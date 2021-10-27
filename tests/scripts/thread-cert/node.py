@@ -3091,35 +3091,37 @@ class LinuxHost():
         The return value is a dict with the same key/values of srp_server_get_service
         except that we don't have a `deleted` field here.
         """
+        host_name_file = self.bash('mktemp')[0].strip()
+        service_data_file = self.bash('mktemp')[0].strip()
 
-        self.bash(f'dns-sd -Z {name} local. > /tmp/{name} 2>&1 &')
+        self.bash(f'dns-sd -Z {name} local. > {service_data_file} 2>&1 &')
         time.sleep(timeout)
 
         full_service_name = f'{instance}.{name}'
         # When hostname is unspecified, extract hostname from browse result
         if host_name is None:
-            for line in self.bash(f'cat /tmp/{name}', encoding='raw_unicode_escape'):
+            for line in self.bash(f'cat {service_data_file}', encoding='raw_unicode_escape'):
                 elements = line.split()
                 if len(elements) >= 6 and elements[0] == full_service_name and elements[1] == 'SRV':
                     host_name = elements[5].split('.')[0]
                     break
 
         assert (host_name is not None)
-        self.bash(f'dns-sd -G v6 {host_name}.local. > /tmp/{host_name} 2>&1 &')
+        self.bash(f'dns-sd -G v6 {host_name}.local. > {host_name_file} 2>&1 &')
         time.sleep(timeout)
 
         self.bash('pkill dns-sd')
         addresses = []
         service = {}
 
-        logging.debug(self.bash(f'cat /tmp/{host_name}', encoding='raw_unicode_escape'))
-        logging.debug(self.bash(f'cat /tmp/{name}', encoding='raw_unicode_escape'))
+        logging.debug(self.bash(f'cat {host_name_file}', encoding='raw_unicode_escape'))
+        logging.debug(self.bash(f'cat {service_data_file}', encoding='raw_unicode_escape'))
 
         # example output in the host file:
         # Timestamp     A/R Flags if Hostname                               Address                                     TTL
         # 9:38:09.274  Add     23 48 my-host.local.                         2001:0000:0000:0000:0000:0000:0000:0002%<0>  120
         #
-        for line in self.bash(f'cat /tmp/{host_name}', encoding='raw_unicode_escape'):
+        for line in self.bash(f'cat {host_name_file}', encoding='raw_unicode_escape'):
             elements = line.split()
             fullname = f'{host_name}.local.'
             if fullname not in elements:
@@ -3135,7 +3137,7 @@ class LinuxHost():
         #
         is_txt = False
         txt = ''
-        for line in self.bash(f'cat /tmp/{name}', encoding='raw_unicode_escape'):
+        for line in self.bash(f'cat {service_data_file}', encoding='raw_unicode_escape'):
             elements = line.split()
             if len(elements) >= 2 and elements[0] == full_service_name and elements[1] == 'TXT':
                 is_txt = True
