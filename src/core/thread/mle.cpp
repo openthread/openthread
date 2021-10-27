@@ -3830,6 +3830,9 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
     uint32_t  mleFrameCounter;
     uint16_t  sourceAddress;
     uint32_t  timeout;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    CslClockAccuracyTlv clockAccuracy;
+#endif
 
     Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aMessageInfo.GetPeerAddr());
 
@@ -3900,6 +3903,20 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
         default:
             ExitNow(error = kErrorParse);
         }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        // CSL Accuracy
+        if (Tlv::FindTlv(aMessage, clockAccuracy) != kErrorNone)
+        {
+            Get<Mac::Mac>().SetCslParentClockAccuracy(clockAccuracy.GetCslClockAccuracy());
+            Get<Mac::Mac>().SetCslParentUncertainty(clockAccuracy.GetCslUncertainty());
+        }
+        else
+        {
+            Get<Mac::Mac>().SetCslParentClockAccuracy(kCslWorstCrystalPpm);
+            Get<Mac::Mac>().SetCslParentUncertainty(kCslWorstUncertainty);
+        }
+#endif
 
         if (!IsRxOnWhenIdle())
         {

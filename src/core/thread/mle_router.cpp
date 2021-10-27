@@ -3255,6 +3255,13 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
         }
     }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (aChild->IsCslSynchronized() && ! aChild->IsRxOnWhenIdle())
+    {
+        SuccessOrExit(error = AppendCslClockAccuracy(*message));
+    }
+#endif
+
     SuccessOrExit(error = SendMessage(*message, aMessageInfo.GetPeerAddr()));
 
     if (aChild == nullptr)
