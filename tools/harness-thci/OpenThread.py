@@ -77,6 +77,8 @@ if TESTHARNESS_VERSION == TESTHARNESS_1_2:
 
 from IThci import IThci
 
+ZEPHYR_PREFIX = 'ot '
+
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
@@ -308,10 +310,10 @@ class OpenThreadTHCI(object):
                 raise Exception('%s: failed to find end of response: %s' % (self, response))
 
         except SerialException as e:
-            ModuleHelper.WriteIntoDebugLogger('__executeCommand() Error: ' + str(e))
+            self.log('__executeCommand() Error: ' + str(e))
             self._disconnect()
             self._connect()
-            raise Exception('The communication has been recreated')
+            raise e
 
         return response
 
@@ -626,7 +628,6 @@ class OpenThreadTHCI(object):
             True: OpenThread is running
             False: OpenThread is not running
         """
-        self.log('call isOpenThreadRunning')
         return self.__executeCommand('state')[0] != 'disabled'
 
     @watched
@@ -637,7 +638,6 @@ class OpenThreadTHCI(object):
             True: OpenThread is running
             False: OpenThread is not running
         """
-        self.log("call isDeviceAttached")
         detached_states = ["detached", "disabled"]
         return self.__executeCommand('state')[0] not in detached_states
 
@@ -1342,7 +1342,7 @@ class OpenThreadTHCI(object):
         print('%s call powerDown' % self)
         self.__sendCommand('reset', expectEcho=False)
 
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2 and not self.IsBorderRouter:
+        if not self.IsBorderRouter:
             self._disconnect()
             self._connect()
 
@@ -3512,8 +3512,8 @@ class OpenThreadTHCI(object):
         """Detect if the device is running Zephyr and adapt in that case"""
 
         try:
-            if self.__executeCommand('ot thread version')[0].isdigit():
-                self.__cmdPrefix = 'ot '
+            if self.__executeCommand(ZEPHYR_PREFIX + 'thread version')[0].isdigit():
+                self.__cmdPrefix = ZEPHYR_PREFIX
                 self.__lineSepX = re.compile(r'\r\n|\r|\n')
         except CommandError:
             pass
@@ -3627,7 +3627,7 @@ class OpenThread(OpenThreadTHCI, IThci):
             return self.__lines.pop(0)
 
     def _cliWriteLine(self, line):
-        if self.__cmdPrefix:
+        if self.__cmdPrefix == ZEPHYR_PREFIX:
             if not line.startswith(self.__cmdPrefix):
                 line = self.__cmdPrefix + line
             self.__socWrite(line + '\r')
