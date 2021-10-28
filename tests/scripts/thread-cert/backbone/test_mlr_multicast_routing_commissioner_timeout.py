@@ -66,12 +66,12 @@ class TestMlrCommissionerTimeout(TestMlrTimeout):
         self.simulator.go(WAIT_REDUNDANCE)
 
         # Ping 2: PBBR should forward to Thread network
-        self.assertFalse(self.nodes[HOST].ping(MA1, backbone=True, ttl=10))
+        self.nodes[HOST].ping(MA1, backbone=True, ttl=10)
 
         self.simulator.go(MLR_TIMEOUT + WAIT_REDUNDANCE)
 
         # Ping 3: PBBR should forward to Thread network
-        self.assertFalse(self.nodes[HOST].ping(MA1, backbone=True, ttl=10))
+        self.nodes[HOST].ping(MA1, backbone=True, ttl=10)
 
         self.simulator.go(COMMISSIONER_MLR_TIMEOUT - MLR_TIMEOUT)
 
