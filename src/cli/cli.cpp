@@ -3225,6 +3225,31 @@ otError Interpreter::ProcessParentPriority(Arg aArgs[])
 }
 #endif
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError Interpreter::ProcessRouterIdRange(Arg *aArgs)
+{
+    uint8_t minRouterId;
+    uint8_t maxRouterId;
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        otThreadGetRouterIdRange(GetInstancePtr(), &minRouterId, &maxRouterId);
+        OutputLine("%d %d", minRouterId, maxRouterId);
+    }
+    else
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint8(minRouterId));
+        SuccessOrExit(error = aArgs[1].ParseAsUint8(maxRouterId));
+        VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = otThreadSetRouterIdRange(GetInstancePtr(), minRouterId, maxRouterId));
+    }
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
 void Interpreter::HandlePingReply(const otPingSenderReply *aReply, void *aContext)

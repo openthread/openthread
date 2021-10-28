@@ -338,6 +338,12 @@ public:
      */
     IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    void GetRouterIdRange(uint8_t &aMinRouterId, uint8_t &aMaxRouterId) const;
+
+    Error SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId);
+#endif
+
 private:
     class IteratorBuilder : public InstanceLocator
     {
@@ -369,6 +375,10 @@ private:
     TimeMilli        mRouterIdSequenceLastUpdated;
     uint8_t          mRouterIdSequence;
     uint8_t          mActiveRouterCount;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    uint8_t mMinRouterId;
+    uint8_t mMaxRouterId;
+#endif
 };
 
 } // namespace ot

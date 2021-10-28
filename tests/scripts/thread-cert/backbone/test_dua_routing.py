@@ -70,6 +70,7 @@ class TestNdProxy(thread_cert.TestCase):
             'is_otbr': True,
             'version': '1.2',
             'channel': CH1,
+            'router_id_range': [0, 30],
         },
         SBBR: {
             'name': 'SBBR',
@@ -93,6 +94,7 @@ class TestNdProxy(thread_cert.TestCase):
             'is_otbr': True,
             'version': '1.2',
             'channel': CH2,
+            'router_id_range': [31, 60],
         },
         ROUTER2: {
             'name': 'ROUTER2',

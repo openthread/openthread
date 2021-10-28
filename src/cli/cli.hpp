@@ -564,6 +564,9 @@ private:
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     otError ProcessTrel(Arg aArgs[]);
 #endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    otError ProcessRouterIdRange(Arg *aArgs);
+#endif
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
@@ -830,6 +833,9 @@ private:
         {"router", &Interpreter::ProcessRouter},
         {"routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold},
         {"routereligible", &Interpreter::ProcessRouterEligible},
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        {"routeridrange", &Interpreter::ProcessRouterIdRange},
+#endif
         {"routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter},
         {"routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold},
 #endif

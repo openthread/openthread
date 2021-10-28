@@ -740,6 +740,38 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
 void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * This function gets the range of router IDs that are allowed to assign to nodes within the thread network.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used for test purpose. All the
+ * router IDs in the range [aMinRouterId, aMaxRouterId] are allowed.
+ *
+ * @param[in]   aInstance     A pointer to an OpenThread instance.
+ * @param[out]  aMinRouterId  The minimum router ID.
+ * @param[out]  aMaxRouterId  The maximum router ID.
+ *
+ * @sa otThreadSetRouterIdRange
+ *
+ */
+void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId);
+
+/**
+ * This function sets the range of router IDs that are allowed to assign to nodes within the thread network.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used for test purpose. All the
+ * router IDs in the range [aMinRouterId, aMaxRouterId] are allowed.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMinRouterId  The minimum router ID.
+ * @param[in]  aMaxRouterId  The maximum router ID.
+ *
+ * @retval  OT_ERROR_NONE           Successfully set the range.
+ * @retval  OT_ERROR_INVALID_ARGS   aMinRouterId > aMaxRouterId, or the range is not covered by [0, 62].
+ *
+ * @sa otThreadGetRouterIdRange
+ *
+ */
+otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
+/**
  * @}
  *
  */

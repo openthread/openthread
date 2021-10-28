@@ -214,6 +214,10 @@ Error MleRouter::BecomeLeader(void)
     Router * router;
     uint32_t partitionId;
     uint8_t  leaderId;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    uint8_t minRouterId;
+    uint8_t maxRouterId;
+#endif
 
     VerifyOrExit(!Get<MeshCoP::ActiveDataset>().IsPartiallyComplete(), error = kErrorInvalidState);
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
@@ -228,8 +232,20 @@ Error MleRouter::BecomeLeader(void)
     partitionId = Random::NonCrypto::GetUint32();
 #endif
 
-    leaderId = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    mRouterTable.GetRouterIdRange(minRouterId, maxRouterId);
+    if (IsRouterIdValid(mPreviousRouterId) && minRouterId <= mPreviousRouterId && mPreviousRouterId <= maxRouterId)
+    {
+        leaderId = mPreviousRouterId;
+    }
+    else
+    {
+        leaderId = Random::NonCrypto::GetUint8InRange(minRouterId, maxRouterId + 1);
+    }
+#else
+    leaderId    = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId
                                                   : Random::NonCrypto::GetUint8InRange(0, kMaxRouterId + 1);
+#endif
 
     SetLeaderData(partitionId, mLeaderWeight, leaderId);
 

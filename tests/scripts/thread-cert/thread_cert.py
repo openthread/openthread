@@ -230,6 +230,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if 'bbr_registration_jitter' in params:
                 self.nodes[i].set_bbr_registration_jitter(params['bbr_registration_jitter'])
 
+            if 'router_id_range' in params:
+                self.nodes[i].set_router_id_range(params['router_id_range'][0], params['router_id_range'][1])
+
         # we have to add allowlist after nodes are all created
         for i, params in initial_topology.items():
             allowlist = params['allowlist']
