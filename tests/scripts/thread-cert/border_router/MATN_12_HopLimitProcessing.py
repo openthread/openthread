@@ -114,12 +114,11 @@ class MATN_12_HopLimitProcessing(thread_cert.TestCase):
         # 4. Host multicasts a ping packet to the multicast address, MA1, with
         # the IPv6 Hop Limit field set to 1. The size of the payload is 130
         # bytes.
-        self.assertFalse(
-            host.ping(MA1,
-                      backbone=True,
-                      ttl=1,
-                      size=130,
-                      interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        host.ping(MA1,
+                  backbone=True,
+                  ttl=1,
+                  size=130,
+                  interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0])
         self.simulator.go(5)
 
         # 6. Router_1 sends a ping packet encapsulated in an MPL packet to the
