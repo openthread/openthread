@@ -2513,12 +2513,12 @@ class NodeImpl:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
 
-    def udp_start(self, local_ipaddr, local_port):
+    def udp_start(self, local_ipaddr, local_port, bind_unspecified=False):
         cmd = 'udp open'
         self.send_command(cmd)
         self._expect_done()
 
-        cmd = 'udp bind %s %s' % (local_ipaddr, local_port)
+        cmd = 'udp bind %s %s %s' % ("-u" if bind_unspecified else "", local_ipaddr, local_port)
         self.send_command(cmd)
         self._expect_done()
 
