@@ -521,9 +521,9 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &srcAddress, const I
     VerifyOrExit(!mNdProxyTable.IsRegistered(dstAddress.GetIid()));
 
     // Perform address queries on behalf of minimal end device children
-    child = Get<ChildTable>().FindChild(srcAddress);
+    child      = Get<ChildTable>().FindChild(srcAddress);
     isMedChild = (child != nullptr && child->GetDeviceMode().IsMinimalEndDevice());
-    error = Get<AddressResolver>().Resolve(dstAddress, rloc16, isMedChild);
+    error      = Get<AddressResolver>().Resolve(dstAddress, rloc16, isMedChild);
 
     // If we successfully find an RLOC in our address cache, only attempt to forward
     // to backbone if RLOC is not our own
