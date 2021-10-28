@@ -1952,7 +1952,7 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
     }
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (!aChild->IsRxOnWhenIdle() && aChild->IsThreadVersion1p2())
+    if (!aChild->IsRxOnWhenIdle() && aChild->IsThreadVersionCslCapable())
     {
         SuccessOrExit(error = AppendCslClockAccuracy(*message));
     }
