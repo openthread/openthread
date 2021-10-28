@@ -65,6 +65,7 @@ class TestEndDeviceUdpReachability(thread_cert.TestCase):
         },
         FED1: {
             'name': 'FED1',
+            'router_eligible': False,
         },
         HOST: {
             'name': 'HOST',
@@ -87,7 +88,7 @@ class TestEndDeviceUdpReachability(thread_cert.TestCase):
 
         fed1.start()
         self.simulator.go(5)
-        self.assertEqual('router', fed1.get_state())
+        self.assertEqual('child', fed1.get_state())
 
         self.simulator.go(20)
 
