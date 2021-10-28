@@ -505,21 +505,34 @@ NdProxyTable &Manager::GetNdProxyTable(void)
     return mNdProxyTable;
 }
 
-bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
+bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &srcAddress, const Ip6::Address &dstAddress)
 {
     bool              forwardToBackbone = false;
     Mac::ShortAddress rloc16;
     Error             error;
+    Child *           child;
+    bool              isMedChild = false;
+    Mac::Address      rloc;
 
     VerifyOrExit(Get<Local>().IsPrimary());
-    VerifyOrExit(Get<Leader>().IsDomainUnicast(aAddress));
+    VerifyOrExit(Get<Leader>().IsDomainUnicast(srcAddress));
+    VerifyOrExit(Get<Leader>().IsDomainUnicast(dstAddress));
 
-    VerifyOrExit(!mNdProxyTable.IsRegistered(aAddress.GetIid()));
+    VerifyOrExit(!mNdProxyTable.IsRegistered(dstAddress.GetIid()));
 
-    error = Get<AddressResolver>().Resolve(aAddress, rloc16, /* aAllowAddressQuery */ false);
+    // Perform address queries on behalf of minimal end device children
+    child = Get<ChildTable>().FindChild(srcAddress);
+    isMedChild = (child != nullptr && child->GetDeviceMode().IsMinimalEndDevice());
+    error = Get<AddressResolver>().Resolve(dstAddress, rloc16, isMedChild);
+
+    // If we successfully find an RLOC in our address cache, only attempt to forward
+    // to backbone if RLOC is not our own
     VerifyOrExit(error != kErrorNone || rloc16 == Get<Mle::MleRouter>().GetRloc16());
 
-    // TODO: check if the DUA is an address of any Child?
+    // If RLOC is our child, do not forward to backbone
+    rloc.SetShort(rloc16);
+    VerifyOrExit((Get<ChildTable>().FindChild(rloc, Child::kInStateValidOrRestoring)) == nullptr);
+
     forwardToBackbone = true;
 
 exit:

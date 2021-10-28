@@ -147,6 +147,39 @@ Child *ChildTable::FindChild(const Mac::Address &aMacAddress, Child::StateFilter
     return FindChild(Child::AddressMatcher(aMacAddress, aFilter));
 }
 
+Child *ChildTable::FindChild(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
+{
+    Child *   child = nullptr;
+    Mac::Address macAddress;
+
+    if (aIp6Address.IsLinkLocal())
+    {
+        aIp6Address.GetIid().ConvertToMacAddress(macAddress);
+    }
+
+    if (Get<Mle::Mle>().IsRoutingLocator(aIp6Address))
+    {
+        macAddress.SetShort(aIp6Address.GetIid().GetLocator());
+    }
+
+    if (!macAddress.IsNone())
+    {
+        child = FindChild(macAddress, aFilter);
+        ExitNow();
+    }
+
+    for (Child &childEntry : Get<ChildTable>().Iterate(aFilter))
+    {
+        if (childEntry.HasIp6Address(aIp6Address))
+        {
+            ExitNow(child = &childEntry);
+        }
+    }
+
+exit:
+    return child;
+}
+
 bool ChildTable::HasChildren(Child::StateFilter aFilter) const
 {
     return (FindChild(Child::AddressMatcher(aFilter)) != nullptr);

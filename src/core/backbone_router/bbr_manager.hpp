@@ -123,13 +123,14 @@ public:
      * This method returns if messages destined to a given Domain Unicast Address should be forwarded to the Backbone
      * link.
      *
-     * @param aAddress The Domain Unicast Address.
+     * @param srcAddress The Source Address.
+     * @param dstAddress The Domain Unicast Address destination.
      *
      * @retval TRUE   If messages destined to the Domain Unicast Address should be forwarded to the Backbone link.
      * @retval FALSE  If messages destined to the Domain Unicast Address should not be forwarded to the Backbone link.
      *
      */
-    bool ShouldForwardDuaToBackbone(const Ip6::Address &aAddress);
+    bool ShouldForwardDuaToBackbone(const Ip6::Address &srcAddress,  const Ip6::Address &dstAddress);
 
     /**
      * This method returns a reference to the Backbone TMF agent.
