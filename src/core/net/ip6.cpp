@@ -1357,8 +1357,8 @@ bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHo
     {
         // on-link global address
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        ExitNow(rval = (aFromNcpHost ||
-                        !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr())));
+        ExitNow(rval = (aFromNcpHost || !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(
+                                            aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr())));
 #else
         ExitNow(rval = true);
 #endif
