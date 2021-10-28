@@ -542,7 +542,6 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
     constexpr uint8_t kIndentSize = 4;
 
     char ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
-    char addrString[OT_IP6_SOCK_ADDR_STRING_SIZE];
 
     otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
 
@@ -561,11 +560,11 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
 
     OutputLine(" %s:0x%04x radio:%s", aIsRx ? "from" : "to", aInfo.mNeighborRloc16, RadioTypeToString(aInfo));
 
-    otIp6SockAddrToString(&aInfo.mSource, addrString, sizeof(addrString));
-    OutputLine(kIndentSize, "src:%s", addrString);
+    OutputFormat(kIndentSize, "src:");
+    OutputSockAddrLine(aInfo.mSource);
 
-    otIp6SockAddrToString(&aInfo.mDestination, addrString, sizeof(addrString));
-    OutputLine(kIndentSize, "dst:%s", addrString);
+    OutputFormat(kIndentSize, "dst:");
+    OutputSockAddrLine(aInfo.mDestination);
 }
 
 void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx)

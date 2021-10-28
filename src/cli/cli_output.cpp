@@ -174,6 +174,21 @@ void Output::OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix)
     OutputLine("");
 }
 
+void Output::OutputSockAddr(const otSockAddr &aSockAddr)
+{
+    char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
+
+    otIp6SockAddrToString(&aSockAddr, string, sizeof(string));
+
+    return OutputFormat("%s", string);
+}
+
+void Output::OutputSockAddrLine(const otSockAddr &aSockAddr)
+{
+    OutputSockAddr(aSockAddr);
+    OutputLine("");
+}
+
 void Output::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
     otDnsTxtEntry         entry;
