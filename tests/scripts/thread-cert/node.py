@@ -3219,9 +3219,6 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     def __repr__(self):
         return f'Otbr<{self.nodeid}>'
 
-    def get_addrs(self) -> List[str]:
-        return super().get_addrs() + self.get_ether_addrs()
-
     def start(self):
         self._setup_sysctl()
         self.set_log_level(5)
