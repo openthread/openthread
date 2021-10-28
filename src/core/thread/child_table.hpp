@@ -181,6 +181,18 @@ public:
     Child *FindChild(const Mac::Address &aMacAddress, Child::StateFilter aFilter);
 
     /**
+     * This method searches the child table for a `Child` with a given IPv6 address.
+     *
+     * @param[in]  aIp6Address  An IPv6 address.
+     * @pram[in]   aFilter      A child state filter.
+     *
+     * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
+     *
+     */
+    Child *FindChild(const Ip6::Address &  aIp6Address,
+                     Child::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
+
+    /**
      * This method indicates whether the child table contains any child matching a given state filter.
      *
      * @param[in]  aFilter  A child state filter.
