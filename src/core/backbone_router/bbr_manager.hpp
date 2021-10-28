@@ -130,7 +130,7 @@ public:
      * @retval FALSE  If messages destined to the Domain Unicast Address should not be forwarded to the Backbone link.
      *
      */
-    bool ShouldForwardDuaToBackbone(const Ip6::Address &srcAddress,  const Ip6::Address &dstAddress);
+    bool ShouldForwardDuaToBackbone(const Ip6::Address &srcAddress, const Ip6::Address &dstAddress);
 
     /**
      * This method returns a reference to the Backbone TMF agent.
