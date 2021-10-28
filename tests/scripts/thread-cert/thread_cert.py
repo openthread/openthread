@@ -269,13 +269,14 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         self.simulator.stop()
 
-        if self._has_backbone_traffic():
-            self._remove_backbone_network()
-            pcap_filename = self._merge_thread_backbone_pcaps()
-        else:
-            pcap_filename = self._get_thread_pcap_filename()
-
         if self._do_packet_verification:
+
+            if self._has_backbone_traffic():
+                self._remove_backbone_network()
+                pcap_filename = self._merge_thread_backbone_pcaps()
+            else:
+                pcap_filename = self._get_thread_pcap_filename()
+
             self._test_info['pcap'] = pcap_filename
 
             test_info_path = self._output_test_info()
