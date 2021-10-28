@@ -149,7 +149,7 @@ Child *ChildTable::FindChild(const Mac::Address &aMacAddress, Child::StateFilter
 
 Child *ChildTable::FindChild(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
 {
-    Child *   child = nullptr;
+    Child *      child = nullptr;
     Mac::Address macAddress;
 
     if (aIp6Address.IsLinkLocal())

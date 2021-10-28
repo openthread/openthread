@@ -189,8 +189,7 @@ public:
      * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
      *
      */
-    Child *FindChild(const Ip6::Address &  aIp6Address,
-                     Child::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
+    Child *FindChild(const Ip6::Address &aIp6Address, Child::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
      * This method indicates whether the child table contains any child matching a given state filter.
