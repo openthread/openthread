@@ -283,7 +283,10 @@ void Server::RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandle
 
     if (aNotifyServiceHandler && mServiceUpdateHandler != nullptr)
     {
-        mServiceUpdateHandler(AllocateId(), aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        uint32_t updateId = AllocateId();
+
+        otLogInfoSrp("[server] SRP update handler is notified (updatedId = %u)", updateId);
+        mServiceUpdateHandler(updateId, aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the host (and its services) regardless of
         // host/service update result. Because removing a host should fail
@@ -345,6 +348,9 @@ void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
 
 void Server::HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError)
 {
+    otLogInfoSrp("[server] handler result of SRP update (id = %u) is received: %s", aUpdate->GetId(),
+                 otThreadErrorToString(aError));
+
     IgnoreError(mOutstandingUpdates.Remove(*aUpdate));
     CommitSrpUpdate(aError, aUpdate->GetDnsHeader(), aUpdate->GetHost(), aUpdate->GetMessageInfo());
     aUpdate->Free();
@@ -1148,6 +1154,7 @@ exit:
         IgnoreError(mOutstandingUpdates.Add(*update));
         mOutstandingUpdatesTimer.StartAt(mOutstandingUpdates.GetTail()->GetExpireTime(), 0);
 
+        otLogInfoSrp("[server] SRP update handler is notified (updatedId = %u)", update->GetId());
         mServiceUpdateHandler(update->GetId(), &aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
     }
     else
@@ -1809,8 +1816,10 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
 
     if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
     {
-        server.mServiceUpdateHandler(server.AllocateId(), this, kDefaultEventsHandlerTimeout,
-                                     server.mServiceUpdateHandlerContext);
+        uint32_t updateId = server.AllocateId();
+
+        otLogInfoSrp("[server] SRP update handler is notified (updatedId = %u)", updateId);
+        server.mServiceUpdateHandler(updateId, this, kDefaultEventsHandlerTimeout, server.mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the service regardless of service update result.
         // Because removing a service should fail only when there is system
