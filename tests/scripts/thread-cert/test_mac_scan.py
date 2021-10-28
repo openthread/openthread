@@ -39,6 +39,7 @@ CHANNEL = 12
 
 class Test_MacScan(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         LEADER: {
@@ -69,7 +70,9 @@ class Test_MacScan(thread_cert.TestCase):
         self.assertEqual(len(results), 1)
         network = results[0]
         self.assertEqual(network['extaddr'], self.nodes[ROUTER].get_addr64())
+        self.assertEqual(network['extpanid'], self.nodes[ROUTER].get_extpanid())
         self.assertEqual(network['networkname'], self.nodes[ROUTER].get_network_name())
+        self.assertEqual(network['channel'], CHANNEL)
 
 
 if __name__ == '__main__':
