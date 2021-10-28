@@ -2466,6 +2466,15 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
         case Tlv::kMleFrameCounter:
             SuccessOrExit(error = AppendMleFrameCounter(*message));
             break;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        case Tlv::kCslTimeout:
+            if (Get<Mac::Mac>().IsCslEnabled())
+            {
+                SuccessOrExit(error = AppendCslTimeout(*message));
+            }
+            break;
+#endif
         }
     }
 
@@ -3777,6 +3786,15 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
 
         // Leader Data, Network Data, Active Timestamp, Pending Timestamp
         SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        CslClockAccuracyTlv cslClockAccuracyTlv;
+        if (Tlv::FindTlv(aMessage, cslClockAccuracyTlv) == kErrorNone)
+        {
+            // MUST include CSL timeout TLV when request includes CSL accuracy
+            tlvs[numTlvs++] = Tlv::kCslTimeout;
+        }
+#endif
     }
     else
     {
@@ -3910,11 +3928,6 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
         {
             Get<Mac::Mac>().SetCslParentClockAccuracy(clockAccuracy.GetCslClockAccuracy());
             Get<Mac::Mac>().SetCslParentUncertainty(clockAccuracy.GetCslUncertainty());
-        }
-        else
-        {
-            Get<Mac::Mac>().SetCslParentClockAccuracy(kCslWorstCrystalPpm);
-            Get<Mac::Mac>().SetCslParentUncertainty(kCslWorstUncertainty);
         }
 #endif
 
