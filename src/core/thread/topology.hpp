@@ -570,9 +570,9 @@ public:
      * @returns TRUE if CSL is supported, FALSE otherwise.
      *
      */
-    bool IsThreadVersionCslCapable(void) const
+    bool IsThreadVersionCslCapable(bool rxOnWhenIdle) const
     {
-        return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2;
+        return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2 && !IsRxOnWhenIdle();
     }
 
     /**
