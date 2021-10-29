@@ -572,7 +572,7 @@ public:
      */
     bool IsThreadVersionCslCapable(void) const
     {
-        return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2 && !IsRxOnWhenIdle();
+        return IsThreadVersion1p2() && !IsRxOnWhenIdle();
     }
 
     /**
