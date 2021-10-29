@@ -1289,6 +1289,10 @@ class NodeImpl:
         self.send_command('extpanid %s' % extpanid)
         self._expect_done()
 
+    def get_extpanid(self):
+        self.send_command('extpanid')
+        return self._expect_result('[0-9a-fA-F]{16}')
+
     def get_joiner_id(self):
         self.send_command('joiner id')
         return self._expect_result('[0-9a-fA-F]{16}')
@@ -1922,12 +1926,30 @@ class NodeImpl:
 
         self._expect('Conflict:', timeout=timeout)
 
-    def scan(self, result=1):
+    def scan(self, result=1, timeout=10):
         self.send_command('scan')
 
+        self.simulator.go(timeout)
+
         if result == 1:
-            return self._expect_results(
-                r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
+            networks = []
+            for line in self._expect_command_output()[2:]:
+                _, J, networkname, extpanid, panid, extaddr, channel, dbm, lqi, _ = map(str.strip, line.split('|'))
+                J = bool(int(J))
+                panid = int(panid, 16)
+                channel, dbm, lqi = map(int, (channel, dbm, lqi))
+
+                networks.append({
+                    'joinable': J,
+                    'networkname': networkname,
+                    'extpanid': extpanid,
+                    'panid': panid,
+                    'extaddr': extaddr,
+                    'channel': channel,
+                    'dbm': dbm,
+                    'lqi': lqi,
+                })
+            return networks
 
     def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64, interface=None):
         args = f'{ipaddr} {size} {count} {interval} {hoplimit} {timeout}'

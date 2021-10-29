@@ -26,8 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-
-import time
+import logging
 import unittest
 
 import thread_cert
@@ -35,17 +34,22 @@ import thread_cert
 LEADER = 1
 ROUTER = 2
 
+CHANNEL = 12
+
 
 class Test_MacScan(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+    SUPPORT_NCP = False
+
     TOPOLOGY = {
         LEADER: {
-            'channel': 12,
+            'channel': CHANNEL,
             'mode': 'rdn',
             'network_name': 'OpenThread',
             'allowlist': [ROUTER]
         },
         ROUTER: {
-            'channel': 12,
+            'channel': CHANNEL,
             'mode': 'rdn',
             'network_name': 'OpenThread',
             'allowlist': [LEADER]
@@ -58,11 +62,17 @@ class Test_MacScan(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(10)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        results = self.nodes[LEADER].scan()
-        self.assertEqual(len(results), 16)
+        results = self.nodes[LEADER].scan(result=True)
+        logging.info('scan result: %r', results)
+        self.assertEqual(len(results), 1)
+        network = results[0]
+        self.assertEqual(network['extaddr'], self.nodes[ROUTER].get_addr64())
+        self.assertEqual(network['extpanid'], self.nodes[ROUTER].get_extpanid())
+        self.assertEqual(network['networkname'], self.nodes[ROUTER].get_network_name())
+        self.assertEqual(network['channel'], CHANNEL)
 
 
 if __name__ == '__main__':
