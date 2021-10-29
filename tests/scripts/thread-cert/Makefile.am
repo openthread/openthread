@@ -170,6 +170,7 @@ EXTRA_DIST                                                         = \
     test_ipv6_source_selection.py                                    \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
+    test_mac_scan.py                                                 \
     test_mle.py                                                      \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \
@@ -241,6 +242,7 @@ check_SCRIPTS                                                      = \
     test_ipv6_source_selection.py                                    \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
+    test_mac_scan.py                                                 \
     test_mle.py                                                      \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \

@@ -114,6 +114,8 @@ void MulticastRoutingManager::Add(const Ip6::Address &aAddress)
     VerifyOrExit(IsEnabled());
 
     UnblockInboundMulticastForwardingCache(aAddress);
+    UpdateMldReport(aAddress, true);
+
     otLogResultPlat(OT_ERROR_NONE, "MulticastRoutingManager: %s: %s", __FUNCTION__, aAddress.ToString().AsCString());
 
 exit:
@@ -127,10 +129,28 @@ void MulticastRoutingManager::Remove(const Ip6::Address &aAddress)
     VerifyOrExit(IsEnabled());
 
     RemoveInboundMulticastForwardingCache(aAddress);
+    UpdateMldReport(aAddress, false);
+
     otLogResultPlat(error, "MulticastRoutingManager: %s: %s", __FUNCTION__, aAddress.ToString().AsCString());
 
 exit:
     return;
+}
+
+void MulticastRoutingManager::UpdateMldReport(const Ip6::Address &aAddress, bool isAdd)
+{
+    struct ipv6_mreq ipv6mr;
+    otError          error = OT_ERROR_NONE;
+
+    ipv6mr.ipv6mr_interface = if_nametoindex(gBackboneNetifName);
+    memcpy(&ipv6mr.ipv6mr_multiaddr, aAddress.GetBytes(), sizeof(ipv6mr.ipv6mr_multiaddr));
+    error = (setsockopt(mMulticastRouterSock, IPPROTO_IPV6, (isAdd ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP),
+                        (void *)&ipv6mr, sizeof(ipv6mr))
+                 ? OT_ERROR_FAILED
+                 : OT_ERROR_NONE);
+
+    otLogResultPlat(error, "MulticastRoutingManager: %s: address %s %s", __FUNCTION__, aAddress.ToString().AsCString(),
+                    (isAdd ? "Added" : "Removed"));
 }
 
 bool MulticastRoutingManager::HasMulticastListener(const Ip6::Address &aAddress) const
@@ -350,6 +370,7 @@ void MulticastRoutingManager::RemoveInboundMulticastForwardingCache(const Ip6::A
     {
         if (mfc.IsValid() && mfc.mIif == kMifIndexBackbone && mfc.mGroupAddr == aGroupAddr)
         {
+            UpdateMldReport(mfc.mGroupAddr, false);
             RemoveMulticastForwardingCache(mfc);
         }
     }
@@ -374,6 +395,7 @@ void MulticastRoutingManager::ExpireMulticastForwardingCache(void)
         {
             if (!UpdateMulticastRouteInfo(mfc))
             {
+                UpdateMldReport(mfc.mGroupAddr, false);
                 // The multicast route is expired
                 RemoveMulticastForwardingCache(mfc);
             }
@@ -539,6 +561,7 @@ void MulticastRoutingManager::SaveMulticastForwardingCache(const Ip6::Address & 
     }
     else
     {
+        UpdateMldReport(oldest->mGroupAddr, false);
         RemoveMulticastForwardingCache(*oldest);
         oldest->Set(aSrcAddr, aGroupAddr, aIif, aOif);
     }
