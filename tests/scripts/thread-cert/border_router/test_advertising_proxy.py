@@ -192,6 +192,10 @@ class SingleHostAndService(thread_cert.TestCase):
         self.host_check_mdns_service(host, '2001::2', 'my-service')
         self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
 
+        # Wait for KEY expiration of service 'my-service-1'.
+        # FIXME: workaround for https://github.com/openthread/ot-br-posix/issues/1071.
+        self.simulator.go(KEY_LEASE + 5)
+
         #
         # 8. Update both the host and the service in a loop and make sure the
         #    Advertising Proxy can follow.
