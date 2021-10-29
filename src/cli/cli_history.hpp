@@ -39,6 +39,7 @@
 #include <openthread/history_tracker.h>
 
 #include "cli/cli_config.h"
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -47,13 +48,11 @@
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements the History Tracker CLI interpreter.
  *
  */
-class History
+class History : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -61,11 +60,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutput The CLI console output context
      *
      */
-    explicit History(Interpreter &aInterpreter)
-        : mInterpreter(aInterpreter)
+    explicit History(Output &aOutput)
+        : OutputWrapper(aOutput)
     {
     }
 
@@ -96,6 +95,8 @@ private:
     };
 
     otError ProcessHelp(Arg aArgs[]);
+    otError ProcessIpAddr(Arg aArgs[]);
+    otError ProcessIpMulticastAddr(Arg aArgs[]);
     otError ProcessNetInfo(Arg aArgs[]);
     otError ProcessNeighbor(Arg aArgs[]);
     otError ProcessRx(Arg aArgs[]);
@@ -107,18 +108,23 @@ private:
     void    OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
     void    OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
 
+    static const char *AddressOriginToString(uint8_t aOrigin);
     static const char *MessagePriorityToString(uint8_t aPriority);
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
 
     static constexpr Command sCommands[] = {
-        {"help", &History::ProcessHelp}, {"neighbor", &History::ProcessNeighbor}, {"netinfo", &History::ProcessNetInfo},
-        {"rx", &History::ProcessRx},     {"rxtx", &History::ProcessRxTx},         {"tx", &History::ProcessTx},
+        {"help", &History::ProcessHelp},
+        {"ipaddr", &History::ProcessIpAddr},
+        {"ipmaddr", &History::ProcessIpMulticastAddr},
+        {"neighbor", &History::ProcessNeighbor},
+        {"netinfo", &History::ProcessNetInfo},
+        {"rx", &History::ProcessRx},
+        {"rxtx", &History::ProcessRxTx},
+        {"tx", &History::ProcessTx},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 };
 
 } // namespace Cli

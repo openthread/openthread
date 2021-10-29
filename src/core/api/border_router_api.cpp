@@ -38,68 +38,54 @@
 #include <openthread/border_router.h>
 
 #include "border_router/routing_manager.hpp"
+#include "common/as_core_type.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
 }
 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<BorderRouter::RoutingManager>().SetEnabled(aEnabled);
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetEnabled(aEnabled);
 }
 
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<BorderRouter::RoutingManager>().GetOmrPrefix(static_cast<Ip6::Prefix &>(*aPrefix));
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));
 }
 
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(static_cast<Ip6::Prefix &>(*aPrefix));
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(AsCoreType(aPrefix));
 }
 
 #endif
 
 otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    OT_ASSERT(aData != nullptr && aDataLength != nullptr);
-
-    return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
+    return AsCoreType(aInstance).Get<NetworkData::Local>().CopyNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    Error                                  error    = kErrorNone;
-    Instance &                             instance = *static_cast<Instance *>(aInstance);
-    const NetworkData::OnMeshPrefixConfig *config   = static_cast<const NetworkData::OnMeshPrefixConfig *>(aConfig);
+    Error error = kErrorNone;
 
     OT_ASSERT(aConfig != nullptr);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (aConfig->mDp)
     {
-        error = instance.Get<BackboneRouter::Local>().SetDomainPrefix(*config);
+        error = AsCoreType(aInstance).Get<BackboneRouter::Local>().SetDomainPrefix(AsCoreType(aConfig));
     }
     else
 #endif
     {
-        error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config);
+        error = AsCoreType(aInstance).Get<NetworkData::Local>().AddOnMeshPrefix(AsCoreType(aConfig));
     }
 
     return error;
@@ -107,19 +93,17 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
 
 otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    Error              error    = kErrorNone;
-    Instance &         instance = *static_cast<Instance *>(aInstance);
-    const Ip6::Prefix *prefix   = static_cast<const Ip6::Prefix *>(aPrefix);
+    Error error = kErrorNone;
 
     OT_ASSERT(aPrefix != nullptr);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    error = instance.Get<BackboneRouter::Local>().RemoveDomainPrefix(*prefix);
+    error = AsCoreType(aInstance).Get<BackboneRouter::Local>().RemoveDomainPrefix(AsCoreType(aPrefix));
 
     if (error == kErrorNotFound)
 #endif
     {
-        error = instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(*prefix);
+        error = AsCoreType(aInstance).Get<NetworkData::Local>().RemoveOnMeshPrefix(AsCoreType(aPrefix));
     }
 
     return error;
@@ -129,50 +113,37 @@ otError otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
                                           otNetworkDataIterator *aIterator,
                                           otBorderRouterConfig * aConfig)
 {
-    Instance &                       instance = *static_cast<Instance *>(aInstance);
-    NetworkData::OnMeshPrefixConfig *config   = static_cast<NetworkData::OnMeshPrefixConfig *>(aConfig);
-
     OT_ASSERT(aIterator != nullptr && aConfig != nullptr);
 
-    return instance.Get<NetworkData::Local>().GetNextOnMeshPrefix(*aIterator, *config);
+    return AsCoreType(aInstance).Get<NetworkData::Local>().GetNextOnMeshPrefix(*aIterator, AsCoreType(aConfig));
 }
 
 otError otBorderRouterAddRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
     OT_ASSERT(aConfig != nullptr);
 
-    return instance.Get<NetworkData::Local>().AddHasRoutePrefix(
-        *static_cast<const NetworkData::ExternalRouteConfig *>(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Local>().AddHasRoutePrefix(AsCoreType(aConfig));
 }
 
 otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
     OT_ASSERT(aPrefix != nullptr);
 
-    return instance.Get<NetworkData::Local>().RemoveHasRoutePrefix(*static_cast<const Ip6::Prefix *>(aPrefix));
+    return AsCoreType(aInstance).Get<NetworkData::Local>().RemoveHasRoutePrefix(AsCoreType(aPrefix));
 }
 
 otError otBorderRouterGetNextRoute(otInstance *           aInstance,
                                    otNetworkDataIterator *aIterator,
                                    otExternalRouteConfig *aConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
     OT_ASSERT(aIterator != nullptr && aConfig != nullptr);
 
-    return instance.Get<NetworkData::Local>().GetNextExternalRoute(
-        *aIterator, *static_cast<NetworkData::ExternalRouteConfig *>(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Local>().GetNextExternalRoute(*aIterator, AsCoreType(aConfig));
 }
 
 otError otBorderRouterRegister(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    AsCoreType(aInstance).Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
     return kErrorNone;
 }

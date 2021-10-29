@@ -62,6 +62,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_ASSERT_ENABLE=0" ]
     }
 
+    if (openthread_config_anycast_locator_enable) {
+      defines += [ "OPENTHREAD_CONFIG_ANYCAST_LOCATOR_ENABLE=1" ]
+    }
+
     if (openthread_config_backbone_router_enable) {
       defines += [ "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1" ]
     }
@@ -369,11 +373,14 @@ openthread_core_files = [
   "coap/coap_secure.hpp",
   "common/arg_macros.hpp",
   "common/array.hpp",
+  "common/as_core_type.hpp",
   "common/bit_vector.hpp",
   "common/clearable.hpp",
   "common/code_utils.hpp",
+  "common/const_cast.hpp",
   "common/crc16.cpp",
   "common/crc16.hpp",
+  "common/data.hpp",
   "common/debug.hpp",
   "common/encoding.hpp",
   "common/equatable.hpp",
@@ -418,10 +425,14 @@ openthread_core_files = [
   "common/trickle_timer.cpp",
   "common/trickle_timer.hpp",
   "common/type_traits.hpp",
+  "common/uptime.cpp",
+  "common/uptime.hpp",
   "crypto/aes_ccm.cpp",
   "crypto/aes_ccm.hpp",
   "crypto/aes_ecb.cpp",
   "crypto/aes_ecb.hpp",
+  "crypto/context_size.hpp",
+  "crypto/crypto_platform.cpp",
   "crypto/ecdsa.cpp",
   "crypto/ecdsa.hpp",
   "crypto/hkdf_sha256.cpp",
@@ -434,6 +445,8 @@ openthread_core_files = [
   "crypto/pbkdf2_cmac.hpp",
   "crypto/sha256.cpp",
   "crypto/sha256.hpp",
+  "crypto/storage.cpp",
+  "crypto/storage.hpp",
   "diags/factory_diags.cpp",
   "diags/factory_diags.hpp",
   "mac/channel_mask.cpp",
@@ -550,6 +563,8 @@ openthread_core_files = [
   "thread/announce_begin_server.hpp",
   "thread/announce_sender.cpp",
   "thread/announce_sender.hpp",
+  "thread/anycast_locator.cpp",
+  "thread/anycast_locator.hpp",
   "thread/child_mask.hpp",
   "thread/child_table.cpp",
   "thread/child_table.hpp",
@@ -672,8 +687,11 @@ openthread_radio_sources = [
   "common/string.cpp",
   "common/tasklet.cpp",
   "common/timer.cpp",
+  "common/uptime.cpp",
   "crypto/aes_ccm.cpp",
   "crypto/aes_ecb.cpp",
+  "crypto/crypto_platform.cpp",
+  "crypto/storage.cpp",
   "diags/factory_diags.cpp",
   "mac/link_raw.cpp",
   "mac/mac_frame.cpp",
@@ -706,6 +724,7 @@ source_set("libopenthread_core_config") {
     "config/child_supervision.h",
     "config/coap.h",
     "config/commissioner.h",
+    "config/crypto.h",
     "config/dataset_updater.h",
     "config/dhcp6_client.h",
     "config/dhcp6_server.h",

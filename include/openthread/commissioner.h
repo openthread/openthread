@@ -125,7 +125,7 @@ typedef struct otJoinerPskd
 } otJoinerPskd;
 
 /**
- * This enumeration defines a Joiner Info Typer.
+ * This enumeration defines a Joiner Info Type.
  *
  */
 typedef enum otJoinerInfoType

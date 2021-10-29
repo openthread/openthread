@@ -110,7 +110,7 @@ void Checksum::Calculate(const Ip6::Address &aSource,
 
     while (chunk.GetLength() > 0)
     {
-        AddData(chunk.GetData(), chunk.GetLength());
+        AddData(chunk.GetBytes(), chunk.GetLength());
         aMessage.GetNextChunk(length, chunk);
     }
 }

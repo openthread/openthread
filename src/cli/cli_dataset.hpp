@@ -40,25 +40,24 @@
 
 #include <openthread/dataset.h>
 
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements the Dataset CLI interpreter.
  *
  */
-class Dataset
+class Dataset : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
 
-    explicit Dataset(Interpreter &aInterpreter)
-        : mInterpreter(aInterpreter)
+    explicit Dataset(Output &aOutput)
+        : OutputWrapper(aOutput)
     {
     }
 
@@ -138,8 +137,6 @@ private:
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 
     static otOperationalDataset sDataset;
 };

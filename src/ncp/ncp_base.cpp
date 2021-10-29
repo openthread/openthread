@@ -43,9 +43,6 @@
 #include <openthread/network_time.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#include <openthread/platform/trel-udp6.h>
-#endif
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -1214,22 +1211,46 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
 {
     OT_UNUSED_VARIABLE(aHeader);
 
-    otError error = OT_ERROR_NONE;
+    otError error      = OT_ERROR_NONE;
+    uint8_t reset_type = SPINEL_RESET_STACK;
 
-    // Signal a platform reset. If implemented, this function
-    // shouldn't return.
-    otInstanceReset(mInstance);
+    if (mDecoder.GetRemainingLengthInStruct() > 0)
+    {
+        SuccessOrAssert(error = mDecoder.ReadUint8(reset_type));
+    }
+
+#if OPENTHREAD_RADIO
+    if (reset_type == SPINEL_RESET_STACK)
+    {
+        otInstanceResetRadioStack(mInstance);
+
+        mIsRawStreamEnabled = false;
+        mCurTransmitTID     = 0;
+        mCurScanChannel     = kInvalidScanChannel;
+        mSrcMatchEnabled    = false;
+
+        ResetCounters();
+
+        SuccessOrAssert(
+            error = WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_POWER_ON));
+    }
+    else
+#endif
+    {
+        // Signal a platform reset. If implemented, this function
+        // shouldn't return.
+        otInstanceReset(mInstance);
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    // We only get to this point if the
-    // platform doesn't support resetting.
-    // In such a case we fake it.
-
-    IgnoreError(otThreadSetEnabled(mInstance, false));
-    IgnoreError(otIp6SetEnabled(mInstance, false));
+        // We only get to this point if the
+        // platform doesn't support resetting.
+        // In such a case we fake it.
+        IgnoreError(otThreadSetEnabled(mInstance, false));
+        IgnoreError(otIp6SetEnabled(mInstance, false));
 #endif
 
-    sNcpInstance = nullptr;
+        sNcpInstance = nullptr;
+    }
 
     return error;
 }
@@ -2514,24 +2535,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>(v
     // Encode common metrics
     SuccessOrExit(error = mEncoder.WriteBool(coexMetrics.mStopped));
     SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumGrantGlitch));
-
-exit:
-    return error;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
-{
-    return mEncoder.WriteBool(mTrelTestModeEnable);
-}
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    SuccessOrExit(error = mDecoder.ReadBool(mTrelTestModeEnable));
-    error = otPlatTrelUdp6SetTestMode(mInstance, mTrelTestModeEnable);
 
 exit:
     return error;

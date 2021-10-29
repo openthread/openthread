@@ -103,8 +103,8 @@ typedef enum otMessagePriority
  */
 typedef struct otMessageSettings
 {
-    bool              mLinkSecurityEnabled; ///< TRUE if the message should be secured at Layer 2.
-    otMessagePriority mPriority;            ///< The message priority level.
+    bool    mLinkSecurityEnabled; ///< TRUE if the message should be secured at Layer 2.
+    uint8_t mPriority;            ///< Priority level (MUST be a `OT_MESSAGE_PRIORITY_*` from `otMessagePriority`).
 } otMessageSettings;
 
 /**

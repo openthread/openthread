@@ -59,13 +59,13 @@ extern "C" {
  * This opaque type represents a SRP service host.
  *
  */
-typedef void otSrpServerHost;
+typedef struct otSrpServerHost otSrpServerHost;
 
 /**
  * This opaque type represents a SRP service.
  *
  */
-typedef void otSrpServerService;
+typedef struct otSrpServerService otSrpServerService;
 
 /**
  * The ID of a SRP service update transaction on the SRP Server.
@@ -143,6 +143,19 @@ typedef enum
 } otSrpServerState;
 
 /**
+ * This enumeration represents the address mode used by the SRP server.
+ *
+ * Address mode specifies how the address and port number are determined by the SRP server and how this info is
+ * published in the Thread Network Data.
+ *
+ */
+typedef enum otSrpServerAddressMode
+{
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST = 0, ///< Unicast address mode.
+    OT_SRP_SERVER_ADDRESS_MODE_ANYCAST = 1, ///< Anycast address mode.
+} otSrpServerAddressMode;
+
+/**
  * This structure includes SRP server LEASE and KEY-LEASE configurations.
  *
  */
@@ -193,6 +206,52 @@ otError otSrpServerSetDomain(otInstance *aInstance, const char *aDomain);
  *
  */
 otSrpServerState otSrpServerGetState(otInstance *aInstance);
+
+/**
+ * This function returns the address mode being used by the SRP server.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The SRP server's address mode.
+ *
+ */
+otSrpServerAddressMode otSrpServerGetAddressMode(otInstance *aInstance);
+
+/**
+ * This function sets the address mode to be used by the SRP server.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aMode      The address mode to use.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the address mode.
+ * @retval OT_ERROR_INVALID_STATE  The SRP server is enabled and the address mode cannot be changed.
+ *
+ */
+otError otSrpServerSetAddressMode(otInstance *aInstance, otSrpServerAddressMode aMode);
+
+/**
+ * This function returns the sequence number used with anycast address mode.
+ *
+ * The sequence number is included in "DNS/SRP Service Anycast Address" entry published in the Network Data.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The anycast sequence number.
+ *
+ */
+uint8_t otSrpServerGetAnycastModeSequenceNumber(otInstance *aInstance);
+
+/**
+ * This function sets the sequence number used with anycast address mode.
+ *
+ * @param[in] aInstance        A pointer to an OpenThread instance.
+ * @param[in] aSequenceNumber  The sequence number to use.
+ *
+ * @retval OT_ERROR_NONE            Successfully set the address mode.
+ * @retval OT_ERROR_INVALID_STATE   The SRP server is enabled and the sequence number cannot be changed.
+ *
+ */
+otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t aSequenceNumber);
 
 /**
  * This function enables/disables the SRP server.
@@ -369,7 +428,7 @@ const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost * 
  *
  * To iterate over sub-types of a specific instance name `instanceName`:
  *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_SUB_TYPE_SERVICE_ONLY, NULL,
- *                                            insatnceName);
+ *                                            instanceName);
  *
  * To find a specific service with service name `serviceName` and service instance name `instanceName`:
  *   service = otSrpServerHostFindNextService(host, NULL, OT_SRP_SERVER_FLAGS_ANY_SERVICE, serviceName, instanceName);

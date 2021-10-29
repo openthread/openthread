@@ -37,7 +37,7 @@
 
 #include <openthread/channel_manager.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 #include "utils/channel_manager.hpp"
 
@@ -45,109 +45,79 @@ using namespace ot;
 
 void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Utils::ChannelManager>().RequestChannelChange(aChannel);
+    AsCoreType(aInstance).Get<Utils::ChannelManager>().RequestChannelChange(aChannel);
 }
 
 uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().GetRequestedChannel();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetRequestedChannel();
 }
 
 uint16_t otChannelManagerGetDelay(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().GetDelay();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetDelay();
 }
 
 otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().SetDelay(aDelay);
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().SetDelay(aDelay);
 }
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().RequestChannelSelect(aSkipQualityCheck);
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().RequestChannelSelect(aSkipQualityCheck);
 }
 #endif
 
 void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Utils::ChannelManager>().SetAutoChannelSelectionEnabled(aEnabled);
+    AsCoreType(aInstance).Get<Utils::ChannelManager>().SetAutoChannelSelectionEnabled(aEnabled);
 }
 
 bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().GetAutoChannelSelectionEnabled();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetAutoChannelSelectionEnabled();
 }
 
 otError otChannelManagerSetAutoChannelSelectionInterval(otInstance *aInstance, uint32_t aInterval)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().SetAutoChannelSelectionInterval(aInterval);
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().SetAutoChannelSelectionInterval(aInterval);
 }
 
 uint32_t otChannelManagerGetAutoChannelSelectionInterval(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().GetAutoChannelSelectionInterval();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetAutoChannelSelectionInterval();
 }
 
 uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().GetSupportedChannels();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetSupportedChannels();
 }
 
 void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().SetSupportedChannels(aChannelMask);
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().SetSupportedChannels(aChannelMask);
 }
 
 uint32_t otChannelManagerGetFavoredChannels(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().GetFavoredChannels();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetFavoredChannels();
 }
 
 void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannelMask)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().SetFavoredChannels(aChannelMask);
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().SetFavoredChannels(aChannelMask);
 }
 
 uint16_t otChannelManagerGetCcaFailureRateThreshold(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().GetCcaFailureRateThreshold();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetCcaFailureRateThreshold();
 }
 
 void otChannelManagerSetCcaFailureRateThreshold(otInstance *aInstance, uint16_t aThreshold)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelManager>().SetCcaFailureRateThreshold(aThreshold);
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().SetCcaFailureRateThreshold(aThreshold);
 }
 
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD

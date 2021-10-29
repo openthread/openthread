@@ -39,3 +39,7 @@ endif()
 if(OT_MTD)
     include(mtd.cmake)
 endif()
+
+if(OT_RCP)
+    include(radio.cmake)
+endif()

@@ -198,6 +198,7 @@ private:
     static constexpr uint32_t kRtrSolicitationInterval     = 4;   // Interval between RSs. In sec.
     static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;   // Max delay for initial solicitation. In sec.
     static constexpr uint32_t kMaxRoutingPolicyDelay       = 1;   // Max delay for routing policy evaluation. In sec.
+    static constexpr uint32_t kRtrSolicitationRetryDelay   = 60;  // The delay before retrying failed RS tx. In Sec.
 
     // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
     // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME

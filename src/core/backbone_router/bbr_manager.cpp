@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -562,8 +563,7 @@ exit:
 
 void Manager::HandleBackboneQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Manager *>(aContext)->HandleBackboneQuery(*static_cast<const Coap::Message *>(aMessage),
-                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Manager *>(aContext)->HandleBackboneQuery(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Manager::HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -597,8 +597,7 @@ exit:
 
 void Manager::HandleBackboneAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Manager *>(aContext)->HandleBackboneAnswer(*static_cast<const Coap::Message *>(aMessage),
-                                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Manager *>(aContext)->HandleBackboneAnswer(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Manager::HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -651,8 +650,8 @@ Error Manager::SendProactiveBackboneNotification(const Ip6::Address &           
                                                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                                  uint32_t                        aTimeSinceLastTransaction)
 {
-    return SendBackboneAnswer(Get<Local>().GetAllDomainBackboneRoutersAddress(), BackboneRouter::kBackboneUdpPort, aDua,
-                              aMeshLocalIid, aTimeSinceLastTransaction, Mac::kShortAddrInvalid);
+    return SendBackboneAnswer(Get<Local>().GetAllDomainBackboneRoutersAddress(), aDua, aMeshLocalIid,
+                              aTimeSinceLastTransaction, Mac::kShortAddrInvalid);
 }
 
 Error Manager::SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
@@ -660,12 +659,11 @@ Error Manager::SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo
                                   uint16_t                     aSrcRloc16,
                                   const NdProxyTable::NdProxy &aNdProxy)
 {
-    return SendBackboneAnswer(aQueryMessageInfo.GetPeerAddr(), aQueryMessageInfo.GetPeerPort(), aDua,
-                              aNdProxy.GetMeshLocalIid(), aNdProxy.GetTimeSinceLastTransaction(), aSrcRloc16);
+    return SendBackboneAnswer(aQueryMessageInfo.GetPeerAddr(), aDua, aNdProxy.GetMeshLocalIid(),
+                              aNdProxy.GetTimeSinceLastTransaction(), aSrcRloc16);
 }
 
 Error Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
-                                  uint16_t                        aDstPort,
                                   const Ip6::Address &            aDua,
                                   const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                   uint32_t                        aTimeSinceLastTransaction,
@@ -700,7 +698,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
     }
 
     messageInfo.SetPeerAddr(aDstAddr);
-    messageInfo.SetPeerPort(aDstPort);
+    messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort);
 
     messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
     messageInfo.SetIsHostInterface(true);

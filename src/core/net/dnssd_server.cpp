@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -71,6 +72,10 @@ Error Server::Start(void)
     SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(kPort, kBindUnspecifiedNetif ? OT_NETIF_UNSPECIFIED : OT_NETIF_THREAD));
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Get<Srp::Server>().HandleDnssdServerStateChange();
+#endif
+
 exit:
     otLogInfoDns("[server] started: %s", ErrorToString(error));
 
@@ -97,23 +102,34 @@ void Server::Stop(void)
 
     IgnoreError(mSocket.Close());
     otLogInfoDns("[server] stopped");
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Get<Srp::Server>().HandleDnssdServerStateChange();
+#endif
 }
 
 void Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Server *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Server *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error  error = kErrorNone;
     Header requestHeader;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), requestHeader));
-    VerifyOrExit(requestHeader.GetType() == Header::kTypeQuery, error = kErrorDrop);
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    // We first let the `Srp::Server` process the received message.
+    // It returns `kErrorNone` to indicate that it successfully
+    // processed the message.
+
+    VerifyOrExit(Get<Srp::Server>().HandleDnssdServerUdpReceive(aMessage, aMessageInfo) != kErrorNone);
+#endif
+
+    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), requestHeader));
+    VerifyOrExit(requestHeader.GetType() == Header::kTypeQuery);
 
     ProcessQuery(requestHeader, aMessage, aMessageInfo);
+
 exit:
     return;
 }
@@ -902,7 +918,7 @@ void Server::AnswerQuery(QueryTransaction &                aQuery,
         {
             for (uint8_t i = 0; i < aInstanceInfo.mAddressNum; i++)
             {
-                const Ip6::Address &address = static_cast<const Ip6::Address &>(aInstanceInfo.mAddresses[i]);
+                const Ip6::Address &address = AsCoreType(&aInstanceInfo.mAddresses[i]);
 
                 OT_ASSERT(!address.IsUnspecified() && !address.IsLinkLocal() && !address.IsMulticast() &&
                           !address.IsLoopback());
@@ -930,7 +946,7 @@ void Server::AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, co
     {
         for (uint8_t i = 0; i < aHostInfo.mAddressNum; i++)
         {
-            const Ip6::Address &address = static_cast<const Ip6::Address &>(aHostInfo.mAddresses[i]);
+            const Ip6::Address &address = AsCoreType(&aHostInfo.mAddresses[i]);
 
             OT_ASSERT(!address.IsUnspecified() && !address.IsMulticast() && !address.IsLinkLocal() &&
                       !address.IsLoopback());

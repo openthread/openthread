@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -59,7 +60,7 @@ DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::
     , mMgmtSetCallback(nullptr)
     , mMgmtSetCallbackContext(nullptr)
 {
-    mTimestamp.Init();
+    mTimestamp.Clear();
 }
 
 const Timestamp *DatasetManager::GetTimestamp(void) const
@@ -67,24 +68,10 @@ const Timestamp *DatasetManager::GetTimestamp(void) const
     return mTimestampValid ? &mTimestamp : nullptr;
 }
 
-int DatasetManager::Compare(const Timestamp &aTimestamp) const
-{
-    const Timestamp *timestamp = GetTimestamp();
-    int              rval      = 1;
-
-    if (timestamp)
-    {
-        rval = timestamp->Compare(aTimestamp);
-    }
-
-    return rval;
-}
-
 Error DatasetManager::Restore(void)
 {
-    Error            error;
-    Dataset          dataset;
-    const Timestamp *timestamp;
+    Error   error;
+    Dataset dataset;
 
     mTimer.Stop();
 
@@ -92,13 +79,7 @@ Error DatasetManager::Restore(void)
 
     SuccessOrExit(error = mLocal.Restore(dataset));
 
-    timestamp = dataset.GetTimestamp(GetType());
-
-    if (timestamp != nullptr)
-    {
-        mTimestamp      = *timestamp;
-        mTimestampValid = true;
-    }
+    mTimestampValid = (dataset.GetTimestamp(GetType(), mTimestamp) == kErrorNone);
 
     if (IsActiveDataset())
     {
@@ -125,7 +106,7 @@ exit:
 
 void DatasetManager::Clear(void)
 {
-    mTimestamp.Init();
+    mTimestamp.Clear();
     mTimestampValid = false;
     mLocal.Clear();
     mTimer.Stop();
@@ -139,16 +120,12 @@ void DatasetManager::HandleDetach(void)
 
 Error DatasetManager::Save(const Dataset &aDataset)
 {
-    Error            error = kErrorNone;
-    const Timestamp *timestamp;
-    int              compare;
-    bool             isNetworkkeyUpdated = false;
+    Error error = kErrorNone;
+    int   compare;
+    bool  isNetworkkeyUpdated = false;
 
-    timestamp = aDataset.GetTimestamp(GetType());
-
-    if (timestamp != nullptr)
+    if (aDataset.GetTimestamp(GetType(), mTimestamp) == kErrorNone)
     {
-        mTimestamp      = *timestamp;
         mTimestampValid = true;
 
         if (IsActiveDataset())
@@ -157,7 +134,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
         }
     }
 
-    compare = mLocal.Compare(timestamp);
+    compare = Timestamp::Compare(mTimestampValid ? &mTimestamp : nullptr, mLocal.GetTimestamp());
 
     if (isNetworkkeyUpdated || compare > 0)
     {
@@ -281,17 +258,18 @@ void DatasetManager::SendSet(void)
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
     VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
-    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, error = kErrorInvalidState);
+
+    VerifyOrExit(Timestamp::Compare(GetTimestamp(), mLocal.GetTimestamp()) < 0, error = kErrorInvalidState);
 
     if (IsActiveDataset())
     {
-        Dataset pendingDataset;
+        Dataset   pendingDataset;
+        Timestamp timestamp;
+
         IgnoreError(Get<PendingDataset>().Read(pendingDataset));
 
-        const ActiveTimestampTlv *tlv                    = pendingDataset.GetTlv<ActiveTimestampTlv>();
-        const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
-
-        if (pendingActiveTimestamp != nullptr && mLocal.Compare(pendingActiveTimestamp) == 0)
+        if ((pendingDataset.GetTimestamp(Dataset::kActive, timestamp) == kErrorNone) &&
+            (Timestamp::Compare(&timestamp, mLocal.GetTimestamp()) == 0))
         {
             // stop registration attempts during dataset transition
             ExitNow(error = kErrorInvalidState);
@@ -339,8 +317,8 @@ void DatasetManager::HandleMgmtSetResponse(void *               aContext,
                                            const otMessageInfo *aMessageInfo,
                                            Error                aError)
 {
-    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aError);
+    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
+                                                                   AsCoreTypePtr(aMessageInfo), aError);
 }
 
 void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
@@ -665,7 +643,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
 
     if (aAddress != nullptr)
     {
-        messageInfo.SetPeerAddr(*static_cast<const Ip6::Address *>(aAddress));
+        messageInfo.SetPeerAddr(AsCoreType(aAddress));
     }
     else
     {
@@ -727,8 +705,7 @@ exit:
 
 void ActiveDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleGet(*static_cast<Coap::Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<ActiveDataset *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void ActiveDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
@@ -762,7 +739,7 @@ void PendingDataset::ClearNetwork(void)
 {
     Dataset dataset;
 
-    mTimestamp.Init();
+    mTimestamp.Clear();
     mTimestampValid = false;
     IgnoreError(DatasetManager::Save(dataset));
 }
@@ -878,8 +855,7 @@ exit:
 
 void PendingDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleGet(*static_cast<Coap::Message *>(aMessage),
-                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<PendingDataset *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void PendingDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const

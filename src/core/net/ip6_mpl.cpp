@@ -427,10 +427,7 @@ void Mpl::Metadata::ReadFrom(const Message &aMessage)
 
 void Mpl::Metadata::RemoveFrom(Message &aMessage) const
 {
-    Error error = aMessage.SetLength(aMessage.GetLength() - sizeof(*this));
-
-    OT_ASSERT(error == kErrorNone);
-    OT_UNUSED_VARIABLE(error);
+    SuccessOrAssert(aMessage.SetLength(aMessage.GetLength() - sizeof(*this)));
 }
 
 void Mpl::Metadata::UpdateIn(Message &aMessage) const

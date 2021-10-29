@@ -43,8 +43,10 @@
 #include <openthread/thread.h>
 
 #include "common/clearable.hpp"
+#include "common/data.hpp"
 #include "common/equatable.hpp"
 #include "common/string.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 namespace Mac {
@@ -419,14 +421,135 @@ public:
     static constexpr uint16_t kSize = OT_MAC_KEY_SIZE; ///< Key size in bytes.
 
     /**
-     * This method gets a pointer to the buffer containing the key.
+     * This method gets a pointer to the bytes array containing the key
      *
-     * @returns A pointer to the buffer containing the key.
+     * @returns A pointer to the byte array containing the key.
      *
      */
-    const uint8_t *GetKey(void) const { return m8; }
+    const uint8_t *GetBytes(void) const { return m8; }
 
 } OT_TOOL_PACKED_END;
+
+/**
+ * This type represents a MAC Key Ref used by PSA.
+ *
+ */
+typedef otMacKeyRef KeyRef;
+
+/**
+ * This class represents a MAC Key Material.
+ *
+ */
+class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
+{
+public:
+    /**
+     * This constructor initializes a `KeyMaterial`.
+     *
+     */
+    KeyMaterial(void)
+    {
+        GetKey().Clear();
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        SetKeyRef(kInvalidKeyRef);
+#endif
+    }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    /**
+     * This method overload `=` operator to assign the `KeyMaterial` from another one.
+     *
+     * If the `KeyMaterial` currently stores a valid and different `KeyRef`, the assignment of new value will ensure to
+     * delete the previous one before using the new `KeyRef` from @p aOther.
+     *
+     * @param[in] aOther  aOther  The other `KeyMaterial` instance to assign from.
+     *
+     * @returns A reference to the current `KeyMaterial`
+     *
+     */
+    KeyMaterial &operator=(const KeyMaterial &aOther);
+#endif
+
+    /**
+     *  This method clears the `KeyMaterial`.
+     *
+     * Under `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE`, if the `KeyMaterial` currently stores a valid previous
+     * `KeyRef`, the `Clear()` call will ensure to delete the previous `KeyRef` and set it to `kInvalidKeyRef`.
+     *
+     */
+    void Clear(void);
+
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    /**
+     * This method gets the literal `Key`.
+     *
+     * @returns The literal `Key`
+     *
+     */
+    const Key &GetKey(void) const { return static_cast<const Key &>(mKeyMaterial.mKey); }
+
+#else
+    /**
+     * This method gets the stored `KeyRef`
+     *
+     * @returns The `KeyRef`
+     *
+     */
+    KeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
+#endif
+
+    /**
+     * This method sets the `KeyMaterial` from a given Key.
+     *
+     * If the `KeyMaterial` currently stores a valid `KeyRef`, the `SetFrom()` call will ensure to delete the previous
+     * one before creating and using a new `KeyRef` associated with the new `Key`.
+     *
+     * @param[in] aKey           A reference to the new key.
+     * @param[in] aIsExportable  Boolean indicating if the key is exportable (this is only applicable under
+     *                           `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` config).
+     *
+     */
+    void SetFrom(const Key &aKey, bool aIsExportable = false);
+
+    /**
+     * This method extracts the literal key from `KeyMaterial`
+     *
+     * @param[out] aKey  A reference to the output the key.
+     *
+     */
+    void ExtractKey(Key &aKey);
+
+    /**
+     * This method converts `KeyMaterial` to a `Crypto::Key`.
+     *
+     * @param[out]  A reference to a `Crypto::Key` to populate.
+     *
+     */
+    void ConvertToCryptoKey(Crypto::Key &aCryptoKey) const;
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two `KeyMaterial` instances are equal.
+     *
+     * @param[in]  aOther  The other `KeyMaterial` instance to compare with.
+     *
+     * @retval TRUE   If the two `KeyMaterial` instances are equal.
+     * @retval FALSE  If the two `KeyMaterial` instances are not equal.
+     *
+     */
+    bool operator==(const KeyMaterial &aOther) const;
+
+    KeyMaterial(const KeyMaterial &) = delete;
+
+private:
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    static constexpr KeyRef kInvalidKeyRef = Crypto::Storage::kInvalidKeyRef;
+
+    void DestroyKey(void);
+    void SetKeyRef(KeyRef aKeyRef) { mKeyMaterial.mKeyRef = aKeyRef; }
+#endif
+    Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
+    void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
+};
 
 /**
  * This structure represents an IEEE 802.15.4 Extended PAN Identifier.
@@ -460,8 +583,10 @@ public:
  * @note The char array does NOT need to be null terminated.
  *
  */
-class NameData
+class NameData : private Data<kWithUint8Length>
 {
+    friend class NetworkName;
+
 public:
     /**
      * This constructor initializes the NameData object.
@@ -470,11 +595,7 @@ public:
      * @param[in] aLength   The length (number of chars) in the buffer.
      *
      */
-    NameData(const char *aBuffer, uint8_t aLength)
-        : mBuffer(aBuffer)
-        , mLength(aLength)
-    {
-    }
+    NameData(const char *aBuffer, uint8_t aLength) { Init(aBuffer, aLength); }
 
     /**
      * This method returns the pointer to char buffer (not necessarily null terminated).
@@ -482,7 +603,7 @@ public:
      * @returns The pointer to the char buffer.
      *
      */
-    const char *GetBuffer(void) const { return mBuffer; }
+    const char *GetBuffer(void) const { return reinterpret_cast<const char *>(GetBytes()); }
 
     /**
      * This method returns the length (number of chars in buffer).
@@ -490,7 +611,7 @@ public:
      * @returns The name length.
      *
      */
-    uint8_t GetLength(void) const { return mLength; }
+    uint8_t GetLength(void) const { return Data<kWithUint8Length>::GetLength(); }
 
     /**
      * This method copies the name data into a given char buffer with a given size.
@@ -505,17 +626,13 @@ public:
      *
      */
     uint8_t CopyTo(char *aBuffer, uint8_t aMaxSize) const;
-
-private:
-    const char *mBuffer;
-    uint8_t     mLength;
 };
 
 /**
  * This structure represents an IEEE802.15.4 Network Name.
  *
  */
-class NetworkName : public otNetworkName
+class NetworkName : public otNetworkName, public Unequatable<NetworkName>
 {
 public:
     /**

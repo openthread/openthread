@@ -45,6 +45,8 @@ openthread_cli_sources = [
   "cli_joiner.hpp",
   "cli_network_data.cpp",
   "cli_network_data.hpp",
+  "cli_output.cpp",
+  "cli_output.hpp",
   "cli_srp_client.cpp",
   "cli_srp_client.hpp",
   "cli_srp_server.cpp",

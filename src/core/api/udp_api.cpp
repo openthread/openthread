@@ -35,79 +35,56 @@
 
 #include <openthread/udp.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
-#include "common/new.hpp"
-#include "net/udp6.hpp"
 
 using namespace ot;
 
 otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().NewMessage(0, Message::Settings(aSettings));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().NewMessage(0, Message::Settings::From(aSettings));
 }
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().Open(*static_cast<Ip6::Udp::SocketHandle *>(aSocket), aCallback, aContext);
+    return AsCoreType(aInstance).Get<Ip6::Udp>().Open(AsCoreType(aSocket), aCallback, aContext);
 }
 
 bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().IsOpen(*static_cast<const Ip6::Udp::SocketHandle *>(aSocket));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().IsOpen(AsCoreType(aSocket));
 }
 
 otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().Close(*static_cast<Ip6::Udp::SocketHandle *>(aSocket));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().Close(AsCoreType(aSocket));
 }
 
 otError otUdpBind(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName, otNetifIdentifier aNetif)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().Bind(*static_cast<Ip6::Udp::SocketHandle *>(aSocket),
-                                         *static_cast<const Ip6::SockAddr *>(aSockName), aNetif);
+    return AsCoreType(aInstance).Get<Ip6::Udp>().Bind(AsCoreType(aSocket), AsCoreType(aSockName), aNetif);
 }
 
 otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAddr *aSockName)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().Connect(*static_cast<Ip6::Udp::SocketHandle *>(aSocket),
-                                            *static_cast<const Ip6::SockAddr *>(aSockName));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().Connect(AsCoreType(aSocket), AsCoreType(aSockName));
 }
 
 otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().SendTo(*static_cast<Ip6::Udp::SocketHandle *>(aSocket),
-                                           *static_cast<Message *>(aMessage),
-                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().SendTo(AsCoreType(aSocket), AsCoreType(aMessage),
+                                                        AsCoreType(aMessageInfo));
 }
 
 otUdpSocket *otUdpGetSockets(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().GetUdpSockets();
+    return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets();
 }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Ip6::Udp>().SetUdpForwarder(aForwarder, aContext);
+    AsCoreType(aInstance).Get<Ip6::Udp>().SetUdpForwarder(aForwarder, aContext);
 }
 
 void otUdpForwardReceive(otInstance *        aInstance,
@@ -117,47 +94,38 @@ void otUdpForwardReceive(otInstance *        aInstance,
                          uint16_t            aSockPort)
 {
     Ip6::MessageInfo messageInfo;
-    Instance &       instance = *static_cast<Instance *>(aInstance);
 
     OT_ASSERT(aMessage != nullptr && aPeerAddr != nullptr);
 
-    messageInfo.SetSockAddr(instance.Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetSockAddr(AsCoreType(aInstance).Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetSockPort(aSockPort);
-    messageInfo.SetPeerAddr(*static_cast<const ot::Ip6::Address *>(aPeerAddr));
+    messageInfo.SetPeerAddr(AsCoreType(aPeerAddr));
     messageInfo.SetPeerPort(aPeerPort);
     messageInfo.SetIsHostInterface(true);
 
-    instance.Get<Ip6::Udp>().HandlePayload(*static_cast<ot::Message *>(aMessage), messageInfo);
+    AsCoreType(aInstance).Get<Ip6::Udp>().HandlePayload(AsCoreType(aMessage), messageInfo);
 
-    static_cast<ot::Message *>(aMessage)->Free();
+    AsCoreType(aMessage).Free();
 }
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 
 otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().AddReceiver(*static_cast<Ip6::Udp::Receiver *>(aUdpReceiver));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().AddReceiver(AsCoreType(aUdpReceiver));
 }
 
 otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().RemoveReceiver(*static_cast<Ip6::Udp::Receiver *>(aUdpReceiver));
+    return AsCoreType(aInstance).Get<Ip6::Udp>().RemoveReceiver(AsCoreType(aUdpReceiver));
 }
 
 otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().SendDatagram(*static_cast<ot::Message *>(aMessage),
-                                                 *static_cast<Ip6::MessageInfo *>(aMessageInfo), Ip6::kProtoUdp);
+    return AsCoreType(aInstance).Get<Ip6::Udp>().SendDatagram(AsCoreType(aMessage), AsCoreType(aMessageInfo),
+                                                              Ip6::kProtoUdp);
 }
 
 bool otUdpIsPortInUse(otInstance *aInstance, uint16_t port)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Udp>().IsPortInUse(port);
+    return AsCoreType(aInstance).Get<Ip6::Udp>().IsPortInUse(port);
 }

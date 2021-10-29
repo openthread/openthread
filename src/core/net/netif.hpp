@@ -38,6 +38,7 @@
 
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -74,6 +75,30 @@ class Netif : public InstanceLocator, private NonCopyable
     friend class Address;
 
 public:
+    /**
+     * This enumeration represent an address event (added or removed)
+     *
+     * The boolean values are used for `aIsAdded` parameter in the call of `otIp6AddressCallback`.
+     *
+     */
+    enum AddressEvent : bool
+    {
+        kAddressRemoved = false, ///< Indicates that address was added.
+        kAddressAdded   = true,  ///< Indicates that address was removed.
+    };
+
+    /**
+     * This enumeration represents the address origin.
+     *
+     */
+    enum AddressOrigin : uint8_t
+    {
+        kOriginThread = OT_ADDRESS_ORIGIN_THREAD, ///< Thread assigned address (ALOC, RLOC, MLEID, etc)
+        kOriginSlaac  = OT_ADDRESS_ORIGIN_SLAAC,  ///< SLAAC assigned address
+        kOriginDhcp6  = OT_ADDRESS_ORIGIN_DHCPV6, ///< DHCPv6 assigned address
+        kOriginManual = OT_ADDRESS_ORIGIN_MANUAL, ///< Manually assigned address
+    };
+
     /**
      * This class implements an IPv6 network interface unicast address.
      *
@@ -180,6 +205,14 @@ public:
             mScopeOverrideValid = true;
         }
 
+        /**
+         * This method gets the IPv6 address origin.
+         *
+         * @returns The address origin.
+         *
+         */
+        AddressOrigin GetOrigin(void) const { return static_cast<AddressOrigin>(mAddressOrigin); }
+
     private:
         bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
     };
@@ -225,10 +258,7 @@ public:
          * @returns A pointer to the next multicast address.
          *
          */
-        MulticastAddress *GetNext(void)
-        {
-            return static_cast<MulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
-        }
+        MulticastAddress *GetNext(void) { return static_cast<MulticastAddress *>(AsNonConst(mNext)); }
 
     private:
         bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
@@ -314,10 +344,7 @@ public:
 #endif
 
     private:
-        ExternalMulticastAddress *GetNext(void)
-        {
-            return static_cast<ExternalMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
-        }
+        ExternalMulticastAddress *GetNext(void) { return static_cast<ExternalMulticastAddress *>(AsNonConst(mNext)); }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
         MlrState mMlrState;

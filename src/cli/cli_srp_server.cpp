@@ -65,17 +65,48 @@ exit:
     return error;
 }
 
+otError SrpServer::ProcessAddrMode(Arg aArgs[])
+{
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    if (aArgs[0].IsEmpty())
+    {
+        switch (otSrpServerGetAddressMode(GetInstancePtr()))
+        {
+        case OT_SRP_SERVER_ADDRESS_MODE_UNICAST:
+            OutputLine("unicast");
+            break;
+
+        case OT_SRP_SERVER_ADDRESS_MODE_ANYCAST:
+            OutputLine("anycast");
+            break;
+        }
+
+        error = OT_ERROR_NONE;
+    }
+    else if (aArgs[0] == "unicast")
+    {
+        error = otSrpServerSetAddressMode(GetInstancePtr(), OT_SRP_SERVER_ADDRESS_MODE_UNICAST);
+    }
+    else if (aArgs[0] == "anycast")
+    {
+        error = otSrpServerSetAddressMode(GetInstancePtr(), OT_SRP_SERVER_ADDRESS_MODE_ANYCAST);
+    }
+
+    return error;
+}
+
 otError SrpServer::ProcessDomain(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
     if (aArgs[0].IsEmpty())
     {
-        mInterpreter.OutputLine("%s", otSrpServerGetDomain(mInterpreter.mInstance));
+        OutputLine("%s", otSrpServerGetDomain(GetInstancePtr()));
     }
     else
     {
-        error = otSrpServerSetDomain(mInterpreter.mInstance, aArgs[0].GetCString());
+        error = otSrpServerSetDomain(GetInstancePtr(), aArgs[0].GetCString());
     }
 
     return error;
@@ -85,19 +116,19 @@ otError SrpServer::ProcessState(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    switch (otSrpServerGetState(mInterpreter.mInstance))
+    switch (otSrpServerGetState(GetInstancePtr()))
     {
     case OT_SRP_SERVER_STATE_DISABLED:
-        mInterpreter.OutputLine("disabled");
+        OutputLine("disabled");
         break;
     case OT_SRP_SERVER_STATE_RUNNING:
-        mInterpreter.OutputLine("running");
+        OutputLine("running");
         break;
     case OT_SRP_SERVER_STATE_STOPPED:
-        mInterpreter.OutputLine("stopped");
+        OutputLine("stopped");
         break;
     default:
-        mInterpreter.OutputLine("invalid state");
+        OutputLine("invalid state");
         break;
     }
 
@@ -108,7 +139,7 @@ otError SrpServer::ProcessEnable(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otSrpServerSetEnabled(mInterpreter.mInstance, /* aEnabled */ true);
+    otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ true);
 
     return OT_ERROR_NONE;
 }
@@ -117,7 +148,7 @@ otError SrpServer::ProcessDisable(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otSrpServerSetEnabled(mInterpreter.mInstance, /* aEnabled */ false);
+    otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ false);
 
     return OT_ERROR_NONE;
 }
@@ -129,11 +160,11 @@ otError SrpServer::ProcessLease(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        otSrpServerGetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
-        mInterpreter.OutputLine("min lease: %u", leaseConfig.mMinLease);
-        mInterpreter.OutputLine("max lease: %u", leaseConfig.mMaxLease);
-        mInterpreter.OutputLine("min key-lease: %u", leaseConfig.mMinKeyLease);
-        mInterpreter.OutputLine("max key-lease: %u", leaseConfig.mMaxKeyLease);
+        otSrpServerGetLeaseConfig(GetInstancePtr(), &leaseConfig);
+        OutputLine("min lease: %u", leaseConfig.mMinLease);
+        OutputLine("max lease: %u", leaseConfig.mMaxLease);
+        OutputLine("min key-lease: %u", leaseConfig.mMinKeyLease);
+        OutputLine("max key-lease: %u", leaseConfig.mMaxKeyLease);
     }
     else
     {
@@ -143,7 +174,7 @@ otError SrpServer::ProcessLease(Arg aArgs[])
         SuccessOrExit(error = aArgs[3].ParseAsUint32(leaseConfig.mMaxKeyLease));
         VerifyOrExit(aArgs[4].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-        error = otSrpServerSetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
+        error = otSrpServerSetLeaseConfig(GetInstancePtr(), &leaseConfig);
     }
 
 exit:
@@ -158,34 +189,34 @@ otError SrpServer::ProcessHost(Arg aArgs[])
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     host = nullptr;
-    while ((host = otSrpServerGetNextHost(mInterpreter.mInstance, host)) != nullptr)
+    while ((host = otSrpServerGetNextHost(GetInstancePtr(), host)) != nullptr)
     {
         const otIp6Address *addresses;
         uint8_t             addressesNum;
         bool                isDeleted = otSrpServerHostIsDeleted(host);
 
-        mInterpreter.OutputLine("%s", otSrpServerHostGetFullName(host));
-        mInterpreter.OutputLine(Interpreter::kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
+        OutputLine("%s", otSrpServerHostGetFullName(host));
+        OutputLine(kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
         if (isDeleted)
         {
             continue;
         }
 
-        mInterpreter.OutputSpaces(Interpreter::kIndentSize);
-        mInterpreter.OutputFormat("addresses: [");
+        OutputSpaces(kIndentSize);
+        OutputFormat("addresses: [");
 
         addresses = otSrpServerHostGetAddresses(host, &addressesNum);
 
         for (uint8_t i = 0; i < addressesNum; ++i)
         {
-            mInterpreter.OutputIp6Address(addresses[i]);
+            OutputIp6Address(addresses[i]);
             if (i < addressesNum - 1)
             {
-                mInterpreter.OutputFormat(", ");
+                OutputFormat(", ");
             }
         }
 
-        mInterpreter.OutputFormat("]\r\n");
+        OutputFormat("]\r\n");
     }
 
 exit:
@@ -199,17 +230,17 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
 
     addresses = otSrpServerHostGetAddresses(aHost, &addressesNum);
 
-    mInterpreter.OutputFormat("[");
+    OutputFormat("[");
     for (uint8_t i = 0; i < addressesNum; ++i)
     {
         if (i != 0)
         {
-            mInterpreter.OutputFormat(", ");
+            OutputFormat(", ");
         }
 
-        mInterpreter.OutputIp6Address(addresses[i]);
+        OutputIp6Address(addresses[i]);
     }
-    mInterpreter.OutputFormat("]");
+    OutputFormat("]");
 }
 
 otError SrpServer::ProcessService(Arg aArgs[])
@@ -222,7 +253,7 @@ otError SrpServer::ProcessService(Arg aArgs[])
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    while ((host = otSrpServerGetNextHost(mInterpreter.mInstance, host)) != nullptr)
+    while ((host = otSrpServerGetNextHost(GetInstancePtr(), host)) != nullptr)
     {
         const otSrpServerService *service = nullptr;
 
@@ -236,15 +267,15 @@ otError SrpServer::ProcessService(Arg aArgs[])
             uint16_t                  txtDataLength;
             bool                      hasSubType = false;
 
-            mInterpreter.OutputLine("%s", instanceName);
-            mInterpreter.OutputLine(Interpreter::kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
+            OutputLine("%s", instanceName);
+            OutputLine(kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
 
             if (isDeleted)
             {
                 continue;
             }
 
-            mInterpreter.OutputFormat(Interpreter::kIndentSize, "subtypes: ");
+            OutputFormat(kIndentSize, "subtypes: ");
 
             while ((subService = otSrpServerHostFindNextService(
                         host, subService, (OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE | OT_SRP_SERVER_SERVICE_FLAG_ACTIVE),
@@ -253,27 +284,47 @@ otError SrpServer::ProcessService(Arg aArgs[])
                 char subLabel[OT_DNS_MAX_LABEL_SIZE];
 
                 IgnoreError(otSrpServerServiceGetServiceSubTypeLabel(subService, subLabel, sizeof(subLabel)));
-                mInterpreter.OutputFormat("%s%s", hasSubType ? "," : "", subLabel);
+                OutputFormat("%s%s", hasSubType ? "," : "", subLabel);
                 hasSubType = true;
             }
 
-            mInterpreter.OutputLine(hasSubType ? "" : "(null)");
+            OutputLine(hasSubType ? "" : "(null)");
 
-            mInterpreter.OutputLine(Interpreter::kIndentSize, "port: %hu", otSrpServerServiceGetPort(service));
-            mInterpreter.OutputLine(Interpreter::kIndentSize, "priority: %hu", otSrpServerServiceGetPriority(service));
-            mInterpreter.OutputLine(Interpreter::kIndentSize, "weight: %hu", otSrpServerServiceGetWeight(service));
+            OutputLine(kIndentSize, "port: %hu", otSrpServerServiceGetPort(service));
+            OutputLine(kIndentSize, "priority: %hu", otSrpServerServiceGetPriority(service));
+            OutputLine(kIndentSize, "weight: %hu", otSrpServerServiceGetWeight(service));
 
             txtData = otSrpServerServiceGetTxtData(service, &txtDataLength);
-            mInterpreter.OutputFormat(Interpreter::kIndentSize, "TXT: ");
-            mInterpreter.OutputDnsTxtData(txtData, txtDataLength);
-            mInterpreter.OutputLine("");
+            OutputFormat(kIndentSize, "TXT: ");
+            OutputDnsTxtData(txtData, txtDataLength);
+            OutputLine("");
 
-            mInterpreter.OutputLine(Interpreter::kIndentSize, "host: %s", otSrpServerHostGetFullName(host));
+            OutputLine(kIndentSize, "host: %s", otSrpServerHostGetFullName(host));
 
-            mInterpreter.OutputFormat(Interpreter::kIndentSize, "addresses: ");
+            OutputFormat(kIndentSize, "addresses: ");
             OutputHostAddresses(host);
-            mInterpreter.OutputLine("");
+            OutputLine("");
         }
+    }
+
+exit:
+    return error;
+}
+
+otError SrpServer::ProcessSeqNum(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%u", otSrpServerGetAnycastModeSequenceNumber(GetInstancePtr()));
+    }
+    else
+    {
+        uint8_t sequenceNumber;
+
+        SuccessOrExit(error = aArgs[0].ParseAsUint8(sequenceNumber));
+        error = otSrpServerSetAnycastModeSequenceNumber(GetInstancePtr(), sequenceNumber);
     }
 
 exit:
@@ -286,7 +337,7 @@ otError SrpServer::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;

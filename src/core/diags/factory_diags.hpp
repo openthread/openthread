@@ -159,7 +159,7 @@ private:
 
     static const struct Command sCommands[];
 
-#if !OPENTHREAD_RADIO
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || (OPENTHREAD_RADIO && OPENTHREAD_RADIO_CLI)
     Stats mStats;
 
     otRadioFrame *mTxPacket;

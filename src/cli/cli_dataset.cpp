@@ -52,73 +52,68 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        mInterpreter.OutputLine("Pending Timestamp: %lu", aDataset.mPendingTimestamp);
+        OutputLine("Pending Timestamp: %lu", aDataset.mPendingTimestamp);
     }
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        mInterpreter.OutputLine("Active Timestamp: %lu", aDataset.mActiveTimestamp);
+        OutputLine("Active Timestamp: %lu", aDataset.mActiveTimestamp);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
     {
-        mInterpreter.OutputLine("Channel: %d", aDataset.mChannel);
+        OutputLine("Channel: %d", aDataset.mChannel);
     }
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
     {
-        mInterpreter.OutputLine("Channel Mask: 0x%08x", aDataset.mChannelMask);
+        OutputLine("Channel Mask: 0x%08x", aDataset.mChannelMask);
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        mInterpreter.OutputLine("Delay: %d", aDataset.mDelay);
+        OutputLine("Delay: %d", aDataset.mDelay);
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
     {
-        mInterpreter.OutputFormat("Ext PAN ID: ");
-        mInterpreter.OutputBytes(aDataset.mExtendedPanId.m8);
-        mInterpreter.OutputLine("");
+        OutputFormat("Ext PAN ID: ");
+        OutputBytesLine(aDataset.mExtendedPanId.m8);
     }
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
-        mInterpreter.OutputFormat("Mesh Local Prefix: ");
-        mInterpreter.OutputPrefix(aDataset.mMeshLocalPrefix);
-        mInterpreter.OutputLine("");
+        OutputFormat("Mesh Local Prefix: ");
+        OutputIp6PrefixLine(aDataset.mMeshLocalPrefix);
     }
 
     if (aDataset.mComponents.mIsNetworkKeyPresent)
     {
-        mInterpreter.OutputFormat("Network Key: ");
-        mInterpreter.OutputBytes(aDataset.mNetworkKey.m8);
-        mInterpreter.OutputLine("");
+        OutputFormat("Network Key: ");
+        OutputBytesLine(aDataset.mNetworkKey.m8);
     }
 
     if (aDataset.mComponents.mIsNetworkNamePresent)
     {
-        mInterpreter.OutputFormat("Network Name: ");
-        mInterpreter.OutputLine("%s", aDataset.mNetworkName.m8);
+        OutputFormat("Network Name: ");
+        OutputLine("%s", aDataset.mNetworkName.m8);
     }
 
     if (aDataset.mComponents.mIsPanIdPresent)
     {
-        mInterpreter.OutputLine("PAN ID: 0x%04x", aDataset.mPanId);
+        OutputLine("PAN ID: 0x%04x", aDataset.mPanId);
     }
 
     if (aDataset.mComponents.mIsPskcPresent)
     {
-        mInterpreter.OutputFormat("PSKc: ");
-        mInterpreter.OutputBytes(aDataset.mPskc.m8);
-        mInterpreter.OutputLine("");
+        OutputFormat("PSKc: ");
+        OutputBytesLine(aDataset.mPskc.m8);
     }
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
     {
-        mInterpreter.OutputFormat("Security Policy: ");
+        OutputFormat("Security Policy: ");
         OutputSecurityPolicy(aDataset.mSecurityPolicy);
-        mInterpreter.OutputLine("");
     }
 
     return OT_ERROR_NONE;
@@ -149,7 +144,7 @@ otError Dataset::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -161,16 +156,16 @@ otError Dataset::ProcessInit(Arg aArgs[])
 
     if (aArgs[0] == "active")
     {
-        error = otDatasetGetActive(mInterpreter.mInstance, &sDataset);
+        error = otDatasetGetActive(GetInstancePtr(), &sDataset);
     }
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetGetPending(mInterpreter.mInstance, &sDataset);
+        error = otDatasetGetPending(GetInstancePtr(), &sDataset);
     }
 #if OPENTHREAD_FTD
     else if (aArgs[0] == "new")
     {
-        error = otDatasetCreateNewNetwork(mInterpreter.mInstance, &sDataset);
+        error = otDatasetCreateNewNetwork(GetInstancePtr(), &sDataset);
     }
 #endif
     else if (aArgs[0] == "tlvs")
@@ -196,16 +191,15 @@ otError Dataset::ProcessActive(Arg aArgs[])
     {
         otOperationalDataset dataset;
 
-        SuccessOrExit(error = otDatasetGetActive(mInterpreter.mInstance, &dataset));
+        SuccessOrExit(error = otDatasetGetActive(GetInstancePtr(), &dataset));
         error = Print(dataset);
     }
     else if (aArgs[0] == "-x")
     {
         otOperationalDatasetTlvs dataset;
 
-        SuccessOrExit(error = otDatasetGetActiveTlvs(mInterpreter.mInstance, &dataset));
-        mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
-        mInterpreter.OutputLine("");
+        SuccessOrExit(error = otDatasetGetActiveTlvs(GetInstancePtr(), &dataset));
+        OutputBytesLine(dataset.mTlvs, dataset.mLength);
     }
 
 exit:
@@ -220,16 +214,15 @@ otError Dataset::ProcessPending(Arg aArgs[])
     {
         otOperationalDataset dataset;
 
-        SuccessOrExit(error = otDatasetGetPending(mInterpreter.mInstance, &dataset));
+        SuccessOrExit(error = otDatasetGetPending(GetInstancePtr(), &dataset));
         error = Print(dataset);
     }
     else if (aArgs[0] == "-x")
     {
         otOperationalDatasetTlvs dataset;
 
-        SuccessOrExit(error = otDatasetGetPendingTlvs(mInterpreter.mInstance, &dataset));
-        mInterpreter.OutputBytes(dataset.mTlvs, dataset.mLength);
-        mInterpreter.OutputLine("");
+        SuccessOrExit(error = otDatasetGetPendingTlvs(GetInstancePtr(), &dataset));
+        OutputBytesLine(dataset.mTlvs, dataset.mLength);
     }
 
 exit:
@@ -244,7 +237,7 @@ otError Dataset::ProcessActiveTimestamp(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsActiveTimestampPresent)
         {
-            mInterpreter.OutputLine("%lu", sDataset.mActiveTimestamp);
+            OutputLine("%lu", sDataset.mActiveTimestamp);
         }
     }
     else
@@ -265,7 +258,7 @@ otError Dataset::ProcessChannel(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsChannelPresent)
         {
-            mInterpreter.OutputLine("%d", sDataset.mChannel);
+            OutputLine("%d", sDataset.mChannel);
         }
     }
     else
@@ -286,7 +279,7 @@ otError Dataset::ProcessChannelMask(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsChannelMaskPresent)
         {
-            mInterpreter.OutputLine("0x%08x", sDataset.mChannelMask);
+            OutputLine("0x%08x", sDataset.mChannelMask);
         }
     }
     else
@@ -313,11 +306,11 @@ otError Dataset::ProcessCommit(Arg aArgs[])
 
     if (aArgs[0] == "active")
     {
-        error = otDatasetSetActive(mInterpreter.mInstance, &sDataset);
+        error = otDatasetSetActive(GetInstancePtr(), &sDataset);
     }
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSetPending(mInterpreter.mInstance, &sDataset);
+        error = otDatasetSetPending(GetInstancePtr(), &sDataset);
     }
 
     return error;
@@ -331,7 +324,7 @@ otError Dataset::ProcessDelay(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsDelayPresent)
         {
-            mInterpreter.OutputLine("%d", sDataset.mDelay);
+            OutputLine("%d", sDataset.mDelay);
         }
     }
     else
@@ -352,8 +345,7 @@ otError Dataset::ProcessExtPanId(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsExtendedPanIdPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mExtendedPanId.m8);
-            mInterpreter.OutputLine("");
+            OutputBytesLine(sDataset.mExtendedPanId.m8);
         }
     }
     else
@@ -374,9 +366,8 @@ otError Dataset::ProcessMeshLocalPrefix(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsMeshLocalPrefixPresent)
         {
-            mInterpreter.OutputFormat("Mesh Local Prefix: ");
-            mInterpreter.OutputPrefix(sDataset.mMeshLocalPrefix);
-            mInterpreter.OutputLine("");
+            OutputFormat("Mesh Local Prefix: ");
+            OutputIp6PrefixLine(sDataset.mMeshLocalPrefix);
         }
     }
     else
@@ -401,8 +392,7 @@ otError Dataset::ProcessNetworkKey(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsNetworkKeyPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mNetworkKey.m8);
-            mInterpreter.OutputLine("");
+            OutputBytesLine(sDataset.mNetworkKey.m8);
         }
     }
     else
@@ -423,7 +413,7 @@ otError Dataset::ProcessNetworkName(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsNetworkNamePresent)
         {
-            mInterpreter.OutputLine("%s", sDataset.mNetworkName.m8);
+            OutputLine("%s", sDataset.mNetworkName.m8);
         }
     }
     else
@@ -444,7 +434,7 @@ otError Dataset::ProcessPanId(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsPanIdPresent)
         {
-            mInterpreter.OutputLine("0x%04x", sDataset.mPanId);
+            OutputLine("0x%04x", sDataset.mPanId);
         }
     }
     else
@@ -465,7 +455,7 @@ otError Dataset::ProcessPendingTimestamp(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsPendingTimestampPresent)
         {
-            mInterpreter.OutputLine("%lu", sDataset.mPendingTimestamp);
+            OutputLine("%lu", sDataset.mPendingTimestamp);
         }
     }
     else
@@ -576,12 +566,12 @@ otError Dataset::ProcessMgmtSetCommand(Arg aArgs[])
 
     if (aArgs[0] == "active")
     {
-        error = otDatasetSendMgmtActiveSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
+        error = otDatasetSendMgmtActiveSet(GetInstancePtr(), &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
                                            /* aContext */ nullptr);
     }
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSendMgmtPendingSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
+        error = otDatasetSendMgmtPendingSet(GetInstancePtr(), &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
                                             /* aContext */ nullptr);
     }
     else
@@ -669,12 +659,12 @@ otError Dataset::ProcessMgmtGetCommand(Arg aArgs[])
 
     if (aArgs[0] == "active")
     {
-        error = otDatasetSendMgmtActiveGet(mInterpreter.mInstance, &datasetComponents, tlvs, tlvsLength,
+        error = otDatasetSendMgmtActiveGet(GetInstancePtr(), &datasetComponents, tlvs, tlvsLength,
                                            destAddrSpecified ? &address : nullptr);
     }
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSendMgmtPendingGet(mInterpreter.mInstance, &datasetComponents, tlvs, tlvsLength,
+        error = otDatasetSendMgmtPendingGet(GetInstancePtr(), &datasetComponents, tlvs, tlvsLength,
                                             destAddrSpecified ? &address : nullptr);
     }
     else
@@ -692,10 +682,11 @@ otError Dataset::ProcessPskc(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
+        // sDataset holds the key as a literal string, we don't
+        // need to export it from PSA ITS.
         if (sDataset.mComponents.mIsPskcPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mPskc.m8);
-            mInterpreter.OutputLine("");
+            OutputBytesLine(sDataset.mPskc.m8);
         }
     }
     else
@@ -710,9 +701,9 @@ otError Dataset::ProcessPskc(Arg aArgs[])
                     aArgs[1].GetCString(),
                     (sDataset.mComponents.mIsNetworkNamePresent
                          ? &sDataset.mNetworkName
-                         : reinterpret_cast<const otNetworkName *>(otThreadGetNetworkName(mInterpreter.mInstance))),
+                         : reinterpret_cast<const otNetworkName *>(otThreadGetNetworkName(GetInstancePtr()))),
                     (sDataset.mComponents.mIsExtendedPanIdPresent ? &sDataset.mExtendedPanId
-                                                                  : otThreadGetExtendedPanId(mInterpreter.mInstance)),
+                                                                  : otThreadGetExtendedPanId(GetInstancePtr())),
                     &sDataset.mPskc));
         }
         else
@@ -730,52 +721,54 @@ exit:
 
 void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
 {
-    mInterpreter.OutputFormat("%d ", aSecurityPolicy.mRotationTime);
+    OutputFormat("%d ", aSecurityPolicy.mRotationTime);
 
     if (aSecurityPolicy.mObtainNetworkKeyEnabled)
     {
-        mInterpreter.OutputFormat("o");
+        OutputFormat("o");
     }
 
     if (aSecurityPolicy.mNativeCommissioningEnabled)
     {
-        mInterpreter.OutputFormat("n");
+        OutputFormat("n");
     }
 
     if (aSecurityPolicy.mRoutersEnabled)
     {
-        mInterpreter.OutputFormat("r");
+        OutputFormat("r");
     }
 
     if (aSecurityPolicy.mExternalCommissioningEnabled)
     {
-        mInterpreter.OutputFormat("c");
+        OutputFormat("c");
     }
 
     if (aSecurityPolicy.mBeaconsEnabled)
     {
-        mInterpreter.OutputFormat("b");
+        OutputFormat("b");
     }
 
     if (aSecurityPolicy.mCommercialCommissioningEnabled)
     {
-        mInterpreter.OutputFormat("C");
+        OutputFormat("C");
     }
 
     if (aSecurityPolicy.mAutonomousEnrollmentEnabled)
     {
-        mInterpreter.OutputFormat("e");
+        OutputFormat("e");
     }
 
     if (aSecurityPolicy.mNetworkKeyProvisioningEnabled)
     {
-        mInterpreter.OutputFormat("p");
+        OutputFormat("p");
     }
 
     if (aSecurityPolicy.mNonCcmRoutersEnabled)
     {
-        mInterpreter.OutputFormat("R");
+        OutputFormat("R");
     }
+
+    OutputLine("");
 }
 
 otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs)
@@ -855,7 +848,6 @@ otError Dataset::ProcessSecurityPolicy(Arg aArgs[])
         if (sDataset.mComponents.mIsSecurityPolicyPresent)
         {
             OutputSecurityPolicy(sDataset.mSecurityPolicy);
-            mInterpreter.OutputLine("");
         }
     }
     else
@@ -901,10 +893,10 @@ otError Dataset::ProcessSet(Arg aArgs[])
         switch (datasetType)
         {
         case MeshCoP::Dataset::Type::kActive:
-            SuccessOrExit(error = otDatasetSetActive(mInterpreter.mInstance, &datasetInfo));
+            SuccessOrExit(error = otDatasetSetActive(GetInstancePtr(), &datasetInfo));
             break;
         case MeshCoP::Dataset::Type::kPending:
-            SuccessOrExit(error = otDatasetSetPending(mInterpreter.mInstance, &datasetInfo));
+            SuccessOrExit(error = otDatasetSetPending(GetInstancePtr(), &datasetInfo));
             break;
         }
     }
@@ -921,15 +913,15 @@ otError Dataset::ProcessUpdater(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        mInterpreter.OutputEnabledDisabledStatus(otDatasetUpdaterIsUpdateOngoing(mInterpreter.mInstance));
+        OutputEnabledDisabledStatus(otDatasetUpdaterIsUpdateOngoing(GetInstancePtr()));
     }
     else if (aArgs[0] == "start")
     {
-        error = otDatasetUpdaterRequestUpdate(mInterpreter.mInstance, &sDataset, &Dataset::HandleDatasetUpdater, this);
+        error = otDatasetUpdaterRequestUpdate(GetInstancePtr(), &sDataset, &Dataset::HandleDatasetUpdater, this);
     }
     else if (aArgs[0] == "cancel")
     {
-        otDatasetUpdaterCancelUpdate(mInterpreter.mInstance);
+        otDatasetUpdaterCancelUpdate(GetInstancePtr());
     }
     else
     {
@@ -946,7 +938,7 @@ void Dataset::HandleDatasetUpdater(otError aError, void *aContext)
 
 void Dataset::HandleDatasetUpdater(otError aError)
 {
-    mInterpreter.OutputLine("Dataset update complete: %s", otThreadErrorToString(aError));
+    OutputLine("Dataset update complete: %s", otThreadErrorToString(aError));
 }
 
 #endif // OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD

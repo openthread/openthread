@@ -231,10 +231,11 @@ exit:
 
 otError Decoder::ReadIp6Address(spinel_ipv6addr_t &aIp6Addr)
 {
-    otError                  error = OT_ERROR_NONE;
-    const spinel_ipv6addr_t *ipv6AddrPtr;
+    otError                  error       = OT_ERROR_NONE;
+    const spinel_ipv6addr_t *ipv6AddrPtr = nullptr;
 
     SuccessOrExit(error = ReadIp6Address(ipv6AddrPtr));
+    VerifyOrExit(ipv6AddrPtr != nullptr, error = OT_ERROR_PARSE);
     aIp6Addr = *ipv6AddrPtr;
 
 exit:
@@ -243,10 +244,11 @@ exit:
 
 otError Decoder::ReadIp6Address(otIp6Address &aIp6Addr)
 {
-    otError             error = OT_ERROR_NONE;
-    const otIp6Address *ipv6AddrPtr;
+    otError             error       = OT_ERROR_NONE;
+    const otIp6Address *ipv6AddrPtr = nullptr;
 
     SuccessOrExit(error = ReadIp6Address(ipv6AddrPtr));
+    VerifyOrExit(ipv6AddrPtr != nullptr, error = OT_ERROR_PARSE);
     aIp6Addr = *ipv6AddrPtr;
 
 exit:
@@ -255,10 +257,11 @@ exit:
 
 otError Decoder::ReadEui64(spinel_eui64_t &aEui64)
 {
-    otError               error = OT_ERROR_NONE;
-    const spinel_eui64_t *eui64Ptr;
+    otError               error    = OT_ERROR_NONE;
+    const spinel_eui64_t *eui64Ptr = nullptr;
 
     SuccessOrExit(error = ReadEui64(eui64Ptr));
+    VerifyOrExit(eui64Ptr != nullptr, error = OT_ERROR_PARSE);
     aEui64 = *eui64Ptr;
 
 exit:
@@ -267,10 +270,11 @@ exit:
 
 otError Decoder::ReadEui64(otExtAddress &aEui64)
 {
-    otError             error = OT_ERROR_NONE;
-    const otExtAddress *eui64Ptr;
+    otError             error    = OT_ERROR_NONE;
+    const otExtAddress *eui64Ptr = nullptr;
 
     SuccessOrExit(error = ReadEui64(eui64Ptr));
+    VerifyOrExit(eui64Ptr != nullptr, error = OT_ERROR_PARSE);
     aEui64 = *eui64Ptr;
 
 exit:
@@ -279,10 +283,11 @@ exit:
 
 otError Decoder::ReadEui48(spinel_eui48_t &aEui48)
 {
-    otError               error = OT_ERROR_NONE;
-    const spinel_eui48_t *eui48Ptr;
+    otError               error    = OT_ERROR_NONE;
+    const spinel_eui48_t *eui48Ptr = nullptr;
 
     SuccessOrExit(error = ReadEui48(eui48Ptr));
+    VerifyOrExit(eui48Ptr != nullptr, error = OT_ERROR_PARSE);
     aEui48 = *eui48Ptr;
 
 exit:

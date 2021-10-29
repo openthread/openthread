@@ -38,9 +38,12 @@
 
 #include <stdint.h>
 
-#include <mbedtls/md.h>
+#include <openthread/platform/crypto.h>
 
+#include "common/code_utils.hpp"
+#include "crypto/context_size.hpp"
 #include "crypto/sha256.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 
@@ -83,11 +86,10 @@ public:
     /**
      * This method sets the key and starts the HMAC computation.
      *
-     * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bytes.
+     * @param[in]  aKey      The key to use.
      *
      */
-    void Start(const uint8_t *aKey, uint16_t aKeyLength);
+    void Start(const Key &aKey);
 
     /**
      * This method inputs bytes into the HMAC computation.
@@ -131,7 +133,8 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    mbedtls_md_context_t mContext;
+    otCryptoContext mContext;
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHmacSha256ContextSize, uint64_t);
 };
 
 /**

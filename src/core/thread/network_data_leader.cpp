@@ -53,35 +53,29 @@
 namespace ot {
 namespace NetworkData {
 
-LeaderBase::LeaderBase(Instance &aInstance)
-    : NetworkData(aInstance, kTypeLeader)
-{
-    Reset();
-}
-
 void LeaderBase::Reset(void)
 {
     mVersion       = Random::NonCrypto::GetUint8();
     mStableVersion = Random::NonCrypto::GetUint8();
-    mLength        = 0;
+    SetLength(0);
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 }
 
-Error LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
-                               const uint8_t *aServiceData,
-                               uint8_t        aServiceDataLength,
-                               bool           aServerStable,
-                               uint8_t &      aServiceId) const
+Error LeaderBase::GetServiceId(uint32_t           aEnterpriseNumber,
+                               const ServiceData &aServiceData,
+                               bool               aServerStable,
+                               uint8_t &          aServiceId) const
 {
     Error         error    = kErrorNotFound;
     Iterator      iterator = kIteratorInit;
     ServiceConfig serviceConfig;
+    ServiceData   serviceData;
 
     while (GetNextService(iterator, serviceConfig) == kErrorNone)
     {
-        if (aEnterpriseNumber == serviceConfig.mEnterpriseNumber &&
-            aServiceDataLength == serviceConfig.mServiceDataLength &&
-            memcmp(aServiceData, serviceConfig.mServiceData, aServiceDataLength) == 0 &&
+        serviceConfig.GetServiceData(serviceData);
+
+        if (aEnterpriseNumber == serviceConfig.mEnterpriseNumber && aServiceData == serviceData &&
             aServerStable == serviceConfig.mServerConfig.mStable)
         {
             aServiceId = serviceConfig.mServiceId;
@@ -362,16 +356,16 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
 
     SuccessOrExit(error = aMessage.Read(aMessageOffset, tlv));
 
-    length = aMessage.ReadBytes(aMessageOffset + sizeof(tlv), mTlvs, tlv.GetLength());
+    length = aMessage.ReadBytes(aMessageOffset + sizeof(tlv), GetBytes(), tlv.GetLength());
     VerifyOrExit(length == tlv.GetLength(), error = kErrorParse);
 
-    mLength        = tlv.GetLength();
+    SetLength(tlv.GetLength());
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 
     if (aStableOnly)
     {
-        RemoveTemporaryData(mTlvs, mLength);
+        RemoveTemporaryData();
     }
 
 #if OPENTHREAD_FTD
@@ -382,7 +376,7 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
     }
 #endif
 
-    otDumpDebgNetData("set network data", mTlvs, mLength);
+    otDumpDebgNetData("SetNetworkData", GetBytes(), GetLength());
 
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 

@@ -55,6 +55,7 @@
 #include "posix/platform/udp.hpp"
 
 otInstance *gInstance = nullptr;
+bool        gDryRun   = false;
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
@@ -122,6 +123,10 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 {
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
+
+    // For Dry-Run option, only init the radio.
+    VerifyOrExit(!aPlatformConfig->mDryRun);
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelInit(getTrelRadioUrl(aPlatformConfig));
 #endif
@@ -148,6 +153,9 @@ void platformInit(otPlatformConfig *aPlatformConfig)
     ot::Posix::Udp::Get().Init(aPlatformConfig->mInterfaceName);
 #endif
 #endif
+
+exit:
+    return;
 }
 
 void platformSetUp(void)
@@ -183,6 +191,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
     platformInit(aPlatformConfig);
 
+    gDryRun   = aPlatformConfig->mDryRun;
     gInstance = otInstanceInitSingle();
     OT_ASSERT(gInstance != nullptr);
 
@@ -377,3 +386,8 @@ void otPlatOtnsStatus(const char *aStatus)
 }
 
 #endif
+
+bool IsSystemDryRun(void)
+{
+    return gDryRun;
+}

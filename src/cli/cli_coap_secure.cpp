@@ -48,8 +48,8 @@ namespace Cli {
 
 constexpr CoapSecure::Command CoapSecure::sCommands[];
 
-CoapSecure::CoapSecure(Interpreter &aInterpreter)
-    : mInterpreter(aInterpreter)
+CoapSecure::CoapSecure(Output &aOutput)
+    : OutputWrapper(aOutput)
     , mShutdownFlag(false)
     , mUseCertificate(false)
     , mPskLength(0)
@@ -66,7 +66,7 @@ CoapSecure::CoapSecure(Interpreter &aInterpreter)
     mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 }
 
-void CoapSecure::PrintPayload(otMessage *aMessage) const
+void CoapSecure::PrintPayload(otMessage *aMessage)
 {
     uint8_t  buf[kMaxBufferSize];
     uint16_t bytesToPrint;
@@ -75,21 +75,21 @@ void CoapSecure::PrintPayload(otMessage *aMessage) const
 
     if (length > 0)
     {
-        mInterpreter.OutputFormat(" with payload: ");
+        OutputFormat(" with payload: ");
 
         while (length > 0)
         {
             bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
             otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, buf, bytesToPrint);
 
-            mInterpreter.OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
+            OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
 
             length -= bytesToPrint;
             bytesPrinted += bytesToPrint;
         }
     }
 
-    mInterpreter.OutputLine("");
+    OutputLine("");
 }
 
 otError CoapSecure::ProcessHelp(Arg aArgs[])
@@ -98,7 +98,7 @@ otError CoapSecure::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -128,14 +128,14 @@ otError CoapSecure::ProcessResource(Arg aArgs[])
 
         strncpy(mUriPath, aArgs[0].GetCString(), sizeof(mUriPath) - 1);
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        otCoapSecureAddBlockWiseResource(mInterpreter.mInstance, &mResource);
+        otCoapSecureAddBlockWiseResource(GetInstancePtr(), &mResource);
 #else
-        otCoapSecureAddResource(mInterpreter.mInstance, &mResource);
+        otCoapSecureAddResource(GetInstancePtr(), &mResource);
 #endif
     }
     else
     {
-        mInterpreter.OutputLine("%s", mResource.mUriPath != nullptr ? mResource.mUriPath : "");
+        OutputLine("%s", mResource.mUriPath != nullptr ? mResource.mUriPath : "");
     }
 
 exit:
@@ -154,7 +154,7 @@ otError CoapSecure::ProcessSet(Arg aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine("%s", mResourceContent);
+        OutputLine("%s", mResourceContent);
     }
 
 exit:
@@ -178,14 +178,14 @@ otError CoapSecure::ProcessStart(Arg aArgs[])
         }
     }
 
-    otCoapSecureSetSslAuthMode(mInterpreter.mInstance, verifyPeerCert);
-    otCoapSecureSetClientConnectedCallback(mInterpreter.mInstance, &CoapSecure::HandleConnected, this);
+    otCoapSecureSetSslAuthMode(GetInstancePtr(), verifyPeerCert);
+    otCoapSecureSetClientConnectedCallback(GetInstancePtr(), &CoapSecure::HandleConnected, this);
 
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
-    otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecure::DefaultHandler, this);
+    otCoapSecureSetDefaultHandler(GetInstancePtr(), &CoapSecure::DefaultHandler, this);
 #endif
 
-    error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT);
+    error = otCoapSecureStart(GetInstancePtr(), OT_DEFAULT_COAP_SECURE_PORT);
 
 exit:
     return error;
@@ -196,14 +196,14 @@ otError CoapSecure::ProcessStop(Arg aArgs[])
     OT_UNUSED_VARIABLE(aArgs);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    otCoapRemoveBlockWiseResource(mInterpreter.mInstance, &mResource);
+    otCoapRemoveBlockWiseResource(GetInstancePtr(), &mResource);
 #else
-    otCoapRemoveResource(mInterpreter.mInstance, &mResource);
+    otCoapRemoveResource(GetInstancePtr(), &mResource);
 #endif
 
-    if (otCoapSecureIsConnectionActive(mInterpreter.mInstance))
+    if (otCoapSecureIsConnectionActive(GetInstancePtr()))
     {
-        otCoapSecureDisconnect(mInterpreter.mInstance);
+        otCoapSecureDisconnect(GetInstancePtr());
         mShutdownFlag = true;
     }
     else
@@ -305,7 +305,7 @@ otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     }
 
-    message = otCoapNewMessage(mInterpreter.mInstance, nullptr);
+    message = otCoapNewMessage(GetInstancePtr(), nullptr);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     otCoapMessageInit(message, coapType, aCoapCode);
@@ -358,20 +358,20 @@ otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
         if (coapBlock)
         {
             error =
-                otCoapSecureSendRequestBlockWise(mInterpreter.mInstance, message, &CoapSecure::HandleResponse, this,
+                otCoapSecureSendRequestBlockWise(GetInstancePtr(), message, &CoapSecure::HandleResponse, this,
                                                  &CoapSecure::BlockwiseTransmitHook, &CoapSecure::BlockwiseReceiveHook);
         }
         else
         {
 #endif
-            error = otCoapSecureSendRequest(mInterpreter.mInstance, message, &CoapSecure::HandleResponse, this);
+            error = otCoapSecureSendRequest(GetInstancePtr(), message, &CoapSecure::HandleResponse, this);
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         }
 #endif
     }
     else
     {
-        error = otCoapSecureSendRequest(mInterpreter.mInstance, message, nullptr, nullptr);
+        error = otCoapSecureSendRequest(GetInstancePtr(), message, nullptr, nullptr);
     }
 
 exit:
@@ -398,7 +398,7 @@ otError CoapSecure::ProcessConnect(Arg aArgs[])
         SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     }
 
-    SuccessOrExit(error = otCoapSecureConnect(mInterpreter.mInstance, &sockaddr, &CoapSecure::HandleConnected, this));
+    SuccessOrExit(error = otCoapSecureConnect(GetInstancePtr(), &sockaddr, &CoapSecure::HandleConnected, this));
 
 exit:
     return error;
@@ -408,7 +408,7 @@ otError CoapSecure::ProcessDisconnect(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otCoapSecureDisconnect(mInterpreter.mInstance);
+    otCoapSecureDisconnect(GetInstancePtr());
 
     return OT_ERROR_NONE;
 }
@@ -431,7 +431,7 @@ otError CoapSecure::ProcessPsk(Arg aArgs[])
     mPskIdLength = static_cast<uint8_t>(length);
     memcpy(mPskId, aArgs[1].GetCString(), mPskIdLength);
 
-    otCoapSecureSetPsk(mInterpreter.mInstance, mPsk, mPskLength, mPskId, mPskIdLength);
+    otCoapSecureSetPsk(GetInstancePtr(), mPsk, mPskLength, mPskId, mPskIdLength);
     mUseCertificate = false;
 
 exit:
@@ -444,11 +444,11 @@ otError CoapSecure::ProcessX509(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otCoapSecureSetCertificate(mInterpreter.mInstance, reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_X509_CERT),
+    otCoapSecureSetCertificate(GetInstancePtr(), reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_X509_CERT),
                                sizeof(OT_CLI_COAPS_X509_CERT), reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_PRIV_KEY),
                                sizeof(OT_CLI_COAPS_PRIV_KEY));
 
-    otCoapSecureSetCaCertificateChain(mInterpreter.mInstance,
+    otCoapSecureSetCaCertificateChain(GetInstancePtr(),
                                       reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE),
                                       sizeof(OT_CLI_COAPS_TRUSTED_ROOT_CERTIFICATE));
     mUseCertificate = true;
@@ -480,11 +480,11 @@ exit:
 void CoapSecure::Stop(void)
 {
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    otCoapRemoveBlockWiseResource(mInterpreter.mInstance, &mResource);
+    otCoapRemoveBlockWiseResource(GetInstancePtr(), &mResource);
 #else
-    otCoapRemoveResource(mInterpreter.mInstance, &mResource);
+    otCoapRemoveResource(GetInstancePtr(), &mResource);
 #endif
-    otCoapSecureStop(mInterpreter.mInstance);
+    otCoapSecureStop(GetInstancePtr());
 }
 
 void CoapSecure::HandleConnected(bool aConnected, void *aContext)
@@ -496,11 +496,11 @@ void CoapSecure::HandleConnected(bool aConnected)
 {
     if (aConnected)
     {
-        mInterpreter.OutputLine("coaps connected");
+        OutputLine("coaps connected");
     }
     else
     {
-        mInterpreter.OutputLine("coaps disconnected");
+        OutputLine("coaps disconnected");
 
         if (mShutdownFlag)
         {
@@ -526,14 +526,14 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
     otCoapOptionIterator iterator;
 #endif
 
-    mInterpreter.OutputFormat("coaps request from ");
-    mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
-    mInterpreter.OutputFormat(" ");
+    OutputFormat("coaps request from ");
+    OutputIp6Address(aMessageInfo->mPeerAddr);
+    OutputFormat(" ");
 
     switch (otCoapMessageGetCode(aMessage))
     {
     case OT_COAP_CODE_GET:
-        mInterpreter.OutputFormat("GET");
+        OutputFormat("GET");
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         SuccessOrExit(error = otCoapOptionIteratorInit(&iterator, aMessage));
         if (otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_BLOCK2) != nullptr)
@@ -545,19 +545,19 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
         break;
 
     case OT_COAP_CODE_DELETE:
-        mInterpreter.OutputFormat("DELETE");
+        OutputFormat("DELETE");
         break;
 
     case OT_COAP_CODE_PUT:
-        mInterpreter.OutputFormat("PUT");
+        OutputFormat("PUT");
         break;
 
     case OT_COAP_CODE_POST:
-        mInterpreter.OutputFormat("POST");
+        OutputFormat("POST");
         break;
 
     default:
-        mInterpreter.OutputLine("Undefined");
+        OutputLine("Undefined");
         return;
     }
 
@@ -575,7 +575,7 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
             responseCode = OT_COAP_CODE_VALID;
         }
 
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, nullptr);
+        responseMessage = otCoapNewMessage(GetInstancePtr(), nullptr);
         VerifyOrExit(responseMessage != nullptr, error = OT_ERROR_NO_BUFS);
 
         SuccessOrExit(
@@ -606,13 +606,13 @@ void CoapSecure::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessag
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         if (blockPresent)
         {
-            SuccessOrExit(error = otCoapSecureSendResponseBlockWise(mInterpreter.mInstance, responseMessage,
-                                                                    aMessageInfo, this, mResource.mTransmitHook));
+            SuccessOrExit(error = otCoapSecureSendResponseBlockWise(GetInstancePtr(), responseMessage, aMessageInfo,
+                                                                    this, mResource.mTransmitHook));
         }
         else
         {
 #endif
-            SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
+            SuccessOrExit(error = otCoapSecureSendResponse(GetInstancePtr(), responseMessage, aMessageInfo));
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         }
 #endif
@@ -624,13 +624,13 @@ exit:
     {
         if (responseMessage != nullptr)
         {
-            mInterpreter.OutputLine("coaps send response error %d: %s", error, otThreadErrorToString(error));
+            OutputLine("coaps send response error %d: %s", error, otThreadErrorToString(error));
             otMessageFree(responseMessage);
         }
     }
     else if (responseCode >= OT_COAP_CODE_RESPONSE_MIN)
     {
-        mInterpreter.OutputLine("coaps response sent");
+        OutputLine("coaps response sent");
     }
 }
 
@@ -645,12 +645,12 @@ void CoapSecure::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessa
 
     if (aError != OT_ERROR_NONE)
     {
-        mInterpreter.OutputLine("coaps receive response error %d: %s", aError, otThreadErrorToString(aError));
+        OutputLine("coaps receive response error %d: %s", aError, otThreadErrorToString(aError));
     }
     else
     {
-        mInterpreter.OutputFormat("coaps response from ");
-        mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
+        OutputFormat("coaps response from ");
+        OutputIp6Address(aMessageInfo->mPeerAddr);
 
         PrintPayload(aMessage);
     }
@@ -670,13 +670,13 @@ void CoapSecure::DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessa
     if ((otCoapMessageGetType(aMessage) == OT_COAP_TYPE_CONFIRMABLE) ||
         (otCoapMessageGetCode(aMessage) == OT_COAP_CODE_GET))
     {
-        responseMessage = otCoapNewMessage(mInterpreter.mInstance, nullptr);
+        responseMessage = otCoapNewMessage(GetInstancePtr(), nullptr);
         VerifyOrExit(responseMessage != nullptr, error = OT_ERROR_NO_BUFS);
 
         SuccessOrExit(error = otCoapMessageInitResponse(responseMessage, aMessage, OT_COAP_TYPE_NON_CONFIRMABLE,
                                                         OT_COAP_CODE_NOT_FOUND));
 
-        SuccessOrExit(error = otCoapSecureSendResponse(mInterpreter.mInstance, responseMessage, aMessageInfo));
+        SuccessOrExit(error = otCoapSecureSendResponse(GetInstancePtr(), responseMessage, aMessageInfo));
     }
 
 exit:
@@ -708,12 +708,11 @@ otError CoapSecure::BlockwiseReceiveHook(const uint8_t *aBlock,
     OT_UNUSED_VARIABLE(aMore);
     OT_UNUSED_VARIABLE(aTotalLength);
 
-    mInterpreter.OutputLine("received block: Num %i Len %i", aPosition / aBlockLength, aBlockLength);
+    OutputLine("received block: Num %i Len %i", aPosition / aBlockLength, aBlockLength);
 
     for (uint16_t i = 0; i < aBlockLength / 16; i++)
     {
-        mInterpreter.OutputBytes(&aBlock[i * 16], 16);
-        mInterpreter.OutputLine("");
+        OutputBytesLine(&aBlock[i * 16], 16);
     }
 
     return OT_ERROR_NONE;
@@ -736,12 +735,11 @@ otError CoapSecure::BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, u
     // Send a random payload
     otRandomNonCryptoFillBuffer(aBlock, *aBlockLength);
 
-    mInterpreter.OutputLine("send block: Num %i Len %i", blockCount, *aBlockLength);
+    OutputLine("send block: Num %i Len %i", blockCount, *aBlockLength);
 
     for (uint16_t i = 0; i < *aBlockLength / 16; i++)
     {
-        mInterpreter.OutputBytes(&aBlock[i * 16], 16);
-        mInterpreter.OutputLine("");
+        OutputBytesLine(&aBlock[i * 16], 16);
     }
 
     if (blockCount == mBlockCount - 1)

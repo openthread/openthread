@@ -64,17 +64,6 @@ bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otE
 
 void TestNetworkDataIterator(void)
 {
-    class TestNetworkData : public NetworkData
-    {
-    public:
-        TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength)
-            : NetworkData(*aInstance, kTypeLeader)
-        {
-            memcpy(mTlvs, aTlvs, aTlvsLength);
-            mLength = aTlvsLength;
-        }
-    };
-
     ot::Instance *      instance;
     Iterator            iter = kIteratorInit;
     ExternalRouteConfig config;
@@ -115,7 +104,7 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        TestNetworkData netData(instance, kNetworkData, sizeof(kNetworkData));
+        NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
         iter = OT_NETWORK_DATA_ITERATOR_INIT;
 
@@ -201,7 +190,7 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        TestNetworkData netData(instance, kNetworkData, sizeof(kNetworkData));
+        NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
         iter = OT_NETWORK_DATA_ITERATOR_INIT;
 
@@ -229,20 +218,24 @@ public:
     {
     }
 
-    template <uint8_t kSize> Error AddService(const uint8_t (&aServiceData)[kSize])
+    Error AddService(const ServiceData &aServiceData)
     {
-        return Local::AddService(ServiceTlv::kThreadEnterpriseNumber, aServiceData, kSize, true, nullptr, 0);
+        return Local::AddService(ServiceTlv::kThreadEnterpriseNumber, aServiceData, true, ServerData());
     }
 
-    template <uint8_t kSize>
-    Error ValidateServiceData(const ServiceTlv *aServiceTlv, const uint8_t (&aServiceData)[kSize]) const
+    Error ValidateServiceData(const ServiceTlv *aServiceTlv, const ServiceData &aServiceData) const
     {
-        return
+        Error       error = kErrorFailed;
+        ServiceData serviceData;
 
-            ((aServiceTlv != nullptr) && (aServiceTlv->GetServiceDataLength() == kSize) &&
-             (memcmp(aServiceTlv->GetServiceData(), aServiceData, kSize) == 0))
-                ? kErrorNone
-                : kErrorFailed;
+        VerifyOrExit(aServiceTlv != nullptr);
+        aServiceTlv->GetServiceData(serviceData);
+
+        VerifyOrExit(aServiceData == serviceData);
+        error = kErrorNone;
+
+    exit:
+        return error;
     }
 
     void Test(void)
@@ -254,52 +247,53 @@ public:
         const uint8_t kServiceData5[] = {0x02, 0xab, 0xcd};
 
         const ServiceTlv *tlv;
+        ServiceData       serviceData1;
+        ServiceData       serviceData2;
+        ServiceData       serviceData3;
+        ServiceData       serviceData4;
+        ServiceData       serviceData5;
 
-        SuccessOrQuit(AddService(kServiceData1));
-        SuccessOrQuit(AddService(kServiceData2));
-        SuccessOrQuit(AddService(kServiceData3));
-        SuccessOrQuit(AddService(kServiceData4));
-        SuccessOrQuit(AddService(kServiceData5));
+        serviceData1.InitFrom(kServiceData1);
+        serviceData2.InitFrom(kServiceData2);
+        serviceData3.InitFrom(kServiceData3);
+        serviceData4.InitFrom(kServiceData4);
+        serviceData5.InitFrom(kServiceData5);
 
-        DumpBuffer("netdata", mTlvs, mLength);
+        SuccessOrQuit(AddService(serviceData1));
+        SuccessOrQuit(AddService(serviceData2));
+        SuccessOrQuit(AddService(serviceData3));
+        SuccessOrQuit(AddService(serviceData4));
+        SuccessOrQuit(AddService(serviceData5));
+
+        DumpBuffer("netdata", GetBytes(), GetLength());
 
         // Iterate through all entries that start with { 0x02 } (kServiceData1)
         tlv = nullptr;
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
-                              kServicePrefixMatch);
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData1));
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
-                              kServicePrefixMatch);
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4));
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
-                              kServicePrefixMatch);
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5));
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
-                              kServicePrefixMatch);
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData1, kServicePrefixMatch);
+        SuccessOrQuit(ValidateServiceData(tlv, serviceData1));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData1, kServicePrefixMatch);
+        SuccessOrQuit(ValidateServiceData(tlv, serviceData4));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData1, kServicePrefixMatch);
+        SuccessOrQuit(ValidateServiceData(tlv, serviceData5));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData1, kServicePrefixMatch);
         VerifyOrQuit(tlv == nullptr, "FindNextService() returned extra TLV");
 
-        // Iterate through all entries that start with { 0xab } (kServiceData2)
+        // Iterate through all entries that start with { 0xab } (serviceData2)
         tlv = nullptr;
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2),
-                              kServicePrefixMatch);
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData2));
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2),
-                              kServicePrefixMatch);
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData3));
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2),
-                              kServicePrefixMatch);
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData2, kServicePrefixMatch);
+        SuccessOrQuit(ValidateServiceData(tlv, serviceData2));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData2, kServicePrefixMatch);
+        SuccessOrQuit(ValidateServiceData(tlv, serviceData3));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData2, kServicePrefixMatch);
         VerifyOrQuit(tlv == nullptr, "FindNextService() returned extra TLV");
 
-        // Iterate through all entries that start with kServiceData5
+        // Iterate through all entries that start with serviceData5
         tlv = nullptr;
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5),
-                              kServicePrefixMatch);
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4));
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5),
-                              kServicePrefixMatch);
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5));
-        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5),
-                              kServicePrefixMatch);
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData5, kServicePrefixMatch);
+        SuccessOrQuit(ValidateServiceData(tlv, serviceData4));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData5, kServicePrefixMatch);
+        SuccessOrQuit(ValidateServiceData(tlv, serviceData5));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, serviceData5, kServicePrefixMatch);
         VerifyOrQuit(tlv == nullptr, "FindNextService() returned extra TLV");
     }
 };
@@ -329,8 +323,8 @@ void TestNetworkDataDsnSrpServices(void)
     public:
         void Populate(const uint8_t *aTlvs, uint8_t aTlvsLength)
         {
-            memcpy(mTlvs, aTlvs, aTlvsLength);
-            mLength = aTlvsLength;
+            memcpy(GetBytes(), aTlvs, aTlvsLength);
+            SetLength(aTlvsLength);
         }
     };
 

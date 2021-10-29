@@ -116,10 +116,29 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-tools-9
+        sudo apt-get --no-install-recommends install -y clang-tools-9 ninja-build
     - name: Run
       run: |
         script/check-scan-build
+
+  mbedtls3-build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
+        rm -rf third_party/mbedtls/repo
+    - uses: actions/checkout@v2
+      with:
+        repository: ARMmbed/mbedtls
+        ref: v3.0.0
+        path: third_party/mbedtls/repo
+    - name: Build
+      run: |
+        ./script/test build
 
   arm-gcc:
     name: arm-gcc-${{ matrix.gcc_ver }}
@@ -151,7 +170,7 @@ jobs:
         cd /tmp
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        wget ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
+        wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
         # use the minimal required cmake version
         sudo pip3 install --system -U cmake==3.10.3
@@ -270,6 +289,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
+        rm -f '/usr/local/bin/2to3'
         brew update
         brew install automake m4 ninja
         [ ${{ matrix.CC }} != clang ] || brew install llvm

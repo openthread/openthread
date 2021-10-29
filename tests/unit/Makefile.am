@@ -53,6 +53,7 @@ AM_CPPFLAGS                                                         = \
     -DOPENTHREAD_FTD=1                                                \
     -DOPENTHREAD_MTD=0                                                \
     -DOPENTHREAD_RADIO=0                                              \
+    -DOPENTHREAD_RADIO_CLI=0                                          \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1            \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
@@ -113,6 +114,7 @@ check_PROGRAMS                                                     += \
     ot-test-child                                                     \
     ot-test-child-table                                               \
     ot-test-cmd-line-parser                                           \
+    ot-test-data                                                      \
     ot-test-dns                                                       \
     ot-test-ecdsa                                                     \
     ot-test-flash                                                     \
@@ -127,6 +129,7 @@ check_PROGRAMS                                                     += \
     ot-test-lowpan                                                    \
     ot-test-mac-frame                                                 \
     ot-test-macros                                                    \
+    ot-test-meshcop                                                   \
     ot-test-message                                                   \
     ot-test-message-queue                                             \
     ot-test-multicast-listeners-table                                 \
@@ -136,7 +139,6 @@ check_PROGRAMS                                                     += \
     ot-test-pool                                                      \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
-    ot-test-steering-data                                             \
     ot-test-string                                                    \
     ot-test-timer                                                     \
     $(NULL)
@@ -196,6 +198,9 @@ ot_test_child_table_SOURCES     = $(COMMON_SOURCES) test_child_table.cpp
 
 ot_test_cmd_line_parser_LDADD   = $(COMMON_LDADD)
 ot_test_cmd_line_parser_SOURCES = $(COMMON_SOURCES) test_cmd_line_parser.cpp
+
+ot_test_data_LDADD              = $(COMMON_LDADD)
+ot_test_data_SOURCES            = $(COMMON_SOURCES) test_data.cpp
 
 ot_test_dns_LDADD               = $(COMMON_LDADD)
 ot_test_dns_SOURCES             = $(COMMON_SOURCES) test_dns.cpp
@@ -272,8 +277,8 @@ ot_test_priority_queue_SOURCES  = $(COMMON_SOURCES) test_priority_queue.cpp
 ot_test_pskc_LDADD              = $(COMMON_LDADD)
 ot_test_pskc_SOURCES            = $(COMMON_SOURCES) test_pskc.cpp
 
-ot_test_steering_data_LDADD     = $(COMMON_LDADD)
-ot_test_steering_data_SOURCES   = $(COMMON_SOURCES) test_steering_data.cpp
+ot_test_meshcop_LDADD           = $(COMMON_LDADD)
+ot_test_meshcop_SOURCES         = $(COMMON_SOURCES) test_meshcop.cpp
 
 ot_test_string_LDADD            = $(COMMON_LDADD)
 ot_test_string_SOURCES          = $(COMMON_SOURCES) test_string.cpp

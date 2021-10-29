@@ -33,6 +33,7 @@
 
 #include "netif.hpp"
 
+#include "common/as_core_type.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -122,8 +123,7 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 void Netif::SubscribeAllNodesMulticast(void)
 {
     MulticastAddress *tail;
-    MulticastAddress &linkLocalAllNodesAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
+    MulticastAddress &linkLocalAllNodesAddress = AsCoreType(&AsNonConst(kLinkLocalAllNodesMulticastAddress));
 
     VerifyOrExit(!mMulticastAddresses.Contains(linkLocalAllNodesAddress));
 
@@ -145,14 +145,22 @@ void Netif::SubscribeAllNodesMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
+#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     VerifyOrExit(mAddressCallback != nullptr);
+#endif
 
     for (const MulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
     {
-        AddressInfo addressInfo(*entry);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry, kOriginThread);
 
-        mAddressCallback(&addressInfo,
-                         /* IsAdded */ true, mAddressCallbackContext);
+        if (mAddressCallback != nullptr)
+#endif
+        {
+            AddressInfo addressInfo(*entry);
+
+            mAddressCallback(&addressInfo, kAddressAdded, mAddressCallbackContext);
+        }
     }
 
 exit:
@@ -162,8 +170,7 @@ exit:
 void Netif::UnsubscribeAllNodesMulticast(void)
 {
     MulticastAddress *      prev;
-    const MulticastAddress &linkLocalAllNodesAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
+    const MulticastAddress &linkLocalAllNodesAddress = AsCoreType(&AsNonConst(kLinkLocalAllNodesMulticastAddress));
 
     // The tail of multicast address linked list contains the
     // fixed addresses. Search if LinkLocalAll is present
@@ -181,8 +188,7 @@ void Netif::UnsubscribeAllNodesMulticast(void)
     //    LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAll
     //         -> RealmLocalAll -> RealmLocalAllMpl.
 
-    OT_ASSERT(prev != static_cast<MulticastAddress *>(
-                          const_cast<otNetifMulticastAddress *>(&kRealmLocalAllRoutersMulticastAddress)));
+    OT_ASSERT(prev != AsCoreTypePtr(AsNonConst(&kRealmLocalAllRoutersMulticastAddress)));
 
     if (prev == nullptr)
     {
@@ -195,14 +201,22 @@ void Netif::UnsubscribeAllNodesMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
+#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     VerifyOrExit(mAddressCallback != nullptr);
+#endif
 
     for (const MulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
     {
-        AddressInfo addressInfo(*entry);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, *entry, kOriginThread);
 
-        mAddressCallback(&addressInfo,
-                         /* IsAdded */ false, mAddressCallbackContext);
+        if (mAddressCallback != nullptr)
+#endif
+        {
+            AddressInfo addressInfo(*entry);
+
+            mAddressCallback(&addressInfo, kAddressRemoved, mAddressCallbackContext);
+        }
     }
 
 exit:
@@ -211,22 +225,15 @@ exit:
 
 void Netif::SubscribeAllRoutersMulticast(void)
 {
-    Error             error = kErrorNone;
-    MulticastAddress *prev  = nullptr;
-    MulticastAddress &linkLocalAllRoutersAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
-    MulticastAddress &linkLocalAllNodesAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
-    MulticastAddress &realmLocalAllRoutersAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kRealmLocalAllRoutersMulticastAddress));
-
-    error = mMulticastAddresses.Find(linkLocalAllNodesAddress, prev);
+    MulticastAddress *prev                        = nullptr;
+    MulticastAddress &linkLocalAllRoutersAddress  = AsCoreType(&AsNonConst(kLinkLocalAllRoutersMulticastAddress));
+    MulticastAddress &linkLocalAllNodesAddress    = AsCoreType(&AsNonConst(kLinkLocalAllNodesMulticastAddress));
+    MulticastAddress &realmLocalAllRoutersAddress = AsCoreType(&AsNonConst(kRealmLocalAllRoutersMulticastAddress));
 
     // This method MUST be called after `SubscribeAllNodesMulticast()`
     // Ensure that the `LinkLocalAll` was found on the list.
 
-    OT_ASSERT(error == kErrorNone);
-    OT_UNUSED_VARIABLE(error);
+    SuccessOrAssert(mMulticastAddresses.Find(linkLocalAllNodesAddress, prev));
 
     // The tail of multicast address linked list contains the
     // fixed addresses. We either have a chain of five addresses
@@ -255,15 +262,23 @@ void Netif::SubscribeAllRoutersMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
+#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     VerifyOrExit(mAddressCallback != nullptr);
+#endif
 
     for (const MulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
          entry                         = entry->GetNext())
     {
-        AddressInfo addressInfo(*entry);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry, kOriginThread);
 
-        mAddressCallback(&addressInfo,
-                         /* IsAdded */ true, mAddressCallbackContext);
+        if (mAddressCallback != nullptr)
+#endif
+        {
+            AddressInfo addressInfo(*entry);
+
+            mAddressCallback(&addressInfo, kAddressAdded, mAddressCallbackContext);
+        }
     }
 
 exit:
@@ -273,10 +288,8 @@ exit:
 void Netif::UnsubscribeAllRoutersMulticast(void)
 {
     MulticastAddress *prev;
-    MulticastAddress &linkLocalAllRoutersAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
-    MulticastAddress &linkLocalAllNodesAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllNodesMulticastAddress));
+    MulticastAddress &linkLocalAllRoutersAddress = AsCoreType(&AsNonConst(kLinkLocalAllRoutersMulticastAddress));
+    MulticastAddress &linkLocalAllNodesAddress   = AsCoreType(&AsNonConst(kLinkLocalAllNodesMulticastAddress));
 
     // The tail of multicast address linked list contains the
     // fixed addresses. We check for the chain of five addresses:
@@ -301,15 +314,23 @@ void Netif::UnsubscribeAllRoutersMulticast(void)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
+#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     VerifyOrExit(mAddressCallback != nullptr);
+#endif
 
     for (const MulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
          entry                         = entry->GetNext())
     {
-        AddressInfo addressInfo(*entry);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, *entry, kOriginThread);
 
-        mAddressCallback(&addressInfo,
-                         /* IsAdded */ false, mAddressCallbackContext);
+        if (mAddressCallback != nullptr)
+#endif
+        {
+            AddressInfo addressInfo(*entry);
+
+            mAddressCallback(&addressInfo, kAddressRemoved, mAddressCallbackContext);
+        }
     }
 
 exit:
@@ -327,13 +348,15 @@ void Netif::SubscribeMulticast(MulticastAddress &aAddress)
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, aAddress, kOriginThread);
+#endif
 
+    if (mAddressCallback != nullptr)
     {
         AddressInfo addressInfo(aAddress);
 
-        mAddressCallback(&addressInfo,
-                         /* IsAdded */ true, mAddressCallbackContext);
+        mAddressCallback(&addressInfo, kAddressAdded, mAddressCallbackContext);
     }
 
 exit:
@@ -346,12 +369,15 @@ void Netif::UnsubscribeMulticast(const MulticastAddress &aAddress)
 
     Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
 
-    VerifyOrExit(mAddressCallback != nullptr);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, aAddress, kOriginThread);
+#endif
+
+    if (mAddressCallback != nullptr)
     {
         AddressInfo addressInfo(aAddress);
 
-        mAddressCallback(&addressInfo,
-                         /* IsAdded */ false, mAddressCallbackContext);
+        mAddressCallback(&addressInfo, kAddressRemoved, mAddressCallbackContext);
     }
 
 exit:
@@ -360,9 +386,8 @@ exit:
 
 Error Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
-    Error             error = kErrorNone;
-    MulticastAddress &linkLocalAllRoutersAddress =
-        static_cast<MulticastAddress &>(const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
+    Error             error                      = kErrorNone;
+    MulticastAddress &linkLocalAllRoutersAddress = AsCoreType(&AsNonConst(kLinkLocalAllRoutersMulticastAddress));
     ExternalMulticastAddress *entry;
 
     VerifyOrExit(aAddress.IsMulticast(), error = kErrorInvalidArgs);
@@ -385,6 +410,11 @@ Error Netif::SubscribeExternalMulticast(const Address &aAddress)
     entry->mMlrState = kMlrStateToRegister;
 #endif
     mMulticastAddresses.Push(*entry);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry, kOriginManual);
+#endif
+
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 
 exit:
@@ -403,6 +433,10 @@ Error Netif::UnsubscribeExternalMulticast(const Address &aAddress)
     VerifyOrExit(IsMulticastAddressExternal(*entry), error = kErrorInvalidArgs);
 
     mMulticastAddresses.PopAfter(prev);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, *entry, kOriginManual);
+#endif
 
     mExtMulticastAddressPool.Free(static_cast<ExternalMulticastAddress &>(*entry));
 
@@ -439,13 +473,15 @@ void Netif::AddUnicastAddress(UnicastAddress &aAddress)
 
     Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocAdded : kEventIp6AddressAdded);
 
-    VerifyOrExit(mAddressCallback != nullptr);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, aAddress);
+#endif
 
+    if (mAddressCallback != nullptr)
     {
         AddressInfo addressInfo(aAddress);
 
-        mAddressCallback(&addressInfo,
-                         /* IsAdded */ true, mAddressCallbackContext);
+        mAddressCallback(&addressInfo, kAddressAdded, mAddressCallbackContext);
     }
 
 exit:
@@ -458,11 +494,15 @@ void Netif::RemoveUnicastAddress(const UnicastAddress &aAddress)
 
     Get<Notifier>().Signal(aAddress.mRloc ? kEventThreadRlocRemoved : kEventIp6AddressRemoved);
 
-    VerifyOrExit(mAddressCallback != nullptr);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, aAddress);
+#endif
+
+    if (mAddressCallback != nullptr)
     {
         AddressInfo addressInfo(aAddress);
 
-        mAddressCallback(&addressInfo, /* IsAdded */ false, mAddressCallbackContext);
+        mAddressCallback(&addressInfo, kAddressRemoved, mAddressCallbackContext);
     }
 
 exit:
@@ -496,6 +536,11 @@ Error Netif::AddExternalUnicastAddress(const UnicastAddress &aAddress)
 
     *entry = aAddress;
     mUnicastAddresses.Push(*entry);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry);
+#endif
+
     Get<Notifier>().Signal(kEventIp6AddressAdded);
 
 exit:
@@ -514,6 +559,11 @@ Error Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorInvalidArgs);
 
     mUnicastAddresses.PopAfter(prev);
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, *entry);
+#endif
+
     mExtUnicastAddressPool.Free(*entry);
     Get<Notifier>().Signal(kEventIp6AddressRemoved);
 
@@ -553,7 +603,7 @@ void Netif::UnicastAddress::InitAsThreadOrigin(bool aPreferred)
 {
     Clear();
     mPrefixLength  = NetworkPrefix::kLength;
-    mAddressOrigin = OT_ADDRESS_ORIGIN_THREAD;
+    mAddressOrigin = kOriginThread;
     mPreferred     = aPreferred;
     mValid         = true;
 }
@@ -567,7 +617,7 @@ void Netif::UnicastAddress::InitAsThreadOriginRealmLocalScope(void)
 void Netif::UnicastAddress::InitAsThreadOriginGlobalScope(void)
 {
     Clear();
-    mAddressOrigin = OT_ADDRESS_ORIGIN_THREAD;
+    mAddressOrigin = kOriginThread;
     mValid         = true;
     SetScopeOverride(Address::kGlobalScope);
 }
@@ -576,7 +626,7 @@ void Netif::UnicastAddress::InitAsSlaacOrigin(uint8_t aPrefixLength, bool aPrefe
 {
     Clear();
     mPrefixLength  = aPrefixLength;
-    mAddressOrigin = OT_ADDRESS_ORIGIN_SLAAC;
+    mAddressOrigin = kOriginSlaac;
     mPreferred     = aPreferred;
     mValid         = true;
 }
@@ -600,7 +650,7 @@ void Netif::ExternalMulticastAddress::Iterator::AdvanceFrom(const MulticastAddre
         aAddr = aAddr->GetNext();
     }
 
-    mItem = const_cast<ExternalMulticastAddress *>(static_cast<const ExternalMulticastAddress *>(aAddr));
+    mItem = AsNonConst(static_cast<const ExternalMulticastAddress *>(aAddr));
 }
 
 } // namespace Ip6

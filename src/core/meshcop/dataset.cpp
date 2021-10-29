@@ -191,7 +191,7 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         switch (cur->GetType())
         {
         case Tlv::kActiveTimestamp:
-            aDatasetInfo.SetActiveTimestamp(static_cast<const ActiveTimestampTlv *>(cur)->GetSeconds());
+            aDatasetInfo.SetActiveTimestamp(static_cast<const ActiveTimestampTlv *>(cur)->GetTimestamp().GetSeconds());
             break;
 
         case Tlv::kChannel:
@@ -235,7 +235,8 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
             break;
 
         case Tlv::kPendingTimestamp:
-            aDatasetInfo.SetPendingTimestamp(static_cast<const PendingTimestampTlv *>(cur)->GetSeconds());
+            aDatasetInfo.SetPendingTimestamp(
+                static_cast<const PendingTimestampTlv *>(cur)->GetTimestamp().GetSeconds());
             break;
 
         case Tlv::kPskc:
@@ -288,20 +289,20 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
     if (aDatasetInfo.IsActiveTimestampPresent())
     {
-        ActiveTimestampTlv tlv;
-        tlv.Init();
-        tlv.SetSeconds(aDatasetInfo.GetActiveTimestamp());
-        tlv.SetTicks(0);
-        IgnoreError(SetTlv(tlv));
+        Timestamp timestamp;
+
+        timestamp.Clear();
+        timestamp.SetSeconds(aDatasetInfo.GetActiveTimestamp());
+        IgnoreError(SetTlv(Tlv::kActiveTimestamp, timestamp));
     }
 
     if (aDatasetInfo.IsPendingTimestampPresent())
     {
-        PendingTimestampTlv tlv;
-        tlv.Init();
-        tlv.SetSeconds(aDatasetInfo.GetPendingTimestamp());
-        tlv.SetTicks(0);
-        IgnoreError(SetTlv(tlv));
+        Timestamp timestamp;
+
+        timestamp.Clear();
+        timestamp.SetSeconds(aDatasetInfo.GetPendingTimestamp());
+        IgnoreError(SetTlv(Tlv::kPendingTimestamp, timestamp));
     }
 
     if (aDatasetInfo.IsDelayPresent())
@@ -371,25 +372,27 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
     return error;
 }
 
-const Timestamp *Dataset::GetTimestamp(Type aType) const
+Error Dataset::GetTimestamp(Type aType, Timestamp &aTimestamp) const
 {
-    const Timestamp *timestamp = nullptr;
+    Error error = kErrorNone;
 
     if (aType == kActive)
     {
         const ActiveTimestampTlv *tlv = GetTlv<ActiveTimestampTlv>();
-        VerifyOrExit(tlv != nullptr);
-        timestamp = static_cast<const Timestamp *>(tlv);
+
+        VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
+        aTimestamp = tlv->GetTimestamp();
     }
     else
     {
         const PendingTimestampTlv *tlv = GetTlv<PendingTimestampTlv>();
-        VerifyOrExit(tlv != nullptr);
-        timestamp = static_cast<const Timestamp *>(tlv);
+
+        VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
+        aTimestamp = tlv->GetTimestamp();
     }
 
 exit:
-    return timestamp;
+    return error;
 }
 
 void Dataset::SetTimestamp(Type aType, const Timestamp &aTimestamp)
@@ -564,13 +567,16 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         case Tlv::kNetworkKey:
         {
             const NetworkKeyTlv *key = static_cast<const NetworkKeyTlv *>(cur);
+            NetworkKey           networkKey;
 
-            if (aIsNetworkKeyUpdated && (key->GetNetworkKey() != keyManager.GetNetworkKey()))
+            keyManager.GetNetworkKey(networkKey);
+
+            if (aIsNetworkKeyUpdated && (key->GetNetworkKey() != networkKey))
             {
                 *aIsNetworkKeyUpdated = true;
             }
 
-            IgnoreError(keyManager.SetNetworkKey(key->GetNetworkKey()));
+            keyManager.SetNetworkKey(key->GetNetworkKey());
             break;
         }
 

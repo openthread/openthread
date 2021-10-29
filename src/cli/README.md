@@ -63,6 +63,7 @@ Done
 - [leaderweight](#leaderweight)
 - [linkmetrics](#linkmetrics-mgmt-ipaddr-enhanced-ack-clear)
 - [linkquality](#linkquality-extaddr)
+- [locate](#locate)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
@@ -110,6 +111,7 @@ Done
 - [txpower](#txpower)
 - [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
+- [uptime](#uptime)
 - [version](#version)
 
 ## OpenThread Command Details
@@ -1613,6 +1615,60 @@ Set the link quality on the link to a given extended address.
 Done
 ```
 
+### locate
+
+Gets the current state (`In Progress` or `Idle`) of anycast locator.
+
+`OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is required.
+
+```bash
+> locate
+Idle
+Done
+
+> locate fdde:ad00:beef:0:0:ff:fe00:fc10
+
+> locate
+In Progress
+Done
+```
+
+### locate \<anycastaddr\>
+
+Locate the closest destination of an anycast address (i.e., find the destination's mesh local EID and RLOC16).
+
+`OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is required.
+
+The closest destination is determined based on the the current routing table and path costs within the Thread mesh.
+
+Locate the leader using its anycast address:
+
+```bash
+> locate fdde:ad00:beef:0:0:ff:fe00:fc00
+fdde:ad00:beef:0:d9d3:9000:16b:d03b 0xc800
+Done
+```
+
+Locate the closest destination of a service anycast address:
+
+```bash
+
+> srp server enable
+Done
+
+> netdata show
+Prefixes:
+Routes:
+Services:
+44970 5d c002 s c800
+44970 5d c002 s cc00
+Done
+
+> locate fdde:ad00:beef:0:0:ff:fe00:fc10
+fdde:ad00:beef:0:a477:dc98:a4e4:71ea 0xcc00
+done
+```
+
 ### log filename \<filename\>
 
 - Note: Simulation Only, ie: `OPENTHREAD_EXAMPLES_SIMULATION`
@@ -2592,6 +2648,32 @@ Print all ports from the allowed unsecured port list.
 > unsecureport get
 1234
 Done
+```
+
+### uptime
+
+This command requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
+
+Print the OpenThread stack uptime (duration since OpenThread stack initialization).
+
+```bash
+> uptime
+12:46:35.469
+Done
+>
+```
+
+### uptime ms
+
+This command requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
+
+Print the OpenThread stack uptime in msec.
+
+```bash
+> uptime ms
+426238
+Done
+>
 ```
 
 ### version

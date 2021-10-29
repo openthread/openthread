@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -353,8 +354,8 @@ void MlrManager::HandleRegisterMulticastListenersResponse(void *               a
                                                           const otMessageInfo *aMessageInfo,
                                                           Error                aResult)
 {
-    static_cast<MlrManager *>(aContext)->HandleRegisterMulticastListenersResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<MlrManager *>(aContext)->HandleRegisterMulticastListenersResponse(AsCoapMessagePtr(aMessage),
+                                                                                  AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          aMessage,
@@ -374,8 +375,8 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          a
     mRegisterMulticastListenersCallback = nullptr;
     mRegisterMulticastListenersContext  = nullptr;
 
-    error = ParseMulticastListenerRegistrationResponse(aResult, static_cast<Coap::Message *>(aMessage), status,
-                                                       failedAddresses, failedAddressNum);
+    error = ParseMulticastListenerRegistrationResponse(aResult, AsCoapMessagePtr(aMessage), status, failedAddresses,
+                                                       failedAddressNum);
 
     if (callback != nullptr)
     {
@@ -460,7 +461,7 @@ void MlrManager::HandleMulticastListenerRegistrationResponse(void *             
                                                              Error                aResult)
 {
     static_cast<MlrManager *>(aContext)->HandleMulticastListenerRegistrationResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+        AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message *         aMessage,

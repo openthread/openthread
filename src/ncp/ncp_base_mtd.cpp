@@ -66,6 +66,9 @@
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 #include <openthread/srp_client_buffers.h>
 #endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#include <openthread/platform/trel-udp6.h>
+#endif
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -662,7 +665,11 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_NETWORK_KEY>(void)
 {
-    return mEncoder.WriteData(otThreadGetNetworkKey(mInstance)->m8, OT_NETWORK_KEY_SIZE);
+    otNetworkKey networkKey;
+
+    otThreadGetNetworkKey(mInstance, &networkKey);
+
+    return mEncoder.WriteData(networkKey.m8, OT_NETWORK_KEY_SIZE);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_KEY>(void)
@@ -3767,8 +3774,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_CLIENT_HOST_NAME>
     SuccessOrExit(error = otSrpClientSetHostName(mInstance, name));
 
     strcpy(hostNameBuffer, name);
-    error = otSrpClientSetHostName(mInstance, hostNameBuffer);
-    OT_ASSERT(error == OT_ERROR_NONE);
+    SuccessOrAssert(error = otSrpClientSetHostName(mInstance, hostNameBuffer));
 
 exit:
     return error;
@@ -3816,8 +3822,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_CLIENT_HOST_ADDRE
 
     memcpy(hostAddressArray, addresses, sizeof(addresses));
 
-    error = otSrpClientSetHostAddresses(mInstance, hostAddressArray, numAddresses);
-    OT_ASSERT(error == OT_ERROR_NONE);
+    SuccessOrAssert(error = otSrpClientSetHostAddresses(mInstance, hostAddressArray, numAddresses));
 
 exit:
     return error;
@@ -4069,6 +4074,24 @@ exit:
 #endif
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
+{
+    return mEncoder.WriteBool(mTrelTestModeEnable);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(mTrelTestModeEnable));
+    error = otPlatTrelUdp6SetTestMode(mInstance, mTrelTestModeEnable);
+
+exit:
+    return error;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
 

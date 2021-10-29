@@ -133,6 +133,8 @@ private:
         static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
 #endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 
+        static constexpr size_t kEntropyMinThreshold = 32;
+
         mbedtls_entropy_context mEntropyContext;
     };
 

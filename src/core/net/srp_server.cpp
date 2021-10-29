@@ -35,6 +35,8 @@
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
+#include "common/as_core_type.hpp"
+#include "common/const_cast.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -88,6 +90,8 @@ Server::Server(Instance &aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mPort(kUdpPortMin)
     , mState(kStateDisabled)
+    , mAddressMode(kDefaultAddressMode)
+    , mAnycastSequenceNumber(0)
     , mHasRegisteredAnyService(false)
 {
     IgnoreError(SetDomain(kDefaultDomain));
@@ -99,6 +103,32 @@ void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, 
     mServiceUpdateHandlerContext = aServiceHandlerContext;
 }
 
+Error Server::SetAddressMode(AddressMode aMode)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mState == kStateDisabled, error = kErrorInvalidState);
+    VerifyOrExit(mAddressMode != aMode);
+    otLogInfoSrp("[server] Address Mode: %s -> %s", AddressModeToString(mAddressMode), AddressModeToString(aMode));
+    mAddressMode = aMode;
+
+exit:
+    return error;
+}
+
+Error Server::SetAnycastModeSequenceNumber(uint8_t aSequenceNumber)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mState == kStateDisabled, error = kErrorInvalidState);
+    mAnycastSequenceNumber = aSequenceNumber;
+
+    otLogInfoSrp("[server] Set Anycast Address Mode Seq Number to %d", aSequenceNumber);
+
+exit:
+    return error;
+}
+
 void Server::SetEnabled(bool aEnabled)
 {
     if (aEnabled)
@@ -106,15 +136,23 @@ void Server::SetEnabled(bool aEnabled)
         VerifyOrExit(mState == kStateDisabled);
         mState = kStateStopped;
 
-        // Select a port and then publish "DNS/SRP Unicast Address
-        // Service" in Thread Network Data using the device's
-        // mesh-local EID as the address. Then wait for callback
-        // `HandleNetDataPublisherEntryChange()` from to `Publisher` to
-        // start server operation when entry is published (i.e., added
-        // to the Network Data).
+        // Request publishing of "DNS/SRP Address Service" entry in the
+        // Thread Network Data based of `mAddressMode`. Then wait for
+        // callback `HandleNetDataPublisherEntryChange()` from the
+        // `Publisher` to start the SRP server.
 
-        SelectPort();
-        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
+        switch (mAddressMode)
+        {
+        case kAddressModeUnicast:
+            SelectPort();
+            Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
+            break;
+
+        case kAddressModeAnycast:
+            mPort = kAnycastAddressModePort;
+            Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
+            break;
+        }
     }
     else
     {
@@ -301,7 +339,7 @@ void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
     }
     else
     {
-        otLogInfoSrp("[server] delayed SRP host update result, the SRP update has been committed");
+        otLogInfoSrp("[server] delayed SRP host update result, the SRP update has been committed (updateId = %u)", aId);
     }
 }
 
@@ -387,12 +425,12 @@ void Server::CommitSrpUpdate(Error                    aError,
         shouldFreeHost = false;
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
-        if (!mHasRegisteredAnyService)
+        if (!mHasRegisteredAnyService && (mAddressMode == kAddressModeUnicast))
         {
             Settings::SrpServerInfo info;
 
             mHasRegisteredAnyService = true;
-            info.SetPort(mSocket.mSockName.mPort);
+            info.SetPort(GetSocket().mSockName.mPort);
             IgnoreError(Get<Settings>().Save(info));
         }
 #endif
@@ -441,24 +479,95 @@ void Server::SelectPort(void)
 
 void Server::Start(void)
 {
-    Error error = kErrorNone;
-
     VerifyOrExit(mState == kStateStopped);
 
     mState = kStateRunning;
-
-    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(mPort, OT_NETIF_THREAD));
-
+    PrepareSocket();
     otLogInfoSrp("[server] start listening on port %u", mPort);
+
+exit:
+    return;
+}
+
+void Server::PrepareSocket(void)
+{
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    Ip6::Udp::Socket &dnsSocket = Get<Dns::ServiceDiscovery::Server>().mSocket;
+
+    if (dnsSocket.GetSockName().GetPort() == mPort)
+    {
+        // If the DNS-SD socket matches our port number, we use the
+        // same socket so we close our own socket (in case it was
+        // open). `GetSocket()` will now return the DNS-SD socket.
+
+        IgnoreError(mSocket.Close());
+        ExitNow();
+    }
+#endif
+
+    VerifyOrExit(!mSocket.IsOpen());
+    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
+    error = mSocket.Bind(mPort, OT_NETIF_THREAD);
 
 exit:
     if (error != kErrorNone)
     {
-        otLogCritSrp("[server] failed to start: %s", ErrorToString(error));
+        otLogCritSrp("[server] failed to prepare socket: %s", ErrorToString(error));
         Stop();
     }
 }
+
+Ip6::Udp::Socket &Server::GetSocket(void)
+{
+    Ip6::Udp::Socket *socket = &mSocket;
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    Ip6::Udp::Socket &dnsSocket = Get<Dns::ServiceDiscovery::Server>().mSocket;
+
+    if (dnsSocket.GetSockName().GetPort() == mPort)
+    {
+        socket = &dnsSocket;
+    }
+#endif
+
+    return *socket;
+}
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+
+void Server::HandleDnssdServerStateChange(void)
+{
+    // This is called from` Dns::ServiceDiscovery::Server` to notify
+    // that it has started or stopped. We check whether we need to
+    // share the socket.
+
+    if (mState == kStateRunning)
+    {
+        PrepareSocket();
+    }
+}
+
+Error Server::HandleDnssdServerUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    // This is called from` Dns::ServiceDiscovery::Server` when a UDP
+    // message is received on its socket. We check whether we are
+    // sharing socket and if so we process the received message. We
+    // return `kErrorNone` to indicate that message was successfully
+    // processed by `Srp::Server`, otherwise `kErrorDrop` is returned.
+
+    Error error = kErrorDrop;
+
+    VerifyOrExit((mState == kStateRunning) && !mSocket.IsOpen());
+
+    error = ProcessMessage(aMessage, aMessageInfo);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
 void Server::Stop(void)
 {
@@ -522,10 +631,10 @@ exit:
     return ret;
 }
 
-void Server::HandleDnsUpdate(Message &                aMessage,
-                             const Ip6::MessageInfo & aMessageInfo,
-                             const Dns::UpdateHeader &aDnsHeader,
-                             uint16_t                 aOffset)
+void Server::ProcessDnsUpdate(Message &                aMessage,
+                              const Ip6::MessageInfo & aMessageInfo,
+                              const Dns::UpdateHeader &aDnsHeader,
+                              uint16_t                 aOffset)
 {
     Error     error = kErrorNone;
     Dns::Zone zone;
@@ -1055,7 +1164,7 @@ void Server::SendResponse(const Dns::UpdateHeader &   aHeader,
     Message *         response = nullptr;
     Dns::UpdateHeader header;
 
-    response = mSocket.NewMessage(0);
+    response = GetSocket().NewMessage(0);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     header.SetMessageId(aHeader.GetMessageId());
@@ -1064,7 +1173,7 @@ void Server::SendResponse(const Dns::UpdateHeader &   aHeader,
     header.SetResponseCode(aResponseCode);
     SuccessOrExit(error = response->Append(header));
 
-    SuccessOrExit(error = mSocket.SendTo(*response, aMessageInfo));
+    SuccessOrExit(error = GetSocket().SendTo(*response, aMessageInfo));
 
     if (aResponseCode != Dns::UpdateHeader::kResponseSuccess)
     {
@@ -1094,7 +1203,7 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     Dns::OptRecord    optRecord;
     Dns::LeaseOption  leaseOption;
 
-    response = mSocket.NewMessage(0);
+    response = GetSocket().NewMessage(0);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     header.SetMessageId(aHeader.GetMessageId());
@@ -1118,7 +1227,7 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     leaseOption.SetKeyLeaseInterval(aKeyLease);
     SuccessOrExit(error = response->Append(leaseOption));
 
-    SuccessOrExit(error = mSocket.SendTo(*response, aMessageInfo));
+    SuccessOrExit(error = GetSocket().SendTo(*response, aMessageInfo));
 
     otLogInfoSrp("[server] send response with granted lease: %u and key lease: %u", aLease, aKeyLease);
 
@@ -1132,11 +1241,20 @@ exit:
 
 void Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Server *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Server *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Error error = ProcessMessage(aMessage, aMessageInfo);
+
+    if (error != kErrorNone)
+    {
+        otLogInfoSrp("[server] failed to handle DNS message: %s", ErrorToString(error));
+    }
+}
+
+Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error             error;
     Dns::UpdateHeader dnsHeader;
@@ -1151,7 +1269,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     switch (dnsHeader.GetQueryType())
     {
     case Dns::UpdateHeader::kQueryTypeUpdate:
-        HandleDnsUpdate(aMessage, aMessageInfo, dnsHeader, offset);
+        ProcessDnsUpdate(aMessage, aMessageInfo, dnsHeader, offset);
         break;
     default:
         error = kErrorDrop;
@@ -1159,10 +1277,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     }
 
 exit:
-    if (error != kErrorNone)
-    {
-        otLogInfoSrp("[server] failed to handle DNS message: %s", ErrorToString(error));
-    }
+    return error;
 }
 
 void Server::HandleLeaseTimer(Timer &aTimer)
@@ -1291,11 +1406,25 @@ void Server::HandleOutstandingUpdatesTimer(Timer &aTimer)
 
 void Server::HandleOutstandingUpdatesTimer(void)
 {
-    otLogInfoSrp("[server] outstanding service update timeout");
     while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
     {
+        otLogInfoSrp("[server] outstanding service update timeout (updateId = %u)",
+                     mOutstandingUpdates.GetTail()->GetId());
         HandleServiceUpdateResult(mOutstandingUpdates.GetTail(), kErrorResponseTimeout);
     }
+}
+
+const char *Server::AddressModeToString(AddressMode aMode)
+{
+    static const char *const kAddressModeStrings[] = {
+        "unicast", // (0) kAddressModeUnicast
+        "anycast", // (1) kAddressModeAnycast
+    };
+
+    static_assert(kAddressModeUnicast == 0, "kAddressModeUnicast value is incorrect");
+    static_assert(kAddressModeAnycast == 1, "kAddressModeAnycast value is incorrect");
+
+    return kAddressModeStrings[aMode];
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1802,7 +1931,7 @@ const Server::Service::Description *Server::Host::FindServiceDescription(const c
 
 Server::Service::Description *Server::Host::FindServiceDescription(const char *aInstanceName)
 {
-    return const_cast<Service::Description *>(const_cast<const Host *>(this)->FindServiceDescription(aInstanceName));
+    return AsNonConst(AsConst(this)->FindServiceDescription(aInstanceName));
 }
 
 const Server::Service *Server::Host::FindService(const char *aServiceName, const char *aInstanceName) const
@@ -1812,7 +1941,7 @@ const Server::Service *Server::Host::FindService(const char *aServiceName, const
 
 Server::Service *Server::Host::FindService(const char *aServiceName, const char *aInstanceName)
 {
-    return const_cast<Service *>(const_cast<const Host *>(this)->FindService(aServiceName, aInstanceName));
+    return AsNonConst(AsConst(this)->FindService(aServiceName, aInstanceName));
 }
 
 Error Server::Host::AddIp6Address(const Ip6::Address &aIp6Address)

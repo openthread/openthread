@@ -911,7 +911,8 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
 
         case kProtoFragment:
             // Always forward IPv6 fragments to the Host.
-            IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromNcpHost, Message::kCopyToUse));
+            IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromNcpHost,
+                                               /* aAllowReceiveFilter */ false, Message::kCopyToUse));
 
             SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromNcpHost));
             break;
@@ -1000,6 +1001,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
                                   const MessageInfo &aMessageInfo,
                                   uint8_t            aIpProto,
                                   bool               aFromNcpHost,
+                                  bool               aAllowReceiveFilter,
                                   Message::Ownership aMessageOwnership)
 {
     Error    error   = kErrorNone;
@@ -1011,7 +1013,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
     // Do not forward reassembled IPv6 packets.
     VerifyOrExit(aMessage.GetLength() <= kMinimalMtu, error = kErrorDrop);
 
-    if (mIsReceiveIp6FilterEnabled)
+    if (mIsReceiveIp6FilterEnabled && aAllowReceiveFilter)
     {
 #if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
@@ -1122,16 +1124,14 @@ Error Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMes
     bool        receive;
     bool        forwardThread;
     bool        forwardHost;
-    bool        multicastPromiscuous;
     bool        shouldFreeMessage;
     uint8_t     nextHeader;
 
 start:
-    receive              = false;
-    forwardThread        = false;
-    forwardHost          = false;
-    multicastPromiscuous = false;
-    shouldFreeMessage    = true;
+    receive           = false;
+    forwardThread     = false;
+    forwardHost       = false;
+    shouldFreeMessage = true;
 
     SuccessOrExit(error = header.Init(aMessage));
 
@@ -1173,7 +1173,7 @@ start:
         }
         else if (netif->IsMulticastPromiscuousEnabled())
         {
-            multicastPromiscuous = true;
+            forwardHost = true;
         }
     }
     else
@@ -1232,7 +1232,8 @@ start:
         }
 #endif
 
-        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, Message::kCopyToUse);
+        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost,
+                                       /* aAllowReceiveFilter */ !forwardHost, Message::kCopyToUse);
 
         if ((error == kErrorNone || error == kErrorNoRoute) && forwardHost)
         {
@@ -1243,15 +1244,11 @@ start:
                               (forwardThread || forwardHost ? Message::kCopyToUse : Message::kTakeCustody));
         shouldFreeMessage = forwardThread || forwardHost;
     }
-    else if (multicastPromiscuous)
-    {
-        IgnoreError(ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, Message::kCopyToUse));
-    }
 
     if (forwardHost)
     {
         // try passing to host
-        error             = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost,
+        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, /* aAllowReceiveFilter */ false,
                                        forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
         shouldFreeMessage = forwardThread;
     }
@@ -1316,6 +1313,14 @@ start:
             OT_UNUSED_VARIABLE(sourcePort);
 #endif
         }
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        // Since the message will be forwarded, we clear the radio
+        // type on the message to allow the radio type for tx to be
+        // selected later (based on the radios supported by the next
+        // hop).
+        aMessage.ClearRadioType();
+#endif
 
         // `SendMessage()` takes custody of message in the success case
         SuccessOrExit(error = Get<ThreadNetif>().SendMessage(aMessage));

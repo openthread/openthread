@@ -270,6 +270,7 @@ class TestOTCI(unittest.TestCase):
         logging.info("Leader router table: %r", leader.get_router_table())
         self.assertFalse(list(leader.get_router_table().values())[0].is_link_established)
 
+        logging.info('discover: %r', leader.discover())
         logging.info('scan: %r', leader.scan())
         logging.info('scan energy: %r', leader.scan_energy())
 
@@ -613,6 +614,7 @@ class TestOTCI(unittest.TestCase):
 
         child1.ifconfig_up()
 
+        logging.info("child1 discover: %r", child1.discover())
         logging.info("child1 scan: %r", child1.scan())
         logging.info("child1 scan energy: %r", child1.scan_energy())
 

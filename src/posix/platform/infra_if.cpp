@@ -264,7 +264,39 @@ bool InfraNetif::IsRunning(void) const
 
     close(sock);
 
-    return (ifReq.ifr_flags & IFF_RUNNING);
+    return (ifReq.ifr_flags & IFF_RUNNING) && HasLinkLocalAddress();
+}
+
+bool InfraNetif::HasLinkLocalAddress(void) const
+{
+    bool            hasLla  = false;
+    struct ifaddrs *ifAddrs = nullptr;
+
+    if (getifaddrs(&ifAddrs) < 0)
+    {
+        otLogCritPlat("failed to get netif addresses: %s", strerror(errno));
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        struct sockaddr_in6 *ip6Addr;
+
+        if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr->sa_family != AF_INET6)
+        {
+            continue;
+        }
+
+        ip6Addr = reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr);
+        if (IN6_IS_ADDR_LINKLOCAL(&ip6Addr->sin6_addr))
+        {
+            hasLla = true;
+            break;
+        }
+    }
+
+    freeifaddrs(ifAddrs);
+    return hasLla;
 }
 
 void InfraNetif::Init(const char *aIfName)
@@ -391,6 +423,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
 
             OT_UNUSED_VARIABLE(errMsg);
             otLogWarnPlat("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
+            break;
         }
         default:
             break;

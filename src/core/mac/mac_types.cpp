@@ -121,25 +121,18 @@ ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 
 uint8_t NameData::CopyTo(char *aBuffer, uint8_t aMaxSize) const
 {
-    uint8_t len = GetLength();
+    MutableData<kWithUint8Length> destData;
 
-    memset(aBuffer, 0, aMaxSize);
+    destData.Init(aBuffer, aMaxSize);
+    destData.ClearBytes();
+    IgnoreError(destData.CopyBytesFrom(*this));
 
-    if (len > aMaxSize)
-    {
-        len = aMaxSize;
-    }
-
-    memcpy(aBuffer, GetBuffer(), len);
-
-    return len;
+    return destData.GetLength();
 }
 
 NameData NetworkName::GetAsData(void) const
 {
-    uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
-
-    return NameData(m8, len);
+    return NameData(m8, static_cast<uint8_t>(StringLength(m8, kMaxSize + 1)));
 }
 
 Error NetworkName::Set(const char *aNameString)
@@ -165,15 +158,21 @@ exit:
 
 Error NetworkName::Set(const NameData &aNameData)
 {
-    Error   error  = kErrorNone;
-    uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
+    Error    error  = kErrorNone;
+    NameData data   = aNameData;
+    uint8_t  newLen = static_cast<uint8_t>(StringLength(data.GetBuffer(), data.GetLength()));
 
-    VerifyOrExit(newLen <= kMaxSize, error = kErrorInvalidArgs);
+    VerifyOrExit((0 < newLen) && (newLen <= kMaxSize), error = kErrorInvalidArgs);
+
+    data.SetLength(newLen);
 
     // Ensure the new name does not match the current one.
-    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = kErrorAlready);
+    if (data.MatchesBytesIn(m8) && m8[newLen] == '\0')
+    {
+        ExitNow(error = kErrorAlready);
+    }
 
-    memcpy(m8, aNameData.GetBuffer(), newLen);
+    data.CopyBytesTo(m8);
     m8[newLen] = '\0';
 
 exit:
@@ -182,11 +181,7 @@ exit:
 
 bool NetworkName::operator==(const NetworkName &aOther) const
 {
-    NameData data      = GetAsData();
-    NameData otherData = aOther.GetAsData();
-
-    return (data.GetLength() == otherData.GetLength()) &&
-           (memcmp(data.GetBuffer(), otherData.GetBuffer(), data.GetLength()) == 0);
+    return GetAsData() == aOther.GetAsData();
 }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -331,6 +326,93 @@ void LinkFrameCounters::SetAll(uint32_t aCounter)
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrelCounter = aCounter;
+#endif
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+KeyMaterial &KeyMaterial::operator=(const KeyMaterial &aOther)
+{
+    VerifyOrExit(GetKeyRef() != aOther.GetKeyRef());
+    DestroyKey();
+    SetKeyRef(aOther.GetKeyRef());
+
+exit:
+    return *this;
+}
+#endif
+
+void KeyMaterial::Clear(void)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    DestroyKey();
+    SetKeyRef(kInvalidKeyRef);
+#else
+    GetKey().Clear();
+#endif
+}
+
+void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    {
+        KeyRef keyRef = 0;
+
+        DestroyKey();
+
+        SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeAes,
+                                                   Crypto::Storage::kKeyAlgorithmAesEcb,
+                                                   (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
+                                                       Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
+                                                   Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize));
+
+        SetKeyRef(keyRef);
+    }
+#else
+    SetKey(aKey);
+    OT_UNUSED_VARIABLE(aIsExportable);
+#endif
+}
+
+void KeyMaterial::ExtractKey(Key &aKey)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    aKey.Clear();
+
+    if (Crypto::Storage::IsKeyRefValid(GetKeyRef()))
+    {
+        size_t keySize;
+
+        SuccessOrAssert(Crypto::Storage::ExportKey(GetKeyRef(), aKey.m8, Key::kSize, keySize));
+    }
+#else
+    aKey = GetKey();
+#endif
+}
+
+void KeyMaterial::ConvertToCryptoKey(Crypto::Key &aCryptoKey) const
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    aCryptoKey.SetAsKeyRef(GetKeyRef());
+#else
+    aCryptoKey.Set(GetKey().GetBytes(), Key::kSize);
+#endif
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+void KeyMaterial::DestroyKey(void)
+{
+    Crypto::Storage::DestroyKey(GetKeyRef());
+    SetKeyRef(kInvalidKeyRef);
+}
+#endif
+
+bool KeyMaterial::operator==(const KeyMaterial &aOther) const
+{
+    return
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        (GetKeyRef() == aOther.GetKeyRef());
+#else
+        (GetKey() == aOther.GetKey());
 #endif
 }
 

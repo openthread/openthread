@@ -35,61 +35,34 @@
 
 #include <string.h>
 
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/error.hpp"
+#include "openthread/platform/crypto.h"
+
 namespace ot {
 namespace Crypto {
 
-void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const uint8_t *aInputKey, uint16_t aInputKeyLength)
+HkdfSha256::HkdfSha256(void)
 {
-    HmacSha256 hmac;
+    mContext.mContext     = mContextStorage;
+    mContext.mContextSize = sizeof(mContextStorage);
+    SuccessOrAssert(otPlatCryptoHkdfInit(&mContext));
+}
 
-    // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
+HkdfSha256::~HkdfSha256(void)
+{
+    SuccessOrAssert(otPlatCryptoHkdfDeinit(&mContext));
+}
 
-    hmac.Start(aSalt, aSaltLength);
-    hmac.Update(aInputKey, aInputKeyLength);
-    hmac.Finish(mPrk);
+void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey)
+{
+    SuccessOrAssert(otPlatCryptoHkdfExtract(&mContext, aSalt, aSaltLength, &aInputKey));
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    HmacSha256       hmac;
-    HmacSha256::Hash hash;
-    uint8_t          iter = 0;
-    uint16_t         copyLength;
-
-    // The aOutputKey is calculated as follows [RFC5889]:
-    //
-    //   N = ceil( aOutputKeyLength / HashSize)
-    //   T = T(1) | T(2) | T(3) | ... | T(N)
-    //   aOutputKey is first aOutputKeyLength of T
-    //
-    // Where:
-    //   T(0) = empty string (zero length)
-    //   T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
-    //   T(2) = HMAC-Hash(PRK, T(1) | info | 0x02)
-    //   T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
-    //   ...
-
-    while (aOutputKeyLength > 0)
-    {
-        hmac.Start(mPrk.GetBytes(), sizeof(mPrk));
-
-        if (iter != 0)
-        {
-            hmac.Update(hash);
-        }
-
-        hmac.Update(aInfo, aInfoLength);
-
-        iter++;
-        hmac.Update(iter);
-        hmac.Finish(hash);
-
-        copyLength = (aOutputKeyLength > sizeof(hash)) ? sizeof(hash) : aOutputKeyLength;
-
-        memcpy(aOutputKey, hash.GetBytes(), copyLength);
-        aOutputKey += copyLength;
-        aOutputKeyLength -= copyLength;
-    }
+    SuccessOrAssert(otPlatCryptoHkdfExpand(&mContext, aInfo, aInfoLength, aOutputKey, aOutputKeyLength));
 }
 
 } // namespace Crypto

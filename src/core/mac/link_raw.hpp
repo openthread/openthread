@@ -66,6 +66,12 @@ public:
     explicit LinkRaw(Instance &aInstance);
 
     /**
+     * This method initializes the states of the raw link-layer.
+     *
+     */
+    void Init(void);
+
+    /**
      * This method returns true if the raw link-layer is enabled.
      *
      * @returns true if enabled, false otherwise.
@@ -254,6 +260,7 @@ public:
      * @param[in]   aNextKey          The next MAC key.
      *
      * @retval kErrorNone            If successful.
+     * @retval kErrorFailed          Platform failed to import key.
      * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */

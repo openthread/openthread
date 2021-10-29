@@ -367,7 +367,7 @@ typedef void (*otCoapRequestHandler)(void *aContext, otMessage *aMessage, const 
  * @param[in]  aPosition    The position of @p aBlock in a sequence in bytes.
  * @param[in]  aBlockLength The length of the block segment in bytes.
  * @param[in]  aMore        Flag if more block segments are following.
- * @param[in]  aTotalLength The total length in bytes of the transfered information (indicated by a Size1 or Size2
+ * @param[in]  aTotalLength The total length in bytes of the transferred information (indicated by a Size1 or Size2
  *                          option).
  *
  * @retval  OT_ERROR_NONE               Block segment was stored successfully.

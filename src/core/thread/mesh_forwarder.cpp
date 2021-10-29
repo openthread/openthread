@@ -775,9 +775,6 @@ start:
                                     maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
         uint8_t              hcLength;
         Mac::Address         meshSource, meshDest;
-        Error                error;
-
-        OT_UNUSED_VARIABLE(error);
 
         if (aAddMeshHeader)
         {
@@ -790,8 +787,7 @@ start:
             meshDest   = aMacDest;
         }
 
-        error = Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer);
-        OT_ASSERT(error == kErrorNone);
+        SuccessOrAssert(Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer));
 
         hcLength = static_cast<uint8_t>(buffer.GetWritePointer() - payload);
         headerLength += hcLength;
@@ -1241,6 +1237,10 @@ void MeshForwarder::HandleFragment(const uint8_t *       aFrame,
     if (fragmentHeader.GetDatagramOffset() == 0)
     {
         uint16_t datagramSize = fragmentHeader.GetDatagramSize();
+
+#if OPENTHREAD_FTD
+        UpdateRoutes(aFrame, aFrameLength, aMacSource, aMacDest);
+#endif
 
         error = FrameToMessage(aFrame, aFrameLength, datagramSize, aMacSource, aMacDest, message);
         SuccessOrExit(error);
@@ -1812,7 +1812,7 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
         break;
     }
 
-    VerifyOrExit(GetInstance().GetLogLevel() >= logLevel);
+    VerifyOrExit(Instance::GetLogLevel() >= logLevel);
 
     switch (aMessage.GetType())
     {

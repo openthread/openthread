@@ -40,6 +40,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/crypto.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -200,6 +201,37 @@ struct otMacKey
 typedef struct otMacKey otMacKey;
 
 /**
+ * This type represents a MAC Key Ref used by PSA.
+ *
+ */
+typedef otCryptoKeyRef otMacKeyRef;
+
+/**
+ * @struct otMacKeyMaterial
+ *
+ * This structure represents a MAC Key.
+ *
+ */
+typedef struct otMacKeyMaterial
+{
+    union
+    {
+        otMacKeyRef mKeyRef; ///< Reference to the key stored.
+        otMacKey    mKey;    ///< Key stored as literal.
+    } mKeyMaterial;
+} otMacKeyMaterial;
+
+/**
+ * This enumeration defines constants about key types.
+ *
+ */
+typedef enum
+{
+    OT_KEY_TYPE_LITERAL_KEY = 0, ///< Use Literal Keys.
+    OT_KEY_TYPE_KEY_REF     = 1, ///< Use Reference to Key.
+} otRadioKeyType;
+
+/**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
 typedef struct otRadioIeInfo
@@ -231,12 +263,12 @@ typedef struct otRadioFrame
          */
         struct
         {
-            const otMacKey *mAesKey;          ///< The key used for AES-CCM frame security.
-            otRadioIeInfo * mIeInfo;          ///< The pointer to the Header IE(s) related information.
-            uint32_t        mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
-            uint32_t        mTxDelayBaseTime; ///< The base time for the transmission delay.
-            uint8_t         mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
-            uint8_t         mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
+            const otMacKeyMaterial *mAesKey;  ///< The key material used for AES-CCM frame security.
+            otRadioIeInfo *         mIeInfo;  ///< The pointer to the Header IE(s) related information.
+            uint32_t                mTxDelay; ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
+            uint32_t                mTxDelayBaseTime; ///< The base time for the transmission delay.
+            uint8_t mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
+            uint8_t mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
              * Indicates whether frame counter and CSL IEs are properly updated in the header.
@@ -559,14 +591,16 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  * @param[in]   aPrevKey     A pointer to the previous MAC key.
  * @param[in]   aCurrKey     A pointer to the current MAC key.
  * @param[in]   aNextKey     A pointer to the next MAC key.
+ * @param[in]   aKeyType     Key Type used.
  *
  */
-void otPlatRadioSetMacKey(otInstance *    aInstance,
-                          uint8_t         aKeyIdMode,
-                          uint8_t         aKeyId,
-                          const otMacKey *aPrevKey,
-                          const otMacKey *aCurrKey,
-                          const otMacKey *aNextKey);
+void otPlatRadioSetMacKey(otInstance *            aInstance,
+                          uint8_t                 aKeyIdMode,
+                          uint8_t                 aKeyId,
+                          const otMacKeyMaterial *aPrevKey,
+                          const otMacKeyMaterial *aCurrKey,
+                          const otMacKeyMaterial *aNextKey,
+                          otRadioKeyType          aKeyType);
 
 /**
  * This method sets the current MAC frame counter value.
@@ -1042,7 +1076,7 @@ uint8_t otPlatRadioGetCslClockUncertainty(otInstance *aInstance);
  * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented
  * @retval  OT_ERROR_INVALID_ARGS     The specified channel is not valid.
  * @retval  OT_ERROR_FAILED           Other platform specific errors.
- * @retval  OT_ERROR_NONE             Successfully set max transmit poewr.
+ * @retval  OT_ERROR_NONE             Successfully set max transmit power.
  *
  */
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);

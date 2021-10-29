@@ -33,6 +33,7 @@
 
 #include "discover_scanner.hpp"
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -315,7 +316,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     result.mRssi    = linkInfo->mRss;
     result.mLqi     = linkInfo->mLqi;
 
-    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(static_cast<Mac::ExtAddress &>(result.mExtAddress));
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&result.mExtAddress));
 
     // Process MeshCoP TLVs
     while (offset < end)
@@ -332,22 +333,22 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
             break;
 
         case MeshCoP::Tlv::kExtendedPanId:
-            SuccessOrExit(error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(
-                              aMessage, offset, static_cast<Mac::ExtendedPanId &>(result.mExtendedPanId)));
+            SuccessOrExit(
+                error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aMessage, offset, AsCoreType(&result.mExtendedPanId)));
             break;
 
         case MeshCoP::Tlv::kNetworkName:
             IgnoreError(aMessage.Read(offset, networkName));
             if (networkName.IsValid())
             {
-                IgnoreError(static_cast<Mac::NetworkName &>(result.mNetworkName).Set(networkName.GetNetworkName()));
+                IgnoreError(AsCoreType(&result.mNetworkName).Set(networkName.GetNetworkName()));
             }
             break;
 
         case MeshCoP::Tlv::kSteeringData:
             if (meshcopTlv.GetLength() > 0)
             {
-                MeshCoP::SteeringData &steeringData = static_cast<MeshCoP::SteeringData &>(result.mSteeringData);
+                MeshCoP::SteeringData &steeringData = AsCoreType(&result.mSteeringData);
                 uint8_t                dataLength   = MeshCoP::SteeringData::kMaxLength;
 
                 if (meshcopTlv.GetLength() < dataLength)

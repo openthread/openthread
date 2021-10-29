@@ -37,7 +37,7 @@
 
 #include <openthread/netdata_publisher.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
@@ -46,47 +46,34 @@ using namespace ot;
 
 void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNumber)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(aSequenceNumber);
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(aSequenceNumber);
 }
 
 void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Address *aAddress, uint16_t aPort)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(*static_cast<const Ip6::Address *>(aAddress),
-                                                                       aPort);
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(AsCoreType(aAddress), aPort);
 }
 
 void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(aPort);
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(aPort);
 }
 
 bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkData::Publisher>().IsDnsSrpServiceAdded();
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().IsDnsSrpServiceAdded();
 }
 
 void otNetDataSetDnsSrpServicePublisherCallback(otInstance *                            aInstance,
                                                 otNetDataDnsSrpServicePublisherCallback aCallback,
                                                 void *                                  aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkData::Publisher>().SetDnsSrpServiceCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().SetDnsSrpServiceCallback(aCallback, aContext);
 }
 
 void otNetDataUnpublishDnsSrpService(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+    AsCoreType(aInstance).Get<NetworkData::Publisher>().UnpublishDnsSrpService();
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -95,41 +82,29 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance)
 
 otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkData::Publisher>().PublishOnMeshPrefix(
-        *static_cast<const NetworkData::OnMeshPrefixConfig *>(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishOnMeshPrefix(AsCoreType(aConfig));
 }
 
 otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkData::Publisher>().PublishExternalRoute(
-        *static_cast<const NetworkData::ExternalRouteConfig *>(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishExternalRoute(AsCoreType(aConfig));
 }
 
 bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkData::Publisher>().IsPrefixAdded(*static_cast<const Ip6::Prefix *>(aPrefix));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().IsPrefixAdded(AsCoreType(aPrefix));
 }
 
 void otNetDataSetPrefixPublisherCallback(otInstance *                     aInstance,
                                          otNetDataPrefixPublisherCallback aCallback,
                                          void *                           aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkData::Publisher>().SetPrefixCallback(aCallback, aContext);
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().SetPrefixCallback(aCallback, aContext);
 }
 
 otError otNetDataUnpublishPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkData::Publisher>().UnpublishPrefix(*static_cast<const Ip6::Prefix *>(aPrefix));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().UnpublishPrefix(AsCoreType(aPrefix));
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

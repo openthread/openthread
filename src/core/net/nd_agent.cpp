@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
@@ -67,8 +68,7 @@ void Agent::UpdateService(void)
                 continue;
             }
 
-            error = Get<NetworkData::Leader>().GetContext(static_cast<const Ip6::Address &>(config.mPrefix.mPrefix),
-                                                          lowpanContext);
+            error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
 
             if ((error != kErrorNone) || (lowpanContext.mContextId != contextId))
             {
@@ -97,8 +97,7 @@ void Agent::UpdateService(void)
             continue;
         }
 
-        error = Get<NetworkData::Leader>().GetContext(static_cast<const Ip6::Address &>(config.mPrefix.mPrefix),
-                                                      lowpanContext);
+        error = Get<NetworkData::Leader>().GetContext(AsCoreType(&config.mPrefix.mPrefix), lowpanContext);
 
         if (error == kErrorNone)
         {

@@ -117,21 +117,26 @@ do_check()
     RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
 
     if [[ ${OT_DAEMON} == 'on' ]]; then
-        sudo "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" 2>&1 | tee "${OT_OUTPUT}" &
+        sudo -E "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" 2>&1 | tee "${OT_OUTPUT}" &
         sleep 3
         # macOS cannot explicitly set network interface name
         NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
-        OT_CTL="$PWD/build/posix/src/posix/ot-ctl"
-        sudo "${OT_CTL}" -I "${NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
+        OT_CTL_PATH="$PWD/build/posix/src/posix/ot-ctl"
+        if [[ ${OT_DAEMON_ALLOW_ALL} == 1 ]]; then
+            OT_CTL=("${OT_CTL_PATH}")
+        else
+            OT_CTL=(sudo "${OT_CTL_PATH}")
+        fi
+        "${OT_CTL[@]}" -I "${NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify supports options in OpenThread commands without separator --
-        sudo "${OT_CTL}" -I "${NETIF_NAME}" pskc -p 123456 | grep 'Done' || die 'unable to set pskc'
+        "${OT_CTL[@]}" -I "${NETIF_NAME}" pskc -p 123456 | grep 'Done' || die 'unable to set pskc'
 
         # verify this reset and factoryreset end immediately
-        sudo "${OT_CTL}" -I "${NETIF_NAME}" reset
+        "${OT_CTL[@]}" -I "${NETIF_NAME}" reset
         # sleep a while for daemon ready
         sleep 2
-        sudo "${OT_CTL}" -I "${NETIF_NAME}" factoryreset
+        "${OT_CTL[@]}" -I "${NETIF_NAME}" factoryreset
         # sleep a while for daemon ready
         sleep 2
 
@@ -140,15 +145,15 @@ do_check()
 
         # verify success if command length doesn't exceed the limit
         for len in $(seq 1 ${kMaxStringLength}); do
-            sudo "${OT_CTL}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"
+            "${OT_CTL[@]}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"
         done
 
         # verify failure if command length exceeds the limit
         len=${OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH}
-        if sudo "${OT_CTL}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"; then
+        if "${OT_CTL[@]}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"; then
             die
         fi
-        OT_CLI_CMD="${OT_CTL} -I ${NETIF_NAME}"
+        OT_CLI_CMD="${OT_CTL[*]} -I ${NETIF_NAME}"
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"
         sudo "${OT_CLI}" -I "${VALID_NETIF_NAME}" -n "${RADIO_URL}"
@@ -222,7 +227,7 @@ EOF
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
         NETIF_INDEX=$(ip link show "${NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
-        sudo PATH="$(dirname "${OT_CLI_CMD}"):${PATH}" \
+        sudo PATH="$(dirname "${OT_CTL_PATH}"):${PATH}" \
             python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" "${NETIF_NAME}" \
             || die 'multicast group join failed'
     fi

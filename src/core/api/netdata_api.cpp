@@ -35,31 +35,25 @@
 
 #include <openthread/netdata.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    OT_ASSERT(aData != nullptr && aDataLength != nullptr);
-
-    return instance.Get<NetworkData::Leader>().GetNetworkData(aStable, aData, *aDataLength);
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().CopyNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
                                      otNetworkDataIterator *aIterator,
                                      otBorderRouterConfig * aConfig)
 {
-    Error                            error    = kErrorNone;
-    Instance &                       instance = *static_cast<Instance *>(aInstance);
-    NetworkData::OnMeshPrefixConfig *config   = static_cast<NetworkData::OnMeshPrefixConfig *>(aConfig);
+    Error error = kErrorNone;
 
     VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
-    error = instance.Get<NetworkData::Leader>().GetNextOnMeshPrefix(*aIterator, *config);
+    error = AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextOnMeshPrefix(*aIterator, AsCoreType(aConfig));
 
 exit:
     return error;
@@ -67,13 +61,11 @@ exit:
 
 otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig)
 {
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Error error = kErrorNone;
 
     VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
-    error = instance.Get<NetworkData::Leader>().GetNextExternalRoute(
-        *aIterator, *static_cast<NetworkData::ExternalRouteConfig *>(aConfig));
+    error = AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextExternalRoute(*aIterator, AsCoreType(aConfig));
 
 exit:
     return error;
@@ -81,13 +73,11 @@ exit:
 
 otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
 {
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Error error = kErrorNone;
 
     VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
-    error = instance.Get<NetworkData::Leader>().GetNextService(*aIterator,
-                                                               *static_cast<NetworkData::ServiceConfig *>(aConfig));
+    error = AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextService(*aIterator, AsCoreType(aConfig));
 
 exit:
     return error;
@@ -95,26 +85,20 @@ exit:
 
 uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Mle::MleRouter>().GetLeaderData().GetDataVersion();
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion();
 }
 
 uint8_t otNetDataGetStableVersion(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Mle::MleRouter>().GetLeaderData().GetStableDataVersion();
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetStableDataVersion();
 }
 
 otError otNetDataSteeringDataCheckJoiner(otInstance *aInstance, const otExtAddress *aEui64)
 {
-    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoiner(
-        *static_cast<const Mac::ExtAddress *>(aEui64));
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().SteeringDataCheckJoiner(AsCoreType(aEui64));
 }
 
 otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance *aInstance, const otJoinerDiscerner *aDiscerner)
 {
-    return static_cast<Instance *>(aInstance)->Get<NetworkData::Leader>().SteeringDataCheckJoiner(
-        *static_cast<const MeshCoP::JoinerDiscerner *>(aDiscerner));
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().SteeringDataCheckJoiner(AsCoreType(aDiscerner));
 }

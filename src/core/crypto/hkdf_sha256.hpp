@@ -37,7 +37,10 @@
 
 #include "openthread-core-config.h"
 
+#include "common/code_utils.hpp"
+#include "crypto/context_size.hpp"
 #include "crypto/hmac_sha256.hpp"
+#include "openthread/platform/crypto.h"
 
 namespace ot {
 namespace Crypto {
@@ -57,17 +60,28 @@ class HkdfSha256
 {
 public:
     /**
+     * Constructor to initialize the context.
+     *
+     */
+    HkdfSha256(void);
+
+    /**
+     * Destructor to free the context.
+     *
+     */
+    ~HkdfSha256(void);
+
+    /**
      * This method performs the HKDF Extract step.
      *
      * In the Extract step getting an input key extracts from it a pseudo-random key.
      *
      * @param[in] aSalt             A pointer to buffer containing salt.
      * @param[in] aSaltLength       The salt length (in bytes).
-     * @param[in] aInputKey         A pointer to buffer containing the input key.
-     * @param[in] aInputKeyLength   The input key length (in bytes).
+     * @param[in] aInputKey         The input key.
      *
      */
-    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const uint8_t *aInputKey, uint16_t aInputKeyLength);
+    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey);
 
     /**
      * This method performs the HKDF Expand step.
@@ -84,7 +98,8 @@ public:
     void Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength);
 
 private:
-    HmacSha256::Hash mPrk; // Pseudo-Random Key (derived from Extract step).
+    otCryptoContext mContext;
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHkdfContextSize, uint64_t);
 };
 
 /**

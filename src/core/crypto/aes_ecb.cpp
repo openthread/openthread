@@ -32,28 +32,32 @@
  */
 
 #include "aes_ecb.hpp"
+#include "common/debug.hpp"
+#include "common/error.hpp"
 
 namespace ot {
 namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
-    mbedtls_aes_init(&mContext);
+    mContext.mContext     = mContextStorage;
+    mContext.mContextSize = sizeof(mContextStorage);
+    SuccessOrAssert(otPlatCryptoAesInit(&mContext));
 }
 
-void AesEcb::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
+void AesEcb::SetKey(const Key &aKey)
 {
-    mbedtls_aes_setkey_enc(&mContext, aKey, aKeyLength);
+    SuccessOrAssert(otPlatCryptoAesSetKey(&mContext, &aKey));
 }
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
-    mbedtls_aes_crypt_ecb(&mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
+    SuccessOrAssert(otPlatCryptoAesEncrypt(&mContext, aInput, aOutput));
 }
 
 AesEcb::~AesEcb(void)
 {
-    mbedtls_aes_free(&mContext);
+    SuccessOrAssert(otPlatCryptoAesFree(&mContext));
 }
 
 } // namespace Crypto

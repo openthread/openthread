@@ -35,10 +35,6 @@
 
 #include <openthread/platform/entropy.h>
 
-#if !OPENTHREAD_RADIO
-#include <mbedtls/entropy_poll.h>
-#endif
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
@@ -58,9 +54,6 @@ RandomManager::CryptoCtrDrbg RandomManager::sCtrDrbg;
 RandomManager::RandomManager(void)
 {
     uint32_t seed;
-    Error    error;
-
-    OT_UNUSED_VARIABLE(error);
 
     OT_ASSERT(sInitCount < 0xffff);
 
@@ -70,11 +63,9 @@ RandomManager::RandomManager(void)
     sEntropy.Init();
     sCtrDrbg.Init();
 
-    error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    OT_ASSERT(error == kErrorNone);
+    SuccessOrAssert(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
 #else
-    error = otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    OT_ASSERT(error == kErrorNone);
+    SuccessOrAssert(otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
 #endif
 
     sPrng.Init(seed);
@@ -155,7 +146,7 @@ void RandomManager::Entropy::Init(void)
 
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
     mbedtls_entropy_add_source(&mEntropyContext, &RandomManager::Entropy::HandleMbedtlsEntropyPoll, nullptr,
-                               MBEDTLS_ENTROPY_MIN_HARDWARE, MBEDTLS_ENTROPY_SOURCE_STRONG);
+                               kEntropyMinThreshold, MBEDTLS_ENTROPY_SOURCE_STRONG);
 #endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 }
 

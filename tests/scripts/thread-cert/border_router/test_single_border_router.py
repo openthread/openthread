@@ -267,8 +267,9 @@ class SingleBorderRouter(thread_cert.TestCase):
 
         br.enable_ether()
 
-        # It takes around 10 seconds to start sending RA messages.
-        self.simulator.go(15)
+        # The routing manager may fail to send RS and will wait for 60 seconds
+        # before retrying.
+        self.simulator.go(80)
         self.collect_ipaddrs()
 
         logging.info("BR     addrs: %r", br.get_addrs())

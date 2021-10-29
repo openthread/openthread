@@ -36,17 +36,17 @@
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #include <openthread/backbone_router.h>
-#include "common/instance.hpp"
+
+#include "common/as_core_type.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 
 otError otBackboneRouterGetPrimary(otInstance *aInstance, otBackboneRouterConfig *aConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
     OT_ASSERT(aConfig != nullptr);
 
-    return instance.Get<BackboneRouter::Leader>().GetConfig(*aConfig);
+    return AsCoreType(aInstance).Get<BackboneRouter::Leader>().GetConfig(*aConfig);
 }
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

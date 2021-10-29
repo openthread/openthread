@@ -36,6 +36,7 @@
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -132,8 +133,8 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(void *               aContex
                                                     const otMessageInfo *aMessageInfo,
                                                     Error                aResult)
 {
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetResponse(AsCoapMessagePtr(aMessage),
+                                                                            AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMessage,
@@ -159,8 +160,8 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *               aContext,
                                                   otMessage *          aMessage,
                                                   const otMessageInfo *aMessageInfo)
 {
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetAnswer(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetAnswer(AsCoapMessage(aMessage),
+                                                                          AsCoreType(aMessageInfo));
 }
 
 void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -355,11 +356,9 @@ Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
 
         case NetworkDiagnosticTlv::kNetworkData:
         {
-            uint8_t netData[NetworkData::NetworkData::kMaxSize];
-            uint8_t length = sizeof(netData);
+            NetworkData::NetworkData &netData = Get<NetworkData::Leader>();
 
-            IgnoreError(Get<NetworkData::Leader>().GetNetworkData(/* aStableOnly */ false, netData, length));
-            SuccessOrExit(error = Tlv::Append<NetworkDataTlv>(aResponse, netData, length));
+            SuccessOrExit(error = Tlv::Append<NetworkDataTlv>(aResponse, netData.GetBytes(), netData.GetLength()));
             break;
         }
 
@@ -456,8 +455,8 @@ exit:
 
 void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetQuery(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetQuery(AsCoapMessage(aMessage),
+                                                                         AsCoreType(aMessageInfo));
 }
 
 void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -519,8 +518,8 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(void *               aContext
                                                    otMessage *          aMessage,
                                                    const otMessageInfo *aMessageInfo)
 {
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetRequest(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetRequest(AsCoapMessage(aMessage),
+                                                                           AsCoreType(aMessageInfo));
 }
 
 void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -598,8 +597,8 @@ exit:
 
 void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticReset(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticReset(AsCoapMessage(aMessage),
+                                                                      AsCoreType(aMessageInfo));
 }
 
 void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -730,8 +729,8 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
         switch (tlv.GetType())
         {
         case NetworkDiagnosticTlv::kExtMacAddress:
-            SuccessOrExit(error = Tlv::Read<ExtMacAddressTlv>(
-                              aMessage, offset, static_cast<Mac::ExtAddress &>(aNetworkDiagTlv.mData.mExtAddress)));
+            SuccessOrExit(
+                error = Tlv::Read<ExtMacAddressTlv>(aMessage, offset, AsCoreType(&aNetworkDiagTlv.mData.mExtAddress)));
             break;
 
         case NetworkDiagnosticTlv::kAddress16:

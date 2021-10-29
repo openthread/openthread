@@ -26,64 +26,30 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# ==============================================================================
-# Verify board is supported for platform
-# ==============================================================================
-if(BOARD_LOWERCASE STREQUAL "brd4151a")
-    set(MCU "EFR32MG1P232F256GM48")
-else()
-    message(FATAL_ERROR "
-    BOARD=${BOARD} not supported.
+add_library(openthread-cli-radio)
 
-    Please provide a value for BOARD variable e.g BOARD=brd4151a.
-    Currently supported:
-    - brd4151a
-    ")
-endif()
-
-list(APPEND OT_PLATFORM_DEFINES "${MCU}")
-set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-
-# ==============================================================================
-# Platform library
-# ==============================================================================
-set(OT_PLATFORM_LIB "openthread-efr32mg1")
-set(OT_PLATFORM_LIB ${OT_PLATFORM_LIB} PARENT_SCOPE)
-
-set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/efr32mg1/efr32mg1.ld")
-
-add_library(openthread-efr32mg1
-    ${EFR32_COMMON_SOURCES}
-    $<TARGET_OBJECTS:openthread-platform-utils>
+target_compile_definitions(openthread-cli-radio
+    PRIVATE
+        OPENTHREAD_RADIO=1
+        OPENTHREAD_RADIO_CLI=1
 )
 
-target_link_libraries(openthread-efr32mg1
-    PUBLIC
-        ${EFR32_COMMON_3RD_LIBS}
-        silabs-libnvm3_CM4_gcc
-        silabs-efr32mg1-sdk
-        -T${LD_FILE}
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+target_compile_options(openthread-cli-radio PRIVATE
+    ${OT_CFLAGS}
+)
+
+target_include_directories(openthread-cli-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+
+target_sources(openthread-cli-radio
     PRIVATE
+        cli.cpp
+        cli_output.cpp
+)
+
+target_link_libraries(openthread-cli-radio
+    PUBLIC
+        openthread-radio
+    PRIVATE
+        ${OT_MBEDTLS}
         ot-config
 )
-
-target_compile_definitions(openthread-efr32mg1
-    PUBLIC
-        ${OT_PLATFORM_DEFINES}
-)
-
-target_compile_options(openthread-efr32mg1
-    PRIVATE
-        ${EFR32_CFLAGS}
-)
-
-target_include_directories(openthread-efr32mg1
-    PUBLIC
-        ${EFR32_INCLUDES}
-    PRIVATE
-        ${SILABS_EFR32MG1X_INCLUDES}
-        ${OT_PUBLIC_INCLUDES}
-)
-

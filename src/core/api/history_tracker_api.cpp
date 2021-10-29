@@ -37,7 +37,7 @@
 
 #include <openthread/history_tracker.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 #include "utils/history_tracker.hpp"
 
@@ -45,47 +45,53 @@ using namespace ot;
 
 void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator)
 {
-    static_cast<Utils::HistoryTracker::Iterator *>(aIterator)->Init();
+    AsCoreType(aIterator).Init();
 }
 
 const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInstance *              aInstance,
                                                                          otHistoryTrackerIterator *aIterator,
                                                                          uint32_t *                aEntryAge)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNetInfoHistory(AsCoreType(aIterator), *aEntryAge);
+}
 
-    return instance.Get<Utils::HistoryTracker>().IterateNetInfoHistory(
-        *static_cast<Utils::HistoryTracker::Iterator *>(aIterator), *aEntryAge);
+const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge)
+{
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateUnicastAddressHistory(AsCoreType(aIterator),
+                                                                                           *aEntryAge);
+}
+
+const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddressHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge)
+{
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateMulticastAddressHistory(AsCoreType(aIterator),
+                                                                                             *aEntryAge);
 }
 
 const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance *              aInstance,
                                                                     otHistoryTrackerIterator *aIterator,
                                                                     uint32_t *                aEntryAge)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::HistoryTracker>().IterateRxHistory(
-        *static_cast<Utils::HistoryTracker::Iterator *>(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateRxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *              aInstance,
                                                                     otHistoryTrackerIterator *aIterator,
                                                                     uint32_t *                aEntryAge)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::HistoryTracker>().IterateTxHistory(
-        *static_cast<Utils::HistoryTracker::Iterator *>(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateTxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance *              aInstance,
                                                                            otHistoryTrackerIterator *aIterator,
                                                                            uint32_t *                aEntryAge)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::HistoryTracker>().IterateNeighborHistory(
-        *static_cast<Utils::HistoryTracker::Iterator *>(aIterator), *aEntryAge);
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNeighborHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)

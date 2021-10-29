@@ -40,6 +40,7 @@ set(COMMON_SOURCES
     cli_history.cpp
     cli_joiner.cpp
     cli_network_data.cpp
+    cli_output.cpp
     cli_srp_client.cpp
     cli_srp_server.cpp
     cli_tcp.cpp
@@ -52,6 +53,10 @@ endif()
 
 if(OT_MTD)
     include(mtd.cmake)
+endif()
+
+if(OT_RCP)
+    include(radio.cmake)
 endif()
 
 set_property(SOURCE cli_joiner.cpp

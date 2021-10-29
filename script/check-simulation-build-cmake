@@ -42,21 +42,44 @@ build_all_features()
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1
 
+    # Build Thread 1.1 cli-radio
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation \
+        -DOT_THREAD_VERSION=1.1 \
+        -DOT_DIAGNOSTIC=ON \
+        -DOT_APP_CLI=ON \
+        -DOT_APP_NCP=OFF \
+        -DOT_APP_RCP=OFF \
+        -DOT_FTD=OFF \
+        -DOT_MTD=OFF
+
+    # Thread 1.2 options
+    local options=(
+        "-DOT_OTNS=ON"
+        "-DOT_SIMULATION_VIRTUAL_TIME=ON"
+        "-DOT_THREAD_VERSION=1.2"
+        "-DOT_MLR=ON"
+        "-DOT_BACKBONE_ROUTER=ON"
+        "-DOT_CSL_RECEIVER=ON"
+    )
+
     # Build Thread 1.2 with full features
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON
 
     # Build Thread 1.2 Backbone Router without DUA ND Proxying
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF
 
     # Build Thread 1.2 Backbone Router without Multicast Routing
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF
 
     # Build with Vendor Extension
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1 -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp
+    "$(dirname "$0")"/cmake-build simulation \
+        -DOT_THREAD_VERSION=1.1 \
+        -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp
 
     # Build Thread 1.2 with no additional features
     reset_source
@@ -64,7 +87,7 @@ build_all_features()
 
     # Build Thread 1.2 with full features and OT_ASSERT=OFF
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_ASSERT=OFF
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_ASSERT=OFF
 }
 
 build_toranj()

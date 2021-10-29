@@ -35,9 +35,8 @@
 
 #include <openthread/srp_client_buffers.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
-#include "utils/srp_client_buffers.hpp"
 
 using namespace ot;
 
@@ -45,58 +44,47 @@ using namespace ot;
 
 char *otSrpClientBuffersGetHostNameString(otInstance *aInstance, uint16_t *aSize)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::SrpClientBuffers>().GetHostNameString(*aSize);
+    return AsCoreType(aInstance).Get<Utils::SrpClientBuffers>().GetHostNameString(*aSize);
 }
 
 otIp6Address *otSrpClientBuffersGetHostAddressesArray(otInstance *aInstance, uint8_t *aArrayLength)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::SrpClientBuffers>().GetHostAddressesArray(*aArrayLength);
+    return AsCoreType(aInstance).Get<Utils::SrpClientBuffers>().GetHostAddressesArray(*aArrayLength);
 }
 
 otSrpClientBuffersServiceEntry *otSrpClientBuffersAllocateService(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::SrpClientBuffers>().AllocateService();
+    return AsCoreType(aInstance).Get<Utils::SrpClientBuffers>().AllocateService();
 }
 
 void otSrpClientBuffersFreeService(otInstance *aInstance, otSrpClientBuffersServiceEntry *aService)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Utils::SrpClientBuffers>().FreeService(
-        *static_cast<Utils::SrpClientBuffers::ServiceEntry *>(aService));
+    AsCoreType(aInstance).Get<Utils::SrpClientBuffers>().FreeService(AsCoreType(aService));
 }
 
 void otSrpClientBuffersFreeAllServices(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Utils::SrpClientBuffers>().FreeAllServices();
+    AsCoreType(aInstance).Get<Utils::SrpClientBuffers>().FreeAllServices();
 }
 
 char *otSrpClientBuffersGetServiceEntryServiceNameString(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aSize)
 {
-    return static_cast<Utils::SrpClientBuffers::ServiceEntry *>(aEntry)->GetServiceNameString(*aSize);
+    return AsCoreType(aEntry).GetServiceNameString(*aSize);
 }
 
 char *otSrpClientBuffersGetServiceEntryInstanceNameString(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aSize)
 {
-    return static_cast<Utils::SrpClientBuffers::ServiceEntry *>(aEntry)->GetInstanceNameString(*aSize);
+    return AsCoreType(aEntry).GetInstanceNameString(*aSize);
 }
 
 uint8_t *otSrpClientBuffersGetServiceEntryTxtBuffer(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aSize)
 {
-    return static_cast<Utils::SrpClientBuffers::ServiceEntry *>(aEntry)->GetTxtBuffer(*aSize);
+    return AsCoreType(aEntry).GetTxtBuffer(*aSize);
 }
 
 const char **otSrpClientBuffersGetSubTypeLabelsArray(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aArrayLength)
 {
-    return static_cast<Utils::SrpClientBuffers::ServiceEntry *>(aEntry)->GetSubTypeLabelsArray(*aArrayLength);
+    return AsCoreType(aEntry).GetSubTypeLabelsArray(*aArrayLength);
 }
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE

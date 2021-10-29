@@ -176,7 +176,34 @@ class SingleHostAndService(thread_cert.TestCase):
         self.host_check_mdns_service(host, '2001::2', 'my-service-1')
 
         #
-        # 7. Check if the expired service is removed by the Advertising Proxy.
+        # 7. Remove a single service and verify that the remaining one can still
+        #    be discovered.
+        #
+
+        client.srp_client_remove_service('my-service-1', '_ipps._tcp')
+        self.simulator.go(5)
+
+        self.check_host_and_service(server, client, '2001::2', 'my-service')
+        self.host_check_mdns_service(host, '2001::2', 'my-service')
+        self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
+
+        #
+        # 8. Update both the host and the service in a loop and make sure the
+        #    Advertising Proxy can follow.
+        #
+
+        for host_address_suffix, service_port in ((1, 12341), (2, 12342), (3, 12343), (2, 12345)):
+            host_address = f'2001::{host_address_suffix}'
+            client.srp_client_clear_service('my-service', '_ipps._tcp')
+            client.srp_client_set_host_address(host_address)
+            client.srp_client_add_service('my-service', '_ipps._tcp', service_port)
+            self.simulator.go(5)
+
+            self.check_host_and_service(server, client, host_address, 'my-service', service_port)
+            self.host_check_mdns_service(host, host_address, 'my-service', service_port)
+
+        #
+        # 9. Check if the expired service is removed by the Advertising Proxy.
         #
 
         client.srp_client_stop()
@@ -185,19 +212,19 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertIsNone(host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host'))
         self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
 
-    def host_check_mdns_service(self, host, host_addr, service_instance):
+    def host_check_mdns_service(self, host, host_addr, service_instance, service_port=12345):
         service = host.discover_mdns_service(service_instance, '_ipps._tcp', 'my-host')
         self.assertIsNotNone(service)
         self.assertEqual(service['instance'], service_instance)
         self.assertEqual(service['name'], '_ipps._tcp')
-        self.assertEqual(service['port'], 12345)
+        self.assertEqual(service['port'], service_port)
         self.assertEqual(service['priority'], 0)
         self.assertEqual(service['weight'], 0)
         self.assertEqual(service['host'], 'my-host')
         self.assertEqual(ipaddress.ip_address(service['addresses'][0]), ipaddress.ip_address(host_addr))
         self.assertEqual(len(service['addresses']), 1)
 
-    def check_host_and_service(self, server, client, host_addr, service_instance):
+    def check_host_and_service(self, server, client, host_addr, service_instance, service_port=12345):
         """Check that we have properly registered host and service instance.
         """
 
@@ -210,7 +237,7 @@ class SingleHostAndService(thread_cert.TestCase):
         # Verify that the client possesses correct service resources.
         self.assertEqual(client_service['instance'], service_instance)
         self.assertEqual(client_service['name'], '_ipps._tcp')
-        self.assertEqual(int(client_service['port']), 12345)
+        self.assertEqual(int(client_service['port']), service_port)
         self.assertEqual(int(client_service['priority']), 0)
         self.assertEqual(int(client_service['weight']), 0)
 

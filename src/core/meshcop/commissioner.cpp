@@ -38,6 +38,7 @@
 #include <stdio.h>
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -98,7 +99,7 @@ void Commissioner::SetState(State aState)
 
     if (mStateCallback)
     {
-        mStateCallback(static_cast<otCommissionerState>(mState), mCallbackContext);
+        mStateCallback(MapEnum(mState), mCallbackContext);
     }
 
 exit:
@@ -411,7 +412,7 @@ void Commissioner::SendCommissionerSet(void)
     dataset.mSessionId      = mSessionId;
     dataset.mIsSessionIdSet = true;
 
-    ComputeBloomFilter(static_cast<SteeringData &>(dataset.mSteeringData));
+    ComputeBloomFilter(AsCoreType(&dataset.mSteeringData));
     dataset.mIsSteeringDataSet = true;
 
     error = SendMgmtCommissionerSetRequest(dataset, nullptr, 0);
@@ -727,8 +728,8 @@ void Commissioner::HandleMgmtCommissionerGetResponse(void *               aConte
                                                      const otMessageInfo *aMessageInfo,
                                                      Error                aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(AsCoapMessagePtr(aMessage),
+                                                                             AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMessage,
@@ -801,8 +802,8 @@ void Commissioner::HandleMgmtCommissionerSetResponse(void *               aConte
                                                      const otMessageInfo *aMessageInfo,
                                                      Error                aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(AsCoapMessagePtr(aMessage),
+                                                                             AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMessage,
@@ -855,8 +856,8 @@ void Commissioner::HandleLeaderPetitionResponse(void *               aContext,
                                                 const otMessageInfo *aMessageInfo,
                                                 Error                aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(AsCoapMessagePtr(aMessage),
+                                                                        AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage,
@@ -950,8 +951,8 @@ void Commissioner::HandleLeaderKeepAliveResponse(void *               aContext,
                                                  const otMessageInfo *aMessageInfo,
                                                  Error                aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(AsCoapMessagePtr(aMessage),
+                                                                         AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessage,
@@ -979,8 +980,7 @@ exit:
 
 void Commissioner::HandleRelayReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleRelayReceive(*static_cast<Coap::Message *>(aMessage),
-                                                              *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Commissioner *>(aContext)->HandleRelayReceive(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1048,8 +1048,7 @@ exit:
 
 void Commissioner::HandleDatasetChanged(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleDatasetChanged(*static_cast<Coap::Message *>(aMessage),
-                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Commissioner *>(aContext)->HandleDatasetChanged(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Commissioner::HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1068,8 +1067,7 @@ exit:
 
 void Commissioner::HandleJoinerFinalize(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(*static_cast<Coap::Message *>(aMessage),
-                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1163,8 +1161,11 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     Coap::Message *  message;
     uint16_t         offset;
     Ip6::MessageInfo messageInfo;
+    Kek              kek;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+
+    Get<KeyManager>().ExtractKek(kek);
 
     message->InitAsNonConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kRelayTx));
@@ -1176,7 +1177,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 
     if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
     {
-        SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, Get<KeyManager>().GetKek()));
+        SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, kek));
     }
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);

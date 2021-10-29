@@ -219,6 +219,18 @@ typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
 typedef UintTlvInfo<Tlv::kPanId, uint16_t> PanIdTlv;
 
 /**
+ * This class defines Active Timestamp TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<Tlv::kActiveTimestamp, MeshCoP::Timestamp> ActiveTimestampTlv;
+
+/**
+ * This class defines Pending Timestamp TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<Tlv::kPendingTimestamp, MeshCoP::Timestamp> PendingTimestampTlv;
+
+/**
  * This class defines CSL Timeout TLV constants and types.
  *
  */
@@ -1190,68 +1202,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-/**
- * This class implements Active Timestamp TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ActiveTimestampTlv : public Tlv,
-                           public MeshCoP::Timestamp,
-                           public SimpleTlvInfo<Tlv::kActiveTimestamp, MeshCoP::Timestamp>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(Tlv::kActiveTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Pending Timestamp TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class PendingTimestampTlv : public Tlv,
-                            public MeshCoP::Timestamp,
-                            public SimpleTlvInfo<Tlv::kPendingTimestamp, MeshCoP::Timestamp>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(Tlv::kPendingTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-} OT_TOOL_PACKED_END;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
 /**

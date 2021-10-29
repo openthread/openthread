@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
@@ -124,8 +125,7 @@ void JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 
 void JoinerRouter::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<JoinerRouter *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-                                                            *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<JoinerRouter *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -172,8 +172,7 @@ exit:
 
 void JoinerRouter::HandleRelayTransmit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<JoinerRouter *>(aContext)->HandleRelayTransmit(*static_cast<Coap::Message *>(aMessage),
-                                                               *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<JoinerRouter *>(aContext)->HandleRelayTransmit(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -314,9 +313,9 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     Error          error;
     Coap::Message *message = nullptr;
     Dataset        dataset;
-
     NetworkNameTlv networkName;
     const Tlv *    tlv;
+    NetworkKey     networkKey;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
@@ -325,7 +324,8 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     SuccessOrExit(error = message->SetPayloadMarker());
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, Get<KeyManager>().GetNetworkKey()));
+    Get<KeyManager>().GetNetworkKey(networkKey);
+    SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, networkKey));
     SuccessOrExit(error = Tlv::Append<MeshLocalPrefixTlv>(*message, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<Mac::Mac>().GetExtendedPanId()));
 
@@ -391,8 +391,8 @@ void JoinerRouter::HandleJoinerEntrustResponse(void *               aContext,
                                                const otMessageInfo *aMessageInfo,
                                                Error                aResult)
 {
-    static_cast<JoinerRouter *>(aContext)->HandleJoinerEntrustResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<JoinerRouter *>(aContext)->HandleJoinerEntrustResponse(AsCoapMessagePtr(aMessage),
+                                                                       AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,

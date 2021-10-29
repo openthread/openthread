@@ -38,6 +38,7 @@
 
 #include <openthread/netdata.h>
 
+#include "common/const_cast.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -221,8 +222,7 @@ public:
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType)
     {
-        return const_cast<NetworkDataTlv *>(
-            Find(const_cast<const NetworkDataTlv *>(aStart), const_cast<const NetworkDataTlv *>(aEnd), aType));
+        return AsNonConst(Find(AsConst(aStart), AsConst(aEnd), aType));
     }
 
     /**
@@ -283,8 +283,7 @@ public:
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType, bool aStable)
     {
-        return const_cast<NetworkDataTlv *>(
-            Find(const_cast<const NetworkDataTlv *>(aStart), const_cast<const NetworkDataTlv *>(aEnd), aType, aStable));
+        return AsNonConst(Find(AsConst(aStart), AsConst(aEnd), aType, aStable));
     }
 
     /**
@@ -793,10 +792,7 @@ public:
      * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
-    NetworkDataTlv *FindSubTlv(Type aType)
-    {
-        return const_cast<NetworkDataTlv *>(const_cast<const PrefixTlv *>(this)->FindSubTlv(aType));
-    }
+    NetworkDataTlv *FindSubTlv(Type aType) { return AsNonConst(AsConst(this)->FindSubTlv(aType)); }
 
     /**
      * This method searches in the sub-TLVs to find the first one matching a given TLV type.
@@ -819,7 +815,7 @@ public:
      */
     NetworkDataTlv *FindSubTlv(Type aType, bool aStable)
     {
-        return const_cast<NetworkDataTlv *>(const_cast<const PrefixTlv *>(this)->FindSubTlv(aType, aStable));
+        return AsNonConst(AsConst(this)->FindSubTlv(aType, aStable));
     }
 
     /**
@@ -1255,31 +1251,9 @@ public:
      * @param[in]  aServiceId          The Service Id value.
      * @param[in]  aEnterpriseNumber   The Enterprise Number.
      * @param[in]  aServiceData        The Service Data.
-     * @param[in]  aServiceDataLength  The Service Data length (number of bytes).
      *
      */
-    void Init(uint8_t aServiceId, uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
-    {
-        NetworkDataTlv::Init();
-        SetType(kTypeService);
-
-        mFlagsServiceId = (aEnterpriseNumber == kThreadEnterpriseNumber) ? kThreadEnterpriseFlag : 0;
-        mFlagsServiceId |= (aServiceId & kServiceIdMask);
-
-        if (aEnterpriseNumber != kThreadEnterpriseNumber)
-        {
-            mShared.mEnterpriseNumber = HostSwap32(aEnterpriseNumber);
-            mServiceDataLength        = aServiceDataLength;
-            memcpy(&mServiceDataLength + sizeof(uint8_t), aServiceData, aServiceDataLength);
-        }
-        else
-        {
-            mShared.mServiceDataLengthThreadEnterprise = aServiceDataLength;
-            memcpy(&mShared.mServiceDataLengthThreadEnterprise + sizeof(uint8_t), aServiceData, aServiceDataLength);
-        }
-
-        SetLength(GetFieldsLength());
-    }
+    void Init(uint8_t aServiceId, uint32_t aEnterpriseNumber, const ServiceData &aServiceData);
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1319,6 +1293,17 @@ public:
     }
 
     /**
+     * This method gets the Service Data.
+     *
+     * @param[out] aServiceData   A reference to a`ServiceData` to return the data.
+     *
+     */
+    void GetServiceData(ServiceData &aServiceData) const
+    {
+        aServiceData.Init(GetServiceData(), GetServiceDataLength());
+    }
+
+    /**
      * This method gets Service Data length.
      *
      * @returns length of the Service Data field in bytes.
@@ -1327,30 +1312,6 @@ public:
     uint8_t GetServiceDataLength(void) const
     {
         return IsThreadEnterprise() ? mShared.mServiceDataLengthThreadEnterprise : mServiceDataLength;
-    }
-
-    /**
-     * This method returns a pointer to the Service Data.
-     *
-     * @returns A pointer to the Service Data.
-     *
-     */
-    uint8_t *GetServiceData(void)
-    {
-        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
-               sizeof(uint8_t);
-    }
-
-    /**
-     * This method returns a pointer to the Service Data.
-     *
-     * @returns A pointer to the Service Data.
-     *
-     */
-    const uint8_t *GetServiceData(void) const
-    {
-        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
-               sizeof(uint8_t);
     }
 
     /**
@@ -1410,6 +1371,12 @@ public:
 private:
     bool IsThreadEnterprise(void) const { return (mFlagsServiceId & kThreadEnterpriseFlag) != 0; }
 
+    const uint8_t *GetServiceData(void) const
+    {
+        return (IsThreadEnterprise() ? &mShared.mServiceDataLengthThreadEnterprise : &mServiceDataLength) +
+               sizeof(uint8_t);
+    }
+
     uint8_t GetFieldsLength(void) const
     {
         // Returns the length of TLV value's common fields (flags, enterprise
@@ -1452,16 +1419,15 @@ public:
      *
      * @param[in] aServer16          The Server16 value.
      * @param[in] aServerData        The Server Data.
-     * @param[in] aServerDataLength  Server Data length in bytes.
      *
      */
-    void Init(uint16_t aServer16, const uint8_t *aServerData, uint8_t aServerDataLength)
+    void Init(uint16_t aServer16, const ServerData &aServerData)
     {
         NetworkDataTlv::Init();
         SetType(kTypeServer);
         SetServer16(aServer16);
-        memcpy(reinterpret_cast<uint8_t *>(this) + sizeof(*this), aServerData, aServerDataLength);
-        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerDataLength);
+        aServerData.CopyBytesTo(GetServerData());
+        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + aServerData.GetLength());
     }
 
     /**
@@ -1490,12 +1456,12 @@ public:
     void SetServer16(uint16_t aServer16) { mServer16 = HostSwap16(aServer16); }
 
     /**
-     * This method returns the Server Data.
+     * This method gets the Server Data.
      *
-     * @returns A pointer to the Server Data.
+     * @param[out] aServerData   A reference to a`ServerData` to return the data.
      *
      */
-    const uint8_t *GetServerData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
+    void GetServerData(ServerData &aServerData) const { aServerData.Init(GetServerData(), GetServerDataLength()); }
 
     /**
      * This method returns the Server Data length in bytes.
@@ -1532,6 +1498,9 @@ public:
     static uint16_t CalculateSize(uint8_t aServerDataLength) { return sizeof(ServerTlv) + aServerDataLength; }
 
 private:
+    const uint8_t *GetServerData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
+    uint8_t *      GetServerData(void) { return AsNonConst(AsConst(this)->GetServerData()); }
+
     uint16_t mServer16;
 } OT_TOOL_PACKED_END;
 

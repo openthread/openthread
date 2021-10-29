@@ -40,6 +40,7 @@
 
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
@@ -960,13 +961,13 @@ private:
 
     const HelpData &GetHelpData(void) const
     {
-        static_assert(sizeof(mBuffer.mHead.mMetadata) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
+        static_assert(sizeof(HelpData) + kHelpDataAlignment <= kHeadBufferDataSize,
                       "Insufficient buffer size for CoAP processing!");
 
-        return *static_cast<const HelpData *>(OT_ALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
+        return *static_cast<const HelpData *>(OT_ALIGN(GetFirstData(), kHelpDataAlignment));
     }
 
-    HelpData &GetHelpData(void) { return const_cast<HelpData &>(static_cast<const Message *>(this)->GetHelpData()); }
+    HelpData &GetHelpData(void) { return AsNonConst(AsConst(this)->GetHelpData()); }
 
     uint8_t *GetToken(void) { return GetHelpData().mHeader.mToken; }
 

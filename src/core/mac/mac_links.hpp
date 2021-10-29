@@ -511,11 +511,7 @@ public:
     void Send(void)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        {
-            Error error = mSubMac.Send();
-            OT_ASSERT(error == kErrorNone);
-            OT_UNUSED_VARIABLE(error);
-        }
+        SuccessOrAssert(mSubMac.Send());
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         mTrel.Send();
@@ -633,7 +629,7 @@ public:
      * @returns A reference to the current MAC key.
      *
      */
-    const Key *GetCurrentMacKey(const Frame &aFrame) const;
+    const KeyMaterial *GetCurrentMacKey(const Frame &aFrame) const;
 
     /**
      * This method returns a reference to the temporary MAC key (for Key Mode 1) for a given Frame based on a given
@@ -645,7 +641,7 @@ public:
      * @returns A reference to the temporary MAC key.
      *
      */
-    const Key *GetTemporaryMacKey(const Frame &aFrame, uint32_t aKeySequence) const;
+    const KeyMaterial *GetTemporaryMacKey(const Frame &aFrame, uint32_t aKeySequence) const;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**

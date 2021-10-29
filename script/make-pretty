@@ -74,6 +74,7 @@ readonly OT_PYTHON_SOURCES=('*.py')
 readonly OT_CLANG_TIDY_FIX_DIRS=('examples' 'include' 'src' 'tests')
 readonly OT_CLANG_TIDY_BUILD_OPTS=(
     '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'
+    '-DOT_ANYCAST_LOCATOR=ON'
     '-DOT_APP_RCP=OFF'
     '-DOT_MTD=OFF'
     '-DOT_RCP=OFF'
@@ -122,6 +123,7 @@ readonly OT_CLANG_TIDY_BUILD_OPTS=(
     '-DOT_COVERAGE=ON'
     '-DOT_LOG_LEVEL_DYNAMIC=ON'
     '-DOT_COMPILE_WARNING_AS_ERROR=ON'
+    '-DOT_UPTIME=ON'
 )
 
 readonly OT_CLANG_TIDY_CHECKS="\

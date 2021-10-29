@@ -37,6 +37,7 @@
 
 #include "tcp6.hpp"
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
 #include "common/instance.hpp"
@@ -77,19 +78,19 @@ exit:
 
 Instance &Tcp::Endpoint::GetInstance(void)
 {
-    return *static_cast<Instance *>(mInstance);
+    return AsCoreType(mInstance);
 }
 
 const SockAddr &Tcp::Endpoint::GetLocalAddress(void) const
 {
     static otSockAddr temp;
-    return *static_cast<SockAddr *>(&temp);
+    return AsCoreType(&temp);
 }
 
 const SockAddr &Tcp::Endpoint::GetPeerAddress(void) const
 {
     static otSockAddr temp;
-    return *static_cast<SockAddr *>(&temp);
+    return AsCoreType(&temp);
 }
 
 Error Tcp::Endpoint::Bind(const SockAddr &aSockName)
@@ -273,7 +274,7 @@ exit:
 
 Instance &Tcp::Listener::GetInstance(void)
 {
-    return *static_cast<Instance *>(mInstance);
+    return AsCoreType(mInstance);
 }
 
 Error Tcp::Listener::Listen(const SockAddr &aSockName)

@@ -36,7 +36,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/misc.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
@@ -78,9 +78,7 @@ otInstance *otInstanceInitSingle(void)
 bool otInstanceIsInitialized(otInstance *aInstance)
 {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.IsInitialized();
+    return AsCoreType(aInstance).IsInitialized();
 #else
     OT_UNUSED_VARIABLE(aInstance);
     return true;
@@ -89,46 +87,54 @@ bool otInstanceIsInitialized(otInstance *aInstance)
 
 void otInstanceFinalize(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-    instance.Finalize();
+    AsCoreType(aInstance).Finalize();
 }
 
 void otInstanceReset(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Reset();
+    AsCoreType(aInstance).Reset();
 }
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+uint64_t otInstanceGetUptime(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Uptime>().GetUptime();
+}
+
+void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t aSize)
+{
+    AsCoreType(aInstance).Get<Uptime>().GetUptime(aBuffer, aSize);
+}
+#endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Notifier>().RegisterCallback(aCallback, aContext);
+    return AsCoreType(aInstance).Get<Notifier>().RegisterCallback(aCallback, aContext);
 }
 
 void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Notifier>().RemoveCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<Notifier>().RemoveCallback(aCallback, aContext);
 }
 
 void otInstanceFactoryReset(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.FactoryReset();
+    AsCoreType(aInstance).FactoryReset();
 }
 
 otError otInstanceErasePersistentInfo(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.ErasePersistentInfo();
+    return AsCoreType(aInstance).ErasePersistentInfo();
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_RADIO
+void otInstanceResetRadioStack(otInstance *aInstance)
+{
+    AsCoreType(aInstance).ResetRadioStack();
+}
+#endif
 
 const char *otGetVersionString(void)
 {
@@ -187,7 +193,5 @@ const char *otGetVersionString(void)
 
 const char *otGetRadioVersionString(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Radio>().GetVersionString();
+    return AsCoreType(aInstance).Get<Radio>().GetVersionString();
 }
