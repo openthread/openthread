@@ -683,13 +683,16 @@ public:
      * node should include Vendor-Specific IE containing Link Metrics data. This method informs the radio to start/stop
      * to collect Link Metrics data and include Vendor-Specific IE that containing the data in Enhanced-ACK sent to that
      * Probing Initiator.
-     * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2
-     * metrics can be specified. The probing would be disabled if @p `aLinkMetrics` is bitwise 0.
-     * @param[in]  aShortAddr    The short address of the Probing Initiator.
-     * @param[in]  aExtAddr      The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
+     *
+     * @param[in]  aLinkMetrics   This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2
+     *                            metrics can be specified. The probing would be disabled if @p aLinkMetrics is
+     *                            bitwise 0.
+     * @param[in]  aShortAddress  The short address of the Probing Initiator.
+     * @param[in]  aExtAddress    The extended source address of the Probing Initiator. @p aExtAddress MUST NOT be
+     *                            nullptr.
      *
      * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
-     * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `NULL`.
+     * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is nullptr.
      * @retval  OT_ERROR_NOT_FOUND       The Initiator indicated by @p aShortAddress is not found when trying to clear.
      * @retval  OT_ERROR_NO_BUFS         No more Initiator can be supported.
      */
