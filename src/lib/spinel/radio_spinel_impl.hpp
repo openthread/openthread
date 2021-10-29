@@ -2406,5 +2406,41 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::ConfigureEnhAckProbing(otLinkMetrics        aLinkMetrics,
+                                                                               const otShortAddress aShortAddress,
+                                                                               const otExtAddress & aExtAddress)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t flags = 0;
+
+    if (aLinkMetrics.mPduCount)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_PDU_COUNT;
+    }
+
+    if (aLinkMetrics.mLqi)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_LQI;
+    }
+
+    if (aLinkMetrics.mLinkMargin)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_LINK_MARGIN;
+    }
+
+    if (aLinkMetrics.mRssi)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_RSSI;
+    }
+
+    error = Set(SPINEL_PROP_RCP_ENH_ACK_PROBING, SPINEL_DATATYPE_UINT16_S, SPINEL_DATATYPE_EUI64_S,
+                SPINEL_DATATYPE_UINT8_S, aShortAddress, aExtAddress.m8, flags);
+
+    return error;
+}
+#endif
+
 } // namespace Spinel
 } // namespace ot
