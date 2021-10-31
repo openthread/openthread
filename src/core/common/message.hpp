@@ -41,6 +41,7 @@
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/data.hpp"
@@ -1518,6 +1519,11 @@ private:
  * @}
  *
  */
+
+DefineCoreType(otMessageBuffer, Buffer);
+DefineCoreType(otMessageSettings, Message::Settings);
+DefineCoreType(otMessage, Message);
+DefineCoreType(otMessageQueue, MessageQueue);
 
 } // namespace ot
 

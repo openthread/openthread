@@ -39,6 +39,7 @@
 #include <openthread/dns.h>
 #include <openthread/dns_client.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -2585,6 +2586,10 @@ public:
  */
 
 } // namespace Dns
+
+DefineCoreType(otDnsTxtEntry, Dns::TxtEntry);
+DefineCoreType(otDnsTxtEntryIterator, Dns::TxtEntry::Iterator);
+
 } // namespace ot
 
 #endif // DNS_HEADER_HPP_

@@ -38,6 +38,7 @@
 
 #include <openthread/platform/crypto.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
@@ -330,6 +331,9 @@ private:
 };
 
 } // namespace Crypto
+
+DefineCoreType(otCryptoKey, Crypto::Key);
+
 } // namespace ot
 
 #endif // STORAGE_HPP_

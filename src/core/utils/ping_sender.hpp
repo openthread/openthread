@@ -40,6 +40,7 @@
 
 #include <openthread/ping_sender.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -184,6 +185,11 @@ private:
 };
 
 } // namespace Utils
+
+DefineCoreType(otPingSenderReply, Utils::PingSender::Reply);
+DefineCoreType(otPingSenderConfig, Utils::PingSender::Config);
+DefineCoreType(otPingSenderStatistics, Utils::PingSender::Statistics);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE

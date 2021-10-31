@@ -35,6 +35,7 @@
 
 #include <openthread/srp_client.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -896,6 +897,11 @@ private:
 };
 
 } // namespace Srp
+
+DefineCoreType(otSrpClientHostInfo, Srp::Client::HostInfo);
+DefineCoreType(otSrpClientService, Srp::Client::Service);
+DefineMapEnum(otSrpClientItemState, Srp::Client::ItemState);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE

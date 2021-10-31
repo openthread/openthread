@@ -41,6 +41,7 @@
 #include <openthread/history_tracker.h>
 #include <openthread/platform/radio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -395,6 +396,12 @@ private:
 };
 
 } // namespace Utils
+
+DefineCoreType(otHistoryTrackerIterator, Utils::HistoryTracker::Iterator);
+DefineCoreType(otHistoryTrackerNetworkInfo, Utils::HistoryTracker::NetworkInfo);
+DefineCoreType(otHistoryTrackerMessageInfo, Utils::HistoryTracker::MessageInfo);
+DefineCoreType(otHistoryTrackerNeighborInfo, Utils::HistoryTracker::NeighborInfo);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

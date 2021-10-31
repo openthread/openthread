@@ -39,6 +39,7 @@
 
 #include <openthread/dataset.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/const_cast.hpp"
 #include "common/locator.hpp"
@@ -963,6 +964,10 @@ template <> inline Error Dataset::SetTlv(Tlv::Type aType, const uint32_t &aValue
 }
 
 } // namespace MeshCoP
+
+DefineCoreType(otOperationalDatasetComponents, MeshCoP::Dataset::Components);
+DefineCoreType(otOperationalDataset, MeshCoP::Dataset::Info);
+
 } // namespace ot
 
 #endif // MESHCOP_DATASET_HPP_

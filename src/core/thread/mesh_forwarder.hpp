@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -593,6 +594,8 @@ private:
  * @}
  *
  */
+
+DefineCoreType(otThreadLinkInfo, ThreadLinkInfo);
 
 } // namespace ot
 

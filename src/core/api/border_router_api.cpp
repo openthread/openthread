@@ -38,8 +38,8 @@
 #include <openthread/border_router.h>
 
 #include "border_router/routing_manager.hpp"
-#include "common/as_core_type.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 
 using namespace ot;
 

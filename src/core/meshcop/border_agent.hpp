@@ -41,6 +41,7 @@
 #include <openthread/border_agent.h>
 
 #include "coap/coap.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -198,6 +199,9 @@ private:
 };
 
 } // namespace MeshCoP
+
+DefineMapEnum(otBorderAgentState, MeshCoP::BorderAgent::State);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

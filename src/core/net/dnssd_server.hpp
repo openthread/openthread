@@ -35,6 +35,7 @@
 
 #include <openthread/dnssd_server.h>
 
+#include "common/as_core_type.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -406,6 +407,9 @@ private:
 
 } // namespace ServiceDiscovery
 } // namespace Dns
+
+DefineMapEnum(otDnssdQueryType, Dns::ServiceDiscovery::Server::DnsQueryType);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

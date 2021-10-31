@@ -41,6 +41,7 @@
 #include <openthread/crypto.h>
 #include <openthread/platform/crypto.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/equatable.hpp"
@@ -155,6 +156,9 @@ private:
  */
 
 } // namespace Crypto
+
+DefineCoreType(otCryptoSha256Hash, Crypto::Sha256::Hash);
+
 } // namespace ot
 
 #endif // SHA256_HPP_

@@ -42,6 +42,7 @@
 
 #include <openthread/thread.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
@@ -588,6 +589,11 @@ typedef Mac::Key Key;
  */
 
 } // namespace Mle
+
+DefineCoreType(otMeshLocalPrefix, Mle::MeshLocalPrefix);
+DefineCoreType(otLeaderData, Mle::LeaderData);
+DefineMapEnum(otDeviceRole, Mle::DeviceRole);
+
 } // namespace ot
 
 #endif // MLE_TYPES_HPP_

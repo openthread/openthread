@@ -38,6 +38,7 @@
 
 #include <openthread/netdata.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/debug.hpp"
@@ -347,6 +348,11 @@ private:
 };
 
 } // namespace NetworkData
+
+DefineCoreType(otBorderRouterConfig, NetworkData::OnMeshPrefixConfig);
+DefineCoreType(otExternalRouteConfig, NetworkData::ExternalRouteConfig);
+DefineCoreType(otServiceConfig, NetworkData::ServiceConfig);
+DefineCoreType(otServerConfig, NetworkData::ServiceConfig::ServerConfig);
 
 /**
  * @}

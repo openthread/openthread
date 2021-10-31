@@ -45,6 +45,7 @@
 
 #include <openthread/link.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -453,6 +454,11 @@ private:
  */
 
 } // namespace LinkMetrics
+
+DefineCoreType(otLinkMetrics, LinkMetrics::Metrics);
+DefineCoreType(otLinkMetricsValues, LinkMetrics::MetricsValues);
+DefineMapEnum(otLinkMetricsEnhAckFlags, LinkMetrics::EnhAckFlags);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

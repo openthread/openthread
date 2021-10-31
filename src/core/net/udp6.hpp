@@ -39,6 +39,7 @@
 #include <openthread/udp.h>
 #include <openthread/platform/udp.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -651,6 +652,10 @@ private:
  */
 
 } // namespace Ip6
+
+DefineCoreType(otUdpSocket, Ip6::Udp::SocketHandle);
+DefineCoreType(otUdpReceiver, Ip6::Udp::Receiver);
+
 } // namespace ot
 
 #endif // UDP6_HPP_

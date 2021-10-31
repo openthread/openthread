@@ -35,6 +35,7 @@
 
 #include <openthread/dns_client.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -746,6 +747,15 @@ private:
 };
 
 } // namespace Dns
+
+DefineCoreType(otDnsQueryConfig, Dns::Client::QueryConfig);
+DefineCoreType(otDnsAddressResponse, Dns::Client::AddressResponse);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+DefineCoreType(otDnsBrowseResponse, Dns::Client::BrowseResponse);
+DefineCoreType(otDnsServiceResponse, Dns::Client::ServiceResponse);
+DefineCoreType(otDnsServiceInfo, Dns::Client::ServiceInfo);
+#endif
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE

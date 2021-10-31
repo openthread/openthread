@@ -42,6 +42,7 @@
 #include <openthread/link.h>
 #include <openthread/thread.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/equatable.hpp"
@@ -1020,6 +1021,12 @@ private:
  */
 
 } // namespace Mac
+
+DefineCoreType(otExtAddress, Mac::ExtAddress);
+DefineCoreType(otMacKey, Mac::Key);
+DefineCoreType(otExtendedPanId, Mac::ExtendedPanId);
+DefineCoreType(otNetworkName, Mac::NetworkName);
+
 } // namespace ot
 
 #endif // MAC_TYPES_HPP_

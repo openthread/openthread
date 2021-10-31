@@ -39,6 +39,7 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include "common/as_core_type.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"

@@ -44,6 +44,7 @@
 #include <openthread/joiner.h>
 
 #include "coap/coap.hpp"
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/message.hpp"
@@ -472,6 +473,10 @@ inline void LogError(const char *, Error)
 #endif
 
 } // namespace MeshCoP
+
+DefineCoreType(otJoinerPskd, MeshCoP::JoinerPskd);
+DefineCoreType(otJoinerDiscerner, MeshCoP::JoinerDiscerner);
+DefineCoreType(otSteeringData, MeshCoP::SteeringData);
 
 } // namespace ot
 

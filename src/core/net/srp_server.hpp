@@ -53,6 +53,7 @@
 #include <openthread/ip6.h>
 #include <openthread/srp_server.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
@@ -889,6 +890,13 @@ private:
 };
 
 } // namespace Srp
+
+DefineCoreType(otSrpServerLeaseConfig, Srp::Server::LeaseConfig);
+DefineCoreType(otSrpServerHost, Srp::Server::Host);
+DefineCoreType(otSrpServerService, Srp::Server::Service);
+DefineMapEnum(otSrpServerState, Srp::Server::State);
+DefineMapEnum(otSrpServerAddressMode, Srp::Server::AddressMode);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
