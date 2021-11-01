@@ -515,7 +515,6 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &srcAddress, const I
     Mac::Address      rloc;
 
     VerifyOrExit(Get<Local>().IsPrimary());
-    VerifyOrExit(Get<Leader>().IsDomainUnicast(srcAddress));
     VerifyOrExit(Get<Leader>().IsDomainUnicast(dstAddress));
 
     VerifyOrExit(!mNdProxyTable.IsRegistered(dstAddress.GetIid()));
