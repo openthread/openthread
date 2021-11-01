@@ -445,29 +445,20 @@ otError SpiInterface::PushPullSpi(void)
         // Go ahead and try to immediately send a frame if we have it queued up.
         txFrame.SetHeaderDataLen(mSpiTxPayloadSize);
 
-        if (mSpiTxPayloadSize > spiTransferBytes)
-        {
-            spiTransferBytes = mSpiTxPayloadSize;
-        }
+        spiTransferBytes = OT_MAX(spiTransferBytes, mSpiTxPayloadSize);
     }
 
     if (mSpiSlaveDataLen != 0)
     {
         // In a previous transaction the slave indicated it had something to send us. Make sure our transaction
         // is large enough to handle it.
-        if (mSpiSlaveDataLen > spiTransferBytes)
-        {
-            spiTransferBytes = mSpiSlaveDataLen;
-        }
+        spiTransferBytes = OT_MAX(spiTransferBytes, mSpiSlaveDataLen);
     }
     else
     {
         // Set up a minimum transfer size to allow small frames the slave wants to send us to be handled in a
         // single transaction.
-        if (spiTransferBytes < mSpiSmallPacketSize)
-        {
-            spiTransferBytes = mSpiSmallPacketSize;
-        }
+        spiTransferBytes = OT_MAX(spiTransferBytes, mSpiSmallPacketSize);
     }
 
     txFrame.SetHeaderAcceptLen(spiTransferBytes);
