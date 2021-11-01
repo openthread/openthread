@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,43 +27,55 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import thread_cert
+from test_srp_register_500_services import CLIENT_IDS, INSTANCE_IDS, SrpRegister500Services, SERVER, SERVICE_NAME
 
-LEADER = 1
-ROUTER = 2
+# Test description:
+#   This test verifies SRP function that SRP clients can register up to 500 services to one SRP server.
+#
+#   This test is same as test_srp_register_500_services.py, with the only difference that the SRP server
+#   is running on an OTBR (Docker).
+#
+
+HOST = SERVER + 1
 
 
-class Test_MacScan(thread_cert.TestCase):
-    TOPOLOGY = {
-        LEADER: {
-            'channel': 12,
-            'mode': 'rdn',
-            'network_name': 'OpenThread',
-            'allowlist': [ROUTER]
-        },
-        ROUTER: {
-            'channel': 12,
-            'mode': 'rdn',
-            'network_name': 'OpenThread',
-            'allowlist': [LEADER]
-        },
+class SrpRegister500ServicesBR(SrpRegister500Services):
+    TOPOLOGY = SrpRegister500Services.TOPOLOGY
+    TOPOLOGY[SERVER]['is_otbr'] = True
+    TOPOLOGY[HOST] = {
+        'name': 'Host',
+        'is_host': True,
     }
 
     def test(self):
-        self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
-        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        self.nodes[HOST].start(start_radvd=False)
 
-        self.nodes[ROUTER].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
+        self._test_impl()
 
-        results = self.nodes[LEADER].scan()
-        self.assertEqual(len(results), 16)
+        # Verify all SRP services are resolvable via mDNS
+        host = self.nodes[HOST]
 
+        browse_retry = 3
+        for i in range(browse_retry):
+            try:
+                service_instances = set(host.browse_mdns_services(SERVICE_NAME, timeout=10))
+                print(service_instances)
+
+                for clientid in CLIENT_IDS:
+                    for instanceid in INSTANCE_IDS:
+                        self.assertIn(f'client{clientid}_{instanceid}', service_instances)
+
+                break
+
+            except Exception:
+                if i < browse_retry - 1:
+                    self.simulator.go(3)
+                    continue
+
+
+del SrpRegister500Services
 
 if __name__ == '__main__':
     unittest.main()

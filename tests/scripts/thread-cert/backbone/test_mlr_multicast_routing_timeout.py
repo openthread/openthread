@@ -116,7 +116,7 @@ class TestMlrTimeout(thread_cert.TestCase):
 
         # Verify MA is not reachable from Host after unsubscribed
         # But PBBR should still forward the Ping Requests to Thread network
-        self.assertFalse(self.nodes[HOST].ping(MA1, backbone=True, ttl=10))
+        self.nodes[HOST].ping(MA1, backbone=True, ttl=10)
 
         self.simulator.go(MLR_TIMEOUT + WAIT_REDUNDANCE)
 

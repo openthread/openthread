@@ -113,11 +113,10 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
         for i in range(1, 6):
             # 5. Host sends a ping packet to the multicast address,
             # MASi[ 3 * i - 1], on the backbone link.
-            self.assertFalse(
-                host.ping(MAS[i][i * 3 - 1],
-                          backbone=True,
-                          ttl=64,
-                          interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MAS[i][i * 3 - 1],
+                      backbone=True,
+                      ttl=64,
+                      interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0])
 
             self.simulator.go(3)
 
