@@ -59,11 +59,11 @@ exit:
     return error;
 }
 
-SrpClient::SrpClient(Interpreter &aInterpreter)
-    : mInterpreter(aInterpreter)
+SrpClient::SrpClient(Output &aOutput)
+    : OutputWrapper(aOutput)
     , mCallbackEnabled(false)
 {
-    otSrpClientSetCallback(mInterpreter.mInstance, SrpClient::HandleCallback, this);
+    otSrpClientSetCallback(GetInstancePtr(), SrpClient::HandleCallback, this);
 }
 
 otError SrpClient::Process(Arg aArgs[])
@@ -95,7 +95,7 @@ otError SrpClient::ProcessAutoStart(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        mInterpreter.OutputEnabledDisabledStatus(otSrpClientIsAutoStartModeEnabled(mInterpreter.mInstance));
+        OutputEnabledDisabledStatus(otSrpClientIsAutoStartModeEnabled(GetInstancePtr()));
         ExitNow();
     }
 
@@ -103,11 +103,11 @@ otError SrpClient::ProcessAutoStart(Arg aArgs[])
 
     if (enable)
     {
-        otSrpClientEnableAutoStartMode(mInterpreter.mInstance, /* aCallback */ nullptr, /* aContext */ nullptr);
+        otSrpClientEnableAutoStartMode(GetInstancePtr(), /* aCallback */ nullptr, /* aContext */ nullptr);
     }
     else
     {
-        otSrpClientDisableAutoStartMode(mInterpreter.mInstance);
+        otSrpClientDisableAutoStartMode(GetInstancePtr());
     }
 
 exit:
@@ -122,7 +122,7 @@ otError SrpClient::ProcessCallback(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        mInterpreter.OutputEnabledDisabledStatus(mCallbackEnabled);
+        OutputEnabledDisabledStatus(mCallbackEnabled);
         ExitNow();
     }
 
@@ -138,7 +138,7 @@ otError SrpClient::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -150,7 +150,7 @@ otError SrpClient::ProcessHost(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        OutputHostInfo(0, *otSrpClientGetHostInfo(mInterpreter.mInstance));
+        OutputHostInfo(0, *otSrpClientGetHostInfo(GetInstancePtr()));
         ExitNow();
     }
 
@@ -158,8 +158,8 @@ otError SrpClient::ProcessHost(Arg aArgs[])
     {
         if (aArgs[1].IsEmpty())
         {
-            const char *name = otSrpClientGetHostInfo(mInterpreter.mInstance)->mName;
-            mInterpreter.OutputLine("%s", (name != nullptr) ? name : "(null)");
+            const char *name = otSrpClientGetHostInfo(GetInstancePtr())->mName;
+            OutputLine("%s", (name != nullptr) ? name : "(null)");
         }
         else
         {
@@ -168,7 +168,7 @@ otError SrpClient::ProcessHost(Arg aArgs[])
             char *   hostName;
 
             VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-            hostName = otSrpClientBuffersGetHostNameString(mInterpreter.mInstance, &size);
+            hostName = otSrpClientBuffersGetHostNameString(GetInstancePtr(), &size);
 
             len = aArgs[1].GetLength();
             VerifyOrExit(len + 1 <= size, error = OT_ERROR_INVALID_ARGS);
@@ -179,28 +179,26 @@ otError SrpClient::ProcessHost(Arg aArgs[])
             // This ensures that we do not overwrite a previous
             // buffer with a host name that cannot be set.
 
-            SuccessOrExit(error = otSrpClientSetHostName(mInterpreter.mInstance, aArgs[1].GetCString()));
+            SuccessOrExit(error = otSrpClientSetHostName(GetInstancePtr(), aArgs[1].GetCString()));
             memcpy(hostName, aArgs[1].GetCString(), len + 1);
 
-            IgnoreError(otSrpClientSetHostName(mInterpreter.mInstance, hostName));
+            IgnoreError(otSrpClientSetHostName(GetInstancePtr(), hostName));
         }
     }
     else if (aArgs[0] == "state")
     {
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        mInterpreter.OutputLine("%s",
-                                otSrpClientItemStateToString(otSrpClientGetHostInfo(mInterpreter.mInstance)->mState));
+        OutputLine("%s", otSrpClientItemStateToString(otSrpClientGetHostInfo(GetInstancePtr())->mState));
     }
     else if (aArgs[0] == "address")
     {
         if (aArgs[1].IsEmpty())
         {
-            const otSrpClientHostInfo *hostInfo = otSrpClientGetHostInfo(mInterpreter.mInstance);
+            const otSrpClientHostInfo *hostInfo = otSrpClientGetHostInfo(GetInstancePtr());
 
             for (uint8_t index = 0; index < hostInfo->mNumAddresses; index++)
             {
-                mInterpreter.OutputIp6Address(hostInfo->mAddresses[index]);
-                mInterpreter.OutputLine("");
+                OutputIp6AddressLine(hostInfo->mAddresses[index]);
             }
         }
         else
@@ -210,7 +208,7 @@ otError SrpClient::ProcessHost(Arg aArgs[])
             uint8_t       arrayLength;
             otIp6Address *hostAddressArray;
 
-            hostAddressArray = otSrpClientBuffersGetHostAddressesArray(mInterpreter.mInstance, &arrayLength);
+            hostAddressArray = otSrpClientBuffersGetHostAddressesArray(GetInstancePtr(), &arrayLength);
 
             // We first make sure we can set the addresses, and if so
             // we copy the address list into the persisted address array
@@ -230,10 +228,10 @@ otError SrpClient::ProcessHost(Arg aArgs[])
                 numAddresses++;
             }
 
-            SuccessOrExit(error = otSrpClientSetHostAddresses(mInterpreter.mInstance, addresses, numAddresses));
+            SuccessOrExit(error = otSrpClientSetHostAddresses(GetInstancePtr(), addresses, numAddresses));
 
             memcpy(hostAddressArray, addresses, numAddresses * sizeof(hostAddressArray[0]));
-            IgnoreError(otSrpClientSetHostAddresses(mInterpreter.mInstance, hostAddressArray, numAddresses));
+            IgnoreError(otSrpClientSetHostAddresses(GetInstancePtr(), hostAddressArray, numAddresses));
         }
     }
     else if (aArgs[0] == "remove")
@@ -252,13 +250,13 @@ otError SrpClient::ProcessHost(Arg aArgs[])
             }
         }
 
-        error = otSrpClientRemoveHostAndServices(mInterpreter.mInstance, removeKeyLease, sendUnregToServer);
+        error = otSrpClientRemoveHostAndServices(GetInstancePtr(), removeKeyLease, sendUnregToServer);
     }
     else if (aArgs[0] == "clear")
     {
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otSrpClientClearHostAndServices(mInterpreter.mInstance);
-        otSrpClientBuffersFreeAllServices(mInterpreter.mInstance);
+        otSrpClientClearHostAndServices(GetInstancePtr());
+        otSrpClientBuffersFreeAllServices(GetInstancePtr());
     }
     else
     {
@@ -271,25 +269,26 @@ exit:
 
 otError SrpClient::ProcessLeaseInterval(Arg aArgs[])
 {
-    return mInterpreter.ProcessGetSet(aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
+    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
 }
 
 otError SrpClient::ProcessKeyLeaseInterval(Arg aArgs[])
 {
-    return mInterpreter.ProcessGetSet(aArgs, otSrpClientGetKeyLeaseInterval, otSrpClientSetKeyLeaseInterval);
+    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetKeyLeaseInterval,
+                                                       otSrpClientSetKeyLeaseInterval);
 }
 
 otError SrpClient::ProcessServer(Arg aArgs[])
 {
     otError           error          = OT_ERROR_NONE;
-    const otSockAddr *serverSockAddr = otSrpClientGetServerAddress(mInterpreter.mInstance);
+    const otSockAddr *serverSockAddr = otSrpClientGetServerAddress(GetInstancePtr());
 
     if (aArgs[0].IsEmpty())
     {
         char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
 
         otIp6SockAddrToString(serverSockAddr, string, sizeof(string));
-        mInterpreter.OutputLine(string);
+        OutputLine(string);
         ExitNow();
     }
 
@@ -297,12 +296,11 @@ otError SrpClient::ProcessServer(Arg aArgs[])
 
     if (aArgs[0] == "address")
     {
-        mInterpreter.OutputIp6Address(serverSockAddr->mAddress);
-        mInterpreter.OutputLine("");
+        OutputIp6AddressLine(serverSockAddr->mAddress);
     }
     else if (aArgs[0] == "port")
     {
-        mInterpreter.OutputLine("%u", serverSockAddr->mPort);
+        OutputLine("%u", serverSockAddr->mPort);
     }
     else
     {
@@ -320,7 +318,7 @@ otError SrpClient::ProcessService(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        OutputServiceList(0, otSrpClientGetServices(mInterpreter.mInstance));
+        OutputServiceList(0, otSrpClientGetServices(GetInstancePtr()));
         ExitNow();
     }
 
@@ -336,7 +334,7 @@ otError SrpClient::ProcessService(Arg aArgs[])
 
         VerifyOrExit(!aArgs[2].IsEmpty() && aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-        for (service = otSrpClientGetServices(mInterpreter.mInstance); service != nullptr; service = service->mNext)
+        for (service = otSrpClientGetServices(GetInstancePtr()); service != nullptr; service = service->mNext)
         {
             if ((aArgs[1] == service->mInstanceName) && (aArgs[2] == service->mName))
             {
@@ -348,15 +346,14 @@ otError SrpClient::ProcessService(Arg aArgs[])
 
         if (isRemove)
         {
-            error = otSrpClientRemoveService(mInterpreter.mInstance, const_cast<otSrpClientService *>(service));
+            error = otSrpClientRemoveService(GetInstancePtr(), const_cast<otSrpClientService *>(service));
         }
         else
         {
-            SuccessOrExit(
-                error = otSrpClientClearService(mInterpreter.mInstance, const_cast<otSrpClientService *>(service)));
+            SuccessOrExit(error = otSrpClientClearService(GetInstancePtr(), const_cast<otSrpClientService *>(service)));
 
-            otSrpClientBuffersFreeService(mInterpreter.mInstance, reinterpret_cast<otSrpClientBuffersServiceEntry *>(
-                                                                      const_cast<otSrpClientService *>(service)));
+            otSrpClientBuffersFreeService(GetInstancePtr(), reinterpret_cast<otSrpClientBuffersServiceEntry *>(
+                                                                const_cast<otSrpClientService *>(service)));
         }
     }
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -368,13 +365,13 @@ otError SrpClient::ProcessService(Arg aArgs[])
 
         if (aArgs[1].IsEmpty())
         {
-            mInterpreter.OutputEnabledDisabledStatus(otSrpClientIsServiceKeyRecordEnabled(mInterpreter.mInstance));
+            OutputEnabledDisabledStatus(otSrpClientIsServiceKeyRecordEnabled(GetInstancePtr()));
             ExitNow();
         }
 
         SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[1], enable));
         VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otSrpClientSetServiceKeyRecordEnabled(mInterpreter.mInstance, enable);
+        otSrpClientSetServiceKeyRecordEnabled(GetInstancePtr(), enable);
     }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else
@@ -396,7 +393,7 @@ otError SrpClient::ProcessServiceAdd(Arg aArgs[])
     otError                         error;
     char *                          label;
 
-    entry = otSrpClientBuffersAllocateService(mInterpreter.mInstance);
+    entry = otSrpClientBuffersAllocateService(GetInstancePtr());
 
     VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
 
@@ -465,14 +462,14 @@ otError SrpClient::ProcessServiceAdd(Arg aArgs[])
         entry->mService.mNumTxtEntries = 0;
     }
 
-    SuccessOrExit(error = otSrpClientAddService(mInterpreter.mInstance, &entry->mService));
+    SuccessOrExit(error = otSrpClientAddService(GetInstancePtr(), &entry->mService));
 
     entry = nullptr;
 
 exit:
     if (entry != nullptr)
     {
-        otSrpClientBuffersFreeService(mInterpreter.mInstance, entry);
+        otSrpClientBuffersFreeService(GetInstancePtr(), entry);
     }
 
     return error;
@@ -480,30 +477,30 @@ exit:
 
 void SrpClient::OutputHostInfo(uint8_t aIndentSize, const otSrpClientHostInfo &aHostInfo)
 {
-    mInterpreter.OutputFormat(aIndentSize, "name:");
+    OutputFormat(aIndentSize, "name:");
 
     if (aHostInfo.mName != nullptr)
     {
-        mInterpreter.OutputFormat("\"%s\"", aHostInfo.mName);
+        OutputFormat("\"%s\"", aHostInfo.mName);
     }
     else
     {
-        mInterpreter.OutputFormat("(null)");
+        OutputFormat("(null)");
     }
 
-    mInterpreter.OutputFormat(", state:%s, addrs:[", otSrpClientItemStateToString(aHostInfo.mState));
+    OutputFormat(", state:%s, addrs:[", otSrpClientItemStateToString(aHostInfo.mState));
 
     for (uint8_t index = 0; index < aHostInfo.mNumAddresses; index++)
     {
         if (index > 0)
         {
-            mInterpreter.OutputFormat(", ");
+            OutputFormat(", ");
         }
 
-        mInterpreter.OutputIp6Address(aHostInfo.mAddresses[index]);
+        OutputIp6Address(aHostInfo.mAddresses[index]);
     }
 
-    mInterpreter.OutputLine("]");
+    OutputLine("]");
 }
 
 void SrpClient::OutputServiceList(uint8_t aIndentSize, const otSrpClientService *aServices)
@@ -517,19 +514,18 @@ void SrpClient::OutputServiceList(uint8_t aIndentSize, const otSrpClientService 
 
 void SrpClient::OutputService(uint8_t aIndentSize, const otSrpClientService &aService)
 {
-    mInterpreter.OutputFormat(aIndentSize, "instance:\"%s\", name:\"%s", aService.mInstanceName, aService.mName);
+    OutputFormat(aIndentSize, "instance:\"%s\", name:\"%s", aService.mInstanceName, aService.mName);
 
     if (aService.mSubTypeLabels != nullptr)
     {
         for (uint16_t index = 0; aService.mSubTypeLabels[index] != nullptr; index++)
         {
-            mInterpreter.OutputFormat(",%s", aService.mSubTypeLabels[index]);
+            OutputFormat(",%s", aService.mSubTypeLabels[index]);
         }
     }
 
-    mInterpreter.OutputLine("\", state:%s, port:%d, priority:%d, weight:%d",
-                            otSrpClientItemStateToString(aService.mState), aService.mPort, aService.mPriority,
-                            aService.mWeight);
+    OutputLine("\", state:%s, port:%d, priority:%d, weight:%d", otSrpClientItemStateToString(aService.mState),
+               aService.mPort, aService.mPriority, aService.mWeight);
 }
 
 otError SrpClient::ProcessStart(Arg aArgs[])
@@ -541,7 +537,7 @@ otError SrpClient::ProcessStart(Arg aArgs[])
     SuccessOrExit(error = aArgs[1].ParseAsUint16(serverSockAddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    error = otSrpClientStart(mInterpreter.mInstance, &serverSockAddr);
+    error = otSrpClientStart(GetInstancePtr(), &serverSockAddr);
 
 exit:
     return error;
@@ -553,7 +549,7 @@ otError SrpClient::ProcessState(Arg aArgs[])
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    mInterpreter.OutputEnabledDisabledStatus(otSrpClientIsRunning(mInterpreter.mInstance));
+    OutputEnabledDisabledStatus(otSrpClientIsRunning(GetInstancePtr()));
 
 exit:
     return error;
@@ -564,7 +560,7 @@ otError SrpClient::ProcessStop(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    otSrpClientStop(mInterpreter.mInstance);
+    otSrpClientStop(GetInstancePtr());
 
 exit:
     return error;
@@ -588,16 +584,16 @@ void SrpClient::HandleCallback(otError                    aError,
 
     if (mCallbackEnabled)
     {
-        mInterpreter.OutputLine("SRP client callback - error:%s", otThreadErrorToString(aError));
-        mInterpreter.OutputLine("Host info:");
+        OutputLine("SRP client callback - error:%s", otThreadErrorToString(aError));
+        OutputLine("Host info:");
         OutputHostInfo(kIndentSize, *aHostInfo);
 
-        mInterpreter.OutputLine("Service list:");
+        OutputLine("Service list:");
         OutputServiceList(kIndentSize, aServices);
 
         if (aRemovedServices != nullptr)
         {
-            mInterpreter.OutputLine("Removed service list:");
+            OutputLine("Removed service list:");
             OutputServiceList(kIndentSize, aRemovedServices);
         }
     }
@@ -608,8 +604,8 @@ void SrpClient::HandleCallback(otError                    aError,
     {
         next = service->mNext;
 
-        otSrpClientBuffersFreeService(mInterpreter.mInstance, reinterpret_cast<otSrpClientBuffersServiceEntry *>(
-                                                                  const_cast<otSrpClientService *>(service)));
+        otSrpClientBuffersFreeService(GetInstancePtr(), reinterpret_cast<otSrpClientBuffersServiceEntry *>(
+                                                            const_cast<otSrpClientService *>(service)));
     }
 }
 

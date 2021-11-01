@@ -58,6 +58,30 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_UNICAST_ADDRESS_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in unicast IPv6 address history list.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_UNICAST_ADDRESS_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_UNICAST_ADDRESS_LIST_SIZE 20
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_MULTICAST_ADDRESS_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in multicast IPv6 address history list.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_MULTICAST_ADDRESS_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_MULTICAST_ADDRESS_LIST_SIZE 20
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE
  *
  * Specifies the maximum number of entries in RX history list.

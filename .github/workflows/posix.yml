@@ -209,6 +209,12 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
+    - name: Run (OT_DAEMON_ALLOW_ALL)
+      if: matrix.OT_DAEMON == 'on'
+      env:
+        OT_DAEMON_ALLOW_ALL: 1
+      run: |
+        script/check-posix-pty check
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -230,6 +236,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
+        rm -f '/usr/local/bin/2to3'
         brew update
         brew install ninja socat
     - name: Build
@@ -238,6 +245,30 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
+
+  rcp-stack-reset:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
+        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+    - name: Build
+      run: |
+        script/cmake-build simulation -DOT_CSL_RECEIVER=ON -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED
+    - name: Run
+      run: |
+        python3 tests/scripts/misc/test_rcp_reset.py build/simulation/examples/apps/ncp/ot-rcp
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-rcp-stack-reset
+        path: tmp/coverage.info
 
   upload-coverage:
     needs:

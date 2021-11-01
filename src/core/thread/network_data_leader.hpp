@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include "coap/coap.hpp"
+#include "common/const_cast.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_router.hpp"
@@ -62,7 +63,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data maintained by the Leader.
  *
  */
-class LeaderBase : public NetworkData
+class LeaderBase : public MutableNetworkData
 {
 public:
     /**
@@ -71,7 +72,11 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit LeaderBase(Instance &aInstance);
+    explicit LeaderBase(Instance &aInstance)
+        : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
+    {
+        Reset();
+    }
 
     /**
      * This method reset the Thread Network Data.
@@ -172,10 +177,7 @@ public:
      * @returns A pointer to the Commissioning Data or nullptr if no Commissioning Data exists.
      *
      */
-    CommissioningDataTlv *GetCommissioningData(void)
-    {
-        return const_cast<CommissioningDataTlv *>(const_cast<const LeaderBase *>(this)->GetCommissioningData());
-    }
+    CommissioningDataTlv *GetCommissioningData(void) { return AsNonConst(AsConst(this)->GetCommissioningData()); }
 
     /**
      * This method returns a pointer to the Commissioning Data.
@@ -195,7 +197,7 @@ public:
      */
     MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
     {
-        return const_cast<MeshCoP::Tlv *>(const_cast<const LeaderBase *>(this)->GetCommissioningDataSubTlv(aType));
+        return AsNonConst(AsConst(this)->GetCommissioningDataSubTlv(aType));
     }
 
     /**
@@ -258,20 +260,18 @@ public:
      * This method gets the Service ID for the specified service.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV
-     * @param[in]  aServiceData       A pointer to the Service Data
-     * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
-     * @param[in]  aServerStable      The Stable flag value for Server TLV
+     * @param[in]  aServiceData       The Service Data.
+     * @param[in]  aServerStable      The Stable flag value for Server TLV.
      * @param[out] aServiceId         A reference where to put the Service ID.
      *
      * @retval kErrorNone       Successfully got the Service ID.
      * @retval kErrorNotFound   The specified service was not found.
      *
      */
-    Error GetServiceId(uint32_t       aEnterpriseNumber,
-                       const uint8_t *aServiceData,
-                       uint8_t        aServiceDataLength,
-                       bool           aServerStable,
-                       uint8_t &      aServiceId) const;
+    Error GetServiceId(uint32_t           aEnterpriseNumber,
+                       const ServiceData &aServiceData,
+                       bool               aServerStable,
+                       uint8_t &          aServiceId) const;
 
 protected:
     uint8_t mStableVersion;
@@ -290,6 +290,8 @@ private:
                               uint16_t *          aRloc16) const;
     Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
+
+    uint8_t mTlvBuffer[kMaxSize];
 };
 
 /**
@@ -302,7 +304,11 @@ private:
 #if OPENTHREAD_MTD
 namespace ot {
 namespace NetworkData {
-typedef class LeaderBase Leader;
+class Leader : public LeaderBase
+{
+public:
+    using LeaderBase::LeaderBase;
+};
 } // namespace NetworkData
 } // namespace ot
 #elif OPENTHREAD_FTD

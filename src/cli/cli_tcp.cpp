@@ -50,8 +50,8 @@ namespace Cli {
 
 constexpr TcpExample::Command TcpExample::sCommands[];
 
-TcpExample::TcpExample(Interpreter &aInterpreter)
-    : mInterpreter(aInterpreter)
+TcpExample::TcpExample(Output &aOutput)
+    : OutputWrapper(aOutput)
     , mInitialized(false)
     , mEndpointConnected(false)
     , mSendBusy(false)
@@ -66,7 +66,7 @@ otError TcpExample::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -107,7 +107,7 @@ otError TcpExample::ProcessInit(Arg aArgs[])
         endpointArgs.mReceiveBuffer            = mReceiveBuffer;
         endpointArgs.mReceiveBufferSize        = receiveBufferSize;
 
-        SuccessOrExit(error = otTcpEndpointInitialize(mInterpreter.mInstance, &mEndpoint, &endpointArgs));
+        SuccessOrExit(error = otTcpEndpointInitialize(GetInstancePtr(), &mEndpoint, &endpointArgs));
     }
 
     {
@@ -118,7 +118,7 @@ otError TcpExample::ProcessInit(Arg aArgs[])
         listenerArgs.mAcceptDoneCallback  = HandleTcpAcceptDoneCallback;
         listenerArgs.mContext             = this;
 
-        error = otTcpListenerInitialize(mInterpreter.mInstance, &mListener, &listenerArgs);
+        error = otTcpListenerInitialize(GetInstancePtr(), &mListener, &listenerArgs);
         if (error != OT_ERROR_NONE)
         {
             IgnoreReturnValue(otTcpEndpointDeinitialize(&mEndpoint));
@@ -373,7 +373,7 @@ void TcpExample::HandleTcpAcceptDoneCallback(otTcpListener *   aListener,
 void TcpExample::HandleTcpEstablished(otTcpEndpoint *aEndpoint)
 {
     OT_UNUSED_VARIABLE(aEndpoint);
-    mInterpreter.OutputLine("TCP: Connection established");
+    OutputLine("TCP: Connection established");
 }
 
 void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData)
@@ -399,7 +399,7 @@ void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aDa
             aData->mLength = sizeof(mSendBuffer);
             if (otTcpSendByReference(&mEndpoint, aData, 0) != OT_ERROR_NONE)
             {
-                mInterpreter.OutputLine("TCP Benchmark Failed");
+                OutputLine("TCP Benchmark Failed");
                 mBenchmarkBytesTotal = 0;
             }
         }
@@ -408,11 +408,9 @@ void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aDa
             uint32_t milliseconds         = TimerMilli::GetNow() - mBenchmarkStart;
             uint32_t thousandTimesGoodput = (1000 * (mBenchmarkBytesTotal << 3) + (milliseconds >> 1)) / milliseconds;
 
-            mInterpreter.OutputLine("TCP Benchmark Complete: Transferred %u bytes in %u milliseconds",
-                                    static_cast<unsigned int>(mBenchmarkBytesTotal),
-                                    static_cast<unsigned int>(milliseconds));
-            mInterpreter.OutputLine("TCP Goodput: %u.%03u kb/s", thousandTimesGoodput / 1000,
-                                    thousandTimesGoodput % 1000);
+            OutputLine("TCP Benchmark Complete: Transferred %u bytes in %u milliseconds",
+                       static_cast<unsigned int>(mBenchmarkBytesTotal), static_cast<unsigned int>(milliseconds));
+            OutputLine("TCP Goodput: %u.%03u kb/s", thousandTimesGoodput / 1000, thousandTimesGoodput % 1000);
             mBenchmarkBytesTotal = 0;
         }
     }
@@ -434,8 +432,8 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
         IgnoreError(otTcpReceiveByReference(aEndpoint, &data));
         for (; data != nullptr; data = data->mNext)
         {
-            mInterpreter.OutputLine("TCP: Received %u bytes: %.*s", static_cast<unsigned int>(data->mLength),
-                                    data->mLength, reinterpret_cast<const char *>(data->mData));
+            OutputLine("TCP: Received %u bytes: %.*s", static_cast<unsigned int>(data->mLength), data->mLength,
+                       reinterpret_cast<const char *>(data->mData));
             totalReceived += data->mLength;
         }
         OT_ASSERT(aBytesAvailable == totalReceived);
@@ -444,7 +442,7 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
 
     if (aEndOfStream)
     {
-        mInterpreter.OutputLine("TCP: Reached end of stream");
+        OutputLine("TCP: Reached end of stream");
     }
 }
 
@@ -455,19 +453,19 @@ void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnect
     switch (aReason)
     {
     case OT_TCP_DISCONNECTED_REASON_NORMAL:
-        mInterpreter.OutputLine("TCP: Disconnected");
+        OutputLine("TCP: Disconnected");
         break;
     case OT_TCP_DISCONNECTED_REASON_TIME_WAIT:
-        mInterpreter.OutputLine("TCP: Entered TIME-WAIT state");
+        OutputLine("TCP: Entered TIME-WAIT state");
         break;
     case OT_TCP_DISCONNECTED_REASON_TIMED_OUT:
-        mInterpreter.OutputLine("TCP: Connection timed out");
+        OutputLine("TCP: Connection timed out");
         break;
     case OT_TCP_DISCONNECTED_REASON_REFUSED:
-        mInterpreter.OutputLine("TCP: Connection refused");
+        OutputLine("TCP: Connection refused");
         break;
     case OT_TCP_DISCONNECTED_REASON_RESET:
-        mInterpreter.OutputLine("TCP: Connection reset");
+        OutputLine("TCP: Connection reset");
         break;
     }
 
@@ -493,9 +491,9 @@ otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener *  
 
     if (mEndpointConnected)
     {
-        mInterpreter.OutputFormat("TCP: Ignoring incoming connection request from [");
-        mInterpreter.OutputIp6Address(aPeer->mAddress);
-        mInterpreter.OutputLine("]:%u (active socket is busy)", static_cast<unsigned int>(aPeer->mPort));
+        OutputFormat("TCP: Ignoring incoming connection request from [");
+        OutputIp6Address(aPeer->mAddress);
+        OutputLine("]:%u (active socket is busy)", static_cast<unsigned int>(aPeer->mPort));
 
         return OT_TCP_INCOMING_CONNECTION_ACTION_DEFER;
     }
@@ -509,9 +507,9 @@ void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aE
     OT_UNUSED_VARIABLE(aListener);
     OT_UNUSED_VARIABLE(aEndpoint);
 
-    mInterpreter.OutputFormat("Accepted connection from [");
-    mInterpreter.OutputIp6Address(aPeer->mAddress);
-    mInterpreter.OutputLine("]:%u", static_cast<unsigned int>(aPeer->mPort));
+    OutputFormat("Accepted connection from [");
+    OutputIp6Address(aPeer->mAddress);
+    OutputLine("]:%u", static_cast<unsigned int>(aPeer->mPort));
 }
 
 } // namespace Cli

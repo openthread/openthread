@@ -33,6 +33,8 @@
 
 #include "sha256.hpp"
 
+#include "common/debug.hpp"
+#include "common/error.hpp"
 #include "common/message.hpp"
 
 namespace ot {
@@ -40,22 +42,24 @@ namespace Crypto {
 
 Sha256::Sha256(void)
 {
-    mbedtls_sha256_init(&mContext);
+    mContext.mContext     = mContextStorage;
+    mContext.mContextSize = sizeof(mContextStorage);
+    SuccessOrAssert(otPlatCryptoSha256Init(&mContext));
 }
 
 Sha256::~Sha256(void)
 {
-    mbedtls_sha256_free(&mContext);
+    SuccessOrAssert(otPlatCryptoSha256Deinit(&mContext));
 }
 
 void Sha256::Start(void)
 {
-    mbedtls_sha256_starts_ret(&mContext, 0);
+    SuccessOrAssert(otPlatCryptoSha256Start(&mContext));
 }
 
 void Sha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    mbedtls_sha256_update_ret(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
+    SuccessOrAssert(otPlatCryptoSha256Update(&mContext, aBuf, aBufLength));
 }
 
 void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
@@ -66,14 +70,14 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 
     while (chunk.GetLength() > 0)
     {
-        Update(chunk.GetData(), chunk.GetLength());
+        Update(chunk.GetBytes(), chunk.GetLength());
         aMessage.GetNextChunk(aLength, chunk);
     }
 }
 
 void Sha256::Finish(Hash &aHash)
 {
-    mbedtls_sha256_finish_ret(&mContext, aHash.m8);
+    SuccessOrAssert(otPlatCryptoSha256Finish(&mContext, aHash.m8, Hash::kSize));
 }
 
 } // namespace Crypto

@@ -58,16 +58,20 @@ namespace NetworkData {
  * This class implements the Thread Network Data contributed by the local device.
  *
  */
-class Local : public NetworkData, private NonCopyable
+class Local : public MutableNetworkData, private NonCopyable
 {
 public:
     /**
      * This constructor initializes the local Network Data.
      *
-     * @param[in]  aNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Local(Instance &aInstance);
+    explicit Local(Instance &aInstance)
+        : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
+        , mOldRloc(Mac::kShortAddrInvalid)
+    {
+    }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
@@ -121,36 +125,31 @@ public:
     /**
      * This method adds a Service entry to the Thread Network local data.
      *
-     * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV
-     * @param[in]  aServiceData       A pointer to the Service Data
-     * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
-     * @param[in]  aServerStable      The Stable flag value for Server TLV
-     * @param[in]  aServerData        A pointer to the Server Data
-     * @param[in]  aServerDataLength  The length of @p aServerData in bytes.
+     * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV.
+     * @param[in]  aServiceData       The Service Data.
+     * @param[in]  aServerStable      The Stable flag value for Server TLV.
+     * @param[in]  aServerData        The Server Data.
      *
      * @retval kErrorNone     Successfully added the Service entry.
      * @retval kErrorNoBufs   Insufficient space to add the Service entry.
      *
      */
-    Error AddService(uint32_t       aEnterpriseNumber,
-                     const uint8_t *aServiceData,
-                     uint8_t        aServiceDataLength,
-                     bool           aServerStable,
-                     const uint8_t *aServerData,
-                     uint8_t        aServerDataLength);
+    Error AddService(uint32_t           aEnterpriseNumber,
+                     const ServiceData &aServiceData,
+                     bool               aServerStable,
+                     const ServerData & aServerData);
 
     /**
      * This method removes a Service entry from the Thread Network local data.
      *
      * @param[in]  aEnterpriseNumber   Enterprise Number of the service to be deleted.
-     * @param[in]  aServiceData        A pointer to the service data.
-     * @param[in]  aServiceDataLength  The length of @p aServiceData in bytes.
+     * @param[in]  aServiceData        The service data.
      *
      * @retval kErrorNone       Successfully removed the Service entry.
      * @retval kErrorNotFound   Could not find the Service entry.
      *
      */
-    Error RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
+    Error RemoveService(uint32_t aEnterpriseNumber, const ServiceData &aServiceData);
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     /**
@@ -182,6 +181,7 @@ private:
     bool IsServiceConsistent(void) const;
 #endif
 
+    uint8_t  mTlvBuffer[kMaxSize];
     uint16_t mOldRloc;
 };
 

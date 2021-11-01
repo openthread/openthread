@@ -41,6 +41,7 @@
 
 #include "coap/coap.hpp"
 #include "common/clearable.hpp"
+#include "common/const_cast.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
@@ -91,6 +92,10 @@ class Manager;
  *
  */
 
+class Leader;
+class Publisher;
+class MutableNetworkData;
+
 /**
  * This type represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
  *
@@ -100,55 +105,91 @@ typedef otNetworkDataIterator Iterator;
 constexpr Iterator kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT; ///< Initializer for `Iterator` type.
 
 /**
- * This class implements Network Data processing.
+ * This class represents an immutable Network Data.
  *
  */
 class NetworkData : public InstanceLocator
 {
-    friend class Service::Manager;
+    friend class Leader;
     friend class Publisher;
+    friend class MutableNetworkData;
+    friend class Service::Manager;
 
 public:
     static constexpr uint8_t kMaxSize = 254; ///< Maximum size of Thread Network Data in bytes.
 
     /**
-     * This enumeration specifies the type of Network Data (local or leader).
+     * This constructor initializes the `NetworkData` from a given pointer to a buffer and length.
+     *
+     * @param[in] aInstance     A reference to the OpenThread instance.
+     * @param[in] aTlvs         A pointer to the buffer containing the TLVs.
+     * @param[in] aLength       The length (number of bytes) of @p aTlvs buffer.
      *
      */
-    enum Type : uint8_t
+    explicit NetworkData(Instance &aInstance, const uint8_t *aTlvs = nullptr, uint8_t aLength = 0)
+        : InstanceLocator(aInstance)
+        , mTlvs(aTlvs)
+        , mLength(aLength)
     {
-        kTypeLocal,  ///< Local Network Data.
-        kTypeLeader, ///< Leader Network Data.
-    };
+    }
 
     /**
-     * This constructor initializes the object.
+     * This constructor initializes the `NetworkData` from a range of TLVs (given as pair of start and end pointers).
      *
-     * @param[in]  aInstance     A reference to the OpenThread instance.
-     * @param[in]  aType         Network data type
+     * @param[in] aInstance     A reference to the OpenThread instance.
+     * @param[in] aStartTlv     A pointer to the start of the TLVs buffer.
+     * @param[in] aEndTlv       A pointer to the end of the TLVs buffer.
      *
      */
-    NetworkData(Instance &aInstance, Type aType);
+    NetworkData(Instance &aInstance, const NetworkDataTlv *aStartTlv, const NetworkDataTlv *aEndTlv)
+        : InstanceLocator(aInstance)
+        , mTlvs(reinterpret_cast<const uint8_t *>(aStartTlv))
+        , mLength(static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(aEndTlv) -
+                                       reinterpret_cast<const uint8_t *>(aStartTlv)))
+    {
+    }
 
     /**
-     * This method clears the network data.
+     * This method returns the length of `NetworkData` (number of bytes).
+     *
+     * @returns The length of `NetworkData` (number of bytes).
      *
      */
-    void Clear(void) { mLength = 0; }
+    uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method provides a full or stable copy of the Thread Network Data.
+     * This method returns a pointer to the start of the TLVs in `NetworkData`.
      *
-     * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
-     * @param[out]    aData        A pointer to the data buffer.
-     * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
-     *                             On exit, number of copied bytes.
+     * @returns A pointer to the start of the TLVs.
+     *
+     */
+    const uint8_t *GetBytes(void) const { return mTlvs; }
+
+    /**
+     * This method provides full or stable copy of the Thread Network Data.
+     *
+     * @param[in]    aStable      TRUE when copying the stable version, FALSE when copying the full version.
+     * @param[out]   aData        A pointer to the data buffer to copy the Network Data into.
+     * @param[inout] aDataLength  On entry, size of the data buffer pointed to by @p aData.
+     *                            On exit, number of copied bytes.
      *
      * @retval kErrorNone       Successfully copied full Thread Network Data.
-     * @retval kErrorNoBufs     Not enough space to fully copy Thread Network Data.
+     * @retval kErrorNoBufs     Not enough space in @p aData to fully copy Thread Network Data.
      *
      */
-    Error GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const;
+    Error CopyNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const;
+
+    /**
+     * This method provides full or stable copy of the Thread Network Data.
+     *
+     * @param[in]    aStable      TRUE when copying the stable version, FALSE when copying the full version.
+     * @param[out]   aNetworkData A reference to a `MutableNetworkData` to copy the Network Data into.
+     *
+     * @retval kErrorNone       Successfully copied full Thread Network Data.
+     * @retval kErrorNoBufs     Not enough space in @p aNetworkData to fully copy Thread Network Data.
+     *
+     */
+    Error CopyNetworkData(bool aStable, MutableNetworkData &aNetworkData) const;
 
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.
@@ -319,14 +360,6 @@ protected:
      * @returns A pointer to the start of Network Data TLV sequence.
      *
      */
-    NetworkDataTlv *GetTlvsStart(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs); }
-
-    /**
-     * This method returns a pointer to the start of Network Data TLV sequence.
-     *
-     * @returns A pointer to the start of Network Data TLV sequence.
-     *
-     */
     const NetworkDataTlv *GetTlvsStart(void) const { return reinterpret_cast<const NetworkDataTlv *>(mTlvs); }
 
     /**
@@ -335,29 +368,7 @@ protected:
      * @returns A pointer to the end of Network Data TLV sequence.
      *
      */
-    NetworkDataTlv *GetTlvsEnd(void) { return reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength); }
-
-    /**
-     * This method returns a pointer to the end of Network Data TLV sequence.
-     *
-     * @returns A pointer to the end of Network Data TLV sequence.
-     *
-     */
     const NetworkDataTlv *GetTlvsEnd(void) const { return reinterpret_cast<const NetworkDataTlv *>(mTlvs + mLength); }
-
-    /**
-     * This method returns a pointer to a Prefix TLV.
-     *
-     * @param[in]  aPrefix        A pointer to an IPv6 prefix.
-     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
-     *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
-     *
-     */
-    PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
-    {
-        return const_cast<PrefixTlv *>(const_cast<const NetworkData *>(this)->FindPrefix(aPrefix, aPrefixLength));
-    }
 
     /**
      * This method returns a pointer to a Prefix TLV.
@@ -378,134 +389,24 @@ protected:
      * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
      *
      */
-    PrefixTlv *FindPrefix(const Ip6::Prefix &aPrefix) { return FindPrefix(aPrefix.GetBytes(), aPrefix.GetLength()); }
-
-    /**
-     * This method returns a pointer to a Prefix TLV.
-     *
-     * @param[in]  aPrefix        An IPv6 prefix.
-     *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
-     *
-     */
     const PrefixTlv *FindPrefix(const Ip6::Prefix &aPrefix) const
     {
         return FindPrefix(aPrefix.GetBytes(), aPrefix.GetLength());
     }
 
     /**
-     * This method returns a pointer to a Prefix TLV in a specified tlvs buffer.
-     *
-     * @param[in]  aPrefix        A pointer to an IPv6 prefix.
-     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
-     * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
-     * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
-     *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
-     *
-     */
-    static PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength)
-    {
-        return const_cast<PrefixTlv *>(
-            FindPrefix(aPrefix, aPrefixLength, const_cast<const uint8_t *>(aTlvs), aTlvsLength));
-    }
-
-    /**
-     * This method returns a pointer to a Prefix TLV in a specified tlvs buffer.
-     *
-     * @param[in]  aPrefix        A pointer to an IPv6 prefix.
-     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
-     * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
-     * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
-     *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
-     *
-     */
-    static const PrefixTlv *FindPrefix(const uint8_t *aPrefix,
-                                       uint8_t        aPrefixLength,
-                                       const uint8_t *aTlvs,
-                                       uint8_t        aTlvsLength);
-
-    /**
      * This method returns a pointer to a matching Service TLV.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceData       A Service Data.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                            const uint8_t *  aServiceData,
-                            uint8_t          aServiceDataLength,
-                            ServiceMatchMode aServiceMatchMode)
-    {
-        return const_cast<ServiceTlv *>(const_cast<const NetworkData *>(this)->FindService(
-            aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode));
-    }
-
-    /**
-     * This method returns a pointer to a matching Service TLV.
-     *
-     * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
-     * @param[in]  aServiceMatchMode  The Service Data match mode.
-     *
-     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
-     *
-     */
-    const ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                                  const uint8_t *  aServiceData,
-                                  uint8_t          aServiceDataLength,
-                                  ServiceMatchMode aServiceMatchMode) const;
-
-    /**
-     * This method returns a pointer to a Service TLV in a specified tlvs buffer.
-     *
-     * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
-     * @param[in]  aServiceMatchMode  The Service Data match mode.
-     * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
-     * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
-     *
-     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
-     *
-     */
-    static ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                                   const uint8_t *  aServiceData,
-                                   uint8_t          aServiceDataLength,
-                                   ServiceMatchMode aServiceMatchMode,
-                                   uint8_t *        aTlvs,
-                                   uint8_t          aTlvsLength)
-    {
-        return const_cast<ServiceTlv *>(FindService(aEnterpriseNumber, aServiceData, aServiceDataLength,
-                                                    aServiceMatchMode, const_cast<const uint8_t *>(aTlvs),
-                                                    aTlvsLength));
-    }
-
-    /**
-     * This method returns a pointer to a Service TLV in a specified tlvs buffer.
-     *
-     * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
-     * @param[in]  aServiceMatchMode  The Service Data match mode.
-     * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
-     * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
-     *
-     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
-     *
-     */
-    static const ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                                         const uint8_t *  aServiceData,
-                                         uint8_t          aServiceDataLength,
-                                         ServiceMatchMode aServiceMatchMode,
-                                         const uint8_t *  aTlvs,
-                                         uint8_t          aTlvsLength);
+    const ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
+                                  const ServiceData &aServiceData,
+                                  ServiceMatchMode   aServiceMatchMode) const;
 
     /**
      * This method returns the next pointer to a matching Service TLV.
@@ -516,96 +417,51 @@ protected:
      *                                Service TLV), or a pointer to the previous Service TLV returned from this method
      *                                to iterate to the next matching Service TLV.
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data to match with Service TLVs.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceData       A Service Data to match with Service TLVs.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the next matching Service TLV if one is found or nullptr if it cannot be found.
      *
      */
-    const ServiceTlv *FindNextService(const ServiceTlv *aPrevServiceTlv,
-                                      uint32_t          aEnterpriseNumber,
-                                      const uint8_t *   aServiceData,
-                                      uint8_t           aServiceDataLength,
-                                      ServiceMatchMode  aServiceMatchMode) const;
+    const ServiceTlv *FindNextService(const ServiceTlv * aPrevServiceTlv,
+                                      uint32_t           aEnterpriseNumber,
+                                      const ServiceData &aServiceData,
+                                      ServiceMatchMode   aServiceMatchMode) const;
 
     /**
-     * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
-     * number of bytes.
+     * This method returns the next pointer to a matching Thread Service TLV (with Thread Enterprise number).
      *
-     * @param[in]  aSize  The number of bytes to grow the Network Data.
+     * This method can be used to iterate over all Thread Service TLVs that start with a given Service Data.
      *
-     * @retval TRUE   There is space to grow Network Data by @p aSize bytes.
-     * @retval FALSE  There is no space left to grow Network Data by @p aSize bytes.
+     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first matching
+     *                                Service TLV), or a pointer to the previous Service TLV returned from this method
+     *                                to iterate to the next matching Service TLV.
+     * @param[in]  aServiceData       A Service Data to match with Service TLVs.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
-     */
-    bool CanInsert(uint16_t aSize) const { return (mLength + aSize <= kMaxSize); }
-
-    /**
-     * This method grows the Network Data to append a TLV with a requested size.
-     *
-     * On success, the returned TLV is not initialized (i.e., the TLV Length field is not set) but the requested
-     * size for it (@p aTlvSize number of bytes) is reserved in the Network Data.
-     *
-     * @param[in]  aTlvSize  The size of TLV (total number of bytes including Type, Length, and Value fields)
-     *
-     * @returns A pointer to the TLV if there is space to grow Network Data, or nullptr if no space to grow the Network
-     *          Data with requested @p aTlvSize number of bytes.
+     * @returns A pointer to the next matching Thread Service TLV if one is found or nullptr if it cannot be found.
      *
      */
-    NetworkDataTlv *AppendTlv(uint16_t aTlvSize);
-
-    /**
-     * This method inserts bytes into the Network Data.
-     *
-     * @param[in]  aStart   A pointer to the beginning of the insertion.
-     * @param[in]  aLength  The number of bytes to insert.
-     *
-     */
-    void Insert(void *aStart, uint8_t aLength);
-
-    /**
-     * This method removes bytes from the Network Data.
-     *
-     * @param[in]  aRemoveStart   A pointer to the beginning of the removal.
-     * @param[in]  aRemoveLength  The number of bytes to remove.
-     *
-     */
-    void Remove(void *aRemoveStart, uint8_t aRemoveLength);
-
-    /**
-     * This method removes a TLV from the Network Data.
-     *
-     * @param[in]  aTlv   The TLV to remove.
-     *
-     */
-    void RemoveTlv(NetworkDataTlv *aTlv);
-
-    /**
-     * This method strips non-stable data from the Thread Network Data.
-     *
-     * @param[inout]  aData        A pointer to the Network Data to modify.
-     * @param[inout]  aDataLength  On entry, the size of the Network Data in bytes.  On exit, the size of the
-     *                             resulting Network Data in bytes.
-     *
-     */
-    static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength);
+    const ServiceTlv *FindNextThreadService(const ServiceTlv * aPrevServiceTlv,
+                                            const ServiceData &aServiceData,
+                                            ServiceMatchMode   aServiceMatchMode) const;
 
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
-     * @param[in]  aRloc16   The old RLOC16 value that was previously registered.
-     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aRloc16            The old RLOC16 value that was previously registered.
+     * @param[in]  aAppendNetDataTlv  Indicates whether or not to append Thread Network Data TLV to the message.
+     * @param[in]  aHandler           A function pointer that is called when the transaction ends.
+     * @param[in]  aContext           A pointer to arbitrary context information.
      *
      * @retval kErrorNone     Successfully enqueued the notification message.
      * @retval kErrorNoBufs   Insufficient message buffers to generate the notification message.
      *
      */
-    Error SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext);
-
-    uint8_t mTlvs[kMaxSize]; ///< The Network Data buffer.
-    uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
+    Error SendServerDataNotification(uint16_t              aRloc16,
+                                     bool                  aAppendNetDataTlv,
+                                     Coap::ResponseHandler aHandler,
+                                     void *                aContext) const;
 
 private:
     class NetworkDataIterator
@@ -680,19 +536,203 @@ private:
 
     Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 
-    static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
-    static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService);
+    static bool MatchService(const ServiceTlv & aServiceTlv,
+                             uint32_t           aEnterpriseNumber,
+                             const ServiceData &aServiceData,
+                             ServiceMatchMode   aServiceMatchMode);
 
-    static void Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength);
-    static void RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv);
+    const uint8_t *mTlvs;
+    uint8_t        mLength;
+};
 
-    static bool MatchService(const ServiceTlv &aServiceTlv,
-                             uint32_t          aEnterpriseNumber,
-                             const uint8_t *   aServiceData,
-                             uint8_t           aServiceDataLength,
-                             ServiceMatchMode  aServiceMatchMode);
+/**
+ * This class represents mutable Network Data.
+ *
+ */
+class MutableNetworkData : public NetworkData
+{
+    friend class NetworkData;
+    friend class Service::Manager;
+    friend class Publisher;
 
-    const Type mType;
+public:
+    /**
+     * This constructor initializes the `MutableNetworkData`
+     *
+     * @param[in] aInstance     A reference to the OpenThread instance.
+     * @param[in] aTlvs         A pointer to the buffer to store the TLVs.
+     * @param[in] aLength       The current length of the Network Data.
+     * @param[in] aSize         Size of the buffer @p aTlvs (maximum length).
+     *
+     */
+    MutableNetworkData(Instance &aInstance, uint8_t *aTlvs, uint8_t aLength, uint8_t aSize)
+        : NetworkData(aInstance, aTlvs, aLength)
+        , mSize(aSize)
+    {
+    }
+
+    using NetworkData::GetBytes;
+    using NetworkData::GetLength;
+
+    /**
+     * This method returns the size of the buffer to store the mutable Network Data.
+     *
+     * @returns The size of the buffer.
+     *
+     */
+    uint8_t GetSize(void) const { return mSize; }
+
+    /**
+     * This method returns a pointer to start of the TLVs in `NetworkData`.
+     *
+     * @returns A pointer to start of the TLVs.
+     *
+     */
+    uint8_t *GetBytes(void) { return AsNonConst(AsConst(this)->GetBytes()); }
+
+    /**
+     * This method clears the network data.
+     *
+     */
+    void Clear(void) { mLength = 0; }
+
+protected:
+    /**
+     * This method sets the Network Data length.
+     *
+     * @param[in] aLength   The length.
+     *
+     */
+    void SetLength(uint8_t aLength) { mLength = aLength; }
+
+    using NetworkData::GetTlvsStart;
+
+    /**
+     * This method returns a pointer to the start of Network Data TLV sequence.
+     *
+     * @returns A pointer to the start of Network Data TLV sequence.
+     *
+     */
+    NetworkDataTlv *GetTlvsStart(void) { return AsNonConst(AsConst(this)->GetTlvsStart()); }
+
+    using NetworkData::GetTlvsEnd;
+
+    /**
+     * This method returns a pointer to the end of Network Data TLV sequence.
+     *
+     * @returns A pointer to the end of Network Data TLV sequence.
+     *
+     */
+    NetworkDataTlv *GetTlvsEnd(void) { return AsNonConst(AsConst(this)->GetTlvsEnd()); }
+
+    using NetworkData::FindPrefix;
+
+    /**
+     * This method returns a pointer to a Prefix TLV.
+     *
+     * @param[in]  aPrefix        A pointer to an IPv6 prefix.
+     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
+     *
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     *
+     */
+    PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+    {
+        return AsNonConst(AsConst(this)->FindPrefix(aPrefix, aPrefixLength));
+    }
+
+    /**
+     * This method returns a pointer to a Prefix TLV.
+     *
+     * @param[in]  aPrefix        An IPv6 prefix.
+     *
+     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     *
+     */
+    PrefixTlv *FindPrefix(const Ip6::Prefix &aPrefix) { return FindPrefix(aPrefix.GetBytes(), aPrefix.GetLength()); }
+
+    using NetworkData::FindService;
+
+    /**
+     * This method returns a pointer to a matching Service TLV.
+     *
+     * @param[in]  aEnterpriseNumber  Enterprise Number.
+     * @param[in]  aServiceData       A Service Data.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
+     *
+     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
+     *
+     */
+    ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
+                            const ServiceData &aServiceData,
+                            ServiceMatchMode   aServiceMatchMode)
+    {
+        return AsNonConst(AsConst(this)->FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode));
+    }
+
+    /**
+     * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
+     * number of bytes.
+     *
+     * @param[in]  aSize  The number of bytes to grow the Network Data.
+     *
+     * @retval TRUE   There is space to grow Network Data by @p aSize bytes.
+     * @retval FALSE  There is no space left to grow Network Data by @p aSize bytes.
+     *
+     */
+    bool CanInsert(uint16_t aSize) const { return (mLength + aSize <= mSize); }
+
+    /**
+     * This method grows the Network Data to append a TLV with a requested size.
+     *
+     * On success, the returned TLV is not initialized (i.e., the TLV Length field is not set) but the requested
+     * size for it (@p aTlvSize number of bytes) is reserved in the Network Data.
+     *
+     * @param[in]  aTlvSize  The size of TLV (total number of bytes including Type, Length, and Value fields)
+     *
+     * @returns A pointer to the TLV if there is space to grow Network Data, or nullptr if no space to grow the Network
+     *          Data with requested @p aTlvSize number of bytes.
+     *
+     */
+    NetworkDataTlv *AppendTlv(uint16_t aTlvSize);
+
+    /**
+     * This method inserts bytes into the Network Data.
+     *
+     * @param[in]  aStart   A pointer to the beginning of the insertion.
+     * @param[in]  aLength  The number of bytes to insert.
+     *
+     */
+    void Insert(void *aStart, uint8_t aLength);
+
+    /**
+     * This method removes bytes from the Network Data.
+     *
+     * @param[in]  aRemoveStart   A pointer to the beginning of the removal.
+     * @param[in]  aRemoveLength  The number of bytes to remove.
+     *
+     */
+    void Remove(void *aRemoveStart, uint8_t aRemoveLength);
+
+    /**
+     * This method removes a TLV from the Network Data.
+     *
+     * @param[in]  aTlv   The TLV to remove.
+     *
+     */
+    void RemoveTlv(NetworkDataTlv *aTlv);
+
+    /**
+     * This method strips non-stable data from the Thread Network Data.
+     *
+     */
+    void RemoveTemporaryData(void);
+
+private:
+    void RemoveTemporaryDataIn(PrefixTlv &aPrefix);
+    void RemoveTemporaryDataIn(ServiceTlv &aService);
+
+    uint8_t mSize;
 };
 
 } // namespace NetworkData

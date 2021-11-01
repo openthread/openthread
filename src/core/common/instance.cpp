@@ -58,12 +58,19 @@ bool Instance::sDnsNameCompressionEnabled = true;
 #endif
 #endif
 
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+otLogLevel Instance::sLogLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
+#endif
+
 Instance::Instance(void)
     : mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
     , mRadio(*this)
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    , mUptime(*this)
+#endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mTimeTicker(*this)
@@ -105,9 +112,6 @@ Instance::Instance(void)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mLinkRaw(*this)
-#endif
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))
@@ -169,6 +173,14 @@ void Instance::Reset(void)
 {
     otPlatReset(this);
 }
+
+#if OPENTHREAD_RADIO
+void Instance::ResetRadioStack(void)
+{
+    mRadio.Init();
+    mLinkRaw.Init();
+}
+#endif
 
 void Instance::AfterInit(void)
 {

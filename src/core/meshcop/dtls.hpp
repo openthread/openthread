@@ -36,10 +36,10 @@
 
 #include "openthread-core-config.h"
 
-#include <mbedtls/certs.h>
 #include <mbedtls/net_sockets.h>
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
+#include <mbedtls/version.h>
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -360,6 +360,9 @@ private:
     static constexpr uint16_t kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
 #endif
 
+    static constexpr size_t kDtlsKeyBlockSize     = 40;
+    static constexpr size_t kDtlsRandomBufferSize = 32;
+
     void  FreeMbedtls(void);
     Error Setup(bool aClient);
 
@@ -388,6 +391,26 @@ private:
     static int HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
     int        HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
 
+#ifdef MBEDTLS_SSL_EXPORT_KEYS
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+
+    static void HandleMbedtlsExportKeys(void *                      aContext,
+                                        mbedtls_ssl_key_export_type aType,
+                                        const unsigned char *       aMasterSecret,
+                                        size_t                      aMasterSecretLen,
+                                        const unsigned char         aClientRandom[32],
+                                        const unsigned char         aServerRandom[32],
+                                        mbedtls_tls_prf_types       aTlsPrfType);
+
+    void HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
+                                 const unsigned char *       aMasterSecret,
+                                 size_t                      aMasterSecretLen,
+                                 const unsigned char         aClientRandom[32],
+                                 const unsigned char         aServerRandom[32],
+                                 mbedtls_tls_prf_types       aTlsPrfType);
+
+#else
+
     static int HandleMbedtlsExportKeys(void *               aContext,
                                        const unsigned char *aMasterSecret,
                                        const unsigned char *aKeyBlock,
@@ -399,6 +422,9 @@ private:
                                        size_t               aMacLength,
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
+
+#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#endif // MBEDTLS_SSL_EXPORT_KEYS
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

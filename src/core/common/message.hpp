@@ -42,6 +42,8 @@
 #include <openthread/platform/messagepool.h>
 
 #include "common/code_utils.hpp"
+#include "common/const_cast.hpp"
+#include "common/data.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -144,69 +146,12 @@ class PriorityQueue;
 class ThreadLinkInfo;
 
 /**
- * This structure contains metadata about a Message.
- *
- */
-struct MessageMetadata
-{
-    Message *    mNext;        ///< A pointer to the next Message in a doubly linked list.
-    Message *    mPrev;        ///< A pointer to the previous Message in a doubly linked list.
-    MessagePool *mMessagePool; ///< Identifies the message pool for this message.
-    union
-    {
-        MessageQueue * mMessage;  ///< Identifies the message queue (if any) where this message is queued.
-        PriorityQueue *mPriority; ///< Identifies the priority queue (if any) where this message is queued.
-    } mQueue;                     ///< Identifies the queue (if any) where this message is queued.
-
-    uint32_t mDatagramTag;    ///< The datagram tag used for 6LoWPAN fragmentation or identification used for IPv6
-                              ///< fragmentation.
-    uint16_t    mReserved;    ///< Number of header bytes reserved for the message.
-    uint16_t    mLength;      ///< Number of bytes within the message.
-    uint16_t    mOffset;      ///< A byte offset within the message.
-    RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    LqiAverager mLqiAverager; ///< The averager maintaining the Link quality indicator (LQI) average.
-#endif
-
-    ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
-    uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
-    uint8_t   mTimeout;   ///< Seconds remaining before dropping the message.
-    union
-    {
-        uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
-        uint8_t  mChannel; ///< Used for MLE Announce.
-    } mPanIdChannel;       ///< Used for MLE Discover Request, Response, and Announce messages.
-
-    uint8_t mType : 3;          ///< Identifies the type of message.
-    uint8_t mSubType : 4;       ///< Identifies the message sub type.
-    bool    mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
-    bool    mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
-    uint8_t mPriority : 2;      ///< Identifies the message priority level (higher value is higher priority).
-    bool    mInPriorityQ : 1;   ///< Indicates whether the message is queued in normal or priority queue.
-    bool    mTxSuccess : 1;     ///< Indicates whether the direct tx of the message was successful.
-    bool    mDoNotEvict : 1;    ///< Indicates whether or not this message may be evicted.
-    bool    mMulticastLoop : 1; ///< Indicates whether or not this multicast message may be looped back.
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
-    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
-    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
-#endif
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    uint8_t mRadioType : 2;      ///< The radio link type the message was received on, or should be sent on.
-    bool    mIsRadioTypeSet : 1; ///< Indicates whether the radio type is set.
-
-    static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
-#endif
-};
-
-/**
  * This class represents a Message buffer.
  *
  */
 class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
 {
     friend class Message;
-    friend class LinkedListEntry<Buffer>;
 
 public:
     /**
@@ -233,69 +178,75 @@ public:
      */
     void SetNextBuffer(Buffer *aNext) { SetNext(aNext); }
 
-private:
-    /**
-     * This method returns the message metadata in the first message buffer.
-     *
-     * @returns The message metadata structure.
-     *
-     */
-    MessageMetadata &GetMetadata(void) { return mBuffer.mHead.mMetadata; }
+protected:
+    struct Metadata
+    {
+        Message *    mNext;        // Next message in a doubly linked list.
+        Message *    mPrev;        // Previous message in a doubly linked list.
+        MessagePool *mMessagePool; // Message pool for this message.
+        void *       mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
+        uint32_t     mDatagramTag; // The datagram tag used for 6LoWPAN frags or IPv6fragmentation.
+        uint16_t     mReserved;    // Number of reserved bytes (for header).
+        uint16_t     mLength;      // Current message length (number of bytes).
+        uint16_t     mOffset;      // A byte offset within the message.
+        uint16_t     mMeshDest;    // Used for unicast non-link-local messages.
+        uint16_t     mPanId;       // PAN ID (used for MLE Discover Request and Response).
+        uint8_t      mChannel;     // The message channel (used for MLE Announce).
+        uint8_t      mTimeout;     // Seconds remaining before dropping the message.
+        RssAverager  mRssAverager; // The averager maintaining the received signal strength (RSS) average.
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+        LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
+#endif
+        ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
 
-    /**
-     * This method returns the message metadata in the first message buffer.
-     *
-     * @returns The message metadata structure.
-     *
-     */
-    const MessageMetadata &GetMetadata(void) const { return mBuffer.mHead.mMetadata; }
+        uint8_t mType : 3;          // The message type.
+        uint8_t mSubType : 4;       // The message sub type.
+        bool    mDirectTx : 1;      // Whether a direct transmission is required.
+        bool    mLinkSecurity : 1;  // Whether link security is enabled.
+        uint8_t mPriority : 2;      // The message priority level (higher value is higher priority).
+        bool    mInPriorityQ : 1;   // Whether the message is queued in normal or priority queue.
+        bool    mTxSuccess : 1;     // Whether the direct tx of the message was successful.
+        bool    mDoNotEvict : 1;    // Whether this message may be evicted.
+        bool    mMulticastLoop : 1; // Whether this multicast message may be looped back.
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
+        bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
+        static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        bool    mTimeSync : 1;      // Whether the message is also used for time sync purpose.
+        int64_t mNetworkTimeOffset; // The time offset to the Thread network time, in microseconds.
+        uint8_t mTimeSyncSeq;       // The time sync sequence.
+#endif
+    };
 
-    /**
-     * This method returns a pointer to the first byte of data in the first message buffer.
-     *
-     * @returns A pointer to the first data byte.
-     *
-     */
-    uint8_t *GetFirstData(void) { return mBuffer.mHead.mData; }
-
-    /**
-     * This method returns a pointer to the first byte of data in the first message buffer.
-     *
-     * @returns A pointer to the first data byte.
-     *
-     */
-    const uint8_t *GetFirstData(void) const { return mBuffer.mHead.mData; }
-
-    /**
-     * This method returns a pointer to the first data byte of a subsequent message buffer.
-     *
-     * @returns A pointer to the first data byte.
-     *
-     */
-    uint8_t *GetData(void) { return mBuffer.mData; }
-
-    /**
-     * This method returns a pointer to the first data byte of a subsequent message buffer.
-     *
-     * @returns A pointer to the first data byte.
-     *
-     */
-    const uint8_t *GetData(void) const { return mBuffer.mData; }
+    static_assert(kBufferSize > sizeof(Metadata) + sizeof(otMessageBuffer), "Metadata does not fit in a single buffer");
 
     static constexpr uint16_t kBufferDataSize     = kBufferSize - sizeof(otMessageBuffer);
-    static constexpr uint16_t kHeadBufferDataSize = kBufferDataSize - sizeof(MessageMetadata);
+    static constexpr uint16_t kHeadBufferDataSize = kBufferDataSize - sizeof(Metadata);
 
-protected:
+    Metadata &      GetMetadata(void) { return mBuffer.mHead.mMetadata; }
+    const Metadata &GetMetadata(void) const { return mBuffer.mHead.mMetadata; }
+
+    uint8_t *      GetFirstData(void) { return mBuffer.mHead.mData; }
+    const uint8_t *GetFirstData(void) const { return mBuffer.mHead.mData; }
+
+    uint8_t *      GetData(void) { return mBuffer.mData; }
+    const uint8_t *GetData(void) const { return mBuffer.mData; }
+
+private:
     union
     {
         struct
         {
-            MessageMetadata mMetadata;
-            uint8_t         mData[kHeadBufferDataSize];
+            Metadata mMetadata;
+            uint8_t  mData[kHeadBufferDataSize];
         } mHead;
         uint8_t mData[kBufferDataSize];
     } mBuffer;
 };
+
+static_assert(sizeof(Buffer) >= kBufferSize, "Buffer size if not valid");
 
 /**
  * This class represents a message.
@@ -341,6 +292,7 @@ public:
         kSubTypeMleChildUpdateRequest  = 8,  ///< MLE Child Update Request
         kSubTypeMleDataResponse        = 9,  ///< MLE Data Response
         kSubTypeMleChildIdRequest      = 10, ///< MLE Child ID Request
+        kSubTypeMleDataRequest         = 11, ///< MLE Data Request
     };
 
     enum Priority : uint8_t
@@ -357,10 +309,10 @@ public:
      * This enumeration represents the link security mode (used by `Settings` constructor).
      *
      */
-    enum LinkSecurityMode : uint8_t
+    enum LinkSecurityMode : bool
     {
-        kNoLinkSecurity,   ///< Link security disabled (no link security).
-        kWithLinkSecurity, ///< Link security enabled.
+        kNoLinkSecurity   = false, ///< Link security disabled (no link security).
+        kWithLinkSecurity = true,  ///< Link security enabled.
     };
 
     /**
@@ -389,7 +341,7 @@ public:
      * This class represents settings used for creating a new message.
      *
      */
-    class Settings
+    class Settings : public otMessageSettings
     {
     public:
         /**
@@ -402,21 +354,12 @@ public:
         Settings(LinkSecurityMode aSecurityMode, Priority aPriority);
 
         /**
-         * This constructor initializes the `Settings` object from a given `otMessageSettings`.
-         *
-         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from. If nullptr default settings (link
-         *                       security enabled with `kPriorityNormal` priority) would be used.
-         *
-         */
-        explicit Settings(const otMessageSettings *aSettings);
-
-        /**
          * This method gets the message priority.
          *
          * @returns The message priority.
          *
          */
-        Priority GetPriority(void) const { return mPriority; }
+        Priority GetPriority(void) const { return static_cast<Priority>(mPriority); }
 
         /**
          * This method indicates whether the link security should be enabled.
@@ -427,18 +370,26 @@ public:
         bool IsLinkSecurityEnabled(void) const { return mLinkSecurityEnabled; }
 
         /**
+         * This static method converts a pointer to an `otMessageSettings` to a `Settings`.
+         *
+         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from.
+         *                       If it is `nullptr`, then the default settings `GetDefault()` will be used.
+         *
+         * @returns A reference to the converted `Settings` or the default if @p aSettings is `nullptr`.
+         *
+         */
+        static const Settings &From(const otMessageSettings *aSettings);
+
+        /**
          * This static method returns the default settings with link security enabled and `kPriorityNormal` priority.
          *
          * @returns A reference to the default settings (link security enable and `kPriorityNormal` priority).
          *
          */
-        static const Settings &GetDefault(void) { return kDefault; }
+        static const Settings &GetDefault(void) { return static_cast<const Settings &>(kDefault); }
 
     private:
-        static const Settings kDefault;
-
-        bool     mLinkSecurityEnabled;
-        Priority mPriority;
+        static const otMessageSettings kDefault;
     };
 
     /**
@@ -946,7 +897,7 @@ public:
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    uint16_t GetPanId(void) const { return GetMetadata().mPanIdChannel.mPanId; }
+    uint16_t GetPanId(void) const { return GetMetadata().mPanId; }
 
     /**
      * This method sets the IEEE 802.15.4 Destination PAN ID.
@@ -956,7 +907,7 @@ public:
      * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
      *
      */
-    void SetPanId(uint16_t aPanId) { GetMetadata().mPanIdChannel.mPanId = aPanId; }
+    void SetPanId(uint16_t aPanId) { GetMetadata().mPanId = aPanId; }
 
     /**
      * This method returns the IEEE 802.15.4 Channel to use for transmission.
@@ -966,7 +917,7 @@ public:
      * @returns The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    uint8_t GetChannel(void) const { return GetMetadata().mPanIdChannel.mChannel; }
+    uint8_t GetChannel(void) const { return GetMetadata().mChannel; }
 
     /**
      * This method sets the IEEE 802.15.4 Channel to use for transmission.
@@ -976,7 +927,7 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 Channel to use for transmission.
      *
      */
-    void SetChannel(uint8_t aChannel) { GetMetadata().mPanIdChannel.mChannel = aChannel; }
+    void SetChannel(uint8_t aChannel) { GetMetadata().mChannel = aChannel; }
 
     /**
      * This method returns the timeout used for 6LoWPAN reassembly.
@@ -1120,9 +1071,9 @@ public:
     uint8_t GetAverageLqi(void) const { return GetMetadata().mLqiAverager.GetAverage(); }
 
     /**
-     * This mehod returns the count of frames counted so far.
+     * This method returns the count of frames counted so far.
      *
-     * @retruns The count of frames that have been counted.
+     * @returns The count of frames that have been counted.
      *
      */
     uint8_t GetPsduCount(void) const { return GetMetadata().mLqiAverager.GetCount(); }
@@ -1144,7 +1095,7 @@ public:
      */
     MessageQueue *GetMessageQueue(void) const
     {
-        return (!GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mMessage : nullptr;
+        return !GetMetadata().mInPriorityQ ? static_cast<MessageQueue *>(GetMetadata().mQueue) : nullptr;
     }
 
     /**
@@ -1155,7 +1106,7 @@ public:
      */
     PriorityQueue *GetPriorityQueue(void) const
     {
-        return (GetMetadata().mInPriorityQ) ? GetMetadata().mQueue.mPriority : nullptr;
+        return GetMetadata().mInPriorityQ ? static_cast<PriorityQueue *>(GetMetadata().mQueue) : nullptr;
     }
 
     /**
@@ -1253,127 +1204,52 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
-private:
-    /**
-     * This method returns a pointer to the message pool to which this message belongs
-     *
-     * @returns A pointer to the message pool.
-     *
-     */
-    MessagePool *GetMessagePool(void) const { return GetMetadata().mMessagePool; }
-
-    /**
-     * This method sets the message pool this message to which this message belongs.
-     *
-     * @param[in] aMessagePool  A pointer to the message pool
-     *
-     */
-    void SetMessagePool(MessagePool *aMessagePool) { GetMetadata().mMessagePool = aMessagePool; }
-
-    /**
-     * This method returns `true` if the message is enqueued in any queue (`MessageQueue` or `PriorityQueue`).
-     *
-     * @returns `true` if the message is in any queue, `false` otherwise.
-     *
-     */
-    bool IsInAQueue(void) const { return (GetMetadata().mQueue.mMessage != nullptr); }
-
-    /**
-     * This method sets the message queue information for the message.
-     *
-     * @param[in]  aMessageQueue  A pointer to the message queue where this message is queued.
-     *
-     */
-    void SetMessageQueue(MessageQueue *aMessageQueue);
-
-    /**
-     * This method sets the message queue information for the message.
-     *
-     * @param[in]  aPriorityQueue  A pointer to the priority queue where this message is queued.
-     *
-     */
-    void SetPriorityQueue(PriorityQueue *aPriorityQueue);
-
-    /**
-     * This method returns a reference to the `mNext` pointer.
-     *
-     * @returns A reference to the mNext pointer.
-     *
-     */
-    Message *&Next(void) { return GetMetadata().mNext; }
-
-    /**
-     * This method returns a reference to the `mNext` pointer (const pointer).
-     *
-     *
-     * @returns A reference to the mNext pointer.
-     *
-     */
-    Message *const &Next(void) const { return GetMetadata().mNext; }
-
-    /**
-     * This method returns a reference to the `mPrev` pointer.
-     *
-     * @returns A reference to the mPrev pointer.
-     *
-     */
-    Message *&Prev(void) { return GetMetadata().mPrev; }
-
-    /**
-     * This method returns the number of reserved header bytes.
-     *
-     * @returns The number of reserved header bytes.
-     *
-     */
+protected:
     uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
-
-    /**
-     * This method sets the number of reserved header bytes.
-     *
-     * @param[in] aReservedHeader  The number of header bytes to reserve.
-     *
-     */
-    void SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
-
-    /**
-     * This method adds or frees message buffers to meet the requested length.
-     *
-     * @param[in]  aLength  The number of bytes that the message buffer needs to handle.
-     *
-     * @retval kErrorNone    Successfully resized the message.
-     * @retval kErrorNoBufs  Could not grow the message due to insufficient available message buffers.
-     *
-     */
-    Error ResizeMessage(uint16_t aLength);
+    void     SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
 
 private:
-    struct Chunk
+    class Chunk : public Data<kWithUint16Length>
     {
-        const uint8_t *GetData(void) const { return mData; }
-        uint16_t       GetLength(void) const { return mLength; }
+    public:
+        const Buffer *GetBuffer(void) const { return mBuffer; }
+        void          SetBuffer(const Buffer *aBuffer) { mBuffer = aBuffer; }
 
-        const uint8_t *mData;   // Pointer to start of chunk data buffer.
-        uint16_t       mLength; // Length of chunk data (in bytes).
-        const Buffer * mBuffer; // Buffer containing the chunk
+    private:
+        const Buffer *mBuffer; // Buffer containing the chunk
     };
 
-    struct WritableChunk : public Chunk
+    class MutableChunk : public Chunk
     {
-        uint8_t *GetData(void) const { return const_cast<uint8_t *>(mData); }
+    public:
+        uint8_t *GetBytes(void) { return AsNonConst(Chunk::GetBytes()); }
     };
 
-    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &chunk) const;
+    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) const;
     void GetNextChunk(uint16_t &aLength, Chunk &aChunk) const;
 
-    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, WritableChunk &aChunk)
+    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, MutableChunk &aChunk)
     {
-        const_cast<const Message *>(this)->GetFirstChunk(aOffset, aLength, static_cast<Chunk &>(aChunk));
+        AsConst(this)->GetFirstChunk(aOffset, aLength, static_cast<Chunk &>(aChunk));
     }
 
-    void GetNextChunk(uint16_t &aLength, WritableChunk &aChunk)
+    void GetNextChunk(uint16_t &aLength, MutableChunk &aChunk)
     {
-        const_cast<const Message *>(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
+        AsConst(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
     }
+
+    MessagePool *GetMessagePool(void) const { return GetMetadata().mMessagePool; }
+    void         SetMessagePool(MessagePool *aMessagePool) { GetMetadata().mMessagePool = aMessagePool; }
+
+    bool IsInAQueue(void) const { return (GetMetadata().mQueue != nullptr); }
+    void SetMessageQueue(MessageQueue *aMessageQueue);
+    void SetPriorityQueue(PriorityQueue *aPriorityQueue);
+
+    Message *&      Next(void) { return GetMetadata().mNext; }
+    Message *const &Next(void) const { return GetMetadata().mNext; }
+    Message *&      Prev(void) { return GetMetadata().mPrev; }
+
+    Error ResizeMessage(uint16_t aLength);
 };
 
 /**
@@ -1460,21 +1336,8 @@ public:
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
 private:
-    /**
-     * This method returns the tail of the list (last message in the list)
-     *
-     * @returns A pointer to the tail of the list.
-     *
-     */
     Message *GetTail(void) const { return static_cast<Message *>(mData); }
-
-    /**
-     * This method set the tail of the list.
-     *
-     * @param[in]  aMessage  A pointer to the message to set as new tail.
-     *
-     */
-    void SetTail(Message *aMessage) { mData = aMessage; }
+    void     SetTail(Message *aMessage) { mData = aMessage; }
 };
 
 /**
@@ -1561,32 +1424,14 @@ public:
     Message *GetTail(void) const;
 
 private:
-    /**
-     * This method increases (moves forward) the given priority while ensuring to wrap from
-     * priority value `kNumPriorities` -1 back to 0.
-     *
-     * @param[in] aPriority  A given priority level
-     *
-     * @returns Increased/Moved forward priority level
-     */
     uint8_t PrevPriority(uint8_t aPriority) const
     {
         return (aPriority == Message::kNumPriorities - 1) ? 0 : (aPriority + 1);
     }
 
-    /**
-     * This private method finds the first non-nullptr tail starting from the given priority level and moving forward.
-     * It wraps from priority value `kNumPriorities` -1 back to 0.
-     *
-     * aStartPriorityLevel  Starting priority level.
-     *
-     * @returns The first non-nullptr tail pointer, or nullptr if all the
-     *
-     */
     Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
 
-private:
-    Message *mTails[Message::kNumPriorities]; ///< Tail pointers associated with different priority levels.
+    Message *mTails[Message::kNumPriorities]; // Tail pointers associated with different priority levels.
 };
 
 /**
@@ -1620,7 +1465,6 @@ public:
      */
     Message *New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority);
 
-public:
     /**
      * This method is used to obtain a new message with specified settings.
      *

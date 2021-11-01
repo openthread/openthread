@@ -36,9 +36,9 @@ from wpan import verify
 #
 #   r1  --------- r2 ---------- r3
 # (trel)      (15.4+trel)     (15.4)
-#                               |
-#                               |
-#                             c3 (15.4)
+#                  |            |
+#                  |            |
+#               c2 (15.4)     c3 (15.4)
 #
 # c3 is used for quick router promotion of r3.
 #
@@ -55,6 +55,7 @@ wpan.Node.set_time_speedup_factor(speedup)
 r1 = wpan.Node(wpan.NODE_TREL)
 r2 = wpan.Node(wpan.NODE_15_4_TREL)
 r3 = wpan.Node(wpan.NODE_15_4)
+c2 = wpan.Node(wpan.NODE_15_4)
 c3 = wpan.Node(wpan.NODE_15_4)
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -72,6 +73,9 @@ r2.allowlist_node(r1)
 r2.allowlist_node(r3)
 r3.allowlist_node(r2)
 
+r2.allowlist_node(c2)
+c2.allowlist_node(r2)
+
 r3.allowlist_node(c3)
 c3.allowlist_node(r3)
 
@@ -79,6 +83,8 @@ r1.form("mesh-header")
 
 r2.join_node(r1, wpan.JOIN_TYPE_ROUTER)
 r3.join_node(r2, wpan.JOIN_TYPE_ROUTER)
+c2.join_node(r2, wpan.NODE_TYPE_SLEEPY_END_DEVICE)
+
 c3.join_node(r3, wpan.JOIN_TYPE_END_DEVICE)
 
 # -----------------------------------------------------------------------------------------------------------------------
@@ -87,7 +93,10 @@ c3.join_node(r3, wpan.JOIN_TYPE_END_DEVICE)
 WAIT_TIME = 5
 INVALID_ROUTER_ID = 63
 MSG_LEN = 1000
-MSG_COUNT = 7
+MSG_COUNT = 2
+POLL_INTERVAL = 400
+
+c2.set(wpan.WPAN_POLL_INTERVAL, str(POLL_INTERVAL))
 
 # Verify that each node supports the correct radio links.
 
@@ -117,7 +126,7 @@ def check_r1_router_table():
 wpan.verify_within(check_r1_router_table, WAIT_TIME)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Send large message from r1 to r3. Such a messag would be sent as a
+# Send large message from r1 to r3. Such a message would be sent as a
 # Mesh Header message. Note that the origin r1 is a trel-only device
 # whereas the final destination r3 is a 15.4-only device. The originator
 # should use smaller MTU size (which then fragment the message into
@@ -128,6 +137,30 @@ r3_ml_address = r3.get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
 
 sender = r1.prepare_tx(r1_ml_address, r3_ml_address, MSG_LEN, MSG_COUNT)
 recver = r3.prepare_rx(sender)
+
+wpan.Node.perform_async_tx_rx()
+
+verify(sender.was_successful)
+verify(recver.was_successful)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Send messages from c2 to r1.
+
+c2_ml_address = c2.get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
+
+sender = c2.prepare_tx(c2_ml_address, r1_ml_address, MSG_LEN, MSG_COUNT)
+recver = r1.prepare_rx(sender)
+
+wpan.Node.perform_async_tx_rx()
+
+verify(sender.was_successful)
+verify(recver.was_successful)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Send messages from r3 to r1.
+
+sender = r3.prepare_tx(r3_ml_address, r1_ml_address, MSG_LEN, MSG_COUNT)
+recver = r1.prepare_rx(sender)
 
 wpan.Node.perform_async_tx_rx()
 

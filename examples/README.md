@@ -6,6 +6,7 @@ This page lists the available common switches with description. Unless stated ot
 
 | Makefile switch | CMake switch | Description |
 | --- | --- | --- |
+| ANYCAST_LOCATOR | OT_ANYCAST_LOCATOR | Enables anycast locator functionality. |
 | BACKBONE_ROUTER | OT_BACKBONE_ROUTER | Enables Backbone Router functionality for Thread 1.2. |
 | BIG_ENDIAN | OT_BIG_ENDIAN | Allows the host platform to use big-endian byte order. |
 | BORDER_AGENT | OT_BORDER_AGENT | Enables support for border agent. In most cases, enable this switch if you are building On-mesh Commissioner or Border Router with External Commissioning support. |
@@ -65,3 +66,4 @@ This page lists the available common switches with description. Unless stated ot
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
 | TREL | OT_TREL | Enables TREL radio link for Thread over Infrastructure feature. |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. | Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |
+| UPTIME | OT_UPTIME | Enables support for tracking OpenThread instance's uptime. |

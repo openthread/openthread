@@ -37,23 +37,21 @@
 
 #include <openthread/channel_monitor.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    Utils::ChannelMonitor &monitor = static_cast<Instance *>(aInstance)->Get<Utils::ChannelMonitor>();
+    Utils::ChannelMonitor &monitor = AsCoreType(aInstance).Get<Utils::ChannelMonitor>();
 
     return aEnabled ? monitor.Start() : monitor.Stop();
 }
 
 bool otChannelMonitorIsEnabled(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelMonitor>().IsRunning();
+    return AsCoreType(aInstance).Get<Utils::ChannelMonitor>().IsRunning();
 }
 
 uint32_t otChannelMonitorGetSampleInterval(otInstance *aInstance)
@@ -79,16 +77,12 @@ uint32_t otChannelMonitorGetSampleWindow(otInstance *aInstance)
 
 uint32_t otChannelMonitorGetSampleCount(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelMonitor>().GetSampleCount();
+    return AsCoreType(aInstance).Get<Utils::ChannelMonitor>().GetSampleCount();
 }
 
 uint16_t otChannelMonitorGetChannelOccupancy(otInstance *aInstance, uint8_t aChannel)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChannelMonitor>().GetChannelOccupancy(aChannel);
+    return AsCoreType(aInstance).Get<Utils::ChannelMonitor>().GetChannelOccupancy(aChannel);
 }
 
 #endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE

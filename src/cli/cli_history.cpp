@@ -50,7 +50,7 @@ otError History::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -78,6 +78,127 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
     }
 
     return aArgs[0].IsEmpty() ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
+}
+
+otError History::ProcessIpAddr(Arg aArgs[])
+{
+    static const char *const kEventStrings[] = {
+        "Added",  // (0) OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED
+        "Removed" // (1) OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED
+    };
+
+    otError                                   error;
+    bool                                      isList;
+    uint16_t                                  numEntries;
+    otHistoryTrackerIterator                  iterator;
+    const otHistoryTrackerUnicastAddressInfo *info;
+    uint32_t                                  entryAge;
+    char                                      ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                      addressString[OT_IP6_ADDRESS_STRING_SIZE + 4];
+
+    static_assert(0 == OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED, "ADDRESS_EVENT_ADDED is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED, "ADDRESS_EVENT_REMOVED is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event   | Address / PrefixLen                  /123   | Origin |Scope| P | V | R |
+        // +----------------------+---------+---------------------------------------------+--------+-----+---+---+---+
+
+        static const char *const kUnicastAddrInfoTitles[] = {
+            "Age", "Event", "Address / PrefixLength", "Origin", "Scope", "P", "V", "R"};
+
+        static const uint8_t kUnicastAddrInfoColumnWidths[] = {22, 9, 45, 8, 5, 3, 3, 3};
+
+        OutputTableHeader(kUnicastAddrInfoTitles, kUnicastAddrInfoColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateUnicastAddressHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+        otIp6AddressToString(&info->mAddress, addressString, sizeof(addressString));
+
+        if (!isList)
+        {
+            sprintf(&addressString[strlen(addressString)], "/%d", info->mPrefixLength);
+
+            OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString, kEventStrings[info->mEvent],
+                       addressString, AddressOriginToString(info->mAddressOrigin), info->mScope,
+                       info->mPreferred ? 'Y' : 'N', info->mValid ? 'Y' : 'N', info->mRloc ? 'Y' : 'N');
+        }
+        else
+        {
+            OutputLine("%s -> event:%s address:%s prefixlen:%d origin:%s scope:%d preferred:%s valid:%s rloc:%s",
+                       ageString, kEventStrings[info->mEvent], addressString, info->mPrefixLength,
+                       AddressOriginToString(info->mAddressOrigin), info->mScope, info->mPreferred ? "yes" : "no",
+                       info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
+        }
+    }
+
+exit:
+    return error;
+}
+
+otError History::ProcessIpMulticastAddr(Arg aArgs[])
+{
+    static const char *const kEventStrings[] = {
+        "Subscribed",  // (0) OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED
+        "Unsubscribed" // (1) OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED
+    };
+
+    otError                                     error;
+    bool                                        isList;
+    uint16_t                                    numEntries;
+    otHistoryTrackerIterator                    iterator;
+    const otHistoryTrackerMulticastAddressInfo *info;
+    uint32_t                                    entryAge;
+    char                                        ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                        addressString[OT_IP6_ADDRESS_STRING_SIZE];
+
+    static_assert(0 == OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED, "ADDRESS_EVENT_ADDED is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED, "ADDRESS_EVENT_REMOVED is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event        | Multicast Address                       | Origin |
+        // +----------------------+--------------+-----------------------------------------+--------+
+
+        static const char *const kMulticastAddrInfoTitles[] = {
+            "Age",
+            "Event",
+            "Multicast Address",
+            "Origin",
+        };
+
+        static const uint8_t kMulticastAddrInfoColumnWidths[] = {22, 14, 42, 8};
+
+        OutputTableHeader(kMulticastAddrInfoTitles, kMulticastAddrInfoColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateMulticastAddressHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+        otIp6AddressToString(&info->mAddress, addressString, sizeof(addressString));
+
+        OutputLine(isList ? "%s -> event:%s address:%s origin:%s" : "| %20s | %-12s | %-39s | %-6s |", ageString,
+                   kEventStrings[info->mEvent], addressString, AddressOriginToString(info->mAddressOrigin));
+    }
+
+exit:
+    return error;
 }
 
 otError History::ProcessNeighbor(Arg aArgs[])
@@ -117,14 +238,14 @@ otError History::ProcessNeighbor(Arg aArgs[])
 
         static const uint8_t kNeighborInfoColumnWidths[] = {22, 8, 11, 18, 8, 6, 9};
 
-        mInterpreter.OutputTableHeader(kNeighborInfoTitles, kNeighborInfoColumnWidths);
+        OutputTableHeader(kNeighborInfoTitles, kNeighborInfoColumnWidths);
     }
 
     otHistoryTrackerInitIterator(&iterator);
 
     for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
     {
-        info = otHistoryTrackerIterateNeighborHistory(mInterpreter.mInstance, &iterator, &entryAge);
+        info = otHistoryTrackerIterateNeighborHistory(GetInstancePtr(), &iterator, &entryAge);
         VerifyOrExit(info != nullptr);
 
         otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
@@ -134,11 +255,11 @@ otError History::ProcessNeighbor(Arg aArgs[])
         mode.mNetworkData  = info->mFullNetworkData;
         Interpreter::LinkModeToString(mode, linkModeString);
 
-        mInterpreter.OutputFormat(isList ? "%s -> type:%s event:%s extaddr:" : "| %20s | %-6s | %-9s | ", ageString,
-                                  info->mIsChild ? "Child" : "Router", kEventString[info->mEvent]);
-        mInterpreter.OutputExtAddress(info->mExtAddress);
-        mInterpreter.OutputLine(isList ? " rloc16:0x%04x mode:%s rss:%d" : " | 0x%04x | %-4s | %7d |", info->mRloc16,
-                                linkModeString, info->mAverageRssi);
+        OutputFormat(isList ? "%s -> type:%s event:%s extaddr:" : "| %20s | %-6s | %-9s | ", ageString,
+                     info->mIsChild ? "Child" : "Router", kEventString[info->mEvent]);
+        OutputExtAddress(info->mExtAddress);
+        OutputLine(isList ? " rloc16:0x%04x mode:%s rss:%d" : " | 0x%04x | %-4s | %7d |", info->mRloc16, linkModeString,
+                   info->mAverageRssi);
     }
 
 exit:
@@ -166,22 +287,22 @@ otError History::ProcessNetInfo(Arg aArgs[])
         static const char *const kNetInfoTitles[]       = {"Age", "Role", "Mode", "RLOC16", "Partition ID"};
         static const uint8_t     kNetInfoColumnWidths[] = {22, 10, 6, 8, 14};
 
-        mInterpreter.OutputTableHeader(kNetInfoTitles, kNetInfoColumnWidths);
+        OutputTableHeader(kNetInfoTitles, kNetInfoColumnWidths);
     }
 
     otHistoryTrackerInitIterator(&iterator);
 
     for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
     {
-        info = otHistoryTrackerIterateNetInfoHistory(mInterpreter.mInstance, &iterator, &entryAge);
+        info = otHistoryTrackerIterateNetInfoHistory(GetInstancePtr(), &iterator, &entryAge);
         VerifyOrExit(info != nullptr);
 
         otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
 
-        mInterpreter.OutputLine(
-            isList ? "%s -> role:%s mode:%s rloc16:0x%04x partition-id:%u" : "| %20s | %-8s | %-4s | 0x%04x | %12u |",
-            ageString, otThreadDeviceRoleToString(info->mRole),
-            Interpreter::LinkModeToString(info->mMode, linkModeString), info->mRloc16, info->mPartitionId);
+        OutputLine(isList ? "%s -> role:%s mode:%s rloc16:0x%04x partition-id:%u"
+                          : "| %20s | %-8s | %-4s | 0x%04x | %12u |",
+                   ageString, otThreadDeviceRoleToString(info->mRole),
+                   Interpreter::LinkModeToString(info->mMode, linkModeString), info->mRloc16, info->mPartitionId);
     }
 
 exit:
@@ -201,6 +322,35 @@ otError History::ProcessRxTx(Arg aArgs[])
 otError History::ProcessTx(Arg aArgs[])
 {
     return ProcessRxTxHistory(kTx, aArgs);
+}
+
+const char *History::AddressOriginToString(uint8_t aOrigin)
+{
+    const char *str = "Unknown";
+
+    switch (aOrigin)
+    {
+    case OT_ADDRESS_ORIGIN_THREAD:
+        str = "Thread";
+        break;
+
+    case OT_ADDRESS_ORIGIN_SLAAC:
+        str = "SLAAC";
+        break;
+
+    case OT_ADDRESS_ORIGIN_DHCPV6:
+        str = "DHCPv6";
+        break;
+
+    case OT_ADDRESS_ORIGIN_MANUAL:
+        str = "Manual";
+        break;
+
+    default:
+        break;
+    }
+
+    return str;
 }
 
 const char *History::MessagePriorityToString(uint8_t aPriority)
@@ -314,7 +464,7 @@ otError History::ProcessRxTxHistory(RxTx aRxTx, Arg aArgs[])
 
     if (!isList)
     {
-        mInterpreter.OutputTableHeader(kTableTitles, kTableColumnWidths);
+        OutputTableHeader(kTableTitles, kTableColumnWidths);
     }
 
     otHistoryTrackerInitIterator(&txIterator);
@@ -325,12 +475,12 @@ otError History::ProcessRxTxHistory(RxTx aRxTx, Arg aArgs[])
         switch (aRxTx)
         {
         case kRx:
-            info = otHistoryTrackerIterateRxHistory(mInterpreter.mInstance, &rxIterator, &entryAge);
+            info = otHistoryTrackerIterateRxHistory(GetInstancePtr(), &rxIterator, &entryAge);
             isRx = true;
             break;
 
         case kTx:
-            info = otHistoryTrackerIterateTxHistory(mInterpreter.mInstance, &txIterator, &entryAge);
+            info = otHistoryTrackerIterateTxHistory(GetInstancePtr(), &txIterator, &entryAge);
             isRx = false;
             break;
 
@@ -340,12 +490,12 @@ otError History::ProcessRxTxHistory(RxTx aRxTx, Arg aArgs[])
 
             if (rxInfo == nullptr)
             {
-                rxInfo = otHistoryTrackerIterateRxHistory(mInterpreter.mInstance, &rxIterator, &rxEntryAge);
+                rxInfo = otHistoryTrackerIterateRxHistory(GetInstancePtr(), &rxIterator, &rxEntryAge);
             }
 
             if (txInfo == nullptr)
             {
-                txInfo = otHistoryTrackerIterateTxHistory(mInterpreter.mInstance, &txIterator, &txEntryAge);
+                txInfo = otHistoryTrackerIterateTxHistory(GetInstancePtr(), &txIterator, &txEntryAge);
             }
 
             if ((rxInfo != nullptr) && ((txInfo == nullptr) || (rxEntryAge <= txEntryAge)))
@@ -376,7 +526,7 @@ otError History::ProcessRxTxHistory(RxTx aRxTx, Arg aArgs[])
         {
             if (index != 0)
             {
-                mInterpreter.OutputTableSeperator(kTableColumnWidths);
+                OutputTableSeparator(kTableColumnWidths);
             }
 
             OutputRxTxEntryTableFormat(*info, entryAge, isRx);
@@ -396,27 +546,26 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
 
     otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
 
-    mInterpreter.OutputLine("%s", ageString);
-    mInterpreter.OutputFormat(kIndentSize, "type:%s len:%u cheksum:0x%04x sec:%s prio:%s ", MessageTypeToString(aInfo),
-                              aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
-                              MessagePriorityToString(aInfo.mPriority));
+    OutputLine("%s", ageString);
+    OutputFormat(kIndentSize, "type:%s len:%u cheksum:0x%04x sec:%s prio:%s ", MessageTypeToString(aInfo),
+                 aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
+                 MessagePriorityToString(aInfo.mPriority));
     if (aIsRx)
     {
-        mInterpreter.OutputFormat("rss:%d", aInfo.mAveRxRss);
+        OutputFormat("rss:%d", aInfo.mAveRxRss);
     }
     else
     {
-        mInterpreter.OutputFormat("tx-success:%s", aInfo.mTxSuccess ? "yes" : "no");
+        OutputFormat("tx-success:%s", aInfo.mTxSuccess ? "yes" : "no");
     }
 
-    mInterpreter.OutputLine(" %s:0x%04x radio:%s", aIsRx ? "from" : "to", aInfo.mNeighborRloc16,
-                            RadioTypeToString(aInfo));
+    OutputLine(" %s:0x%04x radio:%s", aIsRx ? "from" : "to", aInfo.mNeighborRloc16, RadioTypeToString(aInfo));
 
     otIp6SockAddrToString(&aInfo.mSource, addrString, sizeof(addrString));
-    mInterpreter.OutputLine(kIndentSize, "src:%s", addrString);
+    OutputLine(kIndentSize, "src:%s", addrString);
 
     otIp6SockAddrToString(&aInfo.mDestination, addrString, sizeof(addrString));
-    mInterpreter.OutputLine(kIndentSize, "dst:%s", addrString);
+    OutputLine(kIndentSize, "dst:%s", addrString);
 }
 
 void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx)
@@ -426,40 +575,40 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
 
     otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
 
-    mInterpreter.OutputFormat("| %20s | %-16.16s | %5u | 0x%04x | %3s | %4s | ", "", MessageTypeToString(aInfo),
-                              aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
-                              MessagePriorityToString(aInfo.mPriority));
+    OutputFormat("| %20s | %-16.16s | %5u | 0x%04x | %3s | %4s | ", "", MessageTypeToString(aInfo),
+                 aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
+                 MessagePriorityToString(aInfo.mPriority));
 
     if (aIsRx)
     {
-        mInterpreter.OutputFormat("%4d | RX ", aInfo.mAveRxRss);
+        OutputFormat("%4d | RX ", aInfo.mAveRxRss);
     }
     else
     {
-        mInterpreter.OutputFormat(" NA  |");
-        mInterpreter.OutputFormat(aInfo.mTxSuccess ? " TX " : "TX-F");
+        OutputFormat(" NA  |");
+        OutputFormat(aInfo.mTxSuccess ? " TX " : "TX-F");
     }
 
     if (aInfo.mNeighborRloc16 == kShortAddrBroadcast)
     {
-        mInterpreter.OutputFormat("| bcast  ");
+        OutputFormat("| bcast  ");
     }
     else if (aInfo.mNeighborRloc16 == kShortAddrInvalid)
     {
-        mInterpreter.OutputFormat("| unknwn ");
+        OutputFormat("| unknwn ");
     }
     else
     {
-        mInterpreter.OutputFormat("| 0x%04x ", aInfo.mNeighborRloc16);
+        OutputFormat("| 0x%04x ", aInfo.mNeighborRloc16);
     }
 
-    mInterpreter.OutputLine("| %5.5s |", RadioTypeToString(aInfo));
+    OutputLine("| %5.5s |", RadioTypeToString(aInfo));
 
     otIp6SockAddrToString(&aInfo.mSource, addrString, sizeof(addrString));
-    mInterpreter.OutputLine("| %20s | src: %-70s |", ageString, addrString);
+    OutputLine("| %20s | src: %-70s |", ageString, addrString);
 
     otIp6SockAddrToString(&aInfo.mDestination, addrString, sizeof(addrString));
-    mInterpreter.OutputLine("| %20s | dst: %-70s |", "", addrString);
+    OutputLine("| %20s | dst: %-70s |", "", addrString);
 }
 
 otError History::Process(Arg aArgs[])

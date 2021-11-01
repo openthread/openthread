@@ -34,6 +34,7 @@
 
 #if OPENTHREAD_FTD
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -70,6 +71,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mLeaderWeight(kLeaderWeight)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mPreferredLeaderPartitionId(0)
+    , mCcmEnabled(false)
 #endif
     , mRouterEligible(true)
     , mAddressSolicitPending(false)
@@ -122,7 +124,11 @@ bool MleRouter::IsRouterEligible(void) const
 #else
     if (secPolicy.mCommercialCommissioningEnabled)
     {
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        VerifyOrExit(mCcmEnabled || secPolicy.mNonCcmRoutersEnabled);
+#else
         VerifyOrExit(secPolicy.mNonCcmRoutersEnabled);
+#endif
     }
     if (!secPolicy.mRoutersEnabled)
     {
@@ -2191,22 +2197,23 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
                                      const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t                aKeySequence)
 {
-    Error               error = kErrorNone;
-    Mac::ExtAddress     extAddr;
-    uint16_t            version;
-    Challenge           response;
-    uint32_t            linkFrameCounter;
-    uint32_t            mleFrameCounter;
-    uint8_t             modeBitmask;
-    DeviceMode          mode;
-    uint32_t            timeout;
-    RequestedTlvs       requestedTlvs;
-    ActiveTimestampTlv  activeTimestamp;
-    PendingTimestampTlv pendingTimestamp;
-    Child *             child;
-    Router *            router;
-    uint8_t             numTlvs;
-    uint16_t            addressRegistrationOffset = 0;
+    Error              error = kErrorNone;
+    Mac::ExtAddress    extAddr;
+    uint16_t           version;
+    Challenge          response;
+    uint32_t           linkFrameCounter;
+    uint32_t           mleFrameCounter;
+    uint8_t            modeBitmask;
+    DeviceMode         mode;
+    uint32_t           timeout;
+    RequestedTlvs      requestedTlvs;
+    MeshCoP::Timestamp timestamp;
+    bool               needsActiveDatasetTlv;
+    bool               needsPendingDatasetTlv;
+    Child *            child;
+    Router *           router;
+    uint8_t            numTlvs;
+    uint16_t           addressRegistrationOffset = 0;
 
     Log(kMessageReceive, kTypeChildIdRequest, aMessageInfo.GetPeerAddr());
 
@@ -2250,19 +2257,31 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     VerifyOrExit(requestedTlvs.mNumTlvs <= Child::kMaxRequestTlvs, error = kErrorParse);
 
     // Active Timestamp
-    activeTimestamp.SetLength(0);
-
-    if (Tlv::FindTlv(aMessage, activeTimestamp) == kErrorNone)
+    needsActiveDatasetTlv = true;
+    switch (Tlv::Find<ActiveTimestampTlv>(aMessage, timestamp))
     {
-        VerifyOrExit(activeTimestamp.IsValid(), error = kErrorParse);
+    case kErrorNone:
+        needsActiveDatasetTlv =
+            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDataset>().GetTimestamp()) != 0);
+        break;
+    case kErrorNotFound:
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     // Pending Timestamp
-    pendingTimestamp.SetLength(0);
-
-    if (Tlv::FindTlv(aMessage, pendingTimestamp) == kErrorNone)
+    needsPendingDatasetTlv = true;
+    switch (Tlv::Find<PendingTimestampTlv>(aMessage, timestamp))
     {
-        VerifyOrExit(pendingTimestamp.IsValid(), error = kErrorParse);
+    case kErrorNone:
+        needsPendingDatasetTlv =
+            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDataset>().GetTimestamp()) != 0);
+        break;
+    case kErrorNotFound:
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     if (!mode.IsFullThreadDevice())
@@ -2317,12 +2336,12 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
         child->SetRequestTlv(numTlvs, requestedTlvs.mTlvs[numTlvs]);
     }
 
-    if (activeTimestamp.GetLength() == 0 || Get<MeshCoP::ActiveDataset>().Compare(activeTimestamp) != 0)
+    if (needsActiveDatasetTlv)
     {
         child->SetRequestTlv(numTlvs++, Tlv::kActiveDataset);
     }
 
-    if (pendingTimestamp.GetLength() == 0 || Get<MeshCoP::PendingDataset>().Compare(pendingTimestamp) != 0)
+    if (needsPendingDatasetTlv)
     {
         child->SetRequestTlv(numTlvs++, Tlv::kPendingDataset);
     }
@@ -2700,12 +2719,11 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   const Neighbor *        aNeighbor)
 {
-    Error               error = kErrorNone;
-    RequestedTlvs       requestedTlvs;
-    ActiveTimestampTlv  activeTimestamp;
-    PendingTimestampTlv pendingTimestamp;
-    uint8_t             tlvs[4];
-    uint8_t             numTlvs;
+    Error              error = kErrorNone;
+    RequestedTlvs      requestedTlvs;
+    MeshCoP::Timestamp timestamp;
+    uint8_t            tlvs[4];
+    uint8_t            numTlvs;
 
     Log(kMessageReceive, kTypeDataRequest, aMessageInfo.GetPeerAddr());
 
@@ -2715,34 +2733,46 @@ void MleRouter::HandleDataRequest(const Message &         aMessage,
     SuccessOrExit(error = FindTlvRequest(aMessage, requestedTlvs));
     VerifyOrExit(requestedTlvs.mNumTlvs <= sizeof(tlvs), error = kErrorParse);
 
-    // Active Timestamp
-    activeTimestamp.SetLength(0);
-
-    if (Tlv::FindTlv(aMessage, activeTimestamp) == kErrorNone)
-    {
-        VerifyOrExit(activeTimestamp.IsValid(), error = kErrorParse);
-    }
-
-    // Pending Timestamp
-    pendingTimestamp.SetLength(0);
-
-    if (Tlv::FindTlv(aMessage, pendingTimestamp) == kErrorNone)
-    {
-        VerifyOrExit(pendingTimestamp.IsValid(), error = kErrorParse);
-    }
-
     memset(tlvs, Tlv::kInvalid, sizeof(tlvs));
     memcpy(tlvs, requestedTlvs.mTlvs, requestedTlvs.mNumTlvs);
     numTlvs = requestedTlvs.mNumTlvs;
 
-    if (activeTimestamp.GetLength() == 0 || Get<MeshCoP::ActiveDataset>().Compare(activeTimestamp))
+    // Active Timestamp
+    switch (Tlv::Find<ActiveTimestampTlv>(aMessage, timestamp))
     {
+    case kErrorNone:
+        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDataset>().GetTimestamp()) == 0)
+        {
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
+    case kErrorNotFound:
         tlvs[numTlvs++] = Tlv::kActiveDataset;
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
     }
 
-    if (pendingTimestamp.GetLength() == 0 || Get<MeshCoP::PendingDataset>().Compare(pendingTimestamp))
+    // Pending Timestamp
+    switch (Tlv::Find<PendingTimestampTlv>(aMessage, timestamp))
     {
+    case kErrorNone:
+        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDataset>().GetTimestamp()) == 0)
+        {
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
+    case kErrorNotFound:
         tlvs[numTlvs++] = Tlv::kPendingDataset;
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, &aMessage);
@@ -2887,7 +2917,7 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
         {
             otThreadDiscoveryRequestInfo info;
 
-            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(*static_cast<Mac::ExtAddress *>(&info.mExtAddress));
+            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&info.mExtAddress));
             info.mVersion  = discoveryRequest.GetVersion();
             info.mIsJoiner = discoveryRequest.IsJoiner();
 
@@ -3641,8 +3671,8 @@ void MleRouter::HandleAddressSolicitResponse(void *               aContext,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(AsCoapMessagePtr(aMessage),
+                                                                     AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
@@ -3749,8 +3779,7 @@ bool MleRouter::IsExpectedToBecomeRouterSoon(void) const
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(*static_cast<Coap::Message *>(aMessage),
-                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3876,8 +3905,7 @@ exit:
 
 void MleRouter::HandleAddressRelease(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressRelease(*static_cast<Coap::Message *>(aMessage),
-                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<MleRouter *>(aContext)->HandleAddressRelease(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

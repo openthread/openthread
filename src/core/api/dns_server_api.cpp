@@ -33,7 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "net/dns_types.hpp"
 #include "net/dnssd_server.hpp"
 
@@ -46,49 +46,39 @@ void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
                               otDnssdQueryUnsubscribeCallback aUnsubscribe,
                               void *                          aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Dns::ServiceDiscovery::Server>().SetQueryCallbacks(aSubscribe, aUnsubscribe, aContext);
+    AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().SetQueryCallbacks(aSubscribe, aUnsubscribe, aContext);
 }
 
 void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aInstance,
                                                  const char *                aServiceFullName,
                                                  otDnssdServiceInstanceInfo *aInstanceInfo)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
     OT_ASSERT(aServiceFullName != nullptr);
     OT_ASSERT(aInstanceInfo != nullptr);
 
-    instance.Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredServiceInstance(aServiceFullName, *aInstanceInfo);
+    AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredServiceInstance(aServiceFullName,
+                                                                                               *aInstanceInfo);
 }
 
 void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFullName, otDnssdHostInfo *aHostInfo)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
     OT_ASSERT(aHostFullName != nullptr);
     OT_ASSERT(aHostInfo != nullptr);
 
-    instance.Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredHost(aHostFullName, *aHostInfo);
+    AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredHost(aHostFullName, *aHostInfo);
 }
 
 const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuery *aQuery)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Dns::ServiceDiscovery::Server>().GetNextQuery(aQuery);
+    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().GetNextQuery(aQuery);
 }
 
 otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE])
 {
-    otDnssdQueryType type = OT_DNSSD_QUERY_TYPE_NONE;
-
     OT_ASSERT(aQuery != nullptr);
     OT_ASSERT(aNameOutput != nullptr);
-    type = static_cast<otDnssdQueryType>(Dns::ServiceDiscovery::Server::GetQueryTypeAndName(aQuery, *aNameOutput));
 
-    return type;
+    return MapEnum(Dns::ServiceDiscovery::Server::GetQueryTypeAndName(aQuery, *aNameOutput));
 }
 
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

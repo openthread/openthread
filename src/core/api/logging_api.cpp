@@ -41,8 +41,8 @@ using namespace ot;
 
 otLogLevel otLoggingGetLevel(void)
 {
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE && !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    return Instance::Get().GetLogLevel();
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+    return Instance::GetLogLevel();
 #else
     return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
 #endif
@@ -55,7 +55,7 @@ otError otLoggingSetLevel(otLogLevel aLogLevel)
 
     if (aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE)
     {
-        Instance::Get().SetLogLevel(aLogLevel);
+        Instance::SetLogLevel(aLogLevel);
     }
     else
     {

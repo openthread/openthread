@@ -37,175 +37,127 @@
 
 #include <openthread/srp_client.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
-#include "net/srp_client.hpp"
 
 using namespace ot;
 
 otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAddr)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().Start(*static_cast<const Ip6::SockAddr *>(aServerSockAddr));
+    return AsCoreType(aInstance).Get<Srp::Client>().Start(AsCoreType(aServerSockAddr));
 }
 
 void otSrpClientStop(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().Stop();
+    return AsCoreType(aInstance).Get<Srp::Client>().Stop();
 }
 
 bool otSrpClientIsRunning(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().IsRunning();
+    return AsCoreType(aInstance).Get<Srp::Client>().IsRunning();
 }
 
 const otSockAddr *otSrpClientGetServerAddress(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return &instance.Get<Srp::Client>().GetServerAddress();
+    return &AsCoreType(aInstance).Get<Srp::Client>().GetServerAddress();
 }
 
 void otSrpClientSetCallback(otInstance *aInstance, otSrpClientCallback aCallback, void *aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Client>().SetCallback(aCallback, aContext);
+    AsCoreType(aInstance).Get<Srp::Client>().SetCallback(aCallback, aContext);
 }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 void otSrpClientEnableAutoStartMode(otInstance *aInstance, otSrpClientAutoStartCallback aCallback, void *aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Client>().EnableAutoStartMode(aCallback, aContext);
+    AsCoreType(aInstance).Get<Srp::Client>().EnableAutoStartMode(aCallback, aContext);
 }
 
 void otSrpClientDisableAutoStartMode(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Client>().DisableAutoStartMode();
+    AsCoreType(aInstance).Get<Srp::Client>().DisableAutoStartMode();
 }
 
 bool otSrpClientIsAutoStartModeEnabled(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().IsAutoStartModeEnabled();
+    return AsCoreType(aInstance).Get<Srp::Client>().IsAutoStartModeEnabled();
 }
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
 uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().GetLeaseInterval();
+    return AsCoreType(aInstance).Get<Srp::Client>().GetLeaseInterval();
 }
 
 void otSrpClientSetLeaseInterval(otInstance *aInstance, uint32_t aInterval)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().SetLeaseInterval(aInterval);
+    return AsCoreType(aInstance).Get<Srp::Client>().SetLeaseInterval(aInterval);
 }
 
 uint32_t otSrpClientGetKeyLeaseInterval(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().GetKeyLeaseInterval();
+    return AsCoreType(aInstance).Get<Srp::Client>().GetKeyLeaseInterval();
 }
 
 void otSrpClientSetKeyLeaseInterval(otInstance *aInstance, uint32_t aInterval)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().SetKeyLeaseInterval(aInterval);
+    return AsCoreType(aInstance).Get<Srp::Client>().SetKeyLeaseInterval(aInterval);
 }
 
 const otSrpClientHostInfo *otSrpClientGetHostInfo(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return &instance.Get<Srp::Client>().GetHostInfo();
+    return &AsCoreType(aInstance).Get<Srp::Client>().GetHostInfo();
 }
 
 otError otSrpClientSetHostName(otInstance *aInstance, const char *aName)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().SetHostName(aName);
+    return AsCoreType(aInstance).Get<Srp::Client>().SetHostName(aName);
 }
 
 otError otSrpClientSetHostAddresses(otInstance *aInstance, const otIp6Address *aIp6Addresses, uint8_t aNumAddresses)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().SetHostAddresses(static_cast<const Ip6::Address *>(aIp6Addresses),
-                                                        aNumAddresses);
+    return AsCoreType(aInstance).Get<Srp::Client>().SetHostAddresses(AsCoreTypePtr(aIp6Addresses), aNumAddresses);
 }
 
 otError otSrpClientAddService(otInstance *aInstance, otSrpClientService *aService)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().AddService(*static_cast<Srp::Client::Service *>(aService));
+    return AsCoreType(aInstance).Get<Srp::Client>().AddService(AsCoreType(aService));
 }
 
 otError otSrpClientRemoveService(otInstance *aInstance, otSrpClientService *aService)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().RemoveService(*static_cast<Srp::Client::Service *>(aService));
+    return AsCoreType(aInstance).Get<Srp::Client>().RemoveService(AsCoreType(aService));
 }
 
 otError otSrpClientClearService(otInstance *aInstance, otSrpClientService *aService)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().ClearService(*static_cast<Srp::Client::Service *>(aService));
+    return AsCoreType(aInstance).Get<Srp::Client>().ClearService(AsCoreType(aService));
 }
 
 const otSrpClientService *otSrpClientGetServices(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().GetServices().GetHead();
+    return AsCoreType(aInstance).Get<Srp::Client>().GetServices().GetHead();
 }
 
 otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyLease, bool aSendUnregToServer)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().RemoveHostAndServices(aRemoveKeyLease, aSendUnregToServer);
+    return AsCoreType(aInstance).Get<Srp::Client>().RemoveHostAndServices(aRemoveKeyLease, aSendUnregToServer);
 }
 
 void otSrpClientClearHostAndServices(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Client>().ClearHostAndServices();
+    AsCoreType(aInstance).Get<Srp::Client>().ClearHostAndServices();
 }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE
 const char *otSrpClientGetDomainName(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().GetDomainName();
+    return AsCoreType(aInstance).Get<Srp::Client>().GetDomainName();
 }
 
 otError otSrpClientSetDomainName(otInstance *aInstance, const char *aDomainName)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().SetDomainName(aDomainName);
+    return AsCoreType(aInstance).Get<Srp::Client>().SetDomainName(aDomainName);
 }
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE
 
@@ -213,22 +165,18 @@ const char *otSrpClientItemStateToString(otSrpClientItemState aItemState)
 {
     OT_ASSERT(aItemState <= OT_SRP_CLIENT_ITEM_STATE_REMOVED);
 
-    return Srp::Client::ItemStateToString(static_cast<Srp::Client::ItemState>(aItemState));
+    return Srp::Client::ItemStateToString(MapEnum(aItemState));
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Client>().SetServiceKeyRecordEnabled(aEnabled);
+    AsCoreType(aInstance).Get<Srp::Client>().SetServiceKeyRecordEnabled(aEnabled);
 }
 
 bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Client>().IsServiceKeyRecordEnabled();
+    return AsCoreType(aInstance).Get<Srp::Client>().IsServiceKeyRecordEnabled();
 }
 #endif
 

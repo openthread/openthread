@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
@@ -397,8 +398,7 @@ Error Client::AppendRapidCommit(Message &aMessage)
 
 void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Client *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Client *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -578,7 +578,7 @@ Error Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             idAssociation.mNetifAddress.mAddress       = option.GetAddress();
             idAssociation.mPreferredLifetime           = option.GetPreferredLifetime();
             idAssociation.mValidLifetime               = option.GetValidLifetime();
-            idAssociation.mNetifAddress.mAddressOrigin = OT_ADDRESS_ORIGIN_DHCPV6;
+            idAssociation.mNetifAddress.mAddressOrigin = Ip6::Netif::kOriginDhcp6;
             idAssociation.mNetifAddress.mPreferred     = option.GetPreferredLifetime() != 0;
             idAssociation.mNetifAddress.mValid         = option.GetValidLifetime() != 0;
             idAssociation.mStatus                      = kIaStatusSolicitReplied;

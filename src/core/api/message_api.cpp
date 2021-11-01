@@ -35,82 +35,71 @@
 
 #include <openthread/message.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 void otMessageFree(otMessage *aMessage)
 {
-    static_cast<Message *>(aMessage)->Free();
+    AsCoreType(aMessage).Free();
 }
 
 uint16_t otMessageGetLength(const otMessage *aMessage)
 {
-    const Message &message = *static_cast<const Message *>(aMessage);
-    return message.GetLength();
+    return AsCoreType(aMessage).GetLength();
 }
 
 otError otMessageSetLength(otMessage *aMessage, uint16_t aLength)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-    return message.SetLength(aLength);
+    return AsCoreType(aMessage).SetLength(aLength);
 }
 
 uint16_t otMessageGetOffset(const otMessage *aMessage)
 {
-    const Message &message = *static_cast<const Message *>(aMessage);
-    return message.GetOffset();
+    return AsCoreType(aMessage).GetOffset();
 }
 
 void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-    message.SetOffset(aOffset);
+    AsCoreType(aMessage).SetOffset(aOffset);
 }
 
 bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage)
 {
-    const Message &message = *static_cast<const Message *>(aMessage);
-    return message.IsLinkSecurityEnabled();
+    return AsCoreType(aMessage).IsLinkSecurityEnabled();
 }
 
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-
     if (aEnabled)
     {
-        message.SetDirectTransmission();
+        AsCoreType(aMessage).SetDirectTransmission();
     }
     else
     {
-        message.ClearDirectTransmission();
+        AsCoreType(aMessage).ClearDirectTransmission();
     }
 }
 
 int8_t otMessageGetRss(const otMessage *aMessage)
 {
-    const Message &message = *static_cast<const Message *>(aMessage);
-    return message.GetAverageRss();
+    return AsCoreType(aMessage).GetAverageRss();
 }
 
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-    return message.AppendBytes(aBuf, aLength);
+    return AsCoreType(aMessage).AppendBytes(aBuf, aLength);
 }
 
 uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
-    const Message &message = *static_cast<const Message *>(aMessage);
-    return message.ReadBytes(aOffset, aBuf, aLength);
+    return AsCoreType(aMessage).ReadBytes(aOffset, aBuf, aLength);
 }
 
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
-    Message &message = *static_cast<Message *>(aMessage);
-    message.WriteBytes(aOffset, aBuf, aLength);
+    AsCoreType(aMessage).WriteBytes(aOffset, aBuf, aLength);
 
     return aLength;
 }
@@ -122,32 +111,22 @@ void otMessageQueueInit(otMessageQueue *aQueue)
 
 void otMessageQueueEnqueue(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message &     message = *static_cast<Message *>(aMessage);
-    MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
-
-    queue.Enqueue(message);
+    AsCoreType(aQueue).Enqueue(AsCoreType(aMessage));
 }
 
 void otMessageQueueEnqueueAtHead(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message &     message = *static_cast<Message *>(aMessage);
-    MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
-
-    queue.Enqueue(message, MessageQueue::kQueuePositionHead);
+    AsCoreType(aQueue).Enqueue(AsCoreType(aMessage), MessageQueue::kQueuePositionHead);
 }
 
 void otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
 {
-    Message &     message = *static_cast<Message *>(aMessage);
-    MessageQueue &queue   = *static_cast<MessageQueue *>(aQueue);
-
-    queue.Dequeue(message);
+    AsCoreType(aQueue).Dequeue(AsCoreType(aMessage));
 }
 
 otMessage *otMessageQueueGetHead(otMessageQueue *aQueue)
 {
-    MessageQueue &queue = *static_cast<MessageQueue *>(aQueue);
-    return queue.GetHead();
+    return AsCoreType(aQueue).GetHead();
 }
 
 otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessage)
@@ -156,13 +135,8 @@ otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessa
 
     VerifyOrExit(aMessage != nullptr, next = nullptr);
 
-    {
-        const Message &message = *static_cast<const Message *>(aMessage);
-        MessageQueue & queue   = *static_cast<MessageQueue *>(aQueue);
-
-        VerifyOrExit(message.GetMessageQueue() == &queue, next = nullptr);
-        next = message.GetNext();
-    }
+    VerifyOrExit(AsCoreType(aMessage).GetMessageQueue() == aQueue, next = nullptr);
+    next = AsCoreType(aMessage).GetNext();
 
 exit:
     return next;
@@ -172,7 +146,7 @@ exit:
 void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 {
     uint16_t  messages, buffers;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Instance &instance = AsCoreType(aInstance);
 
     aBufferInfo->mTotalBuffers = instance.Get<MessagePool>().GetTotalBufferCount();
 

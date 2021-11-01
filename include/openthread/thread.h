@@ -382,14 +382,27 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 /**
  * Get the Thread Network Key.
  *
- * @param[in]   aInstance   A pointer to an OpenThread instance.
- *
- * @returns A pointer to a buffer containing the Thread Network Key.
+ * @param[in]   aInstance     A pointer to an OpenThread instance.
+ * @param[out]  aNetworkKey   A pointer to an `otNetworkkey` to return the Thread Network Key.
  *
  * @sa otThreadSetNetworkKey
  *
  */
-const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
+void otThreadGetNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey);
+
+/**
+ * Get the `otNetworkKeyRef` for Thread Network Key.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ *
+ * @returns Reference to the Thread Network Key stored in memory.
+ *
+ * @sa otThreadSetNetworkKeyRef
+ *
+ */
+otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance);
 
 /**
  * Set the Thread Network Key.
@@ -402,13 +415,32 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
  * @param[in]  aKey        A pointer to a buffer containing the Thread Network Key.
  *
  * @retval OT_ERROR_NONE            Successfully set the Thread Network Key.
- * @retval OT_ERROR_INVALID_ARGS    If aKeyLength is larger than 16.
  * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
  *
  * @sa otThreadGetNetworkKey
  *
  */
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey);
+
+/**
+ * Set the Thread Network Key as a `otNetworkKeyRef`.
+ *
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aKeyRef     Reference to the Thread Network Key.
+ *
+ * @retval OT_ERROR_NONE            Successfully set the Thread Network Key.
+ * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
+ *
+ * @sa otThreadGetNetworkKeyRef
+ *
+ */
+otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef);
 
 /**
  * This function returns a pointer to the Thread Routing Locator (RLOC) address.
@@ -892,6 +924,58 @@ typedef void (*otThreadDiscoveryRequestCallback)(const otThreadDiscoveryRequestI
 void otThreadSetDiscoveryRequestCallback(otInstance *                     aInstance,
                                          otThreadDiscoveryRequestCallback aCallback,
                                          void *                           aContext);
+
+/**
+ * This function pointer type defines the callback to notify the outcome of a `otThreadLocateAnycastDestination()`
+ * request.
+ *
+ * @param[in] aContext            A pointer to an arbitrary context (provided when callback is registered).
+ * @param[in] aError              The error when handling the request. OT_ERROR_NONE indicates success.
+ *                                OT_ERROR_RESPONSE_TIMEOUT indicates a destination could not be found.
+ *                                OT_ERROR_ABORT indicates the request was aborted.
+ * @param[in] aMeshLocalAddress   A pointer to the mesh-local EID of the closest destination of the anycast address
+ *                                when @p aError is OT_ERROR_NONE, NULL otherwise.
+ * @param[in] aRloc16             The RLOC16 of the destination if found, otherwise invalid RLOC16 (0xfffe).
+ *
+ */
+typedef void (*otThreadAnycastLocatorCallback)(void *              aContext,
+                                               otError             aError,
+                                               const otIp6Address *aMeshLocalAddress,
+                                               uint16_t            aRloc16);
+
+/**
+ * This function requests the closest destination of a given anycast address to be located.
+ *
+ * This function is only available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
+ *
+ * If a previous request is ongoing, a subsequent call to this function will cancel and replace the earlier request.
+ *
+ * @param[in] aInstance         A pointer to an OpenThread instance.
+ * @param[in] aAnycastAddress   The anycast address to locate. MUST NOT be NULL.
+ * @param[in] aCallback         The callback function to report the result.
+ * @param[in] aContext          An arbitrary context used with @p aCallback.
+ *
+ * @retval OT_ERROR_NONE          The request started successfully. @p aCallback will be invoked to report the result.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aAnycastAddress is not a valid anycast address or @p aCallback is NULL.
+ * @retval OT_ERROR_NO_BUFS       Out of buffer to prepare and send the request message.
+ *
+ */
+otError otThreadLocateAnycastDestination(otInstance *                   aInstance,
+                                         const otIp6Address *           aAnycastAddress,
+                                         otThreadAnycastLocatorCallback aCallback,
+                                         void *                         aContext);
+
+/**
+ * This function indicates whether an anycast locate request is currently in progress.
+ *
+ * This function is only available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if an anycast locate request is currently in progress, FALSE otherwise.
+ *
+ */
+bool otThreadIsAnycastLocateInProgress(otInstance *aInstance);
 
 /**
  * This function sends a Proactive Address Notification (ADDR_NTF.ntf) message.

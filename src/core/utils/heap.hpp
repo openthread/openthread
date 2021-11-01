@@ -42,6 +42,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "common/const_cast.hpp"
 #include "common/non_copyable.hpp"
 
 namespace ot {
@@ -208,7 +209,7 @@ public:
      */
     bool IsClean(void) const
     {
-        Heap &       self  = *const_cast<Heap *>(this);
+        Heap &       self  = *AsNonConst(this);
         const Block &super = self.BlockSuper();
         const Block &first = self.BlockRight(super);
         return super.GetNext() == self.BlockOffset(first) && first.GetSize() == kFirstBlockSize;

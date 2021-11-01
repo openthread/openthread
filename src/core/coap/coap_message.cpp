@@ -356,9 +356,8 @@ Error Message::ParseHeader(void)
     Error            error = kErrorNone;
     Option::Iterator iterator;
 
-    OT_ASSERT(mBuffer.mHead.mMetadata.mReserved >=
-              sizeof(GetHelpData()) +
-                  static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - mBuffer.mHead.mData)));
+    OT_ASSERT(GetReserved() >=
+              sizeof(HelpData) + static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - GetFirstData())));
 
     GetHelpData().Clear();
 

@@ -37,28 +37,26 @@
 
 #include <openthread/server.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    OT_ASSERT(aData != nullptr && aDataLength != nullptr);
-
-    return instance.Get<NetworkData::Local>().GetNetworkData(aStable, aData, *aDataLength);
+    return AsCoreType(aInstance).Get<NetworkData::Local>().CopyNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    NetworkData::ServiceData serviceData;
+    NetworkData::ServerData  serverData;
 
-    return instance.Get<NetworkData::Local>().AddService(aConfig->mEnterpriseNumber, &aConfig->mServiceData[0],
-                                                         aConfig->mServiceDataLength, aConfig->mServerConfig.mStable,
-                                                         &aConfig->mServerConfig.mServerData[0],
-                                                         aConfig->mServerConfig.mServerDataLength);
+    serviceData.Init(&aConfig->mServiceData[0], aConfig->mServiceDataLength);
+    serverData.Init(&aConfig->mServerConfig.mServerData[0], aConfig->mServerConfig.mServerDataLength);
+
+    return AsCoreType(aInstance).Get<NetworkData::Local>().AddService(aConfig->mEnterpriseNumber, serviceData,
+                                                                      aConfig->mServerConfig.mStable, serverData);
 }
 
 otError otServerRemoveService(otInstance *   aInstance,
@@ -66,20 +64,20 @@ otError otServerRemoveService(otInstance *   aInstance,
                               const uint8_t *aServiceData,
                               uint8_t        aServiceDataLength)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    NetworkData::ServiceData serviceData;
 
-    return instance.Get<NetworkData::Local>().RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
+    serviceData.Init(aServiceData, aServiceDataLength);
+
+    return AsCoreType(aInstance).Get<NetworkData::Local>().RemoveService(aEnterpriseNumber, serviceData);
 }
 
 otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
 {
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Error error = kErrorNone;
 
     VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
-    error = instance.Get<NetworkData::Local>().GetNextService(*aIterator,
-                                                              *static_cast<NetworkData::ServiceConfig *>(aConfig));
+    error = AsCoreType(aInstance).Get<NetworkData::Local>().GetNextService(*aIterator, AsCoreType(aConfig));
 
 exit:
     return error;
@@ -87,9 +85,7 @@ exit:
 
 otError otServerRegister(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    AsCoreType(aInstance).Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
     return kErrorNone;
 }

@@ -138,6 +138,8 @@ void TestUtf8(void)
     VerifyOrQuit(!IsValidUtf8String("\xef\x80"));
     VerifyOrQuit(!IsValidUtf8String("\xf7\x80\x80"));
     VerifyOrQuit(!IsValidUtf8String("\xff"));
+    VerifyOrQuit(!IsValidUtf8String("NUL\x00NUL", 7)); // UTF-8 NUL
+    VerifyOrQuit(!IsValidUtf8String("abcde\x11"));     // control character
 
     printf(" -- PASS\n");
 }

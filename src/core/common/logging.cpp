@@ -43,7 +43,15 @@
  * It is reasonable to only enable the debug uart and not enable logs to the DEBUG uart.
  */
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && (!OPENTHREAD_CONFIG_ENABLE_DEBUG_UART)
-#error OPENTHREAD_CONFIG_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+#error "OPENTHREAD_CONFIG_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART"
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME && !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME requires OPENTHREAD_CONFIG_UPTIME_ENABLE"
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME is not supported under OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE"
 #endif
 
 #ifdef __cplusplus
@@ -55,6 +63,11 @@ extern "C" {
 static void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     ot::String<OPENTHREAD_CONFIG_LOG_MAX_SIZE> logString;
+
+#if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME
+    ot::Uptime::UptimeToString(ot::Instance::Get().Get<ot::Uptime>().GetUptime(), logString);
+    logString.Append(" ");
+#endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     VerifyOrExit(otLoggingGetLevel() >= aLogLevel);
@@ -166,6 +179,21 @@ void otLogMac(otLogLevel aLogLevel, const char *aFormat, ...)
 exit:
     return;
 }
+
+void otDumpMacFrame(otLogLevel aLogLevel, const char *aId, const void *aBuf, const size_t aLength)
+{
+    constexpr uint8_t kFixedStringPart = 10; // strlen(" seqno=000")
+    constexpr uint8_t kSeqnoIdx        = 2;  // index of the sequence number within aBuf
+
+    size_t idLength = strlen(aId) + kFixedStringPart + 1; // allow for the '\0' character
+    char   newId[25];
+
+    VerifyOrExit(idLength <= sizeof(newId));
+    snprintf(newId, idLength, "%s seqno=%03u", aId, static_cast<const uint8_t *>(aBuf)[kSeqnoIdx]);
+    otDump(aLogLevel, OT_LOG_REGION_MAC, newId, aBuf, aLength);
+exit:
+    return;
+}
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -263,19 +291,20 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t
 
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
 {
-    constexpr uint8_t kWidth = 72;
+    constexpr uint8_t kWidth           = 72;
+    constexpr uint8_t kFixedStringPart = 10; // strlen("[ len=000]")
 
-    size_t                        idLen = strlen(aId);
+    size_t                        idLen = strlen(aId) + kFixedStringPart;
     ot::String<kStringLineLength> string;
 
-    for (size_t i = 0; i < (kWidth - idLen) / 2 - 5; i++)
+    for (size_t i = 0; i < (kWidth - idLen) / 2; i++)
     {
         string.Append("=");
     }
 
     string.Append("[%s len=%03u]", aId, static_cast<unsigned>(aLength));
 
-    for (size_t i = 0; i < (kWidth - idLen) / 2 - 4; i++)
+    for (size_t i = 0; i < kWidth - idLen - (kWidth - idLen) / 2; i++)
     {
         string.Append("=");
     }

@@ -40,6 +40,7 @@ build_all_features()
 {
     local options=(
         "-DOPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_ANYCAST_LOCATOR=1"
         "-DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1"
         "-DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
         "-DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
@@ -176,6 +177,7 @@ build_nest_common()
         --enable-mtd \
         --enable-ncp \
         --enable-radio-only \
+        --enable-radio-cli \
         --disable-docs \
         --disable-tests \
         --with-examples=simulation
@@ -223,6 +225,7 @@ build_multi_radio_links()
         --enable-mtd \
         --enable-ncp \
         --enable-radio-only \
+        --enable-radio-cli \
         --with-examples=simulation \
         --disable-docs \
         --disable-tests
@@ -251,6 +254,7 @@ build_multi_radio_links()
         --enable-mtd \
         --enable-ncp \
         --enable-radio-only \
+        --enable-radio-cli \
         --with-examples=simulation \
         --disable-docs \
         --disable-tests

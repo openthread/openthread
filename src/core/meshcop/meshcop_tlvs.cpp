@@ -33,6 +33,7 @@
 
 #include "meshcop_tlvs.hpp"
 
+#include "common/const_cast.hpp"
 #include "common/debug.hpp"
 #include "common/string.hpp"
 #include "meshcop/meshcop.hpp"
@@ -136,7 +137,7 @@ void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
 
 bool NetworkNameTlv::IsValid(void) const
 {
-    return IsValidUtf8String(mNetworkName, GetLength());
+    return GetLength() >= 1 && IsValidUtf8String(mNetworkName, GetLength());
 }
 
 void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
@@ -262,7 +263,7 @@ exit:
 
 ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void)
 {
-    return const_cast<ChannelMaskEntryBase *>(static_cast<const ChannelMaskBaseTlv *>(this)->GetFirstEntry());
+    return AsNonConst(AsConst(this)->GetFirstEntry());
 }
 
 void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)

@@ -42,6 +42,10 @@ if OPENTHREAD_ENABLE_RADIO_ONLY
 lib_LIBRARIES                             += libopenthread-radio.a
 endif
 
+if OPENTHREAD_ENABLE_RADIO_CLI
+lib_LIBRARIES                             += libopenthread-radio-cli.a
+endif
+
 CPPFLAGS_COMMON                            = \
     -I$(top_srcdir)/include                  \
     $(OPENTHREAD_TARGET_DEFINES)             \
@@ -52,6 +56,15 @@ libopenthread_radio_a_CPPFLAGS             = \
     -DOPENTHREAD_MTD=0                       \
     -DOPENTHREAD_FTD=0                       \
     -DOPENTHREAD_RADIO=1                     \
+    -DOPENTHREAD_RADIO_CLI=0                 \
+    $(NULL)
+
+libopenthread_radio_cli_a_CPPFLAGS         = \
+    $(CPPFLAGS_COMMON)                       \
+    -DOPENTHREAD_MTD=0                       \
+    -DOPENTHREAD_FTD=0                       \
+    -DOPENTHREAD_RADIO=1                     \
+    -DOPENTHREAD_RADIO_CLI=1                 \
     $(NULL)
 
 libopenthread_ftd_a_CPPFLAGS               = \
@@ -184,14 +197,17 @@ SOURCES_COMMON                                  = \
     common/timer.cpp                              \
     common/tlvs.cpp                               \
     common/trickle_timer.cpp                      \
+    common/uptime.cpp                             \
     crypto/aes_ccm.cpp                            \
     crypto/aes_ecb.cpp                            \
+    crypto/crypto_platform.cpp                    \
     crypto/ecdsa.cpp                              \
     crypto/hkdf_sha256.cpp                        \
     crypto/hmac_sha256.cpp                        \
     crypto/mbedtls.cpp                            \
     crypto/pbkdf2_cmac.cpp                        \
     crypto/sha256.cpp                             \
+    crypto/storage.cpp                            \
     diags/factory_diags.cpp                       \
     mac/channel_mask.cpp                          \
     mac/data_poll_handler.cpp                     \
@@ -251,6 +267,7 @@ SOURCES_COMMON                                  = \
     thread/address_resolver.cpp                   \
     thread/announce_begin_server.cpp              \
     thread/announce_sender.cpp                    \
+    thread/anycast_locator.cpp                    \
     thread/child_table.cpp                        \
     thread/csl_tx_scheduler.cpp                   \
     thread/discover_scanner.cpp                   \
@@ -303,14 +320,9 @@ SOURCES_COMMON                                  = \
     utils/srp_client_buffers.cpp                  \
     $(NULL)
 
-EXTRA_DIST                                 = \
-    common/extension_example.cpp             \
-    $(NULL)
-
-libopenthread_radio_a_SOURCES              = \
+RADIO_SOURCES_COMMON                       = \
     api/diags_api.cpp                        \
     api/error_api.cpp                        \
-    api/heap_api.cpp                         \
     api/instance_api.cpp                     \
     api/link_raw_api.cpp                     \
     api/logging_api.cpp                      \
@@ -323,8 +335,11 @@ libopenthread_radio_a_SOURCES              = \
     common/string.cpp                        \
     common/tasklet.cpp                       \
     common/timer.cpp                         \
+    common/uptime.cpp                        \
     crypto/aes_ccm.cpp                       \
     crypto/aes_ecb.cpp                       \
+    crypto/crypto_platform.cpp               \
+    crypto/storage.cpp                       \
     diags/factory_diags.cpp                  \
     mac/link_raw.cpp                         \
     mac/mac_frame.cpp                        \
@@ -337,6 +352,18 @@ libopenthread_radio_a_SOURCES              = \
     thread/link_quality.cpp                  \
     utils/lookup_table.cpp                   \
     utils/parse_cmdline.cpp                  \
+    $(NULL)
+
+EXTRA_DIST                                 = \
+    common/extension_example.cpp             \
+    $(NULL)
+
+libopenthread_radio_a_SOURCES              = \
+    $(RADIO_SOURCES_COMMON)                  \
+    $(NULL)
+
+libopenthread_radio_cli_a_SOURCES          = \
+    $(RADIO_SOURCES_COMMON)                  \
     $(NULL)
 
 libopenthread_mtd_a_SOURCES                = \
@@ -367,6 +394,10 @@ nodist_libopenthread_radio_a_SOURCES       = \
     vendor_extension_temp.cpp                \
     $(NULL)
 
+nodist_libopenthread_radio_cli_a_SOURCES   = \
+    vendor_extension_temp.cpp                \
+    $(NULL)
+
 endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                                  = \
@@ -383,10 +414,13 @@ HEADERS_COMMON                                  = \
     coap/coap_secure.hpp                          \
     common/arg_macros.hpp                         \
     common/array.hpp                              \
+    common/as_core_type.hpp                       \
     common/bit_vector.hpp                         \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \
+    common/const_cast.hpp                         \
     common/crc16.hpp                              \
+    common/data.hpp                               \
     common/debug.hpp                              \
     common/encoding.hpp                           \
     common/equatable.hpp                          \
@@ -417,6 +451,7 @@ HEADERS_COMMON                                  = \
     common/tlvs.hpp                               \
     common/trickle_timer.hpp                      \
     common/type_traits.hpp                        \
+    common/uptime.hpp                             \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
     config/border_router.h                        \
@@ -425,6 +460,7 @@ HEADERS_COMMON                                  = \
     config/child_supervision.h                    \
     config/coap.h                                 \
     config/commissioner.h                         \
+    config/crypto.h                               \
     config/dataset_updater.h                      \
     config/dhcp6_client.h                         \
     config/dhcp6_server.h                         \
@@ -454,12 +490,14 @@ HEADERS_COMMON                                  = \
     config/tmf.h                                  \
     crypto/aes_ccm.hpp                            \
     crypto/aes_ecb.hpp                            \
+    crypto/context_size.hpp                       \
     crypto/ecdsa.hpp                              \
     crypto/hkdf_sha256.hpp                        \
     crypto/hmac_sha256.hpp                        \
     crypto/mbedtls.hpp                            \
     crypto/pbkdf2_cmac.hpp                        \
     crypto/sha256.hpp                             \
+    crypto/storage.hpp                            \
     diags/factory_diags.hpp                       \
     mac/channel_mask.hpp                          \
     mac/data_poll_handler.hpp                     \
@@ -518,6 +556,7 @@ HEADERS_COMMON                                  = \
     thread/address_resolver.hpp                   \
     thread/announce_begin_server.hpp              \
     thread/announce_sender.hpp                    \
+    thread/anycast_locator.hpp                    \
     thread/child_mask.hpp                         \
     thread/child_table.hpp                        \
     thread/csl_tx_scheduler.hpp                   \

@@ -83,7 +83,7 @@ uint64_t otPlatTimeGet(void)
 
     VerifyOrDie(clock_gettime(OT_POSIX_CLOCK_ID, &now) == 0, OT_EXIT_FAILURE);
 
-    return (uint64_t)now.tv_sec * US_PER_S + (uint64_t)now.tv_nsec / NS_PER_US;
+    return static_cast<uint64_t>(now.tv_sec) * US_PER_S + static_cast<uint64_t>(now.tv_nsec) / NS_PER_US;
 }
 #endif // !OPENTHREAD_POSIX_VIRTUAL_TIME
 
@@ -246,7 +246,7 @@ exit:
             remaining = 1;
         }
 
-        if (remaining < aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec)
+        if (remaining < static_cast<int64_t>(aTimeout->tv_sec) * US_PER_S + static_cast<int64_t>(aTimeout->tv_usec))
         {
             aTimeout->tv_sec  = static_cast<time_t>(remaining / US_PER_S);
             aTimeout->tv_usec = static_cast<suseconds_t>(remaining % US_PER_S);

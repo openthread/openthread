@@ -326,6 +326,7 @@ private:
                                  const MessageInfo &aMessageInfo,
                                  uint8_t            aIpProto,
                                  bool               aFromNcpHost,
+                                 bool               aAllowReceiveFilter,
                                  Message::Ownership aMessageOwnership);
     Error HandleExtensionHeaders(Message &    aMessage,
                                  Netif *      aNetif,

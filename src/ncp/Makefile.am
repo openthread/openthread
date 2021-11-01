@@ -79,6 +79,7 @@ libopenthread_ncp_ftd_a_CPPFLAGS                         = \
 
 libopenthread_rcp_a_CPPFLAGS                             = \
     -DOPENTHREAD_RADIO=1                                   \
+    -DOPENTHREAD_RADIO_CLI=0                               \
     -DOPENTHREAD_FTD=0                                     \
     -DOPENTHREAD_MTD=0                                     \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0 \

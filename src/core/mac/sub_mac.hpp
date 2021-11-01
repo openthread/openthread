@@ -38,6 +38,8 @@
 
 #include <openthread/link.h>
 
+#include <openthread/platform/crypto.h>
+
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -79,6 +81,10 @@ namespace Mac {
 #error "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is required for OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE."
 #endif
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+class LinkRaw;
+#endif
+
 /**
  * This class implements the IEEE 802.15.4 MAC (sub-MAC).
  *
@@ -99,6 +105,7 @@ namespace Mac {
 class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
+    friend class LinkRaw;
 
 public:
     static constexpr int8_t kInvalidRssiValue = 127; ///< Invalid Received Signal Strength Indicator (RSSI) value.
@@ -188,12 +195,15 @@ public:
         void EnergyScanDone(int8_t aMaxRssi);
 
         /**
-         * This method notifies user of `SubMac` that MAC frame counter is updated.
+         * This method notifies user of `SubMac` that a specific MAC frame counter is used for transmission.
          *
-         * @param[in]  aFrameCounter  The MAC frame counter value.
+         * It is possible that this callback is invoked out of order in terms of counter values (i.e., called for a
+         * smaller counter value after a call for a larger counter value).
+         *
+         * @param[in]  aFrameCounter  The MAC frame counter value which was used.
          *
          */
-        void FrameCounterUpdated(uint32_t aFrameCounter);
+        void FrameCounterUsed(uint32_t aFrameCounter);
     };
 
     /**
@@ -492,7 +502,11 @@ public:
      * @param[in] aNextKey    The next MAC key.
      *
      */
-    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
+    void SetMacKey(uint8_t            aKeyIdMode,
+                   uint8_t            aKeyId,
+                   const KeyMaterial &aPrevKey,
+                   const KeyMaterial &aCurrKey,
+                   const KeyMaterial &aNextKey);
 
     /**
      * This method returns a reference to the current MAC key.
@@ -500,7 +514,7 @@ public:
      * @returns A reference to the current MAC key.
      *
      */
-    const Key &GetCurrentMacKey(void) const { return mCurrKey; }
+    const KeyMaterial &GetCurrentMacKey(void) const { return mCurrKey; }
 
     /**
      * This method returns a reference to the previous MAC key.
@@ -508,7 +522,7 @@ public:
      * @returns A reference to the previous MAC key.
      *
      */
-    const Key &GetPreviousMacKey(void) const { return mPrevKey; }
+    const KeyMaterial &GetPreviousMacKey(void) const { return mPrevKey; }
 
     /**
      * This method returns a reference to the next MAC key.
@@ -516,7 +530,7 @@ public:
      * @returns A reference to the next MAC key.
      *
      */
-    const Key &GetNextMacKey(void) const { return mNextKey; }
+    const KeyMaterial &GetNextMacKey(void) const { return mNextKey; }
 
     /**
      * This method returns the current MAC frame counter value.
@@ -578,16 +592,18 @@ private:
     // than expected sample window. The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
 
-    static constexpr uint8_t kCslWorstCrystalPpm  = 255; // Worst possible crystal accuracy, in units of ± ppm.
-    static constexpr uint8_t kCslWorstUncertainty = 255; // Worst possible scheduling uncertainty, in units of 100 us.
-    static constexpr uint8_t kUsPerUncertUnit     = 100; // Number of microseconds by uncertainty unit.
-
     enum CslState : uint8_t{
         kCslIdle,   // CSL receiver is not started.
         kCslSample, // Sampling CSL channel.
         kCslSleep,  // Radio in sleep.
     };
 #endif
+
+    /**
+     * This method initializes the states of the sub-MAC layer.
+     *
+     */
+    void Init(void);
 
     bool RadioSupportsCsmaBackoff(void) const
     {
@@ -609,7 +625,7 @@ private:
     bool ShouldHandleTransmitTargetTime(void) const;
 
     void ProcessTransmitSecurity(void);
-    void UpdateFrameCounter(uint32_t aFrameCounter);
+    void SignalFrameCounterUsed(uint32_t aFrameCounter);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
@@ -617,7 +633,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
-    void UpdateFrameCounterOnTxDone(const TxFrame &aFrame);
+    void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
 
     static void HandleTimer(Timer &aTimer);
@@ -642,9 +658,9 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
-    Key                mPrevKey;
-    Key                mCurrKey;
-    Key                mNextKey;
+    KeyMaterial        mPrevKey;
+    KeyMaterial        mCurrKey;
+    KeyMaterial        mNextKey;
     uint32_t           mFrameCounter;
     uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE

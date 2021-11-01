@@ -372,6 +372,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
     steps:
     - uses: actions/checkout@v2
       with:

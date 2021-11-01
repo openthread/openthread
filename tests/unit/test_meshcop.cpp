@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2020-21, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 
 #include "test_util.hpp"
 #include "meshcop/meshcop.hpp"
+#include "meshcop/timestamp.hpp"
 
 namespace ot {
 
@@ -108,6 +109,47 @@ void TestSteeringData(void)
     VerifyOrQuit(!steeringData.Contains(joinerId1), "after Init()");
     VerifyOrQuit(!steeringData.Contains(joinerId2), "after Init()");
     VerifyOrQuit(!steeringData.Contains(indexes), "after Init()");
+
+    printf("TestSteeringData() passed\n");
+}
+
+void TestTimestamp(void)
+{
+    MeshCoP::Timestamp t1;
+    MeshCoP::Timestamp t2;
+
+    t1.Clear();
+    t2.Clear();
+
+    VerifyOrQuit(t1.GetSeconds() == 0);
+    VerifyOrQuit(t1.GetTicks() == 0);
+    VerifyOrQuit(!t1.GetAuthoritative());
+
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, nullptr) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(nullptr, &t2) < 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(nullptr, nullptr) == 0);
+
+    t1.SetTicks(10);
+    VerifyOrQuit(t1.GetTicks() == 10);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t2, &t1) < 0);
+
+    t2.SetTicks(10);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+
+    t1.SetAuthoritative(true);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+
+    t1.SetSeconds(1);
+    VerifyOrQuit(t1.GetSeconds() == 1);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t2, &t1) < 0);
+
+    t2.SetSeconds(1);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+
+    printf("TestTimestamp() passed\n");
 }
 
 } // namespace ot
@@ -115,6 +157,7 @@ void TestSteeringData(void)
 int main(void)
 {
     ot::TestSteeringData();
+    ot::TestTimestamp();
     printf("\nAll tests passed.\n");
     return 0;
 }

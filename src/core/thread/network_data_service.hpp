@@ -160,6 +160,14 @@ public:
     static constexpr uint8_t kServiceNumber = 0x5c; ///< The service number of a `DnsSrpAnycast` entry.
 
     /**
+     * This constant variable represents the short version of service data.
+     *
+     * The short version of service data contains only service number as a single byte.
+     *
+     */
+    static const uint8_t kServiceData = kServiceNumber;
+
+    /**
      * This structure represents information about an DNS/SRP server parsed from related Network Data service entries.
      *
      */

@@ -92,6 +92,13 @@ static int          sSocket          = -1;
 static uint16_t     sUdpPort         = 0;
 static otIp6Address sInterfaceAddress;
 
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+constexpr static uint64_t kAddInterfaceAddressTimeoutSecs = 10;
+
+static int sNetlinkSocket                = -1;
+uint64_t   sAddInterfaceAddressRetryTime = 0;
+#endif
+
 #if OPENTHREAD_CONFIG_LOG_PLATFORM
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT)
 static const char *Ip6AddrToString(const void *aAddress)
@@ -144,7 +151,6 @@ exit:
 
 static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAdd)
 {
-    int            netlinkSocket;
     int            ret;
     struct rtattr *rta;
 
@@ -154,9 +160,6 @@ static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAd
         struct ifaddrmsg ifa;
         char             buf[64];
     } request;
-
-    netlinkSocket = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
-    VerifyOrDie(netlinkSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&request, 0, sizeof(request));
 
@@ -180,22 +183,115 @@ static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAd
 
     request.nh.nlmsg_len = NLMSG_ALIGN(request.nh.nlmsg_len) + rta->rta_len;
 
-    ret = send(netlinkSocket, &request, request.nh.nlmsg_len, 0);
+    ret = send(sNetlinkSocket, &request, request.nh.nlmsg_len, 0);
     VerifyOrDie(ret != -1, OT_EXIT_ERROR_ERRNO);
-
-    close(netlinkSocket);
 }
 
 static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 {
     otLogDebgPlat("[trel] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
     UpdateUnicastAddress(aUnicastAddress, /* aToAdd */ true);
+    sAddInterfaceAddressRetryTime = otPlatTimeGet() + kAddInterfaceAddressTimeoutSecs * US_PER_S;
 }
 
 static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
 {
     otLogDebgPlat("[trel] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
     UpdateUnicastAddress(aUnicastAddress, /* aToAdd */ false);
+}
+
+static void HandleAddInterfaceAddressTimeout(void)
+{
+    otLogWarnPlat("[trel] Failed to add TREL interface address after %d seconds. Trying to add again.",
+                  kAddInterfaceAddressTimeoutSecs);
+    RemoveUnicastAddress(&sInterfaceAddress);
+    AddUnicastAddress(&sInterfaceAddress);
+    sAddInterfaceAddressRetryTime = otPlatTimeGet() + kAddInterfaceAddressTimeoutSecs * US_PER_S;
+}
+
+static void ProcessNetifAddrEvent(struct nlmsghdr *aNetlinkMessage)
+{
+    struct ifaddrmsg *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
+    size_t            rtaLength;
+
+    VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(sInterfaceIndex) && ifaddr->ifa_family == AF_INET6);
+
+    rtaLength = IFA_PAYLOAD(aNetlinkMessage);
+
+    for (struct rtattr *rta = reinterpret_cast<struct rtattr *>(IFA_RTA(ifaddr)); RTA_OK(rta, rtaLength);
+         rta                = RTA_NEXT(rta, rtaLength))
+    {
+        if (rta->rta_type != IFA_ADDRESS)
+        {
+            continue;
+        }
+
+        if (memcmp(&sInterfaceAddress, RTA_DATA(rta), sizeof(sInterfaceAddress)) != 0)
+        {
+            continue;
+        }
+
+        if (aNetlinkMessage->nlmsg_type == RTM_NEWADDR)
+        {
+            otLogInfoPlat("[trel] Interface address added successfully.");
+            sAddInterfaceAddressRetryTime = 0;
+        }
+        else if (aNetlinkMessage->nlmsg_type == RTM_DELADDR)
+        {
+            if (sAddInterfaceAddressRetryTime == 0)
+            {
+                otLogWarnPlat("[trel] Interface address removed unexpectedly.");
+                sAddInterfaceAddressRetryTime = otPlatTimeGet() + kAddInterfaceAddressTimeoutSecs * US_PER_S;
+            }
+        }
+    }
+
+exit:
+    return;
+}
+
+static void ReceiveNetlinkMessage(void)
+{
+    const size_t kMaxNetLinkBufSize = 8192;
+    ssize_t      len;
+    union
+    {
+        nlmsghdr mHeader;
+        uint8_t  mBuffer[kMaxNetLinkBufSize];
+    } msgBuffer;
+
+    len = recv(sNetlinkSocket, msgBuffer.mBuffer, sizeof(msgBuffer.mBuffer), 0);
+    if (len < 0)
+    {
+        otLogCritPlat("failed to receive netlink message: %s", strerror(errno));
+        ExitNow();
+    }
+
+    for (struct nlmsghdr *header = &msgBuffer.mHeader; NLMSG_OK(header, static_cast<size_t>(len));
+         header                  = NLMSG_NEXT(header, len))
+    {
+        switch (header->nlmsg_type)
+        {
+        case RTM_NEWADDR:
+        case RTM_DELADDR:
+            ProcessNetifAddrEvent(header);
+            break;
+        case NLMSG_ERROR:
+        {
+            struct nlmsgerr *errMsg = reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(header));
+
+            if (errMsg->error != 0)
+            {
+                otLogWarnPlat("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
+            }
+        }
+        default:
+            break;
+        }
+    }
+
+exit:
+    return;
 }
 
 #else // OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
@@ -512,6 +608,23 @@ void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddre
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+    {
+        struct sockaddr_nl addr;
+
+        sNetlinkSocket = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
+        VerifyOrDie(sNetlinkSocket >= 0, OT_EXIT_ERROR_ERRNO);
+
+        memset(&addr, 0, sizeof(addr));
+        addr.nl_family = AF_NETLINK;
+        addr.nl_groups = RTMGRP_IPV6_IFADDR;
+
+        VerifyOrDie(bind(sNetlinkSocket, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) == 0,
+                    OT_EXIT_ERROR_ERRNO);
+    }
+#endif
+
+    RemoveUnicastAddress(aUnicastAddress);
     AddUnicastAddress(aUnicastAddress);
 
     sMulticastSocket = socket(AF_INET6, SOCK_DGRAM, 0);
@@ -695,6 +808,14 @@ void platformTrelDeinit(void)
         RemoveUnicastAddress(&sInterfaceAddress);
     }
 
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+    if (sNetlinkSocket != -1)
+    {
+        close(sNetlinkSocket);
+        sNetlinkSocket = -1;
+    }
+#endif
+
     sInitialized = false;
     sEnabled     = false;
 
@@ -705,13 +826,17 @@ exit:
 
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
 {
-    OT_UNUSED_VARIABLE(aTimeout);
-
     assert((aReadFdSet != NULL) && (aWriteFdSet != NULL) && (aMaxFd != NULL) && (aTimeout != NULL));
     VerifyOrExit((sSocket >= 0) && (sMulticastSocket >= 0));
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+    VerifyOrExit(sNetlinkSocket >= 0);
+#endif
 
     FD_SET(sMulticastSocket, aReadFdSet);
     FD_SET(sSocket, aReadFdSet);
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+    FD_SET(sNetlinkSocket, aReadFdSet);
+#endif
 
     if (sTxPacketQueueTail != NULL)
     {
@@ -728,6 +853,35 @@ void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxF
         *aMaxFd = sSocket;
     }
 
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+    if (*aMaxFd < sNetlinkSocket)
+    {
+        *aMaxFd = sNetlinkSocket;
+    }
+
+    if (sAddInterfaceAddressRetryTime > 0)
+    {
+        uint64_t now = otPlatTimeGet();
+
+        if (sAddInterfaceAddressRetryTime > now)
+        {
+            uint64_t remain = sAddInterfaceAddressRetryTime - now;
+
+            if (remain <
+                (static_cast<uint64_t>(aTimeout->tv_sec) * US_PER_S + static_cast<uint64_t>(aTimeout->tv_usec)))
+            {
+                aTimeout->tv_sec  = static_cast<time_t>(remain / US_PER_S);
+                aTimeout->tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+            }
+        }
+        else
+        {
+            aTimeout->tv_sec  = 0;
+            aTimeout->tv_usec = 0;
+        }
+    }
+#endif
+
 exit:
     return;
 }
@@ -735,6 +889,9 @@ exit:
 void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {
     VerifyOrExit((sSocket >= 0) && (sMulticastSocket >= 0));
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+    VerifyOrExit(sNetlinkSocket >= 0);
+#endif
 
     if (FD_ISSET(sSocket, aWriteFdSet))
     {
@@ -750,6 +907,25 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
     {
         ReceivePacket(sMulticastSocket, aInstance);
     }
+
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+    if (FD_ISSET(sNetlinkSocket, aReadFdSet))
+    {
+        ReceiveNetlinkMessage();
+    }
+
+    if (sAddInterfaceAddressRetryTime > 0)
+    {
+        uint64_t now = otPlatTimeGet();
+
+        if (sAddInterfaceAddressRetryTime <= now)
+        {
+            sAddInterfaceAddressRetryTime = 0;
+
+            HandleAddInterfaceAddressTimeout();
+        }
+    }
+#endif
 
 exit:
     return;

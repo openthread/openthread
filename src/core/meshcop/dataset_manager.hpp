@@ -71,18 +71,6 @@ public:
     Error Restore(void);
 
     /**
-     * This method compares @p aTimestamp to the dataset's timestamp value.
-     *
-     * @param[in]  aCompare  A reference to the timestamp to compare.
-     *
-     * @retval -1  if @p aCompare is older than this dataset.
-     * @retval  0  if @p aCompare is equal to this dataset.
-     * @retval  1  if @p aCompare is newer than this dataset.
-     *
-     */
-    int Compare(const Timestamp &aTimestamp) const;
-
-    /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.

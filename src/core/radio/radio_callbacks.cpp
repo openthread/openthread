@@ -61,20 +61,20 @@ void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)
 {
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
     // Pass it to notify OpenThread `Diags` module on host side.
     HandleReceiveDone(aFrame, aError);
-#else
+#else // For OPENTHREAD_FTD, OPENTHREAD_MTD and OPENTHREAD_RADIO(CLI)
     Get<FactoryDiags::Diags>().ReceiveDone(aFrame, aError);
 #endif
 }
 
 void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError)
 {
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
     // Pass it to notify OpenThread `Diags` module on host side.
     HandleTransmitDone(aFrame, nullptr, aError);
-#else
+#else // For OPENTHREAD_FTD, OPENTHREAD_MTD and OPENTHREAD_RADIO(CLI)
     OT_UNUSED_VARIABLE(aFrame);
     Get<FactoryDiags::Diags>().TransmitDone(aError);
 #endif

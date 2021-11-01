@@ -38,6 +38,7 @@
 
 #include <openthread/srp_server.h>
 
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -46,13 +47,11 @@
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements the SRP Server CLI interpreter.
  *
  */
-class SrpServer
+class SrpServer : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -60,11 +59,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutput  The CLI console output context.
      *
      */
-    explicit SrpServer(Interpreter &aInterpreter)
-        : mInterpreter(aInterpreter)
+    explicit SrpServer(Output &aOutput)
+        : OutputWrapper(aOutput)
     {
     }
 
@@ -80,12 +79,15 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
+    static constexpr uint8_t kIndentSize = 4;
+
     struct Command
     {
         const char *mName;
         otError (SrpServer::*mHandler)(Arg aArgs[]);
     };
 
+    otError ProcessAddrMode(Arg aArgs[]);
     otError ProcessDomain(Arg aArgs[]);
     otError ProcessState(Arg aArgs[]);
     otError ProcessEnable(Arg aArgs[]);
@@ -93,20 +95,20 @@ private:
     otError ProcessLease(Arg aArgs[]);
     otError ProcessHost(Arg aArgs[]);
     otError ProcessService(Arg aArgs[]);
+    otError ProcessSeqNum(Arg aArgs[]);
     otError ProcessHelp(Arg aArgs[]);
 
     void OutputHostAddresses(const otSrpServerHost *aHost);
 
     static constexpr Command sCommands[] = {
-        {"disable", &SrpServer::ProcessDisable}, {"domain", &SrpServer::ProcessDomain},
-        {"enable", &SrpServer::ProcessEnable},   {"help", &SrpServer::ProcessHelp},
-        {"host", &SrpServer::ProcessHost},       {"lease", &SrpServer::ProcessLease},
-        {"service", &SrpServer::ProcessService}, {"state", &SrpServer::ProcessState},
+        {"addrmode", &SrpServer::ProcessAddrMode}, {"disable", &SrpServer::ProcessDisable},
+        {"domain", &SrpServer::ProcessDomain},     {"enable", &SrpServer::ProcessEnable},
+        {"help", &SrpServer::ProcessHelp},         {"host", &SrpServer::ProcessHost},
+        {"lease", &SrpServer::ProcessLease},       {"seqnum", &SrpServer::ProcessSeqNum},
+        {"service", &SrpServer::ProcessService},   {"state", &SrpServer::ProcessState},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 };
 
 } // namespace Cli

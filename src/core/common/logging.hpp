@@ -2245,11 +2245,12 @@ void otLogOtns(const char *aFormat, ...);
  *
  */
 #if OPENTHREAD_CONFIG_LOG_MAC
-#define otDumpCritMac(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_MAC, aId, aBuf, aLength)
-#define otDumpWarnMac(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_MAC, aId, aBuf, aLength)
-#define otDumpNoteMac(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_MAC, aId, aBuf, aLength)
-#define otDumpInfoMac(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_MAC, aId, aBuf, aLength)
-#define otDumpDebgMac(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_MAC, aId, aBuf, aLength)
+void otDumpMacFrame(otLogLevel aLogLevel, const char *aId, const void *aBuf, size_t aLength);
+#define otDumpCritMac(aId, aBuf, aLength) otDumpMacFrame(OT_LOG_LEVEL_CRIT, aId, aBuf, aLength)
+#define otDumpWarnMac(aId, aBuf, aLength) otDumpMacFrame(OT_LOG_LEVEL_WARN, aId, aBuf, aLength)
+#define otDumpNoteMac(aId, aBuf, aLength) otDumpMacFrame(OT_LOG_LEVEL_NOTE, aId, aBuf, aLength)
+#define otDumpInfoMac(aId, aBuf, aLength) otDumpMacFrame(OT_LOG_LEVEL_INFO, aId, aBuf, aLength)
+#define otDumpDebgMac(aId, aBuf, aLength) otDumpMacFrame(OT_LOG_LEVEL_DEBG, aId, aBuf, aLength)
 #else
 #define otDumpCritMac(aId, aBuf, aLength)
 #define otDumpWarnMac(aId, aBuf, aLength)

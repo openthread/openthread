@@ -41,6 +41,7 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/string.hpp"
@@ -207,7 +208,7 @@ public:
      */
     static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
     {
-        return const_cast<Tlv *>(FindTlv(const_cast<const uint8_t *>(aTlvsStart), aTlvsLength, aType));
+        return AsNonConst(FindTlv(AsConst(aTlvsStart), aTlvsLength, aType));
     }
 
     /**
@@ -1002,7 +1003,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ActiveTimestampTlv : public Tlv, public Timestamp, public SimpleTlvInfo<Tlv::kActiveTimestamp, Timestamp>
+class ActiveTimestampTlv : public Tlv, public SimpleTlvInfo<Tlv::kActiveTimestamp, Timestamp>
 {
 public:
     /**
@@ -1013,7 +1014,7 @@ public:
     {
         SetType(kActiveTimestamp);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
+        mTimestamp.Clear();
     }
 
     /**
@@ -1024,6 +1025,33 @@ public:
      *
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method gets the timestamp.
+     *
+     * @returns The timestamp.
+     *
+     */
+    const Timestamp &GetTimestamp(void) const { return mTimestamp; }
+
+    /**
+     * This method returns a reference to the timestamp.
+     *
+     * @returns A reference to the timestamp.
+     *
+     */
+    Timestamp &GetTimestamp(void) { return mTimestamp; }
+
+    /**
+     * This method sets the timestamp.
+     *
+     * @param[in] aTimestamp   The new timestamp.
+     *
+     */
+    void SetTimestamp(const Timestamp &aTimestamp) { mTimestamp = aTimestamp; }
+
+private:
+    Timestamp mTimestamp;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1136,7 +1164,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PendingTimestampTlv : public Tlv, public Timestamp, public SimpleTlvInfo<Tlv::kPendingTimestamp, Timestamp>
+class PendingTimestampTlv : public Tlv, public SimpleTlvInfo<Tlv::kPendingTimestamp, Timestamp>
 {
 public:
     /**
@@ -1147,7 +1175,7 @@ public:
     {
         SetType(kPendingTimestamp);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
+        mTimestamp.Clear();
     }
 
     /**
@@ -1158,6 +1186,33 @@ public:
      *
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method gets the timestamp.
+     *
+     * @returns The timestamp.
+     *
+     */
+    const Timestamp &GetTimestamp(void) const { return mTimestamp; }
+
+    /**
+     * This method returns a reference to the timestamp.
+     *
+     * @returns A reference to the timestamp.
+     *
+     */
+    Timestamp &GetTimestamp(void) { return mTimestamp; }
+
+    /**
+     * This method sets the timestamp.
+     *
+     * @param[in] aTimestamp   The new timestamp.
+     *
+     */
+    void SetTimestamp(const Timestamp &aTimestamp) { mTimestamp = aTimestamp; }
+
+private:
+    Timestamp mTimestamp;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1325,10 +1380,7 @@ public:
      * @returns A pointer to next Channel Mask Entry.
      *
      */
-    ChannelMaskEntryBase *GetNext(void)
-    {
-        return const_cast<ChannelMaskEntryBase *>(static_cast<const ChannelMaskEntryBase *>(this)->GetNext());
-    }
+    ChannelMaskEntryBase *GetNext(void) { return AsNonConst(AsConst(this)->GetNext()); }
 
 private:
     uint8_t mChannelPage;

@@ -129,22 +129,17 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
-     *                             or False if not.
-     *
      * @retval kErrorNone           Successfully started the protocol operation.
      * @retval kErrorInvalidState   IPv6 interface is down or device is in raw-link mode.
      *
      */
-    Error Start(bool aAnnounceAttach);
+    Error Start(void) { return Start(kNormalAttach); }
 
     /**
      * This method stops the MLE protocol operation.
      *
-     * @param[in]  aClearNetworkDatasets  True to clear network datasets, False not.
-     *
      */
-    void Stop(bool aClearNetworkDatasets);
+    void Stop(void) { Stop(kUpdateNetworkDatasets); }
 
     /**
      * This method restores network information from non-volatile memory.
@@ -168,10 +163,9 @@ public:
      * This method generates an MLE Announce message.
      *
      * @param[in]  aChannel        The channel to use when transmitting.
-     * @param[in]  aOrphanAnnounce To indicate if MLE Announce is sent from an orphan end device.
      *
      */
-    void SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce);
+    void SendAnnounce(uint8_t aChannel) { SendAnnounce(aChannel, kNormalAnnounce); }
 
     /**
      * This method causes the Thread interface to detach from the Thread network.
@@ -1448,9 +1442,9 @@ protected:
     /**
      * This method adds a message to the message queue. The queued message will be transmitted after given delay.
      *
-     * @param[in]  aMessage      The message to transmit after given delay.
-     * @param[in]  aDestination  The IPv6 address of the recipient of the message.
-     * @param[in]  aDelay        The delay in milliseconds before transmission of the message.
+     * @param[in]  aMessage             The message to transmit after given delay.
+     * @param[in]  aDestination         The IPv6 address of the recipient of the message.
+     * @param[in]  aDelay               The delay in milliseconds before transmission of the message.
      *
      * @retval kErrorNone     Successfully queued the message to transmit after the delay.
      * @retval kErrorNoBufs   Insufficient buffers to queue the message.
@@ -1630,6 +1624,24 @@ private:
     static constexpr uint32_t kAttachBackoffDelayToResetCounter =
         OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL;
 
+    enum StartMode : uint8_t // Used in `Start()`.
+    {
+        kNormalAttach,
+        kAnnounceAttach, // Try to attach on the announced thread network with newer active timestamp.
+    };
+
+    enum StopMode : uint8_t // Used in `Stop()`.
+    {
+        kKeepNetworkDatasets,
+        kUpdateNetworkDatasets,
+    };
+
+    enum AnnounceMode : uint8_t // Used in `SendAnnounce()`
+    {
+        kNormalAnnounce,
+        kOrphanAnnounce,
+    };
+
     enum ParentRequestType : uint8_t
     {
         kParentRequestTypeRouters,         // Parent Request to all routers.
@@ -1751,6 +1763,8 @@ private:
         uint8_t  mCommand;
     } OT_TOOL_PACKED_END;
 
+    Error       Start(StartMode aMode);
+    void        Stop(StopMode aMode);
     void        HandleNotifierEvents(Events aEvents);
     static void HandleAttachTimer(Timer &aTimer);
     void        HandleAttachTimer(void);
@@ -1797,7 +1811,9 @@ private:
     Error    GetNextAnnouceChannel(uint8_t &aChannel) const;
     bool     HasMoreChannelsToAnnouce(void) const;
     bool     PrepareAnnounceState(void);
-    void     SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
+    void     SendAnnounce(uint8_t aChannel, AnnounceMode aMode);
+    void     SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);
+    void     RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     Error SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus);
 #endif

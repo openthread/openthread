@@ -58,6 +58,7 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
 }
 
 proc expect_line {line} {
+    set timeout 10
     expect -re "\[\r\n \]($line)(?=\[\r\n>\])"
     return $expect_out(1,string)
 }

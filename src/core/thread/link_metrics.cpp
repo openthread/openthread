@@ -36,6 +36,7 @@
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #include "common/code_utils.hpp"
+#include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -45,6 +46,8 @@
 
 namespace ot {
 namespace LinkMetrics {
+
+using ot::Encoding::BigEndian::HostSwap32;
 
 void SeriesInfo::Init(uint8_t aSeriesId, const SeriesFlags &aSeriesFlags, const Metrics &aMetrics)
 {
@@ -287,7 +290,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
 
     if (queryId == kQueryIdSingleProbe)
     {
-        values.mPduCountValue = aRequestMessage.GetPsduCount();
+        values.mPduCountValue = HostSwap32(aRequestMessage.GetPsduCount());
         values.mLqiValue      = aRequestMessage.GetAverageLqi();
         // Linearly scale Link Margin from [0, 130] to [0, 255]
         values.mLinkMarginValue =
@@ -313,7 +316,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
         else
         {
             values.SetMetrics(seriesInfo->GetLinkMetrics());
-            values.mPduCountValue = seriesInfo->GetPduCount();
+            values.mPduCountValue = HostSwap32(seriesInfo->GetPduCount());
             values.mLqiValue      = seriesInfo->GetAverageLqi();
             // Linearly scale Link Margin from [0, 130] to [0, 255]
             values.mLinkMarginValue =
@@ -505,6 +508,7 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
             case TypeIdFlags::kPdu:
                 values.GetMetrics().mPduCount = true;
                 SuccessOrExit(aMessage.Read(pos, values.mPduCountValue));
+                values.mPduCountValue = HostSwap32(values.mPduCountValue);
                 pos += sizeof(uint32_t);
                 otLogDebgMle(" - PDU Counter: %d (Count/Summation)", values.mPduCountValue);
                 break;
@@ -602,11 +606,13 @@ void LinkMetrics::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, con
     }
     if (values.GetMetrics().mLinkMargin && idx < aLength)
     {
-        values.mLinkMarginValue = aData[idx++];
+        // Reverse operation for linear scale, map from [0, 255] to [0, 130]
+        values.mLinkMarginValue = aData[idx++] * 130 / 255;
     }
     if (values.GetMetrics().mRssi && idx < aLength)
     {
-        values.mRssiValue = aData[idx++];
+        // Reverse operation for linear scale, map from [0, 255] to [-130, 0]
+        values.mRssiValue = aData[idx++] * 130 / 255 - 130;
     }
 
     mEnhAckProbingIeReportCallback(aNeighbor.GetRloc16(), &aNeighbor.GetExtAddress(), &values,

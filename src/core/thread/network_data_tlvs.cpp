@@ -92,6 +92,32 @@ const NetworkDataTlv *PrefixTlv::FindSubTlv(Type aType, bool aStable) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// ServiceTlv
+
+void ServiceTlv::Init(uint8_t aServiceId, uint32_t aEnterpriseNumber, const ServiceData &aServiceData)
+{
+    NetworkDataTlv::Init();
+    SetType(kTypeService);
+
+    mFlagsServiceId = (aEnterpriseNumber == kThreadEnterpriseNumber) ? kThreadEnterpriseFlag : 0;
+    mFlagsServiceId |= (aServiceId & kServiceIdMask);
+
+    if (aEnterpriseNumber != kThreadEnterpriseNumber)
+    {
+        mShared.mEnterpriseNumber = HostSwap32(aEnterpriseNumber);
+        mServiceDataLength        = aServiceData.GetLength();
+        aServiceData.CopyBytesTo(&mServiceDataLength + sizeof(uint8_t));
+    }
+    else
+    {
+        mShared.mServiceDataLengthThreadEnterprise = aServiceData.GetLength();
+        aServiceData.CopyBytesTo(&mShared.mServiceDataLengthThreadEnterprise + sizeof(uint8_t));
+    }
+
+    SetLength(GetFieldsLength());
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // TlvIterator
 
 const NetworkDataTlv *TlvIterator::Iterate(NetworkDataTlv::Type aType)

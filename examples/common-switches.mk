@@ -28,6 +28,7 @@
 
 # OpenThread Features (Makefile default configuration).
 
+ANYCAST_LOCATOR           ?= 0
 BACKBONE_ROUTER           ?= 0
 BIG_ENDIAN                ?= 0
 BORDER_AGENT              ?= 0
@@ -87,8 +88,12 @@ THREAD_VERSION            ?= 1.2
 TIME_SYNC                 ?= 0
 TREL                      ?= 0
 UDP_FORWARD               ?= 0
+UPTIME                    ?= 0
 RCP_RESTORATION_MAX_COUNT ?= 0
 
+ifeq ($(ANYCAST_LOCATOR),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE=1
+endif
 
 ifeq ($(BACKBONE_ROUTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1
@@ -330,6 +335,10 @@ endif
 
 ifeq ($(UDP_FORWARD),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1
+endif
+
+ifeq ($(UPTIME),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_UPTIME_ENABLE=1
 endif
 
 ifeq ($(DISABLE_BUILTIN_MBEDTLS),1)

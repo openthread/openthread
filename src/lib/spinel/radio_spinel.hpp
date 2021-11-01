@@ -628,20 +628,21 @@ public:
      *
      * @param[in] aKeyIdMode  The key ID mode.
      * @param[in] aKeyId      The key index.
-     * @param[in] aPrevKey    The previous MAC key.
-     * @param[in] aCurrKey    The current MAC key.
-     * @param[in] aNextKey    The next MAC key.
+     * @param[in] aPrevKey    Pointer to previous MAC key.
+     * @param[in] aCurrKey    Pointer to current MAC key.
+     * @param[in] aNextKey    Pointer to next MAC key.
      *
      * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_INVALID_ARGS       One of the keys passed is invalid..
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      *
      */
-    otError SetMacKey(uint8_t         aKeyIdMode,
-                      uint8_t         aKeyId,
-                      const otMacKey &aPrevKey,
-                      const otMacKey &aCurrKey,
-                      const otMacKey &aNextKey);
+    otError SetMacKey(uint8_t                 aKeyIdMode,
+                      uint8_t                 aKeyId,
+                      const otMacKeyMaterial *aPrevKey,
+                      const otMacKeyMaterial *aCurrKey,
+                      const otMacKeyMaterial *aNextKey);
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -741,45 +742,6 @@ public:
      */
     otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aPower);
 
-private:
-    enum
-    {
-        kMaxSpinelFrame        = SpinelInterface::kMaxFrameSize,
-        kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
-        kVersionStringSize     = 128,  ///< Max size of version string.
-        kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
-        kChannelMaskBufferSize = 32,   ///< Max buffer size used to store `SPINEL_PROP_PHY_CHAN_SUPPORTED` value.
-    };
-
-    enum State
-    {
-        kStateDisabled,     ///< Radio is disabled.
-        kStateSleep,        ///< Radio is sleep.
-        kStateReceive,      ///< Radio is in receive mode.
-        kStateTransmitting, ///< Frame passed to radio for transmission, waiting for done event from radio.
-        kStateTransmitDone, ///< Radio indicated frame transmission is done.
-    };
-
-    typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
-
-    static void HandleReceivedFrame(void *aContext);
-
-    otError CheckSpinelVersion(void);
-    otError CheckRadioCapabilities(void);
-    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion);
-
-    /**
-     * This method triggers a state transfer of the state machine.
-     *
-     */
-    void ProcessRadioStateMachine(void);
-
-    /**
-     * This method processes the frame queue.
-     *
-     */
-    void ProcessFrameQueue(void);
-
     /**
      * This method tries to retrieve a spinel property from OpenThread transceiver.
      *
@@ -856,6 +818,56 @@ private:
      */
     otError Remove(spinel_prop_key_t aKey, const char *aFormat, ...);
 
+    /**
+     * This method tries to reset the co-processor.
+     *
+     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM or SPINEL_RESET_STACK.
+     *
+     * @retval  OT_ERROR_NONE               Successfully removed item from the property.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     *
+     */
+    otError SendReset(uint8_t aResetType);
+
+private:
+    enum
+    {
+        kMaxSpinelFrame        = SpinelInterface::kMaxFrameSize,
+        kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
+        kVersionStringSize     = 128,  ///< Max size of version string.
+        kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
+        kChannelMaskBufferSize = 32,   ///< Max buffer size used to store `SPINEL_PROP_PHY_CHAN_SUPPORTED` value.
+    };
+
+    enum State
+    {
+        kStateDisabled,     ///< Radio is disabled.
+        kStateSleep,        ///< Radio is sleep.
+        kStateReceive,      ///< Radio is in receive mode.
+        kStateTransmitting, ///< Frame passed to radio for transmission, waiting for done event from radio.
+        kStateTransmitDone, ///< Radio indicated frame transmission is done.
+    };
+
+    typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
+
+    static void HandleReceivedFrame(void *aContext);
+
+    otError CheckSpinelVersion(void);
+    otError CheckRadioCapabilities(void);
+    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion);
+
+    /**
+     * This method triggers a state transfer of the state machine.
+     *
+     */
+    void ProcessRadioStateMachine(void);
+
+    /**
+     * This method processes the frame queue.
+     *
+     */
+    void ProcessFrameQueue(void);
+
     spinel_tid_t GetNextTid(void);
     void         FreeTid(spinel_tid_t tid) { mCmdTidsInUse &= ~(1 << tid); }
 
@@ -877,12 +889,11 @@ private:
                                         const char *      aFormat,
                                         va_list           aArgs);
     otError WaitResponse(void);
-    otError SendReset(void);
-    otError SendCommand(uint32_t          command,
-                        spinel_prop_key_t key,
-                        spinel_tid_t      tid,
-                        const char *      pack_format,
-                        va_list           args);
+    otError SendCommand(uint32_t          aCommand,
+                        spinel_prop_key_t aKey,
+                        spinel_tid_t      aTid,
+                        const char *      aFormat,
+                        va_list           aArgs);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
     otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
 

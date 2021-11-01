@@ -39,6 +39,10 @@
 #define OPENTHREAD_RADIO 0
 #endif
 
+#ifndef OPENTHREAD_RADIO
+#define OPENTHREAD_RADIO_CLI 0
+#endif
+
 /**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
@@ -46,6 +50,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_UPTIME_ENABLE
+ *
+ * Define to 1 to enable tracking the uptime of OpenThread instance.
+ *
+ */
+#define OPENTHREAD_CONFIG_UPTIME_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -110,6 +122,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+ *
+ * Define to 1 to enable TMF anycast locator functionality.
+ *
+ */
+#define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
@@ -281,12 +301,20 @@
 #define OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME
+ *
+ * Define as 1 to prepend the current uptime to all log messages.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME 1
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages
  *
  */
-#define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL 0
+#define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL 1
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_REGION
@@ -294,7 +322,7 @@
  * Define to prepend the log region to all log messages
  *
  */
-#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION 0
+#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION 1
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_SUFFIX
@@ -493,6 +521,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+ *
+ * Define to 1 to enable DNS-SD Server support.
+ *
+ */
+#define OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE 1
 
 #if OPENTHREAD_RADIO
 /**

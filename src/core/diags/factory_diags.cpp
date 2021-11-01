@@ -41,6 +41,7 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -66,7 +67,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
 namespace ot {
 namespace FactoryDiags {
 
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 
 const struct Diags::Command Diags::sCommands[] = {
     {"channel", &Diags::ProcessChannel},
@@ -142,8 +143,8 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
     otPlatDiagAlarmCallback(aInstance);
 }
 
-#else // OPENTHREAD_RADIO
-
+#else // OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
+// For OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO_CLI
 const struct Diags::Command Diags::sCommands[] = {
     {"channel", &Diags::ProcessChannel}, {"power", &Diags::ProcessPower}, {"radio", &Diags::ProcessRadio},
     {"repeat", &Diags::ProcessRepeat},   {"send", &Diags::ProcessSend},   {"start", &Diags::ProcessStart},
@@ -291,7 +292,9 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
 
     Error error = kErrorNone;
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
+#endif
 
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
@@ -437,9 +440,7 @@ exit:
 
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
-
-    instance->Get<Diags>().AlarmFired();
+    AsCoreType(aInstance).Get<Diags>().AlarmFired();
 }
 
 void Diags::AlarmFired(void)

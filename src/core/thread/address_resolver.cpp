@@ -36,6 +36,7 @@
 #if OPENTHREAD_FTD
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -139,8 +140,8 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
         VerifyOrExit(entry->IsLastTransactionTimeValid());
 
         aInfo.mLastTransTime = entry->GetLastTransactionTime();
-        static_cast<Ip6::Address &>(aInfo.mMeshLocalEid).SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        static_cast<Ip6::Address &>(aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
+        AsCoreType(&aInfo.mMeshLocalEid).SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        AsCoreType(&aInfo.mMeshLocalEid).SetIid(entry->GetMeshLocalIid());
 
         ExitNow();
     }
@@ -583,8 +584,8 @@ exit:
 
 void AddressResolver::HandleAddressNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressNotification(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<AddressResolver *>(aContext)->HandleAddressNotification(AsCoapMessage(aMessage),
+                                                                        AsCoreType(aMessageInfo));
 }
 
 void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -699,8 +700,7 @@ exit:
 
 void AddressResolver::HandleAddressError(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressError(*static_cast<Coap::Message *>(aMessage),
-                                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<AddressResolver *>(aContext)->HandleAddressError(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -780,8 +780,7 @@ exit:
 
 void AddressResolver::HandleAddressQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(*static_cast<Coap::Message *>(aMessage),
-                                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -959,9 +958,8 @@ void AddressResolver::HandleIcmpReceive(void *               aContext,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    static_cast<AddressResolver *>(aContext)->HandleIcmpReceive(*static_cast<Message *>(aMessage),
-                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-                                                                *static_cast<const Ip6::Icmp::Header *>(aIcmpHeader));
+    static_cast<AddressResolver *>(aContext)->HandleIcmpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo),
+                                                                AsCoreType(aIcmpHeader));
 }
 
 void AddressResolver::HandleIcmpReceive(Message &                aMessage,

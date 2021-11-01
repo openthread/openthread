@@ -37,100 +37,97 @@
 
 #include <openthread/srp_server.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 const char *otSrpServerGetDomain(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Server>().GetDomain();
+    return AsCoreType(aInstance).Get<Srp::Server>().GetDomain();
 }
 
 otError otSrpServerSetDomain(otInstance *aInstance, const char *aDomain)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Server>().SetDomain(aDomain);
+    return AsCoreType(aInstance).Get<Srp::Server>().SetDomain(aDomain);
 }
 
 otSrpServerState otSrpServerGetState(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    return MapEnum(AsCoreType(aInstance).Get<Srp::Server>().GetState());
+}
 
-    return static_cast<otSrpServerState>(instance.Get<Srp::Server>().GetState());
+otSrpServerAddressMode otSrpServerGetAddressMode(otInstance *aInstance)
+{
+    return MapEnum(AsCoreType(aInstance).Get<Srp::Server>().GetAddressMode());
+}
+
+otError otSrpServerSetAddressMode(otInstance *aInstance, otSrpServerAddressMode aMode)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().SetAddressMode(MapEnum(aMode));
+}
+
+uint8_t otSrpServerGetAnycastModeSequenceNumber(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().GetAnycastModeSequenceNumber();
+}
+
+otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t aSequenceNumber)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().SetAnycastModeSequenceNumber(aSequenceNumber);
 }
 
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Server>().SetEnabled(aEnabled);
+    AsCoreType(aInstance).Get<Srp::Server>().SetEnabled(aEnabled);
 }
 
 void otSrpServerGetLeaseConfig(otInstance *aInstance, otSrpServerLeaseConfig *aLeaseConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Server>().GetLeaseConfig(static_cast<Srp::Server::LeaseConfig &>(*aLeaseConfig));
+    AsCoreType(aInstance).Get<Srp::Server>().GetLeaseConfig(AsCoreType(aLeaseConfig));
 }
 
 otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseConfig *aLeaseConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Server>().SetLeaseConfig(static_cast<const Srp::Server::LeaseConfig &>(*aLeaseConfig));
+    return AsCoreType(aInstance).Get<Srp::Server>().SetLeaseConfig(AsCoreType(aLeaseConfig));
 }
 
 void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstance,
                                         otSrpServerServiceUpdateHandler aServiceHandler,
                                         void *                          aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Server>().SetServiceHandler(aServiceHandler, aContext);
+    AsCoreType(aInstance).Get<Srp::Server>().SetServiceHandler(aServiceHandler, aContext);
 }
 
 void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, otSrpServerServiceUpdateId aId, otError aError)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Srp::Server>().HandleServiceUpdateResult(aId, aError);
+    AsCoreType(aInstance).Get<Srp::Server>().HandleServiceUpdateResult(aId, aError);
 }
 
 const otSrpServerHost *otSrpServerGetNextHost(otInstance *aInstance, const otSrpServerHost *aHost)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Srp::Server>().GetNextHost(static_cast<const Srp::Server::Host *>(aHost));
+    return AsCoreType(aInstance).Get<Srp::Server>().GetNextHost(AsCoreTypePtr(aHost));
 }
 
 bool otSrpServerHostIsDeleted(const otSrpServerHost *aHost)
 {
-    return static_cast<const Srp::Server::Host *>(aHost)->IsDeleted();
+    return AsCoreType(aHost).IsDeleted();
 }
 
 const char *otSrpServerHostGetFullName(const otSrpServerHost *aHost)
 {
-    return static_cast<const Srp::Server::Host *>(aHost)->GetFullName();
+    return AsCoreType(aHost).GetFullName();
 }
 
 const otIp6Address *otSrpServerHostGetAddresses(const otSrpServerHost *aHost, uint8_t *aAddressesNum)
 {
-    auto host = static_cast<const Srp::Server::Host *>(aHost);
-
-    return host->GetAddresses(*aAddressesNum);
+    return AsCoreType(aHost).GetAddresses(*aAddressesNum);
 }
 
 const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost *   aHost,
                                                         const otSrpServerService *aService)
 {
-    auto host = static_cast<const Srp::Server::Host *>(aHost);
-
-    return host->FindNextService(static_cast<const Srp::Server::Service *>(aService),
-                                 Srp::Server::kFlagsBaseTypeServiceOnly);
+    return AsCoreType(aHost).FindNextService(AsCoreTypePtr(aService), Srp::Server::kFlagsBaseTypeServiceOnly);
 }
 
 const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost *   aHost,
@@ -139,69 +136,64 @@ const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost *
                                                          const char *              aServiceName,
                                                          const char *              aInstanceName)
 {
-    auto host = static_cast<const Srp::Server::Host *>(aHost);
-
-    return host->FindNextService(static_cast<const Srp::Server::Service *>(aPrevService), aFlags, aServiceName,
-                                 aInstanceName);
+    return AsCoreType(aHost).FindNextService(AsCoreTypePtr(aPrevService), aFlags, aServiceName, aInstanceName);
 }
 
 bool otSrpServerServiceIsDeleted(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->IsDeleted();
+    return AsCoreType(aService).IsDeleted();
 }
 
 bool otSrpServerServiceIsSubType(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->IsSubType();
+    return AsCoreType(aService).IsSubType();
 }
 
 const char *otSrpServerServiceGetFullName(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetInstanceName();
+    return AsCoreType(aService).GetInstanceName();
 }
 
 const char *otSrpServerServiceGetInstanceName(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetInstanceName();
+    return AsCoreType(aService).GetInstanceName();
 }
 
 const char *otSrpServerServiceGetServiceName(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetServiceName();
+    return AsCoreType(aService).GetServiceName();
 }
 
 otError otSrpServerServiceGetServiceSubTypeLabel(const otSrpServerService *aService, char *aLabel, uint8_t aMaxSize)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetServiceSubTypeLabel(aLabel, aMaxSize);
+    return AsCoreType(aService).GetServiceSubTypeLabel(aLabel, aMaxSize);
 }
 
 uint16_t otSrpServerServiceGetPort(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetPort();
+    return AsCoreType(aService).GetPort();
 }
 
 uint16_t otSrpServerServiceGetWeight(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetWeight();
+    return AsCoreType(aService).GetWeight();
 }
 
 uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetPriority();
+    return AsCoreType(aService).GetPriority();
 }
 
 const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, uint16_t *aDataLength)
 {
-    const Srp::Server::Service &service = *static_cast<const Srp::Server::Service *>(aService);
+    *aDataLength = AsCoreType(aService).GetTxtDataLength();
 
-    *aDataLength = service.GetTxtDataLength();
-
-    return service.GetTxtData();
+    return AsCoreType(aService).GetTxtData();
 }
 
 const otSrpServerHost *otSrpServerServiceGetHost(const otSrpServerService *aService)
 {
-    return &static_cast<const Srp::Server::Service *>(aService)->GetHost();
+    return &AsCoreType(aService).GetHost();
 }
 
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE

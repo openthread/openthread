@@ -88,6 +88,7 @@
 #include "net/srp_client.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/announce_begin_server.hpp"
+#include "thread/anycast_locator.hpp"
 #include "thread/discover_scanner.hpp"
 #include "thread/energy_scan_server.hpp"
 #include "thread/key_manager.hpp"
@@ -301,6 +302,9 @@ private:
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer    mPanIdQuery;
     EnergyScanServer    mEnergyScan;
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+    AnycastLocator mAnycastLocator;
+#endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeSync mTimeSync;

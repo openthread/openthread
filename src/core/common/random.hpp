@@ -190,7 +190,7 @@ inline mbedtls_ctr_drbg_context *MbedTlsContextGet(void)
 
 } // namespace Crypto
 
-#endif // OPENTHREAD_RADIO
+#endif // !OPENTHREAD_RADIO
 
 } // namespace Random
 } // namespace ot
