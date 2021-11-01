@@ -570,10 +570,7 @@ public:
      * @returns TRUE if CSL is supported, FALSE otherwise.
      *
      */
-    bool IsThreadVersionCslCapable(void) const
-    {
-        return IsThreadVersion1p2() && !IsRxOnWhenIdle();
-    }
+    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2() && !IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
