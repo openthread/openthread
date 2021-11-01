@@ -1593,6 +1593,8 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
     Challenge       challenge;
     Router *        leader;
     Child *         child;
+    uint8_t         modeBitmask;
+    DeviceMode      mode;
 
     Log(kMessageReceive, kTypeParentRequest, aMessageInfo.GetPeerAddr());
 
@@ -1669,6 +1671,12 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         child->SetTimeSyncEnabled(Tlv::Find<TimeRequestTlv>(aMessage, nullptr, 0) == kErrorNone);
 #endif
+        if (Tlv::Find<ModeTlv>(aMessage, modeBitmask) == kErrorNone)
+        {
+            mode.Set(modeBitmask);
+            child->SetDeviceMode(mode);
+            child->SetVersion(static_cast<uint8_t>(version));
+        }
     }
     else if (TimerMilli::GetNow() - child->GetLastHeard() < kParentRequestRouterTimeout - kParentRequestDuplicateMargin)
     {
@@ -1944,7 +1952,7 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
     }
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (!aChild->IsRxOnWhenIdle())
+    if (aChild->IsThreadVersionCslCapable())
     {
         SuccessOrExit(error = AppendCslClockAccuracy(*message));
     }
@@ -2512,6 +2520,8 @@ void MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Mes
         if (Tlv::Find<CslTimeoutTlv>(aMessage, cslTimeout) == kErrorNone)
         {
             child->SetCslTimeout(cslTimeout);
+            // MUST include CSL accuracy TLV when request includes CSL timeout
+            tlvs[tlvslength++] = Tlv::kCslClockAccuracy;
         }
 
         if (Tlv::FindTlv(aMessage, cslChannel) == kErrorNone)
@@ -3252,6 +3262,15 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
         case Tlv::kLinkFrameCounter:
             SuccessOrExit(error = AppendLinkFrameCounter(*message));
             break;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        case Tlv::kCslClockAccuracy:
+            if (!aChild->IsRxOnWhenIdle())
+            {
+                SuccessOrExit(error = AppendCslClockAccuracy(*message));
+            }
+            break;
+#endif
         }
     }
 

@@ -565,6 +565,14 @@ public:
     bool IsThreadVersion1p2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_2; }
 
     /**
+     * This method indicates whether Thread version supports CSL.
+     *
+     * @returns TRUE if CSL is supported, FALSE otherwise.
+     *
+     */
+    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2() && !IsRxOnWhenIdle(); }
+
+    /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
      *
      * @returns TRUE if Enhanced Keep-Alive is supported, FALSE otherwise.
