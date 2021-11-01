@@ -240,6 +240,22 @@ public:
     void OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix);
 
     /**
+     * This method outputs an IPv6 socket address to the CLI console.
+     *
+     * @param[in] aSockAddr   A reference to the IPv6 socket address.
+     *
+     */
+    void OutputSockAddr(const otSockAddr &aSockAddr);
+
+    /**
+     * This method outputs an IPv6 socket address to the CLI console and at the end it also outputs newline "\r\n".
+     *
+     * @param[in] aSockAddr   A reference to the IPv6 socket address.
+     *
+     */
+    void OutputSockAddrLine(const otSockAddr &aSockAddr);
+
+    /**
      * This method outputs DNS TXT data to the CLI console.
      *
      * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
@@ -375,6 +391,8 @@ protected:
     void OutputIp6PrefixLine(const otIp6Prefix &aPrefix) { mOutput.OutputIp6PrefixLine(aPrefix); }
     void OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix) { mOutput.OutputIp6Prefix(aPrefix); }
     void OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix) { mOutput.OutputIp6PrefixLine(aPrefix); }
+    void OutputSockAddr(const otSockAddr &aSockAddr) { mOutput.OutputSockAddr(aSockAddr); }
+    void OutputSockAddrLine(const otSockAddr &aSockAddr) { mOutput.OutputSockAddrLine(aSockAddr); }
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
     {
         mOutput.OutputDnsTxtData(aTxtData, aTxtDataLength);

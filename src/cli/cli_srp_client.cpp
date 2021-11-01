@@ -285,10 +285,7 @@ otError SrpClient::ProcessServer(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
-
-        otIp6SockAddrToString(serverSockAddr, string, sizeof(string));
-        OutputLine(string);
+        OutputSockAddrLine(*serverSockAddr);
         ExitNow();
     }
 

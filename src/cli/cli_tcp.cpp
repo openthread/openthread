@@ -475,7 +475,7 @@ void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnect
     mEndpointConnected = false;
     mSendBusy          = false;
 
-    // Mark the benchmark as inactive if the connction was disconnected.
+    // Mark the benchmark as inactive if the connection was disconnected.
     if (mBenchmarkBytesTotal != 0)
     {
         mBenchmarkBytesTotal = 0;
@@ -491,9 +491,9 @@ otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener *  
 
     if (mEndpointConnected)
     {
-        OutputFormat("TCP: Ignoring incoming connection request from [");
-        OutputIp6Address(aPeer->mAddress);
-        OutputLine("]:%u (active socket is busy)", static_cast<unsigned int>(aPeer->mPort));
+        OutputFormat("TCP: Ignoring incoming connection request from ");
+        OutputSockAddr(*aPeer);
+        OutputLine(" (active socket is busy)");
 
         return OT_TCP_INCOMING_CONNECTION_ACTION_DEFER;
     }
@@ -507,9 +507,8 @@ void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aE
     OT_UNUSED_VARIABLE(aListener);
     OT_UNUSED_VARIABLE(aEndpoint);
 
-    OutputFormat("Accepted connection from [");
-    OutputIp6Address(aPeer->mAddress);
-    OutputLine("]:%u", static_cast<unsigned int>(aPeer->mPort));
+    OutputFormat("Accepted connection from ");
+    OutputSockAddrLine(*aPeer);
 }
 
 } // namespace Cli

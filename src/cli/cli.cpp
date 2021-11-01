@@ -1536,9 +1536,8 @@ otError Interpreter::ProcessDns(Arg aArgs[])
         {
             const otDnsQueryConfig *defaultConfig = otDnsClientGetDefaultConfig(GetInstancePtr());
 
-            OutputFormat("Server: [");
-            OutputIp6Address(defaultConfig->mServerSockAddr.mAddress);
-            OutputLine("]:%d", defaultConfig->mServerSockAddr.mPort);
+            OutputFormat("Server: ");
+            OutputSockAddrLine(defaultConfig->mServerSockAddr);
             OutputLine("ResponseTimeout: %u ms", defaultConfig->mResponseTimeout);
             OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
             OutputLine("RecursionDesired: %s",
