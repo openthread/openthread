@@ -147,7 +147,7 @@ Child *ChildTable::FindChild(const Mac::Address &aMacAddress, Child::StateFilter
     return FindChild(Child::AddressMatcher(aMacAddress, aFilter));
 }
 
-Child *ChildTable::FindChild(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
+Child *ChildTable::FindChild(const Ip6::Address &aAddress, Neighbor::StateFilter aFilter)
 {
     Child *      child = nullptr;
     Mac::Address macAddress;
