@@ -489,10 +489,10 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         else:
             if filterByPrefix[-2:] != '::':
                 filterByPrefix = '%s::' % filterByPrefix
-            prefix = ipaddress.IPv6Address(filterByPrefix.decode())
+            prefix = ipaddress.IPv6Network((filterByPrefix + '/64').decode())
             for fullIp in globalAddrs:
                 address = ipaddress.IPv6Address(fullIp.decode())
-                if address.packed[:8] == prefix.packed[:8]:
+                if address in prefix:
                     return fullIp
 
     def _cliReadLine(self):

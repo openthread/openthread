@@ -1552,7 +1552,7 @@ class OpenThreadTHCI(object):
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         # self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds
-        self.ssedTimeout = 30
+        self.ssedTimeout = 30  # in seconds
         self.cslPeriod = 500  # in milliseconds
         self.deviceRole = None
         self.provisioningUrl = ''
@@ -2815,15 +2815,11 @@ class OpenThreadTHCI(object):
 
                 cmd += policy
 
-                flags0 = str(hex(policyBits & 0x00ff))[2:]
-                if len(flags0) < 2:
-                    flags0 = flags0.ljust(2, '0')
+                flags0 = ('%x' % (policyBits & 0x00ff)).ljust(2, '0')
                 cmd += flags0
 
                 if self.DeviceCapability != DevCapb.V1_1:
-                    flags1 = str(hex((policyBits & 0xff00) >> 8))[2:]
-                    if len(flags1) < 2:
-                        flags1 = flags1.ljust(2, '0')
+                    flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
                     cmd += flags1
 
             if xCommissioningSessionId is not None:
@@ -3221,7 +3217,7 @@ class OpenThreadTHCI(object):
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @staticmethod
-    def getForwardSeriesFlagsFromHexStr(flags):
+    def getForwardSeriesFlagsFromHexOrStr(flags):
         hexFlags = int(flags, 16) if isinstance(flags, str) else flags
         strFlags = ''
         if hexFlags == 0:
@@ -3284,7 +3280,7 @@ class OpenThreadTHCI(object):
         self.log('call LinkMetricsMgmtReq')
         cmd = 'linkmetrics mgmt %s ' % dst_addr
         if type_ == 'FWD':
-            cmd += 'forward %d %s' % (series_id, self.getForwardSeriesFlagsFromHexStr(flags))
+            cmd += 'forward %d %s' % (series_id, self.getForwardSeriesFlagsFromHexOrStr(flags))
             if flags != 0:
                 cmd += ' %s' % (self.getMetricsFlagsFromHexStr(metrics))
         elif type_ == 'ENH':
