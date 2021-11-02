@@ -75,4 +75,23 @@
  */
 #define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 1
 
+/**
+ * @def OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+ *
+ * Define to 1 to enable SRP Replication (SRPL) support.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE 1
+
+/**
+ * OPENTHREAD_CONFIG_SRP_REPLICATION_PARTNER_REMOVE_TIMEOUT
+ *
+ * Specifies the wait timeout in milliseconds for removing a partner.
+ *
+ * In `toranj` tests we use a shorter remove timeout compared to default value to help speed up running of test which
+ * can wait on a entry to time out and removed from partner list.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_REPLICATION_PARTNER_REMOVE_TIMEOUT 5000
+
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */

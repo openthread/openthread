@@ -182,3 +182,4 @@ Done
 
 - [SRP Client CLI Reference](README_SRP_CLIENT.md)
 - [SRP Server CLI Reference](README_SRP_SERVER.md)
+- [SRP Replication CLI Reference](README_SRP_REPLICATION.md)

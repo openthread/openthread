@@ -51,7 +51,7 @@ DHCP6_CLIENT                   ?= 1
 DHCP6_SERVER                   ?= 1
 DIAGNOSTIC                     ?= 1
 DNS_CLIENT                     ?= 1
-DNS_DSO                        ?= 1
+DNS_DSO                        ?= 0
 DNSSD_SERVER                   ?= 1
 ECDSA                          ?= 1
 HISTORY_TRACKER                ?= 1
@@ -69,6 +69,7 @@ REFERENCE_DEVICE               ?= 1
 SERVICE                        ?= 1
 SNTP_CLIENT                    ?= 1
 SRP_CLIENT                     ?= 1
+SRP_REPLICATION                ?= 0
 SRP_SERVER                     ?= 1
 UDP_FORWARD                    ?= 1
 

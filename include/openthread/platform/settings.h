@@ -74,6 +74,7 @@ enum
     OT_SETTINGS_KEY_SRP_CLIENT_INFO      = 0x000c, ///< The SRP client info (selected SRP server address).
     OT_SETTINGS_KEY_SRP_SERVER_INFO      = 0x000d, ///< The SRP server info (UDP port).
     OT_SETTINGS_KEY_NAT64_PREFIX         = 0x000e, ///< NAT64 prefix.
+    OT_SETTINGS_KEY_SRP_REPLICATON_INFO  = 0x000f, ///< SRP Replication info (seq number).
 };
 
 /**

@@ -61,7 +61,6 @@ build_simulation()
         "-DBUILD_TESTING=ON"
         "-DOT_ANYCAST_LOCATOR=ON"
         "-DOT_DNS_CLIENT=ON"
-        "-DOT_DNS_DSO=ON"
         "-DOT_DNSSD_SERVER=ON"
         "-DOT_ECDSA=ON"
         "-DOT_EXTERNAL_HEAP=ON"

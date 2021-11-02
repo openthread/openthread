@@ -345,6 +345,11 @@ if(OT_SNTP_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1")
 endif()
 
+option(OT_SRP_REPLICATION "enable SRP replication")
+if (OT_SRP_REPLICATION)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE=1")
+endif()
+
 option(OT_SRP_SERVER "enable SRP server")
 if (OT_SRP_SERVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1")

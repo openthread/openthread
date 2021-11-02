@@ -491,6 +491,22 @@
 #define OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+ *
+ * Define to 1 to enable SRP Client buffers and service pool feature.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES
+ *
+ * Specifies number of service entries in the SRP client service pool.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES 4
+
+/**
  * @def OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
  *
  * Define to 1 to enable SRP Server support.

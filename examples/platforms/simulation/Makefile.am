@@ -54,6 +54,7 @@ PLATFORM_SOURCES                          = \
     platform-simulation.h                   \
     radio.c                                 \
     spi-stubs.c                             \
+    srp_replication.c                       \
     system.c                                \
     trel.c                                  \
     uart.c                                  \

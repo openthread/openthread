@@ -81,6 +81,7 @@ openthread_headers                      = \
     openthread/sntp.h                     \
     openthread/srp_client.h               \
     openthread/srp_client_buffers.h       \
+    openthread/srp_replication.h          \
     openthread/srp_server.h               \
     openthread/tasklet.h                  \
     openthread/tcp.h                      \
@@ -111,6 +112,7 @@ ot_platform_headers                     = \
     openthread/platform/radio.h           \
     openthread/platform/settings.h        \
     openthread/platform/spi-slave.h       \
+    openthread/platform/srp_replication.h \
     openthread/platform/time.h            \
     openthread/platform/toolchain.h       \
     openthread/platform/trel.h            \

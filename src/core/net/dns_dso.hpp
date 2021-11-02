@@ -434,6 +434,14 @@ public:
         const Ip6::SockAddr &GetPeerSockAddr(void) const { return mPeerSockAddr; }
 
         /**
+         * This method sets the `Connection` peer socket address.
+         *
+         * @param[in] aPeerSockAddr       The peer socket address.
+         *
+         */
+        void SetPeerSockAddr(const Ip6::SockAddr &aPeerSockAddr) { mPeerSockAddr = aPeerSockAddr; }
+
+        /**
          * This method indicates whether or not the device is acting as a DSO server on this `Connection`.
          *
          * Server is the software entity with a listening socket, awaiting incoming connection requests.

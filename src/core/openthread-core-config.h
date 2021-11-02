@@ -87,6 +87,7 @@
 #include "config/radio_link.h"
 #include "config/sntp_client.h"
 #include "config/srp_client.h"
+#include "config/srp_replication.h"
 #include "config/srp_server.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"

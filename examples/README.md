@@ -65,6 +65,7 @@ This page lists the available common switches with description. Unless stated ot
 | SNTP_CLIENT | OT_SNTP_CLIENT | Enables support for SNTP Client. |
 | SPINEL_ENCRYPTER_LIBS | not implemented | Specifies library files (absolute paths) for implementing the NCP Spinel Encrypter. |
 | SRP_CLIENT | OT_SRP_CLIENT | Enable support for SRP client. |
+| SRP_REPLICATION | OT_SRP_REPLICATION | Enable support SRP replication. |
 | SRP_SERVER | OT_SRP_SERVER | Enable support for SRP server. |
 | THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 / 1.2 (default)). For example, set to `1.1` for Thread 1.1. |
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |

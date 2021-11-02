@@ -750,6 +750,13 @@ template <> inline Dns::Dso &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+template <> inline Srp::Srpl &Instance::Get(void)
+{
+    return mThreadNetif.mSrpReplication;
+}
+#endif
+
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 {

@@ -270,4 +270,18 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+void platformDsoInit(uint32_t aSpeedUpFactor);
+void platformDsoDeinit(void);
+void platformDsoUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd);
+void platformDsoProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+void platformSrplInit(uint32_t aSpeedUpFactor);
+void platformSrplDeinit(void);
+void platformSrplUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd);
+void platformSrplProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+#endif
+
 #endif // PLATFORM_SIMULATION_H_

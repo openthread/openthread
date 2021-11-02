@@ -63,6 +63,7 @@
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_output.hpp"
 #include "cli/cli_srp_client.hpp"
+#include "cli/cli_srp_replication.hpp"
 #include "cli/cli_srp_server.hpp"
 #include "cli/cli_tcp.hpp"
 #include "cli/cli_udp.hpp"
@@ -903,6 +904,10 @@ private:
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     SrpServer mSrpServer;
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    SrpReplication mSrpReplication;
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

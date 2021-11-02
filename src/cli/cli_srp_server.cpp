@@ -135,18 +135,14 @@ otError SrpServer::ProcessEnable(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ true);
-
-    return OT_ERROR_NONE;
+    return otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ true);
 }
 
 otError SrpServer::ProcessDisable(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ false);
-
-    return OT_ERROR_NONE;
+    return otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ false);
 }
 
 otError SrpServer::ProcessLease(Arg aArgs[])

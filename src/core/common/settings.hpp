@@ -109,23 +109,25 @@ public:
      */
     enum Key : uint16_t
     {
-        kKeyActiveDataset     = OT_SETTINGS_KEY_ACTIVE_DATASET,
-        kKeyPendingDataset    = OT_SETTINGS_KEY_PENDING_DATASET,
-        kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
-        kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
-        kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
-        kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
-        kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
-        kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
-        kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
-        kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
-        kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
-        kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
-        kKeyNat64Prefix       = OT_SETTINGS_KEY_NAT64_PREFIX,
+        kKeyActiveDataset      = OT_SETTINGS_KEY_ACTIVE_DATASET,
+        kKeyPendingDataset     = OT_SETTINGS_KEY_PENDING_DATASET,
+        kKeyNetworkInfo        = OT_SETTINGS_KEY_NETWORK_INFO,
+        kKeyParentInfo         = OT_SETTINGS_KEY_PARENT_INFO,
+        kKeyChildInfo          = OT_SETTINGS_KEY_CHILD_INFO,
+        kKeyReserved           = OT_SETTINGS_KEY_RESERVED,
+        kKeySlaacIidSecretKey  = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
+        kKeyDadInfo            = OT_SETTINGS_KEY_DAD_INFO,
+        kKeyOmrPrefix          = OT_SETTINGS_KEY_OMR_PREFIX,
+        kKeyOnLinkPrefix       = OT_SETTINGS_KEY_ON_LINK_PREFIX,
+        kKeySrpEcdsaKey        = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
+        kKeySrpClientInfo      = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
+        kKeySrpServerInfo      = OT_SETTINGS_KEY_SRP_SERVER_INFO,
+        kKeyNat64Prefix        = OT_SETTINGS_KEY_NAT64_PREFIX,
+        kKeySrpReplicationInfo = OT_SETTINGS_KEY_SRP_REPLICATON_INFO,
+
     };
 
-    static constexpr Key kLastKey = kKeyNat64Prefix; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeySrpReplicationInfo; ///< The last (numerically) enumerator value in `Key`.
 
     /**
      * This structure represents the device's own network information for settings storage.
@@ -733,6 +735,51 @@ public:
         uint16_t mPort; // (in little-endian encoding)
     } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    /**
+     * This structure represents the SRP Replication (SRPL) info.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class SrpReplicationInfo : private Clearable<SrpReplicationInfo>
+    {
+        friend class Settings;
+
+    public:
+        static constexpr Key kKey = kKeySrpReplicationInfo; ///< The associated key.
+
+        /**
+         * This method initializes the `SrpReplicationInfo` object.
+         *
+         */
+        void Init(void) { Clear(); }
+
+        /**
+         * This method returns the sequence number.
+         *
+         * The sequence number is used as the highest byte (MSB) of Dataset ID in SRPL which is also included in the
+         * Thread Network Data "DNS/SRP Service Anycast Address" service.
+         *
+         * @returns The sequence number.
+         *
+         */
+        uint8_t GetSeqNumber(void) const { return mSeqNumber; }
+
+        /**
+         * This method sets the sequence number.
+         *
+         * @param[in] aSeqNumber  The sequence number.
+         *
+         */
+        void SetSeqNumber(uint8_t aSeqNumber) { mSeqNumber = aSeqNumber; }
+
+    private:
+        void Log(Action aAction) const;
+
+        uint8_t mSeqNumber;
+    } OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
 
 protected:
     explicit SettingsBase(Instance &aInstance)

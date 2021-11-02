@@ -91,6 +91,10 @@ class Server;
 
 namespace Srp {
 
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+class Srpl;
+#endif
+
 /**
  * This class implements the SRP server.
  *
@@ -102,6 +106,9 @@ class Server : public InstanceLocator, private NonCopyable
     friend class Service;
     friend class Host;
     friend class Dns::ServiceDiscovery::Server;
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    friend class Srpl;
+#endif
 
     enum RetainName : bool
     {
@@ -114,6 +121,8 @@ class Server : public InstanceLocator, private NonCopyable
         kDoNotNotifyServiceHandler = false,
         kNotifyServiceHandler      = true,
     };
+
+    struct UpdateMessage;
 
 public:
     static constexpr uint16_t kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN; ///< The reserved min port.
@@ -162,6 +171,9 @@ public:
         friend class LinkedList<Service>;
         friend class LinkedListEntry<Service>;
         friend class Heap::Allocatable<Service>;
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        friend class Srpl;
+#endif
 
     public:
         /**
@@ -379,6 +391,10 @@ public:
         const TimeMilli &GetUpdateTime(void) const { return mUpdateTime; }
         void             Log(Action aAction) const;
 
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        RetainPtr<UpdateMessage> mAddMessagePtr;
+        RetainPtr<UpdateMessage> mDeleteMessagePtr;
+#endif
         Heap::String           mServiceName;
         RetainPtr<Description> mDescription;
         Service *              mNext;
@@ -401,6 +417,9 @@ public:
         friend class Server;
         friend class LinkedListEntry<Host>;
         friend class Heap::Allocatable<Host>;
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        friend class Srpl;
+#endif
 
     public:
         /**
@@ -548,6 +567,9 @@ public:
         uint32_t               mKeyLease; // The KEY-LEASE time in seconds.
         TimeMilli              mUpdateTime;
         LinkedList<Service>    mServices;
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        RetainPtr<UpdateMessage> mMessagePtr;
+#endif
     };
 
     /**
@@ -711,8 +733,12 @@ public:
      *
      * @param[in]  aEnabled  A boolean to enable/disable the SRP server.
      *
+     * @retval kErrorNone          Successfully enabled/disabled the SRP server.
+     * @retval kErrorInvalidState  SRP replication feature is enabled and is managing the SRP server, therefore the
+     *                             SRP server cannot be enabled/disabled directly.
+     *
      */
-    void SetEnabled(bool aEnabled);
+    Error SetEnabled(bool aEnabled);
 
     /**
      * This method returns the LEASE and KEY-LEASE configurations.
@@ -784,6 +810,9 @@ private:
         TimeMilli               mRxTime;
         LeaseConfig             mLeaseConfig;
         const Ip6::MessageInfo *mMessageInfo; // Set to `nullptr` when from SRPL.
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        RetainPtr<UpdateMessage> mMessagePtr;
+#endif
     };
 
     // This class includes metadata for processing a SRP update (register, deregister)
@@ -818,6 +847,21 @@ private:
         bool              mIsDirectRxFromClient;
     };
 
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    // This struct represents an SRP Update Message along with its receive time.
+    struct UpdateMessage : public Heap::Allocatable<UpdateMessage>, public RetainCountable
+    {
+        Error Init(const Message &aMessage, TimeMilli aRxTime);
+
+        Heap::Data mData;
+        TimeMilli  mRxTime;
+        uint32_t   mGrantedLease;
+        uint32_t   mGrantedKeyLease;
+    };
+#endif
+
+    void              Enable(void);
+    void              Disable(void);
     void              Start(void);
     void              Stop(void);
     void              SelectPort(void);
@@ -841,6 +885,9 @@ private:
                           const Ip6::MessageInfo * aMessageInfo,
                           const LeaseConfig &      aLeaseConfig);
     Error ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    Error ProcessMessage(Message &aMessage, TimeMilli aRxTime, uint32_t aGrantedLease, uint32_t aGrantedKeyLease);
+#endif
     Error ProcessMessage(Message &               aMessage,
                          TimeMilli               aRxTime,
                          const LeaseConfig &     aLeaseConfig,

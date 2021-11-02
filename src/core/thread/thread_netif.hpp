@@ -59,6 +59,7 @@
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
 #include "net/srp_client.hpp"
+#include "net/srp_replication.hpp"
 #include "net/srp_server.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/announce_begin_server.hpp"
@@ -188,12 +189,19 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
     Utils::SrpClientBuffers mSrpClientBuffers;
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Srp::Server mSrpServer;
+#endif
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     Dns::ServiceDiscovery::Server mDnssdServer;
 #endif
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
     Dns::Dso mDnsDso;
 #endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    Srp::Srpl mSrpReplication;
+#endif
+
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;
 #endif
@@ -262,9 +270,6 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     DuaManager mDuaManager;
-#endif
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    Srp::Server mSrpServer;
 #endif
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
