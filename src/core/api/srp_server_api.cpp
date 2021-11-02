@@ -76,9 +76,9 @@ otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t a
     return AsCoreType(aInstance).Get<Srp::Server>().SetAnycastModeSequenceNumber(aSequenceNumber);
 }
 
-void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
+otError otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    AsCoreType(aInstance).Get<Srp::Server>().SetEnabled(aEnabled);
+    return AsCoreType(aInstance).Get<Srp::Server>().SetEnabled(aEnabled);
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

@@ -140,18 +140,14 @@ template <> otError SrpServer::Process<Cmd("enable")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ true);
-
-    return OT_ERROR_NONE;
+    return otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ true);
 }
 
 template <> otError SrpServer::Process<Cmd("disable")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ false);
-
-    return OT_ERROR_NONE;
+    return otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ false);
 }
 
 template <> otError SrpServer::Process<Cmd("ttl")>(Arg aArgs[])

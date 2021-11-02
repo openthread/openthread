@@ -144,6 +144,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     , mSrpServer(aInstance, *this)
 #endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    , mSrpReplication(aInstance, *this)
+#endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     , mHistory(aInstance, *this)
 #endif
@@ -7328,6 +7331,12 @@ template <> otError Interpreter::Process<Cmd("srp")>(Arg aArgs[])
     if (aArgs[0] == "server")
     {
         ExitNow(error = mSrpServer.Process(aArgs + 1));
+    }
+#endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    if (aArgs[0] == "replication")
+    {
+        ExitNow(error = mSrpReplication.Process(aArgs + 1));
     }
 #endif
 

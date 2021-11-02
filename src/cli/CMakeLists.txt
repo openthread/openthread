@@ -46,6 +46,7 @@ set(COMMON_SOURCES
     cli_network_data.cpp
     cli_output.cpp
     cli_srp_client.cpp
+    cli_srp_replication.cpp
     cli_srp_server.cpp
     cli_tcp.cpp
     cli_udp.cpp

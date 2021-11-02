@@ -207,6 +207,9 @@ if (openthread_enable_core_config_args) {
     # Enable SRP Client support
     openthread_config_srp_client_enable = false
 
+    # Enable SRP Replication support
+    openthread_config_srp_replication_enable = false
+
     # Enable SRP Server support
     openthread_config_srp_server_enable = false
 

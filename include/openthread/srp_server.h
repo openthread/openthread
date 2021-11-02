@@ -246,11 +246,18 @@ otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t a
  *
  * On a Border Router, it is recommended to use `otSrpServerSetAutoEnableMode()` instead.
  *
+ * When SRP Replication feature is used and is enabled, it manages the SRP server and decides when to enable or disable
+ * it. In such a case this function should not be used (`OT_ERROR_INVALID_STATE` is returned).
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable the SRP server.
  *
+ * @retval OT_ERROR_NONE            Successfully enabled/disabled the SRP server.
+ * @retval OT_ERROR_INVALID_STATE   SRP Replication is enabled and is managing the SRP server, therefore the SRP
+ *                                  server cannot be enabled/disabled directly.
+ *
  */
-void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
+otError otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Enables/disables the auto-enable mode on SRP server.

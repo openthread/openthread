@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,65 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-
 /**
- * This header file defines the OpenThread core configuration for toranj with simulation platform.
- *
+ * @file
+ *   This file contains definitions for a CLI to control SRP Replication (SRPL).
  */
 
-// Include the common configuration for all platforms.
-#include "openthread-core-toranj-config.h"
+#ifndef CLI_SRP_REPLICATION_HPP_
+#define CLI_SRP_REPLICATION_HPP_
 
-#if OPENTHREAD_RADIO
+#include "openthread-core-config.h"
 
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
-#else
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
 
-#endif
+#include <openthread/srp_replication.h>
 
-#define OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE 0
+#include "cli/cli_config.h"
+#include "cli/cli_output.hpp"
 
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+namespace ot {
+namespace Cli {
 
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+/**
+ * This class implements the SRP Replication CLI interpreter.
+ *
+ */
+class SrpReplication : private Output
+{
+public:
+    typedef Utils::CmdLineParser::Arg Arg;
 
-#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE 1
+    /**
+     * Constructor
+     *
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
+     *
+     */
+    SrpReplication(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
-#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL OT_LOG_LEVEL_INFO
+    /**
+     * This method interprets a list of CLI arguments.
+     *
+     * @param[in]  aArgs        A pointer an array of command line arguments.
+     *
+     */
+    otError Process(Arg aArgs[]);
 
-#define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 1
+private:
+    using Command = CommandEntry<SrpReplication>;
 
-#define OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE 1
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-#define OPENTHREAD_CONFIG_RADIO_STATS_ENABLE 0
+    void OutputIdInHexFormat(uint64_t aId);
 
-#define OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE 1
+    static const char *SessionStateToString(otSrpReplicationSessionState aState);
+};
 
-#define OPENTHREAD_CONFIG_SRP_REPLICATION_PARTNER_REMOVE_TIMEOUT 5000
+} // namespace Cli
+} // namespace ot
 
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */
+#endif // OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+
+#endif // CLI_SRP_REPLICATION_HPP_

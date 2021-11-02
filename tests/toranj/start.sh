@@ -190,6 +190,20 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-023-mesh-diag.py
     run cli/test-024-mle-adv-imax-change.py
     run cli/test-400-srp-client-server.py
+    run cli/test-450-srp-replication-domain-selection.py
+    run cli/test-451-srp-replication-initial-sync.py
+    run cli/test-452-srp-replication-add-service.py
+    run cli/test-453-srp-replication-remove-service.py
+    run cli/test-454-srp-replication-update-service.py
+    run cli/test-455-srp-replication-different-lease-intervals.py
+    run cli/test-456-srp-replication-re-add-removed-service.py
+    run cli/test-457-srp-replication-dataset-id-and-seq-num.py
+    run cli/test-458-srp-replication-remove-partner.py
+    run cli/test-459-srp-replication-simul-restart.py
+    run cli/test-460-srp-replication-dataset-id-conflict.py
+    run cli/test-461-srp-replication-new-peer-with-a-misbehaving-peer.py
+    run cli/test-462-srp-replication-peer-id-conflict.py
+    run cli/test-463-srp-replication-reconnect-on-failure.py
     run cli/test-601-channel-manager-channel-change.py
     # Skip the "channel-select" test on a TREL only radio link, since it
     # requires energy scan which is not supported in this case.
@@ -197,7 +211,6 @@ if [ "$TORANJ_CLI" = 1 ]; then
         run cli/test-602-channel-manager-channel-select.py
     fi
     run cli/test-603-channel-announce-recovery.py
-
     exit 0
 fi
 

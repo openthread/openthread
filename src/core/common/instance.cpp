@@ -101,11 +101,17 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
     , mSrpClientBuffers(*this)
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    , mSrpServer(*this)
+#endif
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     , mDnssdServer(*this)
 #endif
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
     , mDnsDso(*this)
+#endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    , mSrpReplication(*this)
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(*this)
@@ -172,9 +178,6 @@ Instance::Instance(void)
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     , mDuaManager(*this)
-#endif
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    , mSrpServer(*this)
 #endif
 #if OPENTHREAD_FTD
     , mChildSupervisor(*this)
