@@ -164,6 +164,12 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    platformDsoInit(speedUpFactor);
+#endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    platformSrplInit(speedUpFactor);
+#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelInit(speedUpFactor);
 #endif
@@ -178,6 +184,12 @@ bool otSysPseudoResetWasRequested(void)
 void otSysDeinit(void)
 {
     platformRadioDeinit();
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    platformDsoDeinit();
+#endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    platformSrplDeinit();
+#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelDeinit();
 #endif
@@ -199,6 +211,12 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
     platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     platformAlarmUpdateTimeout(&timeout);
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    platformDsoUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+#endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    platformSrplUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
 #endif
@@ -223,6 +241,12 @@ void otSysProcessDrivers(otInstance *aInstance)
     }
 
     platformAlarmProcess(aInstance);
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    platformDsoProcess(aInstance, &read_fds, &write_fds);
+#endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    platformSrplProcess(aInstance, &read_fds, &write_fds);
+#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelProcess(aInstance, &read_fds, &write_fds);
 #endif

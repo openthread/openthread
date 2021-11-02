@@ -71,11 +71,17 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
     , mSrpClientBuffers(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    , mSrpServer(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     , mDnssdServer(aInstance)
 #endif
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
     , mDnsDso(aInstance)
+#endif
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    , mSrpReplication(aInstance)
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(aInstance)
@@ -140,9 +146,6 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     , mDuaManager(aInstance)
-#endif
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    , mSrpServer(aInstance)
 #endif
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

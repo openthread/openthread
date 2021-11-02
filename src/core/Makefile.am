@@ -163,6 +163,7 @@ SOURCES_COMMON                                  = \
     api/sntp_api.cpp                              \
     api/srp_client_api.cpp                        \
     api/srp_client_buffers_api.cpp                \
+    api/srp_replication_api.cpp                   \
     api/srp_server_api.cpp                        \
     api/tasklet_api.cpp                           \
     api/tcp_api.cpp                               \
@@ -261,6 +262,7 @@ SOURCES_COMMON                                  = \
     net/sntp_client.cpp                           \
     net/socket.cpp                                \
     net/srp_client.cpp                            \
+    net/srp_replication.cpp                       \
     net/srp_server.cpp                            \
     net/tcp6.cpp                                  \
     net/udp6.cpp                                  \
@@ -501,6 +503,7 @@ HEADERS_COMMON                                  = \
     config/radio_link.h                           \
     config/sntp_client.h                          \
     config/srp_client.h                           \
+    config/srp_replication.h                      \
     config/srp_server.h                           \
     config/time_sync.h                            \
     config/tmf.h                                  \
@@ -561,6 +564,7 @@ HEADERS_COMMON                                  = \
     net/sntp_client.hpp                           \
     net/socket.hpp                                \
     net/srp_client.hpp                            \
+    net/srp_replication.hpp                       \
     net/srp_server.hpp                            \
     net/tcp6.hpp                                  \
     net/udp6.hpp                                  \

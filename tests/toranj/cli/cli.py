@@ -200,6 +200,15 @@ class Node(object):
             self._cli_process.send('exit\n')
             self._cli_process.wait()
 
+    def _parse_line_to_dictionary(self, line):
+        """Parse one line of comma ", " separated "key:value" into a dictionary
+
+           This function handles the case where the value may have `:` (e.g. is an IPv6 address).
+           It also strips any `"` from the `value` string.
+        """
+        key_values = [word.strip().split(':', maxsplit=1) for word in line.split(', ')]
+        return {key_value[0].strip(): key_value[1].strip('"') for key_value in key_values}
+
     # ------------------------------------------------------------------------------------------------------------------
     # cli commands
 
@@ -346,8 +355,23 @@ class Node(object):
         self._cli_no_output('srp client service clear', instance_name, service_name)
 
     def srp_client_get_services(self):
+        """Returns list of services.
+
+            Example output (one service)
+           [{
+               'instance': 'my-service',
+               'name': '_ipps._udp',
+               'state': 'ToAdd',
+               'port': '12345',
+               'priority': '0',
+               'weight': '0'
+           }]
+
+           Note that value of 'port', 'priority' and 'weight' are represented
+           as strings and not integers.
+        """
         outputs = self.cli('srp client service')
-        return [self._parse_srp_client_service(line) for line in outputs]
+        return [self._parse_line_to_dictionary(line) for line in outputs]
 
     def _encode_txt_entry(self, entry):
         """Encodes the TXT entry to the DNS-SD TXT record format as a HEX string.
@@ -358,27 +382,6 @@ class Node(object):
            self._encode_txt_entries(['xyz=XYZ']) -> '0778797a3d58595a'
         """
         return '{:02x}'.format(len(entry)) + "".join("{:02x}".format(ord(c)) for c in entry)
-
-    def _parse_srp_client_service(self, line):
-        """Parse one line of srp service list into a dictionary which
-           maps string keys to string values.
-
-           Example output for input
-           'instance:\"%s\", name:\"%s\", state:%s, port:%d, priority:%d, weight:%d"'
-           {
-               'instance': 'my-service',
-               'name': '_ipps._udp',
-               'state': 'ToAdd',
-               'port': '12345',
-               'priority': '0',
-               'weight': '0'
-           }
-
-           Note that value of 'port', 'priority' and 'weight' are represented
-           as strings but not integers.
-        """
-        key_values = [word.strip().split(':') for word in line.split(', ')]
-        return {key_value[0].strip(): key_value[1].strip('"') for key_value in key_values}
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # SRP server
@@ -503,6 +506,40 @@ class Node(object):
         for service in self.srp_server_get_services():
             if (instance_name == service['instance'] and service_name == service['name']):
                 return service
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # SRP replication (SRPL)
+
+    def srp_replication_enable(self):
+        self._cli_no_output('srp replication enable')
+
+    def srp_replication_disable(self):
+        self._cli_no_output('srp replication disable')
+
+    def srp_replication_get_state(self):
+        return self._cli_single_output('srp replication state', ['Enabled', 'Disabled'])
+
+    def srp_replication_get_domain(self):
+        return self._cli_single_output('srp replication domain')
+
+    def srp_replication_clear_domain(self):
+        self._cli_no_output('srp replication domain clear')
+
+    def srp_replication_set_domain(self, domain):
+        self._cli_no_output('srp replication domain set', domain)
+
+    def srp_replication_get_default_domain(self):
+        return self._cli_single_output('srp replication domain default')
+
+    def srp_replication_set_default_domain(self, domain):
+        self._cli_no_output('srp replication domain default', domain)
+
+    def srp_replication_get_id(self):
+        return self._cli_single_output('srp replication id')
+
+    def srp_replication_get_partners(self):
+        outputs = self.cli('srp replication partners list')
+        return [self._parse_line_to_dictionary(line) for line in outputs]
 
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods

@@ -85,6 +85,7 @@ SETTINGS_RAM              ?= 0
 SLAAC                     ?= 1
 SNTP_CLIENT               ?= 0
 SRP_CLIENT                ?= 0
+SRP_REPLICATION           ?= 0
 SRP_SERVER                ?= 0
 THREAD_VERSION            ?= 1.2
 TIME_SYNC                 ?= 0
@@ -323,6 +324,10 @@ endif
 
 ifeq ($(SRP_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1
+endif
+
+ifeq ($(SRP_REPLICATION),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE=1
 endif
 
 ifeq ($(SRP_SERVER),1)

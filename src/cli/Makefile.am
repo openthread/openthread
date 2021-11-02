@@ -162,6 +162,7 @@ SOURCES_COMMON =                      \
     cli_network_data.cpp              \
     cli_output.cpp                    \
     cli_srp_client.cpp                \
+    cli_srp_replication.cpp           \
     cli_srp_server.cpp                \
     cli_tcp.cpp                       \
     cli_udp.cpp                       \
@@ -192,6 +193,7 @@ noinst_HEADERS                      = \
     cli_network_data.hpp              \
     cli_output.hpp                    \
     cli_srp_client.hpp                \
+    cli_srp_replication.hpp           \
     cli_srp_server.hpp                \
     cli_tcp.hpp                       \
     cli_udp.hpp                       \

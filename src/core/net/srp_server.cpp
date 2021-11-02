@@ -129,38 +129,64 @@ exit:
     return error;
 }
 
-void Server::SetEnabled(bool aEnabled)
+Error Server::SetEnabled(bool aEnabled)
 {
-    if (aEnabled)
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    if (Get<Srpl>().IsEnabled())
     {
-        VerifyOrExit(mState == kStateDisabled);
-        mState = kStateStopped;
-
-        // Request publishing of "DNS/SRP Address Service" entry in the
-        // Thread Network Data based of `mAddressMode`. Then wait for
-        // callback `HandleNetDataPublisherEntryChange()` from the
-        // `Publisher` to start the SRP server.
-
-        switch (mAddressMode)
-        {
-        case kAddressModeUnicast:
-            SelectPort();
-            Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
-            break;
-
-        case kAddressModeAnycast:
-            mPort = kAnycastAddressModePort;
-            Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
-            break;
-        }
+        error = kErrorInvalidState;
     }
     else
+#endif
     {
-        VerifyOrExit(mState != kStateDisabled);
-        Get<NetworkData::Publisher>().UnpublishDnsSrpService();
-        Stop();
-        mState = kStateDisabled;
+        if (aEnabled)
+        {
+            Enable();
+        }
+        else
+        {
+            Disable();
+        }
     }
+
+    return error;
+}
+
+void Server::Enable(void)
+{
+    VerifyOrExit(mState == kStateDisabled);
+    mState = kStateStopped;
+
+    // Request publishing of "DNS/SRP Address Service" entry in the
+    // Thread Network Data based of `mAddressMode`. Then wait for
+    // callback `HandleNetDataPublisherEntryChange()` from the
+    // `Publisher` to start the SRP server.
+
+    switch (mAddressMode)
+    {
+    case kAddressModeUnicast:
+        SelectPort();
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
+        break;
+
+    case kAddressModeAnycast:
+        mPort = kAnycastAddressModePort;
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
+        break;
+    }
+
+exit:
+    return;
+}
+
+void Server::Disable(void)
+{
+    VerifyOrExit(mState != kStateDisabled);
+    Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+    Stop();
+    mState = kStateDisabled;
 
 exit:
     return;
@@ -276,6 +302,11 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyS
     }
     else
     {
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        // Notify `Srpl` that host is about to remove host fully.
+        Get<Srpl>().HandleServerRemovingHost(*aHost);
+#endif
+
         aHost->mKeyLease = 0;
         IgnoreError(mHosts.Remove(*aHost));
         otLogInfoSrp("[server] fully remove host '%s'", aHost->GetFullName());
@@ -407,7 +438,19 @@ void Server::CommitSrpUpdate(Error                    aError,
         service.mDescription->mKeyLease = grantedKeyLease;
     }
 
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    aHost.mMessagePtr->mGrantedLease    = grantedLease;
+    aHost.mMessagePtr->mGrantedKeyLease = grantedKeyLease;
+#endif
+
     existingHost = mHosts.FindMatching(aHost.GetFullName());
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    if (existingHost != nullptr)
+    {
+        existingHost->mMessagePtr = aHost.mMessagePtr;
+    }
+#endif
 
     if (aHost.GetLease() == 0)
     {
@@ -423,6 +466,9 @@ void Server::CommitSrpUpdate(Error                    aError,
 
             for (Service &service : existingHost->mServices)
             {
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+                service.mDeleteMessagePtr = aHost.mMessagePtr;
+#endif
                 existingHost->RemoveService(&service, kRetainName, kDoNotNotifyServiceHandler);
             }
         }
@@ -458,6 +504,17 @@ void Server::CommitSrpUpdate(Error                    aError,
 
     // Re-schedule the lease timer.
     HandleLeaseTimer();
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    if (aMessageInfo != nullptr)
+    {
+        // If the message is a direct rx from a client and not from an
+        // SRPL partner, we inform SRPL to send the update message to
+        // all connected SRPL partners.
+
+        Get<Srpl>().SendUpdateMessageToPartners(aHost.mMessagePtr);
+    }
+#endif
 
 exit:
     if (aMessageInfo != nullptr)
@@ -681,6 +738,11 @@ void Server::ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata)
 
     host = Host::Allocate(GetInstance(), aMetadata.mRxTime);
     VerifyOrExit(host != nullptr, error = kErrorNoBufs);
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    host->mMessagePtr = aMetadata.mMessagePtr;
+#endif
+
     SuccessOrExit(error = ProcessUpdateSection(*host, aMessage, aMetadata));
 
     // Parse lease time and validate signature.
@@ -889,6 +951,18 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
 
         // This RR is a "Delete an RR from an RRset" update when the CLASS is NONE.
         service->mIsDeleted = (ptrRecord.GetClass() == Dns::ResourceRecord::kClassNone);
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        if (service->mIsDeleted)
+        {
+            service->mDeleteMessagePtr = aMetadata.mMessagePtr;
+        }
+        else
+        {
+            service->mAddMessagePtr = aMetadata.mMessagePtr;
+            service->mDeleteMessagePtr.Reset();
+        }
+#endif
     }
 
 exit:
@@ -1149,6 +1223,10 @@ void Server::HandleUpdate(Host &aHost, const MessageMetadata &aMetadata)
             VerifyOrExit(newService != nullptr, error = kErrorNoBufs);
             newService->mDescription->mUpdateTime = aMetadata.mRxTime;
             newService->mIsDeleted                = true;
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+            newService->mDeleteMessagePtr = aMetadata.mMessagePtr;
+#endif
         }
     }
 
@@ -1272,6 +1350,20 @@ Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessage
     return ProcessMessage(aMessage, TimerMilli::GetNow(), mLeaseConfig, &aMessageInfo);
 }
 
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+Error Server::ProcessMessage(Message &aMessage, TimeMilli aRxTime, uint32_t aGrantedLease, uint32_t aGrantedKeyLease)
+{
+    LeaseConfig leaseConfig;
+
+    leaseConfig.mMinLease    = aGrantedLease;
+    leaseConfig.mMaxLease    = aGrantedLease;
+    leaseConfig.mMinKeyLease = aGrantedKeyLease;
+    leaseConfig.mMaxKeyLease = aGrantedKeyLease;
+
+    return ProcessMessage(aMessage, aRxTime, leaseConfig, nullptr);
+}
+#endif
+
 Error Server::ProcessMessage(Message &               aMessage,
                              TimeMilli               aRxTime,
                              const LeaseConfig &     aLeaseConfig,
@@ -1284,6 +1376,11 @@ Error Server::ProcessMessage(Message &               aMessage,
     metadata.mRxTime      = aRxTime;
     metadata.mLeaseConfig = aLeaseConfig;
     metadata.mMessageInfo = aMessageInfo;
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+    metadata.mMessagePtr.Reset(UpdateMessage::AllocateAndInit(aMessage, aRxTime));
+    VerifyOrExit(metadata.mMessagePtr != nullptr, error = kErrorNoBufs);
+#endif
 
     SuccessOrExit(error = aMessage.Read(metadata.mOffset, metadata.mDnsHeader));
     metadata.mOffset += sizeof(Dns::UpdateHeader);
@@ -1823,8 +1920,15 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 
         if (service.mIsDeleted)
         {
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+            if (existingService != nullptr)
+            {
+                existingService->mDeleteMessagePtr = service.mDeleteMessagePtr;
+            }
+#endif
             // `RemoveService()` does nothing if `exitsingService` is `nullptr`.
             RemoveService(existingService, kRetainName, kDoNotNotifyServiceHandler);
+
             continue;
         }
 
@@ -1839,6 +1943,11 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
         newService->mIsDeleted   = false;
         newService->mIsCommitted = true;
         newService->mUpdateTime  = TimerMilli::GetNow();
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+        newService->mAddMessagePtr = service.mAddMessagePtr;
+        newService->mDeleteMessagePtr.Reset();
+#endif
 
         if (!service.mIsSubType)
         {
@@ -1934,6 +2043,22 @@ Server::UpdateMetadata::UpdateMetadata(Instance &aInstance, Host &aHost, const M
         mMessageInfo = *aMessageMetadata.mMessageInfo;
     }
 }
+
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// Server::UpdateMessage
+
+Error Server::UpdateMessage::Init(const Message &aMessage, TimeMilli aRxTime)
+{
+    mRxTime          = aRxTime;
+    mGrantedLease    = 0;
+    mGrantedKeyLease = 0;
+
+    return mData.SetFrom(aMessage);
+}
+
+#endif
 
 } // namespace Srp
 } // namespace ot

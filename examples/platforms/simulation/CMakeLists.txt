@@ -69,6 +69,7 @@ add_library(openthread-simulation
     misc.c
     radio.c
     spi-stubs.c
+    srp_replication.c
     system.c
     trel.c
     uart.c
