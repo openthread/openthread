@@ -78,6 +78,7 @@ if TESTHARNESS_VERSION == TESTHARNESS_1_2:
 from IThci import IThci
 
 ZEPHYR_PREFIX = 'ot '
+"""CLI prefix used for OpenThread commands in Zephyr systems"""
 
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
@@ -956,7 +957,7 @@ class OpenThreadTHCI(object):
                 macAddr64 = self.__executeCommand('eui64')[0]
             elif bType == MacType.HashMac:
                 macAddr64 = self.__executeCommand('joiner id')[0]
-            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and bType == MacType.EthMac:
+            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and bType == MacType.EthMac and self.IsBorderRouter:
                 return self._deviceGetEtherMac()
             else:
                 macAddr64 = self.__executeCommand('extaddr')[0]
@@ -1233,6 +1234,8 @@ class OpenThreadTHCI(object):
                 print('join as SSED')
                 mode = '-'
                 self.setCSLperiod(self.cslPeriod)
+                self.setCSLtout(self.ssedTimeout)
+                self.setCSLsuspension(False)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print('join as end device')
                 mode = 'rn'
@@ -1549,6 +1552,7 @@ class OpenThreadTHCI(object):
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         # self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds
+        self.ssedTimeout = 30  # in seconds
         self.cslPeriod = 500  # in milliseconds
         self.deviceRole = None
         self.provisioningUrl = ''
@@ -1618,6 +1622,10 @@ class OpenThreadTHCI(object):
         print(iPollingRate)
 
         if self.__sedPollPeriod != iPollingRate:
+            if not iPollingRate:
+                iPollingRate = 0xFFFF  # T5.2.1, disable polling
+            elif iPollingRate < 1:
+                iPollingRate = 1  # T9.2.13
             self.__sedPollPeriod = iPollingRate
 
             # apply immediately
@@ -2473,6 +2481,13 @@ class OpenThreadTHCI(object):
             False: fail to start joiner
         """
         self.log("joinCommissioned on channel %s", self.getChannel())
+
+        if self.deviceRole in [
+                Thread_Device_Role.Leader,
+                Thread_Device_Role.Router,
+                Thread_Device_Role.REED,
+        ]:
+            self.__setRouterSelectionJitter(1)
         self.__executeCommand('ifconfig up')
         strPSKd = self.__normalizePSKd(strPSKd)
         cmd = 'joiner start %s %s' % (strPSKd, self.provisioningUrl)
@@ -2493,8 +2508,11 @@ class OpenThreadTHCI(object):
 
                 self.sleep(1)
 
+            self.setMAC(self.mac)
             self.__executeCommand('thread start')
-            self.sleep(30)
+            self.wait_for_attach_to_the_network(expected_role=self.deviceRole,
+                                                timeout=self.NETWORK_ATTACHMENT_TIMEOUT,
+                                                raise_assert=True)
             return True
         else:
             return False
@@ -2509,6 +2527,7 @@ class OpenThreadTHCI(object):
         rawLogs = self.logThread.get()
         ProcessedLogs = []
         payload = []
+
         while not rawLogs.empty():
             rawLogEach = rawLogs.get()
             print(rawLogEach)
@@ -2754,7 +2773,10 @@ class OpenThreadTHCI(object):
                 cmd += pskc
 
             if listSecurityPolicy is not None:
-                cmd += '0c03'
+                if self.DeviceCapability == DevCapb.V1_1:
+                    cmd += '0c03'
+                else:
+                    cmd += '0c04'
 
                 rotationTime = 0
                 policyBits = 0
@@ -2780,7 +2802,11 @@ class OpenThreadTHCI(object):
                 else:
                     # new passing way listSecurityPolicy=[3600, 0b11001111]
                     rotationTime = listSecurityPolicy[0]
-                    policyBits = listSecurityPolicy[1]
+                    # bit order
+                    if self.DeviceCapability != DevCapb.V1_1:
+                        policyBits = listSecurityPolicy[2] << 8 | listSecurityPolicy[1]
+                    else:
+                        policyBits = listSecurityPolicy[1]
 
                 policy = str(hex(rotationTime))[2:]
 
@@ -2789,7 +2815,12 @@ class OpenThreadTHCI(object):
 
                 cmd += policy
 
-                cmd += str(hex(policyBits))[2:]
+                flags0 = ('%x' % (policyBits & 0x00ff)).ljust(2, '0')
+                cmd += flags0
+
+                if self.DeviceCapability != DevCapb.V1_1:
+                    flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
+                    cmd += flags1
 
             if xCommissioningSessionId is not None:
                 cmd += '0b02'
@@ -3157,8 +3188,9 @@ class OpenThreadTHCI(object):
     # Low power THCI
     @API
     def setCSLtout(self, tout=30):
+        self.ssedTimeout = tout
         self.log('call setCSLtout')
-        cmd = 'csl timeout %u' % tout
+        cmd = 'csl timeout %u' % self.ssedTimeout
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
@@ -3185,8 +3217,8 @@ class OpenThreadTHCI(object):
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @staticmethod
-    def getForwardSeriesFlagsFromHexStr(flags):
-        hexFlags = int(flags, 16)
+    def getForwardSeriesFlagsFromHexOrStr(flags):
+        hexFlags = int(flags, 16) if isinstance(flags, str) else flags
         strFlags = ''
         if hexFlags == 0:
             strFlags = 'X'
@@ -3210,19 +3242,31 @@ class OpenThreadTHCI(object):
             0x0a: 'm',
             0x0b: 'r',
         }
-        return metricsFlagMap.get(metrics, '?')
+        metricsReservedFlagMap = {0x11: 'q', 0x12: 'm', 0x13: 'r'}
+        if metricsFlagMap.get(metrics):
+            return metricsFlagMap.get(metrics), False
+        elif metricsReservedFlagMap.get(metrics):
+            return metricsReservedFlagMap.get(metrics), True
+        else:
+            logging.warning("Not found flag mapping for given metrics: {}".format(metrics))
+            return '', False
 
     @staticmethod
     def getMetricsFlagsFromHexStr(metrics):
+        strMetrics = ''
+        reserved_flag = ''
+
         if metrics.startswith('0x'):
             metrics = metrics[2:]
         hexMetricsArray = bytearray.fromhex(metrics)
 
-        strMetrics = ''
         for metric in hexMetricsArray:
-            strMetrics += OpenThreadTHCI.mapMetricsHexToChar(metric)
+            metric_flag, has_reserved_flag = OpenThreadTHCI.mapMetricsHexToChar(metric)
+            strMetrics += metric_flag
+            if has_reserved_flag:
+                reserved_flag = ' r'
 
-        return strMetrics
+        return strMetrics + reserved_flag
 
     @API
     def LinkMetricsSingleReq(self, dst_addr, metrics):
@@ -3236,18 +3280,13 @@ class OpenThreadTHCI(object):
         self.log('call LinkMetricsMgmtReq')
         cmd = 'linkmetrics mgmt %s ' % dst_addr
         if type_ == 'FWD':
-            cmd += 'forward %d %s' % (series_id, self.getForwardSeriesFlagsFromHexStr(flags))
+            cmd += 'forward %d %s' % (series_id, self.getForwardSeriesFlagsFromHexOrStr(flags))
             if flags != 0:
                 cmd += ' %s' % (self.getMetricsFlagsFromHexStr(metrics))
         elif type_ == 'ENH':
             cmd += 'enhanced-ack'
             if flags != 0:
-                cmd += ' register'
-                metricsFlags = self.getMetricsFlagsFromHexStr(metrics)
-                if '?' in metricsFlags:
-                    cmd += ' %s r' % metricsFlags.replace('?', '')
-                else:
-                    cmd += ' %s' % metricsFlags
+                cmd += ' register %s' % (self.getMetricsFlagsFromHexStr(metrics))
             else:
                 cmd += ' clear'
         print(cmd)
@@ -3299,6 +3338,7 @@ class OpenThreadTHCI(object):
         assert payload is not None, 'payload should not be none'
         assert interface == 0, "non-BR must send UDP to Thread interface"
         self.__udpOpen()
+        time.sleep(0.5)
         cmd = 'udp send %s %s -x %s' % (destination, port, payload)
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -3307,6 +3347,13 @@ class OpenThreadTHCI(object):
         if not self.__isUdpOpened:
             cmd = 'udp open'
             self.__executeCommand(cmd)
+
+            # Bind to RLOC address and first dynamic port
+            rlocAddr = self.getRloc()
+
+            cmd = 'udp bind %s 49152' % rlocAddr
+            self.__executeCommand(cmd)
+
             self.__isUdpOpened = True
 
     @API
@@ -3327,13 +3374,13 @@ class OpenThreadTHCI(object):
     def setCSLsuspension(self, suspend):
         self.log('call setCSLsuspension')
         if suspend:
-            self.__setPollPeriod(1000000)
+            self.__setPollPeriod(240 * 1000)
         else:
-            self.__setPollPeriod(self.__sedPollPeriod)
+            self.__setPollPeriod(int(0.9 * self.ssedTimeout * 1000))
 
     @API
     def set_max_addrs_per_child(self, num):
-        cmd = 'childipmax %d' % int(num)
+        cmd = 'childip max %d' % int(num)
         print(cmd)
         self.__executeCommand(cmd)
 
@@ -3446,6 +3493,7 @@ class OpenThreadTHCI(object):
                 else:
                     raise
 
+    @API
     def deregisterMulticast(self, sAddr):
         """
         Unsubscribe to a given IPv6 address.
@@ -3458,6 +3506,10 @@ class OpenThreadTHCI(object):
             sAddr = [sAddr]
         self.externalCommissioner.MLR(sAddr, 0)
         return True
+
+    @API
+    def getMlrLogs(self):
+        return self.externalCommissioner.getMlrLogs()
 
     @API
     def migrateNetwork(self, channel=None, net_name=None):
@@ -3520,19 +3572,22 @@ class OpenThreadTHCI(object):
 
     def __discoverDeviceCapability(self):
         """Discover device capability according to version"""
-        self.DeviceCapability = DevCapb.NotSpecified
-
         if self.IsBorderRouter:
-            self.DeviceCapability = DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm
+            self.log("Setting capability of BR {}: DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm".format(self))
+            self.DeviceCapability = (DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm)
         else:
             # Get Thread stack version to distinguish device capability.
             thver = self.__executeCommand('thread version')[0]
 
             if thver in ['1.2', '3']:
-                self.DeviceCapability = (DevCapb.C_FFD | DevCapb.C_RFD | DevCapb.L_AIO)
+                self.log("Setting capability of {}: DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD".format(self))
+                self.DeviceCapability = (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD)
             elif thver in ['1.1', '2']:
+                self.log("Setting capability of {}: DevCapb.V1_1".format(self))
                 self.DeviceCapability = DevCapb.V1_1
             else:
+                self.log("Capability not specified for {}".format(self))
+                self.DeviceCapability = DevCapb.NotSpecified
                 assert False, thver
 
     @staticmethod

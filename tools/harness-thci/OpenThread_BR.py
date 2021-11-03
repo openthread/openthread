@@ -34,9 +34,9 @@ import logging
 import re
 import sys
 import time
+import ipaddress
 
 import serial
-from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper
 from IThci import IThci
 from THCI.OpenThread import OpenThreadTHCI, watched, API
 
@@ -153,6 +153,13 @@ class SerialHandle:
             raise Exception('login fail')
 
         self.bash('stty cols 256')
+
+    def log(self, fmt, *args):
+        try:
+            msg = fmt % args
+            print('%s - %s - %s' % (self.port, time.strftime('%b %d %H:%M:%S'), msg))
+        except Exception:
+            pass
 
     def close(self):
         self.__handle.close()
@@ -304,6 +311,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     def _deviceAfterReset(self):
         self.__dumpSyslog()
         self.__truncateSyslog()
+        if not self.IsHost:
+            self.bash('sudo service otbr-agent restart')
 
     @API
     def setupHost(self, setDua=False):
@@ -345,11 +354,18 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         if interface == 1:
             ifname = 'eth0'
         else:
-            print('invalid interface')
-            return
+            raise AssertionError('Invalid interface set to send UDP: {} '
+                                 'Available interface options: 0 - Thread; 1 - Ethernet'.format(interface))
+        cmd = 'sudo /home/pi/reference-device/send_udp.py %s %s %s %s' % (ifname, dst, port, payload)
+        print(cmd)
+        self.bash(cmd)
 
-        cmd = 'sudo /home/pi/ot-br-posix/script/reference-device/send_udp.py %s %s %s %s' % (ifname, dst, port,
-                                                                                             payload)
+    @API
+    def mldv2_query(self):
+        ifname = 'eth0'
+        dst = 'ff02::1'
+
+        cmd = 'sudo /home/pi/reference-device/send_mld_query.py %s %s' % (ifname, dst)
         print(cmd)
         self.bash(cmd)
 
@@ -465,14 +481,18 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
                 continue
 
             addr = line[1].split('/')[0]
-            addr = ModuleHelper.GetFullIpv6Address(addr).lower()
+            addr = str(ipaddress.IPv6Address(addr.decode()).exploded)
             globalAddrs.append(addr)
 
         if not filterByPrefix:
             return globalAddrs[0]
         else:
+            if filterByPrefix[-2:] != '::':
+                filterByPrefix = '%s::' % filterByPrefix
+            prefix = ipaddress.IPv6Network((filterByPrefix + '/64').decode())
             for fullIp in globalAddrs:
-                if fullIp.startswith(filterByPrefix):
+                address = ipaddress.IPv6Address(fullIp.decode())
+                if address in prefix:
                     return fullIp
 
     def _cliReadLine(self):
@@ -524,7 +544,7 @@ interface eth0
         AdvAutonomous on;
         AdvRouterAddr on;
     };
-    
+
     prefix fd00:7d03:7d03:7d03::/64
     {
         AdvOnLink on;
@@ -586,3 +606,22 @@ EOF"
         output = self.bash_unwatched('sudo grep "otbr-agent" /var/log/syslog')
         for line in output:
             self.log('%s', line)
+
+    @API
+    def mdns_query(self):
+        print('mdns_query')
+        self.bash('dig -p 5353 @ff02::fb _meshcop._udp.local ptr')
+
+    # Override powerDown
+    @API
+    def powerDown(self):
+        print('powerDown')
+        self.bash('sudo service otbr-agent stop')
+        super(OpenThread_BR, self).powerDown()
+
+    # Override powerUp
+    @API
+    def powerUp(self):
+        print('powerUp')
+        self.bash('sudo service otbr-agent start')
+        super(OpenThread_BR, self).powerUp()
