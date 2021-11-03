@@ -2323,10 +2323,6 @@ class OpenThreadTHCI(object):
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
-    def getBorderAgentPort(self):
-        return int(self.__executeCommand('ba port')[0])
-
-    @API
     def startExternalCommissioner(self, baAddr, baPort):
         """Start external commissioner
         Args:
