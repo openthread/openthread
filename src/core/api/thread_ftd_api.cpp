@@ -370,4 +370,16 @@ void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId)
+{
+    AsCoreType(aInstance).Get<RouterTable>().GetRouterIdRange(*aMinRouterId, *aMaxRouterId);
+}
+
+otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId)
+{
+    return AsCoreType(aInstance).Get<RouterTable>().SetRouterIdRange(aMinRouterId, aMaxRouterId);
+}
+#endif
+
 #endif // OPENTHREAD_FTD

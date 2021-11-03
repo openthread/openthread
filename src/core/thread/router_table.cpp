@@ -58,6 +58,10 @@ RouterTable::RouterTable(Instance &aInstance)
     , mRouterIdSequenceLastUpdated(0)
     , mRouterIdSequence(Random::NonCrypto::GetUint8())
     , mActiveRouterCount(0)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mMinRouterId(0)
+    , mMaxRouterId(Mle::kMaxRouterId)
+#endif
 {
     for (Router &router : mRouters)
     {
@@ -204,7 +208,11 @@ Router *RouterTable::Allocate(void)
     uint8_t freeBit;
 
     // count available router ids
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    for (uint8_t routerId = mMinRouterId; routerId <= mMaxRouterId; routerId++)
+#else
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+#endif
     {
         if (!IsAllocated(routerId) && mRouterIdReuseDelay[routerId] == 0)
         {
@@ -218,7 +226,11 @@ Router *RouterTable::Allocate(void)
     freeBit = Random::NonCrypto::GetUint8InRange(0, numAvailable);
 
     // allocate router
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    for (uint8_t routerId = mMinRouterId; routerId <= mMaxRouterId; routerId++)
+#else
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+#endif
     {
         if (IsAllocated(routerId) || mRouterIdReuseDelay[routerId] > 0)
         {
@@ -528,6 +540,27 @@ void RouterTable::HandleTimeTick(void)
         }
     }
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void RouterTable::GetRouterIdRange(uint8_t &aMinRouterId, uint8_t &aMaxRouterId) const
+{
+    aMinRouterId = mMinRouterId;
+    aMaxRouterId = mMaxRouterId;
+}
+
+Error RouterTable::SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aMinRouterId <= aMaxRouterId, error = kErrorInvalidArgs);
+    VerifyOrExit(aMaxRouterId <= Mle::kMaxRouterId, error = kErrorInvalidArgs);
+    mMinRouterId = aMinRouterId;
+    mMaxRouterId = aMaxRouterId;
+
+exit:
+    return error;
+}
+#endif
 
 } // namespace ot
 

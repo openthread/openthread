@@ -2954,6 +2954,17 @@ class NodeImpl:
 
         return rxtx_list
 
+    def set_router_id_range(self, min_router_id: int, max_router_id: int):
+        cmd = f'routeridrange {min_router_id} {max_router_id}'
+        self.send_command(cmd)
+        self._expect_command_output()
+
+    def get_router_id_range(self):
+        cmd = 'routeridrange'
+        self.send_command(cmd)
+        line = self._expect_command_output()[0]
+        return [int(item) for item in line.split()]
+
 
 class Node(NodeImpl, OtCli):
     pass
