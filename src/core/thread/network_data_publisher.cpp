@@ -836,6 +836,8 @@ Publisher::DnsSrpServiceEntry::Info::Info(Type aType, uint16_t aPortOrSeqNumber,
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+
 //---------------------------------------------------------------------------------------------------------------------
 // Publisher::PrefixEntry
 
@@ -1088,6 +1090,8 @@ void Publisher::PrefixEntry::CountExternalRouteEntries(uint8_t &aNumEntries, uin
 exit:
     return;
 }
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 } // namespace NetworkData
 } // namespace ot
