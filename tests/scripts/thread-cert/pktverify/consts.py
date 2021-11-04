@@ -127,6 +127,8 @@ LEAD_PET_URI = '/c/lp'
 LEAD_KA_URI = '/c/la'
 DIAG_GET_QRY_URI = '/d/dq'
 DIAG_GET_ANS_URI = '/d/da'
+BACKBONE_QUERY_URI = '/b/bq'
+BACKBONE_ANSWER_URI = '/b/ba'
 
 # ADDR SOL Status
 ADDR_SOL_SUCCESS = 0
