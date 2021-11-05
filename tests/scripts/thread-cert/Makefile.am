@@ -163,6 +163,7 @@ EXTRA_DIST                                                         = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_dnssd_name_with_special_chars.py                            \
     test_history_tracker.py                                          \
     test_inform_previous_parent_on_reattach.py                       \
     test_ipv6.py                                                     \
@@ -235,6 +236,7 @@ check_SCRIPTS                                                      = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_dnssd_name_with_special_chars.py                            \
     test_history_tracker.py                                          \
     test_inform_previous_parent_on_reattach.py                       \
     test_ipv6.py                                                     \

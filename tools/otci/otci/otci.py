@@ -862,6 +862,7 @@ class OTCI(object):
 
     def dns_resolve_service(self, instance: str, service: str) -> Dict:
         """Resolves aservice instance."""
+        instance = self.__escape_escapable(instance)
         cmd = f'dns service {instance} {service}'
         output = self.execute_command(cmd, 30.0)
 
@@ -1122,6 +1123,7 @@ class OTCI(object):
                                priority: int = 0,
                                weight: int = 0,
                                txt: Dict[str, Union[str, bytes, bool]] = None):
+        instance = self.__escape_escapable(instance)
         cmd = f'srp client service add {instance} {service} {port} {priority} {weight}'
         if txt:
             cmd += f' {self.__txt_to_hex(txt)}'

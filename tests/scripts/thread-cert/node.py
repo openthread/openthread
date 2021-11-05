@@ -33,6 +33,7 @@ import logging
 import os
 import re
 import socket
+import string
 import subprocess
 import sys
 import time
@@ -292,16 +293,47 @@ class OtbrDocker:
                     line = line[1:]
                 record = list(line.split())
 
-                if section != 'QUESTION':
+                if section == 'QUESTION':
+                    if record[2] in ('SRV', 'TXT'):
+                        record[0] = self.__unescape_dns_instance_name(record[0])
+                else:
                     record[1] = int(record[1])
                     if record[3] == 'SRV':
+                        record[0] = self.__unescape_dns_instance_name(record[0])
                         record[4], record[5], record[6] = map(int, [record[4], record[5], record[6]])
                     elif record[3] == 'TXT':
+                        record[0] = self.__unescape_dns_instance_name(record[0])
                         record[4:] = [self.__parse_dns_dig_txt(line)]
+                    elif record[3] == 'PTR':
+                        record[4] = self.__unescape_dns_instance_name(record[4])
 
                 dig_result[section].append(tuple(record))
 
         return dig_result
+
+    @staticmethod
+    def __unescape_dns_instance_name(name: str) -> str:
+        new_name = []
+        i = 0
+        while i < len(name):
+            c = name[i]
+
+            if c == '\\':
+                assert i + 1 < len(name), name
+                if name[i + 1] in string.digits:
+                    assert i + 3 < len(name) and name[i + 2] in string.digits and name[i + 3] in string.digits, name
+                    b = (ord(name[i + 1]) - 48) * 100 + (ord(name[i + 2]) - 48) * 10 + (ord(name[i + 3]) - 48)
+                    new_name.append(chr(b))
+                    i += 3
+                else:
+                    new_name.append(name[i + 1])
+                    i += 1
+            else:
+                new_name.append(c)
+
+            i += 1
+
+        return ''.join(new_name)
 
     def __parse_dns_dig_txt(self, line: str):
         # Example TXT entry:
@@ -1029,6 +1061,7 @@ class NodeImpl:
 
     def srp_client_add_service(self, instance_name, service_name, port, priority=0, weight=0, txt_entries=[]):
         txt_record = "".join(self._encode_txt_entry(entry) for entry in txt_entries)
+        instance_name = self._escape_escapable(instance_name)
         self.send_command(
             f'srp client service add {instance_name} {service_name} {port} {priority} {weight} {txt_record}')
         self._expect_done()
@@ -2734,6 +2767,7 @@ class NodeImpl:
                 'aaaa_ttl': 7100,
             }
         """
+        instance = self._escape_escapable(instance)
         cmd = f'dns service {instance} {service}'
         if server is not None:
             cmd += f' {server} {port}'
