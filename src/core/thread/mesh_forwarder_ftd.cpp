@@ -162,13 +162,12 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
             {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
                 // Pass back to IPv6 layer for DUA destination resolved by Backbone Query
-                if (ForwardDuaToBackboneLink(*cur, ip6Dst) == kErrorNone)
-                {
-                    ExitNow();
-                }
+                if (ForwardDuaToBackboneLink(*cur, ip6Dst) != kErrorNone)
 #endif
-                mSendQueue.Enqueue(*cur);
-                enqueuedMessage = true;
+                {
+                    mSendQueue.Enqueue(*cur);
+                    enqueuedMessage = true;
+                }
             }
             else
             {
@@ -183,9 +182,6 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
         mScheduleTransmissionTask.Post();
     }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-exit:
-#endif
     return;
 }
 
@@ -202,6 +198,7 @@ Error MeshForwarder::ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Addr
     IgnoreError(Get<AddressResolver>().Resolve(aDst, dstRloc16, /* aAllowAddressQuery */ false));
     VerifyOrExit(dstRloc16 == Get<Mle::MleRouter>().GetRloc16(), error = kErrorNoRoute);
 
+    // Avoid decreasing TTL twice
     IgnoreError(aMessage.Read(Ip6::Header::kHopLimitFieldOffset, ttl));
     ttl++;
     aMessage.Write(Ip6::Header::kHopLimitFieldOffset, ttl);
