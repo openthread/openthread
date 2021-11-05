@@ -516,7 +516,7 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
 
     // Do not forward to Backbone if the DUA is registered on PBBR
     VerifyOrExit(!mNdProxyTable.IsRegistered(aAddress.GetIid()));
-    // Do not forward to Backbone if the DUA belongs to a MTD Child (which may failed in DUA registration)
+    // Do not forward to Backbone if the DUA belongs to a MTD Child (which may have failed in DUA registration)
     VerifyOrExit(Get<NeighborTable>().FindNeighbor(aAddress) == nullptr);
     // Forawrd to Backbone only if the DUA is resolved to the PBBR's RLOC16
     error = Get<AddressResolver>().Resolve(aAddress, rloc16, /* aAllowAddressQuery */ false);
