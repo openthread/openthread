@@ -43,6 +43,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
@@ -241,6 +242,9 @@ private:
 };
 
 } // namespace MeshCoP
+
+DefineMapEnum(otJoinerState, MeshCoP::Joiner::State);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE

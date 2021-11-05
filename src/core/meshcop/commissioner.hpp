@@ -42,6 +42,7 @@
 
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -474,6 +475,9 @@ private:
 };
 
 } // namespace MeshCoP
+
+DefineMapEnum(otCommissionerState, MeshCoP::Commissioner::State);
+
 } // namespace ot
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

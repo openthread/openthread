@@ -45,6 +45,7 @@
 #include <openthread/platform/memory.h>
 #endif
 
+#include "common/as_core_type.hpp"
 #include "common/error.hpp"
 #include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
@@ -443,6 +444,8 @@ private:
     static bool sDnsNameCompressionEnabled;
 #endif
 };
+
+DefineCoreType(otInstance, Instance);
 
 // Specializations of the `Get<Type>()` method.
 

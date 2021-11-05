@@ -380,6 +380,10 @@ private:
  */
 
 } // namespace Ip6
+
+DefineCoreType(otMessageInfo, Ip6::MessageInfo);
+DefineCoreType(otSockAddr, Ip6::SockAddr);
+
 } // namespace ot
 
 #endif // NET_SOCKET_HPP_

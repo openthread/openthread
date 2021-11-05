@@ -34,6 +34,7 @@
 #include <openthread/coap.h>
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/debug.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -834,6 +835,13 @@ private:
 };
 
 } // namespace Coap
+
+DefineCoreType(otCoapTxParameters, Coap::TxParameters);
+DefineCoreType(otCoapResource, Coap::Resource);
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+DefineCoreType(otCoapBlockwiseResource, Coap::ResourceBlockWise);
+#endif
+
 } // namespace ot
 
 #endif // COAP_HPP_

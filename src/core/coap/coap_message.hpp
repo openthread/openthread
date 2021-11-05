@@ -38,6 +38,7 @@
 
 #include <openthread/coap.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
@@ -1218,6 +1219,64 @@ public:
  */
 
 } // namespace Coap
+
+DefineCoreType(otCoapOption, Coap::Option);
+DefineCoreType(otCoapOptionIterator, Coap::Option::Iterator);
+DefineMapEnum(otCoapType, Coap::Type);
+DefineMapEnum(otCoapCode, Coap::Code);
+
+/**
+ * This method casts an `otMessage` pointer to a `Coap::Message` reference.
+ *
+ * @param[in] aMessage   A pointer to an `otMessage`.
+ *
+ * @returns A reference to `Coap::Message` matching @p aMessage.
+ *
+ */
+inline Coap::Message &AsCoapMessage(otMessage *aMessage)
+{
+    return *static_cast<Coap::Message *>(aMessage);
+}
+
+/**
+ * This method casts an `otMessage` pointer to a `Coap::Message` reference.
+ *
+ * @param[in] aMessage   A pointer to an `otMessage`.
+ *
+ * @returns A reference to `Coap::Message` matching @p aMessage.
+ *
+ */
+inline Coap::Message *AsCoapMessagePtr(otMessage *aMessage)
+{
+    return static_cast<Coap::Message *>(aMessage);
+}
+
+/**
+ * This method casts an `otMessage` pointer to a `Coap::Message` pointer.
+ *
+ * @param[in] aMessage   A pointer to an `otMessage`.
+ *
+ * @returns A pointer to `Coap::Message` matching @p aMessage.
+ *
+ */
+inline const Coap::Message &AsCoapMessage(const otMessage *aMessage)
+{
+    return *static_cast<const Coap::Message *>(aMessage);
+}
+
+/**
+ * This method casts an `otMessage` pointer to a `Coap::Message` reference.
+ *
+ * @param[in] aMessage   A pointer to an `otMessage`.
+ *
+ * @returns A pointer to `Coap::Message` matching @p aMessage.
+ *
+ */
+inline const Coap::Message *AsCoapMessagePtr(const otMessage *aMessage)
+{
+    return static_cast<const Coap::Message *>(aMessage);
+}
+
 } // namespace ot
 
 #endif // COAP_HEADER_HPP_

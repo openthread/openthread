@@ -39,8 +39,9 @@
 #include <stdint.h>
 
 #include <openthread/dataset.h>
-
 #include <openthread/platform/crypto.h>
+
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -635,6 +636,10 @@ private:
 /**
  * @}
  */
+
+DefineCoreType(otSecurityPolicy, SecurityPolicy);
+DefineCoreType(otNetworkKey, NetworkKey);
+DefineCoreType(otPskc, Pskc);
 
 } // namespace ot
 

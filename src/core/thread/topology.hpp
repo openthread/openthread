@@ -38,6 +38,7 @@
 
 #include <openthread/thread_ftd.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/linked_list.hpp"
@@ -1462,6 +1463,12 @@ private:
     uint8_t mCslClockUncertainty; ///< Scheduling uncertainty, in units of 10 us.
 #endif
 };
+
+DefineCoreType(otNeighborInfo, Neighbor::Info);
+#if OPENTHREAD_FTD
+DefineCoreType(otChildInfo, Child::Info);
+#endif
+DefineCoreType(otRouterInfo, Router::Info);
 
 } // namespace ot
 

@@ -38,13 +38,13 @@
 
 #include <openthread/tcp.h>
 
-#include "net/ip6_headers.hpp"
-#include "net/socket.hpp"
-
+#include "common/as_core_type.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
+#include "net/ip6_headers.hpp"
+#include "net/socket.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -564,6 +564,10 @@ private:
 };
 
 } // namespace Ip6
+
+DefineCoreType(otTcpEndpoint, Ip6::Tcp::Endpoint);
+DefineCoreType(otTcpListener, Ip6::Tcp::Listener);
+
 } // namespace ot
 
 #endif // TCP6_HPP_

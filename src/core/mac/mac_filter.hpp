@@ -40,6 +40,7 @@
 
 #include <stdint.h>
 
+#include "common/as_core_type.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 
@@ -247,6 +248,9 @@ private:
  */
 
 } // namespace Mac
+
+DefineMapEnum(otMacFilterAddressMode, Mac::Filter::Mode);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

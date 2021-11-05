@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
@@ -665,6 +666,10 @@ private:
  */
 
 } // namespace Ip6
+
+DefineCoreType(otNetifAddress, Ip6::Netif::UnicastAddress);
+DefineCoreType(otNetifMulticastAddress, Ip6::Netif::MulticastAddress);
+
 } // namespace ot
 
 #endif // NET_NETIF_HPP_

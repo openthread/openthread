@@ -38,6 +38,7 @@
 
 #include <openthread/icmp6.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
@@ -345,6 +346,10 @@ private:
  */
 
 } // namespace Ip6
+
+DefineCoreType(otIcmp6Header, Ip6::Icmp::Header);
+DefineCoreType(otIcmp6Handler, Ip6::Icmp::Handler);
+
 } // namespace ot
 
 #endif // ICMP6_HPP_

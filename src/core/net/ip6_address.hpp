@@ -40,6 +40,7 @@
 
 #include <openthread/ip6.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -991,6 +992,11 @@ private:
  */
 
 } // namespace Ip6
+
+DefineCoreType(otIp6Prefix, Ip6::Prefix);
+DefineCoreType(otIp6InterfaceIdentifier, Ip6::InterfaceIdentifier);
+DefineCoreType(otIp6Address, Ip6::Address);
+
 } // namespace ot
 
 #endif // IP6_ADDRESS_HPP_
