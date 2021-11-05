@@ -1887,9 +1887,7 @@ private:
     uint32_t mCslTimeout;
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;
-#endif
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     bool       mParentSearchIsInBackoff : 1;

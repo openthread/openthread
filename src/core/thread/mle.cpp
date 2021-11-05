@@ -97,9 +97,7 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
 #endif
-#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
-#endif
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearchIsInBackoff(false)
     , mParentSearchBackoffWasCanceled(false)
@@ -386,9 +384,7 @@ Error Mle::Restore(void)
         mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
         mParent.SetState(Neighbor::kStateRestored);
 
-#if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
         mPreviousParentRloc = mParent.GetRloc16();
-#endif
     }
 #if OPENTHREAD_FTD
     else
@@ -693,10 +689,16 @@ void Mle::SetStateChild(uint16_t aRloc16)
     UpdateParentSearchState();
 #endif
 
+    if ((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()))
+    {
+        mCounters.mParentChanges++;
+
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
-    InformPreviousParent();
-    mPreviousParentRloc = mParent.GetRloc16();
+        InformPreviousParent();
 #endif
+    }
+
+    mPreviousParentRloc = mParent.GetRloc16();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (Get<Mac::Mac>().IsCslCapable())
@@ -4154,10 +4156,6 @@ void Mle::InformPreviousParent(void)
     Error            error   = kErrorNone;
     Message *        message = nullptr;
     Ip6::MessageInfo messageInfo;
-
-    VerifyOrExit((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()));
-
-    mCounters.mParentChanges++;
 
     VerifyOrExit((message = Get<Ip6::Ip6>().NewMessage(0)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->SetLength(0));
