@@ -1703,7 +1703,6 @@ void Server::Host::Free(void)
 
 Server::Host::Host(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mAddressesNum(0)
     , mNext(nullptr)
     , mLease(0)
     , mKeyLease(0)
@@ -1874,7 +1873,7 @@ void Server::Host::FreeUnusedServiceDescriptions(void)
 
 void Server::Host::ClearResources(void)
 {
-    mAddressesNum = 0;
+    mAddresses.Clear();
 }
 
 Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
@@ -1887,8 +1886,7 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 
     otLogInfoSrp("[server] update host %s", GetFullName());
 
-    memcpy(mAddresses, aHost.mAddresses, aHost.mAddressesNum * sizeof(mAddresses[0]));
-    mAddressesNum   = aHost.mAddressesNum;
+    mAddresses      = aHost.mAddresses;
     mKey            = aHost.mKey;
     mLease          = aHost.mLease;
     mKeyLease       = aHost.mKeyLease;
@@ -1964,22 +1962,15 @@ Error Server::Host::AddIp6Address(const Ip6::Address &aIp6Address)
         ExitNow(error = kErrorDrop);
     }
 
-    for (const Ip6::Address &addr : mAddresses)
-    {
-        if (aIp6Address == addr)
-        {
-            // Drop duplicate addresses.
-            ExitNow(error = kErrorDrop);
-        }
-    }
+    // Drop duplicate addresses.
+    VerifyOrExit(!mAddresses.Contains(aIp6Address), error = kErrorDrop);
 
-    if (mAddressesNum >= kMaxAddressesNum)
+    error = mAddresses.PushBack(aIp6Address);
+
+    if (error == kErrorNoBufs)
     {
         otLogWarnSrp("[server] too many addresses for host %s", GetFullName());
-        ExitNow(error = kErrorNoBufs);
     }
-
-    mAddresses[mAddressesNum++] = aIp6Address;
 
 exit:
     return error;

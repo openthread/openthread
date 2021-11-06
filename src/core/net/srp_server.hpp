@@ -53,6 +53,7 @@
 #include <openthread/ip6.h>
 #include <openthread/srp_server.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/heap_string.hpp"
@@ -408,13 +409,13 @@ public:
          *
          * @param[out]  aAddressesNum  The number of the addresses.
          *
-         * @returns  A pointer to the addresses array.
+         * @returns  A pointer to the addresses array or `nullptr` if no addresses.
          *
          */
         const Ip6::Address *GetAddresses(uint8_t &aAddressesNum) const
         {
-            aAddressesNum = mAddressesNum;
-            return mAddresses;
+            aAddressesNum = mAddresses.GetLength();
+            return mAddresses.Front();
         }
 
         /**
@@ -493,7 +494,7 @@ public:
         bool Matches(const char *aFullName) const { return (mFullName == aFullName); }
 
     private:
-        static constexpr uint16_t kMaxAddressesNum = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
+        static constexpr uint16_t kMaxAddresses = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
 
         static Host *New(Instance &aInstance);
 
@@ -516,17 +517,15 @@ public:
         Service *                   FindService(const char *aServiceName, const char *aInstanceName);
         const Service *             FindService(const char *aServiceName, const char *aInstanceName) const;
 
-        HeapString   mFullName;
-        Ip6::Address mAddresses[kMaxAddressesNum];
-        uint8_t      mAddressesNum;
-        Host *       mNext;
-
-        Dns::Ecdsa256KeyRecord           mKey;
-        uint32_t                         mLease;    // The LEASE time in seconds.
-        uint32_t                         mKeyLease; // The KEY-LEASE time in seconds.
-        TimeMilli                        mTimeLastUpdate;
-        LinkedList<Service>              mServices;
-        LinkedList<Service::Description> mServiceDescriptions;
+        Host *                             mNext;
+        HeapString                         mFullName;
+        Array<Ip6::Address, kMaxAddresses> mAddresses;
+        Dns::Ecdsa256KeyRecord             mKey;
+        uint32_t                           mLease;    // The LEASE time in seconds.
+        uint32_t                           mKeyLease; // The KEY-LEASE time in seconds.
+        TimeMilli                          mTimeLastUpdate;
+        LinkedList<Service>                mServices;
+        LinkedList<Service::Description>   mServiceDescriptions;
     };
 
     /**
