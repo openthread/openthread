@@ -608,10 +608,10 @@ EOF"
             self.log('%s', line)
 
     @API
-    def mdns_query(self, service='_meshcop._udp.local', addrs_blacklist=[]):
-        print('mdns_query %s %s' % (service, addrs_blacklist))
+    def mdns_query(self, dst='ff02::fb', service='_meshcop._udp.local', addrs_blacklist=[]):
+        print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
 
-        result = self.bash('dig -p 5353 @ff02::fb %s ptr +time=2 +retry=2' % service)
+        result = self.bash('dig -p 5353 @%s %s ptr +time=2 +retry=2' % (dst, service))
         responses = ' '.join(result).split(';; ANSWER SECTION:')
 
         # Remove responses from unwanted devices
