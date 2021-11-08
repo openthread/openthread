@@ -849,7 +849,7 @@ otError Interpreter::ProcessCcm(Arg aArgs[])
 
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_COMMAND);
 
-    SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
+    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
     otThreadSetCcmEnabled(GetInstancePtr(), enable);
 
 exit:
