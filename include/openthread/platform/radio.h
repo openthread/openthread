@@ -614,7 +614,10 @@ void otPlatRadioSetMacKey(otInstance *            aInstance,
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
- * Get the current estimated time (64bits width) of the radio chip.
+ * Get the current estimated time (in microseconds) of the radio chip.
+ *
+ * This microsecond timer must be a free-running timer. The timer must continue to advance with microsecond precision
+ * even when the radio is in the sleep state.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  *
