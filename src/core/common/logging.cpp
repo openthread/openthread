@@ -297,6 +297,8 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
     size_t                        idLen = strlen(aId) + kFixedStringPart;
     ot::String<kStringLineLength> string;
 
+    VerifyOrExit(otLoggingGetLevel() >= aLogLevel);
+
     for (size_t i = 0; i < (kWidth - idLen) / 2; i++)
     {
         string.Append("=");
@@ -325,6 +327,9 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
     }
 
     otLogDump(aLogLevel, aLogRegion, "%s", string.AsCString());
+
+exit:
+    return;
 }
 #else  // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 void otDump(otLogLevel, otLogRegion, const char *, const void *, const size_t)
