@@ -184,6 +184,7 @@ SOURCES_COMMON                                  = \
     coap/coap_secure.cpp                          \
     common/crc16.cpp                              \
     common/error.cpp                              \
+    common/heap.cpp                               \
     common/heap_data.cpp                          \
     common/heap_string.cpp                        \
     common/instance.cpp                           \
@@ -427,6 +428,7 @@ HEADERS_COMMON                                  = \
     common/equatable.hpp                          \
     common/error.hpp                              \
     common/extension.hpp                          \
+    common/heap.hpp                               \
     common/heap_data.hpp                          \
     common/heap_string.hpp                        \
     common/instance.hpp                           \

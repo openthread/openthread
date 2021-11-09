@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for `HeapData` (heap allocated data).
+ *   This file includes definitions for `Heap::Data` (heap allocated data).
  */
 
 #ifndef HEAP_DATA_HPP_
@@ -37,60 +37,62 @@
 #include "openthread-core-config.h"
 
 #include "common/data.hpp"
+#include "common/heap.hpp"
 #include "common/message.hpp"
 
 namespace ot {
+namespace Heap {
 
 /**
  * This class represents a heap allocated data.
  *
  */
-class HeapData
+class Data
 {
 public:
     /**
-     * This constructor initializes the `HeapData` as empty.
+     * This constructor initializes the `Heap::Data` as empty.
      *
      */
-    HeapData(void) { mData.Init(nullptr, 0); }
+    Data(void) { mData.Init(nullptr, 0); }
 
     /**
-     * This is the move constructor for `HeapData`.
+     * This is the move constructor for `Heap::Data`.
      *
-     * `HeapData` is non-copyable (copy constructor is deleted) but move constructor is provided to allow it to to be
+     * `Heap::Data` is non-copyable (copy constructor is deleted) but move constructor is provided to allow it to to be
      * used as return type (return by value) from functions/methods (which will then use move semantics).
      *
-     * @param[in] aHeapData   An rvalue reference to another `HeapData` to move from.
+     * @param[in] aData   An rvalue reference to another `Heap::Data` to move from.
      *
      */
-    HeapData(HeapData &&aHeapData) { TakeFrom(aHeapData); }
+    Data(Data &&aData) { TakeFrom(aData); }
 
     /**
-     * This is the destructor for `HeapData` object.
+     * This is the destructor for `Heap::Data` object.
      *
      */
-    ~HeapData(void) { Free(); }
+    ~Data(void) { Free(); }
 
     /**
-     * This method indicates whether or not the `HeapData` is null (i.e., it was never successfully set or it was
+     * This method indicates whether or not the `Heap::Data` is null (i.e., it was never successfully set or it was
      * freed).
      *
-     * @retval TRUE  The `HeapData` is null.
-     * @retval FALSE The `HeapData` is not null.
+     * @retval TRUE  The `Heap::Data` is null.
+     * @retval FALSE The `Heap::Data` is not null.
      *
      */
     bool IsNull(void) const { return (mData.GetBytes() == nullptr); }
 
     /**
-     * This method returns a pointer to the `HeapData` bytes buffer.
+     * This method returns a pointer to the `Heap::Data` bytes buffer.
      *
-     * @returns A pointer to data buffer or `nullptr` if the `HeapData` is null (never set or freed).
+     * @returns A pointer to data buffer or `nullptr` if the `Heap::Data` is null (never set or freed).
      *
      */
     const uint8_t *GetBytes(void) const { return mData.GetBytes(); }
 
     /**
-     * This method returns the `HeapData` length.
+     * This method returns the `Heap::Data` length.
      *
      * @returns The data length (number of bytes) or zero if the `HeadpData` is null.
      *
@@ -98,12 +100,12 @@ public:
     uint16_t GetLength(void) const { return mData.GetLength(); }
 
     /**
-     * This method sets the `HeapData` from the content of a given buffer.
+     * This method sets the `Heap::Data` from the content of a given buffer.
      *
      * @param[in] aBuffer     The buffer to copy bytes from.
      * @param[in] aLength     The buffer length (number of bytes).
      *
-     * @retval kErrorNone     Successfully set the `HeapData`.
+     * @retval kErrorNone     Successfully set the `Heap::Data`.
      * @retval kErrorNoBufs   Failed to allocate buffer.
      *
      */
@@ -117,33 +119,33 @@ public:
      * @param[in] aMessage    The message to copy bytes from (starting from offset till the end of message).
      * @param[in] aLength     The buffer length (number of bytes).
      *
-     * @retval kErrorNone     Successfully set the `HeapData`.
+     * @retval kErrorNone     Successfully set the `Heap::Data`.
      * @retval kErrorNoBufs   Failed to allocate buffer.
      *
      */
     Error SetFrom(const Message &aMessage);
 
     /**
-     * This method sets the `HeapData` from another one (move semantics).
+     * This method sets the `Heap::Data` from another one (move semantics).
      *
-     * @param[in] aHeapData   The other `HeapData` to set from (rvalue reference).
+     * @param[in] aData   The other `Heap::Data` to set from (rvalue reference).
      *
      */
-    void SetFrom(HeapData &&aHeapData);
+    void SetFrom(Data &&aData);
 
     /**
-     * This method appends the bytes from `HeapData` to a given message.
+     * This method appends the bytes from `Heap::Data` to a given message.
      *
      * @param[in] aMessage   The message to append the bytes into.
      *
-     * @retval kErrorNone     Successfully copied the bytes from `HeapData` into @p aMessage.
+     * @retval kErrorNone     Successfully copied the bytes from `Heap::Data` into @p aMessage.
      * @retval kErrorNoBufs   Failed to allocate buffer.
      *
      */
     Error CopyBytesTo(Message &aMessage) const { return aMessage.AppendBytes(mData.GetBytes(), mData.GetLength()); }
 
     /**
-     * This method copies the bytes from `HeapData` into a given buffer.
+     * This method copies the bytes from `Heap::Data` into a given buffer.
      *
      * It is up to the caller to ensure that @p aBuffer has enough space for the current data length.
      *
@@ -153,24 +155,25 @@ public:
     void CopyBytesTo(uint8_t *aBuffer) const { return mData.CopyBytesTo(aBuffer); }
 
     /**
-     * This method frees any buffer allocated by the `HeapData`.
+     * This method frees any buffer allocated by the `Heap::Data`.
      *
-     * The `HeapData` destructor will automatically call `Free()`. This method allows caller to free the buffer
+     * The `Heap::Data` destructor will automatically call `Free()`. This method allows caller to free the buffer
      * explicitly.
      *
      */
     void Free(void);
 
-    HeapData(const HeapData &) = delete;
-    HeapData &operator=(const HeapData &) = delete;
+    Data(const Data &) = delete;
+    Data &operator=(const Data &) = delete;
 
 private:
     Error UpdateBuffer(uint16_t aNewLength);
-    void  TakeFrom(HeapData &aHeapData);
+    void  TakeFrom(Data &aData);
 
     MutableData<kWithUint16Length> mData;
 };
 
+} // namespace Heap
 } // namespace ot
 
 #endif // HEAP_DATA_HPP_

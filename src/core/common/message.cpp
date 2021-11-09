@@ -36,6 +36,7 @@
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/heap.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -119,7 +120,7 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 
     while ((
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-               buffer = static_cast<Buffer *>(Instance::HeapCAlloc(1, sizeof(Buffer)))
+               buffer = static_cast<Buffer *>(Heap::CAlloc(1, sizeof(Buffer)))
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
                buffer = static_cast<Buffer *>(otPlatMessagePoolNew(&GetInstance()))
 #else
@@ -151,7 +152,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     {
         Buffer *next = aBuffer->GetNextBuffer();
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-        Instance::HeapFree(aBuffer);
+        Heap::Free(aBuffer);
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
 #else
@@ -172,7 +173,7 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
     uint16_t rval;
 
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-    rval = static_cast<uint16_t>(GetInstance().GetHeap().GetFreeSize() / sizeof(Buffer));
+    rval = static_cast<uint16_t>(Instance::GetHeap().GetFreeSize() / sizeof(Buffer));
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     rval = otPlatMessagePoolNumFreeBuffers(&GetInstance());
 #else
@@ -185,7 +186,7 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
 uint16_t MessagePool::GetTotalBufferCount(void) const
 {
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-    return static_cast<uint16_t>(GetInstance().GetHeap().GetCapacity() / sizeof(Buffer));
+    return static_cast<uint16_t>(Instance::GetHeap().GetCapacity() / sizeof(Buffer));
 #else
     return OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
 #endif

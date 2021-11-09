@@ -56,6 +56,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/heap.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -348,7 +349,7 @@ public:
             Error       SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
             Description *mNext;
-            HeapString   mInstanceName;
+            Heap::String mInstanceName;
             Host &       mHost;
             uint16_t     mPriority;
             uint16_t     mWeight;
@@ -378,7 +379,7 @@ public:
         bool MatchesFlags(Flags aFlags) const;
         void Log(Action aAction) const;
 
-        HeapString   mServiceName;
+        Heap::String mServiceName;
         Description &mDescription;
         Service *    mNext;
         TimeMilli    mTimeLastUpdate;
@@ -530,7 +531,7 @@ public:
         const Service *             FindService(const char *aServiceName, const char *aInstanceName) const;
 
         Host *                             mNext;
-        HeapString                         mFullName;
+        Heap::String                       mFullName;
         Array<Ip6::Address, kMaxAddresses> mAddresses;
         Dns::Ecdsa256KeyRecord             mKey;
         uint32_t                           mLease;    // The LEASE time in seconds.
@@ -882,7 +883,7 @@ private:
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
     void *                          mServiceUpdateHandlerContext;
 
-    HeapString mDomain;
+    Heap::String mDomain;
 
     LeaseConfig mLeaseConfig;
 

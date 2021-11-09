@@ -28,72 +28,41 @@
 
 /**
  * @file
- *   This file implements the `Heap::String` (a heap allocated string).
+ *   This file implements the `Heap` API.
  */
 
-#include "heap_string.hpp"
+#include "heap.hpp"
 
-#include "common/code_utils.hpp"
-#include "common/string.hpp"
+#include "common/instance.hpp"
 
 namespace ot {
 namespace Heap {
 
-Error String::Set(const char *aCString)
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+void *CAlloc(size_t aCount, size_t aSize)
 {
-    Error  error = kErrorNone;
-    size_t curSize;
-    size_t newSize;
-
-    VerifyOrExit(aCString != nullptr, Free());
-
-    curSize = (mStringBuffer != nullptr) ? strlen(mStringBuffer) + 1 : 0;
-    newSize = strlen(aCString) + 1;
-
-    if (curSize != newSize)
-    {
-        char *newBuffer = static_cast<char *>(Heap::CAlloc(sizeof(char), newSize));
-
-        VerifyOrExit(newBuffer != nullptr, error = kErrorNoBufs);
-
-        Heap::Free(mStringBuffer);
-        mStringBuffer = newBuffer;
-    }
-
-    memcpy(mStringBuffer, aCString, newSize);
-
-exit:
-    return error;
+    return otPlatCAlloc(aCount, aSize);
 }
 
-Error String::Set(String &&aString)
+void Free(void *aPointer)
 {
-    VerifyOrExit(mStringBuffer != aString.mStringBuffer);
-
-    Heap::Free(mStringBuffer);
-    mStringBuffer         = aString.mStringBuffer;
-    aString.mStringBuffer = nullptr;
-
-exit:
-    return kErrorNone;
+    otPlatFree(aPointer);
 }
 
-void String::Free(void)
+#else
+
+void *CAlloc(size_t aCount, size_t aSize)
 {
-    Heap::Free(mStringBuffer);
-    mStringBuffer = nullptr;
+    return Instance::GetHeap().CAlloc(aCount, aSize);
 }
 
-bool String::operator==(const char *aCString) const
+void Free(void *aPointer)
 {
-    bool isEqual;
-
-    VerifyOrExit((aCString != nullptr) && (mStringBuffer != nullptr), isEqual = (mStringBuffer == aCString));
-    isEqual = (strcmp(mStringBuffer, aCString) == 0);
-
-exit:
-    return isEqual;
+    Instance::GetHeap().Free(aPointer);
 }
+
+#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 } // namespace Heap
 } // namespace ot
