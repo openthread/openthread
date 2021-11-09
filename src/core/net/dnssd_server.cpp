@@ -490,7 +490,7 @@ Error Server::AppendTxtRecord(Message &         aMessage,
 {
     Error         error = kErrorNone;
     TxtRecord     txtRecord;
-    const uint8_t kEmptyTxt = '\0';
+    const uint8_t kEmptyTxt = 0;
 
     SuccessOrExit(error = AppendInstanceName(aMessage, aInstanceName, aCompressInfo));
 
