@@ -2435,8 +2435,9 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ConfigureEnhAckProbing(o
         flags |= SPINEL_THREAD_LINK_METRIC_RSSI;
     }
 
-    error = Set(SPINEL_PROP_RCP_ENH_ACK_PROBING, SPINEL_DATATYPE_UINT16_S, SPINEL_DATATYPE_EUI64_S,
-                SPINEL_DATATYPE_UINT8_S, aShortAddress, aExtAddress.m8, flags);
+    error =
+        Set(SPINEL_PROP_RCP_ENH_ACK_PROBING, SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S,
+            aShortAddress, aExtAddress.m8, flags);
 
     return error;
 }
