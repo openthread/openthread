@@ -488,17 +488,25 @@ Error Server::AppendTxtRecord(Message &         aMessage,
                               uint32_t          aTtl,
                               NameCompressInfo &aCompressInfo)
 {
-    Error     error = kErrorNone;
-    TxtRecord txtRecord;
+    Error         error = kErrorNone;
+    TxtRecord     txtRecord;
+    const uint8_t kEmptyTxt = 0;
 
     SuccessOrExit(error = AppendInstanceName(aMessage, aInstanceName, aCompressInfo));
 
     txtRecord.Init();
     txtRecord.SetTtl(aTtl);
-    txtRecord.SetLength(aTxtLength);
+    txtRecord.SetLength(aTxtLength > 0 ? aTxtLength : sizeof(kEmptyTxt));
 
     SuccessOrExit(error = aMessage.Append(txtRecord));
-    error = aMessage.AppendBytes(aTxtData, aTxtLength);
+    if (aTxtLength > 0)
+    {
+        error = aMessage.AppendBytes(aTxtData, aTxtLength);
+    }
+    else
+    {
+        error = aMessage.Append(kEmptyTxt);
+    }
 
 exit:
     return error;
