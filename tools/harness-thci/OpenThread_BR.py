@@ -608,9 +608,31 @@ EOF"
             self.log('%s', line)
 
     @API
-    def mdns_query(self):
-        print('mdns_query')
-        self.bash('dig -p 5353 @ff02::fb _meshcop._udp.local ptr')
+    def mdns_query(self, dst='ff02::fb', service='_meshcop._udp.local', addrs_blacklist=[]):
+        print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
+
+        result = self.bash('dig -p 5353 @%s %s ptr +time=2 +retry=2' % (dst, service))
+        responses = ' '.join(result).split(';; ANSWER SECTION:')
+
+        # Remove responses from unwanted devices
+        for response in responses:
+            if not set(response.split()).isdisjoint(set(addrs_blacklist)):
+                break
+
+        # Records patterns:
+        # raspberrypi-2.local.	10	IN	AAAA	fe80::81:46ff:fe0d:bfe.43684
+        # OpenThread_BorderRouter._meshcop._udp.local. 10\tIN SRV 0 0 49153 raspberrypi.local.
+        try:
+            addr = response.split('AAAA\tfe80')[1].split(' ')[0]
+            addr = 'fe80%s%%eth0' % addr
+        except Exception:
+            raise Exception('Unable to find the DUT address in the mDNS response')
+        try:
+            port = int(response.split('IN SRV')[1].split(' ')[3])
+        except Exception:
+            raise Exception('Unable to find the DUT port in the mDNS response')
+
+        return (addr, port)
 
     # Override powerDown
     @API
