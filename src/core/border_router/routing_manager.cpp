@@ -795,10 +795,9 @@ bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
            (aOmrPrefix.mLength >= 3 && (aOmrPrefix.GetBytes()[0] & 0xE0) == 0x20);
 }
 
-bool RoutingManager::IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig)
+bool RoutingManager::IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio)
 {
-    return IsValidOnLinkPrefix(aPio.GetPrefix()) && aPio.GetOnLink() &&
-           (aPio.GetAutoAddrConfig() || aManagedAddrConfig);
+    return IsValidOnLinkPrefix(aPio.GetPrefix()) && aPio.GetOnLink() && aPio.GetAutoAddrConfig();
 }
 
 bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
@@ -1015,7 +1014,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 
             if (pio->IsValid())
             {
-                needReevaluate |= UpdateDiscoveredPrefixes(*pio, routerAdvMessage->GetManagedAddrConfig());
+                needReevaluate |= UpdateDiscoveredPrefixes(*pio);
             }
         }
         break;
@@ -1052,7 +1051,7 @@ exit:
     return;
 }
 
-bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig)
+bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio)
 {
     Ip6::Prefix     prefix         = aPio.GetPrefix();
     bool            needReevaluate = false;
@@ -1060,7 +1059,7 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption 
     ExternalPrefix  onLinkPrefix;
     ExternalPrefix *existingPrefix = nullptr;
 
-    if (!IsValidOnLinkPrefix(aPio, aManagedAddrConfig))
+    if (!IsValidOnLinkPrefix(aPio))
     {
         otLogInfoBr("Ignore invalid on-link prefix in PIO: %s", prefix.ToString().AsCString());
         ExitNow();
