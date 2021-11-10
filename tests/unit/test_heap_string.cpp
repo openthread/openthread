@@ -34,6 +34,7 @@
 
 #include "test_util.hpp"
 #include "common/code_utils.hpp"
+#include "common/heap_data.hpp"
 #include "common/heap_string.hpp"
 
 namespace ot {
@@ -86,6 +87,9 @@ void TestHeapString(void)
     HeapString  str1;
     HeapString  str2;
     const char *oldBuffer;
+
+    printf("====================================================================================\n");
+    printf("TestHeapString\n\n");
 
     printf("------------------------------------------------------------------------------------\n");
     printf("After constructor\n\n");
@@ -146,11 +150,154 @@ void TestHeapString(void)
     printf("\n -- PASS\n");
 }
 
+void PrintData(const HeapData &aData)
+{
+    DumpBuffer("data", aData.GetBytes(), aData.GetLength());
+}
+
+template <uint16_t kLength> void VerifyData(const HeapData &aData, const uint8_t (&aArray)[kLength])
+{
+    VerifyData(aData, &aArray[0], kLength);
+}
+
+static const uint8_t kTestValue = 0x77;
+
+// Function returning a `HeapData` by value.
+HeapData GetData(void)
+{
+    HeapData data;
+
+    SuccessOrQuit(data.SetFrom(&kTestValue, sizeof(kTestValue)));
+
+    return data;
+}
+
+void VerifyData(const HeapData &aData, const uint8_t *aBytes, uint16_t aLength)
+{
+    static constexpr uint16_t kMaxLength = 100;
+    uint8_t                   buffer[kMaxLength];
+
+    PrintData(aData);
+
+    if (aLength == 0)
+    {
+        VerifyOrQuit(aData.IsNull());
+        VerifyOrQuit(aData.GetBytes() == nullptr);
+        VerifyOrQuit(aData.GetLength() == 0);
+    }
+    else
+    {
+        VerifyOrQuit(!aData.IsNull());
+        VerifyOrQuit(aData.GetBytes() != nullptr);
+        VerifyOrQuit(aData.GetLength() == aLength);
+        VerifyOrQuit(memcmp(aData.GetBytes(), aBytes, aLength) == 0, "Data content is incorrect");
+
+        aData.CopyBytesTo(buffer);
+        VerifyOrQuit(memcmp(buffer, aBytes, aLength) == 0, "CopyBytesTo() failed");
+    }
+}
+
+void TestHeapData(void)
+{
+    Instance *     instance;
+    MessagePool *  messagePool;
+    Message *      message;
+    HeapData       data;
+    const uint8_t *oldBuffer;
+
+    static const uint8_t kData1[] = {10, 20, 3, 15, 100, 0, 60, 16};
+    static const uint8_t kData2[] = "OpenThread HeapData";
+    static const uint8_t kData3[] = {0xaa, 0xbb, 0xcc};
+    static const uint8_t kData4[] = {0x11, 0x22, 0x33};
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
+
+    messagePool = &instance->Get<MessagePool>();
+    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+
+    message->SetOffset(0);
+
+    printf("\n\n====================================================================================\n");
+    printf("TestHeapData\n\n");
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("After constructor\n");
+    VerifyData(data, nullptr, 0);
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("SetFrom(aBuffer, aLength)\n");
+
+    SuccessOrQuit(data.SetFrom(kData1, sizeof(kData1)));
+    VerifyData(data, kData1);
+
+    SuccessOrQuit(data.SetFrom(kData2, sizeof(kData2)));
+    VerifyData(data, kData2);
+
+    SuccessOrQuit(data.SetFrom(kData3, sizeof(kData3)));
+    VerifyData(data, kData3);
+    oldBuffer = data.GetBytes();
+
+    SuccessOrQuit(data.SetFrom(kData4, sizeof(kData4)));
+    VerifyData(data, kData4);
+    VerifyOrQuit(oldBuffer == data.GetBytes(), "did not reuse old buffer on same data length");
+
+    SuccessOrQuit(data.SetFrom(kData4, 0));
+    VerifyData(data, nullptr, 0);
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("SetFrom(aMessage)\n");
+
+    SuccessOrQuit(message->Append(kData2));
+    SuccessOrQuit(data.SetFrom(*message));
+    VerifyData(data, kData2);
+
+    SuccessOrQuit(message->Append(kData3));
+    SuccessOrQuit(data.SetFrom(*message));
+    PrintData(data);
+    VerifyOrQuit(data.GetLength() == message->GetLength());
+
+    message->SetOffset(sizeof(kData2));
+    SuccessOrQuit(data.SetFrom(*message));
+    VerifyData(data, kData3);
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("Free()\n");
+
+    data.Free();
+    VerifyData(data, nullptr, 0);
+
+    data.Free();
+    VerifyData(data, nullptr, 0);
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("CopyBytesTo(aMessage)\n");
+
+    SuccessOrQuit(message->SetLength(0));
+
+    SuccessOrQuit(data.CopyBytesTo(*message));
+    VerifyOrQuit(message->GetLength() == 0, "CopyBytesTo() failed");
+
+    SuccessOrQuit(data.SetFrom(kData1, sizeof(kData1)));
+    VerifyData(data, kData1);
+    SuccessOrQuit(data.CopyBytesTo(*message));
+    VerifyOrQuit(message->GetLength() == data.GetLength(), "CopyBytesTo() failed");
+    VerifyOrQuit(message->Compare(0, kData1), "CopyBytesTo() failed");
+
+    printf("------------------------------------------------------------------------------------\n");
+    printf("SetFrom() move semantics\n\n");
+    data.SetFrom(GetData());
+    VerifyData(data, &kTestValue, sizeof(kTestValue));
+
+    printf("\n -- PASS\n");
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestHeapString();
+    ot::TestHeapData();
     printf("\nAll tests passed.\n");
     return 0;
 }
