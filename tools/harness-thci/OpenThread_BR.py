@@ -647,3 +647,9 @@ EOF"
         print('powerUp')
         self.bash('sudo service otbr-agent start')
         super(OpenThread_BR, self).powerUp()
+
+    # Override forceSetSlaac
+    @API
+    def forceSetSlaac(self, slaacAddress):
+        print('forceSetSlaac %s' % slaacAddress)
+        self.bash('sudo ip -6 addr add %s/64 dev wpan0' % slaacAddress)
