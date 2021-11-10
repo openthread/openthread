@@ -89,6 +89,7 @@ Done
 - [prefix](#prefix)
 - [promiscuous](#promiscuous)
 - [pskc](#pskc--p-keypassphrase)
+- [radiofilter](#radiofilter)
 - [rcp](#rcp)
 - [region](#region)
 - [releaserouterid](#releaserouterid-routerid)
@@ -2180,6 +2181,44 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### radiofilter
+
+`OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` is required.
+
+The radio filter is mainly intended for testing. It can be used to temporarily block all tx/rx on the IEEE 802.15.4 radio.
+
+When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any frame and/or potentially send ack). Also the frame transmission requests return immediately without sending the frame over the air (return "no ack" error if ack is requested, otherwise return success).
+
+Get radio filter status (enabled or disabled).
+
+```bash
+> radiofilter
+Disabled
+Done
+```
+
+### radiofilter enable
+
+`OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` is required.
+
+Enable radio radio filter.
+
+```bash
+> radiofilter enable
+Done
+```
+
+### radiofilter disable
+
+`OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` is required.
+
+Disable radio radio filter.
+
+```bash
+> radiofilter disable
 Done
 ```
 

@@ -2481,5 +2481,13 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+void Mac::SetRadioFilterEnabled(bool aFilterEnabled)
+{
+    mLinks.GetSubMac().SetRadioFilterEnabled(aFilterEnabled);
+    UpdateIdleMode();
+}
+#endif
+
 } // namespace Mac
 } // namespace ot

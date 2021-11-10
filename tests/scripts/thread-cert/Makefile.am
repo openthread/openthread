@@ -179,6 +179,7 @@ EXTRA_DIST                                                         = \
     test_on_mesh_prefix.py                                           \
     test_pbbr_aloc.py                                                \
     test_ping.py                                                     \
+    test_radio_filter.py                                             \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \
@@ -252,6 +253,7 @@ check_SCRIPTS                                                      = \
     test_on_mesh_prefix.py                                           \
     test_pbbr_aloc.py                                                \
     test_ping.py                                                     \
+    test_radio_filter.py                                             \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \

@@ -511,6 +511,7 @@ private:
     otError ProcessPskcRef(Arg aArgs[]);
 #endif
 #endif
+    otError ProcessRadioFilter(Arg aArgs[]);
     otError ProcessRcp(Arg aArgs[]);
     otError ProcessRegion(Arg aArgs[]);
 #if OPENTHREAD_FTD
@@ -816,6 +817,9 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
         {"pskcref", &Interpreter::ProcessPskcRef},
 #endif
+#endif
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+        {"radiofilter", &Interpreter::ProcessRadioFilter},
 #endif
         {"rcp", &Interpreter::ProcessRcp},
         {"region", &Interpreter::ProcessRegion},

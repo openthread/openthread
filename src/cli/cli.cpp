@@ -3666,6 +3666,28 @@ otError Interpreter::ProcessPreferRouterId(Arg aArgs[])
 }
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+otError Interpreter::ProcessRadioFilter(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otLinkIsRadioFilterEnabled(GetInstancePtr()));
+    }
+    else
+    {
+        bool enable;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+        otLinkSetRadioFilterEnabled(GetInstancePtr(), enable);
+    }
+
+exit:
+    return error;
+}
+#endif
+
 otError Interpreter::ProcessRcp(Arg aArgs[])
 {
     otError     error   = OT_ERROR_NONE;
