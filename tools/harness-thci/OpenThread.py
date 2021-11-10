@@ -1220,7 +1220,8 @@ class OpenThreadTHCI(object):
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
-            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
+            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId in (Thread_Device_Role.BR_1,
+                                                                        Thread_Device_Role.BR_2):
                 print('join as BBR')
                 mode = 'rdn'
                 if self.AutoDUTEnable is False:
