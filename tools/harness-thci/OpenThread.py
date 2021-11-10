@@ -1220,7 +1220,7 @@ class OpenThreadTHCI(object):
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
-            elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
+            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
                 print('join as BBR')
                 mode = 'rdn'
                 if self.AutoDUTEnable is False:
@@ -1230,7 +1230,7 @@ class OpenThreadTHCI(object):
                 print('join as sleepy end device')
                 mode = '-'
                 self.__setPollPeriod(self.__sedPollPeriod)
-            elif eRoleId == Thread_Device_Role.SSED:
+            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId == Thread_Device_Role.SSED:
                 print('join as SSED')
                 mode = '-'
                 self.setCSLperiod(self.cslPeriod)
