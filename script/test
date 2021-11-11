@@ -283,6 +283,7 @@ do_build_otbr_docker()
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
         "-DOTBR_DUA_ROUTING=ON"
+        "-DOTBR_MESHCOP_SERVICE_INSTANCE_NAME=OpenThread\\x20Border\\x20Router"
         "-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'"
     )
 
