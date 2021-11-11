@@ -612,9 +612,12 @@ EOF"
         print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
 
         result = self.bash('dig -p 5353 @%s %s ptr +time=2 +retry=2' % (dst, service))
-        responses = ' '.join(result).split(';; ANSWER SECTION:')
+
+        if dst in 'ff02::fb' and not addrs_blacklist:
+            return (0, '')
 
         # Remove responses from unwanted devices
+        responses = ' '.join(result).split(';; ANSWER SECTION:')
         for response in responses:
             if not set(response.split()).isdisjoint(set(addrs_blacklist)):
                 break
