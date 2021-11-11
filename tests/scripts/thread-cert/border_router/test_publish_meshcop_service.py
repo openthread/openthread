@@ -79,7 +79,6 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2 = self.nodes[BR2]
         br2.disable_br()
 
-        host.bash('service otbr-agent stop')
         host.start(start_radvd=False)
         self.simulator.go(20)
 
