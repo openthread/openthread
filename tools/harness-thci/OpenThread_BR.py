@@ -613,7 +613,7 @@ EOF"
 
         result = self.bash('dig -p 5353 @%s %s ptr +time=2 +retry=2' % (dst, service))
 
-        if dst in 'ff02::fb' and not addrs_blacklist:
+        if dst == 'ff02::fb' and not addrs_blacklist:
             return (0, '')
 
         # Remove responses from unwanted devices
