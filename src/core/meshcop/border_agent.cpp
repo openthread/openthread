@@ -37,6 +37,7 @@
 
 #include "coap/coap_message.hpp"
 #include "common/as_core_type.hpp"
+#include "common/heap.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -215,7 +216,7 @@ exit:
         SendErrorMessage(aForwardContext, error);
     }
 
-    Instance::HeapFree(&aForwardContext);
+    Heap::Free(&aForwardContext);
 }
 
 template <Coap::Resource BorderAgent::*aResource>
@@ -503,7 +504,7 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
         SuccessOrExit(error = Get<Coap::CoapSecure>().SendAck(aMessage, aMessageInfo));
     }
 
-    forwardContext = static_cast<ForwardContext *>(Instance::HeapCAlloc(1, sizeof(ForwardContext)));
+    forwardContext = static_cast<ForwardContext *>(Heap::CAlloc(1, sizeof(ForwardContext)));
     VerifyOrExit(forwardContext != nullptr, error = kErrorNoBufs);
 
     forwardContext->Init(GetInstance(), aMessage, aPetition, aSeparate);
@@ -539,7 +540,7 @@ exit:
     {
         if (forwardContext != nullptr)
         {
-            Instance::HeapFree(forwardContext);
+            Heap::Free(forwardContext);
         }
 
         FreeMessage(message);

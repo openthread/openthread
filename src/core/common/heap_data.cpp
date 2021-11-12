@@ -28,18 +28,18 @@
 
 /**
  * @file
- *   This file implements the `HeapData` (a heap allocated data).
+ *   This file implements the `Heap::Data` (a heap allocated data).
  */
 
 #include "heap_data.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 
 namespace ot {
+namespace Heap {
 
-Error HeapData::SetFrom(const uint8_t *aBuffer, uint16_t aLength)
+Error Data::SetFrom(const uint8_t *aBuffer, uint16_t aLength)
 {
     Error error;
 
@@ -52,7 +52,7 @@ exit:
     return error;
 }
 
-Error HeapData::SetFrom(const Message &aMessage)
+Error Data::SetFrom(const Message &aMessage)
 {
     Error    error;
     uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
@@ -66,25 +66,25 @@ exit:
     return error;
 }
 
-void HeapData::SetFrom(HeapData &&aHeapData)
+void Data::SetFrom(Data &&aData)
 {
     Free();
-    TakeFrom(aHeapData);
+    TakeFrom(aData);
 }
 
-void HeapData::Free(void)
+void Data::Free(void)
 {
-    Instance::HeapFree(mData.GetBytes());
+    Heap::Free(mData.GetBytes());
     mData.Init(nullptr, 0);
 }
 
-Error HeapData::UpdateBuffer(uint16_t aNewLength)
+Error Data::UpdateBuffer(uint16_t aNewLength)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(aNewLength != mData.GetLength());
 
-    Instance::HeapFree(mData.GetBytes());
+    Heap::Free(mData.GetBytes());
 
     if (aNewLength == 0)
     {
@@ -92,7 +92,7 @@ Error HeapData::UpdateBuffer(uint16_t aNewLength)
     }
     else
     {
-        uint8_t *newBuffer = static_cast<uint8_t *>(Instance::HeapCAlloc(aNewLength, sizeof(uint8_t)));
+        uint8_t *newBuffer = static_cast<uint8_t *>(Heap::CAlloc(aNewLength, sizeof(uint8_t)));
 
         VerifyOrExit(newBuffer != nullptr, error = kErrorNoBufs);
         mData.Init(newBuffer, aNewLength);
@@ -102,10 +102,11 @@ exit:
     return error;
 }
 
-void HeapData::TakeFrom(HeapData &aHeapData)
+void Data::TakeFrom(Data &aData)
 {
-    mData.Init(aHeapData.mData.GetBytes(), aHeapData.GetLength());
-    aHeapData.mData.Init(nullptr, 0);
+    mData.Init(aData.mData.GetBytes(), aData.GetLength());
+    aData.mData.Init(nullptr, 0);
 }
 
+} // namespace Heap
 } // namespace ot

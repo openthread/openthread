@@ -260,21 +260,15 @@ public:
      */
     Error ErasePersistentInfo(void);
 
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    static void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
-    static void *HeapCAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
-#else
-    static void  HeapFree(void *aPointer) { sHeap.Free(aPointer); }
-    static void *HeapCAlloc(size_t aCount, size_t aSize) { return sHeap.CAlloc(aCount, aSize); }
-
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     /**
      * This method returns a reference to the Heap object.
      *
      * @returns A reference to the Heap object.
      *
      */
-    Utils::Heap &GetHeap(void) { return sHeap; }
-#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static Utils::Heap &GetHeap(void) { return sHeap; }
+#endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**

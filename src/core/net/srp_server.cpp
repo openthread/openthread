@@ -1442,7 +1442,7 @@ Server::Service *Server::Service::New(const char *aServiceName, Description &aDe
     void *   buf;
     Service *service = nullptr;
 
-    buf = Instance::HeapCAlloc(1, sizeof(Service));
+    buf = Heap::CAlloc(1, sizeof(Service));
     VerifyOrExit(buf != nullptr);
 
     service = new (buf) Service(aDescription, aIsSubType);
@@ -1459,7 +1459,7 @@ exit:
 
 void Server::Service::Free(void)
 {
-    Instance::HeapFree(this);
+    Heap::Free(this);
 }
 
 Server::Service::Service(Description &aDescription, bool aIsSubType)
@@ -1591,7 +1591,7 @@ Server::Service::Description *Server::Service::Description::New(const char *aIns
     void *       buf;
     Description *desc = nullptr;
 
-    buf = Instance::HeapCAlloc(1, sizeof(Description));
+    buf = Heap::CAlloc(1, sizeof(Description));
     VerifyOrExit(buf != nullptr);
 
     desc = new (buf) Description(aHost);
@@ -1609,7 +1609,7 @@ exit:
 void Server::Service::Description::Free(void)
 {
     mInstanceName.Free();
-    Instance::HeapFree(this);
+    Heap::Free(this);
 }
 
 Server::Service::Description::Description(Host &aHost)
@@ -1629,7 +1629,7 @@ Server::Service::Description::Description(Host &aHost)
 void Server::Service::Description::ClearResources(void)
 {
     mPort = 0;
-    Instance::HeapFree(mTxtData);
+    Heap::Free(mTxtData);
     mTxtData   = nullptr;
     mTxtLength = 0;
 }
@@ -1638,7 +1638,7 @@ void Server::Service::Description::TakeResourcesFrom(Description &aDescription)
 {
     // Take ownership and move the heap allocated `mTxtData` buffer
     // from `aDescription
-    Instance::HeapFree(mTxtData);
+    Heap::Free(mTxtData);
     mTxtData                = aDescription.mTxtData;
     mTxtLength              = aDescription.mTxtLength;
     aDescription.mTxtData   = nullptr;
@@ -1658,20 +1658,20 @@ Error Server::Service::Description::SetTxtDataFromMessage(const Message &aMessag
     Error    error = kErrorNone;
     uint8_t *txtData;
 
-    txtData = static_cast<uint8_t *>(Instance::HeapCAlloc(1, aLength));
+    txtData = static_cast<uint8_t *>(Heap::CAlloc(1, aLength));
     VerifyOrExit(txtData != nullptr, error = kErrorNoBufs);
 
     VerifyOrExit(aMessage.ReadBytes(aOffset, txtData, aLength) == aLength, error = kErrorParse);
     VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength, /* aAllowEmpty */ false), error = kErrorParse);
 
-    Instance::HeapFree(mTxtData);
+    Heap::Free(mTxtData);
     mTxtData   = txtData;
     mTxtLength = aLength;
 
 exit:
     if (error != kErrorNone)
     {
-        Instance::HeapFree(txtData);
+        Heap::Free(txtData);
     }
 
     return error;
@@ -1685,7 +1685,7 @@ Server::Host *Server::Host::New(Instance &aInstance)
     void *buf;
     Host *host = nullptr;
 
-    buf = Instance::HeapCAlloc(1, sizeof(Host));
+    buf = Heap::CAlloc(1, sizeof(Host));
     VerifyOrExit(buf != nullptr);
 
     host = new (buf) Host(aInstance);
@@ -1698,7 +1698,7 @@ void Server::Host::Free(void)
 {
     FreeAllServices();
     mFullName.Free();
-    Instance::HeapFree(this);
+    Heap::Free(this);
 }
 
 Server::Host::Host(Instance &aInstance)
@@ -1987,7 +1987,7 @@ Server::UpdateMetadata *Server::UpdateMetadata::New(Instance &               aIn
     void *          buf;
     UpdateMetadata *update = nullptr;
 
-    buf = Instance::HeapCAlloc(1, sizeof(UpdateMetadata));
+    buf = Heap::CAlloc(1, sizeof(UpdateMetadata));
     VerifyOrExit(buf != nullptr);
 
     update = new (buf) UpdateMetadata(aInstance, aHeader, aHost, aMessageInfo);
@@ -1998,7 +1998,7 @@ exit:
 
 void Server::UpdateMetadata::Free(void)
 {
-    Instance::HeapFree(this);
+    Heap::Free(this);
 }
 
 Server::UpdateMetadata::UpdateMetadata(Instance &               aInstance,

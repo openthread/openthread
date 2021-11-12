@@ -32,8 +32,8 @@
  *
  */
 
-#ifndef OT_HEAP_HPP_
-#define OT_HEAP_HPP_
+#ifndef OT_UTILS_HEAP_HPP_
+#define OT_UTILS_HEAP_HPP_
 
 #include "openthread-core-config.h"
 
@@ -350,4 +350,4 @@ private:
 
 #endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
-#endif // OT_HEAP_HPP_
+#endif // OT_UTILS_HEAP_HPP_

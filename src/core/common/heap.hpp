@@ -28,72 +28,41 @@
 
 /**
  * @file
- *   This file implements the `Heap::String` (a heap allocated string).
+ *   This file includes definitions for `Heap`.
  */
 
-#include "heap_string.hpp"
+#ifndef HEAP_HPP_
+#define HEAP_HPP_
 
-#include "common/code_utils.hpp"
-#include "common/string.hpp"
+#include "openthread-core-config.h"
+
+#include <string.h>
 
 namespace ot {
 namespace Heap {
 
-Error String::Set(const char *aCString)
-{
-    Error  error = kErrorNone;
-    size_t curSize;
-    size_t newSize;
+/**
+ * This function allocates memory from heap for an array of given number of object of certain size.
+ *
+ * @param[in] aCount   Number of objects.
+ * @param[in] aSize    Size of each object.
+ *
+ * @returns A pointer to the allocated buffer or `nullptr` if fails to allocate.
+ *
+ */
+void *CAlloc(size_t aCount, size_t aSize);
 
-    VerifyOrExit(aCString != nullptr, Free());
-
-    curSize = (mStringBuffer != nullptr) ? strlen(mStringBuffer) + 1 : 0;
-    newSize = strlen(aCString) + 1;
-
-    if (curSize != newSize)
-    {
-        char *newBuffer = static_cast<char *>(Heap::CAlloc(sizeof(char), newSize));
-
-        VerifyOrExit(newBuffer != nullptr, error = kErrorNoBufs);
-
-        Heap::Free(mStringBuffer);
-        mStringBuffer = newBuffer;
-    }
-
-    memcpy(mStringBuffer, aCString, newSize);
-
-exit:
-    return error;
-}
-
-Error String::Set(String &&aString)
-{
-    VerifyOrExit(mStringBuffer != aString.mStringBuffer);
-
-    Heap::Free(mStringBuffer);
-    mStringBuffer         = aString.mStringBuffer;
-    aString.mStringBuffer = nullptr;
-
-exit:
-    return kErrorNone;
-}
-
-void String::Free(void)
-{
-    Heap::Free(mStringBuffer);
-    mStringBuffer = nullptr;
-}
-
-bool String::operator==(const char *aCString) const
-{
-    bool isEqual;
-
-    VerifyOrExit((aCString != nullptr) && (mStringBuffer != nullptr), isEqual = (mStringBuffer == aCString));
-    isEqual = (strcmp(mStringBuffer, aCString) == 0);
-
-exit:
-    return isEqual;
-}
+/**
+ * This function frees a previously heap allocated buffer.
+ *
+ * A heap allocated buffer MUST be freed only once.
+ *
+ * @param[in] aPointer   A pointer to the previously heap allocated buffer. Can be `nullptr` which does nothing.
+ *
+ */
+void Free(void *aPointer);
 
 } // namespace Heap
 } // namespace ot
+
+#endif // HEAP_HPP_
