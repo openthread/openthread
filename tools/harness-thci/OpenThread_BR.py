@@ -423,7 +423,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         )
 
         self.bash(cmd)
-        time.sleep(1)
+        time.sleep(timeout)
 
     def multicast_Ping(self, destination, length=20):
         """send ICMPv6 echo request with a given length to a multicast destination
