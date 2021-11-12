@@ -1469,6 +1469,7 @@ exit:
 
 void Server::Service::Free(void)
 {
+    mServiceName.Free();
     Heap::Free(this);
 }
 
@@ -1619,6 +1620,7 @@ exit:
 void Server::Service::Description::Free(void)
 {
     mInstanceName.Free();
+    Heap::Free(mTxtData);
     Heap::Free(this);
 }
 
