@@ -56,6 +56,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/heap.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -348,7 +349,7 @@ public:
             Error       SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
             Description *mNext;
-            HeapString   mInstanceName;
+            Heap::String mInstanceName;
             Host &       mHost;
             uint16_t     mPriority;
             uint16_t     mWeight;
@@ -357,7 +358,7 @@ public:
             uint8_t *    mTxtData;
             uint32_t     mLease;    // The LEASE time in seconds.
             uint32_t     mKeyLease; // The KEY-LEASE time in seconds.
-            TimeMilli    mTimeLastUpdate;
+            TimeMilli    mUpdateTime;
         };
 
         enum Action : uint8_t
@@ -370,18 +371,22 @@ public:
             kKeyLeaseExpired,
         };
 
-        static Service *New(const char *aServiceName, Description &aDescription, bool aIsSubType);
+        static Service *New(const char * aServiceName,
+                            Description &aDescription,
+                            bool         aIsSubType,
+                            TimeMilli    aUpdateTime);
 
-        Service(Description &aDescription, bool aIsSubType);
+        Service(Description &aDescription, bool aIsSubType, TimeMilli aUpdateTime);
 
-        void Free(void);
-        bool MatchesFlags(Flags aFlags) const;
-        void Log(Action aAction) const;
+        void             Free(void);
+        bool             MatchesFlags(Flags aFlags) const;
+        const TimeMilli &GetUpdateTime(void) const { return mUpdateTime; }
+        void             Log(Action aAction) const;
 
-        HeapString   mServiceName;
+        Heap::String mServiceName;
         Description &mDescription;
         Service *    mNext;
-        TimeMilli    mTimeLastUpdate;
+        TimeMilli    mUpdateTime;
         bool         mIsDeleted : 1;
         bool         mIsSubType : 1;
         bool         mIsCommitted : 1;
@@ -508,16 +513,19 @@ public:
     private:
         static constexpr uint16_t kMaxAddresses = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
 
-        static Host *New(Instance &aInstance);
+        static Host *New(Instance &aInstance, TimeMilli aUpdateTime);
 
-        explicit Host(Instance &aInstance);
+        Host(Instance &aInstance, TimeMilli aUpdateTime);
         void                 Free(void);
         Error                SetFullName(const char *aFullName);
         void                 SetKey(Dns::Ecdsa256KeyRecord &aKey);
         void                 SetLease(uint32_t aLease) { mLease = aLease; }
         void                 SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
         LinkedList<Service> &GetServices(void) { return mServices; }
-        Service *            AddNewService(const char *aServiceName, const char *aInstanceName, bool aIsSubType);
+        Service *            AddNewService(const char *aServiceName,
+                                           const char *aInstanceName,
+                                           bool        aIsSubType,
+                                           TimeMilli   aUpdateTime);
         void                 RemoveService(Service *aService, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
         void                 FreeAllServices(void);
         void                 FreeUnusedServiceDescriptions(void);
@@ -530,12 +538,12 @@ public:
         const Service *             FindService(const char *aServiceName, const char *aInstanceName) const;
 
         Host *                             mNext;
-        HeapString                         mFullName;
+        Heap::String                       mFullName;
         Array<Ip6::Address, kMaxAddresses> mAddresses;
         Dns::Ecdsa256KeyRecord             mKey;
         uint32_t                           mLease;    // The LEASE time in seconds.
         uint32_t                           mKeyLease; // The KEY-LEASE time in seconds.
-        TimeMilli                          mTimeLastUpdate;
+        TimeMilli                          mUpdateTime;
         LinkedList<Service>                mServices;
         LinkedList<Service::Description>   mServiceDescriptions;
     };
@@ -761,6 +769,21 @@ private:
 
     static constexpr uint16_t kAnycastAddressModePort = 53;
 
+    // Metdata for a received SRP Update message.
+    struct MessageMetadata
+    {
+        // Indicates whether the `Message` is received directly from a
+        // client or from an SRPL partner.
+        bool IsDirectRxFromClient(void) const { return (mMessageInfo != nullptr); }
+
+        Dns::UpdateHeader       mDnsHeader;
+        Dns::Zone               mDnsZone;
+        uint16_t                mOffset;
+        TimeMilli               mRxTime;
+        LeaseConfig             mLeaseConfig;
+        const Ip6::MessageInfo *mMessageInfo; // Set to `nullptr` when from SRPL.
+    };
+
     // This class includes metadata for processing a SRP update (register, deregister)
     // and sending DNS response to the client.
     class UpdateMetadata : public InstanceLocator, public LinkedListEntry<UpdateMetadata>
@@ -768,30 +791,28 @@ private:
         friend class LinkedListEntry<UpdateMetadata>;
 
     public:
-        static UpdateMetadata *  New(Instance &               aInstance,
-                                     const Dns::UpdateHeader &aHeader,
-                                     Host *                   aHost,
-                                     const Ip6::MessageInfo & aMessageInfo);
+        static UpdateMetadata *  New(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
         void                     Free(void);
         TimeMilli                GetExpireTime(void) const { return mExpireTime; }
         const Dns::UpdateHeader &GetDnsHeader(void) const { return mDnsHeader; }
         ServiceUpdateId          GetId(void) const { return mId; }
-        Host &                   GetHost(void) { return *mHost; }
+        const LeaseConfig &      GetLeaseConfig(void) const { return mLeaseConfig; }
+        Host &                   GetHost(void) { return mHost; }
         const Ip6::MessageInfo & GetMessageInfo(void) const { return mMessageInfo; }
+        bool                     IsDirectRxFromClient(void) const { return mIsDirectRxFromClient; }
         bool                     Matches(ServiceUpdateId aId) const { return mId == aId; }
 
     private:
-        UpdateMetadata(Instance &               aInstance,
-                       const Dns::UpdateHeader &aHeader,
-                       Host *                   aHost,
-                       const Ip6::MessageInfo & aMessageInfo);
+        UpdateMetadata(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
 
+        UpdateMetadata *  mNext;
         TimeMilli         mExpireTime;
         Dns::UpdateHeader mDnsHeader;
         ServiceUpdateId   mId;          // The ID of this service update transaction.
-        Host *            mHost;        // The host will be updated. The UpdateMetadata has no ownership of this host.
-        Ip6::MessageInfo  mMessageInfo; // The message info of the DNS update request.
-        UpdateMetadata *  mNext;
+        LeaseConfig       mLeaseConfig; // Lease config to use when processing the message.
+        Host &            mHost;        // The `UpdateMetadata` has no ownership of this host.
+        Ip6::MessageInfo  mMessageInfo; // Valid when `mIsDirectRxFromClient` is true.
+        bool              mIsDirectRxFromClient;
     };
 
     void              Start(void);
@@ -809,24 +830,21 @@ private:
 
     ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 
+    void  CommitSrpUpdate(Error aError, Host &aHost, const MessageMetadata &aMessageMetadata);
+    void  CommitSrpUpdate(Error aError, UpdateMetadata &aUpdateMetadata);
     void  CommitSrpUpdate(Error                    aError,
-                          const Dns::UpdateHeader &aDnsHeader,
                           Host &                   aHost,
-                          const Ip6::MessageInfo & aMessageInfo);
+                          const Dns::UpdateHeader &aDnsHeader,
+                          const Ip6::MessageInfo * aMessageInfo,
+                          const LeaseConfig &      aLeaseConfig);
     Error ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  ProcessDnsUpdate(Message &                aMessage,
-                           const Ip6::MessageInfo & aMessageInfo,
-                           const Dns::UpdateHeader &aDnsHeader,
-                           uint16_t                 aOffset);
-    Error ProcessUpdateSection(Host &                   aHost,
-                               const Message &          aMessage,
-                               const Dns::UpdateHeader &aDnsHeader,
-                               const Dns::Zone &        aZone,
-                               uint16_t &               aOffset) const;
-    Error ProcessAdditionalSection(Host *                   aHost,
-                                   const Message &          aMessage,
-                                   const Dns::UpdateHeader &aDnsHeader,
-                                   uint16_t &               aOffset) const;
+    Error ProcessMessage(Message &               aMessage,
+                         TimeMilli               aRxTime,
+                         const LeaseConfig &     aLeaseConfig,
+                         const Ip6::MessageInfo *aMessageInfo);
+    void  ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata);
+    Error ProcessUpdateSection(Host &aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
+    Error ProcessAdditionalSection(Host *aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
     Error VerifySignature(const Dns::Ecdsa256KeyRecord &aKey,
                           const Message &               aMessage,
                           Dns::UpdateHeader             aDnsHeader,
@@ -834,29 +852,18 @@ private:
                           uint16_t                      aSigRdataOffset,
                           uint16_t                      aSigRdataLength,
                           const char *                  aSignerName) const;
-    Error ProcessZoneSection(const Message &          aMessage,
-                             const Dns::UpdateHeader &aDnsHeader,
-                             uint16_t &               aOffset,
-                             Dns::Zone &              aZone) const;
-    Error ProcessHostDescriptionInstruction(Host &                   aHost,
-                                            const Message &          aMessage,
-                                            const Dns::UpdateHeader &aDnsHeader,
-                                            const Dns::Zone &        aZone,
-                                            uint16_t                 aOffset) const;
-    Error ProcessServiceDiscoveryInstructions(Host &                   aHost,
-                                              const Message &          aMessage,
-                                              const Dns::UpdateHeader &aDnsHeader,
-                                              const Dns::Zone &        aZone,
-                                              uint16_t                 aOffset) const;
-    Error ProcessServiceDescriptionInstructions(Host &                   aHost,
-                                                const Message &          aMessage,
-                                                const Dns::UpdateHeader &aDnsHeader,
-                                                const Dns::Zone &        aZone,
-                                                uint16_t &               aOffset) const;
+    Error ProcessZoneSection(const Message &aMessage, MessageMetadata &aMetadata) const;
+    Error ProcessHostDescriptionInstruction(Host &                 aHost,
+                                            const Message &        aMessage,
+                                            const MessageMetadata &aMetadata) const;
+    Error ProcessServiceDiscoveryInstructions(Host &                 aHost,
+                                              const Message &        aMessage,
+                                              const MessageMetadata &aMetadata) const;
+    Error ProcessServiceDescriptionInstructions(Host &aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
 
     static bool IsValidDeleteAllRecord(const Dns::ResourceRecord &aRecord);
 
-    void        HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host &aHost, const Ip6::MessageInfo &aMessageInfo);
+    void        HandleUpdate(Host &aHost, const MessageMetadata &aMetadata);
     void        AddHost(Host &aHost);
     void        RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
     bool        HasNameConflictsWith(Host &aHost) const;
@@ -875,14 +882,14 @@ private:
     void        HandleOutstandingUpdatesTimer(void);
 
     void                  HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError);
-    const UpdateMetadata *FindOutstandingUpdate(const Ip6::MessageInfo &aMessageInfo, uint16_t aDnsMessageId);
+    const UpdateMetadata *FindOutstandingUpdate(const MessageMetadata &aMessageMetadata) const;
     static const char *   AddressModeToString(AddressMode aMode);
 
     Ip6::Udp::Socket                mSocket;
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
     void *                          mServiceUpdateHandlerContext;
 
-    HeapString mDomain;
+    Heap::String mDomain;
 
     LeaseConfig mLeaseConfig;
 

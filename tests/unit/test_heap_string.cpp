@@ -39,7 +39,7 @@
 
 namespace ot {
 
-void PrintString(const char *aName, const HeapString &aString)
+void PrintString(const char *aName, const Heap::String &aString)
 {
     if (aString.IsNull())
     {
@@ -51,7 +51,7 @@ void PrintString(const char *aName, const HeapString &aString)
     }
 }
 
-void VerifyString(const char *aName, const HeapString &aString, const char *aExpectedString)
+void VerifyString(const char *aName, const Heap::String &aString, const char *aExpectedString)
 {
     PrintString(aName, aString);
 
@@ -72,10 +72,10 @@ void VerifyString(const char *aName, const HeapString &aString, const char *aExp
     VerifyOrQuit(aString == aExpectedString);
 }
 
-// Function returning a `HeapString` by value.
-HeapString GetName(void)
+// Function returning a `Heap::String` by value.
+Heap::String GetName(void)
 {
-    HeapString name;
+    Heap::String name;
 
     SuccessOrQuit(name.Set("name"));
 
@@ -84,9 +84,9 @@ HeapString GetName(void)
 
 void TestHeapString(void)
 {
-    HeapString  str1;
-    HeapString  str2;
-    const char *oldBuffer;
+    Heap::String str1;
+    Heap::String str2;
+    const char * oldBuffer;
 
     printf("====================================================================================\n");
     printf("TestHeapString\n\n");
@@ -111,7 +111,7 @@ void TestHeapString(void)
     printf("\tDid reuse its old buffer (same length): %s\n", str1.AsCString() == oldBuffer ? "yes" : "no");
 
     printf("------------------------------------------------------------------------------------\n");
-    printf("Set(const HeapString &)\n\n");
+    printf("Set(const Heap::String &)\n\n");
     SuccessOrQuit(str2.Set(str1));
     VerifyString("str2", str2, str1.AsCString());
 
@@ -150,29 +150,24 @@ void TestHeapString(void)
     printf("\n -- PASS\n");
 }
 
-void PrintData(const HeapData &aData)
+void PrintData(const Heap::Data &aData)
 {
     DumpBuffer("data", aData.GetBytes(), aData.GetLength());
 }
 
-template <uint16_t kLength> void VerifyData(const HeapData &aData, const uint8_t (&aArray)[kLength])
-{
-    VerifyData(aData, &aArray[0], kLength);
-}
-
 static const uint8_t kTestValue = 0x77;
 
-// Function returning a `HeapData` by value.
-HeapData GetData(void)
+// Function returning a `Heap::Data` by value.
+Heap::Data GetData(void)
 {
-    HeapData data;
+    Heap::Data data;
 
     SuccessOrQuit(data.SetFrom(&kTestValue, sizeof(kTestValue)));
 
     return data;
 }
 
-void VerifyData(const HeapData &aData, const uint8_t *aBytes, uint16_t aLength)
+void VerifyData(const Heap::Data &aData, const uint8_t *aBytes, uint16_t aLength)
 {
     static constexpr uint16_t kMaxLength = 100;
     uint8_t                   buffer[kMaxLength];
@@ -197,12 +192,17 @@ void VerifyData(const HeapData &aData, const uint8_t *aBytes, uint16_t aLength)
     }
 }
 
+template <uint16_t kLength> void VerifyData(const Heap::Data &aData, const uint8_t (&aArray)[kLength])
+{
+    VerifyData(aData, &aArray[0], kLength);
+}
+
 void TestHeapData(void)
 {
     Instance *     instance;
     MessagePool *  messagePool;
     Message *      message;
-    HeapData       data;
+    Heap::Data     data;
     const uint8_t *oldBuffer;
 
     static const uint8_t kData1[] = {10, 20, 3, 15, 100, 0, 60, 16};

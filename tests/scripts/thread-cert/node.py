@@ -3245,6 +3245,7 @@ EOF
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
+    TUN_DEV = config.THREAD_IFNAME
     is_otbr = True
     is_bbr = True  # OTBR is also BBR
     node_type = 'otbr-docker'
@@ -3257,6 +3258,10 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
         self.set_log_level(5)
         super().start()
 
+    def add_ipaddr(self, addr):
+        cmd = f'ip -6 addr add {addr}/64 dev {self.TUN_DEV}'
+        self.bash(cmd)
+
 
 class HostNode(LinuxHost, OtbrDocker):
     is_host = True
@@ -3265,6 +3270,7 @@ class HostNode(LinuxHost, OtbrDocker):
         self.nodeid = nodeid
         self.name = name or ('Host%d' % nodeid)
         super().__init__(nodeid, **kwargs)
+        self.bash('service otbr-agent stop')
 
     def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()

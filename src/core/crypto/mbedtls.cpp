@@ -44,7 +44,7 @@
 #endif
 
 #include "common/error.hpp"
-#include "common/instance.hpp"
+#include "common/heap.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -56,7 +56,7 @@ MbedTls::MbedTls(void)
     // mbedTLS's debug level is almost the same as OpenThread's
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
 #endif
-    mbedtls_platform_set_calloc_free(Instance::HeapCAlloc, Instance::HeapFree);
+    mbedtls_platform_set_calloc_free(Heap::CAlloc, Heap::Free);
 #endif // OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
 }
 

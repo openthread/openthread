@@ -2481,6 +2481,15 @@ void MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Mes
     switch (ReadLeaderData(aMessage, leaderData))
     {
     case kErrorNone:
+        if (child->IsFullNetworkData())
+        {
+            child->SetNetworkDataVersion(leaderData.GetDataVersion());
+        }
+        else
+        {
+            child->SetNetworkDataVersion(leaderData.GetStableDataVersion());
+        }
+        break;
     case kErrorNotFound:
         break;
     default:

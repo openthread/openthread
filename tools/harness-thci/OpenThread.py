@@ -1481,7 +1481,7 @@ class OpenThreadTHCI(object):
         start_time = time.time()
         while time.time() < start_time + timeout:
             time.sleep(0.3)
-            if TESTHARNESS_VERSION == TESTHARNESS_1_2 and not self.IsBorderRouter:
+            if not self.IsBorderRouter:
                 self._disconnect()
                 self._connect()
             try:
