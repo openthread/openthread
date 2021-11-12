@@ -285,7 +285,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     IsBorderRouter = True
 
     def _connect(self):
-        self.log("logging to Raspberry Pi ...")
+        self.log("logging in to Raspberry Pi ...")
         self.__cli_output_lines = []
         self.__syslog_skip_lines = None
         self.__syslog_last_read_ts = 0
