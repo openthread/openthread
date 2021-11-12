@@ -979,7 +979,7 @@ Error Server::ProcessServiceDescriptionInstructions(Host &           aHost,
         // (i.e., we saw both SRV and TXT record) or both are default
         // (cleared) value (i.e., we saw neither of them).
 
-        VerifyOrExit((desc.mPort == 0) == (desc.mTxtData == nullptr), error = kErrorFailed);
+        VerifyOrExit((desc.mPort == 0) == desc.mTxtData.IsNull(), error = kErrorFailed);
     }
 
     aMetadata.mOffset = offset;
@@ -1620,7 +1620,7 @@ exit:
 void Server::Service::Description::Free(void)
 {
     mInstanceName.Free();
-    Heap::Free(mTxtData);
+    mTxtData.Free();
     Heap::Free(this);
 }
 
@@ -1630,8 +1630,6 @@ Server::Service::Description::Description(Host &aHost)
     , mPriority(0)
     , mWeight(0)
     , mPort(0)
-    , mTxtLength(0)
-    , mTxtData(nullptr)
     , mLease(0)
     , mKeyLease(0)
     , mUpdateTime(TimerMilli::GetNow().GetDistantPast())
@@ -1641,20 +1639,12 @@ Server::Service::Description::Description(Host &aHost)
 void Server::Service::Description::ClearResources(void)
 {
     mPort = 0;
-    Heap::Free(mTxtData);
-    mTxtData   = nullptr;
-    mTxtLength = 0;
+    mTxtData.Free();
 }
 
 void Server::Service::Description::TakeResourcesFrom(Description &aDescription)
 {
-    // Take ownership and move the heap allocated `mTxtData` buffer
-    // from `aDescription
-    Heap::Free(mTxtData);
-    mTxtData                = aDescription.mTxtData;
-    mTxtLength              = aDescription.mTxtLength;
-    aDescription.mTxtData   = nullptr;
-    aDescription.mTxtLength = 0;
+    mTxtData.SetFrom(static_cast<Heap::Data &&>(aDescription.mTxtData));
 
     mPriority = aDescription.mPriority;
     mWeight   = aDescription.mWeight;
@@ -1667,23 +1657,16 @@ void Server::Service::Description::TakeResourcesFrom(Description &aDescription)
 
 Error Server::Service::Description::SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
-    Error    error = kErrorNone;
-    uint8_t *txtData;
+    Error error;
 
-    txtData = static_cast<uint8_t *>(Heap::CAlloc(1, aLength));
-    VerifyOrExit(txtData != nullptr, error = kErrorNoBufs);
-
-    VerifyOrExit(aMessage.ReadBytes(aOffset, txtData, aLength) == aLength, error = kErrorParse);
-    VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength, /* aAllowEmpty */ false), error = kErrorParse);
-
-    Heap::Free(mTxtData);
-    mTxtData   = txtData;
-    mTxtLength = aLength;
+    SuccessOrExit(error = mTxtData.SetFrom(aMessage, aOffset, aLength));
+    VerifyOrExit(Dns::TxtRecord::VerifyTxtData(mTxtData.GetBytes(), mTxtData.GetLength(), /* aAllowEmpty */ false),
+                 error = kErrorParse);
 
 exit:
     if (error != kErrorNone)
     {
-        Heap::Free(txtData);
+        mTxtData.Free();
     }
 
     return error;

@@ -112,18 +112,33 @@ public:
     Error SetFrom(const uint8_t *aBuffer, uint16_t aLength);
 
     /**
-     * This method sets the `HeapData` from the content of a given message.
+     * This method sets the `Heap::Data` from the content of a given message.
      *
      * The bytes are copied from current offset in @p aMessage till the end of the message.
      *
      * @param[in] aMessage    The message to copy bytes from (starting from offset till the end of message).
-     * @param[in] aLength     The buffer length (number of bytes).
      *
      * @retval kErrorNone     Successfully set the `Heap::Data`.
      * @retval kErrorNoBufs   Failed to allocate buffer.
      *
      */
     Error SetFrom(const Message &aMessage);
+
+    /**
+     * This method sets the `Heap::Data` from the content of a given message read at a given offset up to a given
+     * length.
+     *
+     * @param[in] aMessage    The message to read and copy bytes from.
+     * @param[in] aOffset     The offset into the message to start reading the bytes from.
+     * @param[in] aLength     The number of bytes to read from message. If @p aMessage contains fewer bytes than
+     *                        requested, then `Heap::Data` is cleared and this method returns `kErrorParse`.
+     *
+     * @retval kErrorNone     Successfully set the `Heap::Data`.
+     * @retval kErrorNoBufs   Failed to allocate buffer.
+     * @retval kErrorParse    Not enough bytes in @p aMessage to read the requested @p aLength bytes.
+     *
+     */
+    Error SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method sets the `Heap::Data` from another one (move semantics).
