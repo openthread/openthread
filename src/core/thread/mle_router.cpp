@@ -2111,23 +2111,6 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
             address.Clear();
             address.SetPrefix(context.mPrefix);
             address.SetIid(entry.GetIid());
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
-            {
-                hasDua = true;
-
-                if (oldDuaPtr != nullptr)
-                {
-                    Get<DuaManager>().UpdateChildDomainUnicastAddress(
-                        aChild, oldDua != address ? ChildDuaState::kChanged : ChildDuaState::kUnchanged);
-                }
-                else
-                {
-                    Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kAdded);
-                }
-            }
-#endif
         }
         else
         {
@@ -2152,11 +2135,37 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
         if (error == kErrorNone)
         {
             storedCount++;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
+            {
+                hasDua = true;
+
+                if (oldDuaPtr != nullptr)
+                {
+                    Get<DuaManager>().UpdateChildDomainUnicastAddress(
+                        aChild, oldDua != address ? ChildDuaState::kChanged : ChildDuaState::kUnchanged);
+                }
+                else
+                {
+                    Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kAdded);
+                }
+            }
+#endif
+
             otLogInfoMle("Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), storedCount,
                          address.ToString().AsCString());
         }
         else
         {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
+            {
+                // if not able to store DUA, then assume child does not have one
+                hasDua = false;
+            }
+#endif
+
             otLogWarnMle("Error %s adding IPv6 address %s to child 0x%04x", ErrorToString(error),
                          address.ToString().AsCString(), aChild.GetRloc16());
         }
