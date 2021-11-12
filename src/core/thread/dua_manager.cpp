@@ -483,15 +483,18 @@ void DuaManager::PerformNextRegistration(void)
 
             if (mChildDuaMask.Get(childIndex) && !mChildDuaRegisteredMask.Get(childIndex))
             {
-                mChildIndexDuaRegistering = childIndex;
-                break;
+                child  = Get<ChildTable>().GetChildAtIndex(childIndex);
+                duaPtr = child->GetDomainUnicastAddress();
+                if (duaPtr != nullptr)
+                {
+                    mChildIndexDuaRegistering = childIndex;
+                    break;
+                }
             }
         }
 
-        child  = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
-        duaPtr = child->GetDomainUnicastAddress();
-
-        OT_ASSERT(duaPtr != nullptr);
+        // Previous for might end without finding any suitable candidate to register.
+        VerifyOrExit(duaPtr != nullptr, error = kErrorFailed);
 
         dua = *duaPtr;
         SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, dua));
