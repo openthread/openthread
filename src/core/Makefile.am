@@ -429,6 +429,7 @@ HEADERS_COMMON                                  = \
     common/error.hpp                              \
     common/extension.hpp                          \
     common/heap.hpp                               \
+    common/heap_allocatable.hpp                   \
     common/heap_data.hpp                          \
     common/heap_string.hpp                        \
     common/instance.hpp                           \

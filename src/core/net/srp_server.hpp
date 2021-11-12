@@ -57,6 +57,7 @@
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/heap.hpp"
+#include "common/heap_allocatable.hpp"
 #include "common/heap_data.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
@@ -151,11 +152,15 @@ public:
      * This class implements a server-side SRP service.
      *
      */
-    class Service : public otSrpServerService, public LinkedListEntry<Service>, private NonCopyable
+    class Service : public otSrpServerService,
+                    public LinkedListEntry<Service>,
+                    private Heap::Allocatable<Service>,
+                    private NonCopyable
     {
         friend class Server;
         friend class LinkedList<Service>;
         friend class LinkedListEntry<Service>;
+        friend class Heap::Allocatable<Service>;
 
     public:
         /**
@@ -216,7 +221,7 @@ public:
          * @returns  A pointer service instance name (as a null-terminated C string).
          *
          */
-        const char *GetInstanceName(void) const { return mDescription.mInstanceName.AsCString(); }
+        const char *GetInstanceName(void) const { return mDescription->mInstanceName.AsCString(); }
 
         /**
          * This method gets the full service name of the service.
@@ -251,7 +256,7 @@ public:
          * @returns  The port of the service.
          *
          */
-        uint16_t GetPort(void) const { return mDescription.mPort; }
+        uint16_t GetPort(void) const { return mDescription->mPort; }
 
         /**
          * This method returns the weight of the service instance.
@@ -259,7 +264,7 @@ public:
          * @returns  The weight of the service.
          *
          */
-        uint16_t GetWeight(void) const { return mDescription.mWeight; }
+        uint16_t GetWeight(void) const { return mDescription->mWeight; }
 
         /**
          * This method returns the priority of the service instance.
@@ -269,7 +274,7 @@ public:
          * @returns  The priority of the service.
          *
          */
-        uint16_t GetPriority(void) const { return mDescription.mPriority; }
+        uint16_t GetPriority(void) const { return mDescription->mPriority; }
 
         /**
          * This method returns the TXT record data of the service instance.
@@ -277,7 +282,7 @@ public:
          * @returns A pointer to the buffer containing the TXT record data.
          *
          */
-        const uint8_t *GetTxtData(void) const { return mDescription.mTxtData.GetBytes(); }
+        const uint8_t *GetTxtData(void) const { return mDescription->mTxtData.GetBytes(); }
 
         /**
          * This method returns the TXT record data length of the service instance.
@@ -285,7 +290,7 @@ public:
          * @return The TXT record data length (number of bytes in buffer returned from `GetTxtData()`).
          *
          */
-        uint16_t GetTxtDataLength(void) const { return mDescription.mTxtData.GetLength(); }
+        uint16_t GetTxtDataLength(void) const { return mDescription->mTxtData.GetLength(); }
 
         /**
          * This method returns the host which the service instance reside on.
@@ -293,7 +298,7 @@ public:
          * @returns  A reference to the host instance.
          *
          */
-        const Host &GetHost(void) const { return mDescription.mHost; }
+        const Host &GetHost(void) const { return *mDescription->mHost; }
 
         /**
          * This method returns the expire time (in milliseconds) of the service.
@@ -322,7 +327,7 @@ public:
          */
         bool MatchesInstanceName(const char *aInstanceName) const
         {
-            return (mDescription.mInstanceName == aInstanceName);
+            return (mDescription->mInstanceName == aInstanceName);
         }
 
         /**
@@ -337,12 +342,11 @@ public:
         bool MatchesServiceName(const char *aServiceName) const { return (mServiceName == aServiceName); }
 
     private:
-        struct Description : public LinkedListEntry<Description>, private NonCopyable
+        struct Description : public LinkedListEntry<Description>,
+                             public Heap::Allocatable<Description>,
+                             private NonCopyable
         {
-            static Description *New(const char *aInstanceName, Host &aHost);
-
-            explicit Description(Host &aHost);
-            void        Free(void);
+            Error       Init(const char *aInstanceName, Host &aHost);
             const char *GetInstanceName(void) const { return mInstanceName.AsCString(); }
             bool        Matches(const char *aInstanceName) const { return (mInstanceName == aInstanceName); }
             void        ClearResources(void);
@@ -351,7 +355,7 @@ public:
 
             Description *mNext;
             Heap::String mInstanceName;
-            Host &       mHost;
+            Host *       mHost;
             Heap::Data   mTxtData;
             uint16_t     mPriority;
             uint16_t     mWeight;
@@ -371,20 +375,13 @@ public:
             kKeyLeaseExpired,
         };
 
-        static Service *New(const char * aServiceName,
-                            Description &aDescription,
-                            bool         aIsSubType,
-                            TimeMilli    aUpdateTime);
-
-        Service(Description &aDescription, bool aIsSubType, TimeMilli aUpdateTime);
-
-        void             Free(void);
-        bool             MatchesFlags(Flags aFlags) const;
+        Error Init(const char *aServiceName, Description &aDescription, bool aIsSubType, TimeMilli aUpdateTime);
+        bool  MatchesFlags(Flags aFlags) const;
         const TimeMilli &GetUpdateTime(void) const { return mUpdateTime; }
         void             Log(Action aAction) const;
 
         Heap::String mServiceName;
-        Description &mDescription;
+        Description *mDescription;
         Service *    mNext;
         TimeMilli    mUpdateTime;
         bool         mIsDeleted : 1;
@@ -396,10 +393,15 @@ public:
      * This class implements the Host which registers services on the SRP server.
      *
      */
-    class Host : public otSrpServerHost, public LinkedListEntry<Host>, public InstanceLocator, private NonCopyable
+    class Host : public otSrpServerHost,
+                 public InstanceLocatorInit,
+                 public LinkedListEntry<Host>,
+                 private Heap::Allocatable<Host>,
+                 private NonCopyable
     {
-        friend class LinkedListEntry<Host>;
         friend class Server;
+        friend class LinkedListEntry<Host>;
+        friend class Heap::Allocatable<Host>;
 
     public:
         /**
@@ -513,10 +515,10 @@ public:
     private:
         static constexpr uint16_t kMaxAddresses = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
 
-        static Host *New(Instance &aInstance, TimeMilli aUpdateTime);
+        Host(void) = default;
+        ~Host(void);
 
-        Host(Instance &aInstance, TimeMilli aUpdateTime);
-        void                 Free(void);
+        Error                Init(Instance &aInstance, TimeMilli aUpdateTime);
         Error                SetFullName(const char *aFullName);
         void                 SetKey(Dns::Ecdsa256KeyRecord &aKey);
         void                 SetLease(uint32_t aLease) { mLease = aLease; }
@@ -786,31 +788,33 @@ private:
 
     // This class includes metadata for processing a SRP update (register, deregister)
     // and sending DNS response to the client.
-    class UpdateMetadata : public InstanceLocator, public LinkedListEntry<UpdateMetadata>
+    class UpdateMetadata : public InstanceLocatorInit,
+                           public LinkedListEntry<UpdateMetadata>,
+                           public Heap::Allocatable<UpdateMetadata>
     {
         friend class LinkedListEntry<UpdateMetadata>;
+        friend class Heap::Allocatable<UpdateMetadata>;
 
     public:
-        static UpdateMetadata *  New(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
-        void                     Free(void);
+        Error                    Init(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
         TimeMilli                GetExpireTime(void) const { return mExpireTime; }
         const Dns::UpdateHeader &GetDnsHeader(void) const { return mDnsHeader; }
         ServiceUpdateId          GetId(void) const { return mId; }
         const LeaseConfig &      GetLeaseConfig(void) const { return mLeaseConfig; }
-        Host &                   GetHost(void) { return mHost; }
+        Host &                   GetHost(void) { return *mHost; }
         const Ip6::MessageInfo & GetMessageInfo(void) const { return mMessageInfo; }
         bool                     IsDirectRxFromClient(void) const { return mIsDirectRxFromClient; }
         bool                     Matches(ServiceUpdateId aId) const { return mId == aId; }
 
     private:
-        UpdateMetadata(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
+        UpdateMetadata(void) = default;
 
         UpdateMetadata *  mNext;
         TimeMilli         mExpireTime;
         Dns::UpdateHeader mDnsHeader;
         ServiceUpdateId   mId;          // The ID of this service update transaction.
         LeaseConfig       mLeaseConfig; // Lease config to use when processing the message.
-        Host &            mHost;        // The `UpdateMetadata` has no ownership of this host.
+        Host *            mHost;        // The `UpdateMetadata` has no ownership of this host.
         Ip6::MessageInfo  mMessageInfo; // Valid when `mIsDirectRxFromClient` is true.
         bool              mIsDirectRxFromClient;
     };
