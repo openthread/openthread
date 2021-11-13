@@ -370,7 +370,6 @@ void MulticastRoutingManager::RemoveInboundMulticastForwardingCache(const Ip6::A
     {
         if (mfc.IsValid() && mfc.mIif == kMifIndexBackbone && mfc.mGroupAddr == aGroupAddr)
         {
-            UpdateMldReport(mfc.mGroupAddr, false);
             RemoveMulticastForwardingCache(mfc);
         }
     }
@@ -395,7 +394,6 @@ void MulticastRoutingManager::ExpireMulticastForwardingCache(void)
         {
             if (!UpdateMulticastRouteInfo(mfc))
             {
-                UpdateMldReport(mfc.mGroupAddr, false);
                 // The multicast route is expired
                 RemoveMulticastForwardingCache(mfc);
             }
@@ -561,7 +559,6 @@ void MulticastRoutingManager::SaveMulticastForwardingCache(const Ip6::Address & 
     }
     else
     {
-        UpdateMldReport(oldest->mGroupAddr, false);
         RemoveMulticastForwardingCache(*oldest);
         oldest->Set(aSrcAddr, aGroupAddr, aIif, aOif);
     }
