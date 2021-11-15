@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include <stddef.h>
 #include <string.h>
 
 namespace ot {
