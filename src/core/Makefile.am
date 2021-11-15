@@ -182,6 +182,7 @@ SOURCES_COMMON                                  = \
     coap/coap.cpp                                 \
     coap/coap_message.cpp                         \
     coap/coap_secure.cpp                          \
+    common/appender.cpp                           \
     common/crc16.cpp                              \
     common/error.cpp                              \
     common/heap.cpp                               \
@@ -414,6 +415,7 @@ HEADERS_COMMON                                  = \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \
+    common/appender.hpp                           \
     common/arg_macros.hpp                         \
     common/array.hpp                              \
     common/as_core_type.hpp                       \
