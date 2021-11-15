@@ -371,6 +371,8 @@ openthread_core_files = [
   "coap/coap_message.hpp",
   "coap/coap_secure.cpp",
   "coap/coap_secure.hpp",
+  "common/appender.cpp",
+  "common/appender.hpp",
   "common/arg_macros.hpp",
   "common/array.hpp",
   "common/as_core_type.hpp",
