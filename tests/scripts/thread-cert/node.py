@@ -320,10 +320,9 @@ class OtbrDocker:
 
             if c == '\\':
                 assert i + 1 < len(name), name
-                if name[i + 1] in string.digits:
-                    assert i + 3 < len(name) and name[i + 2] in string.digits and name[i + 3] in string.digits, name
-                    b = (ord(name[i + 1]) - 48) * 100 + (ord(name[i + 2]) - 48) * 10 + (ord(name[i + 3]) - 48)
-                    new_name.append(chr(b))
+                if name[i + 1].isdigit():
+                    assert i + 3 < len(name) and name[i + 2].isdigit() and name[i + 3].isdigit(), name
+                    new_name.append(chr(int(name[i + 1:i + 4])))
                     i += 3
                 else:
                     new_name.append(name[i + 1])
