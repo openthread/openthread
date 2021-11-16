@@ -957,6 +957,13 @@ exit:
 
 Error TxtEntry::AppendTo(Message &aMessage) const
 {
+    Appender appender(aMessage);
+
+    return AppendTo(appender);
+}
+
+Error TxtEntry::AppendTo(Appender &aAppender) const
+{
     Error    error = kErrorNone;
     uint16_t keyLength;
     char     separator = kKeyValueSeparator;
@@ -964,7 +971,7 @@ Error TxtEntry::AppendTo(Message &aMessage) const
     if (mKey == nullptr)
     {
         VerifyOrExit((mValue != nullptr) && (mValueLength != 0));
-        error = aMessage.AppendBytes(mValue, mValueLength);
+        error = aAppender.AppendBytes(mValue, mValueLength);
         ExitNow();
     }
 
@@ -975,8 +982,8 @@ Error TxtEntry::AppendTo(Message &aMessage) const
     if (mValue == nullptr)
     {
         // Treat as a boolean attribute and encoded as "key" (with no `=`).
-        SuccessOrExit(error = aMessage.Append<uint8_t>(static_cast<uint8_t>(keyLength)));
-        error = aMessage.AppendBytes(mKey, keyLength);
+        SuccessOrExit(error = aAppender.Append<uint8_t>(static_cast<uint8_t>(keyLength)));
+        error = aAppender.AppendBytes(mKey, keyLength);
         ExitNow();
     }
 
@@ -984,10 +991,10 @@ Error TxtEntry::AppendTo(Message &aMessage) const
 
     VerifyOrExit(mValueLength + keyLength + sizeof(char) <= kMaxKeyValueEncodedSize, error = kErrorInvalidArgs);
 
-    SuccessOrExit(error = aMessage.Append<uint8_t>(static_cast<uint8_t>(keyLength + mValueLength + sizeof(char))));
-    SuccessOrExit(error = aMessage.AppendBytes(mKey, keyLength));
-    SuccessOrExit(error = aMessage.Append(separator));
-    error = aMessage.AppendBytes(mValue, mValueLength);
+    SuccessOrExit(error = aAppender.Append<uint8_t>(static_cast<uint8_t>(keyLength + mValueLength + sizeof(char))));
+    SuccessOrExit(error = aAppender.AppendBytes(mKey, keyLength));
+    SuccessOrExit(error = aAppender.Append(separator));
+    error = aAppender.AppendBytes(mValue, mValueLength);
 
 exit:
     return error;
@@ -995,17 +1002,35 @@ exit:
 
 Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage)
 {
-    Error    error       = kErrorNone;
-    uint16_t startOffset = aMessage.GetLength();
+    Appender appender(aMessage);
+
+    return AppendEntries(aEntries, aNumEntries, appender);
+}
+
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, MutableData<kWithUint16Length> &aData)
+{
+    Error    error;
+    Appender appender(aData.GetBytes(), aData.GetLength());
+
+    SuccessOrExit(error = AppendEntries(aEntries, aNumEntries, appender));
+    appender.GetAsData(aData);
+
+exit:
+    return error;
+}
+
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Appender &aAppender)
+{
+    Error error = kErrorNone;
 
     for (uint8_t index = 0; index < aNumEntries; index++)
     {
-        SuccessOrExit(error = aEntries[index].AppendTo(aMessage));
+        SuccessOrExit(error = aEntries[index].AppendTo(aAppender));
     }
 
-    if (aMessage.GetLength() == startOffset)
+    if (aAppender.GetAppendedLength() == 0)
     {
-        error = aMessage.Append<uint8_t>(0);
+        error = aAppender.Append<uint8_t>(0);
     }
 
 exit:
