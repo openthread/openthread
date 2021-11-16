@@ -444,6 +444,7 @@ HEADERS_COMMON                                  = \
     common/notifier.hpp                           \
     common/numeric_limits.hpp                     \
     common/owned_ptr.hpp                          \
+    common/owning_list.hpp                        \
     common/pool.hpp                               \
     common/random.hpp                             \
     common/random_manager.hpp                     \
