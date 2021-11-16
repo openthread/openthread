@@ -39,6 +39,7 @@
 #include <openthread/dns.h>
 #include <openthread/dns_client.h>
 
+#include "common/appender.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
@@ -1161,7 +1162,24 @@ public:
      */
     static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
 
+    /**
+     * This static method appends an array of `TxtEntry` items to a `MutableData` buffer.
+     *
+     * @param[in] aEntries     A pointer to array of `TxtEntry` items.
+     * @param[in] aNumEntries  The number of entries in @p aEntries array.
+     * @param[in] aData        The `MutableData` to append in.
+     *
+     * @retval kErrorNone          Entries appended successfully .
+     * @retval kErrorInvalidArgs   The `TxTEntry` info is not valid.
+     * @retval kErrorNoBufs        Insufficient available buffers.
+     *
+     */
+    static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, MutableData<kWithUint16Length> &aData);
+
 private:
+    Error        AppendTo(Appender &aAppender) const;
+    static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Appender &aAppender);
+
     static constexpr uint8_t kMaxKeyValueEncodedSize = 255;
     static constexpr char    kKeyValueSeparator      = '=';
     static constexpr char    kNullChar               = '\0';

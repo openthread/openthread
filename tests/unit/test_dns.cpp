@@ -1185,14 +1185,15 @@ void TestDnsTxtEntry(void)
         {kEncodedTxt5, sizeof(kEncodedTxt5)}, {kEncodedTxt6, sizeof(kEncodedTxt6)},
         {kEncodedTxt7, sizeof(kEncodedTxt7)}};
 
-    Instance *              instance;
-    MessagePool *           messagePool;
-    Message *               message;
-    uint8_t                 txtData[kMaxTxtDataSize];
-    uint16_t                txtDataLength;
-    uint8_t                 index;
-    Dns::TxtEntry           txtEntry;
-    Dns::TxtEntry::Iterator iterator;
+    Instance *                     instance;
+    MessagePool *                  messagePool;
+    Message *                      message;
+    uint8_t                        txtData[kMaxTxtDataSize];
+    uint16_t                       txtDataLength;
+    uint8_t                        index;
+    Dns::TxtEntry                  txtEntry;
+    Dns::TxtEntry::Iterator        iterator;
+    MutableData<kWithUint16Length> data;
 
     printf("================================================================\n");
     printf("TestDnsTxtEntry()\n");
@@ -1203,13 +1204,16 @@ void TestDnsTxtEntry(void)
     messagePool = &instance->Get<MessagePool>();
     VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
 
-    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), *message));
-
-    txtDataLength = message->GetLength();
+    data.Init(txtData, sizeof(txtData));
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), data));
+    VerifyOrQuit(data.GetBytes() == txtData);
+    txtDataLength = data.GetLength();
     VerifyOrQuit(txtDataLength < kMaxTxtDataSize, "TXT data is too long");
-
-    SuccessOrQuit(message->Read(0, txtData, txtDataLength));
     DumpBuffer("txt data", txtData, txtDataLength);
+
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), *message));
+    VerifyOrQuit(txtDataLength == message->GetLength());
+    VerifyOrQuit(message->CompareBytes(0, txtData, txtDataLength));
 
     index = 0;
     for (const EncodedTxtData &encodedData : kEncodedTxtData)
@@ -1272,11 +1276,16 @@ void TestDnsTxtEntry(void)
     // Verify appending empty txt data
 
     SuccessOrQuit(message->SetLength(0));
-    SuccessOrQuit(Dns::TxtEntry::AppendEntries(nullptr, 0, *message), "AppendEntries() failed with empty array");
-    txtDataLength = message->GetLength();
+
+    data.Init(txtData, sizeof(txtData));
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(nullptr, 0, data), "AppendEntries() failed with empty array");
+    txtDataLength = data.GetLength();
     VerifyOrQuit(txtDataLength == sizeof(uint8_t), "Data length is incorrect with empty array");
-    SuccessOrQuit(message->Read(0, txtData, txtDataLength));
     VerifyOrQuit(txtData[0] == 0, "Data is invalid with empty array");
+
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(nullptr, 0, *message), "AppendEntries() failed with empty array");
+    VerifyOrQuit(message->GetLength() == txtDataLength);
+    VerifyOrQuit(message->CompareBytes(0, txtData, txtDataLength));
 
     SuccessOrQuit(message->SetLength(0));
     txtEntry.mKey         = nullptr;
