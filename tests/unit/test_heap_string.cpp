@@ -203,6 +203,7 @@ void TestHeapData(void)
     MessagePool *  messagePool;
     Message *      message;
     Heap::Data     data;
+    uint16_t       offset;
     const uint8_t *oldBuffer;
 
     static const uint8_t kData1[] = {10, 20, 3, 15, 100, 0, 60, 16};
@@ -260,6 +261,24 @@ void TestHeapData(void)
     message->SetOffset(sizeof(kData2));
     SuccessOrQuit(data.SetFrom(*message));
     VerifyData(data, kData3);
+
+    SuccessOrQuit(message->Append(kData4));
+
+    offset = 0;
+    SuccessOrQuit(data.SetFrom(*message, offset, sizeof(kData2)));
+    VerifyData(data, kData2);
+
+    offset = sizeof(kData2);
+    SuccessOrQuit(data.SetFrom(*message, offset, sizeof(kData3)));
+    VerifyData(data, kData3);
+
+    offset += sizeof(kData3);
+    SuccessOrQuit(data.SetFrom(*message, offset, sizeof(kData4)));
+    VerifyData(data, kData4);
+
+    VerifyOrQuit(data.SetFrom(*message, offset, sizeof(kData4) + 1) == kErrorParse);
+    VerifyOrQuit(data.SetFrom(*message, 0, message->GetLength() + 1) == kErrorParse);
+    VerifyOrQuit(data.SetFrom(*message, 1, message->GetLength()) == kErrorParse);
 
     printf("------------------------------------------------------------------------------------\n");
     printf("Free()\n");

@@ -57,6 +57,7 @@
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/heap.hpp"
+#include "common/heap_data.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -276,7 +277,7 @@ public:
          * @returns A pointer to the buffer containing the TXT record data.
          *
          */
-        const uint8_t *GetTxtData(void) const { return mDescription.mTxtData; }
+        const uint8_t *GetTxtData(void) const { return mDescription.mTxtData.GetBytes(); }
 
         /**
          * This method returns the TXT record data length of the service instance.
@@ -284,7 +285,7 @@ public:
          * @return The TXT record data length (number of bytes in buffer returned from `GetTxtData()`).
          *
          */
-        uint16_t GetTxtDataLength(void) const { return mDescription.mTxtLength; }
+        uint16_t GetTxtDataLength(void) const { return mDescription.mTxtData.GetLength(); }
 
         /**
          * This method returns the host which the service instance reside on.
@@ -351,11 +352,10 @@ public:
             Description *mNext;
             Heap::String mInstanceName;
             Host &       mHost;
+            Heap::Data   mTxtData;
             uint16_t     mPriority;
             uint16_t     mWeight;
             uint16_t     mPort;
-            uint16_t     mTxtLength;
-            uint8_t *    mTxtData;
             uint32_t     mLease;    // The LEASE time in seconds.
             uint32_t     mKeyLease; // The KEY-LEASE time in seconds.
             TimeMilli    mUpdateTime;
