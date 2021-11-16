@@ -1363,10 +1363,22 @@ class OpenThreadTHCI(object):
 
     def reset_and_wait_for_connection(self, timeout=3):
         print("Waiting after reset timeout: {} s".format(timeout))
+        start_time = time.time()
         self.__sendCommand('reset', expectEcho=False)
         self.isPowerDown = True
 
-        self.sleep(timeout)
+        while time.time() < start_time + timeout:
+            time.sleep(0.3)
+            if not self.IsBorderRouter:
+                self._disconnect()
+                self._connect()
+            try:
+                self.__executeCommand('state', timeout=0.1)
+                break
+            except Exception:
+                continue
+        else:
+            raise AssertionError("Could not connect with OT device {} after reset.".format(self))
 
         if self.deviceRole == Thread_Device_Role.SED:
             self.__setPollPeriod(self.__sedPollPeriod)
@@ -1400,7 +1412,9 @@ class OpenThreadTHCI(object):
         """
         print('%s call resetAndRejoin' % self)
         try:
-            self.reset_and_wait_for_connection(timeout=timeout)
+            self.powerDown()
+            time.sleep(timeout)
+            self.powerUp()
             self.__startOpenThread()
             return self.wait_for_attach_to_the_network(expected_role="", timeout=self.NETWORK_ATTACHMENT_TIMEOUT)
         except Exception as e:
@@ -1770,13 +1784,15 @@ class OpenThreadTHCI(object):
             # TestHarness 1.2 converts 0x2001000000000000 to "2001000000000000"
             if P_Prefix is None:
                 P_Prefix = 0xfd007d037d037d03
+                
+            P_Prefix = '%016x' % P_Prefix
 
         else:
             # TestHarness 1.1 converts 2001000000000000 to "2001000000000000" (it's wrong, but not fixed yet.)
             P_Prefix = str(P_Prefix)
             int(P_Prefix, 16)
 
-        prefix = self.__convertIp6PrefixStringToIp6Address(str(P_Prefix))
+        prefix = self.__convertIp6PrefixStringToIp6Address(P_Prefix)
         print(prefix)
         parameter = ''
         prf = ''
