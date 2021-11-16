@@ -226,8 +226,11 @@ void otPlatSettingsDeinit(otInstance *aInstance)
     otPosixSecureSettingsDeinit(aInstance);
 #endif
 
-    assert(sSettingsFd != -1);
+    VerifyOrExit(sSettingsFd != -1);
     VerifyOrDie(close(sSettingsFd) == 0, OT_EXIT_ERROR_ERRNO);
+
+exit:
+    return;
 }
 
 otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
