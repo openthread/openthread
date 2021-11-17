@@ -3125,6 +3125,12 @@ class LinuxHost():
                   (self.ETH_DEV, self.ETH_DEV))
         self.bash(f'ip -6 neigh list dev {self.ETH_DEV}')
 
+    def publish_mdns_service(self, instance, service_type, addresses, port, txt, hostname='', timeout=5):
+        script = '/app/third_party/openthread/repo/tests/scripts/thread-cert/publish_mdns_service.py'
+        addresses = ','.join(addresses)
+        self.bash(
+            f'python3 {script} {instance} {service_type} \"{hostname}\" \"{addresses}\" {port} \"{txt}\" {timeout} &')
+
     def browse_mdns_services(self, name, timeout=2):
         """ Browse mDNS services on the ethernet.
 
