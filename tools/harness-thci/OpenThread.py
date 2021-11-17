@@ -3602,6 +3602,10 @@ class OpenThreadTHCI(object):
 
         return s
 
+    @API
+    def setCcmState(self, state=0):
+        self.__executeCommand("ccm {}".format("enable" if state == 1 else "disable"))
+
 
 class OpenThread(OpenThreadTHCI, IThci):
 
