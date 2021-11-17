@@ -132,8 +132,10 @@ bool MleRouter::IsRouterEligible(void) const
     }
     if (!secPolicy.mRoutersEnabled)
     {
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         VerifyOrExit(secPolicy.mVersionThresholdForRouting + SecurityPolicy::kVersionThresholdOffsetVersion <=
                      kThreadVersion);
+#endif
     }
 #endif
 
