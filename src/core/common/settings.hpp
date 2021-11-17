@@ -122,9 +122,10 @@ public:
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
+        kKeyNat64Prefix       = OT_SETTINGS_KEY_NAT64_PREFIX,
     };
 
-    static constexpr Key kLastKey = kKeySrpServerInfo; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyNat64Prefix; ///< The last (numerically) enumerator value in `Key`.
 
     /**
      * This structure represents the device's own network information for settings storage.
@@ -596,6 +597,23 @@ public:
     private:
         OnLinkPrefix(void) = default;
     };
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    /**
+     * This class defines constants and types for NAT64 prefix settings.
+     *
+     */
+    class Nat64Prefix
+    {
+    public:
+        static constexpr Key kKey = kKeyNat64Prefix; ///< The associated key.
+
+        typedef Ip6::Prefix ValueType; ///< The associated value type.
+
+    private:
+        Nat64Prefix(void) = default;
+    };
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
@@ -848,7 +866,7 @@ public:
      *  - It must provide a nested type `EntryType::ValueType` to specify the associated entry value type.
      *
      * This version of `Read<EntryType>` is intended for use with entries that have a simple entry value type (which can
-     * be represented by an existing type), e.g., `OmrPrefx` (using `Ip6::Prefix` as the value type).
+     * be represented by an existing type), e.g., `OmrPrefix` (using `Ip6::Prefix` as the value type).
      *
      * @tparam EntryType              The settings entry type.
      *
@@ -898,7 +916,7 @@ public:
      *  - It must provide a nested type `EntryType::ValueType` to specify the associated entry value type.
      *
      * This version of `Save<EntryType>` is intended for use with entries that have a simple entry value type (which can
-     * be represented by an existing type), e.g., `OmrPrefx` (using `Ip6::Prefix` as the value type).
+     * be represented by an existing type), e.g., `OmrPrefix` (using `Ip6::Prefix` as the value type).
      *
      * @tparam EntryType              The settings entry type.
      *

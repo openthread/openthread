@@ -118,6 +118,23 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
+ * This function returns the local NAT64 prefix.
+ *
+ * This prefix might not be advertised in the Thread network.
+ *
+ * This function is only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE`
+ * is enabled.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aPrefix     A pointer to where the prefix will be output to.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the NAT64 prefix.
+ *
+ */
+otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
  * This method provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.

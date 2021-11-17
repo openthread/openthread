@@ -64,7 +64,13 @@ otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPref
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(AsCoreType(aPrefix));
 }
 
-#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNat64Prefix(AsCoreType(aPrefix));
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
