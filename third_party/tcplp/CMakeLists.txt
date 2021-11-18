@@ -29,12 +29,29 @@
 project("TCPlp" C)
 
 set(src_tcplp
+    bsdtcp/cc/cc_newreno.c
+    bsdtcp/tcp_input.c
+    bsdtcp/tcp_output.c
+    bsdtcp/tcp_reass.c
+    bsdtcp/tcp_sack.c
+    bsdtcp/tcp_subr.c
+    bsdtcp/tcp_timer.c
+    bsdtcp/tcp_timewait.c
+    bsdtcp/tcp_usrreq.c
     lib/bitmap.c
     lib/cbuf.c
     lib/lbuf.c
 )
 
 set(tcplp_static_target "tcplp")
+
+string(REPLACE "-Wsign-compare" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-compare")
+
+string(REPLACE "-Wconversion" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+string(REPLACE "-Wunused-parameter" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
 
 add_library(${tcplp_static_target} STATIC ${src_tcplp})
 set_target_properties(${tcplp_static_target} PROPERTIES OUTPUT_NAME tcplp)
