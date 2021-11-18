@@ -29,6 +29,19 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                    = \
+    bsdtcp/cc/cc_module.h                       \
+    bsdtcp/sys/queue.h                          \
+    bsdtcp/cc.h                                 \
+    bsdtcp/icmp_var.h                           \
+    bsdtcp/ip6.h                                \
+    bsdtcp/ip.h                                 \
+    bsdtcp/tcp_const.h                          \
+    bsdtcp/tcp_fsm.h                            \
+    bsdtcp/tcp.h                                \
+    bsdtcp/tcp_seq.h                            \
+    bsdtcp/tcp_timer.h                          \
+    bsdtcp/tcp_var.h                            \
+    bsdtcp/types.h                              \
     lib/bitmap.h                                \
     lib/cbuf.h                                  \
     lib/lbuf.h                                  \
@@ -42,6 +55,13 @@ lib_LIBRARIES                                 = \
 # Do not enable -Wsign-compare for TCPlp
 override CFLAGS                              := $(filter-out -Wsign-compare,$(CFLAGS))
 override CFLAGS                              := $(CFLAGS) -Wno-sign-compare
+
+# Do not enable -Wconversion for TCPlp
+override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))
+
+# Do not enable -Wcast-align for TCPlp
+override CFLAGS                              := $(filter-out -Wcast-align,$(CFLAGS))
+override CFLAGS                              := $(CFLAGS) -Wno-cast-align
 
 # Do not enable -Wunused-parameter for TCPlp
 override CFLAGS                              := $(filter-out -Wunused-parameter,$(CFLAGS))
@@ -65,6 +85,15 @@ libtcplp_a_CPPFLAGS                           = \
     $(NULL)
 
 libtcplp_a_SOURCES                            = \
+    bsdtcp/cc/cc_newreno.c                      \
+    bsdtcp/tcp_input.c                          \
+    bsdtcp/tcp_output.c                         \
+    bsdtcp/tcp_reass.c                          \
+    bsdtcp/tcp_sack.c                           \
+    bsdtcp/tcp_subr.c                           \
+    bsdtcp/tcp_timer.c                          \
+    bsdtcp/tcp_timewait.c                       \
+    bsdtcp/tcp_usrreq.c                         \
     lib/bitmap.c                                \
     lib/cbuf.c                                  \
     lib/lbuf.c                                  \

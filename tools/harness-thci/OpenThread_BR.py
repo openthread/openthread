@@ -56,6 +56,8 @@ assert OTBR_AGENT_SYSLOG_PATTERN.search(
     'Jun 23 05:21:22 raspberrypi otbr-agent[323]: =========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
 ).group(1) == '=========[[THCI] direction=send | type=JOIN_FIN.req | len=039]==========]'
 
+logging.getLogger('paramiko').setLevel(logging.WARNING)
+
 
 class SSHHandle(object):
 
@@ -191,7 +193,7 @@ class SerialHandle:
         raise Exception('%s: failed to find end of response' % self.port)
 
     def __bashExpect(self, expected, timeout=20, endswith=False):
-        print('[%s] Expecting [%r]' % (self.port, expected))
+        self.log('Expecting [%r]' % (expected))
 
         deadline = time.time() + timeout
         while time.time() < deadline:
@@ -303,6 +305,9 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.__handle = None
 
     def _deviceBeforeReset(self):
+        if self.isPowerDown:
+            self.log('Powering up the device')
+            self.powerUp()
         if self.IsHost:
             self.__stopRadvdService()
             self.bash('sudo ip -6 addr del 910b::1 dev eth0 || true')
@@ -612,9 +617,12 @@ EOF"
         print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
 
         result = self.bash('dig -p 5353 @%s %s ptr +time=2 +retry=2' % (dst, service))
-        responses = ' '.join(result).split(';; ANSWER SECTION:')
+
+        if dst == 'ff02::fb' and not addrs_blacklist:
+            return (0, '')
 
         # Remove responses from unwanted devices
+        responses = ' '.join(result).split(';; ANSWER SECTION:')
         for response in responses:
             if not set(response.split()).isdisjoint(set(addrs_blacklist)):
                 break
@@ -637,14 +645,14 @@ EOF"
     # Override powerDown
     @API
     def powerDown(self):
-        print('powerDown')
+        self.log('Powering down BBR')
         self.bash('sudo service otbr-agent stop')
         super(OpenThread_BR, self).powerDown()
 
     # Override powerUp
     @API
     def powerUp(self):
-        print('powerUp')
+        self.log('Powering up BBR')
         self.bash('sudo service otbr-agent start')
         super(OpenThread_BR, self).powerUp()
 
