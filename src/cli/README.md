@@ -109,6 +109,7 @@ Done
 - [srp](README_SRP.md)
 - [thread](#thread-start)
 - [trel](#trel-enable)
+- [tvcheck](#tvcheck-enable)
 - [txpower](#txpower)
 - [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
@@ -2630,6 +2631,32 @@ Disable TREL radio link.
 
 ```bash
 > trel disable
+Done
+```
+
+### tvcheck enable
+
+Enable thread version check when upgrading to router or leader.
+
+Note: Thread version check is enabled by default.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> tvcheck enable
+Done
+```
+
+### tvcheck disable
+
+Enable thread version check when upgrading to router or leader.
+
+Note: Thread version check is enabled by default.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> tvcheck disable
 Done
 ```
 
