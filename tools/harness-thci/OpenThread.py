@@ -1786,7 +1786,6 @@ class OpenThreadTHCI(object):
             if P_Prefix is None:
                 P_Prefix = 0xfd007d037d037d03
             P_Prefix = '%016x' % P_Prefix
-
         else:
             # TestHarness 1.1 converts 2001000000000000 to "2001000000000000" (it's wrong, but not fixed yet.)
             P_Prefix = '%016x' % P_Prefix
