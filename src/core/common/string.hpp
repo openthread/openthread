@@ -56,6 +56,18 @@ namespace ot {
  */
 
 /**
+ * This enumeration represents comparison mode when matching strings.
+ *
+ */
+enum StringMatchMode : uint8_t
+{
+    kStringExactMatch,           ///< Exact match of characters.
+    kStringCaseInsensitiveMatch, ///< Case insensitive match (uppercase and lowercase characters are treated as equal).
+};
+
+static constexpr char kNullChar = '\0'; ///< null character.
+
+/**
  * This function returns the number of characters that precede the terminating nullptr character.
  *
  * @param[in] aString      A pointer to the string.
@@ -83,11 +95,26 @@ const char *StringFind(const char *aString, char aChar);
  *
  * @param[in] aString     A pointer to the string.
  * @param[in] aSubString  A sub-string to search for.
+ * @param[in] aMode       The string comparison mode, exact match or case insensitive match.
  *
- * @returns The pointer to first occurrence of the @p aSubString in @p aString, or nullptr if cannot be found.
+ * @returns The pointer to first match of the @p aSubString in @p aString (using comparison @p aMode), or nullptr if
+ *          cannot be found.
  *
  */
-const char *StringFind(const char *aString, const char *aSubString);
+const char *StringFind(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
+
+/**
+ * This function checks whether a null-terminated string starts with a given prefix string.
+ *
+ * @param[in] aString         A pointer to the string.
+ * @param[in] aPrefixString   A prefix string.
+ * @param[in] aMode           The string comparison mode, exact match or case insensitive match.
+ *
+ * @retval TRUE   If @p aString starts with @p aPrefixString.
+ * @retval FALSE  If @p aString does not start with @p aPrefixString.
+ *
+ */
+bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatchMode aMode = kStringExactMatch);
 
 /**
  * This function checks whether a null-terminated string ends with a given character.
@@ -105,13 +132,67 @@ bool StringEndsWith(const char *aString, char aChar);
  * This function checks whether a null-terminated string ends with a given sub-string.
  *
  * @param[in] aString      A pointer to the string.
- * @param[in] aSubString   A sun-string to check against.
+ * @param[in] aSubString   A sub-string to check against.
+ * @param[in] aMode        The string comparison mode, exact match or case insensitive match.
  *
  * @retval TRUE   If @p aString ends with sub-string @p aSubString.
  * @retval FALSE  If @p aString does not end with sub-string @p aSubString.
  *
  */
-bool StringEndsWith(const char *aString, const char *aSubString);
+bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
+
+/**
+ * This method checks whether or not two null-terminated strings match.
+ *
+ * @param[in] aFirstString   A pointer to the first string.
+ * @param[in] aSecondString  A pointer to the second string.
+ * @param[in] aMode          The string comparison mode, exact match or case insensitive match.
+ *
+ * @retval TRUE   If @p aFirstString matches @p aSecondString using match mode @p aMode.
+ * @retval FALSE  If @p aFirstString does not match @p aSecondString using match mode @p aMode.
+ *
+ */
+bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode = kStringExactMatch);
+
+/**
+ * This function converts all uppercase letter characters in a given string to lowercase.
+ *
+ * @param[inout] aString   A pointer to the string to convert.
+ *
+ */
+void StringConvertToLowercase(char *aString);
+
+/**
+ * This function converts all lowercase letter characters in a given string to uppercase.
+ *
+ * @param[inout] aString   A pointer to the string to convert.
+ *
+ */
+void StringConvertToUppercase(char *aString);
+
+/**
+ * This function converts an uppercase letter character to lowercase.
+ *
+ * If @p aChar is uppercase letter it is converted lowercase. Otherwise, it remains unchanged.
+ *
+ * @param[in] aChar   The character to convert
+ *
+ * @returns The character converted to lowercase.
+ *
+ */
+char ToLowercase(char aChar);
+
+/**
+ * This function converts a lowercase letter character to uppercase.
+ *
+ * If @p aChar is lowercase letter it is converted uppercase. Otherwise, it remains unchanged.
+ *
+ * @param[in] aChar   The character to convert
+ *
+ * @returns The character converted to uppercase.
+ *
+ */
+char ToUppercase(char aChar);
 
 /**
  * This class implements writing to a string buffer.
@@ -198,6 +279,18 @@ public:
      *
      */
     StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
+
+    /**
+     * This method converts all uppercase letter characters in the string to lowercase.
+     *
+     */
+    void ConvertToLowercase(void) { StringConvertToLowercase(mBuffer); }
+
+    /**
+     * This method converts all lowercase letter characters in the string to uppercase.
+     *
+     */
+    void ConvertToUppercase(void) { StringConvertToUppercase(mBuffer); }
 
 private:
     char *         mBuffer;
