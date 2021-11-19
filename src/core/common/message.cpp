@@ -578,7 +578,7 @@ Error Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
     return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? kErrorNone : kErrorParse;
 }
 
-bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const
+bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher) const
 {
     uint16_t       bytesToCompare = aLength;
     const uint8_t *bufPtr         = reinterpret_cast<const uint8_t *>(aBuf);
@@ -588,7 +588,7 @@ bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
 
     while (chunk.GetLength() > 0)
     {
-        VerifyOrExit(chunk.MatchesBytesIn(bufPtr));
+        VerifyOrExit(chunk.MatchesBytesIn(bufPtr, aMatcher));
         bufPtr += chunk.GetLength();
         bytesToCompare -= chunk.GetLength();
         GetNextChunk(aLength, chunk);
@@ -601,7 +601,8 @@ exit:
 bool Message::CompareBytes(uint16_t       aOffset,
                            const Message &aOtherMessage,
                            uint16_t       aOtherOffset,
-                           uint16_t       aLength) const
+                           uint16_t       aLength,
+                           ByteMatcher    aMatcher) const
 {
     uint16_t bytesToCompare = aLength;
     Chunk    chunk;
@@ -610,7 +611,7 @@ bool Message::CompareBytes(uint16_t       aOffset,
 
     while (chunk.GetLength() > 0)
     {
-        VerifyOrExit(aOtherMessage.CompareBytes(aOtherOffset, chunk.GetBytes(), chunk.GetLength()));
+        VerifyOrExit(aOtherMessage.CompareBytes(aOtherOffset, chunk.GetBytes(), chunk.GetLength(), aMatcher));
         aOtherOffset += chunk.GetLength();
         bytesToCompare -= chunk.GetLength();
         GetNextChunk(aLength, chunk);

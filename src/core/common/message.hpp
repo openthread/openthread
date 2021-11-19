@@ -697,12 +697,14 @@ public:
      * @param[in]  aOffset    Byte offset within the message to read from for the comparison.
      * @param[in]  aBuf       A pointer to a data buffer to compare with the bytes from message.
      * @param[in]  aLength    Number of bytes in @p aBuf.
+     * @param[in]  aMatcher   A `ByteMatcher` function pointer to match the bytes. If `nullptr` then bytes are directly
+     *                        compared.
      *
      * @returns TRUE if there are enough bytes available in @p aMessage and they match the bytes from @p aBuf,
      *          FALSE otherwise.
      *
      */
-    bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const;
+    bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher = nullptr) const;
 
     /**
      * This method compares the bytes in the message at a given offset with bytes read from another message.
@@ -714,11 +716,17 @@ public:
      * @param[in]  aOtherMessage  The other message to compare with.
      * @param[in]  aOtherOffset   Byte offset within @p aOtherMessage to read from for the comparison.
      * @param[in]  aLength        Number of bytes to compare.
+     * @param[in]  aMatcher       A `ByteMatcher` function pointer to match the bytes. If `nullptr` then bytes are
+     *                            directly compared.
      *
      * @returns TRUE if there are enough bytes available in both messages and they all match. FALSE otherwise.
      *
      */
-    bool CompareBytes(uint16_t aOffset, const Message &aOtherMessage, uint16_t aOtherOffset, uint16_t aLength) const;
+    bool CompareBytes(uint16_t       aOffset,
+                      const Message &aOtherMessage,
+                      uint16_t       aOtherOffset,
+                      uint16_t       aLength,
+                      ByteMatcher    aMatcher = nullptr) const;
 
     /**
      * This method compares the bytes in the message at a given offset with an object.
