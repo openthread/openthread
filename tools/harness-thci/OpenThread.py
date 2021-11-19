@@ -1413,7 +1413,9 @@ class OpenThreadTHCI(object):
         """
         print('%s call resetAndRejoin' % self)
         try:
-            self.reset_and_wait_for_connection(timeout=timeout)
+            self.powerDown()
+            time.sleep(timeout)
+            self.powerUp()
             self.__startOpenThread()
             return self.wait_for_attach_to_the_network(expected_role="", timeout=self.NETWORK_ATTACHMENT_TIMEOUT)
         except Exception as e:
