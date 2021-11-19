@@ -157,6 +157,7 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class Instance;
     friend class DataPollSender;
     friend class IndirectSender;
+    friend class Ip6::Ip6;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
     friend class Utils::HistoryTracker;
