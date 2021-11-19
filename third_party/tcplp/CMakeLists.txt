@@ -46,14 +46,17 @@ set(src_tcplp
 set(tcplp_static_target "tcplp")
 
 string(REPLACE "-Wsign-compare" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-compare")
 
 string(REPLACE "-Wconversion" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 string(REPLACE "-Wunused-parameter" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
 
 add_library(${tcplp_static_target} STATIC ${src_tcplp})
+target_compile_options(${tcplp_static_target}
+    PRIVATE
+        "-Wno-sign-compare"
+        "-Wno-unused-parameter"
+)
 set_target_properties(${tcplp_static_target} PROPERTIES OUTPUT_NAME tcplp)
 target_include_directories(${tcplp_static_target}
     PUBLIC
