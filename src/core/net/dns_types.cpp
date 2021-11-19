@@ -368,7 +368,7 @@ Error Name::CompareLabel(const Message &aMessage, uint16_t &aOffset, const char 
     LabelIterator iterator(aMessage, aOffset);
 
     SuccessOrExit(error = iterator.GetNextLabel());
-    VerifyOrExit(iterator.CompareLabel(aLabel, /* aIsSingleLabel */ true), error = kErrorNotFound);
+    VerifyOrExit(iterator.CompareLabel(aLabel, kIsSingleLabel), error = kErrorNotFound);
     aOffset = iterator.mNextLabelOffset;
 
 exit:
@@ -394,7 +394,7 @@ Error Name::CompareName(const Message &aMessage, uint16_t &aOffset, const char *
         switch (error)
         {
         case kErrorNone:
-            if (matches && !iterator.CompareLabel(aName, /* aIsSingleLabel */ false))
+            if (matches && !iterator.CompareLabel(aName, !kIsSingleLabel))
             {
                 matches = false;
             }
@@ -564,6 +564,11 @@ exit:
     return error;
 }
 
+bool Name::LabelIterator::CaseInsensitiveMatch(uint8_t aFirst, uint8_t aSecond)
+{
+    return ToLowercase(static_cast<char>(aFirst)) == ToLowercase(static_cast<char>(aSecond));
+}
+
 bool Name::LabelIterator::CompareLabel(const char *&aName, bool aIsSingleLabel) const
 {
     // This method compares the current label in the iterator with the
@@ -577,7 +582,7 @@ bool Name::LabelIterator::CompareLabel(const char *&aName, bool aIsSingleLabel) 
     bool matches = false;
 
     VerifyOrExit(StringLength(aName, mLabelLength) == mLabelLength);
-    matches = mMessage.CompareBytes(mLabelStartOffset, aName, mLabelLength);
+    matches = mMessage.CompareBytes(mLabelStartOffset, aName, mLabelLength, CaseInsensitiveMatch);
 
     VerifyOrExit(matches);
 
@@ -606,7 +611,7 @@ bool Name::LabelIterator::CompareLabel(const LabelIterator &aOtherIterator) cons
 
     return (mLabelLength == aOtherIterator.mLabelLength) &&
            mMessage.CompareBytes(mLabelStartOffset, aOtherIterator.mMessage, aOtherIterator.mLabelStartOffset,
-                                 mLabelLength);
+                                 mLabelLength, CaseInsensitiveMatch);
 }
 
 Error Name::LabelIterator::AppendLabel(Message &aMessage) const
@@ -626,30 +631,53 @@ exit:
 
 bool Name::IsSubDomainOf(const char *aName, const char *aDomain)
 {
-    bool     match        = false;
-    uint16_t nameLength   = StringLength(aName, kMaxNameLength);
-    uint16_t domainLength = StringLength(aDomain, kMaxNameLength);
+    bool     match             = false;
+    bool     nameEndsWithDot   = false;
+    bool     domainEndsWithDot = false;
+    uint16_t nameLength        = StringLength(aName, kMaxNameLength);
+    uint16_t domainLength      = StringLength(aDomain, kMaxNameLength);
 
     if (nameLength > 0 && aName[nameLength - 1] == kLabelSeperatorChar)
     {
+        nameEndsWithDot = true;
         --nameLength;
     }
 
     if (domainLength > 0 && aDomain[domainLength - 1] == kLabelSeperatorChar)
     {
+        domainEndsWithDot = true;
         --domainLength;
     }
 
     VerifyOrExit(nameLength >= domainLength);
+
     aName += nameLength - domainLength;
 
     if (nameLength > domainLength)
     {
         VerifyOrExit(aName[-1] == kLabelSeperatorChar);
     }
-    VerifyOrExit(memcmp(aName, aDomain, domainLength) == 0);
 
-    match = true;
+    // This method allows either `aName` or `aDomain` to include or
+    // exclude the last `.` character. If both include it or if both
+    // do not, we do a full comparison using `StringMatch()`.
+    // Otherwise (i.e., when one includes and the other one does not)
+    // we use `StringStartWith()` to allow the extra `.` character.
+
+    if (nameEndsWithDot == domainEndsWithDot)
+    {
+        match = StringMatch(aName, aDomain, kStringCaseInsensitiveMatch);
+    }
+    else if (nameEndsWithDot)
+    {
+        // `aName` ends with dot, but `aDomain` does not.
+        match = StringStartsWith(aName, aDomain, kStringCaseInsensitiveMatch);
+    }
+    else
+    {
+        // `aDomain` ends with dot, but `aName` does not.
+        match = StringStartsWith(aDomain, aName, kStringCaseInsensitiveMatch);
+    }
 
 exit:
     return match;

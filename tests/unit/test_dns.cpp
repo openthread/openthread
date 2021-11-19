@@ -64,6 +64,8 @@ void TestDnsName(void)
     char         label[Dns::Name::kMaxLabelSize];
     uint8_t      labelLength;
     char         name[Dns::Name::kMaxNameSize];
+    const char * subDomain;
+    const char * domain;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -147,39 +149,65 @@ void TestDnsName(void)
     printf("----------------------------------------------------------------\n");
     printf("Verify domain name match:\n");
 
-    {
-        const char *subDomain;
-        const char *domain;
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "local.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local.";
-        domain    = "local.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "local.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local";
-        domain    = "local.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "local";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local.";
-        domain    = "local";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "local";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local";
-        domain    = "local";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "default.service.arpa.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.default.service.arpa.";
-        domain    = "default.service.arpa.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "service.arpa.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.default.service.arpa.";
-        domain    = "service.arpa.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    // Verify it doesn't match a portion of a label.
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "vice.arpa.";
+    VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        // Verify it doesn't match a portion of a label.
-        subDomain = "my-service._ipps._tcp.default.service.arpa.";
-        domain    = "vice.arpa.";
-        VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
-    }
+    // Validate case does not matter
+
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "LOCAL.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "LOCAL.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "LOCAL";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "LOCAL";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.Default.Service.ARPA.";
+    domain    = "dEFAULT.Service.arpa.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.default.service.ARpa.";
+    domain    = "SeRvIcE.arPA.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    // Verify it doesn't match a portion of a label.
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "Vice.arpa.";
+    VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
 
     printf("----------------------------------------------------------------\n");
     printf("Append names, check encoded bytes, parse name and read labels:\n");
@@ -247,17 +275,32 @@ void TestDnsName(void)
         {
             uint16_t startOffset = offset;
 
-            SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, test.mLabels[index]));
+            strcpy(label, test.mLabels[index]);
+
+            SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, label));
             VerifyOrQuit(offset != startOffset, "Name::CompareLabel() did not change offset");
 
-            VerifyOrQuit(Dns::Name::CompareLabel(*message, startOffset, kBadLabel) == kErrorNotFound,
+            offset = startOffset;
+            VerifyOrQuit(Dns::Name::CompareLabel(*message, offset, kBadLabel) == kErrorNotFound,
                          "Name::CompareLabel() did not fail with incorrect label");
+
+            StringConvertToUppercase(label);
+
+            offset = startOffset;
+            SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, label));
         }
 
         // Compare the whole name.
+        strcpy(name, test.mExpectedReadName);
+
         offset = 0;
-        SuccessOrQuit(Dns::Name::CompareName(*message, offset, test.mExpectedReadName));
+        SuccessOrQuit(Dns::Name::CompareName(*message, offset, name));
         VerifyOrQuit(offset == len, "Name::CompareName() returned incorrect offset");
+
+        StringConvertToUppercase(name);
+
+        offset = 0;
+        SuccessOrQuit(Dns::Name::CompareName(*message, offset, name));
 
         offset = 0;
         VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == kErrorNotFound,
