@@ -705,6 +705,27 @@ target_link_libraries(ot-test-pskc
 
 add_test(NAME ot-test-pskc COMMAND ot-test-pskc)
 
+add_executable(ot-test-smart-ptrs
+    test_smart_ptrs.cpp
+)
+
+target_include_directories(ot-test-smart-ptrs
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-smart-ptrs
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-smart-ptrs
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-smart-ptrs COMMAND ot-test-smart-ptrs)
+
 add_executable(ot-test-meshcop
     test_meshcop.cpp
 )

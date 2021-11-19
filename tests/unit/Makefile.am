@@ -139,6 +139,7 @@ check_PROGRAMS                                                     += \
     ot-test-pool                                                      \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
+    ot-test-smart-ptrs                                                \
     ot-test-string                                                    \
     ot-test-timer                                                     \
     $(NULL)
@@ -276,6 +277,9 @@ ot_test_priority_queue_SOURCES  = $(COMMON_SOURCES) test_priority_queue.cpp
 
 ot_test_pskc_LDADD              = $(COMMON_LDADD)
 ot_test_pskc_SOURCES            = $(COMMON_SOURCES) test_pskc.cpp
+
+ot_test_smart_ptrs_LDADD        = $(COMMON_LDADD)
+ot_test_smart_ptrs_SOURCES      = $(COMMON_SOURCES) test_smart_ptrs.cpp
 
 ot_test_meshcop_LDADD           = $(COMMON_LDADD)
 ot_test_meshcop_SOURCES         = $(COMMON_SOURCES) test_meshcop.cpp
