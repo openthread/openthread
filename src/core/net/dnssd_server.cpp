@@ -41,6 +41,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
+#include "common/string.hpp"
 #include "net/srp_server.hpp"
 #include "net/udp6.hpp"
 
@@ -48,8 +49,8 @@ namespace ot {
 namespace Dns {
 namespace ServiceDiscovery {
 
-const char Server::kDnssdProtocolUdp[4] = {'_', 'u', 'd', 'p'};
-const char Server::kDnssdProtocolTcp[4] = {'_', 't', 'c', 'p'};
+const char Server::kDnssdProtocolUdp[]  = "_udp";
+const char Server::kDnssdProtocolTcp[]  = "_tcp";
 const char Server::kDnssdSubTypeLabel[] = "._sub.";
 const char Server::kDefaultDomainName[] = "default.service.arpa.";
 
@@ -210,11 +211,11 @@ void Server::SendResponse(Header                  aHeader,
 
     if (error != kErrorNone)
     {
-        otLogWarnDns("[server] failed to send DNS-SD reply: %s", otThreadErrorToString(error));
+        otLogWarnDns("[server] failed to send DNS-SD reply: %s", ErrorToString(error));
     }
     else
     {
-        otLogInfoDns("[server] send DNS-SD reply: %s, RCODE=%d", otThreadErrorToString(error), aResponseCode);
+        otLogInfoDns("[server] send DNS-SD reply: %s, RCODE=%d", ErrorToString(error), aResponseCode);
     }
 }
 
@@ -395,7 +396,7 @@ Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompre
     const char *serviceName;
 
     // Check whether `aName` is a sub-type service name.
-    serviceName = StringFind(aName, kDnssdSubTypeLabel);
+    serviceName = StringFind(aName, kDnssdSubTypeLabel, kStringCaseInsensitiveMatch);
 
     if (serviceName != nullptr)
     {
@@ -577,8 +578,8 @@ Error Server::FindNameComponents(const char *aName, const char *aDomain, NameCom
         VerifyOrExit(error == kErrorNone, error = (error == kErrorNotFound ? kErrorNone : error));
 
         if (labelEnd == labelBegin + kProtocolLabelLength &&
-            (memcmp(&aName[labelBegin], kDnssdProtocolUdp, kProtocolLabelLength) == 0 ||
-             memcmp(&aName[labelBegin], kDnssdProtocolTcp, kProtocolLabelLength) == 0))
+            (StringStartsWith(&aName[labelBegin], kDnssdProtocolUdp, kStringCaseInsensitiveMatch) ||
+             StringStartsWith(&aName[labelBegin], kDnssdProtocolTcp, kStringCaseInsensitiveMatch)))
         {
             // <Protocol> label found
             aInfo.mProtocolOffset = labelBegin;
@@ -599,7 +600,7 @@ Error Server::FindNameComponents(const char *aName, const char *aDomain, NameCom
     // Note that `kDnssdSubTypeLabel` is "._sub.". Here we get the
     // label only so we want to compare it with "_sub".
     if ((labelEnd == labelBegin + kSubTypeLabelLength) &&
-        (memcmp(&aName[labelBegin], kDnssdSubTypeLabel + 1, kSubTypeLabelLength) == 0))
+        StringStartsWith(&aName[labelBegin], kDnssdSubTypeLabel + 1, kStringCaseInsensitiveMatch))
     {
         SuccessOrExit(error = FindPreviousLabel(aName, labelBegin, labelEnd));
         VerifyOrExit(labelBegin == 0, error = kErrorInvalidArgs);
@@ -864,10 +865,10 @@ bool Server::CanAnswerQuery(const QueryTransaction &          aQuery,
     switch (sdType)
     {
     case kDnsQueryBrowse:
-        canAnswer = (strcmp(name, aServiceFullName) == 0);
+        canAnswer = StringMatch(name, aServiceFullName, kStringCaseInsensitiveMatch);
         break;
     case kDnsQueryResolve:
-        canAnswer = (strcmp(name, aInstanceInfo.mFullName) == 0);
+        canAnswer = StringMatch(name, aInstanceInfo.mFullName, kStringCaseInsensitiveMatch);
         break;
     default:
         break;
@@ -882,7 +883,7 @@ bool Server::CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *
     DnsQueryType sdType;
 
     sdType = GetQueryTypeAndName(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
-    return (sdType == kDnsQueryResolveHost) && (strcmp(name, aHostFullName) == 0);
+    return (sdType == kDnsQueryResolveHost) && StringMatch(name, aHostFullName, kStringCaseInsensitiveMatch);
 }
 
 void Server::AnswerQuery(QueryTransaction &                aQuery,
