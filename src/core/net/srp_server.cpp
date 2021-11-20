@@ -713,7 +713,7 @@ Error Server::ProcessZoneSection(const Message &aMessage, MessageMetadata &aMeta
 
     SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
     // TODO: return `Dns::kResponseNotAuth` for not authorized zone names.
-    VerifyOrExit(strcmp(name, GetDomain()) == 0, error = kErrorSecurity);
+    VerifyOrExit(StringMatch(name, GetDomain(), kStringCaseInsensitiveMatch), error = kErrorSecurity);
     SuccessOrExit(error = aMessage.Read(offset, aMetadata.mDnsZone));
     offset += sizeof(Dns::Zone);
 
@@ -865,7 +865,7 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
         // Check if the `serviceName` is a subtype with the name
         // format: "<sub-label>._sub.<service-labels>.<domain>."
 
-        subServiceName = StringFind(serviceName, kServiceSubTypeLabel);
+        subServiceName = StringFind(serviceName, kServiceSubTypeLabel, kStringCaseInsensitiveMatch);
         isSubType      = (subServiceName != nullptr);
 
         if (isSubType)
@@ -877,7 +877,9 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
 
         // Verify that instance name and service name are related.
 
-        VerifyOrExit(StringEndsWith(instanceName, isSubType ? subServiceName : serviceName), error = kErrorFailed);
+        VerifyOrExit(
+            StringEndsWith(instanceName, isSubType ? subServiceName : serviceName, kStringCaseInsensitiveMatch),
+            error = kErrorFailed);
 
         // Ensure the same service does not exist already.
         VerifyOrExit(aHost.FindService(serviceName, instanceName) == nullptr, error = kErrorFailed);
@@ -1467,7 +1469,7 @@ Error Server::Service::GetServiceSubTypeLabel(char *aLabel, uint8_t aMaxSize) co
 
     VerifyOrExit(IsSubType(), error = kErrorInvalidArgs);
 
-    subServiceName = StringFind(serviceName, kServiceSubTypeLabel);
+    subServiceName = StringFind(serviceName, kServiceSubTypeLabel, kStringCaseInsensitiveMatch);
     OT_ASSERT(subServiceName != nullptr);
 
     if (subServiceName - serviceName < aMaxSize)
@@ -1497,6 +1499,16 @@ TimeMilli Server::Service::GetExpireTime(void) const
 TimeMilli Server::Service::GetKeyExpireTime(void) const
 {
     return mUpdateTime + Time::SecToMsec(mDescription->mKeyLease);
+}
+
+bool Server::Service::MatchesInstanceName(const char *aInstanceName) const
+{
+    return StringMatch(mDescription->mInstanceName.AsCString(), aInstanceName, kStringCaseInsensitiveMatch);
+}
+
+bool Server::Service::MatchesServiceName(const char *aServiceName) const
+{
+    return StringMatch(mServiceName.AsCString(), aServiceName, kStringCaseInsensitiveMatch);
 }
 
 bool Server::Service::MatchesFlags(Flags aFlags) const
@@ -1585,6 +1597,11 @@ Error Server::Service::Description::Init(const char *aInstanceName, Host &aHost)
     return mInstanceName.Set(aInstanceName);
 }
 
+bool Server::Service::Description::Matches(const char *aInstanceName) const
+{
+    return StringMatch(mInstanceName.AsCString(), aInstanceName, kStringCaseInsensitiveMatch);
+}
+
 void Server::Service::Description::ClearResources(void)
 {
     mPort = 0;
@@ -1663,6 +1680,11 @@ Error Server::Host::SetFullName(const char *aFullName)
     }
 
     return error;
+}
+
+bool Server::Host::Matches(const char *aFullName) const
+{
+    return StringMatch(mFullName.AsCString(), aFullName, kStringCaseInsensitiveMatch);
 }
 
 void Server::Host::SetKey(Dns::Ecdsa256KeyRecord &aKey)

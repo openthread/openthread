@@ -325,10 +325,7 @@ public:
          * @retval  FALSE  If the service does not match the service instance name.
          *
          */
-        bool MatchesInstanceName(const char *aInstanceName) const
-        {
-            return (mDescription->mInstanceName == aInstanceName);
-        }
+        bool MatchesInstanceName(const char *aInstanceName) const;
 
         /**
          * This method tells whether this service matches a given service name.
@@ -339,7 +336,7 @@ public:
          * @retval  FALSE  If the service does not match the full service name.
          *
          */
-        bool MatchesServiceName(const char *aServiceName) const { return (mServiceName == aServiceName); }
+        bool MatchesServiceName(const char *aServiceName) const;
 
     private:
         struct Description : public LinkedListEntry<Description>,
@@ -348,7 +345,7 @@ public:
         {
             Error       Init(const char *aInstanceName, Host &aHost);
             const char *GetInstanceName(void) const { return mInstanceName.AsCString(); }
-            bool        Matches(const char *aInstanceName) const { return (mInstanceName == aInstanceName); }
+            bool        Matches(const char *aInstanceName) const;
             void        ClearResources(void);
             void        TakeResourcesFrom(Description &aDescription);
             Error       SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
@@ -510,7 +507,7 @@ public:
          * @returns  A boolean that indicates whether the host matches the given name.
          *
          */
-        bool Matches(const char *aFullName) const { return (mFullName == aFullName); }
+        bool Matches(const char *aFullName) const;
 
     private:
         static constexpr uint16_t kMaxAddresses = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
