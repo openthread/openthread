@@ -392,8 +392,8 @@ private:
     void        HandleTimer(void);
     void        ResetTimer(void);
 
-    static const char kDnssdProtocolUdp[4];
-    static const char kDnssdProtocolTcp[4];
+    static const char kDnssdProtocolUdp[];
+    static const char kDnssdProtocolTcp[];
     static const char kDnssdSubTypeLabel[];
     static const char kDefaultDomainName[];
     Ip6::Udp::Socket  mSocket;
