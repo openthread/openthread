@@ -36,6 +36,10 @@
  */
 
 /*
+ * bukepo: omitted unused definitions for quad_t, u_quad_t, etc., because they
+ * come predefined by certain compilers. Also omitted unused definitions for
+ * __uint8_t, __uint16_t, caddr_t, etc.
+ *
  * samkumar: I've omitted definitions for u_char, u_short, u_int, etc., because
  * they come predefined by certain compilers, sometimes differently. I just
  * replaced all usages of these types in the code with the corresponding
@@ -47,25 +51,9 @@
 
 #include <stdint.h>
 
-typedef uint8_t __uint8_t;
-typedef uint16_t __uint16_t;
-typedef uint32_t __uint32_t;
-typedef uint64_t __uint64_t;
-typedef int8_t __int8_t;
-typedef int16_t __int16_t;
-typedef int32_t __int32_t;
-typedef int64_t __int64_t;
-
-typedef __uint8_t	u_int8_t;	/* unsigned integrals (deprecated) */
-typedef __uint16_t	u_int16_t;
-typedef __uint32_t	u_int32_t;
-typedef __uint64_t	u_int64_t;
-
-typedef	__uint64_t	u_quad_t;	/* quads (deprecated) */
-typedef	__int64_t	quad_t;
-typedef	quad_t *	qaddr_t;
-
-typedef	char *		caddr_t;	/* core address */
-typedef	const char *	c_caddr_t;	/* core address, pointer to const */
+typedef uint8_t	    u_int8_t;	/* unsigned integrals (deprecated) */
+typedef uint16_t	u_int16_t;
+typedef uint32_t	u_int32_t;
+typedef uint64_t	u_int64_t;
 
 #endif
