@@ -46,6 +46,8 @@
 #include "net/ip6_headers.hpp"
 #include "net/socket.hpp"
 
+#include "../../third_party/tcplp/tcplp.h"
+
 namespace ot {
 namespace Ip6 {
 
@@ -73,6 +75,7 @@ public:
     class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>
     {
         friend class Tcp;
+        friend class LinkedList<Endpoint>;
 
     public:
         /**
@@ -236,7 +239,7 @@ public:
          * @retval kErrorNone    Successfully completed the operation.
          * @retval kErrorFailed  Failed to complete the operation.
          */
-        Error ReceiveByReference(const otLinkedBuffer *&aBuffer) const;
+        Error ReceiveByReference(const otLinkedBuffer *&aBuffer);
 
         /**
          * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -329,7 +332,32 @@ public:
          */
         Error Deinitialize(void);
 
+        /**
+         * Converts a reference to a struct tcpcb to a reference to its
+         * enclosing Endpoint.
+         */
+        static Endpoint &FromTcb(struct tcpcb &aTcb) { return *reinterpret_cast<Endpoint *>(&aTcb); }
+
+        /**
+         * Obtains a reference to this Endpoint's struct tcpcb.
+         */
+        struct tcpcb &GetTcb(void) { return *reinterpret_cast<struct tcpcb *>(&mTcb); }
+
+        /**
+         * Obtains a const reference to this Endpoint's struct tcpcb.
+         */
+        const struct tcpcb &GetTcb(void) const { return *reinterpret_cast<const struct tcpcb *>(&mTcb); }
+
+        /**
+         * Checks if this Endpoint is in the closed state.
+         */
+        bool IsClosed(void) const { return GetTcb().t_state == TCP6S_CLOSED; }
+
     private:
+        friend void ::tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
+        friend void ::tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
+        friend void ::tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
+
         enum : uint8_t
         {
             kTimerDelack       = 0,
@@ -345,7 +373,18 @@ public:
         void SetTimer(uint8_t aTimerFlag, uint32_t aDelay);
         void CancelTimer(uint8_t aTimerFlag);
         bool FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, TimeMilli &aEarliestFutureExpiry);
+
+        Address &      GetLocalIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcb().laddr); }
+        const Address &GetLocalIp6Address(void) const { return *reinterpret_cast<const Address *>(&GetTcb().laddr); }
+        Address &      GetForeignIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcb().faddr); }
+        const Address &GetForeignIp6Address(void) const { return *reinterpret_cast<const Address *>(&GetTcb().faddr); }
+        bool           Matches(const MessageInfo &aMessageInfo) const;
     };
+
+    static_assert(sizeof(struct tcpcb) == sizeof(Endpoint::mTcb), "mTcb field in otTcpEndpoint is sized incorrectly");
+    static_assert(alignof(struct tcpcb) == alignof(decltype(Endpoint::mTcb)),
+                  "mTcb field in otTcpEndpoint is aligned incorrectly");
+    static_assert(offsetof(Endpoint, mTcb) == 0, "mTcb field in otTcpEndpoint has nonzero offset");
 
     /**
      * This class represents a TCP/IPv6 listener.
@@ -353,6 +392,8 @@ public:
      */
     class Listener : public otTcpListener, public LinkedListEntry<Listener>
     {
+        friend class LinkedList<Listener>;
+
     public:
         /**
          * Initializes a TCP listener.
@@ -438,7 +479,48 @@ public:
          *
          */
         Error Deinitialize(void);
+
+        /**
+         * Converts a reference to a struct tcpcb_listen to a reference to its
+         * enclosing Listener.
+         */
+        static Listener &FromTcbListen(struct tcpcb_listen &aTcbListen)
+        {
+            return *reinterpret_cast<Listener *>(&aTcbListen);
+        }
+
+        /**
+         * Obtains a reference to this Listener's struct tcpcb_listen.
+         */
+        struct tcpcb_listen &GetTcbListen(void) { return *reinterpret_cast<struct tcpcb_listen *>(&mTcbListen); }
+
+        /**
+         * Obtains a const reference to this Listener's struct tcpcb_listen.
+         */
+        const struct tcpcb_listen &GetTcbListen(void) const
+        {
+            return *reinterpret_cast<const struct tcpcb_listen *>(&mTcbListen);
+        }
+
+        /**
+         * Checks if this Listener is in the closed state.
+         */
+        bool IsClosed(void) const { return GetTcbListen().t_state == TCP6S_CLOSED; }
+
+    private:
+        Address &      GetLocalIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcbListen().laddr); }
+        const Address &GetLocalIp6Address(void) const
+        {
+            return *reinterpret_cast<const Address *>(&GetTcbListen().laddr);
+        }
+        bool Matches(const MessageInfo &aMessageInfo) const;
     };
+
+    static_assert(sizeof(struct tcpcb_listen) == sizeof(Listener::mTcbListen),
+                  "mTcbListen field in otTcpListener is sized incorrectly");
+    static_assert(alignof(struct tcpcb_listen) == alignof(decltype(Listener::mTcbListen)),
+                  "mTcbListen field in otTcpListener is aligned incorrectly");
+    static_assert(offsetof(Listener, mTcbListen) == 0, "mTcbListen field in otTcpEndpoint has nonzero offset");
 
     /**
      * This class implements TCP header parsing.
@@ -546,12 +628,42 @@ public:
      */
     Error HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
 
+    /**
+     * Automatically selects a local address and/or port for communication with the specified peer.
+     *
+     * @param[in] aPeer         The peer's address and port.
+     * @param[in,out] aToBind   The SockAddr into which to store the selected address and/or port.
+     * @param[in] aBindAddress  If true, the local address is selected; if not, the current address
+     *                          in @p aToBind is treated as a given.
+     * @param[in] aBindPort     If true, the local port is selected; if not, the current port in
+     *                          @p aToBind is treated as a given.
+     *
+     * @returns  True if successful, false otherwise.
+     *
+     */
+    bool AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, bool aBindPort);
+
+    /**
+     * Checks if an Endpoint is in the list of initialized endpoints.
+     */
+    bool IsInitialized(const Endpoint &aEndpoint) const { return mEndpoints.Contains(aEndpoint); }
+
+    /**
+     * Checks if a Listener is in the list of initialized Listeners.
+     */
+    bool IsInitialized(const Listener &aListener) const { return mListeners.Contains(aListener); }
+
 private:
     enum
     {
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
+
+    void ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct signals &aSignals);
+
+    static Error BsdErrorToOtError(int aBsdError);
+    bool         CanBind(const SockAddr &aSockName);
 
     static void HandleTimer(Timer &aTimer);
     void        ProcessTimers(void);

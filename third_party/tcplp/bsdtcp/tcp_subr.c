@@ -48,12 +48,12 @@
 
 #include "tcp_const.h"
 
-/* samkumar: Eventually, replace this with OpenThread's random generator. */
-// A simple linear congruential number generator
-tcp_seq seed = (tcp_seq) 0xbeaddeed;
+/*
+ * samkumar: This is rewritten to have the host network stack to generate the
+ * ISN with appropriate randomness.
+ */
 tcp_seq tcp_new_isn(struct tcpcb* tp) {
-	seed = (((tcp_seq) 0xfaded011) * seed) + (tcp_seq) 0x1ead1eaf;
-	return seed;
+	return (uint32_t) tcplp_sys_generate_isn();
 }
 
 /*

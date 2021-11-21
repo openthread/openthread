@@ -50,14 +50,6 @@ extern "C" {
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 
-#define hz 1000 // number of ticks per second
-#define MICROS_PER_TICK 1000 // number of microseconds per tick
-
-#define FRAMES_PER_SEG 5
-#define FRAMECAP_6LOWPAN (122 - 11 - 5)
-
-#define IP6HDR_SIZE (2 + 1 + 1 + 16 + 16) // IPHC header (2) + Next header (1) + Hop count (1) + Dest. addr (16) + Src. addr (16)
-
 #define RELOOKUP_REQUIRED -1
 #define CONN_LOST_NORMAL 0
 
@@ -85,6 +77,7 @@ void tcplp_sys_connection_lost(struct tcpcb* tcb, uint8_t errnum);
 void tcplp_sys_on_state_change(struct tcpcb* tcb, int newstate);
 void tcplp_sys_log(const char* format, ...);
 bool tcplp_sys_autobind(otInstance *aInstance, const otSockAddr *aPeer, otSockAddr *aToBind, bool aBindAddress, bool aBindPort);
+uint32_t tcplp_sys_generate_isn();
 
 #ifdef __cplusplus
 } // extern "C"
