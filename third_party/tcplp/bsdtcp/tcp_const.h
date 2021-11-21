@@ -43,9 +43,23 @@
 #include "tcp_var.h"
 #include "tcp_timer.h"
 
+/*
+ * samkumar: these are TCPlp-specific constants that I added. They were not
+ * present in the FreeBSD-derived code.
+ */
+
+#define FRAMES_PER_SEG 5
+#define FRAMECAP_6LOWPAN (122 - 11 - 5)
+#define IP6HDR_SIZE (2 + 1 + 1 + 16 + 16) // IPHC header (2) + Next header (1) + Hop count (1) + Dest. addr (16) + Src. addr (16)
 #define MSS_6LOWPAN ((FRAMES_PER_SEG * FRAMECAP_6LOWPAN) - IP6HDR_SIZE - sizeof(struct tcphdr))
 
-// I may change some of these flags later
+/*
+ * samkumar: The remaining constants were present in the original FreeBSD code,
+ * but I set their values.
+ */
+
+#define hz 1000 // number of ticks per second, assuming millisecond ticks
+
 enum tcp_input_consts {
 	tcp_keepcnt = TCPTV_KEEPCNT,
 	tcp_fast_finwait2_recycle = 0,
