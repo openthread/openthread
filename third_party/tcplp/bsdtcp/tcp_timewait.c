@@ -158,8 +158,7 @@ tcp_twrespond(struct tcpcb* tp, int flags)
 	nth->th_dport = tp->fport;
 	nth->th_seq = htonl(tp->snd_nxt);
 	nth->th_ack = htonl(tp->rcv_nxt);
-	nth->th_x2 = 0;
-	nth->th_off = (sizeof(struct tcphdr) + optlen) >> 2;
+	nth->th_off_x2 = ((sizeof(struct tcphdr) + optlen) >> 2) << TH_OFF_SHIFT;
 	nth->th_flags = flags;
 	nth->th_win = htons(tp->tw_last_win);
 	nth->th_urp = 0;

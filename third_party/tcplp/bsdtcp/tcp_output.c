@@ -1037,7 +1037,7 @@ send:
 	th->th_ack = htonl(tp->rcv_nxt);
 	if (optlen) {
 		bcopy(opt, th + 1, optlen);
-		th->th_off = (sizeof (struct tcphdr) + optlen) >> 2;
+		th->th_off_x2 = ((sizeof (struct tcphdr) + optlen) >> 2) << TH_OFF_SHIFT;
 	}
 	th->th_flags = flags;
 	/*

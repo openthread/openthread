@@ -61,8 +61,8 @@
  *	@(#)ip.h	8.1 (Berkeley) 6/10/93
  */
 
-#ifndef _NETINET_IP6_H_
-#define _NETINET_IP6_H_
+#ifndef TCPLP_NETINET_IP6_H_
+#define TCPLP_NETINET_IP6_H_
 
 #include "types.h"
 

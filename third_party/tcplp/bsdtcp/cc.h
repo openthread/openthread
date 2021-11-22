@@ -57,8 +57,8 @@
  * the global linked list are removed.
  */
 
-#ifndef _NETINET_CC_H_
-#define _NETINET_CC_H_
+#ifndef TCPLP_NETINET_CC_H_
+#define TCPLP_NETINET_CC_H_
 
 /* XXX: TCP_CA_NAME_MAX define lives in tcp.h for compat reasons. */
 #include "tcp.h"

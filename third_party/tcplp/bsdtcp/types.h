@@ -46,8 +46,8 @@
  * standard integer types (uint8_t, uint16_t, etc.).
  */
 
-#ifndef _SYS_TYPES_H_
-#define	_SYS_TYPES_H_
+#ifndef TCPLP_SYS_TYPES_H_
+#define TCPLP_SYS_TYPES_H_
 
 #include <stdint.h>
 

@@ -35,8 +35,8 @@
  * often serve to enable, disable, or configure certain TCP-related features.
  */
 
-#ifndef _TCP_CONST_H_
-#define _TCP_CONST_H_
+#ifndef TCPLP_TCP_CONST_H_
+#define TCPLP_TCP_CONST_H_
 
 #include "../tcplp.h"
 
