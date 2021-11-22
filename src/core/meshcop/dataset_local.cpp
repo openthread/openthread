@@ -41,6 +41,7 @@
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/settings.hpp"
+#include "crypto/storage.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -60,6 +61,9 @@ DatasetLocal::DatasetLocal(Instance &aInstance, Dataset::Type aType)
 
 void DatasetLocal::Clear(void)
 {
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    DestroySecurelyStoredKeys();
+#endif
     IgnoreError(Get<Settings>().DeleteOperationalDataset(IsActive()));
     mTimestamp.Clear();
     mTimestampPresent = false;
@@ -90,6 +94,10 @@ Error DatasetLocal::Read(Dataset &aDataset) const
 
     error = Get<Settings>().ReadOperationalDataset(IsActive(), aDataset);
     VerifyOrExit(error == kErrorNone, aDataset.mLength = 0);
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    EmplaceSecurelyStoredKeys(aDataset);
+#endif
 
     if (mType == Dataset::kActive)
     {
@@ -172,6 +180,10 @@ Error DatasetLocal::Save(const Dataset &aDataset)
 {
     Error error = kErrorNone;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    DestroySecurelyStoredKeys();
+#endif
+
     if (aDataset.GetSize() == 0)
     {
         // do not propagate error back
@@ -181,7 +193,17 @@ Error DatasetLocal::Save(const Dataset &aDataset)
     }
     else
     {
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        // Store the network key and PSKC in the secure storage instead of settings.
+        Dataset dataset;
+
+        dataset.Set(GetType(), aDataset);
+        MoveKeysToSecureStorage(dataset);
+        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), dataset));
+#else
         SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset));
+#endif
+
         mSaved = true;
         otLogInfoMeshCoP("%s dataset set", Dataset::TypeToString(mType));
     }
@@ -192,6 +214,83 @@ Error DatasetLocal::Save(const Dataset &aDataset)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+void DatasetLocal::DestroySecurelyStoredKeys(void) const
+{
+    using namespace Crypto::Storage;
+
+    KeyRef networkKeyRef = IsActive() ? kActiveDatasetNetworkKeyRef : kPendingDatasetNetworkKeyRef;
+    KeyRef pskcRef       = IsActive() ? kActiveDatasetPskcRef : kPendingDatasetPskcRef;
+
+    // Destroy securely stored keys associated with the given operational dataset type.
+    DestroyKey(networkKeyRef);
+    DestroyKey(pskcRef);
+}
+
+void DatasetLocal::MoveKeysToSecureStorage(Dataset &aDataset) const
+{
+    using namespace Crypto::Storage;
+
+    KeyRef         networkKeyRef = IsActive() ? kActiveDatasetNetworkKeyRef : kPendingDatasetNetworkKeyRef;
+    KeyRef         pskcRef       = IsActive() ? kActiveDatasetPskcRef : kPendingDatasetPskcRef;
+    NetworkKeyTlv *networkKeyTlv = aDataset.GetTlv<NetworkKeyTlv>();
+    PskcTlv *      pskcTlv       = aDataset.GetTlv<PskcTlv>();
+
+    if (networkKeyTlv != nullptr)
+    {
+        // If the dataset contains a network key, put it in the secure storage
+        // and zero the corresponding TLV element.
+        NetworkKey networkKey;
+        SuccessOrAssert(ImportKey(networkKeyRef, kKeyTypeRaw, kKeyAlgorithmVendor, kUsageExport, kTypePersistent,
+                                  networkKeyTlv->GetNetworkKey().m8, NetworkKey::kSize));
+        networkKey.Clear();
+        networkKeyTlv->SetNetworkKey(networkKey);
+    }
+
+    if (pskcTlv != nullptr)
+    {
+        // If the dataset contains a PSKC, put it in the secure storage and zero
+        // the corresponding TLV element.
+        Pskc pskc;
+        SuccessOrAssert(ImportKey(pskcRef, kKeyTypeRaw, kKeyAlgorithmVendor, kUsageExport, kTypePersistent,
+                                  pskcTlv->GetPskc().m8, Pskc::kSize));
+        pskc.Clear();
+        pskcTlv->SetPskc(pskc);
+    }
+}
+
+void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
+{
+    using namespace Crypto::Storage;
+
+    KeyRef         networkKeyRef = IsActive() ? kActiveDatasetNetworkKeyRef : kPendingDatasetNetworkKeyRef;
+    KeyRef         pskcRef       = IsActive() ? kActiveDatasetPskcRef : kPendingDatasetPskcRef;
+    NetworkKeyTlv *networkKeyTlv = aDataset.GetTlv<NetworkKeyTlv>();
+    PskcTlv *      pskcTlv       = aDataset.GetTlv<PskcTlv>();
+    size_t         keyLen;
+
+    if (networkKeyTlv != nullptr)
+    {
+        // If the dataset contains a network key, its real value must have been moved to
+        // the secure storage upon saving the dataset, so restore it back now.
+        NetworkKey networkKey;
+        SuccessOrAssert(ExportKey(networkKeyRef, networkKey.m8, NetworkKey::kSize, keyLen));
+        OT_ASSERT(keyLen == NetworkKey::kSize);
+        networkKeyTlv->SetNetworkKey(networkKey);
+    }
+
+    if (pskcTlv != nullptr)
+    {
+        // If the dataset contains a PSKC, its real value must have been moved to
+        // the secure storage upon saving the dataset, so restore it back now.
+        Pskc pskc;
+        SuccessOrAssert(ExportKey(pskcRef, pskc.m8, Pskc::kSize, keyLen));
+        OT_ASSERT(keyLen == Pskc::kSize);
+        pskcTlv->SetPskc(pskc);
+    }
+}
+#endif
 
 } // namespace MeshCoP
 } // namespace ot
