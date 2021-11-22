@@ -31,8 +31,8 @@
  * $FreeBSD$
  */
 
-#ifndef _NETINET_IP_H_
-#define	_NETINET_IP_H_
+#ifndef TCPLP_NETINET_IP_H_
+#define TCPLP_NETINET_IP_H_
 
 #define	IP_MAXPACKET	65535		/* maximum packet size */
 

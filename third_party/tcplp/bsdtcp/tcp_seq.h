@@ -30,8 +30,8 @@
  * $FreeBSD$
  */
 
-#ifndef _NETINET_TCP_SEQ_H_
-#define _NETINET_TCP_SEQ_H_
+#ifndef TCPLP_NETINET_TCP_SEQ_H_
+#define TCPLP_NETINET_TCP_SEQ_H_
 
 #include "../tcplp.h"
 

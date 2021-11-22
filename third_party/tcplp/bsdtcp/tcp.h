@@ -37,8 +37,8 @@
  * we should look at that very closely, and consider rewriting it.
  */
 
-#ifndef _NETINET_TCP_H_
-#define _NETINET_TCP_H_
+#ifndef TCPLP_NETINET_TCP_H_
+#define TCPLP_NETINET_TCP_H_
 
 #include <stdint.h>
 #include <stdio.h>
@@ -61,14 +61,28 @@ struct tcphdr {
 	uint16_t	th_dport;		/* destination port */
 	tcp_seq	th_seq;			/* sequence number */
 	tcp_seq	th_ack;			/* acknowledgement number */
-#if 1 //BYTE_ORDER == LITTLE_ENDIAN
+
+	/*
+	 * samkumar: The original FreeBSD code used bit fields for the offset and
+	 * unused bits, within this byte. I've rewritten it to avoid the use of
+	 * bit fields, so that the code is more portable. The original code, which
+	 * defined the order of bit fields based on the platform's endianness, is
+	 * included below, commented out using "#if 0".
+	 */
+	uint8_t th_off_x2; /* data offset and unused bits */
+#define	TH_OFF_SHIFT	4
+
+#if 0
+#if BYTE_ORDER == LITTLE_ENDIAN
 	uint8_t	th_x2:4,		/* (unused) */
 		th_off:4;		/* data offset */
 #endif
-#if 0 //BYTE_ORDER == BIG_ENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 	uint8_t	th_off:4,		/* data offset */
 		th_x2:4;		/* (unused) */
 #endif
+#endif
+
 	uint8_t	th_flags;
 #define	TH_FIN	0x01
 #define	TH_SYN	0x02

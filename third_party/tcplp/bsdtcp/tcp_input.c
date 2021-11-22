@@ -476,7 +476,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 
 	/*
 	 * samkumar: Logic that handled IPv4 was deleted below. I won't add a
-	 * comment everytime this is done, but I'm putting it here (one of the
+	 * comment every time this is done, but I'm putting it here (one of the
 	 * first instances of this) for clarity.
 	 */
 	iptos = (ntohl(ip6->ip6_flow) >> 20) & 0xff;
@@ -485,7 +485,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 	 * Check that TCP offset makes sense,
 	 * pull out TCP options and adjust length.		XXX
 	 */
-	off = th->th_off << 2;
+	off = (th->th_off_x2 >> TH_OFF_SHIFT) << 2;
 	if (off < sizeof (struct tcphdr) || off > tlen) {
 		goto drop;
 	}
@@ -1030,7 +1030,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	 * Parse options on any incoming segment.
 	 */
 	tcp_dooptions(&to, (uint8_t *)(th + 1),
-	    (th->th_off << 2) - sizeof(struct tcphdr),
+	    ((th->th_off_x2 >> TH_OFF_SHIFT) << 2) - sizeof(struct tcphdr),
 	    (thflags & TH_SYN) ? TO_SYN : 0);
 
 	/*

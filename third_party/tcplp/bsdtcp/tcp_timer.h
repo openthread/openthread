@@ -38,8 +38,8 @@
  * parameters) and global statistics (e.g. tcp_keepcnt).
  */
 
-#ifndef _NETINET_TCP_TIMER_H_
-#define _NETINET_TCP_TIMER_H_
+#ifndef TCPLP_NETINET_TCP_TIMER_H_
+#define TCPLP_NETINET_TCP_TIMER_H_
 
 #include "tcp_var.h"
 

@@ -35,8 +35,8 @@
  * weren't necessary (and often introduced additional dependencies).
  */
 
-#ifndef _NETINET_ICMP_VAR_H_
-#define _NETINET_ICMP_VAR_H_
+#ifndef TCPLP_NETINET_ICMP_VAR_H_
+#define TCPLP_NETINET_ICMP_VAR_H_
 /*
  * Identifiers for ICMP sysctl nodes
  */
