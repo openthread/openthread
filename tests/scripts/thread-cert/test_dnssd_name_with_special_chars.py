@@ -103,6 +103,9 @@ class TestDnssdNameWithSpecialChars(thread_cert.TestCase):
         service = client.dns_resolve_service(SPECIAL_INSTANCE_NAME, '_srv._udp.default.service.arpa')
         self.__verify_service(service)
 
+        service = client.dns_resolve_service(SPECIAL_INSTANCE_NAME.lower(), '_srv._udp.default.service.arpa')
+        self.__verify_service(service)
+
     def __verify_service(self, service):
         logging.info('service discovered: %r', service)
         self.assertEqual(service['port'], 1977)
