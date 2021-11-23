@@ -36,20 +36,24 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/linked_list.hpp"
+#include "common/owning_list.hpp"
 
 #include "test_util.h"
+
+namespace ot {
 
 struct EntryBase
 {
     EntryBase *mNext;
 };
 
-struct Entry : public EntryBase, ot::LinkedListEntry<Entry>
+struct Entry : public EntryBase, LinkedListEntry<Entry>
 {
 public:
     Entry(const char *aName, uint16_t aId)
         : mName(aName)
         , mId(aId)
+        , mWasFreed(false)
     {
     }
 
@@ -57,14 +61,19 @@ public:
     uint16_t    GetId(void) const { return mId; }
     bool        Matches(const char *aName) const { return strcmp(mName, aName) == 0; }
     bool        Matches(uint16_t aId) const { return mId == aId; }
+    void        Free(void) { mWasFreed = true; }
+
+    void ResetTestFlags(void) { mWasFreed = false; }
+    bool WasFreed(void) const { return mWasFreed; }
 
 private:
     const char *mName;
     uint16_t    mId;
+    bool        mWasFreed;
 };
 
 // This function verifies the content of the linked list matches a given list of entries.
-void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
+void VerifyLinkedListContent(const LinkedList<Entry> *aList, ...)
 {
     va_list      args;
     Entry *      argEntry;
@@ -92,6 +101,8 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
         VerifyOrQuit(aList->FindMatching(argEntry->GetId(), prev) == argEntry);
         VerifyOrQuit(prev == argPrev, "List::FindMatching() returned prev entry is incorrect");
 
+        VerifyOrQuit(!argEntry->WasFreed());
+
         argPrev = argEntry;
     }
 
@@ -109,25 +120,27 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
 
 void TestLinkedList(void)
 {
-    Entry                 a("a", 1), b("b", 2), c("c", 3), d("d", 4), e("e", 5);
-    Entry *               prev;
-    ot::LinkedList<Entry> list;
+    Entry             a("a", 1), b("b", 2), c("c", 3), d("d", 4), e("e", 5);
+    Entry *           prev;
+    LinkedList<Entry> list;
+
+    printf("TestLinkedList\n");
 
     VerifyOrQuit(list.IsEmpty(), "failed after init");
     VerifyOrQuit(list.GetHead() == nullptr, "failed after init");
     VerifyOrQuit(list.Pop() == nullptr, "failed when empty");
-    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "succeeded when empty");
+    VerifyOrQuit(list.Find(a, prev) == kErrorNotFound, "succeeded when empty");
 
     VerifyLinkedListContent(&list, nullptr);
 
     list.Push(a);
     VerifyOrQuit(!list.IsEmpty());
     VerifyLinkedListContent(&list, &a, nullptr);
-    VerifyOrQuit(list.Find(b, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.Find(b, prev) == kErrorNotFound, "succeeded for a missing entry");
 
     SuccessOrQuit(list.Add(b));
     VerifyLinkedListContent(&list, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(c, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.Find(c, prev) == kErrorNotFound, "succeeded for a missing entry");
 
     list.Push(c);
     VerifyLinkedListContent(&list, &c, &b, &a, nullptr);
@@ -138,14 +151,14 @@ void TestLinkedList(void)
     SuccessOrQuit(list.Add(e));
     VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
 
-    VerifyOrQuit(list.Add(a) == ot::kErrorAlready, "did not detect duplicate");
-    VerifyOrQuit(list.Add(b) == ot::kErrorAlready, "did not detect duplicate");
-    VerifyOrQuit(list.Add(d) == ot::kErrorAlready, "did not detect duplicate");
-    VerifyOrQuit(list.Add(e) == ot::kErrorAlready, "did not detect duplicate");
+    VerifyOrQuit(list.Add(a) == kErrorAlready, "did not detect duplicate");
+    VerifyOrQuit(list.Add(b) == kErrorAlready, "did not detect duplicate");
+    VerifyOrQuit(list.Add(d) == kErrorAlready, "did not detect duplicate");
+    VerifyOrQuit(list.Add(e) == kErrorAlready, "did not detect duplicate");
 
     VerifyOrQuit(list.Pop() == &e);
     VerifyLinkedListContent(&list, &d, &c, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(e, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.Find(e, prev) == kErrorNotFound, "succeeded for a missing entry");
 
     VerifyOrQuit(list.FindMatching(d.GetName(), prev) == &d);
     VerifyOrQuit(prev == nullptr);
@@ -164,17 +177,17 @@ void TestLinkedList(void)
     SuccessOrQuit(list.Remove(c));
     VerifyLinkedListContent(&list, &e, &d, &b, &a, nullptr);
 
-    VerifyOrQuit(list.Remove(c) == ot::kErrorNotFound);
+    VerifyOrQuit(list.Remove(c) == kErrorNotFound);
     VerifyLinkedListContent(&list, &e, &d, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(c, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.Find(c, prev) == kErrorNotFound, "succeeded for a missing entry");
 
     SuccessOrQuit(list.Remove(e));
     VerifyLinkedListContent(&list, &d, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(e, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.Find(e, prev) == kErrorNotFound, "succeeded for a missing entry");
 
     SuccessOrQuit(list.Remove(a));
     VerifyLinkedListContent(&list, &d, &b, nullptr);
-    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.Find(a, prev) == kErrorNotFound, "succeeded for a missing entry");
 
     list.Push(a);
     list.Push(c);
@@ -222,16 +235,114 @@ void TestLinkedList(void)
     VerifyOrQuit(list.IsEmpty(), "failed after Clear()");
     VerifyOrQuit(list.PopAfter(nullptr) == nullptr);
     VerifyLinkedListContent(&list, nullptr);
-    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.Find(a, prev) == kErrorNotFound, "succeeded for a missing entry");
     VerifyOrQuit(list.FindMatching(b.GetName(), prev) == nullptr, "succeeded when empty");
     VerifyOrQuit(list.FindMatching(c.GetId(), prev) == nullptr, "succeeded when empty");
     VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr, "succeeded when empty");
-    VerifyOrQuit(list.Remove(a) == ot::kErrorNotFound, "succeeded when empty");
+    VerifyOrQuit(list.Remove(a) == kErrorNotFound, "succeeded when empty");
 }
+
+void TestOwningList(void)
+{
+    Entry             a("a", 1), b("b", 2), c("c", 3), d("d", 4), e("e", 5);
+    OwningList<Entry> list;
+    OwnedPtr<Entry>   ptr;
+
+    printf("TestOwningList\n");
+
+    VerifyOrQuit(list.IsEmpty());
+    VerifyOrQuit(list.GetHead() == nullptr);
+    VerifyOrQuit(list.Pop().IsNull());
+
+    list.Free();
+    VerifyOrQuit(list.IsEmpty());
+    VerifyOrQuit(list.GetHead() == nullptr);
+    VerifyOrQuit(list.Pop().IsNull());
+
+    // Clear()
+
+    list.Push(a);
+    VerifyLinkedListContent(&list, &a, nullptr);
+    list.Free();
+    VerifyOrQuit(list.IsEmpty());
+    VerifyOrQuit(a.WasFreed());
+
+    // Test removing entry without taking back the ownership
+
+    a.ResetTestFlags();
+    list.Push(a);
+    list.Push(b);
+    list.Push(c);
+    list.Push(d);
+    list.Push(e);
+    VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
+
+    list.Pop();
+    VerifyLinkedListContent(&list, &d, &c, &b, &a, nullptr);
+    VerifyOrQuit(e.WasFreed());
+
+    list.PopAfter(&c);
+    VerifyLinkedListContent(&list, &d, &c, &a, nullptr);
+    VerifyOrQuit(b.WasFreed());
+
+    list.RemoveMatching("c");
+    VerifyLinkedListContent(&list, &d, &a, nullptr);
+    VerifyOrQuit(c.WasFreed());
+
+    list.Free();
+    VerifyLinkedListContent(&list, nullptr);
+    VerifyOrQuit(d.WasFreed());
+    VerifyOrQuit(a.WasFreed());
+
+    // Test removing entry and taking ownership
+
+    a.ResetTestFlags();
+    b.ResetTestFlags();
+    c.ResetTestFlags();
+    d.ResetTestFlags();
+    e.ResetTestFlags();
+    list.Push(a);
+    list.Push(b);
+    list.Push(c);
+    list.Push(d);
+    list.Push(e);
+    VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
+
+    ptr = list.PopAfter(&a);
+    VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
+    VerifyOrQuit(ptr.IsNull());
+
+    ptr = list.PopAfter(&e);
+    VerifyLinkedListContent(&list, &e, &c, &b, &a, nullptr);
+    VerifyOrQuit(ptr.Get() == &d);
+    VerifyOrQuit(!d.WasFreed());
+
+    ptr = list.Pop();
+    VerifyLinkedListContent(&list, &c, &b, &a, nullptr);
+    VerifyOrQuit(ptr.Get() == &e);
+    VerifyOrQuit(!e.WasFreed());
+    VerifyOrQuit(d.WasFreed());
+
+    ptr = list.RemoveMatching<uint8_t>(1);
+    VerifyLinkedListContent(&list, &c, &b, nullptr);
+    VerifyOrQuit(ptr.Get() == &a);
+    VerifyOrQuit(!a.WasFreed());
+    VerifyOrQuit(e.WasFreed());
+
+    list.Clear();
+    VerifyOrQuit(c.WasFreed());
+    VerifyOrQuit(b.WasFreed());
+    VerifyOrQuit(!a.WasFreed());
+    a.Free();
+    VerifyOrQuit(a.WasFreed());
+}
+
+} // namespace ot
 
 int main(void)
 {
-    TestLinkedList();
+    ot::TestLinkedList();
+    ot::TestOwningList();
     printf("All tests passed\n");
     return 0;
 }
