@@ -402,6 +402,7 @@ class OpenThreadTHCI(object):
 
         self.UIStatusMsg = ''
         self.AutoDUTEnable = False
+        self.isPowerDown = False
         self._is_net = False  # whether device is through ser2net
         self.logStatus = {
             'stop': 'stop',
