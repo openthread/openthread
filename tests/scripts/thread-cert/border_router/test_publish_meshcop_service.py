@@ -99,15 +99,28 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.check_meshcop_service(br1, host)
 
         # verify that there are two meshcop services
+        br2.set_network_name('ot-br2-1')
         br2.start()
         br2.disable_backbone_router()
         br2.enable_br()
         self.simulator.go(25)
+
         service_instances = host.browse_mdns_services('_meshcop._udp')
         self.assertEqual(len(service_instances), 2)
         br1_service = self.check_meshcop_service(br1, host)
         br2_service = self.check_meshcop_service(br2, host)
         self.assertNotEqual(br1_service['host'], br2_service['host'])
+
+        br1.stop_otbr_service()
+        self.simulator.go(5)
+        br2.enable_backbone_router()
+        self.simulator.go(5)
+        self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 1)
+        br1.start_otbr_service()
+        self.simulator.go(10)
+        self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
+        self.check_meshcop_service(br1, host)
+        self.check_meshcop_service(br2, host)
 
     def check_meshcop_service(self, br, host):
         services = self.discover_all_meshcop_services(host)

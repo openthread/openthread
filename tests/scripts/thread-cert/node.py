@@ -137,6 +137,21 @@ class OtbrDocker:
 
         assert launch_ok
 
+        self.start_ot_ctl()
+
+    def __repr__(self):
+        return f'OtbrDocker<{self.nodeid}>'
+
+    def start_otbr_service(self):
+        self.bash('service otbr-agent start')
+        self.simulator.go(3)
+        self.start_ot_ctl()
+
+    def stop_otbr_service(self):
+        self.stop_ot_ctl()
+        self.bash('service otbr-agent stop')
+
+    def start_ot_ctl(self):
         cmd = f'docker exec -i {self._docker_name} ot-ctl'
         self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=30)
         if self.verbose:
@@ -152,8 +167,10 @@ class OtbrDocker:
             except pexpect.TIMEOUT:
                 timeout -= 0.1
 
-    def __repr__(self):
-        return f'OtbrDocker<{self.nodeid}>'
+    def stop_ot_ctl(self):
+        self.pexpect.sendeof()
+        self.pexpect.wait()
+        self.pexpect.proc.kill()
 
     def destroy(self):
         logging.info("Destroying %s", self)
