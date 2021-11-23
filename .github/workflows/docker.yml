@@ -95,14 +95,3 @@ jobs:
       if: always() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
       run: |
         docker buildx imagetools inspect ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
-
-    - name: Push README
-      uses: christian-korneck/update-container-description-action@v1
-      if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-      env:
-        DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
-      with:
-        destination_container_repo: openthread/${{ matrix.docker_name }}
-        provider: dockerhub
-        readme_file: 'README.md'
