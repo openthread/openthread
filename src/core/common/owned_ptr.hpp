@@ -36,8 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "common/ptr_wrapper.hpp"
 
 namespace ot {
 
@@ -52,17 +51,16 @@ namespace ot {
  * @tparam Type  The pointer type.
  *
  */
-template <class Type> class OwnedPtr
+template <class Type> class OwnedPtr : public Ptr<Type>
 {
+    using Ptr<Type>::mPointer;
+
 public:
     /**
      * This is the default constructor for `OwnedPtr` initializing it as null.
      *
      */
-    OwnedPtr(void)
-        : mPointer(nullptr)
-    {
-    }
+    OwnedPtr(void) = default;
 
     /**
      * This constructor initializes the `OwnedPtr` with a given pointer.
@@ -73,7 +71,7 @@ public:
      *
      */
     explicit OwnedPtr(Type *aPointer)
-        : mPointer(aPointer)
+        : Ptr<Type>(aPointer)
     {
     }
 
@@ -98,31 +96,6 @@ public:
      *
      */
     ~OwnedPtr(void) { Delete(); }
-
-    /**
-     * This method indicates whether the `OwnedPtr` is null or not.
-     *
-     * @retval TRUE   The `OwnedPtr` is null.
-     * @retval FALSE  The `OwnedPtr` is not null.
-     *
-     */
-    bool IsNull(void) const { return (mPointer == nullptr); }
-
-    /**
-     * This method gets the raw pointer to the object owned by `OwnedPtr`.
-     *
-     * @returns The raw pointer to the object owned by `OwnedPtr` or `nullptr` if none.
-     *
-     */
-    Type *Get(void) { return mPointer; }
-
-    /**
-     * This method gets the raw pointer to the object owned by `OwnedPtr`.
-     *
-     * @returns The raw pointer to the object owned by `OwnedPtr` or `nullptr` if none.
-     *
-     */
-    const Type *Get(void) const { return mPointer; }
 
     /**
      * This method frees the owned object (if any).
@@ -172,42 +145,6 @@ public:
     }
 
     /**
-     * This method overloads the `->` dereference operator and returns a pointer to the object owned by `OwnedPtr`.
-     *
-     * @returns A pointer to owned object or `nullptr` if none.
-     *
-     */
-    Type *operator->(void) { return mPointer; }
-
-    /**
-     * This method overloads the `->` dereference operator and returns a pointer to the object owned by `OwnedPtr`.
-     *
-     * @returns A pointer to owned object or `nullptr` if none.
-     *
-     */
-    const Type *operator->(void)const { return mPointer; }
-
-    /**
-     * This method overloads the `*` dereference operator and returns a reference to the object owned by `OwnedPtr`.
-     *
-     * The behavior is undefined if `IsNull() == true`.
-     *
-     * @returns A reference to the object owned by `OwnedPtr`.
-     *
-     */
-    Type &operator*(void) { return *mPointer; }
-
-    /**
-     * This method overloads the `*` dereference operator and returns a reference to the object owned by `OwnedPtr`.
-     *
-     * The behavior is undefined if `IsNull() == true`.
-     *
-     * @returns A reference to the object owned by `OwnedPtr`.
-     *
-     */
-    const Type &operator*(void)const { return *mPointer; }
-
-    /**
      * This method overload the assignment operator `=` to replace the object owned by the `OwnedPtr` with another one
      * using move semantics.
      *
@@ -238,8 +175,6 @@ private:
             mPointer->Free();
         }
     }
-
-    Type *mPointer;
 };
 
 } // namespace ot
