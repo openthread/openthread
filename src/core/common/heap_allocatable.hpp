@@ -47,7 +47,7 @@ namespace Heap {
 /**
  * This template class defines a `Heap::Allocatable` object.
  *
- * `Heap::Allocatable` provides `New()` and `Free()` methods to allocate and free instances of `Type` on heap.
+ * `Heap::Allocatable` provides methods to allocate and free instances of `Type` on heap.
  *
  * Users of this class should follow CRTP-style inheritance, i.e., the `Type` class itself should inherit from
  * `Allocatable<Type>`.
@@ -60,7 +60,25 @@ template <class Type> class Allocatable
 {
 public:
     /**
-     * This static method allocates a new instance of `Type` on heap and initializes it.
+     * This static method allocates a new instance of `Type` on heap and initializes it using `Type` constructor.
+     *
+     * The `Type` class MUST have a constructor `Type(Args...)` which is invoked upon allocation of new `Type` to
+     * initialize it.
+     *
+     * @param[in] aArgs   A set of arguments to pass to the `Type` constructor of the allocated `Type` instance.
+     *
+     * @returns A pointer to the newly allocated instance or `nullptr` if it fails to allocate.
+     *
+     */
+    template <typename... Args> static Type *Allocate(Args &&... aArgs)
+    {
+        void *buf = Heap::CAlloc(1, sizeof(Type));
+
+        return (buf != nullptr) ? new (buf) Type(static_cast<Args &&>(aArgs)...) : nullptr;
+    }
+
+    /**
+     * This static method allocates a new instance of `Type` on heap and initializes it using `Type::Init()` method.
      *
      * The `Type` class MUST have a default constructor (with no arguments) which is invoked upon allocation of new
      * `Type` instance. It MUST also provide an `Error Init(Args...)` method to initialize the instance. If any `Error`
@@ -71,7 +89,7 @@ public:
      * @returns A pointer to the newly allocated instance or `nullptr` if it fails to allocate or initialize.
      *
      */
-    template <typename... Args> static Type *New(Args &&... aArgs)
+    template <typename... Args> static Type *AllocateAndInit(Args &&... aArgs)
     {
         void *buf    = Heap::CAlloc(1, sizeof(Type));
         Type *object = nullptr;
@@ -93,7 +111,7 @@ public:
     /**
      * This method frees the `Type` instance.
      *
-     * The instance MUST be heap allocated using the `New()` method.
+     * The instance MUST be heap allocated using either `Allocate()` or `AllocateAndInit()`.
      *
      * The `Free()` method invokes the `Type` destructor before releasing the allocated heap buffer for the instance.
      * This ensures that any heap allocated member variables in `Type` are freed before the `Type` instance itself is

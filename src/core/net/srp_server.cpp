@@ -679,7 +679,7 @@ void Server::ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata)
     // Per 2.3.2 of SRP draft 6, no prerequisites should be included in a SRP update.
     VerifyOrExit(aMetadata.mDnsHeader.GetPrerequisiteRecordCount() == 0, error = kErrorFailed);
 
-    host = Host::New(GetInstance(), aMetadata.mRxTime);
+    host = Host::Allocate(GetInstance(), aMetadata.mRxTime);
     VerifyOrExit(host != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = ProcessUpdateSection(*host, aMessage, aMetadata));
 
@@ -1155,7 +1155,7 @@ void Server::HandleUpdate(Host &aHost, const MessageMetadata &aMetadata)
 exit:
     if ((error == kErrorNone) && (mServiceUpdateHandler != nullptr))
     {
-        UpdateMetadata *update = UpdateMetadata::New(GetInstance(), aHost, aMetadata);
+        UpdateMetadata *update = UpdateMetadata::Allocate(GetInstance(), aHost, aMetadata);
 
         mOutstandingUpdates.Push(*update);
         mOutstandingUpdatesTimer.FireAtIfEarlier(update->GetExpireTime());
@@ -1642,19 +1642,14 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // Server::Host
 
-Error Server::Host::Init(Instance &aInstance, TimeMilli aUpdateTime)
+Server::Host::Host(Instance &aInstance, TimeMilli aUpdateTime)
+    : InstanceLocator(aInstance)
+    , mNext(nullptr)
+    , mLease(0)
+    , mKeyLease(0)
+    , mUpdateTime(aUpdateTime)
 {
-    InstanceLocatorInit::Init(aInstance);
-    mNext = nullptr;
-    mFullName.Free();
-    mAddresses.Clear();
     mKey.Clear();
-    mLease      = 0;
-    mKeyLease   = 0;
-    mUpdateTime = aUpdateTime;
-    mServices.Clear();
-
-    return kErrorNone;
 }
 
 Server::Host::~Host(void)
@@ -1746,11 +1741,11 @@ Server::Service *Server::Host::AddNewService(const char *aServiceName,
 
     if (desc == nullptr)
     {
-        desc.Reset(Service::Description::New(aInstanceName, *this));
+        desc.Reset(Service::Description::AllocateAndInit(aInstanceName, *this));
         VerifyOrExit(desc != nullptr);
     }
 
-    service = Service::New(aServiceName, *desc, aIsSubType, aUpdateTime);
+    service = Service::AllocateAndInit(aServiceName, *desc, aIsSubType, aUpdateTime);
     VerifyOrExit(service != nullptr);
 
     mServices.Push(*service);
@@ -1924,23 +1919,20 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // Server::UpdateMetadata
 
-Error Server::UpdateMetadata::Init(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata)
+Server::UpdateMetadata::UpdateMetadata(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata)
+    : InstanceLocator(aInstance)
+    , mNext(nullptr)
+    , mExpireTime(TimerMilli::GetNow() + kDefaultEventsHandlerTimeout)
+    , mDnsHeader(aMessageMetadata.mDnsHeader)
+    , mId(Get<Server>().AllocateId())
+    , mLeaseConfig(aMessageMetadata.mLeaseConfig)
+    , mHost(aHost)
+    , mIsDirectRxFromClient(aMessageMetadata.IsDirectRxFromClient())
 {
-    InstanceLocatorInit::Init(aInstance);
-    mNext                 = nullptr;
-    mExpireTime           = TimerMilli::GetNow() + kDefaultEventsHandlerTimeout;
-    mDnsHeader            = aMessageMetadata.mDnsHeader;
-    mId                   = Get<Server>().AllocateId();
-    mLeaseConfig          = aMessageMetadata.mLeaseConfig;
-    mHost                 = &aHost;
-    mIsDirectRxFromClient = aMessageMetadata.IsDirectRxFromClient();
-
     if (aMessageMetadata.mMessageInfo != nullptr)
     {
         mMessageInfo = *aMessageMetadata.mMessageInfo;
     }
-
-    return kErrorNone;
 }
 
 } // namespace Srp
