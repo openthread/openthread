@@ -59,6 +59,7 @@ class PublishMeshCopService(thread_cert.TestCase):
             'is_otbr': True,
             'version': '1.2',
             'network_name': 'ot-br1',
+            'boot_delay': 5,
         },
         BR2: {
             'name': 'BR_2',
@@ -66,6 +67,7 @@ class PublishMeshCopService(thread_cert.TestCase):
             'is_otbr': True,
             'version': '1.2',
             'network_name': 'ot-br2',
+            'boot_delay': 5,
         },
         HOST: {
             'name': 'Host',
@@ -79,10 +81,15 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2 = self.nodes[BR2]
         br2.disable_br()
 
+        # Use different network names to distinguish meshcop services
+        br1.set_network_name('ot-br1')
+        br2.set_network_name('ot-br2')
+
         host.start(start_radvd=False)
         self.simulator.go(20)
 
         self.assertEqual(br1.get_state(), 'disabled')
+        self.check_meshcop_service(br1, host)
         br1.start()
         self.simulator.go(20)
         self.assertEqual('leader', br1.get_state())
