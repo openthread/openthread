@@ -103,7 +103,7 @@ public:
     /**
      * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame or nullptr if the receive operation failed.
+     * @param[in]  aFrame  A pointer to the received frame or `nullptr` if the receive operation failed.
      * @param[in]  aError  kErrorNone when successfully received a frame,
      *                     kErrorAbort when reception was aborted and a frame was not received,
      *                     kErrorNoBufs when a frame could not be received due to lack of rx buffer space.

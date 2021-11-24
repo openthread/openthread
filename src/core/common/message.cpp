@@ -844,7 +844,7 @@ PriorityQueue::PriorityQueue(void)
 
 Message *PriorityQueue::FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const
 {
-    // Find the first non-nullptr tail starting from the given priority
+    // Find the first non-`nullptr` tail starting from the given priority
     // level and moving forward (wrapping from priority value
     // `kNumPriorities` -1 back to 0).
 

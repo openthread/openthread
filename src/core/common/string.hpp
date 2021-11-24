@@ -68,13 +68,13 @@ enum StringMatchMode : uint8_t
 static constexpr char kNullChar = '\0'; ///< null character.
 
 /**
- * This function returns the number of characters that precede the terminating nullptr character.
+ * This function returns the number of characters that precede the terminating null character.
  *
  * @param[in] aString      A pointer to the string.
  * @param[in] aMaxLength   The maximum length in bytes.
  *
- * @returns The number of characters that precede the terminating nullptr character or @p aMaxLength, whichever is
- * smaller.
+ * @returns The number of characters that precede the terminating null character or @p aMaxLength, whichever is
+ *          smaller.
  *
  */
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
@@ -85,7 +85,7 @@ uint16_t StringLength(const char *aString, uint16_t aMaxLength);
  * @param[in] aString     A pointer to the string.
  * @param[in] aChar       A char to search for in the string.
  *
- * @returns The pointer to first occurrence of the @p aChar in @p aString, or nullptr if cannot be found.
+ * @returns The pointer to first occurrence of the @p aChar in @p aString, or `nullptr` if cannot be found.
  *
  */
 const char *StringFind(const char *aString, char aChar);
@@ -97,7 +97,7 @@ const char *StringFind(const char *aString, char aChar);
  * @param[in] aSubString  A sub-string to search for.
  * @param[in] aMode       The string comparison mode, exact match or case insensitive match.
  *
- * @returns The pointer to first match of the @p aSubString in @p aString (using comparison @p aMode), or nullptr if
+ * @returns The pointer to first match of the @p aSubString in @p aString (using comparison @p aMode), or `nullptr` if
  *          cannot be found.
  *
  */

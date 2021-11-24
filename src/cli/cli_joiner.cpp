@@ -108,7 +108,7 @@ otError Joiner::ProcessStart(Arg aArgs[])
 
     error = otJoinerStart(GetInstancePtr(),
                           aArgs[0].GetCString(),           // aPskd
-                          aArgs[1].GetCString(),           // aProvisioningUrl (nullptr if aArgs[1] is empty)
+                          aArgs[1].GetCString(),           // aProvisioningUrl (`nullptr` if aArgs[1] is empty)
                           PACKAGE_NAME,                    // aVendorName
                           OPENTHREAD_CONFIG_PLATFORM_INFO, // aVendorModel
                           PACKAGE_VERSION,                 // aVendorSwVersion

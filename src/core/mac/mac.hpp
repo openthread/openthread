@@ -456,7 +456,7 @@ public:
     /**
      * This method is called to handle a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame, or nullptr if the receive operation was aborted.
+     * @param[in]  aFrame  A pointer to the received frame, or `nullptr` if the receive operation was aborted.
      * @param[in]  aError  kErrorNone when successfully received a frame,
      *                     kErrorAbort when reception was aborted and a frame was not received.
      *
@@ -479,7 +479,7 @@ public:
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
      * @param[in] aFrame      The transmitted frame.
-     * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
+     * @param[in] aAckFrame   A pointer to the ACK frame, or `nullptr` if no ACK was received.
      * @param[in] aError      kErrorNone when the frame was transmitted successfully,
      *                        kErrorNoAck when the frame was transmitted but no ACK was received,
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -499,7 +499,7 @@ public:
      * This method is called to handle transmit events.
      *
      * @param[in]  aFrame      The frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
+     * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
      * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
      *                         kErrorNoAck when the frame was transmitted but no ACK was received,
      *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
@@ -544,7 +544,7 @@ public:
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     * or nullptr to disable the callback.
+     *                               or `nullptr` to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */

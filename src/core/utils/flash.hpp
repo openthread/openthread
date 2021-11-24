@@ -72,12 +72,12 @@ public:
      * @param[in]     aKey          The key associated with the requested value.
      * @param[in]     aIndex        The index of the specific item to get.
      * @param[out]    aValue        A pointer to where the value of the setting should be written.
-     *                              May be nullptr if just testing for the presence or length of a key.
+     *                              May be `nullptr` if just testing for the presence or length of a key.
      * @param[inout]  aValueLength  A pointer to the length of the value.
      *                              When called, this should point to an integer containing the maximum bytes that
      *                              can be written to @p aValue.
      *                              At return, the actual length of the setting is written.
-     *                              May be nullptr if performing a presence check.
+     *                              May be `nullptr` if performing a presence check.
      *
      * @retval kErrorNone       The value was fetched successfully.
      * @retval kErrorNotFound   The key was not found.
@@ -93,7 +93,7 @@ public:
      *
      * @param[in]  aKey          The key associated with the value.
      * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
-     *                           MUST NOT be nullptr if @p aValueLength is non-zero.
+     *                           MUST NOT be `nullptr` if @p aValueLength is non-zero.
      * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
      *
      * @retval kErrorNone     The value was changed.
@@ -107,7 +107,7 @@ public:
      *
      * @param[in]  aKey          The key associated with the value.
      * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
-     *                           MUST NOT be nullptr if @p aValueLength is non-zero.
+     *                           MUST NOT be `nullptr` if @p aValueLength is non-zero.
      * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
      *
      * @retval kErrorNone    The value was added.

@@ -810,7 +810,7 @@ public:
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
     Message *Clone(uint16_t aLength) const;
@@ -822,7 +822,7 @@ public:
      * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
      * copied from the original one.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
     Message *Clone(void) const { return Clone(GetLength()); }
@@ -839,7 +839,7 @@ public:
      * This method should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
      * messages).
      *
-     * @returns A pointer to the next message in the queue or nullptr if at the end of the queue.
+     * @returns A pointer to the next message in the queue or `nullptr` if at the end of the queue.
      *
      */
     Message *GetNextCoapMessage(void) { return static_cast<Message *>(GetNext()); }
@@ -850,7 +850,7 @@ public:
      * This method should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
      * messages).
      *
-     * @returns A pointer to the next message in the queue or nullptr if at the end of the queue.
+     * @returns A pointer to the next message in the queue or `nullptr` if at the end of the queue.
      *
      */
     const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
@@ -1141,7 +1141,7 @@ public:
         /**
          * This methods gets a pointer to the current CoAP Option to which the iterator is currently pointing.
          *
-         * @returns A pointer to the current CoAP Option, or nullptr if iterator is done (or there was an earlier
+         * @returns A pointer to the current CoAP Option, or `nullptr` if iterator is done (or there was an earlier
          *          parse error).
          *
          */

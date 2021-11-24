@@ -79,7 +79,7 @@ public:
      * completes.
      *
      * The handler function format is `void (*oHandler)(ScanResult *aResult, void *aContext);`. End of scan is
-     * indicated by `aResult` pointer being set to nullptr.
+     * indicated by `aResult` pointer being set to `nullptr`.
      *
      */
     typedef otHandleActiveScanResult Handler;
@@ -111,7 +111,8 @@ public:
      * @param[in]  aEnableFiltering   Enable filtering MLE Discovery Responses with steering data not containing a
      *                                given filter indexes.
      * @param[in]  aFilterIndexes     A pointer to `FilterIndexes` to use for filtering (when enabled).
-     *                                If set to nullptr, filter indexes are derived from hash of factory-assigned EUI64.
+     *                                If set to `nullptr`, filter indexes are derived from hash of factory-assigned
+     *                                EUI64.
      * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *

@@ -117,7 +117,7 @@ public:
         /**
          * This method gets the host name (label) string.
          *
-         * @returns The host name (label) string, or nullptr if not yet set.
+         * @returns The host name (label) string, or `nullptr` if not yet set.
          *
          */
         const char *GetName(void) const { return mName; }
@@ -401,7 +401,7 @@ public:
      * The SRP client allows a single callback to be registered. So consecutive calls to this method will overwrite any
      * previously set callback functions.
      *
-     * @param[in] aCallback        The callback to notify of events and changes. Can be nullptr if not needed.
+     * @param[in] aCallback        The callback to notify of events and changes. Can be `nullptr` if not needed.
      * @param[in] aContext         An arbitrary context used with @p aCallback.
      *
      */

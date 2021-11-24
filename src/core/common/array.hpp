@@ -317,7 +317,7 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with elements in the array.
      *
-     * @returns A pointer to the matched array element, or nullptr if a match could not be found.
+     * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
      *
      */
     template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
@@ -336,7 +336,7 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with elements in the array.
      *
-     * @returns A pointer to the matched array element, or nullptr if a match could not be found.
+     * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
      *
      */
     template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const

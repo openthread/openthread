@@ -130,7 +130,7 @@ inline bool IsKeyRefValid(KeyRef aKeyRef)
  *
  * @retval kErrorNone          Successfully imported the key.
  * @retval kErrorFailed        Failed to import the key.
- * @retval kErrorInvalidArgs   @p aKey was set to nullptr.
+ * @retval kErrorInvalidArgs   @p aKey was set to `nullptr`.
  *
  */
 inline Error ImportKey(KeyRef &       aKeyRef,
@@ -156,7 +156,7 @@ inline Error ImportKey(KeyRef &       aKeyRef,
  *
  * @retval kErrorNone          Successfully exported  @p aKeyRef.
  * @retval kErrorFailed        Failed to export @p aKeyRef.
- * @retval kErrorInvalidArgs   @p aBuffer was nullptr.
+ * @retval kErrorInvalidArgs   @p aBuffer was `nullptr`.
  *
  */
 inline Error ExportKey(KeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t &aKeyLen)

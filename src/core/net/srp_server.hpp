@@ -456,7 +456,7 @@ public:
          * This method returns the KEY resource of the host.
          *
          * @returns  A pointer to the ECDSA P 256 public key if there is valid one.
-         *           nullptr if no valid key exists.
+         *           `nullptr` if no valid key exists.
          *
          */
         const Dns::Ecdsa256KeyRecord *GetKey(void) const { return mKey.IsValid() ? &mKey : nullptr; }
@@ -637,7 +637,7 @@ public:
      * A trailing dot will be appended to @p aDomain if it is not already there.
      * This method should only be called before the SRP server is enabled.
      *
-     * @param[in]  aDomain  The domain to be set. MUST NOT be nullptr.
+     * @param[in]  aDomain  The domain to be set. MUST NOT be `nullptr`.
      *
      * @retval  kErrorNone          Successfully set the domain to @p aDomain.
      * @retval  kErrorInvalidState  The SRP server is already enabled and the Domain cannot be changed.
@@ -737,9 +737,9 @@ public:
     /**
      * This method returns the next registered SRP host.
      *
-     * @param[in]  aHost  The current SRP host; use nullptr to get the first SRP host.
+     * @param[in]  aHost  The current SRP host; use `nullptr` to get the first SRP host.
      *
-     * @returns  A pointer to the next SRP host or nullptr if no more SRP hosts can be found.
+     * @returns  A pointer to the next SRP host or `nullptr` if no more SRP hosts can be found.
      *
      */
     const Host *GetNextHost(const Host *aHost);

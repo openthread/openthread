@@ -203,7 +203,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
@@ -218,7 +218,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static const Tlv *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType);
@@ -230,7 +230,7 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static TlvType *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength)
@@ -245,7 +245,7 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static const TlvType *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength)
@@ -1464,7 +1464,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
+     * @returns A pointer to first Channel Mask Entry or `nullptr` if not found.
      *
      */
     const ChannelMaskEntryBase *GetFirstEntry(void) const;
@@ -1472,7 +1472,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
+     * @returns A pointer to first Channel Mask Entry or `nullptr` if not found.
      *
      */
     ChannelMaskEntryBase *GetFirstEntry(void);

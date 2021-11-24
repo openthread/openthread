@@ -140,11 +140,11 @@ public:
     /**
      * This helper method returns a pointer to the next valid option in the buffer.
      *
-     * @param[in]  aCurOption     The current option. Use nullptr to get the first option.
+     * @param[in]  aCurOption     The current option. Use `nullptr` to get the first option.
      * @param[in]  aBuffer        The buffer within which the options are held.
      * @param[in]  aBufferLength  The length of the buffer.
      *
-     * @returns  A pointer to the next option if there are a valid one. Otherwise, nullptr.
+     * @returns  A pointer to the next option if there are a valid one. Otherwise, `nullptr`.
      *
      */
     static const Option *GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength);

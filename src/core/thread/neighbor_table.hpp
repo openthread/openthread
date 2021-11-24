@@ -95,7 +95,7 @@ public:
      * @param[in]  aShortAddress  A short address.
      * @param[in]  aFilter        A neighbor state filter
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, nullptr otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, `nullptr` otherwise.
      *
      */
     Neighbor *FindParent(Mac::ShortAddress     aShortAddress,
@@ -108,7 +108,7 @@ public:
      * @param[in]  aExtAddress   A MAC Extended Address.
      * @param[in]  aFilter       A neighbor state filter
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, nullptr otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, `nullptr` otherwise.
      *
      */
     Neighbor *FindParent(const Mac::ExtAddress &aExtAddress,
@@ -121,7 +121,7 @@ public:
      * @param[in]  aMacAddress  A MAC address.
      * @param[in]  aFilter      A neighbor state filter
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, nullptr otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
      *
      */
     Neighbor *FindParent(const Mac::Address &  aMacAddress,
@@ -133,7 +133,7 @@ public:
      * @param[in]  aShortAddress  A short address.
      * @param[in]  aFilter        A neighbor state filter.
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, nullptr otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aShortAddress, `nullptr` otherwise.
      *
      */
     Neighbor *FindNeighbor(Mac::ShortAddress     aShortAddress,
@@ -145,7 +145,7 @@ public:
      * @param[in]  aExtAddress   A MAC Extended Address.
      * @param[in]  aFilter       A neighbor state filter.
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, nullptr otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aExtAddress, `nullptr` otherwise.
      *
      */
     Neighbor *FindNeighbor(const Mac::ExtAddress &aExtAddress,
@@ -157,7 +157,7 @@ public:
      * @param[in]  aMacAddress  A MAC address.
      * @param[in]  aFilter      A neighbor state filter.
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, nullptr otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
      *
      */
     Neighbor *FindNeighbor(const Mac::Address &  aMacAddress,
@@ -171,7 +171,7 @@ public:
      * @param[in]  aIp6Address  An IPv6 address.
      * @pram[in]   aFilter      A neighbor state filter.
      *
-     * @returns A pointer to the `Neighbor` corresponding to @p aIp6Address, nullptr otherwise.
+     * @returns A pointer to the `Neighbor` corresponding to @p aIp6Address, `nullptr` otherwise.
      *
      */
     Neighbor *FindNeighbor(const Ip6::Address &  aIp6Address,
@@ -183,7 +183,7 @@ public:
      *
      * @param[in]  aMacAddress  A MAC address.
      *
-     * @returns A pointer to the Neighbor corresponding to @p aMacAddress, nullptr otherwise.
+     * @returns A pointer to the Neighbor corresponding to @p aMacAddress, `nullptr` otherwise.
      *
      */
     Neighbor *FindRxOnlyNeighborRouter(const Mac::Address &aMacAddress);
@@ -207,7 +207,7 @@ public:
     /**
      * This method registers the "neighbor table changed" callback function.
      *
-     * The provided callback (if non-nullptr) will be invoked when a child/router entry is being added/remove to/from
+     * The provided callback (if non-`nullptr`) will be invoked when a child/router entry is being added/remove to/from
      * the neighbor table. Subsequent calls to this method will overwrite the previous callback.
      *
      * @param[in] aCallback    A pointer to callback handler function.

@@ -635,9 +635,9 @@ public:
     /**
      * This method sends a DNS service instance resolution query for a given service instance.
      *
-     * The @p aConfig can be nullptr. In this case the default config (from `GetDefaultConfig()`) will be used as
-     * the config for this query. In a non-nullptr @p aConfig, some of the fields can be left unspecified (value zero).
-     * The unspecified fields are then replaced by the values from the default config.
+     * The @p aConfig can be `nullptr`. In this case the default config (from `GetDefaultConfig()`) will be used as
+     * the config for this query. In a non-`nullptr` @p aConfig, some of the fields can be left unspecified (value
+     * zero). The unspecified fields are then replaced by the values from the default config.
      *
      * @param[in]  aServerSockAddr    The server socket address.
      * @param[in]  aInstanceLabel     The service instance label.

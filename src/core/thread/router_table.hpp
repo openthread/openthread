@@ -106,7 +106,7 @@ public:
     /**
      * This method allocates a router with a random router id.
      *
-     * @returns A pointer to the allocated router or nullptr if a router ID is not available.
+     * @returns A pointer to the allocated router or `nullptr` if a router ID is not available.
      *
      */
     Router *Allocate(void);
@@ -114,7 +114,7 @@ public:
     /**
      * This method allocates a router with a specified router id.
      *
-     * @returns A pointer to the allocated router or nullptr if the router id could not be allocated.
+     * @returns A pointer to the allocated router or `nullptr` if the router id could not be allocated.
      *
      */
     Router *Allocate(uint8_t aRouterId);
@@ -186,7 +186,7 @@ public:
      *
      * @param[in]  aRloc16  The RLOC16 value.
      *
-     * @returns A pointer to the router or nullptr if the router could not be found.
+     * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
     Router *GetNeighbor(uint16_t aRloc16);
@@ -196,7 +196,7 @@ public:
      *
      * @param[in]  aExtAddress  A reference to the IEEE Extended Address.
      *
-     * @returns A pointer to the router or nullptr if the router could not be found.
+     * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
     Router *GetNeighbor(const Mac::ExtAddress &aExtAddress);
@@ -206,7 +206,7 @@ public:
      *
      * @param[in]  aMacAddress  A MAC address
      *
-     * @returns A pointer to the router or nullptr if the router could not be found.
+     * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
     Router *GetNeighbor(const Mac::Address &aMacAddress);
@@ -216,7 +216,7 @@ public:
      *
      * @param[in]  aRouterId  The router id.
      *
-     * @returns A pointer to the router or nullptr if the router could not be found.
+     * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
     Router *GetRouter(uint8_t aRouterId) { return AsNonConst(AsConst(this)->GetRouter(aRouterId)); }
@@ -226,7 +226,7 @@ public:
      *
      * @param[in]  aRouterId  The router id.
      *
-     * @returns A pointer to the router or nullptr if the router could not be found.
+     * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
     const Router *GetRouter(uint8_t aRouterId) const;
@@ -236,7 +236,7 @@ public:
      *
      * @param[in]  aExtAddress  A reference to the IEEE Extended Address.
      *
-     * @returns A pointer to the router or nullptr if the router could not be found.
+     * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
     Router *GetRouter(const Mac::ExtAddress &aExtAddress);

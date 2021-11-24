@@ -130,12 +130,12 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
     // Iterate to the next entry in Network Data matching `aRloc16`
     // (can be set to `Mac::kShortAddrBroadcast` to allow any RLOC).
     // The `aIterator` is used to track and save the current position.
-    // On input, the non-nullptr pointer members in `aConfig` specify the
-    // Network Data entry types (`mOnMeshPrefix`, `mExternalRoute`,
+    // On input, the non-`nullptr` pointer members in `aConfig` specify
+    // the Network Data entry types (`mOnMeshPrefix`, `mExternalRoute`,
     // `mService`) to iterate over. On successful exit, the `aConfig`
-    // is updated such that only one member pointer is not nullptr
-    // indicating the type of entry and the non-nullptr config is updated
-    // with the entry info.
+    // is updated such that only one member pointer is not `nullptr`
+    // indicating the type of entry and the non-`nullptr` config is
+    // updated with the entry info.
 
     Error               error = kErrorNotFound;
     NetworkDataIterator iterator(aIterator);

@@ -1070,7 +1070,7 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
 
     router = mRouterTable.GetRouter(aRouterId);
 
-    // nullptr aRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
+    // `nullptr` aRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
     VerifyOrExit(router != nullptr);
 
     rval = mRouterTable.GetLinkCost(*router);

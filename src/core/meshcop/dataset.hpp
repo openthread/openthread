@@ -636,7 +636,7 @@ public:
      *
      * @param[in] aType  A TLV type.
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     Tlv *GetTlv(Tlv::Type aType) { return AsNonConst(AsConst(this)->GetTlv(aType)); }
@@ -646,7 +646,7 @@ public:
      *
      * @param[in] aType  The TLV type.
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     const Tlv *GetTlv(Tlv::Type aType) const;
@@ -654,7 +654,7 @@ public:
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     template <typename TlvType> TlvType *GetTlv(void)
@@ -665,7 +665,7 @@ public:
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     template <typename TlvType> const TlvType *GetTlv(void) const

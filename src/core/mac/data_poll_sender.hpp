@@ -163,7 +163,7 @@ public:
      * This method informs the data poll sender to process a transmitted MAC frame.
      *
      * @param[in]  aFrame      A reference to the frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
+     * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
      * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
      *                         kErrorNoAck when the frame was transmitted but no ACK was received,
      *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,

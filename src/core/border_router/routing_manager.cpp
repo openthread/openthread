@@ -681,7 +681,7 @@ Error RoutingManager::SendRouterSolicitation(void)
 // @param[in]  aNewOmrPrefixes   An array of the new OMR prefixes to be advertised.
 //                               Empty array means we should stop advertising OMR prefixes.
 // @param[in]  aOnLinkPrefix     A pointer to the new on-link prefix to be advertised.
-//                               nullptr means we should stop advertising on-link prefix.
+//                               `nullptr` means we should stop advertising on-link prefix.
 void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix)
 {
     uint8_t  buffer[kMaxRouterAdvMessageLength];
