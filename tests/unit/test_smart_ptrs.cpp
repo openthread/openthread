@@ -67,11 +67,14 @@ void VerifyPointer(const PointerType &aPointer,
     {
         VerifyOrQuit(aPointer.IsNull());
         VerifyOrQuit(aPointer.Get() == nullptr);
+        VerifyOrQuit(aPointer == nullptr);
     }
     else
     {
         VerifyOrQuit(!aPointer.IsNull());
         VerifyOrQuit(aPointer.Get() == aObject);
+        VerifyOrQuit(aPointer == aObject);
+        VerifyOrQuit(aPointer != nullptr);
 
         VerifyOrQuit(!aPointer->WasFreed());
         VerifyOrQuit(!(*aPointer).WasFreed());
@@ -81,6 +84,8 @@ void VerifyPointer(const PointerType &aPointer,
             VerifyOrQuit(aObject->GetRetainCount() == aRetainCount);
         }
     }
+
+    VerifyOrQuit(aPointer == aPointer);
 }
 
 void TestOwnedPtr(void)
@@ -388,27 +393,35 @@ void TestRetainPtr(void)
         VerifyPointer(ptr2, &obj2, 1);
         VerifyPointer(ptr3, nullptr);
 
+        VerifyOrQuit(ptr1 != ptr2);
+        VerifyOrQuit(ptr1 != ptr3);
+        VerifyOrQuit(ptr2 != ptr3);
+
         // Set from non-null (ptr1) to non-null (ptr2)
         ptr2 = ptr1;
         VerifyPointer(ptr1, &obj1, 2);
         VerifyPointer(ptr2, &obj1, 2);
         VerifyOrQuit(obj2.WasFreed());
+        VerifyOrQuit(ptr1 == ptr2);
 
         // Set from null (ptr3) to non-null (ptr1)
         ptr1 = ptr3;
         VerifyPointer(ptr1, nullptr);
         VerifyPointer(ptr3, nullptr);
         VerifyPointer(ptr2, &obj1, 1);
+        VerifyOrQuit(ptr1 == ptr3);
 
         // Move from null (ptr1) to null (ptr3)
         ptr3 = ptr1;
         VerifyPointer(ptr1, nullptr);
         VerifyPointer(ptr3, nullptr);
+        VerifyOrQuit(ptr1 == ptr3);
 
         // Move from non-null (ptr2) to null (ptr3)
         ptr3 = ptr2;
         VerifyPointer(ptr2, &obj1, 2);
         VerifyPointer(ptr3, &obj1, 2);
+        VerifyOrQuit(ptr2 == ptr3);
     }
 
     VerifyOrQuit(obj1.WasFreed());
