@@ -89,7 +89,8 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.simulator.go(20)
 
         self.assertEqual(br1.get_state(), 'disabled')
-        self.check_meshcop_service(br1, host)
+        # TODO enable this line when renaming with mDNSResponder is stable
+        # self.check_meshcop_service(br1, host)
         br1.start()
         self.simulator.go(20)
         self.assertEqual('leader', br1.get_state())
