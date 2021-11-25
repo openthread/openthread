@@ -449,6 +449,7 @@ HEADERS_COMMON                                  = \
     common/owned_ptr.hpp                          \
     common/owning_list.hpp                        \
     common/pool.hpp                               \
+    common/ptr_wrapper.hpp                        \
     common/random.hpp                             \
     common/random_manager.hpp                     \
     common/retain_ptr.hpp                         \
