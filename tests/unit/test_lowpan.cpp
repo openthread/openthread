@@ -124,7 +124,7 @@ static void Init(void)
         0x02, 0x40                                                              // Context ID = 2, C = FALSE
     };
 
-    Message *message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0);
+    Message *message = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr, "Ip6::NewMessage failed");
 
     SuccessOrQuit(message->AppendBytes(mockNetworkData, sizeof(mockNetworkData)));
@@ -171,7 +171,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
     {
         Lowpan::BufferWriter buffer(result, 127);
 
-        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != nullptr);
+        VerifyOrQuit((message = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
 
         aVector.GetUncompressedStream(*message);
 
@@ -200,7 +200,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aDecompress)
     {
-        VerifyOrQuit((message = sInstance->Get<MessagePool>().New(Message::kTypeIp6, 0)) != nullptr);
+        VerifyOrQuit((message = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
 
         int decompressedBytes =
             sLowpan->Decompress(*message, aVector.mMacSource, aVector.mMacDestination, iphc, iphcLength, 0);

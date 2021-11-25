@@ -69,20 +69,20 @@ MessagePool::MessagePool(Instance &aInstance)
 #endif
 }
 
-Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority)
+Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings)
 {
     Error    error = kErrorNone;
     Message *message;
 
-    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != nullptr);
+    VerifyOrExit((message = static_cast<Message *>(NewBuffer(aSettings.GetPriority()))) != nullptr);
 
     memset(message, 0, sizeof(*message));
     message->SetMessagePool(this);
     message->SetType(aType);
     message->SetReserved(aReserveHeader);
-    message->SetLinkSecurityEnabled(true);
+    message->SetLinkSecurityEnabled(aSettings.IsLinkSecurityEnabled());
 
-    SuccessOrExit(error = message->SetPriority(aPriority));
+    SuccessOrExit(error = message->SetPriority(aSettings.GetPriority()));
     SuccessOrExit(error = message->SetLength(0));
 
 exit:
@@ -90,18 +90,6 @@ exit:
     {
         Free(message);
         message = nullptr;
-    }
-
-    return message;
-}
-
-Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings)
-{
-    Message *message = New(aType, aReserveHeader, aSettings.GetPriority());
-
-    if (message)
-    {
-        message->SetLinkSecurityEnabled(aSettings.IsLinkSecurityEnabled());
     }
 
     return message;
@@ -667,10 +655,11 @@ Message *Message::Clone(uint16_t aLength) const
 {
     Error    error = kErrorNone;
     Message *messageCopy;
+    Settings settings(IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity, GetPriority());
     uint16_t offset;
 
-    VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved(), GetPriority())) != nullptr,
-                 error = kErrorNoBufs);
+    messageCopy = GetMessagePool()->Allocate(GetType(), GetReserved(), settings);
+    VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = messageCopy->SetLength(aLength));
     CopyTo(0, 0, aLength, *messageCopy);
 
@@ -679,7 +668,6 @@ Message *Message::Clone(uint16_t aLength) const
     messageCopy->SetOffset(offset);
 
     messageCopy->SetSubType(GetSubType());
-    messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     messageCopy->SetTimeSync(IsTimeSync());
 #endif

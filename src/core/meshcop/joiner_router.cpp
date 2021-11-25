@@ -222,7 +222,7 @@ exit:
 void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
 {
     Error                 error   = kErrorNone;
-    Message *             message = Get<MessagePool>().New(Message::kTypeOther, 0);
+    Message *             message = Get<MessagePool>().Allocate(Message::kTypeOther);
     JoinerEntrustMetadata metadata;
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);

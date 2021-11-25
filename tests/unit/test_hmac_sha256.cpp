@@ -93,7 +93,7 @@ void TestSha256(void)
     VerifyOrQuit(instance != nullptr);
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     for (const TestCase &testCase : kTestCases)
     {
@@ -236,7 +236,7 @@ void TestHmacSha256(void)
     VerifyOrQuit(instance != nullptr);
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     for (const TestCase &testCase : kTestCases)
     {

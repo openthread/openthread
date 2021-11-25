@@ -80,7 +80,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
-    message = Get<MessagePool>().New(Message::kTypeSupervision, sizeof(uint8_t));
+    message = Get<MessagePool>().Allocate(Message::kTypeSupervision, sizeof(uint8_t));
     VerifyOrExit(message != nullptr);
 
     // Supervision message is an empty payload 15.4 data frame.
