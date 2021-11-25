@@ -64,6 +64,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/retain_ptr.hpp"
 #include "common/timer.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/dns_types.hpp"
@@ -341,6 +342,7 @@ public:
     private:
         struct Description : public LinkedListEntry<Description>,
                              public Heap::Allocatable<Description>,
+                             public RetainCountable,
                              private NonCopyable
         {
             Error       Init(const char *aInstanceName, Host &aHost);
@@ -377,13 +379,13 @@ public:
         const TimeMilli &GetUpdateTime(void) const { return mUpdateTime; }
         void             Log(Action aAction) const;
 
-        Heap::String mServiceName;
-        Description *mDescription;
-        Service *    mNext;
-        TimeMilli    mUpdateTime;
-        bool         mIsDeleted : 1;
-        bool         mIsSubType : 1;
-        bool         mIsCommitted : 1;
+        Heap::String           mServiceName;
+        RetainPtr<Description> mDescription;
+        Service *              mNext;
+        TimeMilli              mUpdateTime;
+        bool                   mIsDeleted : 1;
+        bool                   mIsSubType : 1;
+        bool                   mIsCommitted : 1;
     };
 
     /**
@@ -527,14 +529,14 @@ public:
                                            TimeMilli   aUpdateTime);
         void                 RemoveService(Service *aService, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
         void                 FreeAllServices(void);
-        void                 FreeUnusedServiceDescriptions(void);
         void                 ClearResources(void);
         Error                MergeServicesAndResourcesFrom(Host &aHost);
         Error                AddIp6Address(const Ip6::Address &aIp6Address);
-        Service::Description *      FindServiceDescription(const char *aInstanceName);
-        const Service::Description *FindServiceDescription(const char *aInstanceName) const;
-        Service *                   FindService(const char *aServiceName, const char *aInstanceName);
-        const Service *             FindService(const char *aServiceName, const char *aInstanceName) const;
+        bool                 HasServiceInstance(const char *aInstanceName) const;
+        RetainPtr<Service::Description>       FindServiceDescription(const char *aInstanceName);
+        const RetainPtr<Service::Description> FindServiceDescription(const char *aInstanceName) const;
+        Service *                             FindService(const char *aServiceName, const char *aInstanceName);
+        const Service *                       FindService(const char *aServiceName, const char *aInstanceName) const;
 
         Host *                             mNext;
         Heap::String                       mFullName;
@@ -544,7 +546,6 @@ public:
         uint32_t                           mKeyLease; // The KEY-LEASE time in seconds.
         TimeMilli                          mUpdateTime;
         LinkedList<Service>                mServices;
-        LinkedList<Service::Description>   mServiceDescriptions;
     };
 
     /**

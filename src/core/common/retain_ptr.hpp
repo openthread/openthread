@@ -36,8 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "common/ptr_wrapper.hpp"
 
 namespace ot {
 
@@ -56,17 +55,16 @@ namespace ot {
  * @tparam Type  The pointer type.
  *
  */
-template <class Type> class RetainPtr
+template <class Type> class RetainPtr : public Ptr<Type>
 {
+    using Ptr<Type>::mPointer;
+
 public:
     /**
      * This is the default constructor for `RetainPtr` initializing it as null.
      *
      */
-    RetainPtr(void)
-        : mPointer(nullptr)
-    {
-    }
+    RetainPtr(void) = default;
 
     /**
      * This constructor initializes the `RetainPtr` with a given pointer.
@@ -77,7 +75,7 @@ public:
      *
      */
     explicit RetainPtr(Type *aPointer)
-        : mPointer(aPointer)
+        : Ptr<Type>(aPointer)
     {
         IncrementRetainCount();
     }
@@ -89,7 +87,7 @@ public:
      *
      */
     RetainPtr(const RetainPtr &aOther)
-        : mPointer(aOther.mPointer)
+        : Ptr<Type>(aOther.mPointer)
     {
         IncrementRetainCount();
     }
@@ -102,31 +100,6 @@ public:
      *
      */
     ~RetainPtr(void) { DecrementRetainCount(); }
-
-    /**
-     * This method indicates whether the `RetainPtr` is null or not.
-     *
-     * @retval TRUE   The `RetainPtr` is null.
-     * @retval FALSE  The `RetainPtr` is not null.
-     *
-     */
-    bool IsNull(void) const { return (mPointer == nullptr); }
-
-    /**
-     * This method gets the raw pointer to the object managed by `RetainPtr`.
-     *
-     * @returns The raw pointer to the object managed by `RetainPtr` or `nullptr` if none.
-     *
-     */
-    Type *Get(void) { return mPointer; }
-
-    /**
-     * This method gets the raw pointer to the object managed by `RetainPtr`.
-     *
-     * @returns The raw pointer to the object managed by `RetainPtr` or `nullptr` if none.
-     *
-     */
-    const Type *Get(void) const { return mPointer; }
 
     /**
      * This method replaces the managed object by `RetainPtr` with a new one.
@@ -164,56 +137,20 @@ public:
     }
 
     /**
-     * This method overloads the `->` dereference operator and returns a pointer to the object managed by `RetainPtr`.
-     *
-     * @returns A pointer to managed object or `nullptr` if none.
-     *
-     */
-    Type *operator->(void) { return mPointer; }
-
-    /**
-     * This method overloads the `->` dereference operator and returns a pointer to the object managed by `RetainPtr`.
-     *
-     * @returns A pointer to managed object or `nullptr` if none.
-     *
-     */
-    const Type *operator->(void)const { return mPointer; }
-
-    /**
-     * This method overloads the `*` dereference operator and returns a reference to the object managed by `RetainPtr`.
-     *
-     * The behavior is undefined if `IsNull() == true`.
-     *
-     * @returns A reference to the object managed by `RetainPtr`.
-     *
-     */
-    Type &operator*(void) { return *mPointer; }
-
-    /**
-     * This method overloads the `*` dereference operator and returns a reference to the object managed by `RetainPtr`.
-     *
-     * The behavior is undefined if `IsNull() == true`.
-     *
-     * @returns A reference to the object managed by `RetainPtr`.
-     *
-     */
-    const Type &operator*(void)const { return *mPointer; }
-
-    /**
-     * This method overload assignment operator `=` .
+     * This method overloads the assignment operator `=`.
      *
      * The `RetainPtr` first frees its current managed object (if there is any and it is different from @p aOther)
      * before taking over the ownership of the object from @p aOther. This method correctly handles a self assignment
      * (i.e., assigning the pointer to itself).
      *
-     * @param[in] aOther   A reference to an `OwendPtr`.
+     * @param[in] aOther   A reference to another `RetainPtr`.
      *
      * @returns A reference to this `RetainPtr`.
      *
      */
-    RetainPtr &operator=(RetainPtr &aOther)
+    RetainPtr &operator=(const RetainPtr &aOther)
     {
-        Reset(aOther.Get());
+        Reset(aOther.mPointer);
         return *this;
     }
 
@@ -233,8 +170,6 @@ private:
             mPointer->Free();
         }
     }
-
-    Type *mPointer;
 };
 
 /**
