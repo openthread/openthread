@@ -68,6 +68,7 @@ static TxPacket  sTxPacketPool[TREL_PACKET_POOL_SIZE];
 static TxPacket *sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
 static TxPacket *sTxPacketQueueTail; // A circular linked list for queued tx packets.
 
+static char sInterfaceName[IFNAMSIZ + 1];
 static bool sInitialized = false;
 static bool sEnabled     = false;
 static int  sSocket      = -1;
@@ -318,6 +319,14 @@ exit:
 // behavior. They need to be overridden during project/platform
 // integration.
 
+OT_TOOL_WEAK void trelDnssdInitialize(const char *aTrelNetif)
+{
+    // This function initialize the TREL DNS-SD module on the given
+    // TREL Network Interface.
+
+    OT_UNUSED_VARIABLE(aTrelNetif);
+}
+
 OT_TOOL_WEAK void trelDnssdStartBrowse(void)
 {
     // This function initiates an ongoing DNS-SD browse on the service
@@ -490,11 +499,18 @@ exit:
 
 void platformTrelInit(const char *aTrelUrl)
 {
-    OT_UNUSED_VARIABLE(aTrelUrl);
+    otLogDebgPlat("[trel] platformTrelInit(aTrelUrl:\"%s\")", aTrelUrl != nullptr ? aTrelUrl : "");
 
     assert(!sInitialized);
 
-    otLogDebgPlat("[trel] platformTrelInit(aTrelUrl:\"%s\")", aTrelUrl != nullptr ? aTrelUrl : "");
+    if (aTrelUrl != nullptr)
+    {
+        ot::Posix::RadioUrl url(aTrelUrl);
+        strncpy(sInterfaceName, url.GetPath(), sizeof(sInterfaceName) - 1);
+        sInterfaceName[sizeof(sInterfaceName) - 1] = '\0';
+    }
+
+    trelDnssdInitialize(sInterfaceName);
 
     InitPacketQueue();
     sInitialized = true;
@@ -505,7 +521,8 @@ void platformTrelDeinit(void)
     VerifyOrExit(sInitialized);
 
     otPlatTrelDisable(nullptr);
-    sInitialized = false;
+    sInterfaceName[0] = '\0';
+    sInitialized      = false;
     otLogDebgPlat("[trel] platformTrelDeinit()");
 
 exit:
