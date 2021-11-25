@@ -1360,6 +1360,8 @@ class OpenThreadTHCI(object):
         self.isPowerDown = False
 
         if not self.__isOpenThreadRunning():
+            if self.deviceRole == Thread_Device_Role.SED:
+                self.__setPollPeriod(self.__sedPollPeriod)
             self.__startOpenThread()
 
     def reset_and_wait_for_connection(self, timeout=3):
@@ -1415,12 +1417,7 @@ class OpenThreadTHCI(object):
         try:
             self.powerDown()
             time.sleep(timeout)
-
-            if self.deviceRole == Thread_Device_Role.SED:
-                self.__setPollPeriod(self.__sedPollPeriod)
-
             self.powerUp()
-            self.__startOpenThread()
             return self.wait_for_attach_to_the_network(expected_role="", timeout=self.NETWORK_ATTACHMENT_TIMEOUT)
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('resetAndRejoin() Error: ' + str(e))
