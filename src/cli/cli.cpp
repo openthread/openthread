@@ -4976,6 +4976,7 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
 
 void Interpreter::OutputPrompt(void)
 {
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
     static const char sPrompt[] = "> ";
 
     // The `OutputFormat()` below is adding the prompt which is not
@@ -4986,6 +4987,7 @@ void Interpreter::OutputPrompt(void)
     SetEmittingCommandOutput(false);
     OutputFormat("%s", sPrompt);
     SetEmittingCommandOutput(true);
+#endif // OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
 }
 
 void Interpreter::HandleTimer(Timer &aTimer)
