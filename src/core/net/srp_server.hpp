@@ -393,7 +393,7 @@ public:
      *
      */
     class Host : public otSrpServerHost,
-                 public InstanceLocatorInit,
+                 public InstanceLocator,
                  public LinkedListEntry<Host>,
                  private Heap::Allocatable<Host>,
                  private NonCopyable
@@ -514,10 +514,9 @@ public:
     private:
         static constexpr uint16_t kMaxAddresses = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
 
-        Host(void) = default;
+        Host(Instance &aInstance, TimeMilli aUpdateTime);
         ~Host(void);
 
-        Error                Init(Instance &aInstance, TimeMilli aUpdateTime);
         Error                SetFullName(const char *aFullName);
         void                 SetKey(Dns::Ecdsa256KeyRecord &aKey);
         void                 SetLease(uint32_t aLease) { mLease = aLease; }
@@ -786,7 +785,7 @@ private:
 
     // This class includes metadata for processing a SRP update (register, deregister)
     // and sending DNS response to the client.
-    class UpdateMetadata : public InstanceLocatorInit,
+    class UpdateMetadata : public InstanceLocator,
                            public LinkedListEntry<UpdateMetadata>,
                            public Heap::Allocatable<UpdateMetadata>
     {
@@ -794,25 +793,24 @@ private:
         friend class Heap::Allocatable<UpdateMetadata>;
 
     public:
-        Error                    Init(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
         TimeMilli                GetExpireTime(void) const { return mExpireTime; }
         const Dns::UpdateHeader &GetDnsHeader(void) const { return mDnsHeader; }
         ServiceUpdateId          GetId(void) const { return mId; }
         const LeaseConfig &      GetLeaseConfig(void) const { return mLeaseConfig; }
-        Host &                   GetHost(void) { return *mHost; }
+        Host &                   GetHost(void) { return mHost; }
         const Ip6::MessageInfo & GetMessageInfo(void) const { return mMessageInfo; }
         bool                     IsDirectRxFromClient(void) const { return mIsDirectRxFromClient; }
         bool                     Matches(ServiceUpdateId aId) const { return mId == aId; }
 
     private:
-        UpdateMetadata(void) = default;
+        UpdateMetadata(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
 
         UpdateMetadata *  mNext;
         TimeMilli         mExpireTime;
         Dns::UpdateHeader mDnsHeader;
         ServiceUpdateId   mId;          // The ID of this service update transaction.
         LeaseConfig       mLeaseConfig; // Lease config to use when processing the message.
-        Host *            mHost;        // The `UpdateMetadata` has no ownership of this host.
+        Host &            mHost;        // The `UpdateMetadata` has no ownership of this host.
         Ip6::MessageInfo  mMessageInfo; // Valid when `mIsDirectRxFromClient` is true.
         bool              mIsDirectRxFromClient;
     };
