@@ -1299,8 +1299,7 @@ class OpenThreadTHCI(object):
                         self, timeout * 2))
                 else:
                     return False
-
-            return True
+        return True
 
     @API
     def getNetworkFragmentID(self):
@@ -1361,6 +1360,8 @@ class OpenThreadTHCI(object):
         self.isPowerDown = False
 
         if not self.__isOpenThreadRunning():
+            if self.deviceRole == Thread_Device_Role.SED:
+                self.__setPollPeriod(self.__sedPollPeriod)
             self.__startOpenThread()
 
     def reset_and_wait_for_connection(self, timeout=3):
@@ -1417,7 +1418,6 @@ class OpenThreadTHCI(object):
             self.powerDown()
             time.sleep(timeout)
             self.powerUp()
-            self.__startOpenThread()
             return self.wait_for_attach_to_the_network(expected_role="", timeout=self.NETWORK_ATTACHMENT_TIMEOUT)
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('resetAndRejoin() Error: ' + str(e))
@@ -2773,10 +2773,13 @@ class OpenThreadTHCI(object):
                 cmd += pskc
 
             if listSecurityPolicy is not None:
-                if self.DeviceCapability == DevCapb.V1_1:
-                    cmd += '0c03'
+                if TESTHARNESS_VERSION == TESTHARNESS_1_2:
+                    if self.DeviceCapability == DevCapb.V1_1:
+                        cmd += '0c03'
+                    else:
+                        cmd += '0c04'
                 else:
-                    cmd += '0c04'
+                    cmd += '0c03'
 
                 rotationTime = 0
                 policyBits = 0
@@ -2803,8 +2806,11 @@ class OpenThreadTHCI(object):
                     # new passing way listSecurityPolicy=[3600, 0b11001111]
                     rotationTime = listSecurityPolicy[0]
                     # bit order
-                    if self.DeviceCapability != DevCapb.V1_1:
-                        policyBits = listSecurityPolicy[2] << 8 | listSecurityPolicy[1]
+                    if TESTHARNESS_VERSION == TESTHARNESS_1_2:
+                        if self.DeviceCapability != DevCapb.V1_1:
+                            policyBits = listSecurityPolicy[2] << 8 | listSecurityPolicy[1]
+                        else:
+                            policyBits = listSecurityPolicy[1]
                     else:
                         policyBits = listSecurityPolicy[1]
 
@@ -2818,9 +2824,10 @@ class OpenThreadTHCI(object):
                 flags0 = ('%x' % (policyBits & 0x00ff)).ljust(2, '0')
                 cmd += flags0
 
-                if self.DeviceCapability != DevCapb.V1_1:
-                    flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
-                    cmd += flags1
+                if TESTHARNESS_VERSION == TESTHARNESS_1_2:
+                    if self.DeviceCapability != DevCapb.V1_1:
+                        flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
+                        cmd += flags1
 
             if xCommissioningSessionId is not None:
                 cmd += '0b02'
