@@ -85,21 +85,6 @@ public:
     typedef void (&Handler)(Timer &aTimer);
 
     /**
-     * This constructor creates a timer instance.
-     *
-     * @param[in]  aInstance   A reference to the OpenThread instance.
-     * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
-     *
-     */
-    Timer(Instance &aInstance, Handler aHandler)
-        : InstanceLocator(aInstance)
-        , mHandler(aHandler)
-        , mFireTime()
-        , mNext(this)
-    {
-    }
-
-    /**
      * This method returns the fire time of the timer.
      *
      * @returns The fire time.
@@ -142,6 +127,13 @@ protected:
 
         LinkedList<Timer> mTimerList;
     };
+
+    Timer(Instance &aInstance, Handler aHandler)
+        : InstanceLocator(aInstance)
+        , mHandler(aHandler)
+        , mNext(this)
+    {
+    }
 
     bool DoesFireBefore(const Timer &aSecondTimer, Time aNow) const;
     void Fired(void) { mHandler(*this); }
