@@ -1400,7 +1400,7 @@ Error MeshForwarder::FrameToMessage(const uint8_t *     aFrame,
     error = GetFramePriority(aFrame, aFrameLength, aMacSource, aMacDest, priority);
     SuccessOrExit(error);
 
-    aMessage = Get<MessagePool>().New(Message::kTypeIp6, 0, priority);
+    aMessage = Get<MessagePool>().Allocate(Message::kTypeIp6, /* aReserveHeader */ 0, Message::Settings(priority));
     VerifyOrExit(aMessage, error = kErrorNoBufs);
 
     headerLength =
@@ -1547,7 +1547,7 @@ Error MeshForwarder::SendEmptyMessage(void)
                      Get<Mle::MleRouter>().GetParent().IsStateValidOrRestoring(),
                  error = kErrorInvalidState);
 
-    message = Get<MessagePool>().New(Message::kTypeMacEmptyData, 0);
+    message = Get<MessagePool>().Allocate(Message::kTypeMacEmptyData);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = SendMessage(*message));

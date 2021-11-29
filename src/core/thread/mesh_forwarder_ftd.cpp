@@ -805,7 +805,8 @@ void MeshForwarder::HandleMesh(uint8_t *             aFrame,
         meshHeader.DecrementHopsLeft();
 
         GetForwardFramePriority(aFrame, aFrameLength, meshSource, meshDest, priority);
-        message = Get<MessagePool>().New(Message::kType6lowpan, /* aReserveHeader */ 0, priority);
+        message =
+            Get<MessagePool>().Allocate(Message::kType6lowpan, /* aReserveHeader */ 0, Message::Settings(priority));
         VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
         SuccessOrExit(error = message->SetLength(meshHeader.GetHeaderLength() + aFrameLength));

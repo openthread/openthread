@@ -65,7 +65,7 @@ void TestMessage(void)
 
     Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
 
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
     SuccessOrQuit(message->SetLength(kMaxSize));
     message->WriteBytes(0, writeBuffer, kMaxSize);
     SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
@@ -136,7 +136,7 @@ void TestMessage(void)
 
     // Test `Message::CopyTo()` behavior.
 
-    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
     SuccessOrQuit(message2->SetLength(kMaxSize));
 
     for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset += kOffsetStep)
@@ -258,7 +258,7 @@ void TestAppender(void)
     instance = static_cast<Instance *>(testInitInstance());
     VerifyOrQuit(instance != nullptr);
 
-    message = instance->Get<MessagePool>().New(Message::kTypeIp6, 0);
+    message = instance->Get<MessagePool>().Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr);
 
     memset(buffer, 0, sizeof(buffer));

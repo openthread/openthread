@@ -142,7 +142,7 @@ void TestDnsName(void)
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     message->SetOffset(0);
 
@@ -468,7 +468,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     // Append name1 "F.ISI.ARPA"
 
@@ -729,7 +729,7 @@ void TestDnsCompressedName(void)
     printf("----------------------------------------------------------------\n");
     printf("Append names from one message to another\n");
 
-    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     dnsName1.SetFromMessage(*message, name1Offset);
     dnsName2.SetFromMessage(*message, name2Offset);
@@ -830,7 +830,7 @@ void TestHeaderAndResourceRecords(void)
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     printf("----------------------------------------------------------------\n");
     printf("Preparing the message\n");
@@ -1245,7 +1245,7 @@ void TestDnsTxtEntry(void)
     VerifyOrQuit(instance != nullptr);
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     data.Init(txtData, sizeof(txtData));
     SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), data));

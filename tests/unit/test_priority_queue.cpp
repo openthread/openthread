@@ -156,32 +156,33 @@ void TestPriorityQueue(void)
 
     messagePool = &instance->Get<ot::MessagePool>();
 
-    // Use the function "New()" to allocate messages with different priorities
+    // Use the function "Allocate()" to allocate messages with different priorities
     for (int i = 0; i < kNumNewPriorityTestMessages; i++)
     {
-        msgNet[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityNet);
+        msgNet[i] = messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityNet));
         VerifyOrQuit(msgNet[i] != nullptr);
-        msgHigh[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityHigh);
+        msgHigh[i] = messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityHigh));
         VerifyOrQuit(msgHigh[i] != nullptr);
-        msgNor[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityNormal);
+        msgNor[i] =
+            messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityNormal));
         VerifyOrQuit(msgNor[i] != nullptr);
-        msgLow[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityLow);
+        msgLow[i] = messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityLow));
         VerifyOrQuit(msgLow[i] != nullptr);
     }
 
     // Use the function "SetPriority()" to allocate messages with different priorities
     for (int i = kNumNewPriorityTestMessages; i < kNumTestMessages; i++)
     {
-        msgNet[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgNet[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgNet[i] != nullptr);
         SuccessOrQuit(msgNet[i]->SetPriority(ot::Message::kPriorityNet));
-        msgHigh[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgHigh[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgHigh[i] != nullptr);
         SuccessOrQuit(msgHigh[i]->SetPriority(ot::Message::kPriorityHigh));
-        msgNor[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgNor[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgNor[i] != nullptr);
         SuccessOrQuit(msgNor[i]->SetPriority(ot::Message::kPriorityNormal));
-        msgLow[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgLow[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgLow[i] != nullptr);
         SuccessOrQuit(msgLow[i]->SetPriority(ot::Message::kPriorityLow));
     }

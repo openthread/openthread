@@ -65,7 +65,7 @@ Error DatasetUpdater::RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Call
     VerifyOrExit(!aDataset.IsActiveTimestampPresent() && !aDataset.IsPendingTimestampPresent(),
                  error = kErrorInvalidArgs);
 
-    message = Get<MessagePool>().New(Message::kTypeOther, 0);
+    message = Get<MessagePool>().Allocate(Message::kTypeOther);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->Append(aDataset));

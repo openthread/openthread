@@ -728,7 +728,7 @@ Error Client::AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const ch
 {
     Error error = kErrorNone;
 
-    aQuery = Get<MessagePool>().New(Message::kTypeOther, /* aReserveHeader */ 0);
+    aQuery = Get<MessagePool>().Allocate(Message::kTypeOther);
     VerifyOrExit(aQuery != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = aQuery->Append(aInfo));

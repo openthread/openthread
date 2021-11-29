@@ -215,7 +215,7 @@ void TestHeapData(void)
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     message->SetOffset(0);
 

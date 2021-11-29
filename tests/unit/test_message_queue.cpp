@@ -88,8 +88,8 @@ void TestMessageQueue(void)
 
     for (ot::Message *&msg : messages)
     {
-        msg = sMessagePool->New(ot::Message::kTypeIp6, 0);
-        VerifyOrQuit(msg != nullptr, "Message::New() failed");
+        msg = sMessagePool->Allocate(ot::Message::kTypeIp6);
+        VerifyOrQuit(msg != nullptr, "Message::Allocate() failed");
     }
 
     VerifyMessageQueueContent(messageQueue, 0);

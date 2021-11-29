@@ -80,13 +80,13 @@ Ip6::Ip6(Instance &aInstance)
 
 Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
-    return Get<MessagePool>().New(Message::kTypeIp6,
-                                  sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
+    return Get<MessagePool>().Allocate(
+        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings)
 {
-    Message *message = Get<MessagePool>().New(Message::kTypeIp6, 0, aSettings);
+    Message *message = Get<MessagePool>().Allocate(Message::kTypeIp6, /* aReserveHeader */ 0, aSettings);
 
     VerifyOrExit(message != nullptr);
 
