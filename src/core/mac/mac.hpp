@@ -752,6 +752,29 @@ public:
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    /**
+     * This method enables/disables the 802.15.4 radio filter.
+     *
+     * When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any
+     * frame and/or potentially send ack). Also the frame transmission requests return immediately without sending the
+     * frame over the air (return "no ack" error if ack is requested, otherwise return success).
+     *
+     * @param[in] aFilterEnabled    TRUE to enable radio filter, FALSE to disable.
+     *
+     */
+    void SetRadioFilterEnabled(bool aFilterEnabled);
+
+    /**
+     * This method indicates whether the 802.15.4 radio filter is enabled or not.
+     *
+     * @retval TRUE   If the radio filter is enabled.
+     * @retval FALSE  If the radio filter is disabled.
+     *
+     */
+    bool IsRadioFilterEnabled(void) const { return mLinks.GetSubMac().IsRadioFilterEnabled(); }
+#endif
+
 private:
     static constexpr int8_t   kInvalidRssiValue  = SubMac::kInvalidRssiValue;
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;

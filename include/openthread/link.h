@@ -865,6 +865,33 @@ void otLinkFilterClearAllRssIn(otInstance *aInstance);
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
+ * This function enables/disables IEEE 802.15.4 radio filter mode.
+ *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
+ * The radio filter is mainly intended for testing. It can be used to temporarily block all tx/rx on the 802.15.4 radio.
+ * When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any frame
+ * and/or potentially send ack). Also the frame transmission requests return immediately without sending the frame over
+ * the air (return "no ack" error if ack is requested, otherwise return success).
+ *
+ * @param[in] aInstance         A pointer to an OpenThread instance.
+ * @param[in] aFilterEnabled    TRUE to enable radio filter, FALSE to disable
+ *
+ */
+void otLinkSetRadioFilterEnabled(otInstance *aInstance, bool aFilterEnabled);
+
+/**
+ * This function indicates whether the IEEE 802.15.4 radio filter is enabled or not.
+ *
+ * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ *
+ * @retval TRUE   If the radio filter is enabled.
+ * @retval FALSE  If the radio filter is disabled.
+ *
+ */
+bool otLinkIsRadioFilterEnabled(otInstance *aInstance);
+
+/**
  * This method converts received signal strength to link quality.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.

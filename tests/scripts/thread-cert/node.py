@@ -839,6 +839,21 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def radiofilter_is_enabled(self) -> bool:
+        states = [r'Disabled', r'Enabled']
+        self.send_command('radiofilter')
+        return self._expect_result(states) == 'Enabled'
+
+    def radiofilter_enable(self):
+        cmd = 'radiofilter enable'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def radiofilter_disable(self):
+        cmd = 'radiofilter disable'
+        self.send_command(cmd)
+        self._expect_done()
+
     def get_bbr_registration_jitter(self):
         self.send_command('bbr jitter')
         return int(self._expect_result(r'\d+'))
@@ -1999,6 +2014,18 @@ class NodeImpl:
                     'lqi': lqi,
                 })
             return networks
+
+    def scan_energy(self, timeout=10):
+        self.send_command('scan energy')
+        self.simulator.go(timeout)
+        rssi_list = []
+        for line in self._expect_command_output()[2:]:
+            _, channel, rssi, _ = line.split('|')
+            rssi_list.append({
+                'channel': int(channel.strip()),
+                'rssi': int(rssi.strip()),
+            })
+        return rssi_list
 
     def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64, interface=None):
         args = f'{ipaddr} {size} {count} {interval} {hoplimit} {timeout}'

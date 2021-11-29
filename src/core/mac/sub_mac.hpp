@@ -548,6 +548,29 @@ public:
      */
     void SetFrameCounter(uint32_t aFrameCounter);
 
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    /**
+     * This method enables/disables the radio filter.
+     *
+     * When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any
+     * frame and/or potentially send ack). Also the frame transmission requests return immediately without sending the
+     * frame over the air (return "no ack" error if ack is requested, otherwise return success).
+     *
+     * @param[in] aFilterEnabled    TRUE to enable radio filter, FALSE to disable.
+     *
+     */
+    void SetRadioFilterEnabled(bool aFilterEnabled) { mRadioFilterEnabled = aFilterEnabled; }
+
+    /**
+     * This method indicates whether the radio filter is enabled or not.
+     *
+     * @retval TRUE   If the radio filter is enabled.
+     * @retval FALSE  If the radio filter is disabled.
+     *
+     */
+    bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
+#endif
+
 private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static void HandleCslTimer(Timer &aTimer);
@@ -645,13 +668,16 @@ private:
     static const char *CslStateToString(CslState aCslState);
 #endif
 
-    otRadioCaps        mRadioCaps;
-    State              mState;
-    uint8_t            mCsmaBackoffs;
-    uint8_t            mTransmitRetries;
-    ShortAddress       mShortAddress;
-    ExtAddress         mExtAddress;
-    bool               mRxOnWhenBackoff;
+    otRadioCaps  mRadioCaps;
+    State        mState;
+    uint8_t      mCsmaBackoffs;
+    uint8_t      mTransmitRetries;
+    ShortAddress mShortAddress;
+    ExtAddress   mExtAddress;
+    bool         mRxOnWhenBackoff : 1;
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    bool mRadioFilterEnabled : 1;
+#endif
     int8_t             mEnergyScanMaxRssi;
     TimeMilli          mEnergyScanEndTime;
     TxFrame &          mTransmitFrame;
