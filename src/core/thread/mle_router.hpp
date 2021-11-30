@@ -560,6 +560,14 @@ public:
      *
      */
     void SetCcmEnabled(bool aEnabled) { mCcmEnabled = aEnabled; }
+
+    /**
+     * This function sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
+     *
+     * @param[in]  aEnabled  TRUE to enable Security Policy TLV version-threshold for routing, FALSE otherwise.
+     *
+     */
+    void SetThreadVersionCheckEnabled(bool aEnabled) { mThreadVersionCheckEnabled = aEnabled; }
 #endif
 
 private:
@@ -681,6 +689,7 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint32_t mPreferredLeaderPartitionId; ///< only for certification testing
     bool     mCcmEnabled : 1;
+    bool     mThreadVersionCheckEnabled : 1;
 #endif
     bool mRouterEligible : 1;
     bool mAddressSolicitPending : 1;

@@ -740,6 +740,18 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
 void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * This function sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
+ *       to indicate that thread protocol version check VR should be skipped.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   TRUE to enable Security Policy TLV version-threshold for routing, FALSE otherwise.
+ *
+ */
+void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
  * This function gets the range of router IDs that are allowed to assign to nodes within the thread network.
  *
  * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used for test purpose. All the

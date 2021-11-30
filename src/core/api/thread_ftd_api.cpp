@@ -368,6 +368,11 @@ void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled)
 {
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetCcmEnabled(aEnabled);
 }
+
+void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<Mle::MleRouter>().SetThreadVersionCheckEnabled(aEnabled);
+}
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

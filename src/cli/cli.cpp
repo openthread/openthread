@@ -855,6 +855,21 @@ otError Interpreter::ProcessCcm(Arg aArgs[])
 exit:
     return error;
 }
+
+otError Interpreter::ProcessThreadVersionCheck(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_COMMAND);
+
+    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+    otThreadSetThreadVersionCheckEnabled(GetInstancePtr(), enable);
+
+exit:
+    return error;
+}
+
 #endif
 
 otError Interpreter::ProcessChannel(Arg aArgs[])

@@ -328,6 +328,7 @@ private:
     otError ProcessCcaThreshold(Arg aArgs[]);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     otError ProcessCcm(Arg aArgs[]);
+    otError ProcessThreadVersionCheck(Arg aArgs[]);
 #endif
     otError ProcessBufferInfo(Arg aArgs[]);
     otError ProcessChannel(Arg aArgs[]);
@@ -861,6 +862,9 @@ private:
         {"thread", &Interpreter::ProcessThread},
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         {"trel", &Interpreter::ProcessTrel},
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        {"tvcheck", &Interpreter::ProcessThreadVersionCheck},
 #endif
         {"txpower", &Interpreter::ProcessTxPower},
         {"udp", &Interpreter::ProcessUdp},

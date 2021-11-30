@@ -72,6 +72,7 @@ MleRouter::MleRouter(Instance &aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mPreferredLeaderPartitionId(0)
     , mCcmEnabled(false)
+    , mThreadVersionCheckEnabled(true)
 #endif
     , mRouterEligible(true)
     , mAddressSolicitPending(false)
@@ -132,8 +133,14 @@ bool MleRouter::IsRouterEligible(void) const
     }
     if (!secPolicy.mRoutersEnabled)
     {
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        VerifyOrExit(!mThreadVersionCheckEnabled ||
+                     secPolicy.mVersionThresholdForRouting + SecurityPolicy::kVersionThresholdOffsetVersion <=
+                         kThreadVersion);
+#else
         VerifyOrExit(secPolicy.mVersionThresholdForRouting + SecurityPolicy::kVersionThresholdOffsetVersion <=
                      kThreadVersion);
+#endif
     }
 #endif
 
