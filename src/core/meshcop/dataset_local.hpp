@@ -186,6 +186,11 @@ public:
 private:
     bool IsActive(void) const { return (mType == Dataset::kActive); }
     void SetTimestamp(const Dataset &aDataset);
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    void MoveKeysToSecureStorage(Dataset &aDataset) const;
+    void DestroySecurelyStoredKeys(void) const;
+    void EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
+#endif
 
     Timestamp     mTimestamp;            ///< Active or Pending Timestamp
     TimeMilli     mUpdateTime;           ///< Local time last updated

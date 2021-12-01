@@ -211,9 +211,6 @@ typedef Mac::KeyMaterial KekKeyMaterial;
 class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
-    static constexpr uint32_t kNetworkKeyPsaItsOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1;
-    static constexpr uint32_t kPskcPsaItsOffset       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2;
-
     /**
      * This constructor initializes the object.
      *

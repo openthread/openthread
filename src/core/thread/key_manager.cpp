@@ -562,7 +562,7 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 {
     NetworkKeyRef keyRef;
 
-    keyRef = kNetworkKeyPsaItsOffset;
+    keyRef = Crypto::Storage::kNetworkKeyRef;
 
     if (!aOverWriteExisting)
     {
@@ -593,7 +593,7 @@ exit:
 
 void KeyManager::StorePskc(const Pskc &aPskc)
 {
-    PskcRef keyRef = kPskcPsaItsOffset;
+    PskcRef keyRef = Crypto::Storage::kPskcRef;
 
     Crypto::Storage::DestroyKey(keyRef);
 
