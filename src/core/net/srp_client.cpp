@@ -1185,11 +1185,12 @@ void Client::ProcessResponse(Message &aMessage)
         /* (7) kRemoved    -> */ kRemoved,
     };
 
-    Error               error = kErrorNone;
-    Dns::UpdateHeader   header;
-    uint16_t            offset = aMessage.GetOffset();
-    uint16_t            recordCount;
-    LinkedList<Service> removedServices;
+    Error                 error = kErrorNone;
+    Dns::UpdateHeader     header;
+    Dns::Header::Response responseCode;
+    uint16_t              offset = aMessage.GetOffset();
+    uint16_t              recordCount;
+    LinkedList<Service>   removedServices;
 
     VerifyOrExit(GetState() == kStateUpdating);
 
@@ -1212,11 +1213,25 @@ void Client::ProcessResponse(Message &aMessage)
     mTimoutFailureCount = 0;
 #endif
 
-    error = Dns::Header::ResponseCodeToError(header.GetResponseCode());
+    responseCode = header.GetResponseCode();
+
+    if ((mHostInfo.GetState() == kRemoving) && (responseCode == Dns::Header::kResponseNameError))
+    {
+        // When removing the host, we accept response code
+        // (NXDOMAIN) `kResponseNameError` as success. Server may
+        // send this if the host name does not exist (in which case
+        // we can treat the remove request as successful).
+
+        error = kErrorNone;
+    }
+    else
+    {
+        error = Dns::Header::ResponseCodeToError(responseCode);
+    }
 
     if (error != kErrorNone)
     {
-        otLogInfoSrp("[client] Server rejected %s code:%d", ErrorToString(error), header.GetResponseCode());
+        otLogInfoSrp("[client] Server rejected %s code:%d", ErrorToString(error), responseCode);
 
         if (mHostInfo.GetState() == kAdding)
         {
