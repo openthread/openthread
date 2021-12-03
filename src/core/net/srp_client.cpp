@@ -767,7 +767,7 @@ Error Client::PrepareUpdateMessage(Message &aMessage)
 
     // Prepare Update section
 
-    if (mHostInfo.GetState() != kToRemove)
+    if ((mHostInfo.GetState() != kToRemove) && (mHostInfo.GetState() != kRemoving))
     {
         for (Service &service : mServices)
         {
