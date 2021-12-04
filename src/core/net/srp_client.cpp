@@ -767,7 +767,7 @@ Error Client::PrepareUpdateMessage(Message &aMessage)
 
     // Prepare Update section
 
-    if (mHostInfo.GetState() != kToRemove)
+    if ((mHostInfo.GetState() != kToRemove) && (mHostInfo.GetState() != kRemoving))
     {
         for (Service &service : mServices)
         {
@@ -1071,7 +1071,7 @@ Error Client::AppendUpdateLeaseOptRecord(Message &aMessage) const
 
     leaseOption.Init();
 
-    if (mHostInfo.GetState() == kToRemove)
+    if ((mHostInfo.GetState() == kToRemove) || (mHostInfo.GetState() == kRemoving))
     {
         leaseOption.SetLeaseInterval(0);
         leaseOption.SetKeyLeaseInterval(mShouldRemoveKeyLease ? 0 : mKeyLeaseInterval);
