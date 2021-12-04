@@ -65,6 +65,12 @@ public:
      */
     virtual void Process(const otSysMainloopContext &aContext) = 0;
 
+    /**
+     * This method mark desturctor virtual.
+     *
+     */
+    virtual ~Source() = 0;
+
 private:
     Source *mNext = nullptr;
 };
