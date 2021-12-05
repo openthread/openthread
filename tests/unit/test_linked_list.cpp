@@ -50,9 +50,16 @@ struct EntryBase
 struct Entry : public EntryBase, LinkedListEntry<Entry>
 {
 public:
-    Entry(const char *aName, uint16_t aId)
+    enum class Type : uint8_t
+    {
+        kAlpha,
+        kBeta,
+    };
+
+    Entry(const char *aName, uint16_t aId, Type aType = Type::kAlpha)
         : mName(aName)
         , mId(aId)
+        , mType(aType)
         , mWasFreed(false)
     {
     }
@@ -61,6 +68,7 @@ public:
     uint16_t    GetId(void) const { return mId; }
     bool        Matches(const char *aName) const { return strcmp(mName, aName) == 0; }
     bool        Matches(uint16_t aId) const { return mId == aId; }
+    bool        Matches(Type aType) const { return mType == aType; }
     void        Free(void) { mWasFreed = true; }
 
     void ResetTestFlags(void) { mWasFreed = false; }
@@ -69,8 +77,12 @@ public:
 private:
     const char *mName;
     uint16_t    mId;
+    Type        mType;
     bool        mWasFreed;
 };
+
+constexpr Entry::Type kAlphaType = Entry::Type::kAlpha;
+constexpr Entry::Type kBetaType  = Entry::Type::kBeta;
 
 // This function verifies the content of the linked list matches a given list of entries.
 void VerifyLinkedListContent(const LinkedList<Entry> *aList, ...)
@@ -120,9 +132,11 @@ void VerifyLinkedListContent(const LinkedList<Entry> *aList, ...)
 
 void TestLinkedList(void)
 {
-    Entry             a("a", 1), b("b", 2), c("c", 3), d("d", 4), e("e", 5);
+    Entry             a("a", 1, kAlphaType), b("b", 2, kAlphaType), c("c", 3, kBetaType);
+    Entry             d("d", 4, kBetaType), e("e", 5, kAlphaType), f("f", 6, kBetaType);
     Entry *           prev;
     LinkedList<Entry> list;
+    LinkedList<Entry> removedList;
 
     printf("TestLinkedList\n");
 
@@ -240,6 +254,46 @@ void TestLinkedList(void)
     VerifyOrQuit(list.FindMatching(c.GetId(), prev) == nullptr, "succeeded when empty");
     VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr, "succeeded when empty");
     VerifyOrQuit(list.Remove(a) == kErrorNotFound, "succeeded when empty");
+
+    list.Clear();
+    removedList.Clear();
+    list.Push(f);
+    list.Push(e);
+    list.Push(d);
+    list.Push(c);
+    list.Push(b);
+    list.Push(a);
+    VerifyLinkedListContent(&list, &a, &b, &c, &d, &e, &f, nullptr);
+
+    list.RemoveAllMatching(kAlphaType, removedList);
+    VerifyLinkedListContent(&list, &c, &d, &f, nullptr);
+    VerifyLinkedListContent(&removedList, &e, &b, &a, nullptr);
+
+    removedList.Clear();
+    list.RemoveAllMatching(kAlphaType, removedList);
+    VerifyLinkedListContent(&list, &c, &d, &f, nullptr);
+    VerifyOrQuit(removedList.IsEmpty());
+
+    list.RemoveAllMatching(kBetaType, removedList);
+    VerifyOrQuit(list.IsEmpty());
+    VerifyLinkedListContent(&removedList, &f, &d, &c, nullptr);
+
+    removedList.Clear();
+    list.RemoveAllMatching(kAlphaType, removedList);
+    VerifyOrQuit(list.IsEmpty());
+    VerifyOrQuit(removedList.IsEmpty());
+
+    list.Push(f);
+    list.Push(e);
+    list.Push(d);
+    list.Push(c);
+    list.Push(b);
+    list.Push(a);
+    VerifyLinkedListContent(&list, &a, &b, &c, &d, &e, &f, nullptr);
+
+    list.RemoveAllMatching(kBetaType, removedList);
+    VerifyLinkedListContent(&list, &a, &b, &e, nullptr);
+    VerifyLinkedListContent(&removedList, &f, &d, &c, nullptr);
 }
 
 void TestOwningList(void)

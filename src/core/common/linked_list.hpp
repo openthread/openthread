@@ -350,6 +350,45 @@ public:
     }
 
     /**
+     * This template method removes all entries in the list matching a given entry indicator from the list and adds
+     * them to a new list.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in] aIndicator   An entry indicator to match against entries in the list.
+     * @param[in] aRemovedList The list to add the removed entries to.
+     *
+     */
+    template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator, LinkedList &aRemovedList)
+    {
+        Type *entry;
+        Type *prev;
+        Type *next;
+
+        for (prev = nullptr, entry = GetHead(); entry != nullptr; entry = next)
+        {
+            next = entry->GetNext();
+
+            if (entry->Matches(aIndicator))
+            {
+                PopAfter(prev);
+                aRemovedList.Push(*entry);
+
+                // When the entry is removed from the list
+                // we keep the `prev` pointer same as before.
+            }
+            else
+            {
+                prev = entry;
+            }
+        }
+    }
+
+    /**
      * This method searches within the linked list to find an entry and if found returns a pointer to previous entry.
      *
      * @param[in]  aEntry      A reference to an entry to find.
