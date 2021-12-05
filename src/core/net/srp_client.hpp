@@ -267,6 +267,7 @@ public:
         TimeMilli GetLeaseRenewTime(void) const { return TimeMilli(mData); }
         void      SetLeaseRenewTime(TimeMilli aTime) { mData = aTime.GetValue(); }
         bool      Matches(const Service &aOther) const;
+        bool      Matches(ItemState aState) const { return GetState() == aState; }
     };
 
     /**

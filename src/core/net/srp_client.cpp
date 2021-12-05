@@ -1355,27 +1355,7 @@ void Client::HandleUpdateDone(void)
 
 void Client::GetRemovedServices(LinkedList<Service> &aRemovedServices)
 {
-    Service *service;
-    Service *prev;
-    Service *next;
-
-    for (prev = nullptr, service = mServices.GetHead(); service != nullptr; service = next)
-    {
-        next = service->GetNext();
-
-        if (service->GetState() == kRemoved)
-        {
-            mServices.PopAfter(prev);
-            aRemovedServices.Push(*service);
-
-            // When the service is removed from the list
-            // we keep the `prev` pointer same as before.
-        }
-        else
-        {
-            prev = service;
-        }
-    }
+    mServices.RemoveAllMatching(kRemoved, aRemovedServices);
 }
 
 Error Client::ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord)
