@@ -128,6 +128,27 @@ public:
     {
         return OwnedPtr<Type>(LinkedList<Type>::RemoveMatching(aIndicator));
     }
+
+    /**
+     * This template method removes all entries in the list matching a given entry indicator from the list and adds
+     * them to a new list.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * The ownership of the removed entries is transferred from the original list to the @p aRemovedList.
+     *
+     * @param[in] aIndicator   An entry indicator to match against entries in the list.
+     * @param[in] aRemovedList The list to add the removed entries to.
+     *
+     */
+    template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator, OwningList &aRemovedList)
+    {
+        RemoveAllMatching(aIndicator, aRemovedList);
+    }
 };
 
 } // namespace ot
