@@ -238,6 +238,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
         SuccessOrDie(mSpinelInterface.ResetConnection());
     }
 
+    otLogCritPlat("Init reset error:%d", error);
+
     SuccessOrExit(error = WaitResponse());
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
@@ -270,6 +272,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
     mAckRadioFrame.mPsdu = mAckPsdu;
 
 exit:
+    otLogCritPlat("Init error:%d", error);
     SuccessOrDie(error);
 }
 
@@ -1058,11 +1061,13 @@ void RadioSpinel<InterfaceType, ProcessContextType>::TransmitDone(otRadioFrame *
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     if (otPlatDiagModeGet())
     {
+        otLogCritPlat("TransmitDone:DiagDone error:%d", aError);
         otPlatDiagRadioTransmitDone(mInstance, aFrame, aError);
     }
     else
 #endif
     {
+        otLogCritPlat("TransmitDone:TxDone error:%d", aError);
         otPlatRadioTxDone(mInstance, aFrame, aAckFrame, aError);
     }
 }
@@ -1718,6 +1723,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SendReset(uint8_t aReset
 
     SuccessOrExit(error = mSpinelInterface.SendFrame(buffer, static_cast<uint16_t>(packed)));
 
+    otLogCritPlat("SendReset error:%d", error);
+
 exit:
     return error;
 }
@@ -1894,6 +1901,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
         error = SpinelStatusToOtError(status);
     }
 
+    otLogCritPlat("HandleTransmitDone framePending:%d headerUpdated:%d", framePending, headerUpdated);
+
     static_cast<Mac::TxFrame *>(mTransmitFrame)->SetIsHeaderUpdated(headerUpdated);
 
     if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && headerUpdated &&
@@ -1944,6 +1953,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
                     mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated,
                     mTransmitFrame->mInfo.mTxInfo.mIsARetx, mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed,
                     mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
+
+    otLogCritPlat("Transmit started error:%d", error);
 
     if (error == OT_ERROR_NONE)
     {
