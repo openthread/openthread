@@ -69,7 +69,7 @@ public:
      * This method mark desturctor virtual.
      *
      */
-    virtual ~Source() = 0;
+    virtual ~Source() = default;
 
 private:
     Source *mNext = nullptr;
