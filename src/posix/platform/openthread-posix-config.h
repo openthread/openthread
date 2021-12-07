@@ -170,11 +170,14 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
  *
- * This macro defines the priority of external routes added to kernel.
+ * This macro defines the priority of external routes added to kernel. The larger the number, the lower the priority. We
+ * need to assign a low priority to such routes so that kernel prefers the infra link rather than thread. Otherwise we
+ * may unnecessarily transmit packets via thread, which potentially causes performance issue. In linux, normally infra
+ * link routes' metric value is not greater than 1024, hence 65535 should be big enough.
  *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
-#define OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY 512
+#define OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY 65535
 #endif
 
 /**
