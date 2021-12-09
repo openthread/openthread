@@ -197,8 +197,9 @@
  *
  * The rules are implemented using ip6tables and ipset. The rules are as follows.
  *
- * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m set --match-set otbr-deny-src src -p ip -j DROP
- * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m set --match-set otbr-allow-dst dst -p ip -j ACCEPT
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m pkttype --pkt-type unicast -i $THREAD_IF -p ip -j DROP
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m set --match-set otbr-ingress-deny-src src -p ip -j DROP
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m set --match-set otbr-ingress-allow-dst dst -p ip -j ACCEPT
  * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m pkttype --pkt-type unicast -p ip -j DROP
  * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -p ip -j ACCEPT
  *
@@ -213,6 +214,12 @@
 
 #ifndef OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
 #define OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE 0
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+#ifndef OPENTHREAD_POSIX_CONFIG_IPSET_BINARY
+#define OPENTHREAD_POSIX_CONFIG_IPSET_BINARY "ipset"
+#endif
 #endif
 
 #ifdef __APPLE__

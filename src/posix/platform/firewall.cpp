@@ -49,7 +49,7 @@ namespace Posix {
 #error Configurations 'OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE' and 'OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE' are required.
 #endif
 
-static const char kIpsetCommand[]             = "ipset";
+static const char kIpsetCommand[]             = OPENTHREAD_POSIX_CONFIG_IPSET_BINARY;
 static const char kIngressDenySrcIpSet[]      = "otbr-ingress-deny-src";
 static const char kIngressDenySrcSwapIpSet[]  = "otbr-ingress-deny-src-swap";
 static const char kIngressAllowDstIpSet[]     = "otbr-ingress-allow-dst";
