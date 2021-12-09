@@ -189,11 +189,12 @@ class BBR_5_11_01(thread_cert.TestCase):
             thread_meshcop.tlv.ipv6_addr == ['{MA5}']
             and thread_nm.tlv.timeout == 0
         """)
-        # Verify PBBR not sends `/b/bmr` on the Backbone link for MA5.
-        pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').filter(f"""
+        # Verify PBBR sends `/b/bmr` on the Backbone link for MA5 with timeout equal to zero.
+        pkts.filter_eth_src(PBBR_ETH).filter_coap_request('/b/bmr').must_next().must_verify(f"""
             thread_meshcop.tlv.ipv6_addr == ['{MA5}']
+            and thread_bl.tlv.timeout == 0
             and ipv6.src.is_link_local
-        """).must_not_next()
+        """)
 
 
 if __name__ == '__main__':
