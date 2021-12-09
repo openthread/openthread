@@ -242,6 +242,8 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
         if (timeout == 0)
         {
             mMulticastListenersTable.Remove(address);
+
+            // Put successfully de-registered addresses at the end of `addresses`.
             addresses[kIp6AddressesNumMax - (++successAddressNum)] = address;
         }
         else
