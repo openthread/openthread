@@ -242,6 +242,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
         if (timeout == 0)
         {
             mMulticastListenersTable.Remove(address);
+            addresses[kIp6AddressesNumMax - (++successAddressNum)] = address;
         }
         else
         {
