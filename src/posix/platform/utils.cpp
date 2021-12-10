@@ -46,7 +46,7 @@ namespace Posix {
 enum
 {
     kSystemCommandMaxLength = 1024, ///< Max length of a system call command.
-    kOutputBufferSize       = 256,  ///< Buffer size of command output.
+    kOutputBufferSize       = 1024, ///< Buffer size of command output.
 };
 
 otError ExecuteCommand(const char *aFormat, ...)
