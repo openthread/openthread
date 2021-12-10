@@ -48,7 +48,11 @@ static ot::Posix::MulticastRoutingManager sMulticastRoutingManager;
 
 void platformBackboneInit(const char *aInterfaceName)
 {
-    VerifyOrExit(aInterfaceName != nullptr && aInterfaceName[0] != '\0');
+    if (aInterfaceName == nullptr || aInterfaceName[0] == '\0')
+    {
+        otLogWarnPlat("Backbone Router feature is disabled: infra/backbone interface is missing");
+        ExitNow();
+    }
 
     VerifyOrDie(strnlen(aInterfaceName, sizeof(gBackboneNetifName)) < sizeof(gBackboneNetifName),
                 OT_EXIT_INVALID_ARGUMENTS);
