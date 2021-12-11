@@ -190,15 +190,11 @@ using namespace ot::Posix::Ip6Utils;
 static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
-#if defined(__linux__)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
 static constexpr uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY;
 static constexpr uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
 static uint8_t            sAddedExternalRoutesNum = 0;
 static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
-#else
-#error "OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE only works on Linux platform"
-#endif // defined(__linux__)
 #endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -516,7 +512,7 @@ exit:
     }
 }
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
 void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
 {
     uint8_t        len = RTA_LENGTH(aLen);
@@ -720,7 +716,7 @@ static void UpdateExternalRoutes(otInstance *aInstance)
 exit:
     return;
 }
-#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
 
 static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext)
 {
@@ -740,7 +736,7 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     {
         UpdateLink(aInstance);
     }
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
         UpdateExternalRoutes(aInstance);
