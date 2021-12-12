@@ -94,7 +94,10 @@ configure_OPTIONS                   = \
 # Platform specific switches
 
 ifeq ($(DAEMON),1)
-configure_OPTIONS              += --enable-posix-daemon
+configure_OPTIONS              += \
+	--enable-posix-daemon 		  \
+	LIBS=-lstdc++				  \
+    $(NULL)
 endif
 
 ifneq ($(DEBUG),1)
