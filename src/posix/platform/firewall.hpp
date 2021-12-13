@@ -31,19 +31,18 @@
 
 #include "posix/platform/openthread-posix-config.h"
 
+#if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+
 #include "common/logging.hpp"
 #include "openthread/thread.h"
 
 namespace ot {
 namespace Posix {
 
-#if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
-
 void UpdateIpSets(otInstance *aInstance);
-
-#endif
 
 } // namespace Posix
 } // namespace ot
 
+#endif // OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
 #endif // OT_POSIX_PLATFORM_FIREWALL_HPP_

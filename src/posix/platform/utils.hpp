@@ -40,7 +40,8 @@ namespace Posix {
  * @param[in] aFormat  A pointer to the format string.
  * @param[in] ...      Arguments for the format specification.
  *
- * @returns The command exit code.
+ * @retval OT_ERROR_NONE    The command was executed successfully.
+ * @retval OT_ERROR_FAILED  It failed to execute the command.
  *
  */
 otError ExecuteCommand(const char *aFormat, ...);
