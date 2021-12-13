@@ -246,6 +246,8 @@ do_cert_suite()
     export PYTHONPATH=tests/scripts/thread-cert
     export VIRTUAL_TIME
 
+    sudo modprobe ip6table_filter
+
     python3 tests/scripts/thread-cert/run_cert_suite.py --multiply "${MULTIPLY:-1}" "$@"
     exit 0
 }

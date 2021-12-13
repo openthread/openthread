@@ -49,6 +49,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "posix/platform/daemon.hpp"
+#include "posix/platform/firewall.hpp"
 #include "posix/platform/infra_if.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/radio_url.hpp"
