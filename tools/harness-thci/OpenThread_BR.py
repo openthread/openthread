@@ -313,6 +313,9 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.bash('sudo ip -6 addr del 910b::1 dev eth0 || true')
             self.bash('sudo ip -6 addr del fd00:7d03:7d03:7d03::1 dev eth0 || true')
 
+        for maddr in self._registeredMulticastAddrs:
+            self.stopListeningToAddr(maddr)
+
     def _deviceAfterReset(self):
         self.__dumpSyslog()
         self.__truncateSyslog()
@@ -661,3 +664,54 @@ EOF"
     def forceSetSlaac(self, slaacAddress):
         print('forceSetSlaac %s' % slaacAddress)
         self.bash('sudo ip -6 addr add %s/64 dev wpan0' % slaacAddress)
+
+    # Override registerMulticast
+    @API
+    def registerMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
+        """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
+
+        Args:
+            sAddr   : str : Multicast address to be subscribed and notified OTA.
+        """
+
+        if self.externalCommissioner is not None:
+            self.externalCommissioner.MLR([sAddr], timeout)
+            return True
+
+        # Register
+        cmd = 'sudo nohup ~/repo/openthread/tests/scripts/thread-cert/mcast6.py wpan0 %s' % sAddr
+        cmd = cmd + ' > /dev/null 2>&1 &'
+        self.bash(cmd)
+
+        # Add route
+        cmd = 'sudo ip -6 route add %s dev wpan0' % sAddr
+        self.bash(cmd)
+
+        self._registeredMulticastAddrs.append(sAddr)
+
+        return True
+
+    # Override stopListeningToAddr
+    @API
+    def stopListeningToAddr(self, sAddr):
+        # De-register
+        cmd = 'sudo pkill -f mcast6.*%s' % sAddr
+        self.bash(cmd)
+
+        # Remove route
+        cmd = 'sudo ip -6 route del %s dev wpan0' % sAddr
+        self.bash(cmd)
+
+        self._registeredMulticastAddrs.remove(sAddr)
+
+    @API
+    def deregisterMulticast(self, sAddr):
+        """
+        Unsubscribe to a given IPv6 address.
+        Only used by External Commissioner.
+
+        Args:
+            sAddr   : str : Multicast address to be unsubscribed.
+        """
+        self.externalCommissioner.MLR([sAddr], 0)
+        return True
