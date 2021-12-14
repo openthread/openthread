@@ -171,6 +171,19 @@ To review and contribute to OpenThread documentation, refer to the following Git
 *   [Guides](https://github.com/openthread/ot-docs/tree/main/site/en/guides)
 *   [API Reference Topics](https://github.com/openthread/openthread/tree/main/include/openthread)
 
-> Note: OpenThread API Reference topics originate directly from the source code. This means that you can contribute to module, function, and parameter definitions.
-
 Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website. See the [Documentation Style Guide](https://github.com/openthread/ot-docs/blob/main/STYLE_GUIDE.md) for more information on how to author and format documentation for contribution.
+
+### Update API reference topics
+
+API Reference topics use [Doxygen code blocks](https://www.doxygen.nl/manual/docblocks.html)
+to render the HTML output on [https://openthread.io/reference](https://openthread.io/reference). OpenThread scripts support the following
+Doxygen [special commands](https://www.doxygen.nl/manual/commands.html):
+
+*   @file
+*   @brief
+*   @param
+*   @returns
+
+You can contribute modifications and additional information to any of these
+tags located in a module header file. To review an example, refer to
+[`border_agent.h`](https://github.com/openthread/openthread/blob/main/include/openthread/border_agent.h).
