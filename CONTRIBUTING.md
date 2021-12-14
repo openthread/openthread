@@ -171,6 +171,6 @@ To review and contribute to OpenThread documentation, refer to the following Git
 *   [Guides](https://github.com/openthread/ot-docs/tree/main/site/en/guides)
 *   [API Reference Topics](https://github.com/openthread/openthread/tree/main/include/openthread)
 
-> Note: OpenThread API Reference topics originate directly from the source code. This means that you can contribute to module descriptions, functions, and parameters. 
+> Note: OpenThread API Reference topics originate directly from the source code. This means that you can contribute to module, function, and parameter definitions.
 
 Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website. See the [Documentation Style Guide](https://github.com/openthread/ot-docs/blob/main/STYLE_GUIDE.md) for more information on how to author and format documentation for contribution.
