@@ -313,8 +313,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.bash('sudo ip -6 addr del 910b::1 dev eth0 || true')
             self.bash('sudo ip -6 addr del fd00:7d03:7d03:7d03::1 dev eth0 || true')
 
-        for maddr in self._registeredMulticastAddrs:
-            self.stopListeningToAddr(maddr)
+        self.stopListeningToAddr('')
 
     def _deviceAfterReset(self):
         self.__dumpSyslog()
@@ -678,31 +677,24 @@ EOF"
             self.externalCommissioner.MLR([sAddr], timeout)
             return True
 
-        # Register
         cmd = 'sudo nohup ~/repo/openthread/tests/scripts/thread-cert/mcast6.py wpan0 %s' % sAddr
         cmd = cmd + ' > /dev/null 2>&1 &'
         self.bash(cmd)
-
-        # Add route
-        cmd = 'sudo ip -6 route add %s dev wpan0' % sAddr
-        self.bash(cmd)
-
-        self._registeredMulticastAddrs.append(sAddr)
 
         return True
 
     # Override stopListeningToAddr
     @API
     def stopListeningToAddr(self, sAddr):
-        # De-register
+        """
+        Unsubscribe to a given IPv6 address which was subscribed earlier wiht `registerMulticast`.
+
+        Args:
+            sAddr   : str : Multicast address to be unsubscribed. Use an empty string to unsubscribe
+                            all the active multicast addresses.
+        """
         cmd = 'sudo pkill -f mcast6.*%s' % sAddr
         self.bash(cmd)
-
-        # Remove route
-        cmd = 'sudo ip -6 route del %s dev wpan0' % sAddr
-        self.bash(cmd)
-
-        self._registeredMulticastAddrs.remove(sAddr)
 
     @API
     def deregisterMulticast(self, sAddr):
