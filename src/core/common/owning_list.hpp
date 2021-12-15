@@ -147,7 +147,7 @@ public:
      */
     template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator, OwningList &aRemovedList)
     {
-        RemoveAllMatching(aIndicator, aRemovedList);
+        LinkedList<Type>::RemoveAllMatching(aIndicator, aRemovedList);
     }
 };
 
