@@ -38,6 +38,7 @@ EXTRA_DIST                              = \
     nrf528xx                              \
     qpg6095                               \
     qpg6100                               \
+    qpg6105                               \
     qpg7015m                              \
     samr21                                \
     $(NULL)
