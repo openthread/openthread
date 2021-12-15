@@ -1644,7 +1644,11 @@ void platformNetifSetUp(void)
     OT_ASSERT(gInstance != nullptr);
 
     otIp6SetReceiveFilterEnabled(gInstance, true);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    otIcmp6SetEchoMode(gInstance, OT_ICMP6_ECHO_HANDLER_ALL);
+#else
     otIcmp6SetEchoMode(gInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
+#endif
     otIp6SetReceiveCallback(gInstance, processReceive, gInstance);
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
