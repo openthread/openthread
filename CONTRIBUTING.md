@@ -165,18 +165,25 @@ Once unzipped:
 
 ## Contributing Documentation
 
-To review and contribute to OpenThread documentation, refer to the following GitHub repositories:
+Documentation undergoes the same review process as code and contributions may
+be mirrored on our [openthread.io](https://openthread.io) website.
+
+### Codelabs and Guides
+
+To review and contribute to OpenThread Codelabs and Guides, refer to the
+following GitHub repositories:
 
 *   [Codelabs](https://github.com/openthread/ot-docs/tree/main/site/en/codelabs)
 *   [Guides](https://github.com/openthread/ot-docs/tree/main/site/en/guides)
-*   [API Reference Topics](https://github.com/openthread/openthread/tree/main/include/openthread)
 
-Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website. See the [Documentation Style Guide](https://github.com/openthread/ot-docs/blob/main/STYLE_GUIDE.md) for more information on how to author and format documentation for contribution.
+For information on how to author and format documentation for contribution,
+refer to the [Documentation Style Guide](https://github.com/openthread/ot-docs/blob/main/STYLE_GUIDE.md).
 
-### Update API reference topics
+### API Reference topics
 
 API Reference topics use [Doxygen code blocks](https://www.doxygen.nl/manual/docblocks.html)
-to render the HTML output on [https://openthread.io/reference](https://openthread.io/reference). OpenThread scripts support the following
+to render the HTML output on [https://openthread.io/reference](https://openthread.io/reference).
+OpenThread scripts support the following
 Doxygen [special commands](https://www.doxygen.nl/manual/commands.html):
 
 *   @file
@@ -184,6 +191,5 @@ Doxygen [special commands](https://www.doxygen.nl/manual/commands.html):
 *   @param
 *   @returns
 
-You can contribute modifications and additional information to any of these
-tags located in a module header file. To review an example, refer to
+You can contribute to any of these tags located in a module header file. To review an example, refer to
 [`border_agent.h`](https://github.com/openthread/openthread/blob/main/include/openthread/border_agent.h).
