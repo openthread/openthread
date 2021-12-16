@@ -298,8 +298,10 @@ void TestLinkedList(void)
 
 void TestOwningList(void)
 {
-    Entry             a("a", 1), b("b", 2), c("c", 3), d("d", 4), e("e", 5);
+    Entry             a("a", 1, kAlphaType), b("b", 2, kAlphaType), c("c", 3, kBetaType);
+    Entry             d("d", 4, kBetaType), e("e", 5, kAlphaType), f("f", 6, kBetaType);
     OwningList<Entry> list;
+    OwningList<Entry> removedList;
     OwnedPtr<Entry>   ptr;
 
     printf("TestOwningList\n");
@@ -389,6 +391,38 @@ void TestOwningList(void)
     VerifyOrQuit(!a.WasFreed());
     a.Free();
     VerifyOrQuit(a.WasFreed());
+
+    // Test `RemoveAllMatching()`
+
+    a.ResetTestFlags();
+    b.ResetTestFlags();
+    c.ResetTestFlags();
+    d.ResetTestFlags();
+    e.ResetTestFlags();
+    f.ResetTestFlags();
+    list.Push(a);
+    list.Push(b);
+    list.Push(c);
+    list.Push(d);
+    list.Push(e);
+    list.Push(f);
+    VerifyLinkedListContent(&list, &f, &e, &d, &c, &b, &a, nullptr);
+
+    list.RemoveAllMatching(kAlphaType, removedList);
+    VerifyLinkedListContent(&list, &f, &d, &c, nullptr);
+    VerifyLinkedListContent(&removedList, &a, &b, &e, nullptr);
+    VerifyOrQuit(!a.WasFreed());
+    VerifyOrQuit(!c.WasFreed());
+
+    removedList.Clear();
+    list.RemoveAllMatching(kAlphaType, removedList);
+    VerifyOrQuit(removedList.IsEmpty());
+    VerifyLinkedListContent(&list, &f, &d, &c, nullptr);
+
+    list.RemoveAllMatching(kBetaType, removedList);
+    VerifyOrQuit(list.IsEmpty());
+    VerifyLinkedListContent(&removedList, &c, &d, &f, nullptr);
+    VerifyOrQuit(!c.WasFreed());
 }
 
 } // namespace ot
