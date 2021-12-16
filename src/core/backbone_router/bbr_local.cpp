@@ -130,8 +130,10 @@ Error Local::SetConfig(const BackboneRouterConfig &aConfig)
     Error error  = kErrorNone;
     bool  update = false;
 
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(aConfig.mMlrTimeout >= Mle::kMlrTimeoutMin && aConfig.mMlrTimeout <= Mle::kMlrTimeoutMax,
                  error = kErrorInvalidArgs);
+#endif
     // Validate configuration according to Thread 1.2.1 Specification 5.21.3.3:
     // "The Reregistration Delay in seconds MUST be lower than (0.5 * MLR Timeout). It MUST be at least 1."
     VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = kErrorInvalidArgs);
