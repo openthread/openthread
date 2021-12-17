@@ -154,6 +154,7 @@
  * @{
  *
  * @defgroup plat-alarm               Alarm
+ * @defgroup plat-crypto              Crypto - Platform
  * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
  * @defgroup plat-logging             Logging
