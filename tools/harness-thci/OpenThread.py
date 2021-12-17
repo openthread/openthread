@@ -1585,7 +1585,7 @@ class OpenThreadTHCI(object):
 
         # remove stale multicast addresses
         if self.IsBorderRouter:
-            self.stopListeningToAddr('')
+            self.stopListeningToAddrAll()
 
         # BBR dataset
         self.bbrSeqNum = random.randint(0, 254)  # random seqnum except 255, so that BBR-TC-02 never need re-run

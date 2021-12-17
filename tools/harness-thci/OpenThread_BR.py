@@ -313,7 +313,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.bash('sudo ip -6 addr del 910b::1 dev eth0 || true')
             self.bash('sudo ip -6 addr del fd00:7d03:7d03:7d03::1 dev eth0 || true')
 
-        self.stopListeningToAddr('')
+        self.stopListeningToAddrAll()
 
     def _deviceAfterReset(self):
         self.__dumpSyslog()
@@ -695,6 +695,9 @@ EOF"
         """
         cmd = 'sudo pkill -f mcast6.*%s' % sAddr
         self.bash(cmd)
+
+    def stopListeningToAddrAll(self):
+        return self.stopListeningToAddr('')
 
     @API
     def deregisterMulticast(self, sAddr):
