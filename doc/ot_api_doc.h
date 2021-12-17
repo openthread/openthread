@@ -126,7 +126,7 @@
  * @defgroup api-heap                 Heap
  * @defgroup api-history-tracker      History Tracker
  * @defgroup api-jam-detection        Jam Detection
- * @defgroup api-logging              Logging
+ * @defgroup api-logging              Logging - Thread Stack
  * @defgroup api-ncp                  Network Co-Processor
  * @defgroup api-network-time         Network Time Synchronization
  * @defgroup api-random-group         Random Number Generator
@@ -157,7 +157,7 @@
  * @defgroup plat-crypto              Crypto - Platform
  * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
- * @defgroup plat-logging             Logging
+ * @defgroup plat-logging             Logging - Platform
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
  * @defgroup plat-misc                Miscellaneous
