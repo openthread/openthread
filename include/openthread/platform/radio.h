@@ -399,7 +399,7 @@ typedef struct otLinkMetrics
  */
 
 /**
- * @defgroup radio-config Configuration
+ * @defgroup radio-config Radio Configuration
  *
  * @brief
  *   This module includes the platform abstraction for radio configuration.
