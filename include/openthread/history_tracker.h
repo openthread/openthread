@@ -43,13 +43,9 @@ extern "C" {
  */
 
 /**
- * @brief
- *   This header defines the public API for History Tracker.
- *
- *   History Tracker module records history of different events (e.g. RX and TX messages or network info changes, etc.)
- *   as the Thread network operates. All tracked entries are timestamped.
- *
- *   The functions in this module are available when `OPENTHREAD_CONFIG_HISTOR_TRACKER_ENABLE` is enabled.
+ * @brief Records the history of different events, for example RX and TX messages or network info changes. All tracked entries are timestamped.
+ * 
+ * The functions in this module are available when `OPENTHREAD_CONFIG_HISTOR_TRACKER_ENABLE` is enabled.
  *
  */
 
