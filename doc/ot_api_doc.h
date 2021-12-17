@@ -122,7 +122,7 @@
  * @defgroup api-cli                  Command Line Interface
  * @defgroup api-crypto               Crypto
  * @defgroup api-entropy              Entropy Source
- * @defgroup api-factory-diagnostics  Factory Diagnostics
+ * @defgroup api-factory-diagnostics  Factory Diagnostics - Thread Stack
  * @defgroup api-heap                 Heap
  * @defgroup api-history-tracker      History Tracker
  * @defgroup api-jam-detection        Jam Detection
@@ -155,7 +155,7 @@
  *
  * @defgroup plat-alarm               Alarm
  * @defgroup plat-entropy             Entropy
- * @defgroup plat-factory-diagnostics Factory Diagnostics
+ * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
  * @defgroup plat-logging             Logging
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
