@@ -278,7 +278,7 @@ RADIO_LINK_IEEE_802_15_4 = "IEEE_802_15_4"
 RADIO_LINK_TREL_UDP6 = "TREL_UDP6"
 RADIO_LINK_TOBLE = "TOBLE"
 
-_OT_BUILDDIR = os.getenv('top_builddir', '../..')
+_OT_BUILDDIR = os.getenv('top_builddir', '../../..')
 _WPANTUND_PREFIX = os.getenv('WPANTUND_PREFIX', '/usr/local')
 
 # -----------------------------------------------------------------------------------------------------------------------
