@@ -523,8 +523,10 @@ void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const 
 
     assert(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen);
     OT_UNUSED_VARIABLE(aMaxLen);
-
-    rta           = (struct rtattr *)((char *)(aHeader) + NLMSG_ALIGN((aHeader)->nlmsg_len));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+    rta           = (struct rtattr *)(((char *)aHeader) + NLMSG_ALIGN((aHeader)->nlmsg_len));
+#pragma GCC diagnostic pop
     rta->rta_type = aType;
     rta->rta_len  = len;
     if (aLen)
