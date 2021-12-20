@@ -3681,7 +3681,7 @@ otError Interpreter::ProcessPreferRouterId(Arg aArgs[])
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 otError Interpreter::ProcessRadioFilter(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
