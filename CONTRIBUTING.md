@@ -191,4 +191,4 @@ Doxygen [special commands](https://www.doxygen.nl/manual/commands.html):
 *   @param
 *   @returns
 
-You can find most of these comments in the [OpenThread `include` directory](https://github.com/openthread/openthread/tree/main/include/openthread). To review an example, refer to [`border_agent.h`](https://github.com/openthread/openthread/tree/main/include/openthread/border_agent.h).
+You can find most of these comments in the [OpenThread header files](https://github.com/openthread/openthread/tree/main/include/openthread). To review an example, refer to [`border_agent.h`](https://github.com/openthread/openthread/tree/main/include/openthread/border_agent.h). The Doxygen comments in `border_agent.h` output the following reference topic on openthread.io: [Border Agent](https://openthread.io/reference/group/api-border-agent).
