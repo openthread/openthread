@@ -181,7 +181,7 @@ refer to the [Documentation Style Guide](https://github.com/openthread/ot-docs/b
 
 ### API Reference topics
 
-API Reference topics use [Doxygen code blocks](https://www.doxygen.nl/manual/docblocks.html)
+API Reference topics use [Doxygen comment blocks](https://www.doxygen.nl/manual/docblocks.html)
 to render the HTML output on [https://openthread.io/reference](https://openthread.io/reference).
 OpenThread scripts support the following
 Doxygen [special commands](https://www.doxygen.nl/manual/commands.html):
