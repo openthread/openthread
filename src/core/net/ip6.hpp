@@ -196,6 +196,7 @@ public:
      * processing is complete, including when a value other than `kErrorNone` is returned.
      *
      * @param[in]  aMessage          A reference to the message.
+     * @param[in]  aFromNcpHost      If the message was forwarded from the NCP Host.
      *
      * @retval kErrorNone     Successfully processed the message.
      * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
@@ -204,7 +205,7 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error SendRaw(Message &aMessage);
+    Error SendRaw(Message &aMessage, bool aFromNcpHost);
 
     /**
      * This method processes a received IPv6 datagram.
