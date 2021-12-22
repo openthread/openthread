@@ -39,7 +39,8 @@ extern "C" {
  * @addtogroup api-history-tracker
  *
  * @brief
- *   Records the history of different events, for example RX and TX messages or network info changes. All tracked entries are timestamped.
+ *   Records the history of different events, for example RX and TX messages or network info changes. All tracked
+ *   entries are timestamped.
  *
  * The functions in this module are available when `OPENTHREAD_CONFIG_HISTOR_TRACKER_ENABLE` is enabled.
  *
