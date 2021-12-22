@@ -176,7 +176,7 @@
   - Describes the purpose, function, and influence of each parameter as well as whether it is an input, an output, or both.
   - Describes the return value, if present, and the expected range or constraints of it.
 
-If your description is longer than 120 characters, continue the comment on the next line: 
+If your description is longer than 120 characters, continue the comment on the next line:
 
 ```
  * @brief
