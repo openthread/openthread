@@ -315,6 +315,7 @@ private:
     void InvalidateAllDiscoveredPrefixes(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     bool UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage);
+    void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
@@ -370,6 +371,7 @@ private:
     // and updated with RA messages initiated from infra interface.
     RouterAdv::RouterAdvMessage mRouterAdvMessage;
     TimeMilli                   mTimeRouterAdvMessageLastUpdate;
+    bool                        mLearntRouterAdvMessageFromHost;
 
     TimerMilli mDiscoveredPrefixInvalidTimer;
     TimerMilli mDiscoveredPrefixStaleTimer;

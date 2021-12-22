@@ -65,6 +65,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
     , mTimeRouterAdvMessageLastUpdate(TimerMilli::GetNow())
+    , mLearntRouterAdvMessageFromHost(false)
     , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
     , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer)
@@ -917,6 +918,9 @@ void RoutingManager::HandleRouterSolicitTimer(void)
 
         // Re-evaluate our routing policy and send Router Advertisement if necessary.
         EvaluateRoutingPolicy();
+
+        // Reset prefix stale timer because `mDiscoveredPrefixes` may change.
+        ResetDiscoveredPrefixStaleTimer();
     }
 }
 
@@ -927,7 +931,7 @@ void RoutingManager::HandleDiscoveredPrefixStaleTimer(Timer &aTimer)
 
 void RoutingManager::HandleDiscoveredPrefixStaleTimer(void)
 {
-    otLogInfoBr("All on-link prefixes are stale");
+    otLogInfoBr("Stale On-Link or OMR Prefixes or RA messages are detected");
     StartRouterSolicitationDelay();
 }
 
@@ -1076,7 +1080,6 @@ bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOpt
 {
     Ip6::Prefix     prefix         = aPio.GetPrefix();
     bool            needReevaluate = false;
-    TimeMilli       staleTime;
     ExternalPrefix  onLinkPrefix;
     ExternalPrefix *existingPrefix = nullptr;
 
@@ -1097,16 +1100,12 @@ bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOpt
     onLinkPrefix.mPreferredLifetime = aPio.GetPreferredLifetime();
     onLinkPrefix.mTimeLastUpdate    = TimerMilli::GetNow();
 
-    staleTime = TimerMilli::GetNow();
-
     for (ExternalPrefix &externalPrefix : mDiscoveredPrefixes)
     {
         if (externalPrefix == onLinkPrefix)
         {
             existingPrefix = &externalPrefix;
         }
-
-        staleTime = OT_MAX(staleTime, externalPrefix.GetStaleTime());
     }
 
     if (existingPrefix == nullptr)
@@ -1159,8 +1158,7 @@ bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOpt
     }
 
     mDiscoveredPrefixInvalidTimer.FireAtIfEarlier(existingPrefix->GetExpireTime());
-    staleTime = OT_MAX(staleTime, existingPrefix->GetStaleTime());
-    mDiscoveredPrefixStaleTimer.FireAtIfEarlier(staleTime);
+    ResetDiscoveredPrefixStaleTimer();
 
 exit:
     return needReevaluate;
@@ -1214,8 +1212,6 @@ void RoutingManager::UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption 
         {
             existingPrefix = &externalPrefix;
         }
-
-        mDiscoveredPrefixStaleTimer.FireAtIfEarlier(externalPrefix.GetStaleTime());
     }
 
     if (existingPrefix == nullptr)
@@ -1240,7 +1236,7 @@ void RoutingManager::UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption 
     *existingPrefix = omrPrefix;
 
     mDiscoveredPrefixInvalidTimer.FireAtIfEarlier(existingPrefix->GetExpireTime());
-    mDiscoveredPrefixStaleTimer.FireAtIfEarlier(existingPrefix->GetStaleTime());
+    ResetDiscoveredPrefixStaleTimer();
 
 exit:
     return;
@@ -1326,15 +1322,77 @@ bool RoutingManager::UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *a
     if (aRouterAdvMessage == nullptr || aRouterAdvMessage->GetRouterLifetime() == 0)
     {
         mRouterAdvMessage.SetToDefault();
+        mLearntRouterAdvMessageFromHost = false;
     }
     else
     {
-        mRouterAdvMessage = *aRouterAdvMessage;
-        mDiscoveredPrefixStaleTimer.FireAtIfEarlier(mTimeRouterAdvMessageLastUpdate +
-                                                    Time::SecToMsec(kRtrAdvStaleTime));
+        mRouterAdvMessage               = *aRouterAdvMessage;
+        mLearntRouterAdvMessageFromHost = true;
     }
 
+    ResetDiscoveredPrefixStaleTimer();
+
     return (mRouterAdvMessage != oldRouterAdvMessage);
+}
+
+void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
+{
+    TimeMilli now                           = TimerMilli::GetNow();
+    TimeMilli nextStaleTime                 = now.GetDistantFuture();
+    TimeMilli maxOnlinkPrefixStaleTime      = now;
+    bool      requireCheckStaleOnlinkPrefix = false;
+
+    OT_ASSERT(mIsRunning);
+
+    // The stale timer is responding for sending RS to re-check the stale On-Link/OMR prefixes or RA message.
+    // The rules for calculating the next stale time:
+    // 1. If BR learns RA header from Host daemons, it should send RS when the RA header is stale.
+    // 2. If BR discovered any on-link prefix, it should send RS when all on-link prefixes are stale.
+    // 3. If BR discovered any OMR prefix, it should send RS when the first OMR prefix is stale.
+
+    // Check for stale Router Advertisement Message if learnt from Host.
+    if (mLearntRouterAdvMessageFromHost)
+    {
+        TimeMilli routerAdvMessageStaleTime = mTimeRouterAdvMessageLastUpdate + Time::SecToMsec(kRtrAdvStaleTime);
+
+        nextStaleTime = OT_MIN(nextStaleTime, routerAdvMessageStaleTime);
+    }
+
+    for (ExternalPrefix &externalPrefix : mDiscoveredPrefixes)
+    {
+        TimeMilli prefixStaleTime = externalPrefix.GetStaleTime();
+
+        if (externalPrefix.mIsOnLinkPrefix && !externalPrefix.IsDeprecated())
+        {
+            // Check for least recent stale On-Link Prefixes if BR is not advertising local On-Link Prefix.
+            maxOnlinkPrefixStaleTime      = OT_MAX(maxOnlinkPrefixStaleTime, prefixStaleTime);
+            requireCheckStaleOnlinkPrefix = true;
+        }
+        else if (!externalPrefix.mIsOnLinkPrefix)
+        {
+            // Check for most recent stale OMR Prefixes
+            nextStaleTime = OT_MIN(nextStaleTime, prefixStaleTime);
+        }
+    }
+
+    if (requireCheckStaleOnlinkPrefix)
+    {
+        nextStaleTime = OT_MIN(nextStaleTime, maxOnlinkPrefixStaleTime);
+    }
+
+    if (nextStaleTime == now.GetDistantFuture())
+    {
+        if (mDiscoveredPrefixStaleTimer.IsRunning())
+        {
+            otLogDebgBr("Prefix stale timer stopped");
+        }
+        mDiscoveredPrefixStaleTimer.Stop();
+    }
+    else
+    {
+        mDiscoveredPrefixStaleTimer.FireAt(nextStaleTime);
+        otLogDebgBr("Prefix stale timer scheduled in %lu ms", nextStaleTime - now);
+    }
 }
 
 } // namespace BorderRouter
