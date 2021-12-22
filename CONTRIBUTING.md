@@ -165,30 +165,24 @@ Once unzipped:
 
 ## Contributing Documentation
 
-Documentation undergoes the same review process as code and contributions may
-be mirrored on our [openthread.io](https://openthread.io) website.
+Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website.
 
 ### Codelabs and Guides
 
-To review and contribute to OpenThread Codelabs and Guides, refer to the
-following GitHub repositories:
+To review and contribute to OpenThread Codelabs and Guides, refer to the following GitHub repositories:
 
-*   [Codelabs](https://github.com/openthread/ot-docs/tree/main/site/en/codelabs)
-*   [Guides](https://github.com/openthread/ot-docs/tree/main/site/en/guides)
+- [Codelabs](https://github.com/openthread/ot-docs/tree/main/site/en/codelabs)
+- [Guides](https://github.com/openthread/ot-docs/tree/main/site/en/guides)
 
-For information on how to author and format documentation for contribution,
-refer to the [Documentation Style Guide](https://github.com/openthread/ot-docs/blob/main/STYLE_GUIDE.md).
+For information on how to author and format documentation for contribution, refer to the [Documentation Style Guide](https://github.com/openthread/ot-docs/blob/main/STYLE_GUIDE.md).
 
 ### API Reference topics
 
-API Reference topics use [Doxygen comment blocks](https://www.doxygen.nl/manual/docblocks.html)
-to render the HTML output on [https://openthread.io/reference](https://openthread.io/reference).
-OpenThread scripts support the following
-Doxygen [special commands](https://www.doxygen.nl/manual/commands.html):
+API Reference topics use [Doxygen comment blocks](https://www.doxygen.nl/manual/docblocks.html) to render the HTML output on [https://openthread.io/reference](https://openthread.io/reference). OpenThread scripts support the following Doxygen [special commands](https://www.doxygen.nl/manual/commands.html):
 
-*   @file
-*   @brief
-*   @param
-*   @returns
+- @file
+- @brief
+- @param
+- @returns
 
 You can find most of these comments in the [OpenThread header files](https://github.com/openthread/openthread/tree/main/include/openthread). To review an example, refer to [`border_agent.h`](https://github.com/openthread/openthread/tree/main/include/openthread/border_agent.h). The Doxygen comments in `border_agent.h` output the [Border Agent](https://openthread.io/reference/group/api-border-agent) reference topic on openthread.io. For more information, refer to [Comments](https://github.com/openthread/openthread/blob/main/STYLE_GUIDE.md#comments) in the OpenThread Coding Conventions and Style guide.
