@@ -307,7 +307,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
 
             if ((messageCopy = aMessage.Clone()) != nullptr)
             {
-                IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, true));
+                IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, /* aFromNcpHost */ true));
                 otLogInfoIp6("Message copy for indirect transmission to sleepy children");
             }
             else
@@ -540,7 +540,7 @@ void Ip6::HandleSendQueue(void)
     while ((message = mSendQueue.GetHead()) != nullptr)
     {
         mSendQueue.Dequeue(*message);
-        IgnoreError(HandleDatagram(*message, nullptr, nullptr, false));
+        IgnoreError(HandleDatagram(*message, nullptr, nullptr, /* aFromNcpHost */ false));
     }
 }
 
@@ -1084,7 +1084,7 @@ exit:
     return error;
 }
 
-Error Ip6::SendRaw(Message &aMessage)
+Error Ip6::SendRaw(Message &aMessage, bool aFromNcpHost)
 {
     Error       error = kErrorNone;
     Header      header;
@@ -1103,7 +1103,7 @@ Error Ip6::SendRaw(Message &aMessage)
         SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
     }
 
-    error = HandleDatagram(aMessage, nullptr, nullptr, true);
+    error = HandleDatagram(aMessage, nullptr, nullptr, aFromNcpHost);
     freed = true;
 
 exit:
