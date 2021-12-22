@@ -499,7 +499,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     const Ip6::Prefix *smallestOnLinkPrefix = nullptr;
 
     // We don't evaluate on-link prefix if we are doing Router Solicitation.
-    VerifyOrExit(!mRouterSolicitTimer.IsRunning(),
+    VerifyOrExit(!IsRouterSolicitationInProgress(),
                  newOnLinkPrefix = (mIsAdvertisingLocalOnLinkPrefix ? &mLocalOnLinkPrefix : nullptr));
 
     for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
@@ -636,7 +636,9 @@ void RoutingManager::StartRouterSolicitationDelay(void)
 {
     uint32_t randomDelay;
 
-    VerifyOrExit(!mRouterSolicitTimer.IsRunning() && mRouterSolicitCount == 0);
+    VerifyOrExit(!IsRouterSolicitationInProgress());
+
+    OT_ASSERT(mRouterSolicitCount == 0);
 
     mVicariousRouterSolicitTimer.Stop();
 
@@ -649,6 +651,11 @@ void RoutingManager::StartRouterSolicitationDelay(void)
 
 exit:
     return;
+}
+
+bool RoutingManager::IsRouterSolicitationInProgress(void) const
+{
+    return mRouterSolicitTimer.IsRunning() || mRouterSolicitCount > 0;
 }
 
 Error RoutingManager::SendRouterSolicitation(void)
@@ -940,7 +947,7 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aBufferLength);
 
-    VerifyOrExit(!mRouterSolicitTimer.IsRunning());
+    VerifyOrExit(!IsRouterSolicitationInProgress());
     otLogInfoBr("Received Router Solicitation from %s on interface %u", aSrcAddress.ToString().AsCString(),
                 mInfraIfIndex);
 
