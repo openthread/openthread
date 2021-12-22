@@ -512,7 +512,9 @@ private:
     otError ProcessPskcRef(Arg aArgs[]);
 #endif
 #endif
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     otError ProcessRadioFilter(Arg aArgs[]);
+#endif
     otError ProcessRcp(Arg aArgs[]);
     otError ProcessRegion(Arg aArgs[]);
 #if OPENTHREAD_FTD
@@ -819,7 +821,7 @@ private:
         {"pskcref", &Interpreter::ProcessPskcRef},
 #endif
 #endif
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         {"radiofilter", &Interpreter::ProcessRadioFilter},
 #endif
         {"rcp", &Interpreter::ProcessRcp},
