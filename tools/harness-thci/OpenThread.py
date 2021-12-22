@@ -1583,6 +1583,10 @@ class OpenThreadTHCI(object):
         self.IsBackboneRouter = False
         self.IsHost = False
 
+        # remove stale multicast addresses
+        if self.IsBorderRouter:
+            self.stopListeningToAddrAll()
+
         # BBR dataset
         self.bbrSeqNum = random.randint(0, 254)  # random seqnum except 255, so that BBR-TC-02 never need re-run
         self.bbrMlrTimeout = 3600
@@ -3455,20 +3459,14 @@ class OpenThreadTHCI(object):
     def stopListeningToAddr(self, sAddr):
         print('%s call stopListeningToAddr' % self.port)
 
-        # convert to list for single element, for possible extension
-        # requirements.
-        if not isinstance(sAddr, list):
-            sAddr = [sAddr]
-
-        for addr in sAddr:
-            cmd = 'ipmaddr del ' + addr
-            try:
-                self.__executeCommand(cmd)
-            except CommandError as ex:
-                if ex.code == OT_ERROR_ALREADY:
-                    pass
-                else:
-                    raise
+        cmd = 'ipmaddr del ' + sAddr
+        try:
+            self.__executeCommand(cmd)
+        except CommandError as ex:
+            if ex.code == OT_ERROR_ALREADY:
+                pass
+            else:
+                raise
 
         return True
 
@@ -3479,40 +3477,16 @@ class OpenThreadTHCI(object):
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
-        # convert to list for single element, for possible extension
-        # requirements.
-        if not isinstance(sAddr, list):
-            sAddr = [sAddr]
 
-        if self.externalCommissioner is not None:
-            self.externalCommissioner.MLR(sAddr, timeout)
-            return True
+        cmd = 'ipmaddr add ' + str(sAddr)
 
-        # subscribe address one by one
-        for addr in sAddr:
-            cmd = 'ipmaddr add ' + str(addr)
-
-            try:
-                self.__executeCommand(cmd)
-            except CommandError as ex:
-                if ex.code == OT_ERROR_ALREADY:
-                    pass
-                else:
-                    raise
-
-    @API
-    def deregisterMulticast(self, sAddr):
-        """
-        Unsubscribe to a given IPv6 address.
-        Only used by External Commissioner.
-
-        Args:
-            sAddr   : str : Multicast address to be unsubscribed.
-        """
-        if not isinstance(sAddr, list):
-            sAddr = [sAddr]
-        self.externalCommissioner.MLR(sAddr, 0)
-        return True
+        try:
+            self.__executeCommand(cmd)
+        except CommandError as ex:
+            if ex.code == OT_ERROR_ALREADY:
+                pass
+            else:
+                raise
 
     @API
     def getMlrLogs(self):

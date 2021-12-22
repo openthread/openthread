@@ -313,6 +313,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.bash('sudo ip -6 addr del 910b::1 dev eth0 || true')
             self.bash('sudo ip -6 addr del fd00:7d03:7d03:7d03::1 dev eth0 || true')
 
+        self.stopListeningToAddrAll()
+
     def _deviceAfterReset(self):
         self.__dumpSyslog()
         self.__truncateSyslog()
@@ -661,3 +663,50 @@ EOF"
     def forceSetSlaac(self, slaacAddress):
         print('forceSetSlaac %s' % slaacAddress)
         self.bash('sudo ip -6 addr add %s/64 dev wpan0' % slaacAddress)
+
+    # Override registerMulticast
+    @API
+    def registerMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
+        """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
+
+        Args:
+            sAddr   : str : Multicast address to be subscribed and notified OTA.
+        """
+
+        if self.externalCommissioner is not None:
+            self.externalCommissioner.MLR([sAddr], timeout)
+            return True
+
+        cmd = 'sudo nohup ~/repo/openthread/tests/scripts/thread-cert/mcast6.py wpan0 %s' % sAddr
+        cmd = cmd + ' > /dev/null 2>&1 &'
+        self.bash(cmd)
+
+        return True
+
+    # Override stopListeningToAddr
+    @API
+    def stopListeningToAddr(self, sAddr):
+        """
+        Unsubscribe to a given IPv6 address which was subscribed earlier wiht `registerMulticast`.
+
+        Args:
+            sAddr   : str : Multicast address to be unsubscribed. Use an empty string to unsubscribe
+                            all the active multicast addresses.
+        """
+        cmd = 'sudo pkill -f mcast6.*%s' % sAddr
+        self.bash(cmd)
+
+    def stopListeningToAddrAll(self):
+        return self.stopListeningToAddr('')
+
+    @API
+    def deregisterMulticast(self, sAddr):
+        """
+        Unsubscribe to a given IPv6 address.
+        Only used by External Commissioner.
+
+        Args:
+            sAddr   : str : Multicast address to be unsubscribed.
+        """
+        self.externalCommissioner.MLR([sAddr], 0)
+        return True
