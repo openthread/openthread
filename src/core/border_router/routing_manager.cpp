@@ -623,11 +623,18 @@ void RoutingManager::StartRoutingPolicyEvaluationDelay(void)
 
     uint32_t randomDelay;
 
+    // Do not start delay timer if Router Solicitation is in progress.
+    // BR will evaluate Routing Policy after Router Solicitation is complete.
+    VerifyOrExit(!IsRouterSolicitationInProgress());
+
     static_assert(kMaxRoutingPolicyDelay > 0, "invalid maximum routing policy evaluation delay");
     randomDelay = Random::NonCrypto::GetUint32InRange(0, Time::SecToMsec(kMaxRoutingPolicyDelay));
 
     otLogInfoBr("Start evaluating routing policy, scheduled in %u milliseconds", randomDelay);
     mRoutingPolicyTimer.Start(randomDelay);
+
+exit:
+    return;
 }
 
 // starts sending Router Solicitations in random delay
@@ -641,6 +648,9 @@ void RoutingManager::StartRouterSolicitationDelay(void)
     OT_ASSERT(mRouterSolicitCount == 0);
 
     mVicariousRouterSolicitTimer.Stop();
+    // Stop Routing Policy timer if it's running.
+    // Routing Policy will be evaluated after Router Solicitation is done.
+    mRoutingPolicyTimer.Stop();
 
     static_assert(kMaxRtrSolicitationDelay > 0, "invalid maximum Router Solicitation delay");
     randomDelay = Random::NonCrypto::GetUint32InRange(0, Time::SecToMsec(kMaxRtrSolicitationDelay));
