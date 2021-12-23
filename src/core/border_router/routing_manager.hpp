@@ -291,8 +291,10 @@ private:
 
     static void HandleRouterAdvertisementTimer(Timer &aTimer);
     void        HandleRouterAdvertisementTimer(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     static void HandleVicariousRouterSolicitTimer(Timer &aTimer);
     void        HandleVicariousRouterSolicitTimer(void);
+#endif
     static void HandleRouterSolicitTimer(Timer &aTimer);
     void        HandleRouterSolicitTimer(void);
     static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
@@ -374,8 +376,10 @@ private:
     TimerMilli mRouterAdvertisementTimer;
     uint32_t   mRouterAdvertisementCount;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     TimerMilli mVicariousRouterSolicitTimer;
     TimeMilli  mTimeVicariousRouterSolicitStart;
+#endif
     TimerMilli mRouterSolicitTimer;
     TimeMilli  mTimeRouterSolicitStart;
     uint8_t    mRouterSolicitCount;
