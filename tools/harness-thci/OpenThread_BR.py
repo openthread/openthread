@@ -618,31 +618,74 @@ EOF"
     def mdns_query(self, dst='ff02::fb', service='_meshcop._udp.local', addrs_blacklist=[]):
         print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
 
-        result = self.bash('dig -p 5353 @%s %s ptr +time=2 +retry=2' % (dst, service))
-
+        # For BBR-TC-03 or DH test cases just send a query
         if dst == 'ff02::fb' and not addrs_blacklist:
-            return (0, '')
+            self.bash('dig -p 5353 @%s %s ptr' % (dst, service))
+            return
 
-        # Remove responses from unwanted devices
-        responses = ' '.join(result).split(';; ANSWER SECTION:')
-        for response in responses:
-            if not set(response.split()).isdisjoint(set(addrs_blacklist)):
-                break
+        # For MATN-TC-17 and MATN-TC-18 use Zeroconf to get the BBR address and border agent port
+        from zeroconf import ServiceBrowser, ServiceStateChange, Zeroconf, DNSAddress, DNSService, DNSText
 
-        # Records patterns:
-        # raspberrypi-2.local.	10	IN	AAAA	fe80::81:46ff:fe0d:bfe.43684
-        # OpenThread_BorderRouter._meshcop._udp.local. 10\tIN SRV 0 0 49153 raspberrypi.local.
-        try:
-            addr = response.split('AAAA\tfe80')[1].split(' ')[0]
-            addr = 'fe80%s%%eth0' % addr
-        except Exception:
-            raise Exception('Unable to find the DUT address in the mDNS response')
-        try:
-            port = int(response.split('IN SRV')[1].split(' ')[3])
-        except Exception:
-            raise Exception('Unable to find the DUT port in the mDNS response')
+        def on_service_state_change(zeroconf, service_type, name, state_change):
+            if state_change is ServiceStateChange.Added:
+                zeroconf.get_service_info(service_type, name)
 
-        return (addr, port)
+        class BorderAgent:
+            alias = None
+            server_name = None
+            link_local_addr = None
+            port = None
+            thread_status = None
+
+            def __init__(self, alias):
+                self.alias = alias
+
+            def __repr__(self):
+                return '%s # [%s]:%s TIS=%s' % (self.alias, self.link_local_addr, self.port, self.thread_status)
+
+        def parse_cache(cache):
+            border_agents = []
+
+            # Find all border routers
+            for ptr in cache['_meshcop._udp.local.']:
+                border_agents.append(BorderAgent(ptr.alias))
+
+            # Find server name, port and Thread Interface status for each border router
+            for ba in border_agents:
+                for record in cache[ba.alias.lower()]:
+                    if isinstance(record, DNSService):
+                        ba.server_name = record.server
+                        ba.port = record.port
+                    elif isinstance(record, DNSText):
+                        text = bytearray(record.text)
+                        sb = text.split(b'sb=')[1][0:4]
+                        ba.thread_status = (sb[3] & 0x18) >> 3
+
+            # Find link local address for each border router
+            for ba in border_agents:
+                for record in cache[ba.server_name]:
+                    if isinstance(record, DNSAddress):
+                        addr = ipaddress.ip_address(record.address)
+                        if addr.is_link_local:
+                            ba.link_local_addr = str(addr)
+                            break
+
+            return border_agents
+
+        # Browse border agents
+        zeroconf = Zeroconf()
+        ServiceBrowser(zeroconf, "_meshcop._udp.local.", handlers=[on_service_state_change])
+        time.sleep(2)
+        cache = zeroconf.cache.cache
+        zeroconf.close()
+
+        # Find an active border agent not in the blacklist
+        border_agents = parse_cache(cache)
+        for ba in border_agents:
+            if ba.thread_status == 2 and ba.link_local_addr not in addrs_blacklist:
+                return ('%s%%eth0' % ba.link_local_addr, ba.port)
+
+        raise Exception('No active Border Agents found')
 
     # Override powerDown
     @API
