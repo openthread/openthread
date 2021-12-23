@@ -298,7 +298,9 @@ class OpenThreadTHCI(object):
                     continue
 
                 self.log("readline: %s", line)
-                response.append(line)
+                # skip empty lines
+                if line:
+                    response.append(line)
 
                 if line.endswith('Done'):
                     break
