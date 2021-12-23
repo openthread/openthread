@@ -1279,6 +1279,16 @@ fe80:0:0:0:f3d9:2a82:c8d8:fe43
 Done
 ```
 
+Use `-v` to get more verbose informations about the address.
+
+```bash
+> ipaddr -v
+fdde:ad00:beef:0:0:ff:fe00:0 origin:thread
+fdde:ad00:beef:0:558:f56b:d688:799 origin:thread
+fe80:0:0:0:f3d9:2a82:c8d8:fe43 origin:thread
+Done
+```
+
 ### ipaddr add \<ipaddr\>
 
 Add an IPv6 address to the Thread interface.
