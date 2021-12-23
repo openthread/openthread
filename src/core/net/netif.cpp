@@ -384,36 +384,41 @@ exit:
     return;
 }
 
-Error Netif::SubscribeExternalMulticast(const Address &aAddress)
+Error Netif::SubscribeExternalMulticast(const otIp6Address *aAddresses, uint8_t aAddressNum)
 {
     Error             error                      = kErrorNone;
     MulticastAddress &linkLocalAllRoutersAddress = AsCoreType(&AsNonConst(kLinkLocalAllRoutersMulticastAddress));
     ExternalMulticastAddress *entry;
 
-    VerifyOrExit(aAddress.IsMulticast(), error = kErrorInvalidArgs);
-    VerifyOrExit(!IsMulticastSubscribed(aAddress), error = kErrorAlready);
-
-    // Check that the address is not one of the fixed addresses:
-    // LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAllNodes
-    // -> RealmLocalAllNodes -> RealmLocalAllMpl.
-
-    for (const MulticastAddress *cur = &linkLocalAllRoutersAddress; cur; cur = cur->GetNext())
+    while (aAddressNum--)
     {
-        VerifyOrExit(cur->GetAddress() != aAddress, error = kErrorInvalidArgs);
-    }
+        const Address &aAddress = AsCoreType(&aAddresses[aAddressNum]);
 
-    entry = mExtMulticastAddressPool.Allocate();
-    VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
+        VerifyOrExit(aAddress.IsMulticast(), error = kErrorInvalidArgs);
+        VerifyOrExit(!IsMulticastSubscribed(aAddress), error = kErrorAlready);
 
-    entry->mAddress = aAddress;
+        // Check that the address is not one of the fixed addresses:
+        // LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAllNodes
+        // -> RealmLocalAllNodes -> RealmLocalAllMpl.
+
+        for (const MulticastAddress *cur = &linkLocalAllRoutersAddress; cur; cur = cur->GetNext())
+        {
+            VerifyOrExit(cur->GetAddress() != aAddress, error = kErrorInvalidArgs);
+        }
+
+        entry = mExtMulticastAddressPool.Allocate();
+        VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
+
+        entry->mAddress = aAddress;
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    entry->mMlrState = kMlrStateToRegister;
+        entry->mMlrState = kMlrStateToRegister;
 #endif
-    mMulticastAddresses.Push(*entry);
+        mMulticastAddresses.Push(*entry);
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry, kOriginManual);
+        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry, kOriginManual);
 #endif
+    }
 
     Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
 

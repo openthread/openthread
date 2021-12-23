@@ -552,8 +552,7 @@ public:
      * @retval kErrorNoBufs        The maximum number of allowed external multicast addresses are already added.
      *
      */
-    Error SubscribeExternalMulticast(const Address &aAddress);
-
+    Error SubscribeExternalMulticast(const otIp6Address *aAddresses, uint8_t aAddressNum);
     /**
      * This method unsubscribes the network interface to the external (to OpenThread) multicast address.
      *

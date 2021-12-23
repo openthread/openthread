@@ -924,7 +924,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
 
                     netAddr.mAddress = addr;
 
-                    error = otIp6SubscribeMulticastAddress(aInstance, &addr);
+                    error = otIp6SubscribeMulticastAddress(aInstance, &addr, 1);
                 }
 
                 logAddrEvent(/* isAdd */ true, !addr.IsMulticast(), addr6, error);
@@ -1190,7 +1190,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                 otNetifMulticastAddress netAddr;
                 netAddr.mAddress = addr;
 
-                error = otIp6SubscribeMulticastAddress(aInstance, &addr);
+                error = otIp6SubscribeMulticastAddress(aInstance, &addr, 1);
                 logAddrEvent(/* isAdd */ true, /* isUnicast */ false, addr6, error);
                 if (error == OT_ERROR_ALREADY)
                 {
@@ -1413,7 +1413,7 @@ static void processMLDEvent(otInstance *aInstance)
             inet_ntop(AF_INET6, &record->mMulticastAddress, addressString, sizeof(addressString));
             if (record->mRecordType == kICMPv6MLDv2RecordChangeToIncludeType)
             {
-                err = otIp6SubscribeMulticastAddress(aInstance, &address);
+                err = otIp6SubscribeMulticastAddress(aInstance, &address, 1);
                 if (err == OT_ERROR_ALREADY)
                 {
                     otLogNotePlat(

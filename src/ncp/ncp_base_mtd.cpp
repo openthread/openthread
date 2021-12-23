@@ -2011,7 +2011,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_IPV6_MULTICAST_ADD
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(addrPtr));
 
-    error = otIp6SubscribeMulticastAddress(mInstance, addrPtr);
+    error = otIp6SubscribeMulticastAddress(mInstance, addrPtr, 1);
 
     if (error == OT_ERROR_ALREADY)
     {

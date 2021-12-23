@@ -335,7 +335,7 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance);
  *                                 addresses.
  *
  */
-otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress, uint8_t aAddressNum);
 
 /**
  * Unsubscribe the Thread interface to a Network Interface Multicast Address.

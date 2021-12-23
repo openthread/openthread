@@ -93,9 +93,9 @@ const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
     return AsCoreType(aInstance).Get<ThreadNetif>().GetMulticastAddresses().GetHead();
 }
 
-otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress, uint8_t aAddressNum)
 {
-    return AsCoreType(aInstance).Get<ThreadNetif>().SubscribeExternalMulticast(AsCoreType(aAddress));
+    return AsCoreType(aInstance).Get<ThreadNetif>().SubscribeExternalMulticast(aAddress, aAddressNum);
 }
 
 otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
