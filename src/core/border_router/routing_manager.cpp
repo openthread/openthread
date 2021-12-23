@@ -69,7 +69,9 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
     , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer)
     , mRouterAdvertisementCount(0)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     , mVicariousRouterSolicitTimer(aInstance, HandleVicariousRouterSolicitTimer)
+#endif
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
@@ -246,7 +248,9 @@ void RoutingManager::Stop(void)
     mRouterAdvertisementTimer.Stop();
     mRouterAdvertisementCount = 0;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     mVicariousRouterSolicitTimer.Stop();
+#endif
     mRouterSolicitTimer.Stop();
     mRouterSolicitCount = 0;
 
@@ -640,7 +644,9 @@ void RoutingManager::StartRouterSolicitationDelay(void)
 
     OT_ASSERT(mRouterSolicitCount == 0);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     mVicariousRouterSolicitTimer.Stop();
+#endif
 
     static_assert(kMaxRtrSolicitationDelay > 0, "invalid maximum Router Solicitation delay");
     randomDelay = Random::NonCrypto::GetUint32InRange(0, Time::SecToMsec(kMaxRtrSolicitationDelay));
@@ -824,6 +830,7 @@ void RoutingManager::HandleRouterAdvertisementTimer(void)
     EvaluateRoutingPolicy();
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
 void RoutingManager::HandleVicariousRouterSolicitTimer(Timer &aTimer)
 {
     aTimer.Get<RoutingManager>().HandleVicariousRouterSolicitTimer();
@@ -842,6 +849,7 @@ void RoutingManager::HandleVicariousRouterSolicitTimer(void)
         }
     }
 }
+#endif
 
 void RoutingManager::HandleRouterSolicitTimer(Timer &aTimer)
 {
@@ -952,11 +960,13 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     otLogInfoBr("Received Router Solicitation from %s on interface %u", aSrcAddress.ToString().AsCString(),
                 mInfraIfIndex);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     if (!mVicariousRouterSolicitTimer.IsRunning())
     {
         mTimeVicariousRouterSolicitStart = TimerMilli::GetNow();
         mVicariousRouterSolicitTimer.Start(Time::SecToMsec(kVicariousSolicitationTime));
     }
+#endif
 
     // Schedule Router Advertisements with random delay.
     randomDelay = Random::NonCrypto::GetUint32InRange(0, kMaxRaDelayTime);
