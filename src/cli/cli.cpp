@@ -2105,8 +2105,14 @@ otError Interpreter::ProcessIpMulticastAddrAdd(Arg aArgs[])
 {
     otError      error;
     otIp6Address address;
+    otIp6Address address2;
 
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(address));
+    if (!aArgs[1].IsEmpty())
+    {
+        SuccessOrExit(error = aArgs[1].ParseAsIp6Address(address2));
+        SuccessOrExit(error = otIp6SubscribeMulticastAddress(GetInstancePtr(), &address2));
+    }
     error = otIp6SubscribeMulticastAddress(GetInstancePtr(), &address);
 
 exit:
