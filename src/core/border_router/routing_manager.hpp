@@ -288,6 +288,7 @@ private:
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);
     void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix);
+    bool  IsRouterSolicitationInProgress(void) const;
 
     static void HandleRouterAdvertisementTimer(Timer &aTimer);
     void        HandleRouterAdvertisementTimer(void);
