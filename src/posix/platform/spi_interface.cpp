@@ -285,7 +285,7 @@ void SpiInterface::InitResetPin(const char *aCharDev, uint8_t aLine)
 
     otLogDebgPlat("InitResetPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
-    VerifyOrDie((aCharDev != nullptr) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aCharDev != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
     mResetGpioValueFd = SetupGpioHandle(fd, aLine, GPIOHANDLE_REQUEST_OUTPUT, label);
 
@@ -299,7 +299,7 @@ void SpiInterface::InitIntPin(const char *aCharDev, uint8_t aLine)
 
     otLogDebgPlat("InitIntPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
-    VerifyOrDie((aCharDev != nullptr) && (aLine < GPIOHANDLES_MAX), OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aCharDev != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
 
     mIntGpioValueFd = SetupGpioEvent(fd, aLine, GPIOHANDLE_REQUEST_INPUT, GPIOEVENT_REQUEST_FALLING_EDGE, label);
