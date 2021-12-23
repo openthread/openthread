@@ -630,7 +630,7 @@ EOF"
             if state_change is ServiceStateChange.Added:
                 zeroconf.get_service_info(service_type, name)
 
-        class BorderAgent:
+        class BorderAgent(object):
             alias = None
             server_name = None
             link_local_addr = None
