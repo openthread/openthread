@@ -322,6 +322,8 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
+        // Invalidate discovered prefixes because OMR Prefixes in Network Data may change.
+        InvalidateDiscoveredPrefixes();
         StartRoutingPolicyEvaluationDelay();
     }
 
@@ -1158,6 +1160,9 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::RouteInfoOption &
         ExitNow();
     }
 
+    // Ignore own OMR prefix.
+    VerifyOrExit(mLocalOmrPrefix != prefix);
+
     // Ignore OMR prefixes advertised by ourselves or in current Thread Network Data.
     // The `mAdvertisedOmrPrefixes` and the OMR prefix set in Network Data should eventually
     // be equal, but there is time that they are not synchronized immediately:
@@ -1236,8 +1241,14 @@ bool RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
 
     for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
     {
-        if ((aPrefix != nullptr && prefix.mPrefix == *aPrefix && prefix.mIsOnLinkPrefix == aIsOnLinkPrefix) ||
-            (prefix.GetExpireTime() <= now))
+        if (
+            // Invalidate specified prefix
+            (aPrefix != nullptr && prefix.mPrefix == *aPrefix && prefix.mIsOnLinkPrefix == aIsOnLinkPrefix) ||
+            // Invalidate expired prefix
+            (prefix.GetExpireTime() <= now) ||
+            // Invalidate Local OMR prefixes
+            (!prefix.mIsOnLinkPrefix &&
+             (mAdvertisedOmrPrefixes.Contains(prefix.mPrefix) || NetworkDataContainsOmrPrefix(prefix.mPrefix))))
         {
             RemoveExternalRoute(prefix.mPrefix);
             didRemove = true;
