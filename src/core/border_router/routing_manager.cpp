@@ -956,7 +956,6 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aBufferLength);
 
-    VerifyOrExit(!IsRouterSolicitationInProgress());
     otLogInfoBr("Received Router Solicitation from %s on interface %u", aSrcAddress.ToString().AsCString(),
                 mInfraIfIndex);
 
@@ -971,10 +970,7 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     // Schedule Router Advertisements with random delay.
     randomDelay = Random::NonCrypto::GetUint32InRange(0, kMaxRaDelayTime);
     otLogInfoBr("Router Advertisement scheduled in %u milliseconds", randomDelay);
-    mRouterAdvertisementTimer.Start(randomDelay);
-
-exit:
-    return;
+    mRouterAdvertisementTimer.FireAtIfEarlier(TimerMilli::GetNow() + randomDelay);
 }
 
 uint32_t RoutingManager::ExternalPrefix::GetPrefixExpireDelay(uint32_t aValidLifetime)
