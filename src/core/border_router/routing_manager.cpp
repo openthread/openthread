@@ -1149,9 +1149,12 @@ bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOpt
             existingPrefix->mValidLifetime = kTwoHoursInSeconds;
         }
 
+        // The on-link prefix routing policy may be affected when a
+        // discovered on-link prefix becomes deprecated or preferred.
+        needReevaluate = (onLinkPrefix.IsDeprecated() != existingPrefix->IsDeprecated());
+
         existingPrefix->mPreferredLifetime = onLinkPrefix.mPreferredLifetime;
         existingPrefix->mTimeLastUpdate    = onLinkPrefix.mTimeLastUpdate;
-        needReevaluate                     = (existingPrefix->mPreferredLifetime == 0);
     }
 
     mDiscoveredPrefixInvalidTimer.FireAtIfEarlier(existingPrefix->GetExpireTime());
