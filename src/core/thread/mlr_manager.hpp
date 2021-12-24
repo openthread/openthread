@@ -142,6 +142,8 @@ public:
 #endif
 
 private:
+    static constexpr uint32_t kUpdateLocalSubscriptionsDelay = 10;
+
     void HandleNotifierEvents(Events aEvents);
 
     void  SendMulticastListenerRegistration(void);
@@ -175,8 +177,10 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    void UpdateLocalSubscriptions(void);
-    bool IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
+    static void HandleDelayTimer(Timer &aTimer);
+    void        HandleDelayTimer(void);
+    void        UpdateLocalSubscriptions(void);
+    bool        IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) const;
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
@@ -224,6 +228,9 @@ private:
     bool mMlrPending : 1;
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     bool mRegisterMulticastListenersPending : 1;
+#endif
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    TimerMilli mDelayTimer;
 #endif
 };
 

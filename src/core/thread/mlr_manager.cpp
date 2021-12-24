@@ -59,15 +59,22 @@ MlrManager::MlrManager(Instance &aInstance)
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     , mRegisterMulticastListenersPending(false)
 #endif
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+    , mDelayTimer(aInstance, HandleDelayTimer)
+#endif
 {
 }
 
 void MlrManager::HandleNotifierEvents(Events aEvents)
 {
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    if (aEvents.Contains(kEventIp6MulticastSubscribed))
+    // We add a short wait time before taking action when an IPv6
+    // multicast address is added (if timer is not already running).
+    // This allows user to add multiple addresses back-to-back and
+    // ensure that they are processed together.
+    if (aEvents.Contains(kEventIp6MulticastSubscribed) && !mDelayTimer.IsRunning())
     {
-        UpdateLocalSubscriptions();
+        mDelayTimer.Start(kUpdateLocalSubscriptionsDelay);
     }
 #endif
 
@@ -90,6 +97,17 @@ void MlrManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State
 }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
+
+void MlrManager::HandleDelayTimer(Timer &aTimer)
+{
+    aTimer.GetInstance().Get<MlrManager>().HandleDelayTimer();
+}
+
+void MlrManager::HandleDelayTimer(void)
+{
+    UpdateLocalSubscriptions();
+}
+
 void MlrManager::UpdateLocalSubscriptions(void)
 {
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
