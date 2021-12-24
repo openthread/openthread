@@ -1793,14 +1793,14 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
                                const Mac::Address *aMacAddress,
                                Error               aError)
 {
-    otLogLevel logLevel = OT_LOG_LEVEL_INFO;
+    otLogLevel logLevel = OT_LOG_LEVEL_DEBG;
 
     switch (aAction)
     {
     case kMessageReceive:
     case kMessageTransmit:
     case kMessagePrepareIndirect:
-        logLevel = (aError == kErrorNone) ? OT_LOG_LEVEL_INFO : OT_LOG_LEVEL_NOTE;
+        logLevel = (aError == kErrorNone) ? OT_LOG_LEVEL_DEBG : OT_LOG_LEVEL_NOTE;
         break;
 
     case kMessageDrop:
