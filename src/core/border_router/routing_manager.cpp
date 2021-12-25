@@ -1344,7 +1344,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 
     OT_ASSERT(mIsRunning);
 
-    // The stale timer is responding for sending RS to re-check the stale On-Link/OMR prefixes or RA message.
+    // The stale timer triggers sending RS to check the state of On-Link/OMR prefixes and host RA messages.
     // The rules for calculating the next stale time:
     // 1. If BR learns RA header from Host daemons, it should send RS when the RA header is stale.
     // 2. If BR discovered any on-link prefix, it should send RS when all on-link prefixes are stale.
@@ -1362,13 +1362,16 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     {
         TimeMilli prefixStaleTime = externalPrefix.GetStaleTime();
 
-        if (externalPrefix.mIsOnLinkPrefix && !externalPrefix.IsDeprecated())
+        if (externalPrefix.mIsOnLinkPrefix)
         {
-            // Check for least recent stale On-Link Prefixes if BR is not advertising local On-Link Prefix.
-            maxOnlinkPrefixStaleTime      = OT_MAX(maxOnlinkPrefixStaleTime, prefixStaleTime);
-            requireCheckStaleOnlinkPrefix = true;
+            if (!externalPrefix.IsDeprecated())
+            {
+                // Check for least recent stale On-Link Prefixes if BR is not advertising local On-Link Prefix.
+                maxOnlinkPrefixStaleTime      = OT_MAX(maxOnlinkPrefixStaleTime, prefixStaleTime);
+                requireCheckStaleOnlinkPrefix = true;
+            }
         }
-        else if (!externalPrefix.mIsOnLinkPrefix)
+        else
         {
             // Check for most recent stale OMR Prefixes
             nextStaleTime = OT_MIN(nextStaleTime, prefixStaleTime);
