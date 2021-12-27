@@ -270,7 +270,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = 1;
         }
 
-        aTimeout->tv_sec  = (time_t)remaining / US_PER_S;
+        aTimeout->tv_sec  = (time_t)(remaining / US_PER_S);
         aTimeout->tv_usec = remaining % US_PER_S;
     }
 }
