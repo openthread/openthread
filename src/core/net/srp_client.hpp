@@ -138,10 +138,7 @@ public:
          * @returns  The host IPv6 address at index @p aIndex.
          *
          */
-        const Ip6::Address &GetAddress(uint8_t aIndex) const
-        {
-            return static_cast<const Ip6::Address &>(mAddresses[aIndex]);
-        }
+        const Ip6::Address &GetAddress(uint8_t aIndex) const { return AsCoreType(&mAddresses[aIndex]); }
 
         /**
          * This method gets the state of `HostInfo`.
@@ -244,7 +241,7 @@ public:
          * @returns A pointer to an array of service TXT entries.
          *
          */
-        const Dns::TxtEntry *GetTxtEntries(void) const { return static_cast<const Dns::TxtEntry *>(mTxtEntries); }
+        const Dns::TxtEntry *GetTxtEntries(void) const { return AsCoreTypePtr(mTxtEntries); }
 
         /**
          * This method gets the number of entries in the service TXT entry array.

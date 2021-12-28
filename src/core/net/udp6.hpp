@@ -97,7 +97,7 @@ public:
          * @returns A reference to the local socket address.
          *
          */
-        SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
+        SockAddr &GetSockName(void) { return AsCoreType(&mSockName); }
 
         /**
          * This method returns the local socket address.
@@ -105,7 +105,7 @@ public:
          * @returns A reference to the local socket address.
          *
          */
-        const SockAddr &GetSockName(void) const { return *static_cast<const SockAddr *>(&mSockName); }
+        const SockAddr &GetSockName(void) const { return AsCoreType(&mSockName); }
 
         /**
          * This method returns the peer's socket address.
@@ -113,7 +113,7 @@ public:
          * @returns A reference to the peer's socket address.
          *
          */
-        SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
+        SockAddr &GetPeerName(void) { return AsCoreType(&mPeerName); }
 
         /**
          * This method returns the peer's socket address.
@@ -121,7 +121,7 @@ public:
          * @returns A reference to the peer's socket address.
          *
          */
-        const SockAddr &GetPeerName(void) const { return *static_cast<const SockAddr *>(&mPeerName); }
+        const SockAddr &GetPeerName(void) const { return AsCoreType(&mPeerName); }
 
     private:
         bool Matches(const MessageInfo &aMessageInfo) const;

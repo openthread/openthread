@@ -72,7 +72,7 @@ public:
      * @returns A reference to the local socket address.
      *
      */
-    Address &GetSockAddr(void) { return *static_cast<Address *>(&mSockAddr); }
+    Address &GetSockAddr(void) { return AsCoreType(&mSockAddr); }
 
     /**
      * This method returns a reference to the local socket address.
@@ -80,7 +80,7 @@ public:
      * @returns A reference to the local socket address.
      *
      */
-    const Address &GetSockAddr(void) const { return *static_cast<const Address *>(&mSockAddr); }
+    const Address &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
 
     /**
      * This method sets the local socket address.
@@ -112,7 +112,7 @@ public:
      * @returns A reference to the peer socket address.
      *
      */
-    Address &GetPeerAddr(void) { return *static_cast<Address *>(&mPeerAddr); }
+    Address &GetPeerAddr(void) { return AsCoreType(&mPeerAddr); }
 
     /**
      * This method returns a reference to the peer socket address.
@@ -120,7 +120,7 @@ public:
      * @returns A reference to the peer socket address.
      *
      */
-    const Address &GetPeerAddr(void) const { return *static_cast<const Address *>(&mPeerAddr); }
+    const Address &GetPeerAddr(void) const { return AsCoreType(&mPeerAddr); }
 
     /**
      * This method sets the peer's socket address.
@@ -298,7 +298,7 @@ public:
      * @returns A reference to the IPv6 address.
      *
      */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
+    Address &GetAddress(void) { return AsCoreType(&mAddress); }
 
     /**
      * This method returns a reference to the IPv6 address.
@@ -306,7 +306,7 @@ public:
      * @returns A reference to the IPv6 address.
      *
      */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
+    const Address &GetAddress(void) const { return AsCoreType(&mAddress); }
 
     /**
      * This method sets the IPv6 address.

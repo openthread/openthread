@@ -157,7 +157,7 @@ public:
      * @return The prefix.
      *
      */
-    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
+    const Ip6::Prefix &GetPrefix(void) const { return AsCoreType(&mPrefix); }
 
     /**
      * This method gets the prefix.
@@ -165,7 +165,7 @@ public:
      * @return The prefix.
      *
      */
-    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+    Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
@@ -209,7 +209,7 @@ public:
      * @return The prefix.
      *
      */
-    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
+    const Ip6::Prefix &GetPrefix(void) const { return AsCoreType(&mPrefix); }
 
     /**
      * This method gets the prefix.
@@ -217,7 +217,7 @@ public:
      * @return The prefix.
      *
      */
-    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+    Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
     /**
      * This method sets the prefix.
