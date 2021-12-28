@@ -224,7 +224,6 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
             uint32_t origTimeout = timeout;
 
             timeout = OT_MIN(timeout, static_cast<uint32_t>(Mle::kMlrTimeoutMax));
-            timeout = OT_MAX(timeout, static_cast<uint32_t>(Mle::kMlrTimeoutMin));
 
             if (timeout != origTimeout)
             {
