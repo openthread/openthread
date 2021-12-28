@@ -151,13 +151,13 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
         case NetworkDataTlv::kTypePrefix:
             if ((aConfig.mOnMeshPrefix != nullptr) || (aConfig.mExternalRoute != nullptr))
             {
-                subTlvs = static_cast<const PrefixTlv *>(cur)->GetSubTlvs();
+                subTlvs = As<PrefixTlv>(cur)->GetSubTlvs();
             }
             break;
         case NetworkDataTlv::kTypeService:
             if (aConfig.mService != nullptr)
             {
-                subTlvs = static_cast<const ServiceTlv *>(cur)->GetSubTlvs();
+                subTlvs = As<ServiceTlv>(cur)->GetSubTlvs();
             }
             break;
         default:
@@ -175,13 +175,13 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
         {
             if (cur->GetType() == NetworkDataTlv::kTypePrefix)
             {
-                const PrefixTlv *prefixTlv = static_cast<const PrefixTlv *>(cur);
+                const PrefixTlv *prefixTlv = As<PrefixTlv>(cur);
 
                 switch (subCur->GetType())
                 {
                 case NetworkDataTlv::kTypeBorderRouter:
                 {
-                    const BorderRouterTlv *borderRouter = static_cast<const BorderRouterTlv *>(subCur);
+                    const BorderRouterTlv *borderRouter = As<BorderRouterTlv>(subCur);
 
                     if (aConfig.mOnMeshPrefix == nullptr)
                     {
@@ -207,7 +207,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
 
                 case NetworkDataTlv::kTypeHasRoute:
                 {
-                    const HasRouteTlv *hasRoute = static_cast<const HasRouteTlv *>(subCur);
+                    const HasRouteTlv *hasRoute = As<HasRouteTlv>(subCur);
 
                     if (aConfig.mExternalRoute == nullptr)
                     {
@@ -237,7 +237,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
             }
             else // cur is `ServiceTLv`
             {
-                const ServiceTlv *service = static_cast<const ServiceTlv *>(cur);
+                const ServiceTlv *service = As<ServiceTlv>(cur);
 
                 if (aConfig.mService == nullptr)
                 {
@@ -246,7 +246,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
 
                 if (subCur->GetType() == NetworkDataTlv::kTypeServer)
                 {
-                    const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
+                    const ServerTlv *server = As<ServerTlv>(subCur);
 
                     if (!iterator.IsNewEntry())
                     {
@@ -402,7 +402,7 @@ void MutableNetworkData::RemoveTemporaryData(void)
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+            PrefixTlv *prefix = As<PrefixTlv>(cur);
 
             RemoveTemporaryDataIn(*prefix);
 
@@ -417,7 +417,8 @@ void MutableNetworkData::RemoveTemporaryData(void)
 
         case NetworkDataTlv::kTypeService:
         {
-            ServiceTlv *service = static_cast<ServiceTlv *>(cur);
+            ServiceTlv *service = As<ServiceTlv>(cur);
+
             RemoveTemporaryDataIn(*service);
 
             if (service->GetSubTlvsLength() == 0)
@@ -456,7 +457,7 @@ void MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
             {
             case NetworkDataTlv::kTypeBorderRouter:
             {
-                BorderRouterTlv *borderRouter = static_cast<BorderRouterTlv *>(cur);
+                BorderRouterTlv *borderRouter = As<BorderRouterTlv>(cur);
                 ContextTlv *     context      = aPrefix.FindSubTlv<ContextTlv>();
 
                 // Replace p_border_router_16
@@ -478,7 +479,7 @@ void MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
 
             case NetworkDataTlv::kTypeHasRoute:
             {
-                HasRouteTlv *hasRoute = static_cast<HasRouteTlv *>(cur);
+                HasRouteTlv *hasRoute = As<HasRouteTlv>(cur);
 
                 // Replace r_border_router_16
                 for (HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
@@ -518,11 +519,8 @@ void MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
             switch (cur->GetType())
             {
             case NetworkDataTlv::kTypeServer:
-            {
-                ServerTlv *server = static_cast<ServerTlv *>(cur);
-                server->SetServer16(Mle::Mle::ServiceAlocFromId(aService.GetServiceId()));
+                As<ServerTlv>(cur)->SetServer16(Mle::Mle::ServiceAlocFromId(aService.GetServiceId()));
                 break;
-            }
 
             default:
                 break;

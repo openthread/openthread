@@ -394,8 +394,7 @@ Error LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLeng
     if (aValueLength > 0)
     {
         VerifyOrExit(aValueLength <= kMaxSize - sizeof(CommissioningDataTlv), error = kErrorNoBufs);
-        commissioningDataTlv =
-            static_cast<CommissioningDataTlv *>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
+        commissioningDataTlv = As<CommissioningDataTlv>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
         VerifyOrExit(commissioningDataTlv != nullptr, error = kErrorNoBufs);
 
         commissioningDataTlv->Init();
@@ -471,7 +470,7 @@ Error LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
     steeringDataTlv = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
     VerifyOrExit(steeringDataTlv != nullptr, error = kErrorInvalidState);
 
-    static_cast<const MeshCoP::SteeringDataTlv *>(steeringDataTlv)->CopyTo(steeringData);
+    As<MeshCoP::SteeringDataTlv>(steeringDataTlv)->CopyTo(steeringData);
 
     VerifyOrExit(steeringData.Contains(aFilterIndexes), error = kErrorNotFound);
 

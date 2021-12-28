@@ -106,8 +106,7 @@ uint16_t JoinerRouter::GetJoinerUdpPort(void)
 
     VerifyOrExit(!mIsJoinerPortConfigured, rval = mJoinerUdpPort);
 
-    joinerUdpPort = static_cast<const JoinerUdpPortTlv *>(
-        Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
+    joinerUdpPort = As<JoinerUdpPortTlv>(Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
     VerifyOrExit(joinerUdpPort != nullptr);
 
     rval = joinerUdpPort->GetUdpPort();

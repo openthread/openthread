@@ -170,8 +170,8 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
 
     SuccessOrExit(Tlv::Find<CommissionerSessionIdTlv>(aMessage, sessionId));
 
-    borderAgentLocator = static_cast<BorderAgentLocatorTlv *>(
-        Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
+    borderAgentLocator =
+        As<BorderAgentLocatorTlv>(Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
 
     if ((borderAgentLocator == nullptr) || (sessionId != mSessionId))
     {

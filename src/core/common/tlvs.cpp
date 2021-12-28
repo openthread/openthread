@@ -41,8 +41,7 @@ namespace ot {
 
 uint32_t Tlv::GetSize(void) const
 {
-    return IsExtended() ? sizeof(ExtendedTlv) + static_cast<const ExtendedTlv *>(this)->GetLength()
-                        : sizeof(Tlv) + GetLength();
+    return IsExtended() ? sizeof(ExtendedTlv) + As<ExtendedTlv>(this)->GetLength() : sizeof(Tlv) + GetLength();
 }
 
 uint8_t *Tlv::GetValue(void)

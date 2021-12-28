@@ -61,6 +61,68 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 
+class NetworkDataTlv;
+
+/**
+ * This template method casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A pointer to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` pointer to `aTlv`.
+ *
+ */
+template <class TlvType> TlvType *As(NetworkDataTlv *aTlv)
+{
+    return static_cast<TlvType *>(aTlv);
+}
+
+/**
+ * This template method casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A pointer to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` pointer to `aTlv`.
+ *
+ */
+template <class TlvType> const TlvType *As(const NetworkDataTlv *aTlv)
+{
+    return static_cast<const TlvType *>(aTlv);
+}
+
+/**
+ * This template method casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A reference to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` reference to `aTlv`.
+ *
+ */
+template <class TlvType> TlvType &As(NetworkDataTlv &aTlv)
+{
+    return static_cast<TlvType &>(aTlv);
+}
+
+/**
+ * This template method casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A reference to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` reference to `aTlv`.
+ *
+ */
+template <class TlvType> const TlvType &As(const NetworkDataTlv &aTlv)
+{
+    return static_cast<const TlvType &>(aTlv);
+}
+
 /**
  * This class implements Thread Network Data TLV generation and parsing.
  *
@@ -250,7 +312,7 @@ public:
      */
     template <typename TlvType> static TlvType *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd)
     {
-        return static_cast<TlvType *>(Find(aStart, aEnd, TlvType::kType));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType));
     }
 
     /**
@@ -266,7 +328,7 @@ public:
      */
     template <typename TlvType> static const TlvType *Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd)
     {
-        return static_cast<const TlvType *>(Find(aStart, aEnd, TlvType::kType));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType));
     }
 
     /**
@@ -318,7 +380,7 @@ public:
      */
     template <typename TlvType> static TlvType *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, bool aStable)
     {
-        return static_cast<TlvType *>(Find(aStart, aEnd, TlvType::kType, aStable));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType, aStable));
     }
 
     /**
@@ -337,7 +399,7 @@ public:
     template <typename TlvType>
     static const TlvType *Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd, bool aStable)
     {
-        return static_cast<const TlvType *>(Find(aStart, aEnd, TlvType::kType, aStable));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType, aStable));
     }
 
 private:
@@ -738,7 +800,7 @@ public:
      */
     template <typename SubTlvType> SubTlvType *FindSubTlv(void)
     {
-        return static_cast<SubTlvType *>(FindSubTlv(SubTlvType::kType));
+        return As<SubTlvType>(FindSubTlv(SubTlvType::kType));
     }
 
     /**
@@ -751,7 +813,7 @@ public:
      */
     template <typename SubTlvType> const SubTlvType *FindSubTlv(void) const
     {
-        return static_cast<const SubTlvType *>(FindSubTlv(SubTlvType::kType));
+        return As<SubTlvType>(FindSubTlv(SubTlvType::kType));
     }
 
     /**
@@ -766,7 +828,7 @@ public:
      */
     template <typename SubTlvType> SubTlvType *FindSubTlv(bool aStable)
     {
-        return static_cast<SubTlvType *>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
+        return As<SubTlvType>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
     }
 
     /**
@@ -781,7 +843,7 @@ public:
      */
     template <typename SubTlvType> const SubTlvType *FindSubTlv(bool aStable) const
     {
-        return static_cast<const SubTlvType *>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
+        return As<SubTlvType>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
     }
 
     /**
@@ -1567,10 +1629,7 @@ public:
      * @returns A pointer to the next TLV, or nullptr if it can not be found.
      *
      */
-    template <typename TlvType> const TlvType *Iterate(void)
-    {
-        return static_cast<const TlvType *>(Iterate(TlvType::kType));
-    }
+    template <typename TlvType> const TlvType *Iterate(void) { return As<TlvType>(Iterate(TlvType::kType)); }
 
     /**
      * This template method iterates to the next TLV with a given type and stable flag.
@@ -1584,7 +1643,7 @@ public:
      */
     template <typename TlvType> const TlvType *Iterate(bool aStable)
     {
-        return static_cast<const TlvType *>(Iterate(TlvType::kType, aStable));
+        return As<TlvType>(Iterate(TlvType::kType, aStable));
     }
 
 private:

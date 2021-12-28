@@ -647,7 +647,7 @@ public:
      */
     template <typename TlvType> TlvType *GetTlv(void)
     {
-        return static_cast<TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
     }
 
     /**
@@ -658,7 +658,7 @@ public:
      */
     template <typename TlvType> const TlvType *GetTlv(void) const
     {
-        return static_cast<const TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
     }
 
     /**

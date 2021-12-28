@@ -802,7 +802,7 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
 
         case NetworkDiagnosticTlv::kIp6AddressList:
         {
-            Ip6AddressListTlv &ip6AddrList = static_cast<Ip6AddressListTlv &>(tlv);
+            Ip6AddressListTlv &ip6AddrList = As<Ip6AddressListTlv>(tlv);
 
             VerifyOrExit(ip6AddrList.IsValid(), error = kErrorParse);
             VerifyOrExit(sizeof(aNetworkDiagTlv.mData.mIp6AddrList.mList) >= ip6AddrList.GetLength(),
@@ -834,7 +834,7 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
 
         case NetworkDiagnosticTlv::kChildTable:
         {
-            ChildTableTlv &childTable = static_cast<ChildTableTlv &>(tlv);
+            ChildTableTlv &childTable = As<ChildTableTlv>(tlv);
 
             VerifyOrExit(childTable.IsValid(), error = kErrorParse);
             VerifyOrExit(childTable.GetNumEntries() <= OT_ARRAY_LENGTH(aNetworkDiagTlv.mData.mChildTable.mTable),

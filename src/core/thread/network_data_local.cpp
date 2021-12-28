@@ -96,7 +96,7 @@ Error Local::AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvT
                        ? sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry)
                        : sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
 
-    prefixTlv = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + aPrefix.GetBytesSize() + subTlvLength));
+    prefixTlv = As<PrefixTlv>(AppendTlv(sizeof(PrefixTlv) + aPrefix.GetBytesSize() + subTlvLength));
     VerifyOrExit(prefixTlv != nullptr, error = kErrorNoBufs);
 
     prefixTlv->Init(0, aPrefix);
@@ -104,7 +104,7 @@ Error Local::AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvT
 
     if (aSubTlvType == NetworkDataTlv::kTypeBorderRouter)
     {
-        BorderRouterTlv *brTlv = static_cast<BorderRouterTlv *>(prefixTlv->GetSubTlvs());
+        BorderRouterTlv *brTlv = As<BorderRouterTlv>(prefixTlv->GetSubTlvs());
         brTlv->Init();
         brTlv->SetLength(brTlv->GetLength() + sizeof(BorderRouterEntry));
         brTlv->GetEntry(0)->Init();
@@ -112,7 +112,7 @@ Error Local::AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvT
     }
     else // aSubTlvType is NetworkDataTlv::kTypeHasRoute
     {
-        HasRouteTlv *hasRouteTlv = static_cast<HasRouteTlv *>(prefixTlv->GetSubTlvs());
+        HasRouteTlv *hasRouteTlv = As<HasRouteTlv>(prefixTlv->GetSubTlvs());
         hasRouteTlv->Init();
         hasRouteTlv->SetLength(hasRouteTlv->GetLength() + sizeof(HasRouteEntry));
         hasRouteTlv->GetEntry(0)->Init();
@@ -154,11 +154,11 @@ void Local::UpdateRloc(PrefixTlv &aPrefixTlv)
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            static_cast<HasRouteTlv *>(cur)->GetEntry(0)->SetRloc(rloc16);
+            As<HasRouteTlv>(cur)->GetEntry(0)->SetRloc(rloc16);
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            static_cast<BorderRouterTlv *>(cur)->GetEntry(0)->SetRloc(rloc16);
+            As<BorderRouterTlv>(cur)->GetEntry(0)->SetRloc(rloc16);
             break;
 
         default:
@@ -198,13 +198,13 @@ Error Local::AddService(uint32_t           aEnterpriseNumber,
 
     VerifyOrExit(serviceTlvSize <= kMaxSize, error = kErrorNoBufs);
 
-    serviceTlv = static_cast<ServiceTlv *>(AppendTlv(serviceTlvSize));
+    serviceTlv = As<ServiceTlv>(AppendTlv(serviceTlvSize));
     VerifyOrExit(serviceTlv != nullptr, error = kErrorNoBufs);
 
     serviceTlv->Init(/* aServiceId */ 0, aEnterpriseNumber, aServiceData);
     serviceTlv->SetSubTlvsLength(sizeof(ServerTlv) + aServerData.GetLength());
 
-    serverTlv = static_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
+    serverTlv = As<ServerTlv>(serviceTlv->GetSubTlvs());
     serverTlv->Init(Get<Mle::MleRouter>().GetRloc16(), aServerData);
 
     // According to Thread spec 1.1.1, section 5.18.6 Service TLV:
@@ -245,7 +245,7 @@ void Local::UpdateRloc(ServiceTlv &aService)
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeServer:
-            static_cast<ServerTlv *>(cur)->SetServer16(rloc16);
+            As<ServerTlv>(cur)->SetServer16(rloc16);
             break;
 
         default:
@@ -271,14 +271,14 @@ void Local::UpdateRloc(void)
         {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
         case NetworkDataTlv::kTypePrefix:
-            UpdateRloc(*static_cast<PrefixTlv *>(cur));
+            UpdateRloc(*As<PrefixTlv>(cur));
             break;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
         case NetworkDataTlv::kTypeService:
-            UpdateRloc(*static_cast<ServiceTlv *>(cur));
+            UpdateRloc(*As<ServiceTlv>(cur));
             break;
 #endif
 

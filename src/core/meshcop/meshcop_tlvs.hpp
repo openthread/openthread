@@ -139,7 +139,7 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    Tlv *GetNext(void) { return static_cast<Tlv *>(ot::Tlv::GetNext()); }
+    Tlv *GetNext(void) { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -147,7 +147,7 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    const Tlv *GetNext(void) const { return static_cast<const Tlv *>(ot::Tlv::GetNext()); }
+    const Tlv *GetNext(void) const { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -235,7 +235,7 @@ public:
      */
     template <typename TlvType> static TlvType *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength)
     {
-        return static_cast<TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
     }
 
     /**
@@ -250,7 +250,7 @@ public:
      */
     template <typename TlvType> static const TlvType *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength)
     {
-        return static_cast<const TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
     }
 
 } OT_TOOL_PACKED_END;
