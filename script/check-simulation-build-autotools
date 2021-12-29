@@ -106,10 +106,6 @@ build_all_features()
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
 
-    # Build Thread 1.1 with full features and full logs (Logs defined as macros)
-    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY=1"
-    make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
-
     # Build Thread 1.2 with full features and logs
     export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
     reset_source
