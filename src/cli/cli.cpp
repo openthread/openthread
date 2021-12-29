@@ -2056,9 +2056,28 @@ exit:
     return error;
 }
 
+const char *AddressOriginToString(uint8_t aOrigin)
+{
+    static const char *const kOriginStrings[4] = {
+        "thread", // 0, OT_ADDRESS_ORIGIN_THREAD
+        "slaac",  // 1, OT_ADDRESS_ORIGIN_SLAAC
+        "dhcp6",  // 2, OT_ADDRESS_ORIGIN_DHCPV6
+        "manual", // 3, OT_ADDRESS_ORIGIN_MANUAL
+    };
+
+    return aOrigin < OT_ARRAY_LENGTH(kOriginStrings) ? kOriginStrings[aOrigin] : "unknown";
+}
+
 otError Interpreter::ProcessIpAddr(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
+    otError error   = OT_ERROR_NONE;
+    bool    verbose = false;
+
+    if (aArgs[0] == "-v")
+    {
+        aArgs++;
+        verbose = true;
+    }
 
     if (aArgs[0].IsEmpty())
     {
@@ -2066,7 +2085,12 @@ otError Interpreter::ProcessIpAddr(Arg aArgs[])
 
         for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
         {
-            OutputIp6AddressLine(addr->mAddress);
+            OutputIp6Address(addr->mAddress);
+            if (verbose)
+            {
+                OutputFormat(" origin:%s", AddressOriginToString(addr->mAddressOrigin));
+            }
+            OutputLine("");
         }
     }
     else
