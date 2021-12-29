@@ -406,15 +406,6 @@ private:
 };
 
 /**
- * This function creates Message for MeshCoP.
- *
- */
-inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
-{
-    return aCoap.NewMessage(Message::Settings(Message::kWithLinkSecurity, Message::kPriorityNet));
-}
-
-/**
  * This function generates PSKc.
  *
  * PSKc is used to establish the Commissioner Session.

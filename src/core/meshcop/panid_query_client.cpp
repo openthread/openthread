@@ -70,7 +70,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     Coap::Message *         message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kPanIdQuery));
     SuccessOrExit(error = message->SetPayloadMarker());

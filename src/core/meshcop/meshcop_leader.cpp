@@ -126,7 +126,7 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -209,7 +209,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -231,7 +231,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     Ip6::MessageInfo messageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDatasetChanged));
 

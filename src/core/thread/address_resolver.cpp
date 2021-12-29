@@ -546,7 +546,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     message->InitAsNonConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressQuery));
@@ -841,7 +841,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     message->InitAsConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressNotify));

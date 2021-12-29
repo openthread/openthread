@@ -141,7 +141,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = GetBorderAgentRloc(Get<ThreadNetif>(), borderAgentRloc));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kRelayRx));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -317,7 +317,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     const Tlv *    tlv;
     NetworkKey     networkKey;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     message->InitAsConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kJoinerEntrust));

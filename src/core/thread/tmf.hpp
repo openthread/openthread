@@ -80,6 +80,15 @@ public:
      */
     bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
+    /**
+     * This method allocates a new MeshCoP message which has Network Control priority level and requires link level
+     * security.
+     *
+     * @returns A pointer to the allocated message, or `nullptr` if allocation fails.
+     *
+     */
+    ot::Coap::Message *NewMeshCoPMessage(void) { return NewPriorityMessage(); }
+
 private:
     static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };

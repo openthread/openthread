@@ -453,7 +453,7 @@ void DuaManager::PerformNextRegistration(void)
     }
 
     // Prepare DUA.req
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDuaRegistrationRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -727,7 +727,7 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
     Ip6::MessageInfo messageInfo;
     Error            error;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDuaRegistrationNotify));
     SuccessOrExit(error = message->SetPayloadMarker());

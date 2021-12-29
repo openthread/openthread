@@ -693,7 +693,7 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
     Ip6::MessageInfo messageInfo;
     MeshCoP::Tlv     tlv;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerGet));
 
@@ -753,7 +753,7 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDataset 
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerSet));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -828,7 +828,7 @@ Error Commissioner::SendPetition(void)
 
     mTransmitAttempts++;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderPetition));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -923,7 +923,7 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderKeepAlive));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -1110,7 +1110,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     Ip6::MessageInfo joinerMessageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Coap::CoapSecure>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -1163,7 +1163,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     Ip6::MessageInfo messageInfo;
     Kek              kek;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMeshCoPMessage()) != nullptr, error = kErrorNoBufs);
 
     Get<KeyManager>().ExtractKek(kek);
 
