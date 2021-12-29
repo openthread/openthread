@@ -87,13 +87,14 @@ private:
     otError ProcessId(Arg aArgs[]);
     otError ProcessStart(Arg aArgs[]);
     otError ProcessStop(Arg aArgs[]);
+    otError ProcessState(Arg aArgs[]);
 
     static void HandleCallback(otError aError, void *aContext);
     void        HandleCallback(otError aError);
 
     static constexpr Command sCommands[] = {
-        {"discerner", &Joiner::ProcessDiscerner}, {"help", &Joiner::ProcessHelp}, {"id", &Joiner::ProcessId},
-        {"start", &Joiner::ProcessStart},         {"stop", &Joiner::ProcessStop},
+        {"discerner", &Joiner::ProcessDiscerner}, {"help", &Joiner::ProcessHelp},   {"id", &Joiner::ProcessId},
+        {"start", &Joiner::ProcessStart},         {"state", &Joiner::ProcessState}, {"stop", &Joiner::ProcessStop},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
