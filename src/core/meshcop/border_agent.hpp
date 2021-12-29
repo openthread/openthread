@@ -169,8 +169,7 @@ private:
     void        HandleProxyTransmit(const Coap::Message &aMessage);
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
-        return static_cast<BorderAgent *>(aContext)->HandleUdpReceive(
-            *static_cast<const Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+        return static_cast<BorderAgent *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
     }
     bool HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

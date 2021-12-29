@@ -36,6 +36,7 @@
 
 #include <openthread/platform/trel-udp6.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -114,7 +115,7 @@ void Interface::CreateMulticastIp6Address(Ip6::Address &aIp6Address)
 
 extern "C" void otPlatTrelUdp6HandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength)
 {
-    ot::Instance &instance = *static_cast<ot::Instance *>(aInstance);
+    ot::Instance &instance = ot::AsCoreType(aInstance);
 
     VerifyOrExit(instance.IsInitialized());
     instance.Get<ot::Trel::Interface>().HandleReceived(aBuffer, aLength);

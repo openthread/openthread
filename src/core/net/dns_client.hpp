@@ -211,7 +211,7 @@ public:
 
         explicit QueryConfig(InitMode aMode);
 
-        Ip6::SockAddr &GetServerSockAddr(void) { return static_cast<Ip6::SockAddr &>(mServerSockAddr); }
+        Ip6::SockAddr &GetServerSockAddr(void) { return AsCoreType(&mServerSockAddr); }
 
         void SetResponseTimeout(uint32_t aResponseTimeout) { mResponseTimeout = aResponseTimeout; }
         void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
