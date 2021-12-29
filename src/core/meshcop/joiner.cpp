@@ -439,7 +439,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     VendorStackVersionTlv vendorStackVersionTlv;
     ProvisioningUrlTlv    provisioningUrlTlv;
 
-    VerifyOrExit((mFinalizeMessage = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((mFinalizeMessage = Get<Coap::CoapSecure>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->InitAsConfirmablePost();
     SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(UriPath::kJoinerFinalize));
@@ -597,7 +597,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     Coap::Message *  message;
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 

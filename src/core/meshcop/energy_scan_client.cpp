@@ -73,7 +73,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     Coap::Message *         message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kEnergyScan));
     SuccessOrExit(error = message->SetPayloadMarker());

@@ -276,7 +276,7 @@ void DatasetManager::SendSet(void)
         }
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error =
                       message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveSet : UriPath::kPendingSet));
@@ -419,7 +419,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     IgnoreError(Read(dataset));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -485,7 +485,7 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &    aDatasetInfo,
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error =
                       message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveSet : UriPath::kPendingSet));
@@ -614,7 +614,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error =
                       message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveGet : UriPath::kPendingGet));
