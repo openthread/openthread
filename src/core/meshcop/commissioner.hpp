@@ -229,7 +229,7 @@ public:
     /**
      * This method sets the Provisioning URL.
      *
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr to set URL to empty string).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be `nullptr` to set URL to empty string).
      *
      * @retval kErrorNone         Successfully set the Provisioning URL.
      * @retval kErrorInvalidArgs  @p aProvisioningUrl is invalid (too long).

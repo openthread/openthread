@@ -921,7 +921,7 @@ public:
         /**
          * This method gets the current `Child` IPv6 Address to which the iterator is pointing.
          *
-         * @returns  A pointer to the associated IPv6 Address, or nullptr if iterator is done.
+         * @returns  A pointer to the associated IPv6 Address, or `nullptr` if iterator is done.
          *
          */
         const Ip6::Address *GetAddress(void) const;

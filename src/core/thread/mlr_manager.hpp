@@ -120,7 +120,7 @@ public:
      *
      * @param aAddresses   A pointer to IPv6 multicast addresses to register.
      * @param aAddressNum  The number of IPv6 multicast addresses.
-     * @param aTimeout     A pointer to the timeout (in seconds), or nullptr to use the default MLR timeout.
+     * @param aTimeout     A pointer to the timeout (in seconds), or `nullptr` to use the default MLR timeout.
      *                     A timeout of 0 seconds removes the Multicast Listener addresses.
      * @param aCallback    A callback function.
      * @param aContext     A user context pointer.

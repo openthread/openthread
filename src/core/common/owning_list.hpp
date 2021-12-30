@@ -99,8 +99,8 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not nullptr the entry after this will be popped,
-     *                        otherwise (if it is nullptr) the entry at the head of the list is popped.
+     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not `nullptr` the entry after this will be popped,
+     *                        otherwise (if it is `nullptr`) the entry at the head of the list is popped.
      *
      * @returns An `OwnerPtr` to the entry that was popped (set to null if there is no entry to pop).
      *

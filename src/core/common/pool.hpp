@@ -99,7 +99,8 @@ public:
     /**
      * This method allocates a new object from the pool.
      *
-     * @returns A pointer to the newly allocated object, or nullptr if all entries from the pool are already allocated.
+     * @returns A pointer to the newly allocated object, or `nullptr` if all entries from the pool are already
+     *          allocated.
      *
      */
     Type *Allocate(void) { return mFreeList.Pop(); }

@@ -217,7 +217,7 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aType   The TLV type to find.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType)
@@ -232,7 +232,7 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aType   The TLV type to find.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static const NetworkDataTlv *Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd, Type aType);
@@ -245,7 +245,7 @@ public:
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static TlvType *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd)
@@ -261,7 +261,7 @@ public:
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static const TlvType *Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd)
@@ -278,7 +278,7 @@ public:
      * @param[in]  aType   The TLV type to find.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType, bool aStable)
@@ -295,7 +295,7 @@ public:
      * @param[in]  aType   The TLV type to find.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static const NetworkDataTlv *Find(const NetworkDataTlv *aStart,
@@ -313,7 +313,7 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static TlvType *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, bool aStable)
@@ -331,7 +331,7 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType>
@@ -733,7 +733,7 @@ public:
      *
      * @tparam     SubTlvType    The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> SubTlvType *FindSubTlv(void)
@@ -746,7 +746,7 @@ public:
      *
      * @tparam     SubTlvType   The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> const SubTlvType *FindSubTlv(void) const
@@ -761,7 +761,7 @@ public:
      *
      * @param[in]  aStable       TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> SubTlvType *FindSubTlv(bool aStable)
@@ -776,7 +776,7 @@ public:
      *
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> const SubTlvType *FindSubTlv(bool aStable) const
@@ -789,7 +789,7 @@ public:
      *
      * @param[in]  aType        The sub-TLV type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     NetworkDataTlv *FindSubTlv(Type aType) { return AsNonConst(AsConst(this)->FindSubTlv(aType)); }
@@ -799,7 +799,7 @@ public:
      *
      * @param[in]  aType        The sub-TLV type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     const NetworkDataTlv *FindSubTlv(Type aType) const;
@@ -810,7 +810,7 @@ public:
      * @param[in]  aType        The sub-TLV type to search for.
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     NetworkDataTlv *FindSubTlv(Type aType, bool aStable)
@@ -824,7 +824,7 @@ public:
      * @param[in]  aType        The sub-TLV type to search for.
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     const NetworkDataTlv *FindSubTlv(Type aType, bool aStable) const;
@@ -1564,7 +1564,7 @@ public:
      *
      * @tparam  TlvType The TLV Type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
-     * @returns A pointer to the next TLV, or nullptr if it can not be found.
+     * @returns A pointer to the next TLV, or `nullptr` if it can not be found.
      *
      */
     template <typename TlvType> const TlvType *Iterate(void)
@@ -1579,7 +1579,7 @@ public:
      *
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the next TLV, or nullptr if it can not be found.
+     * @returns A pointer to the next TLV, or `nullptr` if it can not be found.
      *
      */
     template <typename TlvType> const TlvType *Iterate(bool aStable)

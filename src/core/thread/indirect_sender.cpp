@@ -242,7 +242,7 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     if ((curMessage != nullptr) && !curMessage->GetChildMask(Get<ChildTable>().GetChildIndex(aChild)))
     {
-        // Set the indirect message for this child to nullptr to ensure
+        // Set the indirect message for this child to `nullptr` to ensure
         // it is not processed on `HandleSentFrameToChild()` callback.
 
         aChild.SetIndirectMessage(nullptr);
@@ -270,18 +270,19 @@ void IndirectSender::RequestMessageUpdate(Child &aChild)
 
     if (curMessage == nullptr)
     {
-        // Current message is nullptr, but new message is not.
+        // Current message is `nullptr`, but new message is not.
         // We have a new indirect message.
 
         UpdateIndirectMessage(aChild);
         ExitNow();
     }
 
-    // Current message and new message differ and are both non-nullptr.
-    // We need to request the frame to be replaced. The current
-    // indirect message can be replaced only if it is the first
-    // fragment. If a next fragment frame for message is already
-    // prepared, we wait for the entire message to be delivered.
+    // Current message and new message differ and are both
+    // non-`nullptr`. We need to request the frame to be replaced.
+    // The current indirect message can be replaced only if it is
+    // the first fragment. If a next fragment frame for message is
+    // already prepared, we wait for the entire message to be
+    // delivered.
 
     VerifyOrExit(aChild.GetIndirectFragmentOffset() == 0);
 

@@ -312,7 +312,7 @@ public:
      * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
      * truncated but the outputted string is always null-terminated.
      *
-     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be nullptr).
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
      * @param[in]  aSize     The size of @p aBuffer (in bytes).
      *
      */
@@ -953,7 +953,7 @@ public:
      * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
      * truncated but the outputted string is always null-terminated.
      *
-     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be nullptr).
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
      * @param[in]  aSize     The size of @p aBuffer (in bytes).
      *
      */

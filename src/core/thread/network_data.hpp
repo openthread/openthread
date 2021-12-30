@@ -376,7 +376,7 @@ protected:
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
      * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
      *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or `nullptr` if no matching Prefix TLV exists.
      *
      */
     const PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const;
@@ -386,7 +386,7 @@ protected:
      *
      * @param[in]  aPrefix        An IPv6 prefix.
      *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or `nullptr` if no matching Prefix TLV exists.
      *
      */
     const PrefixTlv *FindPrefix(const Ip6::Prefix &aPrefix) const
@@ -401,7 +401,7 @@ protected:
      * @param[in]  aServiceData       A Service Data.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
-     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV if one is found or `nullptr` if no matching Service TLV exists.
      *
      */
     const ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
@@ -413,14 +413,14 @@ protected:
      *
      * This method can be used to iterate over all Service TLVs that start with a given Service Data.
      *
-     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first matching
-     *                                Service TLV), or a pointer to the previous Service TLV returned from this method
-     *                                to iterate to the next matching Service TLV.
+     * @param[in]  aPrevServiceTlv    Set to `nullptr` to start from the beginning of the TLVs (finding the first
+     *                                matching Service TLV), or a pointer to the previous Service TLV returned from
+     *                                this method to iterate to the next matching Service TLV.
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A Service Data to match with Service TLVs.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
-     * @returns A pointer to the next matching Service TLV if one is found or nullptr if it cannot be found.
+     * @returns A pointer to the next matching Service TLV if one is found or `nullptr` if it cannot be found.
      *
      */
     const ServiceTlv *FindNextService(const ServiceTlv * aPrevServiceTlv,
@@ -433,13 +433,13 @@ protected:
      *
      * This method can be used to iterate over all Thread Service TLVs that start with a given Service Data.
      *
-     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first matching
-     *                                Service TLV), or a pointer to the previous Service TLV returned from this method
-     *                                to iterate to the next matching Service TLV.
+     * @param[in]  aPrevServiceTlv    Set to `nullptr` to start from the beginning of the TLVs (finding the first
+     *                                matching Service TLV), or a pointer to the previous Service TLV returned from
+     *                                this method to iterate to the next matching Service TLV.
      * @param[in]  aServiceData       A Service Data to match with Service TLVs.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
-     * @returns A pointer to the next matching Thread Service TLV if one is found or nullptr if it cannot be found.
+     * @returns A pointer to the next matching Thread Service TLV if one is found or `nullptr` if it cannot be found.
      *
      */
     const ServiceTlv *FindNextThreadService(const ServiceTlv * aPrevServiceTlv,
@@ -633,7 +633,7 @@ protected:
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
      * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
      *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or `nullptr` if no matching Prefix TLV exists.
      *
      */
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
@@ -646,7 +646,7 @@ protected:
      *
      * @param[in]  aPrefix        An IPv6 prefix.
      *
-     * @returns A pointer to the Prefix TLV if one is found or nullptr if no matching Prefix TLV exists.
+     * @returns A pointer to the Prefix TLV if one is found or `nullptr` if no matching Prefix TLV exists.
      *
      */
     PrefixTlv *FindPrefix(const Ip6::Prefix &aPrefix) { return FindPrefix(aPrefix.GetBytes(), aPrefix.GetLength()); }
@@ -660,7 +660,7 @@ protected:
      * @param[in]  aServiceData       A Service Data.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
-     * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
+     * @returns A pointer to the Service TLV if one is found or `nullptr` if no matching Service TLV exists.
      *
      */
     ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
@@ -690,8 +690,8 @@ protected:
      *
      * @param[in]  aTlvSize  The size of TLV (total number of bytes including Type, Length, and Value fields)
      *
-     * @returns A pointer to the TLV if there is space to grow Network Data, or nullptr if no space to grow the Network
-     *          Data with requested @p aTlvSize number of bytes.
+     * @returns A pointer to the TLV if there is space to grow Network Data, or `nullptr` if no space to grow the
+     *          Network Data with requested @p aTlvSize number of bytes.
      *
      */
     NetworkDataTlv *AppendTlv(uint16_t aTlvSize);

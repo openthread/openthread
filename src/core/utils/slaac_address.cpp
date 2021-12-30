@@ -264,7 +264,7 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
      *  - RID is random (but stable) Identifier.
      *  - For pseudo-random function `F()` SHA-256 is used in this method.
      *  - `Net_Iface` is set to constant string "wpan".
-     *  - `Network_ID` is not used if `aNetworkId` is nullptr (optional per RF-7217).
+     *  - `Network_ID` is not used if `aNetworkId` is `nullptr` (optional per RF-7217).
      *  - The `secret_key` is randomly generated on first use (using true
      *    random number generator) and saved in non-volatile settings for
      *    future use.

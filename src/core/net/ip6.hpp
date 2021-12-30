@@ -134,7 +134,7 @@ public:
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
      * @param[in]  aSettings  The message settings.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
     Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
@@ -146,7 +146,7 @@ public:
      * @param[in]  aDataLength  The size of the IPV6 datagram buffer pointed by @p aData.
      * @param[in]  aSettings    The message settings.
      *
-     * @returns A pointer to the message or nullptr if malformed IPv6 header or insufficient message buffers are
+     * @returns A pointer to the message or `nullptr` if malformed IPv6 header or insufficient message buffers are
      * available.
      *
      */
@@ -160,7 +160,7 @@ public:
      * @param[in]  aData        A pointer to the IPv6 datagram buffer.
      * @param[in]  aDataLength  The size of the IPV6 datagram buffer pointed by @p aData.
      *
-     * @returns A pointer to the message or nullptr if malformed IPv6 header or insufficient message buffers are
+     * @returns A pointer to the message or `nullptr` if malformed IPv6 header or insufficient message buffers are
      * available.
      *
      */
@@ -231,7 +231,7 @@ public:
      * the Thread control traffic filter setting.
      *
      * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
-     *                               or nullptr to disable the callback.
+     *                               or `nullptr` to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      * @sa IsReceiveIp6FilterEnabled
@@ -285,7 +285,7 @@ public:
      *
      * @param[in]  aMessageInfo  A reference to the message information.
      *
-     * @returns A pointer to the selected IPv6 source address or nullptr if no source address was found.
+     * @returns A pointer to the selected IPv6 source address or `nullptr` if no source address was found.
      *
      */
     const Netif::UnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);

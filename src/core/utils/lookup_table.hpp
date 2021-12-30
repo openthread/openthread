@@ -108,7 +108,7 @@ public:
      * @param[in] aName   A name string to search for within the table.
      * @param[in] aTable  A reference to an array of `kLength` entries on type `EntryType`
      *
-     * @returns A pointer to the entry in the table if a match is found, otherwise nullptr (no match in table).
+     * @returns A pointer to the entry in the table if a match is found, otherwise `nullptr` (no match in table).
      *
      */
     template <class EntryType, uint16_t kLength>

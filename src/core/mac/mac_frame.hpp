@@ -899,7 +899,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, nullptr if not found.
+     * @returns A pointer to the Time IE, `nullptr` if not found.
      *
      */
     TimeIe *GetTimeIe(void) { return AsNonConst(AsConst(this)->GetTimeIe()); }
@@ -907,7 +907,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, nullptr if not found.
+     * @returns A pointer to the Time IE, `nullptr` if not found.
      *
      */
     const TimeIe *GetTimeIe(void) const;
@@ -937,7 +937,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, nullptr if not found.
+     * @returns A pointer to the Header IE, `nullptr` if not found.
      *
      */
     uint8_t *GetHeaderIe(uint8_t aIeId) { return AsNonConst(AsConst(this)->GetHeaderIe(aIeId)); }
@@ -947,7 +947,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, nullptr if not found.
+     * @returns A pointer to the Header IE, `nullptr` if not found.
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
@@ -959,7 +959,7 @@ public:
      *
      * @param[in] aSubType  The sub type of the Thread IE.
      *
-     * @returns A pointer to the Thread IE, nullptr if not found.
+     * @returns A pointer to the Thread IE, `nullptr` if not found.
      *
      */
     uint8_t *GetThreadIe(uint8_t aSubType) { return AsNonConst(AsConst(this)->GetThreadIe(aSubType)); }
@@ -971,7 +971,7 @@ public:
      *
      * @param[in] aSubType  The sub type of the Thread IE.
      *
-     * @returns A pointer to the Thread IE, nullptr if not found.
+     * @returns A pointer to the Thread IE, `nullptr` if not found.
      *
      */
     const uint8_t *GetThreadIe(uint8_t aSubType) const;

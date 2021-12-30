@@ -174,7 +174,7 @@ public:
     /**
      * This method returns a pointer to the Commissioning Data.
      *
-     * @returns A pointer to the Commissioning Data or nullptr if no Commissioning Data exists.
+     * @returns A pointer to the Commissioning Data or `nullptr` if no Commissioning Data exists.
      *
      */
     CommissioningDataTlv *GetCommissioningData(void) { return AsNonConst(AsConst(this)->GetCommissioningData()); }
@@ -182,7 +182,7 @@ public:
     /**
      * This method returns a pointer to the Commissioning Data.
      *
-     * @returns A pointer to the Commissioning Data or nullptr if no Commissioning Data exists.
+     * @returns A pointer to the Commissioning Data or `nullptr` if no Commissioning Data exists.
      *
      */
     const CommissioningDataTlv *GetCommissioningData(void) const;
@@ -192,7 +192,7 @@ public:
      *
      * @param[in]  aType  The TLV type value.
      *
-     * @returns A pointer to the Commissioning Data Sub-TLV or nullptr if no Sub-TLV exists.
+     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no Sub-TLV exists.
      *
      */
     MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
@@ -205,7 +205,7 @@ public:
      *
      * @param[in]  aType  The TLV type value.
      *
-     * @returns A pointer to the Commissioning Data Sub-TLV or nullptr if no Sub-TLV exists.
+     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no Sub-TLV exists.
      *
      */
     const MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const;

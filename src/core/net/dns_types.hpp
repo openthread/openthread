@@ -673,7 +673,7 @@ public:
      * contain dot '.' character, which, for example, is useful for "Service Instance Names" where <Instance> portion
      * is a user-friendly name and can contain dot characters.
      *
-     * @param[in] aLabel              The label string to append. MUST NOT be nullptr.
+     * @param[in] aLabel              The label string to append. MUST NOT be `nullptr`.
      * @param[in] aMessage            The message to append to.
      *
      * @retval kErrorNone         Successfully encoded and appended the name label to @p aMessage.
@@ -692,7 +692,7 @@ public:
      * whole label. This allows the label string to even contain dot '.' character, which, for example, is useful for
      * "Service Instance Names" where <Instance> portion is a user-friendly name and can contain dot characters.
      *
-     * @param[in] aLabel         The label string to append. MUST NOT be nullptr.
+     * @param[in] aLabel         The label string to append. MUST NOT be `nullptr`.
      * @param[in] aLength        The length of the label to append.
      * @param[in] aMessage       The message to append to.
      *
@@ -715,7 +715,7 @@ public:
      * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
      * ends with a dot character, e.g., "host-1.test." is treated same as "host-1.test".
      *
-     * @param[in]  aLabels            A name label string. Can be nullptr (then treated as "").
+     * @param[in]  aLabels            A name label string. Can be `nullptr` (then treated as "").
      * @param[in]  aMessage           The message to which to append the encoded name.
      *
      * @retval kErrorNone         Successfully encoded and appended the name label(s) to @p aMessage.
@@ -741,7 +741,7 @@ public:
      * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
      * ends with a dot character, e.g., "host-1.test." is treated same as "host-1.test".
      *
-     * @param[in]  aLabels            A name label string. Can be nullptr (then treated as "").
+     * @param[in]  aLabels            A name label string. Can be `nullptr` (then treated as "").
      * @param[in]  aLength            The max length of the name labels to encode.
      * @param[in]  aMessage           The message to which to append the encoded name.
      *
@@ -789,7 +789,7 @@ public:
      * This method validates that the @p aName is a valid name format, i.e. no empty labels, and labels are
      * `kMaxLabelLength` (63) characters or less, and the name is `kMaxLength` (255) characters or less.
      *
-     * @param[in]  aName              A name string. Can be nullptr (then treated as "." or root).
+     * @param[in]  aName              A name string. Can be `nullptr` (then treated as "." or root).
      * @param[in]  aMessage           The message to append to.
      *
      * @retval kErrorNone         Successfully encoded and appended the name to @p aMessage.
@@ -1552,7 +1552,7 @@ public:
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire PTR record (skipping over the record).
      * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
+     *                                  (MUST NOT be `nullptr`).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
      * @retval kErrorNone           The CNAME name was read successfully. @p aOffset and @p aNameBuffer are updated.
@@ -1603,7 +1603,7 @@ public:
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire PTR record (skipping over the record).
      * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
+     *                                  (MUST NOT be `nullptr`).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
      * @retval kErrorNone           The PTR name was read successfully. @p aOffset and @p aNameBuffer are updated.
@@ -1636,7 +1636,7 @@ public:
      *                                  On exit, when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire PTR record (skipping over the record).
      * @param[out]    aLabelBuffer      A pointer to a char array to output the first label as a null-terminated C
-     *                                  string (MUST NOT be nullptr).
+     *                                  string (MUST NOT be `nullptr`).
      * @param[in]     aLabelBufferSize  The size of @p aLabelBuffer.
      * @param[out]    aNameBuffer       A pointer to a char array to output the rest of name (after first label). Can
      *                                  be `nullptr` if caller is only interested in the first label.
@@ -1841,7 +1841,7 @@ public:
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire SRV record (skipping over the record).
      * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
+     *                                  (MUST NOT be `nullptr`).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
      * @retval kErrorNone            The host name was read successfully. @p aOffset and @p aNameBuffer are updated.
@@ -2244,7 +2244,7 @@ public:
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the name field (i.e., start of signature field).
      * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
+     *                                  (MUST NOT be `nullptr`).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
      * @retval kErrorNone           The name was read successfully. @p aOffset and @p aNameBuffer are updated.

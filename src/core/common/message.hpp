@@ -83,14 +83,14 @@ class HmacSha256;
  */
 
 /**
- * This macro frees a given message buffer if not nullptr.
+ * This macro frees a given message buffer if not `nullptr`.
  *
  * This macro and the ones that follow contain small but common code patterns used in many of the core modules. They
  * are intentionally defined as macros instead of inline methods/functions to ensure that they are fully inlined.
  * Note that an `inline` method/function is not necessarily always inlined by the toolchain and not inlining such
  * small implementations can add a rather large code-size overhead.
  *
- * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  *
  */
 #define FreeMessage(aMessage)      \
@@ -105,9 +105,9 @@ class HmacSha256;
 /**
  * This macro frees a given message buffer if a given `Error` indicates an error.
  *
- * The parameter @p aMessage can be nullptr in which case this macro does nothing.
+ * The parameter @p aMessage can be `nullptr` in which case this macro does nothing.
  *
- * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  * @param[in] aError      The `Error` to check.
  *
  */
@@ -123,7 +123,7 @@ class HmacSha256;
 /**
  * This macro frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
  *
- * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  * @param[in] aError      The `Error` to check.
  *
  */
@@ -413,7 +413,7 @@ public:
     /**
      * This method returns a pointer to the next message.
      *
-     * @returns A pointer to the next message in the list or nullptr if at the end of the list.
+     * @returns A pointer to the next message in the list or `nullptr` if at the end of the list.
      *
      */
     Message *GetNext(void) const;
@@ -831,7 +831,7 @@ public:
      * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
      * copied from the original one.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
     Message *Clone(void) const { return Clone(GetLength()); }
@@ -1110,7 +1110,7 @@ public:
     /**
      * This method returns a pointer to the message queue (if any) where this message is queued.
      *
-     * @returns A pointer to the message queue or nullptr if not in any message queue.
+     * @returns A pointer to the message queue or `nullptr` if not in any message queue.
      *
      */
     MessageQueue *GetMessageQueue(void) const
@@ -1121,7 +1121,7 @@ public:
     /**
      * This method returns a pointer to the priority message queue (if any) where this message is queued.
      *
-     * @returns A pointer to the priority queue or nullptr if not in any priority queue.
+     * @returns A pointer to the priority queue or `nullptr` if not in any priority queue.
      *
      */
     PriorityQueue *GetPriorityQueue(void) const
@@ -1390,7 +1390,7 @@ public:
      *
      * @param[in] aPriority   Priority level.
      *
-     * @returns A pointer to the first message with given priority level or nullptr if there is no messages with
+     * @returns A pointer to the first message with given priority level or `nullptr` if there is no messages with
      *          this priority level.
      *
      */
@@ -1478,7 +1478,7 @@ public:
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
      * @param[in]  aSettings       The message settings.
      *
-     * @returns A pointer to the message or nullptr if no message buffers are available.
+     * @returns A pointer to the message or `nullptr` if no message buffers are available.
      *
      */
     Message *Allocate(Message::Type            aType,
