@@ -1437,7 +1437,7 @@ Frame::InfoString Frame::ToInfoString(void) const
     IgnoreError(GetDstAddr(dst));
 
     string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
-                  GetSecurityEnabled() ? "yes" : "no", GetAckRequest() ? "yes" : "no");
+                  ToYesNo(GetSecurityEnabled()), ToYesNo(GetAckRequest()));
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     string.Append(", radio:%s", RadioTypeToString(GetRadioType()));
@@ -1455,7 +1455,7 @@ BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 
     string.Append("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
                   mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
-                  IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
+                  ToYesNo(IsJoiningPermitted()), ToYesNo(IsNative()));
     return string;
 }
 

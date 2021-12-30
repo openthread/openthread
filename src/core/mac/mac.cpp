@@ -1495,7 +1495,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
                 StartOperation(kOperationWaitingForData);
             }
 
-            otLogInfoMac("Sent data poll, fp:%s", framePending ? "yes" : "no");
+            otLogInfoMac("Sent data poll, fp:%s", ToYesNo(framePending));
         }
 
         mCounters.mTxDataPoll++;

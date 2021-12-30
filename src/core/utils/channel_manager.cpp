@@ -41,6 +41,7 @@
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 #include "meshcop/dataset_updater.hpp"
 #include "radio/radio.hpp"
 
@@ -235,7 +236,7 @@ bool ChannelManager::ShouldAttemptChannelChange(void)
     bool     shouldAttempt  = (ccaFailureRate >= mCcaFailureRateThreshold);
 
     otLogInfoUtil("ChannelManager: CCA-err-rate: 0x%04x %s 0x%04x, selecting channel: %s", ccaFailureRate,
-                  shouldAttempt ? ">=" : "<", mCcaFailureRateThreshold, shouldAttempt ? "yes" : "no");
+                  shouldAttempt ? ">=" : "<", mCcaFailureRateThreshold, ToYesNo(shouldAttempt));
 
     return shouldAttempt;
 }
@@ -246,8 +247,7 @@ Error ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
     uint8_t  curChannel, newChannel;
     uint16_t curOccupancy, newOccupancy;
 
-    otLogInfoUtil("ChannelManager: Request to select channel (skip quality check: %s)",
-                  aSkipQualityCheck ? "yes" : "no");
+    otLogInfoUtil("ChannelManager: Request to select channel (skip quality check: %s)", ToYesNo(aSkipQualityCheck));
 
     VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 

@@ -838,7 +838,7 @@ exit:
     if (error != kErrorNone)
     {
         otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", ErrorToString(error), aFrameLength,
-                     aMacSource.ToString().AsCString(), aLinkInfo.IsLinkSecurityEnabled() ? "yes" : "no");
+                     aMacSource.ToString().AsCString(), ToYesNo(aLinkInfo.IsLinkSecurityEnabled()));
         FreeMessage(message);
     }
 }
@@ -1070,7 +1070,7 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
              (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
              (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
              aMeshDest.ToString().AsCString(), meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0),
-             hasFragmentHeader ? "yes" : "no", aMessage.IsLinkSecurityEnabled() ? "yes" : "no",
+             ToYesNo(hasFragmentHeader), ToYesNo(aMessage.IsLinkSecurityEnabled()),
              (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
              shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
              shouldLogRadio ? ", radio:" : "", radioString);

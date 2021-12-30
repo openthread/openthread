@@ -57,8 +57,8 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
 {
     InfoString string;
 
-    string.Append("rx-on:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no", IsFullThreadDevice() ? "yes" : "no",
-                  IsFullNetworkData() ? "yes" : "no");
+    string.Append("rx-on:%s ftd:%s full-net:%s", ToYesNo(IsRxOnWhenIdle()), ToYesNo(IsFullThreadDevice()),
+                  ToYesNo(IsFullNetworkData()));
 
     return string;
 }

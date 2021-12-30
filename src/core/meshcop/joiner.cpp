@@ -309,7 +309,7 @@ void Joiner::SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &
 
     otLogInfoMeshCoP("Joiner discover network: %s, pan:0x%04x, port:%d, chan:%d, rssi:%d, allow-any:%s",
                      AsCoreType(&aResult.mExtAddress).ToString().AsCString(), aResult.mPanId, aResult.mJoinerUdpPort,
-                     aResult.mChannel, aResult.mRssi, doesAllowAny ? "yes" : "no");
+                     aResult.mChannel, aResult.mRssi, ToYesNo(doesAllowAny));
 
     priority = CalculatePriority(aResult.mRssi, doesAllowAny);
 
