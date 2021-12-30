@@ -129,15 +129,15 @@ otError History::ProcessIpAddr(Arg aArgs[])
             sprintf(&addressString[strlen(addressString)], "/%d", info->mPrefixLength);
 
             OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString, kEventStrings[info->mEvent],
-                       addressString, AddressOriginToString(info->mAddressOrigin), info->mScope,
+                       addressString, Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
                        info->mPreferred ? 'Y' : 'N', info->mValid ? 'Y' : 'N', info->mRloc ? 'Y' : 'N');
         }
         else
         {
             OutputLine("%s -> event:%s address:%s prefixlen:%d origin:%s scope:%d preferred:%s valid:%s rloc:%s",
                        ageString, kEventStrings[info->mEvent], addressString, info->mPrefixLength,
-                       AddressOriginToString(info->mAddressOrigin), info->mScope, info->mPreferred ? "yes" : "no",
-                       info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
+                       Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
+                       info->mPreferred ? "yes" : "no", info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
         }
     }
 
@@ -194,7 +194,8 @@ otError History::ProcessIpMulticastAddr(Arg aArgs[])
         otIp6AddressToString(&info->mAddress, addressString, sizeof(addressString));
 
         OutputLine(isList ? "%s -> event:%s address:%s origin:%s" : "| %20s | %-12s | %-39s | %-6s |", ageString,
-                   kEventStrings[info->mEvent], addressString, AddressOriginToString(info->mAddressOrigin));
+                   kEventStrings[info->mEvent], addressString,
+                   Interpreter::AddressOriginToString(info->mAddressOrigin));
     }
 
 exit:
@@ -322,35 +323,6 @@ otError History::ProcessRxTx(Arg aArgs[])
 otError History::ProcessTx(Arg aArgs[])
 {
     return ProcessRxTxHistory(kTx, aArgs);
-}
-
-const char *History::AddressOriginToString(uint8_t aOrigin)
-{
-    const char *str = "Unknown";
-
-    switch (aOrigin)
-    {
-    case OT_ADDRESS_ORIGIN_THREAD:
-        str = "Thread";
-        break;
-
-    case OT_ADDRESS_ORIGIN_SLAAC:
-        str = "SLAAC";
-        break;
-
-    case OT_ADDRESS_ORIGIN_DHCPV6:
-        str = "DHCPv6";
-        break;
-
-    case OT_ADDRESS_ORIGIN_MANUAL:
-        str = "Manual";
-        break;
-
-    default:
-        break;
-    }
-
-    return str;
 }
 
 const char *History::MessagePriorityToString(uint8_t aPriority)
