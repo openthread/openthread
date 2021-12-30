@@ -351,12 +351,12 @@ void otBackboneRouterSetNdProxyCallback(otInstance *                    aInstanc
  * Represents the Backbone Router ND Proxy info.
  *
  */
-struct otBackboneRouterNdProxyInfo
+typedef struct otBackboneRouterNdProxyInfo
 {
     otIp6InterfaceIdentifier *mMeshLocalIid;             ///< Mesh-local IID
     uint32_t                  mTimeSinceLastTransaction; ///< Time since last transaction (Seconds)
     uint16_t                  mRloc16;                   ///< RLOC16
-};
+} otBackboneRouterNdProxyInfo;
 
 /**
  * This method gets the Backbone Router ND Proxy info.
