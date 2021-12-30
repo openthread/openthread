@@ -48,39 +48,39 @@ bool Tlv::IsValid(const Tlv &aTlv)
     switch (aTlv.GetType())
     {
     case Tlv::kChannel:
-        rval = static_cast<const ChannelTlv &>(aTlv).IsValid();
+        rval = As<ChannelTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kPanId:
-        rval = static_cast<const PanIdTlv &>(aTlv).IsValid();
+        rval = As<PanIdTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kExtendedPanId:
-        rval = static_cast<const ExtendedPanIdTlv &>(aTlv).IsValid();
+        rval = As<ExtendedPanIdTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kNetworkName:
-        rval = static_cast<const NetworkNameTlv &>(aTlv).IsValid();
+        rval = As<NetworkNameTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kNetworkKey:
-        rval = static_cast<const NetworkKeyTlv &>(aTlv).IsValid();
+        rval = As<NetworkKeyTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kPskc:
-        rval = static_cast<const PskcTlv &>(aTlv).IsValid();
+        rval = As<PskcTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kMeshLocalPrefix:
-        rval = static_cast<const MeshLocalPrefixTlv &>(aTlv).IsValid();
+        rval = As<MeshLocalPrefixTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kSecurityPolicy:
-        rval = static_cast<const SecurityPolicyTlv &>(aTlv).IsValid();
+        rval = As<SecurityPolicyTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kChannelMask:
-        rval = static_cast<const ChannelMaskTlv &>(aTlv).IsValid();
+        rval = As<ChannelMaskTlv>(aTlv).IsValid();
         break;
 
     default:

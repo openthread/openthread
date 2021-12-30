@@ -189,9 +189,8 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     if (Tlv::Find<ThreadCommissionerSessionIdTlv>(aMessage, commissionerSessionId) == kErrorNone)
     {
-        const MeshCoP::CommissionerSessionIdTlv *commissionerSessionIdTlv =
-            static_cast<const MeshCoP::CommissionerSessionIdTlv *>(
-                Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kCommissionerSessionId));
+        const MeshCoP::CommissionerSessionIdTlv *commissionerSessionIdTlv = As<MeshCoP::CommissionerSessionIdTlv>(
+            Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kCommissionerSessionId));
 
         VerifyOrExit(commissionerSessionIdTlv != nullptr &&
                          commissionerSessionIdTlv->GetCommissionerSessionId() == commissionerSessionId,

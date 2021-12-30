@@ -191,16 +191,16 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         switch (cur->GetType())
         {
         case Tlv::kActiveTimestamp:
-            aDatasetInfo.SetActiveTimestamp(static_cast<const ActiveTimestampTlv *>(cur)->GetTimestamp().GetSeconds());
+            aDatasetInfo.SetActiveTimestamp(As<ActiveTimestampTlv>(cur)->GetTimestamp().GetSeconds());
             break;
 
         case Tlv::kChannel:
-            aDatasetInfo.SetChannel(static_cast<const ChannelTlv *>(cur)->GetChannel());
+            aDatasetInfo.SetChannel(As<ChannelTlv>(cur)->GetChannel());
             break;
 
         case Tlv::kChannelMask:
         {
-            uint32_t mask = static_cast<const ChannelMaskTlv *>(cur)->GetChannelMask();
+            uint32_t mask = As<ChannelMaskTlv>(cur)->GetChannelMask();
 
             if (mask != 0)
             {
@@ -211,45 +211,40 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         }
 
         case Tlv::kDelayTimer:
-            aDatasetInfo.SetDelay(static_cast<const DelayTimerTlv *>(cur)->GetDelayTimer());
+            aDatasetInfo.SetDelay(As<DelayTimerTlv>(cur)->GetDelayTimer());
             break;
 
         case Tlv::kExtendedPanId:
-            aDatasetInfo.SetExtendedPanId(static_cast<const ExtendedPanIdTlv *>(cur)->GetExtendedPanId());
+            aDatasetInfo.SetExtendedPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
             break;
 
         case Tlv::kMeshLocalPrefix:
-            aDatasetInfo.SetMeshLocalPrefix(static_cast<const MeshLocalPrefixTlv *>(cur)->GetMeshLocalPrefix());
+            aDatasetInfo.SetMeshLocalPrefix(As<MeshLocalPrefixTlv>(cur)->GetMeshLocalPrefix());
             break;
 
         case Tlv::kNetworkKey:
-            aDatasetInfo.SetNetworkKey(static_cast<const NetworkKeyTlv *>(cur)->GetNetworkKey());
+            aDatasetInfo.SetNetworkKey(As<NetworkKeyTlv>(cur)->GetNetworkKey());
             break;
 
         case Tlv::kNetworkName:
-            aDatasetInfo.SetNetworkName(static_cast<const NetworkNameTlv *>(cur)->GetNetworkName());
+            aDatasetInfo.SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName());
             break;
 
         case Tlv::kPanId:
-            aDatasetInfo.SetPanId(static_cast<const PanIdTlv *>(cur)->GetPanId());
+            aDatasetInfo.SetPanId(As<PanIdTlv>(cur)->GetPanId());
             break;
 
         case Tlv::kPendingTimestamp:
-            aDatasetInfo.SetPendingTimestamp(
-                static_cast<const PendingTimestampTlv *>(cur)->GetTimestamp().GetSeconds());
+            aDatasetInfo.SetPendingTimestamp(As<PendingTimestampTlv>(cur)->GetTimestamp().GetSeconds());
             break;
 
         case Tlv::kPskc:
-            aDatasetInfo.SetPskc(static_cast<const PskcTlv *>(cur)->GetPskc());
+            aDatasetInfo.SetPskc(As<PskcTlv>(cur)->GetPskc());
             break;
 
         case Tlv::kSecurityPolicy:
-        {
-            const SecurityPolicyTlv *tlv = static_cast<const SecurityPolicyTlv *>(cur);
-
-            aDatasetInfo.SetSecurityPolicy(tlv->GetSecurityPolicy());
+            aDatasetInfo.SetSecurityPolicy(As<SecurityPolicyTlv>(cur)->GetSecurityPolicy());
             break;
-        }
 
         default:
             break;
@@ -486,8 +481,8 @@ Error Dataset::AppendMleDatasetTlv(Type aType, Message &aMessage) const
         }
         else if (cur->GetType() == Tlv::kDelayTimer)
         {
-            uint32_t      elapsed = TimerMilli::GetNow() - mUpdateTime;
-            DelayTimerTlv delayTimer(static_cast<const DelayTimerTlv &>(*cur));
+            uint32_t      elapsed    = TimerMilli::GetNow() - mUpdateTime;
+            DelayTimerTlv delayTimer = *As<DelayTimerTlv>(cur);
 
             if (delayTimer.GetDelayTimer() > elapsed)
             {
@@ -538,7 +533,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         {
         case Tlv::kChannel:
         {
-            uint8_t channel = static_cast<uint8_t>(static_cast<const ChannelTlv *>(cur)->GetChannel());
+            uint8_t channel = static_cast<uint8_t>(As<ChannelTlv>(cur)->GetChannel());
 
             error = mac.SetPanChannel(channel);
 
@@ -553,20 +548,20 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         }
 
         case Tlv::kPanId:
-            mac.SetPanId(static_cast<const PanIdTlv *>(cur)->GetPanId());
+            mac.SetPanId(As<PanIdTlv>(cur)->GetPanId());
             break;
 
         case Tlv::kExtendedPanId:
-            mac.SetExtendedPanId(static_cast<const ExtendedPanIdTlv *>(cur)->GetExtendedPanId());
+            mac.SetExtendedPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
             break;
 
         case Tlv::kNetworkName:
-            IgnoreError(mac.SetNetworkName(static_cast<const NetworkNameTlv *>(cur)->GetNetworkName()));
+            IgnoreError(mac.SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
             break;
 
         case Tlv::kNetworkKey:
         {
-            const NetworkKeyTlv *key = static_cast<const NetworkKeyTlv *>(cur);
+            const NetworkKeyTlv *key = As<NetworkKeyTlv>(cur);
             NetworkKey           networkKey;
 
             keyManager.GetNetworkKey(networkKey);
@@ -583,22 +578,18 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
 #if OPENTHREAD_FTD
 
         case Tlv::kPskc:
-            keyManager.SetPskc(static_cast<const PskcTlv *>(cur)->GetPskc());
+            keyManager.SetPskc(As<PskcTlv>(cur)->GetPskc());
             break;
 
 #endif
 
         case Tlv::kMeshLocalPrefix:
-            aInstance.Get<Mle::MleRouter>().SetMeshLocalPrefix(
-                static_cast<const MeshLocalPrefixTlv *>(cur)->GetMeshLocalPrefix());
+            aInstance.Get<Mle::MleRouter>().SetMeshLocalPrefix(As<MeshLocalPrefixTlv>(cur)->GetMeshLocalPrefix());
             break;
 
         case Tlv::kSecurityPolicy:
-        {
-            const SecurityPolicyTlv *securityPolicy = static_cast<const SecurityPolicyTlv *>(cur);
-            keyManager.SetSecurityPolicy(securityPolicy->GetSecurityPolicy());
+            keyManager.SetSecurityPolicy(As<SecurityPolicyTlv>(cur)->GetSecurityPolicy());
             break;
-        }
 
         default:
             break;

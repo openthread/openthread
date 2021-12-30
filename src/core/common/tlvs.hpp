@@ -469,6 +469,66 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This template method casts a `Tlv` pointer to a given subclass `TlvType` pointer.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
+ *
+ * @param[in] aTlv   A pointer to a `Tlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` pointer to `aTlv`.
+ *
+ */
+template <class TlvType> TlvType *As(Tlv *aTlv)
+{
+    return static_cast<TlvType *>(aTlv);
+}
+
+/**
+ * This template method casts a `Tlv` pointer to a given subclass `TlvType` pointer.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
+ *
+ * @param[in] aTlv   A pointer to a `Tlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` pointer to `aTlv`.
+ *
+ */
+template <class TlvType> const TlvType *As(const Tlv *aTlv)
+{
+    return static_cast<const TlvType *>(aTlv);
+}
+
+/**
+ * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
+ *
+ * @param[in] aTlv   A reference to a `Tlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` reference to `aTlv`.
+ *
+ */
+template <class TlvType> TlvType &As(Tlv &aTlv)
+{
+    return static_cast<TlvType &>(aTlv);
+}
+
+/**
+ * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
+ *
+ * @param[in] aTlv   A reference to a `Tlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` reference to `aTlv`.
+ *
+ */
+template <class TlvType> const TlvType &As(const Tlv &aTlv)
+{
+    return static_cast<const TlvType &>(aTlv);
+}
+
+/**
  * This class defines constants for a TLV.
  *
  * @tparam kTlvTypeValue   The TLV Type value.

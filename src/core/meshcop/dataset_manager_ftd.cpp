@@ -169,7 +169,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
         isUpdateFromCommissioner = true;
 
-        localId = static_cast<const CommissionerSessionIdTlv *>(
+        localId = As<CommissionerSessionIdTlv>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
         VerifyOrExit(localId != nullptr && localId->GetCommissionerSessionId() == sessionId);
@@ -203,7 +203,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
             case Tlv::kDelayTimer:
             {
-                DelayTimerTlv &delayTimerTlv = static_cast<DelayTimerTlv &>(static_cast<Tlv &>(datasetTlv));
+                DelayTimerTlv &delayTimerTlv = As<DelayTimerTlv>(datasetTlv);
 
                 if (doesAffectNetworkKey && delayTimerTlv.GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
                 {
@@ -241,7 +241,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         const CommissionerSessionIdTlv *localSessionId;
         Ip6::Address                    destination;
 
-        localSessionId = static_cast<const CommissionerSessionIdTlv *>(
+        localSessionId = As<CommissionerSessionIdTlv>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
         VerifyOrExit(localSessionId != nullptr);
 

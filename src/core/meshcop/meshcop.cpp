@@ -303,7 +303,7 @@ Error GetBorderAgentRloc(ThreadNetif &aNetif, uint16_t &aRloc)
     Error                        error = kErrorNone;
     const BorderAgentLocatorTlv *borderAgentLocator;
 
-    borderAgentLocator = static_cast<const BorderAgentLocatorTlv *>(
+    borderAgentLocator = As<BorderAgentLocatorTlv>(
         aNetif.Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
     VerifyOrExit(borderAgentLocator != nullptr, error = kErrorNotFound);
 
