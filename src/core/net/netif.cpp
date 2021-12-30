@@ -399,7 +399,7 @@ Error Netif::SubscribeExternalMulticast(const Address &aAddress)
 
     for (const MulticastAddress *cur = &linkLocalAllRoutersAddress; cur; cur = cur->GetNext())
     {
-        VerifyOrExit(cur->GetAddress() != aAddress, error = kErrorInvalidArgs);
+        VerifyOrExit(cur->GetAddress() != aAddress, error = kErrorRejected);
     }
 
     entry = mExtMulticastAddressPool.Allocate();

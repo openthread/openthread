@@ -200,7 +200,7 @@ void TestNetifMulticastAddresses(void)
 
     for (uint8_t i = 0; i < 5; i++)
     {
-        VerifyOrQuit(netif.SubscribeExternalMulticast(addresses[i]) == kErrorInvalidArgs,
+        VerifyOrQuit(netif.SubscribeExternalMulticast(addresses[i]) == kErrorRejected,
                      "SubscribeExternalMulticast() did not fail when address was a default/fixed address");
     }
 }

@@ -329,8 +329,8 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE           Successfully subscribed to the Network Interface Multicast Address.
  * @retval OT_ERROR_ALREADY        The multicast address is already subscribed.
- * @retval OT_ERROR_INVALID_ARGS   The IP Address indicated by @p aAddress is invalid address.
- * @retval OT_ERROR_INVALID_STATE  The Network Interface is not up.
+ * @retval OT_ERROR_INVALID_ARGS   The IP Address indicated by @p aAddress is an invalid multicast address.
+ * @retval OT_ERROR_REJECTED       The IP Address indicated by @p aAddress is an internal multicast address.
  * @retval OT_ERROR_NO_BUFS        The Network Interface is already storing the maximum allowed external multicast
  *                                 addresses.
  *
