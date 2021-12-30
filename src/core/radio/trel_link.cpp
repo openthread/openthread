@@ -449,14 +449,19 @@ void Link::SetState(State aState)
 
 const char *Link::StateToString(State aState)
 {
-    static const char *kStateStrings[] = {
-        "Disabled", // kStateDisabled
-        "Sleep",    // kStateSleep
-        "Receive",  // kStateReceive
-        "Transmit", // kStateTransmit
+    static const char *const kStateStrings[] = {
+        "Disabled", // (0) kStateDisabled
+        "Sleep",    // (1) kStateSleep
+        "Receive",  // (2) kStateReceive
+        "Transmit", // (3) kStateTransmit
     };
 
-    return (static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings)) ? kStateStrings[aState] : "Unknown";
+    static_assert(0 == kStateDisabled, "kStateDisabled value is incorrect");
+    static_assert(1 == kStateSleep, "kStateSleep value is incorrect");
+    static_assert(2 == kStateReceive, "kStateReceive value is incorrect");
+    static_assert(3 == kStateTransmit, "kStateTransmit value is incorrect");
+
+    return kStateStrings[aState];
 }
 
 // LCOV_EXCL_STOP

@@ -452,24 +452,17 @@ otError Interpreter::ProcessBorderAgent(Arg aArgs[])
     }
     else if (aArgs[0] == "state")
     {
-        const char *state;
+        static const char *const kStateStrings[] = {
+            "Stopped"  // (0) OT_BORDER_AGENT_STATE_STOPPED
+            "Started", // (1) OT_BORDER_AGENT_STATE_STARTED
+            "Active",  // (2) OT_BORDER_AGENT_STATE_ACTIVE
+        };
 
-        switch (otBorderAgentGetState(GetInstancePtr()))
-        {
-        case OT_BORDER_AGENT_STATE_STOPPED:
-            state = "Stopped";
-            break;
-        case OT_BORDER_AGENT_STATE_STARTED:
-            state = "Started";
-            break;
-        case OT_BORDER_AGENT_STATE_ACTIVE:
-            state = "Active";
-            break;
-        default:
-            state = "Unknown";
-            break;
-        }
-        OutputLine(state);
+        static_assert(0 == OT_BORDER_AGENT_STATE_STOPPED, "OT_BORDER_AGENT_STATE_STOPPED value is incorrect");
+        static_assert(1 == OT_BORDER_AGENT_STATE_STARTED, "OT_BORDER_AGENT_STATE_STARTED value is incorrect");
+        static_assert(2 == OT_BORDER_AGENT_STATE_ACTIVE, "OT_BORDER_AGENT_STATE_ACTIVE value is incorrect");
+
+        OutputLine("%s", Stringify(otBorderAgentGetState(GetInstancePtr()), kStateStrings));
     }
     else
     {
@@ -664,18 +657,17 @@ otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
     }
     else if (aArgs[0] == "state")
     {
-        switch (otBackboneRouterGetState(GetInstancePtr()))
-        {
-        case OT_BACKBONE_ROUTER_STATE_DISABLED:
-            OutputLine("Disabled");
-            break;
-        case OT_BACKBONE_ROUTER_STATE_SECONDARY:
-            OutputLine("Secondary");
-            break;
-        case OT_BACKBONE_ROUTER_STATE_PRIMARY:
-            OutputLine("Primary");
-            break;
-        }
+        static const char *const kStateStrings[] = {
+            "Disabled",  // (0) OT_BACKBONE_ROUTER_STATE_DISABLED
+            "Secondary", // (1) OT_BACKBONE_ROUTER_STATE_SECONDARY
+            "Primary",   // (2) OT_BACKBONE_ROUTER_STATE_PRIMARY
+        };
+
+        static_assert(0 == OT_BACKBONE_ROUTER_STATE_DISABLED, "OT_BACKBONE_ROUTER_STATE_DISABLED value is incorrect");
+        static_assert(1 == OT_BACKBONE_ROUTER_STATE_SECONDARY, "OT_BACKBONE_ROUTER_STATE_SECONDARY value is incorrect");
+        static_assert(2 == OT_BACKBONE_ROUTER_STATE_PRIMARY, "OT_BACKBONE_ROUTER_STATE_PRIMARY value is incorrect");
+
+        OutputLine("%s", Stringify(otBackboneRouterGetState(GetInstancePtr()), kStateStrings));
     }
     else if (aArgs[0] == "config")
     {
@@ -1768,7 +1760,7 @@ const char *EidCacheStateToString(otCacheEntryState aState)
         "retry",
     };
 
-    return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "unknown";
+    return Interpreter::Stringify(aState, kStateStrings);
 }
 
 void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
@@ -2070,7 +2062,7 @@ const char *Interpreter::AddressOriginToString(uint8_t aOrigin)
     static_assert(2 == OT_ADDRESS_ORIGIN_DHCPV6, "OT_ADDRESS_ORIGIN_DHCPV6 value is incorrect");
     static_assert(3 == OT_ADDRESS_ORIGIN_MANUAL, "OT_ADDRESS_ORIGIN_MANUAL value is incorrect");
 
-    return aOrigin < OT_ARRAY_LENGTH(kOriginStrings) ? kOriginStrings[aOrigin] : "unknown";
+    return Stringify(aOrigin, kOriginStrings);
 }
 
 otError Interpreter::ProcessIpAddr(Arg aArgs[])
@@ -2376,43 +2368,32 @@ void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aS
 
 const char *Interpreter::LinkMetricsStatusToStr(uint8_t aStatus)
 {
-    uint8_t            strIndex                = 0;
-    static const char *linkMetricsStatusText[] = {
-        "Success",
-        "Cannot support new series",
-        "Series ID already registered",
-        "Series ID not recognized",
-        "No matching series ID",
-        "Other error",
-        "Unknown error",
+    static const char *const kStatusStrings[] = {
+        "Success",                      // (0) OT_LINK_METRICS_STATUS_SUCCESS
+        "Cannot support new series",    // (1) OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES
+        "Series ID already registered", // (2) OT_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED
+        "Series ID not recognized",     // (3) OT_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED
+        "No matching series ID",        // (4) OT_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED
     };
 
-    switch (aStatus)
+    const char *str = "Unknown error";
+
+    static_assert(0 == OT_LINK_METRICS_STATUS_SUCCESS, "STATUS_SUCCESS is incorrect");
+    static_assert(1 == OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES, "CANNOT_SUPPORT_NEW_SERIES is incorrect");
+    static_assert(2 == OT_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED, "SERIESID_ALREADY_REGISTERED is incorrect");
+    static_assert(3 == OT_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED, "SERIESID_NOT_RECOGNIZED is incorrect");
+    static_assert(4 == OT_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED, "NO_MATCHING_FRAMES_RECEIVED is incorrect");
+
+    if (aStatus < OT_ARRAY_LENGTH(kStatusStrings))
     {
-    case OT_LINK_METRICS_STATUS_SUCCESS:
-        strIndex = 0;
-        break;
-    case OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES:
-        strIndex = 1;
-        break;
-    case OT_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED:
-        strIndex = 2;
-        break;
-    case OT_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED:
-        strIndex = 3;
-        break;
-    case OT_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED:
-        strIndex = 4;
-        break;
-    case OT_LINK_METRICS_STATUS_OTHER_ERROR:
-        strIndex = 5;
-        break;
-    default:
-        strIndex = 6;
-        break;
+        str = kStatusStrings[aStatus];
+    }
+    else if (aStatus == OT_LINK_METRICS_STATUS_OTHER_ERROR)
+    {
+        str = "Other error";
     }
 
-    return linkMetricsStatusText[strIndex];
+    return str;
 }
 
 otError Interpreter::ProcessLinkMetrics(Arg aArgs[])

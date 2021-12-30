@@ -114,23 +114,19 @@ otError SrpServer::ProcessDomain(Arg aArgs[])
 
 otError SrpServer::ProcessState(Arg aArgs[])
 {
+    static const char *const kStateStrings[] = {
+        "disabled", // (0) OT_SRP_SERVER_STATE_DISABLED
+        "running",  // (1) OT_SRP_SERVER_STATE_RUNNING
+        "stopped",  // (2) OT_SRP_SERVER_STATE_STOPPED
+    };
+
     OT_UNUSED_VARIABLE(aArgs);
 
-    switch (otSrpServerGetState(GetInstancePtr()))
-    {
-    case OT_SRP_SERVER_STATE_DISABLED:
-        OutputLine("disabled");
-        break;
-    case OT_SRP_SERVER_STATE_RUNNING:
-        OutputLine("running");
-        break;
-    case OT_SRP_SERVER_STATE_STOPPED:
-        OutputLine("stopped");
-        break;
-    default:
-        OutputLine("invalid state");
-        break;
-    }
+    static_assert(0 == OT_SRP_SERVER_STATE_DISABLED, "OT_SRP_SERVER_STATE_DISABLED value is incorrect");
+    static_assert(1 == OT_SRP_SERVER_STATE_RUNNING, "OT_SRP_SERVER_STATE_RUNNING value is incorrect");
+    static_assert(2 == OT_SRP_SERVER_STATE_STOPPED, "OT_SRP_SERVER_STATE_STOPPED value is incorrect");
+
+    OutputLine("%s", Stringify(otSrpServerGetState(GetInstancePtr()), kStateStrings));
 
     return OT_ERROR_NONE;
 }
@@ -216,7 +212,7 @@ otError SrpServer::ProcessHost(Arg aArgs[])
             }
         }
 
-        OutputFormat("]\r\n");
+        OutputLine("]");
     }
 
 exit:

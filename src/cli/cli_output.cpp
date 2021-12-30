@@ -47,6 +47,8 @@
 namespace ot {
 namespace Cli {
 
+const char OutputBase::kUnknownString[] = "unknown";
+
 Output::Output(otInstance *aInstance, otCliOutputCallback aCallback, void *aCallbackContext)
     : mInstance(aInstance)
     , mCallback(aCallback)

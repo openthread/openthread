@@ -199,18 +199,27 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
 
 const char *Neighbor::StateToString(State aState)
 {
-    static const char *kStateStrings[] = {
-        "Invalid",        // kStateInvalid
-        "Restored",       // kStateRestored
-        "ParentReq",      // kStateParentRequest
-        "ParentRes",      // kStateParentResponse
-        "ChildIdReq",     // kStateChildIdRequest
-        "LinkReq",        // kStateLinkRequest
-        "ChildUpdateReq", // kStateChildUpdateRequest
-        "Valid",          // kStateValid
+    static const char *const kStateStrings[] = {
+        "Invalid",        // (0) kStateInvalid
+        "Restored",       // (1) kStateRestored
+        "ParentReq",      // (2) kStateParentRequest
+        "ParentRes",      // (3) kStateParentResponse
+        "ChildIdReq",     // (4) kStateChildIdRequest
+        "LinkReq",        // (5) kStateLinkRequest
+        "ChildUpdateReq", // (6) kStateChildUpdateRequest
+        "Valid",          // (7) kStateValid
     };
 
-    return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "Unknown";
+    static_assert(0 == kStateInvalid, "kStateInvalid value is incorrect");
+    static_assert(1 == kStateRestored, "kStateRestored value is incorrect");
+    static_assert(2 == kStateParentRequest, "kStateParentRequest value is incorrect");
+    static_assert(3 == kStateParentResponse, "kStateParentResponse value is incorrect");
+    static_assert(4 == kStateChildIdRequest, "kStateChildIdRequest value is incorrect");
+    static_assert(5 == kStateLinkRequest, "kStateLinkRequest value is incorrect");
+    static_assert(6 == kStateChildUpdateRequest, "kStateChildUpdateRequest value is incorrect");
+    static_assert(7 == kStateValid, "kStateValid value is incorrect");
+
+    return kStateStrings[aState];
 }
 
 #if OPENTHREAD_FTD

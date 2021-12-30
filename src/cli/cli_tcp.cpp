@@ -448,26 +448,23 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
 
 void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason)
 {
+    static const char *const kReasonStrings[] = {
+        "Disconnected",            // (0) OT_TCP_DISCONNECTED_REASON_NORMAL
+        "Entered TIME-WAIT state", // (1) OT_TCP_DISCONNECTED_REASON_REFUSED
+        "Connection timed out",    // (2) OT_TCP_DISCONNECTED_REASON_RESET
+        "Connection refused",      // (3) OT_TCP_DISCONNECTED_REASON_TIME_WAIT
+        "Connection reset",        // (4) OT_TCP_DISCONNECTED_REASON_TIMED_OUT
+    };
+
     OT_UNUSED_VARIABLE(aEndpoint);
 
-    switch (aReason)
-    {
-    case OT_TCP_DISCONNECTED_REASON_NORMAL:
-        OutputLine("TCP: Disconnected");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_TIME_WAIT:
-        OutputLine("TCP: Entered TIME-WAIT state");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_TIMED_OUT:
-        OutputLine("TCP: Connection timed out");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_REFUSED:
-        OutputLine("TCP: Connection refused");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_RESET:
-        OutputLine("TCP: Connection reset");
-        break;
-    }
+    static_assert(0 == OT_TCP_DISCONNECTED_REASON_NORMAL, "OT_TCP_DISCONNECTED_REASON_NORMAL value is incorrect");
+    static_assert(1 == OT_TCP_DISCONNECTED_REASON_REFUSED, "OT_TCP_DISCONNECTED_REASON_REFUSED value is incorrect");
+    static_assert(2 == OT_TCP_DISCONNECTED_REASON_RESET, "OT_TCP_DISCONNECTED_REASON_RESET value is incorrect");
+    static_assert(3 == OT_TCP_DISCONNECTED_REASON_TIME_WAIT, "OT_TCP_DISCONNECTED_REASON_TIME_WAIT value is incorrect");
+    static_assert(4 == OT_TCP_DISCONNECTED_REASON_TIMED_OUT, "OT_TCP_DISCONNECTED_REASON_TIMED_OUT value is incorrect");
+
+    OutputLine("TCP: %s", Stringify(aReason, kReasonStrings));
 
     // We set this to false even for the TIME-WAIT state, so that we can reuse
     // the active socket if an incoming connection comes in instead of waiting
