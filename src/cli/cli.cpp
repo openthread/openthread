@@ -2056,7 +2056,7 @@ exit:
     return error;
 }
 
-const char *AddressOriginToString(uint8_t aOrigin)
+const char *Interpreter::AddressOriginToString(uint8_t aOrigin)
 {
     static const char *const kOriginStrings[4] = {
         "thread", // 0, OT_ADDRESS_ORIGIN_THREAD
@@ -2064,6 +2064,11 @@ const char *AddressOriginToString(uint8_t aOrigin)
         "dhcp6",  // 2, OT_ADDRESS_ORIGIN_DHCPV6
         "manual", // 3, OT_ADDRESS_ORIGIN_MANUAL
     };
+
+    static_assert(0 == OT_ADDRESS_ORIGIN_THREAD, "OT_ADDRESS_ORIGIN_THREAD value is incorrect");
+    static_assert(1 == OT_ADDRESS_ORIGIN_SLAAC, "OT_ADDRESS_ORIGIN_SLAAC value is incorrect");
+    static_assert(2 == OT_ADDRESS_ORIGIN_DHCPV6, "OT_ADDRESS_ORIGIN_DHCPV6 value is incorrect");
+    static_assert(3 == OT_ADDRESS_ORIGIN_MANUAL, "OT_ADDRESS_ORIGIN_MANUAL value is incorrect");
 
     return aOrigin < OT_ARRAY_LENGTH(kOriginStrings) ? kOriginStrings[aOrigin] : "unknown";
 }

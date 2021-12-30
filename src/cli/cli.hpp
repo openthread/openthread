@@ -204,6 +204,16 @@ public:
      */
     static const char *LinkModeToString(const otLinkModeConfig &aLinkMode, char (&aStringBuffer)[kLinkModeStringSize]);
 
+    /**
+     * This method converts an IPv6 address origin `OT_ADDRESS_ORIGIN_*` value to human-readable string.
+     *
+     * @param[in] aOrigin   The IPv6 address origin to convert.
+     *
+     * @returns A human-readable string representation of @p aOrigin.
+     *
+     */
+    static const char *AddressOriginToString(uint8_t aOrigin);
+
 protected:
     static Interpreter *sInterpreter;
 
