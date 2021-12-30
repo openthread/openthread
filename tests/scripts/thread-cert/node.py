@@ -3339,6 +3339,10 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
         cmd = f'ip -6 addr add {addr}/64 dev {self.TUN_DEV}'
         self.bash(cmd)
 
+    def add_ipmaddr_tun(self, ip: str):
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.TUN_DEV} {ip} &'
+        self.bash(cmd)
+
 
 class HostNode(LinuxHost, OtbrDocker):
     is_host = True
