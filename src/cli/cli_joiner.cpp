@@ -128,6 +128,15 @@ otError Joiner::ProcessStop(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+otError Joiner::ProcessState(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+
+    OutputLine("%s", otJoinerStateToString(otJoinerGetState(GetInstancePtr())));
+
+    return OT_ERROR_NONE;
+}
+
 otError Joiner::Process(Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_COMMAND;

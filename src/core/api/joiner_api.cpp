@@ -38,6 +38,7 @@
 #include <openthread/joiner.h>
 
 #include "common/as_core_type.hpp"
+#include "common/debug.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
@@ -91,6 +92,13 @@ otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerne
 const otJoinerDiscerner *otJoinerGetDiscerner(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<MeshCoP::Joiner>().GetDiscerner();
+}
+
+const char *otJoinerStateToString(otJoinerState aState)
+{
+    OT_ASSERT(aState <= OT_JOINER_STATE_JOINED);
+
+    return MeshCoP::Joiner::StateToString(MapEnum(aState));
 }
 
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE

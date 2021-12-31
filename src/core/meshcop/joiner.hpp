@@ -168,6 +168,16 @@ public:
      */
     Error ClearDiscerner(void);
 
+    /**
+     * This method converts a given Joiner state to its human-readable string representation.
+     *
+     * @param[in] aState  The Joiner state to convert.
+     *
+     * @returns A human-readable string representation of @p aState.
+     *
+     */
+    static const char *StateToString(State aState);
+
 private:
     static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
 
@@ -200,8 +210,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-
-    static const char *StateToString(State aState);
 
     void    SetState(State aState);
     void    SetIdFromIeeeEui64(void);
