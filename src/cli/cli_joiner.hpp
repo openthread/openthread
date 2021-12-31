@@ -39,8 +39,6 @@
 #include <openthread/joiner.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
@@ -76,11 +74,7 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    struct Command
-    {
-        const char *mName;
-        otError (Joiner::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<Joiner>;
 
     otError ProcessDiscerner(Arg aArgs[]);
     otError ProcessHelp(Arg aArgs[]);
@@ -97,7 +91,7 @@ private:
         {"start", &Joiner::ProcessStart},         {"state", &Joiner::ProcessState}, {"stop", &Joiner::ProcessStop},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

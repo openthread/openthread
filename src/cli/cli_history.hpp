@@ -40,8 +40,6 @@
 
 #include "cli/cli_config.h"
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
@@ -81,11 +79,7 @@ private:
     static constexpr uint16_t kShortAddrBroadcast = 0xffff;
     static constexpr int8_t   kInvalidRss         = OT_RADIO_RSSI_INVALID;
 
-    struct Command
-    {
-        const char *mName;
-        otError (History::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<History>;
 
     enum RxTx : uint8_t
     {
@@ -123,7 +117,7 @@ private:
         {"tx", &History::ProcessTx},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

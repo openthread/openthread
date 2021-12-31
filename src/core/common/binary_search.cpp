@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,23 +28,20 @@
 
 /**
  * @file
- *   This file implements the lookup table (binary search) functionality.
+ *  This file implements a generic binary search.
  */
 
-#include <string.h>
-
-#include "lookup_table.hpp"
+#include "binary_search.hpp"
 
 #include "common/code_utils.hpp"
 
 namespace ot {
-namespace Utils {
 
-const void *LookupTable::Find(const char *aName,
-                              const void *aTable,
-                              uint16_t    aLength,
-                              uint16_t    aTableEntrySize,
-                              NameGetter  aNameGetter)
+const void *BinarySearch::Find(const void *aKey,
+                               const void *aTable,
+                               uint16_t    aLength,
+                               uint16_t    aEntrySize,
+                               Comparator  aComparator)
 {
     const void *entry;
     uint16_t    left  = 0;
@@ -56,17 +53,17 @@ const void *LookupTable::Find(const char *aName,
         int      compare;
 
         // Note that `aTable` array entry type is not known here and
-        // only its size is given as `aTableEntrySize`. Based on this,
-        // we can calculate the pointer to the table entry at any index
+        // only its size is given as `aEntrySize`. Based on this, we
+        // can calculate the pointer to the table entry at any index
         // (such as `[middle]`) which is then passed to the given
-        // `aNameGetter` function which knows how to cast the void
-        // pointer to proper entry type and get the enclosed `mName`
-        // field. This model keeps the implementation generic and
-        // re-usable allowing it to be used with any entry type.
+        // `aComparator` function which knows how to cast the void
+        // pointer to proper entry type and compare it with `aKey`.
+        // This model keeps the implementation generic and reusable
+        // allowing it to be used with any entry type.
 
-        entry = reinterpret_cast<const uint8_t *>(aTable) + aTableEntrySize * middle;
+        entry = reinterpret_cast<const uint8_t *>(aTable) + aEntrySize * middle;
 
-        compare = strcmp(aName, aNameGetter(entry));
+        compare = aComparator(aKey, entry);
 
         if (compare == 0)
         {
@@ -88,5 +85,4 @@ exit:
     return entry;
 }
 
-} // namespace Utils
 } // namespace ot

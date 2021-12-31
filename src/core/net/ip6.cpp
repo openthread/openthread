@@ -1510,52 +1510,15 @@ exit:
 
 const char *Ip6::IpProtoToString(uint8_t aIpProto)
 {
-    const char *retval;
+    static constexpr Stringify::Entry kIpProtoTable[] = {
+        {kProtoHopOpts, "HopOpts"}, {kProtoTcp, "TCP"},         {kProtoUdp, "UDP"},
+        {kProtoIp6, "IP6"},         {kProtoRouting, "Routing"}, {kProtoFragment, "Frag"},
+        {kProtoIcmp6, "ICMP6"},     {kProtoNone, "None"},       {kProtoDstOpts, "DstOpts"},
+    };
 
-    switch (aIpProto)
-    {
-    case kProtoHopOpts:
-        retval = "HopOpts";
-        break;
+    static_assert(Stringify::IsSorted(kIpProtoTable), "kIpProtoTable is not sorted");
 
-    case kProtoTcp:
-        retval = "TCP";
-        break;
-
-    case kProtoUdp:
-        retval = "UDP";
-        break;
-
-    case kProtoIp6:
-        retval = "IP6";
-        break;
-
-    case kProtoRouting:
-        retval = "Routing";
-        break;
-
-    case kProtoFragment:
-        retval = "Frag";
-        break;
-
-    case kProtoIcmp6:
-        retval = "ICMP6";
-        break;
-
-    case kProtoNone:
-        retval = "None";
-        break;
-
-    case kProtoDstOpts:
-        retval = "DstOpts";
-        break;
-
-    default:
-        retval = "Unknown";
-        break;
-    }
-
-    return retval;
+    return Stringify::Lookup(aIpProto, kIpProtoTable, "Unknown");
 }
 
 // LCOV_EXCL_STOP

@@ -41,8 +41,6 @@
 #include <openthread/coap.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -79,11 +77,7 @@ private:
         kMaxBufferSize = 16
     };
 
-    struct Command
-    {
-        const char *mName;
-        otError (Coap::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<Coap>;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     enum BlockType : uint8_t{
@@ -186,7 +180,7 @@ private:
         {"stop", &Coap::ProcessStop},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     bool mUseDefaultRequestTxParameters;
     bool mUseDefaultResponseTxParameters;

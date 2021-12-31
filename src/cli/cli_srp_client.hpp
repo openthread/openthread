@@ -41,8 +41,6 @@
 
 #include "cli/cli_config.h"
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
@@ -81,11 +79,7 @@ private:
         kIndentSize       = 4,
     };
 
-    struct Command
-    {
-        const char *mName;
-        otError (SrpClient::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<SrpClient>;
 
     otError ProcessAutoStart(Arg aArgs[]);
     otError ProcessCallback(Arg aArgs[]);
@@ -128,7 +122,7 @@ private:
         {"stop", &SrpClient::ProcessStop},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     bool mCallbackEnabled;
 };

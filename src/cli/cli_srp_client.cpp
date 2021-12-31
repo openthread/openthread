@@ -77,7 +77,7 @@ otError SrpClient::Process(Arg aArgs[])
         ExitNow();
     }
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);

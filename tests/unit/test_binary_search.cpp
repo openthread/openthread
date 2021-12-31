@@ -29,81 +29,69 @@
 #include <string.h>
 
 #include "test_platform.h"
+#include "test_util.h"
 
 #include <openthread/config.h>
 
-#include "common/instance.hpp"
-#include "utils/lookup_table.hpp"
+#include "common/binary_search.hpp"
+#include "common/string.hpp"
 
-#include "test_util.h"
+namespace ot {
 
-typedef ot::Utils::LookupTable::Entry Entry;
-
-struct TableEntryBase
+void TestBinarySearch(void)
 {
-    constexpr explicit TableEntryBase(uint8_t aValue)
-        : mValue(aValue)
+    static constexpr uint16_t kMaxNameSize = 30;
+
+    struct Entry
     {
-    }
+        int Compare(const char *aName) const { return strcmp(aName, mName); }
 
-    uint8_t mValue;
-};
+        constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
+        {
+            return AreStringsInOrder(aFirst.mName, aSecond.mName);
+        }
 
-struct TableEntry : public TableEntryBase, public Entry
-{
-    constexpr TableEntry(const char *aName, uint8_t aValue)
-        : TableEntryBase(aValue)
-        , Entry(aName)
-        , mUint16(0xabba)
-        , mUint8(aValue)
-    {
-    }
-
-    uint16_t mUint16;
-    uint8_t  mUint8;
-};
-
-void TestLookupTable(void)
-{
-    enum : uint16_t
-    {
-        kMaxNameSize = 30,
+        const char *mName;
+        uint8_t     mRank;
     };
 
-    constexpr TableEntry kTable[] = {
+    constexpr Entry kTable[] = {
         {"arkham city", 9}, {"arkham knight", 7}, {"bloodborne", 10}, {"god of war", 10},       {"horizon", 9},
         {"infamous", 7},    {"last guardian", 7}, {"last of us", 11}, {"last of us part 2", 8}, {"mass effect", 8},
         {"sekiro", 10},     {"tomb raider", 9},   {"uncharted", 9},
     };
 
-    constexpr Entry kUnsortedTable[]       = {Entry("z"), Entry("a"), Entry("b")};
-    constexpr Entry kDuplicateEntryTable[] = {Entry("duplicate"), Entry("duplicate")};
+    constexpr Entry kUnsortedTable[]       = {{"z", 0}, {"a", 0}, {"b", 0}};
+    constexpr Entry kDuplicateEntryTable[] = {{"duplicate", 1}, {"duplicate", 2}};
 
-    static_assert(ot::Utils::LookupTable::IsSorted(kTable), "LookupTable::IsSorted() failed");
-    static_assert(!ot::Utils::LookupTable::IsSorted(kUnsortedTable), "failed for unsorted table");
-    static_assert(!ot::Utils::LookupTable::IsSorted(kDuplicateEntryTable), "failed for table with duplicate entries");
+    static_assert(BinarySearch::IsSorted(kTable), "IsSorted() failed");
+    static_assert(!BinarySearch::IsSorted(kUnsortedTable), "failed for unsorted table");
+    static_assert(!BinarySearch::IsSorted(kDuplicateEntryTable), "failed for table with duplicate entries");
 
-    for (const TableEntry &tableEntry : kTable)
+    for (const Entry &tableEntry : kTable)
     {
-        const TableEntry *entry;
-        char              name[kMaxNameSize];
+        const Entry *entry;
+        char         name[kMaxNameSize];
 
         strcpy(name, tableEntry.mName);
 
-        entry = ot::Utils::LookupTable::Find(name, kTable);
-        VerifyOrQuit(entry == &tableEntry, "LookupTable::Find() failed");
+        entry = BinarySearch::Find(name, kTable);
+        VerifyOrQuit(entry == &tableEntry, "BinarySearch::Find() failed");
 
         name[strlen(name) - 1] = '\0';
-        entry                  = ot::Utils::LookupTable::Find(name, kTable);
-        VerifyOrQuit(entry == nullptr, "LookupTable::Find() failed with non-matching name");
+
+        entry = BinarySearch::Find(name, kTable);
+        VerifyOrQuit(entry == nullptr, "BinarySearch::Find() failed with non-matching name");
     }
 
-    VerifyOrQuit(ot::Utils::LookupTable::Find("dragon age", kTable) == nullptr, "failed with non-exiting match");
+    VerifyOrQuit(BinarySearch::Find("dragon age", kTable) == nullptr, "failed with non-exiting match");
 }
+
+} // namespace ot
 
 int main(void)
 {
-    TestLookupTable();
+    ot::TestBinarySearch();
     printf("All tests passed\n");
     return 0;
 }
