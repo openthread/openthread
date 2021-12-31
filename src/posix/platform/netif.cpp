@@ -962,7 +962,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         }
 
         default:
-            otLogWarnPlat("[netif] Unexpected address type (%d).", (int)rta->rta_type);
+            otLogDebgPlat("[netif] Unexpected address type (%d).", (int)rta->rta_type);
             break;
         }
     }
