@@ -905,7 +905,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         mRouterSolicitCount = 0;
 
         // Re-evaluate our routing policy and send Router Advertisement if necessary.
-        StartRoutingPolicyEvaluationDelay(0);
+        StartRoutingPolicyEvaluationDelay(/* aDelayJitter */ 0);
 
         // Reset prefix stale timer because `mDiscoveredPrefixes` may change.
         ResetDiscoveredPrefixStaleTimer();
