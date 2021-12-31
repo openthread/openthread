@@ -175,7 +175,7 @@ void EnergyScanServer::SendReport(void)
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kEnergyReport));
     SuccessOrExit(error = message->SetPayloadMarker());
