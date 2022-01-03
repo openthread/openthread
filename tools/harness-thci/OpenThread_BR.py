@@ -665,11 +665,8 @@ EOF"
             for ba in border_agents:
                 for record in cache[ba.server_name]:
                     if isinstance(record, DNSAddress):
-                        try:
-                            addr = ipaddress.IPv6Address(record.address)
-                        except Exception:
-                            continue
-                        if addr.is_link_local:
+                        addr = ipaddress.ip_address(record.address)
+                        if isinstance(addr, ipaddress.IPv6Address) and addr.is_link_local:
                             ba.link_local_addr = str(addr)
                             break
 
