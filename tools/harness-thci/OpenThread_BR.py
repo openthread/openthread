@@ -666,7 +666,7 @@ EOF"
                 for record in cache[ba.server_name]:
                     if isinstance(record, DNSAddress):
                         addr = ipaddress.ip_address(record.address)
-                        if addr.is_link_local:
+                        if isinstance(addr, ipaddress.IPv6Address) and addr.is_link_local:
                             ba.link_local_addr = str(addr)
                             break
 
