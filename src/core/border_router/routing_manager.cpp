@@ -68,7 +68,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mLearntRouterAdvMessageFromHost(false)
     , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
-    , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer)
     , mRouterAdvertisementCount(0)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     , mVicariousRouterSolicitTimer(aInstance, HandleVicariousRouterSolicitTimer)
@@ -246,7 +245,6 @@ void RoutingManager::Stop(void)
     mDiscoveredPrefixInvalidTimer.Stop();
     mDiscoveredPrefixStaleTimer.Stop();
 
-    mRouterAdvertisementTimer.Stop();
     mRouterAdvertisementCount = 0;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
@@ -329,7 +327,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     {
         // Invalidate discovered prefixes because OMR Prefixes in Network Data may change.
         InvalidateDiscoveredPrefixes();
-        StartRoutingPolicyEvaluationDelay();
+        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
     }
 
 exit:
@@ -606,17 +604,17 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
     // 2. Schedule Router Advertisement timer with random interval.
     {
-        uint32_t nextSendTime;
+        uint32_t nextSendDelay;
 
-        nextSendTime = Random::NonCrypto::GetUint32InRange(kMinRtrAdvInterval, kMaxRtrAdvInterval);
+        nextSendDelay = Random::NonCrypto::GetUint32InRange(kMinRtrAdvInterval, kMaxRtrAdvInterval);
 
-        if (mRouterAdvertisementCount <= kMaxInitRtrAdvertisements && nextSendTime > kMaxInitRtrAdvInterval)
+        if (mRouterAdvertisementCount <= kMaxInitRtrAdvertisements && nextSendDelay > kMaxInitRtrAdvInterval)
         {
-            nextSendTime = kMaxInitRtrAdvInterval;
+            nextSendDelay = kMaxInitRtrAdvInterval;
         }
 
-        otLogInfoBr("Router advertisement scheduled in %u seconds", nextSendTime);
-        mRouterAdvertisementTimer.Start(Time::SecToMsec(nextSendTime));
+        otLogInfoBr("Router advertisement scheduled in %u seconds", nextSendDelay);
+        StartRoutingPolicyEvaluationDelay(Time::SecToMsec(nextSendDelay));
     }
 
     // 3. Update advertised on-link & OMR prefixes information.
@@ -624,17 +622,17 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     mAdvertisedOmrPrefixes          = newOmrPrefixes;
 }
 
-void RoutingManager::StartRoutingPolicyEvaluationDelay(void)
+void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli)
 {
     OT_ASSERT(mIsRunning);
 
-    uint32_t randomDelay;
+    StartRoutingPolicyEvaluationDelay(Random::NonCrypto::GetUint32InRange(0, aJitterMilli));
+}
 
-    static_assert(kMaxRoutingPolicyDelay > 0, "invalid maximum routing policy evaluation delay");
-    randomDelay = Random::NonCrypto::GetUint32InRange(0, Time::SecToMsec(kMaxRoutingPolicyDelay));
-
-    otLogInfoBr("Start evaluating routing policy, scheduled in %u milliseconds", randomDelay);
-    mRoutingPolicyTimer.Start(randomDelay);
+void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
+{
+    otLogInfoBr("Start evaluating routing policy, scheduled in %u milliseconds", aDelayMilli);
+    mRoutingPolicyTimer.FireAtIfEarlier(TimerMilli::GetNow() + aDelayMilli);
 }
 
 // starts sending Router Solicitations in random delay
@@ -821,18 +819,6 @@ bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
     return !aOnLinkPrefix.IsLinkLocal() && !aOnLinkPrefix.IsMulticast();
 }
 
-void RoutingManager::HandleRouterAdvertisementTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().HandleRouterAdvertisementTimer();
-}
-
-void RoutingManager::HandleRouterAdvertisementTimer(void)
-{
-    otLogInfoBr("Router advertisement timer triggered");
-
-    EvaluateRoutingPolicy();
-}
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
 void RoutingManager::HandleVicariousRouterSolicitTimer(Timer &aTimer)
 {
@@ -919,7 +905,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         mRouterSolicitCount = 0;
 
         // Re-evaluate our routing policy and send Router Advertisement if necessary.
-        EvaluateRoutingPolicy();
+        StartRoutingPolicyEvaluationDelay(/* aDelayJitter */ 0);
 
         // Reset prefix stale timer because `mDiscoveredPrefixes` may change.
         ResetDiscoveredPrefixStaleTimer();
@@ -956,8 +942,6 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
                                          const uint8_t *     aBuffer,
                                          uint16_t            aBufferLength)
 {
-    uint32_t randomDelay;
-
     OT_UNUSED_VARIABLE(aSrcAddress);
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aBufferLength);
@@ -974,9 +958,7 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
 #endif
 
     // Schedule Router Advertisements with random delay.
-    randomDelay = Random::NonCrypto::GetUint32InRange(0, kMaxRaDelayTime);
-    otLogInfoBr("Router Advertisement scheduled in %u milliseconds", randomDelay);
-    mRouterAdvertisementTimer.FireAtIfEarlier(TimerMilli::GetNow() + randomDelay);
+    StartRoutingPolicyEvaluationJitter(kRaReplyJitter);
 }
 
 uint32_t RoutingManager::ExternalPrefix::GetPrefixExpireDelay(uint32_t aValidLifetime)
@@ -1064,7 +1046,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 
     if (needReevaluate)
     {
-        StartRoutingPolicyEvaluationDelay();
+        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
     }
 
 exit:
