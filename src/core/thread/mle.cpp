@@ -2519,6 +2519,7 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     SuccessOrExit(error = AppendHeader(*message, kCommandAnnounce));
 
     channel.Init();
+    channel.SetChannelPage(0);
     channel.SetChannel(Get<Mac::Mac>().GetPanChannel());
     SuccessOrExit(error = channel.AppendTo(*message));
 
