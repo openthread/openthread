@@ -310,6 +310,7 @@ REAL_LAYER_NAMES = {
     'dns',
     'igmp',
     'mdns',
+    'dns',
 }
 
 FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop', 'ipv6inner'}
