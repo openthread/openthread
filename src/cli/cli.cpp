@@ -2103,18 +2103,19 @@ exit:
 
 otError Interpreter::ProcessIpMulticastAddrAdd(Arg aArgs[])
 {
-    otError      error = OT_ERROR_INVALID_ARGS;
     otIp6Address address;
 
-    Arg *arg = &aArgs[0];
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    for ( ; !arg->IsEmpty(); arg++) {
-#else
-    if (!arg->IsEmpty()) {
-#endif
+    otError      error = OT_ERROR_INVALID_ARGS;
+    for ( Arg *arg = &aArgs[0]; !arg->IsEmpty(); arg++) {
         SuccessOrExit(error = arg->ParseAsIp6Address(address));
         SuccessOrExit(error = otIp6SubscribeMulticastAddress(GetInstancePtr(), &address));
     }
+#else
+    otError      error;
+    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(address));
+    error = otIp6SubscribeMulticastAddress(GetInstancePtr(), &address);
+#endif
 exit:
     return error;
 }
