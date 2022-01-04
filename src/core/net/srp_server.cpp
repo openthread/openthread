@@ -308,7 +308,7 @@ bool Server::HasNameConflictsWith(Host &aHost) const
     bool        hasConflicts = false;
     const Host *existingHost = mHosts.FindMatching(aHost.GetFullName());
 
-    if (existingHost != nullptr && *aHost.GetKey() != *existingHost->GetKey())
+    if (existingHost != nullptr && aHost.GetKeyRecord()->GetKey() != existingHost->GetKeyRecord()->GetKey())
     {
         ExitNow(hasConflicts = true);
     }
@@ -323,7 +323,7 @@ bool Server::HasNameConflictsWith(Host &aHost) const
         {
             if (host.HasServiceInstance(service.GetInstanceName()))
             {
-                VerifyOrExit(*aHost.GetKey() == *host.GetKey(), hasConflicts = true);
+                VerifyOrExit(aHost.GetKeyRecord()->GetKey() == host.GetKeyRecord()->GetKey(), hasConflicts = true);
             }
         }
     }
@@ -799,14 +799,14 @@ Error Server::ProcessHostDescriptionInstruction(Host &                 aHost,
         else if (record.GetType() == Dns::ResourceRecord::kTypeKey)
         {
             // We currently support only ECDSA P-256.
-            Dns::Ecdsa256KeyRecord key;
+            Dns::Ecdsa256KeyRecord keyRecord;
 
             VerifyOrExit(record.GetClass() == aMetadata.mDnsZone.GetClass(), error = kErrorFailed);
-            SuccessOrExit(error = aMessage.Read(offset, key));
-            VerifyOrExit(key.IsValid(), error = kErrorParse);
+            SuccessOrExit(error = aMessage.Read(offset, keyRecord));
+            VerifyOrExit(keyRecord.IsValid(), error = kErrorParse);
 
-            VerifyOrExit(aHost.GetKey() == nullptr || *aHost.GetKey() == key, error = kErrorSecurity);
-            aHost.SetKey(key);
+            VerifyOrExit(aHost.GetKeyRecord() == nullptr || *aHost.GetKeyRecord() == keyRecord, error = kErrorSecurity);
+            aHost.SetKeyRecord(keyRecord);
         }
 
         offset += record.GetSize();
@@ -815,7 +815,7 @@ Error Server::ProcessHostDescriptionInstruction(Host &                 aHost,
     // Verify that we have a complete Host Description Instruction.
 
     VerifyOrExit(aHost.GetFullName() != nullptr, error = kErrorFailed);
-    VerifyOrExit(aHost.GetKey() != nullptr, error = kErrorFailed);
+    VerifyOrExit(aHost.GetKeyRecord() != nullptr, error = kErrorFailed);
 
     // We check the number of host addresses after processing of the
     // Lease Option in the Addition Section and determining whether
@@ -1060,8 +1060,8 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
     VerifyOrExit(sigRecord.GetTypeCovered() == 0, error = kErrorFailed);
     VerifyOrExit(signatureLength == Crypto::Ecdsa::P256::Signature::kSize, error = kErrorParse);
 
-    SuccessOrExit(error = VerifySignature(*aHost->GetKey(), aMessage, aMetadata.mDnsHeader, sigOffset, sigRdataOffset,
-                                          sigRecord.GetLength(), signerName));
+    SuccessOrExit(error = VerifySignature(*aHost->GetKeyRecord(), aMessage, aMetadata.mDnsHeader, sigOffset,
+                                          sigRdataOffset, sigRecord.GetLength(), signerName));
 
     aMetadata.mOffset = offset;
 
@@ -1069,7 +1069,7 @@ exit:
     return error;
 }
 
-Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKey,
+Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
                               const Message &               aMessage,
                               Dns::UpdateHeader             aDnsHeader,
                               uint16_t                      aSigOffset,
@@ -1109,7 +1109,7 @@ Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKey,
     signatureOffset = aSigRdataOffset + aSigRdataLength - Crypto::Ecdsa::P256::Signature::kSize;
     SuccessOrExit(error = aMessage.Read(signatureOffset, signature));
 
-    error = aKey.GetKey().Verify(hash, signature);
+    error = aKeyRecord.GetKey().Verify(hash, signature);
 
 exit:
     FreeMessage(signerNameMessage);
@@ -1649,7 +1649,7 @@ Server::Host::Host(Instance &aInstance, TimeMilli aUpdateTime)
     , mKeyLease(0)
     , mUpdateTime(aUpdateTime)
 {
-    mKey.Clear();
+    mKeyRecord.Clear();
 }
 
 Server::Host::~Host(void)
@@ -1682,11 +1682,11 @@ bool Server::Host::Matches(const char *aFullName) const
     return StringMatch(mFullName.AsCString(), aFullName, kStringCaseInsensitiveMatch);
 }
 
-void Server::Host::SetKey(Dns::Ecdsa256KeyRecord &aKey)
+void Server::Host::SetKeyRecord(Dns::Ecdsa256KeyRecord &aKeyRecord)
 {
-    OT_ASSERT(aKey.IsValid());
+    OT_ASSERT(aKeyRecord.IsValid());
 
-    mKey = aKey;
+    mKeyRecord = aKeyRecord;
 }
 
 TimeMilli Server::Host::GetExpireTime(void) const
@@ -1811,7 +1811,7 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
     otLogInfoSrp("[server] update host %s", GetFullName());
 
     mAddresses  = aHost.mAddresses;
-    mKey        = aHost.mKey;
+    mKeyRecord  = aHost.mKeyRecord;
     mLease      = aHost.mLease;
     mKeyLease   = aHost.mKeyLease;
     mUpdateTime = TimerMilli::GetNow();
