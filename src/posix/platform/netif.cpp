@@ -847,7 +847,14 @@ exit:
 
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnPlat("[netif] Failed to transmit, error:%s", otThreadErrorToString(error));
+        if (error == OT_ERROR_DROP)
+        {
+            otLogNotePlat("[netif] Message dropped by Thread", otThreadErrorToString(error));
+        }
+        else
+        {
+            otLogWarnPlat("[netif] Failed to transmit, error:%s", otThreadErrorToString(error));
+        }
     }
 }
 
