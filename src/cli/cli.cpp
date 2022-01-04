@@ -2106,8 +2106,12 @@ otError Interpreter::ProcessIpMulticastAddrAdd(Arg aArgs[])
     otError      error = OT_ERROR_INVALID_ARGS;
     otIp6Address address;
 
-    for (Arg *arg = &aArgs[0]; !arg->IsEmpty(); arg++)
-    {
+    Arg *arg = &aArgs[0];
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    for ( ; !arg->IsEmpty(); arg++) {
+#else
+    if (!arg->IsEmpty()) {
+#endif
         SuccessOrExit(error = arg->ParseAsIp6Address(address));
         SuccessOrExit(error = otIp6SubscribeMulticastAddress(GetInstancePtr(), &address));
     }
