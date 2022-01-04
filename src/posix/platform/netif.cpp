@@ -849,7 +849,7 @@ exit:
     {
         if (error == OT_ERROR_DROP)
         {
-            otLogInfoPlat("[netif] Message dropped by Thread", otThreadErrorToString(error));
+            otLogNotePlat("[netif] Message dropped by Thread", otThreadErrorToString(error));
         }
         else
         {
