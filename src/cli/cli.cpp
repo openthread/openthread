@@ -2106,13 +2106,14 @@ otError Interpreter::ProcessIpMulticastAddrAdd(Arg aArgs[])
     otIp6Address address;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otError      error = OT_ERROR_INVALID_ARGS;
-    for ( Arg *arg = &aArgs[0]; !arg->IsEmpty(); arg++) {
+    otError error = OT_ERROR_INVALID_ARGS;
+    for (Arg *arg = &aArgs[0]; !arg->IsEmpty(); arg++)
+    {
         SuccessOrExit(error = arg->ParseAsIp6Address(address));
         SuccessOrExit(error = otIp6SubscribeMulticastAddress(GetInstancePtr(), &address));
     }
 #else
-    otError      error;
+    otError error;
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(address));
     error = otIp6SubscribeMulticastAddress(GetInstancePtr(), &address);
 #endif
