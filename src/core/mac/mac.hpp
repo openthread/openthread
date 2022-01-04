@@ -512,13 +512,13 @@ public:
      * This method returns if an active scan is in progress.
      *
      */
-    bool IsActiveScanInProgress(void) const { return (mOperation == kOperationActiveScan) || (mPendingActiveScan); }
+    bool IsActiveScanInProgress(void) const { return IsActiveOrPending(kOperationActiveScan); }
 
     /**
      * This method returns if an energy scan is in progress.
      *
      */
-    bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
+    bool IsEnergyScanInProgress(void) const { return IsActiveOrPending(kOperationEnergyScan); }
 
 #if OPENTHREAD_FTD
     /**
@@ -826,6 +826,10 @@ private:
 #endif
 
     void     UpdateIdleMode(void);
+    bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
+    bool     IsActiveOrPending(Operation aOperation) const;
+    void     SetPending(Operation aOperation) { mPendingOperations |= (1U << aOperation); }
+    void     ClearPending(Operation aOperation) { mPendingOperations &= ~(1U << aOperation); }
     void     StartOperation(Operation aOperation);
     void     FinishOperation(void);
     void     PerformNextOperation(void);
@@ -871,18 +875,6 @@ private:
     static const char            sDomainNameInit[];
 
     bool mEnabled : 1;
-    bool mPendingActiveScan : 1;
-    bool mPendingEnergyScan : 1;
-    bool mPendingTransmitBeacon : 1;
-    bool mPendingTransmitDataDirect : 1;
-#if OPENTHREAD_FTD
-    bool mPendingTransmitDataIndirect : 1;
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    bool mPendingTransmitDataCsl : 1;
-#endif
-#endif
-    bool mPendingTransmitPoll : 1;
-    bool mPendingWaitingForData : 1;
     bool mShouldTxPollBeforeData : 1;
     bool mRxOnWhenIdle : 1;
     bool mPromiscuous : 1;
@@ -892,8 +884,8 @@ private:
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
 #endif
-
     Operation     mOperation;
+    uint16_t      mPendingOperations;
     uint8_t       mBeaconSequence;
     uint8_t       mDataSequence;
     uint8_t       mBroadcastTransmitCount;
