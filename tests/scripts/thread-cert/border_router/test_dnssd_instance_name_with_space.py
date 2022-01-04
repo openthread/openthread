@@ -115,6 +115,7 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
 
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br1.get_rloc()))
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br2.get_rloc()))
+        self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME.lower(), server=br2.get_rloc()))
 
         # check if PTR query works
         dig_result = digger.dns_dig(server_addr, SERVICE_FULL_NAME, 'PTR')
