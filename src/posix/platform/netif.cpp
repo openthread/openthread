@@ -858,28 +858,24 @@ exit:
     }
 }
 
-static void logAddrEvent(bool isAdd, bool isUnicast, struct sockaddr_in6 &addr6, otError error)
+static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError error)
 {
-    char addressString[INET6_ADDRSTRLEN + 1];
+    OT_UNUSED_VARIABLE(aAddress);
 
-    // these parameters may not be used if logging is disabled at compile time
-    OT_UNUSED_VARIABLE(isUnicast);
-    OT_UNUSED_VARIABLE(addr6);
-    OT_UNUSED_VARIABLE(addressString);
-
-    if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY)) ||
+    if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)) ||
         ((!isAdd) && (error == OT_ERROR_NOT_FOUND)))
     {
-        otLogNotePlat("[netif] %s [%s] %s%s", isAdd ? "ADD" : "DEL", isUnicast ? "U" : "M",
-                      inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                      error == OT_ERROR_ALREADY ? " (already subscribed, ignored)"
-                                                : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
+        otLogInfoPlat("[netif] %s [%s] %s%s", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
+                      aAddress.ToString().AsCString(),
+                      error == OT_ERROR_ALREADY
+                          ? " (already subscribed, ignored)"
+                          : error == OT_ERROR_REJECTED ? " (rejected)"
+                                                       : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
     }
     else
     {
-        otLogWarnPlat("[netif] %s [%s] %s failed (%s)", isAdd ? "ADD" : "DEL", isUnicast ? "U" : "M",
-                      inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)),
-                      otThreadErrorToString(error));
+        otLogWarnPlat("[netif] %s [%s] %s failed (%s)", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
+                      aAddress.ToString().AsCString(), otThreadErrorToString(error));
     }
 }
 
@@ -934,8 +930,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 }
 
-                logAddrEvent(/* isAdd */ true, !addr.IsMulticast(), addr6, error);
-                if (error == OT_ERROR_ALREADY)
+                logAddrEvent(/* isAdd */ true, addr, error);
+                if (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)
                 {
                     error = OT_ERROR_NONE;
                 }
@@ -953,7 +949,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
                 }
 
-                logAddrEvent(/* isAdd */ false, !addr.IsMulticast(), addr6, error);
+                logAddrEvent(/* isAdd */ false, addr, error);
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
@@ -1133,7 +1129,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
                 if (subscribed)
                 {
-                    logAddrEvent(/* isAdd */ true, /* isUnicast */ true, addr6, OT_ERROR_ALREADY);
+                    logAddrEvent(/* isAdd */ true, addr, OT_ERROR_ALREADY);
                     error = OT_ERROR_NONE;
                 }
                 else
@@ -1183,7 +1179,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                     else
                     {
                         error = otIp6AddUnicastAddress(aInstance, &netAddr);
-                        logAddrEvent(/* isAdd */ true, /* isUnicast */ true, addr6, error);
+                        logAddrEvent(/* isAdd */ true, addr, error);
                         if (error == OT_ERROR_ALREADY)
                         {
                             error = OT_ERROR_NONE;
@@ -1198,8 +1194,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                 netAddr.mAddress = addr;
 
                 error = otIp6SubscribeMulticastAddress(aInstance, &addr);
-                logAddrEvent(/* isAdd */ true, /* isUnicast */ false, addr6, error);
-                if (error == OT_ERROR_ALREADY)
+                logAddrEvent(/* isAdd */ true, addr, error);
+                if (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)
                 {
                     error = OT_ERROR_NONE;
                 }
@@ -1215,7 +1211,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             if (!addr.IsMulticast())
             {
                 error = otIp6RemoveUnicastAddress(aInstance, &addr);
-                logAddrEvent(/* isAdd */ false, /* isUnicast */ true, addr6, error);
+                logAddrEvent(/* isAdd */ false, addr, error);
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
@@ -1224,7 +1220,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             else
             {
                 error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
-                logAddrEvent(/* isAdd */ false, /* isUnicast */ false, addr6, error);
+                logAddrEvent(/* isAdd */ false, addr, error);
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
@@ -1413,42 +1409,20 @@ static void processMLDEvent(otInstance *aInstance)
         {
             MLDv2Record *record = reinterpret_cast<MLDv2Record *>(&buffer[offset]);
 
-            otError      err;
-            otIp6Address address;
+            otError          err;
+            ot::Ip6::Address address;
 
             memcpy(&address.mFields.m8, &record->mMulticastAddress, sizeof(address.mFields.m8));
             inet_ntop(AF_INET6, &record->mMulticastAddress, addressString, sizeof(addressString));
             if (record->mRecordType == kICMPv6MLDv2RecordChangeToIncludeType)
             {
                 err = otIp6SubscribeMulticastAddress(aInstance, &address);
-                if (err == OT_ERROR_ALREADY)
-                {
-                    otLogNotePlat(
-                        "[netif] Will not subscribe duplicate multicast address %s",
-                        inet_ntop(AF_INET6, &record->mMulticastAddress, addressString, sizeof(addressString)));
-                }
-                else if (err != OT_ERROR_NONE)
-                {
-                    otLogWarnPlat("[netif] Failed to subscribe multicast address %s: %s", addressString,
-                                  otThreadErrorToString(err));
-                }
-                else
-                {
-                    otLogDebgPlat("[netif] Subscribed multicast address %s", addressString);
-                }
+                logAddrEvent(/* isAdd */ true, address, err);
             }
             else if (record->mRecordType == kICMPv6MLDv2RecordChangeToExcludeType)
             {
                 err = otIp6UnsubscribeMulticastAddress(aInstance, &address);
-                if (err != OT_ERROR_NONE)
-                {
-                    otLogWarnPlat("[netif] Failed to unsubscribe multicast address %s: %s", addressString,
-                                  otThreadErrorToString(err));
-                }
-                else
-                {
-                    otLogDebgPlat("[netif] Unsubscribed multicast address %s", addressString);
-                }
+                logAddrEvent(/* isAdd */ false, address, err);
             }
 
             offset += sizeof(MLDv2Record) + sizeof(in6_addr) * ntohs(record->mNumSources);
@@ -1460,8 +1434,6 @@ exit:
     {
         freeifaddrs(ifAddrs);
     }
-
-    return;
 }
 #endif
 

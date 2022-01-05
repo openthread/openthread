@@ -548,7 +548,8 @@ public:
      *
      * @retval kErrorNone          Successfully subscribed to @p aAddress.
      * @retval kErrorAlready       The multicast address is already subscribed.
-     * @retval kErrorInvalidArgs   The address indicated by @p aAddress is an internal multicast address.
+     * @retval kErrorInvalidArgs   The IP Address indicated by @p aAddress is an invalid multicast address.
+     * @retval kErrorRejected      The IP Address indicated by @p aAddress is an internal multicast address.
      * @retval kErrorNoBufs        The maximum number of allowed external multicast addresses are already added.
      *
      */
