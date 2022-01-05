@@ -118,7 +118,7 @@ Error Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLen
 {
     Error        error       = kErrorNotFound;
     uint16_t     valueLength = 0;
-    int          index       = 0; // This must be initalized to 0. See [Note] in Delete().
+    int          index       = 0; // This must be initialized to 0. See [Note] in Delete().
     uint32_t     offset;
     RecordHeader record;
 
@@ -258,7 +258,7 @@ exit:
 Error Flash::Delete(uint16_t aKey, int aIndex)
 {
     Error        error = kErrorNotFound;
-    int          index = 0; // This must be initalized to 0. See [Note] below.
+    int          index = 0; // This must be initialized to 0. See [Note] below.
     RecordHeader record;
 
     for (uint32_t offset = kSwapMarkerSize; offset < mSwapUsed; offset += record.GetSize())
