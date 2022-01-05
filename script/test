@@ -289,9 +289,9 @@ do_build_otbr_docker()
     )
 
     if [[ ${TREL} == 1 ]]; then
-        otbr_options+=("-DOT_TREL=ON")
+        otbr_options+=("-DOTBR_TREL=ON")
     else
-        otbr_options+=("-DOT_TREL=OFF")
+        otbr_options+=("-DOTBR_TREL=OFF")
     fi
 
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
