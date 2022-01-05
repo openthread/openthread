@@ -267,7 +267,12 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Backbo
     {
         // Here original PBBR restores its Backbone Router Service from Thread Network,
         // Intentionally skips the state update as PBBR will refresh its service.
-        mSequenceNumber      = aConfig.mSequenceNumber + 1;
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        // BBR-TC-02 forces Sequence Number for the reference device with raw UDP API
+        mSequenceNumber = aConfig.mSequenceNumber;
+#else
+        mSequenceNumber = aConfig.mSequenceNumber + 1;
+#endif
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
