@@ -58,8 +58,6 @@
 extern "C" {
 #endif
 
-#if !OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
-
 static void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     ot::String<OPENTHREAD_CONFIG_LOG_MAX_SIZE> logString;
@@ -74,31 +72,34 @@ static void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aForma
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
-    logString.Append("%s", otLogLevelToPrefixString(aLogLevel));
+
+    {
+        static const char *const kLevelStrings[] = {
+            "NONE", "CRIT", "WARN", "NOTE", "INFO", "DEBG",
+        };
+
+        uint16_t index = ((aLogLevel >= 0) && (aLogLevel < static_cast<int>(OT_ARRAY_LENGTH(kLevelStrings))))
+                             ? static_cast<uint16_t>(aLogLevel)
+                             : 0;
+
+        logString.Append("[%s]", kLevelStrings[index]);
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_PREPEND_REGION
     {
-        static const char *const kRegionPrefixStrings[] = {
-            _OT_REGION_SUFFIX,          _OT_REGION_API_PREFIX,      _OT_REGION_MLE_PREFIX,  _OT_REGION_ARP_PREFIX,
-            _OT_REGION_NET_DATA_PREFIX, _OT_REGION_ICMP_PREFIX,     _OT_REGION_IP6_PREFIX,  _OT_REGION_TCP_PREFIX,
-            _OT_REGION_MAC_PREFIX,      _OT_REGION_MEM_PREFIX,      _OT_REGION_NCP_PREFIX,  _OT_REGION_MESH_COP_PREFIX,
-            _OT_REGION_NET_DIAG_PREFIX, _OT_REGION_PLATFORM_PREFIX, _OT_REGION_COAP_PREFIX, _OT_REGION_CLI_PREFIX,
-            _OT_REGION_CORE_PREFIX,     _OT_REGION_UTIL_PREFIX,     _OT_REGION_BBR_PREFIX,  _OT_REGION_MLR_PREFIX,
-            _OT_REGION_DUA_PREFIX,      _OT_REGION_BR_PREFIX,       _OT_REGION_SRP_PREFIX,  _OT_REGION_DNS_PREFIX,
+        static const char *const kRegionStrings[] = {
+            "-------", "API----", "MLE----", "ARP----", "N-DATA-", "ICMP---", "IP6----", "TCP----",
+            "MAC----", "MEM----", "NCP----", "MESH-CP", "DIAG---", "PLAT---", "COAP---", "CLI----",
+            "CORE---", "UTIL---", "BBR----", "MLR----", "DUA----", "BR-----", "SRP----", "DNS----",
         };
 
-        if (aLogRegion < OT_ARRAY_LENGTH(kRegionPrefixStrings))
-        {
-            logString.Append("%s", kRegionPrefixStrings[aLogRegion]);
-        }
-        else
-        {
-            logString.Append("%s", _OT_REGION_SUFFIX);
-        }
+        uint16_t index = (aLogRegion < OT_ARRAY_LENGTH(kRegionStrings)) ? static_cast<uint16_t>(aLogRegion) : 0;
+
+        logString.Append("-%s-: ", kRegionStrings[index]);
     }
-#else
-    logString.Append("%s", _OT_REGION_SUFFIX);
+#elif OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
+    logString.Append(": ");
 #endif
 
     logString.AppendVarArgs(aFormat, aArgs);
@@ -218,14 +219,8 @@ void otLogOtns(const char *aFormat, ...)
 }
 #endif
 
-#endif // #if !OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
-
 #if OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
-#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
-#define otLogDump(aLogLevel, aLogRegion, aFormat, ...) \
-    _otDynamicLog(aLogLevel, aLogRegion, aFormat OPENTHREAD_CONFIG_LOG_SUFFIX, __VA_ARGS__)
-#else
 static void otLogDump(otLogLevel aLogLevel, otLogRegion aRegion, const char *aFormat, ...)
 {
     va_list args;
@@ -239,7 +234,6 @@ static void otLogDump(otLogLevel aLogLevel, otLogRegion aRegion, const char *aFo
 exit:
     return;
 }
-#endif
 
 static constexpr uint8_t kStringLineLength = 80;
 static constexpr uint8_t kDumpBytesPerLine = 16;
@@ -336,21 +330,6 @@ void otDump(otLogLevel, otLogRegion, const char *, const void *, const size_t)
 {
 }
 #endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
-
-#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY || OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
-
-const char *otLogLevelToPrefixString(otLogLevel aLogLevel)
-{
-    static const char *const kLevelStrings[] = {
-        _OT_LEVEL_NONE_PREFIX, _OT_LEVEL_CRIT_PREFIX, _OT_LEVEL_WARN_PREFIX,
-        _OT_LEVEL_NOTE_PREFIX, _OT_LEVEL_INFO_PREFIX, _OT_LEVEL_DEBG_PREFIX,
-    };
-
-    return ((aLogLevel >= 0) && (aLogLevel < static_cast<int>(OT_ARRAY_LENGTH(kLevelStrings))))
-               ? kLevelStrings[aLogLevel]
-               : "";
-}
-#endif
 
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
 /* this provides a stub, in case something uses the function */

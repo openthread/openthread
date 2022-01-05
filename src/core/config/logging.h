@@ -391,31 +391,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
- *
- * Set to 1 to require all the logging related definition to user macro only (up to the call to the platform log API).
- * Otherwise the logging implementation uses functions (which is preferred and recommended model).
- *
- * This is intended for special platform requirements where the logging needs to be defined a macro (e.g., for log
- * tokenization or similar features).
- *
- */
-#ifndef OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
-#define OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME
- *
- * Defines the name of macro used for logging inside OpenThread, by default it is set to `otPlatLog()`. This is used
- * and applicable only when `OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY` is set to 1.
- *
- */
-#ifndef OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME
-#define OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME otPlatLog
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_LOG_MAX_SIZE
  *
  * The maximum log string size (number of chars).
