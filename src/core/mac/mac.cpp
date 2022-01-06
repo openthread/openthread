@@ -74,18 +74,6 @@ const char Mac::sDomainNameInit[] = "DefaultDomain";
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
-    , mPendingActiveScan(false)
-    , mPendingEnergyScan(false)
-    , mPendingTransmitBeacon(false)
-    , mPendingTransmitDataDirect(false)
-#if OPENTHREAD_FTD
-    , mPendingTransmitDataIndirect(false)
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    , mPendingTransmitDataCsl(false)
-#endif
-#endif
-    , mPendingTransmitPoll(false)
-    , mPendingWaitingForData(false)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
     , mPromiscuous(false)
@@ -96,6 +84,7 @@ Mac::Mac(Instance &aInstance)
     , mDelayingSleep(false)
 #endif
     , mOperation(kOperationIdle)
+    , mPendingOperations(0)
     , mBeaconSequence(Random::NonCrypto::GetUint8())
     , mDataSequence(Random::NonCrypto::GetUint8())
     , mBroadcastTransmitCount(0)
@@ -394,10 +383,10 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 
     if (mRxOnWhenIdle)
     {
-        if (mPendingWaitingForData)
+        if (IsPending(kOperationWaitingForData))
         {
             mTimer.Stop();
-            mPendingWaitingForData = false;
+            ClearPending(kOperationWaitingForData);
         }
 
         if (mOperation == kOperationWaitingForData)
@@ -536,7 +525,7 @@ void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
 void Mac::RequestDirectFrameTransmission(void)
 {
     VerifyOrExit(IsEnabled());
-    VerifyOrExit(!mPendingTransmitDataDirect && (mOperation != kOperationTransmitDataDirect));
+    VerifyOrExit(!IsActiveOrPending(kOperationTransmitDataDirect));
 
     StartOperation(kOperationTransmitDataDirect);
 
@@ -548,7 +537,7 @@ exit:
 void Mac::RequestIndirectFrameTransmission(void)
 {
     VerifyOrExit(IsEnabled());
-    VerifyOrExit(!mPendingTransmitDataIndirect && (mOperation != kOperationTransmitDataIndirect));
+    VerifyOrExit(!IsActiveOrPending(kOperationTransmitDataIndirect));
 
     StartOperation(kOperationTransmitDataIndirect);
 
@@ -576,13 +565,13 @@ Error Mac::RequestDataPollTransmission(void)
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
-    VerifyOrExit(!mPendingTransmitPoll && (mOperation != kOperationTransmitPoll), error = kErrorAlready);
+    VerifyOrExit(!IsActiveOrPending(kOperationTransmitPoll), error = kErrorAlready);
 
     // We ensure data frame and data poll tx requests are handled in the
     // order they are requested. So if we have a pending direct data frame
     // tx request, it should be sent before the poll frame.
 
-    mShouldTxPollBeforeData = !mPendingTransmitDataDirect;
+    mShouldTxPollBeforeData = !IsPending(kOperationTransmitDataDirect);
 
     StartOperation(kOperationTransmitPoll);
 
@@ -614,7 +603,7 @@ void Mac::UpdateIdleMode(void)
 #endif
     }
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (mPendingTransmitDataCsl)
+    else if (IsPending(kOperationTransmitDataCsl))
     {
         mTimer.FireAt(mCslTxFireTime);
     }
@@ -642,10 +631,17 @@ exit:
     return;
 }
 
+bool Mac::IsActiveOrPending(Operation aOperation) const
+{
+    return (mOperation == aOperation) || IsPending(aOperation);
+}
+
 void Mac::StartOperation(Operation aOperation)
 {
     if (aOperation != kOperationIdle)
     {
+        SetPending(aOperation);
+
         otLogDebgMac("Request to start operation \"%s\"", OperationToString(aOperation));
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
@@ -657,48 +653,6 @@ void Mac::StartOperation(Operation aOperation)
             mShouldDelaySleep = false;
         }
 #endif
-    }
-
-    switch (aOperation)
-    {
-    case kOperationIdle:
-        break;
-
-    case kOperationActiveScan:
-        mPendingActiveScan = true;
-        break;
-
-    case kOperationEnergyScan:
-        mPendingEnergyScan = true;
-        break;
-
-    case kOperationTransmitBeacon:
-        mPendingTransmitBeacon = true;
-        break;
-
-    case kOperationTransmitDataDirect:
-        mPendingTransmitDataDirect = true;
-        break;
-
-#if OPENTHREAD_FTD
-    case kOperationTransmitDataIndirect:
-        mPendingTransmitDataIndirect = true;
-        break;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    case kOperationTransmitDataCsl:
-        mPendingTransmitDataCsl = true;
-        break;
-#endif
-#endif
-
-    case kOperationTransmitPoll:
-        mPendingTransmitPoll = true;
-        break;
-
-    case kOperationWaitingForData:
-        mPendingWaitingForData = true;
-        break;
     }
 
     if (mOperation == kOperationIdle)
@@ -718,18 +672,7 @@ void Mac::PerformNextOperation(void)
 
     if (!IsEnabled())
     {
-        mPendingWaitingForData     = false;
-        mPendingActiveScan         = false;
-        mPendingEnergyScan         = false;
-        mPendingTransmitBeacon     = false;
-        mPendingTransmitDataDirect = false;
-#if OPENTHREAD_FTD
-        mPendingTransmitDataIndirect = false;
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        mPendingTransmitDataCsl = false;
-#endif
-#endif
-        mPendingTransmitPoll = false;
+        mPendingOperations = 0;
         mTimer.Stop();
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
@@ -741,51 +684,43 @@ void Mac::PerformNextOperation(void)
     // `WaitingForData` should be checked before any other pending
     // operations since radio should remain in receive mode after
     // a data poll ack indicating a pending frame from parent.
-    if (mPendingWaitingForData)
+    if (IsPending(kOperationWaitingForData))
     {
-        mPendingWaitingForData = false;
-        mOperation             = kOperationWaitingForData;
+        mOperation = kOperationWaitingForData;
     }
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (mPendingTransmitDataCsl && TimerMilli::GetNow() >= mCslTxFireTime)
+    else if (IsPending(kOperationTransmitDataCsl) && TimerMilli::GetNow() >= mCslTxFireTime)
     {
-        mPendingTransmitDataCsl = false;
-        mOperation              = kOperationTransmitDataCsl;
+        mOperation = kOperationTransmitDataCsl;
     }
 #endif
-    else if (mPendingActiveScan)
+    else if (IsPending(kOperationActiveScan))
     {
-        mPendingActiveScan = false;
-        mOperation         = kOperationActiveScan;
+        mOperation = kOperationActiveScan;
     }
-    else if (mPendingEnergyScan)
+    else if (IsPending(kOperationEnergyScan))
     {
-        mPendingEnergyScan = false;
-        mOperation         = kOperationEnergyScan;
+        mOperation = kOperationEnergyScan;
     }
-    else if (mPendingTransmitBeacon)
+    else if (IsPending(kOperationTransmitBeacon))
     {
-        mPendingTransmitBeacon = false;
-        mOperation             = kOperationTransmitBeacon;
+        mOperation = kOperationTransmitBeacon;
     }
 #if OPENTHREAD_FTD
-    else if (mPendingTransmitDataIndirect)
+    else if (IsPending(kOperationTransmitDataIndirect))
     {
-        mPendingTransmitDataIndirect = false;
-        mOperation                   = kOperationTransmitDataIndirect;
+        mOperation = kOperationTransmitDataIndirect;
     }
 #endif // OPENTHREAD_FTD
-    else if (mPendingTransmitPoll && (!mPendingTransmitDataDirect || mShouldTxPollBeforeData))
+    else if (IsPending(kOperationTransmitPoll) && (!IsPending(kOperationTransmitDataDirect) || mShouldTxPollBeforeData))
     {
-        mPendingTransmitPoll = false;
-        mOperation           = kOperationTransmitPoll;
+        mOperation = kOperationTransmitPoll;
     }
-    else if (mPendingTransmitDataDirect)
+    else if (IsPending(kOperationTransmitDataDirect))
     {
-        mPendingTransmitDataDirect = false;
-        mOperation                 = kOperationTransmitDataDirect;
+        mOperation = kOperationTransmitDataDirect;
 
-        if (mPendingTransmitPoll)
+        if (IsPending(kOperationTransmitPoll))
         {
             // Ensure that a pending "transmit poll" operation request
             // is prioritized over any future "transmit data" requests.
@@ -795,6 +730,7 @@ void Mac::PerformNextOperation(void)
 
     if (mOperation != kOperationIdle)
     {
+        ClearPending(mOperation);
         otLogDebgMac("Starting operation \"%s\"", OperationToString(mOperation));
         mTimer.Stop(); // Stop the timer before any non-idle operation, have the operation itself be responsible to
                        // start the timer (if it wants to).
@@ -1603,7 +1539,7 @@ void Mac::HandleTimer(void)
 #endif
         }
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        else if (mPendingTransmitDataCsl)
+        else if (IsPending(kOperationTransmitDataCsl))
         {
             PerformNextOperation();
         }
