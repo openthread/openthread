@@ -101,6 +101,11 @@ bool platformInfraIfIsRunning(void)
     return ot::Posix::InfraNetif::Get().IsRunning();
 }
 
+const char *otSysGetInfraNetifName(void)
+{
+    return ot::Posix::InfraNetif::Get().GetNetifName();
+}
+
 namespace ot {
 namespace Posix {
 namespace {
