@@ -169,6 +169,7 @@ private:
     int8_t        mTxPower;
     uint8_t       mTxLen;
     bool          mRepeatActive;
+    bool          mDiagSendOn;
 #endif
 };
 
