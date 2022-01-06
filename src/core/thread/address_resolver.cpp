@@ -989,52 +989,39 @@ void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
                                           const CacheEntry &aEntry,
                                           CacheEntryList *  aList)
 {
-    const char *change = "";
-    const char *reason = "";
+    static const char *const kChangeStrings[] = {
+        "added",   // (0) kEntryAdded
+        "updated", // (1) kEntryUpdated
+        "removed", // (2) kEntryRemoved
+    };
 
-    switch (aChange)
-    {
-    case kEntryAdded:
-        change = "added";
-        break;
-    case kEntryUpdated:
-        change = "updated";
-        break;
-    case kEntryRemoved:
-        change = "removed";
-        break;
-    }
+    static const char *const kReasonStrings[] = {
+        "query request",          // (0) kReasonQueryRequest
+        "snoop",                  // (1) kReasonSnoop
+        "rx notification",        // (2) kReasonReceivedNotification
+        "removing router id",     // (3) kReasonRemovingRouterId
+        "removing rloc16",        // (4) kReasonRemovingRloc16
+        "rx icmp no route",       // (5) kReasonReceivedIcmpDstUnreachNoRoute
+        "evicting for new entry", // (6) kReasonEvictingForNewEntry
+        "removing eid",           // (7) kReasonRemovingEid
+    };
 
-    switch (aReason)
-    {
-    case kReasonQueryRequest:
-        reason = "query request";
-        break;
-    case kReasonSnoop:
-        reason = "snoop";
-        break;
-    case kReasonReceivedNotification:
-        reason = "rx notification";
-        break;
-    case kReasonRemovingRouterId:
-        reason = "removing router id";
-        break;
-    case kReasonRemovingRloc16:
-        reason = "removing rloc16";
-        break;
-    case kReasonReceivedIcmpDstUnreachNoRoute:
-        reason = "rx icmp no route";
-        break;
-    case kReasonEvictingForNewEntry:
-        reason = "evicting for new entry";
-        break;
-    case kReasonRemovingEid:
-        reason = "removing eid";
-        break;
-    }
+    static_assert(0 == kEntryAdded, "kEntryAdded value is incorrect");
+    static_assert(1 == kEntryUpdated, "kEntryUpdated value is incorrect");
+    static_assert(2 == kEntryRemoved, "kEntryRemoved value is incorrect");
 
-    otLogNoteArp("Cache entry %s: %s, 0x%04x%s%s - %s", change, aEntry.GetTarget().ToString().AsCString(),
-                 aEntry.GetRloc16(), (aList == nullptr) ? "" : ", list:", ListToString(aList), reason);
+    static_assert(0 == kReasonQueryRequest, "kReasonQueryRequest value is incorrect");
+    static_assert(1 == kReasonSnoop, "kReasonSnoop value is incorrect");
+    static_assert(2 == kReasonReceivedNotification, "kReasonReceivedNotification value is incorrect");
+    static_assert(3 == kReasonRemovingRouterId, "kReasonRemovingRouterId value is incorrect");
+    static_assert(4 == kReasonRemovingRloc16, "kReasonRemovingRloc16 value is incorrect");
+    static_assert(5 == kReasonReceivedIcmpDstUnreachNoRoute, "kReasonReceivedIcmpDstUnreachNoRoute value is incorrect");
+    static_assert(6 == kReasonEvictingForNewEntry, "kReasonEvictingForNewEntry value is incorrect");
+    static_assert(7 == kReasonRemovingEid, "kReasonRemovingEid value is incorrect");
+
+    otLogNoteArp("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange],
+                 aEntry.GetTarget().ToString().AsCString(), aEntry.GetRloc16(),
+                 (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);
 }
 
 const char *AddressResolver::ListToString(const CacheEntryList *aList) const

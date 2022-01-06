@@ -47,10 +47,45 @@ namespace ot {
 namespace Cli {
 
 /**
+ * This class is the base class for `Output` and `OutputWrapper` providing common helper methods.
+ *
+ */
+class OutputBase
+{
+public:
+    static const char kUnknownString[]; // Constant string "unknown".
+
+    /**
+     * This template static method converts an enumeration value to a string using a table array.
+     *
+     * @tparam EnumType       The `enum` type.
+     * @tparam kLength        The table array length (number of entries in the array).
+     *
+     * @param[in] aEnum       The enumeration value to convert (MUST be of `EnumType`).
+     * @param[in] aTable      A reference to the array of strings of length @p kLength. `aTable[e]` is the string
+     *                        representation of enumeration value `e`.
+     * @param[in] aNotFound   The string to return if the @p aEnum is not in the @p aTable.
+     *
+     * @returns The string representation of @p aEnum from @p aTable, or @p aNotFound if it is not in the table.
+     *
+     */
+    template <typename EnumType, uint16_t kLength>
+    static const char *Stringify(EnumType aEnum,
+                                 const char *const (&aTable)[kLength],
+                                 const char *aNotFound = kUnknownString)
+    {
+        return (static_cast<uint16_t>(aEnum) < kLength) ? aTable[static_cast<uint16_t>(aEnum)] : aNotFound;
+    }
+
+protected:
+    OutputBase(void) = default;
+};
+
+/**
  * This class provides CLI output helper methods.
  *
  */
-class Output
+class Output : public OutputBase
 {
 public:
     /**
@@ -337,7 +372,7 @@ private:
 #endif
 };
 
-class OutputWrapper
+class OutputWrapper : public OutputBase
 {
 protected:
     explicit OutputWrapper(Output &aOutput)

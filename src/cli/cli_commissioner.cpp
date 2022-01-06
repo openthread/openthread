@@ -325,22 +325,17 @@ void Commissioner::HandleStateChanged(otCommissionerState aState)
 
 const char *Commissioner::StateToString(otCommissionerState aState)
 {
-    const char *rval = "unknown";
+    static const char *const kStateString[] = {
+        "disabled",    // (0) OT_COMMISSIONER_STATE_DISABLED
+        "petitioning", // (1) OT_COMMISSIONER_STATE_PETITION
+        "active",      // (2) OT_COMMISSIONER_STATE_ACTIVE
+    };
 
-    switch (aState)
-    {
-    case OT_COMMISSIONER_STATE_DISABLED:
-        rval = "disabled";
-        break;
-    case OT_COMMISSIONER_STATE_PETITION:
-        rval = "petitioning";
-        break;
-    case OT_COMMISSIONER_STATE_ACTIVE:
-        rval = "active";
-        break;
-    }
+    static_assert(0 == OT_COMMISSIONER_STATE_DISABLED, "OT_COMMISSIONER_STATE_DISABLED value is incorrect");
+    static_assert(1 == OT_COMMISSIONER_STATE_PETITION, "OT_COMMISSIONER_STATE_PETITION value is incorrect");
+    static_assert(2 == OT_COMMISSIONER_STATE_ACTIVE, "OT_COMMISSIONER_STATE_ACTIVE value is incorrect");
 
-    return rval;
+    return Stringify(aState, kStateString);
 }
 
 void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
@@ -355,28 +350,23 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
                                      const otJoinerInfo *      aJoinerInfo,
                                      const otExtAddress *      aJoinerId)
 {
+    static const char *const kEventStrings[] = {
+        "start",    // (0) OT_COMMISSIONER_JOINER_START
+        "connect",  // (1) OT_COMMISSIONER_JOINER_CONNECTED
+        "finalize", // (2) OT_COMMISSIONER_JOINER_FINALIZE
+        "end",      // (3) OT_COMMISSIONER_JOINER_END
+        "remove",   // (4) OT_COMMISSIONER_JOINER_REMOVED
+    };
+
+    static_assert(0 == OT_COMMISSIONER_JOINER_START, "OT_COMMISSIONER_JOINER_START value is incorrect");
+    static_assert(1 == OT_COMMISSIONER_JOINER_CONNECTED, "OT_COMMISSIONER_JOINER_CONNECTED value is incorrect");
+    static_assert(2 == OT_COMMISSIONER_JOINER_FINALIZE, "OT_COMMISSIONER_JOINER_FINALIZE value is incorrect");
+    static_assert(3 == OT_COMMISSIONER_JOINER_END, "OT_COMMISSIONER_JOINER_END value is incorrect");
+    static_assert(4 == OT_COMMISSIONER_JOINER_REMOVED, "OT_COMMISSIONER_JOINER_REMOVED value is incorrect");
+
     OT_UNUSED_VARIABLE(aJoinerInfo);
 
-    OutputFormat("Commissioner: Joiner ");
-
-    switch (aEvent)
-    {
-    case OT_COMMISSIONER_JOINER_START:
-        OutputFormat("start ");
-        break;
-    case OT_COMMISSIONER_JOINER_CONNECTED:
-        OutputFormat("connect ");
-        break;
-    case OT_COMMISSIONER_JOINER_FINALIZE:
-        OutputFormat("finalize ");
-        break;
-    case OT_COMMISSIONER_JOINER_END:
-        OutputFormat("end ");
-        break;
-    case OT_COMMISSIONER_JOINER_REMOVED:
-        OutputFormat("remove ");
-        break;
-    }
+    OutputFormat("Commissioner: Joiner %s ", Stringify(aEvent, kEventStrings));
 
     if (aJoinerId != nullptr)
     {

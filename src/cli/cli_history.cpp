@@ -128,14 +128,15 @@ otError History::ProcessIpAddr(Arg aArgs[])
         {
             sprintf(&addressString[strlen(addressString)], "/%d", info->mPrefixLength);
 
-            OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString, kEventStrings[info->mEvent],
-                       addressString, Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
+            OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString,
+                       Stringify(info->mEvent, kEventStrings), addressString,
+                       Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
                        info->mPreferred ? 'Y' : 'N', info->mValid ? 'Y' : 'N', info->mRloc ? 'Y' : 'N');
         }
         else
         {
             OutputLine("%s -> event:%s address:%s prefixlen:%d origin:%s scope:%d preferred:%s valid:%s rloc:%s",
-                       ageString, kEventStrings[info->mEvent], addressString, info->mPrefixLength,
+                       ageString, Stringify(info->mEvent, kEventStrings), addressString, info->mPrefixLength,
                        Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
                        info->mPreferred ? "yes" : "no", info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
         }
@@ -194,7 +195,7 @@ otError History::ProcessIpMulticastAddr(Arg aArgs[])
         otIp6AddressToString(&info->mAddress, addressString, sizeof(addressString));
 
         OutputLine(isList ? "%s -> event:%s address:%s origin:%s" : "| %20s | %-12s | %-39s | %-6s |", ageString,
-                   kEventStrings[info->mEvent], addressString,
+                   Stringify(info->mEvent, kEventStrings), addressString,
                    Interpreter::AddressOriginToString(info->mAddressOrigin));
     }
 
@@ -327,31 +328,19 @@ otError History::ProcessTx(Arg aArgs[])
 
 const char *History::MessagePriorityToString(uint8_t aPriority)
 {
-    const char *str = "unkn";
+    static const char *const kPriorityStrings[] = {
+        "low",  // (0) OT_HISTORY_TRACKER_MSG_PRIORITY_LOW
+        "norm", // (1) OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL
+        "high", // (2) OT_HISTORY_TRACKER_MSG_PRIORITY_HIGH
+        "net",  // (3) OT_HISTORY_TRACKER_MSG_PRIORITY_NET
+    };
 
-    switch (aPriority)
-    {
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_LOW:
-        str = "low";
-        break;
+    static_assert(0 == OT_HISTORY_TRACKER_MSG_PRIORITY_LOW, "MSG_PRIORITY_LOW value is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL, "MSG_PRIORITY_NORMAL value is incorrect");
+    static_assert(2 == OT_HISTORY_TRACKER_MSG_PRIORITY_HIGH, "MSG_PRIORITY_HIGH value is incorrect");
+    static_assert(3 == OT_HISTORY_TRACKER_MSG_PRIORITY_NET, "MSG_PRIORITY_NET value is incorrect");
 
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL:
-        str = "norm";
-        break;
-
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_HIGH:
-        str = "high";
-        break;
-
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_NET:
-        str = "net";
-        break;
-
-    default:
-        break;
-    }
-
-    return str;
+    return Stringify(aPriority, kPriorityStrings, "unkn");
 }
 
 const char *History::RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo)
