@@ -36,6 +36,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,14 +102,17 @@ const char *otExitCodeToString(uint8_t aExitCode);
  * @param[in]   aExitCode   The exit code.
  *
  */
-#define VerifyOrDie(aCondition, aExitCode)                                                                   \
-    do                                                                                                       \
-    {                                                                                                        \
-        if (!(aCondition))                                                                                   \
-        {                                                                                                    \
-            otLogCritPlat("%s() at %s:%d: %s", __func__, __FILE__, __LINE__, otExitCodeToString(aExitCode)); \
-            exit(aExitCode);                                                                                 \
-        }                                                                                                    \
+#define VerifyOrDie(aCondition, aExitCode)                                                         \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(aCondition))                                                                         \
+        {                                                                                          \
+            const char *start = strrchr(__FILE__, '/');                                            \
+            OT_UNUSED_VARIABLE(start);                                                             \
+            otLogCritPlat("%s() at %s:%d: %s", __func__, (start ? start + 1 : __FILE__), __LINE__, \
+                          otExitCodeToString(aExitCode));                                          \
+            exit(aExitCode);                                                                       \
+        }                                                                                          \
     } while (false)
 
 /**
