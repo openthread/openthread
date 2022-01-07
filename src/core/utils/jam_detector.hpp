@@ -181,10 +181,9 @@ private:
     static constexpr uint8_t kMaxWindow            = 63; // Max window size
     static constexpr int8_t  kDefaultRssiThreshold = 0;
 
-    static constexpr uint16_t kMaxSampleInterval = 256;  // in ms
-    static constexpr uint16_t kMinSampleInterval = 2;    // in ms
-    static constexpr uint32_t kMaxRandomDelay    = 4;    // in ms
-    static constexpr uint32_t kOneSecondInterval = 1000; // in ms
+    static constexpr uint16_t kMaxSampleInterval = 256; // in ms
+    static constexpr uint16_t kMinSampleInterval = 2;   // in ms
+    static constexpr uint32_t kMaxRandomDelay    = 4;   // in ms
 
     void        CheckState(void);
     void        SetJamState(bool aNewState);

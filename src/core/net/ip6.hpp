@@ -314,8 +314,6 @@ private:
 
     static constexpr uint16_t kMinimalMtu = 1280;
 
-    static constexpr uint32_t kStateUpdatePeriod = 1000;
-
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
 
