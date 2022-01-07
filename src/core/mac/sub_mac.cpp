@@ -1090,10 +1090,9 @@ void SubMac::HandleCslTimer(void)
         break;
 
     case kCslSleep:
-        mCslSampleTime += periodUs;
-
         if (RadioSupportsReceiveTiming())
         {
+            mCslSampleTime += periodUs;
             mCslTimer.FireAt(mCslSampleTime - timeAhead);
             timeAhead -= kCslReceiveTimeAhead;
         }
@@ -1101,6 +1100,7 @@ void SubMac::HandleCslTimer(void)
         {
             mCslTimer.FireAt(mCslSampleTime + timeAfter);
             mCslState = kCslSample;
+            mCslSampleTime += periodUs;
         }
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
