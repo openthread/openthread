@@ -95,7 +95,7 @@ Done
 - [releaserouterid](#releaserouterid-routerid)
 - [reset](#reset)
 - [rloc16](#rloc16)
-- [route](#route-add-prefix-s-prf)
+- [route](#route)
 - [router](#router-list)
 - [routerdowngradethreshold](#routerdowngradethreshold)
 - [routereligible](#routereligible)
