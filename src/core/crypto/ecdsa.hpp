@@ -228,7 +228,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class PublicKey
+    class PublicKey : public Equatable<PublicKey>
     {
         friend class KeyPair;
 

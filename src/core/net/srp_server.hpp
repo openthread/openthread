@@ -453,13 +453,13 @@ public:
         uint32_t GetKeyLease(void) const { return mKeyLease; }
 
         /**
-         * This method returns the KEY resource of the host.
+         * This method returns the KEY resource record of the host.
          *
-         * @returns  A pointer to the ECDSA P 256 public key if there is valid one.
-         *           `nullptr` if no valid key exists.
+         * @returns  A pointer to the ECDSA P 256 public key resource record
+         *           if there is valid one. `nullptr` if no valid key exists.
          *
          */
-        const Dns::Ecdsa256KeyRecord *GetKey(void) const { return mKey.IsValid() ? &mKey : nullptr; }
+        const Dns::Ecdsa256KeyRecord *GetKeyRecord(void) const { return mKeyRecord.IsValid() ? &mKeyRecord : nullptr; }
 
         /**
          * This method returns the expire time (in milliseconds) of the host.
@@ -518,7 +518,7 @@ public:
         ~Host(void);
 
         Error                SetFullName(const char *aFullName);
-        void                 SetKey(Dns::Ecdsa256KeyRecord &aKey);
+        void                 SetKeyRecord(Dns::Ecdsa256KeyRecord &aKeyRecord);
         void                 SetLease(uint32_t aLease) { mLease = aLease; }
         void                 SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
         LinkedList<Service> &GetServices(void) { return mServices; }
@@ -540,11 +540,14 @@ public:
         Host *                             mNext;
         Heap::String                       mFullName;
         Array<Ip6::Address, kMaxAddresses> mAddresses;
-        Dns::Ecdsa256KeyRecord             mKey;
-        uint32_t                           mLease;    // The LEASE time in seconds.
-        uint32_t                           mKeyLease; // The KEY-LEASE time in seconds.
-        TimeMilli                          mUpdateTime;
-        LinkedList<Service>                mServices;
+
+        // TODO(wgtdkp): there is no necessary to save the entire resource
+        // record, saving only the ECDSA-256 public key should be enough.
+        Dns::Ecdsa256KeyRecord mKeyRecord;
+        uint32_t               mLease;    // The LEASE time in seconds.
+        uint32_t               mKeyLease; // The KEY-LEASE time in seconds.
+        TimeMilli              mUpdateTime;
+        LinkedList<Service>    mServices;
     };
 
     /**
@@ -845,7 +848,7 @@ private:
     void  ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata);
     Error ProcessUpdateSection(Host &aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
     Error ProcessAdditionalSection(Host *aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
-    Error VerifySignature(const Dns::Ecdsa256KeyRecord &aKey,
+    Error VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
                           const Message &               aMessage,
                           Dns::UpdateHeader             aDnsHeader,
                           uint16_t                      aSigOffset,
