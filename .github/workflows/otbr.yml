@@ -93,6 +93,8 @@ jobs:
           *.pcap
           *.json
           *.log
+          coredump_*
+          otbr-agent_*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -162,6 +164,8 @@ jobs:
           *.pcap
           *.json
           *.log
+          coredump_*
+          otbr-agent_*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc

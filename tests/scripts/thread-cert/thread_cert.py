@@ -269,8 +269,12 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self._stop_backbone_sniffer()
 
         for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+            try:
+                node.stop()
+            except:
+                traceback.print_exc()
+            finally:
+                node.destroy()
 
         self.simulator.stop()
 

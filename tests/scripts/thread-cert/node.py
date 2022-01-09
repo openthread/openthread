@@ -89,6 +89,14 @@ class OtbrDocker:
                                              stdout=subprocess.DEVNULL,
                                              stderr=subprocess.DEVNULL)
 
+        try:
+            self._ot_rcp_proc.wait(1)
+        except subprocess.TimeoutExpired:
+            # We expect ot-rcp not to quit in 1 second.
+            pass
+        else:
+            raise Exception(f"ot-rcp {nodeid} exited unexpectedly!")
+
     def _get_ot_rcp_path(self) -> str:
         srcdir = os.environ['top_builddir']
         path = '%s/examples/apps/ncp/ot-rcp' % srcdir
@@ -179,14 +187,19 @@ class OtbrDocker:
         self._shutdown_socat()
 
     def _shutdown_docker(self):
-        if self._docker_proc is not None:
+        if self._docker_proc is None:
+            return
+
+        try:
             COVERAGE = int(os.getenv('COVERAGE', '0'))
             OTBR_COVERAGE = int(os.getenv('OTBR_COVERAGE', '0'))
+            test_name = os.getenv('TEST_NAME')
+            unique_node_id = f'{test_name}-{PORT_OFFSET}-{self.nodeid}'
+
             if COVERAGE or OTBR_COVERAGE:
                 self.bash('service otbr-agent stop')
 
-                test_name = os.getenv('TEST_NAME')
-                cov_file_path = f'/tmp/coverage/coverage-{test_name}-{PORT_OFFSET}-{self.nodeid}.info'
+                cov_file_path = f'/tmp/coverage/coverage-{unique_node_id}.info'
                 # Upload OTBR code coverage if OTBR_COVERAGE=1, otherwise OpenThread code coverage.
                 if OTBR_COVERAGE:
                     codecov_cmd = f'lcov --directory . --capture --output-file {cov_file_path}'
@@ -196,6 +209,12 @@ class OtbrDocker:
 
                 self.bash(codecov_cmd)
 
+            copyCore = subprocess.run(f'docker cp {self._docker_name}:/core ./coredump_{unique_node_id}', shell=True)
+            if copyCore.returncode == 0:
+                subprocess.check_call(
+                    f'docker cp {self._docker_name}:/usr/sbin/otbr-agent ./otbr-agent_{unique_node_id}', shell=True)
+
+        finally:
             subprocess.check_call(f"docker rm -f {self._docker_name}", shell=True)
             self._docker_proc.wait()
             del self._docker_proc
