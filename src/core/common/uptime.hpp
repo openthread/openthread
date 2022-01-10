@@ -99,11 +99,7 @@ public:
     static void UptimeToString(uint64_t aUptime, StringWriter &aWriter);
 
 private:
-    static constexpr uint32_t kTimerInterval   = (1 << 30);
-    static constexpr uint32_t kOneSecondInMsec = 1000;
-    static constexpr uint32_t kOneMinuteInMsec = 60 * kOneSecondInMsec;
-    static constexpr uint32_t kOneHourInMsec   = 60 * kOneMinuteInMsec;
-    static constexpr uint32_t kOneDayInMsec    = 24 * kOneHourInMsec;
+    static constexpr uint32_t kTimerInterval = (1 << 30);
 
     static_assert(static_cast<uint32_t>(4 * kTimerInterval) == 0, "kTimerInterval is not correct");
 

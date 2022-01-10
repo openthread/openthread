@@ -60,6 +60,11 @@ namespace ot {
 class Time : public Unequatable<Time>
 {
 public:
+    static constexpr uint32_t kOneSecondInMsec = 1000u;                 ///< One second interval in msec.
+    static constexpr uint32_t kOneMinuteInMsec = kOneSecondInMsec * 60; ///< One minute interval in msec.
+    static constexpr uint32_t kOneHourInMsec   = kOneMinuteInMsec * 60; ///< One hour interval in msec.
+    static constexpr uint32_t kOneDayInMsec    = kOneHourInMsec * 24;   ///< One day interval in msec.
+
     /**
      * This constant defines a maximum time duration ensured to be longer than any other duration.
      *

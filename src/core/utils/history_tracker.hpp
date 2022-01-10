@@ -250,16 +250,11 @@ public:
     static void EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);
 
 private:
-    static constexpr uint32_t kOneSecondInMsec = 1000;
-    static constexpr uint32_t kOneMinuteInMsec = 60 * kOneSecondInMsec;
-    static constexpr uint32_t kOneHourInMsec   = 60 * kOneMinuteInMsec;
-    static constexpr uint32_t kOneDayInMsec    = 24 * kOneHourInMsec;
-
     // `Timestamp` uses `uint32_t` value. `2^32` msec is 49 days, 17
     // hours, 2 minutes and 47 seconds and 296 msec. We use 49 days
     // as `kMaxAge` and check for aged entries every 16 hours.
 
-    static constexpr uint32_t kAgeCheckPeriod = 16 * kOneHourInMsec;
+    static constexpr uint32_t kAgeCheckPeriod = 16 * Time::kOneHourInMsec;
 
     static constexpr uint16_t kNetInfoListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE;
     static constexpr uint16_t kUnicastAddrListSize   = OPENTHREAD_CONFIG_HISTORY_TRACKER_UNICAST_ADDRESS_LIST_SIZE;
