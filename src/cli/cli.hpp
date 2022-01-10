@@ -76,8 +76,6 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/type_traits.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 
@@ -229,11 +227,7 @@ private:
     static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
     static constexpr uint32_t kLocateTimeoutMsecs            = 2500;
 
-    struct Command
-    {
-        const char *mName;
-        otError (Interpreter::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<Interpreter>;
 
     template <typename ValueType> using GetHandler         = ValueType (&)(otInstance *);
     template <typename ValueType> using SetHandler         = void (&)(otInstance *, ValueType);
@@ -888,7 +882,7 @@ private:
         {"version", &Interpreter::ProcessVersion},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;

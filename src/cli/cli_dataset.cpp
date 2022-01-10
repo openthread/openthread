@@ -129,7 +129,7 @@ otError Dataset::Process(Arg aArgs[])
         ExitNow(error = Print(sDataset));
     }
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);

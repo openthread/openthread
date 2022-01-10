@@ -43,8 +43,6 @@
 #include <openthread/coap_secure.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #ifndef CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
@@ -87,11 +85,7 @@ private:
         kPskIdMaxLength = 32
     };
 
-    struct Command
-    {
-        const char *mName;
-        otError (CoapSecure::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<CoapSecure>;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     enum BlockType : uint8_t{
@@ -175,7 +169,7 @@ private:
 #endif
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     otCoapBlockwiseResource mResource;

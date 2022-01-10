@@ -39,8 +39,6 @@
 #include <openthread/netdata.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -98,11 +96,7 @@ public:
     void OutputService(const otServiceConfig &aConfig);
 
 private:
-    struct Command
-    {
-        const char *mName;
-        otError (NetworkData::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<NetworkData>;
 
     otError ProcessHelp(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
@@ -136,7 +130,7 @@ private:
 #endif
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

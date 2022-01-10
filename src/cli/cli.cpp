@@ -293,7 +293,7 @@ void Interpreter::ProcessLine(char *aBuf)
     }
 #endif
 
-    command = Utils::LookupTable::Find(args[0].GetCString(), sCommands);
+    command = BinarySearch::Find(args[0].GetCString(), sCommands);
 
     if (command != nullptr)
     {
