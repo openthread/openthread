@@ -564,7 +564,13 @@ otError Interpreter::ProcessBackboneRouter(Arg aArgs[])
             }
 #endif
         }
-
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        else if (aArgs[0] == "skipseqnoinc")
+        {
+            otBackboneRouterConfigSkipSeqNumIncrease(GetInstancePtr(), true);
+            ExitNow();
+        }
+#endif
         SuccessOrExit(error = ProcessBackboneRouterLocal(aArgs));
     }
 

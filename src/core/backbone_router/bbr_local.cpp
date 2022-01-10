@@ -57,6 +57,9 @@ Local::Local(Instance &aInstance)
     , mIsServiceAdded(false)
     , mDomainPrefixCallback(nullptr)
     , mDomainPrefixCallbackContext(nullptr)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mSkipSeqNumIncrease(false)
+#endif
 {
     mDomainPrefixConfig.GetPrefix().SetLength(0);
 
@@ -267,14 +270,18 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Backbo
     {
         // Here original PBBR restores its Backbone Router Service from Thread Network,
         // Intentionally skips the state update as PBBR will refresh its service.
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        // BBR-TC-02 forces Sequence Number for the reference device with raw UDP API
-        mSequenceNumber = aConfig.mSequenceNumber;
-#else
-        mSequenceNumber = aConfig.mSequenceNumber + 1;
-#endif
+        mSequenceNumber      = aConfig.mSequenceNumber + 1;
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (mSkipSeqNumIncrease)
+        {
+            // BBR-TC-02 forces Sequence Number for the reference device with raw UDP API
+            mSequenceNumber = aConfig.mSequenceNumber;
+        }
+#endif
+
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         if (AddService(true /* Force registration to refresh and restore Primary state */) == kErrorNone)
         {
@@ -448,6 +455,13 @@ void Local::SetDomainPrefixCallback(otBackboneRouterDomainPrefixCallback aCallba
     mDomainPrefixCallback        = aCallback;
     mDomainPrefixCallbackContext = aContext;
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void Local::ConfigSkipSeqNumIncrease(bool aSkip)
+{
+    mSkipSeqNumIncrease = aSkip;
+}
+#endif
 
 } // namespace BackboneRouter
 
