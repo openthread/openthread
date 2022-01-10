@@ -60,33 +60,53 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    - name: Get Border Router Test ID
+      id: unique_action_id
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "/tmp/otbr_unique_action_id"
+        echo ::set-output  name=id::${GITHUB_WORKFLOW}-${GITHUB_JOB}-${GITHUB_RUN_ID}-$(cd /tmp/otbr_unique_action_id/ && git rev-parse HEAD)
+    - name: Check cached result
+      id: check_cache_result
+      uses: actions/cache@v2
+      with:
+        path: |
+          _test_complete_
+        key: "_test_complete_${{ steps.unique_action_id.outputs.id }}"
     - name: Build OTBR Docker
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         ./script/test build_otbr_docker
     - name: Bootstrap
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test build
     - name: Get Thread-Wireshark
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test get_thread_wireshark
     - name: Run
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: cov-thread-1-2-backbone-docker
         path: /tmp/coverage/
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: thread-1-2-backbone-results
         path: |
@@ -94,12 +114,18 @@ jobs:
           *.json
           *.log
     - name: Generate Coverage
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: cov-thread-1-2-backbone
         path: tmp/coverage.info
+    - name: Cache test result
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      run: |
+        mkdir _test_complete_
 
   thread-border-router:
     runs-on: ubuntu-20.04
@@ -127,34 +153,54 @@ jobs:
       BORDER_ROUTING: 1
     steps:
     - uses: actions/checkout@v2
+    - name: Get Border Router Test ID
+      id: unique_action_id
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "/tmp/otbr_unique_action_id"
+        echo ::set-output  name=id::${GITHUB_WORKFLOW}-${GITHUB_JOB}-${GITHUB_RUN_ID}-$(cd /tmp/otbr_unique_action_id/ && git rev-parse HEAD)-${{matrix.otbr_mdns}}-trel${{matrix.otbr_trel}}
+    - name: Check cached result
+      id: check_cache_result
+      uses: actions/cache@v2
+      with:
+        path: |
+          _test_complete_
+        key: "_test_complete_${{ steps.unique_action_id.outputs.id }}"
     - name: Build OTBR Docker
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         TREL: ${{ matrix.otbr_trel }}
       run: |
         ./script/test build_otbr_docker
     - name: Bootstrap
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test build
     - name: Get Thread-Wireshark
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test get_thread_wireshark
     - name: Run
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/border_router/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: cov-thread-border-router-docker
         path: /tmp/coverage/
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: thread-border-router-results
         path: |
@@ -162,12 +208,18 @@ jobs:
           *.json
           *.log
     - name: Generate Coverage
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: cov-thread-border-router
         path: tmp/coverage.info
+    - name: Cache test result
+      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      run: |
+        mkdir _test_complete_
 
   upload-coverage:
     needs:
@@ -185,9 +237,11 @@ jobs:
       with:
         path: coverage/
     - name: Combine Coverage
+      continue-on-error: true
       run: |
         script/test combine_coverage
     - name: Upload Coverage
+      continue-on-error: true
       uses: codecov/codecov-action@v1
       with:
         files: final.info
