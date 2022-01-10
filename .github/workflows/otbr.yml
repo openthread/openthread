@@ -125,6 +125,7 @@ jobs:
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
       BORDER_ROUTING: 1
+      MAX_JOBS: 3
     steps:
     - uses: actions/checkout@v2
     - name: Build OTBR Docker
