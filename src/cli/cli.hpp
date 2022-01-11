@@ -397,9 +397,6 @@ private:
     otError ProcessEidCache(Arg aArgs[]);
 #endif
     otError ProcessEui64(Arg aArgs[]);
-#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-    otError ProcessExit(Arg aArgs[]);
-#endif
     otError ProcessLog(Arg aArgs[]);
     otError ProcessExtAddress(Arg aArgs[]);
     otError ProcessExtPanId(Arg aArgs[]);
@@ -470,10 +467,6 @@ private:
     otError ProcessNeighbor(Arg aArgs[]);
 #endif
     otError ProcessNetworkData(Arg aArgs[]);
-    otError ProcessNetworkDataPrefix(void);
-    otError ProcessNetworkDataRoute(void);
-    otError ProcessNetworkDataService(void);
-
     otError ProcessNetstat(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     otError ProcessService(Arg aArgs[]);
