@@ -128,10 +128,20 @@ public:
                         const otIp6Address &aDestAddress,
                         const uint8_t *     aBuffer,
                         uint16_t            aBufferLength);
+
+    /**
+     * This method gets the infrastructure network interface name.
+     *
+     * @returns The infrastructure network interface name, or `nullptr` if not specified.
+     *
+     */
+    const char *GetNetifName(void) const { return (mInfraIfIndex != 0) ? mInfraIfName : nullptr; }
+
     /**
      * This function gets the infrastructure network interface singleton.
      *
      * @returns The singleton object.
+     *
      */
     static InfraNetif &Get(void);
 

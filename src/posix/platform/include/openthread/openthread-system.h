@@ -176,6 +176,14 @@ const char *otSysGetThreadNetifName(void);
  */
 unsigned int otSysGetThreadNetifIndex(void);
 
+/**
+ * This method returns the infrastructure network interface name.
+ *
+ * @returns The infrastructure network interface name, or `nullptr` if not specified.
+ *
+ */
+const char *otSysGetInfraNetifName(void);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
