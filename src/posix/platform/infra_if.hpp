@@ -132,7 +132,8 @@ public:
     /**
      * This method gets the infrastructure network interface name.
      *
-     * @returns The infrastructure network interface name.
+     * @returns The infrastructure network interface name, or `nullptr` if not specified.
+     *
      */
     const char *GetNetifName(void) const { return (mInfraIfIndex != 0) ? mInfraIfName : nullptr; }
 
@@ -140,6 +141,7 @@ public:
      * This function gets the infrastructure network interface singleton.
      *
      * @returns The singleton object.
+     *
      */
     static InfraNetif &Get(void);
 
