@@ -559,11 +559,8 @@ class OpenThreadTHCI(object):
             False: fail to set the behavior.
         """
         print('call __skipSeqNoIncrease()')
-        try:
-            cmd = 'bbr skipseqnoinc'
-            return self.__executeCommand(cmd)[-1] == 'Done'
-        except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger('__setAddressFilterMode() Error: ' + str(e))
+        cmd = 'bbr skipseqnoinc'
+        return self.__executeCommand(cmd)[-1] == 'Done'
 
     def __startOpenThread(self):
         """start OpenThread stack
