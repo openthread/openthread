@@ -391,6 +391,13 @@ else()
     message(FATAL_ERROR "Invalid max RCP restoration count: ${OT_RCP_RESTORATION_MAX_COUNT}")
 endif()
 
+option(OT_TCP "enable TCPlp support")
+if(OT_TCP)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_TCP_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_TCP_ENABLE=0")
+endif()
+
 # Checks
 if(OT_PLATFORM_UDP AND OT_UDP_FORWARD)
     message(FATAL_ERROR "OT_PLATFORM_UDP and OT_UDP_FORWARD are exclusive")

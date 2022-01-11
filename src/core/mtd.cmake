@@ -43,6 +43,9 @@ target_sources(openthread-mtd PRIVATE ${COMMON_SOURCES})
 target_link_libraries(openthread-mtd
     PRIVATE
         ${OT_MBEDTLS}
-        tcplp
         ot-config
 )
+
+if(OT_TCP)
+    target_link_libraries(openthread-mtd PRIVATE tcplp)
+endif()

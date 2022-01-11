@@ -48,6 +48,7 @@ build()
 
     options+=(
         "-DOT_TREL=ON"
+        "-DOT_TCP=ON"
     )
 
     reset_source

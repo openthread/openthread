@@ -71,6 +71,7 @@ readonly OT_BUILD_OPTIONS=(
     "-DOT_SNTP_CLIENT=ON"
     "-DOT_SRP_CLIENT=ON"
     "-DOT_SRP_SERVER=ON"
+    "-DOT_TCP=ON"
 )
 
 readonly OT_CFLAGS=(

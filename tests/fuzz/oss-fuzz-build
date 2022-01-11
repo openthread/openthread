@@ -69,6 +69,7 @@
         -DOT_SNTP_CLIENT=ON \
         -DOT_SRP_CLIENT=ON \
         -DOT_SRP_SERVER=ON \
+        -DOT_TCP=ON \
         -DOT_THREAD_VERSION=1.2 \
         -DOT_UPTIME=ON \
         ..
