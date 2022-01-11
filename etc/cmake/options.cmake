@@ -360,6 +360,11 @@ if(OT_UPTIME)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UPTIME_ENABLE=1")
 endif()
 
+option(OT_FIREWALL "enable firewall")
+if (OT_FIREWALL)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE=1")
+endif()
+
 option(OT_FULL_LOGS "enable full logs")
 if(OT_FULL_LOGS)
     if(NOT OT_LOG_LEVEL)
