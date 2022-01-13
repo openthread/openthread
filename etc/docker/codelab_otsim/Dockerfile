@@ -8,7 +8,11 @@ ARG OT_GIT_REF=main
 RUN apt-get update -qq
 
 # Install packages needed for build and runtime:
-RUN apt-get --no-install-recommends install -y git sudo software-properties-common \
+RUN apt-get --no-install-recommends install -y \
+    git \
+    sudo \
+    inetutils-ping \
+    software-properties-common \
     ca-certificates \
     && update-ca-certificates
 
