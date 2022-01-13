@@ -2812,11 +2812,8 @@ class OpenThreadTHCI(object):
                     # new passing way listSecurityPolicy=[3600, 0b11001111]
                     rotationTime = listSecurityPolicy[0]
                     # bit order
-                    if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-                        if self.DeviceCapability != DevCapb.V1_1:
-                            policyBits = listSecurityPolicy[2] << 8 | listSecurityPolicy[1]
-                        else:
-                            policyBits = listSecurityPolicy[1]
+                    if len(listSecurityPolicy) > 2:
+                        policyBits = listSecurityPolicy[2] << 8 | listSecurityPolicy[1]
                     else:
                         policyBits = listSecurityPolicy[1]
 
