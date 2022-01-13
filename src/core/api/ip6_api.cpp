@@ -38,9 +38,7 @@
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
-#endif
 
 using namespace ot;
 

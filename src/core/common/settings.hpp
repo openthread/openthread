@@ -44,15 +44,11 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/settings_driver.hpp"
+#include "crypto/ecdsa.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "utils/flash.hpp"
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
-#endif
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-#include "crypto/ecdsa.hpp"
-#endif
 
 namespace ot {
 

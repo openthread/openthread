@@ -47,6 +47,8 @@
 
 #include "common/as_core_type.hpp"
 #include "common/error.hpp"
+#include "common/extension.hpp"
+#include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
@@ -54,64 +56,33 @@
 #include "common/timer.hpp"
 #include "common/uptime.hpp"
 #include "diags/factory_diags.hpp"
-#include "radio/radio.hpp"
-
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-#include "common/message.hpp"
 #include "mac/link_raw.hpp"
-#endif
+#include "radio/radio.hpp"
+#include "utils/otns.hpp"
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+#include "backbone_router/bbr_leader.hpp"
+#include "backbone_router/bbr_local.hpp"
+#include "border_router/routing_manager.hpp"
 #include "common/code_utils.hpp"
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
 #include "meshcop/border_agent.hpp"
-#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 #include "meshcop/dataset_updater.hpp"
-#endif
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
+#include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/tmf.hpp"
-#include "utils/heap.hpp"
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-#include "utils/ping_sender.hpp"
-#endif
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include "utils/channel_manager.hpp"
-#endif
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
-#endif
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#include "utils/heap.hpp"
 #include "utils/history_tracker.hpp"
-#endif
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include "backbone_router/bbr_leader.hpp"
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-#include "backbone_router/bbr_local.hpp"
-#endif
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-#include "thread/link_metrics.hpp"
-#endif
-
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-#include "border_router/routing_manager.hpp"
-#endif
-
+#include "utils/ping_sender.hpp"
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
-#include "common/extension.hpp"
-#endif
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-#include "utils/otns.hpp"
-#endif
+
 /**
  * @addtogroup core-instance
  *

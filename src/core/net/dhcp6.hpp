@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/message.hpp"
@@ -667,5 +669,7 @@ public:
 
 } // namespace Dhcp6
 } // namespace ot
+
+#endif // #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 #endif // DHCP6_HPP_
