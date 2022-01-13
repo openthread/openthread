@@ -36,44 +36,16 @@
 
 #include "openthread-core-config.h"
 
-#include "coap/coap_secure.hpp"
-#include "mac/mac.hpp"
-#include "thread/tmf.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-#include "meshcop/border_agent.hpp"
-#endif
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-#include "meshcop/commissioner.hpp"
-#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include "backbone_router/bbr_leader.hpp"
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include "backbone_router/backbone_tmf.hpp"
+#include "backbone_router/bbr_leader.hpp"
 #include "backbone_router/bbr_local.hpp"
 #include "backbone_router/bbr_manager.hpp"
-#endif
-
-#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-#include "thread/mlr_manager.hpp"
-#endif
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-#include "thread/dua_manager.hpp"
-#endif
-
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-#include "net/srp_server.hpp"
-#endif
-
+#include "coap/coap_secure.hpp"
+#include "mac/mac.hpp"
+#include "meshcop/border_agent.hpp"
+#include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
-
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
 #include "meshcop/joiner.hpp"
-#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
-
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop_leader.hpp"
 #include "net/dhcp6.hpp"
@@ -86,16 +58,19 @@
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
 #include "net/srp_client.hpp"
+#include "net/srp_server.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/announce_begin_server.hpp"
 #include "thread/anycast_locator.hpp"
 #include "thread/discover_scanner.hpp"
+#include "thread/dua_manager.hpp"
 #include "thread/energy_scan_server.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_metrics.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"
+#include "thread/mlr_manager.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
 #include "thread/network_data_publisher.hpp"
@@ -104,16 +79,11 @@
 #include "thread/panid_query_server.hpp"
 #include "thread/radio_selector.hpp"
 #include "thread/time_sync_service.hpp"
+#include "thread/tmf.hpp"
 #include "utils/child_supervision.hpp"
-#include "utils/srp_client_buffers.hpp"
-
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-#include "utils/slaac_address.hpp"
-#endif
-
-#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 #include "utils/jam_detector.hpp"
-#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+#include "utils/slaac_address.hpp"
+#include "utils/srp_client_buffers.hpp"
 
 namespace ot {
 
