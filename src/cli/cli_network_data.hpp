@@ -109,10 +109,14 @@ private:
     otError ProcessShow(Arg aArgs[]);
     otError ProcessSteeringData(Arg aArgs[]);
 
-    otError OutputBinary(void);
-    void    OutputPrefixes(void);
-    void    OutputRoutes(void);
-    void    OutputServices(void);
+    otError GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal);
+    otError GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal);
+    otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
+
+    otError OutputBinary(bool aLocal);
+    void    OutputPrefixes(bool aLocal);
+    void    OutputRoutes(bool aLocal);
+    void    OutputServices(bool aLocal);
     void    OutputPreference(signed int aPreference);
 
     static constexpr Command sCommands[] = {
