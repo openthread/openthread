@@ -39,8 +39,6 @@
 #include <openthread/srp_server.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
@@ -81,11 +79,7 @@ public:
 private:
     static constexpr uint8_t kIndentSize = 4;
 
-    struct Command
-    {
-        const char *mName;
-        otError (SrpServer::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<SrpServer>;
 
     otError ProcessAddrMode(Arg aArgs[]);
     otError ProcessDomain(Arg aArgs[]);
@@ -108,7 +102,7 @@ private:
         {"service", &SrpServer::ProcessService},   {"state", &SrpServer::ProcessState},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

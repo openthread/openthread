@@ -41,6 +41,9 @@
 #include <openthread/cli.h>
 
 #include "cli_config.h"
+
+#include "common/binary_search.hpp"
+#include "common/string.hpp"
 #include "utils/parse_cmdline.hpp"
 
 namespace ot {
@@ -79,6 +82,23 @@ public:
 
 protected:
     OutputBase(void) = default;
+
+    typedef Utils::CmdLineParser::Arg Arg;
+
+    template <typename Cli> struct CommandEntry
+    {
+        typedef otError (Cli::*Handler)(Arg aArgs[]);
+
+        int Compare(const char *aName) const { return strcmp(aName, mName); }
+
+        constexpr static bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
+        {
+            return AreStringsInOrder(aFirst.mName, aSecond.mName);
+        }
+
+        const char *mName;
+        Handler     mHandler;
+    };
 };
 
 /**
@@ -344,8 +364,6 @@ public:
     }
 
 protected:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     void OutputFormatV(const char *aFormat, va_list aArguments);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE

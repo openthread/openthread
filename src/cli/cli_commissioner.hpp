@@ -39,8 +39,6 @@
 #include <openthread/commissioner.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
@@ -81,11 +79,7 @@ private:
         kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
     };
 
-    struct Command
-    {
-        const char *mName;
-        otError (Commissioner::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<Commissioner>;
 
     otError ProcessHelp(Arg aArgs[]);
     otError ProcessAnnounce(Arg aArgs[]);
@@ -131,7 +125,7 @@ private:
         {"state", &Commissioner::ProcessState},         {"stop", &Commissioner::ProcessStop},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

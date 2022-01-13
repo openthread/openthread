@@ -438,100 +438,40 @@ exit:
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 const char *Message::CodeToString(void) const
 {
-    const char *string;
+    static constexpr Stringify::Entry kCodeTable[] = {
+        {kCodeEmpty, "Empty"},
+        {kCodeGet, "Get"},
+        {kCodePost, "Post"},
+        {kCodePut, "Put"},
+        {kCodeDelete, "Delete"},
+        {kCodeCreated, "Created"},
+        {kCodeDeleted, "Deleted"},
+        {kCodeValid, "Valid"},
+        {kCodeChanged, "Changed"},
+        {kCodeContent, "Content"},
+        {kCodeContinue, "Continue"},
+        {kCodeBadRequest, "BadRequest"},
+        {kCodeUnauthorized, "Unauthorized"},
+        {kCodeBadOption, "BadOption"},
+        {kCodeForbidden, "Forbidden"},
+        {kCodeNotFound, "NotFound"},
+        {kCodeMethodNotAllowed, "MethodNotAllowed"},
+        {kCodeNotAcceptable, "NotAcceptable"},
+        {kCodeRequestIncomplete, "RequestIncomplete"},
+        {kCodePreconditionFailed, "PreconditionFailed"},
+        {kCodeRequestTooLarge, "RequestTooLarge"},
+        {kCodeUnsupportedFormat, "UnsupportedFormat"},
+        {kCodeInternalError, "InternalError"},
+        {kCodeNotImplemented, "NotImplemented"},
+        {kCodeBadGateway, "BadGateway"},
+        {kCodeServiceUnavailable, "ServiceUnavailable"},
+        {kCodeGatewayTimeout, "GatewayTimeout"},
+        {kCodeProxyNotSupported, "ProxyNotSupported"},
+    };
 
-    switch (GetCode())
-    {
-    case kCodeEmpty:
-        string = "Empty";
-        break;
-    case kCodeGet:
-        string = "Get";
-        break;
-    case kCodePost:
-        string = "Post";
-        break;
-    case kCodePut:
-        string = "Put";
-        break;
-    case kCodeDelete:
-        string = "Delete";
-        break;
-    case kCodeCreated:
-        string = "Created";
-        break;
-    case kCodeDeleted:
-        string = "Deleted";
-        break;
-    case kCodeValid:
-        string = "Valid";
-        break;
-    case kCodeChanged:
-        string = "Changed";
-        break;
-    case kCodeContent:
-        string = "Content";
-        break;
-    case kCodeContinue:
-        string = "Continue";
-        break;
-    case kCodeBadRequest:
-        string = "BadRequest";
-        break;
-    case kCodeUnauthorized:
-        string = "Unauthorized";
-        break;
-    case kCodeBadOption:
-        string = "BadOption";
-        break;
-    case kCodeForbidden:
-        string = "Forbidden";
-        break;
-    case kCodeNotFound:
-        string = "NotFound";
-        break;
-    case kCodeMethodNotAllowed:
-        string = "MethodNotAllowed";
-        break;
-    case kCodeNotAcceptable:
-        string = "NotAcceptable";
-        break;
-    case kCodeRequestIncomplete:
-        string = "RequestIncomplete";
-        break;
-    case kCodePreconditionFailed:
-        string = "PreconditionFailed";
-        break;
-    case kCodeRequestTooLarge:
-        string = "RequestTooLarge";
-        break;
-    case kCodeUnsupportedFormat:
-        string = "UnsupportedFormat";
-        break;
-    case kCodeInternalError:
-        string = "InternalError";
-        break;
-    case kCodeNotImplemented:
-        string = "NotImplemented";
-        break;
-    case kCodeBadGateway:
-        string = "BadGateway";
-        break;
-    case kCodeServiceUnavailable:
-        string = "ServiceUnavailable";
-        break;
-    case kCodeGatewayTimeout:
-        string = "GatewayTimeout";
-        break;
-    case kCodeProxyNotSupported:
-        string = "ProxyNotSupported";
-        break;
-    default:
-        string = "Unknown";
-        break;
-    }
+    static_assert(Stringify::IsSorted(kCodeTable), "kCodeTable is not sorted");
 
-    return string;
+    return Stringify::Lookup(GetCode(), kCodeTable, "Unknown");
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 

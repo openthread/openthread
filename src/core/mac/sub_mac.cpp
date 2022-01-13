@@ -1090,10 +1090,9 @@ void SubMac::HandleCslTimer(void)
         break;
 
     case kCslSleep:
-        mCslSampleTime += periodUs;
-
         if (RadioSupportsReceiveTiming())
         {
+            mCslSampleTime += periodUs;
             mCslTimer.FireAt(mCslSampleTime - timeAhead);
             timeAhead -= kCslReceiveTimeAhead;
         }
@@ -1101,6 +1100,7 @@ void SubMac::HandleCslTimer(void)
         {
             mCslTimer.FireAt(mCslSampleTime + timeAfter);
             mCslState = kCslSample;
+            mCslSampleTime += periodUs;
         }
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
@@ -1131,20 +1131,13 @@ void SubMac::HandleCslTimer(void)
 void SubMac::GetCslWindowEdges(uint32_t &ahead, uint32_t &after)
 {
     uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
-    uint64_t curTime    = otPlatRadioGetNow(&GetInstance());
-    uint64_t elapsed;
+    uint32_t curTime    = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
+    uint32_t elapsed;
     uint32_t semiWindow;
 
-    if (mCslLastSync.GetValue() > curTime)
-    {
-        elapsed = UINT64_MAX - mCslLastSync.GetValue() + curTime;
-    }
-    else
-    {
-        elapsed = curTime - mCslLastSync.GetValue();
-    }
+    elapsed = curTime - mCslLastSync.GetValue();
 
-    semiWindow = static_cast<uint32_t>(elapsed * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy) / 1000000);
+    semiWindow = elapsed * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy) / 1000000;
     semiWindow += mCslParentUncert * kUsPerUncertUnit;
 
     ahead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;

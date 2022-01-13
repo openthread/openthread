@@ -41,8 +41,6 @@
 #include <openthread/dataset.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -70,11 +68,7 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    struct Command
-    {
-        const char *mName;
-        otError (Dataset::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<Dataset>;
 
     otError Print(otOperationalDataset &aDataset);
 
@@ -136,7 +130,7 @@ private:
 #endif
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     static otOperationalDataset sDataset;
 };

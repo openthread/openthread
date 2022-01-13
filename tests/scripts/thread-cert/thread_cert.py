@@ -32,6 +32,7 @@ import json
 import logging
 import os
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -269,8 +270,12 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self._stop_backbone_sniffer()
 
         for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+            try:
+                node.stop()
+            except:
+                traceback.print_exc()
+            finally:
+                node.destroy()
 
         self.simulator.stop()
 
@@ -518,6 +523,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         time.sleep(0.2)
         assert self._dumpcap_proc.poll() is None, 'tshark terminated unexpectedly'
         logging.info('Backbone sniffer launched successfully: pid=%s', self._dumpcap_proc.pid)
+        os.chmod(pcap_file, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
     def _get_backbone_pcap_filename(self):
         backbone_pcap = self.test_name + '_backbone.pcap'

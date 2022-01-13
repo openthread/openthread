@@ -220,6 +220,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/coap/coap_message.cpp                                  \
     src/core/coap/coap_secure.cpp                                   \
     src/core/common/appender.cpp                                    \
+    src/core/common/binary_search.cpp                               \
     src/core/common/crc16.cpp                                       \
     src/core/common/data.cpp                                        \
     src/core/common/error.cpp                                       \
@@ -353,7 +354,6 @@ LOCAL_SRC_FILES                                                  := \
     src/core/utils/heap.cpp                                         \
     src/core/utils/history_tracker.cpp                              \
     src/core/utils/jam_detector.cpp                                 \
-    src/core/utils/lookup_table.cpp                                 \
     src/core/utils/otns.cpp                                         \
     src/core/utils/parse_cmdline.cpp                                \
     src/core/utils/ping_sender.cpp                                  \

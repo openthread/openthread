@@ -322,7 +322,7 @@ otError TcpExample::Process(Arg aArgs[])
 
     VerifyOrExit(!aArgs[0].IsEmpty(), IgnoreError(ProcessHelp(nullptr)));
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
 
     error = (this->*command->mHandler)(aArgs + 1);

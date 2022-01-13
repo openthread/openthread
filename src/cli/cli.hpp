@@ -76,8 +76,6 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/type_traits.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 
@@ -229,11 +227,7 @@ private:
     static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
     static constexpr uint32_t kLocateTimeoutMsecs            = 2500;
 
-    struct Command
-    {
-        const char *mName;
-        otError (Interpreter::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<Interpreter>;
 
     template <typename ValueType> using GetHandler         = ValueType (&)(otInstance *);
     template <typename ValueType> using SetHandler         = void (&)(otInstance *, ValueType);
@@ -403,9 +397,6 @@ private:
     otError ProcessEidCache(Arg aArgs[]);
 #endif
     otError ProcessEui64(Arg aArgs[]);
-#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-    otError ProcessExit(Arg aArgs[]);
-#endif
     otError ProcessLog(Arg aArgs[]);
     otError ProcessExtAddress(Arg aArgs[]);
     otError ProcessExtPanId(Arg aArgs[]);
@@ -476,10 +467,6 @@ private:
     otError ProcessNeighbor(Arg aArgs[]);
 #endif
     otError ProcessNetworkData(Arg aArgs[]);
-    otError ProcessNetworkDataPrefix(void);
-    otError ProcessNetworkDataRoute(void);
-    otError ProcessNetworkDataService(void);
-
     otError ProcessNetstat(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     otError ProcessService(Arg aArgs[]);
@@ -888,7 +875,7 @@ private:
         {"version", &Interpreter::ProcessVersion},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;

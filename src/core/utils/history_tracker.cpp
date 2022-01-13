@@ -323,21 +323,22 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 
     if (aEntryAge >= kMaxAge)
     {
-        writer.Append("more than %u days", kMaxAge / kOneDayInMsec);
+        writer.Append("more than %u days", kMaxAge / Time::kOneDayInMsec);
     }
     else
     {
-        uint32_t days = aEntryAge / kOneDayInMsec;
+        uint32_t days = aEntryAge / Time::kOneDayInMsec;
 
         if (days > 0)
         {
             writer.Append("%u day%s ", days, (days == 1) ? "" : "s");
-            aEntryAge -= days * kOneDayInMsec;
+            aEntryAge -= days * Time::kOneDayInMsec;
         }
 
-        writer.Append("%02u:%02u:%02u.%03u", (aEntryAge / kOneHourInMsec),
-                      (aEntryAge % kOneHourInMsec) / kOneMinuteInMsec,
-                      (aEntryAge % kOneMinuteInMsec) / kOneSecondInMsec, (aEntryAge % kOneSecondInMsec));
+        writer.Append("%02u:%02u:%02u.%03u", (aEntryAge / Time::kOneHourInMsec),
+                      (aEntryAge % Time::kOneHourInMsec) / Time::kOneMinuteInMsec,
+                      (aEntryAge % Time::kOneMinuteInMsec) / Time::kOneSecondInMsec,
+                      (aEntryAge % Time::kOneSecondInMsec));
     }
 }
 

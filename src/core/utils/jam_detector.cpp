@@ -218,7 +218,7 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 
     // If we reached end of current one second interval, update the history bitmap
 
-    if (interval >= kOneSecondInterval)
+    if (interval >= Time::kOneSecondInMsec)
     {
         mHistoryBitmap <<= 1;
 
@@ -229,7 +229,7 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 
         mAlwaysAboveThreshold = true;
 
-        mCurSecondStartTime += (interval / kOneSecondInterval) * kOneSecondInterval;
+        mCurSecondStartTime += (interval / Time::kOneSecondInMsec) * Time::kOneSecondInMsec;
 
         UpdateJamState();
     }

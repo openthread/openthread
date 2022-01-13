@@ -77,7 +77,7 @@ otError SrpClient::Process(Arg aArgs[])
         ExitNow();
     }
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);
@@ -151,10 +151,8 @@ otError SrpClient::ProcessHost(Arg aArgs[])
     if (aArgs[0].IsEmpty())
     {
         OutputHostInfo(0, *otSrpClientGetHostInfo(GetInstancePtr()));
-        ExitNow();
     }
-
-    if (aArgs[0] == "name")
+    else if (aArgs[0] == "name")
     {
         if (aArgs[1].IsEmpty())
         {
@@ -316,10 +314,8 @@ otError SrpClient::ProcessService(Arg aArgs[])
     if (aArgs[0].IsEmpty())
     {
         OutputServiceList(0, otSrpClientGetServices(GetInstancePtr()));
-        ExitNow();
     }
-
-    if (aArgs[0] == "add")
+    else if (aArgs[0] == "add")
     {
         error = ProcessServiceAdd(aArgs);
     }

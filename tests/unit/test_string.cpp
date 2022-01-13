@@ -309,6 +309,13 @@ void TestStringToLowercase(void)
     printf(" -- PASS\n");
 }
 
+static_assert(ot::AreStringsInOrder("a", "b"), "AreStringsInOrder() failed");
+static_assert(ot::AreStringsInOrder("aa", "aaa"), "AreStringsInOrder() failed");
+static_assert(ot::AreStringsInOrder("", "a"), "AreStringsInOrder() failed");
+static_assert(!ot::AreStringsInOrder("cd", "cd"), "AreStringsInOrder() failed");
+static_assert(!ot::AreStringsInOrder("z", "abcd"), "AreStringsInOrder() failed");
+static_assert(!ot::AreStringsInOrder("0", ""), "AreStringsInOrder() failed");
+
 } // namespace ot
 
 int main(void)
