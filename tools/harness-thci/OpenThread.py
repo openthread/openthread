@@ -559,7 +559,7 @@ class OpenThreadTHCI(object):
             False: fail to set the behavior.
         """
         print('call __skipSeqNoIncrease()')
-        cmd = 'bbr skipseqnoinc'
+        cmd = 'bbr skipseqnuminc'
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     def __startOpenThread(self):

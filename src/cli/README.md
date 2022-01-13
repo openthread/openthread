@@ -324,14 +324,14 @@ Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
 Done
 ```
 
-### bbr skipseqnoinc
+### bbr skipseqnuminc
 
 Skip increase of Sequence Number when updating the local BBR Dataset from the Network Data.
 
 Only for testing/reference device.
 
 ```bash
-> bbr skipseqnoinc
+> bbr skipseqnuminc
 Done
 ```
 
