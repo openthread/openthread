@@ -216,7 +216,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
     if (!aFrame.IsEmpty())
     {
         IgnoreError(aFrame.GetDstAddr(macDest));
-        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest, /* aIsDataPoll */ true);
     }
 
     if (GetParent().IsStateInvalid())
@@ -259,8 +259,14 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
     default:
         mPollTxFailureCounter++;
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        otLogInfoMac("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
+                     (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts
+                                                                              : kMaxPollRetxAttempts);
+#else
         otLogInfoMac("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
                      kMaxPollRetxAttempts);
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (mPollTxFailureCounter <

@@ -883,8 +883,13 @@ start:
     return nextOffset;
 }
 
-Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error aError, const Mac::Address &aMacDest)
+Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &      aFrame,
+                                                   Error               aError,
+                                                   const Mac::Address &aMacDest,
+                                                   bool                aIsDataPoll)
 {
+    OT_UNUSED_VARIABLE(aIsDataPoll);
+
     Neighbor *neighbor = nullptr;
 
     VerifyOrExit(mEnabled);
@@ -907,7 +912,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error a
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) && aFrame.IsDataRequestCommand())
+    if ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) && aIsDataPoll)
     {
         UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true,
                                    /* aFailLimit */ Mle::kFailedCslDataPollTransmissions);
