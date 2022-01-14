@@ -55,12 +55,13 @@ build_all_features()
 
     # Thread 1.2 options
     local options=(
+        "-DOT_BACKBONE_ROUTER=ON"
+        "-DOT_BORDER_ROUTING=ON"
+        "-DOT_CSL_RECEIVER=ON"
+        "-DOT_MLR=ON"
         "-DOT_OTNS=ON"
         "-DOT_SIMULATION_VIRTUAL_TIME=ON"
         "-DOT_THREAD_VERSION=1.2"
-        "-DOT_MLR=ON"
-        "-DOT_BACKBONE_ROUTER=ON"
-        "-DOT_CSL_RECEIVER=ON"
     )
 
     # Build Thread 1.2 with full features
