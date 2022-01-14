@@ -284,112 +284,106 @@ exit:
     return error;
 }
 
-bool NetworkData::ContainsOnMeshPrefixes(const NetworkData &aCompare, uint16_t aRloc16) const
+bool NetworkData::ContainsOnMeshPrefix(const OnMeshPrefixConfig &aPrefix) const
 {
-    Iterator           outerIterator = kIteratorInit;
-    OnMeshPrefixConfig outerConfig;
-    bool               rval = true;
+    bool               contains = false;
+    Iterator           iterator = kIteratorInit;
+    OnMeshPrefixConfig prefix;
 
-    while (aCompare.GetNextOnMeshPrefix(outerIterator, aRloc16, outerConfig) == kErrorNone)
+    while (GetNextOnMeshPrefix(iterator, aPrefix.mRloc16, prefix) == kErrorNone)
     {
-        Iterator           innerIterator = kIteratorInit;
-        OnMeshPrefixConfig innerConfig;
-        Error              error;
-
-        while ((error = GetNextOnMeshPrefix(innerIterator, aRloc16, innerConfig)) == kErrorNone)
+        if (prefix == aPrefix)
         {
-            if (outerConfig == innerConfig)
-            {
-                break;
-            }
-        }
-
-        if (error != kErrorNone)
-        {
-            ExitNow(rval = false);
+            contains = true;
+            break;
         }
     }
 
-exit:
-    return rval;
+    return contains;
 }
 
-bool NetworkData::ContainsExternalRoutes(const NetworkData &aCompare, uint16_t aRloc16) const
+bool NetworkData::ContainsExternalRoute(const ExternalRouteConfig &aRoute) const
 {
-    Iterator            outerIterator = kIteratorInit;
-    ExternalRouteConfig outerConfig;
-    bool                rval = true;
+    bool                contains = false;
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig route;
 
-    while (aCompare.GetNextExternalRoute(outerIterator, aRloc16, outerConfig) == kErrorNone)
+    while (GetNextExternalRoute(iterator, aRoute.mRloc16, route) == kErrorNone)
     {
-        Iterator            innerIterator = kIteratorInit;
-        ExternalRouteConfig innerConfig;
-        Error               error;
-
-        while ((error = GetNextExternalRoute(innerIterator, aRloc16, innerConfig)) == kErrorNone)
+        if (route == aRoute)
         {
-            if (outerConfig == innerConfig)
-            {
-                break;
-            }
-        }
-
-        if (error != kErrorNone)
-        {
-            ExitNow(rval = false);
+            contains = true;
+            break;
         }
     }
 
-exit:
-    return rval;
+    return contains;
 }
 
-bool NetworkData::ContainsServices(const NetworkData &aCompare, uint16_t aRloc16) const
+bool NetworkData::ContainsService(const ServiceConfig &aService) const
 {
-    Iterator      outerIterator = kIteratorInit;
-    ServiceConfig outerConfig;
-    bool          rval = true;
+    bool          contains = false;
+    Iterator      iterator = kIteratorInit;
+    ServiceConfig service;
 
-    while (aCompare.GetNextService(outerIterator, aRloc16, outerConfig) == kErrorNone)
+    while (GetNextService(iterator, aService.GetServerConfig().mRloc16, service) == kErrorNone)
     {
-        Iterator      innerIterator = kIteratorInit;
-        ServiceConfig innerConfig;
-        Error         error;
-
-        while ((error = GetNextService(innerIterator, aRloc16, innerConfig)) == kErrorNone)
+        if (service == aService)
         {
-            if (outerConfig == innerConfig)
-            {
-                break;
-            }
-        }
-
-        if (error != kErrorNone)
-        {
-            ExitNow(rval = false);
+            contains = true;
+            break;
         }
     }
 
-exit:
-    return rval;
+    return contains;
 }
 
 bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16) const
 {
+    bool     contains = false;
     Iterator iterator = kIteratorInit;
     uint8_t  serviceId;
-    bool     rval = false;
 
     while (GetNextServiceId(iterator, aRloc16, serviceId) == kErrorNone)
     {
         if (serviceId == aServiceId)
         {
-            ExitNow(rval = true);
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
+}
+
+bool NetworkData::ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRloc16) const
+{
+    bool     contains = true;
+    Iterator iterator = kIteratorInit;
+
+    while (true)
+    {
+        Config              config;
+        OnMeshPrefixConfig  prefix;
+        ExternalRouteConfig route;
+        ServiceConfig       service;
+
+        config.mOnMeshPrefix  = &prefix;
+        config.mExternalRoute = &route;
+        config.mService       = &service;
+
+        SuccessOrExit(aComapre.Iterate(iterator, aRloc16, config));
+
+        if (((config.mOnMeshPrefix != nullptr) && !ContainsOnMeshPrefix(*config.mOnMeshPrefix)) ||
+            ((config.mExternalRoute != nullptr) && !ContainsExternalRoute(*config.mExternalRoute)) ||
+            ((config.mService != nullptr) && !ContainsService(*config.mService)))
+        {
+            ExitNow(contains = false);
         }
     }
 
 exit:
-    return rval;
+    return contains;
 }
 
 void MutableNetworkData::RemoveTemporaryData(void)

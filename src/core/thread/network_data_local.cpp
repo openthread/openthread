@@ -168,16 +168,10 @@ void Local::UpdateRloc(PrefixTlv &aPrefixTlv)
     }
 }
 
-bool Local::IsOnMeshPrefixConsistent(void) const
+bool Local::IsConsistent(void) const
 {
-    return (Get<Leader>().ContainsOnMeshPrefixes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
-            ContainsOnMeshPrefixes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
-}
-
-bool Local::IsExternalRouteConsistent(void) const
-{
-    return (Get<Leader>().ContainsExternalRoutes(*this, Get<Mle::MleRouter>().GetRloc16()) &&
-            ContainsExternalRoutes(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
+    return Get<Leader>().ContainsEntriesFrom(*this, Get<Mle::MleRouter>().GetRloc16()) &&
+           ContainsEntriesFrom(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16());
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -255,12 +249,6 @@ void Local::UpdateRloc(ServiceTlv &aService)
     }
 }
 
-bool Local::IsServiceConsistent(void) const
-{
-    return (Get<Leader>().ContainsServices(*this, Get<Mle::MleRouter>().GetRloc16()) &&
-            ContainsServices(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16()));
-}
-
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 void Local::UpdateRloc(void)
@@ -291,9 +279,8 @@ void Local::UpdateRloc(void)
 
 Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext)
 {
-    Error    error        = kErrorNone;
-    uint16_t rloc         = Get<Mle::MleRouter>().GetRloc16();
-    bool     isConsistent = true;
+    Error    error = kErrorNone;
+    uint16_t rloc  = Get<Mle::MleRouter>().GetRloc16();
 
 #if OPENTHREAD_FTD
     // Don't send this Server Data Notification if the device is going to upgrade to Router
@@ -306,13 +293,8 @@ Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *
     UpdateRloc();
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    isConsistent = isConsistent && IsOnMeshPrefixConsistent() && IsExternalRouteConsistent();
+    VerifyOrExit(!IsConsistent(), error = kErrorNotFound);
 #endif
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    isConsistent = isConsistent && IsServiceConsistent();
-#endif
-
-    VerifyOrExit(!isConsistent, error = kErrorNotFound);
 
     if (mOldRloc == rloc)
     {
