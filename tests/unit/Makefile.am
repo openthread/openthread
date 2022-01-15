@@ -117,6 +117,7 @@ check_PROGRAMS                                                     += \
     ot-test-cmd-line-parser                                           \
     ot-test-data                                                      \
     ot-test-dns                                                       \
+    ot-test-dso                                                       \
     ot-test-ecdsa                                                     \
     ot-test-flash                                                     \
     ot-test-heap                                                      \
@@ -208,6 +209,9 @@ ot_test_data_SOURCES            = $(COMMON_SOURCES) test_data.cpp
 
 ot_test_dns_LDADD               = $(COMMON_LDADD)
 ot_test_dns_SOURCES             = $(COMMON_SOURCES) test_dns.cpp
+
+ot_test_dso_LDADD               = $(COMMON_LDADD)
+ot_test_dso_SOURCES             = $(COMMON_SOURCES) test_dso.cpp
 
 ot_test_ecdsa_LDADD             = $(COMMON_LDADD)
 ot_test_ecdsa_SOURCES           = $(COMMON_SOURCES) test_ecdsa.cpp

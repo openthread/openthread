@@ -179,6 +179,11 @@ if(OT_DNS_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1")
 endif()
 
+option(OT_DNS_DSO "enable DNS Stateful Operations (DSO) support")
+if(OT_DNS_DSO)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_DSO_ENABLE=1")
+endif()
+
 option(OT_DNSSD_SERVER "enable DNS-SD server support")
 if(OT_DNSSD_SERVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1")

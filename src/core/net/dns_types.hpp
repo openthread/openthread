@@ -151,7 +151,8 @@ public:
         kQueryTypeInverse  = 1,
         kQueryTypeStatus   = 2,
         kQueryTypeNotify   = 4,
-        kQueryTypeUpdate   = 5
+        kQueryTypeUpdate   = 5,
+        kQueryTypeDso      = 6,
     };
 
     /**
@@ -273,6 +274,7 @@ public:
         kResponseRecordNotExists = 8,  ///< Some RRset that ought to exist, does not exist.
         kResponseNotAuth         = 9,  ///< Service is not authoritative for zone.
         kResponseNotZone         = 10, ///< A name is not in the zone.
+        kDsoTypeNotImplemented   = 11, ///< DSO TLV TYPE is not implemented.
         kResponseBadName         = 20, ///< Bad name.
         kResponseBadAlg          = 21, ///< Bad algorithm.
         kResponseBadTruncation   = 22, ///< Bad truncation.
@@ -312,6 +314,7 @@ public:
      * - kResponseRecordNotExists (8) : Some RRset that ought to exist, does not exist  -> kErrorNotFound
      * - kResponseNotAuth (9)         : Service is not authoritative for zone           -> kErrorSecurity
      * - kResponseNotZone (10)        : A name is not in the zone                       -> kErrorParse
+     * - kDsoTypeNotImplemented (11)  : DSO TLV Type is not implemented                 -> kErrorNotImplemented
      * - kResponseBadName (20)        : Bad name                                        -> kErrorParse
      * - kResponseBadAlg (21)         : Bad algorithm                                   -> kErrorSecurity
      * - kResponseBadTruncation (22)  : Bad truncation                                  -> kErrorParse

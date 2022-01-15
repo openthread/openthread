@@ -255,6 +255,28 @@ target_link_libraries(ot-test-dns
 
 add_test(NAME ot-test-dns COMMAND ot-test-dns)
 
+add_executable(ot-test-dso
+    test_dso.cpp
+)
+
+target_include_directories(ot-test-dso
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-dso
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-dso
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-dso COMMAND ot-test-dso)
+
+
 add_executable(ot-test-ecdsa
     test_ecdsa.cpp
 )

@@ -557,4 +557,33 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
 
     return OT_ERROR_NONE;
 }
+
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+
+OT_TOOL_WEAK void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+}
+
+OT_TOOL_WEAK void otPlatDsoConnect(otPlatDsoConnection *aConnection, const otSockAddr *aPeerSockAddr)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+}
+
+OT_TOOL_WEAK void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMessage);
+}
+
+OT_TOOL_WEAK void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMode aMode)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMode);
+}
+
+#endif // #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+
 } // extern "C"

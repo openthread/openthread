@@ -51,6 +51,7 @@ DIAGNOSTIC                ?= 0
 DISABLE_DOC               ?= 0
 DISABLE_TOOLS             ?= 0
 DNS_CLIENT                ?= 0
+DNS_DSO                   ?= 0
 DNSSD_SERVER              ?= 0
 DUA                       ?= 0
 DYNAMIC_LOG_LEVEL         ?= 0
@@ -195,6 +196,10 @@ endif
 
 ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
+endif
+
+ifeq ($(DNS_DSO),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_DSO_ENABLE=1
 endif
 
 ifeq ($(DNSSD_SERVER),1)

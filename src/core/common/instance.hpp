@@ -746,6 +746,13 @@ template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+template <> inline Dns::Dso &Instance::Get(void)
+{
+    return mThreadNetif.mDnsDso;
+}
+#endif
+
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 {
