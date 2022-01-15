@@ -148,8 +148,7 @@ void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
 
 bool SecurityPolicyTlv::IsValid(void) const
 {
-    return GetLength() >= sizeof(mRotationTime) && GetRotationTime() >= SecurityPolicy::kMinKeyRotationTime &&
-           GetFlagsLength() >= kThread11FlagsLength;
+    return GetLength() >= sizeof(mRotationTime) && GetFlagsLength() >= kThread11FlagsLength;
 }
 
 SecurityPolicy SecurityPolicyTlv::GetSecurityPolicy(void) const
