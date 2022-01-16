@@ -129,7 +129,7 @@ static void Init(void)
 
     SuccessOrQuit(message->AppendBytes(mockNetworkData, sizeof(mockNetworkData)));
 
-    IgnoreError(sInstance->Get<NetworkData::Leader>().SetNetworkData(0, 0, true, *message, 0));
+    IgnoreError(sInstance->Get<NetworkData::Leader>().SetNetworkData(0, 0, NetworkData::kStableSubset, *message, 0));
 }
 
 /**

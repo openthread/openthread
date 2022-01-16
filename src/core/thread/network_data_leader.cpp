@@ -346,7 +346,7 @@ Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16
 
 Error LeaderBase::SetNetworkData(uint8_t        aVersion,
                                  uint8_t        aStableVersion,
-                                 bool           aStableOnly,
+                                 Type           aType,
                                  const Message &aMessage,
                                  uint16_t       aMessageOffset)
 {
@@ -363,7 +363,7 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 
-    if (aStableOnly)
+    if (aType == kStableSubset)
     {
         RemoveTemporaryData();
     }

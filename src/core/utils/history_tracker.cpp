@@ -345,7 +345,7 @@ void HistoryTracker::RecordNetworkDataChange(void)
         }
     }
 
-    SuccessOrAssert(Get<NetworkData::Leader>().CopyNetworkData(/* aSatble */ false, mPreviousNetworkData));
+    SuccessOrAssert(Get<NetworkData::Leader>().CopyNetworkData(NetworkData::kFullSet, mPreviousNetworkData));
 }
 
 void HistoryTracker::RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix)

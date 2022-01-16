@@ -47,19 +47,19 @@
 namespace ot {
 namespace NetworkData {
 
-Error NetworkData::CopyNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const
+Error NetworkData::CopyNetworkData(Type aType, uint8_t *aData, uint8_t &aDataLength) const
 {
     Error              error;
     MutableNetworkData netDataCopy(GetInstance(), aData, 0, aDataLength);
 
-    SuccessOrExit(error = CopyNetworkData(aStable, netDataCopy));
+    SuccessOrExit(error = CopyNetworkData(aType, netDataCopy));
     aDataLength = netDataCopy.GetLength();
 
 exit:
     return error;
 }
 
-Error NetworkData::CopyNetworkData(bool aStable, MutableNetworkData &aNetworkData) const
+Error NetworkData::CopyNetworkData(Type aType, MutableNetworkData &aNetworkData) const
 {
     Error error = kErrorNone;
 
@@ -68,7 +68,7 @@ Error NetworkData::CopyNetworkData(bool aStable, MutableNetworkData &aNetworkDat
     memcpy(aNetworkData.GetBytes(), mTlvs, mLength);
     aNetworkData.SetLength(mLength);
 
-    if (aStable)
+    if (aType == kStableSubset)
     {
         aNetworkData.RemoveTemporaryData();
     }
