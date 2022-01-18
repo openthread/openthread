@@ -391,6 +391,8 @@ else()
     message(FATAL_ERROR "Invalid max RCP restoration count: ${OT_RCP_RESTORATION_MAX_COUNT}")
 endif()
 
+option(OT_EXCLUDE_TCPLP_LIB "exclude TCPlp library from build")
+
 # Checks
 if(OT_PLATFORM_UDP AND OT_UDP_FORWARD)
     message(FATAL_ERROR "OT_PLATFORM_UDP and OT_UDP_FORWARD are exclusive")
