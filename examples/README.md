@@ -37,6 +37,7 @@ This page lists the available common switches with description. Unless stated ot
 | DUA | OT_DUA | Enables the Domain Unicast Address feature for Thread 1.2. |
 | DYNAMIC_LOG_LEVEL | not implemented | Enables the dynamic log level feature. Enable this switch if OpenThread log level is required to be set at runtime. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | ECDSA | OT_ECDSA | Enables support for Elliptic Curve Digital Signature Algorithm. Enable this switch if ECDSA digital signature is used by application. |
+| EXCLUDE_TCPLP_LIB | OT_EXCLUDE_TCPLP_LIB | Exclude TCPlp library from the build. |
 | EXTERNAL_HEAP | OT_EXTERNAL_HEAP | Enables support for external heap. Enable this switch if the platform uses its own heap. Make sure to specify the external heap Calloc and Free functions to be used by the OpenThread stack. |
 | FULL_LOGS | OT_FULL_LOGS | Enables all log levels and regions. This switch sets the log level to OT_LOG_LEVEL_DEBG and turns on all region flags. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | HISTORY_TRACKER | OT_HISTORY_TRACKER | Enables support for History Tracker. |
@@ -63,7 +64,6 @@ This page lists the available common switches with description. Unless stated ot
 | SPINEL_ENCRYPTER_LIBS | not implemented | Specifies library files (absolute paths) for implementing the NCP Spinel Encrypter. |
 | SRP_CLIENT | OT_SRP_CLIENT | Enable support for SRP client. |
 | SRP_SERVER | OT_SRP_SERVER | Enable support for SRP server. |
-| TCP | OT_TCP | Enable support for TCPlp. |
 | THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 / 1.2 (default)). For example, set to `1.1` for Thread 1.1. |
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
 | TREL | OT_TREL | Enables TREL radio link for Thread over Infrastructure feature. |

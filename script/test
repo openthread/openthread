@@ -72,7 +72,6 @@ build_simulation()
         "-DOT_SERVICE=ON"
         "-DOT_SRP_CLIENT=ON"
         "-DOT_SRP_SERVER=ON"
-        "-DOT_TCP=ON"
         "-DOT_UPTIME=ON"
         "-DOT_THREAD_VERSION=${version}"
     )
