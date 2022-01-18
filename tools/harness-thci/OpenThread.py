@@ -3603,6 +3603,10 @@ class OpenThreadTHCI(object):
         assert state in (0, 1), state
         self.__executeCommand("ccm {}".format("enable" if state == 1 else "disable"))
 
+    @API
+    def setVrCheckSkip(self):
+        self.__executeCommand("tvcheck disable")
+
 
 class OpenThread(OpenThreadTHCI, IThci):
 
