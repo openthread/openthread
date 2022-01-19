@@ -82,6 +82,11 @@ if(OT_BORDER_ROUTING)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1")
 endif()
 
+option(OT_BORDER_ROUTING_NAT64 "enable border routing NAT64 support")
+if(OT_BORDER_ROUTING_NAT64)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1")
+endif()
+
 if(NOT OT_EXTERNAL_MBEDTLS)
     set(OT_MBEDTLS mbedtls)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1")

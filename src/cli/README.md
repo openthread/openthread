@@ -393,6 +393,18 @@ fd41:2650:a6f5:0::/64
 Done
 ```
 
+### br nat64prefix
+
+Get the local NAT64 prefix of the Border Router.
+
+`OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` is required.
+
+```bash
+> br nat64prefix
+fd14:1078:b3d5:b0b0:0:0::/96
+Done
+```
+
 ### bufferinfo
 
 Show the current message buffer information.

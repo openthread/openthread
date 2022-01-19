@@ -34,6 +34,7 @@ BIG_ENDIAN                ?= 0
 BORDER_AGENT              ?= 0
 BORDER_ROUTER             ?= 0
 BORDER_ROUTING            ?= 0
+BORDER_ROUTING_NAT64	  ?= 0
 COAP                      ?= 0
 COAP_BLOCK                ?= 0
 COAP_OBSERVE              ?= 0
@@ -114,6 +115,10 @@ endif
 
 ifeq ($(BORDER_ROUTING),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1
+endif
+
+ifeq ($(BORDER_ROUTING_NAT64),1)
+COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1
 endif
 
 ifeq ($(COAP),1)
