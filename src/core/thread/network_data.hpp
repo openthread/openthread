@@ -267,19 +267,6 @@ public:
     Error GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
 
     /**
-     * This method provides the next Service ID in the Thread Network Data for a given RLOC16.
-     *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aServiceId A reference to variable where the Service ID will be placed.
-     *
-     * @retval kErrorNone       Successfully found the next service.
-     * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
-     *
-     */
-    Error GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uint8_t &aServiceId) const;
-
-    /**
      * This method indicates whether or not the Thread Network Data contains a given on mesh prefix entry.
      *
      * @param[in]  aPrefix   The on mesh prefix config to check.
@@ -311,19 +298,6 @@ public:
      *
      */
     bool ContainsService(const ServiceConfig &aService) const;
-
-    /**
-     * This method indicates whether or not the Thread Network Data contains the service with a given Service ID
-     * associated with @p aRloc16.
-     *
-     * @param[in]  aServiceId The Service ID to search for.
-     * @param[in]  aRloc16    The RLOC16 to consider.
-     *
-     * @retval TRUE  if Network Data contains a service matching @p aServiceId for @p aRloc16.
-     * @retval FALSE if Network Data does not contain a service matching @p aServiceId for @p aRloc16.
-     *
-     */
-    bool ContainsService(uint8_t aServiceId, uint16_t aRloc16) const;
 
     /**
      * This method indicates whether or not the Thread Network Data contains all the on mesh prefixes, external

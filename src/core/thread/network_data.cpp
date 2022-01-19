@@ -272,18 +272,6 @@ exit:
     return error;
 }
 
-Error NetworkData::GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uint8_t &aServiceId) const
-{
-    Error         error;
-    ServiceConfig config;
-
-    SuccessOrExit(error = GetNextService(aIterator, aRloc16, config));
-    aServiceId = config.mServiceId;
-
-exit:
-    return error;
-}
-
 bool NetworkData::ContainsOnMeshPrefix(const OnMeshPrefixConfig &aPrefix) const
 {
     bool               contains = false;
@@ -329,24 +317,6 @@ bool NetworkData::ContainsService(const ServiceConfig &aService) const
     while (GetNextService(iterator, aService.GetServerConfig().mRloc16, service) == kErrorNone)
     {
         if (service == aService)
-        {
-            contains = true;
-            break;
-        }
-    }
-
-    return contains;
-}
-
-bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16) const
-{
-    bool     contains = false;
-    Iterator iterator = kIteratorInit;
-    uint8_t  serviceId;
-
-    while (GetNextServiceId(iterator, aRloc16, serviceId) == kErrorNone)
-    {
-        if (serviceId == aServiceId)
         {
             contains = true;
             break;
