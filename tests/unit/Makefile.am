@@ -140,6 +140,7 @@ check_PROGRAMS                                                     += \
     ot-test-pool                                                      \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
+    ot-test-serial-number                                             \
     ot-test-smart-ptrs                                                \
     ot-test-string                                                    \
     ot-test-timer                                                     \
@@ -287,6 +288,9 @@ ot_test_smart_ptrs_SOURCES      = $(COMMON_SOURCES) test_smart_ptrs.cpp
 
 ot_test_meshcop_LDADD           = $(COMMON_LDADD)
 ot_test_meshcop_SOURCES         = $(COMMON_SOURCES) test_meshcop.cpp
+
+ot_test_serial_number_LDADD     = $(COMMON_LDADD)
+ot_test_serial_number_SOURCES   = $(COMMON_SOURCES) test_serial_number.cpp
 
 ot_test_string_LDADD            = $(COMMON_LDADD)
 ot_test_string_SOURCES          = $(COMMON_SOURCES) test_string.cpp

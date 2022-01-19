@@ -45,6 +45,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
@@ -546,7 +547,7 @@ public:
      * before @p aTag.
      *
      */
-    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return ((aTag - mLastRxFragmentTag) & (1U << 15)) != 0; }
+    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return SerialNumber::IsGreater(mLastRxFragmentTag, aTag); }
 
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 

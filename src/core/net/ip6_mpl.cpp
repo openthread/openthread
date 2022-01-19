@@ -38,6 +38,7 @@
 #include "common/locator_getters.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -187,14 +188,12 @@ Error Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         {
             // have existing entries for aSeedId
 
-            int8_t diff = static_cast<int8_t>(aSequence - mSeedSet[i].mSequence);
-
-            if (diff == 0)
+            if (aSequence == mSeedSet[i].mSequence)
             {
                 // already received, drop message
                 ExitNow(error = kErrorDrop);
             }
-            else if (insert == nullptr && diff < 0)
+            else if (insert == nullptr && SerialNumber::IsLess(aSequence, mSeedSet[i].mSequence))
             {
                 // insert in order of sequence
                 insert = &mSeedSet[i];
