@@ -107,6 +107,7 @@ class OtCliCommandRunner(OTCommandHandler):
         return repr(self.__otcli)
 
     def execute_command(self, cmd, timeout=10) -> List[str]:
+        assert not self.__should_close.is_set(), "OT CLI is already closed."
         self.__otcli.writeline(cmd)
 
         if cmd in ('reset', 'factoryreset'):
@@ -140,6 +141,7 @@ class OtCliCommandRunner(OTCommandHandler):
     def close(self):
         self.__should_close.set()
         self.__otcli.close()
+        self.__otcli_reader.join()
 
     def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
         self.__line_read_callback = callback
@@ -181,9 +183,19 @@ class OtCliCommandRunner(OTCommandHandler):
         return output
 
     def __otcli_read_routine(self):
-        while not self.__should_close.isSet():
-            line = self.__otcli.readline()
+        while not self.__should_close.is_set():
+            try:
+                line = self.__otcli.readline()
+            except Exception:
+                if self.__should_close.is_set():
+                    break
+                else:
+                    raise
+
             logging.debug('%s: %r', self.__otcli, line)
+
+            if line is None:
+                break
 
             if line.startswith('> '):
                 line = line[2:]
