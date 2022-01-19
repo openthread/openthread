@@ -345,52 +345,124 @@ exit:
     return error;
 }
 
-void NetworkData::OutputPrefixes(void)
+otError NetworkData::GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal)
+{
+    otError error;
+
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        error = otBorderRouterGetNextOnMeshPrefix(GetInstancePtr(), aIterator, aConfig);
+#else
+        error = OT_ERROR_NOT_FOUND;
+#endif
+    }
+    else
+    {
+        error = otNetDataGetNextOnMeshPrefix(GetInstancePtr(), aIterator, aConfig);
+    }
+
+    return error;
+}
+
+void NetworkData::OutputPrefixes(bool aLocal)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig  config;
 
     OutputLine("Prefixes:");
 
-    while (otNetDataGetNextOnMeshPrefix(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
+    while (GetNextPrefix(&iterator, &config, aLocal) == OT_ERROR_NONE)
     {
         OutputPrefix(config);
     }
 }
 
-void NetworkData::OutputRoutes(void)
+otError NetworkData::GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal)
+{
+    otError error;
+
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        error = otBorderRouterGetNextRoute(GetInstancePtr(), aIterator, aConfig);
+#else
+        error = OT_ERROR_NOT_FOUND;
+#endif
+    }
+    else
+    {
+        error = otNetDataGetNextRoute(GetInstancePtr(), aIterator, aConfig);
+    }
+
+    return error;
+}
+
+void NetworkData::OutputRoutes(bool aLocal)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
 
     OutputLine("Routes:");
 
-    while (otNetDataGetNextRoute(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
+    while (GetNextRoute(&iterator, &config, aLocal) == OT_ERROR_NONE)
     {
         OutputRoute(config);
     }
 }
 
-void NetworkData::OutputServices(void)
+otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal)
+{
+    otError error;
+
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+        error = otServerGetNextService(GetInstancePtr(), aIterator, aConfig);
+#else
+        error = OT_ERROR_NOT_FOUND;
+#endif
+    }
+    else
+    {
+        error = otNetDataGetNextService(GetInstancePtr(), aIterator, aConfig);
+    }
+
+    return error;
+}
+
+void NetworkData::OutputServices(bool aLocal)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otServiceConfig       config;
 
     OutputLine("Services:");
 
-    while (otNetDataGetNextService(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
+    while (GetNextService(&iterator, &config, aLocal) == OT_ERROR_NONE)
     {
         OutputService(config);
     }
 }
 
-otError NetworkData::OutputBinary(void)
+otError NetworkData::OutputBinary(bool aLocal)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
     uint8_t data[255];
     uint8_t len = sizeof(data);
 
-    SuccessOrExit(error = otNetDataGet(GetInstancePtr(), false, data, &len));
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        error = otBorderRouterGetNetData(GetInstancePtr(), false, data, &len);
+#else
+        error = OT_ERROR_NOT_IMPLEMENTED;
+#endif
+    }
+    else
+    {
+        error = otNetDataGet(GetInstancePtr(), false, data, &len);
+    }
+    SuccessOrExit(error);
 
     OutputBytesLine(data, static_cast<uint8_t>(len));
 
@@ -400,20 +472,39 @@ exit:
 
 otError NetworkData::ProcessShow(Arg aArgs[])
 {
-    otError error = OT_ERROR_INVALID_ARGS;
+    otError error  = OT_ERROR_INVALID_ARGS;
+    bool    local  = false;
+    bool    binary = false;
 
-    if (aArgs[0].IsEmpty())
+    for (uint8_t i = 0; !aArgs[i].IsEmpty(); i++)
     {
-        OutputPrefixes();
-        OutputRoutes();
-        OutputServices();
+        if (aArgs[i] == "local")
+        {
+            local = true;
+        }
+        else if (aArgs[i] == "-x")
+        {
+            binary = true;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+    if (binary)
+    {
+        error = OutputBinary(local);
+    }
+    else
+    {
+        OutputPrefixes(local);
+        OutputRoutes(local);
+        OutputServices(local);
         error = OT_ERROR_NONE;
     }
-    else if (aArgs[0] == "-x")
-    {
-        error = OutputBinary();
-    }
 
+exit:
     return error;
 }
 
