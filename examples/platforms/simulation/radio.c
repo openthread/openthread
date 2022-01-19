@@ -139,7 +139,7 @@ static uint32_t sCslPeriod;
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
-static bool sRadioCoexEnabled = true;
+static bool sRadioCoexEnabled = OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_DEFAULT_ON;
 #endif
 
 otRadioCaps gRadioCaps =

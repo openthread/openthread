@@ -108,6 +108,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_DEFAULT_ON
+ *
+ * Define to 1 if you want to turn on radio coexistence implemented in platform during initialization. This option
+ * only takes effect when `OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE` is set. When this option is set, coex will
+ * be turned on during initialization. Otherwise, coex needs to be turned on manually.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_DEFAULT_ON
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_DEFAULT_ON 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE
  *
  * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when
