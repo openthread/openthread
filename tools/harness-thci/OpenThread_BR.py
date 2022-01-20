@@ -319,7 +319,23 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.__dumpSyslog()
         self.__truncateSyslog()
         if not self.IsHost:
-            self.bash('sudo service otbr-agent restart')
+            self.bash('sudo systemctl restart otbr-agent')
+            time.sleep(2)
+
+    def _beforeRegisterMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
+        """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
+
+        Args:
+            sAddr   : str : Multicast address to be subscribed and notified OTA.
+        """
+
+        if self.externalCommissioner is not None:
+            self.externalCommissioner.MLR([sAddr], timeout)
+            return True
+
+        cmd = 'sudo nohup ~/repo/openthread/tests/scripts/thread-cert/mcast6.py wpan0 %s' % sAddr
+        cmd = cmd + ' > /dev/null 2>&1 &'
+        self.bash(cmd)
 
     @API
     def setupHost(self, setDua=False):
@@ -604,7 +620,10 @@ EOF"
 
     def __checkServiceStatus(self):
         self.bash('sudo service radvd stop')
-        self.bash('sudo service otbr-agent restart')
+        self.bash('sudo systemctl restart otbr-agent')
+
+    def __restartAgentService(self):
+        self.bash('sudo systemctl restart otbr-agent')
 
     def __truncateSyslog(self):
         self.bash('sudo truncate -s 0 /var/log/syslog')
@@ -691,14 +710,14 @@ EOF"
     @API
     def powerDown(self):
         self.log('Powering down BBR')
-        self.bash('sudo service otbr-agent stop')
+        self.bash('sudo systemctl stop otbr-agent')
         super(OpenThread_BR, self).powerDown()
 
     # Override powerUp
     @API
     def powerUp(self):
         self.log('Powering up BBR')
-        self.bash('sudo service otbr-agent start')
+        self.bash('sudo systemctl start otbr-agent')
         super(OpenThread_BR, self).powerUp()
 
     # Override forceSetSlaac
@@ -706,25 +725,6 @@ EOF"
     def forceSetSlaac(self, slaacAddress):
         print('forceSetSlaac %s' % slaacAddress)
         self.bash('sudo ip -6 addr add %s/64 dev wpan0' % slaacAddress)
-
-    # Override registerMulticast
-    @API
-    def registerMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
-        """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
-
-        Args:
-            sAddr   : str : Multicast address to be subscribed and notified OTA.
-        """
-
-        if self.externalCommissioner is not None:
-            self.externalCommissioner.MLR([sAddr], timeout)
-            return True
-
-        cmd = 'sudo nohup ~/repo/openthread/tests/scripts/thread-cert/mcast6.py wpan0 %s' % sAddr
-        cmd = cmd + ' > /dev/null 2>&1 &'
-        self.bash(cmd)
-
-        return True
 
     # Override stopListeningToAddr
     @API
