@@ -15,6 +15,8 @@ Usage : `history [command] ...`
 - [ipmaddr](#ipmaddr)
 - [neighbor](#neighbor)
 - [netinfo](#netinfo)
+- [prefix](#prefix)
+- [route](#route)
 - [rx](#rx)
 - [rxtx](#rxtx)
 - [tx](#tx)
@@ -52,6 +54,8 @@ ipaddr
 ipmaddr
 neighbor
 netinfo
+prefix
+route
 rx
 rxtx
 tx
@@ -240,6 +244,96 @@ Print only the latest 2 entries.
 +----------------------+----------+------+--------+--------------+
 |         00:02:05.451 | router   | rdn  | 0x6000 |    151029327 |
 |         00:04:04.719 | child    | rdn  | 0x2001 |    151029327 |
+Done
+```
+
+### prefix
+
+Usage `history prefix [list] [<num-entries>]`
+
+Print the Network Data on mesh prefix history. Each item provides:
+
+- Event (`Added` or `Removed`)
+- Prefix
+- Flags
+- Preference (`high`, `med`, `low`)
+- RLOC16
+
+The flags are as follows:
+
+- `p`: Preferred flag
+- `a`: Stateless IPv6 Address Autoconfiguration flag
+- `d`: DHCPv6 IPv6 Address Configuration flag
+- `c`: DHCPv6 Other Configuration flag
+- `r`: Default Route flag
+- `o`: On Mesh flag
+- `s`: Stable flag
+- `n`: Nd Dns flag
+- `D`: Domain Prefix flag
+
+Print the history as a table.
+
+```bash
+> history prefix
+| Age                  | Event   | Prefix                                      | Flags     | Pref | RLOC16 |
++----------------------+---------+---------------------------------------------+-----------+------+--------+
+|         00:00:10.663 | Added   | fd00:1111:2222:3333::/64                    | paro      | med  | 0x5400 |
+|         00:01:02.054 | Removed | fd00:dead:beef:1::/64                       | paros     | high | 0x5400 |
+|         00:01:21.136 | Added   | fd00:abba:cddd:0::/64                       | paos      | med  | 0x5400 |
+|         00:01:45.144 | Added   | fd00:dead:beef:1::/64                       | paros     | high | 0x3c00 |
+|         00:01:50.944 | Added   | fd00:dead:beef:1::/64                       | paros     | high | 0x5400 |
+|         00:01:59.887 | Added   | fd00:dead:beef:1::/64                       | paros     | med  | 0x8800 |
+Done
+```
+
+Print the history as a list.
+
+```bash
+> history prefix list
+00:04:12.487 -> event:Added prefix:fd00:1111:2222:3333::/64 flags:paro pref:med rloc16:0x5400
+00:05:03.878 -> event:Removed prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x5400
+00:05:22.960 -> event:Added prefix:fd00:abba:cddd:0::/64 flags:paos pref:med rloc16:0x5400
+00:05:46.968 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x3c00
+00:05:52.768 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x5400
+00:06:01.711 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:med rloc16:0x8800
+```
+
+### prefix
+
+Usage `history route [list] [<num-entries>]`
+
+Print the Network Data external route history. Each item provides:
+
+- Event (`Added` or `Removed`)
+- Route
+- Flags
+- Preference (`high`, `med`, `low`)
+- RLOC16
+
+The flags are as follows:
+
+- `s`: Stable flag
+- `n`: NAT64 flag
+
+Print the history as a table.
+
+```bash
+history route
+| Age                  | Event   | Route                                       | Flags     | Pref | RLOC16 |
++----------------------+---------+---------------------------------------------+-----------+------+--------+
+|         00:00:05.456 | Removed | fd00:1111:0::/48                            | s         | med  | 0x3c00 |
+|         00:00:29.310 | Added   | fd00:1111:0::/48                            | s         | med  | 0x3c00 |
+|         00:00:42.822 | Added   | fd00:1111:0::/48                            | s         | med  | 0x5400 |
+|         00:01:27.688 | Added   | fd00:aaaa:bbbb:cccc::/64                    | s         | med  | 0x8800 |
+Done
+```
+
+Print the history as a list (last two entries).
+
+```bash
+> history route list 2
+00:00:48.704 -> event:Removed route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
+00:01:12.558 -> event:Added route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
 Done
 ```
 

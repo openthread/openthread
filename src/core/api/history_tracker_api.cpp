@@ -94,6 +94,23 @@ const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otIns
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNeighborHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
+const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHistory(otInstance *              aInstance,
+                                                                                   otHistoryTrackerIterator *aIterator,
+                                                                                   uint32_t *                aEntryAge)
+{
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateOnMeshPrefixHistory(AsCoreType(aIterator),
+                                                                                         *aEntryAge);
+}
+
+const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge)
+{
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateExternalRouteHistory(AsCoreType(aIterator),
+                                                                                          *aEntryAge);
+}
+
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
 {
     Utils::HistoryTracker::EntryAgeToString(aEntryAge, aBuffer, aSize);

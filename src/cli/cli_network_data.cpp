@@ -45,20 +45,9 @@ namespace Cli {
 
 constexpr NetworkData::Command NetworkData::sCommands[];
 
-void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
+void NetworkData::PrefixFlagsToString(const otBorderRouterConfig &aConfig, FlagsString &aString)
 {
-    enum
-    {
-        // BorderRouter flag is `uint16_t` (though some of the bits are
-        // reserved for future use), so we use 17 chars string (16 flags
-        // plus null char at end of string).
-        kMaxFlagStringSize = 17,
-    };
-
-    char  flagsString[kMaxFlagStringSize];
-    char *flagsPtr = &flagsString[0];
-
-    OutputIp6Prefix(aConfig.mPrefix);
+    char *flagsPtr = &aString[0];
 
     if (aConfig.mPreferred)
     {
@@ -106,31 +95,27 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
     }
 
     *flagsPtr = '\0';
+}
 
-    if (flagsPtr != &flagsString[0])
+void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
+{
+    FlagsString flagsString;
+
+    OutputIp6Prefix(aConfig.mPrefix);
+
+    PrefixFlagsToString(aConfig, flagsString);
+
+    if (flagsString[0] != '\0')
     {
         OutputFormat(" %s", flagsString);
     }
 
-    OutputPreference(aConfig.mPreference);
-
-    OutputLine(" %04x", aConfig.mRloc16);
+    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
-void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
+void NetworkData::RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString)
 {
-    enum
-    {
-        // ExternalRoute flag is `uint8_t` (though some of the bits are
-        // reserved for future use), so we use 9 chars string (8 flags
-        // plus null char at end of string).
-        kMaxFlagStringSize = 9,
-    };
-
-    char  flagsString[kMaxFlagStringSize];
-    char *flagsPtr = &flagsString[0];
-
-    OutputIp6Prefix(aConfig.mPrefix);
+    char *flagsPtr = &aString[0];
 
     if (aConfig.mStable)
     {
@@ -143,36 +128,47 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
     }
 
     *flagsPtr = '\0';
+}
 
-    if (flagsPtr != &flagsString[0])
+void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
+{
+    FlagsString flagsString;
+
+    OutputIp6Prefix(aConfig.mPrefix);
+
+    RouteFlagsToString(aConfig, flagsString);
+
+    if (flagsString[0] != '\0')
     {
         OutputFormat(" %s", flagsString);
     }
 
-    OutputPreference(aConfig.mPreference);
-
-    OutputLine(" %04x", aConfig.mRloc16);
+    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
-void NetworkData::OutputPreference(signed int aPreference)
+const char *NetworkData::PreferenceToString(signed int aPreference)
 {
+    const char *str = "";
+
     switch (aPreference)
     {
     case OT_ROUTE_PREFERENCE_LOW:
-        OutputFormat(" low");
+        str = "low";
         break;
 
     case OT_ROUTE_PREFERENCE_MED:
-        OutputFormat(" med");
+        str = "med";
         break;
 
     case OT_ROUTE_PREFERENCE_HIGH:
-        OutputFormat(" high");
+        str = "high";
         break;
 
     default:
         break;
     }
+
+    return str;
 }
 
 void NetworkData::OutputService(const otServiceConfig &aConfig)

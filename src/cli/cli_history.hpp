@@ -93,6 +93,8 @@ private:
     otError ProcessIpMulticastAddr(Arg aArgs[]);
     otError ProcessNetInfo(Arg aArgs[]);
     otError ProcessNeighbor(Arg aArgs[]);
+    otError ProcessPrefix(Arg aArgs[]);
+    otError ProcessRoute(Arg aArgs[]);
     otError ProcessRx(Arg aArgs[]);
     otError ProcessRxTx(Arg aArgs[]);
     otError ProcessTx(Arg aArgs[]);
@@ -112,6 +114,8 @@ private:
         {"ipmaddr", &History::ProcessIpMulticastAddr},
         {"neighbor", &History::ProcessNeighbor},
         {"netinfo", &History::ProcessNetInfo},
+        {"prefix", &History::ProcessPrefix},
+        {"route", &History::ProcessRoute},
         {"rx", &History::ProcessRx},
         {"rxtx", &History::ProcessRxTx},
         {"tx", &History::ProcessTx},

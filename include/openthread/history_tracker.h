@@ -29,6 +29,7 @@
 
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/netdata.h>
 #include <openthread/thread.h>
 
 #ifdef __cplusplus
@@ -192,6 +193,36 @@ typedef struct otHistoryTrackerNeighborInfo
 } otHistoryTrackerNeighborInfo;
 
 /**
+ * This enumeration defines the events for a Network Data entry (i.e., whether an entry is added or removed).
+ *
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED   = 0, ///< Network data entry is added.
+    OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED = 1, ///< Network data entry is removed.
+} otHistoryTrackerNetDataEvent;
+
+/**
+ * This structure represent a Network Data on mesh prefix info.
+ *
+ */
+typedef struct otHistoryTrackerOnMeshPrefixInfo
+{
+    otBorderRouterConfig         mPrefix; ///< The on mesh prefix entry.
+    otHistoryTrackerNetDataEvent mEvent;  ///< Indicates the event (added/removed).
+} otHistoryTrackerOnMeshPrefixInfo;
+
+/**
+ * This structure represent a Network Data extern route info.
+ *
+ */
+typedef struct otHistoryTrackerExternalRouteInfo
+{
+    otExternalRouteConfig        mRoute; ///< The external route entry.
+    otHistoryTrackerNetDataEvent mEvent; ///< Indicates the event (added/removed).
+} otHistoryTrackerExternalRouteInfo;
+
+/**
  * This function initializes an `otHistoryTrackerIterator`.
  *
  * An iterator MUST be initialized before it is used.
@@ -310,6 +341,41 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *
 const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance *              aInstance,
                                                                            otHistoryTrackerIterator *aIterator,
                                                                            uint32_t *                aEntryAge);
+
+/**
+ * This function iterates over the entries in the Network Data on mesh prefix entry history list.
+ *
+ * @param[in]    aInstance   A pointer to the OpenThread instance.
+ * @param[inout] aIterator   A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]   aEntryAge   A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerOnMeshPrefixInfo` entry or `NULL` if no more entries in the list.
+ *
+ */
+const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHistory(otInstance *              aInstance,
+                                                                                   otHistoryTrackerIterator *aIterator,
+                                                                                   uint32_t *                aEntryAge);
+
+/**
+ * This function iterates over the entries in the Network Data external route entry history list.
+ *
+ * @param[in]    aInstance   A pointer to the OpenThread instance.
+ * @param[inout] aIterator   A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]   aEntryAge   A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerExternalRouteInfo` entry or `NULL` if no more entries in the list.
+ *
+ */
+const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge);
 
 /**
  * This function converts a given entry age to a human-readable string.
