@@ -57,7 +57,7 @@ tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_
 	size_t offset;
 	size_t start_index;
 	size_t usedbefore;
-	int tlen = *tlenp;
+	int tlen;
 	size_t merged = 0;
 	int flags = 0;
 
@@ -67,6 +67,8 @@ tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_
 	 */
 	if (th == NULL)
 		goto present;
+
+	tlen = *tlenp;
 
 	/* Insert the new segment queue entry into place. */
 	KASSERT(SEQ_GEQ(th->th_seq, tp->rcv_nxt), ("Adding past segment to the reassembly queue\n"));

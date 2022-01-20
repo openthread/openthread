@@ -450,10 +450,10 @@ void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnect
 {
     static const char *const kReasonStrings[] = {
         "Disconnected",            // (0) OT_TCP_DISCONNECTED_REASON_NORMAL
-        "Entered TIME-WAIT state", // (1) OT_TCP_DISCONNECTED_REASON_REFUSED
-        "Connection timed out",    // (2) OT_TCP_DISCONNECTED_REASON_RESET
-        "Connection refused",      // (3) OT_TCP_DISCONNECTED_REASON_TIME_WAIT
-        "Connection reset",        // (4) OT_TCP_DISCONNECTED_REASON_TIMED_OUT
+        "Connection refused",      // (1) OT_TCP_DISCONNECTED_REASON_REFUSED
+        "Connection reset",        // (2) OT_TCP_DISCONNECTED_REASON_RESET
+        "Entered TIME-WAIT state", // (3) OT_TCP_DISCONNECTED_REASON_TIME_WAIT
+        "Connection timed out",    // (4) OT_TCP_DISCONNECTED_REASON_TIMED_OUT
     };
 
     OT_UNUSED_VARIABLE(aEndpoint);
