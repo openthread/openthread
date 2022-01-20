@@ -1064,7 +1064,7 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
 #endif
 
     otLogMac(aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
-             MessageActionToString(aAction, aError), aMessage.GetLength(),
+             MessageActionToString(aAction), aMessage.GetLength(),
              (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
              (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
              aMeshDest.ToString().AsCString(), meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0),

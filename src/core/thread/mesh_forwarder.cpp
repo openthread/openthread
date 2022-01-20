@@ -1705,7 +1705,7 @@ exit:
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
+const char *MeshForwarder::MessageActionToString(MessageAction aAction)
 {
     static const char *const kMessageActionStrings[] = {
         "Received",                    // (0) kMessageReceive
@@ -1723,7 +1723,7 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
     static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
     static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
 
-    return (aError == kErrorNone) ? kMessageActionStrings[aAction] : "Failed to send";
+    return kMessageActionStrings[aAction];
 }
 
 const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
@@ -1784,9 +1784,9 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
     radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
 #endif
 
-    otLogMac(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
-             MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
-             aMessage.GetLength(), checksum,
+    otLogMac(aLogLevel, "%s%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
+             aError == kErrorNone ? "" : "[FAIL] ", MessageActionToString(aAction),
+             Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()), aMessage.GetLength(), checksum,
              (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
              (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
              ToYesNo(aMessage.IsLinkSecurityEnabled()),

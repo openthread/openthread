@@ -536,7 +536,7 @@ private:
 #endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
-    const char *MessageActionToString(MessageAction aAction, Error aError);
+    const char *MessageActionToString(MessageAction aAction);
     const char *MessagePriorityToString(const Message &aMessage);
 
 #if OPENTHREAD_FTD

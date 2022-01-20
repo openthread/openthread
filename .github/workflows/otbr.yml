@@ -140,16 +140,19 @@ jobs:
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 1
             description: ""
+            result_index: 1
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 1
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 2
             description: ""
+            result_index: 2
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/MATN/*.py
             packet_verification: 1
             description: "MATN"
+            result_index: 3
           - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
@@ -160,6 +163,7 @@ jobs:
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 2
             description: ""
+            result_index: 4
     name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
       REFERENCE_DEVICE: 1
@@ -223,9 +227,9 @@ jobs:
         name: cov-thread-border-router-docker
         path: /tmp/coverage/
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
-        name: thread-border-router-results
+        name: thread-border-router-${{ matrix.result_index }}-results
         path: |
           *.pcap
           *.json
