@@ -50,6 +50,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
+#include "thread/network_data_types.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -308,20 +309,20 @@ public:
     bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device requests Full Network Data.
-     *
-     * @returns TRUE if requests Full Network Data, FALSE otherwise.
-     *
-     */
-    bool IsFullNetworkData(void) const { return mDeviceMode.IsFullNetworkData(); }
-
-    /**
      * This method indicates whether or not the device is a Minimal End Device.
      *
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
      *
      */
     bool IsMinimalEndDevice(void) const { return mDeviceMode.IsMinimalEndDevice(); }
+
+    /**
+     * This method gets the Network Data type (full set or stable subset) that this device requests.
+     *
+     * @returns The Network Data type requested by this device.
+     *
+     */
+    NetworkData::Type GetNetworkDataType(void) const { return mDeviceMode.GetNetworkDataType(); }
 
     /**
      * This method returns a pointer to the Mesh Local Prefix.
@@ -1122,13 +1123,13 @@ protected:
      * This method appends a Network Data TLV to the message.
      *
      * @param[in]  aMessage     A reference to the message.
-     * @param[in]  aStableOnly  TRUE to append stable data, FALSE otherwise.
+     * @param[in]  aType        The Network Data type to append, full set or stable subset.
      *
      * @retval kErrorNone     Successfully appended the Network Data TLV.
      * @retval kErrorNoBufs   Insufficient buffers available to append the Network Data TLV.
      *
      */
-    Error AppendNetworkData(Message &aMessage, bool aStableOnly);
+    Error AppendNetworkData(Message &aMessage, NetworkData::Type aType);
 
     /**
      * This method appends a TLV Request TLV to a message.

@@ -168,28 +168,28 @@ public:
     /**
      * This method provides full or stable copy of the Thread Network Data.
      *
-     * @param[in]    aStable      TRUE when copying the stable version, FALSE when copying the full version.
+     * @param[in]    aType        The Network Data type to copy, the full set or stable subset.
      * @param[out]   aData        A pointer to the data buffer to copy the Network Data into.
      * @param[inout] aDataLength  On entry, size of the data buffer pointed to by @p aData.
      *                            On exit, number of copied bytes.
      *
-     * @retval kErrorNone       Successfully copied full Thread Network Data.
+     * @retval kErrorNone       Successfully copied Thread Network Data.
      * @retval kErrorNoBufs     Not enough space in @p aData to fully copy Thread Network Data.
      *
      */
-    Error CopyNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const;
+    Error CopyNetworkData(Type aType, uint8_t *aData, uint8_t &aDataLength) const;
 
     /**
      * This method provides full or stable copy of the Thread Network Data.
      *
-     * @param[in]    aStable      TRUE when copying the stable version, FALSE when copying the full version.
+     * @param[in]    aType        The Network Data type to copy, the full set or stable subset.
      * @param[out]   aNetworkData A reference to a `MutableNetworkData` to copy the Network Data into.
      *
-     * @retval kErrorNone       Successfully copied full Thread Network Data.
+     * @retval kErrorNone       Successfully copied Thread Network Data.
      * @retval kErrorNoBufs     Not enough space in @p aNetworkData to fully copy Thread Network Data.
      *
      */
-    Error CopyNetworkData(bool aStable, MutableNetworkData &aNetworkData) const;
+    Error CopyNetworkData(Type aType, MutableNetworkData &aNetworkData) const;
 
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.

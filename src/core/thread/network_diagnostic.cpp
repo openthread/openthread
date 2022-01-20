@@ -346,8 +346,8 @@ Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
             tlv.Init();
             tlv.SetPartitionId(leaderData.GetPartitionId());
             tlv.SetWeighting(leaderData.GetWeighting());
-            tlv.SetDataVersion(leaderData.GetDataVersion());
-            tlv.SetStableDataVersion(leaderData.GetStableDataVersion());
+            tlv.SetDataVersion(leaderData.GetDataVersion(NetworkData::kFullSet));
+            tlv.SetStableDataVersion(leaderData.GetDataVersion(NetworkData::kStableSubset));
             tlv.SetLeaderRouterId(leaderData.GetLeaderRouterId());
 
             SuccessOrExit(error = tlv.AppendTo(aResponse));
@@ -646,7 +646,7 @@ static inline void ParseMode(const Mle::DeviceMode &aMode, otLinkModeConfig &aLi
 {
     aLinkModeConfig.mRxOnWhenIdle = aMode.IsRxOnWhenIdle();
     aLinkModeConfig.mDeviceType   = aMode.IsFullThreadDevice();
-    aLinkModeConfig.mNetworkData  = aMode.IsFullNetworkData();
+    aLinkModeConfig.mNetworkData  = (aMode.GetNetworkDataType() == NetworkData::kFullSet);
 }
 
 static inline void ParseConnectivity(const ConnectivityTlv &    aConnectivityTlv,

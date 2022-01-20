@@ -965,7 +965,8 @@ Error MleRouter::HandleLinkAccept(const Message &         aMessage,
         VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
 
         if (mRetrieveNewNetworkData ||
-            (static_cast<int8_t>(leaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion()) > 0))
+            (static_cast<int8_t>(leaderData.GetDataVersion(NetworkData::kFullSet) -
+                                 Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet)) > 0))
         {
             IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0));
         }
@@ -2360,15 +2361,7 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
     child->ClearLastRxFragmentTag();
 #endif
 
-    if (mode.IsFullNetworkData())
-    {
-        child->SetNetworkDataVersion(mLeaderData.GetDataVersion());
-    }
-    else
-    {
-        child->SetNetworkDataVersion(mLeaderData.GetStableDataVersion());
-    }
-
+    child->SetNetworkDataVersion(mLeaderData.GetDataVersion(mode.GetNetworkDataType()));
     child->ClearRequestTlvs();
 
     for (numTlvs = 0; numTlvs < requestedTlvs.mNumTlvs; numTlvs++)
@@ -2497,14 +2490,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Mes
     switch (ReadLeaderData(aMessage, leaderData))
     {
     case kErrorNone:
-        if (child->IsFullNetworkData())
-        {
-            child->SetNetworkDataVersion(leaderData.GetDataVersion());
-        }
-        else
-        {
-            child->SetNetworkDataVersion(leaderData.GetStableDataVersion());
-        }
+        child->SetNetworkDataVersion(leaderData.GetDataVersion(child->GetNetworkDataType()));
         break;
     case kErrorNotFound:
         break;
@@ -2742,14 +2728,7 @@ void MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
     switch (ReadLeaderData(aMessage, leaderData))
     {
     case kErrorNone:
-        if (child->IsFullNetworkData())
-        {
-            child->SetNetworkDataVersion(leaderData.GetDataVersion());
-        }
-        else
-        {
-            child->SetNetworkDataVersion(leaderData.GetStableDataVersion());
-        }
+        child->SetNetworkDataVersion(leaderData.GetDataVersion(child->GetNetworkDataType()));
         break;
     case kErrorNotFound:
         break;
@@ -2857,23 +2836,12 @@ void MleRouter::SynchronizeChildNetworkData(void)
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        uint8_t version;
-
         if (child.IsRxOnWhenIdle())
         {
             continue;
         }
 
-        if (child.IsFullNetworkData())
-        {
-            version = Get<NetworkData::Leader>().GetVersion();
-        }
-        else
-        {
-            version = Get<NetworkData::Leader>().GetStableVersion();
-        }
-
-        if (child.GetNetworkDataVersion() == version)
+        if (child.GetNetworkDataVersion() == Get<NetworkData::Leader>().GetVersion(child.GetNetworkDataType()))
         {
             continue;
         }
@@ -3136,7 +3104,7 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
         switch (aChild.GetRequestTlv(i))
         {
         case Tlv::kNetworkData:
-            SuccessOrExit(error = AppendNetworkData(*message, !aChild.IsFullNetworkData()));
+            SuccessOrExit(error = AppendNetworkData(*message, aChild.GetNetworkDataType()));
             break;
 
         case Tlv::kRoute:
@@ -3219,7 +3187,7 @@ Error MleRouter::SendChildUpdateRequest(Child &aChild)
     SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
-    SuccessOrExit(error = AppendNetworkData(*message, !aChild.IsFullNetworkData()));
+    SuccessOrExit(error = AppendNetworkData(*message, aChild.GetNetworkDataType()));
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
@@ -3279,7 +3247,7 @@ void MleRouter::SendChildUpdateResponse(Child *                 aChild,
             break;
 
         case Tlv::kNetworkData:
-            SuccessOrExit(error = AppendNetworkData(*message, !aChild->IsFullNetworkData()));
+            SuccessOrExit(error = AppendNetworkData(*message, aChild->GetNetworkDataType()));
             SuccessOrExit(error = AppendActiveTimestamp(*message));
             SuccessOrExit(error = AppendPendingTimestamp(*message));
             break;
@@ -3341,7 +3309,6 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
     Error     error   = kErrorNone;
     Message * message = nullptr;
     Neighbor *neighbor;
-    bool      stableOnly;
 
     if (mRetrieveNewNetworkData)
     {
@@ -3362,9 +3329,9 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
         switch (aTlvs[i])
         {
         case Tlv::kNetworkData:
-            neighbor   = mNeighborTable.FindNeighbor(aDestination);
-            stableOnly = neighbor != nullptr ? !neighbor->IsFullNetworkData() : false;
-            SuccessOrExit(error = AppendNetworkData(*message, stableOnly));
+            neighbor = mNeighborTable.FindNeighbor(aDestination);
+            SuccessOrExit(error = AppendNetworkData(*message, (neighbor != nullptr) ? neighbor->GetNetworkDataType()
+                                                                                    : NetworkData::kFullSet));
             break;
 
         case Tlv::kActiveDataset:

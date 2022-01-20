@@ -79,7 +79,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mMessageErrorRate = aNeighbor.GetLinkInfo().GetMessageErrorRate();
     mRxOnWhenIdle     = aNeighbor.IsRxOnWhenIdle();
     mFullThreadDevice = aNeighbor.IsFullThreadDevice();
-    mFullNetworkData  = aNeighbor.IsFullNetworkData();
+    mFullNetworkData  = (aNeighbor.GetNetworkDataType() == NetworkData::kFullSet);
 }
 
 void Neighbor::Init(Instance &aInstance)
@@ -242,7 +242,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mVersion            = aChild.GetVersion();
     mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
     mFullThreadDevice   = aChild.IsFullThreadDevice();
-    mFullNetworkData    = aChild.IsFullNetworkData();
+    mFullNetworkData    = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
     mIsStateRestoring   = aChild.IsStateRestoring();
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();

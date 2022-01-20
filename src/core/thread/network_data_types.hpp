@@ -69,6 +69,16 @@ class ServiceTlv;
 class ServerTlv;
 
 /**
+ * This enumeration represents the Network Data type.
+ *
+ */
+enum Type : uint8_t
+{
+    kFullSet,      ///< Full Network Data set.
+    kStableSubset, ///< Stable Network Data subset.
+};
+
+/**
  * This enumeration type represents the route preference values as a signed integer (per RFC-4191).
  *
  */
