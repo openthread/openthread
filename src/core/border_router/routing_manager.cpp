@@ -641,25 +641,45 @@ void RoutingManager::EvaluateNat64Prefix(void)
 
     NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
     NetworkData::ExternalRouteConfig config;
-    bool                             hasAdvertisedNat64Prefix = false;
+    Ip6::Prefix                      smallestNat64Prefix;
 
     otLogInfoBr("Evaluating NAT64 prefix");
 
+    smallestNat64Prefix.Clear();
     while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, config) == kErrorNone)
     {
-        if (config.mNat64 && config.GetPrefix().IsValidNat64())
+        const Ip6::Prefix &prefix = config.GetPrefix();
+
+        if (config.mNat64 && prefix.IsValidNat64())
         {
-            hasAdvertisedNat64Prefix = true;
+            if (smallestNat64Prefix.GetLength() == 0 || prefix < smallestNat64Prefix)
+            {
+                smallestNat64Prefix = prefix;
+            }
         }
     }
 
-    if (!hasAdvertisedNat64Prefix && !mIsAdvertisingLocalNat64Prefix)
+    if (smallestNat64Prefix.GetLength() == 0 || smallestNat64Prefix == mLocalNat64Prefix)
     {
-        // TODO: when multiple prefixes exits, remove the ones with lower preference or numerically larger.
-        if (AddExternalRoute(mLocalNat64Prefix, NetworkData::kRoutePreferenceLow, /* aNat64= */ true) == kErrorNone)
+        otLogInfoBr("No NAT64 prefix in Network Data is smaller than the local NAT64 prefix %s",
+                    mLocalNat64Prefix.ToString().AsCString());
+
+        // Advertise local NAT64 prefix.
+        if (!mIsAdvertisingLocalNat64Prefix &&
+            AddExternalRoute(mLocalNat64Prefix, NetworkData::kRoutePreferenceLow, /* aNat64= */ true) == kErrorNone)
         {
             mIsAdvertisingLocalNat64Prefix = true;
         }
+    }
+    else if (mIsAdvertisingLocalNat64Prefix && smallestNat64Prefix < mLocalNat64Prefix)
+    {
+        // Withdraw local NAT64 prefix if it's not the smallest one in Network Data.
+        // TODO: remove the prefix with lower preference after discovering upstream NAT64 prefix is supported
+        otLogNoteBr("Withdrawing local NAT64 prefix since a smaller one %s exists.",
+                    smallestNat64Prefix.ToString().AsCString());
+
+        RemoveExternalRoute(mLocalNat64Prefix);
+        mIsAdvertisingLocalNat64Prefix = false;
     }
 }
 #endif
