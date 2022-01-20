@@ -2125,7 +2125,7 @@ class NodeImpl:
                 break
 
         if self.is_otbr:
-            self.set_log_level(5)
+            self.set_log_level(3)
 
     def set_router_selection_jitter(self, jitter):
         cmd = 'routerselectionjitter %d' % jitter
@@ -3383,7 +3383,7 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
 
     def start(self):
         self._setup_sysctl()
-        self.set_log_level(5)
+        self.set_log_level(3)
         super().start()
 
     def add_ipaddr(self, addr):
