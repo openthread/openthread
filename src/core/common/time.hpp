@@ -40,6 +40,7 @@
 #include <stdint.h>
 
 #include "common/equatable.hpp"
+#include "common/serial_number.hpp"
 
 namespace ot {
 
@@ -178,7 +179,7 @@ public:
      * @retval FALSE   This `Time` instance is not strictly before @p aOther.
      *
      */
-    bool operator<(const Time &aOther) const { return ((mValue - aOther.mValue) & (1UL << 31)) != 0; }
+    bool operator<(const Time &aOther) const { return SerialNumber::IsLess(mValue, aOther.mValue); }
 
     /**
      * This method indicates whether this `Time` instance is after or equal to another one.

@@ -422,6 +422,7 @@ openthread_core_files = [
   "common/random_manager.cpp",
   "common/random_manager.hpp",
   "common/retain_ptr.hpp",
+  "common/serial_number.hpp",
   "common/settings.cpp",
   "common/settings.hpp",
   "common/settings_driver.hpp",

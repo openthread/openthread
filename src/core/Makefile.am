@@ -455,6 +455,7 @@ HEADERS_COMMON                                  = \
     common/random.hpp                             \
     common/random_manager.hpp                     \
     common/retain_ptr.hpp                         \
+    common/serial_number.hpp                      \
     common/settings.hpp                           \
     common/settings_driver.hpp                    \
     common/string.hpp                             \

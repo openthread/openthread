@@ -42,6 +42,7 @@
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "common/settings.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop.hpp"
@@ -965,8 +966,8 @@ Error MleRouter::HandleLinkAccept(const Message &         aMessage,
         VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
 
         if (mRetrieveNewNetworkData ||
-            (static_cast<int8_t>(leaderData.GetDataVersion(NetworkData::kFullSet) -
-                                 Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet)) > 0))
+            SerialNumber::IsGreater(leaderData.GetDataVersion(NetworkData::kFullSet),
+                                    Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet)))
         {
             IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), dataRequestTlvs, sizeof(dataRequestTlvs), 0));
         }
@@ -1218,7 +1219,7 @@ Error MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Message
         if (route.IsValid() && IsFullThreadDevice() && (mPreviousPartitionIdTimeout > 0) &&
             (partitionId == mPreviousPartitionId))
         {
-            VerifyOrExit((static_cast<int8_t>(route.GetRouterIdSequence() - mPreviousPartitionRouterIdSequence) > 0),
+            VerifyOrExit(SerialNumber::IsGreater(route.GetRouterIdSequence(), mPreviousPartitionRouterIdSequence),
                          error = kErrorDrop);
         }
 
@@ -1262,7 +1263,7 @@ Error MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Message
 
     if (IsFullThreadDevice() && (aNeighbor && aNeighbor->IsStateValid()) &&
         ((mRouterTable.GetActiveRouterCount() == 0) ||
-         (static_cast<int8_t>(route.GetRouterIdSequence() - mRouterTable.GetRouterIdSequence()) > 0)))
+         SerialNumber::IsGreater(route.GetRouterIdSequence(), mRouterTable.GetRouterIdSequence())))
     {
         bool processRouteTlv = false;
 
