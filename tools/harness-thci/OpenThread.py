@@ -3657,7 +3657,7 @@ class OpenThread(OpenThreadTHCI, IThci):
 
     def _deviceAfterReset(self):
         pass
-        
+
     def __restartAgentService(self):
         pass
 
