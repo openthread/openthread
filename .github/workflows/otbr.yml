@@ -132,6 +132,7 @@ jobs:
   thread-border-router:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - otbr_mdns: "mDNSResponder"
