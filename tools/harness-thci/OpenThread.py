@@ -3493,7 +3493,7 @@ class OpenThreadTHCI(object):
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
-        self._beforeRegisterMulticast(sAddr,timeout)
+        self._beforeRegisterMulticast(sAddr, timeout)
 
         cmd = 'ipmaddr add ' + str(sAddr)
 
