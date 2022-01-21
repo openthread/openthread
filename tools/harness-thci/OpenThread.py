@@ -3658,6 +3658,9 @@ class OpenThread(OpenThreadTHCI, IThci):
     def _deviceAfterReset(self):
         pass
 
+    def _beforeRegisterMulticast(self,sAddr,timeout):
+        pass
+
     def __socRead(self, size=512):
         if self._is_net:
             return self.__handle.recv(size)
