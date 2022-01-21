@@ -78,6 +78,9 @@ void SubMac::Init(void)
     mRxOnWhenBackoff   = true;
     mEnergyScanMaxRssi = kInvalidRssiValue;
     mEnergyScanEndTime = Time{0};
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    mRetxDelayBackOffExponent = kRetxDelayMinBackoffExponent;
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     mRadioFilterEnabled = false;
@@ -342,6 +345,9 @@ Error SubMac::Send(void)
     case kStateCslTransmit:
 #endif
     case kStateTransmit:
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    case kStateDelayBeforeRetx:
+#endif
     case kStateEnergyScan:
         ExitNow(error = kErrorInvalidState);
         OT_UNREACHABLE_CODE(break);
@@ -363,8 +369,14 @@ Error SubMac::Send(void)
 #endif
 
     ProcessTransmitSecurity();
+
     mCsmaBackoffs    = 0;
     mTransmitRetries = 0;
+
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    mRetxDelayBackOffExponent = kRetxDelayMinBackoffExponent;
+#endif
+
     StartCsmaBackoff();
 
 exit:
@@ -414,8 +426,7 @@ exit:
 
 void SubMac::StartCsmaBackoff(void)
 {
-    uint32_t backoff;
-    uint32_t backoffExponent = kCsmaMinBe + mTransmitRetries + mCsmaBackoffs;
+    uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
 
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0)
@@ -444,6 +455,7 @@ void SubMac::StartCsmaBackoff(void)
         ExitNow();
     }
 #endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
     SetState(kStateCsmaBackoff);
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
@@ -453,8 +465,18 @@ void SubMac::StartCsmaBackoff(void)
         backoffExponent = kCsmaMaxBe;
     }
 
-    backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
-    backoff *= (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME);
+    StartTimerForBackoff(backoffExponent);
+
+exit:
+    return;
+}
+
+void SubMac::StartTimerForBackoff(uint8_t aBackoffExponent)
+{
+    uint32_t backoff;
+
+    backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << aBackoffExponent));
+    backoff *= (kUnitBackoffPeriod * Radio::kSymbolTime);
 
     if (mRxOnWhenBackoff)
     {
@@ -471,8 +493,12 @@ void SubMac::StartCsmaBackoff(void)
     mTimer.Start(backoff / 1000UL);
 #endif
 
-exit:
-    return;
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    if (mState == kStateDelayBeforeRetx)
+    {
+        LogDebg("Delaying retx for %u usec (be=%d)", backoff, aBackoffExponent);
+    }
+#endif
 }
 
 void SubMac::BeginTransmit(void)
@@ -593,6 +619,17 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
     {
         mTransmitRetries++;
         aFrame.SetIsARetransmission(true);
+
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+        if (aError == kErrorNoAck)
+        {
+            SetState(kStateDelayBeforeRetx);
+            StartTimerForBackoff(mRetxDelayBackOffExponent);
+            mRetxDelayBackOffExponent = OT_MIN(mRetxDelayBackOffExponent + 1, kRetxDelayMaxBackoffExponent);
+            ExitNow();
+        }
+#endif
+
         StartCsmaBackoff();
         ExitNow();
     }
@@ -672,6 +709,9 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateTransmit:
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kStateCslTransmit:
+#endif
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    case kStateDelayBeforeRetx:
 #endif
     case kStateEnergyScan:
         ExitNow(error = kErrorInvalidState);
@@ -768,6 +808,12 @@ void SubMac::HandleTimer(void)
         IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
         HandleTransmitDone(mTransmitFrame, nullptr, kErrorNoAck);
         break;
+
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    case kStateDelayBeforeRetx:
+        StartCsmaBackoff();
+        break;
+#endif
 
     case kStateEnergyScan:
         SampleRssi();
@@ -968,11 +1014,14 @@ const char *SubMac::StateToString(State aState)
         "CsmaBackoff", // (3) kStateCsmaBackoff
         "Transmit",    // (4) kStateTransmit
         "EnergyScan",  // (5) kStateEnergyScan
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+        "DelayBeforeRetx", // (6) kStateDelayBeforeRetx
+#endif
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        "CslTransmit", // (6) kStateCslTransmit
+        "CslTransmit", // (7) kStateCslTransmit
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        "CslSample", // (7) kStateCslSample
+        "CslSample", // (8) kStateCslSample
 #endif
     };
 
@@ -982,15 +1031,25 @@ const char *SubMac::StateToString(State aState)
     static_assert(kStateCsmaBackoff == 3, "kStateCsmaBackoff value is not correct");
     static_assert(kStateTransmit == 4, "kStateTransmit value is not correct");
     static_assert(kStateEnergyScan == 5, "kStateEnergyScan value is not correct");
+
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+    static_assert(kStateDelayBeforeRetx == 6, "kStateDelayBeforeRetx value is not correct");
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    static_assert(kStateCslTransmit == 7, "kStateCslTransmit value is not correct");
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static_assert(kStateCslSample == 8, "kStateCslSample value is not correct");
+#endif
+#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
+#endif
+
+#elif !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     static_assert(kStateCslTransmit == 6, "kStateCslTransmit value is not correct");
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
 #endif
-#else
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#elif OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static_assert(kStateCslSample == 6, "kStateCslSample value is not correct");
-#endif
 #endif
 
     return kStateStrings[aState];
