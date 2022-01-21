@@ -3657,6 +3657,9 @@ class OpenThread(OpenThreadTHCI, IThci):
 
     def _deviceAfterReset(self):
         pass
+        
+    def __restartAgentService(self):
+        pass
 
     def _beforeRegisterMulticast(self,sAddr,timeout):
         pass
