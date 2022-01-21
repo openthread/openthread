@@ -33,7 +33,6 @@ import logging
 import os
 import re
 import socket
-import string
 import subprocess
 import sys
 import time
@@ -882,6 +881,11 @@ class NodeImpl:
         cmd = 'bbr jitter %d' % jitter
         self.send_command(cmd)
         self._expect_done()
+
+    def get_rcp_version(self) -> str:
+        self.send_command('rcp version')
+        rcp_version = self._expect_command_output()[0].strip()
+        return rcp_version
 
     def srp_server_get_state(self):
         states = ['disabled', 'running', 'stopped']
