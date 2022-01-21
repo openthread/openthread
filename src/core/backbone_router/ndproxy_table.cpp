@@ -149,7 +149,7 @@ void NdProxyTable::Clear(void)
         mCallback(mCallbackContext, OT_BACKBONE_ROUTER_NDPROXY_CLEARED, nullptr);
     }
 
-    LogNote("NdProxyTable::Clear!");
+    LogInfo("NdProxyTable::Clear!");
 }
 
 Error NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,

@@ -1032,7 +1032,7 @@ void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
     static_assert(6 == kReasonEvictingForNewEntry, "kReasonEvictingForNewEntry value is incorrect");
     static_assert(7 == kReasonRemovingEid, "kReasonRemovingEid value is incorrect");
 
-    LogNote("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange], aEntry.GetTarget().ToString().AsCString(),
+    LogInfo("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange], aEntry.GetTarget().ToString().AsCString(),
             aEntry.GetRloc16(), (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);
 }
 

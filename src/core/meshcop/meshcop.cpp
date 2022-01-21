@@ -360,7 +360,7 @@ exit:
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
 void LogError(const char *aActionText, Error aError)
 {
-    if (aError != kErrorNone)
+    if (aError != kErrorNone && aError != kErrorAlready)
     {
         LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
     }
