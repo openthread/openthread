@@ -281,7 +281,7 @@ Error Dtls::Setup(bool aClient)
     OT_UNUSED_VARIABLE(mVerifyPeerCertificate);
 #endif
 
-    mbedtls_ssl_conf_rng(&mConf, mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet());
+    mbedtls_ssl_conf_rng(&mConf, Crypto::MbedTls::CryptoSecurePrng, nullptr);
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 
@@ -307,7 +307,7 @@ Error Dtls::Setup(bool aClient)
 #if defined(MBEDTLS_SSL_SRV_C) && defined(MBEDTLS_SSL_COOKIE_C)
     if (!aClient)
     {
-        rval = mbedtls_ssl_cookie_setup(&mCookieCtx, mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet());
+        rval = mbedtls_ssl_cookie_setup(&mCookieCtx, Crypto::MbedTls::CryptoSecurePrng, nullptr);
         VerifyOrExit(rval == 0);
 
         mbedtls_ssl_conf_dtls_cookies(&mConf, mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check, &mCookieCtx);
@@ -386,8 +386,8 @@ int Dtls::SetApplicationCoapSecureKeys(void)
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
             rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
-                                        static_cast<size_t>(mPrivateKeyLength), nullptr, 0, mbedtls_ctr_drbg_random,
-                                        Random::Crypto::MbedTlsContextGet());
+                                        static_cast<size_t>(mPrivateKeyLength), nullptr, 0,
+                                        Crypto::MbedTls::CryptoSecurePrng, nullptr);
 #else
             rval = mbedtls_pk_parse_key(&mPrivateKey, static_cast<const unsigned char *>(mPrivateKeySrc),
                                         static_cast<size_t>(mPrivateKeyLength), nullptr, 0);

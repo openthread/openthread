@@ -89,6 +89,20 @@ public:
      *
      */
     static Error MapError(int aMbedTlsError);
+
+#if !OPENTHREAD_RADIO
+    /**
+     * This function fills a given buffer with cryptographically secure random bytes.
+     *
+     * @param[in]  aContext A pointer to arbitrary context.
+     * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+     * @param[in]  aSize    Size of buffer (number of bytes to fill).
+     *
+     * @retval kErrorNone   Successfully filled buffer with random values.
+     *
+     */
+    static int CryptoSecurePrng(void *aContext, unsigned char *aBuffer, size_t aSize);
+#endif
 };
 
 /**
