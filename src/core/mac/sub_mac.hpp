@@ -575,11 +575,11 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
-    void        GetCslWindowEdges(uint32_t &ahead, uint32_t &after);
+    void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
 #endif
 
-    static constexpr uint8_t  kMinBE             = 3;   // macMinBE (IEEE 802.15.4-2006).
-    static constexpr uint8_t  kMaxBE             = 5;   // macMaxBE (IEEE 802.15.4-2006).
+    static constexpr uint8_t  kCsmaMinBe         = 3;   // macMinBE (IEEE 802.15.4-2006).
+    static constexpr uint8_t  kCsmaMaxBe         = 5;   // macMaxBE (IEEE 802.15.4-2006).
     static constexpr uint32_t kUnitBackoffPeriod = 20;  // Number of symbols (IEEE 802.15.4-2006).
     static constexpr uint32_t kAckTimeout        = 16;  // Timeout for waiting on an ACK (in msec).
     static constexpr uint32_t kCcaSampleInterval = 128; // CCA sample interval, 128 usec.
