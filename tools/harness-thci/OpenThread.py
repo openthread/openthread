@@ -3493,7 +3493,7 @@ class OpenThreadTHCI(object):
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
-        self._beforeRegisterMulticast(sAddr,timeout)
+        self._beforeRegisterMulticast(sAddr, timeout)
 
         cmd = 'ipmaddr add ' + str(sAddr)
 
@@ -3661,7 +3661,7 @@ class OpenThread(OpenThreadTHCI, IThci):
     def __restartAgentService(self):
         pass
 
-    def _beforeRegisterMulticast(self,sAddr,timeout):
+    def _beforeRegisterMulticast(self, sAddr, timeout):
         pass
 
     def __socRead(self, size=512):
