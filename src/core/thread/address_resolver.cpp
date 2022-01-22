@@ -459,6 +459,14 @@ void AddressResolver::RestartAddressQueries(void)
     }
 }
 
+Mac::ShortAddress AddressResolver::LookUp(const Ip6::Address &aEid)
+{
+    Mac::ShortAddress rloc16 = Mac::kShortAddrInvalid;
+
+    IgnoreError(Resolve(aEid, rloc16, /* aAllowAddressQuery */ false));
+    return rloc16;
+}
+
 Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery)
 {
     Error           error = kErrorNone;
@@ -474,6 +482,7 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
         // allocate a new entry and perform address query. We do not
         // allow first-time address query entries to be evicted till
         // timeout.
+
         VerifyOrExit(aAllowAddressQuery, error = kErrorNotFound);
 
         entry = NewCacheEntry(/* aSnoopedEntry */ false);
@@ -503,9 +512,12 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
         ExitNow();
     }
 
-    // Note that if `aAllowAddressQuery` is `false` then the `entry` is definitely already in a list, i.e., we cannot
-    // not get here with `aAllowAddressQuery` being `false` and `entry` being a newly allocated one, due to the
-    // `VerifyOrExit` check that `aAllowAddressQuery` is `true` before allocating a new cache entry.
+    // Note that if `aAllowAddressQuery` is `false` then the `entry`
+    // is definitely already in a list, i.e., we cannot not get here
+    // with `aAllowAddressQuery` being `false` and `entry` being a
+    // newly allocated one, due to the `VerifyOrExit` check that
+    // `aAllowAddressQuery` is `true` before allocating a new cache
+    // entry.
     VerifyOrExit(aAllowAddressQuery, error = kErrorNotFound);
 
     if (list == &mQueryList)
