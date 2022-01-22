@@ -129,8 +129,7 @@ void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) 
         noJoinerId = true;
     }
 
-    mJoinerCallback(static_cast<otCommissionerJoinerEvent>(aEvent), &joinerInfo, noJoinerId ? nullptr : &joinerId,
-                    mCallbackContext);
+    mJoinerCallback(MapEnum(aEvent), &joinerInfo, noJoinerId ? nullptr : &joinerId, mCallbackContext);
 
 exit:
     return;
@@ -295,9 +294,7 @@ void Commissioner::RemoveJoinerEntry(Commissioner::Joiner &aJoiner)
     SignalJoinerEvent(kJoinerEventRemoved, &joinerCopy);
 }
 
-Error Commissioner::Start(otCommissionerStateCallback  aStateCallback,
-                          otCommissionerJoinerCallback aJoinerCallback,
-                          void *                       aCallbackContext)
+Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext)
 {
     Error error = kErrorNone;
 
@@ -329,7 +326,7 @@ exit:
     return error;
 }
 
-Error Commissioner::Stop(bool aResign)
+Error Commissioner::Stop(ResignMode aResignMode)
 {
     Error error      = kErrorNone;
     bool  needResign = false;
@@ -354,7 +351,7 @@ Error Commissioner::Stop(bool aResign)
 
     SetState(kStateDisabled);
 
-    if (needResign && aResign)
+    if (needResign && (aResignMode == kSendKeepAliveToResign))
     {
         SendKeepAlive();
     }
@@ -402,18 +399,15 @@ exit:
 
 void Commissioner::SendCommissionerSet(void)
 {
-    Error                  error = kErrorNone;
-    otCommissioningDataset dataset;
+    Error   error = kErrorNone;
+    Dataset dataset;
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
-    memset(&dataset, 0, sizeof(dataset));
+    dataset.Clear();
 
-    dataset.mSessionId      = mSessionId;
-    dataset.mIsSessionIdSet = true;
-
-    ComputeBloomFilter(AsCoreType(&dataset.mSteeringData));
-    dataset.mIsSteeringDataSet = true;
+    dataset.SetSessionId(mSessionId);
+    ComputeBloomFilter(dataset.UpdateSteeringData());
 
     error = SendMgmtCommissionerSetRequest(dataset, nullptr, 0);
 
@@ -745,9 +739,7 @@ exit:
     return;
 }
 
-Error Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
-                                                   const uint8_t *               aTlvs,
-                                                   uint8_t                       aLength)
+Error Commissioner::SendMgmtCommissionerSetRequest(const Dataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     Error            error = kErrorNone;
     Coap::Message *  message;
@@ -758,25 +750,26 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDataset 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerSet));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    if (aDataset.mIsLocatorSet)
+    if (aDataset.IsLocatorSet())
     {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(*message, aDataset.mLocator));
+        SuccessOrExit(error = Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(*message, aDataset.GetLocator()));
     }
 
-    if (aDataset.mIsSessionIdSet)
+    if (aDataset.IsSessionIdSet())
     {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, aDataset.mSessionId));
+        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, aDataset.GetSessionId()));
     }
 
-    if (aDataset.mIsSteeringDataSet)
+    if (aDataset.IsSteeringDataSet())
     {
-        SuccessOrExit(
-            error = Tlv::Append<SteeringDataTlv>(*message, aDataset.mSteeringData.m8, aDataset.mSteeringData.mLength));
+        const SteeringData &steeringData = aDataset.GetSteeringData();
+
+        SuccessOrExit(error = Tlv::Append<SteeringDataTlv>(*message, steeringData.GetData(), steeringData.GetLength()));
     }
 
-    if (aDataset.mIsJoinerUdpPortSet)
+    if (aDataset.IsJoinerUdpPortSet())
     {
-        SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aDataset.mJoinerUdpPort));
+        SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aDataset.GetJoinerUdpPort()));
     }
 
     if (aLength > 0)
@@ -876,7 +869,7 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     otLogInfoMeshCoP("received Leader Petition response");
 
     SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
-    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(/* aResign */ false)));
+    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(kDoNotSendKeepAlive)));
 
     SuccessOrExit(Tlv::Find<CommissionerSessionIdTlv>(*aMessage, mSessionId));
 
@@ -903,7 +896,7 @@ exit:
     {
         if (mTransmitAttempts >= kPetitionRetryCount)
         {
-            IgnoreError(Stop(/* aResign */ false));
+            IgnoreError(Stop(kDoNotSendKeepAlive));
         }
         else
         {
@@ -965,12 +958,12 @@ void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessag
 
     VerifyOrExit(mState == kStateActive);
     VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged,
-                 IgnoreError(Stop(/* aResign */ false)));
+                 IgnoreError(Stop(kDoNotSendKeepAlive)));
 
     otLogInfoMeshCoP("received Leader keep-alive response");
 
     SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
-    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(/* aResign */ false)));
+    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(kDoNotSendKeepAlive)));
 
     mTimer.Start(Time::SecToMsec(kKeepAliveTimeout) / 2);
 
