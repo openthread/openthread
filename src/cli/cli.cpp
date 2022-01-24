@@ -4347,34 +4347,14 @@ otError Interpreter::ProcessMacFilter(Arg aArgs[])
 
 void Interpreter::PrintMacFilter(void)
 {
-    otMacFilterEntry       entry;
-    otMacFilterIterator    iterator = OT_MAC_FILTER_ITERATOR_INIT;
-    otMacFilterAddressMode mode     = otLinkFilterGetAddressMode(GetInstancePtr());
+    otMacFilterEntry    entry;
+    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
 
-    if (mode == OT_MAC_FILTER_ADDRESS_MODE_DISABLED)
-    {
-        OutputLine("Address Mode: Disabled");
-    }
-    else if (mode == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST)
-    {
-        OutputLine("Address Mode: Allowlist");
-    }
-    else if (mode == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST)
-    {
-        OutputLine("Address Mode: Denylist");
-    }
+    OutputLine("Address Mode: %s", MacFilterAddressModeToString(otLinkFilterGetAddressMode(GetInstancePtr())));
 
     while (otLinkFilterGetNextAddress(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
     {
-        OutputExtAddress(entry.mExtAddress);
-
-        if (entry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
-        {
-            OutputFormat(" : rss %d (lqi %d)", entry.mRssIn,
-                         otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
-        }
-
-        OutputLine("");
+        OutputMacFilterEntry(entry);
     }
 
     iterator = OT_MAC_FILTER_ITERATOR_INIT;
@@ -4399,47 +4379,26 @@ void Interpreter::PrintMacFilter(void)
         }
         else
         {
-            OutputExtAddress(entry.mExtAddress);
-            OutputLine(" : rss %d (lqi %d)", entry.mRssIn,
-                       otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
+            OutputMacFilterEntry(entry);
         }
     }
 }
 
 otError Interpreter::ProcessMacFilterAddress(Arg aArgs[])
 {
-    otError                error = OT_ERROR_NONE;
-    otExtAddress           extAddr;
-    otMacFilterEntry       entry;
-    otMacFilterIterator    iterator = OT_MAC_FILTER_ITERATOR_INIT;
-    otMacFilterAddressMode mode     = otLinkFilterGetAddressMode(GetInstancePtr());
+    otError      error = OT_ERROR_NONE;
+    otExtAddress extAddr;
 
     if (aArgs[0].IsEmpty())
     {
-        if (mode == OT_MAC_FILTER_ADDRESS_MODE_DISABLED)
-        {
-            OutputLine("Disabled");
-        }
-        else if (mode == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST)
-        {
-            OutputLine("Allowlist");
-        }
-        else if (mode == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST)
-        {
-            OutputLine("Denylist");
-        }
+        otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
+        otMacFilterEntry    entry;
+
+        OutputLine("%s", MacFilterAddressModeToString(otLinkFilterGetAddressMode(GetInstancePtr())));
 
         while (otLinkFilterGetNextAddress(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
         {
-            OutputExtAddress(entry.mExtAddress);
-
-            if (entry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
-            {
-                OutputFormat(" : rss %d (lqi %d)", entry.mRssIn,
-                             otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
-            }
-
-            OutputLine("");
+            OutputMacFilterEntry(entry);
         }
     }
     else if (aArgs[0] == "disable")
@@ -4519,9 +4478,7 @@ otError Interpreter::ProcessMacFilterRss(Arg aArgs[])
             }
             else
             {
-                OutputExtAddress(entry.mExtAddress);
-                OutputLine(" : rss %d (lqi %d)", entry.mRssIn,
-                           otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
+                OutputMacFilterEntry(entry);
             }
         }
     }
@@ -4580,6 +4537,34 @@ otError Interpreter::ProcessMacFilterRss(Arg aArgs[])
 
 exit:
     return error;
+}
+
+void Interpreter::OutputMacFilterEntry(const otMacFilterEntry &aEntry)
+{
+    OutputExtAddress(aEntry.mExtAddress);
+
+    if (aEntry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
+    {
+        OutputFormat(" : rss %d (lqi %d)", aEntry.mRssIn,
+                     otLinkConvertRssToLinkQuality(GetInstancePtr(), aEntry.mRssIn));
+    }
+
+    OutputLine("");
+}
+
+const char *Interpreter::MacFilterAddressModeToString(otMacFilterAddressMode aMode)
+{
+    static const char *const kModeStrings[] = {
+        "Disabled",  // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
+        "Allowlist", // (1) OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST
+        "Denylist",  // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
+    };
+
+    static_assert(0 == OT_MAC_FILTER_ADDRESS_MODE_DISABLED, "OT_MAC_FILTER_ADDRESS_MODE_DISABLED value is incorrect");
+    static_assert(1 == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST, "OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST value is incorrect");
+    static_assert(2 == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST, "OT_MAC_FILTER_ADDRESS_MODE_DENYLIST value is incorrect");
+
+    return Stringify(aMode, kModeStrings);
 }
 
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

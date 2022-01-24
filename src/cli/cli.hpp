@@ -539,10 +539,12 @@ private:
     otError ProcessUptime(Arg aArgs[]);
 #endif
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    otError ProcessMacFilter(Arg aArgs[]);
-    void    PrintMacFilter(void);
-    otError ProcessMacFilterAddress(Arg aArgs[]);
-    otError ProcessMacFilterRss(Arg aArgs[]);
+    otError            ProcessMacFilter(Arg aArgs[]);
+    void               PrintMacFilter(void);
+    otError            ProcessMacFilterAddress(Arg aArgs[]);
+    otError            ProcessMacFilterRss(Arg aArgs[]);
+    void               OutputMacFilterEntry(const otMacFilterEntry &aEntry);
+    static const char *MacFilterAddressModeToString(otMacFilterAddressMode aMode);
 #endif
     otError ProcessMac(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
