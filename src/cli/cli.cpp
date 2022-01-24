@@ -577,7 +577,7 @@ otError Interpreter::ProcessBackboneRouter(Arg aArgs[])
         else if (aArgs[0] == "skipseqnuminc")
         {
             otBackboneRouterConfigSkipSeqNumIncrease(GetInstancePtr(), true);
-            ExitNow();
+            ExitNow(error = OT_ERROR_NONE);
         }
 #endif
         SuccessOrExit(error = ProcessBackboneRouterLocal(aArgs));
