@@ -1511,7 +1511,7 @@ class OpenThreadTHCI(object):
 
         start_time = time.time()
         while time.time() < start_time + timeout:
-            time.sleep(0.3)
+            time.sleep(0.5)
             if not self.IsBorderRouter:
                 self._disconnect()
                 self._connect()
@@ -1519,6 +1519,10 @@ class OpenThreadTHCI(object):
                 self.__executeCommand('state', timeout=0.1)
                 break
             except Exception:
+                self.__restartAgentService()
+                time.sleep(2)
+                self.__sendCommand('factoryreset', expectEcho=False)
+                time.sleep(0.5)
                 continue
         else:
             raise AssertionError("Could not connect with OT device {} after reset.".format(self))
@@ -3489,6 +3493,7 @@ class OpenThreadTHCI(object):
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
+        self._beforeRegisterMulticast(sAddr, timeout)
 
         cmd = 'ipmaddr add ' + str(sAddr)
 
@@ -3651,6 +3656,12 @@ class OpenThread(OpenThreadTHCI, IThci):
         pass
 
     def _deviceAfterReset(self):
+        pass
+
+    def __restartAgentService(self):
+        pass
+
+    def _beforeRegisterMulticast(self, sAddr, timeout):
         pass
 
     def __socRead(self, size=512):
