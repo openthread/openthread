@@ -936,7 +936,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#endif
 
     KeyMaterial mMode2KeyMaterial;
 };

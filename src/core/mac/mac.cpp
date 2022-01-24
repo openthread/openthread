@@ -951,7 +951,6 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1062,7 +1061,6 @@ void Mac::BeginTransmit(void)
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1402,7 +1400,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
         aError = mTxError;
     }
-#endif
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
     // Determine next action based on current operation.
 
@@ -1494,13 +1492,13 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
         break;
-#endif
+#endif // OPENTHREAD_FTD
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(ExitNow()); // Added to suppress "unused label exit" warning (in TREL radio only).
-        OT_UNREACHABLE_CODE(break);
     }
+
+    ExitNow(); // Added to suppress "unused label exit" warning (in TREL radio only).
 
 exit:
     return;
@@ -1548,7 +1546,6 @@ void Mac::HandleTimer(void)
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 }
 
@@ -1644,7 +1641,6 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
     default:
         ExitNow();
-        OT_UNREACHABLE_CODE(break);
     }
 
     SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
