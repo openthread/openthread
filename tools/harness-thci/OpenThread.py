@@ -1607,7 +1607,7 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        self.bbrSeqNum = random.randint(0, 253)  # 5.21.4.2
+        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
         self.bbrMlrTimeout = 3600
         self.bbrReRegDelay = 5
 
