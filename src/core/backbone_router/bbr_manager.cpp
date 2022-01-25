@@ -508,9 +508,7 @@ NdProxyTable &Manager::GetNdProxyTable(void)
 
 bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
 {
-    bool              forwardToBackbone = false;
-    Mac::ShortAddress rloc16;
-    Error             error;
+    bool forwardToBackbone = false;
 
     VerifyOrExit(Get<Local>().IsPrimary());
     VerifyOrExit(Get<Leader>().IsDomainUnicast(aAddress));
@@ -519,9 +517,8 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
     VerifyOrExit(!mNdProxyTable.IsRegistered(aAddress.GetIid()));
     // Do not forward to Backbone if the DUA belongs to a MTD Child (which may have failed in DUA registration)
     VerifyOrExit(Get<NeighborTable>().FindNeighbor(aAddress) == nullptr);
-    // Forawrd to Backbone only if the DUA is resolved to the PBBR's RLOC16
-    error = Get<AddressResolver>().Resolve(aAddress, rloc16, /* aAllowAddressQuery */ false);
-    VerifyOrExit(error == kErrorNone && rloc16 == Get<Mle::MleRouter>().GetRloc16());
+    // Forward to Backbone only if the DUA is resolved to the PBBR's RLOC16
+    VerifyOrExit(Get<AddressResolver>().LookUp(aAddress) == Get<Mle::MleRouter>().GetRloc16());
 
     forwardToBackbone = true;
 
