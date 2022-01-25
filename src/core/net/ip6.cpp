@@ -1269,7 +1269,7 @@ start:
         hopLimit = header.GetHopLimit();
         aMessage.Write(Header::kHopLimitFieldOffset, hopLimit);
 
-        if (aFromNcpHost && nextHeader == kProtoIcmp6)
+        if (nextHeader == kProtoIcmp6)
         {
             uint8_t icmpType;
             bool    isAllowedType = false;
