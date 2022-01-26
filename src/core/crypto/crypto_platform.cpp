@@ -54,7 +54,7 @@
 using namespace ot;
 using namespace Crypto;
 
-#if OPENTHREAD_CONFIG_CRYPTO_LIB != OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of crypto platform APIs
@@ -485,4 +485,4 @@ OT_TOOL_WEAK otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize)
 
 #endif // #if !OPENTHREAD_RADIO
 
-#endif // #if OPENTHREAD_CONFIG_CRYPTO_LIB != OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+#endif // #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
