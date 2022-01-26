@@ -273,6 +273,7 @@ private:
     void RemoveService(void);
     void AddDomainPrefixToNetworkData(void);
     void RemoveDomainPrefixFromNetworkData(void);
+    void SequenceNumberIncrease(void);
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
     void LogBackboneRouterService(const char *aAction, Error aError);
     void LogDomainPrefix(const char *aAction, Error aError);

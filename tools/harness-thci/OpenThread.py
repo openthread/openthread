@@ -1607,7 +1607,7 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        self.bbrSeqNum = random.randint(0, 254)  # random seqnum except 255, so that BBR-TC-02 never need re-run
+        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
         self.bbrMlrTimeout = 3600
         self.bbrReRegDelay = 5
 
@@ -3182,7 +3182,12 @@ class OpenThreadTHCI(object):
         """
         assert not (SeqNumInc and SeqNum is not None), "Must not specify both SeqNumInc and SeqNum"
         if SeqNumInc:
-            SeqNum = (self.bbrSeqNum + 1) % 256
+            if self.bbrSeqNum in (126, 127):
+                self.bbrSeqNum = 0
+            elif self.bbrSeqNum in (254, 255):
+                self.bbrSeqNum = 128
+            else:
+                self.bbrSeqNum = (self.bbrSeqNum + 1) % 256
 
         return self.__configBbrDataset(SeqNum=SeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
 
