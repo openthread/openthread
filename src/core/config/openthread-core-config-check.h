@@ -526,4 +526,8 @@
 #error "OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION was removed and no longer supported"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
+#error "OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE was removed and no longer supported"
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_
