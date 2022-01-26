@@ -318,6 +318,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def _verify_packets(self, test_info_path: str):
         pv = PacketVerifier(test_info_path, self.CASE_WIRESHARK_PREFS)
         pv.add_common_vars()
+        pv.pkts.filter_thread_unallowed_icmpv6().must_not_next()
         self.verify(pv)
         print("Packet verification passed: %s" % test_info_path, file=sys.stderr)
 
