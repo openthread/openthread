@@ -63,6 +63,17 @@ void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
         IgnoreError(aFrame.GetDstPanId(mPanId));
     }
 
+    {
+        Mac::PanId dstPanId;
+
+        if (kErrorNone != aFrame.GetDstPanId(dstPanId))
+        {
+            dstPanId = mPanId;
+        }
+
+        mIsDstPanIdBroadcast = (dstPanId == Mac::kPanIdBroadcast);
+    }
+
     mChannel      = aFrame.GetChannel();
     mRss          = aFrame.GetRssi();
     mLqi          = aFrame.GetLqi();

@@ -2834,8 +2834,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         // We skip logging security check failures for broadcast MLE
         // messages since it can be common to receive such messages
         // from adjacent Thread networks.
-        skipLoggingError = (aMessageInfo.GetSockAddr().IsMulticast() &&
-                            aMessageInfo.GetThreadLinkInfo()->GetPanId() == Mac::kPanIdBroadcast);
+        skipLoggingError =
+            (aMessageInfo.GetSockAddr().IsMulticast() && aMessageInfo.GetThreadLinkInfo()->IsDstPanIdBroadcast());
         ExitNow(error = kErrorSecurity);
     }
 #endif

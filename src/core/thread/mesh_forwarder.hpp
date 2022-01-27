@@ -96,6 +96,15 @@ public:
     uint8_t GetChannel(void) const { return mChannel; }
 
     /**
+     * This method returns whether the Destination PAN ID is broadcast.
+     *
+     * @retval TRUE   If Destination PAN ID is broadcast.
+     * @retval FALSE  If Destination PAN ID is not broadcast.
+     *
+     */
+    bool IsDstPanIdBroadcast(void) const { return mIsDstPanIdBroadcast; }
+
+    /**
      * This method indicates whether or not link security is enabled.
      *
      * @retval TRUE   If link security is enabled.
