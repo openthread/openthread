@@ -55,7 +55,7 @@ RandomManager::RandomManager(void)
     VerifyOrExit(sInitCount == 0);
 
 #if !OPENTHREAD_RADIO
-    SuccessOrAssert(otPlatCryptoRandomInit());
+    otPlatCryptoRandomInit();
     SuccessOrAssert(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
 #else
     SuccessOrAssert(otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
@@ -75,7 +75,7 @@ RandomManager::~RandomManager(void)
     VerifyOrExit(sInitCount == 0);
 
 #if !OPENTHREAD_RADIO
-    SuccessOrAssert(otPlatCryptoRandomDeinit());
+    otPlatCryptoRandomDeinit();
 #endif
 
 exit:

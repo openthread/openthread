@@ -70,9 +70,9 @@ static mbedtls_entropy_context  sEntropyContext;
 static constexpr uint16_t       kEntropyMinThreshold = 16;
 #endif
 
-OT_TOOL_WEAK otError otPlatCryptoInit(void)
+OT_TOOL_WEAK void otPlatCryptoInit(void)
 {
-    return kErrorNone;
+    // Intentionally empty.
 }
 
 // AES  Implementation
@@ -454,7 +454,7 @@ exit:
 
 #endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 
-OT_TOOL_WEAK otError otPlatCryptoRandomInit(void)
+OT_TOOL_WEAK void otPlatCryptoRandomInit(void)
 {
     mbedtls_entropy_init(&sEntropyContext);
 
@@ -465,16 +465,15 @@ OT_TOOL_WEAK otError otPlatCryptoRandomInit(void)
 
     mbedtls_ctr_drbg_init(&sCtrDrbgContext);
 
-    return ot::Crypto::MbedTls::MapError(
-        mbedtls_ctr_drbg_seed(&sCtrDrbgContext, mbedtls_entropy_func, &sEntropyContext, nullptr, 0));
+    int rval = mbedtls_ctr_drbg_seed(&sCtrDrbgContext, mbedtls_entropy_func, &sEntropyContext, nullptr, 0);
+    OT_ASSERT(rval == 0);
+    OT_UNUSED_VARIABLE(rval);
 }
 
-OT_TOOL_WEAK otError otPlatCryptoRandomDeinit(void)
+OT_TOOL_WEAK void otPlatCryptoRandomDeinit(void)
 {
     mbedtls_entropy_free(&sEntropyContext);
     mbedtls_ctr_drbg_free(&sCtrDrbgContext);
-
-    return kErrorNone;
 }
 
 OT_TOOL_WEAK otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize)
