@@ -718,6 +718,15 @@ otCoapType otCoapMessageGetType(const otMessage *aMessage);
 otCoapCode otCoapMessageGetCode(const otMessage *aMessage);
 
 /**
+ * This function sets the Code value.
+ *
+ * @param[inout]  aMessage  A pointer to the CoAP message to initialize.
+ * @param[in]     aCode     CoAP message code.
+ *
+ */
+void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode);
+
+/**
  * This method returns the CoAP Code as human readable string.
  *
  * @param[in]   aMessage    A pointer to the CoAP message.
