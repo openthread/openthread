@@ -3492,14 +3492,16 @@ class OpenThreadTHCI(object):
         return True
 
     @API
-    def registerMulticast(self, sAddr='ff04::1234:777a:1', timeout=MLR_TIMEOUT_MIN):
+    def registerMulticast(self, listAddr=['ff04::1234:777a:1'], timeout=MLR_TIMEOUT_MIN):
         """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
 
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
-        self._beforeRegisterMulticast(sAddr, timeout)
+        for each_sAddr in listAddr:
+            self._beforeRegisterMulticast(each_sAddr, timeout)
 
+        sAddr = ' '.join(listAddr)
         cmd = 'ipmaddr add ' + str(sAddr)
 
         try:
