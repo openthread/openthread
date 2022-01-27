@@ -1805,7 +1805,7 @@ class OpenThreadTHCI(object):
         if TESTHARNESS_VERSION == TESTHARNESS_1_2 and P_dp == 0 and not self.__isOpenThreadRunning():
             self.__useDefaultDomainPrefix = False
 
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2:
+        if TESTHARNESS_VERSION == TESTHARNESS_1_2 and self.IsBorderRouter:
             # TestHarness 1.2 converts 0x2001000000000000 to "2001000000000000"
             if P_Prefix is None:
                 P_Prefix = 0xfd007d037d037d03
@@ -1813,7 +1813,8 @@ class OpenThreadTHCI(object):
             P_Prefix = '%016x' % P_Prefix
         else:
             # TestHarness 1.1 converts 2001000000000000 to "2001000000000000" (it's wrong, but not fixed yet.)
-            P_Prefix = '%016x' % P_Prefix
+            P_Prefix = str(P_Prefix)
+            int(P_Prefix, 16)                        
 
         prefix = self.__convertIp6PrefixStringToIp6Address(P_Prefix)
         print(prefix)
