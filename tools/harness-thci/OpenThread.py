@@ -1814,7 +1814,7 @@ class OpenThreadTHCI(object):
         else:
             # TestHarness 1.1 converts 2001000000000000 to "2001000000000000" (it's wrong, but not fixed yet.)
             P_Prefix = str(P_Prefix)
-            int(P_Prefix, 16)                        
+            int(P_Prefix, 16)
 
         prefix = self.__convertIp6PrefixStringToIp6Address(P_Prefix)
         print(prefix)
