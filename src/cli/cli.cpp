@@ -4712,7 +4712,7 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
     OutputLine("");
 
     // Output Network Diagnostic TLV values in standard YAML format.
-    while ((aError = otThreadGetNextDiagnosticTlv(aMessage, &iterator, &diagTlv)) == OT_ERROR_NONE)
+    while (otThreadGetNextDiagnosticTlv(aMessage, &iterator, &diagTlv) == OT_ERROR_NONE)
     {
         switch (diagTlv.mType)
         {
