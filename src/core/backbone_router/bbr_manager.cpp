@@ -130,7 +130,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
             error = mBackboneTmfAgent.Start();
 
-            otLogResultBbr(error, "Start Backbone TMF agent");
+            LogError("Start Backbone TMF agent", error);
         }
     }
 }
@@ -792,6 +792,20 @@ exit:
                  aDua.ToString().AsCString(), aMeshLocalIid.ToString().AsCString(), aTimeSinceLastTransaction);
 }
 #endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+
+void Manager::LogError(const char *aText, Error aError) const
+{
+    OT_UNUSED_VARIABLE(aText);
+
+    if (aError == kErrorNone)
+    {
+        otLogInfoBbr("%s: %s", aText, ErrorToString(aError));
+    }
+    else
+    {
+        otLogWarnBbr("%s: %s", aText, ErrorToString(aError));
+    }
+}
 
 } // namespace BackboneRouter
 

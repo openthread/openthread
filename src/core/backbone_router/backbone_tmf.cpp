@@ -77,20 +77,31 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
 
 void BackboneTmfAgent::SubscribeMulticast(const Ip6::Address &aAddress)
 {
-    Error error;
+    Error error = mSocket.JoinNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
 
-    error = mSocket.JoinNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
-
-    otLogResultBbr(error, "Backbone TMF subscribes %s", aAddress.ToString().AsCString());
+    LogError("Backbone TMF subscribes", aAddress, error);
 }
 
 void BackboneTmfAgent::UnsubscribeMulticast(const Ip6::Address &aAddress)
 {
-    Error error;
+    Error error = mSocket.LeaveNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
 
-    error = mSocket.LeaveNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
+    LogError("Backbone TMF unsubscribes", aAddress, error);
+}
 
-    otLogResultBbr(error, "Backbone TMF unsubscribes %s", aAddress.ToString().AsCString());
+void BackboneTmfAgent::LogError(const char *aText, const Ip6::Address &aAddress, Error aError) const
+{
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aAddress);
+
+    if (aError == kErrorNone)
+    {
+        otLogInfoBbr("%s %s: %s", aText, aAddress.ToString().AsCString(), ErrorToString(aError));
+    }
+    else
+    {
+        otLogWarnBbr("%s %s: %s", aText, aAddress.ToString().AsCString(), ErrorToString(aError));
+    }
 }
 
 } // namespace BackboneRouter
