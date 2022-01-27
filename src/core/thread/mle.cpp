@@ -2712,6 +2712,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t            tag[kMleSecurityTagSize];
     uint8_t            command;
     Neighbor *         neighbor;
+    bool               skipLoggingError = false;
 
     otLogDebgMle("Receive UDP message");
 
@@ -2792,7 +2793,15 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     aesCcm.Finalize(tag);
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0, error = kErrorSecurity);
+    if (memcmp(messageTag, tag, sizeof(tag)) != 0)
+    {
+        // We skip logging security check failures for broadcast MLE
+        // messages since it can be common to receive such messages
+        // from adjacent Thread networks.
+        skipLoggingError = (aMessageInfo.GetSockAddr().IsMulticast() &&
+                            aMessageInfo.GetThreadLinkInfo()->GetPanId() == Mac::kPanIdBroadcast);
+        ExitNow(error = kErrorSecurity);
+    }
 #endif
 
     if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
@@ -2981,7 +2990,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #endif
 
 exit:
-    LogProcessError(kTypeGenericUdp, error);
+    if (!skipLoggingError)
+    {
+        LogProcessError(kTypeGenericUdp, error);
+    }
 }
 
 void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
