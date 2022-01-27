@@ -463,7 +463,10 @@ private:
 
     void          HandleReceivedFrame(Mac::RxFrame &aFrame);
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error aError, const Mac::Address &aMacDest);
+    Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &      aFrame,
+                                            Error               aError,
+                                            const Mac::Address &aMacDest,
+                                            bool                aIsDataPoll = false);
     void          UpdateNeighborLinkFailures(Neighbor &aNeighbor,
                                              Error     aError,
                                              bool      aAllowNeighborRemove,

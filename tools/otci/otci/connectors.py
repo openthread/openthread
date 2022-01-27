@@ -30,6 +30,7 @@ import logging
 import subprocess
 import time
 from abc import abstractmethod
+from typing import Optional
 
 
 class OtCliHandler:
@@ -142,14 +143,25 @@ class OtCliSerial(OtCliHandler):
         self.__baudrate = baudrate
 
         import serial
-        self.__serial = serial.Serial(self.__dev, self.__baudrate, timeout=None, exclusive=True)
+        self.__serial = serial.Serial(self.__dev, self.__baudrate, timeout=0.1, exclusive=True)
+        self.__linebuffer = b''
 
     def __repr__(self):
         return self.__dev
 
-    def readline(self) -> str:
-        line = self.__serial.readline().decode('utf-8').rstrip('\r\n')
-        return line
+    def readline(self) -> Optional[str]:
+        while self.__serial.is_open:
+            line = self.__serial.readline()
+
+            if not line.endswith(b'\n'):
+                self.__linebuffer += line
+            else:
+                line = self.__linebuffer + line
+                self.__linebuffer = b''
+
+                return line.decode('utf-8').rstrip('\r\n')
+
+        return None
 
     def writeline(self, s: str):
         self.__serial.write((s + '\n').encode('utf-8'))

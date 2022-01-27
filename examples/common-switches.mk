@@ -34,6 +34,7 @@ BIG_ENDIAN                ?= 0
 BORDER_AGENT              ?= 0
 BORDER_ROUTER             ?= 0
 BORDER_ROUTING            ?= 0
+BORDER_ROUTING_NAT64	  ?= 0
 COAP                      ?= 0
 COAP_BLOCK                ?= 0
 COAP_OBSERVE              ?= 0
@@ -51,6 +52,7 @@ DIAGNOSTIC                ?= 0
 DISABLE_DOC               ?= 0
 DISABLE_TOOLS             ?= 0
 DNS_CLIENT                ?= 0
+DNS_DSO                   ?= 0
 DNSSD_SERVER              ?= 0
 DUA                       ?= 0
 DYNAMIC_LOG_LEVEL         ?= 0
@@ -113,6 +115,10 @@ endif
 
 ifeq ($(BORDER_ROUTING),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1
+endif
+
+ifeq ($(BORDER_ROUTING_NAT64),1)
+COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1
 endif
 
 ifeq ($(COAP),1)
@@ -195,6 +201,10 @@ endif
 
 ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
+endif
+
+ifeq ($(DNS_DSO),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_DSO_ENABLE=1
 endif
 
 ifeq ($(DNSSD_SERVER),1)

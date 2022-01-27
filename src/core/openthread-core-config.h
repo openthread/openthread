@@ -70,6 +70,7 @@
 #include "config/dhcp6_server.h"
 #include "config/diag.h"
 #include "config/dns_client.h"
+#include "config/dns_dso.h"
 #include "config/dnssd_server.h"
 #include "config/dtls.h"
 #include "config/history_tracker.h"

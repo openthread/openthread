@@ -239,6 +239,14 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
     }
 
     SuccessOrExit(error = WaitResponse());
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    while (mRcpFailed)
+    {
+        RecoverFromRcpFailure();
+    }
+#endif
+
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
     SuccessOrExit(error = CheckSpinelVersion());

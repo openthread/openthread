@@ -132,15 +132,26 @@ jobs:
   thread-border-router:
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
+            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 1
+            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            description: ""
+          - otbr_mdns: "mDNSResponder"
+            otbr_trel: 0
+            cert_scripts: ./tests/scripts/thread-cert/border_router/MATN/*.py
+            description: "MATN"
           - otbr_mdns: "avahi"
             otbr_trel: 0
-    name: BR (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
+            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            description: ""
+    name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
@@ -196,7 +207,7 @@ jobs:
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
-        sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/border_router/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
+        sudo -E ./script/test cert_suite ${{ matrix.cert_scripts }} || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
       if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:

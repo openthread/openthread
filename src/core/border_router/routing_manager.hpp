@@ -138,6 +138,22 @@ public:
      */
     Error GetOnLinkPrefix(Ip6::Prefix &aPrefix);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    /**
+     * This method returns the local NAT64 prefix.
+     *
+     * The local NAT64 prefix will be published in the Thread network
+     * if none exists.
+     *
+     * @param[out]  aPrefix  A reference to where the prefix will be output to.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully retrieved the NAT64 prefix.
+     *
+     */
+    Error GetNat64Prefix(Ip6::Prefix &aPrefix);
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+
     /**
      * This method receives an ICMPv6 message on the infrastructure interface.
      *
@@ -278,13 +294,18 @@ private:
 
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    Error LoadOrGenerateRandomNat64Prefix(void);
+    void  EvaluateNat64Prefix(void);
+#endif
+
     void  EvaluateRoutingPolicy(void);
     void  StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli);
     void  StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli);
     void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
     Error PublishLocalOmrPrefix(void);
     void  UnpublishLocalOmrPrefix(void);
-    Error AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference);
+    Error AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  RemoveExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);
@@ -358,6 +379,13 @@ private:
     // non-zero preferred lifetime.
     TimeMilli  mTimeAdvertisedOnLinkPrefix;
     TimerMilli mOnLinkPrefixDeprecateTimer;
+
+    // The NAT64 prefix loaded from local persistent storage or
+    // randomly generated if none is found in persistent storage.
+    Ip6::Prefix mLocalNat64Prefix;
+
+    // True if the local NAT64 prefix is advertised in Thread network.
+    bool mIsAdvertisingLocalNat64Prefix;
 
     // The array of prefixes discovered on the infra link. Those
     // prefixes consist of on-link prefix(es) and OMR prefixes

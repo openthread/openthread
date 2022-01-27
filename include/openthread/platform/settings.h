@@ -54,7 +54,7 @@ extern "C" {
 /**
  * This enumeration defines the keys of settings.
  *
- * Note: When adding a new setings key, if the settings corresponding to the key contains security sensitive
+ * Note: When adding a new settings key, if the settings corresponding to the key contains security sensitive
  *       information, the developer MUST add the key to the array `kCriticalKeys`.
  *
  */
@@ -73,6 +73,7 @@ enum
     OT_SETTINGS_KEY_SRP_ECDSA_KEY        = 0x000b, ///< SRP client ECDSA public/private key pair.
     OT_SETTINGS_KEY_SRP_CLIENT_INFO      = 0x000c, ///< The SRP client info (selected SRP server address).
     OT_SETTINGS_KEY_SRP_SERVER_INFO      = 0x000d, ///< The SRP server info (UDP port).
+    OT_SETTINGS_KEY_NAT64_PREFIX         = 0x000e, ///< NAT64 prefix.
 };
 
 /**

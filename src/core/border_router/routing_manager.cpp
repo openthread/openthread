@@ -64,6 +64,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mInfraIfIndex(0)
     , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
+    , mIsAdvertisingLocalNat64Prefix(false)
     , mTimeRouterAdvMessageLastUpdate(TimerMilli::GetNow())
     , mLearntRouterAdvMessageFromHost(false)
     , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
@@ -79,6 +80,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     mLocalOmrPrefix.Clear();
 
     mLocalOnLinkPrefix.Clear();
+
+    mLocalNat64Prefix.Clear();
 }
 
 Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
@@ -90,6 +93,9 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 
     SuccessOrExit(error = LoadOrGenerateRandomOmrPrefix());
     SuccessOrExit(error = LoadOrGenerateRandomOnLinkPrefix());
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    SuccessOrExit(error = LoadOrGenerateRandomNat64Prefix());
+#endif
 
     mInfraIfIndex = aInfraIfIndex;
 
@@ -141,6 +147,19 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+Error RoutingManager::GetNat64Prefix(Ip6::Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aPrefix = mLocalNat64Prefix;
+
+exit:
+    return error;
+}
+#endif
+
 Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 {
     Error error = kErrorNone;
@@ -151,6 +170,7 @@ Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 
         otLogNoteBr("No valid OMR prefix found in settings, generating new one");
 
+        // TODO: generate OMR prefix from the /48 BR ULA prefix
         error = randomOmrPrefix.GenerateRandomUla();
         if (error != kErrorNone)
         {
@@ -195,6 +215,39 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+Error RoutingManager::LoadOrGenerateRandomNat64Prefix(void)
+{
+    Error error = kErrorNone;
+
+    if (Get<Settings>().Read<Settings::Nat64Prefix>(mLocalNat64Prefix) != kErrorNone ||
+        !mLocalNat64Prefix.IsValidNat64())
+    {
+        Ip6::NetworkPrefix randomNat64Prefix;
+        constexpr uint8_t  nat64PrefixLength = 96;
+
+        otLogNoteBr("No valid NAT64 prefix found in settings, generating new one");
+
+        // TODO: generate NAT64 prefix from the /48 BR ULA prefix
+        error = randomNat64Prefix.GenerateRandomUla();
+        if (error != kErrorNone)
+        {
+            otLogCritBr("Failed to generate random NAT64 prefix");
+            ExitNow();
+        }
+
+        mLocalNat64Prefix.Clear();
+        mLocalNat64Prefix.Set(randomNat64Prefix);
+        mLocalNat64Prefix.SetLength(nat64PrefixLength);
+
+        IgnoreError(Get<Settings>().Save<Settings::Nat64Prefix>(mLocalNat64Prefix));
+    }
+
+exit:
+    return error;
+}
+#endif
+
 void RoutingManager::EvaluateState(void)
 {
     if (mIsEnabled && Get<Mle::MleRouter>().IsAttached() && mInfraIfIsRunning)
@@ -233,6 +286,13 @@ void RoutingManager::Stop(void)
         DeprecateOnLinkPrefix();
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    if (mIsAdvertisingLocalNat64Prefix)
+    {
+        RemoveExternalRoute(mLocalNat64Prefix);
+        mIsAdvertisingLocalNat64Prefix = false;
+    }
+#endif
     // Use empty OMR & on-link prefixes to invalidate possible advertised prefixes.
     SendRouterAdvertisement(OmrPrefixArray(), nullptr);
 
@@ -429,7 +489,7 @@ Error RoutingManager::PublishLocalOmrPrefix(void)
     else
     {
         Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        otLogInfoBr("Published local OMR prefix %s in Thread network", mLocalOmrPrefix.ToString().AsCString());
+        otLogInfoBr("Publishing local OMR prefix %s in Thread network", mLocalOmrPrefix.ToString().AsCString());
     }
 
     return error;
@@ -444,7 +504,7 @@ void RoutingManager::UnpublishLocalOmrPrefix(void)
     SuccessOrExit(error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalOmrPrefix));
 
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    otLogInfoBr("Unpublished local OMR prefix %s from Thread network", mLocalOmrPrefix.ToString().AsCString());
+    otLogInfoBr("Unpublishing local OMR prefix %s from Thread network", mLocalOmrPrefix.ToString().AsCString());
 
 exit:
     if (error != kErrorNone)
@@ -454,7 +514,7 @@ exit:
     }
 }
 
-Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference)
+Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
 {
     Error                            error;
     NetworkData::ExternalRouteConfig routeConfig;
@@ -464,6 +524,7 @@ Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreferen
     routeConfig.Clear();
     routeConfig.SetPrefix(aPrefix);
     routeConfig.mStable     = true;
+    routeConfig.mNat64      = aNat64;
     routeConfig.mPreference = aRoutePreference;
 
     error = Get<NetworkData::Local>().AddHasRoutePrefix(routeConfig);
@@ -474,7 +535,7 @@ Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreferen
     else
     {
         Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        otLogInfoBr("Added external route %s", aPrefix.ToString().AsCString());
+        otLogInfoBr("Adding external route %s", aPrefix.ToString().AsCString());
     }
 
     return error;
@@ -489,7 +550,7 @@ void RoutingManager::RemoveExternalRoute(const Ip6::Prefix &aPrefix)
     SuccessOrExit(error = Get<NetworkData::Local>().RemoveHasRoutePrefix(aPrefix));
 
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    otLogInfoBr("Removed external route %s", aPrefix.ToString().AsCString());
+    otLogInfoBr("Removing external route %s", aPrefix.ToString().AsCString());
 
 exit:
     if (error != kErrorNone)
@@ -573,6 +634,56 @@ void RoutingManager::DeprecateOnLinkPrefix(void)
                                         TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime));
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+void RoutingManager::EvaluateNat64Prefix(void)
+{
+    OT_ASSERT(mIsRunning);
+
+    NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
+    NetworkData::ExternalRouteConfig config;
+    Ip6::Prefix                      smallestNat64Prefix;
+
+    otLogInfoBr("Evaluating NAT64 prefix");
+
+    smallestNat64Prefix.Clear();
+    while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, config) == kErrorNone)
+    {
+        const Ip6::Prefix &prefix = config.GetPrefix();
+
+        if (config.mNat64 && prefix.IsValidNat64())
+        {
+            if (smallestNat64Prefix.GetLength() == 0 || prefix < smallestNat64Prefix)
+            {
+                smallestNat64Prefix = prefix;
+            }
+        }
+    }
+
+    if (smallestNat64Prefix.GetLength() == 0 || smallestNat64Prefix == mLocalNat64Prefix)
+    {
+        otLogInfoBr("No NAT64 prefix in Network Data is smaller than the local NAT64 prefix %s",
+                    mLocalNat64Prefix.ToString().AsCString());
+
+        // Advertise local NAT64 prefix.
+        if (!mIsAdvertisingLocalNat64Prefix &&
+            AddExternalRoute(mLocalNat64Prefix, NetworkData::kRoutePreferenceLow, /* aNat64= */ true) == kErrorNone)
+        {
+            mIsAdvertisingLocalNat64Prefix = true;
+        }
+    }
+    else if (mIsAdvertisingLocalNat64Prefix && smallestNat64Prefix < mLocalNat64Prefix)
+    {
+        // Withdraw local NAT64 prefix if it's not the smallest one in Network Data.
+        // TODO: remove the prefix with lower preference after discovering upstream NAT64 prefix is supported
+        otLogNoteBr("Withdrawing local NAT64 prefix since a smaller one %s exists.",
+                    smallestNat64Prefix.ToString().AsCString());
+
+        RemoveExternalRoute(mLocalNat64Prefix);
+        mIsAdvertisingLocalNat64Prefix = false;
+    }
+}
+#endif
+
 // This method evaluate the routing policy depends on prefix and route
 // information on Thread Network and infra link. As a result, this
 // method May send RA messages on infra link and publish/unpublish
@@ -589,6 +700,9 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     // 0. Evaluate on-link & OMR prefixes.
     newOnLinkPrefix = EvaluateOnLinkPrefix();
     EvaluateOmrPrefix(newOmrPrefixes);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    EvaluateNat64Prefix();
+#endif
 
     // 1. Send Router Advertisement message if necessary.
     SendRouterAdvertisement(newOmrPrefixes, newOnLinkPrefix);

@@ -52,11 +52,14 @@ Local::Local(Instance &aInstance)
     , mState(OT_BACKBONE_ROUTER_STATE_DISABLED)
     , mMlrTimeout(Mle::kMlrTimeoutDefault)
     , mReregistrationDelay(Mle::kRegistrationDelayDefault)
-    , mSequenceNumber(Random::NonCrypto::GetUint8())
+    , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
     , mRegistrationJitter(Mle::kBackboneRouterRegistrationJitter)
     , mIsServiceAdded(false)
     , mDomainPrefixCallback(nullptr)
     , mDomainPrefixCallbackContext(nullptr)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mSkipSeqNumIncrease(false)
+#endif
 {
     mDomainPrefixConfig.GetPrefix().SetLength(0);
 
@@ -109,7 +112,7 @@ void Local::Reset(void)
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
         // Increase sequence number when changing from Primary to Secondary.
-        mSequenceNumber++;
+        SequenceNumberIncrease();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
     }
@@ -267,9 +270,22 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Backbo
     {
         // Here original PBBR restores its Backbone Router Service from Thread Network,
         // Intentionally skips the state update as PBBR will refresh its service.
-        mSequenceNumber      = aConfig.mSequenceNumber + 1;
+        mSequenceNumber      = aConfig.mSequenceNumber;
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (mSkipSeqNumIncrease)
+        {
+            // BBR-TC-02 forces Sequence Number for the reference device with raw UDP API
+            // Do not increase Sequence Number in that case.
+        }
+        else
+#endif
+        {
+            SequenceNumberIncrease();
+        }
+
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         if (AddService(true /* Force registration to refresh and restore Primary state */) == kErrorNone)
         {
@@ -412,6 +428,24 @@ void Local::RemoveDomainPrefixFromNetworkData(void)
     LogDomainPrefix("Remove", error);
 }
 
+void Local::SequenceNumberIncrease(void)
+{
+    switch (mSequenceNumber)
+    {
+    case 126:
+    case 127:
+        mSequenceNumber = 0;
+        break;
+    case 254:
+    case 255:
+        mSequenceNumber = 128;
+        break;
+    default:
+        mSequenceNumber++;
+        break;
+    }
+}
+
 void Local::AddDomainPrefixToNetworkData(void)
 {
     Error error = kErrorNotFound; // only used for logging.
@@ -443,6 +477,13 @@ void Local::SetDomainPrefixCallback(otBackboneRouterDomainPrefixCallback aCallba
     mDomainPrefixCallback        = aCallback;
     mDomainPrefixCallbackContext = aContext;
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void Local::ConfigSkipSeqNumIncrease(bool aSkip)
+{
+    mSkipSeqNumIncrease = aSkip;
+}
+#endif
 
 } // namespace BackboneRouter
 

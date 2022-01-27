@@ -85,20 +85,14 @@ public:
     void Reset(void);
 
     /**
-     * This method returns the Thread Network Data version.
+     * This method returns the Data Version value for a type (full set or stable subset).
      *
-     * @returns The Thread Network Data version.
+     * @param[in] aType   The Network Data type (full set or stable subset).
      *
-     */
-    uint8_t GetVersion(void) const { return mVersion; }
-
-    /**
-     * This method returns the Thread Network Data stable version.
-     *
-     * @returns The Thread Network Data stable version.
+     * @returns The Data Version value for @p aType.
      *
      */
-    uint8_t GetStableVersion(void) const { return mStableVersion; }
+    uint8_t GetVersion(Type aType) const { return (aType == kFullSet) ? mVersion : mStableVersion; }
 
     /**
      * This method retrieves the 6LoWPAN Context information based on a given IPv6 address.
@@ -157,7 +151,7 @@ public:
      *
      * @param[in]  aVersion        The Version value.
      * @param[in]  aStableVersion  The Stable Version value.
-     * @param[in]  aStableOnly     TRUE if storing only the stable data, FALSE otherwise.
+     * @param[in]  aType           The Network Data type to set, the full set or stable subset.
      * @param[in]  aMessage        A reference to the MLE message.
      * @param[in]  aMessageOffset  The offset in @p aMessage for the Network Data TLV.
      *
@@ -167,7 +161,7 @@ public:
      */
     Error SetNetworkData(uint8_t        aVersion,
                          uint8_t        aStableVersion,
-                         bool           aStableOnly,
+                         Type           aType,
                          const Message &aMessage,
                          uint16_t       aMessageOffset);
 

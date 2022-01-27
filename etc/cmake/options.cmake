@@ -82,6 +82,11 @@ if(OT_BORDER_ROUTING)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1")
 endif()
 
+option(OT_BORDER_ROUTING_NAT64 "enable border routing NAT64 support")
+if(OT_BORDER_ROUTING_NAT64)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1")
+endif()
+
 if(NOT OT_EXTERNAL_MBEDTLS)
     set(OT_MBEDTLS mbedtls)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1")
@@ -177,6 +182,11 @@ endif()
 option(OT_DNS_CLIENT "enable DNS client support")
 if(OT_DNS_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1")
+endif()
+
+option(OT_DNS_DSO "enable DNS Stateful Operations (DSO) support")
+if(OT_DNS_DSO)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_DSO_ENABLE=1")
 endif()
 
 option(OT_DNSSD_SERVER "enable DNS-SD server support")
@@ -385,6 +395,8 @@ if(OT_RCP_RESTORATION_MAX_COUNT MATCHES "^[0-9]+$")
 else()
     message(FATAL_ERROR "Invalid max RCP restoration count: ${OT_RCP_RESTORATION_MAX_COUNT}")
 endif()
+
+option(OT_EXCLUDE_TCPLP_LIB "exclude TCPlp library from build")
 
 # Checks
 if(OT_PLATFORM_UDP AND OT_UDP_FORWARD)

@@ -53,9 +53,19 @@
 #include "thread/mle.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
+#include "thread/network_data.hpp"
 
 namespace ot {
 namespace Utils {
+
+#ifdef OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
+#error "OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA should not be defined directly." \
+       "It is derived from other configs: on-mesh prefix and external route history list sizes"
+#endif
+
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA                       \
+    ((OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE > 0) || \
+     (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0))
 
 /**
  * This class implements History Tracker.
@@ -110,35 +120,13 @@ public:
         void      SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
     };
 
-    /**
-     * This type represents Thread network info.
-     *
-     */
-    typedef otHistoryTrackerNetworkInfo NetworkInfo;
-
-    /**
-     * This structure represents a unicast IPv6 address info.
-     *
-     */
-    typedef otHistoryTrackerUnicastAddressInfo UnicastAddressInfo;
-
-    /**
-     * This structure represent a multicast IPv6 address info.
-     *
-     */
-    typedef otHistoryTrackerMulticastAddressInfo MulticastAddressInfo;
-
-    /**
-     * This type represents a RX/TX IPv6 message info.
-     *
-     */
-    typedef otHistoryTrackerMessageInfo MessageInfo;
-
-    /**
-     * This type represents a neighbor info.
-     *
-     */
-    typedef otHistoryTrackerNeighborInfo NeighborInfo;
+    typedef otHistoryTrackerNetworkInfo          NetworkInfo;          ///< Thread network info.
+    typedef otHistoryTrackerUnicastAddressInfo   UnicastAddressInfo;   ///< Unicast IPv6 address info.
+    typedef otHistoryTrackerMulticastAddressInfo MulticastAddressInfo; ///< Multicast IPv6 address info.
+    typedef otHistoryTrackerMessageInfo          MessageInfo;          ///< RX/TX IPv6 message info.
+    typedef otHistoryTrackerNeighborInfo         NeighborInfo;         ///< Neighbor info.
+    typedef otHistoryTrackerOnMeshPrefixInfo     OnMeshPrefixInfo;     ///< Network Data on mesh prefix info.
+    typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
 
     /**
      * This constructor initializes the `HistoryTracker`.
@@ -233,6 +221,16 @@ public:
         return mNeighborHistory.Iterate(aIterator, aEntryAge);
     }
 
+    const OnMeshPrefixInfo *IterateOnMeshPrefixHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mOnMeshPrefixHistory.Iterate(aIterator, aEntryAge);
+    }
+
+    const ExternalRouteInfo *IterateExternalRouteHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mExternalRouteHistory.Iterate(aIterator, aEntryAge);
+    }
+
     /**
      * This static method converts a given entry age to a human-readable string.
      *
@@ -262,6 +260,8 @@ private:
     static constexpr uint16_t kRxListSize            = OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE;
     static constexpr uint16_t kTxListSize            = OPENTHREAD_CONFIG_HISTORY_TRACKER_TX_LIST_SIZE;
     static constexpr uint16_t kNeighborListSize      = OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE;
+    static constexpr uint16_t kOnMeshPrefixListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_ON_MESH_PREFIX_LIST_SIZE;
+    static constexpr uint16_t kExternalRouteListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE;
 
     typedef otHistoryTrackerAddressEvent AddressEvent;
 
@@ -277,6 +277,11 @@ private:
     static constexpr NeighborEvent kNeighborRemoved   = OT_HISTORY_TRACKER_NEIGHBOR_EVENT_REMOVED;
     static constexpr NeighborEvent kNeighborChanged   = OT_HISTORY_TRACKER_NEIGHBOR_EVENT_CHANGED;
     static constexpr NeighborEvent kNeighborRestoring = OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING;
+
+    typedef otHistoryTrackerNetDataEvent NetDataEvent;
+
+    static constexpr NetDataEvent kNetDataEntryAdded   = OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED;
+    static constexpr NetDataEvent kNetDataEntryRemoved = OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED;
 
     class Timestamp
     {
@@ -379,6 +384,11 @@ private:
     void        HandleNotifierEvents(Events aEvents);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
+    void RecordNetworkDataChange(void);
+    void RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix);
+    void RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute);
+#endif
 
     EntryList<NetworkInfo, kNetInfoListSize>                mNetInfoHistory;
     EntryList<UnicastAddressInfo, kUnicastAddrListSize>     mUnicastAddressHistory;
@@ -386,8 +396,16 @@ private:
     EntryList<MessageInfo, kRxListSize>                     mRxHistory;
     EntryList<MessageInfo, kTxListSize>                     mTxHistory;
     EntryList<NeighborInfo, kNeighborListSize>              mNeighborHistory;
+    EntryList<OnMeshPrefixInfo, kOnMeshPrefixListSize>      mOnMeshPrefixHistory;
+    EntryList<ExternalRouteInfo, kExternalRouteListSize>    mExternalRouteHistory;
 
     TimerMilli mTimer;
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
+    NetworkData::MutableNetworkData mPreviousNetworkData;
+
+    uint8_t mNetworkDataTlvBuffer[NetworkData::NetworkData::kMaxSize];
+#endif
 };
 
 } // namespace Utils
@@ -396,6 +414,8 @@ DefineCoreType(otHistoryTrackerIterator, Utils::HistoryTracker::Iterator);
 DefineCoreType(otHistoryTrackerNetworkInfo, Utils::HistoryTracker::NetworkInfo);
 DefineCoreType(otHistoryTrackerMessageInfo, Utils::HistoryTracker::MessageInfo);
 DefineCoreType(otHistoryTrackerNeighborInfo, Utils::HistoryTracker::NeighborInfo);
+DefineCoreType(otHistoryTrackerOnMeshPrefixInfo, Utils::HistoryTracker::OnMeshPrefixInfo);
+DefineCoreType(otHistoryTrackerExternalRouteInfo, Utils::HistoryTracker::ExternalRouteInfo);
 
 } // namespace ot
 

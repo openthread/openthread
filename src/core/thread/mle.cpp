@@ -44,6 +44,7 @@
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "common/settings.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "meshcop/meshcop.hpp"
@@ -127,14 +128,6 @@ Mle::Mle(Instance &aInstance)
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
 
     mLeaderAloc.InitAsThreadOriginRealmLocalScope();
-
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    for (Ip6::Netif::UnicastAddress &serviceAloc : mServiceAlocs)
-    {
-        serviceAloc.InitAsThreadOriginRealmLocalScope();
-        serviceAloc.GetAddress().GetIid().SetLocator(Mac::kShortAddrInvalid);
-    }
-#endif
 
     meshLocalPrefix.SetFromExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
 
@@ -890,17 +883,20 @@ void Mle::ApplyMeshLocalPrefix(void)
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-
-    for (Ip6::Netif::UnicastAddress &serviceAloc : mServiceAlocs)
+    for (ServiceAloc &serviceAloc : mServiceAlocs)
     {
-        if (serviceAloc.GetAddress().GetIid().GetLocator() != Mac::kShortAddrInvalid)
+        if (serviceAloc.IsInUse())
         {
             Get<ThreadNetif>().RemoveUnicastAddress(serviceAloc);
-            serviceAloc.GetAddress().SetPrefix(GetMeshLocalPrefix());
+        }
+
+        serviceAloc.ApplyMeshLocalPrefix(GetMeshLocalPrefix());
+
+        if (serviceAloc.IsInUse())
+        {
             Get<ThreadNetif>().AddUnicastAddress(serviceAloc);
         }
     }
-
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -1007,8 +1003,8 @@ exit:
 
 const LeaderData &Mle::GetLeaderData(void)
 {
-    mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion());
-    mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetStableVersion());
+    mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet));
+    mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kStableSubset));
 
     return mLeaderData;
 }
@@ -1171,8 +1167,8 @@ Error Mle::AppendLeaderData(Message &aMessage)
 {
     LeaderDataTlv leaderDataTlv;
 
-    mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion());
-    mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetStableVersion());
+    mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet));
+    mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kStableSubset));
 
     leaderDataTlv.Init();
     leaderDataTlv.Set(mLeaderData);
@@ -1193,7 +1189,7 @@ exit:
     return error;
 }
 
-Error Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
+Error Mle::AppendNetworkData(Message &aMessage, NetworkData::Type aType)
 {
     Error   error = kErrorNone;
     uint8_t networkData[NetworkData::NetworkData::kMaxSize];
@@ -1202,7 +1198,7 @@ Error Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
     VerifyOrExit(!mRetrieveNewNetworkData, error = kErrorInvalidState);
 
     length = sizeof(networkData);
-    IgnoreError(Get<NetworkData::Leader>().CopyNetworkData(aStableOnly, networkData, length));
+    IgnoreError(Get<NetworkData::Leader>().CopyNetworkData(aType, networkData, length));
 
     error = Tlv::Append<NetworkDataTlv>(aMessage, networkData, length);
 
@@ -1621,64 +1617,94 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-void Mle::UpdateServiceAlocs(void)
+
+Mle::ServiceAloc::ServiceAloc(void)
 {
-    uint16_t              rloc               = GetRloc16();
-    uint16_t              serviceAloc        = 0;
-    uint8_t               serviceId          = 0;
-    NetworkData::Iterator serviceIterator    = NetworkData::kIteratorInit;
-    size_t                serviceAlocsLength = OT_ARRAY_LENGTH(mServiceAlocs);
-    size_t                i                  = 0;
+    InitAsThreadOriginRealmLocalScope();
+    GetAddress().GetIid().SetToLocator(kNotInUse);
+}
 
-    VerifyOrExit(!IsDisabled());
+Mle::ServiceAloc *Mle::FindInServiceAlocs(uint16_t aAloc16)
+{
+    // Search in `mServiceAlocs` for an entry matching `aAloc16`.
+    // Can be used with `aAloc16 = ServerAloc::kNotInUse` to find
+    // an unused entry in the array.
 
-    // First remove all alocs which are no longer necessary, to free up space in mServiceAlocs
-    for (i = 0; i < serviceAlocsLength; i++)
+    ServiceAloc *match = nullptr;
+
+    for (ServiceAloc &serviceAloc : mServiceAlocs)
     {
-        serviceAloc = mServiceAlocs[i].GetAddress().GetIid().GetLocator();
-
-        if ((serviceAloc != Mac::kShortAddrInvalid) &&
-            (!Get<NetworkData::Leader>().ContainsService(Mle::ServiceIdFromAloc(serviceAloc), rloc)))
+        if (serviceAloc.GetAloc16() == aAloc16)
         {
-            Get<ThreadNetif>().RemoveUnicastAddress(mServiceAlocs[i]);
-            mServiceAlocs[i].GetAddress().GetIid().SetLocator(Mac::kShortAddrInvalid);
+            match = &serviceAloc;
+            break;
         }
     }
 
-    // Now add any missing service alocs which should be there, if there is enough space in mServiceAlocs
-    while (Get<NetworkData::Leader>().GetNextServiceId(serviceIterator, rloc, serviceId) == kErrorNone)
-    {
-        for (i = 0; i < serviceAlocsLength; i++)
-        {
-            serviceAloc = mServiceAlocs[i].GetAddress().GetIid().GetLocator();
+    return match;
+}
 
-            if ((serviceAloc != Mac::kShortAddrInvalid) && (Mle::ServiceIdFromAloc(serviceAloc) == serviceId))
+void Mle::UpdateServiceAlocs(void)
+{
+    NetworkData::Iterator      iterator;
+    NetworkData::ServiceConfig service;
+
+    VerifyOrExit(!IsDisabled());
+
+    // First remove all ALOCs which are no longer in the Network
+    // Data to free up space in `mServiceAlocs` array.
+
+    for (ServiceAloc &serviceAloc : mServiceAlocs)
+    {
+        bool found = false;
+
+        if (!serviceAloc.IsInUse())
+        {
+            continue;
+        }
+
+        iterator = NetworkData::kIteratorInit;
+
+        while (Get<NetworkData::Leader>().GetNextService(iterator, GetRloc16(), service) == kErrorNone)
+        {
+            if (service.mServiceId == ServiceIdFromAloc(serviceAloc.GetAloc16()))
             {
+                found = true;
                 break;
             }
         }
 
-        if (i >= serviceAlocsLength)
+        if (!found)
         {
-            // Service Aloc is not there, but it should be. Lets add it into first empty space
-            for (i = 0; i < serviceAlocsLength; i++)
-            {
-                serviceAloc = mServiceAlocs[i].GetAddress().GetIid().GetLocator();
+            Get<ThreadNetif>().RemoveUnicastAddress(serviceAloc);
+            serviceAloc.MarkAsNotInUse();
+        }
+    }
 
-                if (serviceAloc == Mac::kShortAddrInvalid)
-                {
-                    SuccessOrExit(GetServiceAloc(serviceId, mServiceAlocs[i].GetAddress()));
-                    Get<ThreadNetif>().AddUnicastAddress(mServiceAlocs[i]);
-                    break;
-                }
-            }
+    // Now add any new ALOCs if there is space in `mServiceAlocs`.
+
+    iterator = NetworkData::kIteratorInit;
+
+    while (Get<NetworkData::Leader>().GetNextService(iterator, GetRloc16(), service) == kErrorNone)
+    {
+        uint16_t aloc16 = ServiceAlocFromId(service.mServiceId);
+
+        if (FindInServiceAlocs(aloc16) == nullptr)
+        {
+            // No matching ALOC in `mServiceAlocs`, so we try to add it.
+            ServiceAloc *newServiceAloc = FindInServiceAlocs(ServiceAloc::kNotInUse);
+
+            VerifyOrExit(newServiceAloc != nullptr);
+            newServiceAloc->SetAloc16(aloc16);
+            Get<ThreadNetif>().AddUnicastAddress(*newServiceAloc);
         }
     }
 
 exit:
     return;
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 void Mle::HandleAttachTimer(Timer &aTimer)
 {
@@ -2722,6 +2748,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t            tag[kMleSecurityTagSize];
     uint8_t            command;
     Neighbor *         neighbor;
+    bool               skipLoggingError = false;
 
     otLogDebgMle("Receive UDP message");
 
@@ -2802,7 +2829,15 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     aesCcm.Finalize(tag);
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(messageTag, tag, sizeof(tag)) == 0, error = kErrorSecurity);
+    if (memcmp(messageTag, tag, sizeof(tag)) != 0)
+    {
+        // We skip logging security check failures for broadcast MLE
+        // messages since it can be common to receive such messages
+        // from adjacent Thread networks.
+        skipLoggingError = (aMessageInfo.GetSockAddr().IsMulticast() &&
+                            aMessageInfo.GetThreadLinkInfo()->GetPanId() == Mac::kPanIdBroadcast);
+        ExitNow(error = kErrorSecurity);
+    }
 #endif
 
     if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
@@ -2991,7 +3026,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #endif
 
 exit:
-    LogProcessError(kTypeGenericUdp, error);
+    if (!skipLoggingError)
+    {
+        LogProcessError(kTypeGenericUdp, error);
+    }
 }
 
 void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
@@ -3115,18 +3153,8 @@ exit:
 
 bool Mle::IsNetworkDataNewer(const LeaderData &aLeaderData)
 {
-    int8_t diff;
-
-    if (IsFullNetworkData())
-    {
-        diff = static_cast<int8_t>(aLeaderData.GetDataVersion() - Get<NetworkData::Leader>().GetVersion());
-    }
-    else
-    {
-        diff = static_cast<int8_t>(aLeaderData.GetStableDataVersion() - Get<NetworkData::Leader>().GetStableVersion());
-    }
-
-    return (diff > 0);
+    return SerialNumber::IsGreater(aLeaderData.GetDataVersion(GetNetworkDataType()),
+                                   Get<NetworkData::Leader>().GetVersion(GetNetworkDataType()));
 }
 
 Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3217,9 +3245,9 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
 
     if (Tlv::FindTlvOffset(aMessage, Tlv::kNetworkData, networkDataOffset) == kErrorNone)
     {
-        error =
-            Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                                      !IsFullNetworkData(), aMessage, networkDataOffset);
+        error = Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
+                                                          leaderData.GetDataVersion(NetworkData::kStableSubset),
+                                                          GetNetworkDataType(), aMessage, networkDataOffset);
         SuccessOrExit(error);
     }
     else
@@ -3478,27 +3506,28 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice() && !IsDetached())
     {
-        int8_t diff = static_cast<int8_t>(connectivity.GetIdSequence() - Get<RouterTable>().GetRouterIdSequence());
+        bool isPartitionIdSame = (leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
+        bool isIdSequenceSame  = (connectivity.GetIdSequence() == Get<RouterTable>().GetRouterIdSequence());
+        bool isIdSequenceGreater =
+            SerialNumber::IsGreater(connectivity.GetIdSequence(), Get<RouterTable>().GetRouterIdSequence());
 
         switch (mParentRequestMode)
         {
         case kAttachAny:
-            VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId() || diff > 0);
+            VerifyOrExit(!isPartitionIdSame || isIdSequenceGreater);
             break;
 
         case kAttachSame1:
         case kAttachSame2:
-            VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
-            VerifyOrExit(diff > 0);
+            VerifyOrExit(isPartitionIdSame && isIdSequenceGreater);
             break;
 
         case kAttachSameDowngrade:
-            VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
-            VerifyOrExit(diff >= 0);
+            VerifyOrExit(isPartitionIdSame && (isIdSequenceSame || isIdSequenceGreater));
             break;
 
         case kAttachBetter:
-            VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId());
+            VerifyOrExit(!isPartitionIdSame);
 
             VerifyOrExit(MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
                                                       Get<MleRouter>().IsSingleton(), mLeaderData) > 0);
@@ -3715,9 +3744,9 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
 
     mParent.SetRloc16(sourceAddress);
 
-    IgnoreError(Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(),
-                                                          leaderData.GetStableDataVersion(), !IsFullNetworkData(),
-                                                          aMessage, networkDataOffset));
+    IgnoreError(Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
+                                                          leaderData.GetDataVersion(NetworkData::kStableSubset),
+                                                          GetNetworkDataType(), aMessage, networkDataOffset));
 
     SetStateChild(shortAddress);
 

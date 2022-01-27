@@ -188,15 +188,13 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 Error MeshForwarder::ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Address &aDst)
 {
-    Error    error = kErrorNone;
-    uint16_t dstRloc16;
-    uint8_t  ttl;
+    Error   error = kErrorNone;
+    uint8_t ttl;
 
     VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aDst),
                  error = kErrorNoRoute);
 
-    IgnoreError(Get<AddressResolver>().Resolve(aDst, dstRloc16, /* aAllowAddressQuery */ false));
-    VerifyOrExit(dstRloc16 == Get<Mle::MleRouter>().GetRloc16(), error = kErrorNoRoute);
+    VerifyOrExit(Get<AddressResolver>().LookUp(aDst) == Get<Mle::MleRouter>().GetRloc16(), error = kErrorNoRoute);
 
     // Avoid decreasing TTL twice
     IgnoreError(aMessage.Read(Ip6::Header::kHopLimitFieldOffset, ttl));

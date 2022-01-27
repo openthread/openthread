@@ -154,6 +154,7 @@ const char *SettingsBase::KeyToString(Key aKey)
         "SrpEcdsaKey",       // (11) kKeySrpEcdsaKey
         "SrpClientInfo",     // (12) kKeySrpClientInfo
         "SrpServerInfo",     // (13) kKeySrpServerInfo
+        "Nat64Prefix",       // (14) kKeyNat64Prefix
     };
 
     static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
@@ -169,8 +170,9 @@ const char *SettingsBase::KeyToString(Key aKey)
     static_assert(11 == kKeySrpEcdsaKey, "kKeySrpEcdsaKey value is incorrect");
     static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
     static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
+    static_assert(14 == kKeyNat64Prefix, "kKeyNat64Prefix value is incorrect");
 
-    static_assert(kLastKey == kKeySrpServerInfo, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyNat64Prefix, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
@@ -431,6 +433,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         case kKeyOmrPrefix:
         case kKeyOnLinkPrefix:
+        case kKeyNat64Prefix:
             LogPrefix(aAction, aKey, *reinterpret_cast<const Ip6::Prefix *>(aValue));
             break;
 #endif

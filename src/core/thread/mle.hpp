@@ -50,6 +50,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
+#include "thread/network_data_types.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -308,20 +309,20 @@ public:
     bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device requests Full Network Data.
-     *
-     * @returns TRUE if requests Full Network Data, FALSE otherwise.
-     *
-     */
-    bool IsFullNetworkData(void) const { return mDeviceMode.IsFullNetworkData(); }
-
-    /**
      * This method indicates whether or not the device is a Minimal End Device.
      *
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
      *
      */
     bool IsMinimalEndDevice(void) const { return mDeviceMode.IsMinimalEndDevice(); }
+
+    /**
+     * This method gets the Network Data type (full set or stable subset) that this device requests.
+     *
+     * @returns The Network Data type requested by this device.
+     *
+     */
+    NetworkData::Type GetNetworkDataType(void) const { return mDeviceMode.GetNetworkDataType(); }
 
     /**
      * This method returns a pointer to the Mesh Local Prefix.
@@ -585,7 +586,7 @@ public:
     /**
      * This method returns the Service ID corresponding to a Service ALOC16.
      *
-     * @param[in]  aAloc16  The Servicer ALOC16 value.
+     * @param[in]  aAloc16  The Service ALOC16 value.
      *
      * @returns The Service ID corresponding to given ALOC16.
      *
@@ -593,7 +594,7 @@ public:
     static uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
     /**
-     * This method returns the Service Aloc corresponding to a Service ID.
+     * This method returns the Service ALOC16 corresponding to a Service ID.
      *
      * @param[in]  aServiceId  The Service ID value.
      *
@@ -1122,13 +1123,13 @@ protected:
      * This method appends a Network Data TLV to the message.
      *
      * @param[in]  aMessage     A reference to the message.
-     * @param[in]  aStableOnly  TRUE to append stable data, FALSE otherwise.
+     * @param[in]  aType        The Network Data type to append, full set or stable subset.
      *
      * @retval kErrorNone     Successfully appended the Network Data TLV.
      * @retval kErrorNoBufs   Insufficient buffers available to append the Network Data TLV.
      *
      */
-    Error AppendNetworkData(Message &aMessage, bool aStableOnly);
+    Error AppendNetworkData(Message &aMessage, NetworkData::Type aType);
 
     /**
      * This method appends a TLV Request TLV to a message.
@@ -1763,6 +1764,22 @@ private:
         uint8_t  mCommand;
     } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    class ServiceAloc : public Ip6::Netif::UnicastAddress
+    {
+    public:
+        static constexpr uint16_t kNotInUse = Mac::kShortAddrInvalid;
+
+        ServiceAloc(void);
+
+        bool     IsInUse(void) const { return GetAloc16() != kNotInUse; }
+        void     MarkAsNotInUse(void) { SetAloc16(kNotInUse); }
+        uint16_t GetAloc16(void) const { return GetAddress().GetIid().GetLocator(); }
+        void     SetAloc16(uint16_t aAloc16) { GetAddress().GetIid().SetLocator(aAloc16); }
+        void     ApplyMeshLocalPrefix(const MeshLocalPrefix &aPrefix) { GetAddress().SetPrefix(aPrefix); }
+    };
+#endif
+
     Error       Start(StartMode aMode);
     void        Stop(StopMode aMode);
     void        HandleNotifierEvents(Events aEvents);
@@ -1829,11 +1846,8 @@ private:
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    /**
-     * This method scans for network data from the leader and updates IP addresses assigned to this
-     * interface to make sure that all Service ALOCs (0xfc10-0xfc1f) are properly set.
-     */
-    void UpdateServiceAlocs(void);
+    ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
+    void         UpdateServiceAlocs(void);
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
@@ -1903,7 +1917,7 @@ private:
     uint64_t mAlternateTimestamp;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    Ip6::Netif::UnicastAddress mServiceAlocs[kMaxServiceAlocs];
+    ServiceAloc mServiceAlocs[kMaxServiceAlocs];
 #endif
 
     otMleCounters mCounters;

@@ -168,28 +168,28 @@ public:
     /**
      * This method provides full or stable copy of the Thread Network Data.
      *
-     * @param[in]    aStable      TRUE when copying the stable version, FALSE when copying the full version.
+     * @param[in]    aType        The Network Data type to copy, the full set or stable subset.
      * @param[out]   aData        A pointer to the data buffer to copy the Network Data into.
      * @param[inout] aDataLength  On entry, size of the data buffer pointed to by @p aData.
      *                            On exit, number of copied bytes.
      *
-     * @retval kErrorNone       Successfully copied full Thread Network Data.
+     * @retval kErrorNone       Successfully copied Thread Network Data.
      * @retval kErrorNoBufs     Not enough space in @p aData to fully copy Thread Network Data.
      *
      */
-    Error CopyNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const;
+    Error CopyNetworkData(Type aType, uint8_t *aData, uint8_t &aDataLength) const;
 
     /**
      * This method provides full or stable copy of the Thread Network Data.
      *
-     * @param[in]    aStable      TRUE when copying the stable version, FALSE when copying the full version.
+     * @param[in]    aType        The Network Data type to copy, the full set or stable subset.
      * @param[out]   aNetworkData A reference to a `MutableNetworkData` to copy the Network Data into.
      *
-     * @retval kErrorNone       Successfully copied full Thread Network Data.
+     * @retval kErrorNone       Successfully copied Thread Network Data.
      * @retval kErrorNoBufs     Not enough space in @p aNetworkData to fully copy Thread Network Data.
      *
      */
-    Error CopyNetworkData(bool aStable, MutableNetworkData &aNetworkData) const;
+    Error CopyNetworkData(Type aType, MutableNetworkData &aNetworkData) const;
 
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.
@@ -267,69 +267,50 @@ public:
     Error GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
 
     /**
-     * This method provides the next Service ID in the Thread Network Data for a given RLOC16.
+     * This method indicates whether or not the Thread Network Data contains a given on mesh prefix entry.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aServiceId A reference to variable where the Service ID will be placed.
+     * @param[in]  aPrefix   The on mesh prefix config to check.
      *
-     * @retval kErrorNone       Successfully found the next service.
-     * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
+     * @retval TRUE  if Network Data contains an on mesh prefix matching @p aPrefix.
+     * @retval FALSE if Network Data does not contain an on mesh prefix matching @p aPrefix.
      *
      */
-    Error GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uint8_t &aServiceId) const;
+    bool ContainsOnMeshPrefix(const OnMeshPrefixConfig &aPrefix) const;
 
     /**
-     * This method indicates whether or not the Thread Network Data contains all of the on mesh prefix information
-     * in @p aCompare associated with @p aRloc16.
+     * This method indicates whether or not the Thread Network Data contains a given external route entry.
      *
-     * @param[in]  aCompare  The Network Data to use for the query.
-     * @param[in]  aRloc16   The RLOC16 to consider.
+     * @param[in]  aRoute   The external route config to check.
      *
-     * @returns TRUE if this object contains all on mesh prefix information in @p aCompare associated with @p aRloc16,
-     *          FALSE otherwise.
+     * @retval TRUE  if Network Data contains an external route matching @p aRoute.
+     * @retval FALSE if Network Data does not contain an external route matching @p aRoute.
      *
      */
-    bool ContainsOnMeshPrefixes(const NetworkData &aCompare, uint16_t aRloc16) const;
+    bool ContainsExternalRoute(const ExternalRouteConfig &aRoute) const;
 
     /**
-     * This method indicates whether or not the Thread Network Data contains all of the external route information
-     * in @p aCompare associated with @p aRloc16.
+     * This method indicates whether or not the Thread Network Data contains a given service entry.
      *
-     * @param[in]  aCompare  The Network Data to use for the query.
-     * @param[in]  aRloc16   The RLOC16 to consider.
+     * @param[in]  aService   The service config to check.
      *
-     * @returns TRUE if this object contains all external route information in @p aCompare associated with @p aRloc16,
-     *          FALSE otherwise.
+     * @retval TRUE  if Network Data contains a service matching @p aService.
+     * @retval FALSE if Network Data does not contain a service matching @p aService.
      *
      */
-    bool ContainsExternalRoutes(const NetworkData &aCompare, uint16_t aRloc16) const;
+    bool ContainsService(const ServiceConfig &aService) const;
 
     /**
-     * This method indicates whether or not the Thread Network Data contains all of the service information
-     * in @p aCompare associated with @p aRloc16.
+     * This method indicates whether or not the Thread Network Data contains all the on mesh prefixes, external
+     * routes, and service entries as in another given Network Data associated with a given RLOC16.
      *
-     * @param[in]  aCompare  The Network Data to use for the query.
-     * @param[in]  aRloc16   The RLOC16 to consider.
+     * @param[in] aCompare         The Network Data to compare with.
+     * @param[in] aRloc16          The RLOC16 to consider.
      *
-     * @returns TRUE if this object contains all service information in @p aCompare associated with @p aRloc16,
-     *          FALSE otherwise.
-     *
-     */
-    bool ContainsServices(const NetworkData &aCompare, uint16_t aRloc16) const;
-
-    /**
-     * This method indicates whether or not the Thread Network Data contains the service with given Service ID
-     * associated with @p aRloc16.
-     *
-     * @param[in]  aServiceId The Service ID to search for.
-     * @param[in]  aRloc16    The RLOC16 to consider.
-     *
-     * @returns TRUE if this object contains the service with given ID associated with @p aRloc16,
-     *          FALSE otherwise.
+     * @retval TRUE  if Network Data contains all the same entries as in @p aCompare for @p aRloc16.
+     * @retval FALSE if Network Data does not contains all the same entries as in @p aCompare for @p aRloc16.
      *
      */
-    bool ContainsService(uint8_t aServiceId, uint16_t aRloc16) const;
+    bool ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRloc16) const;
 
     /**
      * This method provides the next server RLOC16 in the Thread Network Data.

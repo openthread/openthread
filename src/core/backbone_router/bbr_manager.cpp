@@ -130,7 +130,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
             error = mBackboneTmfAgent.Start();
 
-            otLogResultBbr(error, "Start Backbone TMF agent");
+            LogError("Start Backbone TMF agent", error);
         }
     }
 }
@@ -508,9 +508,7 @@ NdProxyTable &Manager::GetNdProxyTable(void)
 
 bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
 {
-    bool              forwardToBackbone = false;
-    Mac::ShortAddress rloc16;
-    Error             error;
+    bool forwardToBackbone = false;
 
     VerifyOrExit(Get<Local>().IsPrimary());
     VerifyOrExit(Get<Leader>().IsDomainUnicast(aAddress));
@@ -519,9 +517,8 @@ bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
     VerifyOrExit(!mNdProxyTable.IsRegistered(aAddress.GetIid()));
     // Do not forward to Backbone if the DUA belongs to a MTD Child (which may have failed in DUA registration)
     VerifyOrExit(Get<NeighborTable>().FindNeighbor(aAddress) == nullptr);
-    // Forawrd to Backbone only if the DUA is resolved to the PBBR's RLOC16
-    error = Get<AddressResolver>().Resolve(aAddress, rloc16, /* aAllowAddressQuery */ false);
-    VerifyOrExit(error == kErrorNone && rloc16 == Get<Mle::MleRouter>().GetRloc16());
+    // Forward to Backbone only if the DUA is resolved to the PBBR's RLOC16
+    VerifyOrExit(Get<AddressResolver>().LookUp(aAddress) == Get<Mle::MleRouter>().GetRloc16());
 
     forwardToBackbone = true;
 
@@ -795,6 +792,20 @@ exit:
                  aDua.ToString().AsCString(), aMeshLocalIid.ToString().AsCString(), aTimeSinceLastTransaction);
 }
 #endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+
+void Manager::LogError(const char *aText, Error aError) const
+{
+    OT_UNUSED_VARIABLE(aText);
+
+    if (aError == kErrorNone)
+    {
+        otLogInfoBbr("%s: %s", aText, ErrorToString(aError));
+    }
+    else
+    {
+        otLogWarnBbr("%s: %s", aText, ErrorToString(aError));
+    }
+}
 
 } // namespace BackboneRouter
 

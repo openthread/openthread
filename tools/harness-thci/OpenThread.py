@@ -551,6 +551,17 @@ class OpenThreadTHCI(object):
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('__setAddressFilterMode() Error: ' + str(e))
 
+    def __skipSeqNoIncrease(self):
+        """skip sequence number increase when recovering BBR Dataset from Network Data
+
+        Returns:
+            True: successful to set the behavior.
+            False: fail to set the behavior.
+        """
+        print('call __skipSeqNoIncrease()')
+        cmd = 'bbr skipseqnuminc'
+        return self.__executeCommand(cmd)[-1] == 'Done'
+
     def __startOpenThread(self):
         """start OpenThread stack
 
@@ -1231,6 +1242,8 @@ class OpenThreadTHCI(object):
                 if self.AutoDUTEnable is False:
                     # set ROUTER_DOWNGRADE_THRESHOLD
                     self.__setRouterDowngradeThreshold(33)
+                    # skip increase of Sequence Number for BBR-TC-02
+                    self.__skipSeqNoIncrease()
             elif eRoleId == Thread_Device_Role.SED:
                 print('join as sleepy end device')
                 mode = '-'
@@ -1498,7 +1511,7 @@ class OpenThreadTHCI(object):
 
         start_time = time.time()
         while time.time() < start_time + timeout:
-            time.sleep(0.3)
+            time.sleep(0.5)
             if not self.IsBorderRouter:
                 self._disconnect()
                 self._connect()
@@ -1506,6 +1519,10 @@ class OpenThreadTHCI(object):
                 self.__executeCommand('state', timeout=0.1)
                 break
             except Exception:
+                self.__restartAgentService()
+                time.sleep(2)
+                self.__sendCommand('factoryreset', expectEcho=False)
+                time.sleep(0.5)
                 continue
         else:
             raise AssertionError("Could not connect with OT device {} after reset.".format(self))
@@ -1590,7 +1607,7 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        self.bbrSeqNum = random.randint(0, 254)  # random seqnum except 255, so that BBR-TC-02 never need re-run
+        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
         self.bbrMlrTimeout = 3600
         self.bbrReRegDelay = 5
 
@@ -2812,11 +2829,8 @@ class OpenThreadTHCI(object):
                     # new passing way listSecurityPolicy=[3600, 0b11001111]
                     rotationTime = listSecurityPolicy[0]
                     # bit order
-                    if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-                        if self.DeviceCapability != DevCapb.V1_1:
-                            policyBits = listSecurityPolicy[2] << 8 | listSecurityPolicy[1]
-                        else:
-                            policyBits = listSecurityPolicy[1]
+                    if len(listSecurityPolicy) > 2:
+                        policyBits = listSecurityPolicy[2] << 8 | listSecurityPolicy[1]
                     else:
                         policyBits = listSecurityPolicy[1]
 
@@ -3168,7 +3182,12 @@ class OpenThreadTHCI(object):
         """
         assert not (SeqNumInc and SeqNum is not None), "Must not specify both SeqNumInc and SeqNum"
         if SeqNumInc:
-            SeqNum = (self.bbrSeqNum + 1) % 256
+            if self.bbrSeqNum in (126, 127):
+                self.bbrSeqNum = 0
+            elif self.bbrSeqNum in (254, 255):
+                self.bbrSeqNum = 128
+            else:
+                self.bbrSeqNum = (self.bbrSeqNum + 1) % 256
 
         return self.__configBbrDataset(SeqNum=SeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
 
@@ -3479,6 +3498,7 @@ class OpenThreadTHCI(object):
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
+        self._beforeRegisterMulticast(sAddr, timeout)
 
         cmd = 'ipmaddr add ' + str(sAddr)
 
@@ -3593,6 +3613,10 @@ class OpenThreadTHCI(object):
         assert state in (0, 1), state
         self.__executeCommand("ccm {}".format("enable" if state == 1 else "disable"))
 
+    @API
+    def setVrCheckSkip(self):
+        self.__executeCommand("tvcheck disable")
+
 
 class OpenThread(OpenThreadTHCI, IThci):
 
@@ -3637,6 +3661,12 @@ class OpenThread(OpenThreadTHCI, IThci):
         pass
 
     def _deviceAfterReset(self):
+        pass
+
+    def __restartAgentService(self):
+        pass
+
+    def _beforeRegisterMulticast(self, sAddr, timeout):
         pass
 
     def __socRead(self, size=512):

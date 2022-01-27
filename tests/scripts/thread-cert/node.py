@@ -33,11 +33,11 @@ import logging
 import os
 import re
 import socket
-import string
 import subprocess
 import sys
 import time
 import traceback
+import typing
 import unittest
 from ipaddress import IPv6Address, IPv6Network
 from typing import Union, Dict, Optional, List, Any
@@ -654,7 +654,7 @@ class NodeImpl:
         if isinstance(pattern, str):
             pattern = re.compile(pattern)
 
-        if isinstance(pattern, re.Pattern):
+        if isinstance(pattern, typing.Pattern):
             return pattern.match(line)
         else:
             return any(NodeImpl._match_pattern(line, p) for p in pattern)
@@ -881,6 +881,11 @@ class NodeImpl:
         cmd = 'bbr jitter %d' % jitter
         self.send_command(cmd)
         self._expect_done()
+
+    def get_rcp_version(self) -> str:
+        self.send_command('rcp version')
+        rcp_version = self._expect_command_output()[0].strip()
+        return rcp_version
 
     def srp_server_get_state(self):
         states = ['disabled', 'running', 'stopped']
@@ -1129,6 +1134,16 @@ class NodeImpl:
         self.send_command(cmd)
         service_lines = self._expect_command_output()
         return [self._parse_srp_client_service(line) for line in service_lines]
+
+    def srp_client_set_lease_interval(self, leaseinterval: int):
+        cmd = f'srp client leaseinterval {leaseinterval}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_client_get_lease_interval(self) -> int:
+        cmd = 'srp client leaseinterval'
+        self.send_command(cmd)
+        return int(self._expect_result('\d+'))
 
     def _encode_txt_entry(self, entry):
         """Encodes the TXT entry to the DNS-SD TXT record format as a HEX string.

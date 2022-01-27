@@ -318,7 +318,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
                      static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue());
 #endif
     }
-#endif
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (!mRadioFilterEnabled)
@@ -413,7 +413,7 @@ exit:
 void SubMac::StartCsmaBackoff(void)
 {
     uint32_t backoff;
-    uint32_t backoffExponent = kMinBE + mTransmitRetries + mCsmaBackoffs;
+    uint32_t backoffExponent = kCsmaMinBe + mTransmitRetries + mCsmaBackoffs;
 
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0)
@@ -446,9 +446,9 @@ void SubMac::StartCsmaBackoff(void)
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
 
-    if (backoffExponent > kMaxBE)
+    if (backoffExponent > kCsmaMaxBe)
     {
-        backoffExponent = kMaxBE;
+        backoffExponent = kCsmaMaxBe;
     }
 
     backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
@@ -477,8 +477,6 @@ void SubMac::BeginTransmit(void)
 {
     Error error;
 
-    OT_UNUSED_VARIABLE(error);
-
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     VerifyOrExit(mState == kStateCsmaBackoff || mState == kStateCslTransmit);
 #else
@@ -498,12 +496,14 @@ void SubMac::BeginTransmit(void)
     }
 
     error = Get<Radio>().Transmit(mTransmitFrame);
+
     if (error == kErrorInvalidState && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
     {
         // Platform `transmit_at` fails and we send the frame directly.
         mTransmitFrame.mInfo.mTxInfo.mTxDelay         = 0;
         mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime = 0;
-        error                                         = Get<Radio>().Transmit(mTransmitFrame);
+
+        error = Get<Radio>().Transmit(mTransmitFrame);
     }
 
     SuccessOrAssert(error);
@@ -1128,7 +1128,7 @@ void SubMac::HandleCslTimer(void)
     }
 }
 
-void SubMac::GetCslWindowEdges(uint32_t &ahead, uint32_t &after)
+void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 {
     uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
     uint32_t curTime    = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
@@ -1140,8 +1140,8 @@ void SubMac::GetCslWindowEdges(uint32_t &ahead, uint32_t &after)
     semiWindow = elapsed * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy) / 1000000;
     semiWindow += mCslParentUncert * kUsPerUncertUnit;
 
-    ahead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;
-    after = (semiWindow + kMinCslWindow > semiPeriod) ? semiPeriod : semiWindow + kMinCslWindow;
+    aAhead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;
+    aAfter = (semiWindow + kMinCslWindow > semiPeriod) ? semiPeriod : semiWindow + kMinCslWindow;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

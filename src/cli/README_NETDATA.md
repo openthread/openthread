@@ -244,7 +244,7 @@ Done
 
 ### show
 
-Usage: `netdata show [-x]`
+Usage: `netdata show [local] [-x]`
 
 Print Network Data received from the Leader.
 
@@ -257,10 +257,29 @@ Services:
 Done
 ```
 
-Print Network Data as hex-encoded TLVs.
+Print Network Data received from the Leader as hex-encoded TLVs.
 
 ```bash
 > netdata show -x
+08040b02174703140040fd00deadbeefcafe0504dc00330007021140
+Done
+```
+
+Print local Network Data to sync with Leader.
+
+```bash
+> netdata show local
+Prefixes:
+fd00:dead:beef:cafe::/64 paros med dc00
+Routes:
+Services:
+Done
+```
+
+Print local Network Data to sync with Leader as hex-encoded TLVs.
+
+```bash
+> netdata show local -x
 08040b02174703140040fd00deadbeefcafe0504dc00330007021140
 Done
 ```

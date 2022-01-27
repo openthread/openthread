@@ -229,6 +229,8 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
+    void LogError(const char *aText, Error aError) const;
+
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     Coap::Resource mMulticastListenerRegistration;
 #endif

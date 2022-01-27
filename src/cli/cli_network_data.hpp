@@ -53,6 +53,18 @@ public:
     typedef Utils::CmdLineParser::Arg Arg;
 
     /**
+     * This constant specifies the string size for representing Network Data prefix/route entry flags.
+     *
+     * BorderRouter (OnMeshPrefix) TLV uses `uint16_t` for its flags and ExternalRoute uses `uint8_t`, though some of
+     * the bits are not currently used and reserved for future, so 17 chars string (16 flags plus null char at end of
+     * string) covers current and future flags.
+     *
+     */
+    static constexpr uint16_t kFlagsStringSize = 17;
+
+    typedef char FlagsString[kFlagsStringSize]; ///< Flags String type (char array of `kFlagsStringSize`).
+
+    /**
      * Constructor
      *
      * @param[in]  aOutput The CLI console output context
@@ -95,6 +107,34 @@ public:
      */
     void OutputService(const otServiceConfig &aConfig);
 
+    /**
+     * This method converts the flags from a given prefix config to string.
+     *
+     * @param[in]  aConfig  The prefix config.
+     * @param[out] aString  The string to populate from @a Config flags.
+     *
+     */
+    static void PrefixFlagsToString(const otBorderRouterConfig &aConfig, FlagsString &aString);
+
+    /**
+     * This method converts the flags from a given route config to string.
+     *
+     * @param[in]  aConfig  The route config.
+     * @param[out] aString  The string to populate from @a Config flags.
+     *
+     */
+    static void RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString);
+
+    /**
+     * This static method converts a route preference value to human-readable string.
+     *
+     * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
+     *
+     * @returns A string representation @p aPreference.
+     *
+     */
+    static const char *PreferenceToString(signed int aPreference);
+
 private:
     using Command = CommandEntry<NetworkData>;
 
@@ -109,11 +149,14 @@ private:
     otError ProcessShow(Arg aArgs[]);
     otError ProcessSteeringData(Arg aArgs[]);
 
-    otError OutputBinary(void);
-    void    OutputPrefixes(void);
-    void    OutputRoutes(void);
-    void    OutputServices(void);
-    void    OutputPreference(signed int aPreference);
+    otError GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal);
+    otError GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal);
+    otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
+
+    otError OutputBinary(bool aLocal);
+    void    OutputPrefixes(bool aLocal);
+    void    OutputRoutes(bool aLocal);
+    void    OutputServices(bool aLocal);
 
     static constexpr Command sCommands[] = {
         {"help", &NetworkData::ProcessHelp},

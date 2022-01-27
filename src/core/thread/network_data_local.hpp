@@ -172,13 +172,11 @@ private:
     Error AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType, uint16_t aFlags, bool aStable);
     Error RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType);
     void  UpdateRloc(PrefixTlv &aPrefixTlv);
-    bool  IsOnMeshPrefixConsistent(void) const;
-    bool  IsExternalRouteConsistent(void) const;
+    bool  IsConsistent(void) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void UpdateRloc(ServiceTlv &aService);
-    bool IsServiceConsistent(void) const;
 #endif
 
     uint8_t  mTlvBuffer[kMaxSize];

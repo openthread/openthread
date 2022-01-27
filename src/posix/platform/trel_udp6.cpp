@@ -284,6 +284,7 @@ static void ReceiveNetlinkMessage(void)
             {
                 otLogWarnPlat("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
             }
+            break;
         }
         default:
             break;

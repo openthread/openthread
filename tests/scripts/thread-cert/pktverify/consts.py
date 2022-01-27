@@ -310,6 +310,7 @@ REAL_LAYER_NAMES = {
     'dns',
     'igmp',
     'mdns',
+    'dns',
 }
 
 FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop', 'ipv6inner'}
@@ -337,6 +338,27 @@ WIRESHARK_OVERRIDE_PREFS = {
 
 WIRESHARK_DECODE_AS_ENTRIES = {
     'udp.port==61631': 'coap',
+    # SRP server ports for dissecting SRP requests and responses
+    'udp.port==53535': 'dns',
+    'udp.port==53536': 'dns',
+    'udp.port==53537': 'dns',
+    'udp.port==53538': 'dns',
+    'udp.port==53539': 'dns',
+    'udp.port==53540': 'dns',
+    'udp.port==53541': 'dns',
+    'udp.port==53542': 'dns',
+    'udp.port==53543': 'dns',
+    'udp.port==53544': 'dns',
+    'udp.port==53545': 'dns',
+    'udp.port==53546': 'dns',
+    'udp.port==53547': 'dns',
+    'udp.port==53548': 'dns',
+    'udp.port==53549': 'dns',
+    'udp.port==53550': 'dns',
+    'udp.port==53551': 'dns',
+    'udp.port==53552': 'dns',
+    'udp.port==53553': 'dns',
+    'udp.port==53554': 'dns',
 }
 
 TIMEOUT_JOIN_NETWORK = 10

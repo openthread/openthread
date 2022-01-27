@@ -37,6 +37,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/logging.hpp"
 #include "common/timer.hpp"
 #include "crypto/hkdf_sha256.hpp"
 #include "crypto/storage.hpp"
@@ -483,9 +484,16 @@ void KeyManager::SetKek(const Kek &aKek)
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
-    OT_ASSERT(aSecurityPolicy.mRotationTime >= SecurityPolicy::kMinKeyRotationTime);
+    if (aSecurityPolicy.mRotationTime < SecurityPolicy::kMinKeyRotationTime)
+    {
+        otLogNoteMeshCoP("Key Rotation Time too small: %d", aSecurityPolicy.mRotationTime);
+        ExitNow();
+    }
 
     IgnoreError(Get<Notifier>().Update(mSecurityPolicy, aSecurityPolicy, kEventSecurityPolicyChanged));
+
+exit:
+    return;
 }
 
 void KeyManager::StartKeyRotationTimer(void)

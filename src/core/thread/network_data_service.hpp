@@ -42,6 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/serial_number.hpp"
 #include "net/socket.hpp"
 #include "thread/network_data_tlvs.hpp"
 
@@ -189,7 +190,7 @@ public:
          */
         bool IsSequenceNumberAheadOf(const Info &aOther) const
         {
-            return (((aOther.mSequenceNumber - mSequenceNumber) & (1U << 7)) != 0);
+            return SerialNumber::IsGreater(mSequenceNumber, aOther.mSequenceNumber);
         }
 
         Ip6::Address mAnycastAddress; ///< The anycast address associated with the DNS/SRP servers.

@@ -45,6 +45,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
@@ -56,6 +57,7 @@
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/network_data_types.hpp"
 #include "thread/radio_selector.hpp"
 
 namespace ot {
@@ -353,12 +355,12 @@ public:
     bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device requests Full Network Data.
+     * This method gets the Network Data type (full set or stable subset) that the device requests.
      *
-     * @returns TRUE if requests Full Network Data, FALSE otherwise.
+     * @returns The Network Data type.
      *
      */
-    bool IsFullNetworkData(void) const { return GetDeviceMode().IsFullNetworkData(); }
+    NetworkData::Type GetNetworkDataType(void) const { return GetDeviceMode().GetNetworkDataType(); }
 
     /**
      * This method sets all bytes of the Extended Address to zero.
@@ -545,7 +547,7 @@ public:
      * before @p aTag.
      *
      */
-    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return ((aTag - mLastRxFragmentTag) & (1U << 15)) != 0; }
+    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return SerialNumber::IsGreater(mLastRxFragmentTag, aTag); }
 
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 

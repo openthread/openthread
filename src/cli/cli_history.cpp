@@ -44,6 +44,11 @@ namespace Cli {
 
 constexpr History::Command History::sCommands[];
 
+static const char *const kSimpleEventStrings[] = {
+    "Added",  // (0) OT_HISTORY_TRACKER_{NET_DATA_ENTRY/ADDRESSS_EVENT}_ADDED
+    "Removed" // (1) OT_HISTORY_TRACKER_{NET_DATA_ENTRY/ADDRESS_EVENT}_REMOVED
+};
+
 otError History::ProcessHelp(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -82,11 +87,6 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
 
 otError History::ProcessIpAddr(Arg aArgs[])
 {
-    static const char *const kEventStrings[] = {
-        "Added",  // (0) OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED
-        "Removed" // (1) OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED
-    };
-
     otError                                   error;
     bool                                      isList;
     uint16_t                                  numEntries;
@@ -129,14 +129,14 @@ otError History::ProcessIpAddr(Arg aArgs[])
             sprintf(&addressString[strlen(addressString)], "/%d", info->mPrefixLength);
 
             OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString,
-                       Stringify(info->mEvent, kEventStrings), addressString,
+                       Stringify(info->mEvent, kSimpleEventStrings), addressString,
                        Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
                        info->mPreferred ? 'Y' : 'N', info->mValid ? 'Y' : 'N', info->mRloc ? 'Y' : 'N');
         }
         else
         {
             OutputLine("%s -> event:%s address:%s prefixlen:%d origin:%s scope:%d preferred:%s valid:%s rloc:%s",
-                       ageString, Stringify(info->mEvent, kEventStrings), addressString, info->mPrefixLength,
+                       ageString, Stringify(info->mEvent, kSimpleEventStrings), addressString, info->mPrefixLength,
                        Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
                        info->mPreferred ? "yes" : "no", info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
         }
@@ -569,6 +569,106 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
 
     otIp6SockAddrToString(&aInfo.mDestination, addrString, sizeof(addrString));
     OutputLine("| %20s | dst: %-70s |", "", addrString);
+}
+
+otError History::ProcessPrefix(Arg aArgs[])
+{
+    otError                                 error;
+    bool                                    isList;
+    uint16_t                                numEntries;
+    otHistoryTrackerIterator                iterator;
+    const otHistoryTrackerOnMeshPrefixInfo *info;
+    uint32_t                                entryAge;
+    char                                    ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                    prefixString[OT_IP6_PREFIX_STRING_SIZE];
+    NetworkData::FlagsString                flagsString;
+
+    static_assert(0 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED, "NET_DATA_ENTRY_ADDED value is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED, "NET_DATA_ENTRY_REMOVED value is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event   | Prefix                                      | Flags     | Pref | RLOC16 |
+        // +----------------------+---------+---------------------------------------------+-----------+------+--------+
+
+        static const char *const kPrefixTitles[]       = {"Age", "Event", "Prefix", "Flags", "Pref", "RLOC16"};
+        static const uint8_t     kPrefixColumnWidths[] = {22, 9, 45, 11, 6, 8};
+
+        OutputTableHeader(kPrefixTitles, kPrefixColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateOnMeshPrefixHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mPrefix.mPrefix, prefixString, sizeof(prefixString));
+        NetworkData::PrefixFlagsToString(info->mPrefix, flagsString);
+
+        OutputLine(isList ? "%s -> event:%s prefix:%s flags:%s pref:%s rloc16:0x%04x"
+                          : "| %20s | %-7s | %-43s | %-9s | %-4s | 0x%04x |",
+                   ageString, Stringify(info->mEvent, kSimpleEventStrings), prefixString, flagsString,
+                   NetworkData::PreferenceToString(info->mPrefix.mPreference), info->mPrefix.mRloc16);
+    }
+
+exit:
+    return error;
+}
+
+otError History::ProcessRoute(Arg aArgs[])
+{
+    otError                                  error;
+    bool                                     isList;
+    uint16_t                                 numEntries;
+    otHistoryTrackerIterator                 iterator;
+    const otHistoryTrackerExternalRouteInfo *info;
+    uint32_t                                 entryAge;
+    char                                     ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                     prefixString[OT_IP6_PREFIX_STRING_SIZE];
+    NetworkData::FlagsString                 flagsString;
+
+    static_assert(0 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED, "NET_DATA_ENTRY_ADDED value is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED, "NET_DATA_ENTRY_REMOVED value is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event   | Route                                       | Flags     | Pref | RLOC16 |
+        // +----------------------+---------+---------------------------------------------+-----------+------+--------+
+
+        static const char *const kRouteTitles[]       = {"Age", "Event", "Route", "Flags", "Pref", "RLOC16"};
+        static const uint8_t     kRouteColumnWidths[] = {22, 9, 45, 11, 6, 8};
+
+        OutputTableHeader(kRouteTitles, kRouteColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateExternalRouteHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mRoute.mPrefix, prefixString, sizeof(prefixString));
+        NetworkData::RouteFlagsToString(info->mRoute, flagsString);
+
+        OutputLine(isList ? "%s -> event:%s route:%s flags:%s pref:%s rloc16:0x%04x"
+                          : "| %20s | %-7s | %-43s | %-9s | %-4s | 0x%04x |",
+                   ageString, Stringify(info->mEvent, kSimpleEventStrings), prefixString, flagsString,
+                   NetworkData::PreferenceToString(info->mRoute.mPreference), info->mRoute.mRloc16);
+    }
+
+exit:
+    return error;
 }
 
 otError History::Process(Arg aArgs[])

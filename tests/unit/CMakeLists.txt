@@ -255,6 +255,28 @@ target_link_libraries(ot-test-dns
 
 add_test(NAME ot-test-dns COMMAND ot-test-dns)
 
+add_executable(ot-test-dso
+    test_dso.cpp
+)
+
+target_include_directories(ot-test-dso
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-dso
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-dso
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-dso COMMAND ot-test-dso)
+
+
 add_executable(ot-test-ecdsa
     test_ecdsa.cpp
 )
@@ -746,6 +768,27 @@ target_link_libraries(ot-test-meshcop
 )
 
 add_test(NAME ot-test-meshcop COMMAND ot-test-meshcop)
+
+add_executable(ot-test-serial-number
+    test_serial_number.cpp
+)
+
+target_include_directories(ot-test-serial-number
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-serial-number
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-serial-number
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-serial-number COMMAND ot-test-serial-number)
 
 add_executable(ot-test-string
     test_string.cpp

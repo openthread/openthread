@@ -11,6 +11,8 @@ This page lists the available common switches with description. Unless stated ot
 | BIG_ENDIAN | OT_BIG_ENDIAN | Allows the host platform to use big-endian byte order. |
 | BORDER_AGENT | OT_BORDER_AGENT | Enables support for border agent. In most cases, enable this switch if you are building On-mesh Commissioner or Border Router with External Commissioning support. |
 | BORDER_ROUTER | OT_BORDER_ROUTER | Enables support for Border Router. This switch is usually combined with the BORDER_AGENT and UDP_FORWARD (or PLATFORM_UDP in case of RCP design) switches to build Border Router device. |
+| BORDER_ROUTING | OT_BORDER_ROUTING | Enables bi-directional border routing between Thread and Infrastructure networks for Border Router. |
+| BORDER_ROUTING_NAT64 | OT_BORDER_ROUTING_NAT64 | Enables NAT64 border routing support for Border Router. |
 | BUILTIN_MBEDTLS_MANAGEMENT | OT_BUILTIN_MBEDTLS_MANAGEMENT | Enables the built-in mbedTLS management. Enable this switch if the external mbedTLS is used, but mbedTLS memory allocation and debug config should be managed internally by OpenThread. |
 | CHANNEL_MANAGER | OT_CHANNEL_MANAGER | Enables support for channel manager. Enable this switch on devices that are supposed to request a Thread network channel change. This switch should be used only with an FTD build. |
 | CHANNEL_MONITOR | OT_CHANNEL_MONITOR | Enables support for channel monitor. Enable this switch on devices that are supposed to determine the cleaner channels. |
@@ -32,10 +34,12 @@ This page lists the available common switches with description. Unless stated ot
 | DEBUG_UART | not implemented | Enables the Debug UART platform feature. |
 | DEBUG_UART_LOG | not implemented | Enables the log output for the debug UART. Requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART to be enabled. |
 | DNS_CLIENT | OT_DNS_CLIENT | Enables support for DNS client. Enable this switch on a device that sends a DNS query for AAAA (IPv6) record. |
+| DNS_DSO | OT_DNS_DSO | Enables support for DNS Stateful Operations (DSO). |
 | DNSSD_SERVER | OT_DNSSD_SERVER | Enables support for DNS-SD server. DNS-SD server use service information from local SRP server to resolve DNS-SD query questions. |
 | DUA | OT_DUA | Enables the Domain Unicast Address feature for Thread 1.2. |
 | DYNAMIC_LOG_LEVEL | not implemented | Enables the dynamic log level feature. Enable this switch if OpenThread log level is required to be set at runtime. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | ECDSA | OT_ECDSA | Enables support for Elliptic Curve Digital Signature Algorithm. Enable this switch if ECDSA digital signature is used by application. |
+| EXCLUDE_TCPLP_LIB | OT_EXCLUDE_TCPLP_LIB | Exclude TCPlp library from the build. |
 | EXTERNAL_HEAP | OT_EXTERNAL_HEAP | Enables support for external heap. Enable this switch if the platform uses its own heap. Make sure to specify the external heap Calloc and Free functions to be used by the OpenThread stack. |
 | FULL_LOGS | OT_FULL_LOGS | Enables all log levels and regions. This switch sets the log level to OT_LOG_LEVEL_DEBG and turns on all region flags. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | HISTORY_TRACKER | OT_HISTORY_TRACKER | Enables support for History Tracker. |

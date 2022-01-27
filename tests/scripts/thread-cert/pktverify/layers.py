@@ -179,3 +179,10 @@ class WpanLayer(Layer):
     @property
     def is_ack(self) -> bool:
         return self.frame_type == 0x2
+
+
+class DnsLayer(Layer):
+    """
+    Represents the DNS layer of a packet.
+    """
+    pass
