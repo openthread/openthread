@@ -3492,7 +3492,7 @@ class OpenThreadTHCI(object):
         return True
 
     @API
-    def registerMulticast(self, listAddr=('ff04::1234:777a:1', ), timeout=MLR_TIMEOUT_MIN):
+    def registerMulticast(self, listAddr=('ff04::1234:777a:1',), timeout=MLR_TIMEOUT_MIN):
         """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
 
         Args:
