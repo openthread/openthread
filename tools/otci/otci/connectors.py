@@ -159,7 +159,7 @@ class OtCliSerial(OtCliHandler):
                 line = self.__linebuffer + line
                 self.__linebuffer = b''
 
-                return line.decode('utf-8').rstrip('\r\n')
+                return line.decode('utf-8', errors='ignore').rstrip('\r\n')
 
         return None
 
