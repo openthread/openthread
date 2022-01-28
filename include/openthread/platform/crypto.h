@@ -133,11 +133,8 @@ typedef struct otCryptoContext
 /**
  * Initialize the Crypto module.
  *
- * @retval OT_ERROR_NONE          Successfully initialized Crypto module.
- * @retval OT_ERROR_FAILED        Failed to initialize Crypto module.
- *
  */
-otError otPlatCryptoInit(void);
+void otPlatCryptoInit(void);
 
 /**
  * Import a key into PSA ITS.
@@ -468,6 +465,30 @@ otError otPlatCryptoSha256Update(otCryptoContext *aContext, const void *aBuf, ui
  *
  */
 otError otPlatCryptoSha256Finish(otCryptoContext *aContext, uint8_t *aHash, uint16_t aHashSize);
+
+/**
+ * Initialize cryptographically-secure pseudorandom number generator (CSPRNG).
+ *
+ */
+void otPlatCryptoRandomInit(void);
+
+/**
+ * Deinitialize cryptographically-secure pseudorandom number generator (CSPRNG).
+ *
+ */
+void otPlatCryptoRandomDeinit(void);
+
+/**
+ * Fills a given buffer with cryptographically secure random bytes.
+ *
+ * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize    Size of buffer (number of bytes to fill).
+ *
+ * @retval OT_ERROR_NONE     Successfully filled buffer with random values.
+ * @retval OT_ERROR_FAILED   Operation failed.
+ *
+ */
+otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize);
 
 /**
  * @}

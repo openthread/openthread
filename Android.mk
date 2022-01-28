@@ -175,7 +175,6 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/diags_api.cpp                                      \
     src/core/api/dns_api.cpp                                        \
     src/core/api/dns_server_api.cpp                                 \
-    src/core/api/entropy_api.cpp                                    \
     src/core/api/error_api.cpp                                      \
     src/core/api/heap_api.cpp                                       \
     src/core/api/history_tracker_api.cpp                            \

@@ -138,7 +138,6 @@ SOURCES_COMMON                                  = \
     api/diags_api.cpp                             \
     api/dns_api.cpp                               \
     api/dns_server_api.cpp                        \
-    api/entropy_api.cpp                           \
     api/error_api.cpp                             \
     api/heap_api.cpp                              \
     api/history_tracker_api.cpp                   \
