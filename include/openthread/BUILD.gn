@@ -76,7 +76,6 @@ source_set("openthread") {
     "dns.h",
     "dns_client.h",
     "dnssd_server.h",
-    "entropy.h",
     "error.h",
     "heap.h",
     "history_tracker.h",

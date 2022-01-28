@@ -38,18 +38,10 @@
 
 #include <stdint.h>
 
-#if !OPENTHREAD_RADIO
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#endif
+#include <openthread/platform/crypto.h>
 
 #include "common/error.hpp"
 #include "common/non_copyable.hpp"
-
-#if (!defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-     (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) || defined(MBEDTLS_HAVEGE_C) || defined(MBEDTLS_ENTROPY_HARDWARE_ALT)))
-#define OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
-#endif
 
 namespace ot {
 
@@ -82,13 +74,6 @@ public:
 
 #if !OPENTHREAD_RADIO
     /**
-     * This static method returns the initialized mbedtls_entropy_context.
-     *
-     * @returns  A pointer to initialized mbedtls_entropy_context.
-     */
-    static mbedtls_entropy_context *GetMbedTlsEntropyContext(void) { return sEntropy.GetContext(); }
-
-    /**
      * This static method fills a given buffer with cryptographically secure random bytes.
      *
      * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
@@ -97,15 +82,7 @@ public:
      * @retval kErrorNone    Successfully filled buffer with random values.
      *
      */
-    static Error CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return sCtrDrbg.FillBuffer(aBuffer, aSize); }
-
-    /**
-     * This static method returns the initialized mbedtls_ctr_drbg_context.
-     *
-     * @returns  A pointer to the initialized mbedtls_ctr_drbg_context.
-     *
-     */
-    static mbedtls_ctr_drbg_context *GetMbedTlsCtrDrbgContext(void) { return sCtrDrbg.GetContext(); }
+    static Error CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return otPlatCryptoRandomGet(aBuffer, aSize); }
 #endif
 
 private:
@@ -119,45 +96,8 @@ private:
         uint32_t mState;
     };
 
-#if !OPENTHREAD_RADIO
-    class Entropy
-    {
-    public:
-        void Init(void);
-        void Deinit(void);
-
-        mbedtls_entropy_context *GetContext(void) { return &mEntropyContext; }
-
-    private:
-#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
-        static int HandleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen);
-#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
-
-        static constexpr size_t kEntropyMinThreshold = 32;
-
-        mbedtls_entropy_context mEntropyContext;
-    };
-
-    class CryptoCtrDrbg
-    {
-    public:
-        void  Init(void);
-        void  Deinit(void);
-        Error FillBuffer(uint8_t *aBuffer, uint16_t aSize);
-
-        mbedtls_ctr_drbg_context *GetContext(void) { return &mCtrDrbg; }
-
-    private:
-        mbedtls_ctr_drbg_context mCtrDrbg;
-    };
-#endif
-
     static uint16_t      sInitCount;
     static NonCryptoPrng sPrng;
-#if !OPENTHREAD_RADIO
-    static Entropy       sEntropy;
-    static CryptoCtrDrbg sCtrDrbg;
-#endif
 };
 
 } // namespace ot
