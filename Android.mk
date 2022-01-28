@@ -73,7 +73,6 @@ ifeq ($(USE_OTBR_DAEMON), 1)
 OPENTHREAD_PUBLIC_CFLAGS                                         += \
     -DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1                     \
     -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1                       \
-    -DOPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE=1  \
     -DOPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1                       \
     $(NULL)
 else
@@ -154,6 +153,7 @@ LOCAL_SHARED_LIBRARIES := libcutils
 
 LOCAL_CFLAGS                                             += \
     -DOPENTHREAD_ENABLE_ANDROID_NDK=1                       \
+    -Wno-sign-compare                                       \
     $(NULL)
 endif
 
@@ -473,6 +473,18 @@ LOCAL_SRC_FILES                                                  := \
     third_party/mbedtls/repo/library/x509write_crt.c                \
     third_party/mbedtls/repo/library/x509write_csr.c                \
     third_party/mbedtls/repo/library/xtea.c                         \
+    third_party/tcplp/bsdtcp/tcp_usrreq.c                           \
+    third_party/tcplp/bsdtcp/tcp_subr.c                             \
+    third_party/tcplp/bsdtcp/tcp_output.c                           \
+    third_party/tcplp/bsdtcp/cc/cc_newreno.c                        \
+    third_party/tcplp/bsdtcp/tcp_reass.c                            \
+    third_party/tcplp/bsdtcp/tcp_timewait.c                         \
+    third_party/tcplp/bsdtcp/tcp_sack.c                             \
+    third_party/tcplp/bsdtcp/tcp_input.c                            \
+    third_party/tcplp/bsdtcp/tcp_timer.c                            \
+    third_party/tcplp/lib/bitmap.c                                  \
+    third_party/tcplp/lib/cbuf.c                                    \
+    third_party/tcplp/lib/lbuf.c                                    \
     $(OPENTHREAD_PROJECT_SRC_FILES)                                 \
     $(NULL)
 

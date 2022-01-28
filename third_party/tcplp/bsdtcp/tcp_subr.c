@@ -41,18 +41,19 @@
 #include "tcp_var.h"
 #include "tcp_seq.h"
 #include "tcp_timer.h"
+#include "sys/queue.h"
 #include "../lib/bitmap.h"
 #include "../lib/cbuf.h"
 #include "cc.h"
 
 #include "tcp_const.h"
 
-/* samkumar: Eventually, replace this with OpenThread's random generator. */
-// A simple linear congruential number generator
-tcp_seq seed = (tcp_seq) 0xbeaddeed;
+/*
+ * samkumar: This is rewritten to have the host network stack to generate the
+ * ISN with appropriate randomness.
+ */
 tcp_seq tcp_new_isn(struct tcpcb* tp) {
-	seed = (((tcp_seq) 0xfaded011) * seed) + (tcp_seq) 0x1ead1eaf;
-	return seed;
+	return (uint32_t) tcplp_sys_generate_isn();
 }
 
 /*
@@ -234,15 +235,16 @@ tcpip_fillheaders(struct tcpcb* tp, otMessageInfo* ip_ptr, void *tcp_ptr)
 	memcpy(&ip_ptr->mPeerAddr, &tp->faddr, sizeof(ip_ptr->mPeerAddr));
 
 	/* Fill in the TCP header */
-	/* samkumar: I kept the old code for ports commented out, for reference. */
+	/* samkumar: I kept the old code commented out, for reference. */
 	//th->th_sport = inp->inp_lport;
 	//th->th_dport = inp->inp_fport;
 	th->th_sport = tp->lport;
 	th->th_dport = tp->fport;
 	th->th_seq = 0;
 	th->th_ack = 0;
-	th->th_x2 = 0;
-	th->th_off = 5;
+	// th->th_x2 = 0;
+	// th->th_off = 5;
+	th->th_off_x2 = (5 << TH_OFF_SHIFT);
 	th->th_flags = 0;
 	th->th_win = 0;
 	th->th_urp = 0;
@@ -309,8 +311,10 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 	nth->th_dport = thgen->th_sport;
 	nth->th_seq = htonl(seq);
 	nth->th_ack = htonl(ack);
-	nth->th_x2 = 0;
-	nth->th_off = sizeof(struct tcphdr) >> 2;
+	/* samkumar: original code for setting th_x2 and th_off, for reference. */
+	// nth->th_x2 = 0;
+	// nth->th_off = (sizeof (struct tcphdr) + optlen) >> 2;
+	nth->th_off_x2 = (sizeof(struct tcphdr) >> 2) << TH_OFF_SHIFT;
 	nth->th_flags = flags;
 	if (tp != NULL)
 		nth->th_win = htons((uint16_t) (win >> tp->rcv_scale));

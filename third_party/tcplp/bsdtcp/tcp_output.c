@@ -895,10 +895,11 @@ send:
 			size_t start_offset;
 			otLinkedBuffer* end;
 			size_t end_offset;
+			otLinkedBuffer* curr;
 			int rv = lbuf_getrange(&tp->sendbuf, off, len, &start, &start_offset, &end, &end_offset);
-			KASSERT(rv == 0, ("Reading send buffer out of range!\n"));
 			size_t message_offset = otMessageGetOffset(message) + sizeof(struct tcphdr) + optlen;
-			for (otLinkedBuffer* curr = start; curr != end->mNext; curr = curr->mNext) {
+			KASSERT(rv == 0, ("Reading send buffer out of range!\n"));
+			for (curr = start; curr != end->mNext; curr = curr->mNext) {
 				const uint8_t* data_to_copy = curr->mData;
 				size_t length_to_copy = curr->mLength;
 				if (curr == start) {
@@ -1036,7 +1037,7 @@ send:
 	th->th_ack = htonl(tp->rcv_nxt);
 	if (optlen) {
 		bcopy(opt, th + 1, optlen);
-		th->th_off = (sizeof (struct tcphdr) + optlen) >> 2;
+		th->th_off_x2 = ((sizeof (struct tcphdr) + optlen) >> 2) << TH_OFF_SHIFT;
 	}
 	th->th_flags = flags;
 	/*

@@ -1217,22 +1217,6 @@ start:
             goto start;
         }
 
-#if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
-        if (nextHeader == kProtoTcp || nextHeader == kProtoUdp)
-        {
-            uint16_t dstPort;
-
-            // TCP/UDP shares header uint16_t srcPort, uint16_t dstPort
-            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + sizeof(uint16_t), dstPort));
-            dstPort = HostSwap16(dstPort);
-
-            if (aMessage.IsLinkSecurityEnabled() && Get<Filter>().IsUnsecurePort(dstPort))
-            {
-                IgnoreError(Get<Filter>().RemoveUnsecurePort(dstPort));
-            }
-        }
-#endif
-
         error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost,
                                        /* aAllowReceiveFilter */ !forwardHost, Message::kCopyToUse);
 
@@ -1285,35 +1269,21 @@ start:
             }
             VerifyOrExit(isAllowedType, error = kErrorDrop);
         }
-        if (aFromNcpHost && (nextHeader == kProtoTcp || nextHeader == kProtoUdp))
-        {
-            uint16_t sourcePort, destPort;
-
-            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), sourcePort));
-            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + sizeof(sourcePort), destPort));
-            sourcePort = HostSwap16(sourcePort);
-            destPort   = HostSwap16(destPort);
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (aFromNcpHost && (nextHeader == kProtoUdp))
+        {
+            uint16_t destPort;
+
+            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + Udp::Header::kDestPortFieldOffset, destPort));
+            destPort = HostSwap16(destPort);
+
             if (nextHeader == kProtoUdp)
             {
                 VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(destPort), error = kErrorDrop);
             }
-#else
-            OT_UNUSED_VARIABLE(destPort);
-#endif
-
-#if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
-            // check whether source port is an unsecure port
-            if (Get<Filter>().IsUnsecurePort(sourcePort))
-            {
-                aMessage.SetLinkSecurityEnabled(false);
-                otLogInfoIp6("Disabled link security for packet to %s", header.GetDestination().ToString().AsCString());
-            }
-#else
-            OT_UNUSED_VARIABLE(sourcePort);
-#endif
         }
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Since the message will be forwarded, we clear the radio
