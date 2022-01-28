@@ -528,8 +528,8 @@ otError SpiInterface::PushPullSpi(void)
 
                 otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1],
                               spiRxFrame[2], spiRxFrame[3], spiRxFrame[4]);
-                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
-                otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
+                otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
+                otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
             }
 
             mSpiTxRefusedCount++;
@@ -547,8 +547,8 @@ otError SpiInterface::PushPullSpi(void)
 
             otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
                           spiRxFrame[3], spiRxFrame[4]);
-            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
-            otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
+            otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
+            otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
 
             ExitNow();
         }
