@@ -1897,7 +1897,6 @@ class OpenThreadTHCI(object):
             True: successful to set the child timeout for device
             False: fail to set the child timeout for device
         """
-        print('%s call setKeepAliveTimeOut' % self)
         try:
             cmd = 'childtimeout %d' % iTimeOut
             return self.__executeCommand(cmd)[-1] == 'Done'
