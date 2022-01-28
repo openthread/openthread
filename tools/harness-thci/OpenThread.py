@@ -1802,21 +1802,16 @@ class OpenThreadTHCI(object):
 
     @API
     def setKeepAliveTimeOut(self, iTimeOut):
-        """set keep alive timeout for device
-           has been deprecated and also set SED polling rate
+        """set child timeout for device
 
         Args:
-            iTimeOut: data poll period for sleepy end device
+            iTimeOut: child timeout for device
 
         Returns:
-            True: successful to set the data poll period for SED
-            False: fail to set the data poll period for SED
+            True: successful to set the child timeout for device
+            False: fail to set the child timeout for device
         """
-        print('%s call setKeepAliveTimeOut' % self)
-        iTimeOut *= 1000
-        print(int(iTimeOut))
-        cmd = 'pollperiod %d' % int(iTimeOut)
-        print(cmd)
+        cmd = 'childtimeout %d' % iTimeOut
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
