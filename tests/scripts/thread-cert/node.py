@@ -182,6 +182,10 @@ class OtbrDocker:
         self.pexpect.wait()
         self.pexpect.proc.kill()
 
+    def _after_reset(self):
+        self.stop_ot_ctl()
+        self.start_ot_ctl()
+
     def destroy(self):
         logging.info("Destroying %s", self)
         self._shutdown_docker()
@@ -588,6 +592,9 @@ class OtCli:
             self.pexpect.expect(pexpect.EOF)
             self.pexpect.wait()
             self._initialized = False
+
+    def _after_reset(self):
+        pass
 
 
 class NodeImpl:
@@ -2142,6 +2149,9 @@ class NodeImpl:
     def reset(self):
         self.send_command('reset', expect_command_echo=False)
         time.sleep(self.RESET_DELAY)
+
+        self._after_reset()
+
         # Send a "version" command and drain the CLI output after reset
         self.send_command('version', expect_command_echo=False)
         while True:
