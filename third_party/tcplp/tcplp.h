@@ -76,6 +76,7 @@ bool tcplp_sys_accepted_connection(struct tcpcb_listen* tpl, struct tcpcb* accep
 void tcplp_sys_connection_lost(struct tcpcb* tcb, uint8_t errnum);
 void tcplp_sys_on_state_change(struct tcpcb* tcb, int newstate);
 void tcplp_sys_log(const char* format, ...);
+void tcplp_sys_panic(const char* format, ...);
 bool tcplp_sys_autobind(otInstance *aInstance, const otSockAddr *aPeer, otSockAddr *aToBind, bool aBindAddress, bool aBindPort);
 uint32_t tcplp_sys_generate_isn();
 

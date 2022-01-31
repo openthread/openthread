@@ -67,7 +67,7 @@ int
 tcp_timer_delack(struct tcpcb* tp)
 {
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_DELACK), ("Delack timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_DELACK), ("Delack timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_DELACK);
 
 	/*
@@ -91,7 +91,7 @@ tcp_timer_keep(struct tcpcb* tp)
 	struct tcptemp t_template;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_KEEP), ("Keep timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_KEEP), ("Keep timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_KEEP);
 
 	/*
@@ -175,7 +175,7 @@ tcp_timer_persist(struct tcpcb* tp)
 	int dropped = 0;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_PERSIST), ("Persist timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_PERSIST), ("Persist timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_PERSIST); // mark that this timer is no longer active
 
 	/*
@@ -223,7 +223,7 @@ tcp_timer_persist(struct tcpcb* tp)
 
 	tcp_setpersist(tp);
 	tp->t_flags |= TF_FORCEDATA;
-	tcplp_sys_log("Persist output: %zu bytes in sendbuf\n", lbuf_used_space(&tp->sendbuf));
+	tcplp_sys_log("Persist output: %zu bytes in sendbuf", lbuf_used_space(&tp->sendbuf));
 	(void) tcp_output(tp);
 	tp->t_flags &= ~TF_FORCEDATA;
 
@@ -243,7 +243,7 @@ tcp_timer_2msl(struct tcpcb* tp)
 	int dropped = 0;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_2MSL), ("2MSL timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_2MSL), ("2MSL timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_2MSL);
 
 	/*
@@ -335,7 +335,7 @@ tcp_timer_rexmt(struct tcpcb *tp)
 	int dropped = 0;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_REXMT), ("Rexmt timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_REXMT), ("Rexmt timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_REXMT);
 
 	/*
@@ -354,7 +354,7 @@ tcp_timer_rexmt(struct tcpcb *tp)
 	 * been acked within retransmit interval.  Back off
 	 * to a longer retransmit interval and retransmit one segment.
 	 */
-	tcplp_sys_log("rxtshift is %d\n", (int) tp->t_rxtshift);
+	tcplp_sys_log("rxtshift is %d", (int) tp->t_rxtshift);
 	if (++tp->t_rxtshift > TCP_MAXRXTSHIFT) {
 		tp->t_rxtshift = TCP_MAXRXTSHIFT;
 
@@ -477,8 +477,7 @@ tcp_timer_activate(struct tcpcb *tp, uint32_t timer_type, uint32_t delta) {
 	if (delta) {
 		tpmarktimeractive(tp, timer_type);
 		if (tpistimeractive(tp, TT_REXMT) && tpistimeractive(tp, TT_PERSIST)) {
-			char* msg = "TCP CRITICAL FAILURE: Retransmit and Persist timers are simultaneously running!\n";
-			tcplp_sys_log("%s\n", msg);
+			tcplp_sys_panic("TCP CRITICAL FAILURE: Retransmit and Persist timers are simultaneously running!");
 		}
 		tcplp_sys_set_timer(tp, timer_type, (uint32_t) delta);
 	} else {
