@@ -989,6 +989,19 @@ void tcplp_sys_log(const char *aFormat, ...)
     otLogDebgTcp(buffer);
 }
 
+void tcplp_sys_panic(const char *aFormat, ...)
+{
+    char    buffer[128];
+    va_list args;
+    va_start(args, aFormat);
+    vsnprintf(buffer, sizeof(buffer), aFormat, args);
+    va_end(args);
+
+    otLogCritTcp(buffer);
+
+    OT_ASSERT(false);
+}
+
 bool tcplp_sys_autobind(otInstance *      aInstance,
                         const otSockAddr *aPeer,
                         otSockAddr *      aToBind,

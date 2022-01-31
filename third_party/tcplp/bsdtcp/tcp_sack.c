@@ -119,7 +119,7 @@ struct sackhole* sackhole_alloc(struct tcpcb* tp) {
 
 void sackhole_free(struct tcpcb* tp, struct sackhole* tofree) {
 	size_t freeindex = (size_t) (tofree - &tp->sackhole_pool[0]);
-	KASSERT(tofree == &tp->sackhole_pool[freeindex], ("sackhole pool unaligned\n"));
+	KASSERT(tofree == &tp->sackhole_pool[freeindex], ("sackhole pool unaligned"));
 	bmp_clrrange(tp->sackhole_bmp, freeindex, 1);
 }
 
