@@ -64,13 +64,6 @@ extern "C" {
 otError otRandomCryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
 /**
- * This function returns initialized mbedtls_ctr_drbg_context.
- *
- * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
- */
-mbedtls_ctr_drbg_context *otRandomCryptoMbedTlsContextGet(void);
-
-/**
  * @}
  *
  */

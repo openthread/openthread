@@ -138,24 +138,33 @@ jobs:
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            packet_verification: 1
             description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 1
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            packet_verification: 2
             description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/MATN/*.py
+            packet_verification: 1
             description: "MATN"
           - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            packet_verification: 1
+            description: ""
+          - otbr_mdns: "avahi"
+            otbr_trel: 1
+            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            packet_verification: 2
             description: ""
     name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
-      PACKET_VERIFICATION: 1
+      PACKET_VERIFICATION: ${{ matrix.packet_verification }}
       THREAD_VERSION: 1.2
       INTER_OP: 1
       COVERAGE: 1

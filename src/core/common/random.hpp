@@ -177,17 +177,6 @@ inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize)
     return RandomManager::CryptoFillBuffer(aBuffer, aSize);
 }
 
-/**
- * This function returns initialized mbedtls_ctr_drbg_context.
- *
- * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
- *
- */
-inline mbedtls_ctr_drbg_context *MbedTlsContextGet(void)
-{
-    return RandomManager::GetMbedTlsCtrDrbgContext();
-}
-
 } // namespace Crypto
 
 #endif // !OPENTHREAD_RADIO

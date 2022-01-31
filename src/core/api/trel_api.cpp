@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,54 @@
 
 /**
  * @file
- *   This file implements the OpenThread entropy source management API.
+ *   This file implements the OpenThread TREL (Thread Radio Encapsulation Link) APIs for Thread Over Infrastructure.
  */
 
-#include <openthread/entropy.h>
+#include "openthread-core-config.h"
 
-#include "common/random_manager.hpp"
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
+#include <openthread/trel.h>
+
+#include "common/as_core_type.hpp"
+#include "common/code_utils.hpp"
+#include "common/instance.hpp"
 
 using namespace ot;
 
-mbedtls_entropy_context *otEntropyMbedTlsContextGet(void)
+void otTrelEnable(otInstance *aInstance)
 {
-    return RandomManager::GetMbedTlsEntropyContext();
+    AsCoreType(aInstance).Get<Trel::Interface>().Enable();
 }
+
+void otTrelDisable(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().Disable();
+}
+
+bool otTrelIsEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Trel::Interface>().IsEnabled();
+}
+
+void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().InitIterator(*aIterator);
+}
+
+const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *aIterator)
+{
+    return AsCoreType(aInstance).Get<Trel::Interface>().GetNextPeer(*aIterator);
+}
+
+void otTrelSetFilterEnabled(otInstance *aInstance, bool aEnable)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().SetFilterEnabled(aEnable);
+}
+
+bool otTrelIsFilterEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Trel::Interface>().IsFilterEnabled();
+}
+
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

@@ -84,6 +84,7 @@
  * @defgroup api-message              Message
  *
  * @defgroup api-multi-radio          Multi Radio Link
+ * @defgroup api-trel                 TREL
  *
  * @defgroup api-thread               Thread
  *
@@ -121,7 +122,6 @@
  *
  * @defgroup api-cli                  Command Line Interface
  * @defgroup api-crypto               Crypto - Thread Stack
- * @defgroup api-entropy              Entropy Source
  * @defgroup api-factory-diagnostics  Factory Diagnostics - Thread Stack
  * @defgroup api-heap                 Heap
  * @defgroup api-history-tracker      History Tracker
