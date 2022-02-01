@@ -84,7 +84,7 @@
  * @defgroup api-message              Message
  *
  * @defgroup api-multi-radio          Multi Radio Link
- * @defgroup api-trel                 TREL - Thread
+ * @defgroup api-trel                 TREL - Thread Stack
  *
  * @defgroup api-thread               Thread
  *
