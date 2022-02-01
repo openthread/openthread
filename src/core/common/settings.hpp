@@ -744,10 +744,10 @@ protected:
     static void LogPrefix(Action aAction, Key aKey, const Ip6::Prefix &aPrefix);
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
     static const char *KeyToString(Key aKey);
 #endif
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
     static const char *ActionToString(Action aAction);
 #endif
 };

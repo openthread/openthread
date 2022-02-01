@@ -38,7 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -46,6 +46,8 @@
 namespace ot {
 
 namespace BackboneRouter {
+
+RegisterLogModule("BbrLocal");
 
 Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -458,17 +460,17 @@ void Local::AddDomainPrefixToNetworkData(void)
     LogDomainPrefix("Add", error);
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
 void Local::LogDomainPrefix(const char *aAction, Error aError)
 {
-    otLogInfoBbr("%s Domain Prefix: %s, %s", aAction, mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
-                 ErrorToString(aError));
+    LogInfo("%s Domain Prefix: %s, %s", aAction, mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
+            ErrorToString(aError));
 }
 
 void Local::LogBackboneRouterService(const char *aAction, Error aError)
 {
-    otLogInfoBbr("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
-                 mReregistrationDelay, mMlrTimeout, ErrorToString(aError));
+    LogInfo("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
+            mReregistrationDelay, mMlrTimeout, ErrorToString(aError));
 }
 #endif
 

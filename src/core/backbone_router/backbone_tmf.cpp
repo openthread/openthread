@@ -36,10 +36,12 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 namespace ot {
 namespace BackboneRouter {
+
+RegisterLogModule("Bbr");
 
 Error BackboneTmfAgent::Start(void)
 {
@@ -96,11 +98,11 @@ void BackboneTmfAgent::LogError(const char *aText, const Ip6::Address &aAddress,
 
     if (aError == kErrorNone)
     {
-        otLogInfoBbr("%s %s: %s", aText, aAddress.ToString().AsCString(), ErrorToString(aError));
+        LogInfo("%s %s: %s", aText, aAddress.ToString().AsCString(), ErrorToString(aError));
     }
     else
     {
-        otLogWarnBbr("%s %s: %s", aText, aAddress.ToString().AsCString(), ErrorToString(aError));
+        LogWarn("%s %s: %s", aText, aAddress.ToString().AsCString(), ErrorToString(aError));
     }
 }
 

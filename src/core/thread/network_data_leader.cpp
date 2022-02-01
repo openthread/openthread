@@ -53,6 +53,8 @@
 namespace ot {
 namespace NetworkData {
 
+RegisterLogModule("NetworkData");
+
 void LeaderBase::Reset(void)
 {
     mVersion       = Random::NonCrypto::GetUint8();
@@ -376,7 +378,7 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
     }
 #endif
 
-    otDumpDebgNetData("SetNetworkData", GetBytes(), GetLength());
+    DumpDebg("SetNetworkData", GetBytes(), GetLength());
 
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 

@@ -40,13 +40,15 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/uri_paths.hpp"
 
 namespace ot {
+
+RegisterLogModule("MeshCoP");
 
 AnnounceBeginClient::AnnounceBeginClient(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -85,7 +87,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent announce begin query");
+    LogInfo("sent announce begin query");
 
 exit:
     FreeMessageOnError(message, error);

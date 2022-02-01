@@ -38,7 +38,6 @@
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 
 using namespace ot;
 

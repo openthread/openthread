@@ -33,11 +33,11 @@
 
 #include <openthread-system.h>
 #include <openthread/cli.h>
+#include <openthread/logging.h>
 
 #include "cli/cli_config.h"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/logging.hpp"
 #include "utils/uart.h"
 
 #if OPENTHREAD_POSIX

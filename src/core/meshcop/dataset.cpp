@@ -40,13 +40,15 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("Dataset");
 
 Error Dataset::Info::GenerateRandom(Instance &aInstance)
 {
@@ -539,8 +541,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
 
             if (error != kErrorNone)
             {
-                otLogWarnMeshCoP("DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)", channel,
-                                 ErrorToString(error));
+                LogWarn("ApplyConfiguration() Failed to set channel to %d (%s)", channel, ErrorToString(error));
                 ExitNow();
             }
 

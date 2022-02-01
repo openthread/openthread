@@ -39,13 +39,15 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/uri_paths.hpp"
 #include "utils/slaac_address.hpp"
 
 namespace ot {
+
+RegisterLogModule("MlrManager");
 
 MlrManager::MlrManager(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -331,7 +333,7 @@ Error MlrManager::RegisterMulticastListeners(const otIp6Address *               
 #else
     if (!Get<MeshCoP::Commissioner>().IsActive())
     {
-        otLogWarnMlr("MLR.req without active commissioner session for test.");
+        LogWarn("MLR.req without active commissioner session for test.");
     }
 #endif
 
@@ -447,10 +449,10 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
 
     error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseContext);
 
-    otLogInfoMlr("Sent MLR.req: addressNum=%d", aAddressNum);
+    LogInfo("Sent MLR.req: addressNum=%d", aAddressNum);
 
 exit:
-    otLogInfoMlr("SendMulticastListenerRegistrationMessage(): %s", ErrorToString(error));
+    LogInfo("SendMulticastListenerRegistrationMessage(): %s", ErrorToString(error));
     FreeMessageOnError(message, error);
     return error;
 }
@@ -621,7 +623,7 @@ void MlrManager::HandleTimeTick(void)
 
 void MlrManager::Reregister(void)
 {
-    otLogInfoMlr("MLR Reregister!");
+    LogInfo("MLR Reregister!");
 
     SetMulticastAddressMlrState(kMlrStateRegistered, kMlrStateToRegister);
     CheckInvariants();
@@ -674,19 +676,19 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
 
     UpdateTimeTickerRegistration();
 
-    otLogDebgMlr("MlrManager::UpdateReregistrationDelay: rereg=%d, needSendMlr=%d, ReregDelay=%lu", aRereg, needSendMlr,
-                 mReregistrationDelay);
+    LogDebg("MlrManager::UpdateReregistrationDelay: rereg=%d, needSendMlr=%d, ReregDelay=%lu", aRereg, needSendMlr,
+            mReregistrationDelay);
 }
 
 void MlrManager::LogMulticastAddresses(void)
 {
-#if OPENTHREAD_CONFIG_LOG_MLR && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
-    otLogDebgMlr("-------- Multicast Addresses --------");
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
+    LogDebg("-------- Multicast Addresses --------");
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     for (const Ip6::Netif::ExternalMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
     {
-        otLogDebgMlr("%-32s%c", addr.GetAddress().ToString().AsCString(), "-rR"[addr.GetMlrState()]);
+        LogDebg("%-32s%c", addr.GetAddress().ToString().AsCString(), "-rR"[addr.GetMlrState()]);
     }
 #endif
 
@@ -695,13 +697,13 @@ void MlrManager::LogMulticastAddresses(void)
     {
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
         {
-            otLogDebgMlr("%-32s%c %04x", address.ToString().AsCString(), "-rR"[child.GetAddressMlrState(address)],
-                         child.GetRloc16());
+            LogDebg("%-32s%c %04x", address.ToString().AsCString(), "-rR"[child.GetAddressMlrState(address)],
+                    child.GetRloc16());
         }
     }
 #endif
 
-#endif // OPENTHREAD_CONFIG_LOG_MLR && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
+#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
 }
 
 void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIp6AddressesNumMax],
@@ -759,19 +761,19 @@ void MlrManager::LogMlrResponse(Error               aResult,
     OT_UNUSED_VARIABLE(aFailedAddresses);
     OT_UNUSED_VARIABLE(aFailedAddressNum);
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLR == 1)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
     if (aResult == kErrorNone && aError == kErrorNone && aStatus == ThreadStatusTlv::MlrStatus::kMlrSuccess)
     {
-        otLogInfoMlr("Receive MLR.rsp OK");
+        LogInfo("Receive MLR.rsp OK");
     }
     else
     {
-        otLogWarnMlr("Receive MLR.rsp: result=%s, error=%s, status=%d, failedAddressNum=%d", ErrorToString(aResult),
-                     ErrorToString(aError), aStatus, aFailedAddressNum);
+        LogWarn("Receive MLR.rsp: result=%s, error=%s, status=%d, failedAddressNum=%d", ErrorToString(aResult),
+                ErrorToString(aError), aStatus, aFailedAddressNum);
 
         for (uint8_t i = 0; i < aFailedAddressNum; i++)
         {
-            otLogWarnMlr("MA failed: %s", aFailedAddresses[i].ToString().AsCString());
+            LogWarn("MA failed: %s", aFailedAddresses[i].ToString().AsCString());
         }
     }
 #endif

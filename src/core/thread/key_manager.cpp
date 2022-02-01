@@ -37,7 +37,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/timer.hpp"
 #include "crypto/hkdf_sha256.hpp"
 #include "crypto/storage.hpp"
@@ -45,6 +45,8 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("KeyManager");
 
 const uint8_t KeyManager::kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
@@ -486,7 +488,7 @@ void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
     if (aSecurityPolicy.mRotationTime < SecurityPolicy::kMinKeyRotationTime)
     {
-        otLogNoteMeshCoP("Key Rotation Time too small: %d", aSecurityPolicy.mRotationTime);
+        LogNote("Key Rotation Time too small: %d", aSecurityPolicy.mRotationTime);
         ExitNow();
     }
 

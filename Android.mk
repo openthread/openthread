@@ -228,7 +228,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/heap_data.cpp                                   \
     src/core/common/heap_string.cpp                                 \
     src/core/common/instance.cpp                                    \
-    src/core/common/logging.cpp                                     \
+    src/core/common/log.cpp                                         \
     src/core/common/message.cpp                                     \
     src/core/common/notifier.cpp                                    \
     src/core/common/random_manager.cpp                              \

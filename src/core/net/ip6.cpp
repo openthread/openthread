@@ -40,7 +40,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "net/checksum.hpp"
@@ -61,6 +61,8 @@ static const IcmpType sForwardICMPTypes[] = {
 
 namespace ot {
 namespace Ip6 {
+
+RegisterLogModule("Ip6");
 
 Ip6::Ip6(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -308,11 +310,11 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
             if ((messageCopy = aMessage.Clone()) != nullptr)
             {
                 IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, /* aFromHost */ true));
-                otLogInfoIp6("Message copy for indirect transmission to sleepy children");
+                LogInfo("Message copy for indirect transmission to sleepy children");
             }
             else
             {
-                otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
+                LogWarn("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
 #endif
@@ -499,12 +501,12 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
             if (messageCopy != nullptr)
             {
-                otLogInfoIp6("Message copy for indirect transmission to sleepy children");
+                LogInfo("Message copy for indirect transmission to sleepy children");
                 EnqueueDatagram(*messageCopy);
             }
             else
             {
-                otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
+                LogWarn("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
 #endif
@@ -637,7 +639,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
             payloadFragment = payloadLeft;
             payloadLeft     = 0;
 
-            otLogDebgIp6("Last Fragment");
+            LogDebg("Last Fragment");
         }
         else
         {
@@ -667,7 +669,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         fragmentCnt++;
         fragment = nullptr;
 
-        otLogInfoIp6("Fragment %d with %d bytes sent", fragmentCnt, payloadFragment);
+        LogInfo("Fragment %d with %d bytes sent", fragmentCnt, payloadFragment);
     }
 
     aMessage.Free();
@@ -676,7 +678,7 @@ exit:
 
     if (error == kErrorNoBufs)
     {
-        otLogWarnIp6("No buffer for Ip6 fragmentation");
+        LogWarn("No buffer for Ip6 fragmentation");
     }
 
     FreeMessageOnError(fragment, error);
@@ -720,18 +722,18 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
     offset          = FragmentHeader::FragmentOffsetToBytes(fragmentHeader.GetOffset());
     payloadFragment = aMessage.GetLength() - aMessage.GetOffset() - sizeof(fragmentHeader);
 
-    otLogInfoIp6("Fragment with id %d received > %d bytes, offset %d", fragmentHeader.GetIdentification(),
-                 payloadFragment, offset);
+    LogInfo("Fragment with id %d received > %d bytes, offset %d", fragmentHeader.GetIdentification(), payloadFragment,
+            offset);
 
     if (offset + payloadFragment + aMessage.GetOffset() > kMaxAssembledDatagramLength)
     {
-        otLogWarnIp6("Packet too large for fragment buffer");
+        LogWarn("Packet too large for fragment buffer");
         ExitNow(error = kErrorNoBufs);
     }
 
     if (message == nullptr)
     {
-        otLogDebgIp6("start reassembly");
+        LogDebg("start reassembly");
         VerifyOrExit((message = NewMessage(0)) != nullptr, error = kErrorNoBufs);
         mReassemblyList.Enqueue(*message);
         SuccessOrExit(error = message->SetLength(aMessage.GetOffset()));
@@ -770,7 +772,7 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
         header.SetNextHeader(fragmentHeader.GetNextHeader());
         message->Write(0, header);
 
-        otLogDebgIp6("Reassembly complete.");
+        LogDebg("Reassembly complete.");
 
         mReassemblyList.Dequeue(*message);
 
@@ -785,7 +787,7 @@ exit:
             mReassemblyList.DequeueAndFree(*message);
         }
 
-        otLogWarnIp6("Reassembly failed: %s", ErrorToString(error));
+        LogWarn("Reassembly failed: %s", ErrorToString(error));
     }
 
     if (isFragmented)
@@ -826,7 +828,7 @@ void Ip6::UpdateReassemblyList(void)
         }
         else
         {
-            otLogNoteIp6("Reassembly timeout.");
+            LogNote("Reassembly timeout.");
             SendIcmpError(*message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
 
             mReassemblyList.DequeueAndFree(*message);
@@ -853,7 +855,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogWarnIp6("Failed to send ICMP error: %s", ErrorToString(error));
+        LogWarn("Failed to send ICMP error: %s", ErrorToString(error));
     }
 }
 
@@ -966,7 +968,7 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
         error = mTcp.HandleMessage(aIp6Header, *message, aMessageInfo);
         if (error == kErrorDrop)
         {
-            otLogNoteIp6("Error TCP Checksum");
+            LogNote("Error TCP Checksum");
         }
         break;
 #endif
@@ -974,7 +976,7 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
         error = mUdp.HandleMessage(*message, aMessageInfo);
         if (error == kErrorDrop)
         {
-            otLogNoteIp6("Error UDP Checksum");
+            LogNote("Error UDP Checksum");
         }
         break;
 
@@ -989,7 +991,7 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
 exit:
     if (error != kErrorNone)
     {
-        otLogNoteIp6("Failed to handle payload: %s", ErrorToString(error));
+        LogNote("Failed to handle payload: %s", ErrorToString(error));
     }
 
     FreeMessage(message);
@@ -1064,7 +1066,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
 
         if (message == nullptr)
         {
-            otLogWarnIp6("No buff to clone msg (len: %d) to pass to host", aMessage.GetLength());
+            LogWarn("No buff to clone msg (len: %d) to pass to host", aMessage.GetLength());
             ExitNow(error = kErrorNoBufs);
         }
 

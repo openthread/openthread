@@ -39,7 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/settings.hpp"
 #include "crypto/storage.hpp"
 #include "meshcop/dataset.hpp"
@@ -48,6 +48,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("DatasetLocal");
 
 DatasetLocal::DatasetLocal(Instance &aInstance, Dataset::Type aType)
     : InstanceLocator(aInstance)
@@ -189,7 +191,7 @@ Error DatasetLocal::Save(const Dataset &aDataset)
         // do not propagate error back
         IgnoreError(Get<Settings>().DeleteOperationalDataset(IsActive()));
         mSaved = false;
-        otLogInfoMeshCoP("%s dataset deleted", Dataset::TypeToString(mType));
+        LogInfo("%s dataset deleted", Dataset::TypeToString(mType));
     }
     else
     {
@@ -205,7 +207,7 @@ Error DatasetLocal::Save(const Dataset &aDataset)
 #endif
 
         mSaved = true;
-        otLogInfoMeshCoP("%s dataset set", Dataset::TypeToString(mType));
+        LogInfo("%s dataset set", Dataset::TypeToString(mType));
     }
 
     mTimestampPresent = (aDataset.GetTimestamp(mType, mTimestamp) == kErrorNone);

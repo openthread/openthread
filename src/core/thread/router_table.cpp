@@ -33,7 +33,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/timer.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"
@@ -41,6 +41,8 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("RouterTable");
 
 RouterTable::Iterator::Iterator(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -268,7 +270,7 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
     Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
-    otLogNoteMle("Allocate router id %d", aRouterId);
+    LogNote("Allocate router id %d", aRouterId);
 
 exit:
     return rval;
@@ -313,7 +315,7 @@ Error RouterTable::Release(uint8_t aRouterId)
     Get<NetworkData::Leader>().RemoveBorderRouter(rloc16, NetworkData::Leader::kMatchModeRouterId);
     Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
-    otLogNoteMle("Release router id %d", aRouterId);
+    LogNote("Release router id %d", aRouterId);
 
 exit:
     return error;

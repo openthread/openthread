@@ -39,13 +39,15 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/uri_paths.hpp"
 
 namespace ot {
+
+RegisterLogModule("EnergyScanSrv");
 
 EnergyScanServer::EnergyScanServer(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -97,7 +99,7 @@ void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::Message
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, responseInfo));
-        otLogInfoMeshCoP("sent energy scan query response");
+        LogInfo("sent energy scan query response");
     }
 
 exit:
@@ -194,7 +196,7 @@ void EnergyScanServer::SendReport(void)
     messageInfo.SetPeerPort(Tmf::kUdpPort);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent scan results");
+    LogInfo("sent scan results");
 
 exit:
     FreeMessageOnError(message, error);

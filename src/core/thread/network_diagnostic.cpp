@@ -43,7 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "mac/mac.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -53,6 +53,8 @@
 #include "thread/uri_paths.hpp"
 
 namespace ot {
+
+RegisterLogModule("NetDiag");
 
 namespace NetworkDiagnostic {
 
@@ -122,7 +124,7 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
     mReceiveDiagnosticGetCallback        = aCallback;
     mReceiveDiagnosticGetCallbackContext = aCallbackContext;
 
-    otLogInfoNetDiag("Sent diagnostic get");
+    LogInfo("Sent diagnostic get");
 
 exit:
     FreeMessageOnError(message, error);
@@ -152,7 +154,7 @@ exit:
     }
     else
     {
-        otLogDebgNetDiag("Received diagnostic get response, error = %s", ErrorToString(aResult));
+        LogDebg("Received diagnostic get response, error = %s", ErrorToString(aResult));
     }
     return;
 }
@@ -169,7 +171,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const
 {
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
-    otLogInfoNetDiag("Diagnostic get answer received");
+    LogInfo("Diagnostic get answer received");
 
     if (mReceiveDiagnosticGetCallback)
     {
@@ -178,7 +180,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic answer acknowledgment");
+    LogInfo("Sent diagnostic answer acknowledgment");
 
 exit:
     return;
@@ -295,7 +297,7 @@ Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
     {
         SuccessOrExit(error = aRequest.Read(offset, type));
 
-        otLogInfoNetDiag("Type %d", type);
+        LogInfo("Type %d", type);
 
         switch (type)
         {
@@ -469,7 +471,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
 
     VerifyOrExit(aMessage.IsPostRequest(), error = kErrorDrop);
 
-    otLogInfoNetDiag("Received diagnostic get query");
+    LogInfo("Received diagnostic get query");
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), networkDiagnosticTlv));
 
@@ -480,7 +482,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     {
         if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
         {
-            otLogInfoNetDiag("Sent diagnostic get query acknowledgment");
+            LogInfo("Sent diagnostic get query acknowledgment");
         }
     }
 
@@ -509,7 +511,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, nullptr, this));
 
-    otLogInfoNetDiag("Sent diagnostic get answer");
+    LogInfo("Sent diagnostic get answer");
 
 exit:
     FreeMessageOnError(message, error);
@@ -532,7 +534,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorDrop);
 
-    otLogInfoNetDiag("Received diagnostic get request");
+    LogInfo("Received diagnostic get request");
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), networkDiagnosticTlv));
 
@@ -547,7 +549,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic get response");
+    LogInfo("Sent diagnostic get response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -589,7 +591,7 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent network diagnostic reset");
+    LogInfo("Sent network diagnostic reset");
 
 exit:
     FreeMessageOnError(message, error);
@@ -608,7 +610,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
     uint8_t              type;
     NetworkDiagnosticTlv tlv;
 
-    otLogInfoNetDiag("Received diagnostic reset request");
+    LogInfo("Received diagnostic reset request");
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
@@ -626,18 +628,18 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
         {
         case NetworkDiagnosticTlv::kMacCounters:
             Get<Mac::Mac>().ResetCounters();
-            otLogInfoNetDiag("Received diagnostic reset type kMacCounters(9)");
+            LogInfo("Received diagnostic reset type kMacCounters(9)");
             break;
 
         default:
-            otLogInfoNetDiag("Received diagnostic reset other type %d not resetable", type);
+            LogInfo("Received diagnostic reset other type %d not resetable", type);
             break;
         }
     }
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
+    LogInfo("Sent diagnostic reset acknowledgment");
 
 exit:
     return;

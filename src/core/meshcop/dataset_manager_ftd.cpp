@@ -46,7 +46,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
@@ -59,6 +59,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("DatasetManager");
 
 Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
@@ -277,7 +279,7 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset set response");
+    LogInfo("sent dataset set response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -388,7 +390,7 @@ Error ActiveDataset::GenerateLocal(void)
     SuccessOrExit(error = mLocal.Save(dataset));
     IgnoreError(Restore());
 
-    otLogInfoMeshCoP("Generated local dataset");
+    LogInfo("Generated local dataset");
 
 exit:
     return error;

@@ -57,8 +57,9 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <openthread/logging.h>
+
 #include "common/code_utils.hpp"
-#include "common/logging.hpp"
 
 #ifdef __APPLE__
 

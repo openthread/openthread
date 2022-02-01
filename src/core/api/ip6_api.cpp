@@ -37,7 +37,6 @@
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "utils/slaac_address.hpp"
 
 using namespace ot;

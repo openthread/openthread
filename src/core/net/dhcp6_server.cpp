@@ -41,12 +41,14 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Dhcp6 {
+
+RegisterLogModule("Dhcp6Server");
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -176,7 +178,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogNoteIp6("Failed to add DHCPv6 prefix agent: %s", ErrorToString(error));
+        LogNote("Failed to add DHCPv6 prefix agent: %s", ErrorToString(error));
     }
 }
 

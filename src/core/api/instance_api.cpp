@@ -38,7 +38,6 @@
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "common/new.hpp"
 #include "radio/radio.hpp"
 
@@ -64,7 +63,6 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     Instance *instance;
 
     instance = Instance::Init(aInstanceBuffer, aInstanceBufferSize);
-    otLogInfoApi("otInstance Initialized");
 
     return instance;
 }

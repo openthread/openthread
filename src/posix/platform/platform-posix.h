@@ -48,10 +48,9 @@
 #include <openthread/error.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/logging.h>
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
-
-#include "common/logging.hpp"
 
 #include "lib/platform/exit_code.h"
 #include "lib/url/url.hpp"

@@ -38,10 +38,12 @@
 
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 namespace ot {
 namespace Utils {
+
+RegisterLogModule("Otns");
 
 const int kMaxStatusStringLength = 128;
 
@@ -170,7 +172,7 @@ void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &a
 exit:
     if (error != kErrorNone)
     {
-        otLogWarnCore("Otns::EmitCoapSend failed: %s", ErrorToString(error));
+        LogWarn("EmitCoapSend failed: %s", ErrorToString(error));
     }
 }
 
@@ -186,7 +188,7 @@ void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo
 exit:
     if (error != kErrorNone)
     {
-        otLogWarnCore("Otns::EmitCoapReceive failed: %s", ErrorToString(error));
+        LogWarn("EmitCoapReceive failed: %s", ErrorToString(error));
     }
 }
 
@@ -203,7 +205,7 @@ void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6:
 exit:
     if (error != kErrorNone)
     {
-        otLogWarnCore("Otns::EmitCoapSendFailure failed: %s", ErrorToString(error));
+        LogWarn("EmitCoapSendFailure failed: %s", ErrorToString(error));
     }
 }
 

@@ -39,7 +39,7 @@
 #include "common/as_core_type.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/notifier.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -50,6 +50,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("DatasetManager");
 
 DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::Handler aTimerHandler)
     : InstanceLocator(aInstance)
@@ -291,7 +293,7 @@ void DatasetManager::SendSet(void)
     SuccessOrExit(
         error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DatasetManager::HandleMgmtSetResponse, this));
 
-    otLogInfoMeshCoP("Sent %s set to leader", Dataset::TypeToString(GetType()));
+    LogInfo("Sent %s set to leader", Dataset::TypeToString(GetType()));
 
 exit:
 
@@ -345,7 +347,7 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::M
     }
 
 exit:
-    otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(error));
+    LogInfo("MGMT_SET finished: %s", ErrorToString(error));
 
     mMgmtPending = false;
 
@@ -454,8 +456,8 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent %s dataset get response to %s", (GetType() == Dataset::kActive ? "active" : "pending"),
-                     aMessageInfo.GetPeerAddr().ToString().AsCString());
+    LogInfo("sent %s dataset get response to %s", (GetType() == Dataset::kActive ? "active" : "pending"),
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     FreeMessageOnError(message, error);
@@ -533,7 +535,7 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &    aDatasetInfo,
     mMgmtSetCallbackContext = aContext;
     mMgmtPending            = true;
 
-    otLogInfoMeshCoP("sent dataset set request to leader");
+    LogInfo("sent dataset set request to leader");
 
 exit:
     FreeMessageOnError(message, error);
@@ -654,7 +656,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
     messageInfo.SetPeerPort(Tmf::kUdpPort);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset get request");
+    LogInfo("sent dataset get request");
 
 exit:
     FreeMessageOnError(message, error);
@@ -811,7 +813,7 @@ void PendingDataset::StartDelayTimer(void)
         }
 
         mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
-        otLogInfoMeshCoP("delay timer started %d", delay);
+        LogInfo("delay timer started %d", delay);
     }
 }
 
@@ -841,7 +843,7 @@ void PendingDataset::HandleDelayTimer(void)
         }
     }
 
-    otLogInfoMeshCoP("pending delay timer expired");
+    LogInfo("pending delay timer expired");
 
     dataset.ConvertToActive();
 

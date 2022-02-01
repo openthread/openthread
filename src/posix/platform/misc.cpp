@@ -35,10 +35,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <openthread/logging.h>
 #include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
-#include "common/logging.hpp"
 
 otPlatResetReason          gPlatResetReason   = OT_PLAT_RESET_REASON_POWER_ON;
 static otPlatMcuPowerState gPlatMcuPowerState = OT_PLAT_MCU_POWER_STATE_ON;
