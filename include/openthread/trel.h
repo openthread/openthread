@@ -48,9 +48,9 @@ extern "C" {
  * @addtogroup api-trel
  *
  * @brief
- *   This file defines Thread Radio Encapsulation Link (TREL) APIs for Thread Over Infrastructure.
+ *   This module defines Thread Radio Encapsulation Link (TREL) APIs for Thread Over Infrastructure.
  *
- *   The functions in this file require `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` to be enabled.
+ *   The functions in this module require `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` to be enabled.
  *
  * @{
  *
