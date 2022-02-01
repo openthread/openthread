@@ -35,4 +35,7 @@ RUN set -x \
     && ninja
 
 # set up ot-daemon
-RUN set -x ./script/cmake-build posix -DOT_DAEMON=ON
+WORKDIR /
+RUN set -x \
+    && cd openthread \
+    && ./script/cmake-build posix -DOT_DAEMON=ON
