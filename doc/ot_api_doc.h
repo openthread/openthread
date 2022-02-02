@@ -84,7 +84,7 @@
  * @defgroup api-message              Message
  *
  * @defgroup api-multi-radio          Multi Radio Link
- * @defgroup api-trel                 TREL
+ * @defgroup api-trel                 TREL - Thread Stack
  *
  * @defgroup api-thread               Thread
  *
@@ -167,7 +167,7 @@
  * @defgroup plat-spi-slave           SPI Slave
  * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
- * @defgroup plat-trel                TREL
+ * @defgroup plat-trel                TREL - Platform
  *
  * @}
  *
