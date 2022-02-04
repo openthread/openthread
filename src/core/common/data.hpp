@@ -69,7 +69,7 @@ enum DataLengthType : uint8_t
  * @param[in] aSecond  A second byte.
  *
  * @retval TRUE  if @p aFirst matches @p aSecond.
- * @retval FLASE if @p aFirst does not match @p aSecond.
+ * @retval FALSE if @p aFirst does not match @p aSecond.
  *
  */
 typedef bool (*ByteMatcher)(uint8_t aFirst, uint8_t aSecond);
