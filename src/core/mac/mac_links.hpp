@@ -572,6 +572,7 @@ public:
      * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
      *
      * @retval kErrorNone            Successfully started scanning the channel.
+     * @retval kErrorBusy            The radio is performing energy scanning.
      * @retval kErrorInvalidState    The radio was disabled or transmitting.
      * @retval kErrorNotImplemented  Energy scan is not supported by radio link.
      *
