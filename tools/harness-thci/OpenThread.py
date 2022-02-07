@@ -3339,6 +3339,8 @@ class OpenThreadTHCI(object):
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
+        if isinstance(listAddr, str):
+            listAddr = [listAddr]
         for each_sAddr in listAddr:
             self._beforeRegisterMulticast(each_sAddr, timeout)
 
