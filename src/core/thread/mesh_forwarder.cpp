@@ -938,7 +938,7 @@ void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor,
     {
         aNeighbor.ResetLinkFailures();
     }
-    else if (aError == kErrorNoAck)
+    else if (aError == kErrorNoAck || !Get<Mle::MleRouter>().IsRouter())
     {
         aNeighbor.IncrementLinkFailures();
 
