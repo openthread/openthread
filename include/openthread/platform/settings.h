@@ -68,12 +68,13 @@ enum
     OT_SETTINGS_KEY_RESERVED             = 0x0006, ///< Reserved (previously auto-start).
     OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY = 0x0007, ///< SLAAC key to generate semantically opaque IID.
     OT_SETTINGS_KEY_DAD_INFO             = 0x0008, ///< Duplicate Address Detection (DAD) information.
-    OT_SETTINGS_KEY_OMR_PREFIX           = 0x0009, ///< Off-mesh routable (OMR) prefix.
+    OT_SETTINGS_KEY_LEGACY_OMR_PREFIX    = 0x0009, ///< Reserved. Legacy Off-mesh routable (OMR) prefix.
     OT_SETTINGS_KEY_ON_LINK_PREFIX       = 0x000a, ///< On-link prefix for infrastructure link.
     OT_SETTINGS_KEY_SRP_ECDSA_KEY        = 0x000b, ///< SRP client ECDSA public/private key pair.
     OT_SETTINGS_KEY_SRP_CLIENT_INFO      = 0x000c, ///< The SRP client info (selected SRP server address).
     OT_SETTINGS_KEY_SRP_SERVER_INFO      = 0x000d, ///< The SRP server info (UDP port).
-    OT_SETTINGS_KEY_NAT64_PREFIX         = 0x000e, ///< NAT64 prefix.
+    OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX  = 0x000e, ///< Reserved. Legacy NAT64 prefix.
+    OT_SETTINGS_KEY_BR_ULA_PREFIX        = 0x000f, ///< BR ULA prefix.
 };
 
 /**

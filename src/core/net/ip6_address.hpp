@@ -111,6 +111,14 @@ public:
     const uint8_t *GetBytes(void) const { return mPrefix.mFields.m8; }
 
     /**
+     * This method gets the subnet ID of the prefix.
+     *
+     * @returns The 16-bit subnet ID.
+     *
+     */
+    uint16_t GetSubnetId(void) const { return HostSwap16(mPrefix.mFields.m16[3]); }
+
+    /**
      * This method gets the prefix length (in bits).
      *
      * @returns The prefix length (in bits).
@@ -142,6 +150,14 @@ public:
      *
      */
     void Set(const NetworkPrefix &aNetworkPrefix) { Set(aNetworkPrefix.m8, NetworkPrefix::kLength); }
+
+    /**
+     * This method sets the subnet ID of the prefix.
+     *
+     * @param[in] aSubnetId  A 16-bit subnet ID.
+     *
+     */
+    void SetSubnetId(uint16_t aSubnetId) { mPrefix.mFields.m16[3] = HostSwap16(aSubnetId); }
 
     /**
      * This method set the prefix length.
