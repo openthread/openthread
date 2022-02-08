@@ -77,7 +77,13 @@ class SSHHandle(object):
 
         self.__handle = paramiko.SSHClient()
         self.__handle.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.__handle.connect(self.ip, port=self.port, username=self.username, password=self.password)
+        try:
+            self.__handle.connect(self.ip, port=self.port, username=self.username, password=self.password)
+        except paramiko.ssh_exception.AuthenticationException:
+            if not self.password:
+                self.__handle.get_transport().auth_none(self.username)
+            else:
+                raise
 
     def close(self):
         if self.__handle is not None:
