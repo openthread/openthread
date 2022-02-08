@@ -47,7 +47,6 @@ jobs:
       matrix:
         include:
           - docker_name: environment
-          - docker_name: codelab_otsim
     steps:
     - uses: actions/checkout@v2
       with:
