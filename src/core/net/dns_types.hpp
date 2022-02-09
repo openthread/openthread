@@ -1137,7 +1137,17 @@ public:
      * @param[in] aValueLength   Number of bytes in @p aValue buffer.
      *
      */
-    TxtEntry(const char *aKey, const uint8_t *aValue, uint8_t aValueLength)
+    TxtEntry(const char *aKey, const uint8_t *aValue, uint8_t aValueLength) { Init(aKey, aValue, aValueLength); }
+
+    /**
+     * This method initializes a `TxtEntry` object.
+     *
+     * @param[in] aKey           A pointer to the key string.
+     * @param[in] aValue         A pointer to a buffer containing the value.
+     * @param[in] aValueLength   Number of bytes in @p aValue buffer.
+     *
+     */
+    void Init(const char *aKey, const uint8_t *aValue, uint8_t aValueLength)
     {
         mKey         = aKey;
         mValue       = aValue;
