@@ -395,16 +395,16 @@ class OpenThreadTHCI(object):
             self.connectType = 'ip'
             self.telnetIp = self.port
             self.telnetPort = 22
-            self.telnetUsername = params.get('Param6', 'pi')
-            self.telnetPassword = params.get('Param7', 'raspberry')
+            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
+            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
         except ValueError:
             self.connectType = (params.get('Param5') or 'usb').lower()
             self.telnetIp = params.get('TelnetIP')
             self.telnetPort = int(params.get('TelnetPort')) if params.get('TelnetPort') else 22
             # username for SSH
-            self.telnetUsername = params.get('Param6', 'pi')
+            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
             # password for SSH
-            self.telnetPassword = params.get('Param7', 'raspberry')
+            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
 
         self.mac = params.get('EUI')
 

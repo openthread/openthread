@@ -160,7 +160,7 @@ class SerialHandle:
         if not loginOk:
             raise Exception('login fail')
 
-        self.bash('stty cols 256', sudo=False)
+        self.bash('stty cols 256')
 
     def log(self, fmt, *args):
         try:
