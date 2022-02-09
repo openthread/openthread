@@ -160,7 +160,7 @@ class SerialHandle:
         if not loginOk:
             raise Exception('login fail')
 
-        self.bash('stty cols 256')
+        self.bash('stty cols 256', sudo=False)
 
     def log(self, fmt, *args):
         try:
@@ -291,6 +291,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     DEFAULT_COMMAND_TIMEOUT = 20
 
     IsBorderRouter = True
+    __is_root = False
 
     def _connect(self):
         self.log("logging in to Raspberry Pi ...")
@@ -300,6 +301,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
         if self.connectType == 'ip':
             self.__handle = SSHHandle(self.telnetIp, self.telnetPort, self.telnetUsername, self.telnetPassword)
+            self.__is_root = self.telnetUsername == 'root'
         else:
             self.__handle = SerialHandle(self.port, 115200)
 
@@ -316,8 +318,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.powerUp()
         if self.IsHost:
             self.__stopRadvdService()
-            self.bash('sudo ip -6 addr del 910b::1 dev eth0 || true')
-            self.bash('sudo ip -6 addr del fd00:7d03:7d03:7d03::1 dev eth0 || true')
+            self.bash('ip -6 addr del 910b::1 dev eth0 || true')
+            self.bash('ip -6 addr del fd00:7d03:7d03:7d03::1 dev eth0 || true')
 
         self.stopListeningToAddrAll()
 
@@ -325,7 +327,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.__dumpSyslog()
         self.__truncateSyslog()
         if not self.IsHost:
-            self.bash('sudo systemctl restart otbr-agent')
+            self.bash('systemctl restart otbr-agent')
             time.sleep(2)
 
     def _beforeRegisterMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
@@ -339,7 +341,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.externalCommissioner.MLR([sAddr], timeout)
             return True
 
-        cmd = 'sudo nohup ~/repo/openthread/tests/scripts/thread-cert/mcast6.py wpan0 %s' % sAddr
+        cmd = 'nohup ~/repo/openthread/tests/scripts/thread-cert/mcast6.py wpan0 %s' % sAddr
         cmd = cmd + ' > /dev/null 2>&1 &'
         self.bash(cmd)
 
@@ -348,9 +350,9 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.IsHost = True
 
         if not setDua:
-            cmd = 'sudo ip -6 addr add 910b::1 dev eth0'
+            cmd = 'ip -6 addr add 910b::1 dev eth0'
         else:
-            cmd = 'sudo ip -6 addr add fd00:7d03:7d03:7d03::1 dev eth0'
+            cmd = 'ip -6 addr add fd00:7d03:7d03:7d03::1 dev eth0'
         self.bash(cmd)
 
         self.__startRadvdService()
@@ -367,10 +369,13 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         return '"' + string + '"'
 
     @watched
-    def bash(self, cmd, timeout=DEFAULT_COMMAND_TIMEOUT):
-        return self.__handle.bash(cmd, timeout=timeout)
+    def bash(self, cmd, timeout=DEFAULT_COMMAND_TIMEOUT, sudo=True):
+        return self.bash_unwatched(cmd, timeout=timeout, sudo=sudo)
 
-    def bash_unwatched(self, cmd, timeout=DEFAULT_COMMAND_TIMEOUT):
+    def bash_unwatched(self, cmd, timeout=DEFAULT_COMMAND_TIMEOUT, sudo=True):
+        if sudo and not self.__is_root:
+            cmd = 'sudo ' + cmd
+
         return self.__handle.bash(cmd, timeout=timeout)
 
     # Override send_udp
@@ -385,7 +390,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         else:
             raise AssertionError('Invalid interface set to send UDP: {} '
                                  'Available interface options: 0 - Thread; 1 - Ethernet'.format(interface))
-        cmd = 'sudo /home/pi/reference-device/send_udp.py %s %s %s %s' % (ifname, dst, port, payload)
+        cmd = '/home/pi/reference-device/send_udp.py %s %s %s %s' % (ifname, dst, port, payload)
         print(cmd)
         self.bash(cmd)
 
@@ -394,7 +399,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         ifname = 'eth0'
         dst = 'ff02::1'
 
-        cmd = 'sudo /home/pi/reference-device/send_mld_query.py %s %s' % (ifname, dst)
+        cmd = '/home/pi/reference-device/send_mld_query.py %s %s' % (ifname, dst)
         print(cmd)
         self.bash(cmd)
 
@@ -407,7 +412,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
                '| cut -d " " -f1 ' \
                '| sudo xargs -I{} ip -6 neigh delete {} dev eth0'
         cmd = '%s ; %s' % (cmd1, cmd2)
-        self.bash(cmd)
+        self.bash(cmd, sudo=False)
 
     @API
     def ip_neighbors_add(self, addr, lladdr, nud='noarp'):
@@ -415,7 +420,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         cmd1 = 'sudo ip -6 neigh delete %s dev eth0' % addr
         cmd2 = 'sudo ip -6 neigh add %s dev eth0 lladdr %s nud %s' % (addr, lladdr, nud)
         cmd = '%s ; %s' % (cmd1, cmd2)
-        self.bash(cmd)
+        self.bash(cmd, sudo=False)
 
     @API
     def get_eth_ll(self):
@@ -451,7 +456,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             int(hop_limit),
         )
 
-        self.bash(cmd)
+        self.bash(cmd, sudo=False)
         time.sleep(timeout)
 
     def multicast_Ping(self, destination, length=20):
@@ -473,7 +478,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
         cmd = 'ping -6 -I %s %s -c 1 -s %d -t %d' % (ifName, destination, str(length), hop_limit)
 
-        self.bash(cmd)
+        self.bash(cmd, sudo=False)
 
     @API
     def getGUA(self, filterByPrefix=None, eth=False):
@@ -498,7 +503,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         globalAddrs = []
 
         cmd = 'ip -6 addr list dev eth0 | grep inet6'
-        output = self.bash(cmd)
+        output = self.bash(cmd, sudo=False)
         for line in output:
             # example: inet6 2401:fa00:41:23:274a:1329:3ab9:d953/64 scope global dynamic noprefixroute
             line = line.strip().split()
@@ -538,12 +543,12 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     def _deviceGetEtherMac(self):
         # Harness wants it in string. Because wireshark filter for eth
         # cannot be applies in hex
-        return self.bash('ip addr list dev eth0 | grep ether')[0].strip().split()[1]
+        return self.bash('ip addr list dev eth0 | grep ether', sudo=False)[0].strip().split()[1]
 
     @watched
     def _onCommissionStart(self):
         assert self.__syslog_skip_lines is None
-        self.__syslog_skip_lines = int(self.bash('wc -l /var/log/syslog')[0].split()[0])
+        self.__syslog_skip_lines = int(self.bash('wc -l /var/log/syslog', sudo=False)[0].split()[0])
         self.__syslog_last_read_ts = 0
 
     @watched
@@ -552,13 +557,13 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.__syslog_skip_lines = None
 
     def _deviceBeforeThreadStart(self):
-        self.bash('sudo sysctl net.ipv6.conf.eth0.accept_ra=2')
+        self.bash('sysctl net.ipv6.conf.eth0.accept_ra=2')
 
     @watched
     def __startRadvdService(self):
         assert self.IsHost, "radvd service runs on Host only"
 
-        self.bash("""sudo sh -c "cat >/etc/radvd.conf <<EOF
+        self.bash("""sh -c "cat >/etc/radvd.conf <<EOF
 interface eth0
 {
     AdvSendAdvert on;
@@ -583,13 +588,13 @@ interface eth0
 };
 EOF"
 """)
-        self.bash('sudo service radvd restart')
-        self.bash('sudo service radvd status')
+        self.bash('service radvd restart')
+        self.bash('service radvd status')
 
     @watched
     def __stopRadvdService(self):
         assert self.IsHost, "radvd service runs on Host only"
-        self.bash('sudo service radvd stop')
+        self.bash('service radvd stop')
 
     def __readSyslogToCli(self):
         if self.__syslog_skip_lines is None:
@@ -601,7 +606,7 @@ EOF"
 
         self.__syslog_last_read_ts = time.time()
 
-        lines = self.bash_unwatched('tail +%d /var/log/syslog' % self.__syslog_skip_lines)
+        lines = self.bash_unwatched('tail +%d /var/log/syslog' % self.__syslog_skip_lines, sudo=False)
         for line in lines:
             m = OTBR_AGENT_SYSLOG_PATTERN.search(line)
             if not m:
@@ -613,7 +618,7 @@ EOF"
         return len(lines)
 
     def _cliWriteLine(self, line):
-        cmd = 'sudo ot-ctl -- %s' % line
+        cmd = 'ot-ctl -- %s' % line
         output = self.bash(cmd)
         # fake the line echo back
         self.__cli_output_lines.append(line)
@@ -625,17 +630,17 @@ EOF"
         self.__checkServiceStatus()
 
     def __checkServiceStatus(self):
-        self.bash('sudo service radvd stop')
-        self.bash('sudo systemctl restart otbr-agent')
+        self.bash('service radvd stop')
+        self.bash('systemctl restart otbr-agent')
 
     def __restartAgentService(self):
-        self.bash('sudo systemctl restart otbr-agent')
+        self.bash('systemctl restart otbr-agent')
 
     def __truncateSyslog(self):
-        self.bash('sudo truncate -s 0 /var/log/syslog')
+        self.bash('truncate -s 0 /var/log/syslog')
 
     def __dumpSyslog(self):
-        output = self.bash_unwatched('sudo grep "otbr-agent" /var/log/syslog')
+        output = self.bash_unwatched('grep "otbr-agent" /var/log/syslog')
         for line in output:
             self.log('%s', line)
 
@@ -645,7 +650,7 @@ EOF"
 
         # For BBR-TC-03 or DH test cases just send a query
         if dst == 'ff02::fb' and not addrs_blacklist:
-            self.bash('dig -p 5353 @%s %s ptr' % (dst, service))
+            self.bash('dig -p 5353 @%s %s ptr' % (dst, service), sudo=False)
             return
 
         # For MATN-TC-17 and MATN-TC-18 use Zeroconf to get the BBR address and border agent port
@@ -716,21 +721,21 @@ EOF"
     @API
     def powerDown(self):
         self.log('Powering down BBR')
-        self.bash('sudo systemctl stop otbr-agent')
+        self.bash('systemctl stop otbr-agent')
         super(OpenThread_BR, self).powerDown()
 
     # Override powerUp
     @API
     def powerUp(self):
         self.log('Powering up BBR')
-        self.bash('sudo systemctl start otbr-agent')
+        self.bash('systemctl start otbr-agent')
         super(OpenThread_BR, self).powerUp()
 
     # Override forceSetSlaac
     @API
     def forceSetSlaac(self, slaacAddress):
         print('forceSetSlaac %s' % slaacAddress)
-        self.bash('sudo ip -6 addr add %s/64 dev wpan0' % slaacAddress)
+        self.bash('ip -6 addr add %s/64 dev wpan0' % slaacAddress)
 
     # Override stopListeningToAddr
     @API
@@ -742,7 +747,7 @@ EOF"
             sAddr   : str : Multicast address to be unsubscribed. Use an empty string to unsubscribe
                             all the active multicast addresses.
         """
-        cmd = 'sudo pkill -f mcast6.*%s' % sAddr
+        cmd = 'pkill -f mcast6.*%s' % sAddr
         self.bash(cmd)
 
     def stopListeningToAddrAll(self):
