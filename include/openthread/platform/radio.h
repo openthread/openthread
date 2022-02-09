@@ -442,7 +442,14 @@ const char *otPlatRadioGetVersionString(otInstance *aInstance);
 int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance);
 
 /**
- * Get the factory-assigned IEEE EUI-64 for this interface.
+ * Gets the factory-assigned IEEE EUI-64 for this interface.
+ *
+ * @cli eui64
+ * @code
+ * eui64
+ * 0615aae900124b00
+ * Done
+ * @endcode
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  * @param[out] aIeeeEui64  A pointer to the factory-assigned IEEE EUI-64.

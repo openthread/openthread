@@ -73,24 +73,42 @@ extern "C" {
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
 /**
- * This method enables/disables the Border Routing Manager.
+ * Enables or disables the Border Routing Manager.
  *
- * @note  The Border Routing Manager is disabled by default.
+ * @note The Border Routing Manager is disabled by default.
+ *
+ * @cli br (enable,disable)
+ * @code
+ * br enable
+ * Done
+ * @endcode
+ * @code
+ * br disable
+ * Done
+ * @endcode
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aEnabled   A boolean to enable/disable the routing manager.
+ * @param[in]  aEnabled   A boolean to enable or disable the routing manager.
  *
  * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
- * @retval  OT_ERROR_NONE           Successfully enabled/disabled the Border Routing Manager.
+ * @retval  OT_ERROR_NONE           Successfully enabled or disabled the Border Routing Manager.
  *
  */
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This method returns the off-mesh-routable (OMR) prefix.
+ * Gets the Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
  *
- * The randomly generated 64-bit prefix will be published
- * in the Thread network if there isn't already an OMR prefix.
+ * An OMR Prefix is a randomly generated 64-bit prefix that's published in the
+ * Thread network if there isn't already an OMR prefix. This prefix can be reached
+ * from the local Wi-Fi or Ethernet network.
+ *
+ * @cli br omrprefix
+ * @code
+ * br omrprefix
+ * fdfc:1ff5:1512:5622::/64
+ * Done
+ * @endcode
  *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.
@@ -102,11 +120,16 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
- * This method returns the on-link prefix for the adjacent infrastructure link.
+ * Gets the On-Link Prefix for the adjacent infrastructure link, for example `fd41:2650:a6f5:0::/64`.
  *
- * The randomly generated 64-bit prefix will be advertised
- * on the infrastructure link if there isn't already a usable
- * on-link prefix being advertised on the link.
+ * An On-Link Prefix is a randomly generated 64-bit prefix that's advertised on the infrastructure
+ * link if there isn't already a usable on-link prefix being advertised on the link.
+ *
+ * @cli br onlinkprefix
+ * @code br onlinkprefix
+ * fd41:2650:a6f5:0::/64
+ * Done
+ * @endcode
  *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.
@@ -118,12 +141,18 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
- * This function returns the local NAT64 prefix.
+ * Gets the local NAT64 Prefix of the Border Router.
  *
- * This prefix might not be advertised in the Thread network.
+ * NAT64 Prefix might not be advertised in the Thread network.
  *
- * This function is only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE`
- * is enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` must be enabled.
+ *
+ * @cli br nat64prefix
+ * @code
+ * br nat64prefix
+ * fd14:1078:b3d5:b0b0:0:0::/96
+ * Done
+ * @endcode
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aPrefix     A pointer to where the prefix will be output to.
@@ -146,7 +175,17 @@ otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefi
 otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
 /**
- * Add a border router configuration to the local network data.
+ * Adds a #otBorderRouterConfig Border Router configuration to the local Network Data.
+ *
+ * @cli prefix add
+ * @code prefix add 2001:dead:beef:cafe::/64 paros med
+ * Done
+ * @endcode
+ * @code prefix add fd00:7d03:7d03:7d03::/64 prosD low
+ * Done
+ * @endcode
+ * @cparam prefix add @ca{prefix} [@ca{padcrosnD}] [@ca{high}|@ca{med}|@ca{low}]
+ * OT CLI uses mapped arguments to configure #otBorderRouterConfig values. @moreinfo{the @overview}.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aConfig   A pointer to the border router configuration.
@@ -236,7 +275,20 @@ otError otBorderRouterGetNextRoute(otInstance *           aInstance,
                                    otExternalRouteConfig *aConfig);
 
 /**
- * Immediately register the local network data with the Leader.
+ * Immediately registers local Network Data with the Leader, including configured prefixes,
+ * routes, and services.
+ *
+ * @cli netdata register
+ * @code
+ * netdata register
+ * Done
+ * @endcode
+ * @par
+ * OT CLI checks for `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE`. If OTBR is enabled, it
+ * registers local Network Data with the Leader. Otherwise, it calls the CLI function `otServerRegister`.
+ * @moreinfo{@netdata}.
+ * @csa{prefix add}
+ * @sa #otServerAddService
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -246,6 +298,7 @@ otError otBorderRouterGetNextRoute(otInstance *           aInstance,
  * @sa otBorderRouterRemoveOnMeshPrefix
  * @sa otBorderRouterAddRoute
  * @sa otBorderRouterRemoveRoute
+ * @sa otServerAddService
  */
 otError otBorderRouterRegister(otInstance *aInstance);
 

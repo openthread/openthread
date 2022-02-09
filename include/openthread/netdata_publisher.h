@@ -95,51 +95,86 @@ typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
                                                  void *                  aContext);
 
 /**
- * This function requests "DNS/SRP Service Anycast Address" to be published in the Thread Network Data.
+ * Publishes a DNS/SRP Service Anycast Address with a sequence number. Any current
+ * DNS/SRP Service entry being published from a previous call to `otNetDataPublishDnsSrpService{Anycast|Unicast}`
+ * functions or sent from the `publish dnssrp` CLI Command is removed and replaced with the new arguments.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
  *
- * A call to this function will remove and replace any previous "DNS/SRP Service" entry that was being published (from
- * earlier call to any of `otNetDataPublishDnsSrpService{Type}()` functions).
+ * @cli netdata publish dnssrp anycast
+ * @code
+ * netdata publish dnssrp anycast 1
+ * Done
+ * @endcode
+ * @cparam netdata publish dnssrp anycast @ca{seq-num}
+ * Publishes a DNS/SRP Service Anycast Address with a sequence number, for example `1`.
+ * @csa{netdata publish dnssrp unicast (addr,port)}
+ * @csa{netdata publish dnssrp unicast (mle)}
  *
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aSequenceNUmber  The sequence number of DNS/SRP Anycast Service.
+ *
+ * @sa otNetDataPublishDnsSrpServiceUnicast
+ * @sa otNetDataPublishDnsSrpServiceUnicastMeshLocalEid
  *
  */
 void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNUmber);
 
 /**
- * This function requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
+ * Publishes a DNS/SRP Service Unicast Address with an address and port number. The address and port information
+ * is included in Service TLV data. Any current DNS/SRP Service entry being published from a previous call to
+ * `otNetDataPublishDnsSrpService{Anycast|Unicast}` functions or sent from the `publish dnssrp` CLI Command is removed
+ * and replaced with the new arguments.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
  *
- * A call to this function will remove and replace any previous "DNS/SRP Service" entry that was being published (from
- * earlier call to any of `otNetDataPublishDnsSrpService{Type}()` functions).
- *
- * This function publishes the "DNS/SRP Service Unicast Address" by including the address and port info in the Service
- * TLV data.
+ * @cli netdata publish dnssrp unicast (addr,port)
+ * @code
+ * netdata publish dnssrp unicast fd00::1234 51525
+ * Done
+ * @endcode
+ * @cparam netdata publish dnssrp unicast @ca{address} @ca{port}
+ * Publishes a DNS/SRP Service Unicast Address with an address and port number.
+ * The address and port information is included in Service TLV data.
+ * @csa{netdata publish dnssrp unicast (mle)}
+ * @csa{netdata publish dnssrp anycast}
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aAddress   The DNS/SRP server address to publish (MUST NOT be NULL).
  * @param[in] aPort      The SRP server port number to publish.
  *
+ * @sa otNetDataPublishDnsSrpServiceUnicastMeshLocalEid
+ * @sa otNetDataPublishDnsSrpServiceAnycast
+ *
  */
 void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Address *aAddress, uint16_t aPort);
 
 /**
- * This function requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
+ * Publishes the device's Mesh-Local EID with a port number. MLE and port information is included in the
+ * Server TLV data. To use a different Unicast address, refer to #otNetDataPublishDnsSrpServiceUnicast
+ * or use the `netdata publish dnssrp unicast (addr,port)` CLI Command.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * Any current DNS/SRP Service entry being published from a previous call to
+ * `otNetDataPublishDnsSrpService{Anycast|Unicast}` functions or sent from the `publish dnssrp` CLI Command
+ * is removed and replaced with the new arguments.
  *
- * A call to this function will remove and replace any previous "DNS/SRP Service" entry that was being published (from
- * earlier call to any of `otNetDataPublishDnsSrpService{Type}()` functions).
+ * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
  *
- * Unlike `otNetDataPublishDnsSrpServiceUnicast()` which requires the published address to be given and includes the
- * info in the Service TLV data, this function uses the device's mesh-local EID and includes the info in the Server TLV
- * data.
+ * @cli netdata publish dnssrp unicast (mle)
+ * @code
+ * netdata publish dnssrp unicast 50152
+ * Done
+ * @endcode
+ * @cparam netdata publish dnssrp unicast @ca{port}
+ * Publishes a DNS/SRP Service Unicast Address with a port number and the device's Mesh-Local
+ * EID for the address. The address and port information is included in Server TLV data.
+ * @csa{netdata publish dnssrp unicast (addr,port)}
+ * @csa{netdata publish dnssrp anycast}
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aPort      The SRP server port number to publish.
+ *
+ * @sa otNetDataPublishDnsSrpServiceUnicast
  *
  */
 void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort);
@@ -175,10 +210,16 @@ void otNetDataSetDnsSrpServicePublisherCallback(otInstance *                    
                                                 void *                                  aContext);
 
 /**
- * This function unpublishes any previously added "DNS/SRP (Anycast or Unicast) Service" entry from the Thread Network
+ * Unpublishes any previously added DNS/SRP (Anycast or Unicast) Service entry from the Thread Network
  * Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
+ *
+ * @cli netdata unpublish dnssrp
+ * @code
+ * netdata unpublish dnssrp
+ * Done
+ * @endcode
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
@@ -186,20 +227,29 @@ void otNetDataSetDnsSrpServicePublisherCallback(otInstance *                    
 void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
 
 /**
- * This function requests an on-mesh prefix to be published in the Thread Network Data.
+ * Publishes an On-Mesh Prefix to the Thread Network Data. Only stable entries can be
+ * published, which means that #otBorderRouterConfig::mStable must be set to `true`.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` must be enabled.
  *
- * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be TRUE).
+ * @cli netdata publish prefix
+ * @code
+ * netdata publish prefix fd00:1234:5678::/64 paos med
+ * Done
+ * @endcode
+ * @cparam netdata publish prefix @ca{prefix} [@ca{padcrosnD}] [@ca{high}|@ca{med}|@ca{low}]
+ * OT CLI uses mapped arguments to configure #otBorderRouterConfig values. @moreinfo{the @overview}.
+ * @par
+ * @moreinfo{@netdata}.
  *
  * @param[in] aInstance           A pointer to an OpenThread instance.
- * @param[in] aConfig             The on-mesh prefix config to publish (MUST NOT be NULL).
+ * @param[in] aConfig             The On-Mesh Prefix config to publish (MUST NOT be NULL).
  *
- * @retval OT_ERROR_NONE          The on-mesh prefix is published successfully.
+ * @retval OT_ERROR_NONE          Published the On-Mesh Prefix successfully.
  * @retval OT_ERROR_INVALID_ARGS  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).
  * @retval OT_ERROR_ALREADY       An entry with the same prefix is already in the published list.
  * @retval OT_ERROR_NO_BUFS       Could not allocate an entry for the new request. Publisher supports a limited number
- *                                of entries (shared between on-mesh prefix and external route) determined by config
+ *                                of entries (shared between On-Mesh Prefix and External Route) determined by config
  *                                `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES`.
  *
  *
@@ -207,20 +257,29 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
 otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig);
 
 /**
- * This function requests an external route prefix to be published in the Thread Network Data.
+ * Publishes an External Route Prefix to the Thread Network Data. Only stable entries can be
+ * published, which means that #otExternalRouteConfig::mStable must be set to `true`.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` must be enabled.
  *
- * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be TRUE).
+ * @cli netdata publish route
+ * @code
+ * netdata publish route fd00:1234:5678::/64 s high
+ * Done
+ * @endcode
+ * @cparam publish route @ca{prefix} [@ca{sn}] [@ca{high}|@ca{med}|@ca{low}]
+ * OT CLI uses mapped arguments to configure #otExternalRouteConfig values. @moreinfo{the @overview}.
+ * @par
+ * @moreinfo{@netdata}.
  *
  * @param[in] aInstance           A pointer to an OpenThread instance.
  * @param[in] aConfig             The external route config to publish (MUST NOT be NULL).
  *
- * @retval OT_ERROR_NONE          The external route is published successfully.
+ * @retval OT_ERROR_NONE          Published the external route successfully.
  * @retval OT_ERROR_INVALID_ARGS  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).
  * @retval OT_ERROR_ALREADY       An entry with the same prefix is already in the published list.
  * @retval OT_ERROR_NO_BUFS       Could not allocate an entry for the new request. Publisher supports a limited number
- *                                of entries (shared between on-mesh prefix and external route) determined by config
+ *                                of entries (shared between On-Mesh Prefix and External Route) determined by config
  *                                `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES`.
  */
 otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig);
@@ -258,9 +317,18 @@ void otNetDataSetPrefixPublisherCallback(otInstance *                     aInsta
                                          void *                           aContext);
 
 /**
- * This function unpublishes a previously published prefix (on-mesh or external route).
+ * Unpublishes a previously published On-Mesh or External Route Prefix.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` must be enabled.
+ *
+ * @cli netdata unpublish (prefix)
+ * @code
+ * netdata unpublish fd00:1234:5678::/64
+ * Done
+ * @endcode
+ * @cparam netdata unpublish @ca{prefix}
+ * @par
+ * @moreinfo{@netdata}.
  *
  * @param[in] aInstance          A pointer to an OpenThread instance.
  * @param[in] aPrefix            The prefix to unpublish (MUST NOT be NULL).

@@ -46,6 +46,22 @@ extern "C" {
  *
  * @{
  *
+ * @cli netdata help
+ * @code
+ * netdata help
+ * help
+ * publish
+ * register
+ * show
+ * steeringdata
+ * unpublish
+ * Done
+ * @endcode
+ * @par
+ * Gets a list of `netdata` CLI commands.
+ * @sa @netdata
+ *
+ *
  */
 
 #define OT_NETWORK_DATA_ITERATOR_INIT 0 ///< Value to initialize `otNetworkDataIterator`.
@@ -57,18 +73,28 @@ typedef uint32_t otNetworkDataIterator; ///< Used to iterate through Network Dat
  */
 typedef struct otBorderRouterConfig
 {
-    otIp6Prefix mPrefix;           ///< The IPv6 prefix.
-    signed int  mPreference : 2;   ///< A 2-bit signed int preference (`OT_ROUTE_PREFERENCE_*` values).
-    bool        mPreferred : 1;    ///< Whether prefix is preferred.
-    bool        mSlaac : 1;        ///< Whether prefix can be used for address auto-configuration (SLAAC).
-    bool        mDhcp : 1;         ///< Whether border router is DHCPv6 Agent.
-    bool        mConfigure : 1;    ///< Whether DHCPv6 Agent supplying other config data.
-    bool        mDefaultRoute : 1; ///< Whether border router is a default router for prefix.
-    bool        mOnMesh : 1;       ///< Whether this prefix is considered on-mesh.
-    bool        mStable : 1;       ///< Whether this configuration is considered Stable Network Data.
-    bool        mNdDns : 1;        ///< Whether this border router can supply DNS information via ND.
-    bool        mDp : 1;           ///< Whether prefix is a Thread Domain Prefix (added since Thread 1.2).
-    uint16_t    mRloc16;           ///< The border router's RLOC16 (value ignored on config add).
+    otIp6Prefix mPrefix;         ///< The IPv6 prefix.
+    signed int  mPreference : 2; ///< A 2-bit signed int preference (`OT_ROUTE_PREFERENCE_*` values).
+                                 ///< Maps to `high`, `med`, or `low` in OT CLI.
+    bool mPreferred : 1;         ///< Whether prefix is preferred.
+                                 ///< Maps to `p` in OT CLI.
+    bool mSlaac : 1;             ///< Whether prefix can be used for address auto-configuration (SLAAC).
+                                 ///< Maps to `a` in OT CLI.
+    bool mDhcp : 1;              ///< Whether border router is DHCPv6 Agent.
+                                 ///< Maps to `d` in OT CLI.
+    bool mConfigure : 1;         ///< Whether DHCPv6 Agent supplying other config data.
+                                 ///< Maps to `c` in OT CLI.
+    bool mDefaultRoute : 1;      ///< Whether border router is a default router for prefix.
+                                 ///< Maps to `r` in OT CLI.
+    bool mOnMesh : 1;            ///< Whether this prefix is considered on-mesh.
+                                 ///< Maps to `o` in OT CLI.
+    bool mStable : 1;            ///< Whether this configuration is considered Stable Network Data.
+                                 ///< Maps to`s` in OT CLI.
+    bool mNdDns : 1;             ///< Whether this border router can supply DNS information via ND.
+                                 ///< Maps to `n` in OT CLI.
+    bool mDp : 1;                ///< Whether prefix is a Thread Domain Prefix (added since Thread 1.2).
+                                 ///< Maps to `D` in OT CLI.
+    uint16_t mRloc16;            ///< The border router's RLOC16 (value ignored on config add).
 } otBorderRouterConfig;
 
 /**
@@ -125,7 +151,53 @@ typedef struct otServiceConfig
 } otServiceConfig;
 
 /**
- * This method provides a full or stable copy of the Partition's Thread Network Data.
+ * Gets a full or stable copy of the Partition's Thread network data, including
+ * prefixes, routes, and services.
+ *
+ * @cli netdata show
+ * @code
+ * netdata show
+ * Prefixes:
+ * fd00:dead:beef:cafe::/64 paros med dc00
+ * Routes:
+ * fd49:7770:7fc5:0::/64 s med 4000
+ * Services:
+ * 44970 5d c000 s 4000
+ * 44970 01 9a04b000000e10 s 4000
+ * Done
+ * @endcode
+ * @code
+ * netdata show -x
+ * 08040b02174703140040fd00deadbeefcafe0504dc00330007021140
+ * Done
+ * @endcode
+ * @code
+ * netdata show local
+ * Prefixes:
+ * fd00:dead:beef:cafe::/64 paros med dc00
+ * Routes:
+ * Services:
+ * Done
+ * @endcode
+ * @code
+ * netdata show local -x
+ * 08040b02174703140040fd00deadbeefcafe0504dc00330007021140
+ * Done
+ * @endcode
+ * @cparam netdata show [@ca{local}] [@ca{-x}]
+ * *   The optional `-x` argument gets Network Data as hex-encoded TLVs.
+ * *   The optional `local` argument gets local Network Data to sync with Leader.
+ * @par
+ * `netdata show` from OT CLI gets full Network Data. This command uses several API functions to combine
+ * prefixes, routes, and services, including #otNetDataGetNextOnMeshPrefix, #otNetDataGetNextRoute, and
+ * #otNetDataGetNextService.
+ * @par
+ * @moreinfo{@netdata}.
+ * @csa{br omrprefix}
+ * @csa{br onlinkprefix}
+ * @sa [NetworkData::ProcessShow
+ * function](https://github.com/openthread/openthread/blob/main/src/cli/cli_network_data.cpp)
+ * @sa #otBorderRouterGetNetData
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
@@ -201,7 +273,28 @@ uint8_t otNetDataGetVersion(otInstance *aInstance);
 uint8_t otNetDataGetStableVersion(otInstance *aInstance);
 
 /**
- * Check if the steering data includes a Joiner.
+ * Check whether the steering data includes a Joiner.
+ *
+ * @cli netdata steeringdata check
+ * @code
+ * netdata steeringdata check d45e64fa83f81cf7
+ * Done
+ * @endcode
+ * @code
+ * netdata steeringdata check 0xabc/12
+ * Done
+ * @endcode
+ * @code
+ * netdata steeringdata check 0xdef/12
+ * Error 23: NotFound
+ * @endcode
+ * @cparam netdata steeringdata check {@ca{eui64}|@ca{discerner}}
+ * *   `eui64`: The IEEE EUI-64 of the Joiner.
+ * *   `discerner`: The Joiner discerner in format `{number}/{length}`.
+ * @par
+ * @moreinfo{@netdata}.
+ * @csa{eui64}
+ * @csa{joiner discerner (get)}
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64.

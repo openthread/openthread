@@ -63,21 +63,35 @@ typedef enum otBorderAgentState
 } otBorderAgentState;
 
 /**
- * This function gets the state of Thread Border Agent role.
+ * Gets the #otBorderAgentState of the Thread Border Agent role.
+ *
+ * @cli ba state
+ * @code
+ * ba state
+ * Started
+ * Done
+ * @endcode
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @returns State of the Border Agent.
+ * @returns The current #otBorderAgentState of the Border Agent.
  *
  */
 otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
 
 /**
- * This function gets the UDP port of Thread Border Agent service.
+ * Gets the UDP port of the Thread Border Agent service.
+ *
+ * @cli ba port
+ * @code
+ * ba port
+ * 49153
+ * Done
+ * @endcode
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @returns UDP port of the Border Agent.
+ * @returns The UDP port of the Border Agent.
  *
  */
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);

@@ -161,13 +161,25 @@ otJoinerState otJoinerGetState(otInstance *aInstance);
 const otExtAddress *otJoinerGetId(otInstance *aInstance);
 
 /**
- * This function sets the Joiner Discerner.
+ * Sets the Joiner Discerner.
  *
- * The Joiner Discerner is used to calculate the Joiner ID used during commissioning/joining process.
+ * The Joiner Discerner is used to calculate the Joiner ID during the Thread Commissioning process. For more
+ * information, refer to #otJoinerGetId.
+ * @note The Joiner Discerner takes the place of the Joiner EUI-64 during the joiner session of Thread Commissioning.
  *
- * By default (when a discerner is not provided or set to NULL), Joiner ID is derived as first 64 bits of the result
- * of computing SHA-256 over factory-assigned IEEE EUI-64. Note that this is the main behavior expected by Thread
- * specification.
+ * @cli joiner discerner (set,clear)
+ * @code
+ * joiner discerner 0xabc/12
+ * Done
+ * @endcode
+ * @code
+ * joiner discerner clear
+ * Done
+ * @endcode
+ * @cparam joiner discerner @ca{discerner}
+ * *   Use `{number}/{length}` to set the `discerner`.
+ * *   `joiner discerner clear` sets `aDiscerner` to `nullptr`.
+ * @csa{joiner discerner (get)}
  *
  * @param[in]   aInstance    A pointer to the OpenThread instance.
  * @param[in]   aDiscerner   A pointer to a Joiner Discerner. If NULL clears any previously set discerner.
@@ -180,7 +192,15 @@ const otExtAddress *otJoinerGetId(otInstance *aInstance);
 otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerner);
 
 /**
- * This function gets the Joiner Discerner.
+ * Gets the Joiner Discerner. For more information, refer to #otJoinerSetDiscerner.
+ *
+ * @cli joiner discerner (get)
+ * @code
+ * joiner discerner
+ * 0xabc/12
+ * Done
+ * @endcode
+ * @csa{joiner discerner (set,clear)}
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
  *
