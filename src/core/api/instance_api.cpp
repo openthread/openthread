@@ -51,7 +51,7 @@
 #endif
 #else // __ANDROID__
 #if defined(__DATE__)
-#define OPENTHREAD_BUILD_DATETIME "; " __DATE__ " " __TIME__
+#define OPENTHREAD_BUILD_DATETIME __DATE__ " " __TIME__
 #endif
 #endif // __ANDROID__
 #endif // !defined(OPENTHREAD_BUILD_DATETIME)
@@ -179,10 +179,10 @@ const char *otGetVersionString(void)
 #endif
     const char sVersion[] = PACKAGE_NAME "/" PACKAGE_VERSION "; " OPENTHREAD_CONFIG_PLATFORM_INFO
 #ifdef OPENTHREAD_BUILD_DATETIME
-        OPENTHREAD_BUILD_DATETIME
+                                         "; " OPENTHREAD_BUILD_DATETIME
 #endif
 #ifdef PLATFORM_VERSION_ATTR_SUFFIX
-            PLATFORM_VERSION_ATTR_SUFFIX
+                                             PLATFORM_VERSION_ATTR_SUFFIX
 #endif
         ; // Trailing semicolon to end statement.
 
