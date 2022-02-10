@@ -69,6 +69,20 @@ Error Local::RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix)
     return RemovePrefix(aPrefix, NetworkDataTlv::kTypeBorderRouter);
 }
 
+bool Local::ContainsOnMeshPrefix(const Ip6::Prefix &aPrefix) const
+{
+    const PrefixTlv *tlv;
+    bool             contains = false;
+
+    VerifyOrExit((tlv = FindPrefix(aPrefix)) != nullptr);
+    VerifyOrExit(tlv->FindSubTlv(NetworkDataTlv::kTypeBorderRouter) != nullptr);
+
+    contains = true;
+
+exit:
+    return contains;
+}
+
 Error Local::AddHasRoutePrefix(const ExternalRouteConfig &aConfig)
 {
     Error error = kErrorInvalidArgs;

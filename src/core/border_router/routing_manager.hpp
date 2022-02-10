@@ -305,6 +305,7 @@ private:
     void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
     Error PublishLocalOmrPrefix(void);
     void  UnpublishLocalOmrPrefix(void);
+    bool  IsOmrPrefixAddedToLocalNetworkData(void) const;
     Error AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  RemoveExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
