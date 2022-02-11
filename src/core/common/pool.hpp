@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/array.hpp"
 #include "common/linked_list.hpp"
 #include "common/non_copyable.hpp"
 
@@ -147,7 +148,7 @@ public:
      * @retval FALSE if @p aObject is not from the pool.
      *
      */
-    bool IsPoolEntry(const Type &aObject) const { return (&mPool[0] <= &aObject) && (&aObject < OT_ARRAY_END(mPool)); }
+    bool IsPoolEntry(const Type &aObject) const { return (&mPool[0] <= &aObject) && (&aObject < GetArrayEnd(mPool)); }
 
     /**
      * This method returns the associated index of a given entry from the pool.

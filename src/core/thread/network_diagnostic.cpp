@@ -36,6 +36,7 @@
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 #include "coap/coap_message.hpp"
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -837,7 +838,7 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage,
             ChildTableTlv &childTable = As<ChildTableTlv>(tlv);
 
             VerifyOrExit(childTable.IsValid(), error = kErrorParse);
-            VerifyOrExit(childTable.GetNumEntries() <= OT_ARRAY_LENGTH(aNetworkDiagTlv.mData.mChildTable.mTable),
+            VerifyOrExit(childTable.GetNumEntries() <= GetArrayLength(aNetworkDiagTlv.mData.mChildTable.mTable),
                          error = kErrorParse);
 
             for (uint8_t i = 0; i < childTable.GetNumEntries(); ++i)

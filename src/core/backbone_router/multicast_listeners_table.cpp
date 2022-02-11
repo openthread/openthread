@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -66,7 +67,7 @@ Error MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireTim
         }
     }
 
-    VerifyOrExit(mNumValidListeners < OT_ARRAY_LENGTH(mListeners), error = kErrorNoBufs);
+    VerifyOrExit(mNumValidListeners < GetArrayLength(mListeners), error = kErrorNoBufs);
 
     mListeners[mNumValidListeners].SetAddress(aAddress);
     mListeners[mNumValidListeners].SetExpireTime(aExpireTime);

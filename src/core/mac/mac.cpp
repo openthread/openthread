@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -1084,7 +1085,7 @@ void Mac::BeginTransmit(void)
         // copy the frame into correct `TxFrame` for each radio type
         // (if it is not already prepared).
 
-        for (uint8_t index = 0; index < OT_ARRAY_LENGTH(RadioTypes::kAllRadioTypes); index++)
+        for (uint8_t index = 0; index < GetArrayLength(RadioTypes::kAllRadioTypes); index++)
         {
             RadioType radio = RadioTypes::kAllRadioTypes[index];
 
@@ -1103,7 +1104,7 @@ void Mac::BeginTransmit(void)
         // process security for each radio type separately. This
         // allows radio links to handle security differently, e.g.,
         // with different keys or link frame counters.
-        for (uint8_t index = 0; index < OT_ARRAY_LENGTH(RadioTypes::kAllRadioTypes); index++)
+        for (uint8_t index = 0; index < GetArrayLength(RadioTypes::kAllRadioTypes); index++)
         {
             RadioType radio = RadioTypes::kAllRadioTypes[index];
 

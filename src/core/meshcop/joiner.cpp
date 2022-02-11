@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -302,7 +303,7 @@ void Joiner::SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &
 {
     uint8_t       priority;
     bool          doesAllowAny;
-    JoinerRouter *end = OT_ARRAY_END(mJoinerRouters);
+    JoinerRouter *end = GetArrayEnd(mJoinerRouters);
     JoinerRouter *entry;
 
     doesAllowAny = AsCoreType(&aResult.mSteeringData).PermitsAllJoiners();
@@ -342,7 +343,7 @@ exit:
 
 void Joiner::TryNextJoinerRouter(Error aPrevError)
 {
-    for (; mJoinerRouterIndex < OT_ARRAY_LENGTH(mJoinerRouters); mJoinerRouterIndex++)
+    for (; mJoinerRouterIndex < GetArrayLength(mJoinerRouters); mJoinerRouterIndex++)
     {
         JoinerRouter &router = mJoinerRouters[mJoinerRouterIndex];
         Error         error;

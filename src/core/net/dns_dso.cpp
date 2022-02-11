@@ -30,6 +30,7 @@
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -640,7 +641,7 @@ Error Dso::Connection::AppendPadding(Message &aMessage)
     // that its padded length is a multiple of the chosen block
     // length.
 
-    blockLength = kBlockLengths[Random::NonCrypto::GetUint8InRange(0, OT_ARRAY_LENGTH(kBlockLengths))];
+    blockLength = kBlockLengths[Random::NonCrypto::GetUint8InRange(0, GetArrayLength(kBlockLengths))];
 
     paddingTlv.Init((blockLength - ((aMessage.GetLength() + sizeof(Tlv)) % blockLength)) % blockLength);
 

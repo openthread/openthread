@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -244,7 +245,7 @@ void Slaac::Update(UpdateMode aMode)
                 if (!added)
                 {
                     otLogWarnUtil("SLAAC: Failed to add - max %d addresses supported and already in use",
-                                  OT_ARRAY_LENGTH(mAddresses));
+                                  GetArrayLength(mAddresses));
                 }
             }
         }
