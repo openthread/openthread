@@ -1897,15 +1897,40 @@ class NodeImpl:
         self.send_command('br disable')
         self._expect_done()
 
-    def get_omr_prefix(self):
+    def get_br_omr_prefix(self):
         cmd = 'br omrprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
-    def get_on_link_prefix(self):
+    def get_netdata_omr_prefixes(self):
+        prefixes = [prefix.split(' ')[0] for prefix in self.get_prefixes()]
+        return prefixes
+
+    def get_br_on_link_prefix(self):
         cmd = 'br onlinkprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
+
+    def get_netdata_non_nat64_prefixes(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' not in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
+
+    def get_br_nat64_prefix(self):
+        cmd = 'br nat64prefix'
+        self.send_command(cmd)
+        return self._expect_command_output()[0]
+
+    def get_netdata_nat64_prefix(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
@@ -1944,10 +1969,12 @@ class NodeImpl:
 
         return netdata
 
-    def add_route(self, prefix, stable=False, prf='med'):
+    def add_route(self, prefix, stable=False, nat64=False, prf='med'):
         cmd = 'route add %s ' % prefix
         if stable:
             cmd += 's'
+        if nat64:
+            cmd += 'n'
         cmd += ' %s' % prf
         self.send_command(cmd)
         self._expect_done()
