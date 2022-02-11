@@ -738,7 +738,15 @@ class NodeImpl:
 
     def send_command(self, cmd, go=True, expect_command_echo=True):
         print("%d: %s" % (self.nodeid, cmd))
-        self.pexpect.send(cmd + '\n')
+        try:
+            self.pexpect.send(cmd + '\n')
+        except Exception:
+            if self.is_otbr:
+                self.bash('ps aux')
+                self.bash('ls /')
+                self.bash('service otbr-agent status')
+            raise
+
         if go:
             self.simulator.go(0, nodeid=self.nodeid)
         sys.stdout.flush()

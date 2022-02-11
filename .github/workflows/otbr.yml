@@ -49,7 +49,7 @@ jobs:
       THREAD_VERSION: 1.2
       INTER_OP: 1
       COVERAGE: 1
-      MULTIPLY: 10
+      MULTIPLY: 3
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
       # The Border Routing and DUA feature can coexist, but current wireshark
