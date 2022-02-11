@@ -295,7 +295,7 @@ void Mle::SetRole(DeviceRole aRole)
     }
 
 exit:
-    OT_UNUSED_VARIABLE(oldRole);
+    return;
 }
 
 void Mle::SetAttachState(AttachState aState)
@@ -2190,9 +2190,6 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
                            const uint8_t *     aExtraTlvs,
                            uint8_t             aExtraTlvsLength)
 {
-    OT_UNUSED_VARIABLE(aExtraTlvs);
-    OT_UNUSED_VARIABLE(aExtraTlvsLength);
-
     Error    error = kErrorNone;
     Message *message;
 
@@ -3632,8 +3629,6 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
                                 const Neighbor *        aNeighbor)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error              error = kErrorNone;
     LeaderData         leaderData;
     uint16_t           sourceAddress;
@@ -3997,8 +3992,6 @@ exit:
 
 void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error                     error = kErrorNone;
     ChannelTlv                channelTlv;
     MeshCoP::Timestamp        timestamp;

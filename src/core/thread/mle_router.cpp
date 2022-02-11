@@ -3707,8 +3707,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
                                              const Ip6::MessageInfo *aMessageInfo,
                                              Error                   aResult)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     uint8_t             status;
     uint16_t            rloc16;
     ThreadRouterMaskTlv routerMaskTlv;
