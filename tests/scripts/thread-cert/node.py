@@ -122,6 +122,8 @@ class OtbrDocker:
             f'{self._rcp_device}:/dev/ttyUSB0',
             '-v',
             '/tmp/coverage/:/tmp/coverage/',
+            '--ulimit',
+            'core=100000',
             config.OTBR_DOCKER_IMAGE,
             '-B',
             config.BACKBONE_IFNAME,
