@@ -59,7 +59,12 @@ namespace MeshCoP {
 
 RegisterLogModule("Dtls");
 
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+const uint16_t Dtls::sGroups[] = {MBEDTLS_SSL_IANA_TLS_GROUP_SECP256R1, MBEDTLS_SSL_IANA_TLS_GROUP_NONE};
+#else
 const mbedtls_ecp_group_id Dtls::sCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_ECP_DP_NONE};
+#endif
+
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 const int Dtls::sHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
 #endif
@@ -291,7 +296,11 @@ Error Dtls::Setup(bool aClient)
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+        mbedtls_ssl_conf_groups(&mConf, sGroups);
+#else
         mbedtls_ssl_conf_curves(&mConf, sCurves);
+#endif
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
         mbedtls_ssl_conf_sig_hashes(&mConf, sHashes);
 #endif

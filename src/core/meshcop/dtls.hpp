@@ -442,7 +442,12 @@ private:
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+    static const uint16_t sGroups[];
+#else
     static const mbedtls_ecp_group_id sCurves[];
+#endif
+
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
     static const int sHashes[];
 #endif
