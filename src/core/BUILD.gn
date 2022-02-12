@@ -394,6 +394,7 @@ openthread_core_files = [
   "common/heap.cpp",
   "common/heap.hpp",
   "common/heap_allocatable.hpp",
+  "common/heap_array.hpp",
   "common/heap_data.cpp",
   "common/heap_data.hpp",
   "common/heap_string.cpp",
