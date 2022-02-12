@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,6 +112,7 @@ const char *otExitCodeToString(uint8_t aExitCode);
             OT_UNUSED_VARIABLE(start);                                                             \
             otLogCritPlat("%s() at %s:%d: %s", __func__, (start ? start + 1 : __FILE__), __LINE__, \
                           otExitCodeToString(aExitCode));                                          \
+            assert(false);                                                                         \
             exit(aExitCode);                                                                       \
         }                                                                                          \
     } while (false)
