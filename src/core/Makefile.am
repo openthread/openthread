@@ -435,6 +435,7 @@ HEADERS_COMMON                                  = \
     common/extension.hpp                          \
     common/heap.hpp                               \
     common/heap_allocatable.hpp                   \
+    common/heap_array.hpp                         \
     common/heap_data.hpp                          \
     common/heap_string.hpp                        \
     common/instance.hpp                           \
