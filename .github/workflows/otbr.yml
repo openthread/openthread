@@ -75,38 +75,38 @@ jobs:
           _test_complete_
         key: "_test_complete_${{ steps.unique_action_id.outputs.id }}"
     - name: Build OTBR Docker
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         ./script/test build_otbr_docker
     - name: Bootstrap
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       run: |
         ./script/test build
     - name: Get Thread-Wireshark
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       run: |
         ./script/test get_thread_wireshark
     - name: Run
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       with:
         name: cov-thread-1-2-backbone-docker
         path: /tmp/coverage/
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ failure() }}
       with:
         name: thread-1-2-backbone-results
         path: |
@@ -116,15 +116,15 @@ jobs:
           coredump_*
           otbr-agent_*
     - name: Generate Coverage
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       with:
         name: cov-thread-1-2-backbone
         path: tmp/coverage.info
     - name: Cache test result
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ success() }}
       run: |
         mkdir _test_complete_
