@@ -1054,6 +1054,17 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
         }
     }
 
+    if (aIpProto == kProtoFragment && mIcmp.ShouldHandleEchoRequest(aMessageInfo))
+    {
+        FragmentHeader fragmentHeader;
+
+        if (aMessage.Read(aMessage.GetOffset(), fragmentHeader) == kErrorNone)
+        {
+            // do not pass fragments of ICMP messages (echo request/reply)
+            VerifyOrExit(fragmentHeader.GetNextHeader() != kProtoIcmp6, error = kErrorDrop);
+        }
+    }
+
     switch (aMessageOwnership)
     {
     case Message::kTakeCustody:
