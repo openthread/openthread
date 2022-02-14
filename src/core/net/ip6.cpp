@@ -910,9 +910,8 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
             break;
 
         case kProtoFragment:
-            // Always forward IPv6 fragments to the Host.
             IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromNcpHost,
-                                               /* aAllowReceiveFilter */ false, Message::kCopyToUse));
+                                               /* aAllowReceiveFilter */ true, Message::kCopyToUse));
 
             SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromNcpHost));
             break;
@@ -1047,6 +1046,30 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
                              !Get<Udp>().IsPortInUse(udp.GetDestinationPort()),
                          error = kErrorNoRoute);
             break;
+        }
+
+        case kProtoFragment:
+        {
+            FragmentHeader fragmentHeader;
+
+            if (aMessage.Read(aMessage.GetOffset(), fragmentHeader) == kErrorNone)
+            {
+                switch (fragmentHeader.GetNextHeader())
+                {
+                case kProtoIcmp6:
+                    // do not pass ICMP fragments (echo request/reply) if should handle echo request filter is active
+                    VerifyOrExit(!mIcmp.ShouldHandleEchoRequest(aMessageInfo), error = kErrorDrop);
+                    break;
+
+                case kProtoUdp:
+                    // do not pass UDP fragments if receive filters are enabled
+                    VerifyOrExit(false, error = kErrorDrop);
+                    break;
+
+                default:
+                    break;
+                }
+            }
         }
 
         default:
