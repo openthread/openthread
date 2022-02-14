@@ -34,6 +34,7 @@
 #include "coap_message.hpp"
 
 #include "coap/coap.hpp"
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -259,7 +260,7 @@ Error Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) con
             *curUriPath++ = '/';
         }
 
-        VerifyOrExit(curUriPath + optionLength < OT_ARRAY_END(aUriPath), error = kErrorParse);
+        VerifyOrExit(curUriPath + optionLength < GetArrayEnd(aUriPath), error = kErrorParse);
 
         IgnoreError(iterator.ReadOptionValue(curUriPath));
         curUriPath += optionLength;

@@ -45,6 +45,7 @@
 #include <openthread/platform/memory.h>
 #endif
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/error.hpp"
 #include "common/extension.hpp"

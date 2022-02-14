@@ -28,6 +28,7 @@
 
 #include "test_platform.h"
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -585,7 +586,7 @@ template <typename TimerType> int TestTenTimers(void)
 
     size_t i;
 
-    for (i = 0; i < OT_ARRAY_LENGTH(kTimeShift); i++)
+    for (i = 0; i < ot::GetArrayLength(kTimeShift); i++)
     {
         TenTimers<TimerType>(kTimeShift[i]);
     }

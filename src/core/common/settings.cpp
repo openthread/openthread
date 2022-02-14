@@ -33,6 +33,7 @@
 
 #include "settings.hpp"
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -195,7 +196,7 @@ const uint16_t Settings::kCriticalKeys[] = {
 void Settings::Init(void)
 {
     Get<SettingsDriver>().Init();
-    Get<SettingsDriver>().SetCriticalKeys(kCriticalKeys, OT_ARRAY_LENGTH(kCriticalKeys));
+    Get<SettingsDriver>().SetCriticalKeys(kCriticalKeys, GetArrayLength(kCriticalKeys));
 }
 
 void Settings::Deinit(void)

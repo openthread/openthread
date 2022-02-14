@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -1022,7 +1023,7 @@ const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
         cur = query + 1;
     }
 
-    for (; cur < OT_ARRAY_END(mQueryTransactions); cur++)
+    for (; cur < GetArrayEnd(mQueryTransactions); cur++)
     {
         if (cur->IsValid())
         {

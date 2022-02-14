@@ -33,6 +33,7 @@
 
 #include "error.hpp"
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 
 namespace ot {
@@ -80,7 +81,7 @@ const char *ErrorToString(Error aError)
         "Rejected",                   // (37) kErrorRejected
     };
 
-    return aError < OT_ARRAY_LENGTH(kErrorStrings) ? kErrorStrings[aError] : "UnknownErrorType";
+    return aError < GetArrayLength(kErrorStrings) ? kErrorStrings[aError] : "UnknownErrorType";
 }
 
 } // namespace ot

@@ -36,6 +36,7 @@
 
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/instance.hpp"
@@ -184,7 +185,7 @@ const Publisher::PrefixEntry *Publisher::FindMatchingPrefixEntry(const Ip6::Pref
 
 bool Publisher::IsAPrefixEntry(const Entry &aEntry) const
 {
-    return (&mPrefixEntries[0] <= &aEntry) && (&aEntry < OT_ARRAY_END(mPrefixEntries));
+    return (&mPrefixEntries[0] <= &aEntry) && (&aEntry < GetArrayEnd(mPrefixEntries));
 }
 
 void Publisher::NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix) const

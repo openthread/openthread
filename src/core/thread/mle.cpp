@@ -36,6 +36,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -4522,7 +4523,7 @@ const char *Mle::RoleToString(DeviceRole aRole)
     static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
     static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
 
-    return (aRole < OT_ARRAY_LENGTH(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
+    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
 }
 
 // LCOV_EXCL_START

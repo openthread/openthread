@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
+#include "common/array.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 
@@ -107,7 +108,7 @@ NdProxyTable::Iterator::Iterator(Instance &aInstance, NdProxyTable::Iterator::It
     : InstanceLocator(aInstance)
 {
     NdProxyTable &table = GetInstance().Get<BackboneRouter::NdProxyTable>();
-    mItem               = OT_ARRAY_END(table.mProxies);
+    mItem               = GetArrayEnd(table.mProxies);
 }
 
 void NdProxyTable::Iterator::Advance(void)
@@ -117,7 +118,7 @@ void NdProxyTable::Iterator::Advance(void)
     do
     {
         mItem++;
-    } while (mItem < OT_ARRAY_END(table.mProxies) && !MatchesFilter(*mItem, mFilter));
+    } while (mItem < GetArrayEnd(table.mProxies) && !MatchesFilter(*mItem, mFilter));
 }
 
 void NdProxyTable::Erase(NdProxy &aNdProxy)

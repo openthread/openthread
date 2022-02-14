@@ -38,6 +38,7 @@
 #include <stdio.h>
 
 #include "coap/coap_message.hpp"
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
@@ -516,7 +517,7 @@ Error Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner
 {
     Error error = kErrorNone;
 
-    while (aIterator < OT_ARRAY_LENGTH(mJoiners))
+    while (aIterator < GetArrayLength(mJoiners))
     {
         const Joiner &joiner = mJoiners[aIterator++];
 

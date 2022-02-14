@@ -33,6 +33,7 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
+#include "common/array.hpp"
 #include "common/instance.hpp"
 #include "net/dns_types.hpp"
 
@@ -1095,7 +1096,7 @@ void TestHeaderAndResourceRecords(void)
     printf("Use FindRecord() to search for specific records:\n");
     printf(" Answer Section\n");
 
-    for (index = 0; index < OT_ARRAY_LENGTH(kInstanceNames); index++)
+    for (index = 0; index < GetArrayLength(kInstanceNames); index++)
     {
         offset = answerSectionOffset;
         SuccessOrQuit(
@@ -1248,13 +1249,13 @@ void TestDnsTxtEntry(void)
     VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     data.Init(txtData, sizeof(txtData));
-    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), data));
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, GetArrayLength(kTxtEntries), data));
     VerifyOrQuit(data.GetBytes() == txtData);
     txtDataLength = data.GetLength();
     VerifyOrQuit(txtDataLength < kMaxTxtDataSize, "TXT data is too long");
     DumpBuffer("txt data", txtData, txtDataLength);
 
-    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), *message));
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, GetArrayLength(kTxtEntries), *message));
     VerifyOrQuit(txtDataLength == message->GetLength());
     VerifyOrQuit(message->CompareBytes(0, txtData, txtDataLength));
 

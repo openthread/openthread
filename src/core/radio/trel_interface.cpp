@@ -36,6 +36,7 @@
 
 #include <string.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -148,7 +149,7 @@ void Interface::RegisterService(void)
     txtEntries[1].Init(kTxtRecordExtPanIdKey, Get<Mac::Mac>().GetExtendedPanId().m8, sizeof(Mac::ExtendedPanId));
 
     txtData.Init(txtDataBuffer, sizeof(txtDataBuffer));
-    SuccessOrAssert(Dns::TxtEntry::AppendEntries(txtEntries, OT_ARRAY_LENGTH(txtEntries), txtData));
+    SuccessOrAssert(Dns::TxtEntry::AppendEntries(txtEntries, GetArrayLength(txtEntries), txtData));
 
     otLogInfoMac("Trel: Registering DNS-SD service: port:%u, txt:\"%s=%s, %s=%s\"", mUdpPort, kTxtRecordExtAddressKey,
                  Get<Mac::Mac>().GetExtAddress().ToString().AsCString(), kTxtRecordExtPanIdKey,
