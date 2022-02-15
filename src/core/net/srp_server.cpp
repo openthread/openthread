@@ -1797,7 +1797,7 @@ void Server::Host::FreeAllServices(void)
 
 void Server::Host::ClearResources(void)
 {
-    mAddresses.Clear();
+    mAddresses.Free();
 }
 
 Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
@@ -1810,7 +1810,7 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 
     LogInfo("update host %s", GetFullName());
 
-    mAddresses  = aHost.mAddresses;
+    mAddresses.TakeFrom(static_cast<Heap::Array<Ip6::Address> &&>(aHost.mAddresses));
     mKeyRecord  = aHost.mKeyRecord;
     mLease      = aHost.mLease;
     mKeyLease   = aHost.mKeyLease;
