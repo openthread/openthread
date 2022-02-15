@@ -58,12 +58,14 @@
 #include "common/clearable.hpp"
 #include "common/heap.hpp"
 #include "common/heap_allocatable.hpp"
+#include "common/heap_array.hpp"
 #include "common/heap_data.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/retain_ptr.hpp"
 #include "common/timer.hpp"
 #include "crypto/ecdsa.hpp"
@@ -432,8 +434,8 @@ public:
          */
         const Ip6::Address *GetAddresses(uint8_t &aAddressesNum) const
         {
-            aAddressesNum = mAddresses.GetLength();
-            return mAddresses.Front();
+            aAddressesNum = static_cast<uint8_t>(OT_MIN(mAddresses.GetLength(), NumericLimits<uint8_t>::kMax));
+            return mAddresses.AsCArray();
         }
 
         /**
@@ -512,8 +514,6 @@ public:
         bool Matches(const char *aFullName) const;
 
     private:
-        static constexpr uint16_t kMaxAddresses = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
-
         Host(Instance &aInstance, TimeMilli aUpdateTime);
         ~Host(void);
 
@@ -537,9 +537,9 @@ public:
         Service *                             FindService(const char *aServiceName, const char *aInstanceName);
         const Service *                       FindService(const char *aServiceName, const char *aInstanceName) const;
 
-        Host *                             mNext;
-        Heap::String                       mFullName;
-        Array<Ip6::Address, kMaxAddresses> mAddresses;
+        Host *                    mNext;
+        Heap::String              mFullName;
+        Heap::Array<Ip6::Address> mAddresses;
 
         // TODO(wgtdkp): there is no necessary to save the entire resource
         // record, saving only the ECDSA-256 public key should be enough.

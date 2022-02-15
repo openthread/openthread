@@ -614,4 +614,9 @@
 #error "OPENTHREAD_CONFIG_LOG_PREPEND_REGION was removed and not longer supported"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM
+#error "OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM was removed. "\
+       "SRP host uses dynamic heap array to store addresses so no need for config on max number of addresses".
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_
