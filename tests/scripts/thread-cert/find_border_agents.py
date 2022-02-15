@@ -50,6 +50,7 @@ class BorderAgent(object):
     def __repr__(self):
         return str([self.alias, self.link_local_addr, self.port, self.thread_status])
 
+
 def parse_cache(cache):
     border_agents = []
 
@@ -83,8 +84,7 @@ def parse_cache(cache):
 def main():
     # Browse border agents
     zeroconf = Zeroconf()
-    ServiceBrowser(zeroconf, "_meshcop._udp.local.",
-                   handlers=[on_service_state_change])
+    ServiceBrowser(zeroconf, "_meshcop._udp.local.", handlers=[on_service_state_change])
     time.sleep(2)
     cache = zeroconf.cache.cache
     zeroconf.close()
@@ -92,6 +92,7 @@ def main():
     border_agents = parse_cache(cache)
     for ba in border_agents:
         print(ba)
+
 
 if __name__ == '__main__':
     main()
