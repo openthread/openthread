@@ -54,8 +54,6 @@
 #define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_2
 #endif
 
-#include "config/openthread-core-default-config.h"
-
 #include "config/announce_sender.h"
 #include "config/backbone_router.h"
 #include "config/border_router.h"
@@ -80,6 +78,7 @@
 #include "config/link_raw.h"
 #include "config/logging.h"
 #include "config/mac.h"
+#include "config/misc.h"
 #include "config/mle.h"
 #include "config/netdata_publisher.h"
 #include "config/parent_search.h"
