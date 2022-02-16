@@ -201,7 +201,7 @@ Error MeshForwarder::ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Addr
     ttl++;
     aMessage.Write(Ip6::Header::kHopLimitFieldOffset, ttl);
 
-    IgnoreError(Get<Ip6::Ip6>().HandleDatagram(aMessage, nullptr, nullptr, /* aFromNcpHost */ false));
+    IgnoreError(Get<Ip6::Ip6>().HandleDatagram(aMessage, nullptr, nullptr, /* aFromHost */ false));
 
 exit:
     return error;
