@@ -262,7 +262,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
             OptionMpl      mplOption;
 
             // read existing hop-by-hop option header
-            IgnoreError(aMessage.Read(0, hbh));
+            SuccessOrExit(error = aMessage.Read(0, hbh));
             hbhLength = (hbh.GetLength() + 1) * 8;
 
             VerifyOrExit(hbhLength <= aHeader.GetPayloadLength(), error = kErrorParse);
