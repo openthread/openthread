@@ -789,12 +789,12 @@ exit:
 
 #else
 
-int Dtls::HandleMbedtlsExportKeys(void *aContext,
+int Dtls::HandleMbedtlsExportKeys(void *               aContext,
                                   const unsigned char *aMasterSecret,
                                   const unsigned char *aKeyBlock,
-                                  size_t aMacLength,
-                                  size_t aKeyLength,
-                                  size_t aIvLength)
+                                  size_t               aMacLength,
+                                  size_t               aKeyLength,
+                                  size_t               aIvLength)
 {
     return static_cast<Dtls *>(aContext)->HandleMbedtlsExportKeys(aMasterSecret, aKeyBlock, aMacLength, aKeyLength,
                                                                   aIvLength);
@@ -802,14 +802,14 @@ int Dtls::HandleMbedtlsExportKeys(void *aContext,
 
 int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
                                   const unsigned char *aKeyBlock,
-                                  size_t aMacLength,
-                                  size_t aKeyLength,
-                                  size_t aIvLength)
+                                  size_t               aMacLength,
+                                  size_t               aKeyLength,
+                                  size_t               aIvLength)
 {
     OT_UNUSED_VARIABLE(aMasterSecret);
 
     Crypto::Sha256::Hash kek;
-    Crypto::Sha256 sha256;
+    Crypto::Sha256       sha256;
 
     VerifyOrExit(mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8);
 
