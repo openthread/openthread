@@ -372,7 +372,7 @@ void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::Message
 
     while (offset < aMessage.GetLength())
     {
-        IgnoreError(aMessage.Read(offset, tlv));
+        SuccessOrExit(aMessage.Read(offset, tlv));
 
         if (tlv.GetType() == Tlv::kGet)
         {
