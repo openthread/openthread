@@ -191,7 +191,7 @@ SOURCES_COMMON                                  = \
     common/heap_data.cpp                          \
     common/heap_string.cpp                        \
     common/instance.cpp                           \
-    common/logging.cpp                            \
+    common/log.cpp                                \
     common/message.cpp                            \
     common/notifier.cpp                           \
     common/random_manager.cpp                     \
@@ -336,7 +336,7 @@ RADIO_SOURCES_COMMON                       = \
     common/binary_search.cpp                 \
     common/error.cpp                         \
     common/instance.cpp                      \
-    common/logging.cpp                       \
+    common/log.cpp                           \
     common/random_manager.cpp                \
     common/string.cpp                        \
     common/tasklet.cpp                       \
@@ -442,6 +442,7 @@ HEADERS_COMMON                                  = \
     common/linked_list.hpp                        \
     common/locator.hpp                            \
     common/locator_getters.hpp                    \
+    common/log.hpp                                \
     common/logging.hpp                            \
     common/message.hpp                            \
     common/new.hpp                                \

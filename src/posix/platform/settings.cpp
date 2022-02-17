@@ -44,6 +44,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <openthread/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
@@ -495,6 +496,17 @@ void otPlatSettingsWipe(otInstance *aInstance)
 #endif
 
 #if SELF_TEST
+
+void otLogCritPlat(const char *aFormat, ...)
+{
+    OT_UNUSED_VARIABLE(aFormat);
+}
+
+const char *otExitCodeToString(uint8_t aExitCode)
+{
+    OT_UNUSED_VARIABLE(aExitCode);
+    return "";
+}
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {

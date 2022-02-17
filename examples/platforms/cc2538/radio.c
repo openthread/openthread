@@ -33,12 +33,12 @@
  */
 
 #include <openthread/config.h>
+#include <openthread/logging.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
 
 #include "platform-cc2538.h"
-#include "common/logging.hpp"
 #include "utils/code_utils.h"
 
 #define RFCORE_XREG_RFIRQM0 0x4008868C // RF interrupt masks

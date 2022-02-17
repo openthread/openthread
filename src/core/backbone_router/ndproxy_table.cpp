@@ -37,11 +37,13 @@
 
 #include "common/array.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 namespace ot {
 
 namespace BackboneRouter {
+
+RegisterLogModule("BbrNdProxy");
 
 void NdProxyTable::NdProxy::Init(const Ip6::InterfaceIdentifier &aAddressIid,
                                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
@@ -147,7 +149,7 @@ void NdProxyTable::Clear(void)
         mCallback(mCallbackContext, OT_BACKBONE_ROUTER_NDPROXY_CLEARED, nullptr);
     }
 
-    otLogNoteBbr("NdProxyTable::Clear!");
+    LogNote("NdProxyTable::Clear!");
 }
 
 Error NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
@@ -186,8 +188,8 @@ Error NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
     mIsAnyDadInProcess = true;
 
 exit:
-    otLogInfoBbr("NdProxyTable::Register %s MLIID %s RLOC16 %04x LTT %u => %s", aAddressIid.ToString().AsCString(),
-                 aMeshLocalIid.ToString().AsCString(), aRloc16, timeSinceLastTransaction, ErrorToString(error));
+    LogInfo("NdProxyTable::Register %s MLIID %s RLOC16 %04x LTT %u => %s", aAddressIid.ToString().AsCString(),
+            aMeshLocalIid.ToString().AsCString(), aRloc16, timeSinceLastTransaction, ErrorToString(error));
     return error;
 }
 
@@ -204,8 +206,8 @@ NdProxyTable::NdProxy *NdProxyTable::FindByAddressIid(const Ip6::InterfaceIdenti
     }
 
 exit:
-    otLogDebgBbr("NdProxyTable::FindByAddressIid(%s) => %s", aAddressIid.ToString().AsCString(),
-                 found ? found->mMeshLocalIid.ToString().AsCString() : "NOT_FOUND");
+    LogDebg("NdProxyTable::FindByAddressIid(%s) => %s", aAddressIid.ToString().AsCString(),
+            found ? found->mMeshLocalIid.ToString().AsCString() : "NOT_FOUND");
     return found;
 }
 
@@ -222,8 +224,8 @@ NdProxyTable::NdProxy *NdProxyTable::FindByMeshLocalIid(const Ip6::InterfaceIden
     }
 
 exit:
-    otLogDebgBbr("NdProxyTable::FindByMeshLocalIid(%s) => %s", aMeshLocalIid.ToString().AsCString(),
-                 found ? found->mAddressIid.ToString().AsCString() : "NOT_FOUND");
+    LogDebg("NdProxyTable::FindByMeshLocalIid(%s) => %s", aMeshLocalIid.ToString().AsCString(),
+            found ? found->mAddressIid.ToString().AsCString() : "NOT_FOUND");
     return found;
 }
 
@@ -237,7 +239,7 @@ NdProxyTable::NdProxy *NdProxyTable::FindInvalid(void)
     }
 
 exit:
-    otLogDebgBbr("NdProxyTable::FindInvalid() => %s", found ? "OK" : "NOT_FOUND");
+    LogDebg("NdProxyTable::FindInvalid() => %s", found ? "OK" : "NOT_FOUND");
     return found;
 }
 

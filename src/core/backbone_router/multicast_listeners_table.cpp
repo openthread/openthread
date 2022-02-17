@@ -39,7 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -48,6 +48,8 @@
 namespace ot {
 
 namespace BackboneRouter {
+
+RegisterLogModule("BbrMlt");
 
 Error MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireTime)
 {
@@ -155,8 +157,8 @@ void MulticastListenersTable::LogMulticastListenersTable(const char *        aAc
     OT_UNUSED_VARIABLE(aExpireTime);
     OT_UNUSED_VARIABLE(aError);
 
-    otLogDebgBbr("MulticastListenersTable: %s %s expire %u: %s", aAction, aAddress.ToString().AsCString(),
-                 aExpireTime.GetValue(), ErrorToString(aError));
+    LogDebg("%s %s expire %u: %s", aAction, aAddress.ToString().AsCString(), aExpireTime.GetValue(),
+            ErrorToString(aError));
 }
 
 void MulticastListenersTable::FixHeap(uint16_t aIndex)

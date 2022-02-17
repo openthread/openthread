@@ -46,6 +46,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
+#include <openthread/logging.h>
 #include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
@@ -89,7 +90,6 @@ namespace ot {
 namespace Cli {
 
 extern "C" void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
-extern "C" void otCliPlatLogLine(otLogLevel, otLogRegion, const char *);
 extern "C" void otCliAppendResult(otError aError);
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 extern "C" void otCliOutputFormat(const char *aFmt, ...);
@@ -107,7 +107,6 @@ class Interpreter : public Output
     friend class SrpClient;
 #endif
     friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
-    friend void otCliPlatLogLine(otLogLevel, otLogRegion, const char *);
     friend void otCliAppendResult(otError aError);
     friend void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
     friend void otCliOutputFormat(const char *aFmt, ...);

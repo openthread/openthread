@@ -39,7 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/sha256.hpp"
@@ -47,6 +47,8 @@
 
 namespace ot {
 namespace Utils {
+
+RegisterLogModule("Slaac");
 
 Slaac::Slaac(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -60,7 +62,7 @@ void Slaac::Enable(void)
 {
     VerifyOrExit(!mEnabled);
 
-    otLogInfoUtil("SLAAC:: Enabling");
+    LogInfo("Enabling");
     mEnabled = true;
     Update(kModeAdd);
 
@@ -72,7 +74,7 @@ void Slaac::Disable(void)
 {
     VerifyOrExit(mEnabled);
 
-    otLogInfoUtil("SLAAC:: Disabling");
+    LogInfo("Disabling");
     mEnabled = false;
     Update(kModeRemove);
 
@@ -85,7 +87,7 @@ void Slaac::SetFilter(otIp6SlaacPrefixFilter aFilter)
     VerifyOrExit(aFilter != mFilter);
 
     mFilter = aFilter;
-    otLogInfoUtil("SLAAC: Filter %s", (mFilter != nullptr) ? "updated" : "disabled");
+    LogInfo("Filter %s", (mFilter != nullptr) ? "updated" : "disabled");
 
     VerifyOrExit(mEnabled);
     Update(kModeAdd | kModeRemove);
@@ -184,7 +186,7 @@ void Slaac::Update(UpdateMode aMode)
 
             if (!found)
             {
-                otLogInfoUtil("SLAAC: Removing address %s", slaacAddr.GetAddress().ToString().AsCString());
+                LogInfo("Removing address %s", slaacAddr.GetAddress().ToString().AsCString());
 
                 Get<ThreadNetif>().RemoveUnicastAddress(slaacAddr);
                 slaacAddr.mValid = false;
@@ -234,7 +236,7 @@ void Slaac::Update(UpdateMode aMode)
 
                     IgnoreError(GenerateIid(slaacAddr));
 
-                    otLogInfoUtil("SLAAC: Adding address %s", slaacAddr.GetAddress().ToString().AsCString());
+                    LogInfo("Adding address %s", slaacAddr.GetAddress().ToString().AsCString());
 
                     Get<ThreadNetif>().AddUnicastAddress(slaacAddr);
 
@@ -244,8 +246,8 @@ void Slaac::Update(UpdateMode aMode)
 
                 if (!added)
                 {
-                    otLogWarnUtil("SLAAC: Failed to add - max %d addresses supported and already in use",
-                                  GetArrayLength(mAddresses));
+                    LogWarn("Failed to add - max %d addresses supported and already in use",
+                            GetArrayLength(mAddresses));
                 }
             }
         }
@@ -316,7 +318,7 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
         ExitNow(error = kErrorNone);
     }
 
-    otLogWarnUtil("SLAAC: Failed to generate a non-reserved IID after %d attempts", kMaxIidCreationAttempts);
+    LogWarn("Failed to generate a non-reserved IID after %d attempts", kMaxIidCreationAttempts);
 
 exit:
     return error;
@@ -341,7 +343,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 
     IgnoreError(Get<Settings>().Save<Settings::SlaacIidSecretKey>(aKey));
 
-    otLogInfoUtil("SLAAC: Generated and saved secret key");
+    LogInfo("Generated and saved secret key");
 
 exit:
     return;

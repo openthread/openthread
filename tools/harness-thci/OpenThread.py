@@ -84,23 +84,19 @@ ZEPHYR_PREFIX = 'ot '
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
-LOGX = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
-                  r'|(-(CLI|MLR|API|MLE|BBR|DUA|ARP|N-DATA|ICMP|IP6|MAC|MEM|NCP|MESH-CP|DIAG|PLAT|COAP|CORE|UTIL)-+: )'
+LOGX = re.compile(r'((\[(-|C|W|N|I|D)\])'
                   r'|(-+$)'  # e.x. ------------------------------------------------------------------------
                   r'|(=+\[.*\]=+$)'  # e.x. ==============================[TX len=108]===============================
                   r'|(\|.+\|.+\|.+)'  # e.x. | 61 DC D2 CE FA 04 00 00 | 00 00 0A 6E 16 01 00 00 | aRNz......n....
                   r')')
 """regex used to filter logs"""
 
-assert LOGX.match('[NONE]')
-assert LOGX.match('[CRIT]')
-assert LOGX.match('[WARN]')
-assert LOGX.match('[NOTE]')
-assert LOGX.match('[INFO]')
-assert LOGX.match('[DEBG]')
-assert LOGX.match('-CLI-----: ')
-assert LOGX.match('-N-DATA--: ')
-assert LOGX.match('-MESH-CP-: ')
+assert LOGX.match('[-]')
+assert LOGX.match('[C]')
+assert LOGX.match('[W]')
+assert LOGX.match('[N]')
+assert LOGX.match('[I]')
+assert LOGX.match('[D]')
 assert LOGX.match('------------------------------------------------------------------------')
 assert LOGX.match('==============================[TX len=108]===============================')
 assert LOGX.match('| 61 DC D2 CE FA 04 00 00 | 00 00 0A 6E 16 01 00 00 | aRNz......n....')

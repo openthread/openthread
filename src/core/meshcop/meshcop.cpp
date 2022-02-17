@@ -36,7 +36,7 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/string.hpp"
 #include "crypto/pbkdf2_cmac.hpp"
 #include "crypto/sha256.hpp"
@@ -44,6 +44,9 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("MeshCoP");
+
 namespace MeshCoP {
 
 Error JoinerPskd::SetFrom(const char *aPskdString)
@@ -354,12 +357,12 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
 void LogError(const char *aActionText, Error aError)
 {
     if (aError != kErrorNone)
     {
-        otLogWarnMeshCoP("Failed to %s: %s", aActionText, ErrorToString(aError));
+        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
     }
 }
 #endif

@@ -46,9 +46,10 @@
 #endif
 
 #include <openthread/backbone_router_ftd.h>
+#include <openthread/logging.h>
 
+#include "core/common/arg_macros.hpp"
 #include "core/common/debug.hpp"
-#include "core/common/logging.hpp"
 
 namespace ot {
 namespace Posix {

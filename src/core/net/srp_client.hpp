@@ -843,7 +843,7 @@ private:
 #endif
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_SRP == 1)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
 #else

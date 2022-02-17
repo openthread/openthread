@@ -147,16 +147,6 @@ void otCliAppendResult(otError aError);
 void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
 
 /**
- * Function to write the OpenThread Log to the CLI console.
- *
- * @param[in]  aLogLevel   The log level.
- * @param[in]  aLogRegion  The log region.
- * @param[in]  aLogLine    A pointer to the log line string.
- *
- */
-void otCliPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine);
-
-/**
  * @}
  *
  */

@@ -46,7 +46,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/timer.hpp"
 #include "crypto/mbedtls.hpp"
 #include "crypto/sha256.hpp"
@@ -56,6 +56,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("Dtls");
 
 const mbedtls_ecp_group_id Dtls::sCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_ECP_DP_NONE};
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
@@ -338,12 +340,12 @@ Error Dtls::Setup(bool aClient)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogInfoMeshCoP("DTLS started");
+        LogInfo("DTLS started");
     }
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     else
     {
-        otLogInfoCoap("Application Coap Secure DTLS started");
+        LogInfo("Application Coap Secure DTLS started");
     }
 #endif
 
@@ -408,7 +410,7 @@ int Dtls::SetApplicationCoapSecureKeys(void)
         break;
 
     default:
-        otLogCritCoap("Application Coap Secure DTLS: Not supported cipher.");
+        LogCrit("Application Coap Secure: Not supported cipher.");
         rval = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
         ExitNow();
         break;
@@ -590,12 +592,12 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogDebgMeshCoP("Dtls::HandleMbedtlsTransmit");
+        LogDebg("HandleMbedtlsTransmit");
     }
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     else
     {
-        otLogDebgCoap("Dtls::ApplicationCoapSecure HandleMbedtlsTransmit");
+        LogDebg("ApplicationCoapSecure HandleMbedtlsTransmit");
     }
 #endif
 
@@ -615,7 +617,7 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
         break;
 
     default:
-        otLogWarnMeshCoP("Dtls::HandleMbedtlsTransmit: %s error", ErrorToString(error));
+        LogWarn("HandleMbedtlsTransmit: %s error", ErrorToString(error));
         rval = MBEDTLS_ERR_NET_SEND_FAILED;
         break;
     }
@@ -634,12 +636,12 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogDebgMeshCoP("Dtls::HandleMbedtlsReceive");
+        LogDebg("HandleMbedtlsReceive");
     }
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     else
     {
-        otLogDebgCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsReceive");
+        LogDebg("ApplicationCoapSecure HandleMbedtlsReceive");
     }
 #endif
 
@@ -669,12 +671,12 @@ int Dtls::HandleMbedtlsGetTimer(void)
 
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogDebgMeshCoP("Dtls::HandleMbedtlsGetTimer");
+        LogDebg("HandleMbedtlsGetTimer");
     }
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     else
     {
-        otLogDebgCoap("Dtls:: ApplicationCoapSecure HandleMbedtlsGetTimer");
+        LogDebg("ApplicationCoapSecure HandleMbedtlsGetTimer");
     }
 #endif
 
@@ -707,12 +709,12 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
-        otLogDebgMeshCoP("Dtls::SetTimer");
+        LogDebg("SetTimer");
     }
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     else
     {
-        otLogDebgCoap("Dtls::ApplicationCoapSecure SetTimer");
+        LogDebg("ApplicationCoapSecure SetTimer");
     }
 #endif
 
@@ -769,7 +771,7 @@ void Dtls::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
     sha256.Update(keyBlock, kDtlsKeyBlockSize);
     sha256.Finish(kek);
 
-    otLogDebgMeshCoP("Generated KEK");
+    LogDebg("Generated KEK");
     Get<KeyManager>().SetKek(kek.GetBytes());
 
 exit:
@@ -806,7 +808,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
     sha256.Update(aKeyBlock, 2 * static_cast<uint16_t>(aMacLength + aKeyLength + aIvLength));
     sha256.Finish(kek);
 
-    otLogDebgMeshCoP("Generated KEK");
+    LogDebg("Generated KEK");
     Get<KeyManager>().SetKek(kek.GetBytes());
 
 exit:
@@ -952,20 +954,20 @@ void Dtls::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const ch
     switch (aLevel)
     {
     case 1:
-        otLogCritMbedTls("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogCrit("[%hu] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 2:
-        otLogWarnMbedTls("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogWarn("[%hu] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 3:
-        otLogInfoMbedTls("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogInfo("[%hu] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 4:
     default:
-        otLogDebgMbedTls("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogDebg("[%hu] %s", mSocket.GetSockName().mPort, aStr);
         break;
     }
 }

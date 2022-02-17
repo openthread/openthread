@@ -32,7 +32,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/new.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
@@ -44,6 +44,8 @@
 
 namespace ot {
 namespace Coap {
+
+RegisterLogModule("CoapSecure");
 
 CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
     : CoapBase(aInstance, &CoapSecure::Send)
@@ -221,12 +223,12 @@ void CoapSecure::HandleTransmit(void)
 exit:
     if (error != kErrorNone)
     {
-        otLogNoteMeshCoP("CoapSecure Transmit: %s", ErrorToString(error));
+        LogNote("Transmit: %s", ErrorToString(error));
         message->Free();
     }
     else
     {
-        otLogDebgMeshCoP("CoapSecure Transmit: %s", ErrorToString(error));
+        LogDebg("Transmit: %s", ErrorToString(error));
     }
 }
 

@@ -40,13 +40,15 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Dhcp6 {
+
+RegisterLogModule("Dhcp6Client");
 
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -146,7 +148,7 @@ void Client::UpdateAddresses(void)
             }
             else
             {
-                otLogWarnIp6("Insufficient memory for new DHCP prefix");
+                LogWarn("Insufficient memory for new DHCP prefix");
                 continue;
             }
         }
@@ -283,13 +285,13 @@ void Client::Solicit(uint16_t aRloc16)
     messageInfo.mPeerPort = kDhcpServerPort;
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
-    otLogInfoIp6("solicit");
+    LogInfo("solicit");
 
 exit:
     if (error != kErrorNone)
     {
         FreeMessage(message);
-        otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", ErrorToString(error));
+        LogWarn("Failed to send DHCPv6 Solicit: %s", ErrorToString(error));
     }
 }
 

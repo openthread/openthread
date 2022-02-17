@@ -36,13 +36,14 @@
 #if OPENTHREAD_FTD
 
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
+
+RegisterLogModule("MeshForwarder");
 
 Error MeshForwarder::SendMessage(Message &aMessage)
 {
@@ -835,8 +836,8 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", ErrorToString(error), aFrameLength,
-                     aMacSource.ToString().AsCString(), ToYesNo(aLinkInfo.IsLinkSecurityEnabled()));
+        LogInfo("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", ErrorToString(error), aFrameLength,
+                aMacSource.ToString().AsCString(), ToYesNo(aLinkInfo.IsLinkSecurityEnabled()));
         FreeMessage(message);
     }
 }
@@ -1010,8 +1011,8 @@ void MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
 exit:
     if (error != kErrorNone)
     {
-        otLogNoteMac("Failed to get forwarded frame priority, error:%s, len:%d, src:%d, dst:%s", ErrorToString(error),
-                     aFrameLength, aMeshSource.ToString().AsCString(), aMeshDest.ToString().AsCString());
+        LogNote("Failed to get forwarded frame priority, error:%s, len:%d, src:%d, dst:%s", ErrorToString(error),
+                aFrameLength, aMeshSource.ToString().AsCString(), aMeshDest.ToString().AsCString());
     }
     else if (isFragment)
     {
@@ -1023,7 +1024,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
 
 Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                            const Message &     aMessage,
@@ -1032,7 +1033,7 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                            uint16_t &          aOffset,
                                            Mac::Address &      aMeshSource,
                                            Mac::Address &      aMeshDest,
-                                           otLogLevel          aLogLevel)
+                                           LogLevel            aLogLevel)
 {
     Error                  error             = kErrorFailed;
     bool                   hasFragmentHeader = false;
@@ -1063,20 +1064,20 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
     radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
 #endif
 
-    otLogMac(aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
-             MessageActionToString(aAction, aError), aMessage.GetLength(),
-             (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
-             (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
-             aMeshDest.ToString().AsCString(), meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0),
-             ToYesNo(hasFragmentHeader), ToYesNo(aMessage.IsLinkSecurityEnabled()),
-             (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
-             shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
-             shouldLogRadio ? ", radio:" : "", radioString);
+    LogAt(aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
+          MessageActionToString(aAction, aError), aMessage.GetLength(),
+          (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
+          (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
+          aMeshDest.ToString().AsCString(), meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0),
+          ToYesNo(hasFragmentHeader), ToYesNo(aMessage.IsLinkSecurityEnabled()),
+          (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
+          shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
+          shouldLogRadio ? ", radio:" : "", radioString);
 
     if (hasFragmentHeader)
     {
-        otLogMac(aLogLevel, "    Frag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
-                 fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
+        LogAt(aLogLevel, "    Frag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
+              fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
 
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0);
     }
@@ -1163,7 +1164,7 @@ void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
                                     uint16_t            aOffset,
                                     const Mac::Address &aMeshSource,
                                     const Mac::Address &aMeshDest,
-                                    otLogLevel          aLogLevel)
+                                    LogLevel            aLogLevel)
 {
     uint16_t    checksum;
     uint16_t    sourcePort;
@@ -1173,8 +1174,8 @@ void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
     SuccessOrExit(DecompressIp6UdpTcpHeader(aMessage, aOffset, aMeshSource, aMeshDest, ip6Header, checksum, sourcePort,
                                             destPort));
 
-    otLogMac(aLogLevel, "    IPv6 %s msg, chksum:%04x, prio:%s", Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
-             checksum, MessagePriorityToString(aMessage));
+    LogAt(aLogLevel, "    IPv6 %s msg, chksum:%04x, prio:%s", Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
+          checksum, MessagePriorityToString(aMessage));
 
     LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort, aLogLevel);
 
@@ -1186,7 +1187,7 @@ void MeshForwarder::LogMeshMessage(MessageAction       aAction,
                                    const Message &     aMessage,
                                    const Mac::Address *aMacAddress,
                                    Error               aError,
-                                   otLogLevel          aLogLevel)
+                                   LogLevel            aLogLevel)
 {
     uint16_t     offset;
     Mac::Address meshSource;
@@ -1208,7 +1209,7 @@ exit:
     return;
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
 
 // LCOV_EXCL_STOP
 

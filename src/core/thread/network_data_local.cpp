@@ -39,13 +39,15 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace NetworkData {
+
+RegisterLogModule("NetworkData");
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
@@ -125,7 +127,7 @@ Error Local::AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvT
         prefixTlv->GetSubTlvs()->SetStable();
     }
 
-    otDumpDebgNetData("AddPrefix", GetBytes(), GetLength());
+    DumpDebg("AddPrefix", GetBytes(), GetLength());
 
 exit:
     return error;
@@ -141,7 +143,7 @@ Error Local::RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubT
     RemoveTlv(tlv);
 
 exit:
-    otDumpDebgNetData("RmvPrefix", GetBytes(), GetLength());
+    DumpDebg("RmvPrefix", GetBytes(), GetLength());
     return error;
 }
 
@@ -210,7 +212,7 @@ Error Local::AddService(uint32_t           aEnterpriseNumber,
         serverTlv->SetStable();
     }
 
-    otDumpDebgNetData("AddService", GetBytes(), GetLength());
+    DumpDebg("AddService", GetBytes(), GetLength());
 
 exit:
     return error;
@@ -226,7 +228,7 @@ Error Local::RemoveService(uint32_t aEnterpriseNumber, const ServiceData &aServi
     RemoveTlv(tlv);
 
 exit:
-    otDumpDebgNetData("RmvService", GetBytes(), GetLength());
+    DumpDebg("RmvService", GetBytes(), GetLength());
     return error;
 }
 

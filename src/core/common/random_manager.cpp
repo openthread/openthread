@@ -37,7 +37,6 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/logging.hpp"
 #include "common/random.hpp"
 #include "crypto/mbedtls.hpp"
 

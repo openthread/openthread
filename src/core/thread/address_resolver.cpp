@@ -42,7 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/time.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -51,6 +51,8 @@
 #include "thread/uri_paths.hpp"
 
 namespace ot {
+
+RegisterLogModule("AddrResolver");
 
 AddressResolver::AddressResolver(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -573,7 +575,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sending address query for %s", aEid.ToString().AsCString());
+    LogInfo("Sending address query for %s", aEid.ToString().AsCString());
 
 exit:
 
@@ -585,8 +587,8 @@ exit:
     {
         uint16_t selfRloc16 = Get<Mle::MleRouter>().GetRloc16();
 
-        otLogInfoArp("Extending ADDR.qry to BB.qry for target=%s, rloc16=%04x(self)", aEid.ToString().AsCString(),
-                     selfRloc16);
+        LogInfo("Extending ADDR.qry to BB.qry for target=%s, rloc16=%04x(self)", aEid.ToString().AsCString(),
+                selfRloc16);
         IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(aEid, selfRloc16));
     }
 #endif
@@ -627,8 +629,8 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
         ExitNow();
     }
 
-    otLogInfoArp("Received address notification from 0x%04x for %s to 0x%04x",
-                 aMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString(), rloc16);
+    LogInfo("Received address notification from 0x%04x for %s to 0x%04x",
+            aMessageInfo.GetPeerAddr().GetIid().GetLocator(), target.ToString().AsCString(), rloc16);
 
     entry = FindCacheEntry(target, list, prev);
     VerifyOrExit(entry != nullptr);
@@ -659,7 +661,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
 
     if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
     {
-        otLogInfoArp("Sending address notification acknowledgment");
+        LogInfo("Sending address notification acknowledgment");
     }
 
     Get<MeshForwarder>().HandleResolved(target, kErrorNone);
@@ -699,14 +701,14 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sending address error for target %s", aTarget.ToString().AsCString());
+    LogInfo("Sending address error for target %s", aTarget.ToString().AsCString());
 
 exit:
 
     if (error != kErrorNone)
     {
         FreeMessage(message);
-        otLogInfoArp("Failed to send address error: %s", ErrorToString(error));
+        LogInfo("Failed to send address error: %s", ErrorToString(error));
     }
 }
 
@@ -725,13 +727,13 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
 
     VerifyOrExit(aMessage.IsPostRequest(), error = kErrorDrop);
 
-    otLogInfoArp("Received address error notification");
+    LogInfo("Received address error notification");
 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
         {
-            otLogInfoArp("Sent address error notification acknowledgment");
+            LogInfo("Sent address error notification acknowledgment");
         }
     }
 
@@ -786,7 +788,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogWarnArp("Error while processing address error notification: %s", ErrorToString(error));
+        LogWarn("Error while processing address error notification: %s", ErrorToString(error));
     }
 }
 
@@ -804,8 +806,8 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
 
     SuccessOrExit(Tlv::Find<ThreadTargetTlv>(aMessage, target));
 
-    otLogInfoArp("Received address query from 0x%04x for target %s", aMessageInfo.GetPeerAddr().GetIid().GetLocator(),
-                 target.ToString().AsCString());
+    LogInfo("Received address query from 0x%04x for target %s", aMessageInfo.GetPeerAddr().GetIid().GetLocator(),
+            target.ToString().AsCString());
 
     if (Get<ThreadNetif>().HasUnicastAddress(target))
     {
@@ -834,8 +836,7 @@ void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::Mes
     {
         uint16_t srcRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
 
-        otLogInfoArp("Extending ADDR.qry to BB.qry for target=%s, rloc16=%04x", target.ToString().AsCString(),
-                     srcRloc16);
+        LogInfo("Extending ADDR.qry to BB.qry for target=%s, rloc16=%04x", target.ToString().AsCString(), srcRloc16);
         IgnoreError(Get<BackboneRouter::Manager>().SendBackboneQuery(target, srcRloc16));
     }
 #endif
@@ -874,7 +875,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoArp("Sending address notification for target %s", aTarget.ToString().AsCString());
+    LogInfo("Sending address notification for target %s", aTarget.ToString().AsCString());
 
 exit:
     FreeMessageOnError(message, error);
@@ -942,8 +943,8 @@ void AddressResolver::HandleTimeTick(void)
                 mQueryList.PopAfter(prev);
                 mQueryRetryList.Push(*entry);
 
-                otLogInfoArp("Timed out waiting for address notification for %s, retry: %d",
-                             entry->GetTarget().ToString().AsCString(), entry->GetTimeout());
+                LogInfo("Timed out waiting for address notification for %s, retry: %d",
+                        entry->GetTarget().ToString().AsCString(), entry->GetTimeout());
 
                 Get<MeshForwarder>().HandleResolved(entry->GetTarget(), kErrorDrop);
 
@@ -994,7 +995,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
 
 void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
                                           Reason            aReason,
@@ -1031,9 +1032,8 @@ void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
     static_assert(6 == kReasonEvictingForNewEntry, "kReasonEvictingForNewEntry value is incorrect");
     static_assert(7 == kReasonRemovingEid, "kReasonRemovingEid value is incorrect");
 
-    otLogNoteArp("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange],
-                 aEntry.GetTarget().ToString().AsCString(), aEntry.GetRloc16(),
-                 (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);
+    LogNote("Cache entry %s: %s, 0x%04x%s%s - %s", kChangeStrings[aChange], aEntry.GetTarget().ToString().AsCString(),
+            aEntry.GetRloc16(), (aList == nullptr) ? "" : ", list:", ListToString(aList), kReasonStrings[aReason]);
 }
 
 const char *AddressResolver::ListToString(const CacheEntryList *aList) const
@@ -1049,13 +1049,13 @@ exit:
     return str;
 }
 
-#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+#else // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
 
 void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry &, CacheEntryList *)
 {
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_ARP == 1)
+#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
 
 // LCOV_EXCL_STOP
 

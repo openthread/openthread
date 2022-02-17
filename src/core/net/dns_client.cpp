@@ -36,7 +36,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -48,6 +48,8 @@
 
 namespace ot {
 namespace Dns {
+
+RegisterLogModule("DnsClient");
 
 //---------------------------------------------------------------------------------------------------------------------
 // Client::QueryConfig
@@ -1050,7 +1052,7 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
 exit:
     if (error != kErrorNone)
     {
-        otLogInfoDns("Failed to parse response %s", ErrorToString(error));
+        LogInfo("Failed to parse response %s", ErrorToString(error));
     }
 
     return error;

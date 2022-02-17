@@ -42,7 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
@@ -55,6 +55,8 @@
 
 namespace ot {
 namespace NetworkData {
+
+RegisterLogModule("NetworkData");
 
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
@@ -142,7 +144,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
     ThreadNetworkDataTlv networkDataTlv;
     uint16_t             rloc16;
 
-    otLogInfoNetData("Received network data registration");
+    LogInfo("Received network data registration");
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator());
 
@@ -170,7 +172,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
-    otLogInfoNetData("Sent network data registration acknowledgment");
+    LogInfo("Sent network data registration acknowledgment");
 
 exit:
     return;
@@ -346,7 +348,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset get response");
+    LogInfo("sent commissioning dataset get response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -368,7 +370,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset set response");
+    LogInfo("sent commissioning dataset set response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -729,13 +731,13 @@ void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkDa
 
     IncrementVersions(flags);
 
-    otDumpDebgNetData("Register", GetBytes(), GetLength());
+    DumpDebg("Register", GetBytes(), GetLength());
 
 exit:
 
     if (error != kErrorNone)
     {
-        otLogNoteNetData("Failed to register network data: %s", ErrorToString(error));
+        LogNote("Failed to register network data: %s", ErrorToString(error));
     }
 }
 
@@ -972,7 +974,7 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
         {
             aServiceId = serviceId;
             error      = kErrorNone;
-            otLogInfoNetData("Allocated Service ID = %d", serviceId);
+            LogInfo("Allocated Service ID = %d", serviceId);
             break;
         }
     }
@@ -1007,7 +1009,7 @@ Error Leader::AllocateContextId(uint8_t &aContextId)
             mContextUsed |= (1 << contextId);
             aContextId = contextId;
             error      = kErrorNone;
-            otLogInfoNetData("Allocated Context ID = %d", contextId);
+            LogInfo("Allocated Context ID = %d", contextId);
             break;
         }
     }
@@ -1017,7 +1019,7 @@ Error Leader::AllocateContextId(uint8_t &aContextId)
 
 void Leader::FreeContextId(uint8_t aContextId)
 {
-    otLogInfoNetData("Free Context Id = %d", aContextId);
+    LogInfo("Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
     mContextUsed &= ~(1 << aContextId);
     IncrementVersions(/* aIncludeStable */ true);

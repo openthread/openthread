@@ -40,7 +40,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -56,6 +56,8 @@
 
 namespace ot {
 namespace Mle {
+
+RegisterLogModule("Mle");
 
 MleRouter::MleRouter(Instance &aInstance)
     : Mle(aInstance)
@@ -191,7 +193,7 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     VerifyOrExit(!IsRouter(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
 
-    otLogInfoMle("Attempt to become router");
+    LogInfo("Attempt to become router");
 
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     mRouterSelectionJitterTimeout = 0;
@@ -436,7 +438,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
         }
     }
 
-    otLogNoteMle("Leader partition id 0x%x", mLeaderData.GetPartitionId());
+    LogNote("Leader partition id 0x%x", mLeaderData.GetPartitionId());
 }
 
 void MleRouter::HandleAdvertiseTrickleTimer(TrickleTimer &aTimer)
@@ -1212,7 +1214,7 @@ Error MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Message
 
     if (partitionId != mLeaderData.GetPartitionId())
     {
-        otLogNoteMle("Different partition (peer:%u, local:%u)", partitionId, mLeaderData.GetPartitionId());
+        LogNote("Different partition (peer:%u, local:%u)", partitionId, mLeaderData.GetPartitionId());
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = kErrorLinkMarginLow);
 
@@ -1246,7 +1248,7 @@ Error MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Message
 
         if (!IsChild())
         {
-            otLogInfoMle("Leader ID mismatch");
+            LogInfo("Leader ID mismatch");
             IgnoreError(BecomeDetached());
             error = kErrorDrop;
         }
@@ -1550,18 +1552,18 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
         ResetAdvertiseInterval();
     }
 
-#if (OPENTHREAD_CONFIG_LOG_MLE && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO))
+#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
 
     VerifyOrExit(changed);
-    otLogInfoMle("Route table updated");
+    LogInfo("Route table updated");
 
     for (Router &router : Get<RouterTable>().Iterate())
     {
-        otLogInfoMle("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
-                     (router.GetNextHop() == kInvalidRouterId) ? 0xffff : Rloc16FromRouterId(router.GetNextHop()),
-                     router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
-                     router.GetLinkQualityOut(),
-                     router.GetRloc16() == GetRloc16() ? "device" : ToYesNo(router.IsStateValid()));
+        LogInfo("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
+                (router.GetNextHop() == kInvalidRouterId) ? 0xffff : Rloc16FromRouterId(router.GetNextHop()),
+                router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
+                router.GetLinkQualityOut(),
+                router.GetRloc16() == GetRloc16() ? "device" : ToYesNo(router.IsStateValid()));
     }
 
 #else
@@ -1810,18 +1812,18 @@ void MleRouter::HandleTimeTick(void)
 
     case kRoleRouter:
         // verify path to leader
-        otLogDebgMle("network id timeout = %d", mRouterTable.GetLeaderAge());
+        LogDebg("network id timeout = %d", mRouterTable.GetLeaderAge());
 
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
-            otLogInfoMle("Router ID Sequence timeout");
+            LogInfo("Router ID Sequence timeout");
             IgnoreError(BecomeChild(kAttachSame1));
         }
 
         if (routerStateUpdate && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             // downgrade to REED
-            otLogNoteMle("Downgrade to REED");
+            LogNote("Downgrade to REED");
             IgnoreError(BecomeChild(kAttachSameDowngrade));
         }
 
@@ -1859,7 +1861,7 @@ void MleRouter::HandleTimeTick(void)
         if (child.IsCslSynchronized() &&
             TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslTimeout()))
         {
-            otLogInfoMle("Child CSL synchronization expired");
+            LogInfo("Child CSL synchronization expired");
             child.SetCslSynchronized(false);
             Get<CslTxScheduler>().Update();
         }
@@ -1867,7 +1869,7 @@ void MleRouter::HandleTimeTick(void)
 
         if (TimerMilli::GetNow() - child.GetLastHeard() >= timeout)
         {
-            otLogInfoMle("Child timeout expired");
+            LogInfo("Child timeout expired");
             RemoveNeighbor(child);
         }
         else if (IsRouterOrLeader() && child.IsStateRestored())
@@ -1895,7 +1897,7 @@ void MleRouter::HandleTimeTick(void)
 
             if (age >= Time::SecToMsec(kMaxNeighborAge))
             {
-                otLogInfoMle("Router timeout expired");
+                LogInfo("Router timeout expired");
                 RemoveNeighbor(router);
                 continue;
             }
@@ -1906,7 +1908,7 @@ void MleRouter::HandleTimeTick(void)
             {
                 if (age < Time::SecToMsec(kMaxNeighborAge) + kMaxTransmissionCount * kUnicastRetransmissionDelay)
                 {
-                    otLogInfoMle("Router timeout expired");
+                    LogInfo("Router timeout expired");
                     IgnoreError(SendLinkRequest(&router));
                 }
                 else
@@ -1922,7 +1924,7 @@ void MleRouter::HandleTimeTick(void)
         {
             if (age >= kMaxLinkRequestTimeout)
             {
-                otLogInfoMle("Link Request timeout expired");
+                LogInfo("Link Request timeout expired");
                 RemoveNeighbor(router);
                 continue;
             }
@@ -1933,7 +1935,7 @@ void MleRouter::HandleTimeTick(void)
             if (mRouterTable.GetRouter(router.GetNextHop()) == nullptr &&
                 mRouterTable.GetLinkCost(router) >= kMaxRouteCost && age >= Time::SecToMsec(kMaxLeaderToRouterTimeout))
             {
-                otLogInfoMle("Router ID timeout expired (no route)");
+                LogInfo("Router ID timeout expired (no route)");
                 IgnoreError(mRouterTable.Release(router.GetRouterId()));
             }
         }
@@ -2112,8 +2114,8 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
         {
             if (Get<NetworkData::Leader>().GetContext(entry.GetContextId(), context) != kErrorNone)
             {
-                otLogWarnMle("Failed to get context %d for compressed address from child 0x%04x", entry.GetContextId(),
-                             aChild.GetRloc16());
+                LogWarn("Failed to get context %d for compressed address from child 0x%04x", entry.GetContextId(),
+                        aChild.GetRloc16());
                 continue;
             }
 
@@ -2162,8 +2164,8 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
             }
 #endif
 
-            otLogInfoMle("Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), storedCount,
-                         address.ToString().AsCString());
+            LogInfo("Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), storedCount,
+                    address.ToString().AsCString());
         }
         else
         {
@@ -2175,8 +2177,8 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
             }
 #endif
 
-            otLogWarnMle("Error %s adding IPv6 address %s to child 0x%04x", ErrorToString(error),
-                         address.ToString().AsCString(), aChild.GetRloc16());
+            LogWarn("Error %s adding IPv6 address %s to child 0x%04x", ErrorToString(error),
+                    address.ToString().AsCString(), aChild.GetRloc16());
         }
 
         if (address.IsMulticast())
@@ -2221,12 +2223,12 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
 
     if (registeredCount == 0)
     {
-        otLogInfoMle("Child 0x%04x has no registered IPv6 address", aChild.GetRloc16());
+        LogInfo("Child 0x%04x has no registered IPv6 address", aChild.GetRloc16());
     }
     else
     {
-        otLogInfoMle("Child 0x%04x has %d registered IPv6 address%s, %d address%s stored", aChild.GetRloc16(),
-                     registeredCount, (registeredCount == 1) ? "" : "es", storedCount, (storedCount == 1) ? "" : "es");
+        LogInfo("Child 0x%04x has %d registered IPv6 address%s, %d address%s stored", aChild.GetRloc16(),
+                registeredCount, (registeredCount == 1) ? "" : "es", storedCount, (storedCount == 1) ? "" : "es");
     }
 
     error = kErrorNone;
@@ -2568,8 +2570,8 @@ void MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::Mes
 
     if (oldMode != child->GetDeviceMode())
     {
-        otLogNoteMle("Child 0x%04x mode change 0x%02x -> 0x%02x [%s]", child->GetRloc16(), oldMode.Get(),
-                     child->GetDeviceMode().Get(), child->GetDeviceMode().ToString().AsCString());
+        LogNote("Child 0x%04x mode change 0x%02x -> 0x%02x [%s]", child->GetRloc16(), oldMode.Get(),
+                child->GetDeviceMode().Get(), child->GetDeviceMode().ToString().AsCString());
 
         childDidChange = true;
 
@@ -3313,7 +3315,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
 
     if (mRetrieveNewNetworkData)
     {
-        otLogInfoMle("Suppressing Data Response - waiting for new network data");
+        LogInfo("Suppressing Data Response - waiting for new network data");
         ExitNow();
     }
 
@@ -3874,7 +3876,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     }
     else
     {
-        otLogInfoMle("router id requested and provided!");
+        LogInfo("router id requested and provided!");
     }
 
     if (router != nullptr)
@@ -3883,7 +3885,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     }
     else
     {
-        otLogInfoMle("router address unavailable!");
+        LogInfo("router address unavailable!");
     }
 
 exit:

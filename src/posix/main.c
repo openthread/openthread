@@ -64,7 +64,6 @@
 #include "cli/cli_config.h"
 #endif
 #include <common/code_utils.hpp>
-#include <common/logging.hpp>
 #include <lib/platform/exit_code.h>
 #include <openthread/openthread-system.h>
 #include <openthread/platform/misc.h>

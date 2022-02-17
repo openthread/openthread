@@ -31,7 +31,9 @@
 #include <openthread/platform/otns.h>
 #include <openthread/platform/toolchain.h>
 
-#include "common/logging.hpp"
+#include "common/log.hpp"
+
+using namespace ot;
 
 /*
  * Implementation note:
@@ -43,7 +45,7 @@
 OT_TOOL_WEAK
 void otPlatOtnsStatus(const char *aStatus)
 {
-    otLogOtns("[OTNS] %s", aStatus);
+    LogAlways("[OTNS] %s", aStatus);
 }
 
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE

@@ -41,7 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
@@ -54,6 +54,8 @@ namespace Ip6 {
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
+
+RegisterLogModule("Tcp");
 
 Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -319,8 +321,8 @@ void Tcp::Endpoint::SetTimer(uint8_t aTimerFlag, uint32_t aDelay)
     uint8_t   timerIndex  = TimerFlagToIndex(aTimerFlag);
 
     mTimers[timerIndex] = newFireTime.GetValue();
-    otLogDebgTcp("Endpoint %p set timer %u to %u ms", static_cast<void *>(this), static_cast<unsigned int>(timerIndex),
-                 static_cast<unsigned int>(aDelay));
+    LogDebg("Endpoint %p set timer %u to %u ms", static_cast<void *>(this), static_cast<unsigned int>(timerIndex),
+            static_cast<unsigned int>(aDelay));
 
     GetInstance().Get<Tcp>().mTimer.FireAtIfEarlier(newFireTime);
 }
@@ -335,8 +337,8 @@ void Tcp::Endpoint::CancelTimer(uint8_t aTimerFlag)
 
     OT_UNUSED_VARIABLE(aTimerFlag);
 
-    otLogDebgTcp("Endpoint %p cancelled timer %u", static_cast<void *>(this),
-                 static_cast<unsigned int>(TimerFlagToIndex(aTimerFlag)));
+    LogDebg("Endpoint %p cancelled timer %u", static_cast<void *>(this),
+            static_cast<unsigned int>(TimerFlagToIndex(aTimerFlag)));
 }
 
 bool Tcp::Endpoint::FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, TimeMilli &aEarliestFutureExpiry)
@@ -727,7 +729,7 @@ exit:
 void Tcp::HandleTimer(Timer &aTimer)
 {
     OT_ASSERT(&aTimer == &aTimer.GetInstance().Get<Tcp>().mTimer);
-    otLogDebgTcp("Main TCP timer expired");
+    LogDebg("Main TCP timer expired");
     aTimer.GetInstance().Get<Tcp>().ProcessTimers();
 }
 
@@ -785,11 +787,11 @@ restart:
          * timers.
          */
         mTimer.FireAtIfEarlier(earliestPendingTimerExpiry);
-        otLogDebgTcp("Reset main TCP timer to %u ms", static_cast<unsigned int>(earliestPendingTimerExpiry - now));
+        LogDebg("Reset main TCP timer to %u ms", static_cast<unsigned int>(earliestPendingTimerExpiry - now));
     }
     else
     {
-        otLogDebgTcp("Did not reset main TCP timer");
+        LogDebg("Did not reset main TCP timer");
     }
 }
 
@@ -837,7 +839,7 @@ void tcplp_sys_send_message(otInstance *aInstance, otMessage *aMessage, otMessag
     Message &    message  = AsCoreType(aMessage);
     MessageInfo &info     = AsCoreType(aMessageInfo);
 
-    otLogDebgTcp("Sending TCP segment: payload_size = %d", static_cast<int>(message.GetLength()));
+    LogDebg("Sending TCP segment: payload_size = %d", static_cast<int>(message.GetLength()));
 
     IgnoreError(instance.Get<ot::Ip6::Ip6>().SendDatagram(message, info, kProtoTcp));
 }
@@ -986,7 +988,7 @@ void tcplp_sys_log(const char *aFormat, ...)
     vsnprintf(buffer, sizeof(buffer), aFormat, args);
     va_end(args);
 
-    otLogDebgTcp(buffer);
+    LogDebg(buffer);
 }
 
 void tcplp_sys_panic(const char *aFormat, ...)
@@ -997,7 +999,7 @@ void tcplp_sys_panic(const char *aFormat, ...)
     vsnprintf(buffer, sizeof(buffer), aFormat, args);
     va_end(args);
 
-    otLogCritTcp(buffer);
+    LogCrit("%s", buffer);
 
     OT_ASSERT(false);
 }
