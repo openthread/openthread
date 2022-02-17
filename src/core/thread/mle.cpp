@@ -36,6 +36,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -295,7 +296,7 @@ void Mle::SetRole(DeviceRole aRole)
     }
 
 exit:
-    OT_UNUSED_VARIABLE(oldRole);
+    return;
 }
 
 void Mle::SetAttachState(AttachState aState)
@@ -2190,9 +2191,6 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
                            const uint8_t *     aExtraTlvs,
                            uint8_t             aExtraTlvsLength)
 {
-    OT_UNUSED_VARIABLE(aExtraTlvs);
-    OT_UNUSED_VARIABLE(aExtraTlvsLength);
-
     Error    error = kErrorNone;
     Message *message;
 
@@ -3632,8 +3630,6 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
                                 const Neighbor *        aNeighbor)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error              error = kErrorNone;
     LeaderData         leaderData;
     uint16_t           sourceAddress;
@@ -3997,8 +3993,6 @@ exit:
 
 void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error                     error = kErrorNone;
     ChannelTlv                channelTlv;
     MeshCoP::Timestamp        timestamp;
@@ -4529,7 +4523,7 @@ const char *Mle::RoleToString(DeviceRole aRole)
     static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
     static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
 
-    return (aRole < OT_ARRAY_LENGTH(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
+    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
 }
 
 // LCOV_EXCL_START

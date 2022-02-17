@@ -34,6 +34,7 @@
 #include "notifier.hpp"
 
 #include "border_router/routing_manager.hpp"
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
@@ -289,7 +290,7 @@ const char *Notifier::EventToString(Event aEvent) const
         "PndDset",           // kEventPendingDatasetChanged            (1 << 29)
     };
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(kEventStrings); index++)
+    for (uint8_t index = 0; index < GetArrayLength(kEventStrings); index++)
     {
         if (static_cast<uint32_t>(aEvent) == (1U << index))
         {

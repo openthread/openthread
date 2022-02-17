@@ -39,6 +39,7 @@
 
 #include <openthread/error.h>
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -242,7 +243,7 @@ public:
     {
         otError error = OT_ERROR_NO_BUFS;
 
-        if (GetFrame() + aLength <= OT_ARRAY_END(mBuffer))
+        if (GetFrame() + aLength <= GetArrayEnd(mBuffer))
         {
             mWritePointer    = GetFrame() + aLength;
             mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
@@ -273,7 +274,7 @@ public:
     {
         otError error = OT_ERROR_NO_BUFS;
 
-        if (mWriteFrameStart + kHeaderSize + aSkipLength <= OT_ARRAY_END(mBuffer))
+        if (mWriteFrameStart + kHeaderSize + aSkipLength <= GetArrayEnd(mBuffer))
         {
             Encoding::LittleEndian::WriteUint16(aSkipLength, mWriteFrameStart + kHeaderSkipLengthOffset);
             mWritePointer    = GetFrame();
@@ -366,7 +367,7 @@ public:
     {
         otError error = OT_ERROR_NONE;
 
-        OT_ASSERT(aFrame == nullptr || (mBuffer <= aFrame && aFrame < OT_ARRAY_END(mBuffer)));
+        OT_ASSERT(aFrame == nullptr || (mBuffer <= aFrame && aFrame < GetArrayEnd(mBuffer)));
 
         aFrame = (aFrame == nullptr) ? mBuffer : aFrame + aLength;
 

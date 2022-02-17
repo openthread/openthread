@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 
@@ -123,7 +124,7 @@ Error Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
 {
     Error error = kErrorNotFound;
 
-    for (; aIterator < OT_ARRAY_LENGTH(mFilterEntries); aIterator++)
+    for (; aIterator < GetArrayLength(mFilterEntries); aIterator++)
     {
         const FilterEntry &entry = mFilterEntries[aIterator];
 
@@ -185,7 +186,7 @@ Error Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
 {
     Error error = kErrorNotFound;
 
-    for (; aIterator < OT_ARRAY_LENGTH(mFilterEntries); aIterator++)
+    for (; aIterator < GetArrayLength(mFilterEntries); aIterator++)
     {
         FilterEntry &entry = mFilterEntries[aIterator];
 
@@ -200,7 +201,7 @@ Error Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
     }
 
     // Return the default RssIn at the end of list
-    if ((aIterator == OT_ARRAY_LENGTH(mFilterEntries)) && (mDefaultRssIn != kFixedRssDisabled))
+    if ((aIterator == GetArrayLength(mFilterEntries)) && (mDefaultRssIn != kFixedRssDisabled))
     {
         AsCoreType(&aEntry.mExtAddress).Fill(0xff);
         aEntry.mRssIn = mDefaultRssIn;

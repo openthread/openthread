@@ -46,6 +46,7 @@ readonly THREAD_VERSION="${THREAD_VERSION:-1.2}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
+readonly BORDER_ROUTING_NAT64="${BORDER_ROUTING_NAT64:-1}"
 readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
 
 readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
@@ -293,6 +294,12 @@ do_build_otbr_docker()
         otbr_options+=("-DOTBR_TREL=ON")
     else
         otbr_options+=("-DOTBR_TREL=OFF")
+    fi
+
+    if [[ ${BORDER_ROUTING_NAT64} == 1 ]]; then
+        otbr_options+=("-DOT_BORDER_ROUTING_NAT64=ON")
+    else
+        otbr_options+=("-DOT_BORDER_ROUTING_NAT64=OFF")
     fi
 
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}

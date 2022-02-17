@@ -643,66 +643,13 @@ EOF"
             return
 
         # For MATN-TC-17 and MATN-TC-18 use Zeroconf to get the BBR address and border agent port
-        from zeroconf import ServiceBrowser, ServiceStateChange, Zeroconf, DNSAddress, DNSService, DNSText
-
-        def on_service_state_change(zeroconf, service_type, name, state_change):
-            if state_change is ServiceStateChange.Added:
-                zeroconf.get_service_info(service_type, name)
-
-        class BorderAgent(object):
-            alias = None
-            server_name = None
-            link_local_addr = None
-            port = None
-            thread_status = None
-
-            def __init__(self, alias):
-                self.alias = alias
-
-            def __repr__(self):
-                return '%s # [%s]:%s TIS=%s' % (self.alias, self.link_local_addr, self.port, self.thread_status)
-
-        def parse_cache(cache):
-            border_agents = []
-
-            # Find all border routers
-            for ptr in cache['_meshcop._udp.local.']:
-                border_agents.append(BorderAgent(ptr.alias))
-
-            # Find server name, port and Thread Interface status for each border router
-            for ba in border_agents:
-                for record in cache[ba.alias.lower()]:
-                    if isinstance(record, DNSService):
-                        ba.server_name = record.server
-                        ba.port = record.port
-                    elif isinstance(record, DNSText):
-                        text = bytearray(record.text)
-                        sb = text.split(b'sb=')[1][0:4]
-                        ba.thread_status = (sb[3] & 0x18) >> 3
-
-            # Find link local address for each border router
-            for ba in border_agents:
-                for record in cache[ba.server_name]:
-                    if isinstance(record, DNSAddress):
-                        addr = ipaddress.ip_address(record.address)
-                        if isinstance(addr, ipaddress.IPv6Address) and addr.is_link_local:
-                            ba.link_local_addr = str(addr)
-                            break
-
-            return border_agents
-
-        # Browse border agents
-        zeroconf = Zeroconf()
-        ServiceBrowser(zeroconf, "_meshcop._udp.local.", handlers=[on_service_state_change])
-        time.sleep(2)
-        cache = zeroconf.cache.cache
-        zeroconf.close()
-
-        # Find an active border agent not in the blacklist
-        border_agents = parse_cache(cache)
-        for ba in border_agents:
-            if ba.thread_status == 2 and ba.link_local_addr not in addrs_blacklist:
-                return ('%s%%eth0' % ba.link_local_addr, ba.port)
+        cmd = 'python3 ~/repo/openthread/tests/scripts/thread-cert/find_border_agents.py'
+        output = self.bash(cmd)
+        for line in output:
+            print(line)
+            alias, link_local_addr, port, thread_status = eval(line)
+            if thread_status == 2 and link_local_addr not in addrs_blacklist:
+                return '%s%%eth0' % link_local_addr, port
 
         raise Exception('No active Border Agents found')
 

@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
@@ -317,7 +318,7 @@ Error Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
     VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = kErrorParse);
 
     // mask matching prefix
-    for (uint16_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
+    for (uint16_t i = 0; i < GetArrayLength(mPrefixAgents); i++)
     {
         if (mPrefixAgents[i].IsValid() && mPrefixAgents[i].IsPrefixMatch(option.GetAddress()))
         {
@@ -397,7 +398,7 @@ Error Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
 
     if (mPrefixAgentsMask)
     {
-        for (uint16_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
+        for (uint16_t i = 0; i < GetArrayLength(mPrefixAgents); i++)
         {
             if (mPrefixAgentsMask & (1 << i))
             {
@@ -437,7 +438,7 @@ Error Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
     if (mPrefixAgentsMask)
     {
         // if specified, only apply specified prefixes
-        for (uint16_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
+        for (uint16_t i = 0; i < GetArrayLength(mPrefixAgents); i++)
         {
             if (mPrefixAgentsMask & (1 << i))
             {

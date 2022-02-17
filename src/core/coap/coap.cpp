@@ -28,6 +28,7 @@
 
 #include "coap.hpp"
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -1289,7 +1290,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
                 *curUriPath++ = '/';
             }
 
-            VerifyOrExit(curUriPath + iterator.GetOption()->GetLength() < OT_ARRAY_END(uriPath), error = kErrorParse);
+            VerifyOrExit(curUriPath + iterator.GetOption()->GetLength() < GetArrayEnd(uriPath), error = kErrorParse);
 
             IgnoreError(iterator.ReadOptionValue(curUriPath));
             curUriPath += iterator.GetOption()->GetLength();

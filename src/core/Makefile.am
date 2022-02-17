@@ -491,10 +491,10 @@ HEADERS_COMMON                                  = \
     config/link_raw.h                             \
     config/logging.h                              \
     config/mac.h                                  \
+    config/misc.h                                 \
     config/mle.h                                  \
     config/netdata_publisher.h                    \
     config/openthread-core-config-check.h         \
-    config/openthread-core-default-config.h       \
     config/parent_search.h                        \
     config/ping_sender.h                          \
     config/platform.h                             \

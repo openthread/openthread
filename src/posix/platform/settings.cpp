@@ -182,7 +182,7 @@ void otPlatSettingsInit(otInstance *aInstance)
 
         if (stat(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, &st) == -1)
         {
-            mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755);
+            VerifyOrDie(mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755) == 0, OT_EXIT_ERROR_ERRNO);
         }
     }
 

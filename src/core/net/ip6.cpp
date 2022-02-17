@@ -262,7 +262,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
             OptionMpl      mplOption;
 
             // read existing hop-by-hop option header
-            IgnoreError(aMessage.Read(0, hbh));
+            SuccessOrExit(error = aMessage.Read(0, hbh));
             hbhLength = (hbh.GetLength() + 1) * 8;
 
             VerifyOrExit(hbhLength <= aHeader.GetPayloadLength(), error = kErrorParse);
@@ -307,7 +307,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
 
             if ((messageCopy = aMessage.Clone()) != nullptr)
             {
-                IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, /* aFromNcpHost */ true));
+                IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, /* aFromHost */ true));
                 otLogInfoIp6("Message copy for indirect transmission to sleepy children");
             }
             else
@@ -540,7 +540,7 @@ void Ip6::HandleSendQueue(void)
     while ((message = mSendQueue.GetHead()) != nullptr)
     {
         mSendQueue.Dequeue(*message);
-        IgnoreError(HandleDatagram(*message, nullptr, nullptr, /* aFromNcpHost */ false));
+        IgnoreError(HandleDatagram(*message, nullptr, nullptr, /* aFromHost */ false));
     }
 }
 
@@ -683,7 +683,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost)
+Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromHost)
 {
     Error          error = kErrorNone;
     Header         header, headerBuffer;
@@ -774,7 +774,7 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
 
         mReassemblyList.Dequeue(*message);
 
-        IgnoreError(HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromNcpHost));
+        IgnoreError(HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromHost));
     }
 
 exit:
@@ -867,11 +867,11 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
     return kErrorNone;
 }
 
-Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost)
+Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromHost)
 {
     OT_UNUSED_VARIABLE(aNetif);
     OT_UNUSED_VARIABLE(aMessageInfo);
-    OT_UNUSED_VARIABLE(aFromNcpHost);
+    OT_UNUSED_VARIABLE(aFromHost);
 
     Error          error = kErrorNone;
     FragmentHeader fragmentHeader;
@@ -893,7 +893,7 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
                                   Header &     aHeader,
                                   uint8_t &    aNextHeader,
                                   bool         aIsOutbound,
-                                  bool         aFromNcpHost,
+                                  bool         aFromHost,
                                   bool &       aReceive)
 {
     Error           error = kErrorNone;
@@ -911,10 +911,10 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
 
         case kProtoFragment:
             // Always forward IPv6 fragments to the Host.
-            IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromNcpHost,
+            IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromHost,
                                                /* aAllowReceiveFilter */ false, Message::kCopyToUse));
 
-            SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromNcpHost));
+            SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromHost));
             break;
 
         case kProtoDstOpts:
@@ -1000,14 +1000,14 @@ exit:
 Error Ip6::ProcessReceiveCallback(Message &          aMessage,
                                   const MessageInfo &aMessageInfo,
                                   uint8_t            aIpProto,
-                                  bool               aFromNcpHost,
+                                  bool               aFromHost,
                                   bool               aAllowReceiveFilter,
                                   Message::Ownership aMessageOwnership)
 {
     Error    error   = kErrorNone;
     Message *message = &aMessage;
 
-    VerifyOrExit(!aFromNcpHost, error = kErrorNoRoute);
+    VerifyOrExit(!aFromHost, error = kErrorNoRoute);
     VerifyOrExit(mReceiveIp6DatagramCallback != nullptr, error = kErrorNoRoute);
 
     // Do not forward reassembled IPv6 packets.
@@ -1084,7 +1084,7 @@ exit:
     return error;
 }
 
-Error Ip6::SendRaw(Message &aMessage, bool aFromNcpHost)
+Error Ip6::SendRaw(Message &aMessage, bool aFromHost)
 {
     Error       error = kErrorNone;
     Header      header;
@@ -1103,7 +1103,7 @@ Error Ip6::SendRaw(Message &aMessage, bool aFromNcpHost)
         SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
     }
 
-    error = HandleDatagram(aMessage, nullptr, nullptr, aFromNcpHost);
+    error = HandleDatagram(aMessage, nullptr, nullptr, aFromHost);
     freed = true;
 
 exit:
@@ -1116,7 +1116,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost)
+Error Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromHost)
 {
     Error       error;
     MessageInfo messageInfo;
@@ -1192,7 +1192,7 @@ start:
             forwardThread = true;
         }
 
-        if (forwardThread && !ShouldForwardToThread(messageInfo, aFromNcpHost))
+        if (forwardThread && !ShouldForwardToThread(messageInfo, aFromHost))
         {
             forwardThread = false;
             forwardHost   = true;
@@ -1204,7 +1204,7 @@ start:
     // process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, aNetif, messageInfo, header, nextHeader, aNetif == nullptr,
-                                                 aFromNcpHost, receive));
+                                                 aFromHost, receive));
 
     // process IPv6 Payload
     if (receive)
@@ -1217,7 +1217,7 @@ start:
             goto start;
         }
 
-        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost,
+        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromHost,
                                        /* aAllowReceiveFilter */ !forwardHost, Message::kCopyToUse);
 
         if ((error == kErrorNone || error == kErrorNoRoute) && forwardHost)
@@ -1233,7 +1233,7 @@ start:
     if (forwardHost)
     {
         // try passing to host
-        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, /* aAllowReceiveFilter */ false,
+        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromHost, /* aAllowReceiveFilter */ false,
                                        forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
         shouldFreeMessage = forwardThread;
     }
@@ -1271,7 +1271,7 @@ start:
         }
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        if (aFromNcpHost && (nextHeader == kProtoUdp))
+        if (aFromHost && (nextHeader == kProtoUdp))
         {
             uint16_t destPort;
 
@@ -1308,9 +1308,9 @@ exit:
     return error;
 }
 
-bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const
+bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromHost) const
 {
-    OT_UNUSED_VARIABLE(aFromNcpHost);
+    OT_UNUSED_VARIABLE(aFromHost);
 
     bool rval = false;
 
@@ -1328,7 +1328,7 @@ bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHo
     {
         // on-link global address
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        ExitNow(rval = (aFromNcpHost ||
+        ExitNow(rval = (aFromHost ||
                         !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aMessageInfo.GetSockAddr())));
 #else
         ExitNow(rval = true);
