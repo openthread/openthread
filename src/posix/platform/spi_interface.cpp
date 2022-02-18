@@ -823,9 +823,9 @@ exit:
 
 otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
-    const uint32_t kMaxNumRetries = 5;
-    otError        error          = OT_ERROR_NONE;
-    uint32_t       count          = 0;
+    const uint8_t kMaxNumRetries = 5;
+    otError       error          = OT_ERROR_NONE;
+    uint8_t       count          = 0;
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
     VerifyOrExit(!mSpiTxIsReady, error = OT_ERROR_BUSY);
@@ -837,9 +837,9 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 
     while (count < kMaxNumRetries)
     {
-        count++;
         VerifyOrExit((error = PushPullSpi()) != OT_ERROR_NONE);
         usleep(1000);
+        count++;
     }
 
 exit:
