@@ -357,7 +357,7 @@ private:
 #if !OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     static constexpr uint16_t kApplicationDataMaxLength = 1152;
 #else
-    static constexpr uint16_t kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+    static constexpr uint16_t         kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
 #endif
 
     static constexpr size_t kDtlsKeyBlockSize     = 40;
