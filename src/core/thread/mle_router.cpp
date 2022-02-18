@@ -3078,7 +3078,7 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
     SuccessOrExit(error = AppendActiveTimestamp(*message));
     SuccessOrExit(error = AppendPendingTimestamp(*message));
 
-    if (aChild.GetRloc16() == 0)
+    if ((aChild.GetRloc16() == 0) || !RouterIdMatch(aChild.GetRloc16(), GetRloc16()))
     {
         uint16_t rloc16;
 
