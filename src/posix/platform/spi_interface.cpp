@@ -249,6 +249,7 @@ int SpiInterface::SetupGpioEvent(int         aFd,
 {
     struct gpioevent_request req;
     int                      ret;
+    int                      status;
 
     assert(strlen(aLabel) < sizeof(req.consumer_label));
 
@@ -258,6 +259,8 @@ int SpiInterface::SetupGpioEvent(int         aFd,
     snprintf(req.consumer_label, sizeof(req.consumer_label), "%s", aLabel);
 
     VerifyOrDie((ret = ioctl(aFd, GPIO_GET_LINEEVENT_IOCTL, &req)) != -1, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie((status = fcntl(req.fd, F_GETFL)) >= 0, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(fcntl(req.fd, F_SETFL, status | O_NONBLOCK) != -1, OT_EXIT_ERROR_ERRNO);
 
     return req.fd;
 }
@@ -533,7 +536,7 @@ otError SpiInterface::PushPullSpi(void)
             }
 
             mSpiTxRefusedCount++;
-            ExitNow();
+            ExitNow(error = OT_ERROR_FAILED);
         }
 
         slaveAcceptLen   = rxFrame.GetHeaderAcceptLen();
@@ -550,7 +553,7 @@ otError SpiInterface::PushPullSpi(void)
             otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
             otDumpWarn(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
 
-            ExitNow();
+            ExitNow(error = OT_ERROR_FAILED);
         }
 
         mSpiValidFrameCount++;
@@ -820,7 +823,9 @@ exit:
 
 otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
-    otError error = OT_ERROR_NONE;
+    const uint32_t kMaxNumRetries = 5;
+    otError        error          = OT_ERROR_NONE;
+    uint32_t       count          = 0;
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
     VerifyOrExit(!mSpiTxIsReady, error = OT_ERROR_BUSY);
@@ -830,7 +835,12 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     mSpiTxIsReady     = true;
     mSpiTxPayloadSize = aLength;
 
-    IgnoreError(PushPullSpi());
+    while (count < kMaxNumRetries)
+    {
+        count++;
+        VerifyOrExit((error = PushPullSpi()) != OT_ERROR_NONE);
+        usleep(1000);
+    }
 
 exit:
     return error;
