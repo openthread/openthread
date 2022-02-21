@@ -185,6 +185,15 @@ public:
      */
     Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
 
+    /**
+     * This method checks if the given OnMeshPrefixConfig represents a valid OMR prefix.
+     *
+     * @param[in]  aOnMeshPrefixConfig  The OnMeshPrefixConfig being checked.
+     *
+     * @returns  Whether the given OnMeshPrefixConfig represents a valid OMR prefix.
+     */
+    static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
+
 private:
     typedef NetworkData::RoutePreference RoutePreference;
 
@@ -337,7 +346,6 @@ private:
     bool UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage);
     void ResetDiscoveredPrefixStaleTimer(void);
 
-    static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
