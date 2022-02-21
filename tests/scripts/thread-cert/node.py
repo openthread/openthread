@@ -38,6 +38,7 @@ import socket
 import subprocess
 import sys
 import time
+import json
 import traceback
 import typing
 import unittest
@@ -2485,6 +2486,16 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_active_dataset_hex(self):
+        cmd = 'dataset active -x'
+        self.send_command(cmd)
+        return self._expect_command_output()[0]
+
+    def set_active_dataset_hex(self, data):
+        cmd = f'dataset set active {data}'
+        self.send_command(cmd, expect_command_echo=False)
+        self._expect_done()
+
     def set_active_dataset(
         self,
         timestamp,
@@ -3601,19 +3612,18 @@ class LinuxHost():
 
         :param name: the service type name in format of '<service-name>.<protocol>'.
         :param timeout: timeout value in seconds before returning.
-        :return: A list of service instance names.
+        :return: A list of service instances.
         """
 
-        self.bash(f'dns-sd -Z {name} local. > /tmp/{name} 2>&1 &')
-        time.sleep(timeout)
-        self.bash('pkill dns-sd')
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/browse_service.py {name}.local. {timeout}'
+        services = json.loads(''.join(self.bash(cmd)))
 
-        instances = []
-        for line in self.bash(f'cat /tmp/{name}', encoding='raw_unicode_escape'):
-            elements = line.split()
-            if len(elements) >= 3 and elements[0] == name and elements[1] == 'PTR':
-                instances.append(elements[2][:-len('.' + name)])
-        return instances
+        for service in services:
+            for key, value in service['txt'].items():
+                service['txt'][key] = bytes.fromhex(value)
+
+        logging.info(f'services = {services}')
+        return services
 
     def discover_mdns_service(self, instance, name, host_name, timeout=2):
         """ Discover/resolve the mDNS service on ethernet.
@@ -3628,80 +3638,19 @@ class LinuxHost():
         The return value is a dict with the same key/values of srp_server_get_service
         except that we don't have a `deleted` field here.
         """
-        host_name_file = self.bash('mktemp')[0].strip()
-        service_data_file = self.bash('mktemp')[0].strip()
 
-        self.bash(f'dns-sd -Z {name} local. > {service_data_file} 2>&1 &')
-        time.sleep(timeout)
+        services = self.browse_mdns_services(name, timeout)
 
-        full_service_name = f'{instance}.{name}'
         # When hostname is unspecified, extract hostname from browse result
         if host_name is None:
-            for line in self.bash(f'cat {service_data_file}', encoding='raw_unicode_escape'):
-                elements = line.split()
-                if len(elements) >= 6 and elements[0] == full_service_name and elements[1] == 'SRV':
-                    host_name = elements[5].split('.')[0]
+            for service in services:
+                if service['instance'] == instance:
+                    host_name = service['host']
                     break
 
         assert (host_name is not None)
-        self.bash(f'dns-sd -G v6 {host_name}.local. > {host_name_file} 2>&1 &')
-        time.sleep(timeout)
 
-        self.bash('pkill dns-sd')
-        addresses = []
-        service = {}
-
-        logging.debug(self.bash(f'cat {host_name_file}', encoding='raw_unicode_escape'))
-        logging.debug(self.bash(f'cat {service_data_file}', encoding='raw_unicode_escape'))
-
-        # example output in the host file:
-        # Timestamp     A/R Flags if Hostname                               Address                                     TTL
-        # 9:38:09.274  Add     23 48 my-host.local.                         2001:0000:0000:0000:0000:0000:0000:0002%<0>  120
-        #
-        for line in self.bash(f'cat {host_name_file}', encoding='raw_unicode_escape'):
-            elements = line.split()
-            fullname = f'{host_name}.local.'
-            if fullname not in elements:
-                continue
-            if 'Add' not in elements:
-                continue
-            addresses.append(elements[elements.index(fullname) + 1].split('%')[0])
-
-        logging.debug(f'addresses of {host_name}: {addresses}')
-
-        # example output of in the service file:
-        # _ipps._tcp                                      PTR     my-service._ipps._tcp
-        # my-service._ipps._tcp                           SRV     0 0 12345 my-host.local. ; Replace with unicast FQDN of target host
-        # my-service._ipps._tcp                           TXT     ""
-        #
-        is_txt = False
-        txt = ''
-        for line in self.bash(f'cat {service_data_file}', encoding='raw_unicode_escape'):
-            elements = line.split()
-            if len(elements) >= 2 and elements[0] == full_service_name and elements[1] == 'TXT':
-                is_txt = True
-            if is_txt:
-                txt += line.strip()
-                if line.strip().endswith('"'):
-                    is_txt = False
-                    txt_dict = self.__parse_dns_sd_txt(txt)
-                    logging.info(f'txt = {txt_dict}')
-                    service['txt'] = txt_dict
-
-            if not elements or elements[0] != full_service_name:
-                continue
-            if elements[1] == 'SRV':
-                service['fullname'] = elements[0]
-                service['instance'] = instance
-                service['name'] = name
-                service['priority'] = int(elements[2])
-                service['weight'] = int(elements[3])
-                service['port'] = int(elements[4])
-                service['host_fullname'] = elements[5]
-                assert (service['host_fullname'] == f'{host_name}.local.')
-                service['host'] = host_name
-                service['addresses'] = addresses
-        return service or None
+        return service if 'addresses' in service and service['addresses'] else None
 
     def start_radvd_service(self, prefix, slaac):
         self.bash("""cat >/etc/radvd.conf <<EOF
@@ -3735,19 +3684,6 @@ EOF
 
     def kill_radvd_service(self):
         self.bash('pkill radvd')
-
-    def __parse_dns_sd_txt(self, line: str):
-        # Example TXT entry:
-        # "xp=\\000\\013\\184\\000\\000\\000\\000\\000"
-        txt = {}
-        for entry in re.findall(r'"((?:[^\\]|\\.)*?)"', line):
-            if '=' not in entry:
-                continue
-
-            k, v = entry.split('=', 1)
-            txt[k] = v
-
-        return txt
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):

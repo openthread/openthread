@@ -55,18 +55,18 @@ class PublishMeshCopService(thread_cert.TestCase):
     TOPOLOGY = {
         BR1: {
             'name': 'BR_1',
-            'allowlist': [],
             'is_otbr': True,
             'version': '1.2',
             'network_name': 'ot-br1',
+            'channel': 12,
             'boot_delay': 5,
         },
         BR2: {
             'name': 'BR_2',
-            'allowlist': [],
             'is_otbr': True,
             'version': '1.2',
             'network_name': 'ot-br2',
+            'channel': 13,
             'boot_delay': 5,
         },
         HOST: {
@@ -94,17 +94,18 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
-        self.check_meshcop_service(br1, host)
+        br1_omr = ipaddress.IPv6Network(br1.get_br_omr_prefix()).network_address
+        self.check_meshcop_service(br1, host, br1_omr)
 
         br1.disable_backbone_router()
         self.simulator.go(10)
-        self.check_meshcop_service(br1, host)
+        self.check_meshcop_service(br1, host, br1_omr)
 
         br1.stop()
         br1.set_network_name('ot-br1-1')
         br1.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
-        self.check_meshcop_service(br1, host)
+        self.check_meshcop_service(br1, host, br1_omr)
 
         # verify that there are two meshcop services
         br2.set_network_name('ot-br2-1')
@@ -113,10 +114,11 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2.enable_br()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
 
+        br2_omr = ipaddress.IPv6Network(br2.get_br_omr_prefix()).network_address
         service_instances = host.browse_mdns_services('_meshcop._udp')
         self.assertEqual(len(service_instances), 2)
-        br1_service = self.check_meshcop_service(br1, host)
-        br2_service = self.check_meshcop_service(br2, host)
+        br1_service = self.check_meshcop_service(br1, host, br1_omr)
+        br2_service = self.check_meshcop_service(br2, host, br2_omr)
         self.assertNotEqual(br1_service['host'], br2_service['host'])
 
         br1.stop_otbr_service()
@@ -127,25 +129,37 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.start_otbr_service()
         self.simulator.go(10)
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
-        self.check_meshcop_service(br1, host)
-        self.check_meshcop_service(br2, host)
+        self.check_meshcop_service(br1, host, br1_omr)
+        self.check_meshcop_service(br2, host, br2_omr)
+
+        # only the smallest OMR should be published in the network
+        br1.stop()
+        br1.set_active_dataset_hex(br2.get_active_dataset_hex())
+        br1.start()
+        br2.start()
+        self.simulator.go(10)
+        br1_omr = ipaddress.IPv6Network(br1.get_br_omr_prefix()).network_address
+        br2_omr = ipaddress.IPv6Network(br2.get_br_omr_prefix()).network_address
+        min_omr = min(br1_omr, br2_omr)
+        self.check_meshcop_service(br1, host, min_omr)
+        self.check_meshcop_service(br2, host, min_omr)
 
         br1.factory_reset()
         br1.set_network_name('ot-br-1-3')
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
-        self.check_meshcop_service(br1, host)
-        self.check_meshcop_service(br2, host)
+        self.check_meshcop_service(br1, host, None)
+        self.check_meshcop_service(br2, host, br2_omr)
 
-    def check_meshcop_service(self, br, host):
-        services = self.discover_all_meshcop_services(host)
+    def check_meshcop_service(self, br, host, omr):
+        services = host.browse_mdns_services('_meshcop._udp')
         for service in services:
-            if service['txt']['nn'] == br.get_network_name():
-                self.check_meshcop_service_by_data(br, service)
+            if service['txt']['xa'].hex() == br.get_addr64():
+                self.check_meshcop_service_by_data(br, service, omr)
                 return service
         self.fail('MeshCoP service not found')
 
-    def check_meshcop_service_by_data(self, br, service_data):
-        sb_data = service_data['txt']['sb'].encode('raw_unicode_escape')
+    def check_meshcop_service_by_data(self, br, service_data, omr):
+        sb_data = service_data['txt']['sb']
         state_bitmap = int.from_bytes(sb_data, byteorder='big')
         logging.info(bin(state_bitmap))
         self.assertEqual((state_bitmap & 7), 1)  # connection mode = PskC
@@ -162,16 +176,16 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.assertEqual((state_bitmap >> 8 & 1),
                          br.get_state() not in ['disabled', 'detached'] and
                          br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
-        self.assertEqual(service_data['txt']['nn'], br.get_network_name())
-        self.assertEqual(service_data['txt']['rv'], '1')
-        self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0', '1.3.0'])
-
-    def discover_all_meshcop_services(self, host):
-        instance_names = host.browse_mdns_services('_meshcop._udp')
-        services = []
-        for instance_name in instance_names:
-            services.append(host.discover_mdns_service(instance_name, '_meshcop._udp', None))
-        return services
+        if omr is not None:
+            discovered_omr = service_data['txt']['omr']
+            self.assertEqual(discovered_omr[0], 64)
+            self.assertEqual(len(discovered_omr), 9)
+            self.assertEqual(ipaddress.IPv6Address(discovered_omr[1:] + bytes([0] * 8)), omr)
+        else:
+            self.assertTrue('omr' not in service_data['txt'])
+        self.assertEqual(service_data['txt']['nn'].decode('raw_unicode_escape'), br.get_network_name())
+        self.assertEqual(service_data['txt']['rv'].decode('raw_unicode_escape'), '1')
+        self.assertIn(service_data['txt']['tv'].decode('raw_unicode_escape'), ['1.1.0', '1.1.1', '1.2.0', '1.3.0'])
 
 
 if __name__ == '__main__':
