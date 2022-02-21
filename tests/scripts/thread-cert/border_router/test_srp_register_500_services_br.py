@@ -60,7 +60,8 @@ class SrpRegister500ServicesBR(SrpRegister500Services):
         browse_retry = 3
         for i in range(browse_retry):
             try:
-                service_instances = set(host.browse_mdns_services(SERVICE_NAME, timeout=10))
+                service_instances = set(
+                    [service['instance'] for service in host.browse_mdns_services(SERVICE_NAME, timeout=10)])
                 print(service_instances)
 
                 for clientid in CLIENT_IDS:
