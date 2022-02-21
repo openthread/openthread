@@ -191,6 +191,17 @@ otError otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
                                           otBorderRouterConfig * aConfig);
 
 /**
+ * This function checks if an IPv6 prefix is a valid OMR prefix.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aConfig    A pointer to an otBorderRouterConfig.
+ *
+ * @returns Whether this prefix is a valid OMR prefix.
+ *
+ */
+bool otBorderRouterIsValidOmrPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig);
+
+/**
  * Add an external route configuration to the local network data.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
