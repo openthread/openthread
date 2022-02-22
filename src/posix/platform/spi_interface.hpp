@@ -173,6 +173,7 @@ private:
     uint8_t *GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength);
     otError  DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransferLength);
     otError  PushPullSpi(void);
+    void     Process(const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
     bool CheckInterrupt(void);
     void LogStats(void);
@@ -244,6 +245,8 @@ private:
 
     bool     mDidPrintRateLimitLog;
     uint16_t mSpiSlaveDataLen;
+
+    bool mDidRxFrame;
 
     // Non-copyable, intentionally not implemented.
     SpiInterface(const SpiInterface &);
