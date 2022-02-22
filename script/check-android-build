@@ -51,7 +51,6 @@ check_datetime()
 
     datetime="$(date)"
     cat >openthread-config-datetime.h <<EOF
-#include <openthread-config-android.h>
 #define OPENTHREAD_BUILD_DATETIME "$datetime"
 EOF
 
