@@ -3650,11 +3650,12 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
 
     VerifyOrExit(mAttachState == kAttachStateChildIdRequest);
 
-    // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
-
     // ShortAddress
     SuccessOrExit(error = Tlv::Find<Address16Tlv>(aMessage, shortAddress));
+    VerifyOrExit(RouterIdMatch(sourceAddress, shortAddress), error = kErrorRejected);
+
+    // Leader Data
+    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
 
     // Network Data
     error = Tlv::FindTlvOffset(aMessage, Tlv::kNetworkData, networkDataOffset);
