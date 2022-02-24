@@ -89,6 +89,29 @@ exit:
     return error;
 }
 
+Error LeaderBase::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
+{
+    Error               error    = kErrorNotFound;
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig config;
+
+    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    {
+        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
+        {
+            continue;
+        }
+
+        if ((error == kErrorNotFound) || (config.mPreference > aConfig.mPreference))
+        {
+            aConfig = config;
+            error   = kErrorNone;
+        }
+    }
+
+    return error;
+}
+
 const PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
 {
     const PrefixTlv *prefixTlv;
