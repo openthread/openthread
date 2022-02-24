@@ -2211,6 +2211,14 @@ template <> otError Interpreter::Process<Cmd("leaderweight")>(Arg aArgs[])
 }
 #endif // OPENTHREAD_FTD
 
+template <> otError Interpreter::Process<Cmd("leavenetwork")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otThreadLeaveNetwork(GetInstancePtr());
+    return kErrorNone;
+}
+
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
@@ -5046,6 +5054,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_FTD
         CmdEntry("leaderweight"),
 #endif
+        CmdEntry("leavenetwork"),
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
         CmdEntry("linkmetrics"),
 #endif

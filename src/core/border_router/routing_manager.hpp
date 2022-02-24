@@ -185,6 +185,14 @@ public:
      */
     Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
 
+    /**
+     * This method cleans up the persistent storage when leaving a Thread network.
+     *
+     * @retval kErrorNone     Successfully cleaned up the persistent storage.
+     * @retval kErrorFailed   Failed to generate prefixes.
+     */
+    Error HandleLeavingNetwork(void);
+
 private:
     typedef NetworkData::RoutePreference RoutePreference;
 

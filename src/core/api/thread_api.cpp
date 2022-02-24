@@ -501,4 +501,20 @@ bool otThreadIsAnycastLocateInProgress(otInstance *aInstance)
 }
 #endif
 
+void otThreadLeaveNetwork(otInstance *aInstance)
+{
+    static constexpr otOperationalDatasetTlvs kEmptyDatasetTlvs = {};
+
+    SuccessOrAssert(otThreadSetEnabled(aInstance, false));
+    if (otIp6IsEnabled(aInstance))
+    {
+        SuccessOrAssert(otIp6SetEnabled(aInstance, false));
+    }
+    SuccessOrAssert(otDatasetSetActiveTlvs(aInstance, &kEmptyDatasetTlvs));
+    SuccessOrAssert(otDatasetSetPendingTlvs(aInstance, &kEmptyDatasetTlvs));
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    SuccessOrAssert(AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().HandleLeavingNetwork());
+#endif
+}
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD

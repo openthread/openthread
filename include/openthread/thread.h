@@ -1010,6 +1010,14 @@ otError otThreadSendProactiveBackboneNotification(otInstance *              aIns
                                                   uint32_t                  aTimeSinceLastTransaction);
 
 /**
+ * This function detaches from the Thread network and forgets all credentials of the network.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ */
+void otThreadLeaveNetwork(otInstance *aInstance);
+
+/**
  * @}
  *
  */

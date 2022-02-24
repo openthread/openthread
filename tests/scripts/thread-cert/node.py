@@ -2159,6 +2159,24 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_active_dataset_tlvs(self):
+        try:
+            self.send_command('dataset active -x')
+            return self._expect_command_output()[0].strip()
+        except Exception as ex:
+            if 'Error 23: NotFound' in str(ex):
+                return None
+            raise
+
+    def get_pending_dataset_tlvs(self):
+        try:
+            self.send_command('dataset pending -x')
+            return self._expect_command_output()[0].strip()
+        except Exception as ex:
+            if 'Error 23: NotFound' in str(ex):
+                return None
+            raise
+
     def set_active_dataset(
         self,
         timestamp,
@@ -3119,6 +3137,11 @@ class NodeImpl:
         self.send_command(cmd)
         line = self._expect_command_output()[0]
         return [int(item) for item in line.split()]
+
+    def leave_network(self):
+        cmd = 'leavenetwork'
+        self.send_command(cmd)
+        self._expect_done()
 
 
 class Node(NodeImpl, OtCli):

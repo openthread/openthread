@@ -1504,6 +1504,20 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     }
 }
 
+Error RoutingManager::HandleLeavingNetwork(void)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = Get<Settings>().Delete<Settings::OmrPrefix>());
+    if (IsInitialized())
+    {
+        SuccessOrExit(error = LoadOrGenerateRandomOmrPrefix());
+    }
+
+exit:
+    return error;
+}
+
 } // namespace BorderRouter
 
 } // namespace ot
