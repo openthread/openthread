@@ -50,12 +50,73 @@ namespace ot {
 namespace Cli {
 
 /**
+ * This type represents a ID number value associated with a CLI command string.
+ *
+ */
+typedef uint64_t CommandId;
+
+/**
+ * This `constexpr` function converts a CLI command string to its associated `CommandId` value.
+ *
+ * @param[in] aString   The CLI command string.
+ *
+ * @returns The associated `CommandId` with @p aString.
+ *
+ */
+constexpr static CommandId Cmd(const char *aString)
+{
+    return (aString[0] == '\0') ? 0 : (static_cast<uint8_t>(aString[0]) + Cmd(aString + 1) * 255u);
+}
+
+/**
  * This class is the base class for `Output` and `OutputWrapper` providing common helper methods.
  *
  */
 class OutputBase
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg; ///< An argument
+
+    /**
+     * This structure represent a CLI command table entry, mapping a command with `aName` to a handler method.
+     *
+     * @tparam Cli    The CLI module type.
+     *
+     */
+    template <typename Cli> struct CommandEntry
+    {
+        typedef otError (Cli::*Handler)(Arg aArgs[]); ///< The handler method pointer type.
+
+        /**
+         * This method compares the entry's name with a given name.
+         *
+         * @param aName    The name string to compare with.
+         *
+         * @return zero means perfect match, positive (> 0) indicates @p aName is larger than entry's name, and
+         *         negative (< 0) indicates @p aName is smaller than entry's name.
+         *
+         */
+        int Compare(const char *aName) const { return strcmp(aName, mName); }
+
+        /**
+         * This `constexpr` method compares two entries to check if they are in order.
+         *
+         * @param[in] aFirst     The first entry.
+         * @param[in] aSecond    The second entry.
+         *
+         * @retval TRUE  if @p aFirst and @p aSecond are in order, i.e. `aFirst < aSecond`.
+         * @retval FALSE if @p aFirst and @p aSecond are not in order, i.e. `aFirst >= aSecond`.
+         *
+         */
+        constexpr static bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
+        {
+            return AreStringsInOrder(aFirst.mName, aSecond.mName);
+        }
+
+        const char *mName;    ///< The command name.
+        Handler     mHandler; ///< The handler method pointer.
+    };
+
     static const char kUnknownString[]; // Constant string "unknown".
 
     /**
@@ -82,23 +143,6 @@ public:
 
 protected:
     OutputBase(void) = default;
-
-    typedef Utils::CmdLineParser::Arg Arg;
-
-    template <typename Cli> struct CommandEntry
-    {
-        typedef otError (Cli::*Handler)(Arg aArgs[]);
-
-        int Compare(const char *aName) const { return strcmp(aName, mName); }
-
-        constexpr static bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
-        {
-            return AreStringsInOrder(aFirst.mName, aSecond.mName);
-        }
-
-        const char *mName;
-        Handler     mHandler;
-    };
 };
 
 /**
@@ -363,6 +407,23 @@ public:
         OutputTableSeparator(kTableNumColumns, &aWidths[0]);
     }
 
+    /**
+     * This method outputs the list of commands from a given command table.
+     *
+     * @tparam Cli      The CLI module type.
+     * @tparam kLength  The length of command table array.
+     *
+     * @param[in] aCommandTable   The command table array.
+     *
+     */
+    template <typename Cli, uint16_t kLength> void OutputCommandTable(const CommandEntry<Cli> (&aCommandTable)[kLength])
+    {
+        for (const CommandEntry<Cli> &entry : aCommandTable)
+        {
+            OutputLine("%s", entry.mName);
+        }
+    }
+
 protected:
     void OutputFormatV(const char *aFormat, va_list aArguments);
 
@@ -461,6 +522,11 @@ protected:
     template <uint8_t kTableNumColumns> void OutputTableSeparator(const uint8_t (&aWidths)[kTableNumColumns])
     {
         mOutput.OutputTableSeparator(aWidths);
+    }
+
+    template <typename Cli, uint16_t kLength> void OutputCommandTable(const CommandEntry<Cli> (&aCommandTable)[kLength])
+    {
+        mOutput.OutputCommandTable(aCommandTable);
     }
 
 private:

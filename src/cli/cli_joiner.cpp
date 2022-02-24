@@ -42,9 +42,7 @@
 namespace ot {
 namespace Cli {
 
-constexpr Joiner::Command Joiner::sCommands[];
-
-otError Joiner::ProcessDiscerner(Arg aArgs[])
+template <> otError Joiner::Process<Cmd("discerner")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -79,19 +77,7 @@ exit:
     return error;
 }
 
-otError Joiner::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError Joiner::ProcessId(Arg aArgs[])
+template <> otError Joiner::Process<Cmd("id")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -100,7 +86,7 @@ otError Joiner::ProcessId(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessStart(Arg aArgs[])
+template <> otError Joiner::Process<Cmd("start")>(Arg aArgs[])
 {
     otError error;
 
@@ -119,7 +105,7 @@ exit:
     return error;
 }
 
-otError Joiner::ProcessStop(Arg aArgs[])
+template <> otError Joiner::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -128,7 +114,7 @@ otError Joiner::ProcessStop(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessState(Arg aArgs[])
+template <> otError Joiner::Process<Cmd("state")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -139,16 +125,29 @@ otError Joiner::ProcessState(Arg aArgs[])
 
 otError Joiner::Process(Arg aArgs[])
 {
+#define CmdEntry(aCommandString)                              \
+    {                                                         \
+        aCommandString, &Joiner::Process<Cmd(aCommandString)> \
+    }
+
+    static constexpr Command kCommands[] = {
+        CmdEntry("discerner"), CmdEntry("id"), CmdEntry("start"), CmdEntry("state"), CmdEntry("stop"),
+    };
+
+#undef CmdEntry
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
-    if (aArgs[0].IsEmpty())
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
     {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
     }
 
-    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);
