@@ -535,12 +535,19 @@ Error Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLeng
 
     VerifyOrExit(mState == kStateConnected, error = kErrorInvalidState);
 
+#if (MBEDTLS_VERSION_NUMBER >= 0x03010000)
+    VerifyOrExit(mbedtls_base64_encode(aPeerCert, aCertBufferSize, aCertLength,
+                                       mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.p,
+                                       mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->raw.len) == 0,
+                 error = kErrorNoBufs);
+#else
     VerifyOrExit(
         mbedtls_base64_encode(
             aPeerCert, aCertBufferSize, aCertLength,
             mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(p),
             mSsl.MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(peer_cert)->MBEDTLS_PRIVATE(raw).MBEDTLS_PRIVATE(len)) == 0,
         error = kErrorNoBufs);
+#endif
 
 exit:
     return error;
