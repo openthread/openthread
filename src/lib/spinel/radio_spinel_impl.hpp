@@ -160,7 +160,7 @@ static inline void LogIfFail(const char *aText, otError aError)
     OT_UNUSED_VARIABLE(aText);
     OT_UNUSED_VARIABLE(aError);
 
-    if (aError != OT_ERROR_NONE)
+    if (aError != OT_ERROR_NONE && aError != OT_ERROR_NO_ACK)
     {
         otLogWarnPlat("%s: %s", aText, otThreadErrorToString(aError));
     }

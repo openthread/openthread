@@ -1323,7 +1323,7 @@ Error MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Message
             if (mParent.GetRloc16() != sourceAddress)
             {
                 IgnoreError(BecomeDetached());
-                ExitNow(error = kErrorNoRoute);
+                ExitNow(error = kErrorDetached);
             }
 
             if (IsFullThreadDevice())

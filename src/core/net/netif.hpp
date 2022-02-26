@@ -561,7 +561,7 @@ public:
      * @param[in]  aAddress  A reference to the multicast address.
      *
      * @retval kErrorNone         Successfully unsubscribed to the unicast address.
-     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorRejected     The address indicated by @p aAddress is an internal address.
      * @retval kErrorNotFound     The multicast address was not found.
      *
      */

@@ -849,7 +849,7 @@ exit:
     {
         if (error == OT_ERROR_DROP)
         {
-            otLogNotePlat("[netif] Message dropped by Thread", otThreadErrorToString(error));
+            otLogInfoPlat("[netif] Message dropped by Thread", otThreadErrorToString(error));
         }
         else
         {
@@ -863,7 +863,7 @@ static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError e
     OT_UNUSED_VARIABLE(aAddress);
 
     if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)) ||
-        ((!isAdd) && (error == OT_ERROR_NOT_FOUND)))
+        ((!isAdd) && (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)))
     {
         otLogInfoPlat("[netif] %s [%s] %s%s", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
                       aAddress.ToString().AsCString(),
@@ -950,7 +950,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 }
 
                 logAddrEvent(/* isAdd */ false, addr, error);
-                if (error == OT_ERROR_NOT_FOUND)
+                if (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)
                 {
                     error = OT_ERROR_NONE;
                 }

@@ -164,7 +164,8 @@ exit:
 
 Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 {
-    Error error = kErrorNone;
+    Error error     = kErrorNone;
+    bool  generated = false;
 
     if (Get<Settings>().Read<Settings::OmrPrefix>(mLocalOmrPrefix) != kErrorNone || !IsValidOmrPrefix(mLocalOmrPrefix))
     {
@@ -182,7 +183,12 @@ Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 
         mLocalOmrPrefix.Set(randomOmrPrefix);
         IgnoreError(Get<Settings>().Save<Settings::OmrPrefix>(mLocalOmrPrefix));
+        generated = true;
     }
+
+    OT_UNUSED_VARIABLE(generated);
+
+    LogNote("Local OMR prefix: %s (%s)", mLocalOmrPrefix.ToString().AsCString(), generated ? "generated" : "loaded");
 
 exit:
     return error;
@@ -190,14 +196,13 @@ exit:
 
 Error RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
 {
-    Error error = kErrorNone;
+    Error error     = kErrorNone;
+    bool  generated = false;
 
     if (Get<Settings>().Read<Settings::OnLinkPrefix>(mLocalOnLinkPrefix) != kErrorNone ||
         !mLocalOnLinkPrefix.IsUniqueLocal())
     {
         Ip6::NetworkPrefix randomOnLinkPrefix;
-
-        LogNote("No valid on-link prefix found in settings, generating new one");
 
         error = randomOnLinkPrefix.GenerateRandomUla();
         if (error != kErrorNone)
@@ -211,7 +216,13 @@ Error RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
         mLocalOnLinkPrefix.Set(randomOnLinkPrefix);
 
         IgnoreError(Get<Settings>().Save<Settings::OnLinkPrefix>(mLocalOnLinkPrefix));
+        generated = true;
     }
+
+    OT_UNUSED_VARIABLE(generated);
+
+    LogNote("Local on-link prefix: %s (%s)", mLocalOnLinkPrefix.ToString().AsCString(),
+            generated ? "generated" : "loaded");
 
 exit:
     return error;
@@ -509,7 +520,7 @@ void RoutingManager::UnpublishLocalOmrPrefix(void)
     LogInfo("Unpublishing local OMR prefix %s from Thread network", mLocalOmrPrefix.ToString().AsCString());
 
 exit:
-    if (error != kErrorNone)
+    if (error != kErrorNone && error != kErrorNotFound)
     {
         LogWarn("Failed to unpublish local OMR prefix %s from Thread network: %s",
                 mLocalOmrPrefix.ToString().AsCString(), ErrorToString(error));

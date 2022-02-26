@@ -586,7 +586,7 @@ void BorderAgent::Start(void)
     Coap::CoapSecure &coaps = Get<Coap::CoapSecure>();
     Pskc              pskc;
 
-    VerifyOrExit(mState == kStateStopped, error = kErrorAlready);
+    VerifyOrExit(mState == kStateStopped, error = kErrorNone);
 
     Get<KeyManager>().GetPskc(pskc);
     SuccessOrExit(error = coaps.Start(kBorderAgentUdpPort));
