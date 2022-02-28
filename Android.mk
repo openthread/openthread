@@ -41,7 +41,6 @@ OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1                      \
     -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1                  \
-    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_DTLS_ENABLE=1                               \
     -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1                          \
     -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1                      \
