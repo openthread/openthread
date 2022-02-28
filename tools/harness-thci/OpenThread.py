@@ -1718,7 +1718,7 @@ class OpenThreadTHCI(object):
         if TESTHARNESS_VERSION == TESTHARNESS_1_2 and P_dp == 0 and not self.__isOpenThreadRunning():
             self.__useDefaultDomainPrefix = False
 
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2 and self.IsBackboneRouter:
+        if TESTHARNESS_VERSION == TESTHARNESS_1_2 and self.IsBorderRouter:
             # TestHarness 1.2 converts 0x2001000000000000 to "2001000000000000"
             if P_Prefix is None:
                 P_Prefix = 0xfd007d037d037d03
