@@ -129,7 +129,7 @@ void TestEdsaKeyGenerationSignAndVerify(void)
 {
     Instance *instance = testInitInstance();
 
-    const char *kMessage = "You are not a drop in the ocean. You are the entire ocean in a drop.";
+    const char kMessage[] = "You are not a drop in the ocean. You are the entire ocean in a drop.";
 
     Ecdsa::P256::KeyPair   keyPair;
     Ecdsa::P256::PublicKey publicKey;
