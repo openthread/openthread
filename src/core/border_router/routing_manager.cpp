@@ -462,18 +462,29 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
         // The `aNewOmrPrefixes` remains empty if we fail to publish
         // the local OMR prefix.
     }
-    else if (publishedLocalOmrPrefix != nullptr && smallestOmrPrefix != publishedLocalOmrPrefix)
+    else
     {
-        LogInfo("EvaluateOmrPrefix: There is already a smaller OMR prefix %s in the Thread network",
-                smallestOmrPrefix->ToString().AsCString());
+        OT_ASSERT(smallestOmrPrefix != nullptr);
 
-        UnpublishLocalOmrPrefix();
+        if (*smallestOmrPrefix == mLocalOmrPrefix)
+        {
+            IgnoreError(PublishLocalOmrPrefix());
+        }
+        else if (IsOmrPrefixAddedToLocalNetworkData())
+        {
+            LogInfo("EvaluateOmrPrefix: There is already a smaller OMR prefix %s in the Thread network",
+                    smallestOmrPrefix->ToString().AsCString());
 
-        // Remove the local OMR prefix from the list by overwriting it
-        // with the last element and then popping it from the list.
+            UnpublishLocalOmrPrefix();
 
-        *publishedLocalOmrPrefix = *aNewOmrPrefixes.Back();
-        aNewOmrPrefixes.PopBack();
+            // Remove the local OMR prefix from the list by overwriting it
+            // with the last element and then popping it from the list.
+            if (publishedLocalOmrPrefix != nullptr)
+            {
+                *publishedLocalOmrPrefix = *aNewOmrPrefixes.Back();
+                aNewOmrPrefixes.PopBack();
+            }
+        }
     }
 }
 
@@ -483,6 +494,8 @@ Error RoutingManager::PublishLocalOmrPrefix(void)
     NetworkData::OnMeshPrefixConfig omrPrefixConfig;
 
     OT_ASSERT(mIsRunning);
+
+    VerifyOrExit(!IsOmrPrefixAddedToLocalNetworkData());
 
     omrPrefixConfig.Clear();
     omrPrefixConfig.mPrefix       = mLocalOmrPrefix;
@@ -505,6 +518,7 @@ Error RoutingManager::PublishLocalOmrPrefix(void)
         LogInfo("Publishing local OMR prefix %s in Thread network", mLocalOmrPrefix.ToString().AsCString());
     }
 
+exit:
     return error;
 }
 
@@ -513,6 +527,8 @@ void RoutingManager::UnpublishLocalOmrPrefix(void)
     Error error = kErrorNone;
 
     VerifyOrExit(mIsRunning);
+
+    VerifyOrExit(IsOmrPrefixAddedToLocalNetworkData());
 
     SuccessOrExit(error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalOmrPrefix));
 
@@ -525,6 +541,11 @@ exit:
         LogWarn("Failed to unpublish local OMR prefix %s from Thread network: %s",
                 mLocalOmrPrefix.ToString().AsCString(), ErrorToString(error));
     }
+}
+
+bool RoutingManager::IsOmrPrefixAddedToLocalNetworkData(void) const
+{
+    return Get<NetworkData::Local>().ContainsOnMeshPrefix(mLocalOmrPrefix);
 }
 
 Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
