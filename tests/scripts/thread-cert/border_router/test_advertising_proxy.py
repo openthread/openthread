@@ -280,5 +280,48 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address(host_addr))
 
 
+class SrpClientRemoveNonExistingHost(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
+    TOPOLOGY = {
+        BR: {
+            'name': 'BR',
+            'allowlist': [ROUTER],
+            'is_otbr': True,
+            'version': '1.2',
+        },
+        ROUTER: {
+            'name': 'Router',
+            'allowlist': [BR],
+            'version': '1.2',
+        }
+    }
+
+    def test(self):
+        server = self.nodes[BR]
+        client = self.nodes[ROUTER]
+
+        server.srp_server_set_enabled(True)
+        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
+        server.start()
+        self.simulator.go(10)
+        self.assertEqual('leader', server.get_state())
+        self.assertEqual(server.srp_server_get_state(), 'running')
+
+        client.start()
+        self.simulator.go(5)
+        self.assertEqual('router', client.get_state())
+
+        # Immediately remove a non-existing host.
+
+        client.srp_client_enable_auto_start_mode()
+        client.srp_client_set_host_name('my-host')
+        self.assertEqual('ToAdd', client.srp_client_get_host_state())
+
+        client.srp_client_remove_host(remove_key=True, send_unreg_to_server=True)
+        self.simulator.go(2)
+        self.assertEqual('Removed', client.srp_client_get_host_state())
+
+
 if __name__ == '__main__':
     unittest.main()
