@@ -978,12 +978,18 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
 
     // Check the Question Section
 
-    VerifyOrExit(header.GetQuestionCount() == kQuestionCount[aType], error = kErrorParse);
-
-    for (uint8_t num = 0; num < kQuestionCount[aType]; num++)
+    if (header.GetQuestionCount() == kQuestionCount[aType])
     {
-        SuccessOrExit(error = Name::CompareName(message, offset, queryName));
-        offset += sizeof(Question);
+        for (uint8_t num = 0; num < kQuestionCount[aType]; num++)
+        {
+            SuccessOrExit(error = Name::CompareName(message, offset, queryName));
+            offset += sizeof(Question);
+        }
+    }
+    else
+    {
+        VerifyOrExit((header.GetResponseCode() != Header::kResponseSuccess) && (header.GetQuestionCount() == 0),
+                     error = kErrorParse);
     }
 
     // Check the answer, authority and additional record sections
