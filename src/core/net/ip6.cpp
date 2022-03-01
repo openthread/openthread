@@ -912,10 +912,10 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
             break;
 
         case kProtoFragment:
-            // Always forward IPv6 fragments to the Host.
+#if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
             IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromHost,
                                                /* aAllowReceiveFilter */ false, Message::kCopyToUse));
-
+#endif
             SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromHost));
             break;
 
