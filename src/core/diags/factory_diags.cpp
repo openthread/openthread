@@ -138,6 +138,11 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
     return kErrorNone;
 }
 
+void Diags::ReceiveDone(otRadioFrame *aFrame, Error aError)
+{
+    otPlatDiagRadioReceived(&GetInstance(), aFrame, aError);
+}
+
 extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 {
     otPlatDiagAlarmCallback(aInstance);

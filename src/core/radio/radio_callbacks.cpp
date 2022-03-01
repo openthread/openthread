@@ -64,9 +64,14 @@ void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
     // Pass it to notify OpenThread `Diags` module on host side.
     HandleReceiveDone(aFrame, aError);
-#else // For OPENTHREAD_FTD, OPENTHREAD_MTD and OPENTHREAD_RADIO(CLI)
-    Get<FactoryDiags::Diags>().ReceiveDone(aFrame, aError);
 #endif
+    /*
+     * Call Diags::ReceiveDone anyway.
+     * For host + RCP, `otPlatDiagRadioReceived` will be called on both sides.
+     * The posix host has an empty implementation for `otPlatDiagRadioReceived`
+     * and the RCP side has a platform-specific implementation.
+     */
+    Get<FactoryDiags::Diags>().ReceiveDone(aFrame, aError);
 }
 
 void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError)
