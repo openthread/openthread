@@ -391,8 +391,8 @@ class OpenThreadTHCI(object):
             self.connectType = 'ip'
             self.telnetIp = self.port
             self.telnetPort = 22
-            self.telnetUsername = 'pi'
-            self.telnetPassword = 'raspberry'
+            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
+            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
         except ValueError:
             self.connectType = (params.get('Param5') or 'usb').lower()
             self.telnetIp = params.get('TelnetIP')
