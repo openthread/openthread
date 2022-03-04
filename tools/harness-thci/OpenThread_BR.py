@@ -648,7 +648,7 @@ EOF"
     def mdns_query(self, dst='ff02::fb', service='_meshcop._udp.local', addrs_blacklist=[]):
         print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
 
-        # For BBR-TC-03 or DH test cases just send a query
+        # For BBR-TC-03 or DH test cases (empty arguments) just send a query
         if dst == 'ff02::fb' and not addrs_blacklist:
             self.bash('dig -p 5353 @%s %s ptr' % (dst, service), sudo=False)
             return
@@ -659,8 +659,9 @@ EOF"
         for line in output:
             print(line)
             alias, link_local_addr, port, thread_status = eval(line)
-            if thread_status == 2 and link_local_addr not in addrs_blacklist:
-                return '%s%%eth0' % link_local_addr, port
+            if thread_status == 2 and link_local_addr:
+                if (dst and link_local_addr in dst) or (link_local_addr not in addrs_blacklist):
+                    return '%s%%eth0' % link_local_addr, port
 
         raise Exception('No active Border Agents found')
 

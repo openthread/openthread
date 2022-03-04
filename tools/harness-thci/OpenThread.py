@@ -70,9 +70,7 @@ from GRLLibs.UtilityModules.enums import (
 )
 
 if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-    from GRLLibs.UtilityModules.enums import (
-        DevCapb,)
-
+    from GRLLibs.UtilityModules.enums import DevCapb
     import commissioner
     from commissioner_impl import OTCommissioner
 
@@ -1497,8 +1495,9 @@ class OpenThreadTHCI(object):
         self.panId = ModuleHelper.Default_PanId
         self.xpanId = ModuleHelper.Default_XpanId
         self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
-        # OT only accept hex format PSKc for now
-        self.pskc = '00000000000000000000000000000001'
+        stretchedPSKc = Thread_PBKDF2.get(ModuleHelper.Default_PSKc, ModuleHelper.Default_XpanId,
+                                          ModuleHelper.Default_NwkName)
+        self.pskc = hex(stretchedPSKc).rstrip('L').lstrip('0x')
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
         self.securityPolicyFlags = 'onrcb'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
