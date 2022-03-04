@@ -142,8 +142,8 @@ class MdnsRestart(thread_cert.TestCase):
         self.assertEqual(len(host.browse_mdns_services('_ed2._tcp')), 1)
 
         # BR1's mdns restart
-        br1.bash('service mdns restart')
-        br1.bash('service avahi-daemon restart')
+        br1.stop_mdns_service()
+        br1.start_mdns_service()
 
         self.simulator.go(10)
 

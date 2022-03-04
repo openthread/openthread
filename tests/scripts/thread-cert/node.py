@@ -104,6 +104,7 @@ class OtbrDocker:
         return path
 
     def _launch_docker(self):
+        logging.info(f'Docker image: {config.OTBR_DOCKER_IMAGE}')
         subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
         CI_ENV = os.getenv('CI_ENV', '').split()
         os.makedirs('/tmp/coverage/', exist_ok=True)
@@ -160,6 +161,14 @@ class OtbrDocker:
     def stop_otbr_service(self):
         self.stop_ot_ctl()
         self.bash('service otbr-agent stop')
+
+    def stop_mdns_service(self):
+        self.bash('service avahi-daemon stop')
+        self.bash('service mdns stop')
+
+    def start_mdns_service(self):
+        self.bash('service avahi-daemon start')
+        self.bash('service mdns start')
 
     def start_ot_ctl(self):
         cmd = f'docker exec -i {self._docker_name} ot-ctl'
