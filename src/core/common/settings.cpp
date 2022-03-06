@@ -37,7 +37,6 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "meshcop/dataset.hpp"
 #include "thread/mle.hpp"
 
@@ -50,7 +49,7 @@ RegisterLogModule("Settings");
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void SettingsBase::NetworkInfo::Log(Action aAction) const
 {
@@ -106,9 +105,9 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
 }
 #endif
 
-#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *SettingsBase::ActionToString(Action aAction)
 {
     static const char *const kActionStrings[] = {
@@ -135,9 +134,9 @@ const char *SettingsBase::ActionToString(Action aAction)
 
     return kActionStrings[aAction];
 }
-#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 const char *SettingsBase::KeyToString(Key aKey)
 {
     static const char *const kKeyStrings[] = {
@@ -179,7 +178,7 @@ const char *SettingsBase::KeyToString(Key aKey)
 
     return kKeyStrings[aKey];
 }
-#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 
 // LCOV_EXCL_STOP
 
@@ -360,7 +359,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
     {
         // Log error if log level is at "warn" or higher.
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
         const char *actionText = "";
 
         switch (aAction)
@@ -396,7 +395,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 
         LogWarn("Error %s %s %s", ErrorToString(aError), actionText, KeyToString(aKey));
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 
         ExitNow();
     }
@@ -404,7 +403,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
     // We reach here when `aError` is `kErrorNone`.
     // Log success if log level is at "info" or higher.
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     if (aValue != nullptr)
     {
         switch (aKey)
@@ -463,7 +462,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
     {
         LogInfo("%s %s", ActionToString(aAction), KeyToString(aKey));
     }
-#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 exit:
     return;

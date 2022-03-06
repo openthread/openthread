@@ -1704,7 +1704,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {
@@ -1884,7 +1884,7 @@ void MeshForwarder::LogLowpanHcFrameDrop(Error               aError,
             aFrameLength, aMacSource.ToString().AsCString(), aMacDest.ToString().AsCString(), ToYesNo(aIsSecure));
 }
 
-#else // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 
 void MeshForwarder::LogMessage(MessageAction, const Message &, const Mac::Address *, Error)
 {
@@ -1907,7 +1907,7 @@ void MeshForwarder::LogLowpanHcFrameDrop(Error, uint16_t, const Mac::Address &, 
 {
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
 

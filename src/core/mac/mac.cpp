@@ -42,7 +42,6 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"
@@ -2190,7 +2189,7 @@ void Mac::ResetRetrySuccessHistogram()
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Mac::OperationToString(Operation aOperation)
 {
@@ -2281,7 +2280,7 @@ void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload
     LogInfo("%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString().AsCString());
 }
 
-#else // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Mac::LogFrameRxFailure(const RxFrame *, Error) const
 {
@@ -2295,7 +2294,7 @@ void Mac::LogFrameTxFailure(const TxFrame &, Error, uint8_t, bool) const
 {
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 // LCOV_EXCL_STOP
 

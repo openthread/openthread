@@ -43,7 +43,6 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -4311,7 +4310,7 @@ void Mle::UpdateParentSearchState(void)
 }
 #endif // OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress)
 {
     Log(aAction, aType, aAddress, Mac::kShortAddrInvalid);
@@ -4336,7 +4335,7 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
 }
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 void Mle::LogProcessError(MessageType aType, Error aError)
 {
     LogError(kMessageReceive, aType, aError);
@@ -4513,7 +4512,7 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
     return str;
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_WARN)
 
 const char *Mle::RoleToString(DeviceRole aRole)
 {
@@ -4536,7 +4535,7 @@ const char *Mle::RoleToString(DeviceRole aRole)
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 const char *Mle::AttachModeToString(AttachMode aMode)
 {
@@ -4597,7 +4596,7 @@ const char *Mle::ReattachStateToString(ReattachState aState)
     return kReattachStateStrings[aState];
 }
 
-#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#endif // OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
 

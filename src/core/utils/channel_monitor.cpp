@@ -191,7 +191,7 @@ void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult)
 
 void ChannelMonitor::LogResults(void)
 {
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     const size_t        kStringSize = 128;
     String<kStringSize> logString;
 

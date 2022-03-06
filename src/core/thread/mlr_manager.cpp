@@ -682,7 +682,7 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
 
 void MlrManager::LogMulticastAddresses(void)
 {
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
     LogDebg("-------- Multicast Addresses --------");
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
@@ -703,7 +703,7 @@ void MlrManager::LogMulticastAddresses(void)
     }
 #endif
 
-#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 }
 
 void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIp6AddressesNumMax],
@@ -761,7 +761,7 @@ void MlrManager::LogMlrResponse(Error               aResult,
     OT_UNUSED_VARIABLE(aFailedAddresses);
     OT_UNUSED_VARIABLE(aFailedAddressNum);
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     if (aResult == kErrorNone && aError == kErrorNone && aStatus == ThreadStatusTlv::MlrStatus::kMlrSuccess)
     {
         LogInfo("Receive MLR.rsp OK");

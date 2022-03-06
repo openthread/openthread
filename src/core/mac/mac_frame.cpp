@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/log.hpp"
 #include "radio/trel_link.hpp"
 #if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 #include "crypto/aes_ccm.hpp"
@@ -1379,7 +1380,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 Frame::InfoString Frame::ToInfoString(void) const
 {
@@ -1459,7 +1460,7 @@ BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
     return string;
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
 

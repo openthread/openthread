@@ -37,7 +37,6 @@
 
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
 
 namespace ot {
 namespace BackboneRouter {
@@ -83,7 +82,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const
 {
@@ -143,7 +142,7 @@ const char *Leader::DomainPrefixStateToString(DomainPrefixState aState)
     return kPrefixStateStrings[aState];
 }
 
-#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Leader::Update(void)
 {

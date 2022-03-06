@@ -40,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"

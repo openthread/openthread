@@ -41,6 +41,7 @@
 #include <openthread/link_raw.h>
 
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/sub_mac.hpp"
@@ -277,6 +278,7 @@ public:
      */
     Error SetMacFrameCounter(uint32_t aMacFrameCounter);
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.
      *
@@ -294,7 +296,6 @@ public:
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
      *
      */
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
     void RecordFrameTransmitStatus(const TxFrame &aFrame,
                                    const RxFrame *aAckFrame,
                                    Error          aError,

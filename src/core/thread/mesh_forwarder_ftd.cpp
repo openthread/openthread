@@ -1024,7 +1024,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                            const Message &     aMessage,
@@ -1209,7 +1209,7 @@ exit:
     return;
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
 

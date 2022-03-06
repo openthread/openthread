@@ -42,6 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/settings_driver.hpp"
 #include "crypto/ecdsa.hpp"
@@ -744,10 +745,10 @@ protected:
     static void LogPrefix(Action aAction, Key aKey, const Ip6::Prefix &aPrefix);
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     static const char *KeyToString(Key aKey);
 #endif
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *ActionToString(Action aAction);
 #endif
 };

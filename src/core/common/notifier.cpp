@@ -216,7 +216,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Notifier::LogEvents(Events aEvents) const
 {
@@ -303,7 +303,7 @@ const char *Notifier::EventToString(Event aEvent) const
     return retval;
 }
 
-#else // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
 void Notifier::LogEvents(Events) const
 {
@@ -314,7 +314,7 @@ const char *Notifier::EventToString(Event) const
     return "";
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
 // LCOV_EXCL_STOP
 

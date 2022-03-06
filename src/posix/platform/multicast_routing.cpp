@@ -480,7 +480,7 @@ const char *MulticastRoutingManager::MifIndexToString(MifIndex aMif)
 
 void MulticastRoutingManager::DumpMulticastForwardingCache(void) const
 {
-#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
     otLogDebgPlat("MulticastRoutingManager: ==================== MFC ENTRIES ====================");
 
     for (const MulticastForwardingCache &mfc : mMulticastForwardingCacheTable)

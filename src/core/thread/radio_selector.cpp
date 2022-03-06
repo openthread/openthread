@@ -355,7 +355,7 @@ Mac::RadioType RadioSelector::SelectPollFrameRadio(const Neighbor &aParent)
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void RadioSelector::Log(LogLevel        aLogLevel,
                         const char *    aActionText,
@@ -385,13 +385,13 @@ exit:
     return;
 }
 
-#else // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void RadioSelector::Log(LogLevel, const char *, Mac::RadioType, const Neighbor &)
 {
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 // LCOV_EXCL_STOP
 

@@ -40,7 +40,6 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -1552,7 +1551,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
         ResetAdvertiseInterval();
     }
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
     VerifyOrExit(changed);
     LogInfo("Route table updated");
