@@ -3026,7 +3026,7 @@ class OpenThreadTHCI(object):
             else:
                 self.bbrSeqNum = (self.bbrSeqNum + 1) % 256
 
-        return self.__configBbrDataset(SeqNum=SeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
+        return self.__configBbrDataset(SeqNum=self.bbrSeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
 
     def __configBbrDataset(self, SeqNum=None, MlrTimeout=None, ReRegDelay=None):
         if MlrTimeout is not None and ReRegDelay is None:
