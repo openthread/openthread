@@ -42,6 +42,12 @@
 #include <mbedtls/pk.h>
 #include <mbedtls/version.h>
 
+#if defined(MBEDTLS_USE_TINYCRYPT)
+#include <tinycrypt/ecc.h>
+#include <tinycrypt/ecc_dh.h>
+#include <tinycrypt/ecc_dsa.h>
+#endif
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/random.hpp"
@@ -53,6 +59,36 @@ namespace Ecdsa {
 
 Error P256::KeyPair::Generate(void)
 {
+#if defined(MBEDTLS_USE_TINYCRYPT)
+
+    mbedtls_pk_context    pk;
+    mbedtls_uecc_keypair *keypair;
+    int                   ret;
+
+    mbedtls_pk_init(&pk);
+
+    ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY));
+    VerifyOrExit(ret == 0);
+
+    keypair = mbedtls_pk_uecc(pk);
+
+    ret = uECC_make_key(keypair->public_key, keypair->private_key);
+    VerifyOrExit(ret == UECC_SUCCESS);
+
+    ret = mbedtls_pk_write_key_der(&pk, mDerBytes, sizeof(mDerBytes));
+    VerifyOrExit(ret > 0);
+
+    mDerLength = static_cast<uint8_t>(ret);
+
+    memmove(mDerBytes, mDerBytes + sizeof(mDerBytes) - mDerLength, mDerLength);
+
+exit:
+    mbedtls_pk_free(&pk);
+
+    return (ret >= 0) ? kErrorNone : MbedTls::MapError(ret);
+
+#else
+
     mbedtls_pk_context pk;
     int                ret;
 
@@ -75,6 +111,8 @@ exit:
     mbedtls_pk_free(&pk);
 
     return (ret >= 0) ? kErrorNone : MbedTls::MapError(ret);
+
+#endif
 }
 
 Error P256::KeyPair::Parse(void *aContext) const
@@ -98,10 +136,30 @@ exit:
 
 Error P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
 {
-    Error                error;
-    mbedtls_pk_context   pk;
+#if defined(MBEDTLS_USE_TINYCRYPT)
+
+    Error                 error;
+    mbedtls_pk_context    pk;
+    mbedtls_uecc_keypair *keyPair;
+    int                   ret;
+
+    SuccessOrExit(error = Parse(&pk));
+
+    keyPair = mbedtls_pk_uecc(pk);
+
+    memcpy(aPublicKey.mData, keyPair->public_key, kMpiSize);
+    memcpy(aPublicKey.mData + kMpiSize, keyPair->public_key + kMpiSize, kMpiSize);
+
+exit:
+    mbedtls_pk_free(&pk);
+    return error;
+
+#else
+
+    Error error;
+    mbedtls_pk_context pk;
     mbedtls_ecp_keypair *keyPair;
-    int                  ret;
+    int ret;
 
     SuccessOrExit(error = Parse(&pk));
 
@@ -117,17 +175,46 @@ Error P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
 exit:
     mbedtls_pk_free(&pk);
     return error;
+
+#endif
 }
 
 Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) const
 {
+#if defined(MBEDTLS_USE_TINYCRYPT)
+
     Error                 error;
     mbedtls_pk_context    pk;
-    mbedtls_ecp_keypair * keypair;
-    mbedtls_ecdsa_context ecdsa;
-    mbedtls_mpi           r;
-    mbedtls_mpi           s;
+    mbedtls_uecc_keypair *keypair;
     int                   ret;
+
+    uint8_t *sig = (uint8_t *)malloc(2 * kMpiSize);
+
+    SuccessOrExit(error = Parse(&pk));
+
+    keypair = mbedtls_pk_uecc(pk);
+
+    ret = uECC_sign(keypair->private_key, aHash.GetBytes(), Sha256::Hash::kSize, sig);
+    VerifyOrExit(ret == UECC_SUCCESS, error = MbedTls::MapError(ret));
+
+    memcpy(aSignature.mShared.mMpis.mR, sig, kMpiSize);
+    memcpy(aSignature.mShared.mMpis.mS, sig + kMpiSize, kMpiSize);
+
+exit:
+    mbedtls_pk_free(&pk);
+    free(sig);
+
+    return error;
+
+#else
+
+    Error error;
+    mbedtls_pk_context pk;
+    mbedtls_ecp_keypair *keypair;
+    mbedtls_ecdsa_context ecdsa;
+    mbedtls_mpi r;
+    mbedtls_mpi s;
+    int ret;
 
     mbedtls_ecdsa_init(&ecdsa);
     mbedtls_mpi_init(&r);
@@ -164,15 +251,41 @@ exit:
     mbedtls_ecdsa_free(&ecdsa);
 
     return error;
+
+#endif
 }
 
 Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
 {
-    Error                 error = kErrorNone;
+#if defined(MBEDTLS_USE_TINYCRYPT)
+
+    Error error = kErrorNone;
+    int   ret;
+
+    uint8_t *public_key = (uint8_t *)malloc(2 * kMpiSize);
+    uint8_t *sig        = (uint8_t *)malloc(2 * kMpiSize);
+
+    memcpy(public_key, GetBytes(), 2 * kMpiSize);
+
+    memcpy(sig, aSignature.mShared.mMpis.mR, kMpiSize);
+    memcpy(sig + kMpiSize, aSignature.mShared.mMpis.mS, kMpiSize);
+
+    ret = uECC_verify(public_key, aHash.GetBytes(), Sha256::Hash::kSize, sig);
+    VerifyOrExit(ret == UECC_SUCCESS, error = kErrorSecurity);
+
+exit:
+    free(public_key);
+    free(sig);
+
+    return error;
+
+#else
+
+    Error error = kErrorNone;
     mbedtls_ecdsa_context ecdsa;
-    mbedtls_mpi           r;
-    mbedtls_mpi           s;
-    int                   ret;
+    mbedtls_mpi r;
+    mbedtls_mpi s;
+    int ret;
 
     mbedtls_ecdsa_init(&ecdsa);
     mbedtls_mpi_init(&r);
@@ -204,6 +317,8 @@ exit:
     mbedtls_ecdsa_free(&ecdsa);
 
     return error;
+
+#endif
 }
 
 Error Sign(uint8_t *      aOutput,
@@ -213,12 +328,47 @@ Error Sign(uint8_t *      aOutput,
            const uint8_t *aPrivateKey,
            uint16_t       aPrivateKeyLength)
 {
+#if defined(MBEDTLS_USE_TINYCRYPT)
+
     Error                 error = kErrorNone;
-    mbedtls_ecdsa_context ctx;
     mbedtls_pk_context    pkCtx;
-    mbedtls_ecp_keypair * keypair;
-    mbedtls_mpi           rMpi;
-    mbedtls_mpi           sMpi;
+    mbedtls_uecc_keypair *keypair;
+    uint8_t *             sig;
+
+    sig = (uint8_t *)malloc(2 * NUM_ECC_BYTES);
+    mbedtls_pk_init(&pkCtx);
+
+    // Parse a private key in PEM format.
+    VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, nullptr, 0) == 0,
+                 error = kErrorInvalidArgs);
+    VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = kErrorInvalidArgs);
+
+    keypair = mbedtls_pk_uecc(pkCtx);
+    OT_ASSERT(keypair != nullptr);
+
+    // Sign using ECDSA.
+    VerifyOrExit(uECC_sign(keypair->private_key, aInputHash, aInputHashLength, sig) == UECC_SUCCESS,
+                 error = kErrorFailed);
+    VerifyOrExit(2 * NUM_ECC_BYTES <= aOutputLength, error = kErrorNoBufs);
+
+    // Concatenate the two octet sequences in the order R and then S.
+    memcpy(aOutput, sig, 2 * NUM_ECC_BYTES);
+    aOutputLength = 2 * NUM_ECC_BYTES;
+
+exit:
+    mbedtls_pk_free(&pkCtx);
+    free(sig);
+
+    return error;
+
+#else
+
+    Error error = kErrorNone;
+    mbedtls_ecdsa_context ctx;
+    mbedtls_pk_context pkCtx;
+    mbedtls_ecp_keypair *keypair;
+    mbedtls_mpi rMpi;
+    mbedtls_mpi sMpi;
 
     mbedtls_pk_init(&pkCtx);
     mbedtls_ecdsa_init(&ctx);
@@ -262,6 +412,8 @@ exit:
     mbedtls_pk_free(&pkCtx);
 
     return error;
+
+#endif
 }
 
 } // namespace Ecdsa
