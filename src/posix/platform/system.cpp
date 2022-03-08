@@ -263,9 +263,9 @@ void otSysDeinit(void)
 /**
  * This function try selecting the given file descriptors in nonblocking mode.
  *
- * @param[inout]    aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]    aWriteFdSet  A pointer to the write file descriptors.
- * @param[inout]    aErrorFdSet  A pointer to the error file descriptors.
+ * @param[in,out]   aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]   aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]   aErrorFdSet  A pointer to the error file descriptors.
  * @param[in]       aMaxFd       The max file descriptor.
  *
  * @returns The value returned from select().

@@ -96,8 +96,8 @@ public:
     /**
      * This method gets the information about the next EID cache entry (using an iterator).
      *
-     * @param[out]   aInfo       An `EntryInfo` where the EID cache entry information is placed.
-     * @param[inout] aIterator   An iterator. It will be updated to point to the next entry on success.
+     * @param[out]    aInfo      An `EntryInfo` where the EID cache entry information is placed.
+     * @param[in,out] aIterator  An iterator. It will be updated to point to the next entry on success.
      *                           To get the first entry, initialize the iterator by setting all its fields to zero.
      *                           e.g., `memset` the the iterator structure to zero.
      *

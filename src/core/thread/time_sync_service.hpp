@@ -66,7 +66,7 @@ public:
     /**
      * Get the Thread network time.
      *
-     * @param[inout] aNetworkTime  The Thread network time in microseconds.
+     * @param[in,out] aNetworkTime  The Thread network time in microseconds.
      *
      * @returns The time synchronization status.
      *

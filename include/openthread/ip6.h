@@ -693,8 +693,8 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
 /**
  * This function perform OpenThread source address selection.
  *
- * @param[in]     aInstance     A pointer to an OpenThread instance.
- * @param[inout]  aMessageInfo  A pointer to the message information.
+ * @param[in]      aInstance     A pointer to an OpenThread instance.
+ * @param[in,out]  aMessageInfo  A pointer to the message information.
  *
  * @retval  OT_ERROR_NONE       Found a source address and is filled into mSockAddr of @p aMessageInfo.
  * @retval  OT_ERROR_NOT_FOUND  No source address was found and @p aMessageInfo is unchanged.

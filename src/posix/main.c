@@ -89,7 +89,7 @@ void otAppNcpUpdate(otSysMainloopContext *aContext);
 /**
  * This function updates the file descriptor sets with file descriptors used by console.
  *
- * @param[inout]    aMainloop   A pointer to the mainloop context.
+ * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
  */
 void otAppNcpProcess(const otSysMainloopContext *aContext);
@@ -111,7 +111,7 @@ void otAppCliDeinit(void);
 /**
  * This function updates the file descriptor sets with file descriptors used by console.
  *
- * @param[inout]    aMainloop   A pointer to the mainloop context.
+ * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
  */
 void otAppCliUpdate(otSysMainloopContext *aMainloop);

@@ -139,13 +139,13 @@ void otPlatCryptoInit(void);
 /**
  * Import a key into PSA ITS.
  *
- * @param[inout] aKeyRef           Pointer to the key ref to be used for crypto operations.
- * @param[in]    aKeyType          Key Type encoding for the key.
- * @param[in]    aKeyAlgorithm     Key algorithm encoding for the key.
- * @param[in]    aKeyUsage         Key Usage encoding for the key (combinations of `OT_CRYPTO_KEY_USAGE_*`).
- * @param[in]    aKeyPersistence   Key Persistence for this key
- * @param[in]    aKey              Actual key to be imported.
- * @param[in]    aKeyLen           Length of the key to be imported.
+ * @param[in,out] aKeyRef           Pointer to the key ref to be used for crypto operations.
+ * @param[in]     aKeyType          Key Type encoding for the key.
+ * @param[in]     aKeyAlgorithm     Key algorithm encoding for the key.
+ * @param[in]     aKeyUsage         Key Usage encoding for the key (combinations of `OT_CRYPTO_KEY_USAGE_*`).
+ * @param[in]     aKeyPersistence   Key Persistence for this key
+ * @param[in]     aKey              Actual key to be imported.
+ * @param[in]     aKeyLen           Length of the key to be imported.
  *
  * @retval OT_ERROR_NONE          Successfully imported the key.
  * @retval OT_ERROR_FAILED        Failed to import the key.

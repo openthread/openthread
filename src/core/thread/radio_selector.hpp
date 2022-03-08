@@ -173,9 +173,9 @@ public:
      * The `aMessage` will be updated to store the selected radio type (please see `Message::GetRadioType()`).
      * The `aTxFrames` will also be updated to indicate which radio links are to be used.
      *
-     * @param[inout] aMessage   The message to send.
-     * @param[in]    aMacDest   The MAC destination address.
-     * @param[inout] aTxFrames  The set of TxFrames for all radio links.
+     * @param[in,out] aMessage   The message to send.
+     * @param[in]     aMacDest   The MAC destination address.
+     * @param[in,out] aTxFrames  The set of TxFrames for all radio links.
      *
      * @returns  A reference to `mTxFrame` to use when preparing the frame for tx.
      *

@@ -306,7 +306,7 @@ public:
     /**
      * This method get joiner info at aIterator position.
      *
-     * @param[inout]    aIterator   A iterator to the index of the joiner.
+     * @param[in,out]   aIterator   A iterator to the index of the joiner.
      * @param[out]      aJoiner     A reference to Joiner info.
      *
      * @retval kErrorNone       Successfully get the Joiner info.

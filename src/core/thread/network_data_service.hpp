@@ -560,8 +560,8 @@ public:
      * To get the first entry, @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
      * method).
      *
-     * @param[inout] aIterator     A reference to an iterator.
-     * @param[out]   aInfo         A reference to `DnsSrpAnycast::Info` to return the info.
+     * @param[in,out] aIterator    A reference to an iterator.
+     * @param[out]    aInfo        A reference to `DnsSrpAnycast::Info` to return the info.
      *
      * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
      * @retval kErrorNotFound   No more matching entries in the Network Data.
@@ -590,8 +590,8 @@ public:
      * To get the first entry @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
      * method).
      *
-     * @param[inout] aIterator     A reference to an iterator.
-     * @param[out]   aInfo         A reference to `DnsSrpUnicast::Info` to return the info.
+     * @param[in,out] aIterator    A reference to an iterator.
+     * @param[out]    aInfo        A reference to `DnsSrpUnicast::Info` to return the info.
      *
      * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
      * @retval kErrorNotFound   No more matching entries in the Network Data.

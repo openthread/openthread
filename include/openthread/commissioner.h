@@ -251,7 +251,7 @@ otError otCommissionerAddJoinerWithDiscerner(otInstance *             aInstance,
  * This method get joiner info at aIterator position.
  *
  * @param[in]      aInstance   A pointer to instance.
- * @param[inout]   aIterator   A pointer to the Joiner Info iterator context.
+ * @param[in,out]  aIterator   A pointer to the Joiner Info iterator context.
  * @param[out]     aJoiner     A reference to Joiner info.
  *
  * @retval OT_ERROR_NONE       Successfully get the Joiner info.
