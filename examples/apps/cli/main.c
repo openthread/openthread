@@ -150,21 +150,13 @@ pseudo_reset:
     return 0;
 }
 
-/*
- * Provide, if required an "otPlatLog()" function
- */
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     va_list ap;
+
     va_start(ap, aFormat);
     otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
     va_end(ap);
 }
-
-void otPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine)
-{
-    otCliPlatLogLine(aLogLevel, aLogRegion, aLogLine);
-}
-
 #endif

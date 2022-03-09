@@ -140,13 +140,13 @@ extern int
 #include <openthread/icmp6.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/logging.h>
 #include <openthread/message.h>
 #include <openthread/netdata.h>
 #include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/logging.hpp"
 #include "net/ip6_address.hpp"
 
 unsigned int gNetifIndex = 0;
@@ -776,7 +776,7 @@ static void processReceive(otMessage *aMessage, void *aContext)
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     otLogInfoPlat("[netif] Packet from NCP (%u bytes)", static_cast<uint16_t>(length));
-    otDumpInfo(OT_LOG_REGION_PLATFORM, "", &packet[offset], length);
+    otDumpInfoPlat("", &packet[offset], length);
 #endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
@@ -831,7 +831,7 @@ static void processTransmit(otInstance *aInstance)
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     otLogInfoPlat("[netif] Packet to NCP (%hu bytes)", static_cast<uint16_t>(rval));
-    otDumpInfo(OT_LOG_REGION_PLATFORM, "", &packet[offset], static_cast<size_t>(rval));
+    otDumpInfoPlat("", &packet[offset], static_cast<size_t>(rval));
 #endif
 
     SuccessOrExit(error = otMessageAppend(message, &packet[offset], static_cast<uint16_t>(rval)));
@@ -849,7 +849,7 @@ exit:
     {
         if (error == OT_ERROR_DROP)
         {
-            otLogNotePlat("[netif] Message dropped by Thread", otThreadErrorToString(error));
+            otLogInfoPlat("[netif] Message dropped by Thread", otThreadErrorToString(error));
         }
         else
         {
@@ -863,7 +863,7 @@ static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError e
     OT_UNUSED_VARIABLE(aAddress);
 
     if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)) ||
-        ((!isAdd) && (error == OT_ERROR_NOT_FOUND)))
+        ((!isAdd) && (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)))
     {
         otLogInfoPlat("[netif] %s [%s] %s%s", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
                       aAddress.ToString().AsCString(),
@@ -950,7 +950,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 }
 
                 logAddrEvent(/* isAdd */ false, addr, error);
-                if (error == OT_ERROR_NOT_FOUND)
+                if (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)
                 {
                     error = OT_ERROR_NONE;
                 }

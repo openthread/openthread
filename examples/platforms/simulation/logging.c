@@ -43,37 +43,22 @@
 
 #include "utils/code_utils.h"
 
-// Macro to append content to end of the log string.
-
-#define LOG_PRINTF(...)                                                                   \
-    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset, __VA_ARGS__); \
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                            \
-    offset += (unsigned int)charsWritten;                                                 \
-    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0)
-
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    char         logString[512];
-    unsigned int offset;
-    int          charsWritten;
-    va_list      args;
+    char    logString[512];
+    int     offset;
+    va_list args;
 
-    offset = 0;
-
-    LOG_PRINTF("[%d] ", gNodeId);
+    offset = snprintf(logString, sizeof(logString), "[%d]", gNodeId);
 
     va_start(args, aFormat);
-    charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
+    vsnprintf(&logString[offset], sizeof(logString) - (uint16_t)offset, aFormat, args);
     va_end(args);
 
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
-
-exit:
     syslog(LOG_CRIT, "%s", logString);
 }
-
-#endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
+#endif

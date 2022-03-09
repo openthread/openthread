@@ -40,7 +40,7 @@
 #include "common/heap.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -49,6 +49,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("BorderAgent");
 
 namespace {
 constexpr uint16_t kBorderAgentUdpPort = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT; ///< UDP port of border agent service.
@@ -191,8 +193,8 @@ void BorderAgent::HandleCoapResponse(ForwardContext &aForwardContext, const Coap
             Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
             IgnoreError(Get<Ip6::Udp>().AddReceiver(mUdpReceiver));
 
-            otLogInfoMeshCoP("commissioner accepted: session ID=%d, ALOC=%s", sessionId,
-                             mCommissionerAloc.GetAddress().ToString().AsCString());
+            LogInfo("commissioner accepted: session ID=%d, ALOC=%s", sessionId,
+                    mCommissionerAloc.GetAddress().ToString().AsCString());
         }
     }
 
@@ -211,7 +213,7 @@ exit:
     {
         FreeMessage(message);
 
-        otLogWarnMeshCoP("Commissioner request[%hu] failed: %s", aForwardContext.GetMessageId(), ErrorToString(error));
+        LogWarn("Commissioner request[%hu] failed: %s", aForwardContext.GetMessageId(), ErrorToString(error));
 
         SendErrorMessage(aForwardContext, error);
     }
@@ -343,7 +345,7 @@ void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo, Ip6::kProtoUdp));
     mUdpProxyPort = tlv.GetSourcePort();
 
-    otLogInfoMeshCoP("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
+    LogInfo("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     FreeMessageOnError(message, error);
@@ -386,7 +388,7 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, Get<Coap::CoapSecure>().GetMessageInfo()));
 
-    otLogInfoMeshCoP("Sent to commissioner on %s", UriPath::kProxyRx);
+    LogInfo("Sent to commissioner on %s", UriPath::kProxyRx);
 
 exit:
     FreeMessageOnError(message, error);
@@ -412,7 +414,7 @@ void BorderAgent::HandleRelayReceive(const Coap::Message &aMessage)
     }
 
     SuccessOrExit(error = ForwardToCommissioner(*message, aMessage));
-    otLogInfoMeshCoP("Sent to commissioner on %s", UriPath::kRelayRx);
+    LogInfo("Sent to commissioner on %s", UriPath::kRelayRx);
 
 exit:
     FreeMessageOnError(message, error);
@@ -430,7 +432,7 @@ Error BorderAgent::ForwardToCommissioner(Coap::Message &aForwardMessage, const M
     SuccessOrExit(error =
                       Get<Coap::CoapSecure>().SendMessage(aForwardMessage, Get<Coap::CoapSecure>().GetMessageInfo()));
 
-    otLogInfoMeshCoP("Sent to commissioner");
+    LogInfo("Sent to commissioner");
 
 exit:
     LogError("send to commissioner", error);
@@ -478,7 +480,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("Sent to joiner router request on %s", UriPath::kRelayTx);
+    LogInfo("Sent to joiner router request on %s", UriPath::kRelayTx);
 
 exit:
     FreeMessageOnError(message, error);
@@ -531,7 +533,7 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     // HandleCoapResponse is responsible to free this forward context.
     forwardContext = nullptr;
 
-    otLogInfoMeshCoP("Forwarded request to leader on %s", aPath);
+    LogInfo("Forwarded request to leader on %s", aPath);
 
 exit:
     LogError("forward to leader", error);
@@ -559,13 +561,13 @@ void BorderAgent::HandleConnected(bool aConnected)
 {
     if (aConnected)
     {
-        otLogInfoMeshCoP("Commissioner connected");
+        LogInfo("Commissioner connected");
         mState = kStateActive;
         mTimer.Start(kKeepAliveTimeout);
     }
     else
     {
-        otLogInfoMeshCoP("Commissioner disconnected");
+        LogInfo("Commissioner disconnected");
         IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
         Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         mState        = kStateStarted;
@@ -584,7 +586,7 @@ void BorderAgent::Start(void)
     Coap::CoapSecure &coaps = Get<Coap::CoapSecure>();
     Pskc              pskc;
 
-    VerifyOrExit(mState == kStateStopped, error = kErrorAlready);
+    VerifyOrExit(mState == kStateStopped, error = kErrorNone);
 
     Get<KeyManager>().GetPskc(pskc);
     SuccessOrExit(error = coaps.Start(kBorderAgentUdpPort));
@@ -609,12 +611,12 @@ void BorderAgent::Start(void)
     mState        = kStateStarted;
     mUdpProxyPort = 0;
 
-    otLogInfoMeshCoP("Border Agent start listening on port %d", kBorderAgentUdpPort);
+    LogInfo("Border Agent start listening on port %d", kBorderAgentUdpPort);
 
 exit:
     if (error != kErrorNone)
     {
-        otLogWarnMeshCoP("failed to start Border Agent on port %d: %s", kBorderAgentUdpPort, ErrorToString(error));
+        LogWarn("failed to start Border Agent on port %d: %s", kBorderAgentUdpPort, ErrorToString(error));
     }
 }
 
@@ -628,7 +630,7 @@ void BorderAgent::HandleTimeout(void)
     if (Get<Coap::CoapSecure>().IsConnected())
     {
         Get<Coap::CoapSecure>().Disconnect();
-        otLogWarnMeshCoP("Reset commissioner session");
+        LogWarn("Reset commissioner session");
     }
 }
 
@@ -658,7 +660,7 @@ void BorderAgent::Stop(void)
     mState        = kStateStopped;
     mUdpProxyPort = 0;
 
-    otLogInfoMeshCoP("Border Agent stopped");
+    LogInfo("Border Agent stopped");
 
 exit:
     return;

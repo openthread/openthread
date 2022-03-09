@@ -39,6 +39,7 @@
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
@@ -535,7 +536,7 @@ private:
     otError ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Address &aDst);
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
     const char *MessagePriorityToString(const Message &aMessage);
 
@@ -555,28 +556,28 @@ private:
                                 uint16_t &          aOffset,
                                 Mac::Address &      aMeshSource,
                                 Mac::Address &      aMeshDest,
-                                otLogLevel          aLogLevel);
+                                LogLevel            aLogLevel);
     void  LogMeshIpHeader(const Message &     aMessage,
                           uint16_t            aOffset,
                           const Mac::Address &aMeshSource,
                           const Mac::Address &aMeshDest,
-                          otLogLevel          aLogLevel);
+                          LogLevel            aLogLevel);
     void  LogMeshMessage(MessageAction       aAction,
                          const Message &     aMessage,
                          const Mac::Address *aAddress,
                          Error               aError,
-                         otLogLevel          aLogLevel);
+                         LogLevel            aLogLevel);
 #endif
     void LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
                                    uint16_t     aSourcePort,
                                    uint16_t     aDestPort,
-                                   otLogLevel   aLogLevel);
+                                   LogLevel     aLogLevel);
     void LogIp6Message(MessageAction       aAction,
                        const Message &     aMessage,
                        const Mac::Address *aAddress,
                        Error               aError,
-                       otLogLevel          aLogLevel);
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+                       LogLevel            aLogLevel);
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;

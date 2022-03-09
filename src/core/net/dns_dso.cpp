@@ -30,12 +30,13 @@
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 
 /**
@@ -45,6 +46,8 @@
 
 namespace ot {
 namespace Dns {
+
+RegisterLogModule("DnsDso");
 
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatDso transport callbacks
@@ -110,8 +113,8 @@ void Dso::Connection::SetState(State aState)
 {
     VerifyOrExit(mState != aState);
 
-    otLogInfoDns("[dso] State: %s -> %s on connection with %s", StateToString(mState), StateToString(aState),
-                 mPeerSockAddr.ToString().AsCString());
+    LogInfo("State: %s -> %s on connection with %s", StateToString(mState), StateToString(aState),
+            mPeerSockAddr.ToString().AsCString());
 
     mState          = aState;
     mStateDidChange = true;
@@ -253,7 +256,7 @@ void Dso::Connection::MarkAsDisconnected(void)
     mPendingRequests.Clear();
     SetState(kStateDisconnected);
 
-    otLogInfoDns("[dso] Disconnect reason: %s", DisconnectReasonToString(mDisconnectReason));
+    LogInfo("Disconnect reason: %s", DisconnectReasonToString(mDisconnectReason));
 }
 
 void Dso::Connection::MarkSessionEstablished(void)
@@ -296,7 +299,7 @@ void Dso::Connection::SetLongLivedOperation(bool aLongLivedOperation)
 
     mLongLivedOperation = aLongLivedOperation;
 
-    otLogInfoDns("[dso] Long-lived operation %s", mLongLivedOperation ? "started" : "stopped");
+    LogInfo("Long-lived operation %s", mLongLivedOperation ? "started" : "stopped");
 
     if (!mLongLivedOperation)
     {
@@ -578,8 +581,8 @@ Error Dso::Connection::SendMessage(Message &             aMessage,
         }
     }
 
-    otLogInfoDns("[dso] Sending %s message with id %u to %s", MessageTypeToString(aMessageType), aMessageId,
-                 mPeerSockAddr.ToString().AsCString());
+    LogInfo("Sending %s message with id %u to %s", MessageTypeToString(aMessageType), aMessageId,
+            mPeerSockAddr.ToString().AsCString());
 
     switch (mState)
     {
@@ -640,7 +643,7 @@ Error Dso::Connection::AppendPadding(Message &aMessage)
     // that its padded length is a multiple of the chosen block
     // length.
 
-    blockLength = kBlockLengths[Random::NonCrypto::GetUint8InRange(0, OT_ARRAY_LENGTH(kBlockLengths))];
+    blockLength = kBlockLengths[Random::NonCrypto::GetUint8InRange(0, GetArrayLength(kBlockLengths))];
 
     paddingTlv.Init((blockLength - ((aMessage.GetLength() + sizeof(Tlv)) % blockLength)) % blockLength);
 
@@ -816,7 +819,7 @@ Error Dso::Connection::ProcessRequestOrUnidirectionalMessage(const Dns::Header &
     default:
         if (aHeader.GetMessageId() == 0)
         {
-            otLogInfoDns("[dso] Received unidirectional message from %s", mPeerSockAddr.ToString().AsCString());
+            LogInfo("Received unidirectional message from %s", mPeerSockAddr.ToString().AsCString());
 
             error = mCallbacks.mProcessUnidirectionalMessage(*this, aMessage, aPrimaryTlvType);
         }
@@ -824,8 +827,7 @@ Error Dso::Connection::ProcessRequestOrUnidirectionalMessage(const Dns::Header &
         {
             MessageId messageId = aHeader.GetMessageId();
 
-            otLogInfoDns("[dso] Received request message with id %u from %s", messageId,
-                         mPeerSockAddr.ToString().AsCString());
+            LogInfo("Received request message with id %u from %s", messageId, mPeerSockAddr.ToString().AsCString());
 
             error = mCallbacks.mProcessRequestMessage(*this, messageId, aMessage, aPrimaryTlvType);
 
@@ -955,8 +957,7 @@ Error Dso::Connection::ProcessKeepAliveMessage(const Dns::Header &aHeader, const
 
             VerifyOrExit(aHeader.GetMessageId() != 0);
 
-            otLogInfoDns("[dso] Received KeepAlive request message from client %s",
-                         mPeerSockAddr.ToString().AsCString());
+            LogInfo("Received KeepAlive request message from client %s", mPeerSockAddr.ToString().AsCString());
 
             IgnoreError(SendKeepAliveMessage(kResponseMessage, aHeader.GetMessageId()));
             error = kErrorNone;
@@ -970,8 +971,8 @@ Error Dso::Connection::ProcessKeepAliveMessage(const Dns::Header &aHeader, const
         VerifyOrExit(aHeader.GetMessageId() == 0);
     }
 
-    otLogInfoDns("[dso] Received Keep Alive %s message from server %s",
-                 (aHeader.GetMessageId() == 0) ? "unidirectional" : "response", mPeerSockAddr.ToString().AsCString());
+    LogInfo("Received Keep Alive %s message from server %s",
+            (aHeader.GetMessageId() == 0) ? "unidirectional" : "response", mPeerSockAddr.ToString().AsCString());
 
     // Receiving a Keep Alive interval value from server less than the
     // minimum (ten seconds) is a fatal error and client MUST then
@@ -989,7 +990,7 @@ Error Dso::Connection::ProcessKeepAliveMessage(const Dns::Header &aHeader, const
     AdjustInactivityTimeout(keepAliveTlv.GetInactivityTimeout());
     mKeepAlive.SetInterval(keepAliveTlv.GetKeepAliveInterval());
 
-    otLogInfoDns("[dso] Timeouts Inactivity:%u, KeepAlive:%u", mInactivity.GetInterval(), mKeepAlive.GetInterval());
+    LogInfo("Timeouts Inactivity:%u, KeepAlive:%u", mInactivity.GetInterval(), mKeepAlive.GetInterval());
 
     error = kErrorNone;
 
@@ -1017,8 +1018,8 @@ Error Dso::Connection::ProcessRetryDelayMessage(const Dns::Header &aHeader, cons
     mRetryDelayErrorCode = aHeader.GetResponseCode();
     mRetryDelay          = retryDelayTlv.GetRetryDelay();
 
-    otLogInfoDns("[dso] Received Retry Delay message from server %s", mPeerSockAddr.ToString().AsCString());
-    otLogInfoDns("[dso]    RetryDelay:%u ms, ResponseCode:%d", mRetryDelay, mRetryDelayErrorCode);
+    LogInfo("Received Retry Delay message from server %s", mPeerSockAddr.ToString().AsCString());
+    LogInfo("   RetryDelay:%u ms, ResponseCode:%d", mRetryDelay, mRetryDelayErrorCode);
 
     Disconnect(kGracefullyClose, kReasonServerRetryDelayRequest);
 

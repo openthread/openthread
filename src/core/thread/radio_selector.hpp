@@ -41,6 +41,7 @@
 #include <openthread/multi_radio.h>
 
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_links.hpp"
@@ -198,9 +199,9 @@ private:
 
     static constexpr uint16_t kRadioPreferenceStringSize = 75;
 
-    otLogLevel     UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference);
+    LogLevel       UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference);
     Mac::RadioType Select(Mac::RadioTypes aRadioOptions, const Neighbor &aNeighbor);
-    void           Log(otLogLevel aLogLevel, const char *aActionText, Mac::RadioType aType, const Neighbor &aNeighbor);
+    void           Log(LogLevel aLogLevel, const char *aActionText, Mac::RadioType aType, const Neighbor &aNeighbor);
 
     static const Mac::RadioType sRadioSelectionOrder[Mac::kNumRadioTypes];
 };

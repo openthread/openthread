@@ -43,8 +43,6 @@
 namespace ot {
 namespace Cli {
 
-constexpr NetworkData::Command NetworkData::sCommands[];
-
 void NetworkData::PrefixFlagsToString(const otBorderRouterConfig &aConfig, FlagsString &aString)
 {
     char *flagsPtr = &aString[0];
@@ -186,20 +184,8 @@ void NetworkData::OutputService(const otServiceConfig &aConfig)
     OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
 }
 
-otError NetworkData::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-otError NetworkData::ProcessPublish(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -261,7 +247,7 @@ exit:
     return error;
 }
 
-otError NetworkData::ProcessUnpublish(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("unpublish")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -293,7 +279,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-otError NetworkData::ProcessRegister(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("register")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -310,7 +296,7 @@ exit:
 }
 #endif
 
-otError NetworkData::ProcessSteeringData(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("steeringdata")>(Arg aArgs[])
 {
     otError           error;
     otExtAddress      addr;
@@ -466,7 +452,7 @@ exit:
     return error;
 }
 
-otError NetworkData::ProcessShow(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
 {
     otError error  = OT_ERROR_INVALID_ARGS;
     bool    local  = false;
@@ -506,16 +492,39 @@ exit:
 
 otError NetworkData::Process(Arg aArgs[])
 {
+#define CmdEntry(aCommandString)                                   \
+    {                                                              \
+        aCommandString, &NetworkData::Process<Cmd(aCommandString)> \
+    }
+
+    static constexpr Command kCommands[] = {
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+        CmdEntry("publish"),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+        CmdEntry("register"),
+#endif
+        CmdEntry("show"),
+        CmdEntry("steeringdata"),
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+        CmdEntry("unpublish"),
+#endif
+    };
+
+#undef CmdEntry
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
-    if (aArgs[0].IsEmpty())
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
     {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
     }
 
-    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);

@@ -70,9 +70,7 @@ from GRLLibs.UtilityModules.enums import (
 )
 
 if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-    from GRLLibs.UtilityModules.enums import (
-        DevCapb,)
-
+    from GRLLibs.UtilityModules.enums import DevCapb
     import commissioner
     from commissioner_impl import OTCommissioner
 
@@ -84,23 +82,19 @@ ZEPHYR_PREFIX = 'ot '
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
-LOGX = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
-                  r'|(-(CLI|MLR|API|MLE|BBR|DUA|ARP|N-DATA|ICMP|IP6|MAC|MEM|NCP|MESH-CP|DIAG|PLAT|COAP|CORE|UTIL)-+: )'
+LOGX = re.compile(r'((\[(-|C|W|N|I|D)\])'
                   r'|(-+$)'  # e.x. ------------------------------------------------------------------------
                   r'|(=+\[.*\]=+$)'  # e.x. ==============================[TX len=108]===============================
                   r'|(\|.+\|.+\|.+)'  # e.x. | 61 DC D2 CE FA 04 00 00 | 00 00 0A 6E 16 01 00 00 | aRNz......n....
                   r')')
 """regex used to filter logs"""
 
-assert LOGX.match('[NONE]')
-assert LOGX.match('[CRIT]')
-assert LOGX.match('[WARN]')
-assert LOGX.match('[NOTE]')
-assert LOGX.match('[INFO]')
-assert LOGX.match('[DEBG]')
-assert LOGX.match('-CLI-----: ')
-assert LOGX.match('-N-DATA--: ')
-assert LOGX.match('-MESH-CP-: ')
+assert LOGX.match('[-]')
+assert LOGX.match('[C]')
+assert LOGX.match('[W]')
+assert LOGX.match('[N]')
+assert LOGX.match('[I]')
+assert LOGX.match('[D]')
 assert LOGX.match('------------------------------------------------------------------------')
 assert LOGX.match('==============================[TX len=108]===============================')
 assert LOGX.match('| 61 DC D2 CE FA 04 00 00 | 00 00 0A 6E 16 01 00 00 | aRNz......n....')
@@ -395,8 +389,8 @@ class OpenThreadTHCI(object):
             self.connectType = 'ip'
             self.telnetIp = self.port
             self.telnetPort = 22
-            self.telnetUsername = 'pi'
-            self.telnetPassword = 'raspberry'
+            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
+            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
         except ValueError:
             self.connectType = (params.get('Param5') or 'usb').lower()
             self.telnetIp = params.get('TelnetIP')
@@ -1392,7 +1386,6 @@ class OpenThreadTHCI(object):
         print('destination: %s' % strDestination)
         cmd = 'ping %s %s 1 1 %d %d' % (strDestination, str(ilength), hop_limit, timeout)
         self.__executeCommand(cmd)
-        time.sleep(1)
 
     @API
     def multicast_Ping(self, destination, length=20):
@@ -1501,8 +1494,9 @@ class OpenThreadTHCI(object):
         self.panId = ModuleHelper.Default_PanId
         self.xpanId = ModuleHelper.Default_XpanId
         self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
-        # OT only accept hex format PSKc for now
-        self.pskc = '00000000000000000000000000000001'
+        stretchedPSKc = Thread_PBKDF2.get(ModuleHelper.Default_PSKc, ModuleHelper.Default_XpanId,
+                                          ModuleHelper.Default_NwkName)
+        self.pskc = hex(stretchedPSKc).rstrip('L').lstrip('0x')
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
         self.securityPolicyFlags = 'onrcb'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
@@ -3030,7 +3024,7 @@ class OpenThreadTHCI(object):
             else:
                 self.bbrSeqNum = (self.bbrSeqNum + 1) % 256
 
-        return self.__configBbrDataset(SeqNum=SeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
+        return self.__configBbrDataset(SeqNum=self.bbrSeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
 
     def __configBbrDataset(self, SeqNum=None, MlrTimeout=None, ReRegDelay=None):
         if MlrTimeout is not None and ReRegDelay is None:

@@ -33,11 +33,11 @@
 
 #include "topology.hpp"
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 
 namespace ot {
 
@@ -474,7 +474,7 @@ MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress) const
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 
@@ -487,7 +487,7 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 

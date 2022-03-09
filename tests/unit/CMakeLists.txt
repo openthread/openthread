@@ -341,6 +341,27 @@ target_link_libraries(ot-test-heap
 
 add_test(NAME ot-test-heap COMMAND ot-test-heap)
 
+add_executable(ot-test-heap-array
+    test_heap_array.cpp
+)
+
+target_include_directories(ot-test-heap-array
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-heap-array
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-heap-array
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-heap-array COMMAND ot-test-heap-array)
+
 add_executable(ot-test-heap-string
     test_heap_string.cpp
 )

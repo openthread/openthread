@@ -38,13 +38,15 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "radio/radio.hpp"
 
 namespace ot {
+
+RegisterLogModule("AnnounceSender");
 
 //---------------------------------------------------------------------------------------------------------------------
 // AnnounceSenderBase
@@ -168,7 +170,7 @@ void AnnounceSender::Stop(void)
 {
     AnnounceSenderBase::Stop();
     mTrickleTimer.Stop();
-    otLogInfoMle("[announce-sender] Stopped");
+    LogInfo("Stopped");
 }
 
 void AnnounceSender::HandleTimer(Timer &aTimer)
@@ -191,7 +193,7 @@ void AnnounceSender::HandleTrickleTimer(void)
     // message transmissions.
 
     SendAnnounce(1);
-    otLogInfoMle("[announce-sender] Schedule tx for one cycle");
+    LogInfo("Schedule tx for one cycle");
 }
 
 void AnnounceSender::HandleNotifierEvents(Events aEvents)
@@ -240,7 +242,7 @@ void AnnounceSender::HandleRoleChanged(void)
     // desired Announce Tx cycle interval.
 
     mTrickleTimer.Start(TrickleTimer::kModeTrickle, kInterval, kInterval, kRedundancyConstant);
-    otLogInfoMle("[announce-sender] Started");
+    LogInfo("Started");
 
 exit:
     return;
@@ -257,7 +259,7 @@ void AnnounceSender::HandleActiveDatasetChanged(void)
 
     SetChannelMask(channelMask);
     SetPeriod(kTxInterval / channelMask.GetNumberOfChannels());
-    otLogInfoMle("[announce-sender] ChannelMask:%s, period:%u", GetChannelMask().ToString().AsCString(), GetPeriod());
+    LogInfo("ChannelMask:%s, period:%u", GetChannelMask().ToString().AsCString(), GetPeriod());
 
     // When channel mask is changed, we also check and update the PAN
     // channel. This handles the case where `ThreadChannelChanged` event
@@ -273,7 +275,7 @@ exit:
 void AnnounceSender::HandleThreadChannelChanged(void)
 {
     SetStartingChannel(Get<Mac::Mac>().GetPanChannel());
-    otLogInfoMle("[announce-sender] StartingChannel:%d", GetStartingChannel());
+    LogInfo("StartingChannel:%d", GetStartingChannel());
 }
 
 #endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE

@@ -109,14 +109,4 @@
 #define OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT ((4 * 250u) + 250u)
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM
- *
- * Specifies the maximum number of addresses the SRP server can handle for a host.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM
-#define OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM 2
-#endif
-
 #endif // CONFIG_SRP_SERVER_H_

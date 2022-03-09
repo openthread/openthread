@@ -38,9 +38,11 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 namespace ot {
+
+RegisterLogModule("DataPollHandlr");
 
 DataPollHandler::Callbacks::Callbacks(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -144,8 +146,8 @@ void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
 
     indirectMsgCount = child->GetIndirectMessageCount();
 
-    otLogInfoMac("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d, ack-fp:%d", child->GetRloc16(), indirectMsgCount,
-                 aFrame.GetRssi(), aFrame.IsAckedWithFramePending());
+    LogInfo("Rx data poll, src:0x%04x, qed_msgs:%d, rss:%d, ack-fp:%d", child->GetRloc16(), indirectMsgCount,
+            aFrame.GetRssi(), aFrame.IsAckedWithFramePending());
 
     if (!aFrame.IsAckedWithFramePending())
     {
@@ -245,8 +247,8 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
         OT_ASSERT(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
 
         aChild.IncrementIndirectTxAttempts();
-        otLogInfoMac("Indirect tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(),
-                     aChild.GetIndirectTxAttempts(), kMaxPollTriggeredTxAttempts);
+        LogInfo("Indirect tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetIndirectTxAttempts(),
+                kMaxPollTriggeredTxAttempts);
 
         OT_FALL_THROUGH;
 

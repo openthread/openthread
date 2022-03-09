@@ -28,6 +28,7 @@
 
 #include <openthread/config.h>
 
+#include "common/array.hpp"
 #include "common/debug.hpp"
 #include "common/message.hpp"
 #include "crypto/hmac_sha256.hpp"
@@ -87,7 +88,7 @@ void TestSha256(void)
     Instance *   instance = testInitInstance();
     MessagePool *messagePool;
     Message *    message;
-    uint16_t     offsets[OT_ARRAY_LENGTH(kTestCases)];
+    uint16_t     offsets[GetArrayLength(kTestCases)];
     uint8_t      index;
 
     VerifyOrQuit(instance != nullptr);
@@ -228,7 +229,7 @@ void TestHmacSha256(void)
     Instance *   instance = testInitInstance();
     MessagePool *messagePool;
     Message *    message;
-    uint16_t     offsets[OT_ARRAY_LENGTH(kTestCases)];
+    uint16_t     offsets[GetArrayLength(kTestCases)];
     uint8_t      index;
 
     printf("TestHmacSha256\n");

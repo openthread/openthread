@@ -104,6 +104,7 @@ class OtbrDocker:
         return path
 
     def _launch_docker(self):
+        logging.info(f'Docker image: {config.OTBR_DOCKER_IMAGE}')
         subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
         CI_ENV = os.getenv('CI_ENV', '').split()
         os.makedirs('/tmp/coverage/', exist_ok=True)
@@ -160,6 +161,14 @@ class OtbrDocker:
     def stop_otbr_service(self):
         self.stop_ot_ctl()
         self.bash('service otbr-agent stop')
+
+    def stop_mdns_service(self):
+        self.bash('service avahi-daemon stop')
+        self.bash('service mdns stop')
+
+    def start_mdns_service(self):
+        self.bash('service avahi-daemon start')
+        self.bash('service mdns start')
 
     def start_ot_ctl(self):
         cmd = f'docker exec -i {self._docker_name} ot-ctl'
@@ -678,7 +687,7 @@ class NodeImpl:
         return lines
 
     def __is_logging_line(self, line: str) -> bool:
-        return len(line) >= 6 and line[:6] in {'[DEBG]', '[INFO]', '[NOTE]', '[WARN]', '[CRIT]', '[NONE]'}
+        return len(line) >= 3 and line[:3] in {'[D]', '[I]', '[N]', '[W]', '[C]', '[-]'}
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
@@ -1897,15 +1906,40 @@ class NodeImpl:
         self.send_command('br disable')
         self._expect_done()
 
-    def get_omr_prefix(self):
+    def get_br_omr_prefix(self):
         cmd = 'br omrprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
-    def get_on_link_prefix(self):
+    def get_netdata_omr_prefixes(self):
+        prefixes = [prefix.split(' ')[0] for prefix in self.get_prefixes()]
+        return prefixes
+
+    def get_br_on_link_prefix(self):
         cmd = 'br onlinkprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
+
+    def get_netdata_non_nat64_prefixes(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' not in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
+
+    def get_br_nat64_prefix(self):
+        cmd = 'br nat64prefix'
+        self.send_command(cmd)
+        return self._expect_command_output()[0]
+
+    def get_netdata_nat64_prefix(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
@@ -1944,10 +1978,12 @@ class NodeImpl:
 
         return netdata
 
-    def add_route(self, prefix, stable=False, prf='med'):
+    def add_route(self, prefix, stable=False, nat64=False, prf='med'):
         cmd = 'route add %s ' % prefix
         if stable:
             cmd += 's'
+        if nat64:
+            cmd += 'n'
         cmd += ' %s' % prf
         self.send_command(cmd)
         self._expect_done()

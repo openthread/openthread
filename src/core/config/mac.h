@@ -86,6 +86,40 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+ *
+ * Define as 1 to add random backoff delay in between frame transmission retries when the previous attempt resulted in
+ * no-ack error.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+#define OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_RETX_DELAY_MIN_BACKOFF_EXPONENT
+ *
+ * Specifies the minimum backoff exponent to start with when adding random delay in between frame transmission
+ * retries on no-ack error. It is applicable only when `OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY`
+ * is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_RETX_DELAY_MIN_BACKOFF_EXPONENT
+#define OPENTHREAD_CONFIG_MAC_RETX_DELAY_MIN_BACKOFF_EXPONENT 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_RETX_DELAY_MAX_BACKOFF_EXPONENT
+ *
+ * Specifies the maximum backoff exponent when adding random delay in between frame transmission retries on no-ack
+ * error. It is applicable only when `OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_RETX_DELAY_MAX_BACKOFF_EXPONENT
+#define OPENTHREAD_CONFIG_MAC_RETX_DELAY_MAX_BACKOFF_EXPONENT 5
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
  *
  * Define to 1 to enable MAC retry packets histogram analysis.

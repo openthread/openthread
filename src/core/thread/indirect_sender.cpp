@@ -38,7 +38,6 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "common/message.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle_tlvs.hpp"

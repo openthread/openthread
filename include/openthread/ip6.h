@@ -344,8 +344,9 @@ otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address
  * @param[in]  aAddress  A pointer to an IP Address.
  *
  * @retval OT_ERROR_NONE          Successfully unsubscribed to the Network Interface Multicast Address.
- * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
+ * @retval OT_ERROR_REJECTED      The IP Address indicated by @p aAddress is an internal address.
  * @retval OT_ERROR_NOT_FOUND     The IP Address indicated by @p aAddress was not found.
+ *
  */
 otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 

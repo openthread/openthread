@@ -101,7 +101,7 @@ set(COMMON_SOURCES
     common/heap_data.cpp
     common/heap_string.cpp
     common/instance.cpp
-    common/logging.cpp
+    common/log.cpp
     common/message.cpp
     common/notifier.cpp
     common/random_manager.cpp
@@ -246,7 +246,7 @@ set(RADIO_COMMON_SOURCES
     common/binary_search.cpp
     common/error.cpp
     common/instance.cpp
-    common/logging.cpp
+    common/log.cpp
     common/random_manager.cpp
     common/string.cpp
     common/tasklet.cpp

@@ -34,12 +34,15 @@
 #include "notifier.hpp"
 
 #include "border_router/routing_manager.hpp"
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 namespace ot {
+
+RegisterLogModule("Notifier");
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -213,7 +216,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_CORE == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Notifier::LogEvents(Events aEvents) const
 {
@@ -230,8 +233,8 @@ void Notifier::LogEvents(Events aEvents) const
         {
             if (string.GetLength() >= kFlagsStringLineLimit)
             {
-                otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s ...", aEvents.GetAsFlags(), didLog ? "... " : "[",
-                              string.AsCString());
+                LogInfo("StateChanged (0x%08x) %s%s ...", aEvents.GetAsFlags(), didLog ? "... " : "[",
+                        string.AsCString());
                 string.Clear();
                 didLog   = true;
                 addSpace = false;
@@ -245,8 +248,7 @@ void Notifier::LogEvents(Events aEvents) const
     }
 
 exit:
-    otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s]", aEvents.GetAsFlags(), didLog ? "... " : "[",
-                  string.AsCString());
+    LogInfo("StateChanged (0x%08x) %s%s]", aEvents.GetAsFlags(), didLog ? "... " : "[", string.AsCString());
 }
 
 const char *Notifier::EventToString(Event aEvent) const
@@ -289,7 +291,7 @@ const char *Notifier::EventToString(Event aEvent) const
         "PndDset",           // kEventPendingDatasetChanged            (1 << 29)
     };
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(kEventStrings); index++)
+    for (uint8_t index = 0; index < GetArrayLength(kEventStrings); index++)
     {
         if (static_cast<uint32_t>(aEvent) == (1U << index))
         {
@@ -301,7 +303,7 @@ const char *Notifier::EventToString(Event aEvent) const
     return retval;
 }
 
-#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_CORE == 1)
+#else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
 void Notifier::LogEvents(Events) const
 {
@@ -312,7 +314,7 @@ const char *Notifier::EventToString(Event) const
     return "";
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_CORE == 1)
+#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
 // LCOV_EXCL_STOP
 

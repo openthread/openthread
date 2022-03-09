@@ -36,17 +36,20 @@
 
 #include <string.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/string.hpp"
 #include "net/dns_types.hpp"
 
 namespace ot {
 namespace Trel {
+
+RegisterLogModule("TrelInterface");
 
 const char Interface::kTxtRecordExtAddressKey[] = "xa";
 const char Interface::kTxtRecordExtPanIdKey[]   = "xp";
@@ -82,7 +85,7 @@ void Interface::Enable(void)
 
     otPlatTrelEnable(&GetInstance(), &mUdpPort);
 
-    otLogInfoMac("Trel: Enabled interface, local port:%u", mUdpPort);
+    LogInfo("Enabled interface, local port:%u", mUdpPort);
     mRegisterServiceTask.Post();
 
 exit:
@@ -98,7 +101,7 @@ void Interface::Disable(void)
 
     otPlatTrelDisable(&GetInstance());
     mPeerTable.Clear();
-    otLogDebgMac("Trel: Disabled interface");
+    LogDebg("Disabled interface");
 
 exit:
     return;
@@ -107,7 +110,7 @@ exit:
 void Interface::HandleExtAddressChange(void)
 {
     VerifyOrExit(mInitialized && mEnabled);
-    otLogDebgMac("Trel: Extended Address changed, re-registering DNS-SD service");
+    LogDebg("Extended Address changed, re-registering DNS-SD service");
     mRegisterServiceTask.Post();
 
 exit:
@@ -117,7 +120,7 @@ exit:
 void Interface::HandleExtPanIdChange(void)
 {
     VerifyOrExit(mInitialized && mEnabled);
-    otLogDebgMac("Trel: Extended PAN ID changed, re-registering DNS-SD service");
+    LogDebg("Extended PAN ID changed, re-registering DNS-SD service");
     mRegisterServiceTask.Post();
 
 exit:
@@ -148,11 +151,11 @@ void Interface::RegisterService(void)
     txtEntries[1].Init(kTxtRecordExtPanIdKey, Get<Mac::Mac>().GetExtendedPanId().m8, sizeof(Mac::ExtendedPanId));
 
     txtData.Init(txtDataBuffer, sizeof(txtDataBuffer));
-    SuccessOrAssert(Dns::TxtEntry::AppendEntries(txtEntries, OT_ARRAY_LENGTH(txtEntries), txtData));
+    SuccessOrAssert(Dns::TxtEntry::AppendEntries(txtEntries, GetArrayLength(txtEntries), txtData));
 
-    otLogInfoMac("Trel: Registering DNS-SD service: port:%u, txt:\"%s=%s, %s=%s\"", mUdpPort, kTxtRecordExtAddressKey,
-                 Get<Mac::Mac>().GetExtAddress().ToString().AsCString(), kTxtRecordExtPanIdKey,
-                 Get<Mac::Mac>().GetExtendedPanId().ToString().AsCString());
+    LogInfo("Registering DNS-SD service: port:%u, txt:\"%s=%s, %s=%s\"", mUdpPort, kTxtRecordExtAddressKey,
+            Get<Mac::Mac>().GetExtAddress().ToString().AsCString(), kTxtRecordExtPanIdKey,
+            Get<Mac::Mac>().GetExtendedPanId().ToString().AsCString());
 
     otPlatTrelRegisterService(&GetInstance(), mUdpPort, txtData.GetBytes(), static_cast<uint8_t>(txtData.GetLength()));
 
@@ -384,7 +387,7 @@ exit:
 
 void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength)
 {
-    otLogDebgMac("Trel: HandleReceived(aLength:%u)", aLength);
+    LogDebg("HandleReceived(aLength:%u)", aLength);
 
     VerifyOrExit(mInitialized && mEnabled && !mFiltered);
 
@@ -411,8 +414,8 @@ void Interface::Peer::Log(const char *aAction) const
 {
     OT_UNUSED_VARIABLE(aAction);
 
-    otLogInfoMac("Trel: %s peer mac:%s, xpan:%s, %s", aAction, GetExtAddress().ToString().AsCString(),
-                 GetExtPanId().ToString().AsCString(), GetSockAddr().ToString().AsCString());
+    LogInfo("%s peer mac:%s, xpan:%s, %s", aAction, GetExtAddress().ToString().AsCString(),
+            GetExtPanId().ToString().AsCString(), GetSockAddr().ToString().AsCString());
 }
 
 } // namespace Trel

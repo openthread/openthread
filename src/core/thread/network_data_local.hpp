@@ -98,6 +98,17 @@ public:
     Error RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix);
 
     /**
+     * This method indicates whether or not the Thread Network Data contains a given on mesh prefix.
+     *
+     * @param[in]  aPrefix   The on mesh prefix to check.
+     *
+     * @retval TRUE  if Network Data contains mesh prefix @p aPrefix.
+     * @retval FALSE if Network Data does not contain mesh prefix @p aPrefix.
+     *
+     */
+    bool ContainsOnMeshPrefix(const Ip6::Prefix &aPrefix) const;
+
+    /**
      * This method adds a Has Route entry to the Thread Network data.
      *
      * @param[in]  aConfig       A reference to the external route configuration.

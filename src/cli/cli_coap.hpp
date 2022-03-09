@@ -86,29 +86,14 @@ private:
     };
 #endif
 
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
+
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otError CancelResourceSubscription(void);
     void    CancelSubscriber(void);
 #endif
 
     void PrintPayload(otMessage *aMessage);
-
-    otError ProcessHelp(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otError ProcessCancel(Arg aArgs[]);
-#endif
-    otError ProcessDelete(Arg aArgs[]);
-    otError ProcessGet(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otError ProcessObserve(Arg aArgs[]);
-#endif
-    otError ProcessParameters(Arg aArgs[]);
-    otError ProcessPost(Arg aArgs[]);
-    otError ProcessPut(Arg aArgs[]);
-    otError ProcessResource(Arg aArgs[]);
-    otError ProcessSet(Arg aArgs[]);
-    otError ProcessStart(Arg aArgs[]);
-    otError ProcessStop(Arg aArgs[]);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode, bool aCoapObserve = false);
@@ -160,27 +145,6 @@ private:
     {
         return mUseDefaultResponseTxParameters ? nullptr : &mResponseTxParameters;
     }
-
-    static constexpr Command sCommands[] = {
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        {"cancel", &Coap::ProcessCancel},
-#endif
-        {"delete", &Coap::ProcessDelete},
-        {"get", &Coap::ProcessGet},
-        {"help", &Coap::ProcessHelp},
-#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        {"observe", &Coap::ProcessObserve},
-#endif
-        {"parameters", &Coap::ProcessParameters},
-        {"post", &Coap::ProcessPost},
-        {"put", &Coap::ProcessPut},
-        {"resource", &Coap::ProcessResource},
-        {"set", &Coap::ProcessSet},
-        {"start", &Coap::ProcessStart},
-        {"stop", &Coap::ProcessStop},
-    };
-
-    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     bool mUseDefaultRequestTxParameters;
     bool mUseDefaultResponseTxParameters;

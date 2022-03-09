@@ -88,16 +88,7 @@ private:
         kRxTx,
     };
 
-    otError ProcessHelp(Arg aArgs[]);
-    otError ProcessIpAddr(Arg aArgs[]);
-    otError ProcessIpMulticastAddr(Arg aArgs[]);
-    otError ProcessNetInfo(Arg aArgs[]);
-    otError ProcessNeighbor(Arg aArgs[]);
-    otError ProcessPrefix(Arg aArgs[]);
-    otError ProcessRoute(Arg aArgs[]);
-    otError ProcessRx(Arg aArgs[]);
-    otError ProcessRxTx(Arg aArgs[]);
-    otError ProcessTx(Arg aArgs[]);
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) const;
     otError ProcessRxTxHistory(RxTx aRxTx, Arg aArgs[]);
@@ -107,21 +98,6 @@ private:
     static const char *MessagePriorityToString(uint8_t aPriority);
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
-
-    static constexpr Command sCommands[] = {
-        {"help", &History::ProcessHelp},
-        {"ipaddr", &History::ProcessIpAddr},
-        {"ipmaddr", &History::ProcessIpMulticastAddr},
-        {"neighbor", &History::ProcessNeighbor},
-        {"netinfo", &History::ProcessNetInfo},
-        {"prefix", &History::ProcessPrefix},
-        {"route", &History::ProcessRoute},
-        {"rx", &History::ProcessRx},
-        {"rxtx", &History::ProcessRxTx},
-        {"tx", &History::ProcessTx},
-    };
-
-    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

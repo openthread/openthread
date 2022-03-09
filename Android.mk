@@ -35,17 +35,24 @@ OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --ma
 
 OPENTHREAD_PROJECT_CFLAGS                                                 ?= \
     -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"openthread-core-posix-config.h\" \
-    -DOPENTHREAD_CONFIG_FILE=\<openthread-config-android.h\>                 \
     $(NULL)
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
-    -DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1                        \
-    -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
+    -DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1                       \
+    -DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1                      \
+    -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1                  \
+    -DOPENTHREAD_CONFIG_DTLS_ENABLE=1                               \
     -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1                          \
+    -DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1                      \
+    -DOPENTHREAD_CONFIG_JOINER_ENABLE=1                             \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
-    -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
+    -DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1                           \
+    -DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1                        \
+    -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1                \
     -DOPENTHREAD_FTD=1                                              \
+    -DOPENTHREAD_PLATFORM_POSIX=1                                   \
+    -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1          \
     $(NULL)
 
@@ -228,7 +235,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/heap_data.cpp                                   \
     src/core/common/heap_string.cpp                                 \
     src/core/common/instance.cpp                                    \
-    src/core/common/logging.cpp                                     \
+    src/core/common/log.cpp                                         \
     src/core/common/message.cpp                                     \
     src/core/common/notifier.cpp                                    \
     src/core/common/random_manager.cpp                              \

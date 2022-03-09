@@ -30,12 +30,13 @@
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -47,6 +48,8 @@
 
 namespace ot {
 namespace Dns {
+
+RegisterLogModule("DnsClient");
 
 //---------------------------------------------------------------------------------------------------------------------
 // Client::QueryConfig
@@ -325,16 +328,17 @@ Error Client::AddressResponse::GetAddress(uint16_t aIndex, Ip6::Address &aAddres
 
     if ((info.mQueryType == kIp4AddressQuery) || mIp6QueryResponseRequiresNat64)
     {
-        Section     section;
-        ARecord     aRecord;
-        Ip6::Prefix nat64Prefix;
+        Section                          section;
+        ARecord                          aRecord;
+        NetworkData::ExternalRouteConfig nat64Prefix;
 
-        SuccessOrExit(error = GetNat64Prefix(nat64Prefix));
+        VerifyOrExit(mInstance->Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == kErrorNone,
+                     error = kErrorInvalidState);
 
         section = (info.mQueryType == kIp4AddressQuery) ? kAnswerSection : kAdditionalDataSection;
         SuccessOrExit(error = FindARecord(section, name, aIndex, aRecord));
 
-        aAddress.SynthesizeFromIp4Address(nat64Prefix, aRecord.GetAddress());
+        aAddress.SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), aRecord.GetAddress());
         aTtl = aRecord.GetTtl();
 
         ExitNow();
@@ -347,37 +351,6 @@ Error Client::AddressResponse::GetAddress(uint16_t aIndex, Ip6::Address &aAddres
 exit:
     return error;
 }
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-
-Error Client::AddressResponse::GetNat64Prefix(Ip6::Prefix &aPrefix) const
-{
-    Error                            error      = kErrorNotFound;
-    NetworkData::Iterator            iterator   = NetworkData::kIteratorInit;
-    signed int                       preference = NetworkData::kRoutePreferenceLow;
-    NetworkData::ExternalRouteConfig config;
-
-    aPrefix.Clear();
-
-    while (mInstance->Get<NetworkData::Leader>().GetNextExternalRoute(iterator, config) == kErrorNone)
-    {
-        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
-        {
-            continue;
-        }
-
-        if ((aPrefix.GetLength() == 0) || (config.mPreference > preference))
-        {
-            aPrefix    = config.GetPrefix();
-            preference = config.mPreference;
-            error      = kErrorNone;
-        }
-    }
-
-    return error;
-}
-
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
@@ -533,13 +506,13 @@ const uint16_t Client::kServiceQueryRecordTypes[] = {ResourceRecord::kTypeSrv, R
 #endif
 
 const uint8_t Client::kQuestionCount[] = {
-    /* kIp6AddressQuery -> */ OT_ARRAY_LENGTH(kIp6AddressQueryRecordTypes), // AAAA records
+    /* kIp6AddressQuery -> */ GetArrayLength(kIp6AddressQueryRecordTypes), // AAAA records
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    /* kIp4AddressQuery -> */ OT_ARRAY_LENGTH(kIp4AddressQueryRecordTypes), // A records
+    /* kIp4AddressQuery -> */ GetArrayLength(kIp4AddressQueryRecordTypes), // A records
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /* kBrowseQuery  -> */ OT_ARRAY_LENGTH(kBrowseQueryRecordTypes),  // PTR records
-    /* kServiceQuery -> */ OT_ARRAY_LENGTH(kServiceQueryRecordTypes), // SRV and TXT records
+    /* kBrowseQuery  -> */ GetArrayLength(kBrowseQueryRecordTypes),  // PTR records
+    /* kServiceQuery -> */ GetArrayLength(kServiceQueryRecordTypes), // SRV and TXT records
 #endif
 };
 
@@ -648,6 +621,22 @@ Error Client::ResolveAddress(const char *       aHostName,
     return StartQuery(info, aConfig, nullptr, aHostName, aContext);
 }
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+Error Client::ResolveIp4Address(const char *       aHostName,
+                                AddressCallback    aCallback,
+                                void *             aContext,
+                                const QueryConfig *aConfig)
+{
+    QueryInfo info;
+
+    info.Clear();
+    info.mQueryType                 = kIp4AddressQuery;
+    info.mCallback.mAddressCallback = aCallback;
+
+    return StartQuery(info, aConfig, nullptr, aHostName, aContext);
+}
+#endif
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 Error Client::Browse(const char *aServiceName, BrowseCallback aCallback, void *aContext, const QueryConfig *aConfig)
@@ -714,6 +703,17 @@ Error Client::StartQuery(QueryInfo &        aInfo,
     }
 
     aInfo.mCallbackContext = aContext;
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    if (aInfo.mQueryType == kIp4AddressQuery)
+    {
+        NetworkData::ExternalRouteConfig nat64Prefix;
+
+        VerifyOrExit(aInfo.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow, error = kErrorInvalidArgs);
+        VerifyOrExit(Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == kErrorNone,
+                     error = kErrorInvalidState);
+    }
+#endif
 
     SuccessOrExit(error = AllocateQuery(aInfo, aLabel, aName, query));
     mQueries.Enqueue(*query);
@@ -975,12 +975,18 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
 
     // Check the Question Section
 
-    VerifyOrExit(header.GetQuestionCount() == kQuestionCount[aType], error = kErrorParse);
-
-    for (uint8_t num = 0; num < kQuestionCount[aType]; num++)
+    if (header.GetQuestionCount() == kQuestionCount[aType])
     {
-        SuccessOrExit(error = Name::CompareName(message, offset, queryName));
-        offset += sizeof(Question);
+        for (uint8_t num = 0; num < kQuestionCount[aType]; num++)
+        {
+            SuccessOrExit(error = Name::CompareName(message, offset, queryName));
+            offset += sizeof(Question);
+        }
+    }
+    else
+    {
+        VerifyOrExit((header.GetResponseCode() != Header::kResponseSuccess) && (header.GetQuestionCount() == 0),
+                     error = kErrorParse);
     }
 
     // Check the answer, authority and additional record sections
@@ -1049,7 +1055,7 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
 exit:
     if (error != kErrorNone)
     {
-        otLogInfoDns("Failed to parse response %s", ErrorToString(error));
+        LogInfo("Failed to parse response %s", ErrorToString(error));
     }
 
     return error;

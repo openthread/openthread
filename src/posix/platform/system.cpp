@@ -379,15 +379,6 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 }
 
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-
-void otPlatOtnsStatus(const char *aStatus)
-{
-    otLogOtns("[OTNS] %s", aStatus);
-}
-
-#endif
-
 bool IsSystemDryRun(void)
 {
     return gDryRun;

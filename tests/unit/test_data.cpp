@@ -45,8 +45,8 @@ template <DataLengthType kDataLengthType> void TestData(void)
     Data     data;
     Data     data2;
     uint8_t  buffer[sizeof(kData) + 1];
-    uint8_t  u8;
-    uint16_t u16;
+    uint8_t  u8  = 0x12;
+    uint16_t u16 = 0x3456;
 
     data.Clear();
     data2.Clear();

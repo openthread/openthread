@@ -45,6 +45,63 @@
 namespace ot {
 
 /**
+ * This function returns the length of a given array (number of elements in the array).
+ *
+ * This template function is `constexpr`. The template arguments are expected to be deduced by the compiler allowing
+ * callers to simply use `GetArrayLength(aArray)`.
+ *
+ * @tparam  Type     The array element type.
+ * @tparam  kLength  The array length.
+ *
+ * @param[in] aArray   A reference to the array.
+ *
+ * @returns The array length (number of elements in the array).
+ *
+ */
+template <typename Type, uint16_t kArrayLength> constexpr inline uint16_t GetArrayLength(const Type (&)[kArrayLength])
+{
+    return kArrayLength;
+}
+
+/**
+ * This function returns a pointer to end of a given array (pointing to the past-the-end element).
+ *
+ * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
+ * not point to an actual element in array, and thus should not be dereferenced.
+ *
+ * @tparam  Type     The array element type.
+ * @tparam  kLength  The array length.
+ *
+ * @param[in] aArray   A reference to the array.
+ *
+ * @returns Pointer to the past-the-end element.
+ *
+ */
+template <typename Type, uint16_t kArrayLength> inline Type *GetArrayEnd(Type (&aArray)[kArrayLength])
+{
+    return &aArray[kArrayLength];
+}
+
+/**
+ * This function returns a pointer to end of a given array (pointing to the past-the-end element).
+ *
+ * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
+ * not point to an actual element in array, and thus should not be dereferenced.
+ *
+ * @tparam  Type     The array element type.
+ * @tparam  kLength  The array length.
+ *
+ * @param[in] aArray   A reference to the array.
+ *
+ * @returns Pointer to the past-the-end element.
+ *
+ */
+template <typename Type, uint16_t kArrayLength> inline const Type *GetArrayEnd(const Type (&aArray)[kArrayLength])
+{
+    return &aArray[kArrayLength];
+}
+
+/**
  * This template class represents an array of elements with a fixed max size.
  *
  * @tparam Type        The array element type.

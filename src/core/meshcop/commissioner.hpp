@@ -45,6 +45,7 @@
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"

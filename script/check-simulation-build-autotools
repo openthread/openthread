@@ -99,7 +99,7 @@ build_all_features()
     )
 
     # Build Thread 1.1 with full features and no log
-    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
+    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.1
 
@@ -109,7 +109,7 @@ build_all_features()
     make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
 
     # Build Thread 1.2 with full features and logs
-    export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
+    export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.2
 

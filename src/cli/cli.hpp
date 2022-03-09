@@ -46,6 +46,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
+#include <openthread/logging.h>
 #include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
@@ -89,7 +90,6 @@ namespace ot {
 namespace Cli {
 
 extern "C" void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
-extern "C" void otCliPlatLogLine(otLogLevel, otLogRegion, const char *);
 extern "C" void otCliAppendResult(otError aError);
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 extern "C" void otCliOutputFormat(const char *aFmt, ...);
@@ -107,7 +107,6 @@ class Interpreter : public Output
     friend class SrpClient;
 #endif
     friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
-    friend void otCliPlatLogLine(otLogLevel, otLogRegion, const char *);
     friend void otCliAppendResult(otError aError);
     friend void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
     friend void otCliOutputFormat(const char *aFmt, ...);
@@ -317,34 +316,15 @@ private:
     static otError ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig);
 #endif
 
-    // Process methods on FTD/MTD/RCP
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-    otError ProcessDiag(Arg aArgs[]);
-#endif
-    otError ProcessHelp(Arg aArgs[]);
-    otError ProcessHistory(Arg aArgs[]);
-    otError ProcessReset(Arg aArgs[]);
+    otError ProcessCommand(Arg aArgs[]);
+
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
+
     otError ProcessUserCommands(Arg aArgs[]);
-    otError ProcessVersion(Arg aArgs[]);
 
-    // Process methods only on FTD/MTD
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
-    otError ProcessCcaThreshold(Arg aArgs[]);
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otError ProcessCcm(Arg aArgs[]);
-    otError ProcessThreadVersionCheck(Arg aArgs[]);
-#endif
-    otError ProcessBufferInfo(Arg aArgs[]);
-    otError ProcessChannel(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    otError ProcessBorderAgent(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    otError ProcessBorderRouting(Arg aArgs[]);
-#endif
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    otError ProcessBackboneRouter(Arg aArgs[]);
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     otError ProcessBackboneRouterLocal(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
@@ -352,86 +332,18 @@ private:
     void    PrintMulticastListenersTable(void);
 #endif
 #endif
-
-    otError ProcessDomainName(Arg aArgs[]);
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    otError ProcessDua(Arg aArgs[]);
 #endif
 
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
 #if OPENTHREAD_FTD
-    otError ProcessChild(Arg aArgs[]);
-    otError ProcessChildIp(Arg aArgs[]);
-    otError ProcessChildMax(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-    otError ProcessChildSupervision(Arg aArgs[]);
-#endif
-    otError ProcessChildTimeout(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    otError ProcessCoap(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    otError ProcessCoapSecure(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
-    otError ProcessCoexMetrics(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    otError ProcessCommissioner(Arg aArgs[]);
-#endif
-#if OPENTHREAD_FTD
-    otError ProcessContextIdReuseDelay(Arg aArgs[]);
-#endif
-    otError ProcessCounters(Arg aArgs[]);
-    otError ProcessCsl(Arg aArgs[]);
-#if OPENTHREAD_FTD
-    otError ProcessDelayTimerMin(Arg aArgs[]);
-#endif
-    otError ProcessDiscover(Arg aArgs[]);
-    otError ProcessDns(Arg aArgs[]);
-#if OPENTHREAD_FTD
-    void    OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
-    otError ProcessEidCache(Arg aArgs[]);
-#endif
-    otError ProcessEui64(Arg aArgs[]);
-    otError ProcessLog(Arg aArgs[]);
-    otError ProcessExtAddress(Arg aArgs[]);
-    otError ProcessExtPanId(Arg aArgs[]);
-    otError ProcessFactoryReset(Arg aArgs[]);
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otError ProcessFake(Arg aArgs[]);
-#endif
-    otError ProcessFem(Arg aArgs[]);
-    otError ProcessIfconfig(Arg aArgs[]);
-    otError ProcessIpAddr(Arg aArgs[]);
-    otError ProcessIpMulticastAddr(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
-    otError ProcessJoiner(Arg aArgs[]);
-#endif
-#if OPENTHREAD_FTD
-    otError ProcessJoinerPort(Arg aArgs[]);
-#endif
-    otError ProcessKeySequence(Arg aArgs[]);
-    otError ProcessLeaderData(Arg aArgs[]);
-#if OPENTHREAD_FTD
-    otError ProcessPartitionId(Arg aArgs[]);
-    otError ProcessLeaderWeight(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otError ProcessMlIid(Arg aArgs[]);
+    void OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    otError ProcessLinkMetrics(Arg aArgs[]);
     otError ProcessLinkMetricsQuery(Arg aArgs[]);
     otError ProcessLinkMetricsMgmt(Arg aArgs[]);
     otError ProcessLinkMetricsProbe(Arg aArgs[]);
     otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, const Arg &aFlags);
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
-    otError     ProcessLocate(Arg aArgs[]);
     static void HandleLocateResult(void *              aContext,
                                    otError             aError,
                                    const otIp6Address *aMeshLocalAddress,
@@ -439,8 +351,6 @@ private:
     void        HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16);
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    otError ProcessMlr(Arg aArgs[]);
-
     static void HandleMlrRegResult(void *              aContext,
                                    otError             aError,
                                    uint8_t             aMlrStatus,
@@ -451,107 +361,16 @@ private:
                                    const otIp6Address *aFailedAddresses,
                                    uint8_t             aFailedAddressNum);
 #endif
-    otError ProcessMode(Arg aArgs[]);
-    otError ProcessMultiRadio(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     void OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo);
 #endif
-#if OPENTHREAD_FTD
-    otError ProcessNeighbor(Arg aArgs[]);
-#endif
-    otError ProcessNetworkData(Arg aArgs[]);
-    otError ProcessNetstat(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    otError ProcessService(Arg aArgs[]);
-    otError ProcessServiceList(void);
-#endif
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-    otError ProcessNetworkDiagnostic(Arg aArgs[]);
-#endif
-#if OPENTHREAD_FTD
-    otError ProcessNetworkIdTimeout(Arg aArgs[]);
-#endif
-    otError ProcessNetworkKey(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    otError ProcessNetworkKeyRef(Arg aArgs[]);
-#endif
-    otError ProcessNetworkName(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    otError ProcessNetworkTime(Arg aArgs[]);
-#endif
-    otError ProcessPanId(Arg aArgs[]);
-    otError ProcessParent(Arg aArgs[]);
-#if OPENTHREAD_FTD
-    otError ProcessParentPriority(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    otError ProcessPing(Arg aArgs[]);
-#endif
-    otError ProcessPollPeriod(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    otError ProcessPrefix(Arg aArgs[]);
-#endif
-    otError ProcessPromiscuous(Arg aArgs[]);
-#if OPENTHREAD_FTD
-    otError ProcessPreferRouterId(Arg aArgs[]);
-    otError ProcessPskc(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    otError ProcessPskcRef(Arg aArgs[]);
-#endif
-#endif
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    otError ProcessRadioFilter(Arg aArgs[]);
-#endif
-    otError ProcessRcp(Arg aArgs[]);
-    otError ProcessRegion(Arg aArgs[]);
-#if OPENTHREAD_FTD
-    otError ProcessReleaseRouterId(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    otError ProcessRoute(Arg aArgs[]);
-#endif
-#if OPENTHREAD_FTD
-    otError ProcessRouter(Arg aArgs[]);
-    otError ProcessRouterDowngradeThreshold(Arg aArgs[]);
-    otError ProcessRouterEligible(Arg aArgs[]);
-    otError ProcessRouterSelectionJitter(Arg aArgs[]);
-    otError ProcessRouterUpgradeThreshold(Arg aArgs[]);
-#endif
-    otError ProcessRloc16(Arg aArgs[]);
-    otError ProcessScan(Arg aArgs[]);
-    otError ProcessSingleton(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
-    otError ProcessSntp(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    otError ProcessSrp(Arg aArgs[]);
-#endif
-    otError ProcessState(Arg aArgs[]);
-    otError ProcessThread(Arg aArgs[]);
-    otError ProcessDataset(Arg aArgs[]);
-    otError ProcessTxPower(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
-    otError ProcessTcp(Arg aArgs[]);
-#endif
-    otError ProcessUdp(Arg aArgs[]);
-    otError ProcessUnsecurePort(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    otError ProcessUptime(Arg aArgs[]);
-#endif
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    otError            ProcessMacFilter(Arg aArgs[]);
     void               PrintMacFilter(void);
     otError            ProcessMacFilterAddress(Arg aArgs[]);
     otError            ProcessMacFilterRss(Arg aArgs[]);
     void               OutputMacFilterEntry(const otMacFilterEntry &aEntry);
     static const char *MacFilterAddressModeToString(otMacFilterAddressMode aMode);
-#endif
-    otError ProcessMac(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    otError ProcessTrel(Arg aArgs[]);
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otError ProcessRouterIdRange(Arg *aArgs);
 #endif
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
@@ -646,221 +465,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-
-    // Commands supported by radio:
-    // [diag, help, reset, version]
-    static constexpr Command sCommands[] = {
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-        {"ba", &Interpreter::ProcessBorderAgent},
-#endif
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-        {"bbr", &Interpreter::ProcessBackboneRouter},
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-        {"br", &Interpreter::ProcessBorderRouting},
-#endif
-        {"bufferinfo", &Interpreter::ProcessBufferInfo},
-        {"ccathreshold", &Interpreter::ProcessCcaThreshold},
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        {"ccm", &Interpreter::ProcessCcm},
-#endif
-        {"channel", &Interpreter::ProcessChannel},
-#if OPENTHREAD_FTD
-        {"child", &Interpreter::ProcessChild},
-        {"childip", &Interpreter::ProcessChildIp},
-        {"childmax", &Interpreter::ProcessChildMax},
-#endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-        {"childsupervision", &Interpreter::ProcessChildSupervision},
-#endif
-        {"childtimeout", &Interpreter::ProcessChildTimeout},
-#if OPENTHREAD_CONFIG_COAP_API_ENABLE
-        {"coap", &Interpreter::ProcessCoap},
-#endif
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-        {"coaps", &Interpreter::ProcessCoapSecure},
-#endif
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
-        {"coex", &Interpreter::ProcessCoexMetrics},
-#endif
-#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-        {"commissioner", &Interpreter::ProcessCommissioner},
-#endif
-#if OPENTHREAD_FTD
-        {"contextreusedelay", &Interpreter::ProcessContextIdReuseDelay},
-#endif
-        {"counters", &Interpreter::ProcessCounters},
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        {"csl", &Interpreter::ProcessCsl},
-#endif
-        {"dataset", &Interpreter::ProcessDataset},
-#if OPENTHREAD_FTD
-        {"delaytimermin", &Interpreter::ProcessDelayTimerMin},
-#endif
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-        {"diag", &Interpreter::ProcessDiag},
-#endif
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-        {"discover", &Interpreter::ProcessDiscover},
-        {"dns", &Interpreter::ProcessDns},
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-        {"domainname", &Interpreter::ProcessDomainName},
-#endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        {"dua", &Interpreter::ProcessDua},
-#endif
-#if OPENTHREAD_FTD
-        {"eidcache", &Interpreter::ProcessEidCache},
-#endif
-        {"eui64", &Interpreter::ProcessEui64},
-        {"extaddr", &Interpreter::ProcessExtAddress},
-        {"extpanid", &Interpreter::ProcessExtPanId},
-        {"factoryreset", &Interpreter::ProcessFactoryReset},
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        {"fake", &Interpreter::ProcessFake},
-#endif
-        {"fem", &Interpreter::ProcessFem},
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-        {"help", &Interpreter::ProcessHelp},
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        {"history", &Interpreter::ProcessHistory},
-#endif
-        {"ifconfig", &Interpreter::ProcessIfconfig},
-        {"ipaddr", &Interpreter::ProcessIpAddr},
-        {"ipmaddr", &Interpreter::ProcessIpMulticastAddr},
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
-        {"joiner", &Interpreter::ProcessJoiner},
-#endif
-#if OPENTHREAD_FTD
-        {"joinerport", &Interpreter::ProcessJoinerPort},
-#endif
-        {"keysequence", &Interpreter::ProcessKeySequence},
-        {"leaderdata", &Interpreter::ProcessLeaderData},
-#if OPENTHREAD_FTD
-        {"leaderweight", &Interpreter::ProcessLeaderWeight},
-#endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-        {"linkmetrics", &Interpreter::ProcessLinkMetrics},
-#endif
-#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
-        {"locate", &Interpreter::ProcessLocate},
-#endif
-        {"log", &Interpreter::ProcessLog},
-        {"mac", &Interpreter::ProcessMac},
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-        {"macfilter", &Interpreter::ProcessMacFilter},
-#endif
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        {"mliid", &Interpreter::ProcessMlIid},
-#endif
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-        {"mlr", &Interpreter::ProcessMlr},
-#endif
-        {"mode", &Interpreter::ProcessMode},
-        {"multiradio", &Interpreter::ProcessMultiRadio},
-#if OPENTHREAD_FTD
-        {"neighbor", &Interpreter::ProcessNeighbor},
-#endif
-        {"netdata", &Interpreter::ProcessNetworkData},
-        {"netstat", &Interpreter::ProcessNetstat},
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-        {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},
-#endif
-#if OPENTHREAD_FTD
-        {"networkidtimeout", &Interpreter::ProcessNetworkIdTimeout},
-#endif
-        {"networkkey", &Interpreter::ProcessNetworkKey},
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-        {"networkkeyref", &Interpreter::ProcessNetworkKeyRef},
-#endif
-        {"networkname", &Interpreter::ProcessNetworkName},
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        {"networktime", &Interpreter::ProcessNetworkTime},
-#endif
-        {"panid", &Interpreter::ProcessPanId},
-        {"parent", &Interpreter::ProcessParent},
-#if OPENTHREAD_FTD
-        {"parentpriority", &Interpreter::ProcessParentPriority},
-        {"partitionid", &Interpreter::ProcessPartitionId},
-#endif
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-        {"ping", &Interpreter::ProcessPing},
-#endif
-        {"pollperiod", &Interpreter::ProcessPollPeriod},
-#if OPENTHREAD_FTD
-        {"preferrouterid", &Interpreter::ProcessPreferRouterId},
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-        {"prefix", &Interpreter::ProcessPrefix},
-#endif
-        {"promiscuous", &Interpreter::ProcessPromiscuous},
-#if OPENTHREAD_FTD
-        {"pskc", &Interpreter::ProcessPskc},
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-        {"pskcref", &Interpreter::ProcessPskcRef},
-#endif
-#endif
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        {"radiofilter", &Interpreter::ProcessRadioFilter},
-#endif
-        {"rcp", &Interpreter::ProcessRcp},
-        {"region", &Interpreter::ProcessRegion},
-#if OPENTHREAD_FTD
-        {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
-#endif
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-        {"reset", &Interpreter::ProcessReset},
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-        {"rloc16", &Interpreter::ProcessRloc16},
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-        {"route", &Interpreter::ProcessRoute},
-#endif
-#if OPENTHREAD_FTD
-        {"router", &Interpreter::ProcessRouter},
-        {"routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold},
-        {"routereligible", &Interpreter::ProcessRouterEligible},
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        {"routeridrange", &Interpreter::ProcessRouterIdRange},
-#endif
-        {"routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter},
-        {"routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold},
-#endif
-        {"scan", &Interpreter::ProcessScan},
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-        {"service", &Interpreter::ProcessService},
-#endif
-        {"singleton", &Interpreter::ProcessSingleton},
-#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
-        {"sntp", &Interpreter::ProcessSntp},
-#endif
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-        {"srp", &Interpreter::ProcessSrp},
-#endif
-        {"state", &Interpreter::ProcessState},
-#if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
-        {"tcp", &Interpreter::ProcessTcp},
-#endif
-        {"thread", &Interpreter::ProcessThread},
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-        {"trel", &Interpreter::ProcessTrel},
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        {"tvcheck", &Interpreter::ProcessThreadVersionCheck},
-#endif
-        {"txpower", &Interpreter::ProcessTxPower},
-        {"udp", &Interpreter::ProcessUdp},
-        {"unsecureport", &Interpreter::ProcessUnsecurePort},
-#if OPENTHREAD_CONFIG_UPTIME_ENABLE
-        {"uptime", &Interpreter::ProcessUptime},
-#endif
-#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-        {"version", &Interpreter::ProcessVersion},
-    };
-
-    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;

@@ -37,13 +37,13 @@
 #include <stdlib.h>
 
 #include <openthread/dataset.h>
+#include <openthread/logging.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/settings.hpp"
 #include "lib/platform/exit_code.h"
@@ -160,7 +160,7 @@ static inline void LogIfFail(const char *aText, otError aError)
     OT_UNUSED_VARIABLE(aText);
     OT_UNUSED_VARIABLE(aError);
 
-    if (aError != OT_ERROR_NONE)
+    if (aError != OT_ERROR_NONE && aError != OT_ERROR_NO_ACK)
     {
         otLogWarnPlat("%s: %s", aText, otThreadErrorToString(aError));
     }

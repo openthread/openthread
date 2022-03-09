@@ -28,12 +28,13 @@
 
 #include <openthread/config.h>
 
-#include "common/debug.hpp"
-#include "crypto/hkdf_sha256.hpp"
-
 #include "test_platform.h"
 #include "test_util.h"
 #include "test_util.hpp"
+
+#include "common/array.hpp"
+#include "common/debug.hpp"
+#include "crypto/hkdf_sha256.hpp"
 
 struct TestVector
 {
@@ -125,7 +126,7 @@ void TestHkdfSha256(void)
 
     VerifyOrQuit(instance != nullptr);
 
-    for (const TestVector *test = &kTestVectors[0]; test < OT_ARRAY_END(kTestVectors); test++)
+    for (const TestVector *test = &kTestVectors[0]; test < ot::GetArrayEnd(kTestVectors); test++)
     {
         ot::Crypto::HkdfSha256 hkdf;
         uint8_t                outKey[kMaxOuttKey];

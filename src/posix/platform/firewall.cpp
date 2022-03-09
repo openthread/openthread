@@ -36,8 +36,10 @@
 
 #include <string.h>
 
+#include <openthread/logging.h>
+#include <openthread/netdata.h>
+
 #include "common/code_utils.hpp"
-#include "openthread/netdata.h"
 #include "posix/platform/utils.hpp"
 
 namespace ot {

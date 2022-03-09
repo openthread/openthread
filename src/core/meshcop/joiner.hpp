@@ -45,7 +45,7 @@
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
 #include "common/locator.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"

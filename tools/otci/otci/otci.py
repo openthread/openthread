@@ -1140,6 +1140,10 @@ class OTCI(object):
         """Remove a service from SRP client."""
         self.execute_command(f'srp client service remove {instance} {service}')
 
+    def srp_client_clear_service(self, instance: str, service: str):
+        """Remove a service from SRP client without notifying the SRP server."""
+        self.execute_command(f'srp client service clear {instance} {service}')
+
     def srp_client_get_key_lease_interval(self) -> int:
         """Get SRP client key lease interval (in seconds)."""
         return self.__parse_int(self.execute_command('srp client keyleaseinterval'))

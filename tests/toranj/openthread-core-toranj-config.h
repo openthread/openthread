@@ -317,14 +317,6 @@
 #define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL 1
 
 /**
- * @def OPENTHREAD_CONFIG_LOG_PREPEND_REGION
- *
- * Define to prepend the log region to all log messages
- *
- */
-#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION 1
-
-/**
  * @def OPENTHREAD_CONFIG_LOG_SUFFIX
  *
  * Define suffix to append at the end of logs.

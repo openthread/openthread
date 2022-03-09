@@ -47,6 +47,7 @@
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
@@ -445,7 +446,7 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
  */
 Error GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 /**
  * This function emits a log message indicating an error during a MeshCoP action.
  *

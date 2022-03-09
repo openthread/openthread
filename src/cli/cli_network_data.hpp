@@ -138,16 +138,7 @@ public:
 private:
     using Command = CommandEntry<NetworkData>;
 
-    otError ProcessHelp(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-    otError ProcessPublish(Arg aArgs[]);
-    otError ProcessUnpublish(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    otError ProcessRegister(Arg aArgs[]);
-#endif
-    otError ProcessShow(Arg aArgs[]);
-    otError ProcessSteeringData(Arg aArgs[]);
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal);
     otError GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal);
@@ -157,23 +148,6 @@ private:
     void    OutputPrefixes(bool aLocal);
     void    OutputRoutes(bool aLocal);
     void    OutputServices(bool aLocal);
-
-    static constexpr Command sCommands[] = {
-        {"help", &NetworkData::ProcessHelp},
-#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-        {"publish", &NetworkData::ProcessPublish},
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-        {"register", &NetworkData::ProcessRegister},
-#endif
-        {"show", &NetworkData::ProcessShow},
-        {"steeringdata", &NetworkData::ProcessSteeringData},
-#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-        {"unpublish", &NetworkData::ProcessUnpublish},
-#endif
-    };
-
-    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

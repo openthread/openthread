@@ -191,7 +191,7 @@ SOURCES_COMMON                                  = \
     common/heap_data.cpp                          \
     common/heap_string.cpp                        \
     common/instance.cpp                           \
-    common/logging.cpp                            \
+    common/log.cpp                                \
     common/message.cpp                            \
     common/notifier.cpp                           \
     common/random_manager.cpp                     \
@@ -336,7 +336,7 @@ RADIO_SOURCES_COMMON                       = \
     common/binary_search.cpp                 \
     common/error.cpp                         \
     common/instance.cpp                      \
-    common/logging.cpp                       \
+    common/log.cpp                           \
     common/random_manager.cpp                \
     common/string.cpp                        \
     common/tasklet.cpp                       \
@@ -435,6 +435,7 @@ HEADERS_COMMON                                  = \
     common/extension.hpp                          \
     common/heap.hpp                               \
     common/heap_allocatable.hpp                   \
+    common/heap_array.hpp                         \
     common/heap_data.hpp                          \
     common/heap_string.hpp                        \
     common/instance.hpp                           \
@@ -442,6 +443,7 @@ HEADERS_COMMON                                  = \
     common/linked_list.hpp                        \
     common/locator.hpp                            \
     common/locator_getters.hpp                    \
+    common/log.hpp                                \
     common/logging.hpp                            \
     common/message.hpp                            \
     common/new.hpp                                \
@@ -491,10 +493,10 @@ HEADERS_COMMON                                  = \
     config/link_raw.h                             \
     config/logging.h                              \
     config/mac.h                                  \
+    config/misc.h                                 \
     config/mle.h                                  \
     config/netdata_publisher.h                    \
     config/openthread-core-config-check.h         \
-    config/openthread-core-default-config.h       \
     config/parent_search.h                        \
     config/ping_sender.h                          \
     config/platform.h                             \

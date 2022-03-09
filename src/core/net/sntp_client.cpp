@@ -36,7 +36,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -47,6 +47,8 @@
 
 namespace ot {
 namespace Sntp {
+
+RegisterLogModule("SntpClnt");
 
 Header::Header(void)
     : mFlags(kNtpVersion << kVersionOffset | kModeClient << kModeOffset)
@@ -237,7 +239,7 @@ exit:
     if (error != kErrorNone)
     {
         FreeMessage(messageCopy);
-        otLogWarnIp6("Failed to send SNTP request: %s", ErrorToString(error));
+        LogWarn("Failed to send SNTP request: %s", ErrorToString(error));
     }
 }
 
@@ -360,7 +362,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         memcpy(kissCode, responseHeader.GetKissCode(), Header::kKissCodeLength);
         kissCode[Header::kKissCodeLength] = 0;
 
-        otLogInfoIp6("SNTP response contains the Kiss-o'-death packet with %s code", kissCode);
+        LogInfo("SNTP response contains the Kiss-o'-death packet with %s code", kissCode);
         ExitNow(error = kErrorBusy);
     }
 

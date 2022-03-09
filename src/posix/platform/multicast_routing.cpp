@@ -46,9 +46,10 @@
 #endif
 
 #include <openthread/backbone_router_ftd.h>
+#include <openthread/logging.h>
 
+#include "core/common/arg_macros.hpp"
 #include "core/common/debug.hpp"
-#include "core/common/logging.hpp"
 
 namespace ot {
 namespace Posix {
@@ -479,7 +480,7 @@ const char *MulticastRoutingManager::MifIndexToString(MifIndex aMif)
 
 void MulticastRoutingManager::DumpMulticastForwardingCache(void) const
 {
-#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
     otLogDebgPlat("MulticastRoutingManager: ==================== MFC ENTRIES ====================");
 
     for (const MulticastForwardingCache &mfc : mMulticastForwardingCacheTable)

@@ -39,7 +39,7 @@
 #include "common/heap.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
 
@@ -54,6 +54,8 @@
 #endif
 
 namespace ot {
+
+RegisterLogModule("Message");
 
 //---------------------------------------------------------------------------------------------------------------------
 // MessagePool
@@ -128,7 +130,7 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 exit:
     if (buffer == nullptr)
     {
-        otLogInfoMem("No available message buffer");
+        LogInfo("No available message buffer");
     }
 
     return buffer;

@@ -38,7 +38,6 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "common/time_ticker.hpp"
@@ -53,6 +52,8 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("MeshForwarder");
 
 void ThreadLinkInfo::SetFrom(const Mac::RxFrame &aFrame)
 {
@@ -522,7 +523,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 
         if ((mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest) && mSendMessage->IsLinkSecurityEnabled())
         {
-            otLogNoteMac("Child ID Request requires fragmentation, aborting tx");
+            LogNote("Child ID Request requires fragmentation, aborting tx");
             mMessageNextOffset = mSendMessage->GetLength();
             ExitNow(frame = nullptr);
         }
@@ -970,8 +971,8 @@ void MeshForwarder::HandleDeferredAck(Neighbor &aNeighbor, Error aError)
 
     if (aError == kErrorNoAck)
     {
-        otLogInfoMac("Deferred ack timeout on trel for neighbor %s rloc16:0x%04x",
-                     aNeighbor.GetExtAddress().ToString().AsCString(), aNeighbor.GetRloc16());
+        LogInfo("Deferred ack timeout on trel for neighbor %s rloc16:0x%04x",
+                aNeighbor.GetExtAddress().ToString().AsCString(), aNeighbor.GetRloc16());
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1102,7 +1103,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
             // shorter Child ID Request message (by only including mesh-local
             // address in the Address Registration TLV).
 
-            otLogInfoMac("Requesting shorter `Child ID Request`");
+            LogInfo("Requesting shorter `Child ID Request`");
             Get<Mle::Mle>().RequestShorterChildIdRequest();
         }
 
@@ -1570,7 +1571,7 @@ Error MeshForwarder::SendEmptyMessage(void)
 
 exit:
     FreeMessageOnError(message, error);
-    otLogDebgMac("Send empty message, error:%s", ErrorToString(error));
+    LogDebg("Send empty message, error:%s", ErrorToString(error));
     return error;
 }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -1703,7 +1704,7 @@ exit:
     return error;
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {
@@ -1735,28 +1736,28 @@ const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
 void MeshForwarder::LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
                                               uint16_t     aSourcePort,
                                               uint16_t     aDestPort,
-                                              otLogLevel   aLogLevel)
+                                              LogLevel     aLogLevel)
 {
     if (aSourcePort != 0)
     {
-        otLogMac(aLogLevel, "    src:[%s]:%d", aIp6Header.GetSource().ToString().AsCString(), aSourcePort);
+        LogAt(aLogLevel, "    src:[%s]:%d", aIp6Header.GetSource().ToString().AsCString(), aSourcePort);
     }
     else
     {
-        otLogMac(aLogLevel, "    src:[%s]", aIp6Header.GetSource().ToString().AsCString());
+        LogAt(aLogLevel, "    src:[%s]", aIp6Header.GetSource().ToString().AsCString());
     }
 
     if (aDestPort != 0)
     {
-        otLogMac(aLogLevel, "    dst:[%s]:%d", aIp6Header.GetDestination().ToString().AsCString(), aDestPort);
+        LogAt(aLogLevel, "    dst:[%s]:%d", aIp6Header.GetDestination().ToString().AsCString(), aDestPort);
     }
     else
     {
-        otLogMac(aLogLevel, "    dst:[%s]", aIp6Header.GetDestination().ToString().AsCString());
+        LogAt(aLogLevel, "    dst:[%s]", aIp6Header.GetDestination().ToString().AsCString());
     }
 }
 #else
-void MeshForwarder::LogIp6SourceDestAddresses(Ip6::Header &, uint16_t, uint16_t, otLogLevel)
+void MeshForwarder::LogIp6SourceDestAddresses(Ip6::Header &, uint16_t, uint16_t, LogLevel)
 {
 }
 #endif
@@ -1765,7 +1766,7 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
                                   const Message &     aMessage,
                                   const Mac::Address *aMacAddress,
                                   Error               aError,
-                                  otLogLevel          aLogLevel)
+                                  LogLevel            aLogLevel)
 {
     Ip6::Header ip6Header;
     uint16_t    checksum;
@@ -1784,16 +1785,16 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
     radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
 #endif
 
-    otLogMac(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
-             MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
-             aMessage.GetLength(), checksum,
-             (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
-             (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
-             ToYesNo(aMessage.IsLinkSecurityEnabled()),
-             (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
-             MessagePriorityToString(aMessage), shouldLogRss ? ", rss:" : "",
-             shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "", shouldLogRadio ? ", radio:" : "",
-             radioString);
+    LogAt(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
+          MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
+          aMessage.GetLength(), checksum,
+          (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
+          (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
+          ToYesNo(aMessage.IsLinkSecurityEnabled()),
+          (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
+          MessagePriorityToString(aMessage), shouldLogRss ? ", rss:" : "",
+          shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "", shouldLogRadio ? ", radio:" : "",
+          radioString);
 
     if (aAction != kMessagePrepareIndirect)
     {
@@ -1809,20 +1810,20 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
                                const Mac::Address *aMacAddress,
                                Error               aError)
 {
-    otLogLevel logLevel = OT_LOG_LEVEL_INFO;
+    LogLevel logLevel = kLogLevelInfo;
 
     switch (aAction)
     {
     case kMessageReceive:
     case kMessageTransmit:
     case kMessagePrepareIndirect:
-        logLevel = (aError == kErrorNone) ? OT_LOG_LEVEL_INFO : OT_LOG_LEVEL_NOTE;
+        logLevel = (aError == kErrorNone) ? kLogLevelInfo : kLogLevelNote;
         break;
 
     case kMessageDrop:
     case kMessageReassemblyDrop:
     case kMessageEvict:
-        logLevel = OT_LOG_LEVEL_NOTE;
+        logLevel = kLogLevelNote;
         break;
     }
 
@@ -1852,11 +1853,11 @@ void MeshForwarder::LogFrame(const char *aActionText, const Mac::Frame &aFrame, 
 {
     if (aError != kErrorNone)
     {
-        otLogNoteMac("%s, aError:%s, %s", aActionText, ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        LogNote("%s, aError:%s, %s", aActionText, ErrorToString(aError), aFrame.ToInfoString().AsCString());
     }
     else
     {
-        otLogInfoMac("%s, %s", aActionText, aFrame.ToInfoString().AsCString());
+        LogInfo("%s, %s", aActionText, aFrame.ToInfoString().AsCString());
     }
 }
 
@@ -1867,10 +1868,10 @@ void MeshForwarder::LogFragmentFrameDrop(Error                         aError,
                                          const Lowpan::FragmentHeader &aFragmentHeader,
                                          bool                          aIsSecure)
 {
-    otLogNoteMac("Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
-                 ErrorToString(aError), aFrameLength, aMacSource.ToString().AsCString(),
-                 aMacDest.ToString().AsCString(), aFragmentHeader.GetDatagramTag(), aFragmentHeader.GetDatagramOffset(),
-                 aFragmentHeader.GetDatagramSize(), ToYesNo(aIsSecure));
+    LogNote("Dropping rx frag frame, error:%s, len:%d, src:%s, dst:%s, tag:%d, offset:%d, dglen:%d, sec:%s",
+            ErrorToString(aError), aFrameLength, aMacSource.ToString().AsCString(), aMacDest.ToString().AsCString(),
+            aFragmentHeader.GetDatagramTag(), aFragmentHeader.GetDatagramOffset(), aFragmentHeader.GetDatagramSize(),
+            ToYesNo(aIsSecure));
 }
 
 void MeshForwarder::LogLowpanHcFrameDrop(Error               aError,
@@ -1879,11 +1880,11 @@ void MeshForwarder::LogLowpanHcFrameDrop(Error               aError,
                                          const Mac::Address &aMacDest,
                                          bool                aIsSecure)
 {
-    otLogNoteMac("Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s", ErrorToString(aError),
-                 aFrameLength, aMacSource.ToString().AsCString(), aMacDest.ToString().AsCString(), ToYesNo(aIsSecure));
+    LogNote("Dropping rx lowpan HC frame, error:%s, len:%d, src:%s, dst:%s, sec:%s", ErrorToString(aError),
+            aFrameLength, aMacSource.ToString().AsCString(), aMacDest.ToString().AsCString(), ToYesNo(aIsSecure));
 }
 
-#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 
 void MeshForwarder::LogMessage(MessageAction, const Message &, const Mac::Address *, Error)
 {
@@ -1906,7 +1907,7 @@ void MeshForwarder::LogLowpanHcFrameDrop(Error, uint16_t, const Mac::Address &, 
 {
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
 

@@ -42,7 +42,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -52,6 +52,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("MeshCoPLeader");
 
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -78,7 +80,7 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     CommissionerIdTlv commissionerId;
     StateTlv::State   state = StateTlv::kReject;
 
-    otLogInfoMeshCoP("received petition");
+    LogInfo("received petition");
 
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
@@ -145,7 +147,7 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent petition response");
+    LogInfo("sent petition response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -164,7 +166,7 @@ void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aM
     BorderAgentLocatorTlv *borderAgentLocator;
     StateTlv::State        responseState;
 
-    otLogInfoMeshCoP("received keep alive");
+    LogInfo("received keep alive");
 
     SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
 
@@ -218,7 +220,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent keep alive response");
+    LogInfo("sent keep alive response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -240,7 +242,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     messageInfo.SetPeerPort(Tmf::kUdpPort);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset changed");
+    LogInfo("sent dataset changed");
 
 exit:
     FreeMessageOnError(message, error);
@@ -294,7 +296,7 @@ void Leader::ResignCommissioner(void)
     mTimer.Stop();
     SetEmptyCommissionerData();
 
-    otLogInfoMeshCoP("commissioner inactive");
+    LogInfo("commissioner inactive");
 }
 
 } // namespace MeshCoP
