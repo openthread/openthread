@@ -1386,7 +1386,6 @@ class OpenThreadTHCI(object):
         print('destination: %s' % strDestination)
         cmd = 'ping %s %s 1 1 %d %d' % (strDestination, str(ilength), hop_limit, timeout)
         self.__executeCommand(cmd)
-        time.sleep(1)
 
     @API
     def multicast_Ping(self, destination, length=20):
