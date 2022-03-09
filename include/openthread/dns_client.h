@@ -199,6 +199,8 @@ typedef void (*otDnsAddressCallback)(otError aError, const otDnsAddressResponse 
  *
  * @retval OT_ERROR_NONE          Query sent successfully. @p aCallback will be invoked to report the status.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer to prepare and send query.
+ * @retval OT_ERROR_INVALID_ARGS  The host name is not valid format.
+ * @retval OT_ERROR_INVALID_STATE Cannot send query since Thread interface is not up.
  *
  */
 otError otDnsClientResolveAddress(otInstance *            aInstance,
@@ -206,6 +208,36 @@ otError otDnsClientResolveAddress(otInstance *            aInstance,
                                   otDnsAddressCallback    aCallback,
                                   void *                  aContext,
                                   const otDnsQueryConfig *aConfig);
+
+/**
+ * This function sends an address resolution DNS query for A (IPv4) record(s) for a given host name.
+ *
+ * This function requires and is available when `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE` is enabled.
+ *
+ * When a successful response is received, the addresses are returned from @p aCallback as NAT64 IPv6 translated
+ * versions of the IPv4 addresses from the query response.
+ *
+ * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
+ * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
+ * unspecified fields are then replaced by the values from the default config.
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ * @param[in]  aHostName        The host name for which to query the address (MUST NOT be NULL).
+ * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
+ * @param[in]  aContext         A pointer to arbitrary context information.
+ * @param[in]  aConfig          A pointer to the config to use for this query.
+ *
+ * @retval OT_ERROR_NONE          Query sent successfully. @p aCallback will be invoked to report the status.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer to prepare and send query.
+ * @retval OT_ERROR_INVALID_ARGS  The host name is not valid format or NAT64 is not enabled in config.
+ * @retval OT_ERROR_INVALID_STATE Cannot send query since Thread interface is not up.
+ *
+ */
+otError otDnsClientResolveIp4Address(otInstance *            aInstance,
+                                     const char *            aHostName,
+                                     otDnsAddressCallback    aCallback,
+                                     void *                  aContext,
+                                     const otDnsQueryConfig *aConfig);
 
 /**
  * This function gets the full host name associated with an address resolution DNS response.
@@ -239,9 +271,10 @@ otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
  * @param[out] aTtl          A pointer to an `uint32_t` to output TTL for the address. It can be NULL if caller does not
  *                           want to get the TTL.
  *
- * @retval OT_ERROR_NONE       The address was read successfully.
- * @retval OT_ERROR_NOT_FOUND  No address record in @p aResponse at @p aIndex.
- * @retval OT_ERROR_PARSE      Could not parse the records in the @p aResponse.
+ * @retval OT_ERROR_NONE           The address was read successfully.
+ * @retval OT_ERROR_NOT_FOUND      No address record in @p aResponse at @p aIndex.
+ * @retval OT_ERROR_PARSE          Could not parse the records in the @p aResponse.
+ * @retval OT_ERROR_INVALID_STATE  No NAT64 prefix (applicable only when NAT64 is allowed).
  *
  */
 otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,

@@ -1544,6 +1544,16 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
                                                         &Interpreter::HandleDnsAddressResponse, this, config));
         error = OT_ERROR_PENDING;
     }
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    else if (aArgs[0] == "resolve4")
+    {
+        VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = GetDnsConfig(aArgs + 2, config));
+        SuccessOrExit(error = otDnsClientResolveIp4Address(GetInstancePtr(), aArgs[1].GetCString(),
+                                                           &Interpreter::HandleDnsAddressResponse, this, config));
+        error = OT_ERROR_PENDING;
+    }
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     else if (aArgs[0] == "browse")
     {
