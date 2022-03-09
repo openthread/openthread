@@ -221,6 +221,42 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
+
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+void reportRadioStatusToOTNS(void)
+{
+    struct Event event;
+
+    event.mDelay      = 1; // 1us for now
+    event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+
+    switch (sState)
+    {
+    case OT_RADIO_STATE_RECEIVE:
+        event.mDataLength = 8;
+        memcpy(event.mData, "radio=rx", 8);
+        break;
+    case OT_RADIO_STATE_TRANSMIT:
+        event.mDataLength = 8;
+        memcpy(event.mData, "radio=tx", 8);
+        break;
+    case OT_RADIO_STATE_DISABLED:
+        event.mDataLength = 9;
+        memcpy(event.mData, "radio=off", 9);
+        break;
+    case OT_RADIO_STATE_SLEEP:
+        event.mDataLength = 11;
+        memcpy(event.mData, "radio=sleep", 11);
+        break;
+    default:
+        fprintf(stderr, "Invalid radio status: %d\n", sState);
+        break;
+    }
+
+    otSimSendEvent(&event);
+}
+#endif
+
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -406,6 +442,9 @@ otError otPlatRadioEnable(otInstance *aInstance)
     if (!otPlatRadioIsEnabled(aInstance))
     {
         sState = OT_RADIO_STATE_SLEEP;
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+        reportRadioStatusToOTNS();
+#endif
     }
 
     return OT_ERROR_NONE;
@@ -419,6 +458,9 @@ otError otPlatRadioDisable(otInstance *aInstance)
     otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP, error = OT_ERROR_INVALID_STATE);
 
     sState = OT_RADIO_STATE_DISABLED;
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+    reportRadioStatusToOTNS();
+#endif
 
 exit:
     return error;
@@ -436,6 +478,9 @@ otError otPlatRadioSleep(otInstance *aInstance)
     {
         error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+        reportRadioStatusToOTNS();
+#endif
     }
 
     return error;
@@ -456,6 +501,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         sTxWait                = false;
         sReceiveFrame.mChannel = aChannel;
         sCurrentChannel        = aChannel;
+        
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+        reportRadioStatusToOTNS();
+#endif
     }
 
     return error;
@@ -476,6 +525,10 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         error           = OT_ERROR_NONE;
         sState          = OT_RADIO_STATE_TRANSMIT;
         sCurrentChannel = aFrame->mChannel;
+        
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+        reportRadioStatusToOTNS();
+#endif
     }
 
     return error;
