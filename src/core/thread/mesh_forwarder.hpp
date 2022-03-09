@@ -536,7 +536,7 @@ private:
     otError ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Address &aDst);
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
     const char *MessagePriorityToString(const Message &aMessage);
 
@@ -577,7 +577,7 @@ private:
                        const Mac::Address *aAddress,
                        Error               aError,
                        LogLevel            aLogLevel);
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;

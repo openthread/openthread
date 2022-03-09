@@ -271,7 +271,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void LinkRaw::RecordFrameTransmitStatus(const TxFrame &aFrame,
                                         const RxFrame *aAckFrame,

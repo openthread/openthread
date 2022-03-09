@@ -43,6 +43,24 @@
 namespace ot {
 
 /**
+ * @def OT_SHOULD_LOG
+ *
+ * This definition indicates whether or not logging is enabled.
+ *
+ */
+#define OT_SHOULD_LOG (OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_NONE)
+
+/**
+ * This macro indicates whether the OpenThread logging is enabled at a given log level.
+ *
+ * @param[in] aLevel   The log level to check.
+ *
+ * @returns TRUE if logging is enabled at @p aLevel, FALSE otherwise.
+ *
+ */
+#define OT_SHOULD_LOG_AT(aLevel) (OT_SHOULD_LOG && (OPENTHREAD_CONFIG_LOG_LEVEL >= (aLevel)))
+
+/**
  * This enumeration represents the log level.
  *
  */
@@ -58,6 +76,7 @@ enum LogLevel : uint8_t
 
 constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 
+#if OT_SHOULD_LOG && (OPENTHREAD_CONFIG_LOG_LEVEL != OT_LOG_LEVEL_NONE)
 /**
  * This macro registers log module name.
  *
@@ -77,8 +96,11 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
     }                                                                \
     static_assert(sizeof(kLogModuleName) <= kMaxLogModuleNameLength + 1, "Log module name is too long")
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT
+#else
+#define RegisterLogModule(aName) static_assert(true, "Consume the required semi-colon at the end of macro")
+#endif
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_CRIT)
 /**
  * This macro emits a log message at critical log level.
  *
@@ -90,7 +112,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define LogCrit(...)
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 /**
  * This macro emits a log message at warning log level.
  *
@@ -102,7 +124,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define LogWarn(...)
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 /**
  * This macro emits a log message at note log level.
  *
@@ -114,7 +136,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define LogNote(...)
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 /**
  * This macro emits a log message at info log level.
  *
@@ -126,7 +148,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define LogInfo(...)
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 /**
  * This macro emits a log message at debug log level.
  *
@@ -138,6 +160,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define LogDebg(...)
 #endif
 
+#if OT_SHOULD_LOG
 /**
  * This macro emits a log message at a given log level.
  *
@@ -146,7 +169,11 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  *
  */
 #define LogAt(aLogLevel, ...) Logger::LogInModule(kLogModuleName, aLogLevel, __VA_ARGS__)
+#else
+#define LogAt(aLogLevel, ...)
+#endif
 
+#if OT_SHOULD_LOG
 /**
  * This macro emits a log message independent of the configured log level.
  *
@@ -154,8 +181,11 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  *
  */
 #define LogAlways(...) Logger::LogInModule("", kLogLevelNone, __VA_ARGS__)
+#else
+#define LogAlways(...)
+#endif
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OT_SHOULD_LOG && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 /**
  * This macro emit a log message for the certification test.
  *
@@ -167,7 +197,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define LogCert(...)
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
 /**
  * This macro generates a memory dump at log level critical.
  *
@@ -181,7 +211,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define DumpCrit(aText, aData, aDataLength)
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
 /**
  * This macro generates a memory dump at log level warning.
  *
@@ -195,7 +225,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define DumpWarn(aText, aData, aDataLength)
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
 /**
  * This macro generates a memory dump at log level note.
  *
@@ -209,7 +239,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define DumpNote(aText, aData, aDataLength)
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
 /**
  * This macro generates a memory dump at log level info.
  *
@@ -223,7 +253,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define DumpInfo(aText, aData, aDataLength)
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PKT_DUMP
 /**
  * This macro generates a memory dump at log level debug.
  *
@@ -237,7 +267,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define DumpDebg(aText, aData, aDataLength)
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG && OPENTHREAD_CONFIG_LOG_PKT_DUMP
 /**
  * This macro generates a memory dump independent of the configured log level.
  *
@@ -249,7 +279,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #define DumpAlways(aText, aData, aDataLength) Logger::DumpInModule("", kLogLevelNone, aText, aData, aDataLength)
 #endif
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_LOG_PKT_DUMP
 /**
  * This macro generates a memory dump for certification test.
  *
@@ -264,6 +294,8 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
+
+#if OT_SHOULD_LOG
 
 class Logger
 {
@@ -339,7 +371,8 @@ extern template void Logger::DumpAtLevel<kLogLevelDebg>(const char *aModuleName,
                                                         const char *aText,
                                                         const void *aData,
                                                         uint16_t    aDataLength);
-#endif
+#endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#endif // OT_SHOULD_LOG
 
 } // namespace ot
 

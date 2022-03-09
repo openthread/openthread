@@ -1540,7 +1540,7 @@ exit:
     return matches;
 }
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Server::Service::Log(Action aAction) const
 {
     static const char *const kActionStrings[] = {
@@ -1578,7 +1578,7 @@ void Server::Service::Log(Action aAction) const
 void Server::Service::Log(Action) const
 {
 }
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 //---------------------------------------------------------------------------------------------------------------------
 // Server::Service::Description

@@ -35,7 +35,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
+
 #include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
@@ -1868,7 +1868,7 @@ const char *Client::ItemStateToString(ItemState aState)
     return kItemStateStrings[aState];
 }
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Client::StateToString(State aState)
 {
@@ -1901,7 +1901,7 @@ void Client::LogRetryWaitInterval(void) const
             (interval < kLogInMsecLimit) ? "ms" : "sec");
 }
 
-#endif // #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 } // namespace Srp
 } // namespace ot

@@ -43,7 +43,6 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "common/string.hpp"
 #include "meshcop/joiner.hpp"
 #include "meshcop/joiner_router.hpp"
@@ -1210,7 +1209,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Commissioner::StateToString(State aState)
 {
@@ -1256,7 +1255,7 @@ void Commissioner::LogJoinerEntry(const char *, const Joiner &) const
 {
 }
 
-#endif // OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 // LCOV_EXCL_STOP
 

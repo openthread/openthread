@@ -63,7 +63,7 @@ static const char kPlatformModuleName[] = "Platform";
 
 void otLogCritPlat(const char *aFormat, ...)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PLATFORM
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PLATFORM
     va_list args;
 
     va_start(args, aFormat);
@@ -77,7 +77,7 @@ void otLogCritPlat(const char *aFormat, ...)
 
 void otLogWarnPlat(const char *aFormat, ...)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PLATFORM
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PLATFORM
     va_list args;
 
     va_start(args, aFormat);
@@ -90,7 +90,7 @@ void otLogWarnPlat(const char *aFormat, ...)
 
 void otLogNotePlat(const char *aFormat, ...)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PLATFORM
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PLATFORM
     va_list args;
 
     va_start(args, aFormat);
@@ -103,7 +103,7 @@ void otLogNotePlat(const char *aFormat, ...)
 
 void otLogInfoPlat(const char *aFormat, ...)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PLATFORM
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PLATFORM
     va_list args;
 
     va_start(args, aFormat);
@@ -116,7 +116,7 @@ void otLogInfoPlat(const char *aFormat, ...)
 
 void otLogDebgPlat(const char *aFormat, ...)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM
     va_list args;
 
     va_start(args, aFormat);
@@ -129,8 +129,7 @@ void otLogDebgPlat(const char *aFormat, ...)
 
 void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PLATFORM && \
-    OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
     Logger::DumpInModule(kPlatformModuleName, kLogLevelCrit, aText, aData, aDataLength);
 #else
     OT_UNUSED_VARIABLE(aText);
@@ -141,8 +140,7 @@ void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength)
 
 void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PLATFORM && \
-    OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
     Logger::DumpInModule(kPlatformModuleName, kLogLevelWarn, aText, aData, aDataLength);
 #else
     OT_UNUSED_VARIABLE(aText);
@@ -153,8 +151,7 @@ void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength)
 
 void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PLATFORM && \
-    OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
     Logger::DumpInModule(kPlatformModuleName, kLogLevelNote, aText, aData, aDataLength);
 #else
     OT_UNUSED_VARIABLE(aText);
@@ -165,8 +162,7 @@ void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength)
 
 void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PLATFORM && \
-    OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
     Logger::DumpInModule(kPlatformModuleName, kLogLevelInfo, aText, aData, aDataLength);
 #else
     OT_UNUSED_VARIABLE(aText);
@@ -177,8 +173,7 @@ void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength)
 
 void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength)
 {
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM && \
-    OPENTHREAD_CONFIG_LOG_PKT_DUMP
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
     Logger::DumpInModule(kPlatformModuleName, kLogLevelDebg, aText, aData, aDataLength);
 #else
     OT_UNUSED_VARIABLE(aText);
@@ -189,7 +184,7 @@ void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength)
 
 void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...)
 {
-#if OPENTHREAD_CONFIG_LOG_CLI
+#if OT_SHOULD_LOG && OPENTHREAD_CONFIG_LOG_CLI
     static const char kCliModuleName[] = "Cli";
 
     va_list args;

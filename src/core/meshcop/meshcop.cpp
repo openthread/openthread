@@ -36,7 +36,6 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
-#include "common/log.hpp"
 #include "common/string.hpp"
 #include "crypto/pbkdf2_cmac.hpp"
 #include "crypto/sha256.hpp"
@@ -357,7 +356,7 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 void LogError(const char *aActionText, Error aError)
 {
     if (aError != kErrorNone && aError != kErrorAlready)

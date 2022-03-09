@@ -60,6 +60,8 @@
 
 namespace ot {
 
+#if OT_SHOULD_LOG
+
 template <LogLevel kLogLevel> void Logger::LogAtLevel(const char *aModuleName, const char *aFormat, ...)
 {
     va_list args;
@@ -258,5 +260,7 @@ exit:
     return;
 }
 #endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
+
+#endif // OT_SHOULD_LOG
 
 } // namespace ot
