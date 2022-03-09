@@ -29,7 +29,7 @@
 import ipaddress
 import sys
 import time
-from zeroconf import ServiceBrowser, ServiceStateChange, Zeroconf, DNSAddress, DNSService, DNSText
+from zeroconf import IPVersion, ServiceBrowser, ServiceStateChange, Zeroconf, DNSAddress, DNSService, DNSText
 
 
 def on_service_state_change(zeroconf, service_type, name, state_change):
@@ -83,7 +83,7 @@ def parse_cache(cache):
 
 def main():
     # Browse border agents
-    zeroconf = Zeroconf()
+    zeroconf = Zeroconf(ip_version=IPVersion.V6Only)
     ServiceBrowser(zeroconf, "_meshcop._udp.local.", handlers=[on_service_state_change])
     time.sleep(2)
     cache = zeroconf.cache.cache
