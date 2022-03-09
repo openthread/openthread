@@ -81,6 +81,7 @@ class Radio : public InstanceLocator, private NonCopyable
     friend class Instance;
 
 public:
+    static constexpr uint32_t kSymbolTime = OT_RADIO_SYMBOL_TIME;
 #if (OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT && OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT)
     static constexpr uint16_t kNumChannelPages = 2;
     static constexpr uint32_t kSupportedChannels =
