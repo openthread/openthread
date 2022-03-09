@@ -273,19 +273,6 @@ void otBackboneRouterMulticastListenerClear(otInstance *aInstance);
  */
 otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6Address *aAddress, uint32_t aTimeout);
 
-/**
- * This method configures the ability to increase or not the BBR Dataset Sequence Number when a
- * BBR recovers its BBR Dataset from the Leader's Network Data.
- *
- * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
- *       Only used for certification.
- *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aSkip      Whether to skip the increase of Sequence Number or not.
- *
- */
-void otBackboneRouterConfigSkipSeqNumIncrease(otInstance *aInstance, bool aSkip);
-
 #define OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT \
     0 ///< Initializer for otBackboneRouterMulticastListenerIterator
 

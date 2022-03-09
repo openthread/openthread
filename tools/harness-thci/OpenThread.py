@@ -533,17 +533,6 @@ class OpenThreadTHCI(object):
         cmd = 'macfilter addr ' + mode
         return self.__executeCommand(cmd)[-1] == 'Done'
 
-    def __skipSeqNoIncrease(self):
-        """skip sequence number increase when recovering BBR Dataset from Network Data
-
-        Returns:
-            True: successful to set the behavior.
-            False: fail to set the behavior.
-        """
-        print('call __skipSeqNoIncrease()')
-        cmd = 'bbr skipseqnuminc'
-        return self.__executeCommand(cmd)[-1] == 'Done'
-
     def __startOpenThread(self):
         """start OpenThread stack
 
@@ -1160,8 +1149,6 @@ class OpenThreadTHCI(object):
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
-                # skip increase of Sequence Number for BBR-TC-02
-                self.__skipSeqNoIncrease()
         elif eRoleId == Thread_Device_Role.SED:
             print('join as sleepy end device')
             mode = '-'
