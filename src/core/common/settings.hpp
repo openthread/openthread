@@ -118,15 +118,16 @@ public:
         kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
         kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
         kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
+        kKeyLegacyOmrPrefix   = OT_SETTINGS_KEY_LEGACY_OMR_PREFIX,
         kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
-        kKeyNat64Prefix       = OT_SETTINGS_KEY_NAT64_PREFIX,
+        kKeyLegacyNat64Prefix = OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX,
+        kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
     };
 
-    static constexpr Key kLastKey = kKeyNat64Prefix; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyBrUlaPrefix; ///< The last (numerically) enumerator value in `Key`.
 
     /**
      * This structure represents the device's own network information for settings storage.
@@ -570,18 +571,33 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This class defines constants and types for OMR prefix settings.
+     * This class defines constants and types for BR ULA prefix settings.
      *
      */
-    class OmrPrefix
+    class BrUlaPrefix
     {
     public:
-        static constexpr Key kKey = kKeyOmrPrefix; ///< The associated key.
+        static constexpr Key kKey = kKeyBrUlaPrefix; ///< The associated key.
 
         typedef Ip6::Prefix ValueType; ///< The associated value type.
 
     private:
-        OmrPrefix(void) = default;
+        BrUlaPrefix(void) = default;
+    };
+
+    /**
+     * This class defines constants and types for legacy OMR prefix settings.
+     *
+     */
+    class LegacyOmrPrefix
+    {
+    public:
+        static constexpr Key kKey = kKeyLegacyOmrPrefix; ///< The associated key.
+
+        typedef Ip6::Prefix ValueType; ///< The associated value type.
+
+    private:
+        LegacyOmrPrefix(void) = default;
     };
 
     /**
@@ -598,23 +614,6 @@ public:
     private:
         OnLinkPrefix(void) = default;
     };
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
-    /**
-     * This class defines constants and types for NAT64 prefix settings.
-     *
-     */
-    class Nat64Prefix
-    {
-    public:
-        static constexpr Key kKey = kKeyNat64Prefix; ///< The associated key.
-
-        typedef Ip6::Prefix ValueType; ///< The associated value type.
-
-    private:
-        Nat64Prefix(void) = default;
-    };
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
