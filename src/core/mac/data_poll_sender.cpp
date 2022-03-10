@@ -550,7 +550,8 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
-        period = OT_MIN(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
+        period    = OT_MIN(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
+        pollAhead = static_cast<uint32_t>(kRetxPollPeriod);
     }
 #endif
 
