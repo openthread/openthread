@@ -3142,13 +3142,13 @@ class LinuxHost():
         """Enable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} up')
+        self.bash(f'ip link set {self.ETH_DEV} up')
 
     def disable_ether(self):
         """Disable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} down')
+        self.bash(f'ip link set {self.ETH_DEV} down')
 
     def get_ether_addrs(self):
         output = self.bash(f'ip -6 addr list dev {self.ETH_DEV}')
