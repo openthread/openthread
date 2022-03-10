@@ -123,15 +123,15 @@ void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys,
  *  values. The order of such values MAY change after ANY
  *  write operation to the store.
  *
- *  @param[in]     aInstance     The OpenThread instance structure.
- *  @param[in]     aKey          The key associated with the requested setting.
- *  @param[in]     aIndex        The index of the specific item to get.
- *  @param[out]    aValue        A pointer to where the value of the setting should be written. May be set to NULL if
- *                               just testing for the presence or length of a setting.
- *  @param[inout]  aValueLength  A pointer to the length of the value. When called, this pointer should point to an
- *                               integer containing the maximum value size that can be written to aValue. At return,
- *                               the actual length of the setting is written. This may be set to NULL if performing
- *                               a presence check.
+ *  @param[in]      aInstance     The OpenThread instance structure.
+ *  @param[in]      aKey          The key associated with the requested setting.
+ *  @param[in]      aIndex        The index of the specific item to get.
+ *  @param[out]     aValue        A pointer to where the value of the setting should be written. May be set to NULL if
+ *                                just testing for the presence or length of a setting.
+ *  @param[in,out]  aValueLength  A pointer to the length of the value. When called, this pointer should point to an
+ *                                integer containing the maximum value size that can be written to aValue. At return,
+ *                                the actual length of the setting is written. This may be set to NULL if performing
+ *                                a presence check.
  *
  *  @retval OT_ERROR_NONE             The given setting was found and fetched successfully.
  *  @retval OT_ERROR_NOT_FOUND        The given setting was not found in the setting store.

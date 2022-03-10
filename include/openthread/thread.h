@@ -714,10 +714,10 @@ otError otThreadBecomeChild(otInstance *aInstance);
  * This function gets the next neighbor information. It is used to go through the entries of
  * the neighbor table.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the iterator context. To get the first neighbor entry
-                             it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
- * @param[out]    aInfo      A pointer to the neighbor information.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the iterator context. To get the first neighbor entry
+                              it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
+ * @param[out]     aInfo      A pointer to the neighbor information.
  *
  * @retval OT_ERROR_NONE         Successfully found the next neighbor entry in table.
  * @retval OT_ERROR_NOT_FOUND     No subsequent neighbor entry exists in the table.

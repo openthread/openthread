@@ -155,15 +155,15 @@ public:
     /**
      * This method fetches the value identified by @p aKey at a given @p aIndex.
      *
-     * @param[in]     aKey          The key associated with the requested value.
-     * @param[in]     aIndex        The index of the specific item to get.
-     * @param[out]    aValue        A pointer to where the value of the setting should be written.
-     *                              May be `nullptr` if just testing for the presence or length of a key.
-     * @param[inout]  aValueLength  A pointer to the length of the value.
-     *                              When called, this should point to an integer containing the maximum bytes that
-     *                              can be written to @p aValue.
-     *                              At return, the actual length of the setting is written.
-     *                              May be `nullptr` if performing a presence check.
+     * @param[in]      aKey          The key associated with the requested value.
+     * @param[in]      aIndex        The index of the specific item to get.
+     * @param[out]     aValue        A pointer to where the value of the setting should be written.
+     *                               May be `nullptr` if just testing for the presence or length of a key.
+     * @param[in,out]  aValueLength  A pointer to the length of the value.
+     *                               When called, this should point to an integer containing the maximum bytes that
+     *                               can be written to @p aValue.
+     *                               At return, the actual length of the setting is written.
+     *                               May be `nullptr` if performing a presence check.
      *
      * @retval kErrorNone        The value was fetched successfully.
      * @retval kErrorNotFound    The key was not found.
@@ -185,14 +185,14 @@ public:
     /**
      * This method fetches the value identified by @p aKey.
      *
-     * @param[in]     aKey          The key associated with the requested value.
-     * @param[out]    aValue        A pointer to where the value of the setting should be written.
-     *                              May be `nullptr` if just testing for the presence or length of a key.
-     * @param[inout]  aValueLength  A pointer to the length of the value.
-     *                              When called, this should point to an integer containing the maximum bytes that
-     *                              can be written to @p aValue.
-     *                              At return, the actual length of the setting is written.
-     *                              May be `nullptr` if performing a presence check.
+     * @param[in]      aKey          The key associated with the requested value.
+     * @param[out]     aValue        A pointer to where the value of the setting should be written.
+     *                               May be `nullptr` if just testing for the presence or length of a key.
+     * @param[in,out]  aValueLength  A pointer to the length of the value.
+     *                               When called, this should point to an integer containing the maximum bytes that
+     *                               can be written to @p aValue.
+     *                               At return, the actual length of the setting is written.
+     *                               May be `nullptr` if performing a presence check.
      *
      * @retval kErrorNone        The value was fetched successfully.
      * @retval kErrorNotFound    The key was not found.

@@ -270,9 +270,9 @@ public:
      *
      * The template `Type` should support comparison operator `==` and assignment operator `=`.
      *
-     * @param[inout] aVariable    A reference to the variable to update.
-     * @param[in]    aNewValue    The new value.
-     * @param[in]    aEvent       The event to signal.
+     * @param[in,out] aVariable    A reference to the variable to update.
+     * @param[in]     aNewValue    The new value.
+     * @param[in]     aEvent       The event to signal.
      *
      * @retval kErrorNone      The variable was update successfully and @p aEvent was signaled.
      * @retval kErrorAlready   The variable was already set to the same value.

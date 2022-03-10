@@ -249,10 +249,10 @@ template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aStr
  * This function correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
  * parsed as {0xaa, 0xbb, 0xcc, 0xdd} and "123" (with odd length) is parsed as {0x01, 0x23}.
  *
- * @param[in]     aString   The string to parse.
- * @param[inout]  aSize     On entry indicates the number of bytes in @p aBuffer (max size of @p aBuffer).
- *                          On exit provides number of bytes parsed and copied into @p aBuffer.
- * @param[out]    aBuffer   A pointer to a buffer to output the parsed byte sequence.
+ * @param[in]      aString   The string to parse.
+ * @param[in,out]  aSize     On entry indicates the number of bytes in @p aBuffer (max size of @p aBuffer).
+ *                           On exit provides number of bytes parsed and copied into @p aBuffer.
+ * @param[out]     aBuffer   A pointer to a buffer to output the parsed byte sequence.
  *
  * @retval kErrorNone        The string was parsed successfully.
  * @retval kErrorInvalidArgs The string does not contain valid format or too many bytes.
@@ -271,10 +271,10 @@ otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
  * This function correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
  * parsed as {0xaa, 0xbb, 0xcc, 0xdd} and "123" (with odd length) is parsed as {0x01, 0x23}.
  *
- * @param[inout] aString     A reference to string to parse. On successful parse, updated to skip parsed digits.
- * @param[inout] aSize       On entry indicates the segment size (number of bytes in @p aBuffer).
+ * @param[in,out] aString    A reference to string to parse. On successful parse, updated to skip parsed digits.
+ * @param[in,out] aSize      On entry indicates the segment size (number of bytes in @p aBuffer).
  *                           On exit provides number of bytes parsed and copied into @p aBuffer.
- * @param[out]   aBuffer     A pointer to a buffer to output the parsed byte sequence.
+ * @param[out]    aBuffer    A pointer to a buffer to output the parsed byte sequence.
  *
  * @retval kErrorNone        The string was parsed successfully to the end of string.
  * @retval kErrorPedning     The string segment was parsed successfully, but there are additional bytes remaining
@@ -557,9 +557,9 @@ public:
      *
      * This method verifies that the parsed hex string bytes fit in @p aBuffer with its given @p aSize.
      *
-     * @param[inout]  aSize     On entry indicates the number of bytes in @p aBuffer (max size of @p aBuffer).
+     * @param[in,out]  aSize    On entry indicates the number of bytes in @p aBuffer (max size of @p aBuffer).
      *                          On exit provides number of bytes parsed and copied into @p aBuffer.
-     * @param[out]    aBuffer   A pointer to a buffer to output the parsed byte sequence.
+     * @param[out]     aBuffer  A pointer to a buffer to output the parsed byte sequence.
      *
      * @retval kErrorNone        The argument was parsed successfully.
      * @retval kErrorInvalidArgs The argument does not contain valid format or too many bytes.
