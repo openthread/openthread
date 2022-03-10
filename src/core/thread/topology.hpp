@@ -501,7 +501,7 @@ public:
     /**
      * This method clears the last received fragment tag.
      *
-     * The last received fragment tag is used for detect duplicate frames (receievd over different radios) when
+     * The last received fragment tag is used for detect duplicate frames (received over different radios) when
      * multi-radio feature is enabled.
      *
      */
@@ -523,15 +523,15 @@ public:
      * @param[in] aTag   The new tag value.
      *
      */
-    void SetLastRxFragmentTag(uint16_t aTag) { mLastRxFragmentTag = (aTag == 0) ? 0xffff : aTag; }
+    void SetLastRxFragmentTag(uint16_t aTag);
 
     /**
-     * This method indicates whether the last received fragment tag is set or not.
+     * This method indicates whether or not the last received fragment tag is set and valid (i.e., not yet timed out).
      *
-     * @returns TRUE if the last received fragment tag is set, FALSE otherwise.
+     * @returns TRUE if the last received fragment tag is set and valid, FALSE otherwise.
      *
      */
-    bool IsLastRxFragmentTagSet(void) const { return (mLastRxFragmentTag != 0); }
+    bool IsLastRxFragmentTagSet(void) const;
 
     /**
      * This method indicates whether the last received fragment tag is strictly after a given tag value.
@@ -778,6 +778,11 @@ protected:
     void Init(Instance &aInstance);
 
 private:
+    enum : uint32_t
+    {
+        kLastRxFragmentTagTimeout = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT, ///< Frag tag timeout in msec.
+    };
+
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
     TimeMilli       mLastHeard; ///< Time when last heard.
     union
@@ -797,7 +802,8 @@ private:
     } mValidPending;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    uint16_t mLastRxFragmentTag; ///< Last received fragment tag
+    uint16_t  mLastRxFragmentTag;     ///< Last received fragment tag
+    TimeMilli mLastRxFragmentTagTime; ///< The time last fragment tag was received and set.
 #endif
 
     uint32_t mKeySequence; ///< Current key sequence
