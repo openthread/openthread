@@ -1957,14 +1957,14 @@ void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 
 void Mle::HandleDelayedResponseTimer(void)
 {
-    DelayedResponseMetadata metadata;
-    TimeMilli               now          = TimerMilli::GetNow();
-    TimeMilli               nextSendTime = now.GetDistantFuture();
-    Message *               message;
-    Message *               nextMessage;
+    TimeMilli now          = TimerMilli::GetNow();
+    TimeMilli nextSendTime = now.GetDistantFuture();
+    Message * nextMessage;
 
-    for (message = mDelayedResponses.GetHead(); message != nullptr; message = nextMessage)
+    for (Message *message = mDelayedResponses.GetHead(); message != nullptr; message = nextMessage)
     {
+        DelayedResponseMetadata metadata;
+
         nextMessage = message->GetNext();
 
         metadata.ReadFrom(*message);
@@ -1978,37 +1978,8 @@ void Mle::HandleDelayedResponseTimer(void)
         }
         else
         {
-            Error error = kErrorNone;
-
             mDelayedResponses.Dequeue(*message);
-            metadata.RemoveFrom(*message);
-
-            if (message->GetSubType() == Message::kSubTypeMleDataRequest)
-            {
-                error = AppendActiveTimestamp(*message);
-                error = (error == kErrorNone) ? AppendPendingTimestamp(*message) : error;
-            }
-
-            error = (error == kErrorNone) ? SendMessage(*message, metadata.mDestination) : error;
-
-            if (error == kErrorNone)
-            {
-                Log(kMessageSend, kTypeGenericDelayed, metadata.mDestination);
-
-                // Here enters fast poll mode, as for Rx-Off-when-idle device, the enqueued msg should
-                // be Mle Data Request.
-                // Note: Finer-grade check (e.g. message subtype) might be required when deciding whether
-                // or not enters fast poll mode fast poll mode if there are other type of delayed message
-                // for Rx-Off-when-idle device.
-                if (!IsRxOnWhenIdle())
-                {
-                    Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
-                }
-            }
-            else
-            {
-                message->Free();
-            }
+            SendDelayedResponse(*message, metadata);
         }
     }
 
@@ -2016,6 +1987,35 @@ void Mle::HandleDelayedResponseTimer(void)
     {
         mDelayedResponseTimer.FireAt(nextSendTime);
     }
+}
+
+void Mle::SendDelayedResponse(Message &aMessage, const DelayedResponseMetadata &aMetadata)
+{
+    Error error = kErrorNone;
+
+    aMetadata.RemoveFrom(aMessage);
+
+    if (aMessage.GetSubType() == Message::kSubTypeMleDataRequest)
+    {
+        SuccessOrExit(error = AppendActiveTimestamp(aMessage));
+        SuccessOrExit(error = AppendPendingTimestamp(aMessage));
+    }
+
+    SuccessOrExit(error = SendMessage(aMessage, aMetadata.mDestination));
+
+    Log(kMessageSend, kTypeGenericDelayed, aMetadata.mDestination);
+
+    if (!IsRxOnWhenIdle())
+    {
+        // Start fast poll mode, assuming enqueued msg is MLE Data Request.
+        // Note: Finer-grade check may be required when deciding whether or
+        // not to enter fast poll mode for other type of delayed message.
+
+        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
+    }
+
+exit:
+    FreeMessageOnError(&aMessage, error);
 }
 
 void Mle::RemoveDelayedDataResponseMessage(void)
