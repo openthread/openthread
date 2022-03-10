@@ -1838,6 +1838,7 @@ private:
     Error SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus);
 #endif
     uint32_t Reattach(void);
+    bool     HasAcceptableParentCandidate(void) const;
 
     bool IsBetterParent(uint16_t               aRloc16,
                         uint8_t                aLinkQuality,

@@ -1713,43 +1713,66 @@ void Mle::HandleAttachTimer(Timer &aTimer)
     aTimer.Get<Mle>().HandleAttachTimer();
 }
 
-void Mle::HandleAttachTimer(void)
+bool Mle::HasAcceptableParentCandidate(void) const
 {
-    uint32_t delay          = 0;
-    bool     shouldAnnounce = true;
+    bool    hasAcceptableParent = false;
+    uint8_t linkQuality;
 
-    if (mAttachState == kAttachStateParentRequestRouter || mAttachState == kAttachStateParentRequestReed ||
-        (mAttachState == kAttachStateAnnounce && !HasMoreChannelsToAnnouce()))
+    VerifyOrExit(mParentCandidate.IsStateParentResponse());
+
+    switch (mAttachState)
     {
-        uint8_t linkQuality;
+    case kAttachStateAnnounce:
+        VerifyOrExit(!HasMoreChannelsToAnnouce());
+        break;
 
-        linkQuality = mParentCandidate.GetLinkInfo().GetLinkQuality();
+    case kAttachStateParentRequestRouter:
+        // If we cannot find a parent with best link quality (3) when
+        // in `kAttachStateParentRequestRouter` state we will keep the
+        // candidate and forward to REED stage to potentially find a
+        // better parent.
+        linkQuality = OT_MIN(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
+        VerifyOrExit(linkQuality == 3);
+        break;
 
-        if (linkQuality > mParentCandidate.GetLinkQualityOut())
-        {
-            linkQuality = mParentCandidate.GetLinkQualityOut();
-        }
+    case kAttachStateParentRequestReed:
+        break;
 
+    default:
+        ExitNow();
+    }
+
+    if (IsChild())
+    {
         // If already attached, accept the parent candidate if
         // we are trying to attach to a better partition or if a
         // Parent Response was also received from the current parent
         // to which the device is attached. This ensures that the
         // new parent candidate is compared with the current parent
         // and that it is indeed preferred over the current one.
-        // If we are in kAttachStateParentRequestRouter and cannot
-        // find a parent with best link quality(3), we will keep
-        // the candidate and forward to REED stage to find a better
-        // parent.
 
-        if ((linkQuality == 3 || mAttachState != kAttachStateParentRequestRouter) &&
-            mParentCandidate.IsStateParentResponse() &&
-            (!IsChild() || mReceivedResponseFromParent || mParentRequestMode == kAttachBetter) &&
-            SendChildIdRequest() == kErrorNone)
-        {
-            SetAttachState(kAttachStateChildIdRequest);
-            delay = kParentRequestReedTimeout;
-            ExitNow();
-        }
+        VerifyOrExit(mReceivedResponseFromParent || (mParentRequestMode == kAttachBetter));
+    }
+
+    hasAcceptableParent = true;
+
+exit:
+    return hasAcceptableParent;
+}
+
+void Mle::HandleAttachTimer(void)
+{
+    uint32_t delay          = 0;
+    bool     shouldAnnounce = true;
+
+    // First, check if we are waiting to receive parent responses and
+    // found an acceptable parent candidate.
+
+    if (HasAcceptableParentCandidate() && (SendChildIdRequest() == kErrorNone))
+    {
+        SetAttachState(kAttachStateChildIdRequest);
+        delay = kParentRequestReedTimeout;
+        ExitNow();
     }
 
     switch (mAttachState)
