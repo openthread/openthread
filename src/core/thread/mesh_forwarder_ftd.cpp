@@ -140,40 +140,37 @@ Error MeshForwarder::SendMessage(Message &aMessage)
 
 void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
 {
-    Message *    cur, *next;
     Ip6::Address ip6Dst;
     bool         enqueuedMessage = false;
 
-    for (cur = mResolvingQueue.GetHead(); cur; cur = next)
+    for (Message &message : mResolvingQueue)
     {
-        next = cur->GetNext();
-
-        if (cur->GetType() != Message::kTypeIp6)
+        if (message.GetType() != Message::kTypeIp6)
         {
             continue;
         }
 
-        IgnoreError(cur->Read(Ip6::Header::kDestinationFieldOffset, ip6Dst));
+        IgnoreError(message.Read(Ip6::Header::kDestinationFieldOffset, ip6Dst));
 
         if (ip6Dst == aEid)
         {
-            mResolvingQueue.Dequeue(*cur);
+            mResolvingQueue.Dequeue(message);
 
             if (aError == kErrorNone)
             {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
                 // Pass back to IPv6 layer for DUA destination resolved by Backbone Query
-                if (ForwardDuaToBackboneLink(*cur, ip6Dst) != kErrorNone)
+                if (ForwardDuaToBackboneLink(message, ip6Dst) != kErrorNone)
 #endif
                 {
-                    mSendQueue.Enqueue(*cur);
+                    mSendQueue.Enqueue(message);
                     enqueuedMessage = true;
                 }
             }
             else
             {
-                LogMessage(kMessageDrop, *cur, nullptr, aError);
-                cur->Free();
+                LogMessage(kMessageDrop, message, nullptr, aError);
+                message.Free();
             }
         }
     }
@@ -182,8 +179,6 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
     {
         mScheduleTransmissionTask.Post();
     }
-
-    return;
 }
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -280,30 +275,26 @@ exit:
 
 void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
 {
-    Message *nextMessage;
-
-    for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
+    for (Message &message : mSendQueue)
     {
-        nextMessage = message->GetNext();
-
-        if ((aSubType != Message::kSubTypeNone) && (aSubType != message->GetSubType()))
+        if ((aSubType != Message::kSubTypeNone) && (aSubType != message.GetSubType()))
         {
             continue;
         }
 
-        if (mIndirectSender.RemoveMessageFromSleepyChild(*message, aChild) != kErrorNone)
+        if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) != kErrorNone)
         {
-            switch (message->GetType())
+            switch (message.GetType())
             {
             case Message::kTypeIp6:
             {
                 Ip6::Header ip6header;
 
-                IgnoreError(message->Read(0, ip6header));
+                IgnoreError(message.Read(0, ip6header));
 
                 if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(ip6header.GetDestination())))
                 {
-                    message->ClearDirectTransmission();
+                    message.ClearDirectTransmission();
                 }
 
                 break;
@@ -313,11 +304,11 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             {
                 Lowpan::MeshHeader meshHeader;
 
-                IgnoreError(meshHeader.ParseFrom(*message));
+                IgnoreError(meshHeader.ParseFrom(message));
 
                 if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination())))
                 {
-                    message->ClearDirectTransmission();
+                    message.ClearDirectTransmission();
                 }
 
                 break;
@@ -328,41 +319,38 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             }
         }
 
-        RemoveMessageIfNoPendingTx(*message);
+        RemoveMessageIfNoPendingTx(message);
     }
 }
 
 void MeshForwarder::RemoveDataResponseMessages(void)
 {
     Ip6::Header ip6Header;
-    Message *   next;
 
-    for (Message *message = mSendQueue.GetHead(); message != nullptr; message = next)
+    for (Message &message : mSendQueue)
     {
-        next = message->GetNext();
-
-        if (message->GetSubType() != Message::kSubTypeMleDataResponse)
+        if (message.GetSubType() != Message::kSubTypeMleDataResponse)
         {
             continue;
         }
 
-        IgnoreError(message->Read(0, ip6Header));
+        IgnoreError(message.Read(0, ip6Header));
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {
             for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
             {
-                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(*message, child));
+                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(message, child));
             }
         }
 
-        if (mSendMessage == message)
+        if (mSendMessage == &message)
         {
             mSendMessage = nullptr;
         }
 
-        LogMessage(kMessageDrop, *message, nullptr, kErrorNone);
-        mSendQueue.DequeueAndFree(*message);
+        LogMessage(kMessageDrop, message, nullptr, kErrorNone);
+        mSendQueue.DequeueAndFree(message);
     }
 }
 

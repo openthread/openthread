@@ -42,10 +42,12 @@
 #include <openthread/platform/messagepool.h>
 
 #include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/data.hpp"
 #include "common/encoding.hpp"
+#include "common/iterator_utils.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -1225,6 +1227,45 @@ public:
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 protected:
+    class ConstIterator : public ItemPtrIterator<const Message, ConstIterator>
+    {
+        friend class ItemPtrIterator<const Message, ConstIterator>;
+
+    public:
+        ConstIterator(void) = default;
+
+        explicit ConstIterator(const Message *aMessage)
+            : ItemPtrIterator(aMessage)
+        {
+        }
+
+    private:
+        void Advance(void) { mItem = mItem->GetNext(); }
+    };
+
+    class Iterator : public ItemPtrIterator<Message, Iterator>
+    {
+        friend class ItemPtrIterator<Message, Iterator>;
+
+    public:
+        Iterator(void)
+            : mNext(nullptr)
+        {
+        }
+
+        explicit Iterator(Message *aMessage)
+            : ItemPtrIterator(aMessage)
+            , mNext(NextMessage(aMessage))
+        {
+        }
+
+    private:
+        void            Advance(void);
+        static Message *NextMessage(Message *aMessage) { return (aMessage != nullptr) ? aMessage->GetNext() : nullptr; }
+
+        Message *mNext;
+    };
+
     uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
     void     SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
 
@@ -1269,6 +1310,9 @@ private:
     Message *const &Next(void) const { return GetMetadata().mNext; }
     Message *&      Prev(void) { return GetMetadata().mPrev; }
 
+    static Message *      NextOf(Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
+    static const Message *NextOf(const Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
+
     Error ResizeMessage(uint16_t aLength);
 };
 
@@ -1297,7 +1341,7 @@ public:
      * This constructor initializes the message queue.
      *
      */
-    MessageQueue(void);
+    MessageQueue(void) { SetTail(nullptr); }
 
     /**
      * This method returns a pointer to the first message.
@@ -1305,7 +1349,15 @@ public:
      * @returns A pointer to the first message.
      *
      */
-    Message *GetHead(void) const;
+    Message *GetHead(void) { return Message::NextOf(GetTail()); }
+
+    /**
+     * This method returns a pointer to the first message.
+     *
+     * @returns A pointer to the first message.
+     *
+     */
+    const Message *GetHead(void) const { return Message::NextOf(GetTail()); }
 
     /**
      * This method adds a message to the end of the list.
@@ -1355,16 +1407,28 @@ public:
      */
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
+    // The following methods are intended to support range-based `for`
+    // loop iteration over the queue entries and should not be used
+    // directly. The range-based `for` works correctly even if the
+    // current entry is removed from the queue during iteration.
+
+    Message::Iterator begin(void);
+    Message::Iterator end(void) { return Message::Iterator(); }
+
+    Message::ConstIterator begin(void) const;
+    Message::ConstIterator end(void) const { return Message::ConstIterator(); }
+
 private:
-    Message *GetTail(void) const { return static_cast<Message *>(mData); }
-    void     SetTail(Message *aMessage) { mData = aMessage; }
+    Message *      GetTail(void) { return static_cast<Message *>(mData); }
+    const Message *GetTail(void) const { return static_cast<const Message *>(mData); }
+    void           SetTail(Message *aMessage) { mData = aMessage; }
 };
 
 /**
  * This class implements a priority queue.
  *
  */
-class PriorityQueue
+class PriorityQueue : private Clearable<PriorityQueue>
 {
     friend class Message;
     friend class MessageQueue;
@@ -1375,7 +1439,7 @@ public:
      * This constructor initializes the priority queue.
      *
      */
-    PriorityQueue(void);
+    PriorityQueue(void) { Clear(); }
 
     /**
      * This method returns a pointer to the first message.
@@ -1383,7 +1447,15 @@ public:
      * @returns A pointer to the first message.
      *
      */
-    Message *GetHead(void) const;
+    Message *GetHead(void) { return AsNonConst(AsConst(this)->GetHead()); }
+
+    /**
+     * This method returns a pointer to the first message.
+     *
+     * @returns A pointer to the first message.
+     *
+     */
+    const Message *GetHead(void) const;
 
     /**
      * This method returns a pointer to the first message for a given priority level.
@@ -1394,7 +1466,21 @@ public:
      *          this priority level.
      *
      */
-    Message *GetHeadForPriority(Message::Priority aPriority) const;
+    Message *GetHeadForPriority(Message::Priority aPriority)
+    {
+        return AsNonConst(AsConst(this)->GetHeadForPriority(aPriority));
+    }
+
+    /**
+     * This method returns a pointer to the first message for a given priority level.
+     *
+     * @param[in] aPriority   Priority level.
+     *
+     * @returns A pointer to the first message with given priority level or `nullptr` if there is no messages with
+     *          this priority level.
+     *
+     */
+    const Message *GetHeadForPriority(Message::Priority aPriority) const;
 
     /**
      * This method adds a message to the queue.
@@ -1441,7 +1527,26 @@ public:
      * @returns A pointer to the tail of the list.
      *
      */
-    Message *GetTail(void) const;
+    Message *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
+
+    /**
+     * This method returns the tail of the list (last message in the list)
+     *
+     * @returns A pointer to the tail of the list.
+     *
+     */
+    const Message *GetTail(void) const;
+
+    // The following methods are intended to support range-based `for`
+    // loop iteration over the queue entries and should not be used
+    // directly. The range-based `for` works correctly even if the
+    // current entry is removed from the queue during iteration.
+
+    Message::Iterator begin(void);
+    Message::Iterator end(void) { return Message::Iterator(); }
+
+    Message::ConstIterator begin(void) const;
+    Message::ConstIterator end(void) const { return Message::ConstIterator(); }
 
 private:
     uint8_t PrevPriority(uint8_t aPriority) const
@@ -1449,7 +1554,12 @@ private:
         return (aPriority == Message::kNumPriorities - 1) ? 0 : (aPriority + 1);
     }
 
-    Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
+    const Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
+
+    Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel)
+    {
+        return AsNonConst(AsConst(this)->FindFirstNonNullTail(aStartPriorityLevel));
+    }
 
     Message *mTails[Message::kNumPriorities]; // Tail pointers associated with different priority levels.
 };

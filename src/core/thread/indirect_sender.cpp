@@ -136,18 +136,13 @@ exit:
 
 void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
 {
-    Message *message;
-    Message *nextMessage;
-
     VerifyOrExit(aChild.GetIndirectMessageCount() > 0);
 
-    for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = nextMessage)
+    for (Message &message : Get<MeshForwarder>().mSendQueue)
     {
-        nextMessage = message->GetNext();
+        message.ClearChildMask(Get<ChildTable>().GetChildIndex(aChild));
 
-        message->ClearChildMask(Get<ChildTable>().GetChildIndex(aChild));
-
-        Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*message);
+        Get<MeshForwarder>().RemoveMessageIfNoPendingTx(message);
     }
 
     aChild.SetIndirectMessage(nullptr);
@@ -186,12 +181,12 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
     {
         uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-        for (Message *message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = message->GetNext())
+        for (Message &message : Get<MeshForwarder>().mSendQueue)
         {
-            if (message->GetChildMask(childIndex))
+            if (message.GetChildMask(childIndex))
             {
-                message->ClearChildMask(childIndex);
-                message->SetDirectTransmission();
+                message.ClearChildMask(childIndex);
+                message.SetDirectTransmission();
             }
         }
 
@@ -214,19 +209,20 @@ void IndirectSender::HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMo
 
 Message *IndirectSender::FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly)
 {
-    Message *message;
+    Message *msg        = nullptr;
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    for (message = Get<MeshForwarder>().mSendQueue.GetHead(); message; message = message->GetNext())
+    for (Message &message : Get<MeshForwarder>().mSendQueue)
     {
-        if (message->GetChildMask(childIndex) &&
-            (!aSupervisionTypeOnly || (message->GetType() == Message::kTypeSupervision)))
+        if (message.GetChildMask(childIndex) &&
+            (!aSupervisionTypeOnly || (message.GetType() == Message::kTypeSupervision)))
         {
+            msg = &message;
             break;
         }
     }
 
-    return message;
+    return msg;
 }
 
 void IndirectSender::RequestMessageUpdate(Child &aChild)

@@ -113,18 +113,12 @@ exit:
 
 Error Client::Stop(void)
 {
-    Message *     message = mPendingQueries.GetHead();
-    Message *     messageToRemove;
-    QueryMetadata queryMetadata;
-
-    // Remove all pending queries.
-    while (message != nullptr)
+    for (Message &message : mPendingQueries)
     {
-        messageToRemove = message;
-        message         = message->GetNext();
+        QueryMetadata queryMetadata;
 
-        queryMetadata.ReadFrom(*messageToRemove);
-        FinalizeSntpTransaction(*messageToRemove, queryMetadata, 0, kErrorAbort);
+        queryMetadata.ReadFrom(message);
+        FinalizeSntpTransaction(message, queryMetadata, 0, kErrorAbort);
     }
 
     return mSocket.Close();
@@ -245,24 +239,21 @@ exit:
 
 Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata)
 {
-    Header   header;
-    Message *message = mPendingQueries.GetHead();
+    Message *matchedMessage = nullptr;
 
-    while (message != nullptr)
+    for (Message &message : mPendingQueries)
     {
         // Read originate timestamp.
-        aQueryMetadata.ReadFrom(*message);
+        aQueryMetadata.ReadFrom(message);
 
         if (aQueryMetadata.mTransmitTimestamp == aResponseHeader.GetOriginateTimestampSeconds())
         {
-            ExitNow();
+            matchedMessage = &message;
+            break;
         }
-
-        message = message->GetNext();
     }
 
-exit:
-    return message;
+    return matchedMessage;
 }
 
 void Client::FinalizeSntpTransaction(Message &            aQuery,
@@ -288,36 +279,32 @@ void Client::HandleRetransmissionTimer(void)
     TimeMilli        now      = TimerMilli::GetNow();
     TimeMilli        nextTime = now.GetDistantFuture();
     QueryMetadata    queryMetadata;
-    Message *        message;
-    Message *        nextMessage;
     Ip6::MessageInfo messageInfo;
 
-    for (message = mPendingQueries.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mPendingQueries)
     {
-        nextMessage = message->GetNext();
-
-        queryMetadata.ReadFrom(*message);
+        queryMetadata.ReadFrom(message);
 
         if (now >= queryMetadata.mTransmissionTime)
         {
             if (queryMetadata.mRetransmissionCount >= kMaxRetransmit)
             {
                 // No expected response.
-                FinalizeSntpTransaction(*message, queryMetadata, 0, kErrorResponseTimeout);
+                FinalizeSntpTransaction(message, queryMetadata, 0, kErrorResponseTimeout);
                 continue;
             }
 
             // Increment retransmission counter and timer.
             queryMetadata.mRetransmissionCount++;
             queryMetadata.mTransmissionTime = now + kResponseTimeout;
-            queryMetadata.UpdateIn(*message);
+            queryMetadata.UpdateIn(message);
 
             // Retransmit
             messageInfo.SetPeerAddr(queryMetadata.mDestinationAddress);
             messageInfo.SetPeerPort(queryMetadata.mDestinationPort);
             messageInfo.SetSockAddr(queryMetadata.mSourceAddress);
 
-            SendCopy(*message, messageInfo);
+            SendCopy(message, messageInfo);
         }
 
         if (nextTime > queryMetadata.mTransmissionTime)
