@@ -1649,6 +1649,7 @@ class OpenThreadTHCI(object):
             False: fail to remove the prefix entry from border router
         """
         print('%s call removeRouterPrefix' % self)
+        assert(ipaddress.IPv6Network(prefixEntry.decode()))
         cmd = 'prefix remove %s/64' % prefixEntry
         print(cmd)
         if self.__executeCommand(cmd)[-1] == 'Done':
@@ -1688,6 +1689,7 @@ class OpenThreadTHCI(object):
         """
         print('%s call configBorderRouter' % self)
         assert TESTHARNESS_VERSION == TESTHARNESS_1_2 or P_dp == 0
+        assert(ipaddress.IPv6Network(P_Prefix.decode()))
 
         # turn off default domain prefix if configBorderRouter is called before joining network
         if TESTHARNESS_VERSION == TESTHARNESS_1_2 and P_dp == 0 and not self.__isOpenThreadRunning():
@@ -1858,6 +1860,7 @@ class OpenThreadTHCI(object):
             False: fail to configure the border router with a given external route prefix
         """
         print('%s call configExternalRouter' % self)
+        assert(ipaddress.IPv6Network(P_Prefix.decode()))
         prf = ''
         stable = ''
         if R_Preference == 1:
