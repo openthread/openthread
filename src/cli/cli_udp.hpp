@@ -55,7 +55,7 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutputContext The CLI console output context.
+     * @param[in]  aOutput The CLI console output context.
      *
      */
     explicit UdpExample(Output &aOutput);

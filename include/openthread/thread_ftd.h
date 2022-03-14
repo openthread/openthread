@@ -605,7 +605,7 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc);
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aPskcRef    Key Reference to the new Thread PSKc.
+ * @param[in]  aKeyRef     Key Reference to the new Thread PSKc.
  *
  * @retval OT_ERROR_NONE           Successfully set the Thread PSKc.
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.

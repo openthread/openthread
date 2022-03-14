@@ -310,7 +310,7 @@ public:
      * @retval FALSE if Network Data does not contains all the same entries as in @p aCompare for @p aRloc16.
      *
      */
-    bool ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRloc16) const;
+    bool ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const;
 
     /**
      * This method provides the next server RLOC16 in the Thread Network Data.

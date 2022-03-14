@@ -734,7 +734,7 @@ void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled);
  * when it is about to add a SLAAC address based on a prefix. Its boolean return value determines whether the address
  * is filtered (not added) or not.
  *
- * @param[in] aInstacne   A pointer to an OpenThread instance.
+ * @param[in] aInstance   A pointer to an OpenThread instance.
  * @param[in] aPrefix     A pointer to prefix for which SLAAC address is about to be added.
  *
  * @retval TRUE    Indicates that the SLAAC address based on the prefix should be filtered and NOT added.

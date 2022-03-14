@@ -111,7 +111,7 @@ public:
     /**
      * Set the Jam Detection RSSI Threshold (in dBm).
      *
-     * @param[in]  aRssiThreshold  The RSSI threshold.
+     * @param[in]  aThreshold  The RSSI threshold.
      *
      */
     void SetRssiThreshold(int8_t aThreshold);

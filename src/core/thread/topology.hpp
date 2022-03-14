@@ -694,7 +694,7 @@ public:
     /**
      * This method adds a new LinkMetrics::SeriesInfo to the neighbor's list.
      *
-     * @param[in]    A reference to the new SeriesInfo.
+     * @param[in]  aSeriesInfo  A reference to the new SeriesInfo.
      *
      */
     void AddForwardTrackingSeriesInfo(LinkMetrics::SeriesInfo &aSeriesInfo);
@@ -1435,7 +1435,7 @@ public:
     /**
      * This method sets the CSL clock accuracy of this router.
      *
-     * @param[in]  aCost  The CSL clock accuracy of this router.
+     * @param[in]  aCslClockAccuracy  The CSL clock accuracy of this router.
      *
      */
     void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
@@ -1451,7 +1451,7 @@ public:
     /**
      * This method sets the CSL clock uncertainty of this router.
      *
-     * @param[in]  aCost  The CSL clock uncertainty of this router.
+     * @param[in]  aCslClockUncertainty  The CSL clock uncertainty of this router.
      *
      */
     void SetCslClockUncertainty(uint8_t aCslClockUncertainty) { mCslClockUncertainty = aCslClockUncertainty; }

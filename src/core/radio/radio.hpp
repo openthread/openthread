@@ -163,8 +163,7 @@ public:
          * This method is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability. It is called from
          * `otPlatRadioEnergyScanDone()`.
          *
-         * @param[in]  aInstance           The OpenThread instance structure.
-         * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
+         * @param[in]  aMaxRssi  The maximum RSSI encountered on the scanned channel.
          *
          */
         void HandleEnergyScanDone(int8_t aMaxRssi);
@@ -476,8 +475,6 @@ public:
     /**
      * Get the current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
      *
-     * @param[in]   aInstance    A pointer to an OpenThread instance.
-     *
      * @returns The current CSL Clock Uncertainty in units of 10 us.
      *
      */
@@ -630,12 +627,11 @@ public:
      * starts/stops to collect Link Metrics data and include Vendor-Specific IE that containing the data
      * in Enhanced-ACK sent to that Probing Initiator.
      *
-     * @param[in]  aInstance    The OpenThread instance structure.
-     * @param[in]  aDataLength  Length of Link Metrics data in the Vendor-Specific IE. Per spec 4.11.3.4.4.6,
-     *                          @p aDataLength should only be 1 or 2. The probing would be disabled if `aDataLength` is
-     *                          `0`.
-     * @param[in]  aShortAddr   The short address of the the probing Initiator.
-     * @param[in]  aExtAddr     The extended source address of the probing Initiator.
+     * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2
+     *                           metrics can be specified. The probing would be disabled if @p `aLinkMetrics` is
+     *                           bitwise 0.
+     * @param[in]  aShortAddress The short address of the the probing Initiator.
+     * @param[in]  aExtAddress   The extended source address of the probing Initiator.
      *
      * @retval kErrorNone            Successfully enable/disable or update Enhanced-ACK Based Probing for a specific
      *                               Initiator.

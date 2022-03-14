@@ -78,7 +78,7 @@ public:
     /**
      * This method sets the Joiner UDP Port.
      *
-     * @param[in]  The Joiner UDP Port number.
+     * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
      *
      */
     void SetJoinerUdpPort(uint16_t aJoinerUdpPort);

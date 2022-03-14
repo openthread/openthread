@@ -827,7 +827,7 @@ public:
     /**
      * This method sets the Border Agent Locator value.
      *
-     * @param[in]  aBorderAgentLocator  The Border Agent Locator value.
+     * @param[in]  aLocator  The Border Agent Locator value.
      *
      */
     void SetBorderAgentLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
@@ -930,7 +930,7 @@ public:
     /**
      * This method sets the Commissioner Session ID value.
      *
-     * @param[in]  aCommissionerSessionId  The Commissioner Session ID value.
+     * @param[in]  aSessionId  The Commissioner Session ID value.
      *
      */
     void SetCommissionerSessionId(uint16_t aSessionId) { mSessionId = HostSwap16(aSessionId); }
@@ -1500,7 +1500,7 @@ public:
     /**
      * This method sets the Channel Mask Entries.
      *
-     * @param[in]  aMask  The Channel Mask value.
+     * @param[in]  aChannelMask  The Channel Mask value.
      *
      */
     void SetChannelMask(uint32_t aChannelMask);

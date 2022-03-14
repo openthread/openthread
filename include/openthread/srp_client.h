@@ -160,7 +160,7 @@ typedef struct otSrpClientService
  *
  * @param[in] aError            The error (see above).
  * @param[in] aHostInfo         A pointer to host info.
- * @param[in] aService          The head of linked-list containing all services (excluding the ones removed). NULL if
+ * @param[in] aServices         The head of linked-list containing all services (excluding the ones removed). NULL if
  *                              the list is empty.
  * @param[in] aRemovedServices  The head of linked-list containing all removed services. NULL if the list is empty.
  * @param[in] aContext          A pointer to an arbitrary context (provided when callback was registered).
@@ -180,9 +180,9 @@ typedef void (*otSrpClientCallback)(otError                    aError,
  * This callback is invoked when auto-start mode is enabled and the SRP client is either automatically started or
  * stopped.
  *
- * @param[in] aServerSockAddress   A non-NULL pointer indicates SRP server was started and pointer will give the
- *                                 selected server socket address. A NULL pointer indicates SRP server was stopped.
- * @param[in] aContext             A pointer to an arbitrary context (provided when callback was registered).
+ * @param[in] aServerSockAddr   A non-NULL pointer indicates SRP server was started and pointer will give the
+ *                              selected server socket address. A NULL pointer indicates SRP server was stopped.
+ * @param[in] aContext          A pointer to an arbitrary context (provided when callback was registered).
  *
  */
 typedef void (*otSrpClientAutoStartCallback)(const otSockAddr *aServerSockAddr, void *aContext);
@@ -408,15 +408,15 @@ otError otSrpClientSetHostName(otInstance *aInstance, const char *aName);
  * request from an earlier call to `otSrpClientRemoveHostAndServices()` and host info still being in  either
  * `STATE_TO_REMOVE` or `STATE_REMOVING` states).
  *
- * The host IPv6 address array pointed to by @p aAddresses MUST persist and remain unchanged after returning from this
- * function (with `OT_ERROR_NONE`). OpenThread will save the pointer to the array.
+ * The host IPv6 address array pointed to by @p aIp6Addresses MUST persist and remain unchanged after returning from
+ * this function (with `OT_ERROR_NONE`). OpenThread will save the pointer to the array.
  *
  * After a successful call to this function, `otSrpClientCallback` will be called to report the status of the address
  * registration with SRP server.
  *
  * @param[in] aInstance           A pointer to the OpenThread instance.
- * @param[in] aAddresses          A pointer to the an array containing the host IPv6 addresses.
- * @param[in] aNumAddresses       The number of addresses in the @p aAddresses array.
+ * @param[in] aIp6Addresses       A pointer to the an array containing the host IPv6 addresses.
+ * @param[in] aNumAddresses       The number of addresses in the @p aIp6Addresses array.
  *
  * @retval OT_ERROR_NONE            The host IPv6 address list change started successfully. The `otSrpClientCallback`
  *                                  will be called to report the status of registering addresses with server.
