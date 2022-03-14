@@ -645,21 +645,21 @@ bool Tcp::CanBind(const SockAddr &aSockName)
     uint16_t port    = HostSwap16(aSockName.mPort);
     bool     allowed = false;
 
-    for (Endpoint *endpoint = mEndpoints.GetHead(); endpoint != nullptr; endpoint = endpoint->GetNext())
+    for (Endpoint &endpoint : mEndpoints)
     {
-        struct tcpcb *tp = &endpoint->GetTcb();
+        struct tcpcb *tp = &endpoint.GetTcb();
 
         if (tp->lport == port)
         {
             VerifyOrExit(!aSockName.GetAddress().IsUnspecified());
             VerifyOrExit(!reinterpret_cast<Address *>(&tp->laddr)->IsUnspecified());
-            VerifyOrExit(memcmp(&endpoint->GetTcb().laddr, &aSockName.mAddress, sizeof(tp->laddr)) != 0);
+            VerifyOrExit(memcmp(&endpoint.GetTcb().laddr, &aSockName.mAddress, sizeof(tp->laddr)) != 0);
         }
     }
 
-    for (Listener *listener = mListeners.GetHead(); listener != nullptr; listener = listener->GetNext())
+    for (Listener &listener : mListeners)
     {
-        struct tcpcb_listen *tpl = &listener->GetTcbListen();
+        struct tcpcb_listen *tpl = &listener.GetTcbListen();
 
         if (tpl->lport == port)
         {
