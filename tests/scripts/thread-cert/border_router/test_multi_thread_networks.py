@@ -108,6 +108,9 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('router', router2.get_state())
 
+        # Wait for network to stabilize
+        self.simulator.go(15)
+
         self.collect_ipaddrs()
 
         logging.info("BR1     addrs: %r", br1.get_addrs())
