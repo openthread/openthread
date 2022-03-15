@@ -222,7 +222,7 @@ public:
      * This method removes/unregisters a previously registered `otStateChangedCallback` handler.
      *
      * @param[in]  aCallback     A pointer to the callback function pointer.
-     * @param[in]  aContex       A pointer to arbitrary context information.
+     * @param[in]  aContext      A pointer to arbitrary context information.
      *
      */
     void RemoveCallback(otStateChangedCallback aCallback, void *aContext);

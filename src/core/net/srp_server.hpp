@@ -272,8 +272,6 @@ public:
         /**
          * This method returns the priority of the service instance.
          *
-         * @param[in]  aService  A pointer to the SRP service.
-         *
          * @returns  The priority of the service.
          *
          */

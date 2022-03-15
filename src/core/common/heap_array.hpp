@@ -354,8 +354,6 @@ public:
      *
      * This method will invoke the `Type` destructor on the removed element.
      *
-     * @returns A pointer to the removed element from the array, or `nullptr` if array is empty.
-     *
      */
     void PopBack(void)
     {

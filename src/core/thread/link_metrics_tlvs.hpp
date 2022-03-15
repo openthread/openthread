@@ -329,7 +329,7 @@ public:
     /**
      * This method sets the Link Metrics Type ID.
      *
-     * @param[in]  aMetricsTypeID  The Link Metrics Type ID to set.
+     * @param[in]  aMetricsTypeId  The Link Metrics Type ID to set.
      *
      */
     void SetMetricsTypeId(TypeIdFlags aMetricsTypeId)

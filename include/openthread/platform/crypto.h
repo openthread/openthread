@@ -374,7 +374,7 @@ otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
  *
  * @param[in]  aContext           Operation context for HKDF operation.
  * @param[in]  aSalt              Pointer to the Salt for HKDF.
- * @param[in]  aInfoLength        length of Salt.
+ * @param[in]  aSaltLength        Length of Salt.
  * @param[in]  aInputKey          Pointer to the input key.
  *
  * @retval OT_ERROR_NONE          HKDF Extract was successful.
@@ -455,7 +455,6 @@ otError otPlatCryptoSha256Update(otCryptoContext *aContext, const void *aBuf, ui
  * Finish SHA-256 operation.
  *
  * @param[in]  aContext           Context for SHA-256 operation.
- * @param[in]  aContextSize       Context size SHA-256 operation.
  * @param[in]  aHash              A pointer to the output buffer, where hash needs to be stored.
  * @param[in]  aHashSize          The length of @p aHash in bytes.
  *

@@ -478,7 +478,7 @@ public:
         /**
          * This method sets the Thread device mode.
          *
-         * @param[in] aRloc16  The Thread device mode.
+         * @param[in] aMode  The Thread device mode.
          *
          */
         void SetMode(uint8_t aMode) { mMode = aMode; }
@@ -920,7 +920,7 @@ public:
      *
      * @tparam EntryType              The settings entry type.
      *
-     * @param[in] aEntry              The entry value to be saved.
+     * @param[in] aValue              The entry value to be saved.
      *
      * @retval kErrorNone             Successfully saved Network Info in settings.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.

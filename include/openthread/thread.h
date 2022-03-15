@@ -872,7 +872,7 @@ void otThreadResetMleCounters(otInstance *aInstance);
 /**
  * This function pointer is called every time an MLE Parent Response message is received.
  *
- * @param[in]  aStats    pointer to a location on stack holding the stats data.
+ * @param[in]  aInfo     A pointer to a location on stack holding the stats data.
  * @param[in]  aContext  A pointer to callback client-specific context.
  *
  */

@@ -1126,8 +1126,8 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2 metrics
  *                           can be specified. The probing would be disabled if @p `aLinkMetrics` is bitwise 0.
- * @param[in]  aShortAddr    The short address of the Probing Initiator.
- * @param[in]  aExtAddr      The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
+ * @param[in]  aShortAddress The short address of the Probing Initiator.
+ * @param[in]  aExtAddress   The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
  *
  * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
  * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `NULL`.

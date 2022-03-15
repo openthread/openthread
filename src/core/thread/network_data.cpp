@@ -328,7 +328,7 @@ bool NetworkData::ContainsService(const ServiceConfig &aService) const
     return contains;
 }
 
-bool NetworkData::ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRloc16) const
+bool NetworkData::ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const
 {
     bool     contains = true;
     Iterator iterator = kIteratorInit;
@@ -344,7 +344,7 @@ bool NetworkData::ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRlo
         config.mExternalRoute = &route;
         config.mService       = &service;
 
-        SuccessOrExit(aComapre.Iterate(iterator, aRloc16, config));
+        SuccessOrExit(aCompare.Iterate(iterator, aRloc16, config));
 
         if (((config.mOnMeshPrefix != nullptr) && !ContainsOnMeshPrefix(*config.mOnMeshPrefix)) ||
             ((config.mExternalRoute != nullptr) && !ContainsExternalRoute(*config.mExternalRoute)) ||

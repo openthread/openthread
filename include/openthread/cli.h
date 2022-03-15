@@ -70,9 +70,9 @@ typedef struct otCliCommand
 /**
  * This function pointer is called to notify about Console output.
  *
- * @param[in]  aBuf        A pointer to a buffer with an output.
- * @param[in]  aBufLength  A length of the output data stored in the buffer.
  * @param[out] aContext    A user context pointer.
+ * @param[in]  aFormat     The format string.
+ * @param[in]  aArguments  The format string arguments.
  *
  * @returns                Number of bytes written by the callback.
  *

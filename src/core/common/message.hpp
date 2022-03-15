@@ -1077,7 +1077,7 @@ public:
      * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4
      * frame fragments each received with a different signal strength.
      *
-     * @param[in] aLQI A new LQI value (has no unit) to be added to average.
+     * @param[in] aLqi A new LQI value (has no unit) to be added to average.
      *
      */
     void AddLqi(uint8_t aLqi) { GetMetadata().mLqiAverager.Add(aLqi); }

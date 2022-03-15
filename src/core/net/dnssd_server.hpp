@@ -147,8 +147,8 @@ public:
     /**
      * This method acquires the DNS-SD query type and name for a specific query.
      *
-     * @param[in]   aQuery            The query pointer.
-     * @param[out]  aNameOutput       The name output buffer.
+     * @param[in]   aQuery      The query pointer.
+     * @param[out]  aName       The name output buffer.
      *
      * @returns The DNS-SD query type.
      *

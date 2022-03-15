@@ -93,7 +93,7 @@ public:
     /**
      * This method sets the IE Element Id.
      *
-     * @param[in]  aID  The IE Element Id.
+     * @param[in]  aId  The IE Element Id.
      *
      */
     void SetId(uint16_t aId)
@@ -155,7 +155,7 @@ public:
     /**
      * This method returns the Vendor OUI.
      *
-     * @returns the Vendor OUI.
+     * @returns The Vendor OUI.
      *
      */
     uint32_t GetVendorOui(void) const { return ReadUint24(mOui); }
@@ -171,7 +171,7 @@ public:
     /**
      * This method returns the Vendor IE sub-type.
      *
-     * @returns the Vendor IE sub-type.
+     * @returns The Vendor IE sub-type.
      *
      */
     uint8_t GetSubType(void) const { return mSubType; }
@@ -179,7 +179,7 @@ public:
     /**
      * This method sets the Vendor IE sub-type.
      *
-     * @param[in] the Vendor IE sub-type.
+     * @param[in]  aSubType  The Vendor IE sub-type.
      *
      */
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
@@ -364,8 +364,8 @@ public:
     /**
      * This method initializes the MAC header.
      *
-     * @param[in]  aFcf          The Frame Control field.
-     * @param[in]  aSecurityCtl  The Security Control field.
+     * @param[in]  aFcf              The Frame Control field.
+     * @param[in]  aSecurityControl  The Security Control field.
      *
      */
     void InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl);
@@ -663,7 +663,7 @@ public:
     /**
      * This method gets the Key Identifier Mode.
      *
-     * @param[out]  aSecurityLevel  The Key Identifier Mode.
+     * @param[out]  aKeyIdMode  The Key Identifier Mode.
      *
      * @retval kErrorNone  Successfully retrieved the Key Identifier Mode.
      *

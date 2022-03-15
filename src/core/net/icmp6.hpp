@@ -307,9 +307,9 @@ public:
     otIcmp6EchoMode GetEchoMode(void) const { return mEchoMode; }
 
     /**
-     * This method sets whether or not ICMPv6 Echo processing is enabled.
+     * Sets the ICMPv6 echo mode.
      *
-     * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
+     * @param[in]  aMode  The ICMPv6 echo mode.
      *
      */
     void SetEchoMode(otIcmp6EchoMode aMode) { mEchoMode = aMode; }

@@ -1086,9 +1086,9 @@ protected:
      * Frame Counter TLV is present in the message, its value is read into @p aMleFrameCounter. If the MLE Frame
      * Counter TLV is not present in the message, then @p aMleFrameCounter is set to same value as @p aLinkFrameCounter.
      *
-     * @param[in]  aMesssage           A reference to the message to read from.
-     * @param[out] aLinkFrameCounter   A reference to an `uint32_t` to output the Link Frame Counter.
-     * @param[out] aMleFrameCounter    A reference to an `uint32_t` to output the MLE Frame Counter.
+     * @param[in]  aMessage           A reference to the message to read from.
+     * @param[out] aLinkFrameCounter  A reference to an `uint32_t` to output the Link Frame Counter.
+     * @param[out] aMleFrameCounter   A reference to an `uint32_t` to output the MLE Frame Counter.
      *
      * @retval kErrorNone       Successfully read the counters.
      * @retval kErrorNotFound   Link Frame Counter TLV was not found in the message.

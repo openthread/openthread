@@ -391,7 +391,6 @@ public:
          * Note that this method gets the service instance label and not the full service instance name which is of the
          * form `<Instance>.<Service>.<Domain>`.
          *
-         * @param[in]  aResponse          A pointer to a response.
          * @param[in]  aIndex             The service instance record index to retrieve.
          * @param[out] aLabelBuffer       A char array to output the service instance label (MUST NOT be NULL).
          * @param[in]  aLabelBufferSize   The size of @p aLabelBuffer.
@@ -668,7 +667,6 @@ public:
      * the config for this query. In a non-`nullptr` @p aConfig, some of the fields can be left unspecified (value
      * zero). The unspecified fields are then replaced by the values from the default config.
      *
-     * @param[in]  aServerSockAddr    The server socket address.
      * @param[in]  aInstanceLabel     The service instance label.
      * @param[in]  aServiceName       The service name (together with @p aInstanceLabel form full instance name).
      * @param[in]  aCallback          A function pointer that shall be called on response reception or time-out.

@@ -301,7 +301,7 @@ public:
     /**
      * This static method converts an IP protocol number to a string.
      *
-     * @param[in] aIpPorto  An IP protocol number.
+     * @param[in] aIpProto  An IP protocol number.
      *
      * @returns The string representation of @p aIpProto.
      *
