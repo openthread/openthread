@@ -72,6 +72,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
     , mRouterAdvertisementCount(0)
+    , mLastRouterAdvertisementSendTime(TimerMilli::GetNow())
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     , mVicariousRouterSolicitTimer(aInstance, HandleVicariousRouterSolicitTimer)
 #endif
@@ -772,8 +773,15 @@ void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli)
 
 void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
 {
-    LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", aDelayMilli);
-    mRoutingPolicyTimer.FireAtIfEarlier(TimerMilli::GetNow() + aDelayMilli);
+    TimeMilli now          = TimerMilli::GetNow();
+    TimeMilli evaluateTime = now + aDelayMilli;
+    TimeMilli earlestTime  = mLastRouterAdvertisementSendTime + kMinDelayBetweenRtrAdvs;
+
+    evaluateTime = OT_MAX(evaluateTime, earlestTime);
+
+    LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", evaluateTime - now);
+
+    mRoutingPolicyTimer.FireAtIfEarlier(evaluateTime);
 }
 
 // starts sending Router Solicitations in random delay
@@ -928,6 +936,7 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
 
         if (error == kErrorNone)
         {
+            mLastRouterAdvertisementSendTime = TimerMilli::GetNow();
             LogInfo("Sent Router Advertisement on interface %u", mInfraIfIndex);
             DumpDebg("[BR-CERT] direction=send | type=RA |", buffer, bufferLength);
         }

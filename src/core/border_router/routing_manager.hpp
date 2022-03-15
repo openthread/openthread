@@ -220,6 +220,7 @@ private:
     static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;      // Max delay for initial solicitation. In sec.
     static constexpr uint32_t kRoutingPolicyEvaluationJitter = 1000; // Jitter for routing policy evaluation. In msec.
     static constexpr uint32_t kRtrSolicitationRetryDelay     = 60;   // The delay before retrying failed RS tx. In Sec.
+    static constexpr uint32_t kMinDelayBetweenRtrAdvs        = 3000; // Min delay (msec) between consecutive RAs.
 
     // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
     // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
@@ -413,7 +414,8 @@ private:
     TimerMilli mDiscoveredPrefixInvalidTimer;
     TimerMilli mDiscoveredPrefixStaleTimer;
 
-    uint32_t mRouterAdvertisementCount;
+    uint32_t  mRouterAdvertisementCount;
+    TimeMilli mLastRouterAdvertisementSendTime;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     TimerMilli mVicariousRouterSolicitTimer;
