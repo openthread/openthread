@@ -91,6 +91,18 @@ otError otDnsClientResolveAddress(otInstance *            aInstance,
                                                                    AsCoreTypePtr(aConfig));
 }
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+otError otDnsClientResolveIp4Address(otInstance *            aInstance,
+                                     const char *            aHostName,
+                                     otDnsAddressCallback    aCallback,
+                                     void *                  aContext,
+                                     const otDnsQueryConfig *aConfig)
+{
+    return AsCoreType(aInstance).Get<Dns::Client>().ResolveIp4Address(aHostName, aCallback, aContext,
+                                                                      AsCoreTypePtr(aConfig));
+}
+#endif
+
 otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
                                         char *                      aNameBuffer,
                                         uint16_t                    aNameBufferSize)

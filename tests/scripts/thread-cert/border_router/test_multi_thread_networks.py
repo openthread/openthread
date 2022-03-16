@@ -108,6 +108,9 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('router', router2.get_state())
 
+        # Wait for network to stabilize
+        self.simulator.go(15)
+
         self.collect_ipaddrs()
 
         logging.info("BR1     addrs: %r", br1.get_addrs())
@@ -115,22 +118,22 @@ class MultiThreadNetworks(thread_cert.TestCase):
         logging.info("BR2     addrs: %r", br2.get_addrs())
         logging.info("ROUTER2 addrs: %r", router2.get_addrs())
 
-        self.assertTrue(len(br1.get_prefixes()) == 1)
-        self.assertTrue(len(router1.get_prefixes()) == 1)
-        self.assertTrue(len(br2.get_prefixes()) == 1)
-        self.assertTrue(len(router2.get_prefixes()) == 1)
+        self.assertTrue(len(br1.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(router1.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(br2.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(router2.get_netdata_omr_prefixes()) == 1)
 
-        br1_omr_prefix = br1.get_omr_prefix()
-        br2_omr_prefix = br2.get_omr_prefix()
+        br1_omr_prefix = br1.get_br_omr_prefix()
+        br2_omr_prefix = br2.get_br_omr_prefix()
 
         self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
 
         # Each BR should independently register an external route for the on-link prefix
         # and OMR prefix in another Thread Network.
-        self.assertTrue(len(br1.get_routes()) == 2)
-        self.assertTrue(len(router1.get_routes()) == 2)
-        self.assertTrue(len(br2.get_routes()) == 2)
-        self.assertTrue(len(router2.get_routes()) == 2)
+        self.assertTrue(len(br1.get_netdata_non_nat64_prefixes()) == 2)
+        self.assertTrue(len(router1.get_netdata_non_nat64_prefixes()) == 2)
+        self.assertTrue(len(br2.get_netdata_non_nat64_prefixes()) == 2)
+        self.assertTrue(len(router2.get_netdata_non_nat64_prefixes()) == 2)
 
         br1_external_routes = br1.get_routes()
         br2_external_routes = br2.get_routes()

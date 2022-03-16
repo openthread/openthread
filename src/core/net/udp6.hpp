@@ -306,8 +306,8 @@ public:
         /**
          * This constructor initializes the UDP receiver.
          *
-         * @param[in]   aUdpHandler     A pointer to the function to handle UDP message.
-         * @param[in]   aContext        A pointer to arbitrary context information.
+         * @param[in]   aHandler     A pointer to the function to handle UDP message.
+         * @param[in]   aContext     A pointer to arbitrary context information.
          *
          */
         Receiver(otUdpHandler aHandler, void *aContext)

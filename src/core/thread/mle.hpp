@@ -38,6 +38,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
@@ -1085,9 +1086,9 @@ protected:
      * Frame Counter TLV is present in the message, its value is read into @p aMleFrameCounter. If the MLE Frame
      * Counter TLV is not present in the message, then @p aMleFrameCounter is set to same value as @p aLinkFrameCounter.
      *
-     * @param[in]  aMesssage           A reference to the message to read from.
-     * @param[out] aLinkFrameCounter   A reference to an `uint32_t` to output the Link Frame Counter.
-     * @param[out] aMleFrameCounter    A reference to an `uint32_t` to output the MLE Frame Counter.
+     * @param[in]  aMessage           A reference to the message to read from.
+     * @param[out] aLinkFrameCounter  A reference to an `uint32_t` to output the Link Frame Counter.
+     * @param[out] aMleFrameCounter   A reference to an `uint32_t` to output the MLE Frame Counter.
      *
      * @retval kErrorNone       Successfully read the counters.
      * @retval kErrorNotFound   Link Frame Counter TLV was not found in the message.
@@ -1453,7 +1454,7 @@ protected:
      */
     Error AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     /**
      * This static method emits a log message with an IPv6 address.
      *
@@ -1477,9 +1478,9 @@ protected:
 #else
     static void Log(MessageAction, MessageType, const Ip6::Address &) {}
     static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t) {}
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     /**
      * This static method emits a log message indicating an error in processing of a message.
      *
@@ -1506,7 +1507,7 @@ protected:
 #else
     static void LogProcessError(MessageType, Error) {}
     static void LogSendError(MessageType, Error) {}
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_WARN)
 
     /**
      * This method triggers MLE Announce on previous channel after the Thread device successfully
@@ -1526,7 +1527,7 @@ protected:
      */
     bool IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     /**
      * This method converts an `AttachMode` enumeration value into a human-readable string.
      *
@@ -1787,6 +1788,7 @@ private:
     void        HandleAttachTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
     void        HandleDelayedResponseTimer(void);
+    void        SendDelayedResponse(Message &aMessage, const DelayedResponseMetadata &aMetadata);
     static void HandleMessageTransmissionTimer(Timer &aTimer);
     void        HandleMessageTransmissionTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -1830,11 +1832,13 @@ private:
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, AnnounceMode aMode);
     void     SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);
-    void     RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination);
+    void RemoveDelayedMessage(Message::SubType aSubType, MessageType aMessageType, const Ip6::Address *aDestination);
+    void RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     Error SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus);
 #endif
     uint32_t Reattach(void);
+    bool     HasAcceptableParentCandidate(void) const;
 
     bool IsBetterParent(uint16_t               aRloc16,
                         uint8_t                aLinkQuality,
@@ -1861,7 +1865,7 @@ private:
     void        UpdateParentSearchState(void);
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     static void        LogError(MessageAction aAction, MessageType aType, Error aError);
     static const char *MessageActionToString(MessageAction aAction);
     static const char *MessageTypeToString(MessageType aType);

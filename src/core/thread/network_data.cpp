@@ -38,7 +38,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
@@ -46,6 +46,8 @@
 
 namespace ot {
 namespace NetworkData {
+
+RegisterLogModule("NetworkData");
 
 Error NetworkData::CopyNetworkData(Type aType, uint8_t *aData, uint8_t &aDataLength) const
 {
@@ -326,7 +328,7 @@ bool NetworkData::ContainsService(const ServiceConfig &aService) const
     return contains;
 }
 
-bool NetworkData::ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRloc16) const
+bool NetworkData::ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const
 {
     bool     contains = true;
     Iterator iterator = kIteratorInit;
@@ -342,7 +344,7 @@ bool NetworkData::ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRlo
         config.mExternalRoute = &route;
         config.mService       = &service;
 
-        SuccessOrExit(aComapre.Iterate(iterator, aRloc16, config));
+        SuccessOrExit(aCompare.Iterate(iterator, aRloc16, config));
 
         if (((config.mOnMeshPrefix != nullptr) && !ContainsOnMeshPrefix(*config.mOnMeshPrefix)) ||
             ((config.mExternalRoute != nullptr) && !ContainsExternalRoute(*config.mExternalRoute)) ||
@@ -665,7 +667,7 @@ Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
     messageInfo.SetPeerPort(Tmf::kUdpPort);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
 
-    otLogInfoNetData("Sent server data notification");
+    LogInfo("Sent server data notification");
 
 exit:
     FreeMessageOnError(message, error);

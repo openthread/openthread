@@ -37,10 +37,11 @@
 
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 
 namespace ot {
 namespace BackboneRouter {
+
+RegisterLogModule("BbrLeader");
 
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -81,24 +82,24 @@ exit:
     return error;
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const
 {
     OT_UNUSED_VARIABLE(aConfig);
 
-    otLogInfoBbr("PBBR state: %s", StateToString(aState));
+    LogInfo("PBBR state: %s", StateToString(aState));
 
     if (aState != kStateRemoved && aState != kStateNone)
     {
-        otLogInfoBbr("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
-                     aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
+        LogInfo("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
+                aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
     }
 }
 
 void Leader::LogDomainPrefix(DomainPrefixState aState, const Ip6::Prefix &aPrefix) const
 {
-    otLogInfoBbr("Domain Prefix: %s, state: %s", aPrefix.ToString().AsCString(), DomainPrefixStateToString(aState));
+    LogInfo("Domain Prefix: %s, state: %s", aPrefix.ToString().AsCString(), DomainPrefixStateToString(aState));
 }
 
 const char *Leader::StateToString(State aState)
@@ -141,7 +142,7 @@ const char *Leader::DomainPrefixStateToString(DomainPrefixState aState)
     return kPrefixStateStrings[aState];
 }
 
-#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Leader::Update(void)
 {
@@ -204,7 +205,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
 
         if (config.mMlrTimeout != origMlrTimeout)
         {
-            otLogNoteBbr("Leader MLR Timeout is normalized from %u to %u", origMlrTimeout, config.mMlrTimeout);
+            LogNote("Leader MLR Timeout is normalized from %u to %u", origMlrTimeout, config.mMlrTimeout);
         }
     }
 

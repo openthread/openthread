@@ -81,7 +81,7 @@ tcp_setpersist(struct tcpcb *tp)
 
 	tp->t_flags &= ~TF_PREVVALID;
 	if (tcp_timer_active(tp, TT_REXMT))
-		printf("PANIC: tcp_setpersist: retransmit pending\n");
+		tcplp_sys_panic("PANIC: tcp_setpersist: retransmit pending");
 	/*
 	 * Start/restart persistance timer.
 	 */
@@ -142,7 +142,7 @@ tcp_output(struct tcpcb *tp)
 	}
 	/* samkumar: This would be printed once per _window_ that is transmitted. */
 #ifdef INSTRUMENT_TCP
-	printf("TCP output %u %d %d\n", (unsigned int) get_micros(), (int) tp->snd_wnd, (int) tp->snd_cwnd);
+	tcplp_sys_log("TCP output %u %d %d", (unsigned int) tcplp_sys_get_millis(), (int) tp->snd_wnd, (int) tp->snd_cwnd);
 #endif
 
 again:
@@ -898,7 +898,7 @@ send:
 			otLinkedBuffer* curr;
 			int rv = lbuf_getrange(&tp->sendbuf, off, len, &start, &start_offset, &end, &end_offset);
 			size_t message_offset = otMessageGetOffset(message) + sizeof(struct tcphdr) + optlen;
-			KASSERT(rv == 0, ("Reading send buffer out of range!\n"));
+			KASSERT(rv == 0, ("Reading send buffer out of range!"));
 			for (curr = start; curr != end->mNext; curr = curr->mNext) {
 				const uint8_t* data_to_copy = curr->mData;
 				size_t length_to_copy = curr->mLength;
@@ -1258,7 +1258,7 @@ timer:
 	                        tcp_timer_activate(tp, TT_REXMT, tp->t_rxtcur);
 			tp->snd_cwnd = tp->t_maxseg;
 #ifdef INSTRUMENT_TCP
-			printf("TCP ALLOCFAIL %u %d\n", (unsigned int) get_micros(), (int) tp->snd_cwnd);
+			tcplp_sys_log("TCP ALLOCFAIL %u %d", (unsigned int) tcplp_sys_get_millis(), (int) tp->snd_cwnd);
 #endif
 			return (0);
 		case EMSGSIZE:
@@ -1454,7 +1454,7 @@ tcp_addoptions(struct tcpopt *to, uint8_t *optp)
 			break;
 			}
 		default:
-			printf("PANIC: %s: unknown TCP option type", __func__);
+			tcplp_sys_panic("PANIC: %s: unknown TCP option type", __func__);
 			break;
 		}
 	}

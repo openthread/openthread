@@ -1,5 +1,6 @@
+#!/usr/bin/expect -f
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,4 +27,67 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-configure_file(${PROJECT_SOURCE_DIR}/etc/cmake/openthread-config-generic.h.in ${PROJECT_BINARY_DIR}/etc/cmake/openthread-config-generic.h)
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+setup_two_nodes
+
+switch_node 1
+send "tcp init\n"
+expect_line "Done"
+
+switch_node 2
+send "tcp init\n"
+expect_line "Done"
+set addr_2 [get_ipaddr mleid]
+send "tcp listen :: 30000\n"
+expect_line "Done"
+
+switch_node 1
+set addr_1 [get_ipaddr mleid]
+send "tcp bind $addr_1 25000\n"
+expect_line "Done"
+send "tcp connect $addr_2 30000\n"
+expect_line "Done"
+expect "TCP: Connection established"
+
+switch_node 2
+expect "Accepted connection from \\\[$addr_1\\\]:25000"
+expect "TCP: Connection established"
+
+switch_node 1
+send "tcp send hello\n"
+expect_line "Done"
+
+switch_node 2
+expect "TCP: Received 5 bytes: hello"
+send "tcp send world\n"
+expect_line "Done"
+
+switch_node 1
+expect "TCP: Received 5 bytes: world"
+send "tcp sendend\n"
+expect_line "Done"
+send "tcp send more\n"
+expect_line "Error 1: Failed"
+
+switch_node 2
+expect "TCP: Reached end of stream"
+send "tcp send goodbye\n"
+expect_line "Done"
+
+switch_node 1
+expect "TCP: Received 7 bytes: goodbye"
+
+switch_node 2
+send "tcp sendend\n"
+expect_line "Done"
+expect "TCP: Disconnected"
+
+switch_node 1
+expect "TCP: Reached end of stream"
+expect "TCP: Entered TIME-WAIT state"
+set timeout 130
+expect "TCP: Disconnected"
+
+dispose_all

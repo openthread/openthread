@@ -38,12 +38,14 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Utils {
+
+RegisterLogModule("JamDetector");
 
 JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -73,7 +75,7 @@ Error JamDetector::Start(Handler aHandler, void *aContext)
     mContext = aContext;
     mEnabled = true;
 
-    otLogInfoUtil("JamDetector - Started");
+    LogInfo("Started");
 
     CheckState();
 
@@ -92,7 +94,7 @@ Error JamDetector::Stop(void)
 
     mTimer.Stop();
 
-    otLogInfoUtil("JamDetector - Stopped");
+    LogInfo("Stopped");
 
 exit:
     return error;
@@ -128,7 +130,7 @@ exit:
 void JamDetector::SetRssiThreshold(int8_t aThreshold)
 {
     mRssiThreshold = aThreshold;
-    otLogInfoUtil("JamDetector - RSSI threshold set to %d", mRssiThreshold);
+    LogInfo("RSSI threshold set to %d", mRssiThreshold);
 }
 
 Error JamDetector::SetWindow(uint8_t aWindow)
@@ -139,7 +141,7 @@ Error JamDetector::SetWindow(uint8_t aWindow)
     VerifyOrExit(aWindow <= kMaxWindow, error = kErrorInvalidArgs);
 
     mWindow = aWindow;
-    otLogInfoUtil("JamDetector - window set to %d", mWindow);
+    LogInfo("window set to %d", mWindow);
 
 exit:
     return error;
@@ -153,7 +155,7 @@ Error JamDetector::SetBusyPeriod(uint8_t aBusyPeriod)
     VerifyOrExit(aBusyPeriod <= mWindow, error = kErrorInvalidArgs);
 
     mBusyPeriod = aBusyPeriod;
-    otLogInfoUtil("JamDetector - busy period set to %d", mBusyPeriod);
+    LogInfo("busy period set to %d", mBusyPeriod);
 
 exit:
     return error;
@@ -261,7 +263,7 @@ void JamDetector::SetJamState(bool aNewState)
     {
         mJamState           = aNewState;
         shouldInvokeHandler = true;
-        otLogInfoUtil("JamDetector - jamming %s", mJamState ? "detected" : "cleared");
+        LogInfo("Jamming %s", mJamState ? "detected" : "cleared");
     }
 
     if (shouldInvokeHandler)

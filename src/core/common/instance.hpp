@@ -40,14 +40,15 @@
 #include <stdint.h>
 
 #include <openthread/heap.h>
-#include <openthread/platform/logging.h>
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 #include <openthread/platform/memory.h>
 #endif
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/error.hpp"
 #include "common/extension.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
@@ -118,9 +119,9 @@ public:
       *
       * This function must be called before any other calls on OpenThread instance.
       *
-      * @param[in]    aBuffer      The buffer for OpenThread to use for allocating the Instance.
-      * @param[inout] aBufferSize  On input, the size of `aBuffer`. On output, if not enough space for `Instance`, the
-                                   number of bytes required for `Instance`.
+      * @param[in]     aBuffer      The buffer for OpenThread to use for allocating the Instance.
+      * @param[in,out] aBufferSize  On input, the size of `aBuffer`. On output, if not enough space for `Instance`, the
+                                    number of bytes required for `Instance`.
       *
       * @returns  A pointer to the new OpenThread instance.
       *
@@ -180,14 +181,14 @@ public:
      * @returns The log level.
      *
      */
-    static otLogLevel GetLogLevel(void)
+    static LogLevel GetLogLevel(void)
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     {
         return sLogLevel;
     }
 #else
     {
-        return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
+        return static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
     }
 #endif
 
@@ -198,11 +199,7 @@ public:
      * @param[in] aLogLevel  A log level.
      *
      */
-    static void SetLogLevel(otLogLevel aLogLevel)
-    {
-        OT_ASSERT(aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE);
-        sLogLevel = aLogLevel;
-    }
+    static void SetLogLevel(LogLevel aLogLevel) { sLogLevel = aLogLevel; }
 #endif
 
     /**
@@ -395,7 +392,7 @@ private:
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    static otLogLevel sLogLevel;
+    static LogLevel sLogLevel;
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;

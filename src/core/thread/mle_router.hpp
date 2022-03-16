@@ -303,7 +303,7 @@ public:
     /**
      * This method sets the ROUTER_UPGRADE_THRESHOLD value.
      *
-     * @returns The ROUTER_UPGRADE_THRESHOLD value.
+     * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
      *
      */
     void SetRouterUpgradeThreshold(uint8_t aThreshold) { mRouterUpgradeThreshold = aThreshold; }
@@ -319,7 +319,7 @@ public:
     /**
      * This method sets the ROUTER_DOWNGRADE_THRESHOLD value.
      *
-     * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
+     * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
      *
      */
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }

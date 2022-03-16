@@ -67,7 +67,9 @@ using namespace Crypto;
 #if !OPENTHREAD_RADIO
 static mbedtls_ctr_drbg_context sCtrDrbgContext;
 static mbedtls_entropy_context  sEntropyContext;
-static constexpr uint16_t       kEntropyMinThreshold = 16;
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+static constexpr uint16_t kEntropyMinThreshold = 16;
+#endif
 #endif
 
 OT_TOOL_WEAK void otPlatCryptoInit(void)
@@ -461,7 +463,7 @@ OT_TOOL_WEAK void otPlatCryptoRandomInit(void)
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
     mbedtls_entropy_add_source(&sEntropyContext, handleMbedtlsEntropyPoll, nullptr, kEntropyMinThreshold,
                                MBEDTLS_ENTROPY_SOURCE_STRONG);
-#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+#endif
 
     mbedtls_ctr_drbg_init(&sCtrDrbgContext);
 

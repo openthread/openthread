@@ -53,6 +53,8 @@
 namespace ot {
 namespace NetworkData {
 
+RegisterLogModule("NetworkData");
+
 void LeaderBase::Reset(void)
 {
     mVersion       = Random::NonCrypto::GetUint8();
@@ -84,6 +86,29 @@ Error LeaderBase::GetServiceId(uint32_t           aEnterpriseNumber,
     }
 
 exit:
+    return error;
+}
+
+Error LeaderBase::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
+{
+    Error               error    = kErrorNotFound;
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig config;
+
+    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    {
+        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
+        {
+            continue;
+        }
+
+        if ((error == kErrorNotFound) || (config.mPreference > aConfig.mPreference))
+        {
+            aConfig = config;
+            error   = kErrorNone;
+        }
+    }
+
     return error;
 }
 
@@ -376,7 +401,7 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
     }
 #endif
 
-    otDumpDebgNetData("SetNetworkData", GetBytes(), GetLength());
+    DumpDebg("SetNetworkData", GetBytes(), GetLength());
 
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 

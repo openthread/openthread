@@ -79,7 +79,7 @@ tcp_state_change(struct tcpcb *tp, int newstate)
 	int pstate = tp->t_state;
 #endif
 #endif
-	tcplp_sys_log("Socket %p: %s --> %s\n", tp, tcpstates[tp->t_state], tcpstates[newstate]);
+	tcplp_sys_log("Socket %p: %s --> %s", tp, tcpstates[tp->t_state], tcpstates[newstate]);
 	tp->t_state = newstate;
 
 	// samkumar: may need to do other actions too, so call into the host

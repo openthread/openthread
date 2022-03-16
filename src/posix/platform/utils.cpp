@@ -37,8 +37,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openthread/logging.h>
+
 #include "common/code_utils.hpp"
-#include "common/logging.hpp"
 
 namespace ot {
 namespace Posix {

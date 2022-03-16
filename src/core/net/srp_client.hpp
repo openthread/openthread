@@ -39,6 +39,7 @@
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -421,7 +422,7 @@ public:
      * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
      * It only changes any future SRP update messages (i.e adding new services and/or refreshes of existing services).
      *
-     * @param[in] The lease interval (in seconds). If zero, the default value `kDefaultLease` would be used.
+     * @param[in] aInterval  The lease interval (in seconds). If zero, the default value `kDefaultLease` would be used.
      *
      */
     void SetLeaseInterval(uint32_t aInterval) { mLeaseInterval = GetBoundedLeaseInterval(aInterval, kDefaultLease); }
@@ -440,7 +441,8 @@ public:
      * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
      * It only changes any future SRP update messages (i.e adding new services and/or refreshes of existing services).
      *
-     * @param[in] The key lease interval (in seconds). If zero, the default value `kDefaultKeyLease` would be used.
+     * @param[in] aInterval The key lease interval (in seconds). If zero, the default value `kDefaultKeyLease` would be
+     *                      used.
      *
      */
     void SetKeyLeaseInterval(uint32_t aInterval)
@@ -575,9 +577,9 @@ public:
      * any previously registered services with the server. In this case, caller can `SetHostName()` and then request
      * `RemoveHostAndServices()` with `aSendUnregToServer` as `true`.
      *
-     * @param[in] aRemoveKeyLease     A boolean indicating whether or not the host key lease should also be removed.
-     * @param[in] aSendUnregToServer   A boolean indicating whether to send update to server when host info is not
-     *                                registered.
+     * @param[in] aShouldRemoveKeyLease  A boolean indicating whether or not the host key lease should also be removed.
+     * @param[in] aSendUnregToServer     A boolean indicating whether to send update to server when host info is not
+     *                                   registered.
      *
      * @retval kErrorNone      The removal of host and services started successfully. The `Callback` will be called
      *                         to report the status.
@@ -843,7 +845,7 @@ private:
 #endif
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_SRP == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
 #else

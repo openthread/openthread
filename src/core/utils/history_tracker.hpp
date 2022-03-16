@@ -139,10 +139,11 @@ public:
     /**
      * This method iterates over the entries in the network info history list.
      *
-     * @param[inout] aIterator  An iterator. MUST be initialized.
-     * @param[out]   aEntryAge  A reference to a variable to output the entry's age.
-     *                          Age is provided as the duration (in milliseconds) from when entry was recorded to
-     *                          @p aIterator initialization time. It is set to `kMaxAge` for entries older than max age.
+     * @param[in,out] aIterator  An iterator. MUST be initialized.
+     * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
+     *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+     *                           @p aIterator initialization time. It is set to `kMaxAge` for entries older than max
+     *                           age.
      *
      * @returns A pointer to `NetworkInfo` entry or `nullptr` if no more entries in the list.
      *
@@ -155,10 +156,11 @@ public:
     /**
      * This method iterates over the entries in the unicast address history list.
      *
-     * @param[inout] aIterator  An iterator. MUST be initialized.
-     * @param[out]   aEntryAge  A reference to a variable to output the entry's age.
-     *                          Age is provided as the duration (in milliseconds) from when entry was recorded to
-     *                          @p aIterator initialization time. It is set to `kMaxAge` for entries older than max age.
+     * @param[in,out] aIterator  An iterator. MUST be initialized.
+     * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
+     *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+     *                           @p aIterator initialization time. It is set to `kMaxAge` for entries older than max
+     *                           age.
      *
      * @returns A pointer to `UnicastAddress` entry or `nullptr` if no more entries in the list.
      *
@@ -171,10 +173,11 @@ public:
     /**
      * This method iterates over the entries in the multicast address history list.
      *
-     * @param[inout] aIterator  An iterator. MUST be initialized.
-     * @param[out]   aEntryAge  A reference to a variable to output the entry's age.
-     *                          Age is provided as the duration (in milliseconds) from when entry was recorded to
-     *                          @p aIterator initialization time. It is set to `kMaxAge` for entries older than max age.
+     * @param[in,out] aIterator  An iterator. MUST be initialized.
+     * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
+     *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+     *                           @p aIterator initialization time. It is set to `kMaxAge` for entries older than max
+     *                           age.
      *
      * @returns A pointer to `MulticastAddress` entry or `nullptr` if no more entries in the list.
      *
@@ -187,10 +190,11 @@ public:
     /**
      * This method iterates over the entries in the RX history list.
      *
-     * @param[inout] aIterator  An iterator. MUST be initialized.
-     * @param[out]   aEntryAge  A reference to a variable to output the entry's age.
-     *                          Age is provided as the duration (in milliseconds) from when entry was recorded to
-     *                          @p aIterator initialization time. It is set to `kMaxAge` for entries older than max age.
+     * @param[in,out] aIterator  An iterator. MUST be initialized.
+     * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
+     *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+     *                           @p aIterator initialization time. It is set to `kMaxAge` for entries older than max
+     *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
      *
@@ -203,10 +207,11 @@ public:
     /**
      * This method iterates over the entries in the TX history list.
      *
-     * @param[inout] aIterator  An iterator. MUST be initialized.
-     * @param[out]   aEntryAge  A reference to a variable to output the entry's age.
-     *                          Age is provided as the duration (in milliseconds) from when entry was recorded to
-     *                          @p aIterator initialization time. It is set to `kMaxAge` for entries older than max age.
+     * @param[in,out] aIterator  An iterator. MUST be initialized.
+     * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
+     *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+     *                           @p aIterator initialization time. It is set to `kMaxAge` for entries older than max
+     *                           age.
      *
      * @returns A pointer to `MessageInfo` entry or `nullptr` if no more entries in the list.
      *

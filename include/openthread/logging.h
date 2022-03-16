@@ -77,6 +77,144 @@ otLogLevel otLoggingGetLevel(void);
 otError otLoggingSetLevel(otLogLevel aLogLevel);
 
 /**
+ * This function emits a log message at critical log level.
+ *
+ * This function is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
+ * level is below critical, this function does not emit any log message.
+ *
+ * @param[in]  aFormat  The format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+void otLogCritPlat(const char *aFormat, ...);
+
+/**
+ * This function emits a log message at warning log level.
+ *
+ * This function is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
+ * level is below warning, this function does not emit any log message.
+ *
+ * @param[in]  aFormat  The format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+void otLogWarnPlat(const char *aFormat, ...);
+
+/**
+ * This function emits a log message at note log level.
+ *
+ * This function is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
+ * level is below note, this function does not emit any log message.
+ *
+ * @param[in]  aFormat  The format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+void otLogNotePlat(const char *aFormat, ...);
+
+/**
+ * This function emits a log message at info log level.
+ *
+ * This function is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
+ * level is below info, this function does not emit any log message.
+ *
+ * @param[in]  aFormat  The format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+void otLogInfoPlat(const char *aFormat, ...);
+
+/**
+ * This function emits a log message at debug log level.
+ *
+ * This function is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
+ * level is below debug, this function does not emit any log message.
+ *
+ * @param[in]  aFormat  The format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+void otLogDebgPlat(const char *aFormat, ...);
+
+/**
+ * This function generates a memory dump at critical log level.
+ *
+ * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
+ * critical this function does not emit any log message.
+ *
+ * @param[in]  aText         A string that is printed before the bytes.
+ * @param[in]  aData         A pointer to the data buffer.
+ * @param[in]  aDataLength   Number of bytes in @p aData.
+ *
+ */
+void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength);
+
+/**
+ * This function generates a memory dump at warning log level.
+ *
+ * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
+ * warning this function does not emit any log message.
+ *
+ * @param[in]  aText         A string that is printed before the bytes.
+ * @param[in]  aData         A pointer to the data buffer.
+ * @param[in]  aDataLength   Number of bytes in @p aData.
+ *
+ */
+void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength);
+
+/**
+ * This function generates a memory dump at note log level.
+ *
+ * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
+ * note this function does not emit any log message.
+ *
+ * @param[in]  aText         A string that is printed before the bytes.
+ * @param[in]  aData         A pointer to the data buffer.
+ * @param[in]  aDataLength   Number of bytes in @p aData.
+ *
+ */
+void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength);
+
+/**
+ * This function generates a memory dump at info log level.
+ *
+ * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
+ * info this function does not emit any log message.
+ *
+ * @param[in]  aText         A string that is printed before the bytes.
+ * @param[in]  aData         A pointer to the data buffer.
+ * @param[in]  aDataLength   Number of bytes in @p aData.
+ *
+ */
+void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength);
+
+/**
+ * This function generates a memory dump at debug log level.
+ *
+ * If `OPENTHREAD_CONFIG_LOG_PLATFORM` or `OPENTHREAD_CONFIG_LOG_PKT_DUMP` is not set or the current log level is below
+ * debug this function does not emit any log message.
+ *
+ * @param[in]  aText         A string that is printed before the bytes.
+ * @param[in]  aData         A pointer to the data buffer.
+ * @param[in]  aDataLength   Number of bytes in @p aData.
+ *
+ */
+void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength);
+
+/**
+ * This function emits a log message at a given log level.
+ *
+ * This function is intended for use by CLI only. If `OPENTHREAD_CONFIG_LOG_CLI` is not set or the current log
+ * level is below the given log level, this function does not emit any log message.
+ *
+ * @param[in]  aLogLevel The log level.
+ * @param[in]  aFormat   The format string.
+ * @param[in]  ...       Arguments for the format specification.
+ *
+ */
+void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...);
+
+/**
  * @}
  *
  */

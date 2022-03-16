@@ -33,7 +33,6 @@
 
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
 
-#include "common/logging.hpp"
 #include "openthread/thread.h"
 
 namespace ot {

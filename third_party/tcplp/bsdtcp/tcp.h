@@ -45,7 +45,7 @@
 
 #define __func__ "BSD TCP function"
 
-#define KASSERT(COND, MSG) if (!(COND)) tcplp_sys_log MSG
+#define KASSERT(COND, MSG) if (!(COND)) tcplp_sys_panic MSG
 
 typedef	uint32_t tcp_seq;
 

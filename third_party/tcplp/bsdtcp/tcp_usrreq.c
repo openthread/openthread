@@ -192,7 +192,7 @@ tcp6_usr_connect(struct tcpcb* tp, struct sockaddr_in6* sin6p)
 	 * Is this a significant problem?
 	 */
 	if (IN6_IS_ADDR_V4MAPPED(&sin6p->sin6_addr)) {
-		tcplp_sys_log("V4-Mapped Address!\n");
+		tcplp_sys_log("V4-Mapped Address!");
 
 		/*
 		 * samkumar: There used to be code that woulf handle the case of

@@ -402,7 +402,7 @@ public:
      * This method processes received Enh-ACK Probing IE data.
      *
      * @param[in] aData      A pointer to buffer containing the Enh-ACK Probing IE data.
-     * @param[in] aLen       The length of @p aData.
+     * @param[in] aLength    The length of @p aData.
      * @param[in] aNeighbor  The neighbor from which the Enh-ACK Probing IE was received.
      *
      */

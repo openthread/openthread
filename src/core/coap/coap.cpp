@@ -28,12 +28,13 @@
 
 #include "coap.hpp"
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
@@ -46,6 +47,8 @@
 
 namespace ot {
 namespace Coap {
+
+RegisterLogModule("Coap");
 
 CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     : InstanceLocator(aInstance)
@@ -676,8 +679,8 @@ Error CoapBase::SendNextBlock1Request(Message &               aRequest,
 
     DequeueMessage(aRequest);
 
-    otLogInfoCoap("Send Block1 Nr. %d, Size: %d bytes, More Blocks Flag: %d", request->GetBlockWiseBlockNumber(),
-                  otCoapBlockSizeFromExponent(request->GetBlockWiseBlockSize()), request->IsMoreBlocksFlagSet());
+    LogInfo("Send Block1 Nr. %d, Size: %d bytes, More Blocks Flag: %d", request->GetBlockWiseBlockNumber(),
+            otCoapBlockSizeFromExponent(request->GetBlockWiseBlockSize()), request->IsMoreBlocksFlagSet());
 
     SuccessOrExit(error = SendMessage(*request, aMessageInfo, TxParameters::GetDefault(),
                                       aCoapMetadata.mResponseHandler, aCoapMetadata.mResponseContext,
@@ -718,8 +721,8 @@ Error CoapBase::SendNextBlock2Request(Message &               aRequest,
                                                     bufLen, aMessage.IsMoreBlocksFlagSet(), aTotalLength));
 
     // CoAP Block-Wise Transfer continues
-    otLogInfoCoap("Received Block2 Nr. %d , Size: %d bytes, More Blocks Flag: %d", aMessage.GetBlockWiseBlockNumber(),
-                  otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()), aMessage.IsMoreBlocksFlagSet());
+    LogInfo("Received Block2 Nr. %d , Size: %d bytes, More Blocks Flag: %d", aMessage.GetBlockWiseBlockNumber(),
+            otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()), aMessage.IsMoreBlocksFlagSet());
 
     // Conclude block-wise transfer if last block has been received
     if (!aMessage.IsMoreBlocksFlagSet())
@@ -738,8 +741,8 @@ Error CoapBase::SendNextBlock2Request(Message &               aRequest,
         DequeueMessage(aRequest);
     }
 
-    otLogInfoCoap("Request Block2 Nr. %d, Size: %d bytes", request->GetBlockWiseBlockNumber(),
-                  otCoapBlockSizeFromExponent(request->GetBlockWiseBlockSize()));
+    LogInfo("Request Block2 Nr. %d, Size: %d bytes", request->GetBlockWiseBlockNumber(),
+            otCoapBlockSizeFromExponent(request->GetBlockWiseBlockSize()));
 
     SuccessOrExit(error =
                       SendMessage(*request, aMessageInfo, TxParameters::GetDefault(), aCoapMetadata.mResponseHandler,
@@ -789,8 +792,8 @@ Error CoapBase::ProcessBlock1Request(Message &                aMessage,
 
         SuccessOrExit(error = CacheLastBlockResponse(response));
 
-        otLogInfoCoap("Acknowledge Block1 Nr. %d, Size: %d bytes", response->GetBlockWiseBlockNumber(),
-                      otCoapBlockSizeFromExponent(response->GetBlockWiseBlockSize()));
+        LogInfo("Acknowledge Block1 Nr. %d, Size: %d bytes", response->GetBlockWiseBlockNumber(),
+                otCoapBlockSizeFromExponent(response->GetBlockWiseBlockSize()));
 
         SuccessOrExit(error = SendMessage(*response, aMessageInfo));
 
@@ -826,8 +829,8 @@ Error CoapBase::ProcessBlock2Request(Message &                aMessage,
 
     SuccessOrExit(error = aMessage.ReadBlockOptionValues(kOptionBlock2));
 
-    otLogInfoCoap("Request for Block2 Nr. %d, Size: %d bytes received", aMessage.GetBlockWiseBlockNumber(),
-                  otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()));
+    LogInfo("Request for Block2 Nr. %d, Size: %d bytes received", aMessage.GetBlockWiseBlockNumber(),
+            otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()));
 
     if (aMessage.GetBlockWiseBlockNumber() == 0)
     {
@@ -926,8 +929,8 @@ Error CoapBase::ProcessBlock2Request(Message &                aMessage,
         FreeLastBlockResponse();
     }
 
-    otLogInfoCoap("Send Block2 Nr. %d, Size: %d bytes, More Blocks Flag %d", response->GetBlockWiseBlockNumber(),
-                  otCoapBlockSizeFromExponent(response->GetBlockWiseBlockSize()), response->IsMoreBlocksFlagSet());
+    LogInfo("Send Block2 Nr. %d, Size: %d bytes, More Blocks Flag %d", response->GetBlockWiseBlockNumber(),
+            otCoapBlockSizeFromExponent(response->GetBlockWiseBlockSize()), response->IsMoreBlocksFlagSet());
 
     SuccessOrExit(error = SendMessage(*response, aMessageInfo));
 
@@ -953,7 +956,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogWarnCoap("Failed to send copy: %s", ErrorToString(error));
+        LogWarn("Failed to send copy: %s", ErrorToString(error));
         FreeMessage(messageCopy);
     }
 }
@@ -1006,7 +1009,7 @@ void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     if (message.ParseHeader() != kErrorNone)
     {
-        otLogDebgCoap("Failed to parse CoAP header");
+        LogDebg("Failed to parse CoAP header");
 
         if (!aMessageInfo.GetSockAddr().IsMulticast() && message.IsConfirmable())
         {
@@ -1289,7 +1292,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
                 *curUriPath++ = '/';
             }
 
-            VerifyOrExit(curUriPath + iterator.GetOption()->GetLength() < OT_ARRAY_END(uriPath), error = kErrorParse);
+            VerifyOrExit(curUriPath + iterator.GetOption()->GetLength() < GetArrayEnd(uriPath), error = kErrorParse);
 
             IgnoreError(iterator.ReadOptionValue(curUriPath));
             curUriPath += iterator.GetOption()->GetLength();
@@ -1398,7 +1401,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogInfoCoap("Failed to process request: %s", ErrorToString(error));
+        LogInfo("Failed to process request: %s", ErrorToString(error));
 
         if (error == kErrorNotFound && !aMessageInfo.GetSockAddr().IsMulticast())
         {

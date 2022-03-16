@@ -36,18 +36,20 @@
 
 #include <string.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/string.hpp"
 #include "net/dns_types.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Trel {
+
+RegisterLogModule("TrelInterface");
 
 const char Interface::kTxtRecordExtAddressKey[] = "xa";
 const char Interface::kTxtRecordExtPanIdKey[]   = "xp";
@@ -83,7 +85,7 @@ void Interface::Enable(void)
 
     otPlatTrelEnable(&GetInstance(), &mUdpPort);
 
-    otLogInfoMac("Trel: Enabled interface, local port:%u", mUdpPort);
+    LogInfo("Enabled interface, local port:%u", mUdpPort);
     mRegisterServiceTask.Post();
 
 exit:
@@ -99,7 +101,7 @@ void Interface::Disable(void)
 
     otPlatTrelDisable(&GetInstance());
     mPeerTable.Clear();
-    otLogDebgMac("Trel: Disabled interface");
+    LogDebg("Disabled interface");
 
 exit:
     return;
@@ -108,7 +110,7 @@ exit:
 void Interface::HandleExtAddressChange(void)
 {
     VerifyOrExit(mInitialized && mEnabled);
-    otLogDebgMac("Trel: Extended Address changed, re-registering DNS-SD service");
+    LogDebg("Extended Address changed, re-registering DNS-SD service");
     mRegisterServiceTask.Post();
 
 exit:
@@ -118,7 +120,7 @@ exit:
 void Interface::HandleExtPanIdChange(void)
 {
     VerifyOrExit(mInitialized && mEnabled);
-    otLogDebgMac("Trel: Extended PAN ID changed, re-registering DNS-SD service");
+    LogDebg("Extended PAN ID changed, re-registering DNS-SD service");
     mRegisterServiceTask.Post();
 
 exit:
@@ -132,41 +134,30 @@ void Interface::HandleRegisterServiceTask(Tasklet &aTasklet)
 
 void Interface::RegisterService(void)
 {
-    // TXT data consists of two entries: the length fields , the
-    // "key" string, "=" char, and hex representation of the MAC or
-    // Extended PAN ID values.
+    // TXT data consists of two entries: the length fields, the
+    // "key" string, "=" char, and binary representation of the MAC
+    // or Extended PAN ID values.
     static constexpr uint8_t kTxtDataSize =
-        sizeof(uint8_t) + sizeof(kTxtRecordExtAddressKey) - 1 + sizeof(char) + sizeof(Mac::ExtAddress) * 2 +
-        sizeof(uint8_t) + sizeof(kTxtRecordExtPanIdKey) - 1 + sizeof(char) + sizeof(Mac::ExtendedPanId) * 2;
+        /* ExtAddr  */ sizeof(uint8_t) + sizeof(kTxtRecordExtAddressKey) - 1 + sizeof(char) + sizeof(Mac::ExtAddress) +
+        /* ExtPanId */ sizeof(uint8_t) + sizeof(kTxtRecordExtPanIdKey) - 1 + sizeof(char) + sizeof(Mac::ExtendedPanId);
 
-    uint8_t              txtData[kTxtDataSize];
-    uint8_t *            txtPtr = &txtData[0];
-    String<kTxtDataSize> string;
+    uint8_t                        txtDataBuffer[kTxtDataSize];
+    MutableData<kWithUint16Length> txtData;
+    Dns::TxtEntry                  txtEntries[2];
 
     VerifyOrExit(mInitialized && mEnabled);
 
-    string.Append("%s=", kTxtRecordExtAddressKey);
-    string.AppendHexBytes(Get<Mac::Mac>().GetExtAddress().m8, sizeof(Mac::ExtAddress));
+    txtEntries[0].Init(kTxtRecordExtAddressKey, Get<Mac::Mac>().GetExtAddress().m8, sizeof(Mac::ExtAddress));
+    txtEntries[1].Init(kTxtRecordExtPanIdKey, Get<Mac::Mac>().GetExtendedPanId().m8, sizeof(Mac::ExtendedPanId));
 
-    *txtPtr++ = static_cast<uint8_t>(string.GetLength());
-    memcpy(txtPtr, string.AsCString(), string.GetLength());
-    txtPtr += string.GetLength();
+    txtData.Init(txtDataBuffer, sizeof(txtDataBuffer));
+    SuccessOrAssert(Dns::TxtEntry::AppendEntries(txtEntries, GetArrayLength(txtEntries), txtData));
 
-    string.Clear();
-    string.Append("%s=", kTxtRecordExtPanIdKey);
-    string.AppendHexBytes(Get<Mac::Mac>().GetExtendedPanId().m8, sizeof(Mac::ExtendedPanId));
+    LogInfo("Registering DNS-SD service: port:%u, txt:\"%s=%s, %s=%s\"", mUdpPort, kTxtRecordExtAddressKey,
+            Get<Mac::Mac>().GetExtAddress().ToString().AsCString(), kTxtRecordExtPanIdKey,
+            Get<Mac::Mac>().GetExtendedPanId().ToString().AsCString());
 
-    *txtPtr++ = static_cast<uint8_t>(string.GetLength());
-    memcpy(txtPtr, string.AsCString(), string.GetLength());
-    txtPtr += string.GetLength();
-
-    OT_ASSERT(txtPtr == OT_ARRAY_END(txtData));
-
-    otLogInfoMac("Trel: Registering DNS-SD service: port:%u, txt:\"%s=%s, %s=%s\"", mUdpPort, kTxtRecordExtAddressKey,
-                 Get<Mac::Mac>().GetExtAddress().ToString().AsCString(), kTxtRecordExtPanIdKey,
-                 Get<Mac::Mac>().GetExtendedPanId().ToString().AsCString());
-
-    otPlatTrelRegisterService(&GetInstance(), mUdpPort, txtData, sizeof(txtData));
+    otPlatTrelRegisterService(&GetInstance(), mUdpPort, txtData.GetBytes(), static_cast<uint8_t>(txtData.GetLength()));
 
 exit:
     return;
@@ -246,27 +237,6 @@ exit:
     return;
 }
 
-template <uint16_t kBufferSize>
-static Error ParseValueAsHexString(const Dns::TxtEntry &aTxtEntry, uint8_t (&aBuffer)[kBufferSize])
-{
-    // Parse the value from `Dns::TxtEntry` as a hex string and
-    // populates the parsed bytes into `aBuffer`. It requires parsing of
-    // the hex string to result in exactly `kBufferSize` decoded bytes.
-
-    Error error = kErrorParse;
-    char  hexString[kBufferSize * 2 + 1];
-
-    VerifyOrExit(aTxtEntry.mValueLength < sizeof(hexString));
-
-    memcpy(hexString, aTxtEntry.mValue, aTxtEntry.mValueLength);
-    hexString[aTxtEntry.mValueLength] = '\0';
-
-    error = Utils::CmdLineParser::ParseAsHexString(hexString, aBuffer);
-
-exit:
-    return error;
-}
-
 Error Interface::ParsePeerInfoTxtData(const Peer::Info &  aInfo,
                                       Mac::ExtAddress &   aExtAddress,
                                       Mac::ExtendedPanId &aExtPanId) const
@@ -286,13 +256,15 @@ Error Interface::ParsePeerInfoTxtData(const Peer::Info &  aInfo,
         if (strcmp(entry.mKey, kTxtRecordExtAddressKey) == 0)
         {
             VerifyOrExit(!parsedExtAddress, error = kErrorParse);
-            SuccessOrExit(error = ParseValueAsHexString(entry, aExtAddress.m8));
+            VerifyOrExit(entry.mValueLength == sizeof(Mac::ExtAddress), error = kErrorParse);
+            aExtAddress.Set(entry.mValue);
             parsedExtAddress = true;
         }
         else if (strcmp(entry.mKey, kTxtRecordExtPanIdKey) == 0)
         {
             VerifyOrExit(!parsedExtPanId, error = kErrorParse);
-            SuccessOrExit(error = ParseValueAsHexString(entry, aExtPanId.m8));
+            VerifyOrExit(entry.mValueLength == sizeof(Mac::ExtendedPanId), error = kErrorParse);
+            memcpy(aExtPanId.m8, entry.mValue, sizeof(Mac::ExtendedPanId));
             parsedExtPanId = true;
         }
 
@@ -415,7 +387,7 @@ exit:
 
 void Interface::HandleReceived(uint8_t *aBuffer, uint16_t aLength)
 {
-    otLogDebgMac("Trel: HandleReceived(aLength:%u)", aLength);
+    LogDebg("HandleReceived(aLength:%u)", aLength);
 
     VerifyOrExit(mInitialized && mEnabled && !mFiltered);
 
@@ -442,8 +414,8 @@ void Interface::Peer::Log(const char *aAction) const
 {
     OT_UNUSED_VARIABLE(aAction);
 
-    otLogInfoMac("Trel: %s peer mac:%s, xpan:%s, %s", aAction, GetExtAddress().ToString().AsCString(),
-                 GetExtPanId().ToString().AsCString(), GetSockAddr().ToString().AsCString());
+    LogInfo("%s peer mac:%s, xpan:%s, %s", aAction, GetExtAddress().ToString().AsCString(),
+            GetExtPanId().ToString().AsCString(), GetSockAddr().ToString().AsCString());
 }
 
 } // namespace Trel

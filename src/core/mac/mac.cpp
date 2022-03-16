@@ -35,13 +35,13 @@
 
 #include <stdio.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"
@@ -56,6 +56,8 @@
 
 namespace ot {
 namespace Mac {
+
+RegisterLogModule("Mac");
 
 const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
@@ -593,7 +595,7 @@ void Mac::UpdateIdleMode(void)
             mTimer.Start(kSleepDelay);
             mShouldDelaySleep = false;
             mDelayingSleep    = true;
-            otLogDebgMac("Idle mode: Sleep delayed");
+            LogDebg("Idle mode: Sleep delayed");
         }
 
         if (mDelayingSleep)
@@ -619,12 +621,12 @@ void Mac::UpdateIdleMode(void)
         }
 #endif
         mLinks.Sleep();
-        otLogDebgMac("Idle mode: Radio sleeping");
+        LogDebg("Idle mode: Radio sleeping");
     }
     else
     {
         mLinks.Receive(mRadioChannel);
-        otLogDebgMac("Idle mode: Radio receiving on channel %d", mRadioChannel);
+        LogDebg("Idle mode: Radio receiving on channel %d", mRadioChannel);
     }
 
 exit:
@@ -642,12 +644,12 @@ void Mac::StartOperation(Operation aOperation)
     {
         SetPending(aOperation);
 
-        otLogDebgMac("Request to start operation \"%s\"", OperationToString(aOperation));
+        LogDebg("Request to start operation \"%s\"", OperationToString(aOperation));
 
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         if (mDelayingSleep)
         {
-            otLogDebgMac("Canceling sleep delay");
+            LogDebg("Canceling sleep delay");
             mTimer.Stop();
             mDelayingSleep    = false;
             mShouldDelaySleep = false;
@@ -731,7 +733,7 @@ void Mac::PerformNextOperation(void)
     if (mOperation != kOperationIdle)
     {
         ClearPending(mOperation);
-        otLogDebgMac("Starting operation \"%s\"", OperationToString(mOperation));
+        LogDebg("Starting operation \"%s\"", OperationToString(mOperation));
         mTimer.Stop(); // Stop the timer before any non-idle operation, have the operation itself be responsible to
                        // start the timer (if it wants to).
     }
@@ -774,7 +776,7 @@ exit:
 
 void Mac::FinishOperation(void)
 {
-    otLogDebgMac("Finishing operation \"%s\"", OperationToString(mOperation));
+    LogDebg("Finishing operation \"%s\"", OperationToString(mOperation));
     mOperation = kOperationIdle;
 }
 
@@ -788,7 +790,7 @@ TxFrame *Mac::PrepareBeaconRequest(void)
     frame.SetDstAddr(kShortAddrBroadcast);
     IgnoreError(frame.SetCommandId(Frame::kMacCmdBeaconRequest));
 
-    otLogInfoMac("Sending Beacon Request");
+    LogInfo("Sending Beacon Request");
 
     return &frame;
 }
@@ -1084,7 +1086,7 @@ void Mac::BeginTransmit(void)
         // copy the frame into correct `TxFrame` for each radio type
         // (if it is not already prepared).
 
-        for (uint8_t index = 0; index < OT_ARRAY_LENGTH(RadioTypes::kAllRadioTypes); index++)
+        for (uint8_t index = 0; index < GetArrayLength(RadioTypes::kAllRadioTypes); index++)
         {
             RadioType radio = RadioTypes::kAllRadioTypes[index];
 
@@ -1103,7 +1105,7 @@ void Mac::BeginTransmit(void)
         // process security for each radio type separately. This
         // allows radio links to handle security differently, e.g.,
         // with different keys or link frame counters.
-        for (uint8_t index = 0; index < OT_ARRAY_LENGTH(RadioTypes::kAllRadioTypes); index++)
+        for (uint8_t index = 0; index < GetArrayLength(RadioTypes::kAllRadioTypes); index++)
         {
             RadioType radio = RadioTypes::kAllRadioTypes[index];
 
@@ -1139,7 +1141,7 @@ void Mac::BeginTransmit(void)
     if (!mRxOnWhenIdle && !mPromiscuous)
     {
         mShouldDelaySleep = frame->GetFramePending();
-        otLogDebgMac("Delay sleep for pending tx");
+        LogDebg("Delay sleep for pending tx");
     }
 #endif
 
@@ -1232,7 +1234,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     if (aError != kErrorNone)
     {
         LogFrameTxFailure(aFrame, aError, aRetryCount, aWillRetx);
-        otDumpDebgMac("TX ERR", aFrame.GetHeader(), 16);
+        DumpDebg("TX ERR", aFrame.GetHeader(), 16);
 
         if (aWillRetx)
         {
@@ -1385,8 +1387,8 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
             if (requriedRadios.Contains(radio) && (aError != kErrorNone))
             {
-                otLogDebgMac("Frame tx failed on required radio link %s with error %s", RadioTypeToString(radio),
-                             ErrorToString(aError));
+                LogDebg("Frame tx failed on required radio link %s with error %s", RadioTypeToString(radio),
+                        ErrorToString(aError));
 
                 mTxError = aError;
             }
@@ -1429,7 +1431,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
                 StartOperation(kOperationWaitingForData);
             }
 
-            otLogInfoMac("Sent data poll, fp:%s", ToYesNo(framePending));
+            LogInfo("Sent data poll, fp:%s", ToYesNo(framePending));
         }
 
         mCounters.mTxDataPoll++;
@@ -1452,7 +1454,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         }
 #endif
 
-        otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -1466,7 +1468,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
 
-        otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<CslTxScheduler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
@@ -1487,7 +1489,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         }
 #endif
 
-        otDumpDebgMac("TX", aFrame.GetHeader(), aFrame.GetLength());
+        DumpDebg("TX", aFrame.GetHeader(), aFrame.GetLength());
         FinishOperation();
         Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
@@ -1518,7 +1520,7 @@ void Mac::HandleTimer(void)
         break;
 
     case kOperationWaitingForData:
-        otLogDebgMac("Data poll timeout");
+        LogDebg("Data poll timeout");
         FinishOperation();
         Get<DataPollSender>().HandlePollTimeout();
         PerformNextOperation();
@@ -1530,7 +1532,7 @@ void Mac::HandleTimer(void)
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
             if (mDelayingSleep)
             {
-                otLogDebgMac("Sleep delay timeout expired");
+                LogDebg("Sleep delay timeout expired");
                 mDelayingSleep = false;
                 UpdateIdleMode();
             }
@@ -1567,7 +1569,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     VerifyOrExit(securityLevel == Frame::kSecEncMic32);
 
     IgnoreError(aFrame.GetFrameCounter(frameCounter));
-    otLogDebgMac("Rx security - frame counter %u", frameCounter);
+    LogDebg("Rx security - frame counter %u", frameCounter);
 
     IgnoreError(aFrame.GetKeyIdMode(keyIdMode));
 
@@ -1713,7 +1715,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     VerifyOrExit(txKeyId == ackKeyId);
 
     IgnoreError(aAckFrame.GetFrameCounter(frameCounter));
-    otLogDebgMac("Rx security - Ack frame counter %u", frameCounter);
+    LogDebg("Rx security - Ack frame counter %u", frameCounter);
 
     IgnoreError(aAckFrame.GetSrcAddr(srcAddr));
 
@@ -1774,7 +1776,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 exit:
     if (error != kErrorNone)
     {
-        otLogInfoMac("Frame tx attempt failed, error: Enh-ACK security check fail");
+        LogInfo("Frame tx attempt failed, error: Enh-ACK security check fail");
     }
 
     return error;
@@ -1841,7 +1843,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         break;
 
     case Address::kTypeShort:
-        otLogDebgMac("Received frame from short address 0x%04x", srcaddr.GetShort());
+        LogDebg("Received frame from short address 0x%04x", srcaddr.GetShort());
 
         VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
 
@@ -2004,7 +2006,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
             if (!mRxOnWhenIdle && !mPromiscuous && aFrame->GetFramePending())
             {
                 mShouldDelaySleep = true;
-                otLogDebgMac("Delay sleep for pending rx");
+                LogDebg("Delay sleep for pending rx");
             }
 #endif
             FinishOperation();
@@ -2042,7 +2044,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         ExitNow();
     }
 
-    otDumpDebgMac("RX", aFrame->GetHeader(), aFrame->GetLength());
+    DumpDebg("RX", aFrame->GetHeader(), aFrame->GetLength());
     Get<MeshForwarder>().HandleReceivedFrame(*aFrame);
 
     UpdateIdleMode();
@@ -2105,7 +2107,7 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
     {
     case Frame::kMacCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
-        otLogInfoMac("Received Beacon Request");
+        LogInfo("Received Beacon Request");
 
         if (ShouldSendBeacon())
         {
@@ -2187,7 +2189,7 @@ void Mac::ResetRetrySuccessHistogram()
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 const char *Mac::OperationToString(Operation aOperation)
 {
@@ -2226,28 +2228,28 @@ const char *Mac::OperationToString(Operation aOperation)
 
 void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
 {
-    otLogLevel logLevel;
+    LogLevel logLevel;
 
     switch (aError)
     {
     case kErrorAbort:
     case kErrorNoFrameReceived:
     case kErrorDestinationAddressFiltered:
-        logLevel = OT_LOG_LEVEL_DEBG;
+        logLevel = kLogLevelDebg;
         break;
 
     default:
-        logLevel = OT_LOG_LEVEL_INFO;
+        logLevel = kLogLevelInfo;
         break;
     }
 
     if (aFrame == nullptr)
     {
-        otLogMac(logLevel, "Frame rx failed, error:%s", ErrorToString(aError));
+        LogAt(logLevel, "Frame rx failed, error:%s", ErrorToString(aError));
     }
     else
     {
-        otLogMac(logLevel, "Frame rx failed, error:%s, %s", ErrorToString(aError), aFrame->ToInfoString().AsCString());
+        LogAt(logLevel, "Frame rx failed, error:%s, %s", ErrorToString(aError), aFrame->ToInfoString().AsCString());
     }
 }
 
@@ -2264,21 +2266,21 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
         uint8_t maxAttempts = aFrame.GetMaxFrameRetries() + 1;
         uint8_t curAttempt  = aWillRetx ? (aRetryCount + 1) : maxAttempts;
 
-        otLogInfoMac("Frame tx attempt %d/%d failed, error:%s, %s", curAttempt, maxAttempts, ErrorToString(aError),
-                     aFrame.ToInfoString().AsCString());
+        LogInfo("Frame tx attempt %d/%d failed, error:%s, %s", curAttempt, maxAttempts, ErrorToString(aError),
+                aFrame.ToInfoString().AsCString());
     }
     else
     {
-        otLogInfoMac("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        LogInfo("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
     }
 }
 
 void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const
 {
-    otLogInfoMac("%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString().AsCString());
+    LogInfo("%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString().AsCString());
 }
 
-#else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Mac::LogFrameRxFailure(const RxFrame *, Error) const
 {
@@ -2292,7 +2294,7 @@ void Mac::LogFrameTxFailure(const TxFrame &, Error, uint8_t, bool) const
 {
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 // LCOV_EXCL_STOP
 
@@ -2380,9 +2382,9 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     child->SetCslSynchronized(true);
     child->SetCslLastHeard(TimerMilli::GetNow());
     child->SetLastRxTimestamp(aFrame.GetTimestamp());
-    otLogDebgMac("Timestamp=%u Sequence=%u CslPeriod=%hu CslPhase=%hu TransmitPhase=%hu",
-                 static_cast<uint32_t>(aFrame.GetTimestamp()), aFrame.GetSequence(), csl->GetPeriod(), csl->GetPhase(),
-                 child->GetCslPhase());
+    LogDebg("Timestamp=%u Sequence=%u CslPeriod=%hu CslPhase=%hu TransmitPhase=%hu",
+            static_cast<uint32_t>(aFrame.GetTimestamp()), aFrame.GetSequence(), csl->GetPeriod(), csl->GetPhase(),
+            child->GetCslPhase());
 
     Get<CslTxScheduler>().Update();
 

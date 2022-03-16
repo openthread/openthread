@@ -42,12 +42,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <openthread/logging.h>
 #include <openthread/platform/trel.h>
 
 #include "radio_url.hpp"
 #include "system.hpp"
 #include "common/code_utils.hpp"
-#include "common/logging.hpp"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
@@ -72,8 +72,6 @@ static char sInterfaceName[IFNAMSIZ + 1];
 static bool sInitialized = false;
 static bool sEnabled     = false;
 static int  sSocket      = -1;
-
-#if OPENTHREAD_CONFIG_LOG_PLATFORM && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
 
 static const char *Ip6AddrToString(const void *aAddress)
 {
@@ -116,8 +114,6 @@ exit:
     *end = '\0';
     return string;
 }
-
-#endif // #if OPENTHREAD_CONFIG_LOG_PLATFORM && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
 
 static void PrepareSocket(uint16_t &aUdpPort)
 {

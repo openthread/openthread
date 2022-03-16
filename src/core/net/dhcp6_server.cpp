@@ -35,17 +35,20 @@
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
 namespace Dhcp6 {
+
+RegisterLogModule("Dhcp6Server");
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -175,7 +178,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogNoteIp6("Failed to add DHCPv6 prefix agent: %s", ErrorToString(error));
+        LogNote("Failed to add DHCPv6 prefix agent: %s", ErrorToString(error));
     }
 }
 
@@ -317,7 +320,7 @@ Error Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
     VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = kErrorParse);
 
     // mask matching prefix
-    for (uint16_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
+    for (uint16_t i = 0; i < GetArrayLength(mPrefixAgents); i++)
     {
         if (mPrefixAgents[i].IsValid() && mPrefixAgents[i].IsPrefixMatch(option.GetAddress()))
         {
@@ -397,7 +400,7 @@ Error Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
 
     if (mPrefixAgentsMask)
     {
-        for (uint16_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
+        for (uint16_t i = 0; i < GetArrayLength(mPrefixAgents); i++)
         {
             if (mPrefixAgentsMask & (1 << i))
             {
@@ -437,7 +440,7 @@ Error Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
     if (mPrefixAgentsMask)
     {
         // if specified, only apply specified prefixes
-        for (uint16_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
+        for (uint16_t i = 0; i < GetArrayLength(mPrefixAgents); i++)
         {
             if (mPrefixAgentsMask & (1 << i))
             {

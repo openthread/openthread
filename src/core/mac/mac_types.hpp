@@ -523,7 +523,7 @@ public:
     /**
      * This method converts `KeyMaterial` to a `Crypto::Key`.
      *
-     * @param[out]  A reference to a `Crypto::Key` to populate.
+     * @param[out]  aCryptoKey  A reference to a `Crypto::Key` to populate.
      *
      */
     void ConvertToCryptoKey(Crypto::Key &aCryptoKey) const;

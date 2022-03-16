@@ -35,7 +35,6 @@
 
 #include <openthread/platform/misc.h>
 
-#include "common/logging.hpp"
 #include "common/new.hpp"
 #include "radio/trel_link.hpp"
 #include "utils/heap.hpp"
@@ -59,7 +58,7 @@ bool Instance::sDnsNameCompressionEnabled = true;
 #endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-otLogLevel Instance::sLogLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
+LogLevel Instance::sLogLevel = static_cast<LogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
 #endif
 
 Instance::Instance(void)

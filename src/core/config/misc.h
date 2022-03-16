@@ -28,12 +28,11 @@
 
 /**
  * @file
- *   This file includes default compile-time configuration constants
- *   for OpenThread.
+ *   This file includes miscellaneous compile-time configuration constants for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_DEFAULT_CONFIG_H_
-#define OPENTHREAD_CORE_DEFAULT_CONFIG_H_
+#ifndef CONFIG_MISC_H_
+#define CONFIG_MISC_H_
 
 #include "config/coap.h"
 #include "config/srp_server.h"
@@ -527,4 +526,4 @@
 #define OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE 0
 #endif
 
-#endif // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
+#endif // CONFIG_MISC_H_

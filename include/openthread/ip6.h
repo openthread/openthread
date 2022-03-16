@@ -344,8 +344,9 @@ otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address
  * @param[in]  aAddress  A pointer to an IP Address.
  *
  * @retval OT_ERROR_NONE          Successfully unsubscribed to the Network Interface Multicast Address.
- * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
+ * @retval OT_ERROR_REJECTED      The IP Address indicated by @p aAddress is an internal address.
  * @retval OT_ERROR_NOT_FOUND     The IP Address indicated by @p aAddress was not found.
+ *
  */
 otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
@@ -692,8 +693,8 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress);
 /**
  * This function perform OpenThread source address selection.
  *
- * @param[in]     aInstance     A pointer to an OpenThread instance.
- * @param[inout]  aMessageInfo  A pointer to the message information.
+ * @param[in]      aInstance     A pointer to an OpenThread instance.
+ * @param[in,out]  aMessageInfo  A pointer to the message information.
  *
  * @retval  OT_ERROR_NONE       Found a source address and is filled into mSockAddr of @p aMessageInfo.
  * @retval  OT_ERROR_NOT_FOUND  No source address was found and @p aMessageInfo is unchanged.
@@ -733,7 +734,7 @@ void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled);
  * when it is about to add a SLAAC address based on a prefix. Its boolean return value determines whether the address
  * is filtered (not added) or not.
  *
- * @param[in] aInstacne   A pointer to an OpenThread instance.
+ * @param[in] aInstance   A pointer to an OpenThread instance.
  * @param[in] aPrefix     A pointer to prefix for which SLAAC address is about to be added.
  *
  * @retval TRUE    Indicates that the SLAAC address based on the prefix should be filtered and NOT added.

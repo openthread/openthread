@@ -304,12 +304,12 @@ typedef struct otBackboneRouterMulticastListenerInfo
 /**
  * This function gets the next Multicast Listener info (using an iterator).
  *
- * @param[in]     aInstance    A pointer to an OpenThread instance.
- * @param[inout]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
- *                             Multicast Listener. To get the first entry the iterator should be set to
- *                             OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT.
- * @param[out]    aListenerInfo  A pointer to an `otBackboneRouterMulticastListenerInfo` where information of next
- *                               Multicast Listener is placed (on success).
+ * @param[in]      aInstance      A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
+ *                                Multicast Listener. To get the first entry the iterator should be set to
+ *                                OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT.
+ * @param[out]     aListenerInfo  A pointer to an `otBackboneRouterMulticastListenerInfo` where information of next
+ *                                Multicast Listener is placed (on success).
  *
  * @retval OT_ERROR_NONE       Successfully found the next Multicast Listener info (@p aListenerInfo was successfully
  *                             updated).

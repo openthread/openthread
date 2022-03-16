@@ -70,9 +70,7 @@ from GRLLibs.UtilityModules.enums import (
 )
 
 if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-    from GRLLibs.UtilityModules.enums import (
-        DevCapb,)
-
+    from GRLLibs.UtilityModules.enums import DevCapb
     import commissioner
     from commissioner_impl import OTCommissioner
 
@@ -84,23 +82,19 @@ ZEPHYR_PREFIX = 'ot '
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
-LOGX = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
-                  r'|(-(CLI|MLR|API|MLE|BBR|DUA|ARP|N-DATA|ICMP|IP6|MAC|MEM|NCP|MESH-CP|DIAG|PLAT|COAP|CORE|UTIL)-+: )'
+LOGX = re.compile(r'((\[(-|C|W|N|I|D)\])'
                   r'|(-+$)'  # e.x. ------------------------------------------------------------------------
                   r'|(=+\[.*\]=+$)'  # e.x. ==============================[TX len=108]===============================
                   r'|(\|.+\|.+\|.+)'  # e.x. | 61 DC D2 CE FA 04 00 00 | 00 00 0A 6E 16 01 00 00 | aRNz......n....
                   r')')
 """regex used to filter logs"""
 
-assert LOGX.match('[NONE]')
-assert LOGX.match('[CRIT]')
-assert LOGX.match('[WARN]')
-assert LOGX.match('[NOTE]')
-assert LOGX.match('[INFO]')
-assert LOGX.match('[DEBG]')
-assert LOGX.match('-CLI-----: ')
-assert LOGX.match('-N-DATA--: ')
-assert LOGX.match('-MESH-CP-: ')
+assert LOGX.match('[-]')
+assert LOGX.match('[C]')
+assert LOGX.match('[W]')
+assert LOGX.match('[N]')
+assert LOGX.match('[I]')
+assert LOGX.match('[D]')
 assert LOGX.match('------------------------------------------------------------------------')
 assert LOGX.match('==============================[TX len=108]===============================')
 assert LOGX.match('| 61 DC D2 CE FA 04 00 00 | 00 00 0A 6E 16 01 00 00 | aRNz......n....')
@@ -395,8 +389,8 @@ class OpenThreadTHCI(object):
             self.connectType = 'ip'
             self.telnetIp = self.port
             self.telnetPort = 22
-            self.telnetUsername = 'pi'
-            self.telnetPassword = 'raspberry'
+            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
+            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
         except ValueError:
             self.connectType = (params.get('Param5') or 'usb').lower()
             self.telnetIp = params.get('TelnetIP')
@@ -686,26 +680,6 @@ class OpenThreadTHCI(object):
                 pass
 
         return None
-
-    def __convertIp6PrefixStringToIp6Address(self, strIp6Prefix):
-        """convert IPv6 prefix string to IPv6 dotted-quad format
-           for example:
-           2001000000000000 -> 2001:0000:0000:0000::
-
-        Args:
-            strIp6Prefix: IPv6 address string
-
-        Returns:
-            IPv6 address dotted-quad format
-        """
-        prefix1 = strIp6Prefix.rstrip('L')
-        prefix2 = self.__lstrip0x(prefix1)
-        hexPrefix = str(prefix2).ljust(16, '0')
-        hexIter = iter(hexPrefix)
-        finalMac = ':'.join(a + b + c + d for a, b, c, d in zip(hexIter, hexIter, hexIter, hexIter))
-        prefix = str(finalMac)
-        strIp6Prefix = prefix[:19]
-        return strIp6Prefix + '::'
 
     # pylint: disable=no-self-use
     def __convertLongToHex(self, iValue, fillZeros=None):
@@ -1392,7 +1366,6 @@ class OpenThreadTHCI(object):
         print('destination: %s' % strDestination)
         cmd = 'ping %s %s 1 1 %d %d' % (strDestination, str(ilength), hop_limit, timeout)
         self.__executeCommand(cmd)
-        time.sleep(1)
 
     @API
     def multicast_Ping(self, destination, length=20):
@@ -1501,8 +1474,9 @@ class OpenThreadTHCI(object):
         self.panId = ModuleHelper.Default_PanId
         self.xpanId = ModuleHelper.Default_XpanId
         self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
-        # OT only accept hex format PSKc for now
-        self.pskc = '00000000000000000000000000000001'
+        stretchedPSKc = Thread_PBKDF2.get(ModuleHelper.Default_PSKc, ModuleHelper.Default_XpanId,
+                                          ModuleHelper.Default_NwkName)
+        self.pskc = hex(stretchedPSKc).rstrip('L').lstrip('0x')
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
         self.securityPolicyFlags = 'onrcb'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
@@ -1668,17 +1642,15 @@ class OpenThreadTHCI(object):
         """remove the configured prefix on a border router
 
         Args:
-            prefixEntry: a on-mesh prefix entry
+            prefixEntry: a on-mesh prefix entry in IPv6 dotted-quad format
 
         Returns:
             True: successful to remove the prefix entry from border router
             False: fail to remove the prefix entry from border router
         """
         print('%s call removeRouterPrefix' % self)
-        print(prefixEntry)
-        prefix = self.__convertIp6PrefixStringToIp6Address(str(prefixEntry))
-        prefixLen = 64
-        cmd = 'prefix remove %s/%d' % (prefix, prefixLen)
+        assert (ipaddress.IPv6Network(prefixEntry.decode()))
+        cmd = 'prefix remove %s/64' % prefixEntry
         print(cmd)
         if self.__executeCommand(cmd)[-1] == 'Done':
             # send server data ntf to leader
@@ -1689,7 +1661,7 @@ class OpenThreadTHCI(object):
     @API
     def configBorderRouter(
         self,
-        P_Prefix=None,
+        P_Prefix="fd00:7d03:7d03:7d03::",
         P_stable=1,
         P_default=1,
         P_slaac_preferred=0,
@@ -1702,7 +1674,7 @@ class OpenThreadTHCI(object):
         """configure the border router with a given prefix entry parameters
 
         Args:
-            P_Prefix: IPv6 prefix that is available on the Thread Network
+            P_Prefix: IPv6 prefix that is available on the Thread Network in IPv6 dotted-quad format
             P_stable: true if the default router is expected to be stable network data
             P_default: true if border router offers the default route for P_Prefix
             P_slaac_preferred: true if allowing auto-configure address using P_Prefix
@@ -1717,23 +1689,12 @@ class OpenThreadTHCI(object):
         """
         print('%s call configBorderRouter' % self)
         assert TESTHARNESS_VERSION == TESTHARNESS_1_2 or P_dp == 0
+        assert (ipaddress.IPv6Network(P_Prefix.decode()))
 
         # turn off default domain prefix if configBorderRouter is called before joining network
         if TESTHARNESS_VERSION == TESTHARNESS_1_2 and P_dp == 0 and not self.__isOpenThreadRunning():
             self.__useDefaultDomainPrefix = False
 
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-            # TestHarness 1.2 converts 0x2001000000000000 to "2001000000000000"
-            if P_Prefix is None:
-                P_Prefix = 0xfd007d037d037d03
-
-            P_Prefix = '%016x' % P_Prefix
-        else:
-            # TestHarness 1.1 converts 2001000000000000 to "2001000000000000" (it's wrong, but not fixed yet.)
-            P_Prefix = '%016x' % P_Prefix
-
-        prefix = self.__convertIp6PrefixStringToIp6Address(P_Prefix)
-        print(prefix)
         parameter = ''
         prf = ''
 
@@ -1769,7 +1730,7 @@ class OpenThreadTHCI(object):
         else:
             pass
 
-        cmd = 'prefix add %s/64 %s %s' % (prefix, parameter, prf)
+        cmd = 'prefix add %s/64 %s %s' % (P_Prefix, parameter, prf)
         print(cmd)
         if self.__executeCommand(cmd)[-1] == 'Done':
             # if prefix configured before starting OpenThread stack
@@ -1887,7 +1848,7 @@ class OpenThreadTHCI(object):
         """configure border router with a given external route prefix entry
 
         Args:
-            P_Prefix: IPv6 prefix for the route
+            P_Prefix: IPv6 prefix for the route in IPv6 dotted-quad format
             P_Stable: is true if the external route prefix is stable network data
             R_Preference: a two-bit signed integer indicating Router preference
                           1: high
@@ -1899,10 +1860,9 @@ class OpenThreadTHCI(object):
             False: fail to configure the border router with a given external route prefix
         """
         print('%s call configExternalRouter' % self)
-        print(P_Prefix)
+        assert (ipaddress.IPv6Network(P_Prefix.decode()))
         prf = ''
         stable = ''
-        prefix = self.__convertIp6PrefixStringToIp6Address(str(P_Prefix))
         if R_Preference == 1:
             prf = 'high'
         elif R_Preference == 0:
@@ -1914,9 +1874,9 @@ class OpenThreadTHCI(object):
 
         if P_stable:
             stable += 's'
-            cmd = 'route add %s/64 %s %s' % (prefix, stable, prf)
+            cmd = 'route add %s/64 %s %s' % (P_Prefix, stable, prf)
         else:
-            cmd = 'route add %s/64 %s' % (prefix, prf)
+            cmd = 'route add %s/64 %s' % (P_Prefix, prf)
         print(cmd)
 
         if self.__executeCommand(cmd)[-1] == 'Done':
@@ -3029,7 +2989,7 @@ class OpenThreadTHCI(object):
             else:
                 self.bbrSeqNum = (self.bbrSeqNum + 1) % 256
 
-        return self.__configBbrDataset(SeqNum=SeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
+        return self.__configBbrDataset(SeqNum=self.bbrSeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
 
     def __configBbrDataset(self, SeqNum=None, MlrTimeout=None, ReRegDelay=None):
         if MlrTimeout is not None and ReRegDelay is None:

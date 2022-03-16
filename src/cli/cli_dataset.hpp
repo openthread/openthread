@@ -70,29 +70,9 @@ public:
 private:
     using Command = CommandEntry<Dataset>;
 
-    otError Print(otOperationalDataset &aDataset);
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-    otError ProcessHelp(Arg aArgs[]);
-    otError ProcessActive(Arg aArgs[]);
-    otError ProcessActiveTimestamp(Arg aArgs[]);
-    otError ProcessChannel(Arg aArgs[]);
-    otError ProcessChannelMask(Arg aArgs[]);
-    otError ProcessClear(Arg aArgs[]);
-    otError ProcessCommit(Arg aArgs[]);
-    otError ProcessDelay(Arg aArgs[]);
-    otError ProcessExtPanId(Arg aArgs[]);
-    otError ProcessInit(Arg aArgs[]);
-    otError ProcessMeshLocalPrefix(Arg aArgs[]);
-    otError ProcessNetworkName(Arg aArgs[]);
-    otError ProcessNetworkKey(Arg aArgs[]);
-    otError ProcessPanId(Arg aArgs[]);
-    otError ProcessPending(Arg aArgs[]);
-    otError ProcessPendingTimestamp(Arg aArgs[]);
-    otError ProcessMgmtSetCommand(Arg aArgs[]);
-    otError ProcessMgmtGetCommand(Arg aArgs[]);
-    otError ProcessPskc(Arg aArgs[]);
-    otError ProcessSecurityPolicy(Arg aArgs[]);
-    otError ProcessSet(Arg aArgs[]);
+    otError Print(otOperationalDataset &aDataset);
 
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
     otError     ProcessUpdater(Arg aArgs[]);
@@ -102,35 +82,6 @@ private:
 
     void    OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
     otError ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs);
-
-    static constexpr Command sCommands[] = {
-        {"active", &Dataset::ProcessActive},
-        {"activetimestamp", &Dataset::ProcessActiveTimestamp},
-        {"channel", &Dataset::ProcessChannel},
-        {"channelmask", &Dataset::ProcessChannelMask},
-        {"clear", &Dataset::ProcessClear},
-        {"commit", &Dataset::ProcessCommit},
-        {"delay", &Dataset::ProcessDelay},
-        {"extpanid", &Dataset::ProcessExtPanId},
-        {"help", &Dataset::ProcessHelp},
-        {"init", &Dataset::ProcessInit},
-        {"meshlocalprefix", &Dataset::ProcessMeshLocalPrefix},
-        {"mgmtgetcommand", &Dataset::ProcessMgmtGetCommand},
-        {"mgmtsetcommand", &Dataset::ProcessMgmtSetCommand},
-        {"networkkey", &Dataset::ProcessNetworkKey},
-        {"networkname", &Dataset::ProcessNetworkName},
-        {"panid", &Dataset::ProcessPanId},
-        {"pending", &Dataset::ProcessPending},
-        {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
-        {"pskc", &Dataset::ProcessPskc},
-        {"securitypolicy", &Dataset::ProcessSecurityPolicy},
-        {"set", &Dataset::ProcessSet},
-#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
-        {"updater", &Dataset::ProcessUpdater},
-#endif
-    };
-
-    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     static otOperationalDataset sDataset;
 };

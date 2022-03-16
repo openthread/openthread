@@ -42,7 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/mle.hpp"
@@ -51,6 +51,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("JoinerRouter");
 
 JoinerRouter::JoinerRouter(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -84,7 +86,7 @@ void JoinerRouter::Start(void)
         IgnoreError(mSocket.Open(&JoinerRouter::HandleUdpReceive, this));
         IgnoreError(mSocket.Bind(port));
         IgnoreError(Get<Ip6::Filter>().AddUnsecurePort(port));
-        otLogInfoMeshCoP("Joiner Router: start");
+        LogInfo("Joiner Router: start");
     }
     else
     {
@@ -136,7 +138,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     uint16_t         borderAgentRloc;
     uint16_t         offset;
 
-    otLogInfoMeshCoP("JoinerRouter::HandleUdpReceive");
+    LogInfo("JoinerRouter::HandleUdpReceive");
 
     SuccessOrExit(error = GetBorderAgentRloc(Get<ThreadNetif>(), borderAgentRloc));
 
@@ -163,7 +165,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("Sent relay rx");
+    LogInfo("Sent relay rx");
 
 exit:
     FreeMessageOnError(message, error);
@@ -190,7 +192,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), error = kErrorDrop);
 
-    otLogInfoMeshCoP("Received relay transmit");
+    LogInfo("Received relay transmit");
 
     SuccessOrExit(error = Tlv::Find<JoinerUdpPortTlv>(aMessage, joinerPort));
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMessage, joinerIid));
@@ -209,7 +211,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::Messa
 
     if (Tlv::Find<JoinerRouterKekTlv>(aMessage, kek) == kErrorNone)
     {
-        otLogInfoMeshCoP("Received kek");
+        LogInfo("Received kek");
 
         DelaySendingJoinerEntrust(messageInfo, kek);
     }
@@ -295,12 +297,12 @@ Error JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
 
     IgnoreError(Get<Tmf::Agent>().AbortTransaction(&JoinerRouter::HandleJoinerEntrustResponse, this));
 
-    otLogInfoMeshCoP("Sending JOIN_ENT.ntf");
+    LogInfo("Sending JOIN_ENT.ntf");
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo,
                                                         &JoinerRouter::HandleJoinerEntrustResponse, this));
 
-    otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
+    LogInfo("Sent joiner entrust length = %d", message->GetLength());
+    LogCert("[THCI] direction=send | type=JOIN_ENT.ntf");
 
 exit:
     FreeMessageOnError(message, error);
@@ -406,8 +408,8 @@ void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
 
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged);
 
-    otLogInfoMeshCoP("Receive joiner entrust response");
-    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.rsp");
+    LogInfo("Receive joiner entrust response");
+    LogCert("[THCI] direction=recv | type=JOIN_ENT.rsp");
 
 exit:
     return;

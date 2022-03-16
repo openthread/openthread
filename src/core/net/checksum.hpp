@@ -71,7 +71,7 @@ public:
     /**
      * This static method calculates and then updates the checksum in a given message (if UDP/ICMP6).
      *
-     * @param[inout] aMessage   The message to update the checksum in. The `aMessage.GetOffset()` should point to start
+     * @param[in,out] aMessage  The message to update the checksum in. The `aMessage.GetOffset()` should point to start
      *                          of the UDP/ICMP6 header. On exit the checksum field in UDP/ICMP6 header in the message
      *                          is updated.
      * @param[in] aSource       The source address.

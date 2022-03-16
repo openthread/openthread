@@ -44,6 +44,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <openthread/logging.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
@@ -182,7 +183,7 @@ void otPlatSettingsInit(otInstance *aInstance)
 
         if (stat(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, &st) == -1)
         {
-            mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755);
+            VerifyOrDie(mkdir(OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH, 0755) == 0, OT_EXIT_ERROR_ERRNO);
         }
     }
 
@@ -495,6 +496,17 @@ void otPlatSettingsWipe(otInstance *aInstance)
 #endif
 
 #if SELF_TEST
+
+void otLogCritPlat(const char *aFormat, ...)
+{
+    OT_UNUSED_VARIABLE(aFormat);
+}
+
+const char *otExitCodeToString(uint8_t aExitCode)
+{
+    OT_UNUSED_VARIABLE(aExitCode);
+    return "";
+}
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {

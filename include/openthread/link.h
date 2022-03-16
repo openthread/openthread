@@ -60,11 +60,12 @@ extern "C" {
  */
 typedef struct otThreadLinkInfo
 {
-    uint16_t mPanId;        ///< Source PAN ID
-    uint8_t  mChannel;      ///< 802.15.4 Channel
-    int8_t   mRss;          ///< Received Signal Strength in dBm.
-    uint8_t  mLqi;          ///< Link Quality Indicator for a received message.
-    bool     mLinkSecurity; ///< Indicates whether or not link security is enabled.
+    uint16_t mPanId;                   ///< Source PAN ID
+    uint8_t  mChannel;                 ///< 802.15.4 Channel
+    int8_t   mRss;                     ///< Received Signal Strength in dBm.
+    uint8_t  mLqi;                     ///< Link Quality Indicator for a received message.
+    bool     mLinkSecurity : 1;        ///< Indicates whether or not link security is enabled.
+    bool     mIsDstPanIdBroadcast : 1; ///< Indicates whether or not destination PAN ID is broadcast.
 
     // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
@@ -772,10 +773,10 @@ void otLinkFilterClearAddresses(otInstance *aInstance);
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the MAC filter iterator context. To get the first in-use address filter entry,
- *                           it should be set to OT_MAC_FILTER_ITERATOR_INIT. MUST NOT be NULL.
- * @param[out]    aEntry     A pointer to where the information is placed. MUST NOT be NULL.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the MAC filter iterator context. To get the first in-use address filter
+ *                            entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT. MUST NOT be NULL.
+ * @param[out]     aEntry     A pointer to where the information is placed. MUST NOT be NULL.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved an in-use address filter entry.
  * @retval OT_ERROR_NOT_FOUND     No subsequent entry exists.
@@ -851,12 +852,12 @@ void otLinkFilterClearAllRssIn(otInstance *aInstance);
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the MAC filter iterator context. MUST NOT be NULL.
- *                           To get the first entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
- * @param[out]    aEntry     A pointer to where the information is placed. The last entry would have the extended
- *                           address as all 0xff to indicate the default received signal strength if it was set.
-                             @p aEntry MUST NOT be NULL.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the MAC filter iterator context. MUST NOT be NULL.
+ *                            To get the first entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
+ * @param[out]     aEntry     A pointer to where the information is placed. The last entry would have the extended
+ *                            address as all 0xff to indicate the default received signal strength if it was set.
+                              @p aEntry MUST NOT be NULL.
  *
  * @retval OT_ERROR_NONE          Successfully retrieved the next entry.
  * @retval OT_ERROR_NOT_FOUND     No subsequent entry exists.

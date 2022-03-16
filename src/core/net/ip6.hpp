@@ -196,7 +196,7 @@ public:
      * processing is complete, including when a value other than `kErrorNone` is returned.
      *
      * @param[in]  aMessage          A reference to the message.
-     * @param[in]  aFromNcpHost      If the message was forwarded from the NCP Host.
+     * @param[in]  aFromHost         TRUE if the message is originated from the host, FALSE otherwise.
      *
      * @retval kErrorNone     Successfully processed the message.
      * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
@@ -205,7 +205,7 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error SendRaw(Message &aMessage, bool aFromNcpHost);
+    Error SendRaw(Message &aMessage, bool aFromHost);
 
     /**
      * This method processes a received IPv6 datagram.
@@ -213,7 +213,7 @@ public:
      * @param[in]  aMessage          A reference to the message.
      * @param[in]  aNetif            A pointer to the network interface that received the message.
      * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
-     * @param[in]  aFromNcpHost      TRUE if the message was submitted by the NCP host, FALSE otherwise.
+     * @param[in]  aFromHost         TRUE if the message is originated from the host, FALSE otherwise.
      *
      * @retval kErrorNone     Successfully processed the message.
      * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
@@ -222,7 +222,7 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
+    Error HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromHost);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -301,7 +301,7 @@ public:
     /**
      * This static method converts an IP protocol number to a string.
      *
-     * @param[in] aIpPorto  An IP protocol number.
+     * @param[in] aIpProto  An IP protocol number.
      *
      * @returns The string representation of @p aIpProto.
      *
@@ -324,7 +324,7 @@ private:
     Error ProcessReceiveCallback(Message &          aMessage,
                                  const MessageInfo &aMessageInfo,
                                  uint8_t            aIpProto,
-                                 bool               aFromNcpHost,
+                                 bool               aFromHost,
                                  bool               aAllowReceiveFilter,
                                  Message::Ownership aMessageOwnership);
     Error HandleExtensionHeaders(Message &    aMessage,
@@ -333,10 +333,10 @@ private:
                                  Header &     aHeader,
                                  uint8_t &    aNextHeader,
                                  bool         aIsOutbound,
-                                 bool         aFromNcpHost,
+                                 bool         aFromHost,
                                  bool &       aReceive);
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
-    Error HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
+    Error HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     void CleanupFragmentationBuffer(void);
     void HandleTimeTick(void);
@@ -353,7 +353,7 @@ private:
                         MessageInfo &      aMessageInfo,
                         uint8_t            aIpProto,
                         Message::Ownership aMessageOwnership);
-    bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const;
+    bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromHost) const;
     bool  IsOnLink(const Address &aAddress) const;
 
     bool                 mForwardingEnabled;

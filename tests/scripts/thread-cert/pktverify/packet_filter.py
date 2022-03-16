@@ -34,6 +34,7 @@ from typing import Optional, Callable, Tuple, Union
 from pktverify import consts, errors
 from pktverify.addrs import EthAddr, ExtAddr, Ipv6Addr
 from pktverify.bytes import Bytes
+from pktverify.consts import THREAD_ALLOWED_ICMPV6_TYPES
 from pktverify.packet import Packet
 from pktverify.utils import make_filter_func
 
@@ -617,6 +618,10 @@ class PacketFilter(object):
 
     def filter_icmpv6_nd_ra(self):
         return self.filter(lambda p: p.icmpv6.is_router_advertisement)
+
+    def filter_thread_unallowed_icmpv6(self):
+        return self.filter('wpan and icmpv6 and icmpv6.type not in {THREAD_ALLOWED_ICMPV6_TYPES}',
+                           THREAD_ALLOWED_ICMPV6_TYPES=THREAD_ALLOWED_ICMPV6_TYPES)
 
     def filter_has_bbr_dataset(self):
         return self.filter("""

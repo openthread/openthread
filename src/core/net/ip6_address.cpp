@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
@@ -613,7 +614,7 @@ Error Address::FromString(const char *aString)
         Ip4::Address ip4Addr;
 
         SuccessOrExit(error = ip4Addr.FromString(aString));
-        memcpy(OT_ARRAY_END(mFields.m8) - Ip4::Address::kSize, ip4Addr.GetBytes(), Ip4::Address::kSize);
+        memcpy(GetArrayEnd(mFields.m8) - Ip4::Address::kSize, ip4Addr.GetBytes(), Ip4::Address::kSize);
     }
 
     error = kErrorNone;
@@ -639,7 +640,7 @@ void Address::ToString(char *aBuffer, uint16_t aSize) const
 
 void Address::ToString(StringWriter &aWriter) const
 {
-    AppendHexWords(aWriter, OT_ARRAY_LENGTH(mFields.m16));
+    AppendHexWords(aWriter, static_cast<uint8_t>(GetArrayLength(mFields.m16)));
 }
 
 void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const

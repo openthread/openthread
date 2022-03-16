@@ -35,12 +35,13 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/string.hpp"
 #include "net/srp_server.hpp"
 #include "net/udp6.hpp"
@@ -48,6 +49,8 @@
 namespace ot {
 namespace Dns {
 namespace ServiceDiscovery {
+
+RegisterLogModule("DnssdServer");
 
 const char Server::kDnssdProtocolUdp[]  = "_udp";
 const char Server::kDnssdProtocolTcp[]  = "_tcp";
@@ -78,7 +81,7 @@ Error Server::Start(void)
 #endif
 
 exit:
-    otLogInfoDns("[server] started: %s", ErrorToString(error));
+    LogInfo("started: %s", ErrorToString(error));
 
     if (error != kErrorNone)
     {
@@ -102,7 +105,7 @@ void Server::Stop(void)
     mTimer.Stop();
 
     IgnoreError(mSocket.Close());
-    otLogInfoDns("[server] stopped");
+    LogInfo("stopped");
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Get<Srp::Server>().HandleDnssdServerStateChange();
@@ -195,7 +198,7 @@ void Server::SendResponse(Header                  aHeader,
 
     if (aResponseCode == Header::kResponseServerFailure)
     {
-        otLogWarnDns("[server] failed to handle DNS query due to server failure");
+        LogWarn("failed to handle DNS query due to server failure");
         aHeader.SetQuestionCount(0);
         aHeader.SetAnswerCount(0);
         aHeader.SetAdditionalRecordCount(0);
@@ -211,11 +214,11 @@ void Server::SendResponse(Header                  aHeader,
 
     if (error != kErrorNone)
     {
-        otLogWarnDns("[server] failed to send DNS-SD reply: %s", ErrorToString(error));
+        LogWarn("failed to send DNS-SD reply: %s", ErrorToString(error));
     }
     else
     {
-        otLogInfoDns("[server] send DNS-SD reply: %s, RCODE=%d", ErrorToString(error), aResponseCode);
+        LogInfo("send DNS-SD reply: %s, RCODE=%d", ErrorToString(error), aResponseCode);
     }
 }
 
@@ -662,8 +665,8 @@ Header::Response Server::ResolveBySrp(Header &                  aResponseHeader,
         response = ResolveQuestionBySrp(name, question, aResponseHeader, aResponseMessage, aCompressInfo,
                                         /* aAdditional */ false);
 
-        otLogInfoDns("[server] ANSWER: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d",
-                     aResponseHeader.GetMessageId(), name, question.GetClass(), question.GetType(), response);
+        LogInfo("ANSWER: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d", aResponseHeader.GetMessageId(), name,
+                question.GetClass(), question.GetType(), response);
     }
 
     // Answer the questions with additional RRs if required
@@ -681,8 +684,8 @@ Header::Response Server::ResolveBySrp(Header &                  aResponseHeader,
                                                                                 /* aAdditional */ true),
                          response = Header::kResponseServerFailure);
 
-            otLogInfoDns("[server] ADDITIONAL: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d",
-                         aResponseHeader.GetMessageId(), name, question.GetClass(), question.GetType(), response);
+            LogInfo("ADDITIONAL: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d", aResponseHeader.GetMessageId(),
+                    name, question.GetClass(), question.GetType(), response);
         }
     }
 exit:
@@ -1022,7 +1025,7 @@ const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
         cur = query + 1;
     }
 
-    for (; cur < OT_ARRAY_END(mQueryTransactions); cur++)
+    for (; cur < GetArrayEnd(mQueryTransactions); cur++)
     {
         if (cur->IsValid())
         {

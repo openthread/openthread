@@ -47,7 +47,9 @@ class OTCI(object):
     manipulate an OpenThread device.
     """
 
-    __exec_command_retry = 0
+    DEFAULT_EXEC_COMMAND_RETRY = 4  # A command is retried 4 times if failed.
+
+    __exec_command_retry = DEFAULT_EXEC_COMMAND_RETRY
 
     def __init__(self, otcmd: OTCommandHandler):
         """
@@ -278,7 +280,12 @@ class OTCI(object):
         for line in output[2:]:
             fields = line.strip().split('|')
 
-            _, J, netname, extpanid, panid, extaddr, ch, dbm, lqi, _ = fields
+            try:
+                _, J, netname, extpanid, panid, extaddr, ch, dbm, lqi, _ = fields
+            except Exception:
+                logging.warning('ignored output: %r', line)
+                continue
+
             networks.append({
                 'joinable': bool(int(J)),
                 'network_name': netname.strip(),
@@ -1132,6 +1139,10 @@ class OTCI(object):
     def srp_client_remove_service(self, instance: str, service: str):
         """Remove a service from SRP client."""
         self.execute_command(f'srp client service remove {instance} {service}')
+
+    def srp_client_clear_service(self, instance: str, service: str):
+        """Remove a service from SRP client without notifying the SRP server."""
+        self.execute_command(f'srp client service clear {instance} {service}')
 
     def srp_client_get_key_lease_interval(self) -> int:
         """Get SRP client key lease interval (in seconds)."""

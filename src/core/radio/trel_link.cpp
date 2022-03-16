@@ -38,10 +38,12 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 namespace ot {
 namespace Trel {
+
+RegisterLogModule("TrelLink");
 
 Link::Link(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -219,8 +221,7 @@ void Link::BeginTransmit(void)
         txPacket.GetHeader().SetDestination(destAddr.GetExtended());
     }
 
-    otLogDebgMac("Trel: BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(),
-                 txPacket.GetPayloadLength());
+    LogDebg("BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(), txPacket.GetPayloadLength());
 
     VerifyOrExit(mInterface.Send(txPacket, isDisovery) == kErrorNone, InvokeSendDone(kErrorAbort));
 
@@ -372,8 +373,7 @@ void Link::ProcessReceivedPacket(Packet &aPacket)
         }
     }
 
-    otLogDebgMac("Trel: ReceivedPacket() [%s] plen:%d", aPacket.GetHeader().ToString().AsCString(),
-                 aPacket.GetPayloadLength());
+    LogDebg("ReceivedPacket() [%s] plen:%d", aPacket.GetHeader().ToString().AsCString(), aPacket.GetPayloadLength());
 
     if (aPacket.GetHeader().GetAckMode() == Header::kAckRequested)
     {
@@ -404,7 +404,7 @@ void Link::HandleAck(Packet &aAckPacket)
     Neighbor *   neighbor;
     uint32_t     ackNumber;
 
-    otLogDebgMac("Trel: HandleAck() [%s]", aAckPacket.GetHeader().ToString().AsCString());
+    LogDebg("HandleAck() [%s]", aAckPacket.GetHeader().ToString().AsCString());
 
     srcAddress.SetExtended(aAckPacket.GetHeader().GetSource());
     neighbor = Get<NeighborTable>().FindNeighbor(srcAddress, Neighbor::kInStateAnyExceptInvalid);
@@ -450,15 +450,15 @@ void Link::SendAck(Packet &aRxPacket)
     ackPacket.GetHeader().SetSource(Get<Mac::Mac>().GetExtAddress());
     ackPacket.GetHeader().SetDestination(aRxPacket.GetHeader().GetSource());
 
-    otLogDebgMac("Trel: SendAck [%s]", ackPacket.GetHeader().ToString().AsCString());
+    LogDebg("SendAck [%s]", ackPacket.GetHeader().ToString().AsCString());
 
     IgnoreError(mInterface.Send(ackPacket));
 }
 
 void Link::ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError)
 {
-    otLogDebgMac("Trel: ReportDeferredAckStatus(): %s for %s", aNeighbor.GetExtAddress().ToString().AsCString(),
-                 ErrorToString(aError));
+    LogDebg("ReportDeferredAckStatus(): %s for %s", aNeighbor.GetExtAddress().ToString().AsCString(),
+            ErrorToString(aError));
 
     Get<MeshForwarder>().HandleDeferredAck(aNeighbor, aError);
 }
@@ -467,7 +467,7 @@ void Link::SetState(State aState)
 {
     if (mState != aState)
     {
-        otLogDebgMac("Trel: State: %s -> %s", StateToString(mState), StateToString(aState));
+        LogDebg("State: %s -> %s", StateToString(mState), StateToString(aState));
         mState = aState;
     }
 }

@@ -26,9 +26,6 @@
 #
 
 _openthread_config_file = ""
-if (current_os == "fuchsia") {
-  _openthread_config_file = "<openthread-config-android.h>"
-}
 
 declare_args() {
   # OpenThread config header.

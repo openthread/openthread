@@ -123,7 +123,7 @@ typedef struct otSysMainloopContext
  * This function updates the file descriptor sets with file descriptors used by OpenThread drivers.
  *
  * @param[in]       aInstance   The OpenThread instance structure.
- * @param[inout]    aMainloop   A pointer to the mainloop context.
+ * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
  */
 void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop);
@@ -131,7 +131,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 /**
  * This function polls OpenThread's mainloop.
  *
- * @param[inout]    aMainloop   A pointer to the mainloop context.
+ * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
  * @returns value returned from select().
  *

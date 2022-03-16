@@ -88,6 +88,7 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     , mSpiTxPayloadSize(0)
     , mDidPrintRateLimitLog(false)
     , mSpiSlaveDataLen(0)
+    , mDidRxFrame(false)
 {
 }
 
@@ -398,8 +399,8 @@ otError SpiInterface::DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransf
 
     if (ret != -1)
     {
-        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, transfer[1].len);
-        otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", aSpiRxFrameBuffer, transfer[1].len);
+        otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, static_cast<uint16_t>(transfer[1].len));
+        otDumpDebgPlat("SPI-RX", aSpiRxFrameBuffer, static_cast<uint16_t>(transfer[1].len));
 
         mSpiFrameCount++;
     }
@@ -528,8 +529,8 @@ otError SpiInterface::PushPullSpi(void)
 
                 otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1],
                               spiRxFrame[2], spiRxFrame[3], spiRxFrame[4]);
-                otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
-                otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
+                otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
+                otDumpDebgPlat("SPI-RX", spiRxFrameBuffer, spiTransferBytes);
             }
 
             mSpiTxRefusedCount++;
@@ -547,8 +548,8 @@ otError SpiInterface::PushPullSpi(void)
 
             otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
                           spiRxFrame[3], spiRxFrame[4]);
-            otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
-            otDumpDebg(OT_LOG_REGION_PLATFORM, "SPI-RX", spiRxFrameBuffer, spiTransferBytes);
+            otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
+            otDumpDebgPlat("SPI-RX", spiRxFrameBuffer, spiTransferBytes);
 
             ExitNow();
         }
@@ -579,6 +580,7 @@ otError SpiInterface::PushPullSpi(void)
             // Upper layer will free the frame buffer.
             discardRxFrame = false;
 
+            mDidRxFrame = true;
             mReceiveFrameCallback(mReceiveFrameContext);
         }
     }
@@ -731,7 +733,14 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
 
 void SpiInterface::Process(const RadioProcessContext &aContext)
 {
-    if (FD_ISSET(mIntGpioValueFd, aContext.mReadFdSet))
+    Process(aContext.mReadFdSet, aContext.mWriteFdSet);
+}
+
+void SpiInterface::Process(const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+{
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+
+    if (FD_ISSET(mIntGpioValueFd, aReadFdSet))
     {
         struct gpioevent_data event;
 
@@ -751,68 +760,48 @@ void SpiInterface::Process(const RadioProcessContext &aContext)
 
 otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
 {
-    otError        error      = OT_ERROR_NONE;
-    struct timeval spiTimeout = {kSecPerDay, 0};
-    struct timeval timeout;
-    fd_set         readFdSet;
-    int            ret;
-    bool           isDataReady = false;
+    otError  error = OT_ERROR_NONE;
+    uint64_t now   = otPlatTimeGet();
+    uint64_t end   = now + aTimeoutUs;
 
-    timeout.tv_sec  = static_cast<time_t>(aTimeoutUs / US_PER_S);
-    timeout.tv_usec = static_cast<suseconds_t>(aTimeoutUs % US_PER_S);
+    mDidRxFrame = false;
 
-    FD_ZERO(&readFdSet);
-
-    if (mIntGpioValueFd >= 0)
+    while (now < end)
     {
-        if ((isDataReady = CheckInterrupt()))
+        fd_set         readFdSet;
+        fd_set         writeFdSet;
+        int            maxFds = -1;
+        struct timeval timeout;
+        int            ret;
+
+        timeout.tv_sec  = static_cast<time_t>((end - now) / US_PER_S);
+        timeout.tv_usec = static_cast<suseconds_t>((end - now) % US_PER_S);
+
+        FD_ZERO(&readFdSet);
+        FD_ZERO(&writeFdSet);
+
+        UpdateFdSet(readFdSet, writeFdSet, maxFds, timeout);
+
+        ret = select(maxFds + 1, &readFdSet, &writeFdSet, nullptr, &timeout);
+
+        if (ret >= 0)
         {
-            // Interrupt pin is asserted, set the timeout to be 0.
-            spiTimeout.tv_sec  = 0;
-            spiTimeout.tv_usec = 0;
+            Process(&readFdSet, &writeFdSet);
+
+            if (mDidRxFrame)
+            {
+                ExitNow();
+            }
         }
-        else
+        else if (errno != EINTR)
         {
-            // The interrupt pin was not asserted, so we wait for the interrupt pin to be asserted by adding it to the
-            // read set.
-            FD_SET(mIntGpioValueFd, &readFdSet);
+            DieNow(OT_EXIT_ERROR_ERRNO);
         }
-    }
-    else
-    {
-        // In this case we don't have an interrupt, so we revert to SPI polling.
-        spiTimeout.tv_sec  = 0;
-        spiTimeout.tv_usec = kSpiPollPeriodUs;
+
+        now = otPlatTimeGet();
     }
 
-    if (timercmp(&spiTimeout, &timeout, <))
-    {
-        timeout = spiTimeout;
-    }
-
-    ret = select(mIntGpioValueFd + 1, &readFdSet, nullptr, nullptr, &timeout);
-
-    if (ret > 0 && FD_ISSET(mIntGpioValueFd, &readFdSet))
-    {
-        struct gpioevent_data event;
-
-        // Read event data to clear interrupt.
-        VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_FAILURE);
-        isDataReady = true;
-    }
-
-    if (isDataReady)
-    {
-        IgnoreError(PushPullSpi());
-    }
-    else if (ret == 0)
-    {
-        ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
-    }
-    else if (errno != EINTR)
-    {
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    error = OT_ERROR_RESPONSE_TIMEOUT;
 
 exit:
     return error;

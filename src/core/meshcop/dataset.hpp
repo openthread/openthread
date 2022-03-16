@@ -406,7 +406,7 @@ public:
         /**
          * This method sets the Delay Timer in the Dataset.
          *
-         * @param[in] aDely   A Delay value.
+         * @param[in] aDelay  A Delay value.
          *
          */
         void SetDelay(uint32_t aDelay)
