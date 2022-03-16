@@ -551,6 +551,7 @@ public:
      *
      * @retval kErrorNone     Successfully started the DNS client.
      * @retval kErrorAlready  The socket is already open.
+     * @retval kErrorFailed   The platform UDP open failed.
      *
      */
     Error Start(void);
@@ -574,8 +575,11 @@ public:
      *
      * @param[in] aQueryConfig   The new default query config.
      *
+     * @retval kErrorNone     Successfully started the DNS client.
+     * @retval kErrorFailed   The platform UDP open failed.
+     *
      */
-    void SetDefaultConfig(const QueryConfig &aQueryConfig);
+    Error SetDefaultConfig(const QueryConfig &aQueryConfig);
 
     /**
      * This method resets the default config to the config used when the OpenThread stack starts.
@@ -584,8 +588,10 @@ public:
      * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, or `_DEFAULT_RESPONSE_TIMEOUT`
      * etc. (see `config/dns_client.h` for all related config options).
      *
+     * @retval kErrorNone     Successfully started the DNS client.
+     * @retval kErrorFailed   The platform UDP open failed.
      */
-    void ResetDefaultConfig(void);
+    Error ResetDefaultConfig(void);
 
     /**
      * This method sends an address resolution DNS query for AAAA (IPv6) record for a given host name.
@@ -728,6 +734,7 @@ private:
 
     static constexpr uint16_t kNameOffsetInQuery = sizeof(QueryInfo);
 
+    Error       RestartOnNetifChange(otNetifIdentifier prevNetif);
     Error       StartQuery(QueryInfo &        aInfo,
                            const QueryConfig *aConfig,
                            const char *       aLabel,

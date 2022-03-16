@@ -38,6 +38,7 @@
 #include <openthread/dns.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/udp.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,6 +95,7 @@ typedef struct otDnsQueryConfig
     uint8_t            mMaxTxAttempts;   ///< Maximum tx attempts before reporting failure. Zero for unspecified value.
     otDnsRecursionFlag mRecursionFlag;   ///< Indicates whether the server can resolve the query recursively or not.
     otDnsNat64Mode     mNat64Mode;       ///< Allow/Disallow NAT64 address translation during address resolution.
+    otNetifIdentifier  mNetif;           ///< The netif to send DNS queries. Zero for unspecified value.
 } otDnsQueryConfig;
 
 /**
@@ -133,8 +135,11 @@ const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance);
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aConfig     A pointer to the new query config to use as default.
  *
+ * @retval OT_ERROR_NONE        The config was set successfully.
+ * @retval OT_ERROR_ALREADY     The underlying UDP socket failed.
+ *
  */
-void otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig);
+otError otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig);
 
 /**
  * This type is an opaque representation of a response to an address resolution DNS query.

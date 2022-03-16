@@ -78,6 +78,7 @@ NETDATA_PUBLISHER         ?= 0
 OTNS                      ?= 0
 PING_SENDER               ?= 1
 PLATFORM_UDP              ?= 0
+RECURSIVE_DNS64_SERVER    ?= 0
 REFERENCE_DEVICE          ?= 0
 SERVICE                   ?= 0
 SETTINGS_RAM              ?= 0
@@ -302,6 +303,10 @@ endif
 
 ifeq ($(PLATFORM_UDP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1
+endif
+
+ifeq ($(RECURSIVE_DNS64_SERVER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE=1
 endif
 
 # Enable features only required for reference device during certification.

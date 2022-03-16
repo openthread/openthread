@@ -46,6 +46,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
+ *
+ * Define to 1 to enable recursive DNS64 Server support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
+#define OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DNSSD_SERVER_PORT
  *
  * Define the the DNS-SD Server port.

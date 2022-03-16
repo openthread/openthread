@@ -551,10 +551,13 @@ Client::Client(Instance &aInstance)
 
 Error Client::Start(void)
 {
-    Error error;
+    Error error = kErrorNone;
 
-    SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(0, OT_NETIF_UNSPECIFIED));
+    if (!mSocket.IsOpen())
+    {
+        SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
+        SuccessOrExit(error = mSocket.Bind(0, mDefaultConfig.mNetif));
+    }
 
 exit:
     return error;
@@ -572,9 +575,10 @@ void Client::Stop(void)
     IgnoreError(mSocket.Close());
 }
 
-void Client::SetDefaultConfig(const QueryConfig &aQueryConfig)
+Error Client::SetDefaultConfig(const QueryConfig &aQueryConfig)
 {
-    QueryConfig startingDefault(QueryConfig::kInitFromDefaults);
+    QueryConfig       startingDefault(QueryConfig::kInitFromDefaults);
+    otNetifIdentifier prevNetif = mDefaultConfig.mNetif;
 
     mDefaultConfig.SetFrom(aQueryConfig, startingDefault);
 
@@ -582,16 +586,31 @@ void Client::SetDefaultConfig(const QueryConfig &aQueryConfig)
     mUserDidSetDefaultAddress = !aQueryConfig.GetServerSockAddr().GetAddress().IsUnspecified();
     UpdateDefaultConfigAddress();
 #endif
+    return RestartOnNetifChange(prevNetif);
 }
 
-void Client::ResetDefaultConfig(void)
+Error Client::ResetDefaultConfig(void)
 {
-    mDefaultConfig = QueryConfig(QueryConfig::kInitFromDefaults);
+    otNetifIdentifier prevNetif = mDefaultConfig.mNetif;
+    mDefaultConfig              = QueryConfig(QueryConfig::kInitFromDefaults);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     mUserDidSetDefaultAddress = false;
     UpdateDefaultConfigAddress();
 #endif
+    return RestartOnNetifChange(prevNetif);
+}
+
+Error Client::RestartOnNetifChange(otNetifIdentifier prevNetif)
+{
+    Error err = kErrorNone;
+
+    if (prevNetif != mDefaultConfig.mNetif)
+    {
+        Stop();
+        err = Start();
+    }
+    return err;
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE

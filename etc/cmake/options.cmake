@@ -194,6 +194,11 @@ if(OT_DNSSD_SERVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1")
 endif()
 
+option(OT_RECURSIVE_DNS64_SERVER "enable recursive DNS64 server support")
+if(OT_RECURSIVE_DNS64_SERVER)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE=1")
+endif()
+
 option(OT_DOC "Build OpenThread documentation")
 
 option(OT_ECDSA "enable ECDSA support")

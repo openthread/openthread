@@ -140,6 +140,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1" ]
     }
 
+    if (openthread_config_recursive_dns64_server_enable) {
+      defines += [ "OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE=1" ]
+    }
+
     if (openthread_config_ecdsa_enable) {
       defines += [ "OPENTHREAD_CONFIG_ECDSA_ENABLE=1" ]
     }

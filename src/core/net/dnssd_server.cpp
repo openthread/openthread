@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
+#include "dns_client.hpp"
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
@@ -174,7 +175,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
 
     // Resolve the question using query callbacks if SRP server failed to resolve the questions.
     if (responseHeader.GetAnswerCount() == 0 &&
-        kErrorNone == ResolveByQueryCallbacks(responseHeader, *responseMessage, compressInfo, aMessageInfo))
+        kErrorNone == ResolveByQuery(responseHeader, *responseMessage, compressInfo, aMessageInfo))
     {
         resolveByQueryCallbacks = true;
     }
@@ -252,27 +253,34 @@ Header::Response Server::AddQuestions(const Header &    aRequestHeader,
                          qtype == ResourceRecord::kTypeTxt || qtype == ResourceRecord::kTypeAaaa,
                      response = Header::kResponseNotImplemented);
 
-        VerifyOrExit(kErrorNone == FindNameComponents(name, aCompressInfo.GetDomainName(), nameComponentsOffsetInfo),
-                     response = Header::kResponseNameError);
-
-        switch (question.GetType())
+        if (Name::IsSubDomainOf(name, aCompressInfo.GetDomainName()))
         {
-        case ResourceRecord::kTypePtr:
-            VerifyOrExit(nameComponentsOffsetInfo.IsServiceName(), response = Header::kResponseNameError);
-            break;
-        case ResourceRecord::kTypeSrv:
-            VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
-            break;
-        case ResourceRecord::kTypeTxt:
-            VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
-            break;
-        case ResourceRecord::kTypeAaaa:
-            VerifyOrExit(nameComponentsOffsetInfo.IsHostName(), response = Header::kResponseNameError);
-            break;
-        default:
-            ExitNow(response = Header::kResponseNotImplemented);
+            switch (question.GetType())
+            {
+            case ResourceRecord::kTypePtr:
+                VerifyOrExit(nameComponentsOffsetInfo.IsServiceName(), response = Header::kResponseNameError);
+                break;
+            case ResourceRecord::kTypeSrv:
+                VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
+                break;
+            case ResourceRecord::kTypeTxt:
+                VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
+                break;
+            case ResourceRecord::kTypeAaaa:
+                VerifyOrExit(nameComponentsOffsetInfo.IsHostName(), response = Header::kResponseNameError);
+                break;
+            default:
+                ExitNow(response = Header::kResponseNotImplemented);
+            }
         }
-
+        else
+        {
+#if OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
+            VerifyOrExit(question.GetType() == ResourceRecord::kTypeAaaa);
+#else
+            ExitNow(response = Header::kResponseNotImplemented);
+#endif
+        }
         VerifyOrExit(AppendQuestion(name, question, aResponseMessage, aCompressInfo) == kErrorNone,
                      response = Header::kResponseServerFailure);
     }
@@ -803,10 +811,10 @@ const Srp::Server::Service *Server::GetNextSrpService(const Srp::Server::Host & 
 }
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
-Error Server::ResolveByQueryCallbacks(Header &                aResponseHeader,
-                                      Message &               aResponseMessage,
-                                      NameCompressInfo &      aCompressInfo,
-                                      const Ip6::MessageInfo &aMessageInfo)
+Error Server::ResolveByQuery(Header &                aResponseHeader,
+                             Message &               aResponseMessage,
+                             NameCompressInfo &      aCompressInfo,
+                             const Ip6::MessageInfo &aMessageInfo)
 {
     QueryTransaction *query = nullptr;
     DnsQueryType      queryType;
@@ -822,11 +830,59 @@ Error Server::ResolveByQueryCallbacks(Header &                aResponseHeader,
     query = NewQuery(aResponseHeader, aResponseMessage, aCompressInfo, aMessageInfo);
     VerifyOrExit(query != nullptr, error = kErrorNoBufs);
 
-    mQuerySubscribe(mQueryCallbackContext, name);
+    if (Name::IsSubDomainOf(name, kDefaultDomainName))
+    {
+        mQuerySubscribe(mQueryCallbackContext, name);
+    }
+    else
+    {
+#if OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
+        error = QueryRecursive(name);
+#else
+        error = kErrorNotImplemented;
+#endif
+    }
 
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
+Error Server::QueryRecursive(const char *name)
+{
+    Client::QueryConfig config;
+
+    config.Clear();
+    config.mNat64Mode = OT_DNS_NAT64_ALLOW;
+
+    return Get<Dns::Client>().ResolveIp4Address(name, HandleRecursiveResolveResponse, this, &config);
+}
+
+void Server::HandleRecursiveResolveResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
+{
+    Server *server = static_cast<Server *>(aContext);
+    server->HandleRecursiveResolveResponse(aError, aResponse);
+}
+
+void Server::HandleRecursiveResolveResponse(otError aError, const otDnsAddressResponse *aResponse)
+{
+    char name[OT_DNS_MAX_NAME_SIZE];
+
+    VerifyOrExit(aError == OT_ERROR_NONE && aResponse != nullptr);
+    SuccessOrExit(otDnsAddressResponseGetHostName(aResponse, name, sizeof(name)));
+
+    for (QueryTransaction &query : mQueryTransactions)
+    {
+        if (query.IsValid() && CanAnswerQuery(query, name))
+        {
+            AnswerQuery(query, name, aResponse);
+        }
+    }
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
 
 Server::QueryTransaction *Server::NewQuery(const Header &          aResponseHeader,
                                            Message &               aResponseMessage,
@@ -966,6 +1022,31 @@ void Server::AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, co
             SuccessOrExit(error =
                               AppendAaaaRecord(responseMessage, aHostFullName, address, aHostInfo.mTtl, compressInfo));
             IncResourceRecordCount(responseHeader, /* aAdditional */ false);
+        }
+    }
+
+exit:
+    FinalizeQuery(aQuery, error == kErrorNone ? Header::kResponseSuccess : Header::kResponseServerFailure);
+    ResetTimer();
+}
+
+void Server::AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnsAddressResponse *aDnsResponse)
+{
+    Header &          responseHeader  = aQuery.GetResponseHeader();
+    Message &         responseMessage = aQuery.GetResponseMessage();
+    Error             error           = kErrorNone;
+    NameCompressInfo &compressInfo    = aQuery.GetNameCompressInfo();
+
+    if (HasQuestion(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), aHostFullName, ResourceRecord::kTypeAaaa))
+    {
+        uint8_t      i = 0;
+        Ip6::Address address;
+        uint32_t     ttl;
+        while (otDnsAddressResponseGetAddress(aDnsResponse, i, &address, &ttl) == kErrorNone)
+        {
+            SuccessOrExit(error = AppendAaaaRecord(responseMessage, aHostFullName, address, ttl, compressInfo));
+            IncResourceRecordCount(responseHeader, /* aAdditional */ false);
+            i++;
         }
     }
 
@@ -1187,7 +1268,10 @@ void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseC
     OT_ASSERT(sdType != kDnsQueryNone);
     OT_UNUSED_VARIABLE(sdType);
 
-    mQueryUnsubscribe(mQueryCallbackContext, name);
+    if (Name::IsSubDomainOf(name, kDefaultDomainName))
+    {
+        mQueryUnsubscribe(mQueryCallbackContext, name);
+    }
     aQuery.Finalize(aResponseCode, mSocket);
 }
 

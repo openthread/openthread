@@ -367,10 +367,10 @@ private:
                                                          const Srp::Server::Service *aService);
 #endif
 
-    Error             ResolveByQueryCallbacks(Header &                aResponseHeader,
-                                              Message &               aResponseMessage,
-                                              NameCompressInfo &      aCompressInfo,
-                                              const Ip6::MessageInfo &aMessageInfo);
+    Error             ResolveByQuery(Header &                aResponseHeader,
+                                     Message &               aResponseMessage,
+                                     NameCompressInfo &      aCompressInfo,
+                                     const Ip6::MessageInfo &aMessageInfo);
     QueryTransaction *NewQuery(const Header &          aResponseHeader,
                                Message &               aResponseMessage,
                                const NameCompressInfo &aCompressInfo,
@@ -383,6 +383,7 @@ private:
                                   const otDnssdServiceInstanceInfo &aInstanceInfo);
     static bool       CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *aHostFullName);
     void AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
+    void AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnsAddressResponse *aDnsResponse);
     void FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode);
     static DnsQueryType GetQueryTypeAndName(const Header & aHeader,
                                             const Message &aMessage,
@@ -391,6 +392,12 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
     void        ResetTimer(void);
+
+#if OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
+    Error       QueryRecursive(const char *name);
+    static void HandleRecursiveResolveResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
+    void        HandleRecursiveResolveResponse(otError aError, const otDnsAddressResponse *aResponse);
+#endif // OPENTHREAD_CONFIG_RECURSIVE_DNS64_SERVER_ENABLE
 
     static const char kDnssdProtocolUdp[];
     static const char kDnssdProtocolTcp[];

@@ -69,15 +69,15 @@ const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance)
     return &AsCoreType(aInstance).Get<Dns::Client>().GetDefaultConfig();
 }
 
-void otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig)
+otError otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig)
 {
     if (aConfig != nullptr)
     {
-        AsCoreType(aInstance).Get<Dns::Client>().SetDefaultConfig(AsCoreType(aConfig));
+        return AsCoreType(aInstance).Get<Dns::Client>().SetDefaultConfig(AsCoreType(aConfig));
     }
     else
     {
-        AsCoreType(aInstance).Get<Dns::Client>().ResetDefaultConfig();
+        return AsCoreType(aInstance).Get<Dns::Client>().ResetDefaultConfig();
     }
 }
 

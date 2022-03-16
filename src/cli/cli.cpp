@@ -1529,11 +1529,12 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
             OutputLine("RecursionDesired: %s",
                        (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
+            OutputLine("Backbone: %s", defaultConfig->mNetif == OT_NETIF_BACKBONE ? "yes" : "no");
         }
         else
         {
             SuccessOrExit(error = GetDnsConfig(aArgs + 1, config));
-            otDnsClientSetDefaultConfig(GetInstancePtr(), config);
+            SuccessOrExit(error = otDnsClientSetDefaultConfig(GetInstancePtr(), config));
         }
     }
     else if (aArgs[0] == "resolve")
@@ -1588,10 +1589,11 @@ otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 {
     // This method gets the optional DNS config from `aArgs[]`.
     // The format: `[server IPv6 address] [server port] [timeout]
-    // [max tx attempt] [recursion desired]`.
+    // [max tx attempt] [recursion desired] [use backbone]`.
 
     otError error = OT_ERROR_NONE;
     bool    recursionDesired;
+    bool    useBackbone;
 
     memset(aConfig, 0, sizeof(otDnsQueryConfig));
 
@@ -1611,6 +1613,10 @@ otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     VerifyOrExit(!aArgs[4].IsEmpty());
     SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
     aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
+
+    VerifyOrExit(!aArgs[5].IsEmpty());
+    SuccessOrExit(error = aArgs[5].ParseAsBool(useBackbone));
+    aConfig->mNetif = useBackbone ? OT_NETIF_BACKBONE : OT_NETIF_UNSPECIFIED;
 
 exit:
     return error;

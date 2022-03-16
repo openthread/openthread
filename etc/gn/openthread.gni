@@ -129,6 +129,9 @@ if (openthread_enable_core_config_args) {
     # Enable DNS-SD server support
     openthread_config_dnssd_server_enable = false
 
+    # Enable recursive DNS64 server support
+    openthread_config_recursive_dns64_server_enable = false
+
     # Enable ECDSA support
     openthread_config_ecdsa_enable = false
 
