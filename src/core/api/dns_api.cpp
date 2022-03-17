@@ -71,14 +71,17 @@ const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance)
 
 otError otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig)
 {
+    otError error;
+
     if (aConfig != nullptr)
     {
-        return AsCoreType(aInstance).Get<Dns::Client>().SetDefaultConfig(AsCoreType(aConfig));
+        error = AsCoreType(aInstance).Get<Dns::Client>().SetDefaultConfig(AsCoreType(aConfig));
     }
     else
     {
-        return AsCoreType(aInstance).Get<Dns::Client>().ResetDefaultConfig();
+        error = AsCoreType(aInstance).Get<Dns::Client>().ResetDefaultConfig();
     }
+    return error;
 }
 
 otError otDnsClientResolveAddress(otInstance *            aInstance,

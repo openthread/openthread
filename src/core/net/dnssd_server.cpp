@@ -255,6 +255,9 @@ Header::Response Server::AddQuestions(const Header &    aRequestHeader,
 
         if (Name::IsSubDomainOf(name, aCompressInfo.GetDomainName()))
         {
+            VerifyOrExit(kErrorNone ==
+                             FindNameComponents(name, aCompressInfo.GetDomainName(), nameComponentsOffsetInfo),
+                         response = Header::kResponseNameError);
             switch (question.GetType())
             {
             case ResourceRecord::kTypePtr:
