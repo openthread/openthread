@@ -212,7 +212,7 @@ The design goals of the PSA cryptography API include:
 * The interface to algorithms is generic, favoring algorithm agility.
 * The interface is designed to be easy to use and hard to accidentally misuse.
 
-Arm welcomes feedback on the design of the API. If you think something could be improved, please open an issue on our Github repository. Alternatively, if you prefer to provide your feedback privately, please email us at [`mbed-crypto@arm.com`](mailto:mbed-crypto@arm.com). All feedback received by email is treated confidentially.
+Arm welcomes feedback on the design of the API. If you think something could be improved, please open an issue on our GitHub repository. Alternatively, if you prefer to provide your feedback privately, please email us at [`mbed-crypto@arm.com`](mailto:mbed-crypto@arm.com). All feedback received by email is treated confidentially.
 
 ### PSA API documentation
 
@@ -225,7 +225,7 @@ This implementation is not yet as mature as the rest of the library. Some parts 
 
 The X.509 and TLS code can use PSA cryptography for a limited subset of operations. To enable this support, activate the compilation option `MBEDTLS_USE_PSA_CRYPTO` in `config.h`.
 
-There are currently a few deviations where the library does not yet implement the latest version of the specification. Please refer to the [compliance issues on Github](https://github.com/ARMmbed/mbed-crypto/labels/compliance) for an up-to-date list.
+There are currently a few deviations where the library does not yet implement the latest version of the specification. Please refer to the [compliance issues on GitHub](https://github.com/ARMmbed/mbed-crypto/labels/compliance) for an up-to-date list.
 
 ### Upcoming features
 
