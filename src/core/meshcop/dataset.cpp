@@ -73,12 +73,12 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     mChannel         = preferredChannels.ChooseRandomChannel();
     mChannelMask     = supportedChannels.GetMask();
     mPanId           = Mac::GenerateRandomPanId();
-    static_cast<SecurityPolicy &>(mSecurityPolicy).SetToDefault();
+    AsCoreType(&mSecurityPolicy).SetToDefault();
 
-    SuccessOrExit(error = static_cast<NetworkKey &>(mNetworkKey).GenerateRandom());
-    SuccessOrExit(error = static_cast<Pskc &>(mPskc).GenerateRandom());
+    SuccessOrExit(error = AsCoreType(&mNetworkKey).GenerateRandom());
+    SuccessOrExit(error = AsCoreType(&mPskc).GenerateRandom());
     SuccessOrExit(error = Random::Crypto::FillBuffer(mExtendedPanId.m8, sizeof(mExtendedPanId.m8)));
-    SuccessOrExit(error = static_cast<Ip6::NetworkPrefix &>(mMeshLocalPrefix).GenerateRandomUla());
+    SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
     snprintf(mNetworkName.m8, sizeof(mNetworkName), "OpenThread-%04x", mPanId);
 
