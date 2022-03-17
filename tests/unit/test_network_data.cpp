@@ -459,6 +459,187 @@ void TestNetworkDataDsnSrpServices(void)
     testFreeInstance(instance);
 }
 
+void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
+{
+    class TestLeader : public Leader
+    {
+    public:
+        void Populate(const uint8_t *aTlvs, uint8_t aTlvsLength)
+        {
+            memcpy(GetBytes(), aTlvs, aTlvsLength);
+            SetLength(aTlvsLength);
+        }
+    };
+
+    struct TestInfo
+    {
+        const uint8_t *mNetworkData;
+        uint8_t        mNetworkDataLength;
+        const uint8_t *mSeqNumbers;
+        uint8_t        mSeqNumbersLength;
+        uint8_t        mPreferredSeqNum;
+    };
+
+    ot::Instance *instance;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataDsnSrpAnycastSeqNumSelection()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr);
+
+    const uint8_t kNetworkData1[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0x01, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x81, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+    };
+    const uint8_t kSeqNumbers1[]    = {1, 129};
+    const uint8_t kPreferredSeqNum1 = 129;
+
+    const uint8_t kNetworkData2[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0x85, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x05, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+    };
+    const uint8_t kSeqNumbers2[]    = {133, 5};
+    const uint8_t kPreferredSeqNum2 = 133;
+
+    const uint8_t kNetworkData3[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0x01, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x02, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0xff, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+    };
+    const uint8_t kSeqNumbers3[]    = {1, 2, 255};
+    const uint8_t kPreferredSeqNum3 = 2;
+
+    const uint8_t kNetworkData4[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0x0a, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x82, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0xfa, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+    };
+    const uint8_t kSeqNumbers4[]    = {10, 130, 250};
+    const uint8_t kPreferredSeqNum4 = 250;
+
+    const uint8_t kNetworkData5[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0x82, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0xfa, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0x0a, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+    };
+    const uint8_t kSeqNumbers5[]    = {130, 250, 10};
+    const uint8_t kPreferredSeqNum5 = 250;
+
+    const uint8_t kNetworkData6[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0xfa, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x0a, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0x82, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+    };
+    const uint8_t kSeqNumbers6[]    = {250, 10, 130};
+    const uint8_t kPreferredSeqNum6 = 250;
+
+    const uint8_t kNetworkData7[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0xfa, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x0a, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0x8A, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+    };
+    const uint8_t kSeqNumbers7[]    = {250, 10, 138};
+    const uint8_t kPreferredSeqNum7 = 250;
+
+    const uint8_t kNetworkData8[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0x01, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x02, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0xff, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+        0x0b, 0x08, 0x83, 0x02, 0x5c, 0xfe, 0x0d, 0x02, 0x50, 0x03, // Server sub-TLV
+
+    };
+    const uint8_t kSeqNumbers8[]    = {1, 2, 255, 254};
+    const uint8_t kPreferredSeqNum8 = 2;
+
+    const uint8_t kNetworkData9[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0x01, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x02, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0xff, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+        0x0b, 0x08, 0x83, 0x02, 0x5c, 0xfe, 0x0d, 0x02, 0x50, 0x03, // Server sub-TLV
+
+    };
+    const uint8_t kSeqNumbers9[]    = {1, 2, 255, 254};
+    const uint8_t kPreferredSeqNum9 = 2;
+
+    const uint8_t kNetworkData10[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0xfe, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x02, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0x78, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+        0x0b, 0x08, 0x83, 0x02, 0x5c, 0x01, 0x0d, 0x02, 0x50, 0x03, // Server sub-TLV
+
+    };
+    const uint8_t kSeqNumbers10[]    = {254, 2, 120, 1};
+    const uint8_t kPreferredSeqNum10 = 120;
+
+    const uint8_t kNetworkData11[] = {
+        0x08, 0x04, 0x0b, 0x02, 0x50, 0xb0,                         // Service TLV
+        0x0b, 0x08, 0x80, 0x02, 0x5c, 0xf0, 0x0d, 0x02, 0x50, 0x00, // Server sub-TLV
+        0x0b, 0x08, 0x81, 0x02, 0x5c, 0x02, 0x0d, 0x02, 0x50, 0x01, // Server sub-TLV
+        0x0b, 0x08, 0x82, 0x02, 0x5c, 0x78, 0x0d, 0x02, 0x50, 0x02, // Server sub-TLV
+        0x0b, 0x08, 0x83, 0x02, 0x5c, 0x01, 0x0d, 0x02, 0x50, 0x03, // Server sub-TLV
+
+    };
+    const uint8_t kSeqNumbers11[]    = {240, 2, 120, 1};
+    const uint8_t kPreferredSeqNum11 = 240;
+
+    const TestInfo kTests[] = {
+        {kNetworkData1, sizeof(kNetworkData1), kSeqNumbers1, sizeof(kSeqNumbers1), kPreferredSeqNum1},
+        {kNetworkData2, sizeof(kNetworkData2), kSeqNumbers2, sizeof(kSeqNumbers2), kPreferredSeqNum2},
+        {kNetworkData3, sizeof(kNetworkData3), kSeqNumbers3, sizeof(kSeqNumbers3), kPreferredSeqNum3},
+        {kNetworkData4, sizeof(kNetworkData4), kSeqNumbers4, sizeof(kSeqNumbers4), kPreferredSeqNum4},
+        {kNetworkData5, sizeof(kNetworkData5), kSeqNumbers5, sizeof(kSeqNumbers5), kPreferredSeqNum5},
+        {kNetworkData6, sizeof(kNetworkData6), kSeqNumbers6, sizeof(kSeqNumbers6), kPreferredSeqNum6},
+        {kNetworkData7, sizeof(kNetworkData7), kSeqNumbers7, sizeof(kSeqNumbers7), kPreferredSeqNum7},
+        {kNetworkData8, sizeof(kNetworkData8), kSeqNumbers8, sizeof(kSeqNumbers8), kPreferredSeqNum8},
+        {kNetworkData9, sizeof(kNetworkData9), kSeqNumbers9, sizeof(kSeqNumbers9), kPreferredSeqNum9},
+        {kNetworkData10, sizeof(kNetworkData10), kSeqNumbers10, sizeof(kSeqNumbers10), kPreferredSeqNum10},
+        {kNetworkData11, sizeof(kNetworkData11), kSeqNumbers11, sizeof(kSeqNumbers11), kPreferredSeqNum11},
+    };
+
+    Service::Manager &manager   = instance->Get<Service::Manager>();
+    uint8_t           testIndex = 0;
+
+    for (const TestInfo &test : kTests)
+    {
+        Service::Manager::Iterator   iterator;
+        Service::DnsSrpAnycast::Info anycastInfo;
+
+        reinterpret_cast<TestLeader &>(instance->Get<Leader>()).Populate(test.mNetworkData, test.mNetworkDataLength);
+
+        printf("\n- - - - - - - - - - - - - - - - - - - -");
+        printf("\nDNS/SRP Anycast Service entries for test %d", ++testIndex);
+
+        for (uint8_t index = 0; index < test.mSeqNumbersLength; index++)
+        {
+            SuccessOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo));
+
+            printf("\n { %s, seq:%d }", anycastInfo.mAnycastAddress.ToString().AsCString(),
+                   anycastInfo.mSequenceNumber);
+
+            VerifyOrQuit(anycastInfo.mSequenceNumber == test.mSeqNumbers[index]);
+        }
+
+        VerifyOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNotFound);
+        SuccessOrQuit(manager.FindPreferredDnsSrpAnycastInfo(anycastInfo));
+
+        printf("\n preferred -> seq:%d ", anycastInfo.mSequenceNumber);
+        VerifyOrQuit(anycastInfo.mSequenceNumber == test.mPreferredSeqNum);
+    }
+
+    testFreeInstance(instance);
+}
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -469,6 +650,7 @@ int main(void)
     ot::NetworkData::TestNetworkDataFindNextService();
 #endif
     ot::NetworkData::TestNetworkDataDsnSrpServices();
+    ot::NetworkData::TestNetworkDataDsnSrpAnycastSeqNumSelection();
 
     printf("\nAll tests passed\n");
     return 0;
