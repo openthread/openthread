@@ -35,18 +35,14 @@
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
+#ifndef MBEDTLS_USE_TINYCRYPT
+
 #include <string.h>
 
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/ecdsa.h>
 #include <mbedtls/pk.h>
 #include <mbedtls/version.h>
-
-#ifdef MBEDTLS_USE_TINYCRYPT
-#include <tinycrypt/ecc.h>
-#include <tinycrypt/ecc_dh.h>
-#include <tinycrypt/ecc_dsa.h>
-#endif
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -61,22 +57,14 @@ Error P256::KeyPair::Generate(void)
 {
     mbedtls_pk_context pk;
     int                ret;
+
     mbedtls_pk_init(&pk);
 
     ret = mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY));
     VerifyOrExit(ret == 0);
 
-#ifdef MBEDTLS_USE_TINYCRYPT
-    {
-        mbedtls_uecc_keypair *keypair = mbedtls_pk_uecc(pk);
-
-        ret = uECC_make_key(keypair->public_key, keypair->private_key);
-        VerifyOrExit(ret == UECC_SUCCESS);
-    }
-#else
     ret = mbedtls_ecp_gen_key(MBEDTLS_ECP_DP_SECP256R1, mbedtls_pk_ec(pk), MbedTls::CryptoSecurePrng, nullptr);
     VerifyOrExit(ret == 0);
-#endif
 
     ret = mbedtls_pk_write_key_der(&pk, mDerBytes, sizeof(mDerBytes));
     VerifyOrExit(ret > 0);
@@ -112,31 +100,21 @@ exit:
 
 Error P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
 {
-    Error              error;
-    mbedtls_pk_context pk;
-    int                ret;
+    Error                error;
+    mbedtls_pk_context   pk;
+    mbedtls_ecp_keypair *keyPair;
+    int                  ret;
 
     SuccessOrExit(error = Parse(&pk));
 
-#ifdef MBEDTLS_USE_TINYCRYPT
-    {
-        mbedtls_uecc_keypair *keyPair = mbedtls_pk_uecc(pk);
+    keyPair = mbedtls_pk_ec(pk);
 
-        memcpy(aPublicKey.mData, keyPair->public_key, kMpiSize);
-        memcpy(aPublicKey.mData + kMpiSize, keyPair->public_key + kMpiSize, kMpiSize);
-    }
-#else
-    {
-        mbedtls_ecp_keypair *keyPair = mbedtls_pk_ec(pk);
+    ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), aPublicKey.mData, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-        ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), aPublicKey.mData, kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-
-        ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), aPublicKey.mData + kMpiSize,
-                                       kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-    }
-#endif
+    ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), aPublicKey.mData + kMpiSize,
+                                   kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
 exit:
     mbedtls_pk_free(&pk);
@@ -145,131 +123,88 @@ exit:
 
 Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) const
 {
-    Error              error;
-    mbedtls_pk_context pk;
-    int                ret;
-
-#ifndef MBEDTLS_USE_TINYCRYPT
+    Error                 error;
+    mbedtls_pk_context    pk;
+    mbedtls_ecp_keypair * keypair;
     mbedtls_ecdsa_context ecdsa;
     mbedtls_mpi           r;
     mbedtls_mpi           s;
+    int                   ret;
 
     mbedtls_ecdsa_init(&ecdsa);
     mbedtls_mpi_init(&r);
     mbedtls_mpi_init(&s);
-#endif
 
     SuccessOrExit(error = Parse(&pk));
 
-#ifdef MBEDTLS_USE_TINYCRYPT
-    {
-        mbedtls_uecc_keypair *keypair;
-        uint8_t               sig[2 * kMpiSize];
+    keypair = mbedtls_pk_ec(pk);
 
-        keypair = mbedtls_pk_uecc(pk);
-
-        ret = uECC_sign(keypair->private_key, aHash.GetBytes(), Sha256::Hash::kSize, sig);
-        VerifyOrExit(ret == UECC_SUCCESS, error = MbedTls::MapError(ret));
-
-        memcpy(aSignature.mShared.mMpis.mR, sig, kMpiSize);
-        memcpy(aSignature.mShared.mMpis.mS, sig + kMpiSize, kMpiSize);
-    }
-#else
-    {
-        mbedtls_ecp_keypair *keypair = mbedtls_pk_ec(pk);
-
-        ret = mbedtls_ecdsa_from_keypair(&ecdsa, keypair);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    ret = mbedtls_ecdsa_from_keypair(&ecdsa, keypair);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x02130000)
-        ret =
-            mbedtls_ecdsa_sign_det_ext(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
-                                       Sha256::Hash::kSize, MBEDTLS_MD_SHA256, MbedTls::CryptoSecurePrng, nullptr);
+    ret = mbedtls_ecdsa_sign_det_ext(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
+                                     Sha256::Hash::kSize, MBEDTLS_MD_SHA256, MbedTls::CryptoSecurePrng, nullptr);
 #else
-        ret = mbedtls_ecdsa_sign_det(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
-                                     Sha256::Hash::kSize, MBEDTLS_MD_SHA256);
+    ret = mbedtls_ecdsa_sign_det(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
+                                 Sha256::Hash::kSize, MBEDTLS_MD_SHA256);
 #endif
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-        OT_ASSERT(mbedtls_mpi_size(&r) <= kMpiSize);
+    OT_ASSERT(mbedtls_mpi_size(&r) <= kMpiSize);
 
-        ret = mbedtls_mpi_write_binary(&r, aSignature.mShared.mMpis.mR, kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    ret = mbedtls_mpi_write_binary(&r, aSignature.mShared.mMpis.mR, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-        ret = mbedtls_mpi_write_binary(&s, aSignature.mShared.mMpis.mS, kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-    }
-#endif
+    ret = mbedtls_mpi_write_binary(&s, aSignature.mShared.mMpis.mS, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
 exit:
     mbedtls_pk_free(&pk);
-#ifndef MBEDTLS_USE_TINYCRYPT
     mbedtls_mpi_free(&s);
     mbedtls_mpi_free(&r);
     mbedtls_ecdsa_free(&ecdsa);
-#endif
 
     return error;
 }
 
 Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
 {
-    Error error = kErrorNone;
-    int   ret;
-
-#ifndef MBEDTLS_USE_TINYCRYPT
+    Error                 error = kErrorNone;
     mbedtls_ecdsa_context ecdsa;
     mbedtls_mpi           r;
     mbedtls_mpi           s;
+    int                   ret;
 
     mbedtls_ecdsa_init(&ecdsa);
     mbedtls_mpi_init(&r);
     mbedtls_mpi_init(&s);
-#endif
 
-#ifdef MBEDTLS_USE_TINYCRYPT
-    {
-        uint8_t public_key[2 * kMpiSize];
-        uint8_t sig[2 * kMpiSize];
+    ret = mbedtls_ecp_group_load(&ecdsa.MBEDTLS_PRIVATE(grp), MBEDTLS_ECP_DP_SECP256R1);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-        memcpy(public_key, GetBytes(), 2 * kMpiSize);
+    ret = mbedtls_mpi_read_binary(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), GetBytes(), kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    ret = mbedtls_mpi_read_binary(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), GetBytes() + kMpiSize, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    ret = mbedtls_mpi_lset(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Z), 1);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-        memcpy(sig, aSignature.mShared.mMpis.mR, kMpiSize);
-        memcpy(sig + kMpiSize, aSignature.mShared.mMpis.mS, kMpiSize);
+    ret = mbedtls_mpi_read_binary(&r, aSignature.mShared.mMpis.mR, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-        ret = uECC_verify(public_key, aHash.GetBytes(), Sha256::Hash::kSize, sig);
-        VerifyOrExit(ret == UECC_SUCCESS, error = kErrorSecurity);
-    }
-#else
-    {
-        ret = mbedtls_ecp_group_load(&ecdsa.MBEDTLS_PRIVATE(grp), MBEDTLS_ECP_DP_SECP256R1);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    ret = mbedtls_mpi_read_binary(&s, aSignature.mShared.mMpis.mS, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-        ret = mbedtls_mpi_read_binary(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), GetBytes(), kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-        ret = mbedtls_mpi_read_binary(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), GetBytes() + kMpiSize, kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-        ret = mbedtls_mpi_lset(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Z), 1);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-
-        ret = mbedtls_mpi_read_binary(&r, aSignature.mShared.mMpis.mR, kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-
-        ret = mbedtls_mpi_read_binary(&s, aSignature.mShared.mMpis.mS, kMpiSize);
-        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-
-        ret = mbedtls_ecdsa_verify(&ecdsa.MBEDTLS_PRIVATE(grp), aHash.GetBytes(), Sha256::Hash::kSize,
-                                   &ecdsa.MBEDTLS_PRIVATE(Q), &r, &s);
-        VerifyOrExit(ret == 0, error = kErrorSecurity);
-    }
-#endif
+    ret = mbedtls_ecdsa_verify(&ecdsa.MBEDTLS_PRIVATE(grp), aHash.GetBytes(), Sha256::Hash::kSize,
+                               &ecdsa.MBEDTLS_PRIVATE(Q), &r, &s);
+    VerifyOrExit(ret == 0, error = kErrorSecurity);
 
 exit:
-#ifndef MBEDTLS_USE_TINYCRYPT
     mbedtls_mpi_free(&s);
     mbedtls_mpi_free(&r);
     mbedtls_ecdsa_free(&ecdsa);
-#endif
+
     return error;
 }
 
@@ -280,20 +215,17 @@ Error Sign(uint8_t *      aOutput,
            const uint8_t *aPrivateKey,
            uint16_t       aPrivateKeyLength)
 {
-    Error              error = kErrorNone;
-    mbedtls_pk_context pkCtx;
-
-    mbedtls_pk_init(&pkCtx);
-
-#ifndef MBEDTLS_USE_TINYCRYPT
+    Error                 error = kErrorNone;
     mbedtls_ecdsa_context ctx;
+    mbedtls_pk_context    pkCtx;
+    mbedtls_ecp_keypair * keypair;
     mbedtls_mpi           rMpi;
     mbedtls_mpi           sMpi;
 
+    mbedtls_pk_init(&pkCtx);
     mbedtls_ecdsa_init(&ctx);
     mbedtls_mpi_init(&rMpi);
     mbedtls_mpi_init(&sMpi);
-#endif
 
     // Parse a private key in PEM format.
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
@@ -306,51 +238,30 @@ Error Sign(uint8_t *      aOutput,
 #endif
     VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = kErrorInvalidArgs);
 
-#ifdef MBEDTLS_USE_TINYCRYPT
-    {
-        uint8_t               sig[2 * NUM_ECC_BYTES];
-        mbedtls_uecc_keypair *keypair = mbedtls_pk_uecc(pkCtx);
-        OT_ASSERT(keypair != nullptr);
+    keypair = mbedtls_pk_ec(pkCtx);
+    OT_ASSERT(keypair != nullptr);
 
-        // Sign using ECDSA.
-        VerifyOrExit(uECC_sign(keypair->private_key, aInputHash, aInputHashLength, sig) == UECC_SUCCESS,
-                     error = kErrorFailed);
-        VerifyOrExit(2 * NUM_ECC_BYTES <= aOutputLength, error = kErrorNoBufs);
+    VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = kErrorFailed);
 
-        // Concatenate the two octet sequences in the order R and then S.
-        memcpy(aOutput, sig, 2 * NUM_ECC_BYTES);
-        aOutputLength = 2 * NUM_ECC_BYTES;
-    }
-#else
-    {
-        mbedtls_ecp_keypair *keypair = mbedtls_pk_ec(pkCtx);
-        OT_ASSERT(keypair != nullptr);
+    // Sign using ECDSA.
+    VerifyOrExit(mbedtls_ecdsa_sign(&ctx.MBEDTLS_PRIVATE(grp), &rMpi, &sMpi, &ctx.MBEDTLS_PRIVATE(d), aInputHash,
+                                    aInputHashLength, MbedTls::CryptoSecurePrng, nullptr) == 0,
+                 error = kErrorFailed);
+    VerifyOrExit(mbedtls_mpi_size(&rMpi) + mbedtls_mpi_size(&sMpi) <= aOutputLength, error = kErrorNoBufs);
 
-        VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = kErrorFailed);
+    // Concatenate the two octet sequences in the order R and then S.
+    VerifyOrExit(mbedtls_mpi_write_binary(&rMpi, aOutput, mbedtls_mpi_size(&rMpi)) == 0, error = kErrorFailed);
+    aOutputLength = static_cast<uint16_t>(mbedtls_mpi_size(&rMpi));
 
-        // Sign using ECDSA.
-        VerifyOrExit(mbedtls_ecdsa_sign(&ctx.MBEDTLS_PRIVATE(grp), &rMpi, &sMpi, &ctx.MBEDTLS_PRIVATE(d), aInputHash,
-                                        aInputHashLength, MbedTls::CryptoSecurePrng, nullptr) == 0,
-                     error = kErrorFailed);
-        VerifyOrExit(mbedtls_mpi_size(&rMpi) + mbedtls_mpi_size(&sMpi) <= aOutputLength, error = kErrorNoBufs);
-
-        // Concatenate the two octet sequences in the order R and then S.
-        VerifyOrExit(mbedtls_mpi_write_binary(&rMpi, aOutput, mbedtls_mpi_size(&rMpi)) == 0, error = kErrorFailed);
-        aOutputLength = static_cast<uint16_t>(mbedtls_mpi_size(&rMpi));
-
-        VerifyOrExit(mbedtls_mpi_write_binary(&sMpi, aOutput + aOutputLength, mbedtls_mpi_size(&sMpi)) == 0,
-                     error = kErrorFailed);
-        aOutputLength += mbedtls_mpi_size(&sMpi);
-    }
-#endif
+    VerifyOrExit(mbedtls_mpi_write_binary(&sMpi, aOutput + aOutputLength, mbedtls_mpi_size(&sMpi)) == 0,
+                 error = kErrorFailed);
+    aOutputLength += mbedtls_mpi_size(&sMpi);
 
 exit:
-    mbedtls_pk_free(&pkCtx);
-#ifndef MBEDTLS_USE_TINYCRYPT
     mbedtls_mpi_free(&rMpi);
     mbedtls_mpi_free(&sMpi);
     mbedtls_ecdsa_free(&ctx);
-#endif
+    mbedtls_pk_free(&pkCtx);
 
     return error;
 }
@@ -359,4 +270,5 @@ exit:
 } // namespace Crypto
 } // namespace ot
 
+#endif // MBEDTLS_USE_TINYCRYPT
 #endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
