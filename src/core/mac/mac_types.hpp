@@ -539,7 +539,11 @@ public:
      */
     bool operator==(const KeyMaterial &aOther) const;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
     KeyMaterial(const KeyMaterial &) = delete;
+
+#endif
 
 private:
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
