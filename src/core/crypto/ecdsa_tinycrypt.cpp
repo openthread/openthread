@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements ECDSA signing using Tinycrypt library.
+ *   This file implements ECDSA signing using TinyCrypt library.
  */
 
 #include "ecdsa.hpp"
@@ -42,14 +42,14 @@
 #include <mbedtls/pk.h>
 #include <mbedtls/version.h>
 
+#include <tinycrypt/ecc.h>
+#include <tinycrypt/ecc_dh.h>
+#include <tinycrypt/ecc_dsa.h>
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/random.hpp"
 #include "crypto/mbedtls.hpp"
-
-#include <tinycrypt/ecc.h>
-#include <tinycrypt/ecc_dh.h>
-#include <tinycrypt/ecc_dsa.h>
 
 namespace ot {
 namespace Crypto {
@@ -121,7 +121,6 @@ exit:
     mbedtls_pk_free(&pk);
 
     return error;
-
 }
 
 Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) const
@@ -146,13 +145,12 @@ exit:
     mbedtls_pk_free(&pk);
 
     return error;
-
 }
 
 Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
 {
-    Error error = kErrorNone;
-    int   ret;
+    Error   error = kErrorNone;
+    int     ret;
     uint8_t public_key[2 * kMpiSize];
     uint8_t sig[2 * kMpiSize];
 
@@ -166,7 +164,6 @@ Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSigna
 
 exit:
     return error;
-
 }
 
 Error Sign(uint8_t *      aOutput,
@@ -204,7 +201,6 @@ exit:
     mbedtls_pk_free(&pkCtx);
 
     return error;
-
 }
 
 } // namespace Ecdsa
