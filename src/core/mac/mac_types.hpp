@@ -469,6 +469,8 @@ public:
      *
      */
     KeyMaterial &operator=(const KeyMaterial &aOther);
+
+    KeyMaterial(const KeyMaterial &) = delete;
 #endif
 
     /**
@@ -538,8 +540,6 @@ public:
      *
      */
     bool operator==(const KeyMaterial &aOther) const;
-
-    KeyMaterial(const KeyMaterial &) = delete;
 
 private:
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
