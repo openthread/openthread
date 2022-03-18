@@ -251,6 +251,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/crypto/aes_ecb.cpp                                     \
     src/core/crypto/crypto_platform.cpp                             \
     src/core/crypto/ecdsa.cpp                                       \
+    src/core/crypto/ecdsa_tinycrypt.cpp                             \
     src/core/crypto/hkdf_sha256.cpp                                 \
     src/core/crypto/hmac_sha256.cpp                                 \
     src/core/crypto/mbedtls.cpp                                     \
