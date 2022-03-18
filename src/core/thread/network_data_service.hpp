@@ -260,12 +260,23 @@ public:
     static const uint8_t kServiceData = kServiceNumber;
 
     /**
+     * This enumeration represents the origin a `DnsSrpUnicast` entry.
+     *
+     */
+    enum Origin : uint8_t
+    {
+        kFromServiceData, ///< Socket address is from service data.
+        kFromServerData,  ///< Socket address is from server data.
+    };
+
+    /**
      * This structure represents information about an DNS/SRP server parsed from related Network Data service entries.
      *
      */
     struct Info
     {
         Ip6::SockAddr mSockAddr; ///< The socket address (IPv6 address and port) of the DNS/SRP server.
+        Origin        mOrigin;   ///< The origin of the socket address (whether from service or server data).
     };
 
     /**
