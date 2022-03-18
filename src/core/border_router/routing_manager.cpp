@@ -72,7 +72,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
     , mRouterAdvertisementCount(0)
-    , mLastRouterAdvertisementSendTime(TimerMilli::GetNow())
+    , mLastRouterAdvertisementSendTime(TimerMilli::GetNow() - kMinDelayBetweenRtrAdvs)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     , mVicariousRouterSolicitTimer(aInstance, HandleVicariousRouterSolicitTimer)
 #endif

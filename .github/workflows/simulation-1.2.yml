@@ -54,6 +54,7 @@ jobs:
       CC: ${{ matrix.compiler.c }}
       CXX: ${{ matrix.compiler.cxx }}
     strategy:
+      fail-fast: false
       matrix:
         compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang-10", cxx: "clang++-10", gcov: "llvm"}]
         arch: ["m32", "m64"]
