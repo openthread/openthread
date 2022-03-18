@@ -44,6 +44,7 @@ jobs:
     name: toranj-${{ matrix.TORANJ_RADIO }}
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
         TORANJ_RADIO: ['15.4', 'trel', 'multi']
     env:

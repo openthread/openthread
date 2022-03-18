@@ -44,6 +44,7 @@ jobs:
     name: buildx-${{ matrix.docker_name }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - docker_name: environment
