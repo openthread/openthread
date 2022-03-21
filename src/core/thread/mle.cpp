@@ -81,7 +81,11 @@ Mle::Mle(Instance &aInstance)
     , mAttachTimer(aInstance, Mle::HandleAttachTimer)
     , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer)
     , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer)
+    , mDetachGracefullyTimer(aInstance, Mle::HandleDetachGracefullyTimer)
+    , mStopThreadTask(aInstance, Mle::HandleStopThreadTask)
     , mParentLeaderCost(0)
+    , mDetachGracefullyCallback(nullptr)
+    , mDetachGracefullyContext(nullptr)
     , mAttachMode(kAnyPartition)
     , mParentPriority(0)
     , mParentLinkQuality3(0)
@@ -259,7 +263,21 @@ void Mle::Stop(StopMode aMode)
     SetRole(kRoleDisabled);
 
 exit:
-    return;
+    if (IsDetachingGracefully())
+    {
+        mDetachGracefullyTimer.Stop();
+    }
+
+    if (mDetachGracefullyCallback != nullptr)
+    {
+        otDetachGracefullyCallback callback = mDetachGracefullyCallback;
+        void *                     context  = mDetachGracefullyContext;
+
+        mDetachGracefullyCallback = nullptr;
+        mDetachGracefullyContext  = nullptr;
+
+        callback(context);
+    }
 }
 
 void Mle::SetRole(DeviceRole aRole)
@@ -2423,6 +2441,11 @@ exit:
 
 Error Mle::SendChildUpdateRequest(void)
 {
+    return SendChildUpdateRequest(mTimeout);
+}
+
+Error Mle::SendChildUpdateRequest(uint32_t aTimeout)
+{
     Error                   error = kErrorNone;
     Ip6::Address            destination;
     TxMessage *             message = nullptr;
@@ -2452,7 +2475,7 @@ Error Mle::SendChildUpdateRequest(void)
     case kRoleChild:
         SuccessOrExit(error = message->AppendSourceAddressTlv());
         SuccessOrExit(error = message->AppendLeaderDataTlv());
-        SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
+        SuccessOrExit(error = message->AppendTimeoutTlv(aTimeout));
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
@@ -4017,7 +4040,14 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         switch (Tlv::Find<TimeoutTlv>(aRxInfo.mMessage, timeout))
         {
         case kErrorNone:
-            mTimeout = timeout;
+            if (timeout == 0 && IsDetachingGracefully())
+            {
+                Stop();
+            }
+            else
+            {
+                mTimeout = timeout;
+            }
             break;
         case kErrorNotFound:
             break;
@@ -4741,6 +4771,50 @@ void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
 void Mle::DelayedResponseMetadata::RemoveFrom(Message &aMessage) const
 {
     SuccessOrAssert(aMessage.SetLength(aMessage.GetLength() - sizeof(*this)));
+}
+
+Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext)
+{
+    Error error = kErrorNone;
+
+    OT_ASSERT(IsChild());
+
+    VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
+
+    mDetachGracefullyCallback = aCallback;
+    mDetachGracefullyContext  = aContext;
+
+    mDetachGracefullyTimer.Start(kDetachGracefullyTimeout);
+
+    IgnoreError(SendChildUpdateRequest(/*aTimeout=*/0));
+
+exit:
+    return error;
+}
+
+void Mle::HandleDetachGracefullyTimer(Timer &aTimer)
+{
+    aTimer.Get<Mle>().HandleDetachGracefullyTimer();
+}
+
+void Mle::HandleDetachGracefullyTimer(void)
+{
+    Stop();
+}
+
+void Mle::HandleStopThreadTask(Tasklet &aTasklet)
+{
+    aTasklet.Get<Mle>().HandleStopThreadTask();
+}
+
+void Mle::HandleStopThreadTask(void)
+{
+    Stop();
+}
+
+bool Mle::IsDetachingGracefully(void)
+{
+    return mDetachGracefullyTimer.IsRunning();
 }
 
 } // namespace Mle

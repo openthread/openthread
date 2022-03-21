@@ -452,6 +452,9 @@ private:
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
+    static void HandleDetachGracefullyResult(void *aContext);
+    void        HandleDetachGracefullyResult(void);
+
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
     {
         static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
@@ -512,6 +515,8 @@ private:
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     History mHistory;
 #endif
+
+    bool mDetachAsync : 1;
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE

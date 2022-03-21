@@ -497,4 +497,9 @@ bool otThreadIsAnycastLocateInProgress(otInstance *aInstance)
 }
 #endif
 
+otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallback aCallback, void *aContext)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().DetachGracefully(aCallback, aContext);
+}
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD

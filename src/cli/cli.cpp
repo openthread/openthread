@@ -1453,6 +1453,20 @@ exit:
 }
 #endif
 
+template <> otError Interpreter::Process<Cmd("detach")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = otThreadDetachGracefully(GetInstancePtr(), &Interpreter::HandleDetachGracefullyResult, this));
+
+    mDetachAsync = (aArgs[0] == "async");
+
+    error = mDetachAsync ? OT_ERROR_NONE : OT_ERROR_PENDING;
+
+exit:
+    return error;
+}
+
 template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
@@ -4903,6 +4917,21 @@ void Interpreter::OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiag
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
+void Interpreter::HandleDetachGracefullyResult(void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDetachGracefullyResult();
+}
+
+void Interpreter::HandleDetachGracefullyResult(void)
+{
+    OutputLine("Finished detaching");
+
+    if (!mDetachAsync)
+    {
+        OutputResult(OT_ERROR_NONE);
+    }
+}
+
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
 {
     OutputFormat("~ Discovery Request from ");
@@ -5017,6 +5046,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_FTD
         CmdEntry("delaytimermin"),
 #endif
+        CmdEntry("detach"),
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         CmdEntry("diag"),

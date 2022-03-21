@@ -195,6 +195,14 @@ typedef struct otThreadParentResponseInfo
 } otThreadParentResponseInfo;
 
 /**
+ * This callback informs the application that the detaching process has finished.
+ *
+ * @param[in] aContext A pointer to application-specific context.
+ *
+ */
+typedef void (*otDetachGracefullyCallback)(void *aContext);
+
+/**
  * This function starts Thread protocol operation.
  *
  * The interface must be up when calling this function.
@@ -1008,6 +1016,21 @@ otError otThreadSendProactiveBackboneNotification(otInstance *              aIns
                                                   otIp6Address *            aTarget,
                                                   otIp6InterfaceIdentifier *aMlIid,
                                                   uint32_t                  aTimeSinceLastTransaction);
+
+/**
+ * This function notifies other nodes in the network (if any) and then stops Thread protocol operation.
+ *
+ * It sends an Address Release if it's a router, or sets its child timeout to 0 if it's a child.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aCallback A pointer to a function that is called upon finishing detaching.
+ * @param[in] aContext  A pointer to callback application-specific context.
+ *
+ * @retval OT_ERROR_NONE Successfully started detaching.
+ * @retval OT_ERROR_BUSY Detaching is already in progress.
+ *
+ */
+otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallback aCallback, void *aContext);
 
 /**
  * @}

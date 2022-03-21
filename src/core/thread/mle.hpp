@@ -187,6 +187,18 @@ public:
     Error BecomeChild(void);
 
     /**
+     * This function sets the child timeout to 0 and then stops Thread protocol operation.
+     *
+     * @param[in] aCallback A pointer to a function that is called upon finishing detaching.
+     * @param[in] aContext  A pointer to callback application-specific context.
+     *
+     * @retval OT_ERROR_NONE         Successfully started detaching.
+     * @retval OT_ERROR_ALREADY      Not currently attached.
+     *
+     */
+    Error DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext);
+
+    /**
      * This method indicates whether or not the Thread device is attached to a Thread network.
      *
      * @retval TRUE   Attached to a Thread network.
@@ -1651,6 +1663,15 @@ protected:
 
 #endif
 
+    /**
+     * This method indicates whether the device is detaching gracefully.
+     *
+     * @retval TRUE  Detaching is in progress.
+     * @retval FALSE Not detaching.
+     *
+     */
+    bool IsDetachingGracefully(void);
+
     Ip6::Netif::UnicastAddress mLeaderAloc; ///< Leader anycast locator
 
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
@@ -1667,7 +1688,14 @@ protected:
     TimerMilli    mAttachTimer;              ///< The timer for driving the attach process.
     TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
+    TimerMilli    mDetachGracefullyTimer;
+    Tasklet       mStopThreadTask;
     uint8_t       mParentLeaderCost;
+
+    otDetachGracefullyCallback mDetachGracefullyCallback;
+    void *                     mDetachGracefullyContext;
+
+    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
 private:
     static constexpr uint8_t kMleHopLimit        = 255;
@@ -1795,6 +1823,11 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        ScheduleMessageTransmissionTimer(void);
+    static void HandleDetachGracefullyTimer(Timer &aTimer);
+    void        HandleDetachGracefullyTimer(void);
+    static void HandleStopThreadTask(Tasklet &aTasklet);
+    void        HandleStopThreadTask(void);
+    Error       SendChildUpdateRequest(uint32_t aTimeout);
 
     void HandleAdvertisement(RxInfo &aRxInfo);
     void HandleChildIdResponse(RxInfo &aRxInfo);

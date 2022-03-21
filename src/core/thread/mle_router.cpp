@@ -3675,7 +3675,7 @@ exit:
     return error;
 }
 
-void MleRouter::SendAddressRelease(void)
+void MleRouter::SendAddressRelease(Coap::ResponseHandler aResponseHandler, void *aResponseHandlerContext)
 {
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
@@ -3689,7 +3689,8 @@ void MleRouter::SendAddressRelease(void)
 
     SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderRloc());
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error =
+                      Get<Tmf::Agent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseHandlerContext));
 
     Log(kMessageSend, kTypeAddressRelease, messageInfo.GetPeerAddr());
 
@@ -4482,6 +4483,61 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+Error MleRouter::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext)
+{
+    Error error = kErrorNone;
+
+    if (IsChild())
+    {
+        ExitNow(error = Mle::DetachGracefully(aCallback, aContext));
+    }
+
+    OT_ASSERT(IsDisabled() || IsDetached() || IsRouter() || IsLeader());
+
+    VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
+
+    OT_ASSERT(mDetachGracefullyCallback == nullptr);
+
+    mDetachGracefullyCallback = aCallback;
+    mDetachGracefullyContext  = aContext;
+
+    mDetachGracefullyTimer.Start(kDetachGracefullyTimeout);
+
+    if (IsRouter())
+    {
+        SendAddressRelease(&MleRouter::HandleDetachGracefullyAddressReleaseResponse, this);
+    }
+    else
+    {
+        mStopThreadTask.Post();
+    }
+
+exit:
+    return error;
+}
+
+void MleRouter::HandleDetachGracefullyAddressReleaseResponse(void *               aContext,
+                                                             otMessage *          aMessage,
+                                                             const otMessageInfo *aMessageInfo,
+                                                             Error                aResult)
+{
+    static_cast<MleRouter *>(aContext)->HandleDetachGracefullyAddressReleaseResponse(aMessage, aMessageInfo, aResult);
+}
+
+void MleRouter::HandleDetachGracefullyAddressReleaseResponse(otMessage *          aMessage,
+                                                             const otMessageInfo *aMessageInfo,
+                                                             Error                aResult)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aResult);
+
+    if (IsDetachingGracefully())
+    {
+        Stop();
+    }
+}
 
 } // namespace Mle
 } // namespace ot
