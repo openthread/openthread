@@ -80,10 +80,17 @@ enum
 /**
  * Performs any initialization for the settings subsystem, if necessary.
  *
- * @param[in]  aInstance The OpenThread instance structure.
+ * This function also sets the critical keys that should be stored in the secure area.
+ *
+ * Note that the memory pointed by @p aCriticalKeys MUST not be released before @p aInstance is destroyed.
+ *
+ * @param[in]  aInstance            The OpenThread instance structure.
+ * @param[in]  aCriticalKeys        A pointer to an array containing the list of critical keys. May be NULL only if
+ *                                  @p aCriticalKeysLength is 0, which means that there is no critical keys.
+ * @param[in]  aCriticalKeysLength  The number of entries in the @p aCriticalKeys array.
  *
  */
-void otPlatSettingsInit(otInstance *aInstance);
+void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aCriticalKeys, uint16_t aCriticalKeysLength);
 
 /**
  * Performs any de-initialization for the settings subsystem, if necessary.
@@ -92,18 +99,6 @@ void otPlatSettingsInit(otInstance *aInstance);
  *
  */
 void otPlatSettingsDeinit(otInstance *aInstance);
-
-/**
- * This function sets the critical keys that should be stored in the secure area.
- *
- * Note that the memory pointed by @p aKeys MUST not be released before @p aInstance is destroyed.
- *
- * @param[in]  aInstance    The OpenThread instance structure.
- * @param[in]  aKeys        A pointer to an array containing the list of critical keys.
- * @param[in]  aKeysLength  The number of entries in the @p aKeys array.
- *
- */
-void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys, uint16_t aKeysLength);
 
 /// Fetches the value of a setting
 /** This function fetches the value of the setting identified

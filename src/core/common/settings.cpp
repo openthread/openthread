@@ -196,8 +196,7 @@ const uint16_t Settings::kCriticalKeys[] = {
 
 void Settings::Init(void)
 {
-    Get<SettingsDriver>().Init();
-    Get<SettingsDriver>().SetCriticalKeys(kCriticalKeys, GetArrayLength(kCriticalKeys));
+    Get<SettingsDriver>().Init(kCriticalKeys, GetArrayLength(kCriticalKeys));
 }
 
 void Settings::Deinit(void)

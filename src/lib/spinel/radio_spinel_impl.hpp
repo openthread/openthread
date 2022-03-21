@@ -431,7 +431,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RestoreDatasetFromNcp(vo
 {
     otError error = OT_ERROR_NONE;
 
-    Instance::Get().template Get<SettingsDriver>().Init();
+    Instance::Get().template Get<SettingsDriver>().Init(nullptr, 0);
 
     otLogInfoPlat("Trying to get saved dataset from NCP");
     SuccessOrExit(
