@@ -587,7 +587,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             conf += "\n    };"
         conf += "\n};"
         conf += "\nEOF"
-        cmd = 'sh -c "cat >/tmp/radvd.conf <<%s"' % conf
+        cmd = 'sh -c "cat >/etc/radvd.conf <<%s"' % conf
 
         self.bash(cmd)
         self.bash('service radvd restart')
