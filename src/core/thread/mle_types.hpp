@@ -97,6 +97,7 @@ constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  ///< Delay for aggreg
 constexpr uint8_t  kMaxTransmissionCount           = 3;    ///< Max number of times an MLE message may be transmitted
 constexpr uint32_t kMaxResponseDelay               = 1000; ///< Max response delay for a multicast request (in msec)
 constexpr uint32_t kMaxChildIdRequestTimeout       = 5000; ///< Max delay to rx a Child ID Request (in msec)
+constexpr uint32_t kMaxChildIdResponseTimeout      = 1250; ///< Max delay to rx a Child ID Response (in msec)
 constexpr uint32_t kMaxChildUpdateResponseTimeout  = 2000; ///< Max delay to rx a Child Update Response (in msec)
 constexpr uint32_t kMaxLinkRequestTimeout          = 2000; ///< Max delay to rx a Link Accept
 

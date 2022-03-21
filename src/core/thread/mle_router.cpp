@@ -3131,8 +3131,6 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
         SuccessOrExit(error = AppendChildAddresses(*message, aChild));
     }
 
-    SetChildStateToValid(aChild);
-
     if (!aChild.IsRxOnWhenIdle())
     {
         Get<IndirectSender>().SetChildUseShortAddress(aChild, false);
@@ -3149,6 +3147,10 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
     SuccessOrExit(error = SendMessage(*message, destination));
 
     Log(kMessageSend, kTypeChildIdResponse, destination, aChild.GetRloc16());
+
+    // On purpose deferring access to settings after sending the response to comply with
+    // the kMaxChildIdResponseTimeout timing
+    SetChildStateToValid(aChild);
 
 exit:
     FreeMessageOnError(message, error);
