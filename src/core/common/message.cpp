@@ -199,6 +199,15 @@ const Message::Settings &Message::Settings::From(const otMessageSettings *aSetti
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+// Message::Iterator
+
+void Message::Iterator::Advance(void)
+{
+    mItem = mNext;
+    mNext = NextMessage(mNext);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // Message
 
 Error Message::ResizeMessage(uint16_t aLength)
@@ -740,16 +749,6 @@ void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 //---------------------------------------------------------------------------------------------------------------------
 // MessageQueue
 
-MessageQueue::MessageQueue(void)
-{
-    SetTail(nullptr);
-}
-
-Message *MessageQueue::GetHead(void) const
-{
-    return (GetTail() == nullptr) ? nullptr : GetTail()->Next();
-}
-
 void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
 {
     OT_ASSERT(!aMessage.IsInAQueue());
@@ -821,37 +820,39 @@ void MessageQueue::DequeueAndFreeAll(void)
     }
 }
 
+Message::Iterator MessageQueue::begin(void)
+{
+    return Message::Iterator(GetHead());
+}
+
+Message::ConstIterator MessageQueue::begin(void) const
+{
+    return Message::ConstIterator(GetHead());
+}
+
 void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
 {
     aMessageCount = 0;
     aBufferCount  = 0;
 
-    for (const Message *message = GetHead(); message != nullptr; message = message->GetNext())
+    for (const Message &message : *this)
     {
         aMessageCount++;
-        aBufferCount += message->GetBufferCount();
+        aBufferCount += message.GetBufferCount();
     }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 // PriorityQueue
 
-PriorityQueue::PriorityQueue(void)
-{
-    for (Message *&tail : mTails)
-    {
-        tail = nullptr;
-    }
-}
-
-Message *PriorityQueue::FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const
+const Message *PriorityQueue::FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const
 {
     // Find the first non-`nullptr` tail starting from the given priority
     // level and moving forward (wrapping from priority value
     // `kNumPriorities` -1 back to 0).
 
-    Message *tail = nullptr;
-    uint8_t  priority;
+    const Message *tail = nullptr;
+    uint8_t        priority;
 
     priority = static_cast<uint8_t>(aStartPriorityLevel);
 
@@ -869,19 +870,15 @@ Message *PriorityQueue::FindFirstNonNullTail(Message::Priority aStartPriorityLev
     return tail;
 }
 
-Message *PriorityQueue::GetHead(void) const
+const Message *PriorityQueue::GetHead(void) const
 {
-    Message *tail;
-
-    tail = FindFirstNonNullTail(Message::kPriorityLow);
-
-    return (tail == nullptr) ? nullptr : tail->Next();
+    return Message::NextOf(FindFirstNonNullTail(Message::kPriorityLow));
 }
 
-Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) const
+const Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) const
 {
-    Message *head;
-    Message *previousTail;
+    const Message *head;
+    const Message *previousTail;
 
     if (mTails[aPriority] != nullptr)
     {
@@ -899,7 +896,7 @@ Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) const
     return head;
 }
 
-Message *PriorityQueue::GetTail(void) const
+const Message *PriorityQueue::GetTail(void) const
 {
     return FindFirstNonNullTail(Message::kPriorityLow);
 }
@@ -983,15 +980,25 @@ void PriorityQueue::DequeueAndFreeAll(void)
     }
 }
 
+Message::Iterator PriorityQueue::begin(void)
+{
+    return Message::Iterator(GetHead());
+}
+
+Message::ConstIterator PriorityQueue::begin(void) const
+{
+    return Message::ConstIterator(GetHead());
+}
+
 void PriorityQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
 {
     aMessageCount = 0;
     aBufferCount  = 0;
 
-    for (const Message *message = GetHead(); message != nullptr; message = message->GetNext())
+    for (const Message &message : *this)
     {
         aMessageCount++;
-        aBufferCount += message->GetBufferCount();
+        aBufferCount += message.GetBufferCount();
     }
 }
 
