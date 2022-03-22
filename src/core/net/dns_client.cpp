@@ -905,20 +905,21 @@ void Client::GetCallback(const Query &aQuery, Callback &aCallback, void *&aConte
 
 Client::Query *Client::FindQueryById(uint16_t aMessageId)
 {
-    Query *   query;
+    Query *   matchedQuery = nullptr;
     QueryInfo info;
 
-    for (query = mQueries.GetHead(); query != nullptr; query = query->GetNext())
+    for (Query &query : mQueries)
     {
-        info.ReadFrom(*query);
+        info.ReadFrom(query);
 
         if (info.mMessageId == aMessageId)
         {
+            matchedQuery = &query;
             break;
         }
     }
 
-    return query;
+    return matchedQuery;
 }
 
 void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMsgInfo)
@@ -1070,24 +1071,21 @@ void Client::HandleTimer(void)
 {
     TimeMilli now      = TimerMilli::GetNow();
     TimeMilli nextTime = now.GetDistantFuture();
-    Query *   nextQuery;
     QueryInfo info;
 
-    for (Query *query = mQueries.GetHead(); query != nullptr; query = nextQuery)
+    for (Query &query : mQueries)
     {
-        nextQuery = query->GetNext();
-
-        info.ReadFrom(*query);
+        info.ReadFrom(query);
 
         if (now >= info.mRetransmissionTime)
         {
             if (info.mTransmissionCount >= info.mConfig.GetMaxTxAttempts())
             {
-                FinalizeQuery(*query, kErrorResponseTimeout);
+                FinalizeQuery(query, kErrorResponseTimeout);
                 continue;
             }
 
-            SendQuery(*query, info, /* aUpdateTimer */ false);
+            SendQuery(query, info, /* aUpdateTimer */ false);
         }
 
         if (nextTime > info.mRetransmissionTime)
