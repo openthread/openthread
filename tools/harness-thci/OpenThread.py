@@ -592,15 +592,10 @@ class OpenThreadTHCI(object):
             if self.__useDefaultDomainPrefix:
                 self.__addDefaultDomainPrefix()
 
-            self._deviceBeforeThreadStart()
-
         self.__executeCommand('ifconfig up')
         self.__executeCommand('thread start')
         self.isPowerDown = False
         return True
-
-    def _deviceBeforeThreadStart(self):
-        pass
 
     def __stopOpenThread(self):
         """stop OpenThread stack
