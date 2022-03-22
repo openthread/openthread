@@ -223,7 +223,7 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
 
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-void reportRadioStatusToOTNS(void)
+void reportRadioStatusToOtns(void)
 {
     struct Event event;
 
@@ -443,7 +443,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
     {
         sState = OT_RADIO_STATE_SLEEP;
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOTNS();
+        reportRadioStatusToOtns();
 #endif
     }
 
@@ -459,7 +459,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
 
     sState = OT_RADIO_STATE_DISABLED;
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-    reportRadioStatusToOTNS();
+    reportRadioStatusToOtns();
 #endif
 
 exit:
@@ -479,7 +479,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
         error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOTNS();
+        reportRadioStatusToOtns();
 #endif
     }
 
@@ -503,7 +503,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         sCurrentChannel        = aChannel;
         
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOTNS();
+        reportRadioStatusToOtns();
 #endif
     }
 
@@ -527,7 +527,7 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         sCurrentChannel = aFrame->mChannel;
         
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOTNS();
+        reportRadioStatusToOtns();
 #endif
     }
 
