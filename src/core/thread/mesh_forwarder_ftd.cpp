@@ -422,6 +422,13 @@ Error MeshForwarder::UpdateMeshRoute(Message &aMessage)
     mMeshDest      = meshHeader.GetDestination();
     mMeshSource    = meshHeader.GetSource();
 
+#if OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    if (mMacDest.GetShort() != mMeshDest)
+    {
+        mDelayNextTx = true;
+    }
+#endif
+
 exit:
     return error;
 }
@@ -635,6 +642,9 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
         // destination is not neighbor
         mMacSource.SetShort(mMeshSource);
         mAddMeshHeader = true;
+#if OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+        mDelayNextTx = true;
+#endif
     }
 
 exit:
