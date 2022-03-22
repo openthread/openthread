@@ -1982,15 +1982,12 @@ void Mle::HandleDelayedResponseTimer(void)
 {
     TimeMilli now          = TimerMilli::GetNow();
     TimeMilli nextSendTime = now.GetDistantFuture();
-    Message * nextMessage;
 
-    for (Message *message = mDelayedResponses.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mDelayedResponses)
     {
         DelayedResponseMetadata metadata;
 
-        nextMessage = message->GetNext();
-
-        metadata.ReadFrom(*message);
+        metadata.ReadFrom(message);
 
         if (now < metadata.mSendTime)
         {
@@ -2001,8 +1998,8 @@ void Mle::HandleDelayedResponseTimer(void)
         }
         else
         {
-            mDelayedResponses.Dequeue(*message);
-            SendDelayedResponse(*message, metadata);
+            mDelayedResponses.Dequeue(message);
+            SendDelayedResponse(message, metadata);
         }
     }
 
@@ -2053,20 +2050,16 @@ void Mle::RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination)
 
 void Mle::RemoveDelayedMessage(Message::SubType aSubType, MessageType aMessageType, const Ip6::Address *aDestination)
 {
-    Message *nextMessage;
-
-    for (Message *message = mDelayedResponses.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mDelayedResponses)
     {
         DelayedResponseMetadata metadata;
 
-        nextMessage = message->GetNext();
+        metadata.ReadFrom(message);
 
-        metadata.ReadFrom(*message);
-
-        if ((message->GetSubType() == aSubType) &&
+        if ((message.GetSubType() == aSubType) &&
             ((aDestination == nullptr) || (metadata.mDestination == *aDestination)))
         {
-            mDelayedResponses.DequeueAndFree(*message);
+            mDelayedResponses.DequeueAndFree(message);
             Log(kMessageRemoveDelayed, aMessageType, metadata.mDestination);
         }
     }
