@@ -267,7 +267,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
-        if (!curMessage->GetDirectTransmission())
+        if (!curMessage->IsDirectTransmission())
         {
             nextMessage = curMessage->GetNext();
             continue;
@@ -1017,7 +1017,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 
     VerifyOrExit(mSendMessage != nullptr);
 
-    OT_ASSERT(mSendMessage->GetDirectTransmission());
+    OT_ASSERT(mSendMessage->IsDirectTransmission());
 
     if (aFrameTxError != kErrorNone)
     {
@@ -1120,7 +1120,7 @@ exit:
 
 void MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
 {
-    VerifyOrExit(!aMessage.GetDirectTransmission() && !aMessage.IsChildPending());
+    VerifyOrExit(!aMessage.IsDirectTransmission() && !aMessage.IsChildPending());
 
     if (mSendMessage == &aMessage)
     {
