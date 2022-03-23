@@ -1699,15 +1699,25 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 spinel_tid_t RadioSpinel<InterfaceType, ProcessContextType>::GetNextTid(void)
 {
-    spinel_tid_t tid = 0;
+    spinel_tid_t tid = mCmdNextTid;
 
-    if (((1 << mCmdNextTid) & mCmdTidsInUse) == 0)
+    while (((1 << tid) & mCmdTidsInUse) != 0)
     {
-        tid         = mCmdNextTid;
-        mCmdNextTid = SPINEL_GET_NEXT_TID(mCmdNextTid);
-        mCmdTidsInUse |= (1 << tid);
+        tid = SPINEL_GET_NEXT_TID(tid);
+
+        if (tid == mCmdNextTid)
+        {
+            // We looped back to `mCmdNextTid` indicating that all
+            // TIDs are in-use.
+
+            ExitNow(tid = 0);
+        }
     }
 
+    mCmdTidsInUse |= (1 << tid);
+    mCmdNextTid = SPINEL_GET_NEXT_TID(tid);
+
+exit:
     return tid;
 }
 
