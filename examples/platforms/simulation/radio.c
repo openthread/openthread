@@ -29,6 +29,7 @@
 #include "platform-simulation.h"
 
 #include <errno.h>
+#include <stdio.h>
 
 #include <openthread/dataset.h>
 #include <openthread/link.h>
@@ -223,39 +224,50 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
 
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+const char * radioStateToString(otRadioState aState)
+{
+    switch (aState)
+    {
+    case OT_RADIO_STATE_RECEIVE:
+        return "rx";
+    case OT_RADIO_STATE_TRANSMIT:
+        return "tx";
+    case OT_RADIO_STATE_DISABLED:
+        return "off";
+    case OT_RADIO_STATE_SLEEP:
+        return "sleep";
+    default:
+        fprintf(stderr, "Invalid radio status: %d\n", sState);
+        return "";
+    }
+}
+
 void reportRadioStatusToOtns(void)
 {
     struct Event event;
-
+    
     event.mDelay      = 1; // 1us for now
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
-    switch (sState)
+    int n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(sState));
+    if (n < 0)
     {
-    case OT_RADIO_STATE_RECEIVE:
-        event.mDataLength = 8;
-        memcpy(event.mData, "radio=rx", 8);
-        break;
-    case OT_RADIO_STATE_TRANSMIT:
-        event.mDataLength = 8;
-        memcpy(event.mData, "radio=tx", 8);
-        break;
-    case OT_RADIO_STATE_DISABLED:
-        event.mDataLength = 9;
-        memcpy(event.mData, "radio=off", 9);
-        break;
-    case OT_RADIO_STATE_SLEEP:
-        event.mDataLength = 11;
-        memcpy(event.mData, "radio=sleep", 11);
-        break;
-    default:
-        fprintf(stderr, "Invalid radio status: %d\n", sState);
-        break;
+        fprintf(stderr, "Failed to format radio status: %d\n", n);
+        return;
     }
+    event.mDataLength = n;
 
     otSimSendEvent(&event);
 }
 #endif
+
+void setRadioState(otRadioState aState)
+{
+    sState = aState;
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+    reportRadioStatusToOtns();
+#endif
+}
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -441,10 +453,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
-        sState = OT_RADIO_STATE_SLEEP;
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOtns();
-#endif
+        setRadioState(OT_RADIO_STATE_SLEEP);
     }
 
     return OT_ERROR_NONE;
@@ -457,10 +466,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
     otEXPECT(otPlatRadioIsEnabled(aInstance));
     otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP, error = OT_ERROR_INVALID_STATE);
 
-    sState = OT_RADIO_STATE_DISABLED;
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-    reportRadioStatusToOtns();
-#endif
+    setRadioState(OT_RADIO_STATE_DISABLED);
 
 exit:
     return error;
@@ -477,10 +483,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
         error  = OT_ERROR_NONE;
-        sState = OT_RADIO_STATE_SLEEP;
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOtns();
-#endif
+        setRadioState(OT_RADIO_STATE_SLEEP);
     }
 
     return error;
@@ -496,15 +499,11 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     if (sState != OT_RADIO_STATE_DISABLED)
     {
+        setRadioState(OT_RADIO_STATE_RECEIVE);
         error                  = OT_ERROR_NONE;
-        sState                 = OT_RADIO_STATE_RECEIVE;
         sTxWait                = false;
         sReceiveFrame.mChannel = aChannel;
         sCurrentChannel        = aChannel;
-        
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOtns();
-#endif
     }
 
     return error;
@@ -522,13 +521,9 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
+        setRadioState(OT_RADIO_STATE_TRANSMIT);
         error           = OT_ERROR_NONE;
-        sState          = OT_RADIO_STATE_TRANSMIT;
         sCurrentChannel = aFrame->mChannel;
-        
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-        reportRadioStatusToOtns();
-#endif
     }
 
     return error;
