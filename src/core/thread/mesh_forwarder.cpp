@@ -246,7 +246,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 {
     VerifyOrExit(!mSendBusy && !mTxPaused);
 
-    mSendMessage = GetDirectTransmission();
+    mSendMessage = PrepareNextDirectTransmission();
     VerifyOrExit(mSendMessage != nullptr);
 
     if (mSendMessage->GetOffset() == 0)
@@ -260,7 +260,7 @@ exit:
     return;
 }
 
-Message *MeshForwarder::GetDirectTransmission(void)
+Message *MeshForwarder::PrepareNextDirectTransmission(void)
 {
     Message *curMessage, *nextMessage;
     Error    error = kErrorNone;
