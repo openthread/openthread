@@ -312,7 +312,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
 
     switch (aMode)
     {
-    case kAttachSameDowngrade:
+    case kDowngradeToReed:
         SendAddressRelease();
 
         // reset children info if any
@@ -325,8 +325,8 @@ void MleRouter::HandleChildStart(AttachMode aMode)
         SetRouterId(kInvalidRouterId);
         break;
 
-    case kAttachSame1:
-    case kAttachSame2:
+    case kSamePartition:
+    case kSamePartitionRetry:
         if (HasChildren())
         {
             IgnoreError(BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest));
@@ -334,7 +334,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
 
         break;
 
-    case kAttachAny:
+    case kAnyPartition:
         // If attach was started due to receiving MLE Announce Messages, all rx-on-when-idle devices would
         // start attach immediately when receiving such Announce message as in Thread 1.1 specification,
         // Section 4.8.1,
@@ -351,7 +351,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
 
         OT_FALL_THROUGH;
 
-    case kAttachBetter:
+    case kBetterPartition:
         if (HasChildren() && mPreviousPartitionIdRouter != mLeaderData.GetPartitionId())
         {
             IgnoreError(BecomeRouter(ThreadStatusTlv::kParentPartitionChange));
@@ -1236,7 +1236,7 @@ Error MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::Message
 #endif
         )
         {
-            IgnoreError(BecomeChild(kAttachBetter));
+            Attach(kBetterPartition);
         }
 
         ExitNow(error = kErrorDrop);
@@ -1816,14 +1816,13 @@ void MleRouter::HandleTimeTick(void)
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
             LogInfo("Router ID Sequence timeout");
-            IgnoreError(BecomeChild(kAttachSame1));
+            Attach(kSamePartition);
         }
 
         if (routerStateUpdate && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
-            // downgrade to REED
             LogNote("Downgrade to REED");
-            IgnoreError(BecomeChild(kAttachSameDowngrade));
+            Attach(kDowngradeToReed);
         }
 
         break;
