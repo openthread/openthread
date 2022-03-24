@@ -189,6 +189,7 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
     , mShortAddress(0)
     , mPanId(0xffff)
     , mRadioCaps(0)
+    , mRcpApiVersion(1)
     , mChannel(0)
     , mRxSensitivity(0)
     , mState(kStateDisabled)
@@ -391,6 +392,9 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
+    VerifyOrDie(!(kRequiredRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) || mRcpApiVersion >= 4,
+                OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+
 exit:
     return error;
 }
@@ -398,25 +402,24 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool aSupportsRcpApiVersion)
 {
-    otError      error         = OT_ERROR_NONE;
-    unsigned int rcpApiVersion = 1;
+    otError error = OT_ERROR_NONE;
 
     // Use RCP API Version value 1, when the RCP capability
     // list does not contain `SPINEL_CAP_RCP_API_VERSION`.
 
     if (aSupportsRcpApiVersion)
     {
-        SuccessOrExit(error = Get(SPINEL_PROP_RCP_API_VERSION, SPINEL_DATATYPE_UINT_PACKED_S, &rcpApiVersion));
+        SuccessOrExit(error = Get(SPINEL_PROP_RCP_API_VERSION, SPINEL_DATATYPE_UINT_PACKED_S, &mRcpApiVersion));
     }
 
-    otLogNotePlat("RCP API Version: %u", rcpApiVersion);
+    otLogNotePlat("RCP API Version: %u", mRcpApiVersion);
 
     static_assert(SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION <= SPINEL_RCP_API_VERSION,
                   "MIN_HOST_SUPPORTED_RCP_API_VERSION must be smaller than or equal to RCP_API_VERSION");
 
-    if ((rcpApiVersion < SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION) || (rcpApiVersion > SPINEL_RCP_API_VERSION))
+    if ((mRcpApiVersion < SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION) || (mRcpApiVersion > SPINEL_RCP_API_VERSION))
     {
-        otLogCritPlat("RCP API Version %u is not in the supported range [%u-%u]", rcpApiVersion,
+        otLogCritPlat("RCP API Version %u is not in the supported range [%u-%u]", mRcpApiVersion,
                       SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION, SPINEL_RCP_API_VERSION);
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
@@ -1895,11 +1898,18 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
 
-    unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &headerUpdated);
-    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+    if (mRcpApiVersion >= 4)
+    {
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &headerUpdated);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
-    aBuffer += unpacked;
-    aLength -= static_cast<uint16_t>(unpacked);
+        aBuffer += unpacked;
+        aLength -= static_cast<uint16_t>(unpacked);
+    }
+    else
+    {
+        headerUpdated = mTxRadioFrame.mInfo.mTxInfo.mIsHeaderUpdated;
+    }
 
     if (status == SPINEL_STATUS_OK)
     {
@@ -1946,22 +1956,43 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     // `otPlatRadioTxStarted()` is triggered immediately for now, which may be earlier than real started time.
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
 
-    error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
-                    SPINEL_DATATYPE_DATA_WLEN_S                                   // Frame data
-                        SPINEL_DATATYPE_UINT8_S                                   // Channel
-                            SPINEL_DATATYPE_UINT8_S                               // MaxCsmaBackoffs
-                                SPINEL_DATATYPE_UINT8_S                           // MaxFrameRetries
-                                    SPINEL_DATATYPE_BOOL_S                        // CsmaCaEnabled
-                                        SPINEL_DATATYPE_BOOL_S                    // IsHeaderUpdated
+    if (mRcpApiVersion >= 4)
+    {
+        error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
+                        SPINEL_DATATYPE_DATA_WLEN_S                                   // Frame data
+                            SPINEL_DATATYPE_UINT8_S                                   // Channel
+                                SPINEL_DATATYPE_UINT8_S                               // MaxCsmaBackoffs
+                                    SPINEL_DATATYPE_UINT8_S                           // MaxFrameRetries
+                                        SPINEL_DATATYPE_BOOL_S                        // CsmaCaEnabled
+                                            SPINEL_DATATYPE_BOOL_S                    // IsHeaderUpdated
+                                                SPINEL_DATATYPE_BOOL_S                // IsARetx
+                                                    SPINEL_DATATYPE_BOOL_S            // SkipAes
+                                                        SPINEL_DATATYPE_UINT32_S      // TxDelay
+                                                            SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
+                        mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
+                        mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
+                        mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated,
+                        mTransmitFrame->mInfo.mTxInfo.mIsARetx, mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed,
+                        mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
+    }
+    else
+    {
+        error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
+                        SPINEL_DATATYPE_DATA_WLEN_S                               // Frame data
+                            SPINEL_DATATYPE_UINT8_S                               // Channel
+                                SPINEL_DATATYPE_UINT8_S                           // MaxCsmaBackoffs
+                                    SPINEL_DATATYPE_UINT8_S                       // MaxFrameRetries
+                                        SPINEL_DATATYPE_BOOL_S                    // CsmaCaEnabled
                                             SPINEL_DATATYPE_BOOL_S                // IsARetx
                                                 SPINEL_DATATYPE_BOOL_S            // SkipAes
                                                     SPINEL_DATATYPE_UINT32_S      // TxDelay
                                                         SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
-                    mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
-                    mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
-                    mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated,
-                    mTransmitFrame->mInfo.mTxInfo.mIsARetx, mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed,
-                    mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
+                        mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
+                        mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
+                        mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsARetx,
+                        mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed, mTransmitFrame->mInfo.mTxInfo.mTxDelay,
+                        mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
+    }
 
     if (error == OT_ERROR_NONE)
     {

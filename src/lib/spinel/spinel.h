@@ -389,7 +389,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION 4
+#define SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION 1
 
 /**
  * @def SPINEL_FRAME_MAX_SIZE

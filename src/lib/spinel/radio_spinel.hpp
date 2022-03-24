@@ -989,6 +989,7 @@ private:
     uint16_t     mShortAddress;
     uint16_t     mPanId;
     otRadioCaps  mRadioCaps;
+    unsigned int mRcpApiVersion;
     uint8_t      mChannel;
     int8_t       mRxSensitivity;
     otError      mTxError;
