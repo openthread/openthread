@@ -66,7 +66,10 @@ Please only use the OpenThread name and marks when accurately referencing this s
 
 # Need help?
 
-OpenThread support is available on GitHub:
+There are numerous avenues for OpenThread support:
 
 - Bugs and feature requests — [submit to the Issue Tracker](https://github.com/openthread/openthread/issues)
-- Community Discussion - [ask questions, share ideas, and engage with other community members](https://github.com/openthread/openthread/discussions)
+- Stack Overflow — [post questions using the `openthread` tag](http://stackoverflow.com/questions/tagged/openthread)
+- Google Groups — [discussion and announcements at openthread-users](https://groups.google.com/forum/#!forum/openthread-users)
+
+The openthread-users Google Group is the recommended place for users to discuss OpenThread and interact directly with the OpenThread team.
