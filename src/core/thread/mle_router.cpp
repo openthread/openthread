@@ -335,6 +335,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
         break;
 
     case kAnyPartition:
+    case kBetterParent:
         // If attach was started due to receiving MLE Announce Messages, all rx-on-when-idle devices would
         // start attach immediately when receiving such Announce message as in Thread 1.1 specification,
         // Section 4.8.1,
