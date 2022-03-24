@@ -62,7 +62,7 @@ class SED_EnhancedKeepAlive(thread_cert.TestCase):
         self.nodes[SED_1].set_pollperiod(USER_POLL_PERIOD * 1000)
 
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[SED_1].start()

@@ -79,7 +79,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         server.srp_server_set_enabled(True)
         server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'leader')
         self.simulator.go(5)
 

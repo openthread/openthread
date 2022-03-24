@@ -1282,10 +1282,64 @@ void Mle::HandleAttachTimer(Timer &aTimer)
     aTimer.Get<Mle>().HandleAttachTimer();
 }
 
+Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
+{
+    // This method determines the Parent Request type to use during an
+    // attach cycle based on `mAttachMode`, `mAttachCounter` and
+    // `mParentRequestCounter`. This method MUST be used while in
+    // `kAttachStateParentRequest` state.
+    //
+    // On success it returns `kErrorNone` and sets `aType`. It returns
+    // `kErrorNotFound` to indicate that device can now transition
+    // from `kAttachStateParentRequest` state (has already sent the
+    // required number of Parent Requests for this attach attempt
+    // cycle).
+
+    Error error = kErrorNone;
+
+    OT_ASSERT(mAttachState == kAttachStateParentRequest);
+
+    aType = kToRoutersAndReeds;
+
+    // If device is not yet attached, `mAttachCounter` will track the
+    // number of attach attempt cycles so far, starting from one for
+    // the first attempt. `mAttachCounter` will be zero if device is
+    // already attached. Examples of this situation include a leader or
+    // router trying to attach to a better partition, or a child trying
+    // to find a better parent.
+
+    if ((mAttachCounter <= 1) && (mAttachMode != kBetterParent))
+    {
+        VerifyOrExit(mParentRequestCounter <= kFirstAttachCycleTotalParentRequests, error = kErrorNotFound);
+
+        // During reattach to the same partition all the Parent
+        // Request are sent to Routers and REEDs.
+
+        if ((mAttachMode != kSamePartition) && (mAttachMode != kSamePartitionRetry) &&
+            (mParentRequestCounter <= kFirstAttachCycleNumParentRequestToRouters))
+        {
+            aType = kToRouters;
+        }
+    }
+    else
+    {
+        VerifyOrExit(mParentRequestCounter <= kNextAttachCycleTotalParentRequests, error = kErrorNotFound);
+
+        if (mParentRequestCounter <= kNextAttachCycleNumParentRequestToRouters)
+        {
+            aType = kToRouters;
+        }
+    }
+
+exit:
+    return error;
+}
+
 bool Mle::HasAcceptableParentCandidate(void) const
 {
-    bool        hasAcceptableParent = false;
-    LinkQuality linkQuality;
+    bool              hasAcceptableParent = false;
+    LinkQuality       linkQuality;
+    ParentRequestType parentReqType;
 
     VerifyOrExit(mParentCandidate.IsStateParentResponse());
 
@@ -1295,16 +1349,19 @@ bool Mle::HasAcceptableParentCandidate(void) const
         VerifyOrExit(!HasMoreChannelsToAnnouce());
         break;
 
-    case kAttachStateParentRequestRouter:
-        // If we cannot find a parent with best link quality (3) when
-        // in `kAttachStateParentRequestRouter` state we will keep the
-        // candidate and forward to REED stage to potentially find a
-        // better parent.
-        linkQuality = OT_MIN(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
-        VerifyOrExit(linkQuality == kLinkQuality3);
-        break;
+    case kAttachStateParentRequest:
+        SuccessOrAssert(DetermineParentRequestType(parentReqType));
 
-    case kAttachStateParentRequestReed:
+        if (parentReqType == kToRouters)
+        {
+            // If we cannot find a parent with best link quality (3) when
+            // in Parent Request was sent to routers, we will keep the
+            // candidate and forward to REED stage to potentially find a
+            // better parent.
+            linkQuality = OT_MIN(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
+            VerifyOrExit(linkQuality == kLinkQuality3);
+        }
+
         break;
 
     default:
@@ -1331,8 +1388,9 @@ exit:
 
 void Mle::HandleAttachTimer(void)
 {
-    uint32_t delay          = 0;
-    bool     shouldAnnounce = true;
+    uint32_t          delay          = 0;
+    bool              shouldAnnounce = true;
+    ParentRequestType type;
 
     // First, check if we are waiting to receive parent responses and
     // found an acceptable parent candidate.
@@ -1355,46 +1413,26 @@ void Mle::HandleAttachTimer(void)
         break;
 
     case kAttachStateStart:
-        if (mAttachCounter > 0)
-        {
-            LogNote("Attempt to attach - attempt %d, %s %s", mAttachCounter, AttachModeToString(mAttachMode),
-                    ReattachStateToString(mReattachState));
-        }
-        else
-        {
-            LogNote("Attempt to attach - %s %s", AttachModeToString(mAttachMode),
-                    ReattachStateToString(mReattachState));
-        }
+        LogNote("Attach attempt %d, %s %s", mAttachCounter, AttachModeToString(mAttachMode),
+                ReattachStateToString(mReattachState));
 
-        SetAttachState(kAttachStateParentRequestRouter);
+        SetAttachState(kAttachStateParentRequest);
         mParentCandidate.SetState(Neighbor::kStateInvalid);
         mReceivedResponseFromParent = false;
+        mParentRequestCounter       = 0;
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
 
-        // initial MLE Parent Request has both E and R flags set in Scan Mask TLV
-        // during reattach when losing connectivity.
-        if (mAttachMode == kSamePartition || mAttachMode == kSamePartitionRetry)
+        OT_FALL_THROUGH;
+
+    case kAttachStateParentRequest:
+        mParentRequestCounter++;
+        if (DetermineParentRequestType(type) == kErrorNone)
         {
-            SendParentRequest(kToRoutersAndReeds);
-            delay = kParentRequestReedTimeout;
-        }
-        // initial MLE Parent Request has only R flag set in Scan Mask TLV for
-        // during initial attach or downgrade process
-        else
-        {
-            SendParentRequest(kToRouters);
-            delay = kParentRequestRouterTimeout;
+            SendParentRequest(type);
+            delay = (type == kToRouters) ? kParentRequestRouterTimeout : kParentRequestReedTimeout;
+            break;
         }
 
-        break;
-
-    case kAttachStateParentRequestRouter:
-        SetAttachState(kAttachStateParentRequestReed);
-        SendParentRequest(kToRoutersAndReeds);
-        delay = kParentRequestReedTimeout;
-        break;
-
-    case kAttachStateParentRequestReed:
         shouldAnnounce = PrepareAnnounceState();
 
         if (shouldAnnounce)
@@ -4199,22 +4237,20 @@ const char *Mle::AttachModeToString(AttachMode aMode)
 const char *Mle::AttachStateToString(AttachState aState)
 {
     static const char *const kAttachStateStrings[] = {
-        "Idle",             // (0) kAttachStateIdle
-        "ProcessAnnounce",  // (1) kAttachStateProcessAnnounce
-        "Start",            // (2) kAttachStateStart
-        "ParentReqRouters", // (3) kAttachStateParentRequestRouter
-        "ParentReqReeds",   // (4) kAttachStateParentRequestReed
-        "Announce",         // (5) kAttachStateAnnounce
-        "ChildIdReq",       // (6) kAttachStateChildIdRequest
+        "Idle",            // (0) kAttachStateIdle
+        "ProcessAnnounce", // (1) kAttachStateProcessAnnounce
+        "Start",           // (2) kAttachStateStart
+        "ParentReq",       // (3) kAttachStateParent
+        "Announce",        // (4) kAttachStateAnnounce
+        "ChildIdReq",      // (5) kAttachStateChildIdRequest
     };
 
     static_assert(kAttachStateIdle == 0, "kAttachStateIdle value is incorrect");
     static_assert(kAttachStateProcessAnnounce == 1, "kAttachStateProcessAnnounce value is incorrect");
     static_assert(kAttachStateStart == 2, "kAttachStateStart value is incorrect");
-    static_assert(kAttachStateParentRequestRouter == 3, "kAttachStateParentRequestRouter value is incorrect");
-    static_assert(kAttachStateParentRequestReed == 4, "kAttachStateParentRequestReed value is incorrect");
-    static_assert(kAttachStateAnnounce == 5, "kAttachStateAnnounce value is incorrect");
-    static_assert(kAttachStateChildIdRequest == 6, "kAttachStateChildIdRequest value is incorrect");
+    static_assert(kAttachStateParentRequest == 3, "kAttachStateParentRequest value is incorrect");
+    static_assert(kAttachStateAnnounce == 4, "kAttachStateAnnounce value is incorrect");
+    static_assert(kAttachStateChildIdRequest == 5, "kAttachStateChildIdRequest value is incorrect");
 
     return kAttachStateStrings[aState];
 }

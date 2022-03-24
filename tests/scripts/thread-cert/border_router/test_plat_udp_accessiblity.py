@@ -67,7 +67,7 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         router = self.nodes[ROUTER]
 
         br.start()
-        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
         br.srp_server_set_enabled(True)
 
@@ -104,7 +104,7 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
 
         reset_device.reset()
         reset_device.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertIn(reset_device.get_state(), ['leader', 'router'])
         self.simulator.go(5)
 

@@ -81,7 +81,7 @@ parent.form("recovery")
 
 for child in sleepy_children:
     child.join_node(parent, wpan.JOIN_TYPE_SLEEPY_END_DEVICE)
-    child.set(wpan.WPAN_POLL_INTERVAL, '4000')
+    child.set(wpan.WPAN_POLL_INTERVAL, '10000')
 
 for child in rx_on_children:
     child.join_node(parent, wpan.JOIN_TYPE_END_DEVICE)
@@ -148,7 +148,7 @@ def check_parent_is_associated():
     verify(parent.is_associated())
 
 
-wpan.verify_within(check_parent_is_associated, 5)
+wpan.verify_within(check_parent_is_associated, 10)
 
 # Verify that all the children are recovered and present in the parent's
 # child table again (within 5 seconds).

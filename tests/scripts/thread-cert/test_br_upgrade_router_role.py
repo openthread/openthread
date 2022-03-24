@@ -31,6 +31,7 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -96,7 +97,7 @@ class BrUpgradeRouterRole(thread_cert.TestCase):
         # Start the leader and router.
 
         leader.start()
-        self.simulator.go(10)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         router.start()

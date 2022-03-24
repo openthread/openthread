@@ -207,7 +207,7 @@ class NetDataPublisher(thread_cert.TestCase):
         # Start the nodes
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         for router in routers:

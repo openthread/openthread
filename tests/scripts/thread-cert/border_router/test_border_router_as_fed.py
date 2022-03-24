@@ -80,7 +80,7 @@ class TestBorderRouterAsFed(thread_cert.TestCase):
         self.simulator.go(5)
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', leader.get_state())
 
         br.start()

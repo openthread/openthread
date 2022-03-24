@@ -53,7 +53,7 @@ class Router_5_1_01(thread_cert.TestCase):
         self.nodes[ROUTER_1].set_router_selection_jitter(1)
 
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER_1].start()

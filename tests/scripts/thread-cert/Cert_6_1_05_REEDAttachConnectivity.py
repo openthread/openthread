@@ -75,7 +75,7 @@ class Cert_6_1_5_REEDAttachConnectivity(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
@@ -95,6 +95,8 @@ class Cert_6_1_5_REEDAttachConnectivity(thread_cert.TestCase):
         self.assertEqual(self.nodes[ED].get_state(), 'child')
         self.assertEqual(self.nodes[REED1].get_state(), 'router')
 
+        self.num_parent_requests = 1 if self.nodes[ED].version in ['1.1', '1.2'] else 2
+
         self.collect_ipaddrs()
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
@@ -109,12 +111,14 @@ class Cert_6_1_5_REEDAttachConnectivity(thread_cert.TestCase):
         _reed1_pkts = pkts.filter_wpan_src64(REED_1)
         _ed_pkts = pkts.filter_wpan_src64(ED)
 
-        # Step 2: The DUT MUST send a MLE Parent Request to the
+        # Step 2: The DUT MUST send MLE Parent Requests to the
         # All-Routers multicast address
-        _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).filter_ipv6_dst(
-            LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).must_next().must_verify(
-                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type
-                                                                                      ) and p.mle.tlv.scan_mask.r == 1)
+
+        for num in range(self.num_parent_requests):
+            _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).filter_ipv6_dst(
+                LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).must_next().must_verify(
+                    lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(
+                        p.mle.tlv.type) and p.mle.tlv.scan_mask.r == 1)
 
         # Step 3: REED_1 and REED_2 No response to Parent Request
         # Step 4: DUT Send MLE Parent Request with Scan Mask set to Routers AND REEDs

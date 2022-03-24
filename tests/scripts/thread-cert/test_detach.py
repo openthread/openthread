@@ -78,11 +78,11 @@ class TestDetach(thread_cert.TestCase):
         child1 = self.nodes[CHILD_1]
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         router1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(router1.get_state(), 'router')
         router1_rloc16 = router1.get_addr16()
         self.assertTrue(list(filter(lambda x: x[1]['rloc16'] == router1_rloc16, leader.router_table().items())))
@@ -145,10 +145,10 @@ class TestDetach(thread_cert.TestCase):
         self.assertEqual(leader.get_state(), 'disabled')
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
         router1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(router1.get_state(), 'router')
 
         leader.thread_stop()
