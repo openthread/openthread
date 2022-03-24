@@ -267,9 +267,9 @@ class SingleBorderRouter(thread_cert.TestCase):
 
         br.enable_ether()
 
-        # The routing manager may fail to send RS and will wait for 60 seconds
+        # The routing manager may fail to send RS and will wait for 4 seconds
         # before retrying.
-        self.simulator.go(80)
+        self.simulator.go(20)
         self.collect_ipaddrs()
 
         logging.info("BR     addrs: %r", br.get_addrs())

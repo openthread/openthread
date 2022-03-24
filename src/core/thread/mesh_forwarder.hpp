@@ -429,7 +429,7 @@ private:
                           Ip6::Header &       aIp6Header);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    Message *GetDirectTransmission(void);
+    Message *PrepareNextDirectTransmission(void);
     void     HandleMesh(uint8_t *             aFrame,
                         uint16_t              aFrameLength,
                         const Mac::Address &  aMacSource,

@@ -3160,7 +3160,7 @@ Error MleRouter::SendChildUpdateRequest(Child &aChild)
     static const uint8_t tlvs[] = {Tlv::kTimeout, Tlv::kAddressRegistration};
     Error                error  = kErrorNone;
     Ip6::Address         destination;
-    Message *            message;
+    Message *            message = nullptr;
 
     if (!aChild.IsRxOnWhenIdle())
     {

@@ -246,7 +246,7 @@ void MeshForwarder::ScheduleTransmissionTask(void)
 {
     VerifyOrExit(!mSendBusy && !mTxPaused);
 
-    mSendMessage = GetDirectTransmission();
+    mSendMessage = PrepareNextDirectTransmission();
     VerifyOrExit(mSendMessage != nullptr);
 
     if (mSendMessage->GetOffset() == 0)
@@ -260,14 +260,14 @@ exit:
     return;
 }
 
-Message *MeshForwarder::GetDirectTransmission(void)
+Message *MeshForwarder::PrepareNextDirectTransmission(void)
 {
     Message *curMessage, *nextMessage;
     Error    error = kErrorNone;
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
-        if (!curMessage->GetDirectTransmission())
+        if (!curMessage->IsDirectTransmission())
         {
             nextMessage = curMessage->GetNext();
             continue;
@@ -528,7 +528,6 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
             ExitNow(frame = nullptr);
         }
 
-        OT_ASSERT(frame->GetLength() != 7);
         break;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -1018,7 +1017,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 
     VerifyOrExit(mSendMessage != nullptr);
 
-    OT_ASSERT(mSendMessage->GetDirectTransmission());
+    OT_ASSERT(mSendMessage->IsDirectTransmission());
 
     if (aFrameTxError != kErrorNone)
     {
@@ -1121,7 +1120,7 @@ exit:
 
 void MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
 {
-    VerifyOrExit(!aMessage.GetDirectTransmission() && !aMessage.IsChildPending());
+    VerifyOrExit(!aMessage.IsDirectTransmission() && !aMessage.IsChildPending());
 
     if (mSendMessage == &aMessage)
     {
