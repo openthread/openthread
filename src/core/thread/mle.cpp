@@ -324,6 +324,10 @@ void Mle::Restore(void)
 
     SuccessOrExit(Get<Settings>().Read(networkInfo));
 
+#if OPENTHREAD_MTD
+    VerifyOrExit(!(networkInfo.GetDeviceMode() & DeviceMode::kModeFullThreadDevice));
+#endif
+
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
     Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter());
@@ -754,6 +758,10 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 {
     Error      error   = kErrorNone;
     DeviceMode oldMode = mDeviceMode;
+
+#if OPENTHREAD_MTD
+    VerifyOrExit(!aDeviceMode.IsFullThreadDevice(), error = kErrorInvalidArgs);
+#endif
 
     VerifyOrExit(aDeviceMode.IsValid(), error = kErrorInvalidArgs);
     VerifyOrExit(mDeviceMode != aDeviceMode);
