@@ -226,35 +226,36 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
 const char * radioStateToString(otRadioState aState)
 {
+    char const * ans;
     switch (aState)
     {
     case OT_RADIO_STATE_RECEIVE:
-        return "rx";
+        ans = "rx";
+        break;
     case OT_RADIO_STATE_TRANSMIT:
-        return "tx";
+        ans = "tx";
+        break;
     case OT_RADIO_STATE_DISABLED:
-        return "off";
+        ans = "off";
+        break;
     case OT_RADIO_STATE_SLEEP:
-        return "sleep";
+        ans = "sleep";
+        break;
     default:
-        fprintf(stderr, "Invalid radio status: %d\n", sState);
-        return "";
+        assert(false);
     }
+    return ans;
 }
 
 void reportRadioStatusToOtns(void)
 {
     struct Event event;
     
-    event.mDelay      = 1; // 1us for now
+    event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
     int n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(sState));
-    if (n < 0)
-    {
-        fprintf(stderr, "Failed to format radio status: %d\n", n);
-        return;
-    }
+    assert(n > 0);
     event.mDataLength = n;
 
     otSimSendEvent(&event);
