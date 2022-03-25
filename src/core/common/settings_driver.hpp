@@ -66,19 +66,19 @@ public:
     /**
      * This method initializes the settings storage driver.
      *
-     * @param[in]  aCriticalKeys        A pointer to an array containing the list of critical keys.
-     * @param[in]  aCriticalKeysLength  The number of entries in the @p aCriticalKeys array.
+     * @param[in]  aSensitiveKeys        A pointer to an array containing the list of critical keys.
+     * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
      *
      */
-    void Init(const uint16_t *aCriticalKeys, uint16_t aCriticalKeysLength)
+    void Init(const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
     {
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
-        OT_UNUSED_VARIABLE(aCriticalKeys);
-        OT_UNUSED_VARIABLE(aCriticalKeysLength);
+        OT_UNUSED_VARIABLE(aSensitiveKeys);
+        OT_UNUSED_VARIABLE(aSensitiveKeysLength);
 
         mFlash.Init();
 #else
-        otPlatSettingsInit(GetInstancePtr(), aCriticalKeys, aCriticalKeysLength);
+        otPlatSettingsInit(GetInstancePtr(), aSensitiveKeys, aSensitiveKeysLength);
 #endif
     }
 

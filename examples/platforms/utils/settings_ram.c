@@ -57,11 +57,11 @@ struct settingsBlock
 } OT_TOOL_PACKED_END;
 
 // settings API
-void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aCriticalKeys, uint16_t aCriticalKeysLength)
+void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aCriticalKeys);
-    OT_UNUSED_VARIABLE(aCriticalKeysLength);
+    OT_UNUSED_VARIABLE(aSensitiveKeys);
+    OT_UNUSED_VARIABLE(aSensitiveKeysLength);
 
     sSettingsBufLength = 0;
 }

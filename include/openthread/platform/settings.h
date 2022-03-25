@@ -55,7 +55,7 @@ extern "C" {
  * This enumeration defines the keys of settings.
  *
  * Note: When adding a new settings key, if the settings corresponding to the key contains security sensitive
- *       information, the developer MUST add the key to the array `kCriticalKeys`.
+ *       information, the developer MUST add the key to the array `kSensitiveKeys`.
  *
  */
 enum
@@ -82,15 +82,15 @@ enum
  *
  * This function also sets the critical keys that should be stored in the secure area.
  *
- * Note that the memory pointed by @p aCriticalKeys MUST not be released before @p aInstance is destroyed.
+ * Note that the memory pointed by @p aSensitiveKeys MUST not be released before @p aInstance is destroyed.
  *
- * @param[in]  aInstance            The OpenThread instance structure.
- * @param[in]  aCriticalKeys        A pointer to an array containing the list of critical keys. May be NULL only if
- *                                  @p aCriticalKeysLength is 0, which means that there is no critical keys.
- * @param[in]  aCriticalKeysLength  The number of entries in the @p aCriticalKeys array.
+ * @param[in]  aInstance             The OpenThread instance structure.
+ * @param[in]  aSensitiveKeys        A pointer to an array containing the list of critical keys. May be NULL only if
+ *                                   @p aSensitiveKeysLength is 0, which means that there is no critical keys.
+ * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
  *
  */
-void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aCriticalKeys, uint16_t aCriticalKeysLength);
+void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength);
 
 /**
  * Performs any de-initialization for the settings subsystem, if necessary.

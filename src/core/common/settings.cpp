@@ -187,8 +187,8 @@ const char *SettingsBase::KeyToString(Key aKey)
 //---------------------------------------------------------------------------------------------------------------------
 // Settings
 
-// This array contains critical keys that should be stored in the secure area.
-const uint16_t Settings::kCriticalKeys[] = {
+// This array contains sensitive keys that should be stored in the secure area.
+const uint16_t Settings::kSensitiveKeys[] = {
     SettingsBase::kKeyActiveDataset,
     SettingsBase::kKeyPendingDataset,
     SettingsBase::kKeySrpEcdsaKey,
@@ -196,7 +196,7 @@ const uint16_t Settings::kCriticalKeys[] = {
 
 void Settings::Init(void)
 {
-    Get<SettingsDriver>().Init(kCriticalKeys, GetArrayLength(kCriticalKeys));
+    Get<SettingsDriver>().Init(kSensitiveKeys, GetArrayLength(kSensitiveKeys));
 }
 
 void Settings::Deinit(void)
