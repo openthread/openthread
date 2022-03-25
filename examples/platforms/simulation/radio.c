@@ -264,10 +264,13 @@ void reportRadioStatusToOtns(void)
 
 void setRadioState(otRadioState aState)
 {
-    sState = aState;
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-    reportRadioStatusToOtns();
+    if (sState != aState)
+    {
+        reportRadioStatusToOtns();
+    }
 #endif
+    sState = aState;
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
