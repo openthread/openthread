@@ -1978,7 +1978,11 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NCP_VERSION>(void)
 {
+#if OPENTHREAD_RADIO
+    return mEncoder.WriteUtf8(otGetRadioVersionString(mInstance));
+#else
     return mEncoder.WriteUtf8(otGetVersionString());
+#endif
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_INTERFACE_COUNT>(void)
