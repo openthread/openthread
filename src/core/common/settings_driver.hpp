@@ -66,13 +66,19 @@ public:
     /**
      * This method initializes the settings storage driver.
      *
+     * @param[in]  aSensitiveKeys        A pointer to an array containing the list of sensitive keys.
+     * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
+     *
      */
-    void Init(void)
+    void Init(const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
     {
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+        OT_UNUSED_VARIABLE(aSensitiveKeys);
+        OT_UNUSED_VARIABLE(aSensitiveKeysLength);
+
         mFlash.Init();
 #else
-        otPlatSettingsInit(GetInstancePtr());
+        otPlatSettingsInit(GetInstancePtr(), aSensitiveKeys, aSensitiveKeysLength);
 #endif
     }
 
@@ -84,23 +90,6 @@ public:
     {
 #if !OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
         otPlatSettingsDeinit(GetInstancePtr());
-#endif
-    }
-
-    /**
-     * This method sets the critical keys that should be stored in a secure area.
-     *
-     * @param[in]  aKeys        A pointer to an array containing the list of critical keys.
-     * @param[in]  aKeysLength  The number of entries in the @p aKeys array.
-     *
-     */
-    void SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
-    {
-#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
-        OT_UNUSED_VARIABLE(aKeys);
-        OT_UNUSED_VARIABLE(aKeysLength);
-#else
-        otPlatSettingsSetCriticalKeys(GetInstancePtr(), aKeys, aKeysLength);
 #endif
     }
 
