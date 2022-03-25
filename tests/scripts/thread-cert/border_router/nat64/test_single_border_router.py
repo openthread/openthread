@@ -32,7 +32,8 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies the advertisement of NAT64 prefix in Thread network.
+#   This test verifies the advertisement of local NAT64 prefix in Thread network
+#   when no NAT64 prefix found on infrastructure interface.
 #
 #   TODO: add checks for outbound connectivity from Thread device to IPv4 host
 #         after OTBR change is ready.
@@ -49,9 +50,12 @@ BR = 1
 ROUTER = 2
 HOST = 3
 
-# The prefix is set small enough that a random-generated NAT64 prefix is very
-# likely greater than it. So that the BR will remove the random-generated one.
+# The prefix is set small enough that a random-generated ULA NAT64 prefix is very
+# likely greater than it. So the BR will remove the random-generated one.
 SMALL_NAT64_PREFIX = "fd00:00:00:01:00:00::/96"
+# The prefix is set larger than a random-generated ULA NAT64 prefix.
+# So the BR will remove the random-generated one.
+LARGE_NAT64_PREFIX = "ff00:00:00:01:00:00::/96"
 
 
 class Nat64SingleBorderRouter(thread_cert.TestCase):
@@ -85,6 +89,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         br.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
+        br.bash("service bind9 stop")
+        self.simulator.go(330)
         self.assertEqual('leader', br.get_state())
 
         router.start()
@@ -103,10 +109,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         #
         # Case 2.
-        # User adds a smaller NAT64 prefix and the local prefix is withdrawn.
+        # User adds a smaller NAT64 prefix (same preference) and the local prefix is withdrawn.
         # User removes the smaller NAT64 prefix and the local prefix is re-added.
         #
-        br.add_route(SMALL_NAT64_PREFIX, stable=False, nat64=True)
+        br.add_route(SMALL_NAT64_PREFIX, stable=False, nat64=True, prf='low')
         br.register_netdata()
         self.simulator.go(5)
 
@@ -115,13 +121,32 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         br.remove_route(SMALL_NAT64_PREFIX)
         br.register_netdata()
-        self.simulator.go(5)
+        self.simulator.go(10)
 
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         self.assertEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
 
         #
-        # Case 3. Disable and re-enable border routing on the border router.
+        # Case 3.
+        # User adds a larger NAT64 prefix (higher preference) and the local prefix is withdrawn.
+        # User removes the larger NAT64 prefix and the local prefix is re-added.
+        #
+        br.add_route(LARGE_NAT64_PREFIX, stable=False, nat64=True, prf='med')
+        br.register_netdata()
+        self.simulator.go(5)
+
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
+        self.assertNotEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+
+        br.remove_route(LARGE_NAT64_PREFIX)
+        br.register_netdata()
+        self.simulator.go(10)
+
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
+        self.assertEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+
+        #
+        # Case 4. Disable and re-enable border routing on the border router.
         #
         br.disable_br()
         self.simulator.go(5)
@@ -137,7 +162,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
 
         #
-        # Case 4. Disable and re-enable ethernet on the border router.
+        # Case 5. Disable and re-enable ethernet on the border router.
         #
         br.disable_ether()
         self.simulator.go(5)

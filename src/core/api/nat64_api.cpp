@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,23 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-simulation.h"
+/**
+ * @file
+ *   This file implements the OpenThread APIs for handling IPv4 (NAT64) messages
+ */
 
-#include <openthread/platform/infra_if.h>
+#include <openthread/nat64.h>
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+#include "net/ip4_types.hpp"
+
+using namespace ot;
+
+bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond)
 {
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-    OT_UNUSED_VARIABLE(aAddress);
-
-    return false;
+    return AsCoreType(aFirst) == AsCoreType(aSecond);
 }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
-                                 const otIp6Address *aDestAddress,
-                                 const uint8_t *     aBuffer,
-                                 uint16_t            aBufferLength)
+void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6Address, otIp4Address *aIp4Address)
 {
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-    OT_UNUSED_VARIABLE(aDestAddress);
-    OT_UNUSED_VARIABLE(aBuffer);
-    OT_UNUSED_VARIABLE(aBufferLength);
-
-    return OT_ERROR_FAILED;
+    AsCoreType(aIp4Address).ExtractFromIp6Address(aPrefixLength, AsCoreType(aIp6Address));
 }
-
-otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-
-    return OT_ERROR_FAILED;
-}
-#endif
