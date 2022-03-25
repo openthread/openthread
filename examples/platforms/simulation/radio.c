@@ -749,7 +749,7 @@ void radioSendMessage(otInstance *aInstance)
 
     if (!sTxWait)
     {
-        sState = OT_RADIO_STATE_RECEIVE;
+        setRadioState(OT_RADIO_STATE_RECEIVE);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
@@ -872,7 +872,7 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#if   == 0
     ssize_t            rval;
     struct sockaddr_in sockaddr;
 
