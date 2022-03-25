@@ -80,13 +80,13 @@ enum
 /**
  * Performs any initialization for the settings subsystem, if necessary.
  *
- * This function also sets the critical keys that should be stored in the secure area.
+ * This function also sets the sensitive keys that should be stored in the secure area.
  *
  * Note that the memory pointed by @p aSensitiveKeys MUST not be released before @p aInstance is destroyed.
  *
  * @param[in]  aInstance             The OpenThread instance structure.
- * @param[in]  aSensitiveKeys        A pointer to an array containing the list of critical keys. May be NULL only if
- *                                   @p aSensitiveKeysLength is 0, which means that there is no critical keys.
+ * @param[in]  aSensitiveKeys        A pointer to an array containing the list of sensitive keys. May be NULL only if
+ *                                   @p aSensitiveKeysLength is 0, which means that there is no sensitive keys.
  * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
  *
  */

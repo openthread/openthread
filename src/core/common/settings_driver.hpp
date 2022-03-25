@@ -66,7 +66,7 @@ public:
     /**
      * This method initializes the settings storage driver.
      *
-     * @param[in]  aSensitiveKeys        A pointer to an array containing the list of critical keys.
+     * @param[in]  aSensitiveKeys        A pointer to an array containing the list of sensitive keys.
      * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
      *
      */
