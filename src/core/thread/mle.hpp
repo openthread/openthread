@@ -181,14 +181,12 @@ public:
     /**
      * This method causes the Thread interface to attempt an MLE attach.
      *
-     * @param[in]  aMode  Indicates what partitions to attach to.
-     *
      * @retval kErrorNone          Successfully began the attach process.
      * @retval kErrorInvalidState  MLE is Disabled.
      * @retval kErrorBusy          An attach process is in progress.
      *
      */
-    Error BecomeChild(AttachMode aMode);
+    Error BecomeChild(void);
 
     /**
      * This method indicates whether or not the Thread device is attached to a Thread network.
@@ -786,6 +784,19 @@ protected:
     };
 
     /**
+     * Attach mode.
+     *
+     */
+    enum AttachMode : uint8_t
+    {
+        kAnyPartition,       ///< Attach to any Thread partition.
+        kSamePartition,      ///< Attach to the same Thread partition (attempt 1 when losing connectivity).
+        kSamePartitionRetry, ///< Attach to the same Thread partition (attempt 2 when losing connectivity).
+        kBetterPartition,    ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
+        kDowngradeToReed,    ///< Attach to the same Thread partition during downgrade process.
+    };
+
+    /**
      * States during attach (when searching for a parent).
      *
      */
@@ -806,10 +817,10 @@ protected:
      */
     enum ReattachState : uint8_t
     {
-        kReattachStop    = 0, ///< Reattach process is disabled or finished
-        kReattachStart   = 1, ///< Start reattach process
-        kReattachActive  = 2, ///< Reattach using stored Active Dataset
-        kReattachPending = 3, ///< Reattach using stored Pending Dataset
+        kReattachStop,    ///< Reattach process is disabled or finished
+        kReattachStart,   ///< Start reattach process
+        kReattachActive,  ///< Reattach using stored Active Dataset
+        kReattachPending, ///< Reattach using stored Pending Dataset
     };
 
     static constexpr uint16_t kMleMaxResponseDelay = 1000u; ///< Max delay before responding to a multicast request.
@@ -949,6 +960,14 @@ protected:
      *
      */
     void SetRole(DeviceRole aRole);
+
+    /**
+     * This method causes the Thread interface to attempt an MLE attach.
+     *
+     * @param[in]  aMode  Indicates what partitions to attach to.
+     *
+     */
+    void Attach(AttachMode aMode);
 
     /**
      * This method sets the attach state
@@ -1646,8 +1665,8 @@ private:
 
     enum ParentRequestType : uint8_t
     {
-        kParentRequestTypeRouters,         // Parent Request to all routers.
-        kParentRequestTypeRoutersAndReeds, // Parent Request to all routers and REEDs.
+        kToRouters,         // Parent Request to routers only.
+        kToRoutersAndReeds, // Parent Request to all routers and REEDs.
     };
 
     enum ChildUpdateRequestState : uint8_t
@@ -1825,7 +1844,7 @@ private:
     bool  HasUnregisteredAddress(void);
 
     uint32_t GetAttachStartDelay(void) const;
-    Error    SendParentRequest(ParentRequestType aType);
+    void     SendParentRequest(ParentRequestType aType);
     Error    SendChildIdRequest(void);
     Error    GetNextAnnouceChannel(uint8_t &aChannel) const;
     bool     HasMoreChannelsToAnnouce(void) const;
@@ -1876,7 +1895,7 @@ private:
 
     Challenge mParentRequestChallenge;
 
-    AttachMode mParentRequestMode;
+    AttachMode mAttachMode;
     int8_t     mParentPriority;
     uint8_t    mParentLinkQuality3;
     uint8_t    mParentLinkQuality2;

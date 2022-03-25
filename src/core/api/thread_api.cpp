@@ -295,7 +295,7 @@ otError otThreadBecomeDetached(otInstance *aInstance)
 
 otError otThreadBecomeChild(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild(Mle::kAttachAny);
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild();
 }
 
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
