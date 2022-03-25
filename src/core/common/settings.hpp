@@ -1118,7 +1118,7 @@ private:
 
     static void Log(Action aAction, Error aError, Key aKey, const void *aValue = nullptr);
 
-    static const uint16_t kCriticalKeys[];
+    static const uint16_t kSensitiveKeys[];
 };
 
 } // namespace ot

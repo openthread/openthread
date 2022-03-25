@@ -167,9 +167,19 @@ static void swapDiscard(otInstance *aInstance, int aFd)
     VerifyOrDie(0 == unlink(swapFileName), OT_EXIT_ERROR_ERRNO);
 }
 
-void otPlatSettingsInit(otInstance *aInstance)
+void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
 {
+#if !OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
+    OT_UNUSED_VARIABLE(aSensitiveKeys);
+    OT_UNUSED_VARIABLE(aSensitiveKeysLength);
+#endif
+
     otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
+    sKeys       = aSensitiveKeys;
+    sKeysLength = aSensitiveKeysLength;
+#endif
 
     // Don't touch the settings file the system runs in dry-run mode.
     VerifyOrExit(!IsSystemDryRun());
@@ -531,7 +541,7 @@ int main()
         data[i] = i;
     }
 
-    otPlatSettingsInit(instance);
+    otPlatSettingsInit(instance, nullptr, 0);
 
     // verify empty situation
     otPlatSettingsWipe(instance);
