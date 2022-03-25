@@ -794,6 +794,7 @@ protected:
         kSamePartitionRetry, ///< Attach to the same Thread partition (attempt 2 when losing connectivity).
         kBetterPartition,    ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
         kDowngradeToReed,    ///< Attach to the same Thread partition during downgrade process.
+        kBetterParent,       ///< Attach to a better parent.
     };
 
     /**

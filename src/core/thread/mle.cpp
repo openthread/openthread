@@ -1937,6 +1937,7 @@ uint32_t Mle::Reattach(void)
     switch (mAttachMode)
     {
     case kAnyPartition:
+    case kBetterParent:
         if (!IsChild())
         {
             if (mAlternatePanId != Mac::kPanIdBroadcast)
@@ -3528,6 +3529,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
         switch (mAttachMode)
         {
         case kAnyPartition:
+        case kBetterParent:
             VerifyOrExit(!isPartitionIdSame || isIdSequenceGreater);
             break;
 
@@ -4257,7 +4259,7 @@ void Mle::HandleParentSearchTimer(void)
     {
         LogInfo("PeriodicParentSearch: Parent RSS less than %d, searching for new parents", kParentSearchRssThreadhold);
         mParentSearchIsInBackoff = true;
-        Attach(kAnyPartition);
+        Attach(kBetterParent);
     }
 
 exit:
@@ -4560,6 +4562,7 @@ const char *Mle::AttachModeToString(AttachMode aMode)
         "SamePartitionRetry", // (2) kSamePartitionRetry
         "BetterPartition",    // (3) kBetterPartition
         "DowngradeToReed",    // (4) kDowngradeToReed
+        "BetterParent",       // (5) kBetterParent
     };
 
     static_assert(kAnyPartition == 0, "kAnyPartition value is incorrect");
@@ -4567,6 +4570,7 @@ const char *Mle::AttachModeToString(AttachMode aMode)
     static_assert(kSamePartitionRetry == 2, "kSamePartitionRetry value is incorrect");
     static_assert(kBetterPartition == 3, "kBetterPartition value is incorrect");
     static_assert(kDowngradeToReed == 4, "kDowngradeToReed value is incorrect");
+    static_assert(kBetterParent == 5, "kBetterParent value is incorrect");
 
     return kAttachModeStrings[aMode];
 }
