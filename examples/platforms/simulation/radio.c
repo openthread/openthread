@@ -247,14 +247,14 @@ const char * radioStateToString(otRadioState aState)
     return ans;
 }
 
-void reportRadioStatusToOtns(void)
+void reportRadioStatusToOtns(otRadioState aState)
 {
     struct Event event;
     
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
-    int n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(sState));
+    int n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(aState));
     assert(n > 0);
     event.mDataLength = n;
 
@@ -267,7 +267,7 @@ void setRadioState(otRadioState aState)
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
     if (sState != aState)
     {
-        reportRadioStatusToOtns();
+        reportRadioStatusToOtns(aState);
     }
 #endif
     sState = aState;
@@ -872,7 +872,7 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-#if   == 0
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     ssize_t            rval;
     struct sockaddr_in sockaddr;
 
