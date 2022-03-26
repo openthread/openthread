@@ -249,16 +249,17 @@ const char *radioStateToString(otRadioState aState)
 
 void reportRadioStatusToOtns(otRadioState aState)
 {
+    int n;
     struct Event event;
 
     event.mDelay = 0;
     event.mEvent = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
-    int n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(aState));
+    n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(aState));
 
     assert(n > 0);
 
-    event.mDataLength = n;
+    event.mDataLength = (uint16_t)n;
     otSimSendEvent(&event);
 }
 #endif
