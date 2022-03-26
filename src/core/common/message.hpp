@@ -980,7 +980,7 @@ public:
      * @retval FALSE  If message forwarding is not scheduled for direct transmission.
      *
      */
-    bool GetDirectTransmission(void) const { return GetMetadata().mDirectTx; }
+    bool IsDirectTransmission(void) const { return GetMetadata().mDirectTx; }
 
     /**
      * This method unschedules forwarding using direct transmission.

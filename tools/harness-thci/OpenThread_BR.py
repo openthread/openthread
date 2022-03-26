@@ -305,8 +305,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         else:
             self.__handle = SerialHandle(self.port, 115200)
 
-        self.__afterConnect()
-
     def _disconnect(self):
         if self.__handle:
             self.__handle.close()
@@ -326,9 +324,13 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     def _deviceAfterReset(self):
         self.__dumpSyslog()
         self.__truncateSyslog()
+        self.__enableAcceptRa()
         if not self.IsHost:
-            self.bash('systemctl restart otbr-agent')
+            self.__restartAgentService()
             time.sleep(2)
+
+    def __enableAcceptRa(self):
+        self.bash('sysctl net.ipv6.conf.eth0.accept_ra=2')
 
     def _beforeRegisterMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
         """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
@@ -555,9 +557,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         assert self.__syslog_skip_lines is not None
         self.__syslog_skip_lines = None
 
-    def _deviceBeforeThreadStart(self):
-        self.bash('sysctl net.ipv6.conf.eth0.accept_ra=2')
-
     @watched
     def __startRadvdService(self, setDp=False):
         assert self.IsHost, "radvd service runs on Host only"
@@ -626,14 +625,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.__cli_output_lines.append(line)
         for line in output:
             self.__cli_output_lines.append(line)
-
-    def __afterConnect(self):
-        self.__truncateSyslog()
-        self.__checkServiceStatus()
-
-    def __checkServiceStatus(self):
-        self.bash('service radvd stop')
-        self.bash('systemctl restart otbr-agent')
 
     def __restartAgentService(self):
         self.bash('systemctl restart otbr-agent')

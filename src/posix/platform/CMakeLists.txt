@@ -62,6 +62,13 @@ if(OT_POSIX_MAX_POWER_TABLE)
     )
 endif()
 
+option(OT_POSIX_SECURE_SETTINGS "enable secure settings" OFF)
+if (OT_POSIX_SECURE_SETTINGS)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE=1"
+    )
+endif()
+
 set(OT_POSIX_CONFIG_RCP_BUS "" CACHE STRING "RCP bus type")
 if(OT_POSIX_CONFIG_RCP_BUS)
     target_compile_definitions(ot-posix-config

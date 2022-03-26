@@ -38,6 +38,10 @@ display_usage()
     echo "        ncp-15.4        : Build OpenThread NCP FTD mode with simulation platform - 15.4 radio"
     echo "        ncp-trel        : Build OpenThread NCP FTD mode with simulation platform - TREL radio "
     echo "        ncp-15.4+trel   : Build OpenThread NCP FTD mode with simulation platform - multi radio (15.4+TREL)"
+    echo "        cli             : Build OpenThread CLI FTD mode with simulation platform"
+    echo "        cli-15.4        : Build OpenThread CLI FTD mode with simulation platform - 15.4 radio"
+    echo "        cli-trel        : Build OpenThread CLI FTD mode with simulation platform - TREL radio "
+    echo "        cli-15.4+trel   : Build OpenThread CLI FTD mode with simulation platform - multi radio (15.4+TREL)"
     echo "        rcp             : Build OpenThread RCP (NCP in radio mode) with simulation platform"
     echo "        posix           : Build OpenThread POSIX NCP"
     echo "        posix-15.4      : Build OpenThread POSIX NCP - 15.4 radio"
@@ -92,12 +96,20 @@ fi
 
 build_config=$1
 
-configure_options=(
+ncp_configure_options=(
     "--disable-docs"
     "--enable-tests=$tests"
     "--enable-coverage=$coverage"
     "--enable-ftd"
     "--enable-ncp"
+)
+
+cli_configure_options=(
+    "--disable-docs"
+    "--enable-tests=$tests"
+    "--enable-coverage=$coverage"
+    "--enable-ftd"
+    "--enable-cli"
 )
 
 posix_configure_options=(
@@ -127,7 +139,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-examples=simulation \
-            "${configure_options[@]}" || die
+            "${ncp_configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -143,7 +155,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-examples=simulation \
-            "${configure_options[@]}" || die
+            "${ncp_configure_options[@]}" || die
         make -j 8 || die
         cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4
         ;;
@@ -160,7 +172,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-examples=simulation \
-            "${configure_options[@]}" || die
+            "${ncp_configure_options[@]}" || die
         make -j 8 || die
         cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-trel
         ;;
@@ -177,9 +189,74 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-examples=simulation \
-            "${configure_options[@]}" || die
+            "${ncp_configure_options[@]}" || die
         make -j 8 || die
         cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4-trel
+        ;;
+
+    cli | cli-)
+        echo "==================================================================================================="
+        echo "Building OpenThread CLI FTD mode with simulation platform (radios determined by config)"
+        echo "==================================================================================================="
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-examples=simulation \
+            "${cli_configure_options[@]}" || die
+        make -j 8 || die
+        ;;
+
+    cli-15.4)
+        echo "==================================================================================================="
+        echo "Building OpenThread CLI FTD mode with simulation platform - 15.4 radio"
+        echo "==================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=0"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-examples=simulation \
+            "${cli_configure_options[@]}" || die
+        make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4
+        ;;
+
+    cli-trel)
+        echo "==================================================================================================="
+        echo "Building OpenThread CLI FTD mode with simulation platform - TREL radio"
+        echo "==================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=0"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-examples=simulation \
+            "${cli_configure_options[@]}" || die
+        make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-trel
+        ;;
+
+    cli-15.4+trel | cli-trel+15.4)
+        echo "==================================================================================================="
+        echo "Building OpenThread NCP FTD mode with simulation platform - multi radio (15.4 + TREL)"
+        echo "==================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-examples=simulation \
+            "${cli_configure_options[@]}" || die
+        make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4-trel
         ;;
 
     rcp)

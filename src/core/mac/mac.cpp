@@ -2234,6 +2234,7 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
     {
     case kErrorAbort:
     case kErrorNoFrameReceived:
+    case kErrorAddressFiltered:
     case kErrorDestinationAddressFiltered:
         logLevel = kLogLevelDebg;
         break;

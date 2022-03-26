@@ -194,19 +194,6 @@ enum DeviceRole : uint8_t
     kRoleLeader   = OT_DEVICE_ROLE_LEADER,   ///< The Thread Leader role.
 };
 
-/**
- * MLE Attach modes
- *
- */
-enum AttachMode : uint8_t
-{
-    kAttachAny           = 0, ///< Attach to any Thread partition.
-    kAttachSame1         = 1, ///< Attach to the same Thread partition (attempt 1 when losing connectivity).
-    kAttachSame2         = 2, ///< Attach to the same Thread partition (attempt 2 when losing connectivity).
-    kAttachBetter        = 3, ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
-    kAttachSameDowngrade = 4, ///< Attach to the same Thread partition during downgrade process.
-};
-
 constexpr uint16_t kAloc16Leader                      = 0xfc00;
 constexpr uint16_t kAloc16DhcpAgentStart              = 0xfc01;
 constexpr uint16_t kAloc16DhcpAgentEnd                = 0xfc0f;

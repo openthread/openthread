@@ -103,7 +103,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
             }
         }
         else if ((neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination())) != nullptr &&
-                 !neighbor->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
+                 !neighbor->IsRxOnWhenIdle() && !aMessage.IsDirectTransmission())
         {
             // destined for a sleepy child
             Child &child = *static_cast<Child *>(neighbor);
