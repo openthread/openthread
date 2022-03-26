@@ -222,11 +222,11 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
-
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-const char * radioStateToString(otRadioState aState)
+const char *radioStateToString(otRadioState aState)
 {
-    char const * ans;
+    char const *ans;
+
     switch (aState)
     {
     case OT_RADIO_STATE_RECEIVE:
@@ -250,14 +250,15 @@ const char * radioStateToString(otRadioState aState)
 void reportRadioStatusToOtns(otRadioState aState)
 {
     struct Event event;
-    
-    event.mDelay      = 0;
-    event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+
+    event.mDelay = 0;
+    event.mEvent = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
     int n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(aState));
-    assert(n > 0);
-    event.mDataLength = n;
 
+    assert(n > 0);
+
+    event.mDataLength = n;
     otSimSendEvent(&event);
 }
 #endif
@@ -486,7 +487,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
-        error  = OT_ERROR_NONE;
+        error = OT_ERROR_NONE;
         setRadioState(OT_RADIO_STATE_SLEEP);
     }
 
