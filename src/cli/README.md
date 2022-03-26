@@ -107,6 +107,7 @@ Done
 - [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 - [state](#state)
 - [srp](README_SRP.md)
+- [tcp](README_TCP.md)
 - [thread](#thread-start)
 - [trel](#trel)
 - [tvcheck](#tvcheck-enable)
