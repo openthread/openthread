@@ -249,7 +249,7 @@ const char *radioStateToString(otRadioState aState)
 
 void reportRadioStatusToOtns(otRadioState aState)
 {
-    int n;
+    int          n;
     struct Event event;
 
     event.mDelay = 0;
