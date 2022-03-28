@@ -995,7 +995,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void AddressResolver::LogCacheEntryChange(EntryChange       aChange,
                                           Reason            aReason,
@@ -1049,7 +1049,7 @@ exit:
     return str;
 }
 
-#else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
+#else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry &, CacheEntryList *)
 {
