@@ -310,9 +310,8 @@ exit:
     return;
 }
 
-Error Mle::Restore(void)
+void Mle::Restore(void)
 {
-    Error                 error = kErrorNone;
     Settings::NetworkInfo networkInfo;
     Settings::ParentInfo  parentInfo;
 
@@ -323,7 +322,7 @@ Error Mle::Restore(void)
     Get<DuaManager>().Restore();
 #endif
 
-    SuccessOrExit(error = Get<Settings>().Read(networkInfo));
+    SuccessOrExit(Get<Settings>().Read(networkInfo));
 
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
@@ -356,9 +355,7 @@ Error Mle::Restore(void)
 
     if (!IsActiveRouter(networkInfo.GetRloc16()))
     {
-        error = Get<Settings>().Read(parentInfo);
-
-        if (error != kErrorNone)
+        if (Get<Settings>().Read(parentInfo) != kErrorNone)
         {
             // If the restored RLOC16 corresponds to an end-device, it
             // is expected that the `ParentInfo` settings to be valid
@@ -390,11 +387,11 @@ Error Mle::Restore(void)
     }
 #endif
 
-    // Sucessfully restored the network information from non-volatile settings after boot.
+    // Successfully restored the network information from non-volatile settings after boot.
     mHasRestored = true;
 
 exit:
-    return error;
+    return;
 }
 
 Error Mle::Store(void)

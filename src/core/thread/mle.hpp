@@ -144,13 +144,10 @@ public:
     void Stop(void) { Stop(kUpdateNetworkDatasets); }
 
     /**
-     * This method restores network information from non-volatile memory.
-     *
-     * @retval kErrorNone      Successfully restore the network information.
-     * @retval kErrorNotFound  There is no valid network information stored in non-volatile memory.
+     * This method restores network information from non-volatile memory (if any).
      *
      */
-    Error Restore(void);
+    void Restore(void);
 
     /**
      * This method stores network information into non-volatile memory.
