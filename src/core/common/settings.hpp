@@ -129,7 +129,7 @@ public:
 
     static constexpr Key kLastKey = kKeyBrUlaPrefix; ///< The last (numerically) enumerator value in `Key`.
     static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
-                  "Core settings keys overlap with Vender reserved keys");
+                  "Core settings keys overlap with vendor reserved keys");
 
     /**
      * This structure represents the device's own network information for settings storage.
