@@ -78,7 +78,7 @@ enum
 
     // Keys in range 0x8000-0xffff are reserved for vendor-specific use.
     OT_SETTINGS_KEY_VENDOR_RESERVED_BEGIN = 0x8000,
-    OT_SETTINGS_KEY_VENDOR_RESERVED_END   = 0x10000,
+    OT_SETTINGS_KEY_VENDOR_RESERVED_MAX   = 0xffff,
 };
 
 /**
