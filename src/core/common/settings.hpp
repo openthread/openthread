@@ -128,7 +128,7 @@ public:
     };
 
     static constexpr Key kLastKey = kKeyBrUlaPrefix; ///< The last (numerically) enumerator value in `Key`.
-    static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_BEGIN),
+    static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
                   "Core settings keys overlap with Vender reserved keys");
 
     /**

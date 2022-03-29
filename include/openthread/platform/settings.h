@@ -77,8 +77,8 @@ enum
     OT_SETTINGS_KEY_BR_ULA_PREFIX        = 0x000f, ///< BR ULA prefix.
 
     // Keys in range 0x8000-0xffff are reserved for vendor-specific use.
-    OT_SETTINGS_KEY_VENDOR_RESERVED_BEGIN = 0x8000,
-    OT_SETTINGS_KEY_VENDOR_RESERVED_MAX   = 0xffff,
+    OT_SETTINGS_KEY_VENDOR_RESERVED_MIN = 0x8000,
+    OT_SETTINGS_KEY_VENDOR_RESERVED_MAX = 0xffff,
 };
 
 /**
