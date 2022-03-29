@@ -412,6 +412,7 @@ LOCAL_SRC_FILES                                                  := \
     third_party/mbedtls/repo/library/cipher.c                       \
     third_party/mbedtls/repo/library/cipher_wrap.c                  \
     third_party/mbedtls/repo/library/cmac.c                         \
+    third_party/mbedtls/repo/library/constant_time.c                \
     third_party/mbedtls/repo/library/ctr_drbg.c                     \
     third_party/mbedtls/repo/library/debug.c                        \
     third_party/mbedtls/repo/library/des.c                          \
