@@ -200,6 +200,27 @@ Get current commissioner session id.
 Done
 ```
 
+### id
+
+Usage: `commissioner id`
+
+Get the in mesh commissioner id.
+
+```bash
+> commissioner id
+Commissioner id:  OpenThread Commissioner
+Done
+```
+
+### id \<name\>
+
+Set the in mesh commissioner id.
+
+```bash
+> commissioner id "Custom Commissioner Id"
+Done
+```
+
 ### start
 
 Usage: `commissioner start`
@@ -210,16 +231,6 @@ This command will cause the device to send `LEAD_PET` and `LEAD_KA` messages.
 
 ```bash
 > commissioner start
-Commissioner: petitioning
-Done
-Commissioner: active
-```
-
-The default ID of the commissioner is "OpenThread Commissioner", but can be specified in the command line:
-
-
-```bash
-> commissioner start myCustomId
 Commissioner: petitioning
 Done
 Commissioner: active
