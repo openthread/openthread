@@ -76,9 +76,9 @@ enum
     OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX  = 0x000e, ///< Reserved. Legacy NAT64 prefix.
     OT_SETTINGS_KEY_BR_ULA_PREFIX        = 0x000f, ///< BR ULA prefix.
 
-    // Keys in range 0x1000-0x1fff are reserved for vendor-specific use.
-    OT_SETTINGS_KEY_VENDOR_RESERVED_BEGIN = 0x1000,
-    OT_SETTINGS_KEY_VENDOR_RESERVED_END   = 0x2000,
+    // Keys in range 0x8000-0xffff are reserved for vendor-specific use.
+    OT_SETTINGS_KEY_VENDOR_RESERVED_BEGIN = 0x8000,
+    OT_SETTINGS_KEY_VENDOR_RESERVED_END   = 0x10000,
 };
 
 /**
