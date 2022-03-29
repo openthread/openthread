@@ -324,22 +324,19 @@ void Mle::Restore(void)
 
     SuccessOrExit(Get<Settings>().Read(networkInfo));
 
-#if OPENTHREAD_MTD
-    VerifyOrExit(!IsActiveRouter(networkInfo.GetRloc16()), error = kErrorInvalidState);
-#endif
-
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
     Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter());
 
 #if OPENTHREAD_MTD
+    VerifyOrExit(!IsActiveRouter(networkInfo.GetRloc16()));
     mDeviceMode.Set(networkInfo.GetDeviceMode() & ~DeviceMode::kModeFullThreadDevice);
 #else
     mDeviceMode.Set(networkInfo.GetDeviceMode());
 #endif
 
     // force re-attach when version mismatch.
-    VerifyOrExit(networkInfo.GetVersion() == kThreadVersion, error = kErrorInvalidState);
+    VerifyOrExit(networkInfo.GetVersion() == kThreadVersion);
 
     switch (networkInfo.GetRole())
     {
