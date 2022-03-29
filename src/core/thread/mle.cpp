@@ -329,7 +329,6 @@ void Mle::Restore(void)
     Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter());
 
 #if OPENTHREAD_MTD
-    VerifyOrExit(!IsActiveRouter(networkInfo.GetRloc16()));
     mDeviceMode.Set(networkInfo.GetDeviceMode() & ~DeviceMode::kModeFullThreadDevice);
 #else
     mDeviceMode.Set(networkInfo.GetDeviceMode());
@@ -349,7 +348,12 @@ void Mle::Restore(void)
         ExitNow();
     }
 
-    Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
+#if OPENTHREAD_MTD
+    if (!IsActiveRouter(networkInfo.GetRloc16()))
+#endif
+    {
+        Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
+    }
     Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
 
     mMeshLocal64.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
