@@ -1717,7 +1717,7 @@ class OTCI(object):
         # Network Name: OpenThread-7caa
         # PAN ID: 0x7caa
         # PSKc: 167d89fd169e439ca0b8266de248090f
-        # Security Policy: 0, onrcb
+        # Security Policy: 0, onrc
 
         dataset = {}
 

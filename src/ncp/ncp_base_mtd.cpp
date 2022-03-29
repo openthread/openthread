@@ -4221,11 +4221,6 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *aResult)
     {
         uint8_t flags = static_cast<uint8_t>(aResult->mVersion << SPINEL_BEACON_THREAD_FLAG_VERSION_SHIFT);
 
-        if (aResult->mIsJoinable)
-        {
-            flags |= SPINEL_BEACON_THREAD_FLAG_JOINABLE;
-        }
-
         if (aResult->mIsNative)
         {
             flags |= SPINEL_BEACON_THREAD_FLAG_NATIVE;

@@ -27,7 +27,7 @@ Border Router and service information may be stable or temporary. Stable Thread 
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
    PSKc: c23a76e98f1a6483639b1ac1271e2e27
-   Security Policy: 0, onrcb
+   Security Policy: 0, onrc
    Done
    ```
 

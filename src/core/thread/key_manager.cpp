@@ -72,7 +72,6 @@ void SecurityPolicy::SetToDefaultFlags(void)
     mNativeCommissioningEnabled     = true;
     mRoutersEnabled                 = true;
     mExternalCommissioningEnabled   = true;
-    mBeaconsEnabled                 = true;
     mCommercialCommissioningEnabled = false;
     mAutonomousEnrollmentEnabled    = false;
     mNetworkKeyProvisioningEnabled  = false;
@@ -91,7 +90,6 @@ void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
     mNativeCommissioningEnabled     = aFlags[0] & kNativeCommissioningMask;
     mRoutersEnabled                 = aFlags[0] & kRoutersMask;
     mExternalCommissioningEnabled   = aFlags[0] & kExternalCommissioningMask;
-    mBeaconsEnabled                 = aFlags[0] & kBeaconsMask;
     mCommercialCommissioningEnabled = (aFlags[0] & kCommercialCommissioningMask) == 0;
     mAutonomousEnrollmentEnabled    = (aFlags[0] & kAutonomousEnrollmentMask) == 0;
     mNetworkKeyProvisioningEnabled  = (aFlags[0] & kNetworkKeyProvisioningMask) == 0;
@@ -129,11 +127,6 @@ void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
     if (mExternalCommissioningEnabled)
     {
         aFlags[0] |= kExternalCommissioningMask;
-    }
-
-    if (mBeaconsEnabled)
-    {
-        aFlags[0] |= kBeaconsMask;
     }
 
     if (!mCommercialCommissioningEnabled)

@@ -152,7 +152,6 @@ run ncp/test-004-scan.py
 run ncp/test-005-discover-scan.py
 run ncp/test-006-traffic-router-end-device.py
 run ncp/test-007-traffic-router-sleepy.py
-run ncp/test-008-permit-join.py
 run ncp/test-009-insecure-traffic-join.py
 run ncp/test-010-on-mesh-prefix-config-gateway.py
 run ncp/test-011-child-table.py
