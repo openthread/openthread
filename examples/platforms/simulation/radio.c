@@ -618,7 +618,7 @@ static void radioReceive(otInstance *aInstance)
 
     if (isTxDone)
     {
-        sState  = OT_RADIO_STATE_RECEIVE;
+        setRadioState(OT_RADIO_STATE_RECEIVE);
         sTxWait = false;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
