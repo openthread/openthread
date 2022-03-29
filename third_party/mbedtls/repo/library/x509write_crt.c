@@ -163,7 +163,7 @@ int mbedtls_x509write_crt_set_basic_constraints( mbedtls_x509write_cert *ctx,
     return(
         mbedtls_x509write_crt_set_extension( ctx, MBEDTLS_OID_BASIC_CONSTRAINTS,
                              MBEDTLS_OID_SIZE( MBEDTLS_OID_BASIC_CONSTRAINTS ),
-                             0, buf + sizeof(buf) - len, len ) );
+                             is_ca, buf + sizeof(buf) - len, len ) );
 }
 
 #if defined(MBEDTLS_SHA1_C)
@@ -233,7 +233,7 @@ int mbedtls_x509write_crt_set_authority_key_identifier( mbedtls_x509write_cert *
 int mbedtls_x509write_crt_set_key_usage( mbedtls_x509write_cert *ctx,
                                          unsigned int key_usage )
 {
-    unsigned char buf[5], ku[2];
+    unsigned char buf[5] = {0}, ku[2] = {0};
     unsigned char *c;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     const unsigned int allowed_bits = MBEDTLS_X509_KU_DIGITAL_SIGNATURE |
@@ -251,8 +251,7 @@ int mbedtls_x509write_crt_set_key_usage( mbedtls_x509write_cert *ctx,
         return( MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE );
 
     c = buf + 5;
-    ku[0] = (unsigned char)( key_usage      );
-    ku[1] = (unsigned char)( key_usage >> 8 );
+    MBEDTLS_PUT_UINT16_LE( key_usage, ku, 0 );
     ret = mbedtls_asn1_write_named_bitstring( &c, buf, ku, 9 );
 
     if( ret < 0 )
@@ -272,7 +271,7 @@ int mbedtls_x509write_crt_set_key_usage( mbedtls_x509write_cert *ctx,
 int mbedtls_x509write_crt_set_ns_cert_type( mbedtls_x509write_cert *ctx,
                                     unsigned char ns_cert_type )
 {
-    unsigned char buf[4];
+    unsigned char buf[4] = {0};
     unsigned char *c;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
