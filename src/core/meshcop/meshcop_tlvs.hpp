@@ -892,7 +892,7 @@ public:
     }
 
 private:
-    char mCommissionerId[kMaxLength];
+    char mCommissionerId[kMaxLength + 1];
 } OT_TOOL_PACKED_END;
 
 /**
