@@ -86,6 +86,9 @@ Commissioner::Commissioner(Instance &aInstance)
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mCommissionerAloc.mScopeOverrideValid = true;
 
+    mCommissionerId.Init();
+    mCommissionerId.SetCommissionerId("OpenThread Commissioner");
+
     mProvisioningUrl[0] = '\0';
 }
 
@@ -296,10 +299,7 @@ void Commissioner::RemoveJoinerEntry(Commissioner::Joiner &aJoiner)
     SignalJoinerEvent(kJoinerEventRemoved, &joinerCopy);
 }
 
-Error Commissioner::Start(const char *   aId,
-                          StateCallback  aStateCallback,
-                          JoinerCallback aJoinerCallback,
-                          void *         aCallbackContext)
+Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext)
 {
     Error error = kErrorNone;
 
@@ -317,9 +317,6 @@ Error Commissioner::Start(const char *   aId,
     mJoinerCallback   = aJoinerCallback;
     mCallbackContext  = aCallbackContext;
     mTransmitAttempts = 0;
-
-    mCommissionerId.Init();
-    mCommissionerId.SetCommissionerId(aId == nullptr ? "OpenThread Commissioner" : aId);
 
     SuccessOrExit(error = SendPetition());
     SetState(kStatePetition);
@@ -372,6 +369,22 @@ Error Commissioner::Stop(ResignMode aResignMode)
 
 exit:
     LogError("stop commissioner", error);
+    return error;
+}
+
+Error Commissioner::SetId(const char *aId)
+{
+    Error   error = kErrorNone;
+    uint8_t len   = static_cast<uint8_t>(StringLength(aId, ot::MeshCoP::CommissionerIdTlv::kMaxLength));
+
+    // CommissionerIdTlv::SetCommissionerId trims the string to the maximum array size.
+    // Prevent this from happening returning an error.
+    VerifyOrExit((0 < len) && (len < mCommissionerId.kMaxLength), error = kErrorInvalidArgs);
+
+    mCommissionerId.Init();
+    mCommissionerId.SetCommissionerId(aId);
+
+exit:
     return error;
 }
 

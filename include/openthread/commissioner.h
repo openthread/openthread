@@ -193,25 +193,6 @@ otError otCommissionerStart(otInstance *                 aInstance,
                             void *                       aCallbackContext);
 
 /**
- * This function enables the Thread Commissioner role with the supplied ID.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aId               A pointer to a Commissioner ID.
- * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
- * @param[in]  aJoinerCallback   A pointer to a function that is called with a joiner event occurs.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
- *
- * @retval OT_ERROR_NONE           Successfully started the Commissioner role.
- * @retval OT_ERROR_INVALID_STATE  Commissioner is already started.
- *
- */
-otError otCommissionerStartWithId(otInstance *                 aInstance,
-                                  const char *                 aId,
-                                  otCommissionerStateCallback  aStateCallback,
-                                  otCommissionerJoinerCallback aJoinerCallback,
-                                  void *                       aCallbackContext);
-
-/**
  * This function disables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
@@ -221,6 +202,28 @@ otError otCommissionerStartWithId(otInstance *                 aInstance,
  *
  */
 otError otCommissionerStop(otInstance *aInstance);
+
+/**
+ * This method returns the Commissioner Id.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ *
+ * @returns The Commissioner Id.
+ *
+ */
+const char *otCommissionerGetId(otInstance *aInstance);
+
+/**
+ * This method sets the Commissioner Id.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aId   A pointer to a string character array. Must be null terminated.
+ *
+ * @retval kErrorNone          Successfully set the Commissioner Id.
+ * @retval kErrorInvalidArgs   Given name is too long.
+ *
+ */
+otError otCommissionerSetId(otInstance *aInstance, const char *aId);
 
 /**
  * This function adds a Joiner entry.

@@ -231,7 +231,6 @@ public:
     /**
      * This method starts the Commissioner service.
      *
-     * @param[in]  aId               A pointer to the Commissioner ID.
      * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
      * @param[in]  aJoinerCallback   A pointer to a function that is called when a joiner event occurs.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
@@ -241,7 +240,7 @@ public:
      * @retval kErrorInvalidState   Device is not currently attached to a network.
      *
      */
-    Error Start(const char *aId, StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext);
+    Error Start(StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext);
 
     /**
      * This method stops the Commissioner service.
@@ -251,6 +250,25 @@ public:
      *
      */
     Error Stop(void) { return Stop(kSendKeepAliveToResign); }
+
+    /**
+     * This method returns the Commissioner Id.
+     *
+     * @returns The Commissioner Id.
+     *
+     */
+    const char *GetId(void) const { return mCommissionerId.GetCommissionerId(); }
+
+    /**
+     * This method sets the Commissioner Id.
+     *
+     * @param[in]  aId   A pointer to a string character array. Must be null terminated.
+     *
+     * @retval kErrorNone          Successfully set the Commissioner Id.
+     * @retval kErrorInvalidArgs   Given name is too long.
+     *
+     */
+    Error SetId(const char *aId);
 
     /**
      * This method clears all Joiner entries.

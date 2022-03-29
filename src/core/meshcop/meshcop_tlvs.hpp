@@ -887,6 +887,7 @@ public:
     {
         uint16_t length = StringLength(aCommissionerId, sizeof(mCommissionerId));
         memcpy(mCommissionerId, aCommissionerId, length);
+        mCommissionerId[length] = '\0';
         SetLength(static_cast<uint8_t>(length));
     }
 

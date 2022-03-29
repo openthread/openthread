@@ -332,10 +332,23 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
+{
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("Commissioner id: %s", otCommissionerGetId(GetInstancePtr()));
+        return OT_ERROR_NONE;
+    }
+
+    return otCommissionerSetId(GetInstancePtr(), aArgs[0].GetCString());
+}
+
 template <> otError Commissioner::Process<Cmd("start")>(Arg aArgs[])
 {
-    return otCommissionerStartWithId(GetInstancePtr(), aArgs[0].IsEmpty() ? nullptr : aArgs[0].GetCString(),
-                                     &Commissioner::HandleStateChanged, &Commissioner::HandleJoinerEvent, this);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    return otCommissionerStart(GetInstancePtr(), &Commissioner::HandleStateChanged, &Commissioner::HandleJoinerEvent,
+                               this);
 }
 
 void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext)
@@ -425,10 +438,9 @@ otError Commissioner::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("announce"),        CmdEntry("energy"),    CmdEntry("joiner"),
-        CmdEntry("mgmtget"),         CmdEntry("mgmtset"),   CmdEntry("panid"),
-        CmdEntry("provisioningurl"), CmdEntry("sessionid"), CmdEntry("start"),
-        CmdEntry("state"),           CmdEntry("stop"),
+        CmdEntry("announce"),  CmdEntry("energy"),  CmdEntry("id"),    CmdEntry("joiner"),
+        CmdEntry("mgmtget"),   CmdEntry("mgmtset"), CmdEntry("panid"), CmdEntry("provisioningurl"),
+        CmdEntry("sessionid"), CmdEntry("start"),   CmdEntry("state"), CmdEntry("stop"),
     };
 
 #undef CmdEntry
