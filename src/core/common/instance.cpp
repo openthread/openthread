@@ -298,4 +298,22 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+
+void Instance::SetLogLevel(LogLevel aLogLevel)
+{
+    if (aLogLevel != sLogLevel)
+    {
+        sLogLevel = aLogLevel;
+        otPlatLogHandleLevelChanged(sLogLevel);
+    }
+}
+
+extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+}
+
+#endif
+
 } // namespace ot
