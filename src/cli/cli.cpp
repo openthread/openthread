@@ -543,13 +543,6 @@ template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
             }
 #endif
         }
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        else if (aArgs[0] == "skipseqnuminc")
-        {
-            otBackboneRouterConfigSkipSeqNumIncrease(GetInstancePtr(), true);
-            ExitNow(error = OT_ERROR_NONE);
-        }
-#endif
         SuccessOrExit(error = ProcessBackboneRouterLocal(aArgs));
     }
 
