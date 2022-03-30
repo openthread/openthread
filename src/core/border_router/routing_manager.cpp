@@ -715,7 +715,7 @@ void RoutingManager::EvaluateNat64Prefix(void)
 // This method evaluate the routing policy depends on prefix and route
 // information on Thread Network and infra link. As a result, this
 // method May send RA messages on infra link and publish/unpublish
-// OMR prefix in the Thread network.
+// OMR and NAT64 prefix in the Thread network.
 void RoutingManager::EvaluateRoutingPolicy(void)
 {
     OT_ASSERT(mIsRunning);
@@ -725,7 +725,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
     LogInfo("Evaluating routing policy");
 
-    // 0. Evaluate on-link & OMR prefixes.
+    // 0. Evaluate on-link, OMR and NAT64 prefixes.
     newOnLinkPrefix = EvaluateOnLinkPrefix();
     EvaluateOmrPrefix(newOmrPrefixes);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
@@ -738,13 +738,13 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     if (newOmrPrefixes.IsEmpty())
     {
         // This is the very exceptional case and happens only when we failed to publish
-        // our local OMR prefix to the Thread network. We schedule the Router Advertisement
+        // our local OMR prefix to the Thread network. We schedule the routing policy
         // timer to re-evaluate our routing policy in the future.
 
-        LogWarn("No OMR prefix advertised! Start Router Advertisement timer for future evaluation");
+        LogWarn("No OMR prefix advertised! Start Routing Policy timer for future evaluation");
     }
 
-    // 2. Schedule Router Advertisement timer with random interval.
+    // 2. Schedule routing policy timer with random interval for the next Router Advertisement.
     {
         uint32_t nextSendDelay;
 
@@ -755,7 +755,6 @@ void RoutingManager::EvaluateRoutingPolicy(void)
             nextSendDelay = kMaxInitRtrAdvInterval;
         }
 
-        LogInfo("Router advertisement scheduled in %u seconds", nextSendDelay);
         StartRoutingPolicyEvaluationDelay(Time::SecToMsec(nextSendDelay));
     }
 
@@ -1111,7 +1110,7 @@ void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
     }
 #endif
 
-    // Schedule Router Advertisements with random delay.
+    // Schedule routing policy evaluation with random jitter to respond with Router Advertisement.
     StartRoutingPolicyEvaluationJitter(kRaReplyJitter);
 }
 
