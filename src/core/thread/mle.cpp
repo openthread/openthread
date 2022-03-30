@@ -327,7 +327,12 @@ void Mle::Restore(void)
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
     Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter());
+
+#if OPENTHREAD_MTD
+    mDeviceMode.Set(networkInfo.GetDeviceMode() & ~DeviceMode::kModeFullThreadDevice);
+#else
     mDeviceMode.Set(networkInfo.GetDeviceMode());
+#endif
 
     // force re-attach when version mismatch.
     VerifyOrExit(networkInfo.GetVersion() == kThreadVersion);
@@ -343,7 +348,12 @@ void Mle::Restore(void)
         ExitNow();
     }
 
-    Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
+#if OPENTHREAD_MTD
+    if (!IsActiveRouter(networkInfo.GetRloc16()))
+#endif
+    {
+        Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
+    }
     Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
 
     mMeshLocal64.GetAddress().SetIid(networkInfo.GetMeshLocalIid());
@@ -754,6 +764,10 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 {
     Error      error   = kErrorNone;
     DeviceMode oldMode = mDeviceMode;
+
+#if OPENTHREAD_MTD
+    VerifyOrExit(!aDeviceMode.IsFullThreadDevice(), error = kErrorInvalidArgs);
+#endif
 
     VerifyOrExit(aDeviceMode.IsValid(), error = kErrorInvalidArgs);
     VerifyOrExit(mDeviceMode != aDeviceMode);
