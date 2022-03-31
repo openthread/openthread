@@ -52,6 +52,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/pool.hpp"
+#include "common/timer.hpp"
 #include "common/type_traits.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/child_mask.hpp"
@@ -189,13 +190,13 @@ protected:
         MessagePool *mMessagePool; // Message pool for this message.
         void *       mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
         uint32_t     mDatagramTag; // The datagram tag used for 6LoWPAN frags or IPv6fragmentation.
+        TimeMilli    mTimestamp;   // The message timestamp.
         uint16_t     mReserved;    // Number of reserved bytes (for header).
         uint16_t     mLength;      // Current message length (number of bytes).
         uint16_t     mOffset;      // A byte offset within the message.
         uint16_t     mMeshDest;    // Used for unicast non-link-local messages.
         uint16_t     mPanId;       // PAN ID (used for MLE Discover Request and Response).
         uint8_t      mChannel;     // The message channel (used for MLE Announce).
-        uint8_t      mTimeout;     // Seconds remaining before dropping the message.
         RssAverager  mRssAverager; // The averager maintaining the received signal strength (RSS) average.
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
@@ -952,26 +953,26 @@ public:
     void SetChannel(uint8_t aChannel) { GetMetadata().mChannel = aChannel; }
 
     /**
-     * This method returns the timeout used for 6LoWPAN reassembly.
+     * This method returns the message timestamp.
      *
-     * @returns The time remaining in seconds.
+     * @returns The message timestamp.
      *
      */
-    uint8_t GetTimeout(void) const { return GetMetadata().mTimeout; }
+    TimeMilli GetTimestamp(void) const { return GetMetadata().mTimestamp; }
 
     /**
-     * This method sets the timeout used for 6LoWPAN reassembly.
+     * This method sets the message timestamp to a given time.
      *
-     * @param[in]  aTimeout  The timeout value.
+     * @param[in] aTimestamp   The timestamp value.
      *
      */
-    void SetTimeout(uint8_t aTimeout) { GetMetadata().mTimeout = aTimeout; }
+    void SetTimestamp(TimeMilli aTimestamp) { GetMetadata().mTimestamp = aTimestamp; }
 
     /**
-     * This method decrements the timeout.
+     * This method sets the message timestamp to the current time.
      *
      */
-    void DecrementTimeout(void) { GetMetadata().mTimeout--; }
+    void SetTimestampToNow(void) { SetTimestamp(TimerMilli::GetNow()); }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
