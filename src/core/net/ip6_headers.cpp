@@ -60,9 +60,9 @@ bool Header::IsValid(void) const
 
     // check Payload Length
 #if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    VerifyOrExit((sizeof(*this) + GetPayloadLength()) <= Ip6::kMaxDatagramLength, ret = false);
+    VerifyOrExit((sizeof(*this) + GetPayloadLength()) <= kMaxDatagramLength, ret = false);
 #else
-    VerifyOrExit((sizeof(*this) + GetPayloadLength()) <= Ip6::kMaxAssembledDatagramLength, ret = false);
+    VerifyOrExit((sizeof(*this) + GetPayloadLength()) <= kMaxAssembledDatagramLength, ret = false);
 #endif
 
 exit:

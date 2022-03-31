@@ -51,6 +51,7 @@
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/ip6_mpl.hpp"
+#include "net/ip6_types.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
 #include "net/tcp6.hpp"
@@ -108,18 +109,6 @@ class Ip6 : public InstanceLocator, private NonCopyable
     friend class Mpl;
 
 public:
-    /**
-     * The max datagram length (in bytes) of an IPv6 message.
-     *
-     */
-    static constexpr uint16_t kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
-
-    /**
-     * The max datagram length (in bytes) of an unfragmented IPv6 message.
-     *
-     */
-    static constexpr uint16_t kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM;
-
     /**
      * This constructor initializes the object.
      *

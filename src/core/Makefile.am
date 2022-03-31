@@ -559,6 +559,7 @@ HEADERS_COMMON                                  = \
     net/ip6_filter.hpp                            \
     net/ip6_headers.hpp                           \
     net/ip6_mpl.hpp                               \
+    net/ip6_types.hpp                             \
     net/nd_agent.hpp                              \
     net/netif.hpp                                 \
     net/sntp_client.hpp                           \

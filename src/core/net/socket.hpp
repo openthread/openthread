@@ -39,6 +39,7 @@
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "net/ip6_address.hpp"
+#include "net/ip6_types.hpp"
 
 namespace ot {
 
@@ -209,7 +210,7 @@ public:
      * @returns The ECN status, as represented in the IP header.
      *
      */
-    uint8_t GetEcn(void) const { return mEcn; }
+    Ecn GetEcn(void) const { return static_cast<Ecn>(mEcn); }
 
     /**
      * This method sets the ECN status.
@@ -217,7 +218,7 @@ public:
      * @param[in]  aEcn  The ECN status, as represented in the IP header.
      *
      */
-    void SetEcn(uint8_t aEcn) { mEcn = aEcn; }
+    void SetEcn(Ecn aEcn) { mEcn = aEcn; }
 
     /**
      * This method indicates whether peer is via the host interface.
