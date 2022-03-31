@@ -225,7 +225,10 @@ void otPlatSettingsDeinit(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
-    otPosixSecureSettingsDeinit(aInstance);
+    if (!IsSystemDryRun())
+    {
+        otPosixSecureSettingsDeinit(aInstance);
+    }
 #endif
 
     VerifyOrExit(sSettingsFd != -1);

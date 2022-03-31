@@ -196,7 +196,10 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     gInstance = otInstanceInitSingle();
     OT_ASSERT(gInstance != nullptr);
 
-    platformSetUp();
+    if (!gDryRun)
+    {
+        platformSetUp();
+    }
 
     return gInstance;
 }
@@ -230,6 +233,10 @@ void platformDeinit(void)
     virtualTimeDeinit();
 #endif
     platformRadioDeinit();
+
+    // For Dry-Run option, only the radio is initialized.
+    VerifyOrExit(!gDryRun);
+
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     ot::Posix::Udp::Get().Deinit();
 #endif
@@ -247,13 +254,19 @@ void platformDeinit(void)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneDeinit();
 #endif
+
+exit:
+    return;
 }
 
 void otSysDeinit(void)
 {
     OT_ASSERT(gInstance != nullptr);
 
-    platformTearDown();
+    if (!gDryRun)
+    {
+        platformTearDown();
+    }
     otInstanceFinalize(gInstance);
     gInstance = nullptr;
     platformDeinit();
