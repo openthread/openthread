@@ -335,14 +335,23 @@ private:
 
     static constexpr uint32_t kTxDelayInterval = OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_INTERVAL; // In msec
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    static constexpr uint32_t kTimeInQueueMarkEcn = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_MARK_ECN_INTERVAL;
+    static constexpr uint32_t kTimeInQueueDropMsg = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_DROP_MSG_INTERVAL;
+#endif
+
     enum MessageAction : uint8_t
     {
         kMessageReceive,         // Indicates that the message was received.
         kMessageTransmit,        // Indicates that the message was sent.
         kMessagePrepareIndirect, // Indicates that the message is being prepared for indirect tx.
-        kMessageDrop,            // Indicates that the outbound message is being dropped (e.g., dst unknown).
+        kMessageDrop,            // Indicates that the outbound message is dropped (e.g., dst unknown).
         kMessageReassemblyDrop,  // Indicates that the message is being dropped from reassembly list.
         kMessageEvict,           // Indicates that the message was evicted.
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+        kMessageMarkEcn,       // Indicates that ECN is marked on an outbound message by delay-aware queue management.
+        kMessageQueueMgmtDrop, // Indicates that an outbound message is dropped by delay-aware queue management.
+#endif
     };
 
     enum AnycastType : uint8_t
@@ -361,21 +370,39 @@ private:
             friend class FragmentPriorityList;
 
         public:
-            Message::Priority GetPriority(void) const { return mPriority; }
+            // Lifetime of an entry in seconds.
+            static constexpr uint8_t kLifetime =
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+                OT_MAX(kReassemblyTimeout, OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_RETAIN_TIME);
+#else
+                kReassemblyTimeout;
+#endif
+
+            Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
             bool              IsExpired(void) const { return (mLifetime == 0); }
             void              DecrementLifetime(void) { mLifetime--; }
-            void              ResetLifetime(void) { mLifetime = kReassemblyTimeout; }
+            void              ResetLifetime(void) { mLifetime = kLifetime; }
 
             bool Matches(uint16_t aSrcRloc16, uint16_t aTag) const
             {
                 return (mSrcRloc16 == aSrcRloc16) && (mDatagramTag == aTag);
             }
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+            bool ShouldDrop(void) const { return mShouldDrop; }
+            void MarkToDrop(void) { mShouldDrop = true; }
+#endif
+
         private:
-            uint16_t          mSrcRloc16;
-            uint16_t          mDatagramTag;
-            Message::Priority mPriority;
-            uint8_t           mLifetime;
+            uint16_t mSrcRloc16;
+            uint16_t mDatagramTag;
+            uint8_t  mLifetime;
+            uint8_t  mPriority : 2;
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+            bool mShouldDrop : 1;
+#endif
+
+            static_assert(Message::kNumPriorities <= 4, "mPriority as a 2-bit does not fit all `Priority` values");
         };
 
         Entry *AllocateEntry(uint16_t aSrcRloc16, uint16_t aTag, Message::Priority aPriority);
@@ -383,7 +410,13 @@ private:
         bool   UpdateOnTimeTick(void);
 
     private:
-        static constexpr uint16_t kNumEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
+        static constexpr uint16_t kNumEntries =
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+            OT_MAX(OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
+                   OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_ENTRY_LIST_SIZE);
+#else
+            OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
+#endif
 
         Entry mEntries[kNumEntries];
     };
@@ -433,6 +466,10 @@ private:
                               bool                aAddFragHeader = false);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend = true);
+    Error RemoveAgedMessages(void);
+#endif
     void  SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
     Error UpdateIp6Route(Message &aMessage);
