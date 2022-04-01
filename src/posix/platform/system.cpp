@@ -161,6 +161,8 @@ exit:
 
 void platformSetUp(void)
 {
+    VerifyOrExit(!gDryRun);
+
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneSetUp();
 #endif
@@ -184,6 +186,9 @@ void platformSetUp(void)
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(gInstance, processStateChange, gInstance));
 #endif
+
+exit:
+    return;
 }
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
@@ -196,16 +201,15 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     gInstance = otInstanceInitSingle();
     OT_ASSERT(gInstance != nullptr);
 
-    if (!gDryRun)
-    {
-        platformSetUp();
-    }
+    platformSetUp();
 
     return gInstance;
 }
 
 void platformTearDown(void)
 {
+    VerifyOrExit(!gDryRun);
+
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     ot::Posix::Daemon::Get().TearDown();
 #endif
@@ -225,6 +229,9 @@ void platformTearDown(void)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneTearDown();
 #endif
+
+exit:
+    return;
 }
 
 void platformDeinit(void)
@@ -263,10 +270,7 @@ void otSysDeinit(void)
 {
     OT_ASSERT(gInstance != nullptr);
 
-    if (!gDryRun)
-    {
-        platformTearDown();
-    }
+    platformTearDown();
     otInstanceFinalize(gInstance);
     gInstance = nullptr;
     platformDeinit();
