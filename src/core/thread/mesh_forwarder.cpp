@@ -224,7 +224,7 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
         }
     }
 
-    LogMessage(kMessageEvict, aMessage, nullptr, kErrorNoBufs);
+    LogMessage(kMessageEvict, aMessage, kErrorNoBufs);
     queue->DequeueAndFree(aMessage);
 }
 
@@ -320,7 +320,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 #endif
 
         default:
-            LogMessage(kMessageDrop, *curMessage, nullptr, error);
+            LogMessage(kMessageDrop, *curMessage, error);
             mSendQueue.DequeueAndFree(*curMessage);
             continue;
         }
@@ -1071,7 +1071,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
     Get<Utils::HistoryTracker>().RecordTxMessage(*mSendMessage, aMacDest);
 #endif
 
-    LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
+    LogMessage(kMessageTransmit, *mSendMessage, txError, &aMacDest);
 
     if (mSendMessage->GetType() == Message::kTypeIp6)
     {
@@ -1348,7 +1348,7 @@ void MeshForwarder::ClearReassemblyList(void)
 {
     for (Message &message : mReassemblyList)
     {
-        LogMessage(kMessageReassemblyDrop, message, nullptr, kErrorNoFrameReceived);
+        LogMessage(kMessageReassemblyDrop, message, kErrorNoFrameReceived);
 
         if (message.GetType() == Message::kTypeIp6)
         {
@@ -1385,7 +1385,7 @@ bool MeshForwarder::UpdateReassemblyList(void)
         }
         else
         {
-            LogMessage(kMessageReassemblyDrop, message, nullptr, kErrorReassemblyTimeout);
+            LogMessage(kMessageReassemblyDrop, message, kErrorReassemblyTimeout);
 
             if (message.GetType() == Message::kTypeIp6)
             {
@@ -1475,7 +1475,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
     Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
 #endif
 
-    LogMessage(kMessageReceive, aMessage, &aMacSource, kErrorNone);
+    LogMessage(kMessageReceive, aMessage, kErrorNone, &aMacSource);
 
     if (aMessage.GetType() == Message::kTypeIp6)
     {
@@ -1713,6 +1713,8 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
         "Evicting",                    // (5) kMessageEvict
     };
 
+    const char *string = kMessageActionStrings[aAction];
+
     static_assert(kMessageReceive == 0, "kMessageReceive value is incorrect");
     static_assert(kMessageTransmit == 1, "kMessageTransmit value is incorrect");
     static_assert(kMessagePrepareIndirect == 2, "kMessagePrepareIndirect value is incorrect");
@@ -1720,7 +1722,12 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
     static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
     static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
 
-    return (aError == kErrorNone) ? kMessageActionStrings[aAction] : "Failed to send";
+    if ((aAction == kMessageTransmit) && (aError != kErrorNone))
+    {
+        string = "Failed to send";
+    }
+
+    return string;
 }
 
 const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
@@ -1803,8 +1810,9 @@ exit:
 
 void MeshForwarder::LogMessage(MessageAction       aAction,
                                const Message &     aMessage,
-                               const Mac::Address *aMacAddress,
-                               Error               aError)
+                               Error               aError,
+                               const Mac::Address *aMacAddress)
+
 {
     LogLevel logLevel = kLogLevelInfo;
 
@@ -1882,7 +1890,7 @@ void MeshForwarder::LogLowpanHcFrameDrop(Error               aError,
 
 #else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 
-void MeshForwarder::LogMessage(MessageAction, const Message &, const Mac::Address *, Error)
+void MeshForwarder::LogMessage(MessageAction, const Message &, Error, const Mac::Address *)
 {
 }
 

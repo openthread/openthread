@@ -320,7 +320,7 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
         mDataPollHandler.HandleNewFrame(aChild);
 
         aChild.GetMacAddress(childAddress);
-        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, &childAddress, kErrorNone);
+        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, kErrorNone, &childAddress);
     }
 }
 
@@ -519,7 +519,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         if (!aFrame.IsEmpty())
         {
             IgnoreError(aFrame.GetDstAddr(macDest));
-            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, &macDest, txError);
+            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageTransmit, *message, txError, &macDest);
         }
 
         if (message->GetType() == Message::kTypeIp6)
