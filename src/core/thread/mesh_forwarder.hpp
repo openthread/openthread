@@ -512,7 +512,11 @@ private:
     void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);
 
-    void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, Error aError);
+    void LogMessage(MessageAction       aAction,
+                    const Message &     aMessage,
+                    Error               aError   = kErrorNone,
+                    const Mac::Address *aAddress = nullptr);
+
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,

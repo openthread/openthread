@@ -169,7 +169,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
             }
             else
             {
-                LogMessage(kMessageDrop, message, nullptr, aError);
+                LogMessage(kMessageDrop, message, aError);
                 message.Free();
             }
         }
@@ -349,7 +349,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
             mSendMessage = nullptr;
         }
 
-        LogMessage(kMessageDrop, message, nullptr, kErrorNone);
+        LogMessage(kMessageDrop, message);
         mSendQueue.DequeueAndFree(message);
     }
 }
@@ -807,7 +807,7 @@ void MeshForwarder::HandleMesh(uint8_t *             aFrame,
         message->SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
 #endif
 
-        LogMessage(kMessageReceive, *message, &aMacSource, kErrorNone);
+        LogMessage(kMessageReceive, *message, kErrorNone, &aMacSource);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Since the message will be forwarded, we clear the radio
