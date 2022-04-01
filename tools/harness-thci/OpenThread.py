@@ -2963,6 +2963,10 @@ class OpenThreadTHCI(object):
             False: fail to set BBR Dataset
         """
         assert not (SeqNumInc and SeqNum is not None), "Must not specify both SeqNumInc and SeqNum"
+
+        if MlrTimeout and MlrTimeout != self.bbrMlrTimeout or ReRegDelay and ReRegDelay != self.bbrReRegDelay:
+            SeqNumInc = True
+
         if SeqNumInc:
             if self.bbrSeqNum in (126, 127):
                 self.bbrSeqNum = 0
@@ -3256,7 +3260,7 @@ class OpenThreadTHCI(object):
     @API
     def setMLRtimeout(self, iMsecs):
         """Setup BBR MLR Timeout to `iMsecs` seconds."""
-        self.__configBbrDataset(MlrTimeout=iMsecs)
+        self.setBbrDataset(MlrTimeout=iMsecs)
 
     @API
     def stopListeningToAddr(self, sAddr):
