@@ -229,7 +229,7 @@ Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
     messageInfo.GetPeerAddr().SetToRealmLocalAllMplForwarders();
 
-    tunnelHeader.Init();
+    tunnelHeader.InitVersionTrafficClassFlow();
     tunnelHeader.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
     tunnelHeader.SetDestination(messageInfo.GetPeerAddr());
@@ -454,7 +454,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     Header   header;
     uint16_t payloadLength = aMessage.GetLength();
 
-    header.Init();
+    header.InitVersionTrafficClassFlow();
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
     header.SetEcn(aMessageInfo.GetEcn());
     header.SetPayloadLength(payloadLength);
@@ -1089,7 +1089,7 @@ Error Ip6::SendRaw(Message &aMessage, bool aFromHost)
     MessageInfo messageInfo;
     bool        freed = false;
 
-    SuccessOrExit(error = header.Init(aMessage));
+    SuccessOrExit(error = header.ParseFrom(aMessage));
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
 
     messageInfo.SetPeerAddr(header.GetSource());
@@ -1131,7 +1131,7 @@ start:
     forwardHost       = false;
     shouldFreeMessage = true;
 
-    SuccessOrExit(error = header.Init(aMessage));
+    SuccessOrExit(error = header.ParseFrom(aMessage));
 
     messageInfo.Clear();
     messageInfo.SetPeerAddr(header.GetSource());

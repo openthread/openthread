@@ -329,7 +329,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class Header : public Clearable<Header>
     {
     public:
         static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.
