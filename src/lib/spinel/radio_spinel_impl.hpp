@@ -2220,6 +2220,10 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(sp
 
     otLogCritPlat("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_CUSTOM_RESTORATION
+    SuccessOrDie(mSpinelInterface.HandleRcpFailed());
+#endif
+
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailed = true;
 #else
@@ -2230,6 +2234,10 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(sp
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpTimeout(void)
 {
+#if OPENTHREAD_SPINEL_CONFIG_RCP_CUSTOM_RESTORATION
+    SuccessOrDie(mSpinelInterface.HandleRcpFailed());
+#endif
+
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailed = true;
 #else
