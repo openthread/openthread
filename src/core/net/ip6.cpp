@@ -1490,6 +1490,23 @@ const char *Ip6::IpProtoToString(uint8_t aIpProto)
     return Stringify::Lookup(aIpProto, kIpProtoTable, "Unknown");
 }
 
+const char *Ip6::EcnToString(Ecn aEcn)
+{
+    static const char *const kEcnStrings[] = {
+        "no", // (0) kEcnNotCapable
+        "e1", // (1) kEcnCapable1  (ECT1)
+        "e0", // (2) kEcnCapable0  (ECT0)
+        "ce", // (3) kEcnMarked    (Congestion Encountered)
+    };
+
+    static_assert(0 == kEcnNotCapable, "kEcnNotCapable value is incorrect");
+    static_assert(1 == kEcnCapable1, "kEcnCapable1 value is incorrect");
+    static_assert(2 == kEcnCapable0, "kEcnCapable0 value is incorrect");
+    static_assert(3 == kEcnMarked, "kEcnMarked value is incorrect");
+
+    return kEcnStrings[aEcn];
+}
+
 // LCOV_EXCL_STOP
 
 } // namespace Ip6

@@ -1786,9 +1786,9 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
     radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
 #endif
 
-    LogAt(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
+    LogAt(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x, ecn:%s%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
           MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
-          aMessage.GetLength(), checksum,
+          aMessage.GetLength(), checksum, Ip6::Ip6::EcnToString(ip6Header.GetEcn()),
           (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
           (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
           ToYesNo(aMessage.IsLinkSecurityEnabled()),
