@@ -346,6 +346,8 @@ Error Message::SetPriority(Priority aPriority)
     uint8_t        priority = static_cast<uint8_t>(aPriority);
     PriorityQueue *priorityQueue;
 
+    static_assert(kNumPriorities <= 4, "`Metadata::mPriority` as a 2-bit field cannot fit all `Priority` values");
+
     VerifyOrExit(priority < kNumPriorities, error = kErrorInvalidArgs);
 
     VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = priority);
