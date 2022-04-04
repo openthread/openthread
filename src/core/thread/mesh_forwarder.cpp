@@ -1266,7 +1266,7 @@ void MeshForwarder::HandleFragment(const uint8_t *       aFrame,
         SuccessOrExit(error);
 
         message->SetDatagramTag(fragmentHeader.GetDatagramTag());
-        message->SetTimeout(kReassemblyTimeout);
+        message->SetTimestampToNow();
         message->SetLinkInfo(aLinkInfo);
 
         VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = kErrorDrop);
@@ -1323,7 +1323,7 @@ void MeshForwarder::HandleFragment(const uint8_t *       aFrame,
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         message->AddLqi(aLinkInfo.GetLqi());
 #endif
-        message->SetTimeout(kReassemblyTimeout);
+        message->SetTimestampToNow();
     }
 
 exit:
@@ -1377,13 +1377,11 @@ void MeshForwarder::HandleTimeTick(void)
 
 bool MeshForwarder::UpdateReassemblyList(void)
 {
+    TimeMilli now = TimerMilli::GetNow();
+
     for (Message &message : mReassemblyList)
     {
-        if (message.GetTimeout() > 0)
-        {
-            message.DecrementTimeout();
-        }
-        else
+        if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kReassemblyTimeout))
         {
             LogMessage(kMessageReassemblyDrop, message, kErrorReassemblyTimeout);
 
