@@ -3219,7 +3219,7 @@ class OpenThreadTHCI(object):
         return dua
 
     def __addDefaultDomainPrefix(self):
-        self.configBorderRouter(P_dp=1, P_slaac_preferred=1, P_stable=1, P_on_mesh=1, P_default=1)
+        self.configBorderRouter(P_dp=1, P_stable=1, P_on_mesh=1, P_default=1)
 
     def __setDUA(self, sDua):
         """specify the DUA before Thread Starts."""
