@@ -575,6 +575,11 @@ private:
     static constexpr uint32_t kStateUpdatePeriod             = 1000; // State update period (in msec).
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500;  // Max delay for unsol Data Response (in msec).
 
+    // Threshold to accept a router upgrade request with reason
+    // `kBorderRouterRequst` (number of BRs acting as router in
+    // Network Data).
+    static constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
+
     Error AppendConnectivity(Message &aMessage);
     Error AppendChildAddresses(Message &aMessage, Child &aChild);
     Error AppendRoute(Message &aMessage, Neighbor *aNeighbor = nullptr);
@@ -616,6 +621,7 @@ private:
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     void  SendAddressRelease(void);
     void  SendAddressSolicitResponse(const Coap::Message &   aRequest,
+                                     ThreadStatusTlv::Status aResponseStatus,
                                      const Router *          aRouter,
                                      const Ip6::MessageInfo &aMessageInfo);
     void  SendAdvertisement(void);

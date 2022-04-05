@@ -166,6 +166,8 @@ public:
         kTooFewRouters         = 2, ///< Address Solicit due to too few routers.
         kHaveChildIdRequest    = 3, ///< Address Solicit due to child ID request.
         kParentPartitionChange = 4, ///< Address Solicit due to parent partition change
+        kBorderRouterRequst    = 5, ///< Address Solicit from Border Router request.
+        kUnrecognizedStatus    = 6, ///< The requested status is unrecognized or not meaningful in a request.
     };
 
     /**
