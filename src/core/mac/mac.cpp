@@ -224,11 +224,8 @@ bool Mac::IsInTransmitState(void) const
 
 Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
 {
-    Error                error = kErrorNone;
-    Address              address;
-    const Beacon *       beacon        = nullptr;
-    const BeaconPayload *beaconPayload = nullptr;
-    uint16_t             payloadLength;
+    Error   error = kErrorNone;
+    Address address;
 
     memset(&aResult, 0, sizeof(ActiveScanResult));
 
@@ -248,22 +245,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
     aResult.mRssi    = aBeaconFrame->GetRssi();
     aResult.mLqi     = aBeaconFrame->GetLqi();
 
-    payloadLength = aBeaconFrame->GetPayloadLength();
-
-    beacon        = reinterpret_cast<const Beacon *>(aBeaconFrame->GetPayload());
-    beaconPayload = reinterpret_cast<const BeaconPayload *>(beacon->GetPayload());
-
-    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
-    {
-        aResult.mVersion    = beaconPayload->GetProtocolVersion();
-        aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
-        aResult.mIsNative   = beaconPayload->IsNative();
-        IgnoreError(AsCoreType(&aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
-        VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = kErrorParse);
-        aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
-    }
-
-    LogBeacon("Received", *beaconPayload);
+    LogBeacon("Received");
 
 exit:
     return error;
@@ -797,11 +779,9 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame *      frame;
-    uint8_t        beaconLength;
-    uint16_t       fcf;
-    Beacon *       beacon        = nullptr;
-    BeaconPayload *beaconPayload = nullptr;
+    TxFrame *frame;
+    uint16_t fcf;
+    Beacon * beacon = nullptr;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -818,32 +798,8 @@ TxFrame *Mac::PrepareBeacon(void)
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
-    beaconLength = sizeof(*beacon);
 
-    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
-
-    if (Get<KeyManager>().GetSecurityPolicy().mBeaconsEnabled)
-    {
-        beaconPayload->Init();
-
-        if (IsJoinable())
-        {
-            beaconPayload->SetJoiningPermitted();
-        }
-        else
-        {
-            beaconPayload->ClearJoiningPermitted();
-        }
-
-        beaconPayload->SetNetworkName(mNetworkName.GetAsData());
-        beaconPayload->SetExtendedPanId(mExtendedPanId);
-
-        beaconLength += sizeof(*beaconPayload);
-    }
-
-    frame->SetPayloadLength(beaconLength);
-
-    LogBeacon("Sending", *beaconPayload);
+    LogBeacon("Sending");
 
     return frame;
 }
@@ -2276,9 +2232,9 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
     }
 }
 
-void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const
+void Mac::LogBeacon(const char *aActionText) const
 {
-    LogInfo("%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString().AsCString());
+    LogInfo("%s Beacon", aActionText);
 }
 
 #else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -2287,7 +2243,7 @@ void Mac::LogFrameRxFailure(const RxFrame *, Error) const
 {
 }
 
-void Mac::LogBeacon(const char *, const BeaconPayload &) const
+void Mac::LogBeacon(const char *) const
 {
 }
 

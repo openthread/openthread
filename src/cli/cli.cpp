@@ -1471,7 +1471,15 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
     SuccessOrExit(error = otThreadDiscover(GetInstancePtr(), scanChannels, OT_PANID_BROADCAST, false, false,
                                            &Interpreter::HandleActiveScanResult, this));
 
-    OutputScanTableHeader();
+    static const char *const kScanTableTitles[] = {
+        "Network Name", "Extended PAN", "PAN", "MAC Address", "Ch", "dBm", "LQI",
+    };
+
+    static const uint8_t kScanTableColumnWidths[] = {
+        18, 18, 6, 18, 4, 5, 5,
+    };
+
+    OutputTableHeader(kScanTableTitles, kScanTableColumnWidths);
 
     error = OT_ERROR_PENDING;
 
@@ -3898,7 +3906,11 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
     }
     else
     {
-        OutputScanTableHeader();
+        static const char *const kScanTableTitles[]       = {"PAN", "MAC Address", "Ch", "dBm", "LQI"};
+        static const uint8_t     kScanTableColumnWidths[] = {6, 18, 4, 5, 5};
+
+        OutputTableHeader(kScanTableTitles, kScanTableColumnWidths);
+
         SuccessOrExit(error = otLinkActiveScan(GetInstancePtr(), scanChannels, scanDuration,
                                                &Interpreter::HandleActiveScanResult, this));
     }
@@ -3907,19 +3919,6 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
 
 exit:
     return error;
-}
-
-void Interpreter::OutputScanTableHeader(void)
-{
-    static const char *const kScanTableTitles[] = {
-        "J", "Network Name", "Extended PAN", "PAN", "MAC Address", "Ch", "dBm", "LQI",
-    };
-
-    static const uint8_t kScanTableColumnWidths[] = {
-        3, 18, 18, 6, 18, 4, 5, 5,
-    };
-
-    OutputTableHeader(kScanTableTitles, kScanTableColumnWidths);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
@@ -3935,13 +3934,14 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
         ExitNow();
     }
 
-    OutputFormat("| %d ", aResult->mIsJoinable);
+    if (aResult->mDiscover)
+    {
+        OutputFormat("| %-16s ", aResult->mNetworkName.m8);
 
-    OutputFormat("| %-16s ", aResult->mNetworkName.m8);
-
-    OutputFormat("| ");
-    OutputBytes(aResult->mExtendedPanId.m8);
-    OutputFormat(" ");
+        OutputFormat("| ");
+        OutputBytes(aResult->mExtendedPanId.m8);
+        OutputFormat(" ");
+    }
 
     OutputFormat("| %04x | ", aResult->mPanId);
     OutputExtAddress(aResult->mExtAddress);

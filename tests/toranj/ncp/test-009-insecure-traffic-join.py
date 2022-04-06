@@ -60,7 +60,6 @@ NUM_MSGS = 4
 
 # Make node1 joinable and set the insecure port
 node1.permit_join(duration_sec='100', port=str(insecure_port))
-verify(node1.get(wpan.WPAN_NETWORK_ALLOW_JOIN) == 'true')
 
 # Join node1 network from node2 without setting the key
 node2.join_node(node1, should_set_key=False)

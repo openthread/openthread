@@ -1447,19 +1447,6 @@ Frame::InfoString Frame::ToInfoString(void) const
     return string;
 }
 
-BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
-{
-    NetworkName name;
-    InfoString  string;
-
-    IgnoreError(name.Set(GetNetworkName()));
-
-    string.Append("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
-                  mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
-                  ToYesNo(IsJoiningPermitted()), ToYesNo(IsNative()));
-    return string;
-}
-
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP

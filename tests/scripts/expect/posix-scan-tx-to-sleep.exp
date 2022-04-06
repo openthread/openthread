@@ -49,17 +49,6 @@ expect "panid"
 expect -re {([0-9a-f]{4})}
 set pan $expect_out(1,string)
 expect_line "Done"
-send "extpanid\n"
-expect "extpanid"
-expect -re {([0-9a-f]{16})}
-set extpan $expect_out(1,string)
-expect_line "Done"
-expect "> "
-send "networkname\n"
-expect "networkname"
-expect -re {[\r\n]([^\r\n]+)[\r\n]}
-set network $expect_out(1,string)
-expect_line "Done"
 send "channel\n"
 expect "channel"
 expect -re {(\d+)}
@@ -68,9 +57,9 @@ expect_line "Done"
 
 spawn_node 2 "rcp" "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx&forkpty-arg=2"
 send "scan\n"
-expect "| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
-expect "+---+------------------+------------------+------+------------------+----+-----+-----+"
-wait_for "" "\\| \\d \\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
+expect "| PAN  | MAC Address      | Ch | dBm | LQI |"
+expect "+------+------------------+----+-----+-----+"
+wait_for "" "\\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
 wait_for "" "Done"
 
 dispose_all

@@ -310,10 +310,11 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
     end = offset + tlv.GetLength();
 
     memset(&result, 0, sizeof(result));
-    result.mPanId   = linkInfo->mPanId;
-    result.mChannel = linkInfo->mChannel;
-    result.mRssi    = linkInfo->mRss;
-    result.mLqi     = linkInfo->mLqi;
+    result.mDiscover = true;
+    result.mPanId    = linkInfo->mPanId;
+    result.mChannel  = linkInfo->mChannel;
+    result.mRssi     = linkInfo->mRss;
+    result.mLqi      = linkInfo->mLqi;
 
     aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&result.mExtAddress));
 

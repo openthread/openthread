@@ -56,7 +56,6 @@ WPAN_ROLE = 'Network:Role'
 WPAN_PARTITION_ID = 'Network:PartitionId'
 WPAN_NCP_VERSION = 'NCP:Version'
 WPAN_NCP_MCU_POWER_STATE = "NCP:MCUPowerState"
-WPAN_NETWORK_ALLOW_JOIN = 'com.nestlabs.internal:Network:AllowingJoin'
 WPAN_NETWORK_PASSTHRU_PORT = 'com.nestlabs.internal:Network:PassthruPort'
 WPAN_RCP_VERSION = "POSIXApp:RCPVersion"
 
@@ -568,7 +567,6 @@ class Node(object):
         """Checks if node is in the scan results
            `scan_result` must be an array of `ScanResult` object (see `parse_scan_result`).
         """
-        joinable = (self.get(WPAN_NETWORK_ALLOW_JOIN) == 'true')
         panid = self.get(WPAN_PANID)
         xpanid = self.get(WPAN_XPANID)[2:]
         name = self.get(WPAN_NAME)[1:-1]
@@ -576,11 +574,12 @@ class Node(object):
         ext_address = self.get(WPAN_EXT_ADDRESS)[1:-1]
 
         for item in scan_result:
-            if all([
-                    item.network_name == name, item.panid == panid, item.xpanid == xpanid,
-                    item.channel == channel, item.ext_address == ext_address,
-                (item.type == ScanResult.TYPE_DISCOVERY_SCAN) or (item.joinable == joinable)
-            ]):
+            if all([item.panid == panid, item.channel == channel, item.ext_address == ext_address]):
+                if (item.type == ScanResult.TYPE_DISCOVERY_SCAN):
+                    if all([item.network_name == name, item.xpanid == xpanid]):
+                        return True
+                    else:
+                        continue
                 return True
 
         return False
@@ -1061,16 +1060,17 @@ class ScanResult(object):
 
         items = [item.strip() for item in result_text.split('|')]
 
-        if len(items) == 8:
+        if len(items) == 2:
+            self._type = ScanResult.TYPE_ENERGY_SCAN
+            self._channel = items[0]
+            self._rssi = items[1]
+        if len(items) == 7 and '------ NONE ------' in items[1]:
             self._type = ScanResult.TYPE_ACTIVE_SCAN
             self._index = items[0]
-            self._joinable = (items[1] == 'YES')
-            self._network_name = items[2][1:-1]
-            self._panid = items[3]
-            self._channel = items[4]
-            self._xpanid = items[5]
-            self._ext_address = items[6]
-            self._rssi = items[7]
+            self._panid = items[2]
+            self._channel = items[3]
+            self._ext_address = items[5]
+            self._rssi = items[6]
         elif len(items) == 7:
             self._type = ScanResult.TYPE_DISCOVERY_SCAN
             self._index = items[0]
@@ -1080,12 +1080,8 @@ class ScanResult(object):
             self._xpanid = items[4]
             self._ext_address = items[5]
             self._rssi = items[6]
-        elif len(items) == 2:
-            self._type = ScanResult.TYPE_ENERGY_SCAN
-            self._channel = items[0]
-            self._rssi = items[1]
         else:
-            raise ValueError('"{}" does not seem to be a valid scan result string'.result_text)
+            raise ValueError('"%s" does not seem to be a valid scan result string' % result_text)
 
     @property
     def type(self):

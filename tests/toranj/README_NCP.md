@@ -124,7 +124,6 @@ wpan1 => [
     "Network:PANID" => 0x9D81
     "IPv6:MeshLocalAddress" => "fda4:38cf:5973:0:b899:3436:15c6:941d"
     "IPv6:MeshLocalPrefix" => "fda4:38cf:5973::/64"
-    "com.nestlabs.internal:Network:AllowingJoin" => false
 ]
 ```
 
@@ -348,9 +347,9 @@ $ Node1.wpanctl('form "toranj-net"'):
      Forming WPAN "toranj-net" as node type "router"
      Successfully formed!
 $ Node2.wpanctl('scan'):
-        | Joinable | NetworkName        | PAN ID | Ch | XPanID           | HWAddr           | RSSI
-     ---+----------+--------------------+--------+----+------------------+------------------+------
-      1 |       NO | "toranj-net"       | 0x9DEB | 16 | 8CC6CFC810F23E1B | BEECDAF3439DC931 |  -20
+        | PAN ID | Ch | XPanID           | HWAddr           | RSSI
+     ---+--------+----+------------------+------------------+------
+      1 | 0x9DEB | 16 | 8CC6CFC810F23E1B | BEECDAF3439DC931 |  -20
 $ Node1.wpanctl('get -v NCP:State') -> '"associated"'
 $ Node1.wpanctl('get -v Network:Name') -> '"toranj-net"'
 $ Node1.wpanctl('get -v Network:PANID') -> '0x9DEB'
