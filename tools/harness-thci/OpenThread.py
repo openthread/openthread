@@ -2964,8 +2964,9 @@ class OpenThreadTHCI(object):
         """
         assert not (SeqNumInc and SeqNum is not None), "Must not specify both SeqNumInc and SeqNum"
 
-        if MlrTimeout and MlrTimeout != self.bbrMlrTimeout or ReRegDelay and ReRegDelay != self.bbrReRegDelay:
-            SeqNumInc = True
+        if (MlrTimeout and MlrTimeout != self.bbrMlrTimeout) or (ReRegDelay and ReRegDelay != self.bbrReRegDelay):
+            if SeqNum is None:
+                SeqNumInc = True
 
         if SeqNumInc:
             if self.bbrSeqNum in (126, 127):
