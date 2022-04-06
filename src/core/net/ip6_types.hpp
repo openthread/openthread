@@ -76,7 +76,7 @@ static constexpr uint16_t kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRA
 static constexpr uint16_t kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM;
 
 /**
- * Class Selectors
+ * 6-bit Differentiated Services Code Point (DSCP) values.
  *
  */
 enum IpDscpCs : uint8_t
@@ -93,7 +93,7 @@ enum IpDscpCs : uint8_t
 };
 
 /**
- * This enumeration represents the Explicit Congestion Notification (ECN) values.
+ * This enumeration represents the 2-bit Explicit Congestion Notification (ECN) values.
  *
  */
 enum Ecn : uint8_t

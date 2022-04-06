@@ -117,7 +117,7 @@ public:
                      const char *aSource,
                      const char *aDestination)
     {
-        mIpHeader.Init(aVersionClassFlow);
+        mIpHeader.SetVerionTrafficClassFlow(aVersionClassFlow);
         mIpHeader.SetPayloadLength(aPayloadLength);
         mIpHeader.SetNextHeader(aNextHeader);
         mIpHeader.SetHopLimit(aHopLimit);
@@ -143,7 +143,7 @@ public:
                              const char *aSource,
                              const char *aDestination)
     {
-        mIpTunneledHeader.Init(aVersionClassFlow);
+        mIpTunneledHeader.SetVerionTrafficClassFlow(aVersionClassFlow);
         mIpTunneledHeader.SetPayloadLength(aPayloadLength);
         mIpTunneledHeader.SetNextHeader(aNextHeader);
         mIpTunneledHeader.SetHopLimit(aHopLimit);

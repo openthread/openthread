@@ -39,6 +39,7 @@
 #include <openthread/tcp.h>
 
 #include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -527,7 +528,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class Header : public Clearable<Header>
     {
     public:
         static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.

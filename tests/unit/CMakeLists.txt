@@ -431,6 +431,27 @@ target_link_libraries(ot-test-hmac-sha256
 
 add_test(NAME ot-test-hmac-sha256 COMMAND ot-test-hmac-sha256)
 
+add_executable(ot-test-ip6-header
+    test_ip6_header.cpp
+)
+
+target_include_directories(ot-test-ip6-header
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-ip6-header
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-ip6-header
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-ip6-header COMMAND ot-test-ip6-header)
+
 add_executable(ot-test-ip-address
     test_ip_address.cpp
 )
