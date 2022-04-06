@@ -57,6 +57,17 @@ using ot::Encoding::BigEndian::HostSwap32;
 
 RegisterLogModule("Tcp");
 
+static_assert(sizeof(struct tcpcb) == sizeof(Tcp::Endpoint::mTcb), "mTcb field in otTcpEndpoint is sized incorrectly");
+static_assert(alignof(struct tcpcb) == alignof(decltype(Tcp::Endpoint::mTcb)),
+              "mTcb field in otTcpEndpoint is aligned incorrectly");
+static_assert(offsetof(Tcp::Endpoint, mTcb) == 0, "mTcb field in otTcpEndpoint has nonzero offset");
+
+static_assert(sizeof(struct tcpcb_listen) == sizeof(Tcp::Listener::mTcbListen),
+              "mTcbListen field in otTcpListener is sized incorrectly");
+static_assert(alignof(struct tcpcb_listen) == alignof(decltype(Tcp::Listener::mTcbListen)),
+              "mTcbListen field in otTcpListener is aligned incorrectly");
+static_assert(offsetof(Tcp::Listener, mTcbListen) == 0, "mTcbListen field in otTcpEndpoint has nonzero offset");
+
 Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, Tcp::HandleTimer)
@@ -259,6 +270,11 @@ exit:
     return error;
 }
 
+bool Tcp::Endpoint::IsClosed(void) const
+{
+    return GetTcb().t_state == TCP6S_CLOSED;
+}
+
 uint8_t Tcp::Endpoint::TimerFlagToIndex(uint8_t aTimerFlag)
 {
     uint8_t timerIndex = 0;
@@ -412,6 +428,26 @@ exit:
     return calledUserCallback;
 }
 
+Address &Tcp::Endpoint::GetLocalIp6Address(void)
+{
+    return *reinterpret_cast<Address *>(&GetTcb().laddr);
+}
+
+const Address &Tcp::Endpoint::GetLocalIp6Address(void) const
+{
+    return *reinterpret_cast<const Address *>(&GetTcb().laddr);
+}
+
+Address &Tcp::Endpoint::GetForeignIp6Address(void)
+{
+    return *reinterpret_cast<Address *>(&GetTcb().faddr);
+}
+
+const Address &Tcp::Endpoint::GetForeignIp6Address(void) const
+{
+    return *reinterpret_cast<const Address *>(&GetTcb().faddr);
+}
+
 bool Tcp::Endpoint::Matches(const MessageInfo &aMessageInfo) const
 {
     bool                matches = false;
@@ -494,6 +530,21 @@ exit:
     return error;
 }
 
+bool Tcp::Listener::IsClosed(void) const
+{
+    return GetTcbListen().t_state == TCP6S_CLOSED;
+}
+
+Address &Tcp::Listener::GetLocalIp6Address(void)
+{
+    return *reinterpret_cast<Address *>(&GetTcbListen().laddr);
+}
+
+const Address &Tcp::Listener::GetLocalIp6Address(void) const
+{
+    return *reinterpret_cast<const Address *>(&GetTcbListen().laddr);
+}
+
 bool Tcp::Listener::Matches(const MessageInfo &aMessageInfo) const
 {
     bool                       matches = false;
@@ -551,9 +602,9 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     endpoint = mEndpoints.FindMatching(aMessageInfo, endpointPrev);
     if (endpoint != nullptr)
     {
-        struct signals sig;
-        int            nextAction;
-        struct tcpcb * tp = &endpoint->GetTcb();
+        struct tcplp_signals sig;
+        int                  nextAction;
+        struct tcpcb *       tp = &endpoint->GetTcb();
 
         otLinkedBuffer *priorHead = lbuf_head(&tp->sendbuf);
 
@@ -583,7 +634,7 @@ exit:
     return error;
 }
 
-void Tcp::ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct signals &aSignals)
+void Tcp::ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct tcplp_signals &aSignals)
 {
     VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
     if (aEndpoint.mSendDoneCallback != nullptr)
