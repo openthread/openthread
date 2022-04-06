@@ -103,11 +103,11 @@ class Firewall(thread_cert.TestCase):
                 route = str(ipaddress.IPv6Network(f'{interface}/64', strict=False))
                 host.bash(f'ip -6 route del {route} dev {host.ETH_DEV}')
             if add_route:
-                host.bash(f'ip -6 route add {dest} dev {host.ETH_DEV} via {gateway}')
+                host.bash(f'ip -6 route add {dest} dev {host.ETH_DEV} via {gateway} pref high metric 10')
             self.simulator.go(2)
             result = host.ping_ether(dest, ttl=ttl, interface=interface)
             if add_route:
-                host.bash(f'ip -6 route del {dest}')
+                host.bash(f'ip -6 route del {dest} dev {host.ETH_DEV} via {gateway} pref high metric 10')
             if add_interface:
                 host.bash(f'ip -6 addr del {interface}/64 dev {host.ETH_DEV} scope global')
             self.simulator.go(1)
@@ -236,9 +236,8 @@ class Firewall(thread_cert.TestCase):
             vars['Router_1_RLOC16']).filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
         # 8. Host pings router1's link-local address from host's infra address.
-        # Skip this scenario as for now
-        # _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_dst(
-        #     vars['Router_1_LLA']).filter_ping_request().must_next()
+        _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_dst(
+            vars['Router_1_LLA']).filter_ping_request().must_next()
         pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst16(
             vars['Router_1_RLOC16']).filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
