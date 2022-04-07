@@ -22,11 +22,34 @@ set(executables_mbedcrypto
 )
 
 if(TEST_CPP)
-    list(APPEND executables_mbedcrypto cpp_dummy_build)
+    set(cpp_dummy_build_cpp "${CMAKE_CURRENT_BINARY_DIR}/cpp_dummy_build.cpp")
+    set(generate_cpp_dummy_build "${CMAKE_CURRENT_SOURCE_DIR}/generate_cpp_dummy_build.sh")
+    add_custom_command(
+        OUTPUT "${cpp_dummy_build_cpp}"
+        COMMAND "${generate_cpp_dummy_build}" "${cpp_dummy_build_cpp}"
+        DEPENDS "${generate_cpp_dummy_build}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+    add_executable(cpp_dummy_build "${cpp_dummy_build_cpp}")
+    target_include_directories(cpp_dummy_build PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+    target_link_libraries(cpp_dummy_build ${mbedcrypto_target})
+endif()
+
+if(USE_SHARED_MBEDTLS_LIBRARY AND
+   NOT ${CMAKE_SYSTEM_NAME} MATCHES "[Ww][Ii][Nn]")
+    add_executable(dlopen "dlopen.c")
+    target_include_directories(dlopen PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+    target_link_libraries(dlopen ${CMAKE_DL_LIBS})
 endif()
 
 foreach(exe IN LISTS executables_libs executables_mbedcrypto)
-    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:mbedtls_test>)
+    set(extra_sources "")
+    if(exe STREQUAL "query_compile_time_config")
+        list(APPEND extra_sources
+            ${CMAKE_CURRENT_SOURCE_DIR}/query_config.c)
+    endif()
+    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:mbedtls_test>
+        ${extra_sources})
 
     # This emulates "if ( ... IN_LIST ... )" which becomes available in CMake 3.3
     list(FIND executables_libs ${exe} exe_index)
@@ -36,9 +59,6 @@ foreach(exe IN LISTS executables_libs executables_mbedcrypto)
         target_link_libraries(${exe} ${mbedcrypto_target})
     endif()
 endforeach()
-
-set_property(TARGET query_compile_time_config APPEND PROPERTY SOURCES
-             ${CMAKE_CURRENT_SOURCE_DIR}/query_config.c)
 
 install(TARGETS ${executables_libs} ${executables_mbedcrypto}
         DESTINATION "bin"

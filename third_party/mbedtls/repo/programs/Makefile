@@ -3,8 +3,8 @@
 # To compile with PKCS11: add "-lpkcs11-helper" to LDFLAGS
 
 CFLAGS	?= -O2
-WARNING_CFLAGS ?= -Wall -Wextra
-WARNING_CXXFLAGS ?= -Wall -Wextra
+WARNING_CFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral
+WARNING_CXXFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral
 LDFLAGS ?=
 
 MBEDTLS_TEST_PATH:=../tests/src
@@ -17,6 +17,12 @@ LOCAL_LDFLAGS = ${MBEDTLS_TEST_OBJS} 		\
 		-lmbedtls$(SHARED_SUFFIX)	\
 		-lmbedx509$(SHARED_SUFFIX)	\
 		-lmbedcrypto$(SHARED_SUFFIX)
+
+ifeq ($(shell uname -s),Linux)
+DLOPEN_LDFLAGS ?= -ldl
+else
+DLOPEN_LDFLAGS ?=
+endif
 
 include ../3rdparty/Makefile.inc
 LOCAL_CFLAGS+=$(THIRDPARTY_INCLUDES)
@@ -55,8 +61,19 @@ ifdef ZLIB
 LOCAL_LDFLAGS += -lz
 endif
 
+# Only build the dlopen test in shared library builds, and not when building
+# for Windows.
+ifdef BUILD_DLOPEN
+# Don't override the value
+else ifdef WINDOWS_BUILD
+BUILD_DLOPEN =
+else ifdef SHARED
+BUILD_DLOPEN = y
+else
+BUILD_DLOPEN =
+endif
+
 APPS = \
-	aes/aescrypt2$(EXEXT) \
 	aes/crypt_and_hash$(EXEXT) \
 	hash/generic_sum$(EXEXT) \
 	hash/hello$(EXEXT) \
@@ -107,11 +124,16 @@ APPS = \
 	x509/cert_req$(EXEXT) \
 	x509/cert_write$(EXEXT) \
 	x509/crl_app$(EXEXT) \
+	x509/load_roots$(EXEXT) \
 	x509/req_app$(EXEXT) \
 # End of APPS
 
 ifdef PTHREAD
 APPS +=	ssl/ssl_pthread_server$(EXEXT)
+endif
+
+ifdef BUILD_DLOPEN
+APPS +=	test/dlopen
 endif
 
 ifdef TEST_CPP
@@ -138,10 +160,6 @@ $(MBEDLIBS):
 
 ${MBEDTLS_TEST_OBJS}:
 	$(MAKE) -C ../tests mbedtls_test
-
-aes/aescrypt2$(EXEXT): aes/aescrypt2.c $(DEP)
-	echo "  CC    aes/aescrypt2.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) aes/aescrypt2.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 aes/crypt_and_hash$(EXEXT): aes/crypt_and_hash.c $(DEP)
 	echo "  CC    aes/crypt_and_hash.c"
@@ -239,7 +257,7 @@ psa/key_ladder_demo$(EXEXT): psa/key_ladder_demo.c $(DEP)
 	echo "  CC    psa/key_ladder_demo.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/key_ladder_demo.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-psa/psa_constant_names$(EXEXT): psa/psa_constant_names.c $(DEP)
+psa/psa_constant_names$(EXEXT): psa/psa_constant_names.c psa/psa_constant_names_generated.c $(DEP)
 	echo "  CC    psa/psa_constant_names.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/psa_constant_names.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
@@ -267,21 +285,32 @@ ssl/ssl_client1$(EXEXT): ssl/ssl_client1.c $(DEP)
 	echo "  CC    ssl/ssl_client1.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_client1.c  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/ssl_client2$(EXEXT): ssl/ssl_client2.c test/query_config.c $(DEP)
+SSL_TEST_OBJECTS = test/query_config.o ssl/ssl_test_lib.o
+SSL_TEST_DEPS = $(SSL_TEST_OBJECTS) \
+		test/query_config.h \
+		ssl/ssl_test_lib.h \
+		ssl/ssl_test_common_source.c \
+		$(DEP)
+
+ssl/ssl_test_lib.o: ssl/ssl_test_lib.c ssl/ssl_test_lib.h $(DEP)
+	echo "  CC    ssl/ssl_test_lib.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) -c ssl/ssl_test_lib.c -o $@
+
+ssl/ssl_client2$(EXEXT): ssl/ssl_client2.c $(SSL_TEST_DEPS)
 	echo "  CC    ssl/ssl_client2.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_client2.c test/query_config.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_client2.c $(SSL_TEST_OBJECTS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 ssl/ssl_server$(EXEXT): ssl/ssl_server.c $(DEP)
 	echo "  CC    ssl/ssl_server.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_server.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/ssl_server2$(EXEXT): ssl/ssl_server2.c test/query_config.c $(DEP)
+ssl/ssl_server2$(EXEXT): ssl/ssl_server2.c $(SSL_TEST_DEPS)
 	echo "  CC    ssl/ssl_server2.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_server2.c test/query_config.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_server2.c $(SSL_TEST_OBJECTS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/ssl_context_info$(EXEXT): ssl/ssl_context_info.c test/query_config.c $(DEP)
+ssl/ssl_context_info$(EXEXT): ssl/ssl_context_info.c test/query_config.o test/query_config.h $(DEP)
 	echo "  CC    ssl/ssl_context_info.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_context_info.c test/query_config.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_context_info.c test/query_config.o $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 ssl/ssl_fork_server$(EXEXT): ssl/ssl_fork_server.c $(DEP)
 	echo "  CC    ssl/ssl_fork_server.c"
@@ -303,9 +332,26 @@ test/benchmark$(EXEXT): test/benchmark.c $(DEP)
 	echo "  CC    test/benchmark.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/benchmark.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
+test/cpp_dummy_build.cpp: test/generate_cpp_dummy_build.sh
+	echo "  Gen   test/cpp_dummy_build.cpp"
+	test/generate_cpp_dummy_build.sh
+
 test/cpp_dummy_build$(EXEXT): test/cpp_dummy_build.cpp $(DEP)
 	echo "  CXX   test/cpp_dummy_build.cpp"
 	$(CXX) $(LOCAL_CXXFLAGS) $(CXXFLAGS) test/cpp_dummy_build.cpp   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+ifdef BUILD_DLOPEN
+test/dlopen$(EXEXT): test/dlopen.c $(DEP)
+	echo "  CC    test/dlopen.c"
+# Do not link any test objects (that would bring in a static dependency on
+# libmbedcrypto at least). Do not link with libmbed* (that would defeat the
+# purpose of testing dynamic loading).
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/dlopen.c $(LDFLAGS) $(DLOPEN_LDFLAGS) -o $@
+endif
+
+test/query_config.o: test/query_config.c test/query_config.h $(DEP)
+	echo "  CC    test/query_config.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) -c test/query_config.c -o $@
 
 test/selftest$(EXEXT): test/selftest.c $(DEP)
 	echo "  CC    test/selftest.c"
@@ -319,9 +365,9 @@ test/zeroize$(EXEXT): test/zeroize.c $(DEP)
 	echo "  CC    test/zeroize.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/zeroize.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-test/query_compile_time_config$(EXEXT): test/query_compile_time_config.c test/query_config.c $(DEP)
+test/query_compile_time_config$(EXEXT): test/query_compile_time_config.c test/query_config.o test/query_config.h $(DEP)
 	echo "  CC    test/query_compile_time_config.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/query_compile_time_config.c test/query_config.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/query_compile_time_config.c test/query_config.o $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 util/pem2der$(EXEXT): util/pem2der.c $(DEP)
 	echo "  CC    util/pem2der.c"
@@ -347,6 +393,10 @@ x509/cert_req$(EXEXT): x509/cert_req.c $(DEP)
 	echo "  CC    x509/cert_req.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) x509/cert_req.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
+x509/load_roots$(EXEXT): x509/load_roots.c $(DEP)
+	echo "  CC    x509/load_roots.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) x509/load_roots.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
 x509/req_app$(EXEXT): x509/req_app.c $(DEP)
 	echo "  CC    x509/req_app.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) x509/req_app.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
@@ -359,10 +409,12 @@ clean:
 ifndef WINDOWS
 	rm -f $(APPS)
 	-rm -f ssl/ssl_pthread_server$(EXEXT)
-	-rm -f test/cpp_dummy_build$(EXEXT)
+	-rm -f test/cpp_dummy_build.cpp test/cpp_dummy_build$(EXEXT)
+	-rm -f test/dlopen$(EXEXT)
 else
 	if exist *.o del /Q /F *.o
 	if exist *.exe del /Q /F *.exe
+	if exist test\cpp_dummy_build.cpp del /Q /F test\cpp_dummy_build.cpp
 endif
 	$(MAKE) -C fuzz clean
 

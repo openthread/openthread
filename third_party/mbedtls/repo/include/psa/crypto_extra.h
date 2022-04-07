@@ -30,6 +30,7 @@
 
 #include "mbedtls/platform_util.h"
 
+#include "crypto_types.h"
 #include "crypto_compat.h"
 
 #ifdef __cplusplus
@@ -39,6 +40,10 @@ extern "C" {
 /* UID for secure storage seed */
 #define PSA_CRYPTO_ITS_RANDOM_SEED_UID 0xFFFFFF52
 
+/* See config.h for definition */
+#if !defined(MBEDTLS_PSA_KEY_SLOT_COUNT)
+#define MBEDTLS_PSA_KEY_SLOT_COUNT 32
+#endif
 
 /** \addtogroup attributes
  * @{
@@ -175,6 +180,9 @@ static inline void psa_clear_key_slot_number(
  *         The secure element driver for the specified lifetime does not
  *         support registering a key.
  * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The identifier in \p attributes is invalid, namely the identifier is
+ *         not in the user range.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         \p attributes specifies a lifetime which is not located
  *         in a secure element.
  * \retval #PSA_ERROR_INVALID_ARGUMENT
@@ -183,8 +191,10 @@ static inline void psa_clear_key_slot_number(
  * \retval #PSA_ERROR_NOT_PERMITTED
  *         The caller is not authorized to register the specified key slot.
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE
  * \retval #PSA_ERROR_COMMUNICATION_FAILURE
- * \retval #PSA_ERROR_HARDWARE_FAILURE
+ * \retval #PSA_ERROR_DATA_INVALID
+ * \retval #PSA_ERROR_DATA_CORRUPT
  * \retval #PSA_ERROR_CORRUPTION_DETECTED
  * \retval #PSA_ERROR_BAD_STATE
  *         The library has not been previously initialized by psa_crypto_init().
@@ -401,10 +411,9 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
 
 /* We need to expand the sample definition of this macro from
  * the API definition. */
-#undef PSA_ALG_IS_HASH_AND_SIGN
-#define PSA_ALG_IS_HASH_AND_SIGN(alg)                                   \
-    (PSA_ALG_IS_RSA_PSS(alg) || PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg) ||    \
-     PSA_ALG_IS_DSA(alg) || PSA_ALG_IS_ECDSA(alg))
+#undef PSA_ALG_IS_VENDOR_HASH_AND_SIGN
+#define PSA_ALG_IS_VENDOR_HASH_AND_SIGN(alg)    \
+    PSA_ALG_IS_DSA(alg)
 
 /**@}*/
 
@@ -635,19 +644,173 @@ static inline psa_ecc_family_t mbedtls_ecc_group_to_psa( mbedtls_ecp_group_id gr
  *
  * \param curve         A PSA elliptic curve identifier
  *                      (`PSA_ECC_FAMILY_xxx`).
- * \param byte_length   The byte-length of a private key on \p curve.
+ * \param bits          The bit-length of a private key on \p curve.
+ * \param bits_is_sloppy If true, \p bits may be the bit-length rounded up
+ *                      to the nearest multiple of 8. This allows the caller
+ *                      to infer the exact curve from the length of a key
+ *                      which is supplied as a byte string.
  *
  * \return              The corresponding Mbed TLS elliptic curve identifier
  *                      (`MBEDTLS_ECP_DP_xxx`).
  * \return              #MBEDTLS_ECP_DP_NONE if \c curve is not recognized.
- * \return              #MBEDTLS_ECP_DP_NONE if \p byte_length is not
+ * \return              #MBEDTLS_ECP_DP_NONE if \p bits is not
  *                      correct for \p curve.
  */
 mbedtls_ecp_group_id mbedtls_ecc_group_of_psa( psa_ecc_family_t curve,
-                                               size_t byte_length );
+                                               size_t bits,
+                                               int bits_is_sloppy );
 #endif /* MBEDTLS_ECP_C */
 
 /**@}*/
+
+/** \defgroup psa_external_rng External random generator
+ * @{
+ */
+
+#if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+/** External random generator function, implemented by the platform.
+ *
+ * When the compile-time option #MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG is enabled,
+ * this function replaces Mbed TLS's entropy and DRBG modules for all
+ * random generation triggered via PSA crypto interfaces.
+ *
+ * \note This random generator must deliver random numbers with cryptographic
+ *       quality and high performance. It must supply unpredictable numbers
+ *       with a uniform distribution. The implementation of this function
+ *       is responsible for ensuring that the random generator is seeded
+ *       with sufficient entropy. If you have a hardware TRNG which is slow
+ *       or delivers non-uniform output, declare it as an entropy source
+ *       with mbedtls_entropy_add_source() instead of enabling this option.
+ *
+ * \param[in,out] context       Pointer to the random generator context.
+ *                              This is all-bits-zero on the first call
+ *                              and preserved between successive calls.
+ * \param[out] output           Output buffer. On success, this buffer
+ *                              contains random data with a uniform
+ *                              distribution.
+ * \param output_size           The size of the \p output buffer in bytes.
+ * \param[out] output_length    On success, set this value to \p output_size.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success. The output buffer contains \p output_size bytes of
+ *         cryptographic-quality random data, and \c *output_length is
+ *         set to \p output_size.
+ * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY
+ *         The random generator requires extra entropy and there is no
+ *         way to obtain entropy under current environment conditions.
+ *         This error should not happen under normal circumstances since
+ *         this function is responsible for obtaining as much entropy as
+ *         it needs. However implementations of this function may return
+ *         #PSA_ERROR_INSUFFICIENT_ENTROPY if there is no way to obtain
+ *         entropy without blocking indefinitely.
+ * \retval #PSA_ERROR_HARDWARE_FAILURE
+ *         A failure of the random generator hardware that isn't covered
+ *         by #PSA_ERROR_INSUFFICIENT_ENTROPY.
+ */
+psa_status_t mbedtls_psa_external_get_random(
+    mbedtls_psa_external_random_context_t *context,
+    uint8_t *output, size_t output_size, size_t *output_length );
+#endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+
+/**@}*/
+
+/** \defgroup psa_builtin_keys Built-in keys
+ * @{
+ */
+
+/** The minimum value for a key identifier that is built into the
+ * implementation.
+ *
+ * The range of key identifiers from #MBEDTLS_PSA_KEY_ID_BUILTIN_MIN
+ * to #MBEDTLS_PSA_KEY_ID_BUILTIN_MAX within the range from
+ * #PSA_KEY_ID_VENDOR_MIN and #PSA_KEY_ID_VENDOR_MAX and must not intersect
+ * with any other set of implementation-chosen key identifiers.
+ *
+ * This value is part of the library's ABI since changing it would invalidate
+ * the values of built-in key identifiers in applications.
+ */
+#define MBEDTLS_PSA_KEY_ID_BUILTIN_MIN          ((psa_key_id_t)0x7fff0000)
+
+/** The maximum value for a key identifier that is built into the
+ * implementation.
+ *
+ * See #MBEDTLS_PSA_KEY_ID_BUILTIN_MIN for more information.
+ */
+#define MBEDTLS_PSA_KEY_ID_BUILTIN_MAX          ((psa_key_id_t)0x7fffefff)
+
+/** A slot number identifying a key in a driver.
+ *
+ * Values of this type are used to identify built-in keys.
+ */
+typedef uint64_t psa_drv_slot_number_t;
+
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+/** Test whether a key identifier belongs to the builtin key range.
+ *
+ * \param key_id  Key identifier to test.
+ *
+ * \retval 1
+ *         The key identifier is a builtin key identifier.
+ * \retval 0
+ *         The key identifier is not a builtin key identifier.
+ */
+static inline int psa_key_id_is_builtin( psa_key_id_t key_id )
+{
+    return( ( key_id >= MBEDTLS_PSA_KEY_ID_BUILTIN_MIN ) &&
+            ( key_id <= MBEDTLS_PSA_KEY_ID_BUILTIN_MAX ) );
+}
+
+/** Platform function to obtain the location and slot number of a built-in key.
+ *
+ * An application-specific implementation of this function must be provided if
+ * #MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS is enabled. This would typically be provided
+ * as part of a platform's system image.
+ *
+ * #MBEDTLS_SVC_KEY_ID_GET_KEY_ID(\p key_id) needs to be in the range from
+ * #MBEDTLS_PSA_KEY_ID_BUILTIN_MIN to #MBEDTLS_PSA_KEY_ID_BUILTIN_MAX.
+ *
+ * In a multi-application configuration
+ * (\c MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER is defined),
+ * this function should check that #MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(\p key_id)
+ * is allowed to use the given key.
+ *
+ * \param key_id                The key ID for which to retrieve the
+ *                              location and slot attributes.
+ * \param[out] lifetime         On success, the lifetime associated with the key
+ *                              corresponding to \p key_id. Lifetime is a
+ *                              combination of which driver contains the key,
+ *                              and with what persistence level the key is
+ *                              intended to be used. If the platform
+ *                              implementation does not contain specific
+ *                              information about the intended key persistence
+ *                              level, the persistence level may be reported as
+ *                              #PSA_KEY_PERSISTENCE_DEFAULT.
+ * \param[out] slot_number      On success, the slot number known to the driver
+ *                              registered at the lifetime location reported
+ *                              through \p lifetime which corresponds to the
+ *                              requested built-in key.
+ *
+ * \retval #PSA_SUCCESS
+ *         The requested key identifier designates a built-in key.
+ *         In a multi-application configuration, the requested owner
+ *         is allowed to access it.
+ * \retval #PSA_ERROR_DOES_NOT_EXIST
+ *         The requested key identifier is not a built-in key which is known
+ *         to this function. If a key exists in the key storage with this
+ *         identifier, the data from the storage will be used.
+ * \return (any other error)
+ *         Any other error is propagated to the function that requested the key.
+ *         Common errors include:
+ *         - #PSA_ERROR_NOT_PERMITTED: the key exists but the requested owner
+ *           is not allowed to access it.
+ */
+psa_status_t mbedtls_psa_platform_get_builtin_key(
+    mbedtls_svc_key_id_t key_id,
+    psa_key_lifetime_t *lifetime,
+    psa_drv_slot_number_t *slot_number );
+#endif /* MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
+
+/** @} */
 
 #ifdef __cplusplus
 }

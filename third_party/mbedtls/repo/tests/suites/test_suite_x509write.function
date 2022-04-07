@@ -6,25 +6,6 @@
 #include "mbedtls/oid.h"
 #include "mbedtls/rsa.h"
 
-/* These are the same depends as the test function x509_crs_check_opaque(),
- * the only function using PSA here. Using a weaker condition would result in
- * warnings about the static functions defined in psa_crypto_helpers.h being
- * unused. */
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && \
-    defined(MBEDTLS_PEM_WRITE_C) && \
-    defined(MBEDTLS_X509_CSR_WRITE_C)
-#include "psa/crypto.h"
-#include "mbedtls/psa_util.h"
-#include "test/psa_crypto_helpers.h"
-#define PSA_INIT( ) PSA_ASSERT( psa_crypto_init( ) )
-#else
-/* Define empty macros so that we can use them in the preamble and teardown
- * of every test function that uses PSA conditionally based on
- * MBEDTLS_USE_PSA_CRYPTO. */
-#define PSA_INIT( ) ( (void) 0 )
-#define PSA_DONE( ) ( (void) 0 )
-#endif /* MBEDTLS_USE_PSA_CRYPTO && MBEDTLS_PEM_WRITE_C && MBEDTLS_X509_CSR_WRITE_C */
-
 #if defined(MBEDTLS_RSA_C)
 int mbedtls_rsa_decrypt_func( void *ctx, int mode, size_t *olen,
                        const unsigned char *input, unsigned char *output,
@@ -219,7 +200,7 @@ void x509_crt_check( char *subject_key_file, char *subject_pwd,
                      char *serial_str, char *not_before, char *not_after,
                      int md_type, int key_usage, int set_key_usage,
                      int cert_type, int set_cert_type, int auth_ident,
-                     int ver, char *cert_check_file, int rsa_alt )
+                     int ver, char *cert_check_file, int rsa_alt, int is_ca )
 {
     mbedtls_pk_context subject_key, issuer_key, issuer_key_alt;
     mbedtls_pk_context *key = &issuer_key;
@@ -265,7 +246,7 @@ void x509_crt_check( char *subject_key_file, char *subject_pwd,
     (void) rsa_alt;
 #endif
 
-    TEST_ASSERT( mbedtls_mpi_read_string( &serial, 10, serial_str ) == 0 );
+    TEST_ASSERT( mbedtls_test_read_mpi( &serial, 10, serial_str ) == 0 );
 
     if( ver != -1 )
         mbedtls_x509write_crt_set_version( &crt, ver );
@@ -282,7 +263,9 @@ void x509_crt_check( char *subject_key_file, char *subject_pwd,
 
     if( crt.version >= MBEDTLS_X509_CRT_VERSION_3 )
     {
-        TEST_ASSERT( mbedtls_x509write_crt_set_basic_constraints( &crt, 0, 0 ) == 0 );
+        /* For the CA case, a path length of -1 means unlimited. */
+        TEST_ASSERT( mbedtls_x509write_crt_set_basic_constraints( &crt, is_ca,
+                                                                  (is_ca ? -1 : 0) ) == 0 );
         TEST_ASSERT( mbedtls_x509write_crt_set_subject_key_identifier( &crt ) == 0 );
         if( auth_ident )
             TEST_ASSERT( mbedtls_x509write_crt_set_authority_key_identifier( &crt ) == 0 );
