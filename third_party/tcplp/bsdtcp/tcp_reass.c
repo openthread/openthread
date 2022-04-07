@@ -51,7 +51,7 @@
  * not need to update it if only part of the segment is trimmed off.
  */
 int
-tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_t data_offset, struct signals* sig)
+tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_t data_offset, struct tcplp_signals* sig)
 {
 	size_t mergeable, written;
 	size_t offset;

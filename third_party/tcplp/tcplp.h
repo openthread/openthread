@@ -53,7 +53,7 @@ extern "C" {
 #define RELOOKUP_REQUIRED -1
 #define CONN_LOST_NORMAL 0
 
-struct signals {
+struct tcplp_signals {
     int links_popped;
     bool conn_established;
     bool recvbuf_notempty;

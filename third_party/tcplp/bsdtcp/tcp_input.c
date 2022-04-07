@@ -103,7 +103,7 @@ static void	 tcp_dooptions(struct tcpopt *, uint8_t *, int, int);
 static void
 tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
     struct tcpcb *tp, int drop_hdrlen, int tlen, uint8_t iptos,
-    struct signals* sig);
+    struct tcplp_signals* sig);
 static void	 tcp_xmit_timer(struct tcpcb *, int);
 void tcp_hc_get(/*struct in_conninfo *inc*/ struct tcpcb* tp, struct hc_metrics_lite *hc_metrics_lite);
 static void	 tcp_newreno_partial_ack(struct tcpcb *, struct tcphdr *);
@@ -431,7 +431,7 @@ tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otIn
 /* NOTE: tcp_fields_to_host(th) must be called before this function is called. */
 int
 tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
-          struct signals* sig)
+          struct tcplp_signals* sig)
 {
 	/*
 	 * samkumar: I significantly modified this function, compared to the
@@ -948,7 +948,7 @@ drop:
 static void
 tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
     struct tcpcb *tp, int drop_hdrlen, int tlen, uint8_t iptos,
-    struct signals* sig)
+    struct tcplp_signals* sig)
 {
 	/*
 	 * samkumar: All code pertaining to locks, stats, and debug has been
