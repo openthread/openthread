@@ -43,6 +43,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/time_ticker.hpp"
@@ -296,6 +297,16 @@ public:
      *
      */
     static const char *IpProtoToString(uint8_t aIpProto);
+
+    /**
+     * This static method converts an IP header ECN value to a string.
+     *
+     * @param[in] aEcn   The 2-bit ECN value.
+     *
+     * @returns The string representation of @p aEcn.
+     *
+     */
+    static const char *EcnToString(Ecn aEcn);
 
 private:
     static constexpr uint8_t kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
