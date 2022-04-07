@@ -267,7 +267,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
-        if (!curMessage->IsDirectTransmission())
+        if (!curMessage->IsDirectTransmission() || curMessage->IsResolvingAddress())
         {
             nextMessage = curMessage->GetNext();
             continue;
@@ -311,12 +311,9 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
             ExitNow();
 
 #if OPENTHREAD_FTD
-
         case kErrorAddressQuery:
-            mSendQueue.Dequeue(*curMessage);
-            mResolvingQueue.Enqueue(*curMessage);
+            curMessage->SetResolvingAddress(true);
             continue;
-
 #endif
 
         default:

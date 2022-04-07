@@ -264,10 +264,6 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
 
     Get<MeshForwarder>().GetReassemblyQueue().GetInfo(aInfo.m6loReassemblyMessages, aInfo.m6loReassemblyBuffers);
 
-#if OPENTHREAD_FTD
-    Get<MeshForwarder>().GetResolvingQueue().GetInfo(aInfo.mArpMessages, aInfo.mArpBuffers);
-#endif
-
     Get<Ip6::Ip6>().GetSendQueue().GetInfo(aInfo.mIp6Messages, aInfo.mIp6Buffers);
 
 #if OPENTHREAD_FTD

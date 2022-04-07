@@ -203,15 +203,16 @@ protected:
 #endif
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
 
-        uint8_t mType : 3;          // The message type.
-        uint8_t mSubType : 4;       // The message sub type.
-        bool    mDirectTx : 1;      // Whether a direct transmission is required.
-        bool    mLinkSecurity : 1;  // Whether link security is enabled.
-        uint8_t mPriority : 2;      // The message priority level (higher value is higher priority).
-        bool    mInPriorityQ : 1;   // Whether the message is queued in normal or priority queue.
-        bool    mTxSuccess : 1;     // Whether the direct tx of the message was successful.
-        bool    mDoNotEvict : 1;    // Whether this message may be evicted.
-        bool    mMulticastLoop : 1; // Whether this multicast message may be looped back.
+        uint8_t mType : 3;             // The message type.
+        uint8_t mSubType : 4;          // The message sub type.
+        bool    mDirectTx : 1;         // Whether a direct transmission is required.
+        bool    mLinkSecurity : 1;     // Whether link security is enabled.
+        uint8_t mPriority : 2;         // The message priority level (higher value is higher priority).
+        bool    mInPriorityQ : 1;      // Whether the message is queued in normal or priority queue.
+        bool    mTxSuccess : 1;        // Whether the direct tx of the message was successful.
+        bool    mDoNotEvict : 1;       // Whether this message may be evicted.
+        bool    mMulticastLoop : 1;    // Whether this multicast message may be looped back.
+        bool    mResolvingAddress : 1; // Whether the message is pending an address query resolution.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
         bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
@@ -1029,6 +1030,23 @@ public:
      *
      */
     void SetDoNotEvict(bool aDoNotEvict) { GetMetadata().mDoNotEvict = aDoNotEvict; }
+
+    /**
+     * This method indicates whether the message is waiting for an address query resolution.
+     *
+     * @retval TRUE   If the message is waiting for address query resolution.
+     * @retval FALSE  If the message is not waiting for address query resolution.
+     *
+     */
+    bool IsResolvingAddress(void) const { return GetMetadata().mResolvingAddress; }
+
+    /**
+     * This method sets whether the message is waiting for an address query resolution.
+     *
+     * @param[in] aResolvingAddress    TRUE if message is waiting for address resolution, FALSE otherwise.
+     *
+     */
+    void SetResolvingAddress(bool aResolvingAddress) { GetMetadata().mResolvingAddress = aResolvingAddress; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.

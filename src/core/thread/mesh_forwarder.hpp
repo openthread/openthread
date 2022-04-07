@@ -311,15 +311,6 @@ public:
      */
     void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
 
-#if OPENTHREAD_FTD
-    /**
-     * This method returns a reference to the resolving queue.
-     *
-     * @returns  A reference to the resolving queue.
-     *
-     */
-    const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
-#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
      * This method handles a deferred ack.
@@ -536,10 +527,6 @@ private:
                                       uint16_t &     aSourcePort,
                                       uint16_t &     aDestPort);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    otError ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Address &aDst);
-#endif
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
     const char *MessagePriorityToString(const Message &aMessage);
@@ -605,7 +592,6 @@ private:
 
 #if OPENTHREAD_FTD
     FragmentPriorityList mFragmentPriorityList;
-    PriorityQueue        mResolvingQueue;
     IndirectSender       mIndirectSender;
 #endif
 
