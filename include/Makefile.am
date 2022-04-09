@@ -84,6 +84,7 @@ openthread_headers                      = \
     openthread/srp_server.h               \
     openthread/tasklet.h                  \
     openthread/tcp.h                      \
+    openthread/tcp_ext.h                  \
     openthread/thread.h                   \
     openthread/thread_ftd.h               \
     openthread/trel.h                     \
