@@ -62,7 +62,7 @@ Error AnycastLocator::Locate(const Ip6::Address &aAnycastAddress, Callback aCall
 {
     Error            error   = kErrorNone;
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
     VerifyOrExit((aCallback != nullptr) && Get<Mle::Mle>().IsAnycastLocator(aAnycastAddress),
                  error = kErrorInvalidArgs);
@@ -78,9 +78,7 @@ Error AnycastLocator::Locate(const Ip6::Address &aAnycastAddress, Callback aCall
         IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleResponse, this));
     }
 
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerAddr(aAnycastAddress);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    messageInfo.SetSockAddrToRlocPeerAddrTo(aAnycastAddress);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleResponse, this));
 
