@@ -1186,6 +1186,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				{
 					uint32_t poppedbytes = lbuf_pop(&tp->sendbuf, acked, &sig->links_popped);
 					KASSERT(poppedbytes == acked, ("More bytes were acked than are in the send buffer"));
+					sig->bytes_acked += poppedbytes;
 				}
 				if (SEQ_GT(tp->snd_una, tp->snd_recover) &&
 				    SEQ_LEQ(th->th_ack, tp->snd_recover))
@@ -1329,10 +1330,9 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 			 */
 
 			if (!tpiscantrcv(tp)) {
-				size_t usedbefore = cbuf_used_space(&tp->recvbuf);
 				cbuf_write(&tp->recvbuf, msg, otMessageGetOffset(msg) + drop_hdrlen, tlen, cbuf_copy_from_message);
-				if (usedbefore == 0 && tlen > 0) {
-					sig->recvbuf_notempty = true;
+				if (tlen > 0) {
+					sig->recvbuf_added = true;
 				}
 			} else {
 				/*
@@ -2213,10 +2213,12 @@ process_ACK:
 			tp->snd_wnd -= usedspace;
 			poppedbytes = lbuf_pop(&tp->sendbuf, usedspace, &sig->links_popped);
 			KASSERT(poppedbytes == usedspace, ("Could not fully empty send buffer"));
+			sig->bytes_acked += poppedbytes;
 			ourfinisacked = 1;
 		} else {
 			uint32_t poppedbytes = lbuf_pop(&tp->sendbuf, acked, &sig->links_popped);
 			KASSERT(poppedbytes == acked, ("Could not remove acked bytes from send buffer"));
+			sig->bytes_acked += poppedbytes;
 			tp->snd_wnd -= acked;
 			ourfinisacked = 0;
 		}
@@ -2414,10 +2416,9 @@ step6:
 			 * sbappendstream_locked(&so->so_rcv, m, 0);).
 			 */
 			if (!tpiscantrcv(tp)) {
-				size_t usedbefore = cbuf_used_space(&tp->recvbuf);
 				cbuf_write(&tp->recvbuf, msg, otMessageGetOffset(msg) + drop_hdrlen, tlen, cbuf_copy_from_message);
-				if (usedbefore == 0 && tlen > 0) {
-					sig->recvbuf_notempty = true;
+				if (tlen > 0) {
+					sig->recvbuf_added = true;
 				}
 			} else if (tlen > 0) {
 				/*

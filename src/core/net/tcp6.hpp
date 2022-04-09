@@ -107,7 +107,7 @@ public:
          * @retval kErrorFailed  Failed to open the TCP endpoint.
          *
          */
-        Error Initialize(Instance &aInstance, otTcpEndpointInitializeArgs &aArgs);
+        Error Initialize(Instance &aInstance, const otTcpEndpointInitializeArgs &aArgs);
 
         /**
          * Obtains the Instance that was associated with this Endpoint upon
@@ -384,6 +384,13 @@ public:
         void CancelTimer(uint8_t aTimerFlag);
         bool FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, TimeMilli &aEarliestFutureExpiry);
 
+        void PostCallbacksAfterSend(size_t aSent, size_t aBacklogBefore);
+        bool FirePendingCallbacks(void);
+
+        size_t GetSendBufferBytes(void) const;
+        size_t GetInFlightBytes(void) const;
+        size_t GetBacklogBytes(void) const;
+
         Address &      GetLocalIp6Address(void);
         const Address &GetLocalIp6Address(void) const;
         Address &      GetForeignIp6Address(void);
@@ -418,7 +425,7 @@ public:
          * @retval kErrorFailed  Failed to open the TCP listener.
          *
          */
-        Error Initialize(Instance &aInstance, otTcpListenerInitializeArgs &aArgs);
+        Error Initialize(Instance &aInstance, const otTcpListenerInitializeArgs &aArgs);
 
         /**
          * Obtains the otInstance that was associated with this Listener upon
@@ -656,7 +663,16 @@ private:
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
 
-    void ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct tcplp_signals &aSignals);
+    static constexpr uint8_t kEstablishedCallbackFlag      = (1 << 0);
+    static constexpr uint8_t kSendDoneCallbackFlag         = (1 << 1);
+    static constexpr uint8_t kForwardProgressCallbackFlag  = (1 << 2);
+    static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
+    static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
+
+    void ProcessSignals(Endpoint &            aEndpoint,
+                        otLinkedBuffer *      aPriorHead,
+                        size_t                aPriorBacklog,
+                        struct tcplp_signals &aSignals);
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
@@ -664,7 +680,11 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        ProcessTimers(void);
 
+    static void HandleTasklet(Tasklet &aTasklet);
+    void        ProcessCallbacks(void);
+
     TimerMilli mTimer;
+    Tasklet    mTasklet;
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;

@@ -65,7 +65,7 @@ void lbuf_extend(struct lbufhead* buffer, size_t numbytes);
    NUMBYTES bytes in the buffer to begin with). *NTRAVERSED is incremented once
    for each entry in the buffer that is no longer referenced and can be
    reclaimed. */
-size_t lbuf_pop(struct lbufhead* buffer, size_t numbytes, int* ntraversed);
+size_t lbuf_pop(struct lbufhead* buffer, size_t numbytes, uint32_t* ntraversed);
 
 /* Given a range of indices, specified by an OFFSET from the start and a
    length NUMBYTES, this function locates the chain of linked buffer entries
@@ -83,6 +83,6 @@ int lbuf_getrange(struct lbufhead* buffer, size_t offset, size_t numbytes,
                   struct otLinkedBuffer** last, size_t* lastextra);
 
 /* Returns the total number of bytes stored in the buffer. */
-size_t lbuf_used_space(struct lbufhead* buffer);
+size_t lbuf_used_space(const struct lbufhead* buffer);
 
 #endif
