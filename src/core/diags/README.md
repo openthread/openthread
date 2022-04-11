@@ -199,7 +199,7 @@ Done
 Set the RCP IEEE 802.15.4 Channel value for diagnostics module.
 
 ```bash
-> diag channel 11
+> diag rcp channel 11
 Done
 ```
 
@@ -217,7 +217,7 @@ Done
 RCP echoes the given message.
 
 ```bash
-> diag echo 0123456789
+> diag rcp echo 0123456789
 0123456789
 Done
 ```
@@ -227,7 +227,7 @@ Done
 RCP echoes the message with the given number of bytes.
 
 ```bash
-> diag echo -n 20
+> diag rcp echo -n 20
 01234567890123456789
 Done
 ```
