@@ -86,8 +86,17 @@ class OtCliCommandRunner(OTCommandHandler):
 
     __PATTERN_LOG_LINE = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
                                     r'|(-.*-+: )'  # e.g. -CLI-----: 
+                                    r'|(\[[DINWC\-]\] (?=[\w\-]{14}:)\w+-*:)'  # e.g. [I] Mac-----------:
                                     r')')
     """regex used to filter logs"""
+
+    assert __PATTERN_LOG_LINE.match('[I] ChannelMonitor: debug log')
+    assert __PATTERN_LOG_LINE.match('[I] Mac-----------: info log')
+    assert __PATTERN_LOG_LINE.match('[N] MeshForwarder-: note    log')
+    assert __PATTERN_LOG_LINE.match('[W] Notifier------: warn log')
+    assert __PATTERN_LOG_LINE.match('[C] Mle-----------: critical log')
+    assert __PATTERN_LOG_LINE.match('[-] Settings------: none log')
+    assert not __PATTERN_LOG_LINE.match('[-] Settings-----: none log')  # not enough `-` after module name
 
     __ASYNC_COMMANDS = {'scan', 'ping', 'discover'}
 
