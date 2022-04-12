@@ -2145,7 +2145,13 @@ class NodeImpl:
         return result
 
     def reset(self):
-        self.send_command('reset', expect_command_echo=False)
+        self._reset('reset')
+
+    def factory_reset(self):
+        self._reset('factoryreset')
+
+    def _reset(self, cmd):
+        self.send_command(cmd, expect_command_echo=False)
         time.sleep(self.RESET_DELAY)
         # Send a "version" command and drain the CLI output after reset
         self.send_command('version', expect_command_echo=False)
