@@ -207,7 +207,7 @@ public:
      * @param[in] aLogLevel  A log level.
      *
      */
-    static void SetLogLevel(LogLevel aLogLevel) { sLogLevel = aLogLevel; }
+    static void SetLogLevel(LogLevel aLogLevel);
 #endif
 
     /**
