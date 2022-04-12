@@ -324,6 +324,43 @@ public:
      */
     Error GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
 
+    /**
+     * This method finds and returns the list of RLOCs of border routers providing external IPv6 connectivity.
+     *
+     * A border router is considered to provide external IPv6 connectivity if it has added at least one external route
+     * entry, or an on-mesh prefix with default-route and on-mesh flags set.
+     *
+     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * full set and not the stable subset).
+     *
+     * @param[in]      aRoleFilter   Indicates which devices to include (any role, router role only, or child only).
+     * @param[out]     aRlocs        Array to output the list of RLOCs.
+     * @param[in,out]  aRlocsLength  On entry, @p aRlocs array length (max number of elements).
+     *                               On exit, number RLOC16 entries added in @p aRlocs.
+     *
+     * @retval kErrorNone     Successfully found all RLOC16s and updated @p aRlocs and @p aRlocsLength.
+     * @retval kErrorNoBufs   Ran out of space in @p aRlocs array. @p aRlocs and @p aRlocsLength are still updated up
+     *                        to the maximum array length.
+     *
+     */
+    Error FindBorderRouters(RoleFilter aRoleFilter, uint16_t aRlocs[], uint8_t &aRlocsLength) const;
+
+    /**
+     * This method counts the number of border routers providing external IPv6 connectivity.
+     *
+     * A border router is considered to provide external IPv6 connectivity if it has added at least one external route
+     * entry, or an on-mesh prefix with default-route and on-mesh flags set.
+     *
+     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * full set and not the stable subset).
+     *
+     * @param[in] aRoleFilter   Indicates which RLOCs to include (any role, router only, or child only).
+     *
+     * @returns The number of border routers in Thread Network Data matching @p aRoleFilter.
+     *
+     */
+    uint8_t CountBorderRouters(RoleFilter aRoleFilter) const;
+
 protected:
     /**
      * This enumeration defines Service Data match mode.
