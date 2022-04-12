@@ -141,103 +141,84 @@ Error MeshForwarder::SendMessage(Message &aMessage)
 void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
 {
     Ip6::Address ip6Dst;
-    bool         enqueuedMessage = false;
+    bool         didUpdate = false;
 
-    for (Message &message : mResolvingQueue)
+    for (Message &message : mSendQueue)
     {
-        if (message.GetType() != Message::kTypeIp6)
+        if (!message.IsResolvingAddress())
         {
             continue;
         }
 
         IgnoreError(message.Read(Ip6::Header::kDestinationFieldOffset, ip6Dst));
 
-        if (ip6Dst == aEid)
+        if (ip6Dst != aEid)
         {
-            mResolvingQueue.Dequeue(message);
-
-            if (aError == kErrorNone)
-            {
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-                // Pass back to IPv6 layer for DUA destination resolved by Backbone Query
-                if (ForwardDuaToBackboneLink(message, ip6Dst) != kErrorNone)
-#endif
-                {
-                    mSendQueue.Enqueue(message);
-                    enqueuedMessage = true;
-                }
-            }
-            else
-            {
-                LogMessage(kMessageDrop, message, aError);
-                message.Free();
-            }
+            continue;
         }
+
+        if (aError != kErrorNone)
+        {
+            LogMessage(kMessageDrop, message, kErrorAddressQuery);
+            mSendQueue.DequeueAndFree(message);
+            continue;
+        }
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        // Pass back to IPv6 layer for DUA destination resolved
+        // by Backbone Query
+        if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Dst) &&
+            Get<AddressResolver>().LookUp(ip6Dst) == Get<Mle::MleRouter>().GetRloc16())
+        {
+            uint8_t hopLimit;
+
+            mSendQueue.Dequeue(message);
+
+            // Avoid decreasing Hop Limit twice
+            IgnoreError(message.Read(Ip6::Header::kHopLimitFieldOffset, hopLimit));
+            hopLimit++;
+            message.Write(Ip6::Header::kHopLimitFieldOffset, hopLimit);
+
+            IgnoreError(Get<Ip6::Ip6>().HandleDatagram(message, nullptr, nullptr, /* aFromHost */ false));
+            continue;
+        }
+#endif
+
+        message.SetResolvingAddress(false);
+        didUpdate = true;
     }
 
-    if (enqueuedMessage)
+    if (didUpdate)
     {
         mScheduleTransmissionTask.Post();
     }
 }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-Error MeshForwarder::ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Address &aDst)
-{
-    Error   error = kErrorNone;
-    uint8_t ttl;
-
-    VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aDst),
-                 error = kErrorNoRoute);
-
-    VerifyOrExit(Get<AddressResolver>().LookUp(aDst) == Get<Mle::MleRouter>().GetRloc16(), error = kErrorNoRoute);
-
-    // Avoid decreasing TTL twice
-    IgnoreError(aMessage.Read(Ip6::Header::kHopLimitFieldOffset, ttl));
-    ttl++;
-    aMessage.Write(Ip6::Header::kHopLimitFieldOffset, ttl);
-
-    IgnoreError(Get<Ip6::Ip6>().HandleDatagram(aMessage, nullptr, nullptr, /* aFromHost */ false));
-
-exit:
-    return error;
-}
-#endif
-
 Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 {
-    Error          error    = kErrorNotFound;
-    PriorityQueue *queues[] = {&mResolvingQueue, &mSendQueue};
-    Message *      evict    = nullptr;
+    Error    error = kErrorNotFound;
+    Message *evict = nullptr;
 
-    // search for a lower priority message to evict (choose lowest priority message among all queues)
-    for (PriorityQueue *queue : queues)
+    // Search for a lower priority message to evict
+    for (uint8_t priority = 0; priority < aPriority; priority++)
     {
-        for (uint8_t priority = 0; priority < aPriority; priority++)
+        for (Message *message = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
+             message          = message->GetNext())
         {
-            for (Message *message = queue->GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
-                 message          = message->GetNext())
+            if (message->GetPriority() != priority)
             {
-                if (message->GetPriority() != priority)
-                {
-                    break;
-                }
-
-                if (message->GetDoNotEvict())
-                {
-                    continue;
-                }
-
-                evict     = message;
-                aPriority = static_cast<Message::Priority>(priority);
                 break;
             }
-        }
-    }
 
-    if (evict != nullptr)
-    {
-        ExitNow(error = kErrorNone);
+            if (message->GetDoNotEvict())
+            {
+                continue;
+            }
+
+            evict = message;
+            error = kErrorNone;
+            ExitNow();
+        }
     }
 
     for (uint8_t priority = aPriority; priority < Message::kNumPriorities; priority++)
