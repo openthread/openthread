@@ -69,6 +69,7 @@ enum
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 extern int      sSockFd;
 extern uint16_t sPortOffset;
+uint64_t        sDelayToTransmit;
 #else
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
@@ -593,6 +594,9 @@ static void radioReceive(otInstance *aInstance)
 {
     bool isTxDone = false;
     bool isAck    = otMacFrameIsAck(&sReceiveFrame);
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    struct timespec remaining, request = {0, 1000}; // for nanosleep
+#endif
 
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
@@ -610,6 +614,11 @@ static void radioReceive(otInstance *aInstance)
         // Simulate tx done when receiving the echo frame.
         else
         {
+            // wait for the transmission delay
+            while (otPlatRadioGetNow(aInstance) < sDelayToTransmit)
+            {
+                nanosleep(&request, &remaining);
+            }
             isTxDone = !isAck && sTransmitFrame.mLength == sReceiveFrame.mLength &&
                        memcmp(sTransmitFrame.mPsdu, sReceiveFrame.mPsdu, sTransmitFrame.mLength) == 0;
         }
@@ -894,12 +903,14 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     struct Event event;
 
-    event.mDelay      = 1; // 1us for now
     event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
-    event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
+    event.mDataLength = 1 + aFrame->mLength;                        // include channel in first byte
+    event.mDelay      = (event.mDataLength * 8 * 1000) / 250 + 400; // 250kbps plus 400us of radio state transision time
     memcpy(event.mData, aMessage, event.mDataLength);
 
     otSimSendEvent(&event);
+
+    sDelayToTransmit = otPlatTimeGet() + event.mDelay;
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
