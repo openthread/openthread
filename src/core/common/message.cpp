@@ -832,15 +832,13 @@ Message::ConstIterator MessageQueue::begin(void) const
     return Message::ConstIterator(GetHead());
 }
 
-void MessageQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
+void MessageQueue::GetInfo(Info &aInfo) const
 {
-    aMessageCount = 0;
-    aBufferCount  = 0;
-
     for (const Message &message : *this)
     {
-        aMessageCount++;
-        aBufferCount += message.GetBufferCount();
+        aInfo.mNumMessages++;
+        aInfo.mNumBuffers += message.GetBufferCount();
+        aInfo.mTotalBytes += message.GetLength();
     }
 }
 
@@ -992,15 +990,13 @@ Message::ConstIterator PriorityQueue::begin(void) const
     return Message::ConstIterator(GetHead());
 }
 
-void PriorityQueue::GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const
+void PriorityQueue::GetInfo(Info &aInfo) const
 {
-    aMessageCount = 0;
-    aBufferCount  = 0;
-
     for (const Message &message : *this)
     {
-        aMessageCount++;
-        aBufferCount += message.GetBufferCount();
+        aInfo.mNumMessages++;
+        aInfo.mNumBuffers += message.GetBufferCount();
+        aInfo.mTotalBytes += message.GetLength();
     }
 }
 
