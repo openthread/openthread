@@ -33,7 +33,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/timer.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"
@@ -41,6 +41,8 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("RouterTable");
 
 RouterTable::Iterator::Iterator(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -58,6 +60,10 @@ RouterTable::RouterTable(Instance &aInstance)
     , mRouterIdSequenceLastUpdated(0)
     , mRouterIdSequence(Random::NonCrypto::GetUint8())
     , mActiveRouterCount(0)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mMinRouterId(0)
+    , mMaxRouterId(Mle::kMaxRouterId)
+#endif
 {
     for (Router &router : mRouters)
     {
@@ -204,7 +210,11 @@ Router *RouterTable::Allocate(void)
     uint8_t freeBit;
 
     // count available router ids
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    for (uint8_t routerId = mMinRouterId; routerId <= mMaxRouterId; routerId++)
+#else
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+#endif
     {
         if (!IsAllocated(routerId) && mRouterIdReuseDelay[routerId] == 0)
         {
@@ -218,7 +228,11 @@ Router *RouterTable::Allocate(void)
     freeBit = Random::NonCrypto::GetUint8InRange(0, numAvailable);
 
     // allocate router
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    for (uint8_t routerId = mMinRouterId; routerId <= mMaxRouterId; routerId++)
+#else
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+#endif
     {
         if (IsAllocated(routerId) || mRouterIdReuseDelay[routerId] > 0)
         {
@@ -256,7 +270,7 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
     Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
-    otLogNoteMle("Allocate router id %d", aRouterId);
+    LogNote("Allocate router id %d", aRouterId);
 
 exit:
     return rval;
@@ -301,7 +315,7 @@ Error RouterTable::Release(uint8_t aRouterId)
     Get<NetworkData::Leader>().RemoveBorderRouter(rloc16, NetworkData::Leader::kMatchModeRouterId);
     Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
-    otLogNoteMle("Release router id %d", aRouterId);
+    LogNote("Release router id %d", aRouterId);
 
 exit:
     return error;
@@ -528,6 +542,27 @@ void RouterTable::HandleTimeTick(void)
         }
     }
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void RouterTable::GetRouterIdRange(uint8_t &aMinRouterId, uint8_t &aMaxRouterId) const
+{
+    aMinRouterId = mMinRouterId;
+    aMaxRouterId = mMaxRouterId;
+}
+
+Error RouterTable::SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aMinRouterId <= aMaxRouterId, error = kErrorInvalidArgs);
+    VerifyOrExit(aMaxRouterId <= Mle::kMaxRouterId, error = kErrorInvalidArgs);
+    mMinRouterId = aMinRouterId;
+    mMaxRouterId = aMaxRouterId;
+
+exit:
+    return error;
+}
+#endif
 
 } // namespace ot
 

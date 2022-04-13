@@ -47,11 +47,11 @@
 timer_t sMicroTimer;
 #endif // __linux__
 
+#include <openthread/logging.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 
-#include "core/common/logging.hpp"
 #include "lib/platform/exit_code.h"
 
 #define MS_PER_S 1000
@@ -270,7 +270,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout)
             remaining = 1;
         }
 
-        aTimeout->tv_sec  = (time_t)remaining / US_PER_S;
+        aTimeout->tv_sec  = (time_t)(remaining / US_PER_S);
         aTimeout->tv_usec = remaining % US_PER_S;
     }
 }

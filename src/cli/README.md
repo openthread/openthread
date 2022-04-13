@@ -89,12 +89,13 @@ Done
 - [prefix](#prefix)
 - [promiscuous](#promiscuous)
 - [pskc](#pskc--p-keypassphrase)
+- [radiofilter](#radiofilter)
 - [rcp](#rcp)
 - [region](#region)
 - [releaserouterid](#releaserouterid-routerid)
 - [reset](#reset)
 - [rloc16](#rloc16)
-- [route](#route-add-prefix-s-prf)
+- [route](#route)
 - [router](#router-list)
 - [routerdowngradethreshold](#routerdowngradethreshold)
 - [routereligible](#routereligible)
@@ -106,8 +107,10 @@ Done
 - [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 - [state](#state)
 - [srp](README_SRP.md)
+- [tcp](README_TCP.md)
 - [thread](#thread-start)
-- [trel](#trel-enable)
+- [trel](#trel)
+- [tvcheck](#tvcheck-enable)
 - [txpower](#txpower)
 - [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
@@ -377,6 +380,18 @@ Get the randomly generated on-link prefix of the Border Router.
 ```bash
 > br onlinkprefix
 fd41:2650:a6f5:0::/64
+Done
+```
+
+### br nat64prefix
+
+Get the local NAT64 prefix of the Border Router.
+
+`OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` is required.
+
+```bash
+> br nat64prefix
+fd14:1078:b3d5:b0b0:0:0::/96
 Done
 ```
 
@@ -1274,6 +1289,16 @@ List all IPv6 addresses assigned to the Thread interface.
 fdde:ad00:beef:0:0:ff:fe00:0
 fdde:ad00:beef:0:558:f56b:d688:799
 fe80:0:0:0:f3d9:2a82:c8d8:fe43
+Done
+```
+
+Use `-v` to get more verbose informations about the address.
+
+```bash
+> ipaddr -v
+fdde:ad00:beef:0:0:ff:fe00:0 origin:thread
+fdde:ad00:beef:0:558:f56b:d688:799 origin:thread
+fe80:0:0:0:f3d9:2a82:c8d8:fe43 origin:thread
 Done
 ```
 
@@ -2183,6 +2208,44 @@ Disable radio promiscuous operation.
 Done
 ```
 
+### radiofilter
+
+`OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` is required.
+
+The radio filter is mainly intended for testing. It can be used to temporarily block all tx/rx on the IEEE 802.15.4 radio.
+
+When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any frame and/or potentially send ack). Also the frame transmission requests return immediately without sending the frame over the air (return "no ack" error if ack is requested, otherwise return success).
+
+Get radio filter status (enabled or disabled).
+
+```bash
+> radiofilter
+Disabled
+Done
+```
+
+### radiofilter enable
+
+`OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` is required.
+
+Enable radio radio filter.
+
+```bash
+> radiofilter enable
+Done
+```
+
+### radiofilter disable
+
+`OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` is required.
+
+Disable radio radio filter.
+
+```bash
+> radiofilter disable
+Done
+```
+
 ### rcp
 
 RCP-related commands.
@@ -2418,9 +2481,9 @@ Perform an IEEE 802.15.4 Active Scan.
 
 ```bash
 > scan
-| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
-+---+------------------+------------------+------+------------------+----+-----+-----+
-| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+| PAN  | MAC Address      | Ch | dBm | LQI |
++------+------------------+----+-----+-----+
+| ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
 Done
 ```
 
@@ -2570,13 +2633,21 @@ Get the Thread Version number.
 Done
 ```
 
+### trel
+
+Indicate whether TREL radio operation is enabled or not.
+
+`OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required for all `trel` sub-commands.
+
+```bash
+> trel
+Enabled
+Done
+```
+
 ### trel enable
 
-Enable TREL radio link.
-
-`OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required.
-
-Note: TREL radio link can be enabled only when a valid TREL URL was specified.
+Enable TREL operation.
 
 ```bash
 > trel enable
@@ -2585,12 +2656,85 @@ Done
 
 ### trel disable
 
-Disable TREL radio link.
-
-`OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required.
+Disable TREL operation.
 
 ```bash
 > trel disable
+Done
+```
+
+### trel filter
+
+Indicate whether TREL filter mode is enabled or not
+
+When filter mode is enabled, any rx and tx traffic through TREL interface is silently dropped. This is mainly intended for use during testing.
+
+```bash
+> trel filter
+Disabled
+Done
+```
+
+### trel filter enable
+
+Enable TREL filter mode.
+
+```bash
+> trel filter enable
+Done
+```
+
+### trel filter disable
+
+Disable TREL filter mode.
+
+```bash
+> trel filter disable
+Done
+```
+
+### trel peers [list]
+
+Get the TREL peer table in table format or as a list.
+
+```bash
+> trel peers
+| No  | Ext MAC Address  | Ext PAN Id       | IPv6 Socket Address                              |
++-----+------------------+------------------+--------------------------------------------------+
+|   1 | 5e5785ba3a63adb9 | f0d9c001f00d2e43 | [fe80:0:0:0:cc79:2a29:d311:1aea]:9202            |
+|   2 | ce792a29d3111aea | dead00beef00cafe | [fe80:0:0:0:5c57:85ba:3a63:adb9]:9203            |
+Done
+
+> trel peers list
+001 ExtAddr:5e5785ba3a63adb9 ExtPanId:f0d9c001f00d2e43 SockAddr:[fe80:0:0:0:cc79:2a29:d311:1aea]:9202
+002 ExtAddr:ce792a29d3111aea ExtPanId:dead00beef00cafe SockAddr:[fe80:0:0:0:5c57:85ba:3a63:adb9]:9203
+>>>>>>> [trel] implement new TREL model using DNS-SD
+Done
+```
+
+### tvcheck enable
+
+Enable thread version check when upgrading to router or leader.
+
+Note: Thread version check is enabled by default.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> tvcheck enable
+Done
+```
+
+### tvcheck disable
+
+Enable thread version check when upgrading to router or leader.
+
+Note: Thread version check is enabled by default.
+
+`OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+
+```bash
+> tvcheck disable
 Done
 ```
 

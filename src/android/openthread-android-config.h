@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread-config-android.h>
+#include "openthread-config-android-version.h"
 
 /**
  * @def OPENTHREAD_CONFIG_CLI_TX_BUFFER_SIZE

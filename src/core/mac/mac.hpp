@@ -40,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
@@ -456,7 +457,7 @@ public:
     /**
      * This method is called to handle a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame, or nullptr if the receive operation was aborted.
+     * @param[in]  aFrame  A pointer to the received frame, or `nullptr` if the receive operation was aborted.
      * @param[in]  aError  kErrorNone when successfully received a frame,
      *                     kErrorAbort when reception was aborted and a frame was not received.
      *
@@ -479,7 +480,7 @@ public:
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
      * @param[in] aFrame      The transmitted frame.
-     * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
+     * @param[in] aAckFrame   A pointer to the ACK frame, or `nullptr` if no ACK was received.
      * @param[in] aError      kErrorNone when the frame was transmitted successfully,
      *                        kErrorNoAck when the frame was transmitted but no ACK was received,
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -499,7 +500,7 @@ public:
      * This method is called to handle transmit events.
      *
      * @param[in]  aFrame      The frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
+     * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
      * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
      *                         kErrorNoAck when the frame was transmitted but no ACK was received,
      *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
@@ -512,13 +513,13 @@ public:
      * This method returns if an active scan is in progress.
      *
      */
-    bool IsActiveScanInProgress(void) const { return (mOperation == kOperationActiveScan) || (mPendingActiveScan); }
+    bool IsActiveScanInProgress(void) const { return IsActiveOrPending(kOperationActiveScan); }
 
     /**
      * This method returns if an energy scan is in progress.
      *
      */
-    bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
+    bool IsEnergyScanInProgress(void) const { return IsActiveOrPending(kOperationEnergyScan); }
 
 #if OPENTHREAD_FTD
     /**
@@ -544,7 +545,7 @@ public:
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     * or nullptr to disable the callback.
+     *                               or `nullptr` to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
@@ -752,6 +753,29 @@ public:
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    /**
+     * This method enables/disables the 802.15.4 radio filter.
+     *
+     * When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any
+     * frame and/or potentially send ack). Also the frame transmission requests return immediately without sending the
+     * frame over the air (return "no ack" error if ack is requested, otherwise return success).
+     *
+     * @param[in] aFilterEnabled    TRUE to enable radio filter, FALSE to disable.
+     *
+     */
+    void SetRadioFilterEnabled(bool aFilterEnabled);
+
+    /**
+     * This method indicates whether the 802.15.4 radio filter is enabled or not.
+     *
+     * @retval TRUE   If the radio filter is enabled.
+     * @retval FALSE  If the radio filter is disabled.
+     *
+     */
+    bool IsRadioFilterEnabled(void) const { return mLinks.GetSubMac().IsRadioFilterEnabled(); }
+#endif
+
 private:
     static constexpr int8_t   kInvalidRssiValue  = SubMac::kInvalidRssiValue;
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
@@ -803,6 +827,10 @@ private:
 #endif
 
     void     UpdateIdleMode(void);
+    bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
+    bool     IsActiveOrPending(Operation aOperation) const;
+    void     SetPending(Operation aOperation) { mPendingOperations |= (1U << aOperation); }
+    void     ClearPending(Operation aOperation) { mPendingOperations &= ~(1U << aOperation); }
     void     StartOperation(Operation aOperation);
     void     FinishOperation(void);
     void     PerformNextOperation(void);
@@ -828,7 +856,7 @@ private:
 
     void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
-    void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+    void LogBeacon(const char *aActionText) const;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t GetTimeIeOffset(const Frame &aFrame);
@@ -848,18 +876,6 @@ private:
     static const char            sDomainNameInit[];
 
     bool mEnabled : 1;
-    bool mPendingActiveScan : 1;
-    bool mPendingEnergyScan : 1;
-    bool mPendingTransmitBeacon : 1;
-    bool mPendingTransmitDataDirect : 1;
-#if OPENTHREAD_FTD
-    bool mPendingTransmitDataIndirect : 1;
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    bool mPendingTransmitDataCsl : 1;
-#endif
-#endif
-    bool mPendingTransmitPoll : 1;
-    bool mPendingWaitingForData : 1;
     bool mShouldTxPollBeforeData : 1;
     bool mRxOnWhenIdle : 1;
     bool mPromiscuous : 1;
@@ -869,8 +885,8 @@ private:
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
 #endif
-
     Operation     mOperation;
+    uint16_t      mPendingOperations;
     uint8_t       mBeaconSequence;
     uint8_t       mDataSequence;
     uint8_t       mBroadcastTransmitCount;
@@ -921,7 +937,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#endif
 
     KeyMaterial mMode2KeyMaterial;
 };

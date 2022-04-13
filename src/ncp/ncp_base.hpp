@@ -389,8 +389,6 @@ protected:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    otError DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount);
-
     otError EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValues);
 #endif
 
@@ -403,6 +401,10 @@ protected:
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    otError DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount);
+#endif
 
     otError CommandHandler_NOOP(uint8_t aHeader);
     otError CommandHandler_RESET(uint8_t aHeader);
@@ -674,10 +676,6 @@ protected:
     uint32_t mTxSpinelFrameCounter;         // Number of sent (outbound) spinel frames.
 
     bool mDidInitialUpdates;
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    bool mTrelTestModeEnable;
-#endif
 
     uint64_t mLogTimestampBase; // Timestamp base used for logging
 };

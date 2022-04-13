@@ -36,7 +36,6 @@
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "common/string.hpp"
 #include "crypto/pbkdf2_cmac.hpp"
 #include "crypto/sha256.hpp"
@@ -44,6 +43,9 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("MeshCoP");
+
 namespace MeshCoP {
 
 Error JoinerPskd::SetFrom(const char *aPskdString)
@@ -303,7 +305,7 @@ Error GetBorderAgentRloc(ThreadNetif &aNetif, uint16_t &aRloc)
     Error                        error = kErrorNone;
     const BorderAgentLocatorTlv *borderAgentLocator;
 
-    borderAgentLocator = static_cast<const BorderAgentLocatorTlv *>(
+    borderAgentLocator = As<BorderAgentLocatorTlv>(
         aNetif.Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
     VerifyOrExit(borderAgentLocator != nullptr, error = kErrorNotFound);
 
@@ -354,12 +356,12 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 void LogError(const char *aActionText, Error aError)
 {
-    if (aError != kErrorNone)
+    if (aError != kErrorNone && aError != kErrorAlready)
     {
-        otLogWarnMeshCoP("Failed to %s: %s", aActionText, ErrorToString(aError));
+        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
     }
 }
 #endif

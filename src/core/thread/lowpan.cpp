@@ -705,8 +705,8 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         IgnoreError(networkData.GetContext(0, dstContext));
     }
 
-    memset(&aIp6Header, 0, sizeof(aIp6Header));
-    aIp6Header.Init();
+    aIp6Header.Clear();
+    aIp6Header.InitVersionTrafficClassFlow();
 
     // Traffic Class and Flow Label
     if ((hcCtl & kHcTrafficFlowMask) != kHcTrafficFlow)

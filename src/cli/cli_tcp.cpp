@@ -322,7 +322,7 @@ otError TcpExample::Process(Arg aArgs[])
 
     VerifyOrExit(!aArgs[0].IsEmpty(), IgnoreError(ProcessHelp(nullptr)));
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
 
     error = (this->*command->mHandler)(aArgs + 1);
@@ -448,26 +448,23 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
 
 void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason)
 {
+    static const char *const kReasonStrings[] = {
+        "Disconnected",            // (0) OT_TCP_DISCONNECTED_REASON_NORMAL
+        "Connection refused",      // (1) OT_TCP_DISCONNECTED_REASON_REFUSED
+        "Connection reset",        // (2) OT_TCP_DISCONNECTED_REASON_RESET
+        "Entered TIME-WAIT state", // (3) OT_TCP_DISCONNECTED_REASON_TIME_WAIT
+        "Connection timed out",    // (4) OT_TCP_DISCONNECTED_REASON_TIMED_OUT
+    };
+
     OT_UNUSED_VARIABLE(aEndpoint);
 
-    switch (aReason)
-    {
-    case OT_TCP_DISCONNECTED_REASON_NORMAL:
-        OutputLine("TCP: Disconnected");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_TIME_WAIT:
-        OutputLine("TCP: Entered TIME-WAIT state");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_TIMED_OUT:
-        OutputLine("TCP: Connection timed out");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_REFUSED:
-        OutputLine("TCP: Connection refused");
-        break;
-    case OT_TCP_DISCONNECTED_REASON_RESET:
-        OutputLine("TCP: Connection reset");
-        break;
-    }
+    static_assert(0 == OT_TCP_DISCONNECTED_REASON_NORMAL, "OT_TCP_DISCONNECTED_REASON_NORMAL value is incorrect");
+    static_assert(1 == OT_TCP_DISCONNECTED_REASON_REFUSED, "OT_TCP_DISCONNECTED_REASON_REFUSED value is incorrect");
+    static_assert(2 == OT_TCP_DISCONNECTED_REASON_RESET, "OT_TCP_DISCONNECTED_REASON_RESET value is incorrect");
+    static_assert(3 == OT_TCP_DISCONNECTED_REASON_TIME_WAIT, "OT_TCP_DISCONNECTED_REASON_TIME_WAIT value is incorrect");
+    static_assert(4 == OT_TCP_DISCONNECTED_REASON_TIMED_OUT, "OT_TCP_DISCONNECTED_REASON_TIMED_OUT value is incorrect");
+
+    OutputLine("TCP: %s", Stringify(aReason, kReasonStrings));
 
     // We set this to false even for the TIME-WAIT state, so that we can reuse
     // the active socket if an incoming connection comes in instead of waiting
@@ -475,7 +472,7 @@ void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnect
     mEndpointConnected = false;
     mSendBusy          = false;
 
-    // Mark the benchmark as inactive if the connction was disconnected.
+    // Mark the benchmark as inactive if the connection was disconnected.
     if (mBenchmarkBytesTotal != 0)
     {
         mBenchmarkBytesTotal = 0;
@@ -491,9 +488,9 @@ otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener *  
 
     if (mEndpointConnected)
     {
-        OutputFormat("TCP: Ignoring incoming connection request from [");
-        OutputIp6Address(aPeer->mAddress);
-        OutputLine("]:%u (active socket is busy)", static_cast<unsigned int>(aPeer->mPort));
+        OutputFormat("TCP: Ignoring incoming connection request from ");
+        OutputSockAddr(*aPeer);
+        OutputLine(" (active socket is busy)");
 
         return OT_TCP_INCOMING_CONNECTION_ACTION_DEFER;
     }
@@ -507,9 +504,8 @@ void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aE
     OT_UNUSED_VARIABLE(aListener);
     OT_UNUSED_VARIABLE(aEndpoint);
 
-    OutputFormat("Accepted connection from [");
-    OutputIp6Address(aPeer->mAddress);
-    OutputLine("]:%u", static_cast<unsigned int>(aPeer->mPort));
+    OutputFormat("Accepted connection from ");
+    OutputSockAddrLine(*aPeer);
 }
 
 } // namespace Cli

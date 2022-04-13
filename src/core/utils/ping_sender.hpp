@@ -40,6 +40,7 @@
 
 #include <openthread/ping_sender.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -100,7 +101,7 @@ public:
          * @returns The ping source IPv6 address.
          *
          */
-        Ip6::Address &GetSource(void) { return static_cast<Ip6::Address &>(mSource); }
+        Ip6::Address &GetSource(void) { return AsCoreType(&mSource); }
 
         /**
          * This method gets the source IPv6 address of the ping.
@@ -108,7 +109,7 @@ public:
          * @returns The ping source IPv6 address.
          *
          */
-        const Ip6::Address &GetSource(void) const { return static_cast<const Ip6::Address &>(mSource); }
+        const Ip6::Address &GetSource(void) const { return AsCoreType(&mSource); }
 
         /**
          * This method gets the destination IPv6 address to ping.
@@ -116,7 +117,7 @@ public:
          * @returns The ping destination IPv6 address.
          *
          */
-        Ip6::Address &GetDestination(void) { return static_cast<Ip6::Address &>(mDestination); }
+        Ip6::Address &GetDestination(void) { return AsCoreType(&mDestination); }
 
         /**
          * This method gets the destination IPv6 address to ping.
@@ -124,7 +125,7 @@ public:
          * @returns The ping destination IPv6 address.
          *
          */
-        const Ip6::Address &GetDestination(void) const { return static_cast<const Ip6::Address &>(mDestination); }
+        const Ip6::Address &GetDestination(void) const { return AsCoreType(&mDestination); }
 
     private:
         static constexpr uint16_t kDefaultSize     = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE;
@@ -184,6 +185,11 @@ private:
 };
 
 } // namespace Utils
+
+DefineCoreType(otPingSenderReply, Utils::PingSender::Reply);
+DefineCoreType(otPingSenderConfig, Utils::PingSender::Config);
+DefineCoreType(otPingSenderStatistics, Utils::PingSender::Statistics);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE

@@ -72,7 +72,7 @@ public:
     /**
      * This method gets the next entry in the linked list.
      *
-     * @returns A pointer to the next entry in the linked list or nullptr if at the end of the list.
+     * @returns A pointer to the next entry in the linked list or `nullptr` if at the end of the list.
      *
      */
     const Type *GetNext(void) const { return static_cast<const Type *>(static_cast<const Type *>(this)->mNext); }
@@ -80,7 +80,7 @@ public:
     /**
      * This method gets the next entry in the linked list.
      *
-     * @returns A pointer to the next entry in the linked list or nullptr if at the end of the list.
+     * @returns A pointer to the next entry in the linked list or `nullptr` if at the end of the list.
      *
      */
     Type *GetNext(void) { return static_cast<Type *>(static_cast<Type *>(this)->mNext); }
@@ -119,7 +119,7 @@ public:
     /**
      * This method returns the entry at the head of the linked list
      *
-     * @returns Pointer to the entry at the head of the linked list, or nullptr if the list is empty.
+     * @returns Pointer to the entry at the head of the linked list, or `nullptr` if the list is empty.
      *
      */
     Type *GetHead(void) { return mHead; }
@@ -127,7 +127,7 @@ public:
     /**
      * This method returns the entry at the head of the linked list.
      *
-     * @returns Pointer to the entry at the head of the linked list, or nullptr if the list is empty.
+     * @returns Pointer to the entry at the head of the linked list, or `nullptr` if the list is empty.
      *
      */
     const Type *GetHead(void) const { return mHead; }
@@ -185,7 +185,7 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @returns The entry that was popped if the list is not empty, or nullptr if the list is empty.
+     * @returns The entry that was popped if the list is not empty, or `nullptr` if the list is empty.
      *
      */
     Type *Pop(void)
@@ -205,10 +205,10 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not nullptr the entry after this will be popped,
-     *                        otherwise (if it is nullptr) the entry at the head of the list is popped.
+     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not `nullptr` the entry after this will be popped,
+     *                        otherwise (if it is `nullptr`) the entry at the head of the list is popped.
      *
-     * @returns Pointer to the entry that was popped, or nullptr if there is no entry to pop.
+     * @returns Pointer to the entry that was popped, or `nullptr` if there is no entry to pop.
      *
      */
     Type *PopAfter(Type *aPrevEntry)
@@ -333,7 +333,8 @@ public:
      *
      * @param[in] aIndicator   An entry indicator to match against entries in the list.
      *
-     * @returns A pointer to the removed matching entry if one could be found, or nullptr if no matching entry is found.
+     * @returns A pointer to the removed matching entry if one could be found, or `nullptr` if no matching entry is
+     *          found.
      *
      */
     template <typename Indicator> Type *RemoveMatching(const Indicator &aIndicator)
@@ -350,11 +351,50 @@ public:
     }
 
     /**
+     * This template method removes all entries in the list matching a given entry indicator from the list and adds
+     * them to a new list.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in] aIndicator   An entry indicator to match against entries in the list.
+     * @param[in] aRemovedList The list to add the removed entries to.
+     *
+     */
+    template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator, LinkedList &aRemovedList)
+    {
+        Type *entry;
+        Type *prev;
+        Type *next;
+
+        for (prev = nullptr, entry = GetHead(); entry != nullptr; entry = next)
+        {
+            next = entry->GetNext();
+
+            if (entry->Matches(aIndicator))
+            {
+                PopAfter(prev);
+                aRemovedList.Push(*entry);
+
+                // When the entry is removed from the list
+                // we keep the `prev` pointer same as before.
+            }
+            else
+            {
+                prev = entry;
+            }
+        }
+    }
+
+    /**
      * This method searches within the linked list to find an entry and if found returns a pointer to previous entry.
      *
      * @param[in]  aEntry      A reference to an entry to find.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when @p aEntry is found in the list).
-     *                         @p aPrevEntry is set to nullptr if @p aEntry is the head of the list. Otherwise it is
+     *                         @p aPrevEntry is set to `nullptr` if @p aEntry is the head of the list. Otherwise it is
      *                         updated to point to the previous entry before @p aEntry in the list.
      *
      * @retval kErrorNone      The entry was found in the list and @p aPrevEntry was updated successfully.
@@ -384,7 +424,7 @@ public:
      *
      * @param[in]  aEntry      A reference to an entry to find.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when @p aEntry is found in the list).
-     *                         @p aPrevEntry is set to nullptr if @p aEntry is the head of the list. Otherwise it is
+     *                         @p aPrevEntry is set to `nullptr` if @p aEntry is the head of the list. Otherwise it is
      *                         updated to point to the previous entry before @p aEntry in the list.
      *
      * @retval kErrorNone      The entry was found in the list and @p aPrevEntry was updated successfully.
@@ -407,13 +447,14 @@ public:
      *     bool Type::Matches(const Indicator &aIndicator) const
      *
      * @param[in]  aBegin      A pointer to the begin of the range.
-     * @param[in]  aEnd        A pointer to the end of the range, or nullptr to search all entries after @p aBegin.
+     * @param[in]  aEnd        A pointer to the end of the range, or `nullptr` to search all entries after @p aBegin.
      * @param[in]  aIndicator  An indicator to match with entries in the list.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
-     *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
-     *                         it is updated to point to the previous entry before the matching entry in the list.
+     *                         @p aPrevEntry is set to `nullptr` if the matching entry is the head of the list.
+     *                         Otherwise it is updated to point to the previous entry before the matching entry in the
+     *                         list.
      *
-     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      *
      */
     template <typename Indicator>
@@ -448,13 +489,14 @@ public:
      *     bool Type::Matches(const Indicator &aIndicator) const
      *
      * @param[in]  aBegin      A pointer to the begin of the range.
-     * @param[in]  aEnd        A pointer to the end of the range, or nullptr to search all entries after @p aBegin.
+     * @param[in]  aEnd        A pointer to the end of the range, or `nullptr` to search all entries after @p aBegin.
      * @param[in]  aIndicator  An indicator to match with entries in the list.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
-     *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
-     *                         it is updated to point to the previous entry before the matching entry in the list.
+     *                         @p aPrevEntry is set to `nullptr` if the matching entry is the head of the list.
+     *                         Otherwise it is updated to point to the previous entry before the matching entry in the
+     *                         list.
      *
-     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      *
      */
     template <typename Indicator>
@@ -474,10 +516,11 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with entries in the list.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
-     *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
-     *                         it is updated to point to the previous entry before the matching entry in the list.
+     *                         @p aPrevEntry is set to `nullptr` if the matching entry is the head of the list.
+     *                         Otherwise it is updated to point to the previous entry before the matching entry in the
+     *                         list.
      *
-     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      *
      */
     template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator, const Type *&aPrevEntry) const
@@ -497,10 +540,11 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with entries in the list.
      * @param[out] aPrevEntry  A pointer to output the previous entry on success (when a match is found in the list).
-     *                         @p aPrevEntry is set to nullptr if the matching entry is the head of the list. Otherwise
-     *                         it is updated to point to the previous entry before the matching entry in the list.
+     *                         @p aPrevEntry is set to `nullptr` if the matching entry is the head of the list.
+     *                         Otherwise it is updated to point to the previous entry before the matching entry in the
+     *                         list.
      *
-     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      *
      */
     template <typename Indicator> Type *FindMatching(const Indicator &aIndicator, Type *&aPrevEntry)
@@ -519,7 +563,7 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with entries in the list.
      *
-     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      *
      */
     template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
@@ -540,7 +584,7 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with entries in the list.
      *
-     * @returns A pointer to the matching entry if one is found, or nullptr if no matching entry was found.
+     * @returns A pointer to the matching entry if one is found, or `nullptr` if no matching entry was found.
      *
      */
     template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
@@ -551,7 +595,7 @@ public:
     /**
      * This method returns the tail of the linked list (i.e., the last entry in the list).
      *
-     * @returns A pointer to the tail entry in the linked list or nullptr if the list is empty.
+     * @returns A pointer to the tail entry in the linked list or `nullptr` if the list is empty.
      *
      */
     const Type *GetTail(void) const
@@ -572,7 +616,7 @@ public:
     /**
      * This method returns the tail of the linked list (i.e., the last entry in the list).
      *
-     * @returns A pointer to the tail entry in the linked list or nullptr if the list is empty.
+     * @returns A pointer to the tail entry in the linked list or `nullptr` if the list is empty.
      *
      */
     Type *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }

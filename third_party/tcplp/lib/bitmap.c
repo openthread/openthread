@@ -141,6 +141,11 @@ int bmp_isempty(uint8_t* buf, size_t buflen) {
     return 1;
 }
 
+/*
+ * This function is unused, but I'm leaving it in the code as a comment in case
+ * it becomes useful for debugging later on.
+ */
+#if 0
 void bmp_print(uint8_t* buf, size_t buflen) {
     size_t i;
     for (i = 0; i < buflen; i++) {
@@ -148,3 +153,4 @@ void bmp_print(uint8_t* buf, size_t buflen) {
     }
     printf("\n");
 }
+#endif

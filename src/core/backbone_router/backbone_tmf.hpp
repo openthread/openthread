@@ -99,6 +99,7 @@ public:
     void UnsubscribeMulticast(const Ip6::Address &aAddress);
 
 private:
+    void         LogError(const char *aText, const Ip6::Address &aAddress, Error aError) const;
     static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 

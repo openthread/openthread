@@ -512,6 +512,25 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_ENH_ACK_PROBING>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    uint16_t            shortAddress;
+    const otExtAddress *extAddress;
+    otLinkMetrics       linkMetrics = {};
+
+    SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
+    SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
+    SuccessOrExit(error = DecodeLinkMetrics(&linkMetrics, /* aAllowPduCount */ true));
+
+    error = otPlatRadioConfigureEnhAckProbing(mInstance, linkMetrics, shortAddress, extAddress);
+
+exit:
+    return error;
+}
+#endif
+
 } // namespace Ncp
 } // namespace ot
 

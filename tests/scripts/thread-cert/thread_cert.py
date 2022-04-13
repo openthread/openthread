@@ -32,12 +32,13 @@ import json
 import logging
 import os
 import signal
+import stat
 import subprocess
 import sys
 import time
 import traceback
 import unittest
-from typing import Optional, Callable
+from typing import Optional, Callable, Union, Any
 
 import config
 import debug
@@ -100,6 +101,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     TOPOLOGY = None
     CASE_WIRESHARK_PREFS = None
     SUPPORT_THREAD_1_1 = True
+    PACKET_VERIFICATION = config.PACKET_VERIFICATION_DEFAULT
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -107,9 +109,16 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
         self._start_time = None
-        self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify')
+        self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify') \
+                                       and self.PACKET_VERIFICATION == PACKET_VERIFICATION
+
+    def skipTest(self, reason: Any) -> None:
+        self._testSkipped = True
+        super(TestCase, self).skipTest(reason)
 
     def setUp(self):
+        self._testSkipped = False
+
         if ENV_THREAD_VERSION == '1.1' and not self.SUPPORT_THREAD_1_1:
             self.skipTest('Thread 1.1 not supported.')
 
@@ -162,6 +171,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 version=params['version'],
                 is_bbr=params['is_bbr'],
             )
+            if 'boot_delay' in params:
+                self.simulator.go(params['boot_delay'])
 
             self.nodes[i] = node
 
@@ -230,6 +241,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if 'bbr_registration_jitter' in params:
                 self.nodes[i].set_bbr_registration_jitter(params['bbr_registration_jitter'])
 
+            if 'router_id_range' in params:
+                self.nodes[i].set_router_id_range(params['router_id_range'][0], params['router_id_range'][1])
+
         # we have to add allowlist after nodes are all created
         for i, params in initial_topology.items():
             allowlist = params['allowlist']
@@ -264,8 +278,12 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self._stop_backbone_sniffer()
 
         for node in list(self.nodes.values()):
-            node.stop()
-            node.destroy()
+            try:
+                node.stop()
+            except:
+                traceback.print_exc()
+            finally:
+                node.destroy()
 
         self.simulator.stop()
 
@@ -280,7 +298,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self._test_info['pcap'] = pcap_filename
 
             test_info_path = self._output_test_info()
-            self._verify_packets(test_info_path)
+            if not self._testSkipped:
+                self._verify_packets(test_info_path)
 
     def flush_all(self):
         """Flush away all captured messages of all nodes.
@@ -308,6 +327,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     def _verify_packets(self, test_info_path: str):
         pv = PacketVerifier(test_info_path, self.CASE_WIRESHARK_PREFS)
         pv.add_common_vars()
+        pv.pkts.filter_thread_unallowed_icmpv6().must_not_next()
         self.verify(pv)
         print("Packet verification passed: %s" % test_info_path, file=sys.stderr)
 
@@ -355,6 +375,32 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 continue
 
             test_info['rlocs'][i] = node.get_rloc()
+
+    def collect_omrs(self):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['omrs'] = {}
+
+        for i, node in self.nodes.items():
+            if node.is_host:
+                continue
+
+            test_info['omrs'][i] = node.get_ip6_address(config.ADDRESS_TYPE.OMR)
+
+    def collect_duas(self):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['duas'] = {}
+
+        for i, node in self.nodes.items():
+            if node.is_host:
+                continue
+
+            test_info['duas'][i] = node.get_ip6_address(config.ADDRESS_TYPE.DUA)
 
     def collect_leader_aloc(self, node):
         if not self._do_packet_verification:
@@ -487,6 +533,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         time.sleep(0.2)
         assert self._dumpcap_proc.poll() is None, 'tshark terminated unexpectedly'
         logging.info('Backbone sniffer launched successfully: pid=%s', self._dumpcap_proc.pid)
+        os.chmod(pcap_file, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
     def _get_backbone_pcap_filename(self):
         backbone_pcap = self.test_name + '_backbone.pcap'
@@ -521,8 +568,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if timeout <= 0:
                 raise RuntimeError(f'wait failed after {timeout} seconds')
 
-    def wait_node_state(self, nodeid: int, state: str, timeout: int):
-        self.wait_until(lambda: self.nodes[nodeid].get_state() == state, timeout)
+    def wait_node_state(self, node: Union[int, Node], state: str, timeout: int):
+        node = self.nodes[node] if isinstance(node, int) else node
+        self.wait_until(lambda: node.get_state() == state, timeout)
 
     def wait_route_established(self, node1: int, node2: int, timeout=10):
         node2_addr = self.nodes[node2].get_ip6_address(config.ADDRESS_TYPE.RLOC)

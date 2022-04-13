@@ -87,7 +87,7 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
     return AsCoreType(aEndpoint).SendByExtension(aNumBytes, aFlags);
 }
 
-otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer)
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer)
 {
     return AsCoreType(aEndpoint).ReceiveByReference(*aBuffer);
 }

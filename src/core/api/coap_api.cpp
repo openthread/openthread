@@ -144,6 +144,11 @@ otCoapCode otCoapMessageGetCode(const otMessage *aMessage)
     return static_cast<otCoapCode>(AsCoapMessage(aMessage).GetCode());
 }
 
+void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode)
+{
+    AsCoapMessage(aMessage).SetCode(MapEnum(aCode));
+}
+
 const char *otCoapMessageCodeToString(const otMessage *aMessage)
 {
     return AsCoapMessage(aMessage).CodeToString();

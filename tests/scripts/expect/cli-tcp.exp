@@ -1,0 +1,93 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2022, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+setup_two_nodes
+
+switch_node 1
+send "tcp init\n"
+expect_line "Done"
+
+switch_node 2
+send "tcp init\n"
+expect_line "Done"
+set addr_2 [get_ipaddr mleid]
+send "tcp listen :: 30000\n"
+expect_line "Done"
+
+switch_node 1
+set addr_1 [get_ipaddr mleid]
+send "tcp bind $addr_1 25000\n"
+expect_line "Done"
+send "tcp connect $addr_2 30000\n"
+expect_line "Done"
+expect "TCP: Connection established"
+
+switch_node 2
+expect "Accepted connection from \\\[$addr_1\\\]:25000"
+expect "TCP: Connection established"
+
+switch_node 1
+send "tcp send hello\n"
+expect_line "Done"
+
+switch_node 2
+expect "TCP: Received 5 bytes: hello"
+send "tcp send world\n"
+expect_line "Done"
+
+switch_node 1
+expect "TCP: Received 5 bytes: world"
+send "tcp sendend\n"
+expect_line "Done"
+send "tcp send more\n"
+expect_line "Error 1: Failed"
+
+switch_node 2
+expect "TCP: Reached end of stream"
+send "tcp send goodbye\n"
+expect_line "Done"
+
+switch_node 1
+expect "TCP: Received 7 bytes: goodbye"
+
+switch_node 2
+send "tcp sendend\n"
+expect_line "Done"
+expect "TCP: Disconnected"
+
+switch_node 1
+expect "TCP: Reached end of stream"
+expect "TCP: Entered TIME-WAIT state"
+set timeout 130
+expect "TCP: Disconnected"
+
+dispose_all

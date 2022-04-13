@@ -38,6 +38,7 @@
 
 #include <openthread/netdata.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
 #include "common/debug.hpp"
@@ -68,6 +69,16 @@ class ServiceTlv;
 class ServerTlv;
 
 /**
+ * This enumeration represents the Network Data type.
+ *
+ */
+enum Type : uint8_t
+{
+    kFullSet,      ///< Full Network Data set.
+    kStableSubset, ///< Stable Network Data subset.
+};
+
+/**
  * This enumeration type represents the route preference values as a signed integer (per RFC-4191).
  *
  */
@@ -76,6 +87,18 @@ enum RoutePreference : int8_t
     kRoutePreferenceLow    = OT_ROUTE_PREFERENCE_LOW,  ///< Low route preference.
     kRoutePreferenceMedium = OT_ROUTE_PREFERENCE_MED,  ///< Medium route preference.
     kRoutePreferenceHigh   = OT_ROUTE_PREFERENCE_HIGH, ///< High route preference.
+};
+
+/**
+ * This enumeration represents the border router RLOC role filter used when searching for border routers in the Network
+ * Data.
+ *
+ */
+enum RoleFilter : uint8_t
+{
+    kAnyRole,        ///< Include devices in any role.
+    kRouterRoleOnly, ///< Include devices that act as Thread router.
+    kChildRoleOnly,  ///< Include devices that act as Thread child (end-device).
 };
 
 /**
@@ -156,7 +179,7 @@ public:
      * @return The prefix.
      *
      */
-    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
+    const Ip6::Prefix &GetPrefix(void) const { return AsCoreType(&mPrefix); }
 
     /**
      * This method gets the prefix.
@@ -164,7 +187,7 @@ public:
      * @return The prefix.
      *
      */
-    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+    Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
@@ -208,7 +231,7 @@ public:
      * @return The prefix.
      *
      */
-    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
+    const Ip6::Prefix &GetPrefix(void) const { return AsCoreType(&mPrefix); }
 
     /**
      * This method gets the prefix.
@@ -216,7 +239,7 @@ public:
      * @return The prefix.
      *
      */
-    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
+    Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
     /**
      * This method sets the prefix.
@@ -347,6 +370,11 @@ private:
 };
 
 } // namespace NetworkData
+
+DefineCoreType(otBorderRouterConfig, NetworkData::OnMeshPrefixConfig);
+DefineCoreType(otExternalRouteConfig, NetworkData::ExternalRouteConfig);
+DefineCoreType(otServiceConfig, NetworkData::ServiceConfig);
+DefineCoreType(otServerConfig, NetworkData::ServiceConfig::ServerConfig);
 
 /**
  * @}

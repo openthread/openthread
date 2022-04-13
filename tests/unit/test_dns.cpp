@@ -33,6 +33,7 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
+#include "common/array.hpp"
 #include "common/instance.hpp"
 #include "net/dns_types.hpp"
 
@@ -64,6 +65,8 @@ void TestDnsName(void)
     char         label[Dns::Name::kMaxLabelSize];
     uint8_t      labelLength;
     char         name[Dns::Name::kMaxNameSize];
+    const char * subDomain;
+    const char * domain;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -140,46 +143,72 @@ void TestDnsName(void)
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     message->SetOffset(0);
 
     printf("----------------------------------------------------------------\n");
     printf("Verify domain name match:\n");
 
-    {
-        const char *subDomain;
-        const char *domain;
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "local.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local.";
-        domain    = "local.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "local.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local";
-        domain    = "local.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "local";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local.";
-        domain    = "local";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "local";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.local";
-        domain    = "local";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "default.service.arpa.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.default.service.arpa.";
-        domain    = "default.service.arpa.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "service.arpa.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        subDomain = "my-service._ipps._tcp.default.service.arpa.";
-        domain    = "service.arpa.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+    // Verify it doesn't match a portion of a label.
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "vice.arpa.";
+    VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
 
-        // Verify it doesn't match a portion of a label.
-        subDomain = "my-service._ipps._tcp.default.service.arpa.";
-        domain    = "vice.arpa.";
-        VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
-    }
+    // Validate case does not matter
+
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "LOCAL.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "LOCAL.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.local.";
+    domain    = "LOCAL";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.local";
+    domain    = "LOCAL";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.Default.Service.ARPA.";
+    domain    = "dEFAULT.Service.arpa.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    subDomain = "my-service._ipps._tcp.default.service.ARpa.";
+    domain    = "SeRvIcE.arPA.";
+    VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    // Verify it doesn't match a portion of a label.
+    subDomain = "my-service._ipps._tcp.default.service.arpa.";
+    domain    = "Vice.arpa.";
+    VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
 
     printf("----------------------------------------------------------------\n");
     printf("Append names, check encoded bytes, parse name and read labels:\n");
@@ -247,17 +276,32 @@ void TestDnsName(void)
         {
             uint16_t startOffset = offset;
 
-            SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, test.mLabels[index]));
+            strcpy(label, test.mLabels[index]);
+
+            SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, label));
             VerifyOrQuit(offset != startOffset, "Name::CompareLabel() did not change offset");
 
-            VerifyOrQuit(Dns::Name::CompareLabel(*message, startOffset, kBadLabel) == kErrorNotFound,
+            offset = startOffset;
+            VerifyOrQuit(Dns::Name::CompareLabel(*message, offset, kBadLabel) == kErrorNotFound,
                          "Name::CompareLabel() did not fail with incorrect label");
+
+            StringConvertToUppercase(label);
+
+            offset = startOffset;
+            SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, label));
         }
 
         // Compare the whole name.
+        strcpy(name, test.mExpectedReadName);
+
         offset = 0;
-        SuccessOrQuit(Dns::Name::CompareName(*message, offset, test.mExpectedReadName));
+        SuccessOrQuit(Dns::Name::CompareName(*message, offset, name));
         VerifyOrQuit(offset == len, "Name::CompareName() returned incorrect offset");
+
+        StringConvertToUppercase(name);
+
+        offset = 0;
+        SuccessOrQuit(Dns::Name::CompareName(*message, offset, name));
 
         offset = 0;
         VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == kErrorNotFound,
@@ -425,7 +469,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     // Append name1 "F.ISI.ARPA"
 
@@ -686,7 +730,7 @@ void TestDnsCompressedName(void)
     printf("----------------------------------------------------------------\n");
     printf("Append names from one message to another\n");
 
-    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     dnsName1.SetFromMessage(*message, name1Offset);
     dnsName2.SetFromMessage(*message, name2Offset);
@@ -787,7 +831,7 @@ void TestHeaderAndResourceRecords(void)
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
     printf("----------------------------------------------------------------\n");
     printf("Preparing the message\n");
@@ -1052,7 +1096,7 @@ void TestHeaderAndResourceRecords(void)
     printf("Use FindRecord() to search for specific records:\n");
     printf(" Answer Section\n");
 
-    for (index = 0; index < OT_ARRAY_LENGTH(kInstanceNames); index++)
+    for (index = 0; index < GetArrayLength(kInstanceNames); index++)
     {
         offset = answerSectionOffset;
         SuccessOrQuit(
@@ -1185,14 +1229,15 @@ void TestDnsTxtEntry(void)
         {kEncodedTxt5, sizeof(kEncodedTxt5)}, {kEncodedTxt6, sizeof(kEncodedTxt6)},
         {kEncodedTxt7, sizeof(kEncodedTxt7)}};
 
-    Instance *              instance;
-    MessagePool *           messagePool;
-    Message *               message;
-    uint8_t                 txtData[kMaxTxtDataSize];
-    uint16_t                txtDataLength;
-    uint8_t                 index;
-    Dns::TxtEntry           txtEntry;
-    Dns::TxtEntry::Iterator iterator;
+    Instance *                     instance;
+    MessagePool *                  messagePool;
+    Message *                      message;
+    uint8_t                        txtData[kMaxTxtDataSize];
+    uint16_t                       txtDataLength;
+    uint8_t                        index;
+    Dns::TxtEntry                  txtEntry;
+    Dns::TxtEntry::Iterator        iterator;
+    MutableData<kWithUint16Length> data;
 
     printf("================================================================\n");
     printf("TestDnsTxtEntry()\n");
@@ -1201,15 +1246,18 @@ void TestDnsTxtEntry(void)
     VerifyOrQuit(instance != nullptr);
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
 
-    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), *message));
-
-    txtDataLength = message->GetLength();
+    data.Init(txtData, sizeof(txtData));
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, GetArrayLength(kTxtEntries), data));
+    VerifyOrQuit(data.GetBytes() == txtData);
+    txtDataLength = data.GetLength();
     VerifyOrQuit(txtDataLength < kMaxTxtDataSize, "TXT data is too long");
-
-    SuccessOrQuit(message->Read(0, txtData, txtDataLength));
     DumpBuffer("txt data", txtData, txtDataLength);
+
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, GetArrayLength(kTxtEntries), *message));
+    VerifyOrQuit(txtDataLength == message->GetLength());
+    VerifyOrQuit(message->CompareBytes(0, txtData, txtDataLength));
 
     index = 0;
     for (const EncodedTxtData &encodedData : kEncodedTxtData)
@@ -1272,11 +1320,16 @@ void TestDnsTxtEntry(void)
     // Verify appending empty txt data
 
     SuccessOrQuit(message->SetLength(0));
-    SuccessOrQuit(Dns::TxtEntry::AppendEntries(nullptr, 0, *message), "AppendEntries() failed with empty array");
-    txtDataLength = message->GetLength();
+
+    data.Init(txtData, sizeof(txtData));
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(nullptr, 0, data), "AppendEntries() failed with empty array");
+    txtDataLength = data.GetLength();
     VerifyOrQuit(txtDataLength == sizeof(uint8_t), "Data length is incorrect with empty array");
-    SuccessOrQuit(message->Read(0, txtData, txtDataLength));
     VerifyOrQuit(txtData[0] == 0, "Data is invalid with empty array");
+
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(nullptr, 0, *message), "AppendEntries() failed with empty array");
+    VerifyOrQuit(message->GetLength() == txtDataLength);
+    VerifyOrQuit(message->CompareBytes(0, txtData, txtDataLength));
 
     SuccessOrQuit(message->SetLength(0));
     txtEntry.mKey         = nullptr;

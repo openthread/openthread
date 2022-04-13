@@ -168,10 +168,7 @@ typedef struct otMleCounters
     uint16_t mBetterPartitionAttachAttempts; ///< Number of attempts to attach to a better partition.
 
     /**
-     * Number of times device changed its parents.
-     *
-     * Support for this counter requires the feature option OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH to
-     * be enabled.
+     * Number of times device changed its parent.
      *
      * A parent change can happen if device detaches from its current parent and attaches to a different one, or even
      * while device is attached when the periodic parent search feature is enabled  (please see option
@@ -717,10 +714,10 @@ otError otThreadBecomeChild(otInstance *aInstance);
  * This function gets the next neighbor information. It is used to go through the entries of
  * the neighbor table.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the iterator context. To get the first neighbor entry
-                             it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
- * @param[out]    aInfo      A pointer to the neighbor information.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the iterator context. To get the first neighbor entry
+                              it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
+ * @param[out]     aInfo      A pointer to the neighbor information.
  *
  * @retval OT_ERROR_NONE         Successfully found the next neighbor entry in table.
  * @retval OT_ERROR_NOT_FOUND     No subsequent neighbor entry exists in the table.
@@ -875,7 +872,7 @@ void otThreadResetMleCounters(otInstance *aInstance);
 /**
  * This function pointer is called every time an MLE Parent Response message is received.
  *
- * @param[in]  aStats    pointer to a location on stack holding the stats data.
+ * @param[in]  aInfo     A pointer to a location on stack holding the stats data.
  * @param[in]  aContext  A pointer to callback client-specific context.
  *
  */

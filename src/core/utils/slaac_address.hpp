@@ -126,12 +126,12 @@ public:
     /**
      * This method generates the IID of an IPv6 address.
      *
-     * @param[inout]  aAddress             A reference to the address that will be filled with the IID generated.
+     * @param[in,out]  aAddress            A reference to the address that will be filled with the IID generated.
      *                                     Note the prefix of the address must already be filled and will be used
      *                                     to generate the IID.
-     * @param[in]     aNetworkId           A pointer to a byte array of Network_ID to generate IID.
-     * @param[in]     aNetworkIdLength     The size of array @p aNetworkId.
-     * @param[inout]  aDadCounter          A pointer to the DAD_Counter that is employed to resolve Duplicate
+     * @param[in]      aNetworkId          A pointer to a byte array of Network_ID to generate IID.
+     * @param[in]      aNetworkIdLength    The size of array @p aNetworkId.
+     * @param[in,out]  aDadCounter         A pointer to the DAD_Counter that is employed to resolve Duplicate
      *                                     Address Detection connflicts.
      *
      * @retval kErrorNone    If successfully generated the IID.

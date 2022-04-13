@@ -43,6 +43,7 @@ build_all_features()
         "-DOPENTHREAD_CONFIG_ANYCAST_LOCATOR=1"
         "-DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1"
         "-DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1"
         "-DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
         "-DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1"
         "-DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1"
@@ -54,6 +55,7 @@ build_all_features()
         "-DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1"
         "-DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
         "-DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DNS_DSO_ENABLE=1"
         "-DOPENTHREAD_CONFIG_ECDSA_ENABLE=1"
         "-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1"
         "-DOPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE=1"
@@ -97,7 +99,7 @@ build_all_features()
     )
 
     # Build Thread 1.1 with full features and no log
-    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
+    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.1
 
@@ -106,12 +108,8 @@ build_all_features()
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
 
-    # Build Thread 1.1 with full features and full logs (Logs defined as macros)
-    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY=1"
-    make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
-
     # Build Thread 1.2 with full features and logs
-    export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
+    export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.2
 

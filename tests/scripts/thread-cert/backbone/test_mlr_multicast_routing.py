@@ -212,9 +212,6 @@ class TestMlr(thread_cert.TestCase):
         self.nodes[nodeid].del_ipmaddr(ma)
         self.simulator.go(1)
 
-        # Verify MA is not reachable from Host after unsubscribed
-        self.assertFalse(self.nodes[HOST].ping(ma, backbone=True, ttl=10))
-
 
 if __name__ == '__main__':
     unittest.main()

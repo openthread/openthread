@@ -33,19 +33,17 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/logging.h>
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/log.hpp"
 
 using namespace ot;
 
 otLogLevel otLoggingGetLevel(void)
 {
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    return Instance::GetLogLevel();
-#else
-    return static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL);
-#endif
+    return static_cast<otLogLevel>(Instance::GetLogLevel());
 }
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -53,15 +51,154 @@ otError otLoggingSetLevel(otLogLevel aLogLevel)
 {
     Error error = kErrorNone;
 
-    if (aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE)
-    {
-        Instance::SetLogLevel(aLogLevel);
-    }
-    else
-    {
-        error = kErrorInvalidArgs;
-    }
+    VerifyOrExit(aLogLevel <= kLogLevelDebg && aLogLevel >= kLogLevelNone, error = kErrorInvalidArgs);
+    Instance::SetLogLevel(static_cast<LogLevel>(aLogLevel));
 
+exit:
     return error;
 }
 #endif
+
+static const char kPlatformModuleName[] = "Platform";
+
+void otLogCritPlat(const char *aFormat, ...)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PLATFORM
+    va_list args;
+
+    va_start(args, aFormat);
+    Logger::LogVarArgs(kPlatformModuleName, kLogLevelCrit, aFormat, args);
+    va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+    OT_UNUSED_VARIABLE(kPlatformModuleName);
+#endif
+}
+
+void otLogWarnPlat(const char *aFormat, ...)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PLATFORM
+    va_list args;
+
+    va_start(args, aFormat);
+    Logger::LogVarArgs(kPlatformModuleName, kLogLevelWarn, aFormat, args);
+    va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
+}
+
+void otLogNotePlat(const char *aFormat, ...)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PLATFORM
+    va_list args;
+
+    va_start(args, aFormat);
+    Logger::LogVarArgs(kPlatformModuleName, kLogLevelNote, aFormat, args);
+    va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
+}
+
+void otLogInfoPlat(const char *aFormat, ...)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PLATFORM
+    va_list args;
+
+    va_start(args, aFormat);
+    Logger::LogVarArgs(kPlatformModuleName, kLogLevelInfo, aFormat, args);
+    va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
+}
+
+void otLogDebgPlat(const char *aFormat, ...)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM
+    va_list args;
+
+    va_start(args, aFormat);
+    Logger::LogVarArgs(kPlatformModuleName, kLogLevelDebg, aFormat, args);
+    va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
+}
+
+void otDumpCritPlat(const char *aText, const void *aData, uint16_t aDataLength)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_CRIT) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+    Logger::DumpInModule(kPlatformModuleName, kLogLevelCrit, aText, aData, aDataLength);
+#else
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aDataLength);
+#endif
+}
+
+void otDumpWarnPlat(const char *aText, const void *aData, uint16_t aDataLength)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+    Logger::DumpInModule(kPlatformModuleName, kLogLevelWarn, aText, aData, aDataLength);
+#else
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aDataLength);
+#endif
+}
+
+void otDumpNotePlat(const char *aText, const void *aData, uint16_t aDataLength)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+    Logger::DumpInModule(kPlatformModuleName, kLogLevelNote, aText, aData, aDataLength);
+#else
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aDataLength);
+#endif
+}
+
+void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+    Logger::DumpInModule(kPlatformModuleName, kLogLevelInfo, aText, aData, aDataLength);
+#else
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aDataLength);
+#endif
+}
+
+void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength)
+{
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG) && OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_PKT_DUMP
+    Logger::DumpInModule(kPlatformModuleName, kLogLevelDebg, aText, aData, aDataLength);
+#else
+    OT_UNUSED_VARIABLE(aText);
+    OT_UNUSED_VARIABLE(aData);
+    OT_UNUSED_VARIABLE(aDataLength);
+#endif
+}
+
+void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...)
+{
+#if OT_SHOULD_LOG && OPENTHREAD_CONFIG_LOG_CLI
+    static const char kCliModuleName[] = "Cli";
+
+    va_list args;
+
+    OT_ASSERT(aLogLevel >= kLogLevelNone && aLogLevel <= kLogLevelDebg);
+    VerifyOrExit(aLogLevel >= kLogLevelNone && aLogLevel <= kLogLevelDebg);
+
+    va_start(args, aFormat);
+    Logger::LogVarArgs(kCliModuleName, static_cast<LogLevel>(aLogLevel), aFormat, args);
+    va_end(args);
+exit:
+#else
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
+    return;
+}

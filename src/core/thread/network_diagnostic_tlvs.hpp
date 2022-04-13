@@ -1033,7 +1033,7 @@ private:
     static constexpr uint8_t  kReservedOffset = 9;
     static constexpr uint16_t kTimeoutMask    = 0xf800;
     static constexpr uint16_t kReservedMask   = 0x0600;
-    static constexpr uint16_t kChildIdMask    = 0x1f;
+    static constexpr uint16_t kChildIdMask    = 0x1ff;
 
     uint16_t mTimeoutRsvChildId;
     uint8_t  mMode;

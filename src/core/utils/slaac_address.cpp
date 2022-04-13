@@ -35,10 +35,11 @@
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/sha256.hpp"
@@ -46,6 +47,8 @@
 
 namespace ot {
 namespace Utils {
+
+RegisterLogModule("Slaac");
 
 Slaac::Slaac(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -59,7 +62,7 @@ void Slaac::Enable(void)
 {
     VerifyOrExit(!mEnabled);
 
-    otLogInfoUtil("SLAAC:: Enabling");
+    LogInfo("Enabling");
     mEnabled = true;
     Update(kModeAdd);
 
@@ -71,7 +74,7 @@ void Slaac::Disable(void)
 {
     VerifyOrExit(mEnabled);
 
-    otLogInfoUtil("SLAAC:: Disabling");
+    LogInfo("Disabling");
     mEnabled = false;
     Update(kModeRemove);
 
@@ -84,7 +87,7 @@ void Slaac::SetFilter(otIp6SlaacPrefixFilter aFilter)
     VerifyOrExit(aFilter != mFilter);
 
     mFilter = aFilter;
-    otLogInfoUtil("SLAAC: Filter %s", (mFilter != nullptr) ? "updated" : "disabled");
+    LogInfo("Filter %s", (mFilter != nullptr) ? "updated" : "disabled");
 
     VerifyOrExit(mEnabled);
     Update(kModeAdd | kModeRemove);
@@ -183,7 +186,7 @@ void Slaac::Update(UpdateMode aMode)
 
             if (!found)
             {
-                otLogInfoUtil("SLAAC: Removing address %s", slaacAddr.GetAddress().ToString().AsCString());
+                LogInfo("Removing address %s", slaacAddr.GetAddress().ToString().AsCString());
 
                 Get<ThreadNetif>().RemoveUnicastAddress(slaacAddr);
                 slaacAddr.mValid = false;
@@ -233,7 +236,7 @@ void Slaac::Update(UpdateMode aMode)
 
                     IgnoreError(GenerateIid(slaacAddr));
 
-                    otLogInfoUtil("SLAAC: Adding address %s", slaacAddr.GetAddress().ToString().AsCString());
+                    LogInfo("Adding address %s", slaacAddr.GetAddress().ToString().AsCString());
 
                     Get<ThreadNetif>().AddUnicastAddress(slaacAddr);
 
@@ -243,8 +246,8 @@ void Slaac::Update(UpdateMode aMode)
 
                 if (!added)
                 {
-                    otLogWarnUtil("SLAAC: Failed to add - max %d addresses supported and already in use",
-                                  OT_ARRAY_LENGTH(mAddresses));
+                    LogWarn("Failed to add - max %d addresses supported and already in use",
+                            GetArrayLength(mAddresses));
                 }
             }
         }
@@ -264,7 +267,7 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
      *  - RID is random (but stable) Identifier.
      *  - For pseudo-random function `F()` SHA-256 is used in this method.
      *  - `Net_Iface` is set to constant string "wpan".
-     *  - `Network_ID` is not used if `aNetworkId` is nullptr (optional per RF-7217).
+     *  - `Network_ID` is not used if `aNetworkId` is `nullptr` (optional per RF-7217).
      *  - The `secret_key` is randomly generated on first use (using true
      *    random number generator) and saved in non-volatile settings for
      *    future use.
@@ -315,7 +318,7 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
         ExitNow(error = kErrorNone);
     }
 
-    otLogWarnUtil("SLAAC: Failed to generate a non-reserved IID after %d attempts", kMaxIidCreationAttempts);
+    LogWarn("Failed to generate a non-reserved IID after %d attempts", kMaxIidCreationAttempts);
 
 exit:
     return error;
@@ -340,7 +343,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 
     IgnoreError(Get<Settings>().Save<Settings::SlaacIidSecretKey>(aKey));
 
-    otLogInfoUtil("SLAAC: Generated and saved secret key");
+    LogInfo("Generated and saved secret key");
 
 exit:
     return;

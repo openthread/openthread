@@ -101,6 +101,11 @@ bool platformInfraIfIsRunning(void)
     return ot::Posix::InfraNetif::Get().IsRunning();
 }
 
+const char *otSysGetInfraNetifName(void)
+{
+    return ot::Posix::InfraNetif::Get().GetNetifName();
+}
+
 namespace ot {
 namespace Posix {
 namespace {
@@ -304,7 +309,11 @@ void InfraNetif::Init(const char *aIfName)
     ssize_t  rval;
     uint32_t ifIndex = 0;
 
-    VerifyOrExit(aIfName != nullptr && aIfName[0] != '\0');
+    if (aIfName == nullptr || aIfName[0] == '\0')
+    {
+        otLogWarnPlat("Border Routing feature is disabled: infra/backbone interface is missing");
+        ExitNow();
+    }
 
     VerifyOrDie(strnlen(aIfName, sizeof(mInfraIfName)) <= sizeof(mInfraIfName) - 1, OT_EXIT_INVALID_ARGUMENTS);
     strcpy(mInfraIfName, aIfName);
@@ -313,7 +322,7 @@ void InfraNetif::Init(const char *aIfName)
     ifIndex = if_nametoindex(aIfName);
     if (ifIndex == 0)
     {
-        otLogCritPlat("failed to get the index for infra interface %s", aIfName);
+        otLogCritPlat("Failed to get the index for infra interface %s", aIfName);
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
     mInfraIfIndex = ifIndex;
@@ -399,7 +408,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
     len = recv(mNetLinkSocket, msgBuffer.mBuffer, sizeof(msgBuffer.mBuffer), 0);
     if (len < 0)
     {
-        otLogCritPlat("failed to receive netlink message: %s", strerror(errno));
+        otLogCritPlat("Failed to receive netlink message: %s", strerror(errno));
         ExitNow();
     }
 
@@ -466,7 +475,7 @@ void InfraNetif::ReceiveIcmp6Message(void)
     rval = recvmsg(mInfraIfIcmp6Socket, &msg, 0);
     if (rval < 0)
     {
-        otLogWarnPlat("failed to receive ICMPv6 message: %s", strerror(errno));
+        otLogWarnPlat("Failed to receive ICMPv6 message: %s", strerror(errno));
         ExitNow(error = OT_ERROR_DROP);
     }
 
@@ -502,7 +511,7 @@ void InfraNetif::ReceiveIcmp6Message(void)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogDebgPlat("failed to handle ICMPv6 message: %s", otThreadErrorToString(error));
+        otLogDebgPlat("Failed to handle ICMPv6 message: %s", otThreadErrorToString(error));
     }
 }
 

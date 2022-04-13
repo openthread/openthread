@@ -45,6 +45,7 @@
 
 #include <openthread/link.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -401,7 +402,7 @@ public:
      * This method processes received Enh-ACK Probing IE data.
      *
      * @param[in] aData      A pointer to buffer containing the Enh-ACK Probing IE data.
-     * @param[in] aLen       The length of @p aData.
+     * @param[in] aLength    The length of @p aData.
      * @param[in] aNeighbor  The neighbor from which the Enh-ACK Probing IE was received.
      *
      */
@@ -453,6 +454,11 @@ private:
  */
 
 } // namespace LinkMetrics
+
+DefineCoreType(otLinkMetrics, LinkMetrics::Metrics);
+DefineCoreType(otLinkMetricsValues, LinkMetrics::MetricsValues);
+DefineMapEnum(otLinkMetricsEnhAckFlags, LinkMetrics::EnhAckFlags);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

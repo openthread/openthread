@@ -94,8 +94,6 @@ def cleanup_backbone_env():
 
 
 def setup_backbone_env():
-    bash('sudo modprobe ip6table_filter')
-
     if THREAD_VERSION != '1.2':
         raise RuntimeError('Backbone tests only work with THREAD_VERSION=1.2')
 

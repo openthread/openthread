@@ -111,9 +111,10 @@ public:
     /**
      * This static method gets the next Network Diagnostic TLV in a given message.
      *
-     * @param[in]     aMessage         A message.
-     * @param[inout]  aIterator        The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
-     * @param[out]    aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
+     * @param[in]      aMessage         A message.
+     * @param[in,out]  aIterator        The Network Diagnostic iterator. To get the first TLV set it to
+     *                                  `kIteratorInit`.
+     * @param[out]     aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
      *
      * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
      * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.

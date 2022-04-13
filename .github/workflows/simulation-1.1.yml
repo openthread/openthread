@@ -66,60 +66,6 @@ jobs:
         ./bootstrap
         VERBOSE=1 make -f examples/Makefile-simulation distcheck
 
-  cli-ftd-otns:
-    runs-on: ubuntu-20.04
-    env:
-      CFLAGS: -m32
-      CXXFLAGS: -m32
-      LDFLAGS: -m32
-      COVERAGE: 1
-      REFERENCE_DEVICE: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-      VIRTUAL_TIME_UART: 1
-      MAX_NETWORK_SIZE: 999
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - uses: actions/setup-go@v1
-      with:
-        go-version: '1.14'
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.6
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
-        ./bootstrap
-    - name: Run OTNS Tests
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      run: |
-        export OT_DIR=$PWD
-        mkdir -p /tmp/otns
-        (
-          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
-          cd /tmp/otns
-          ./script/test py-unittests py-examples
-        )
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: cli-ftd-otns-pcaps
-        path: |
-          ./output/*/bin/*.pcap
-          ./output/*/bin/*.replay
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-cli-ftd-otns
-        path: tmp/coverage.info
-
   packet-verification:
     runs-on: ubuntu-20.04
     env:
@@ -204,6 +150,7 @@ jobs:
     name: cli-mtd MESSAGE_USE_HEAP=${{ matrix.message_use_heap }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         message_use_heap: [0, 1]
     env:
@@ -494,7 +441,6 @@ jobs:
 
   upload-coverage:
     needs:
-    - cli-ftd-otns
     - packet-verification
     - cli-ftd
     - cli-mtd

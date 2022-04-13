@@ -41,16 +41,115 @@
 #include <openthread/cli.h>
 
 #include "cli_config.h"
+
+#include "common/binary_search.hpp"
+#include "common/string.hpp"
 #include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
 
 /**
+ * This type represents a ID number value associated with a CLI command string.
+ *
+ */
+typedef uint64_t CommandId;
+
+/**
+ * This `constexpr` function converts a CLI command string to its associated `CommandId` value.
+ *
+ * @param[in] aString   The CLI command string.
+ *
+ * @returns The associated `CommandId` with @p aString.
+ *
+ */
+constexpr static CommandId Cmd(const char *aString)
+{
+    return (aString[0] == '\0') ? 0 : (static_cast<uint8_t>(aString[0]) + Cmd(aString + 1) * 255u);
+}
+
+/**
+ * This class is the base class for `Output` and `OutputWrapper` providing common helper methods.
+ *
+ */
+class OutputBase
+{
+public:
+    typedef Utils::CmdLineParser::Arg Arg; ///< An argument
+
+    /**
+     * This structure represent a CLI command table entry, mapping a command with `aName` to a handler method.
+     *
+     * @tparam Cli    The CLI module type.
+     *
+     */
+    template <typename Cli> struct CommandEntry
+    {
+        typedef otError (Cli::*Handler)(Arg aArgs[]); ///< The handler method pointer type.
+
+        /**
+         * This method compares the entry's name with a given name.
+         *
+         * @param aName    The name string to compare with.
+         *
+         * @return zero means perfect match, positive (> 0) indicates @p aName is larger than entry's name, and
+         *         negative (< 0) indicates @p aName is smaller than entry's name.
+         *
+         */
+        int Compare(const char *aName) const { return strcmp(aName, mName); }
+
+        /**
+         * This `constexpr` method compares two entries to check if they are in order.
+         *
+         * @param[in] aFirst     The first entry.
+         * @param[in] aSecond    The second entry.
+         *
+         * @retval TRUE  if @p aFirst and @p aSecond are in order, i.e. `aFirst < aSecond`.
+         * @retval FALSE if @p aFirst and @p aSecond are not in order, i.e. `aFirst >= aSecond`.
+         *
+         */
+        constexpr static bool AreInOrder(const CommandEntry &aFirst, const CommandEntry &aSecond)
+        {
+            return AreStringsInOrder(aFirst.mName, aSecond.mName);
+        }
+
+        const char *mName;    ///< The command name.
+        Handler     mHandler; ///< The handler method pointer.
+    };
+
+    static const char kUnknownString[]; // Constant string "unknown".
+
+    /**
+     * This template static method converts an enumeration value to a string using a table array.
+     *
+     * @tparam EnumType       The `enum` type.
+     * @tparam kLength        The table array length (number of entries in the array).
+     *
+     * @param[in] aEnum       The enumeration value to convert (MUST be of `EnumType`).
+     * @param[in] aTable      A reference to the array of strings of length @p kLength. `aTable[e]` is the string
+     *                        representation of enumeration value `e`.
+     * @param[in] aNotFound   The string to return if the @p aEnum is not in the @p aTable.
+     *
+     * @returns The string representation of @p aEnum from @p aTable, or @p aNotFound if it is not in the table.
+     *
+     */
+    template <typename EnumType, uint16_t kLength>
+    static const char *Stringify(EnumType aEnum,
+                                 const char *const (&aTable)[kLength],
+                                 const char *aNotFound = kUnknownString)
+    {
+        return (static_cast<uint16_t>(aEnum) < kLength) ? aTable[static_cast<uint16_t>(aEnum)] : aNotFound;
+    }
+
+protected:
+    OutputBase(void) = default;
+};
+
+/**
  * This class provides CLI output helper methods.
  *
  */
-class Output
+class Output : public OutputBase
 {
 public:
     /**
@@ -240,6 +339,22 @@ public:
     void OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix);
 
     /**
+     * This method outputs an IPv6 socket address to the CLI console.
+     *
+     * @param[in] aSockAddr   A reference to the IPv6 socket address.
+     *
+     */
+    void OutputSockAddr(const otSockAddr &aSockAddr);
+
+    /**
+     * This method outputs an IPv6 socket address to the CLI console and at the end it also outputs newline "\r\n".
+     *
+     * @param[in] aSockAddr   A reference to the IPv6 socket address.
+     *
+     */
+    void OutputSockAddrLine(const otSockAddr &aSockAddr);
+
+    /**
      * This method outputs DNS TXT data to the CLI console.
      *
      * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
@@ -264,7 +379,7 @@ public:
      * @tparam kTableNumColumns   The number columns in the table.
      *
      * @param[in] aTitles   An array specifying the table column titles.
-     * @param[in] aWidth    An array specifying the table column widths (in number of chars).
+     * @param[in] aWidths   An array specifying the table column widths (in number of chars).
      *
      */
     template <uint8_t kTableNumColumns>
@@ -284,7 +399,7 @@ public:
      *
      * @tparam kTableNumColumns   The number columns in the table.
      *
-     * @param[in] aWidth    An array specifying the table column widths (in number of chars).
+     * @param[in] aWidths   An array specifying the table column widths (in number of chars).
      *
      */
     template <uint8_t kTableNumColumns> void OutputTableSeparator(const uint8_t (&aWidths)[kTableNumColumns])
@@ -292,9 +407,24 @@ public:
         OutputTableSeparator(kTableNumColumns, &aWidths[0]);
     }
 
-protected:
-    typedef Utils::CmdLineParser::Arg Arg;
+    /**
+     * This method outputs the list of commands from a given command table.
+     *
+     * @tparam Cli      The CLI module type.
+     * @tparam kLength  The length of command table array.
+     *
+     * @param[in] aCommandTable   The command table array.
+     *
+     */
+    template <typename Cli, uint16_t kLength> void OutputCommandTable(const CommandEntry<Cli> (&aCommandTable)[kLength])
+    {
+        for (const CommandEntry<Cli> &entry : aCommandTable)
+        {
+            OutputLine("%s", entry.mName);
+        }
+    }
 
+protected:
     void OutputFormatV(const char *aFormat, va_list aArguments);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
@@ -321,7 +451,7 @@ private:
 #endif
 };
 
-class OutputWrapper
+class OutputWrapper : public OutputBase
 {
 protected:
     explicit OutputWrapper(Output &aOutput)
@@ -375,6 +505,8 @@ protected:
     void OutputIp6PrefixLine(const otIp6Prefix &aPrefix) { mOutput.OutputIp6PrefixLine(aPrefix); }
     void OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix) { mOutput.OutputIp6Prefix(aPrefix); }
     void OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix) { mOutput.OutputIp6PrefixLine(aPrefix); }
+    void OutputSockAddr(const otSockAddr &aSockAddr) { mOutput.OutputSockAddr(aSockAddr); }
+    void OutputSockAddrLine(const otSockAddr &aSockAddr) { mOutput.OutputSockAddrLine(aSockAddr); }
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
     {
         mOutput.OutputDnsTxtData(aTxtData, aTxtDataLength);
@@ -390,6 +522,11 @@ protected:
     template <uint8_t kTableNumColumns> void OutputTableSeparator(const uint8_t (&aWidths)[kTableNumColumns])
     {
         mOutput.OutputTableSeparator(aWidths);
+    }
+
+    template <typename Cli, uint16_t kLength> void OutputCommandTable(const CommandEntry<Cli> (&aCommandTable)[kLength])
+    {
+        mOutput.OutputCommandTable(aCommandTable);
     }
 
 private:

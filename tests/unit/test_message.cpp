@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "common/appender.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
@@ -53,6 +54,8 @@ void TestMessage(void)
     uint8_t      readBuffer[kMaxSize];
     uint8_t      zeroBuffer[kMaxSize];
 
+    printf("TestMessage\n");
+
     memset(zeroBuffer, 0, sizeof(zeroBuffer));
 
     instance = static_cast<Instance *>(testInitInstance());
@@ -62,7 +65,7 @@ void TestMessage(void)
 
     Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
 
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
     SuccessOrQuit(message->SetLength(kMaxSize));
     message->WriteBytes(0, writeBuffer, kMaxSize);
     SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
@@ -133,7 +136,7 @@ void TestMessage(void)
 
     // Test `Message::CopyTo()` behavior.
 
-    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    VerifyOrQuit((message2 = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
     SuccessOrQuit(message2->SetLength(kMaxSize));
 
     for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset += kOffsetStep)
@@ -236,11 +239,101 @@ void TestMessage(void)
     testFreeInstance(instance);
 }
 
+void TestAppender(void)
+{
+    const uint8_t kData1[] = {0x01, 0x02, 0x03, 0x04};
+    const uint8_t kData2[] = {0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa};
+
+    static constexpr uint16_t kMaxBufferSize = sizeof(kData1) * 2 + sizeof(kData2);
+
+    Instance *              instance;
+    Message *               message;
+    uint8_t                 buffer[kMaxBufferSize];
+    uint8_t                 zeroBuffer[kMaxBufferSize];
+    Appender                bufAppender(buffer, sizeof(buffer));
+    Data<kWithUint16Length> data;
+
+    printf("TestAppender\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr);
+
+    message = instance->Get<MessagePool>().Allocate(Message::kTypeIp6);
+    VerifyOrQuit(message != nullptr);
+
+    memset(buffer, 0, sizeof(buffer));
+    memset(zeroBuffer, 0, sizeof(zeroBuffer));
+
+    // Test Buffer Appender
+    VerifyOrQuit(bufAppender.GetType() == Appender::kBuffer);
+    VerifyOrQuit(bufAppender.GetBufferStart() == buffer);
+    VerifyOrQuit(bufAppender.GetAppendedLength() == 0);
+
+    SuccessOrQuit(bufAppender.AppendBytes(kData1, sizeof(kData1)));
+    DumpBuffer("Data1", buffer, sizeof(buffer));
+    VerifyOrQuit(bufAppender.GetAppendedLength() == sizeof(kData1));
+    VerifyOrQuit(bufAppender.GetBufferStart() == buffer);
+    VerifyOrQuit(memcmp(buffer, kData1, sizeof(kData1)) == 0);
+    VerifyOrQuit(memcmp(buffer + sizeof(kData1), zeroBuffer, sizeof(buffer) - sizeof(kData1)) == 0);
+
+    SuccessOrQuit(bufAppender.AppendBytes(kData2, sizeof(kData2)));
+    DumpBuffer("Data1+Data2", buffer, sizeof(buffer));
+    VerifyOrQuit(bufAppender.GetAppendedLength() == sizeof(kData1) + sizeof(kData2));
+    VerifyOrQuit(bufAppender.GetBufferStart() == buffer);
+    VerifyOrQuit(memcmp(buffer, kData1, sizeof(kData1)) == 0);
+    VerifyOrQuit(memcmp(buffer + sizeof(kData1), kData2, sizeof(kData2)) == 0);
+    VerifyOrQuit(memcmp(buffer + sizeof(kData1) + sizeof(kData2), zeroBuffer,
+                        sizeof(buffer) - sizeof(kData1) - sizeof(kData2)) == 0);
+
+    VerifyOrQuit(bufAppender.Append(kData2) == kErrorNoBufs);
+
+    SuccessOrQuit(bufAppender.AppendBytes(kData1, sizeof(kData1)));
+    DumpBuffer("Data1+Data2+Data1", buffer, sizeof(buffer));
+    VerifyOrQuit(bufAppender.GetAppendedLength() == sizeof(kData1) + sizeof(kData2) + sizeof(kData1));
+    VerifyOrQuit(bufAppender.GetBufferStart() == buffer);
+    VerifyOrQuit(memcmp(buffer, kData1, sizeof(kData1)) == 0);
+    VerifyOrQuit(memcmp(buffer + sizeof(kData1), kData2, sizeof(kData2)) == 0);
+    VerifyOrQuit(memcmp(buffer + sizeof(kData1) + sizeof(kData2), kData1, sizeof(kData1)) == 0);
+
+    VerifyOrQuit(bufAppender.Append<uint8_t>(0) == kErrorNoBufs);
+
+    bufAppender.GetAsData(data);
+    VerifyOrQuit(data.GetBytes() == buffer);
+    VerifyOrQuit(data.GetLength() == sizeof(buffer));
+
+    // Test Message Appender
+
+    SuccessOrQuit(message->Append(kData2));
+    VerifyOrQuit(message->Compare(0, kData2));
+
+    {
+        Appender msgAppender(*message);
+        uint16_t offset = message->GetLength();
+
+        VerifyOrQuit(msgAppender.GetType() == Appender::kMessage);
+
+        SuccessOrQuit(msgAppender.AppendBytes(kData1, sizeof(kData1)));
+        VerifyOrQuit(msgAppender.GetAppendedLength() == sizeof(kData1));
+
+        VerifyOrQuit(message->GetLength() == sizeof(kData2) + sizeof(kData1));
+        VerifyOrQuit(message->Compare(offset, kData1));
+
+        SuccessOrQuit(msgAppender.AppendBytes(kData2, sizeof(kData2)));
+        VerifyOrQuit(msgAppender.GetAppendedLength() == sizeof(kData1) + sizeof(kData2));
+        VerifyOrQuit(message->Compare(offset, kData1));
+        VerifyOrQuit(message->Compare(offset + sizeof(kData1), kData2));
+    }
+
+    message->Free();
+    testFreeInstance(instance);
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestMessage();
+    ot::TestAppender();
     printf("All tests passed\n");
     return 0;
 }

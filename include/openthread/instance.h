@@ -53,7 +53,7 @@ extern "C" {
  * @note This number versions both OpenThread platform and user APIs.
  *
  */
-#define OPENTHREAD_API_VERSION (172)
+#define OPENTHREAD_API_VERSION (202)
 
 /**
  * @addtogroup api-instance
@@ -78,9 +78,9 @@ typedef struct otInstance otInstance;
  *
  * This function is available and can only be used when support for multiple OpenThread instances is enabled.
  *
- * @param[in]    aInstanceBuffer      The buffer for OpenThread to use for allocating the otInstance structure.
- * @param[inout] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for
- *                                    otInstance, the number of bytes required for otInstance.
+ * @param[in]     aInstanceBuffer      The buffer for OpenThread to use for allocating the otInstance structure.
+ * @param[in,out] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for
+ *                                     otInstance, the number of bytes required for otInstance.
  *
  * @returns  A pointer to the new OpenThread instance.
  *

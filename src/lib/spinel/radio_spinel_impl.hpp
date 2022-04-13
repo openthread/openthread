@@ -37,13 +37,13 @@
 #include <stdlib.h>
 
 #include <openthread/dataset.h>
+#include <openthread/logging.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/settings.hpp"
 #include "lib/platform/exit_code.h"
@@ -160,7 +160,7 @@ static inline void LogIfFail(const char *aText, otError aError)
     OT_UNUSED_VARIABLE(aText);
     OT_UNUSED_VARIABLE(aError);
 
-    if (aError != OT_ERROR_NONE)
+    if (aError != OT_ERROR_NONE && aError != OT_ERROR_NO_ACK)
     {
         otLogWarnPlat("%s: %s", aText, otThreadErrorToString(aError));
     }
@@ -239,6 +239,14 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
     }
 
     SuccessOrExit(error = WaitResponse());
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    while (mRcpFailed)
+    {
+        RecoverFromRcpFailure();
+    }
+#endif
+
     VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
 
     SuccessOrExit(error = CheckSpinelVersion());
@@ -423,7 +431,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RestoreDatasetFromNcp(vo
 {
     otError error = OT_ERROR_NONE;
 
-    Instance::Get().template Get<SettingsDriver>().Init();
+    Instance::Get().template Get<SettingsDriver>().Init(nullptr, 0);
 
     otLogInfoPlat("Trying to get saved dataset from NCP");
     SuccessOrExit(
@@ -1691,15 +1699,25 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 spinel_tid_t RadioSpinel<InterfaceType, ProcessContextType>::GetNextTid(void)
 {
-    spinel_tid_t tid = 0;
+    spinel_tid_t tid = mCmdNextTid;
 
-    if (((1 << mCmdNextTid) & mCmdTidsInUse) == 0)
+    while (((1 << tid) & mCmdTidsInUse) != 0)
     {
-        tid         = mCmdNextTid;
-        mCmdNextTid = SPINEL_GET_NEXT_TID(mCmdNextTid);
-        mCmdTidsInUse |= (1 << tid);
+        tid = SPINEL_GET_NEXT_TID(tid);
+
+        if (tid == mCmdNextTid)
+        {
+            // We looped back to `mCmdNextTid` indicating that all
+            // TIDs are in-use.
+
+            ExitNow(tid = 0);
+        }
     }
 
+    mCmdTidsInUse |= (1 << tid);
+    mCmdNextTid = SPINEL_GET_NEXT_TID(tid);
+
+exit:
     return tid;
 }
 
@@ -2405,6 +2423,43 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::GetRadioRegion(uint16_t 
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::ConfigureEnhAckProbing(otLinkMetrics        aLinkMetrics,
+                                                                               const otShortAddress aShortAddress,
+                                                                               const otExtAddress & aExtAddress)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t flags = 0;
+
+    if (aLinkMetrics.mPduCount)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_PDU_COUNT;
+    }
+
+    if (aLinkMetrics.mLqi)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_LQI;
+    }
+
+    if (aLinkMetrics.mLinkMargin)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_LINK_MARGIN;
+    }
+
+    if (aLinkMetrics.mRssi)
+    {
+        flags |= SPINEL_THREAD_LINK_METRIC_RSSI;
+    }
+
+    error =
+        Set(SPINEL_PROP_RCP_ENH_ACK_PROBING, SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S,
+            aShortAddress, aExtAddress.m8, flags);
+
+    return error;
+}
+#endif
 
 } // namespace Spinel
 } // namespace ot

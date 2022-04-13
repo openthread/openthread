@@ -48,6 +48,7 @@ libopenthread_posix_a_SOURCES             = \
     backbone.cpp                            \
     daemon.cpp                              \
     entropy.cpp                             \
+    firewall.cpp                            \
     hdlc_interface.cpp                      \
     infra_if.cpp                            \
     logging.cpp                             \
@@ -61,8 +62,9 @@ libopenthread_posix_a_SOURCES             = \
     settings.cpp                            \
     spi_interface.cpp                       \
     system.cpp                              \
-    trel_udp6.cpp                           \
+    trel.cpp                                \
     udp.cpp                                 \
+    utils.cpp                               \
     virtual_time.cpp                        \
     $(NULL)
 

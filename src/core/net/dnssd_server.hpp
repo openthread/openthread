@@ -35,6 +35,7 @@
 
 #include <openthread/dnssd_server.h>
 
+#include "common/as_core_type.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -136,9 +137,9 @@ public:
     /**
      * This method acquires the next query in the server.
      *
-     * @param[in] aQuery            The query pointer. Pass nullptr to get the first query.
+     * @param[in] aQuery            The query pointer. Pass `nullptr` to get the first query.
      *
-     * @returns  A pointer to the query or nullptr if no more queries.
+     * @returns  A pointer to the query or `nullptr` if no more queries.
      *
      */
     const otDnssdQuery *GetNextQuery(const otDnssdQuery *aQuery) const;
@@ -146,8 +147,8 @@ public:
     /**
      * This method acquires the DNS-SD query type and name for a specific query.
      *
-     * @param[in]   aQuery            The query pointer.
-     * @param[out]  aNameOutput       The name output buffer.
+     * @param[in]   aQuery      The query pointer.
+     * @param[out]  aName       The name output buffer.
      *
      * @returns The DNS-SD query type.
      *
@@ -391,8 +392,8 @@ private:
     void        HandleTimer(void);
     void        ResetTimer(void);
 
-    static const char kDnssdProtocolUdp[4];
-    static const char kDnssdProtocolTcp[4];
+    static const char kDnssdProtocolUdp[];
+    static const char kDnssdProtocolTcp[];
     static const char kDnssdSubTypeLabel[];
     static const char kDefaultDomainName[];
     Ip6::Udp::Socket  mSocket;
@@ -406,6 +407,9 @@ private:
 
 } // namespace ServiceDiscovery
 } // namespace Dns
+
+DefineMapEnum(otDnssdQueryType, Dns::ServiceDiscovery::Server::DnsQueryType);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

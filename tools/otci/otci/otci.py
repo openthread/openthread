@@ -47,6 +47,10 @@ class OTCI(object):
     manipulate an OpenThread device.
     """
 
+    DEFAULT_EXEC_COMMAND_RETRY = 4  # A command is retried 4 times if failed.
+
+    __exec_command_retry = DEFAULT_EXEC_COMMAND_RETRY
+
     def __init__(self, otcmd: OTCommandHandler):
         """
         This method initializes an OTCI instance.
@@ -67,7 +71,7 @@ class OTCI(object):
         :param expect_line: The line expected to output if given.
                             Raise ExpectLineTimeoutError if expect_line is not found within the given duration.
         """
-        self.__logger and self.__logger.info("wait for %.3f seconds", duration)
+        self.log('info', "wait for %.3f seconds", duration)
         if expect_line is None:
             self.__otcmd.wait(duration)
         else:
@@ -88,7 +92,23 @@ class OTCI(object):
         """Close the OTCI instance."""
         self.__otcmd.close()
 
-    def execute_command(self, cmd: str, timeout: float = 10, silent: bool = False) -> List[str]:
+    def execute_command(self,
+                        cmd: str,
+                        timeout: float = 10,
+                        silent: bool = False,
+                        already_is_ok: bool = True) -> List[str]:
+        for i in range(self.__exec_command_retry + 1):
+            try:
+                return self.__execute_command(cmd, timeout, silent, already_is_ok=already_is_ok)
+            except Exception:
+                if i == self.__exec_command_retry:
+                    raise
+
+    def __execute_command(self,
+                          cmd: str,
+                          timeout: float = 10,
+                          silent: bool = False,
+                          already_is_ok: bool = True) -> List[str]:
         """Execute the OpenThread CLI command.
 
         :param cmd: The command to execute.
@@ -97,26 +117,41 @@ class OTCI(object):
         :returns: The command output as a list of lines.
         """
         if not silent:
-            self.__logger and self.__logger.info('> %s', cmd)
+            self.log('info', '> %s', cmd)
 
         output = self.__otcmd.execute_command(cmd, timeout)
 
         if not silent:
             for line in output:
-                self.__logger and self.__logger.info('%s', line)
+                self.log('info', '%s', line)
 
         if cmd in ('reset', 'factoryreset'):
             return output
 
-        if output[-1] == 'Done':
+        if output[-1] == 'Done' or (already_is_ok and output[-1] == 'Error 24: Already'):
             output = output[:-1]
             return output
         else:
             raise CommandError(cmd, output)
 
+    def set_execute_command_retry(self, n: int):
+        assert n >= 0
+        self.__exec_command_retry = n
+
+    def shell(self, cmd: str, timeout: float = 10):
+        self.log('info', '# %s', cmd)
+        output = self.__otcmd.shell(cmd, timeout=timeout)
+        for line in output:
+            self.log('info', '%s', line)
+        return output
+
     def set_logger(self, logger: logging.Logger):
         """Set the logger for the OTCI instance, or None to disable logging."""
         self.__logger = logger
+
+    def log(self, level, fmt, *args, **kwargs):
+        if self.__logger is not None:
+            getattr(self.__logger, level)('(%s) ' + fmt, repr(self), *args, **kwargs)
 
     def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
         """Set the callback that will be called for each line output by the CLI."""
@@ -189,7 +224,7 @@ class OTCI(object):
              interval: float = 1,
              hoplimit: int = 64,
              timeout: float = 3) -> Dict:
-        """Send an ICMPv6 Echo Request. 
+        """Send an ICMPv6 Echo Request.
         The default arguments are consistent with https://github.com/openthread/openthread/blob/main/src/core/utils/ping_sender.hpp.
 
         :param ip: The target IPv6 address to ping.
@@ -245,7 +280,12 @@ class OTCI(object):
         for line in output[2:]:
             fields = line.strip().split('|')
 
-            _, J, netname, extpanid, panid, extaddr, ch, dbm, lqi, _ = fields
+            try:
+                _, J, netname, extpanid, panid, extaddr, ch, dbm, lqi, _ = fields
+            except Exception:
+                logging.warning('ignored output: %r', line)
+                continue
+
             networks.append({
                 'joinable': bool(int(J)),
                 'network_name': netname.strip(),
@@ -829,6 +869,7 @@ class OTCI(object):
 
     def dns_resolve_service(self, instance: str, service: str) -> Dict:
         """Resolves aservice instance."""
+        instance = self.__escape_escapable(instance)
         cmd = f'dns service {instance} {service}'
         output = self.execute_command(cmd, 30.0)
 
@@ -1089,6 +1130,7 @@ class OTCI(object):
                                priority: int = 0,
                                weight: int = 0,
                                txt: Dict[str, Union[str, bytes, bool]] = None):
+        instance = self.__escape_escapable(instance)
         cmd = f'srp client service add {instance} {service} {port} {priority} {weight}'
         if txt:
             cmd += f' {self.__txt_to_hex(txt)}'
@@ -1097,6 +1139,10 @@ class OTCI(object):
     def srp_client_remove_service(self, instance: str, service: str):
         """Remove a service from SRP client."""
         self.execute_command(f'srp client service remove {instance} {service}')
+
+    def srp_client_clear_service(self, instance: str, service: str):
+        """Remove a service from SRP client without notifying the SRP server."""
+        self.execute_command(f'srp client service clear {instance} {service}')
 
     def srp_client_get_key_lease_interval(self) -> int:
         """Get SRP client key lease interval (in seconds)."""
@@ -1174,7 +1220,7 @@ class OTCI(object):
             elif k == 'RSSI':
                 info['rssi'] = int(v)
             else:
-                self.__logger and self.__logger.warning("Child info %s: %s ignored", k, v)
+                self.log('warning', "Child info %s: %s ignored", k, v)
 
         return info
 
@@ -1671,7 +1717,7 @@ class OTCI(object):
         # Network Name: OpenThread-7caa
         # PAN ID: 0x7caa
         # PSKc: 167d89fd169e439ca0b8266de248090f
-        # Security Policy: 0, onrcb
+        # Security Policy: 0, onrc
 
         dataset = {}
 
@@ -1714,6 +1760,14 @@ class OTCI(object):
 
         hexstr = self.__parse_str(self.execute_command(cmd))
         return self.__hex_to_bytes(hexstr)
+
+    def set_dataset_bytes(self, dataset: str, data: bytes) -> None:
+        if dataset in ('active', 'pending'):
+            cmd = f'dataset set {dataset} {self.__bytes_to_hex(data)}'
+        else:
+            raise InvalidArgumentsError(f'Unkonwn dataset: {dataset}')
+
+        self.execute_command(cmd)
 
     def dataset_set_buffer(self,
                            active_timestamp: int = None,
@@ -1913,7 +1967,7 @@ class OTCI(object):
 
     def get_backbone_router_state(self) -> str:
         """Get local Backbone state (Disabled or Primary or Secondary) for Thread 1.2 FTD."""
-        self.__parse_str(self.execute_command('bbr state'))
+        return self.__parse_str(self.execute_command('bbr state'))
 
     def get_primary_backbone_router_info(self) -> Optional[dict]:
         """Show current Primary Backbone Router information for Thread 1.2 device."""
@@ -2194,6 +2248,29 @@ class OTCI(object):
         """Disable link security."""
         self.execute_command('udp linksecurity disable')
 
+    def netstat(self) -> List[Tuple[Tuple[Ip6Addr, int], Tuple[Ip6Addr, int]]]:
+        cmd = 'netstat'
+        output = self.execute_command(cmd)
+        if len(output) < 2:
+            raise UnexpectedCommandOutput(output)
+
+        socks = []
+        for line in output[2:]:
+            _, sock_addr, peer_addr = line.strip().split('|')[:3]
+            sock_addr = self.__parse_socket_addr(sock_addr.strip())
+            peer_addr = self.__parse_socket_addr(peer_addr.strip())
+            socks.append((sock_addr, peer_addr))
+
+        return socks
+
+    @staticmethod
+    def __parse_socket_addr(addr: str) -> Tuple[Ip6Addr, int]:
+        addr, port = addr.rsplit(':', 1)
+        if addr.startswith('[') and addr.endswith(']'):
+            addr = addr[1:-1]
+
+        return Ip6Addr(addr), int(port) if port != '*' else 0
+
     #
     # CoAP CLI (test) utilities
     #
@@ -2353,6 +2430,9 @@ class OTCI(object):
     def __hex_to_bytes(self, hexstr: str) -> bytes:
         self.__validate_hex(hexstr)
         return bytes(int(hexstr[i:i + 2], 16) for i in range(0, len(hexstr), 2))
+
+    def __bytes_to_hex(self, data: bytes) -> str:
+        return ''.join('%02x' % b for b in data)
 
     def __escape_escapable(self, s: str) -> str:
         """Escape CLI escapable characters in the given string.

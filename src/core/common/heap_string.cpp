@@ -28,18 +28,18 @@
 
 /**
  * @file
- *   This file implements the `HeapString` (a heap allocated string).
+ *   This file implements the `Heap::String` (a heap allocated string).
  */
 
 #include "heap_string.hpp"
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/string.hpp"
 
 namespace ot {
+namespace Heap {
 
-Error HeapString::Set(const char *aCString)
+Error String::Set(const char *aCString)
 {
     Error  error = kErrorNone;
     size_t curSize;
@@ -52,11 +52,11 @@ Error HeapString::Set(const char *aCString)
 
     if (curSize != newSize)
     {
-        char *newBuffer = static_cast<char *>(Instance::HeapCAlloc(sizeof(char), newSize));
+        char *newBuffer = static_cast<char *>(Heap::CAlloc(sizeof(char), newSize));
 
         VerifyOrExit(newBuffer != nullptr, error = kErrorNoBufs);
 
-        Instance::HeapFree(mStringBuffer);
+        Heap::Free(mStringBuffer);
         mStringBuffer = newBuffer;
     }
 
@@ -66,11 +66,11 @@ exit:
     return error;
 }
 
-Error HeapString::Set(HeapString &&aString)
+Error String::Set(String &&aString)
 {
     VerifyOrExit(mStringBuffer != aString.mStringBuffer);
 
-    Instance::HeapFree(mStringBuffer);
+    Heap::Free(mStringBuffer);
     mStringBuffer         = aString.mStringBuffer;
     aString.mStringBuffer = nullptr;
 
@@ -78,13 +78,13 @@ exit:
     return kErrorNone;
 }
 
-void HeapString::Free(void)
+void String::Free(void)
 {
-    Instance::HeapFree(mStringBuffer);
+    Heap::Free(mStringBuffer);
     mStringBuffer = nullptr;
 }
 
-bool HeapString::operator==(const char *aCString) const
+bool String::operator==(const char *aCString) const
 {
     bool isEqual;
 
@@ -95,4 +95,5 @@ exit:
     return isEqual;
 }
 
+} // namespace Heap
 } // namespace ot

@@ -42,11 +42,12 @@
 // This function verifies the content of the priority queue to match the passed in messages
 void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
 {
-    va_list      args;
-    ot::Message *message;
-    ot::Message *msgArg;
-    int8_t       curPriority = ot::Message::kNumPriorities;
-    uint16_t     msgCount, bufCount;
+    const ot::PriorityQueue &constQueue = aPriorityQueue;
+    va_list                  args;
+    ot::Message *            message;
+    ot::Message *            msgArg;
+    int8_t                   curPriority = ot::Message::kNumPriorities;
+    uint16_t                 msgCount, bufCount;
 
     // Check the `GetInfo`
     aPriorityQueue.GetInfo(msgCount, bufCount);
@@ -106,6 +107,30 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
     }
 
     va_end(args);
+
+    // Check range-based `for` loop iteration using non-const iterator
+
+    message = aPriorityQueue.GetHead();
+
+    for (ot::Message &msg : aPriorityQueue)
+    {
+        VerifyOrQuit(message == &msg, "`for` loop iteration does not match expected");
+        message = message->GetNext();
+    }
+
+    VerifyOrQuit(message == nullptr, "`for` loop iteration resulted in fewer entries than expected");
+
+    // Check  range-base `for` iteration using const iterator
+
+    message = aPriorityQueue.GetHead();
+
+    for (const ot::Message &constMsg : constQueue)
+    {
+        VerifyOrQuit(message == &constMsg, "`for` loop iteration does not match expected");
+        message = message->GetNext();
+    }
+
+    VerifyOrQuit(message == nullptr, "`for` loop iteration resulted in fewer entries than expected");
 }
 
 // This function verifies the content of the message queue to match the passed in messages
@@ -156,32 +181,33 @@ void TestPriorityQueue(void)
 
     messagePool = &instance->Get<ot::MessagePool>();
 
-    // Use the function "New()" to allocate messages with different priorities
+    // Use the function "Allocate()" to allocate messages with different priorities
     for (int i = 0; i < kNumNewPriorityTestMessages; i++)
     {
-        msgNet[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityNet);
+        msgNet[i] = messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityNet));
         VerifyOrQuit(msgNet[i] != nullptr);
-        msgHigh[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityHigh);
+        msgHigh[i] = messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityHigh));
         VerifyOrQuit(msgHigh[i] != nullptr);
-        msgNor[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityNormal);
+        msgNor[i] =
+            messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityNormal));
         VerifyOrQuit(msgNor[i] != nullptr);
-        msgLow[i] = messagePool->New(ot::Message::kTypeIp6, 0, ot::Message::kPriorityLow);
+        msgLow[i] = messagePool->Allocate(ot::Message::kTypeIp6, 0, ot::Message::Settings(ot::Message::kPriorityLow));
         VerifyOrQuit(msgLow[i] != nullptr);
     }
 
     // Use the function "SetPriority()" to allocate messages with different priorities
     for (int i = kNumNewPriorityTestMessages; i < kNumTestMessages; i++)
     {
-        msgNet[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgNet[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgNet[i] != nullptr);
         SuccessOrQuit(msgNet[i]->SetPriority(ot::Message::kPriorityNet));
-        msgHigh[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgHigh[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgHigh[i] != nullptr);
         SuccessOrQuit(msgHigh[i]->SetPriority(ot::Message::kPriorityHigh));
-        msgNor[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgNor[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgNor[i] != nullptr);
         SuccessOrQuit(msgNor[i]->SetPriority(ot::Message::kPriorityNormal));
-        msgLow[i] = messagePool->New(ot::Message::kTypeIp6, 0);
+        msgLow[i] = messagePool->Allocate(ot::Message::kTypeIp6);
         VerifyOrQuit(msgLow[i] != nullptr);
         SuccessOrQuit(msgLow[i]->SetPriority(ot::Message::kPriorityLow));
     }
@@ -288,6 +314,56 @@ void TestPriorityQueue(void)
     queue.Dequeue(*msgLow[0]);
     VerifyPriorityQueueContent(queue, 1, msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
+
+    queue.Dequeue(*msgNor[0]);
+    VerifyPriorityQueueContent(queue, 0);
+    messageQueue.Dequeue(*msgNor[1]);
+    VerifyMsgQueueContent(messageQueue, 0);
+
+    for (ot::Message *message : msgNor)
+    {
+        SuccessOrQuit(message->SetPriority(ot::Message::kPriorityNormal));
+    }
+
+    // Range-based `for` and dequeue during iteration
+
+    for (uint16_t removeIndex = 0; removeIndex < 4; removeIndex++)
+    {
+        uint16_t index = 0;
+
+        queue.Enqueue(*msgNor[0]);
+        queue.Enqueue(*msgNor[1]);
+        queue.Enqueue(*msgNor[2]);
+        queue.Enqueue(*msgNor[3]);
+        VerifyPriorityQueueContent(queue, 4, msgNor[0], msgNor[1], msgNor[2], msgNor[3]);
+
+        // While iterating over the queue remove the entry at `removeIndex`
+        for (ot::Message &message : queue)
+        {
+            if (index == removeIndex)
+            {
+                queue.Dequeue(message);
+            }
+
+            VerifyOrQuit(&message == msgNor[index++]);
+        }
+
+        index = 0;
+
+        // Iterate over the queue and remove all
+        for (ot::Message &message : queue)
+        {
+            if (index == removeIndex)
+            {
+                index++;
+            }
+
+            VerifyOrQuit(&message == msgNor[index++]);
+            queue.Dequeue(message);
+        }
+
+        VerifyPriorityQueueContent(queue, 0);
+    }
 
     testFreeInstance(instance);
 }

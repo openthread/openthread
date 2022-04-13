@@ -40,6 +40,7 @@
 
 #include <openthread/ip6.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -110,6 +111,14 @@ public:
     const uint8_t *GetBytes(void) const { return mPrefix.mFields.m8; }
 
     /**
+     * This method gets the subnet ID of the prefix.
+     *
+     * @returns The 16-bit subnet ID.
+     *
+     */
+    uint16_t GetSubnetId(void) const { return HostSwap16(mPrefix.mFields.m16[3]); }
+
+    /**
      * This method gets the prefix length (in bits).
      *
      * @returns The prefix length (in bits).
@@ -141,6 +150,14 @@ public:
      *
      */
     void Set(const NetworkPrefix &aNetworkPrefix) { Set(aNetworkPrefix.m8, NetworkPrefix::kLength); }
+
+    /**
+     * This method sets the subnet ID of the prefix.
+     *
+     * @param[in] aSubnetId  A 16-bit subnet ID.
+     *
+     */
+    void SetSubnetId(uint16_t aSubnetId) { mPrefix.mFields.m16[3] = HostSwap16(aSubnetId); }
 
     /**
      * This method set the prefix length.
@@ -311,7 +328,7 @@ public:
      * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
      * truncated but the outputted string is always null-terminated.
      *
-     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be nullptr).
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
      * @param[in]  aSize     The size of @p aBuffer (in bytes).
      *
      */
@@ -952,7 +969,7 @@ public:
      * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
      * truncated but the outputted string is always null-terminated.
      *
-     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be nullptr).
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
      * @param[in]  aSize     The size of @p aBuffer (in bytes).
      *
      */
@@ -991,6 +1008,11 @@ private:
  */
 
 } // namespace Ip6
+
+DefineCoreType(otIp6Prefix, Ip6::Prefix);
+DefineCoreType(otIp6InterfaceIdentifier, Ip6::InterfaceIdentifier);
+DefineCoreType(otIp6Address, Ip6::Address);
+
 } // namespace ot
 
 #endif // IP6_ADDRESS_HPP_

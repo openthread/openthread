@@ -35,12 +35,14 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
+#include "common/string.hpp"
 #include "net/srp_server.hpp"
 #include "net/udp6.hpp"
 
@@ -48,8 +50,10 @@ namespace ot {
 namespace Dns {
 namespace ServiceDiscovery {
 
-const char Server::kDnssdProtocolUdp[4] = {'_', 'u', 'd', 'p'};
-const char Server::kDnssdProtocolTcp[4] = {'_', 't', 'c', 'p'};
+RegisterLogModule("DnssdServer");
+
+const char Server::kDnssdProtocolUdp[]  = "_udp";
+const char Server::kDnssdProtocolTcp[]  = "_tcp";
 const char Server::kDnssdSubTypeLabel[] = "._sub.";
 const char Server::kDefaultDomainName[] = "default.service.arpa.";
 
@@ -77,7 +81,7 @@ Error Server::Start(void)
 #endif
 
 exit:
-    otLogInfoDns("[server] started: %s", ErrorToString(error));
+    LogInfo("started: %s", ErrorToString(error));
 
     if (error != kErrorNone)
     {
@@ -101,7 +105,7 @@ void Server::Stop(void)
     mTimer.Stop();
 
     IgnoreError(mSocket.Close());
-    otLogInfoDns("[server] stopped");
+    LogInfo("stopped");
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Get<Srp::Server>().HandleDnssdServerStateChange();
@@ -194,7 +198,7 @@ void Server::SendResponse(Header                  aHeader,
 
     if (aResponseCode == Header::kResponseServerFailure)
     {
-        otLogWarnDns("[server] failed to handle DNS query due to server failure");
+        LogWarn("failed to handle DNS query due to server failure");
         aHeader.SetQuestionCount(0);
         aHeader.SetAnswerCount(0);
         aHeader.SetAdditionalRecordCount(0);
@@ -210,11 +214,11 @@ void Server::SendResponse(Header                  aHeader,
 
     if (error != kErrorNone)
     {
-        otLogWarnDns("[server] failed to send DNS-SD reply: %s", otThreadErrorToString(error));
+        LogWarn("failed to send DNS-SD reply: %s", ErrorToString(error));
     }
     else
     {
-        otLogInfoDns("[server] send DNS-SD reply: %s, RCODE=%d", otThreadErrorToString(error), aResponseCode);
+        LogInfo("send DNS-SD reply: %s, RCODE=%d", ErrorToString(error), aResponseCode);
     }
 }
 
@@ -395,7 +399,7 @@ Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompre
     const char *serviceName;
 
     // Check whether `aName` is a sub-type service name.
-    serviceName = StringFind(aName, kDnssdSubTypeLabel);
+    serviceName = StringFind(aName, kDnssdSubTypeLabel, kStringCaseInsensitiveMatch);
 
     if (serviceName != nullptr)
     {
@@ -488,17 +492,25 @@ Error Server::AppendTxtRecord(Message &         aMessage,
                               uint32_t          aTtl,
                               NameCompressInfo &aCompressInfo)
 {
-    Error     error = kErrorNone;
-    TxtRecord txtRecord;
+    Error         error = kErrorNone;
+    TxtRecord     txtRecord;
+    const uint8_t kEmptyTxt = 0;
 
     SuccessOrExit(error = AppendInstanceName(aMessage, aInstanceName, aCompressInfo));
 
     txtRecord.Init();
     txtRecord.SetTtl(aTtl);
-    txtRecord.SetLength(aTxtLength);
+    txtRecord.SetLength(aTxtLength > 0 ? aTxtLength : sizeof(kEmptyTxt));
 
     SuccessOrExit(error = aMessage.Append(txtRecord));
-    error = aMessage.AppendBytes(aTxtData, aTxtLength);
+    if (aTxtLength > 0)
+    {
+        error = aMessage.AppendBytes(aTxtData, aTxtLength);
+    }
+    else
+    {
+        error = aMessage.Append(kEmptyTxt);
+    }
 
 exit:
     return error;
@@ -569,8 +581,8 @@ Error Server::FindNameComponents(const char *aName, const char *aDomain, NameCom
         VerifyOrExit(error == kErrorNone, error = (error == kErrorNotFound ? kErrorNone : error));
 
         if (labelEnd == labelBegin + kProtocolLabelLength &&
-            (memcmp(&aName[labelBegin], kDnssdProtocolUdp, kProtocolLabelLength) == 0 ||
-             memcmp(&aName[labelBegin], kDnssdProtocolTcp, kProtocolLabelLength) == 0))
+            (StringStartsWith(&aName[labelBegin], kDnssdProtocolUdp, kStringCaseInsensitiveMatch) ||
+             StringStartsWith(&aName[labelBegin], kDnssdProtocolTcp, kStringCaseInsensitiveMatch)))
         {
             // <Protocol> label found
             aInfo.mProtocolOffset = labelBegin;
@@ -591,7 +603,7 @@ Error Server::FindNameComponents(const char *aName, const char *aDomain, NameCom
     // Note that `kDnssdSubTypeLabel` is "._sub.". Here we get the
     // label only so we want to compare it with "_sub".
     if ((labelEnd == labelBegin + kSubTypeLabelLength) &&
-        (memcmp(&aName[labelBegin], kDnssdSubTypeLabel + 1, kSubTypeLabelLength) == 0))
+        StringStartsWith(&aName[labelBegin], kDnssdSubTypeLabel + 1, kStringCaseInsensitiveMatch))
     {
         SuccessOrExit(error = FindPreviousLabel(aName, labelBegin, labelEnd));
         VerifyOrExit(labelBegin == 0, error = kErrorInvalidArgs);
@@ -653,8 +665,8 @@ Header::Response Server::ResolveBySrp(Header &                  aResponseHeader,
         response = ResolveQuestionBySrp(name, question, aResponseHeader, aResponseMessage, aCompressInfo,
                                         /* aAdditional */ false);
 
-        otLogInfoDns("[server] ANSWER: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d",
-                     aResponseHeader.GetMessageId(), name, question.GetClass(), question.GetType(), response);
+        LogInfo("ANSWER: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d", aResponseHeader.GetMessageId(), name,
+                question.GetClass(), question.GetType(), response);
     }
 
     // Answer the questions with additional RRs if required
@@ -672,8 +684,8 @@ Header::Response Server::ResolveBySrp(Header &                  aResponseHeader,
                                                                                 /* aAdditional */ true),
                          response = Header::kResponseServerFailure);
 
-            otLogInfoDns("[server] ADDITIONAL: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d",
-                         aResponseHeader.GetMessageId(), name, question.GetClass(), question.GetType(), response);
+            LogInfo("ADDITIONAL: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d", aResponseHeader.GetMessageId(),
+                    name, question.GetClass(), question.GetType(), response);
         }
     }
 exit:
@@ -856,10 +868,10 @@ bool Server::CanAnswerQuery(const QueryTransaction &          aQuery,
     switch (sdType)
     {
     case kDnsQueryBrowse:
-        canAnswer = (strcmp(name, aServiceFullName) == 0);
+        canAnswer = StringMatch(name, aServiceFullName, kStringCaseInsensitiveMatch);
         break;
     case kDnsQueryResolve:
-        canAnswer = (strcmp(name, aInstanceInfo.mFullName) == 0);
+        canAnswer = StringMatch(name, aInstanceInfo.mFullName, kStringCaseInsensitiveMatch);
         break;
     default:
         break;
@@ -874,7 +886,7 @@ bool Server::CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *
     DnsQueryType sdType;
 
     sdType = GetQueryTypeAndName(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
-    return (sdType == kDnsQueryResolveHost) && (strcmp(name, aHostFullName) == 0);
+    return (sdType == kDnsQueryResolveHost) && StringMatch(name, aHostFullName, kStringCaseInsensitiveMatch);
 }
 
 void Server::AnswerQuery(QueryTransaction &                aQuery,
@@ -1013,7 +1025,7 @@ const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
         cur = query + 1;
     }
 
-    for (; cur < OT_ARRAY_END(mQueryTransactions); cur++)
+    for (; cur < GetArrayEnd(mQueryTransactions); cur++)
     {
         if (cur->IsValid())
         {

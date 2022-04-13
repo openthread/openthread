@@ -43,8 +43,9 @@
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
@@ -86,11 +87,11 @@ public:
      * This method starts the Joiner service.
      *
      * @param[in]  aPskd             A pointer to the PSKd.
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr).
-     * @param[in]  aVendorName       A pointer to the Vendor Name (may be nullptr).
-     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be nullptr).
-     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be nullptr).
-     * @param[in]  aVendorData       A pointer to the Vendor Data (may be nullptr).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be `nullptr`).
+     * @param[in]  aVendorName       A pointer to the Vendor Name (may be `nullptr`).
+     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be `nullptr`).
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be `nullptr`).
+     * @param[in]  aVendorData       A pointer to the Vendor Data (may be `nullptr`).
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
@@ -167,6 +168,16 @@ public:
      */
     Error ClearDiscerner(void);
 
+    /**
+     * This method converts a given Joiner state to its human-readable string representation.
+     *
+     * @param[in] aState  The Joiner state to convert.
+     *
+     * @returns A human-readable string representation of @p aState.
+     *
+     */
+    static const char *StateToString(State aState);
+
 private:
     static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
 
@@ -199,8 +210,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-
-    static const char *StateToString(State aState);
 
     void    SetState(State aState);
     void    SetIdFromIeeeEui64(void);
@@ -241,6 +250,9 @@ private:
 };
 
 } // namespace MeshCoP
+
+DefineMapEnum(otJoinerState, MeshCoP::Joiner::State);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_JOINER_ENABLE
