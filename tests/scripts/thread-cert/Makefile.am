@@ -153,6 +153,7 @@ EXTRA_DIST                                                         = \
     sniffer_transport.py                                             \
     test_anycast.py                                                  \
     test_anycast_locator.py                                          \
+    test_br_upgrade_router_role.py                                   \
     test_coap.py                                                     \
     test_coap_block.py                                               \
     test_coap_observe.py                                             \
@@ -232,6 +233,7 @@ check_PROGRAMS                                                     = \
 check_SCRIPTS                                                      = \
     test_anycast.py                                                  \
     test_anycast_locator.py                                          \
+    test_br_upgrade_router_role.py                                   \
     test_coap.py                                                     \
     test_coap_block.py                                               \
     test_coap_observe.py                                             \

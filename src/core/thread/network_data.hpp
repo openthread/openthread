@@ -325,9 +325,9 @@ public:
     Error GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
 
     /**
-     * This method finds and returns the list of RLOCs of border routers providing external IPv6 connectivity.
+     * This method finds and returns the list of RLOCs of border routers providing external IP connectivity.
      *
-     * A border router is considered to provide external IPv6 connectivity if it has added at least one external route
+     * A border router is considered to provide external IP connectivity if it has added at least one external route
      * entry, or an on-mesh prefix with default-route and on-mesh flags set.
      *
      * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
@@ -346,10 +346,13 @@ public:
     Error FindBorderRouters(RoleFilter aRoleFilter, uint16_t aRlocs[], uint8_t &aRlocsLength) const;
 
     /**
-     * This method counts the number of border routers providing external IPv6 connectivity.
+     * This method counts the number of border routers providing external IP connectivity.
      *
-     * A border router is considered to provide external IPv6 connectivity if it has added at least one external route
-     * entry, or an on-mesh prefix with default-route and on-mesh flags set.
+     * A border router is considered to provide external IP connectivity if at least one of the below conditions hold
+     *
+     * - It has added at least one external route entry.
+     * - It has added at least one prefix entry with default-route and on-mesh flags set.
+     * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
      * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
@@ -360,6 +363,27 @@ public:
      *
      */
     uint8_t CountBorderRouters(RoleFilter aRoleFilter) const;
+
+    /**
+     * This method indicates whether the network data contains a border providing external IP connectivity with a given
+     * RLOC16.
+     *
+     * A border router is considered to provide external IP connectivity if at least one of the below conditions hold
+     *
+     * - It has added at least one external route entry.
+     * - It has added at least one prefix entry with default-route and on-mesh flags set.
+     * - It has added at least one domain prefix (domain and on-mesh flags set).
+     *
+     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * full set and not the stable subset).
+     *
+     * @param[in] aRloc16   The RLOC16 to check.
+     *
+     * @returns TRUE  If the network data contains a border router with @p aRloc16 providing IP connectivity.
+     * @returns FALSE If the network data does not contain a border router with @p aRloc16 providing IP connectivity.
+     *
+     */
+    bool ContainsBorderRouterWithRloc(uint16_t aRloc16) const;
 
 protected:
     /**
