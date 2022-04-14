@@ -114,7 +114,7 @@ exit:
 
 Error Diags::ProcessEcho(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
-    otError error = kErrorNone;
+    Error error = kErrorNone;
 
     if (aArgsLength == 1)
     {
