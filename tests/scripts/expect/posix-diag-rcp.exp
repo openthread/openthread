@@ -53,5 +53,17 @@ expect "status 0x7"
 expect_line "Done"
 send "diag rcp power 10\n"
 expect_line "Done"
+send "diag rcp echo\n"
+expect "failed"
+expect "status 0x7"
+expect_line "Done"
+send "diag rcp echo 0123456789\n"
+expect_line "0123456789"
+expect_line "Done"
+send "diag rcp echo -n 0\n"
+expect_line "Done"
+send "diag rcp echo -n 253\n"
+expect_line {[0-9]{253}}
+expect_line "Done"
 
 dispose_all
