@@ -38,6 +38,48 @@
 namespace ot {
 namespace Tmf {
 
+//----------------------------------------------------------------------------------------------------------------------
+// MessageInfo
+
+void MessageInfo::SetSockAddrToRloc(void)
+{
+    SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+}
+
+Error MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
+{
+    SetSockAddrToRloc();
+    return Get<Mle::MleRouter>().GetLeaderAloc(GetPeerAddr());
+}
+
+Error MessageInfo::SetSockAddrToRlocPeerAddrToLeaderRloc(void)
+{
+    SetSockAddrToRloc();
+    return Get<Mle::MleRouter>().GetLeaderAddress(GetPeerAddr());
+}
+
+void MessageInfo::SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void)
+{
+    SetSockAddrToRloc();
+    GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
+}
+
+void MessageInfo::SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16)
+{
+    SetSockAddrToRloc();
+    SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    GetPeerAddr().GetIid().SetLocator(aRloc16);
+}
+
+void MessageInfo::SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress)
+{
+    SetSockAddrToRloc();
+    SetPeerAddr(aPeerAddress);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Agent
+
 Error Agent::Start(void)
 {
     return Coap::Start(kUdpPort, OT_NETIF_THREAD);
