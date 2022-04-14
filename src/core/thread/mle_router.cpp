@@ -3803,11 +3803,12 @@ void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const 
 
 void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error           error = kErrorNone;
-    Mac::ExtAddress extAddress;
-    uint16_t        rloc16;
-    uint8_t         status;
-    Router *        router = nullptr;
+    Error                   error          = kErrorNone;
+    ThreadStatusTlv::Status responseStatus = ThreadStatusTlv::kNoAddressAvailable;
+    Router *                router         = nullptr;
+    Mac::ExtAddress         extAddress;
+    uint16_t                rloc16;
+    uint8_t                 status;
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorParse);
 
@@ -3815,6 +3816,17 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
 
     SuccessOrExit(error = Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(aMessage, status));
+
+    switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        rloc16 = Mac::kShortAddrInvalid;
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     {
@@ -3827,7 +3839,12 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
 
     // Check if allocation already exists
     router = mRouterTable.GetRouter(extAddress);
-    VerifyOrExit(router == nullptr);
+
+    if (router != nullptr)
+    {
+        responseStatus = ThreadStatusTlv::kSuccess;
+        ExitNow();
+    }
 
     switch (status)
     {
@@ -3839,61 +3856,61 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     case ThreadStatusTlv::kParentPartitionChange:
         break;
 
+    case ThreadStatusTlv::kBorderRouterRequst:
+        if ((mRouterTable.GetActiveRouterCount() >= mRouterUpgradeThreshold) &&
+            (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
+             kRouterUpgradeBorderRouterRequestThreshold))
+        {
+            LogInfo("Rejecting BR %s router role req - have %d BR routers", extAddress.ToString().AsCString(),
+                    kRouterUpgradeBorderRouterRequestThreshold);
+            ExitNow();
+        }
+        break;
+
     default:
-        ExitNow(error = kErrorParse);
+        responseStatus = ThreadStatusTlv::kUnrecognizedStatus;
+        ExitNow();
     }
 
-    switch (Tlv::Find<ThreadRloc16Tlv>(aMessage, rloc16))
+    if (rloc16 != Mac::kShortAddrInvalid)
     {
-    case kErrorNone:
         router = mRouterTable.Allocate(RouterIdFromRloc16(rloc16));
 
         if (router != nullptr)
         {
             LogInfo("Router id %d requested and provided!", RouterIdFromRloc16(rloc16));
-            break;
         }
+    }
 
-        OT_FALL_THROUGH;
-
-    case kErrorNotFound:
+    if (router == nullptr)
+    {
         router = mRouterTable.Allocate();
-        break;
-
-    default:
-        ExitNow(error = kErrorParse);
+        VerifyOrExit(router != nullptr);
     }
 
-    if (router != nullptr)
-    {
-        router->SetExtAddress(extAddress);
-    }
-    else
-    {
-        LogInfo("Router address unavailable!");
-    }
+    router->SetExtAddress(extAddress);
+    responseStatus = ThreadStatusTlv::kSuccess;
 
 exit:
     if (error == kErrorNone)
     {
-        SendAddressSolicitResponse(aMessage, router, aMessageInfo);
+        SendAddressSolicitResponse(aMessage, responseStatus, router, aMessageInfo);
     }
 }
 
 void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
+                                           ThreadStatusTlv::Status aResponseStatus,
                                            const Router *          aRouter,
                                            const Ip6::MessageInfo &aMessageInfo)
 {
-    Coap::Message *         message = Get<Tmf::Agent>().NewPriorityMessage();
-    ThreadStatusTlv::Status status;
+    Coap::Message *message = Get<Tmf::Agent>().NewPriorityMessage();
 
     VerifyOrExit(message != nullptr);
 
     SuccessOrExit(message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(message->SetPayloadMarker());
 
-    status = (aRouter == nullptr) ? ThreadStatusTlv::kNoAddressAvailable : ThreadStatusTlv::kSuccess;
-    SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, status));
+    SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, aResponseStatus));
 
     if (aRouter != nullptr)
     {
