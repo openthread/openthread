@@ -494,7 +494,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
         SuccessOrExit(error = message->SetPayloadMarker());
     }
 
-    if (aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast())
+    if (aMessageInfo.GetPeerAddr().IsLinkLocal())
     {
         messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetLinkLocalAddress());
     }
