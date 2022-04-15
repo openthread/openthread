@@ -67,11 +67,8 @@ Error AnycastLocator::Locate(const Ip6::Address &aAnycastAddress, Callback aCall
     VerifyOrExit((aCallback != nullptr) && Get<Mle::Mle>().IsAnycastLocator(aAnycastAddress),
                  error = kErrorInvalidArgs);
 
-    message = Get<Tmf::Agent>().NewMessage();
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kAnycastLocate);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAnycastLocate));
-    SuccessOrExit(error = message->SetPayloadMarker());
 
     if (mCallback != nullptr)
     {
@@ -143,11 +140,8 @@ void AnycastLocator::HandleAnycastLocate(const Coap::Message &aRequest, const Ip
 
     VerifyOrExit(aRequest.IsConfirmablePostRequest());
 
-    message = Get<Tmf::Agent>().NewMessage();
+    message = Get<Tmf::Agent>().NewResponseMessage(aRequest);
     VerifyOrExit(message != nullptr);
-
-    SuccessOrExit(message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(message->SetPayloadMarker());
 
     SuccessOrExit(Tlv::Append<ThreadMeshLocalEidTlv>(*message, Get<Mle::Mle>().GetMeshLocal64().GetIid()));
     SuccessOrExit(Tlv::Append<ThreadRloc16Tlv>(*message, Get<Mle::Mle>().GetRloc16()));

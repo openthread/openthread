@@ -44,6 +44,8 @@ namespace Tmf {
 
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
+typedef Coap::Message Message; ///< A TMF message.
+
 /**
  * This class represents message information for a TMF message.
  *
@@ -160,7 +162,7 @@ public:
     bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
 private:
-    static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 
 } // namespace Tmf

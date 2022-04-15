@@ -442,11 +442,9 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     VendorStackVersionTlv vendorStackVersionTlv;
     ProvisioningUrlTlv    provisioningUrlTlv;
 
-    VerifyOrExit((mFinalizeMessage = Get<Coap::CoapSecure>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    mFinalizeMessage = Get<Coap::CoapSecure>().NewPriorityConfirmablePostMessage(UriPath::kJoinerFinalize);
+    VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
-    mFinalizeMessage->InitAsConfirmablePost();
-    SuccessOrExit(error = mFinalizeMessage->AppendUriPathOptions(UriPath::kJoinerFinalize));
-    SuccessOrExit(error = mFinalizeMessage->SetPayloadMarker());
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*mFinalizeMessage, StateTlv::kAccept));
@@ -600,8 +598,9 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
     Coap::Message *  message;
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     responseInfo.GetSockAddr().Clear();

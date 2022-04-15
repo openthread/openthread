@@ -278,11 +278,9 @@ void DatasetManager::SendSet(void)
         }
     }
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error =
-                      message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveSet : UriPath::kPendingSet));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? UriPath::kActiveSet
+                                                                                    : UriPath::kPendingSet);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     IgnoreError(Read(dataset));
     SuccessOrExit(error = message->AppendBytes(dataset.GetBytes(), dataset.GetSize()));
@@ -419,10 +417,8 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     IgnoreError(Read(dataset));
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aLength == 0)
     {
@@ -485,11 +481,9 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &    aDatasetInfo,
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error =
-                      message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveSet : UriPath::kPendingSet));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? UriPath::kActiveSet
+                                                                                    : UriPath::kPendingSet);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
@@ -612,15 +606,9 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error =
-                      message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveGet : UriPath::kPendingGet));
-
-    if (aLength + length > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? UriPath::kActiveGet
+                                                                                    : UriPath::kPendingGet);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aLength + length > 0)
     {

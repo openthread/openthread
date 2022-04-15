@@ -3636,10 +3636,8 @@ Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(!mAddressSolicitPending);
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressSolicit));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kAddressSolicit);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadExtMacAddressTlv>(*message, Get<Mac::Mac>().GetExtAddress()));
 
@@ -3672,10 +3670,8 @@ void MleRouter::SendAddressRelease(void)
     Tmf::MessageInfo messageInfo(GetInstance());
     Coap::Message *  message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressRelease));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kAddressRelease);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, Rloc16FromRouterId(mRouterId)));
     SuccessOrExit(error = Tlv::Append<ThreadExtMacAddressTlv>(*message, Get<Mac::Mac>().GetExtAddress()));
@@ -3904,12 +3900,9 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                            const Router *          aRouter,
                                            const Ip6::MessageInfo &aMessageInfo)
 {
-    Coap::Message *message = Get<Tmf::Agent>().NewPriorityMessage();
+    Coap::Message *message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
 
     VerifyOrExit(message != nullptr);
-
-    SuccessOrExit(message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(message->SetPayloadMarker());
 
     SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, aResponseStatus));
 

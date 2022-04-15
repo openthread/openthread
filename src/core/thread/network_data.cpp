@@ -640,14 +640,12 @@ Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
                                               Coap::ResponseHandler aHandler,
                                               void *                aContext) const
 {
-    Error            error   = kErrorNone;
-    Coap::Message *  message = nullptr;
+    Error            error = kErrorNone;
+    Coap::Message *  message;
     Tmf::MessageInfo messageInfo(GetInstance());
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kServerData);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aAppendNetDataTlv)
     {

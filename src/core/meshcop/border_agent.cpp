@@ -362,11 +362,8 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
 
     VerifyOrExit(aMessage.GetLength() > 0, error = kErrorNone);
 
-    VerifyOrExit((message = Get<Coap::CoapSecure>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    message->InitAsNonConfirmablePost();
-    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kProxyRx));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Coap::CoapSecure>().NewPriorityNonConfirmablePostMessage(UriPath::kProxyRx);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     {
         UdpEncapsulationTlv tlv;
@@ -403,15 +400,9 @@ void BorderAgent::HandleRelayReceive(const Coap::Message &aMessage)
     Error          error;
 
     VerifyOrExit(aMessage.IsNonConfirmablePostRequest(), error = kErrorDrop);
-    VerifyOrExit((message = Get<Coap::CoapSecure>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    message->InitAsNonConfirmablePost();
-    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kRelayRx));
-
-    if (aMessage.GetLength() > aMessage.GetOffset())
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    message = Get<Coap::CoapSecure>().NewPriorityNonConfirmablePostMessage(UriPath::kRelayRx);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = ForwardToCommissioner(*message, aMessage));
     LogInfo("Sent to commissioner on %s", UriPath::kRelayRx);
@@ -463,10 +454,8 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
 
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRouterRloc));
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kRelayTx));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(UriPath::kRelayTx);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     offset = message->GetLength();
     SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength() - aMessage.GetOffset()));
@@ -496,8 +485,6 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     Coap::Message *  message = nullptr;
     uint16_t         offset  = 0;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
     if (aSeparate)
     {
         SuccessOrExit(error = Get<Coap::CoapSecure>().SendAck(aMessage, aMessageInfo));
@@ -508,13 +495,8 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
 
     forwardContext->Init(GetInstance(), aMessage, aPetition, aSeparate);
 
-    SuccessOrExit(error = message->InitAsConfirmablePost(aPath));
-
-    // Payload of c/cg may be empty
-    if (aMessage.GetLength() - aMessage.GetOffset() > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(aPath);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     offset = message->GetLength();
     SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength() - aMessage.GetOffset()));

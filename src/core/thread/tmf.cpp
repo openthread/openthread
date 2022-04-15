@@ -85,7 +85,7 @@ Error Agent::Start(void)
     return Coap::Start(kUdpPort, OT_NETIF_THREAD);
 }
 
-Error Agent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+Error Agent::Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
     OT_UNUSED_VARIABLE(aMessage);
 

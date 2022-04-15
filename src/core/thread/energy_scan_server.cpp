@@ -177,10 +177,8 @@ void EnergyScanServer::SendReport(void)
     Tmf::MessageInfo        messageInfo(GetInstance());
     Coap::Message *         message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kEnergyReport));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kEnergyReport);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     channelMask.Init();
     channelMask.SetChannelMask(mChannelMask);
