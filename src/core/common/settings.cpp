@@ -210,9 +210,14 @@ void Settings::Wipe(void)
     LogInfo("Wiped all info");
 }
 
-Error Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset)
+Settings::Key Settings::KeyForDatasetType(MeshCoP::Dataset::Type aType)
 {
-    Key   key   = (aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    return (aType == MeshCoP::Dataset::kActive) ? kKeyActiveDataset : kKeyPendingDataset;
+}
+
+Error Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
+{
+    Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetSize());
 
     Log(kActionSave, error, key);
@@ -220,13 +225,12 @@ Error Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &a
     return error;
 }
 
-Error Settings::ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const
+Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const
 {
     Error    error  = kErrorNone;
     uint16_t length = MeshCoP::Dataset::kMaxSize;
 
-    SuccessOrExit(error = Get<SettingsDriver>().Get(aIsActive ? kKeyActiveDataset : kKeyPendingDataset,
-                                                    aDataset.GetBytes(), &length));
+    SuccessOrExit(error = Get<SettingsDriver>().Get(KeyForDatasetType(aType), aDataset.GetBytes(), &length));
     VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = kErrorNotFound);
 
     aDataset.SetSize(length);
@@ -235,9 +239,9 @@ exit:
     return error;
 }
 
-Error Settings::DeleteOperationalDataset(bool aIsActive)
+Error Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
 {
-    Key   key   = (aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Delete(key);
 
     Log(kActionDelete, error, key);

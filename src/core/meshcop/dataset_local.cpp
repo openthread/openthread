@@ -66,7 +66,7 @@ void DatasetLocal::Clear(void)
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DestroySecurelyStoredKeys();
 #endif
-    IgnoreError(Get<Settings>().DeleteOperationalDataset(IsActive()));
+    IgnoreError(Get<Settings>().DeleteOperationalDataset(mType));
     mTimestamp.Clear();
     mTimestampPresent = false;
     mSaved            = false;
@@ -94,7 +94,7 @@ Error DatasetLocal::Read(Dataset &aDataset) const
     uint32_t       elapsed;
     Error          error;
 
-    error = Get<Settings>().ReadOperationalDataset(IsActive(), aDataset);
+    error = Get<Settings>().ReadOperationalDataset(mType, aDataset);
     VerifyOrExit(error == kErrorNone, aDataset.mLength = 0);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -189,7 +189,7 @@ Error DatasetLocal::Save(const Dataset &aDataset)
     if (aDataset.GetSize() == 0)
     {
         // do not propagate error back
-        IgnoreError(Get<Settings>().DeleteOperationalDataset(IsActive()));
+        IgnoreError(Get<Settings>().DeleteOperationalDataset(mType));
         mSaved = false;
         LogInfo("%s dataset deleted", Dataset::TypeToString(mType));
     }
@@ -201,9 +201,9 @@ Error DatasetLocal::Save(const Dataset &aDataset)
 
         dataset.Set(GetType(), aDataset);
         MoveKeysToSecureStorage(dataset);
-        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), dataset));
+        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(mType, dataset));
 #else
-        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset));
+        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(mType, aDataset));
 #endif
 
         mSaved = true;
@@ -320,7 +320,7 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
 
         dataset.Set(GetType(), aDataset);
         MoveKeysToSecureStorage(dataset);
-        SuccessOrAssert(error = Get<Settings>().SaveOperationalDataset(IsActive(), dataset));
+        SuccessOrAssert(error = Get<Settings>().SaveOperationalDataset(mType, dataset));
     }
 }
 #endif
