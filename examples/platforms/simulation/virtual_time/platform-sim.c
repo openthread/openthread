@@ -115,6 +115,10 @@ static void receiveEvent(otInstance *aInstance)
     case OT_SIM_EVENT_UART_WRITE:
         otPlatUartReceived(event.mData, event.mDataLength);
         break;
+    
+    case OT_SIM_EVENT_RADIO_TX_DONE:
+        platformRadioTxDone(aInstance, event.mData);
+        break;
 
     default:
         assert(false);

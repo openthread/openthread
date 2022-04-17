@@ -67,6 +67,7 @@ enum
     OT_SIM_EVENT_UART_WRITE         = 2,
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
+    OT_SIM_EVENT_RADIO_TX_DONE      = 6,
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
@@ -157,6 +158,14 @@ void platformRadioDeinit(void);
  *
  */
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength);
+
+/**
+ * This function signals Tx Done to the radio (instead of echo frames).
+ *
+ * @param[in]  aInstance   A pointer to the OpenThread instance.
+ *
+ */
+void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.

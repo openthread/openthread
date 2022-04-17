@@ -67,9 +67,10 @@ enum
 };
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
-extern int      sSockFd;
-extern uint16_t sPortOffset;
-uint64_t        sDelayToTransmit;
+extern int          sSockFd;
+extern uint16_t     sPortOffset;
+static otRadioState sLastReportedState  = OT_RADIO_STATE_DISABLED;
+static bool         sRxDoneAfterAckSent = false;
 #else
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
@@ -223,7 +224,7 @@ static uint16_t crc16_citt(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 const char *radioStateToString(otRadioState aState)
 {
     char const *ans;
@@ -253,25 +254,26 @@ void reportRadioStatusToOtns(otRadioState aState)
     int          n;
     struct Event event;
 
-    event.mDelay = 0;
-    event.mEvent = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+    if (sLastReportedState != aState)
+    {
+        sLastReportedState = aState;
+        event.mDelay       = 0;
+        event.mEvent       = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
-    n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(aState));
+        n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(aState));
 
-    assert(n > 0);
+        assert(n > 0);
 
-    event.mDataLength = (uint16_t)n;
-    otSimSendEvent(&event);
+        event.mDataLength = (uint16_t)n;
+        otSimSendEvent(&event);
+    }
 }
 #endif
 
 void setRadioState(otRadioState aState)
 {
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 1
-    if (sState != aState)
-    {
-        reportRadioStatusToOtns(aState);
-    }
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    reportRadioStatusToOtns(aState);
 #endif
     sState = aState;
 }
@@ -590,13 +592,24 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
     return sPromiscuous;
 }
 
+void confirmRxDone(otInstance *aInstance, otError error) 
+{
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    if (otPlatDiagModeGet())
+    {
+        otPlatDiagRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
+    }
+    else
+#endif
+    {
+        otPlatRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
+    }
+}
+
 static void radioReceive(otInstance *aInstance)
 {
     bool isTxDone = false;
     bool isAck    = otMacFrameIsAck(&sReceiveFrame);
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
-    struct timespec remaining, request = {0, 1000}; // for nanosleep
-#endif
 
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
@@ -604,25 +617,9 @@ static void radioReceive(otInstance *aInstance)
     // Unable to simulate SFD, so use the rx done timestamp instead.
     sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();
 
-    if (sTxWait)
+    if (sTxWait && otMacFrameIsAckRequested(&sTransmitFrame))
     {
-        if (otMacFrameIsAckRequested(&sTransmitFrame))
-        {
-            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
-        }
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
-        // Simulate tx done when receiving the echo frame.
-        else
-        {
-            // wait for the transmission delay
-            while (otPlatRadioGetNow(aInstance) < sDelayToTransmit)
-            {
-                nanosleep(&request, &remaining);
-            }
-            isTxDone = !isAck && sTransmitFrame.mLength == sReceiveFrame.mLength &&
-                       memcmp(sTransmitFrame.mPsdu, sReceiveFrame.mPsdu, sTransmitFrame.mLength) == 0;
-        }
-#endif
+        isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
     }
 
     if (isTxDone)
@@ -775,7 +772,7 @@ void radioSendMessage(otInstance *aInstance)
         }
     }
 #else
-    // Wait for echo radio in virtual time mode.
+    // Wait for simulator confirmation signal of radio transmission in virtual time mode.
     sTxWait = true;
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 exit:
@@ -797,6 +794,59 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
     sReceiveFrame.mLength = (uint8_t)(aBufLength - 1);
 
     radioReceive(aInstance);
+}
+
+void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
+{
+    bool isTxDone = false;
+
+    OT_UNUSED_VARIABLE(aInstance);
+    // OT_UNUSED_VARIABLE(aBuf);
+
+    otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
+
+    // Simulate tx done when receiving Tx Done signal from simulator.
+    if (sRxDoneAfterAckSent)
+    {
+        sRxDoneAfterAckSent = false;
+        confirmRxDone(aInstance, OT_ERROR_NONE);
+    }
+    else if (otMacFrameGetSequence(&sTransmitFrame) == aBuf[0]) // Data[0] is the sequence number
+    {
+        // Radio sState keeps in OT_RADIO_STATE_RECEIVE even when sending an ack.
+        // For energy accuracy, we make a report without changing the sState.
+        if (otMacFrameIsAckRequested(&sTransmitFrame))
+        {
+            reportRadioStatusToOtns(OT_RADIO_STATE_RECEIVE);
+        }
+        else
+        {
+            isTxDone = true;
+        }
+    }
+
+
+
+    if (isTxDone)
+    {
+        setRadioState(OT_RADIO_STATE_RECEIVE);
+        sTxWait = false;
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, OT_ERROR_NONE);
+        }
+        else
+#endif
+        {
+            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
+        }
+    }
+
+exit:
+    return;
 }
 #else
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
@@ -903,14 +953,16 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     struct Event event;
 
-    event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
-    event.mDataLength = 1 + aFrame->mLength;                        // include channel in first byte
-    event.mDelay      = (event.mDataLength * 8 * 1000) / 250 + 400; // 250kbps plus 400us of radio state transision time
+    // Radio sState keeps in OT_RADIO_STATE_RECEIVE even when sending an ack.
+    // For energy accuracy, we make a report without changing the sState.
+    reportRadioStatusToOtns(OT_RADIO_STATE_TRANSMIT);
+
+    event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;                    // OT_SIM_EVENT_RADIO_RECEIVED automatically sets OTNS' radio state to tx.
+    event.mDataLength = 1 + aFrame->mLength;                            // include channel in first byte
+    event.mDelay      = ((aFrame->mLength + 6) * 8 * 1000) / 250 + 400; // 4 bytes of preamble + 1 SOF + 1 PHY header @250kbps + 400us of radio state transision time
     memcpy(event.mData, aMessage, event.mDataLength);
 
     otSimSendEvent(&event);
-
-    sDelayToTransmit = otPlatTimeGet() + event.mDelay;
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
@@ -1008,6 +1060,10 @@ void radioProcessFrame(otInstance *aInstance)
     if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
         radioSendAck();
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME
+        sRxDoneAfterAckSent = true;
+#endif
+
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (otMacFrameIsSecurityEnabled(&sAckFrame))
         {
@@ -1021,16 +1077,14 @@ exit:
 
     if (error != OT_ERROR_ABORT)
     {
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-        if (otPlatDiagModeGet())
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+        confirmRxDone(aInstance, error);
+#else // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+        if (!sRxDoneAfterAckSent || error != OT_ERROR_NONE)
         {
-            otPlatDiagRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
+            confirmRxDone(aInstance, error);
         }
-        else
 #endif
-        {
-            otPlatRadioReceiveDone(aInstance, error == OT_ERROR_NONE ? &sReceiveFrame : NULL, error);
-        }
     }
 }
 
