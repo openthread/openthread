@@ -51,7 +51,7 @@
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
-#include "common/random_manager.hpp"
+#include "common/random.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
@@ -331,7 +331,7 @@ private:
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    // RandomManager is initialized before other objects. Note that it
+    // Random::Manager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     static Utils::Heap sHeap;
@@ -339,7 +339,7 @@ private:
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-    RandomManager mRandomManager;
+    Random::Manager mRandomManager;
 
     // Radio is initialized before other member variables
     // (particularly, SubMac and Mac) to allow them to use its methods
