@@ -108,7 +108,7 @@ static void receiveEvent(otInstance *aInstance)
     case OT_SIM_EVENT_ALARM_FIRED:
         break;
 
-    case OT_SIM_EVENT_RADIO_RECEIVED:
+    case OT_SIM_EVENT_RADIO_COMM:
         platformRadioReceive(aInstance, event.mData, event.mDataLength);
         break;
 

@@ -268,6 +268,21 @@ void reportRadioStatusToOtns(otRadioState aState)
         otSimSendEvent(&event);
     }
 }
+void bsReport(const char *s)
+{
+    int          n;
+    struct Event event;
+
+    event.mDelay       = 0;
+    event.mEvent       = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+
+    n = snprintf((char *)event.mData, sizeof(event.mData), "bsReport=%s", s);
+
+    assert(n > 0);
+
+    event.mDataLength = (uint16_t)n;
+    otSimSendEvent(&event);
+}
 #endif
 
 void setRadioState(otRadioState aState)
@@ -507,7 +522,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError error = OT_ERROR_INVALID_STATE;
 
     if (sState != OT_RADIO_STATE_DISABLED)
-    {
+    {bsReport("Platform requested RX");
         setRadioState(OT_RADIO_STATE_RECEIVE);
         error                  = OT_ERROR_NONE;
         sTxWait                = false;
@@ -616,14 +631,14 @@ static void radioReceive(otInstance *aInstance)
 
     // Unable to simulate SFD, so use the rx done timestamp instead.
     sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();
-
+bsReport("Processing received frame");
     if (sTxWait && otMacFrameIsAckRequested(&sTransmitFrame))
-    {
+    {bsReport("is TX waiting");
         isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
     }
 
     if (isTxDone)
-    {
+    {bsReport("Regular set to Rx");
         setRadioState(OT_RADIO_STATE_RECEIVE);
         sTxWait = false;
 
@@ -635,7 +650,7 @@ static void radioReceive(otInstance *aInstance)
         }
         else
 #endif
-        {
+        {bsReport("Told plat Tx is done");
             otPlatRadioTxDone(aInstance, &sTransmitFrame, (isAck ? &sReceiveFrame : NULL), OT_ERROR_NONE);
         }
     }
@@ -807,16 +822,16 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
 
     // Simulate tx done when receiving Tx Done signal from simulator.
     if (sRxDoneAfterAckSent)
-    {
+    {bsReport("Was Ack echo, restoring");
         sRxDoneAfterAckSent = false;
         confirmRxDone(aInstance, OT_ERROR_NONE);
     }
     else if (otMacFrameGetSequence(&sTransmitFrame) == aBuf[0]) // Data[0] is the sequence number
-    {
+    {bsReport("Is echo frame");
         // Radio sState keeps in OT_RADIO_STATE_RECEIVE even when sending an ack.
         // For energy accuracy, we make a report without changing the sState.
         if (otMacFrameIsAckRequested(&sTransmitFrame))
-        {
+        {bsReport("changed to Rx");
             reportRadioStatusToOtns(OT_RADIO_STATE_RECEIVE);
         }
         else
@@ -828,7 +843,7 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
 
 
     if (isTxDone)
-    {
+    {bsReport("Regular set to Rx");
         setRadioState(OT_RADIO_STATE_RECEIVE);
         sTxWait = false;
 
@@ -840,7 +855,7 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
         }
         else
 #endif
-        {
+        {bsReport("Told plat Tx is done");
             otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
         }
     }
@@ -957,7 +972,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     // For energy accuracy, we make a report without changing the sState.
     reportRadioStatusToOtns(OT_RADIO_STATE_TRANSMIT);
 
-    event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;                    // OT_SIM_EVENT_RADIO_RECEIVED automatically sets OTNS' radio state to tx.
+    event.mEvent      = OT_SIM_EVENT_RADIO_COMM;
     event.mDataLength = 1 + aFrame->mLength;                            // include channel in first byte
     event.mDelay      = ((aFrame->mLength + 6) * 8 * 1000) / 250 + 400; // 4 bytes of preamble + 1 SOF + 1 PHY header @250kbps + 400us of radio state transision time
     memcpy(event.mData, aMessage, event.mDataLength);
