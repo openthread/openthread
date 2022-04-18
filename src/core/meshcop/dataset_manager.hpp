@@ -272,6 +272,9 @@ protected:
      * @param[in]  aOffset     The offset where the Operational Dataset begins.
      * @param[in]  aLength     The length of the Operational Dataset.
      *
+     * @retval kErrorNone     Successfully parsed the Dataset from the @p aMessage and saved it.
+     * @retval kErrorParse    Could not parse the Dataset from @p aMessage.
+     *
      */
     Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
@@ -418,6 +421,9 @@ public:
      * @param[in]  aMessage    The message buffer.
      * @param[in]  aOffset     The offset where the Operational Dataset begins.
      * @param[in]  aLength     The length of the Operational Dataset.
+     *
+     * @retval kErrorNone     Successfully parsed the Dataset from the @p aMessage and saved it.
+     * @retval kErrorParse    Could not parse the Dataset from @p aMessage.
      *
      */
     Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);

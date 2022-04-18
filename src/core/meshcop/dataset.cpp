@@ -435,12 +435,14 @@ Error Dataset::SetTlv(const Tlv &aTlv)
     return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength());
 }
 
-Error Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
-    Error error = kErrorInvalidArgs;
+    Error error = kErrorParse;
 
     SuccessOrExit(aMessage.Read(aOffset, mTlvs, aLength));
     mLength = aLength;
+
+    VerifyOrExit(IsValid(), error = kErrorParse);
 
     mUpdateTime = TimerMilli::GetNow();
     error       = kErrorNone;

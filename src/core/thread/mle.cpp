@@ -3696,7 +3696,8 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
         if (Tlv::FindTlvOffset(aMessage, Tlv::kActiveDataset, offset) == kErrorNone)
         {
             IgnoreError(aMessage.Read(offset, tlv));
-            IgnoreError(Get<MeshCoP::ActiveDataset>().Save(timestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
+            SuccessOrExit(
+                error = Get<MeshCoP::ActiveDataset>().Save(timestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
         }
         break;
 

@@ -140,7 +140,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
 
     if (isNetworkkeyUpdated || compare > 0)
     {
-        IgnoreError(mLocal.Save(aDataset));
+        SuccessOrExit(error = mLocal.Save(aDataset));
 
 #if OPENTHREAD_FTD
         Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
@@ -690,9 +690,9 @@ Error ActiveDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, 
     Error   error = kErrorNone;
     Dataset dataset;
 
-    SuccessOrExit(error = dataset.Set(aMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.ReadFromMessage(aMessage, aOffset, aLength));
     dataset.SetTimestamp(Dataset::kActive, aTimestamp);
-    IgnoreError(DatasetManager::Save(dataset));
+    error = DatasetManager::Save(dataset);
 
 exit:
     return error;
@@ -777,9 +777,9 @@ Error PendingDataset::Save(const Timestamp &aTimestamp, const Message &aMessage,
     Error   error = kErrorNone;
     Dataset dataset;
 
-    SuccessOrExit(error = dataset.Set(aMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.ReadFromMessage(aMessage, aOffset, aLength));
     dataset.SetTimestamp(Dataset::kPending, aTimestamp);
-    IgnoreError(DatasetManager::Save(dataset));
+    SuccessOrExit(error = DatasetManager::Save(dataset));
     StartDelayTimer();
 
 exit:
