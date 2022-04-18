@@ -173,6 +173,19 @@ public:
      */
     Error RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext);
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    /**
+     * This method indicates whether or not the Thread Network Data contains a given OMR prefix.
+     *
+     * @param[in]  aPrefix   The OMR prefix to check.
+     *
+     * @retval TRUE  if Network Data contains OMR prefix @p aPrefix.
+     * @retval FALSE if Network Data does not contain OMR prefix @p aPrefix.
+     *
+     */
+    bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix);
+#endif
+
 private:
     class ChangedFlags
     {

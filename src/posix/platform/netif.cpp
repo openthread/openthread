@@ -137,6 +137,7 @@ extern int
 
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
+#include <openthread/border_router.h>
 #include <openthread/icmp6.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
@@ -191,6 +192,13 @@ using namespace ot::Posix::Ip6Utils;
 
 #if defined(__linux__)
 static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
+static constexpr uint32_t kOmrRoutesPriority = OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY;
+static constexpr uint8_t  kMaxOmrRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM;
+static uint8_t            sAddedOmrRoutesNum = 0;
+static otIp6Prefix        sAddedOmrRoutes[kMaxOmrRoutesNum];
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
@@ -345,8 +353,19 @@ void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, 
     AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
 }
 
-static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo)
 {
+    otIp6Prefix addressPrefix{*aAddressInfo.mAddress, aAddressInfo.mPrefixLength};
+
+    return otNetDataContainsOmrPrefix(aInstance, &addressPrefix);
+}
+#endif
+
+static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
     struct
     {
         struct nlmsghdr  nh;
@@ -380,12 +399,26 @@ static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdd
         AddRtAttr(&req.nh, sizeof(req), IFA_CACHEINFO, &cacheinfo, sizeof(cacheinfo));
     }
 
-#if OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC > 0
-    if (aAddressInfo.mScope > ot::Ip6::Address::kLinkLocalScope)
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+    if (IsOmrAddress(aInstance, aAddressInfo))
     {
-        AddRtAttrUint32(&req.nh, sizeof(req), IFA_RT_PRIORITY, OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC);
+        // Remove prefix route for OMR address if `OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE` is enabled to
+        // avoid having two routes.
+        if (aIsAdded)
+        {
+            AddRtAttrUint32(&req.nh, sizeof(req), IFA_FLAGS, IFA_F_NOPREFIXROUTE);
+        }
     }
+    else
 #endif
+    {
+#if OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC > 0
+        if (aAddressInfo.mScope > ot::Ip6::Address::kLinkLocalScope)
+        {
+            AddRtAttrUint32(&req.nh, sizeof(req), IFA_RT_PRIORITY, OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC);
+        }
+#endif
+    }
 
     if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
     {
@@ -410,7 +443,7 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
     assert(sIpFd >= 0);
 
 #if defined(__linux__)
-    UpdateUnicastLinux(aAddressInfo, aIsAdded);
+    UpdateUnicastLinux(aInstance, aAddressInfo, aIsAdded);
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     {
         int                 rval;
@@ -531,8 +564,10 @@ exit:
     }
 }
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
-static otError AddExternalRoute(const otIp6Prefix &aPrefix)
+#if __linux__ && \
+    (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
+
+static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
 {
     constexpr unsigned int kBufSize = 128;
     struct
@@ -548,7 +583,6 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 
     VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum, error = OT_ERROR_NO_BUFS);
 
     req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
 
@@ -570,7 +604,7 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
     AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, data, sizeof(data));
-    AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority);
+    AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, aPriority);
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
     if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
@@ -582,7 +616,7 @@ exit:
     return error;
 }
 
-static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
+static otError DeleteRoute(const otIp6Prefix &aPrefix)
 {
     constexpr unsigned int kBufSize = 512;
     struct
@@ -627,6 +661,107 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
+exit:
+    return error;
+}
+
+#endif // __linux__ && (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE ||
+       // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
+
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
+
+bool HasAddedOmrRoute(const otIp6Prefix &aOmrPrefix)
+{
+    bool found = false;
+
+    for (uint8_t i = 0; i < sAddedOmrRoutesNum; ++i)
+    {
+        if (otIp6ArePrefixesEqual(&sAddedOmrRoutes[i], &aOmrPrefix))
+        {
+            found = true;
+            break;
+        }
+    }
+
+    return found;
+}
+
+static otError AddOmrRoute(const otIp6Prefix &aPrefix)
+{
+    otError error;
+
+    VerifyOrExit(sAddedOmrRoutesNum < kMaxOmrRoutesNum, error = OT_ERROR_NO_BUFS);
+
+    error = AddRoute(aPrefix, kOmrRoutesPriority);
+exit:
+    return error;
+}
+
+static void UpdateOmrRoutes(otInstance *aInstance)
+{
+    otError               error;
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otBorderRouterConfig  config;
+    char                  prefixString[OT_IP6_PREFIX_STRING_SIZE];
+
+    // Remove kernel routes if the OMR prefix is removed
+    for (int i = 0; i < static_cast<int>(sAddedOmrRoutesNum); ++i)
+    {
+        if (otNetDataContainsOmrPrefix(aInstance, &sAddedOmrRoutes[i]))
+        {
+            continue;
+        }
+
+        otIp6PrefixToString(&sAddedOmrRoutes[i], prefixString, sizeof(prefixString));
+        if ((error = DeleteRoute(sAddedOmrRoutes[i])) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("[netif] Failed to delete an OMR route %s in kernel: %s", prefixString,
+                          otThreadErrorToString(error));
+        }
+        else
+        {
+            sAddedOmrRoutes[i] = sAddedOmrRoutes[sAddedOmrRoutesNum - 1];
+            --sAddedOmrRoutesNum;
+            --i;
+            otLogInfoPlat("[netif] Successfully deleted an OMR route %s in kernel", prefixString);
+        }
+    }
+
+    // Add kernel routes for OMR prefixes in Network Data
+    while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
+    {
+        if (HasAddedOmrRoute(config.mPrefix))
+        {
+            continue;
+        }
+
+        otIp6PrefixToString(&config.mPrefix, prefixString, sizeof(prefixString));
+        if ((error = AddOmrRoute(config.mPrefix)) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("[netif] Failed to add an OMR route %s in kernel: %s", prefixString,
+                          otThreadErrorToString(error));
+        }
+        else
+        {
+            sAddedOmrRoutes[sAddedOmrRoutesNum++] = config.mPrefix;
+            otLogInfoPlat("[netif] Successfully added an OMR route %s in kernel: %s", prefixString);
+        }
+    }
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
+
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
+
+static otError AddExternalRoute(const otIp6Prefix &aPrefix)
+{
+    otError error;
+
+    VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum, error = OT_ERROR_NO_BUFS);
+
+    error = AddRoute(aPrefix, kExternalRoutePriority);
 exit:
     return error;
 }
@@ -676,9 +811,10 @@ static void UpdateExternalRoutes(otInstance *aInstance)
         {
             continue;
         }
-        if ((error = DeleteExternalRoute(sAddedExternalRoutes[i])) != OT_ERROR_NONE)
+
+        otIp6PrefixToString(&sAddedExternalRoutes[i], prefixString, sizeof(prefixString));
+        if ((error = DeleteRoute(sAddedExternalRoutes[i])) != OT_ERROR_NONE)
         {
-            otIp6PrefixToString(&sAddedExternalRoutes[i], prefixString, sizeof(prefixString));
             otLogWarnPlat("[netif] Failed to delete an external route %s in kernel: %s", prefixString,
                           otThreadErrorToString(error));
         }
@@ -687,6 +823,7 @@ static void UpdateExternalRoutes(otInstance *aInstance)
             sAddedExternalRoutes[i] = sAddedExternalRoutes[sAddedExternalRoutesNum - 1];
             --sAddedExternalRoutesNum;
             --i;
+            otLogWarnPlat("[netif] Successfully deleted an external route %s in kernel", prefixString);
         }
     }
 
@@ -698,15 +835,17 @@ static void UpdateExternalRoutes(otInstance *aInstance)
         }
         VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum,
                      otLogWarnPlat("[netif] No buffer to add more external routes in kernel"));
+
+        otIp6PrefixToString(&config.mPrefix, prefixString, sizeof(prefixString));
         if ((error = AddExternalRoute(config.mPrefix)) != OT_ERROR_NONE)
         {
-            otIp6PrefixToString(&config.mPrefix, prefixString, sizeof(prefixString));
             otLogWarnPlat("[netif] Failed to add an external route %s in kernel: %s", prefixString,
                           otThreadErrorToString(error));
         }
         else
         {
             sAddedExternalRoutes[sAddedExternalRoutesNum++] = config.mPrefix;
+            otLogWarnPlat("[netif] Successfully added an external route %s in kernel: %s", prefixString);
         }
     }
 exit:
@@ -732,18 +871,18 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     {
         UpdateLink(aInstance);
     }
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
+        UpdateOmrRoutes(aInstance);
+#endif
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
         UpdateExternalRoutes(aInstance);
-    }
 #endif
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
-    if (OT_CHANGED_THREAD_NETDATA & aFlags)
-    {
         ot::Posix::UpdateIpSets(aInstance);
-    }
 #endif
+    }
 }
 
 static void processReceive(otMessage *aMessage, void *aContext)

@@ -60,6 +60,13 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+bool otNetDataContainsOmrPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().ContainsOmrPrefix(AsCoreType(aPrefix));
+}
+#endif
+
 otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig)
 {
     Error error = kErrorNone;

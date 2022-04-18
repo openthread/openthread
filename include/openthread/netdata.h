@@ -231,6 +231,19 @@ otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance *              
                                                       const struct otJoinerDiscerner *aDiscerner);
 
 /**
+ * This function checks whether the Leader's Network Data contains a given OMR prefix.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aPrefix    A pointer to the IPv6 prefix.
+ *
+ * @returns  Whether Leader's Network Data contains the OMR prefix @p aPrefix.
+ *
+ * @note This API is only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` is used.
+ *
+ */
+bool otNetDataContainsOmrPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix);
+
+/**
  * @}
  *
  */
