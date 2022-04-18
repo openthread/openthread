@@ -47,15 +47,12 @@
 #include "common/settings_driver.hpp"
 #include "crypto/ecdsa.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/dataset.hpp"
 #include "net/ip6_address.hpp"
 #include "utils/flash.hpp"
 #include "utils/slaac_address.hpp"
 
 namespace ot {
-
-namespace MeshCoP {
-class Dataset;
-}
 
 class Settings;
 
@@ -799,38 +796,38 @@ public:
     /**
      * This method saves the Operational Dataset (active or pending).
      *
-     * @param[in]   aIsActive   Indicates whether Dataset is active or pending.
+     * @param[in]   aType       The Dataset type (active or pending) to save.
      * @param[in]   aDataset    A reference to a `Dataset` object to be saved.
      *
      * @retval kErrorNone             Successfully saved the Dataset.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset);
+    Error SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset);
 
     /**
      * This method reads the Operational Dataset (active or pending).
      *
-     * @param[in]   aIsActive             Indicates whether Dataset is active or pending.
-     * @param[out]  aDataset              A reference to a `Dataset` object to output the read content.
+     * @param[in]   aType            The Dataset type (active or pending) to read.
+     * @param[out]  aDataset         A reference to a `Dataset` object to output the read content.
      *
      * @retval kErrorNone             Successfully read the Dataset.
      * @retval kErrorNotFound         No corresponding value in the setting store.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const;
+    Error ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const;
 
     /**
      * This method deletes the Operational Dataset (active/pending) from settings.
      *
-     * @param[in]   aIsActive            Indicates whether Dataset is active or pending.
+     * @param[in]   aType            The Dataset type (active or pending) to delete.
      *
      * @retval kErrorNone            Successfully deleted the Dataset.
      * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    Error DeleteOperationalDataset(bool aIsActive);
+    Error DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
 
     /**
      * This template method reads a specified settings entry.
@@ -1113,6 +1110,8 @@ private:
         ChildInfoIterator end(void) { return ChildInfoIterator(GetInstance(), ChildInfoIterator::kEndIterator); }
     };
 #endif
+
+    static Key KeyForDatasetType(MeshCoP::Dataset::Type aType);
 
     Error ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const;
     Error SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength);
