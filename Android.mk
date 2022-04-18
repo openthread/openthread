@@ -238,7 +238,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/log.cpp                                         \
     src/core/common/message.cpp                                     \
     src/core/common/notifier.cpp                                    \
-    src/core/common/random_manager.cpp                              \
+    src/core/common/random.cpp                                      \
     src/core/common/settings.cpp                                    \
     src/core/common/string.cpp                                      \
     src/core/common/tasklet.cpp                                     \
