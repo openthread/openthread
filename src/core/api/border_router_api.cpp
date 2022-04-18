@@ -64,6 +64,11 @@ otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPref
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(AsCoreType(aPrefix));
 }
 
+bool otBorderRoutingIsValidOmrPrefix(const otBorderRouterConfig *aConfig)
+{
+    return BorderRouter::RoutingManager::IsValidOmrPrefix(AsCoreType(aConfig));
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {

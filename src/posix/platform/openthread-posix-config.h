@@ -127,6 +127,38 @@
 #endif
 
 /**
+ * @def OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+ *
+ * Define as 1 to add OMR routes to POSIX kernel when OMR prefixes are changed in netdata.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_OMR_ROUTE_PRIORITY
+ *
+ * This macro defines the priority of OMR routes added to kernel. The larger the number, the lower the priority. We
+ * need to assign a high priority to such routes so that kernel prefers the Thread link rather than infrastructure.
+ * Otherwise we may unnecessarily transmit packets via infrastructure, which potentially causes looping issue.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_OMR_ROUTE_PRIORITY
+#define OPENTHREAD_POSIX_CONFIG_OMR_ROUTE_PRIORITY 1
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTE_NUM
+ *
+ * This macro defines the max number of OMR routes that can be added to kernel.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTE_NUM
+#define OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTE_NUM 8
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
  *
  * Define as 1 to add external routes to POSIX kernel when external routes are changed in netdata.

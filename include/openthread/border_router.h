@@ -118,6 +118,15 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
+ * This method checks if the On Mesh Prefix is a valid off-mesh-routable (OMR) Prefix.
+ *
+ * @param[in]  aConfig    A pointer the the On Mesh Prefix inforamtion.
+ *
+ * @returns  Whether the On Mesh Prefix is a valid OMR Prefix.
+ */
+bool otBorderRoutingIsValidOmrPrefix(const otBorderRouterConfig *aConfig);
+
+/**
  * This function returns the local NAT64 prefix.
  *
  * This prefix might not be advertised in the Thread network.
