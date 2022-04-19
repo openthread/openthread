@@ -334,6 +334,8 @@ private:
     static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
     static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
 
+    static constexpr uint32_t kTxDelayInterval = OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_INTERVAL; // In msec
+
     enum MessageAction : uint8_t
     {
         kMessageReceive,         // Indicates that the message was received.
@@ -503,11 +505,15 @@ private:
     void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    static void HandleTxDelayTimer(Timer &aTimer);
+    void        HandleTxDelayTimer(void);
+#endif
+
     void LogMessage(MessageAction       aAction,
                     const Message &     aMessage,
                     Error               aError   = kErrorNone,
                     const Mac::Address *aAddress = nullptr);
-
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,
@@ -585,6 +591,10 @@ private:
     bool         mEnabled : 1;
     bool         mTxPaused : 1;
     bool         mSendBusy : 1;
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    bool       mDelayNextTx : 1;
+    TimerMilli mTxDelayTimer;
+#endif
 
     Tasklet mScheduleTransmissionTask;
 
