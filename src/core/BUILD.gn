@@ -509,6 +509,8 @@ openthread_core_files = [
   "meshcop/dtls.hpp",
   "meshcop/energy_scan_client.cpp",
   "meshcop/energy_scan_client.hpp",
+  "meshcop/extended_panid.cpp",
+  "meshcop/extended_panid.hpp",
   "meshcop/joiner.cpp",
   "meshcop/joiner.hpp",
   "meshcop/joiner_router.cpp",

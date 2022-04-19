@@ -131,7 +131,7 @@ Mle::Mle(Instance &aInstance)
 
     mLeaderAloc.InitAsThreadOriginRealmLocalScope();
 
-    meshLocalPrefix.SetFromExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
+    meshLocalPrefix.SetFromExtendedPanId(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
 
     mMeshLocal64.InitAsThreadOriginRealmLocalScope();
     mMeshLocal64.GetAddress().GetIid().GenerateRandom();

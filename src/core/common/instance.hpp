@@ -71,6 +71,7 @@
 #include "crypto/mbedtls.hpp"
 #include "meshcop/border_agent.hpp"
 #include "meshcop/dataset_updater.hpp"
+#include "meshcop/extended_panid.hpp"
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_metrics.hpp"
@@ -700,6 +701,11 @@ template <> inline Coap::CoapSecure &Instance::Get(void)
     return mThreadNetif.mCoapSecure;
 }
 #endif
+
+template <> inline MeshCoP::ExtendedPanIdManager &Instance::Get(void)
+{
+    return mThreadNetif.mExtendedPanIdManager;
+}
 
 template <> inline MeshCoP::ActiveDataset &Instance::Get(void)
 {

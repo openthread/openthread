@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for MAC types such as Address, Extended PAN Identifier, Network Name, etc.
+ *   This file includes definitions for MAC types.
  */
 
 #ifndef MAC_TYPES_HPP_
@@ -553,32 +553,6 @@ private:
 };
 
 /**
- * This structure represents an IEEE 802.15.4 Extended PAN Identifier.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>, public Clearable<ExtendedPanId>
-{
-public:
-    static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
-
-    /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
-     *
-     */
-    typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This method converts an address to a string.
-     *
-     * @returns An `InfoString` containing the string representation of the Extended PAN Identifier.
-     *
-     */
-    InfoString ToString(void) const;
-
-} OT_TOOL_PACKED_END;
-
-/**
  * This class represents a name string as data (pointer to a char buffer along with a length).
  *
  * @note The char array does NOT need to be null terminated.
@@ -1024,7 +998,6 @@ private:
 
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
-DefineCoreType(otExtendedPanId, Mac::ExtendedPanId);
 DefineCoreType(otNetworkName, Mac::NetworkName);
 
 } // namespace ot

@@ -146,6 +146,7 @@ set(COMMON_SOURCES
     meshcop/dataset_updater.cpp
     meshcop/dtls.cpp
     meshcop/energy_scan_client.cpp
+    meshcop/extended_panid.cpp
     meshcop/joiner.cpp
     meshcop/joiner_router.cpp
     meshcop/meshcop.cpp

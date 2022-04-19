@@ -334,7 +334,7 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<ExtendedPanIdTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<Mac::Mac>().GetExtendedPanId()));
+        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
     }
 
     if (dataset.GetTlv<MeshLocalPrefixTlv>() == nullptr)

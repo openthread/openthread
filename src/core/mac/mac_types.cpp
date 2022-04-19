@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements MAC types such as Address, Extended PAN Identifier, Network Name, etc.
+ *   This file implements MAC types.
  */
 
 #include "mac_types.hpp"
@@ -106,15 +106,6 @@ Address::InfoString Address::ToString(void) const
     {
         string.Append("0x%04x", GetShort());
     }
-
-    return string;
-}
-
-ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
-{
-    InfoString string;
-
-    string.AppendHexBytes(m8, sizeof(ExtendedPanId));
 
     return string;
 }

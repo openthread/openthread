@@ -236,6 +236,7 @@ SOURCES_COMMON                                  = \
     meshcop/dataset_updater.cpp                   \
     meshcop/dtls.cpp                              \
     meshcop/energy_scan_client.cpp                \
+    meshcop/extended_panid.cpp                    \
     meshcop/joiner.cpp                            \
     meshcop/joiner_router.cpp                     \
     meshcop/meshcop.cpp                           \
@@ -536,6 +537,7 @@ HEADERS_COMMON                                  = \
     meshcop/dataset_updater.hpp                   \
     meshcop/dtls.hpp                              \
     meshcop/energy_scan_client.hpp                \
+    meshcop/extended_panid.hpp                    \
     meshcop/joiner.hpp                            \
     meshcop/joiner_router.hpp                     \
     meshcop/meshcop.hpp                           \

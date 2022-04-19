@@ -63,10 +63,6 @@ const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
 
-const otExtendedPanId Mac::sExtendedPanidInit = {
-    {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
-};
-
 const char Mac::sNetworkNameInit[] = "OpenThread";
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -123,13 +119,11 @@ Mac::Mac(Instance &aInstance)
 
     mCcaSuccessRateTracker.Clear();
     ResetCounters();
-    mExtendedPanId.Clear();
 
     SetEnabled(true);
     mLinks.Enable();
 
     Get<KeyManager>().UpdateKeyMaterial();
-    SetExtendedPanId(AsCoreType(&sExtendedPanidInit));
     IgnoreError(SetNetworkName(sNetworkNameInit));
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     IgnoreError(SetDomainName(sDomainNameInit));
@@ -499,11 +493,6 @@ void Mac::SetPanId(PanId aPanId)
 
 exit:
     return;
-}
-
-void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
-{
-    IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, kEventThreadExtPanIdChanged));
 }
 
 void Mac::RequestDirectFrameTransmission(void)
