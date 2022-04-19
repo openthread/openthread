@@ -322,10 +322,35 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
 
-static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
+#if !defined(IFA_RT_PRIORITY)
+#define IFA_RT_PRIORITY 9
+#endif
+
+void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
 {
+    uint8_t        len = RTA_LENGTH(aLen);
     struct rtattr *rta;
 
+    assert(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen);
+    OT_UNUSED_VARIABLE(aMaxLen);
+
+    rta           = (struct rtattr *)((char *)(aHeader) + NLMSG_ALIGN((aHeader)->nlmsg_len));
+    rta->rta_type = aType;
+    rta->rta_len  = len;
+    if (aLen)
+    {
+        memcpy(RTA_DATA(rta), aData, aLen);
+    }
+    aHeader->nlmsg_len = NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len);
+}
+
+void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, uint32_t aData)
+{
+    AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
+}
+
+static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
+{
     struct
     {
         struct nlmsghdr  nh;
@@ -347,29 +372,24 @@ static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdd
     req.ifa.ifa_scope     = aAddressInfo.mScope;
     req.ifa.ifa_index     = gNetifIndex;
 
-    rta           = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(&req)) + NLMSG_ALIGN(req.nh.nlmsg_len));
-    rta->rta_type = IFA_LOCAL;
-    rta->rta_len  = RTA_LENGTH(sizeof(*aAddressInfo.mAddress));
-
-    memcpy(RTA_DATA(rta), aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
-
-    req.nh.nlmsg_len = NLMSG_ALIGN(req.nh.nlmsg_len) + rta->rta_len;
+    AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
 
     if (!aAddressInfo.mPreferred)
     {
         struct ifa_cacheinfo cacheinfo;
 
-        rta           = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(rta)) + rta->rta_len);
-        rta->rta_type = IFA_CACHEINFO;
-        rta->rta_len  = RTA_LENGTH(sizeof(cacheinfo));
-
         memset(&cacheinfo, 0, sizeof(cacheinfo));
         cacheinfo.ifa_valid = UINT32_MAX;
 
-        memcpy(RTA_DATA(rta), &cacheinfo, sizeof(cacheinfo));
-
-        req.nh.nlmsg_len += rta->rta_len;
+        AddRtAttr(&req.nh, sizeof(req), IFA_CACHEINFO, &cacheinfo, sizeof(cacheinfo));
     }
+
+#if OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC > 0
+    if (aAddressInfo.mScope > ot::Ip6::Address::kLinkLocalScope)
+    {
+        AddRtAttrUint32(&req.nh, sizeof(req), IFA_RT_PRIORITY, OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC);
+    }
+#endif
 
     if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
     {
@@ -516,29 +536,6 @@ exit:
 }
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
-void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
-{
-    uint8_t        len = RTA_LENGTH(aLen);
-    struct rtattr *rta;
-
-    assert(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen);
-    OT_UNUSED_VARIABLE(aMaxLen);
-
-    rta           = (struct rtattr *)((char *)(aHeader) + NLMSG_ALIGN((aHeader)->nlmsg_len));
-    rta->rta_type = aType;
-    rta->rta_len  = len;
-    if (aLen)
-    {
-        memcpy(RTA_DATA(rta), aData, aLen);
-    }
-    aHeader->nlmsg_len = NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len);
-}
-
-void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, uint32_t aData)
-{
-    AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
-}
-
 static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 {
     constexpr unsigned int kBufSize = 128;
