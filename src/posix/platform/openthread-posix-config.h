@@ -127,6 +127,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC
+ *
+ * This setting configures the prefix route metric on the Thread network interface.
+ * Define as 0 to use use the default prefix route metric.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC
+#define OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC 0
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
  *
  * Define as 1 to add external routes to POSIX kernel when external routes are changed in netdata.
