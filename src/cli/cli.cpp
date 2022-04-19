@@ -756,21 +756,19 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 
     struct BufferInfoName
     {
-        const uint16_t otBufferInfo::*mNumMessagesPtr;
-        const uint16_t otBufferInfo::*mNumBuffersPtr;
-        const char *                  mName;
+        const otMessageQueueInfo otBufferInfo::*mQueuePtr;
+        const char *                            mName;
     };
 
     static const BufferInfoName kBufferInfoNames[] = {
-        {&otBufferInfo::m6loSendMessages, &otBufferInfo::m6loSendBuffers, "6lo send"},
-        {&otBufferInfo::m6loReassemblyMessages, &otBufferInfo::m6loReassemblyBuffers, "6lo reas"},
-        {&otBufferInfo::mIp6Messages, &otBufferInfo::mIp6Buffers, "ip6"},
-        {&otBufferInfo::mMplMessages, &otBufferInfo::mMplBuffers, "mpl"},
-        {&otBufferInfo::mMleMessages, &otBufferInfo::mMleBuffers, "mle"},
-        {&otBufferInfo::mArpMessages, &otBufferInfo::mArpBuffers, "arp"},
-        {&otBufferInfo::mCoapMessages, &otBufferInfo::mCoapBuffers, "coap"},
-        {&otBufferInfo::mCoapSecureMessages, &otBufferInfo::mCoapSecureBuffers, "coap secure"},
-        {&otBufferInfo::mApplicationCoapMessages, &otBufferInfo::mApplicationCoapBuffers, "application coap"},
+        {&otBufferInfo::m6loSendQueue, "6lo send"},
+        {&otBufferInfo::m6loReassemblyQueue, "6lo reas"},
+        {&otBufferInfo::mIp6Queue, "ip6"},
+        {&otBufferInfo::mMplQueue, "mpl"},
+        {&otBufferInfo::mMleQueue, "mle"},
+        {&otBufferInfo::mCoapQueue, "coap"},
+        {&otBufferInfo::mCoapSecureQueue, "coap secure"},
+        {&otBufferInfo::mApplicationCoapQueue, "application coap"},
     };
 
     otBufferInfo bufferInfo;
@@ -782,7 +780,8 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 
     for (const BufferInfoName &info : kBufferInfoNames)
     {
-        OutputLine("%s: %d %d", info.mName, bufferInfo.*info.mNumMessagesPtr, bufferInfo.*info.mNumBuffersPtr);
+        OutputLine("%s: %u %u %u", info.mName, (bufferInfo.*info.mQueuePtr).mNumMessages,
+                   (bufferInfo.*info.mQueuePtr).mNumBuffers, (bufferInfo.*info.mQueuePtr).mTotalBytes);
     }
 
     return OT_ERROR_NONE;

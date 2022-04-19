@@ -59,34 +59,6 @@ extern "C" {
 typedef struct otMessage otMessage;
 
 /**
- * This structure represents the message buffer information.
- *
- */
-typedef struct otBufferInfo
-{
-    uint16_t mTotalBuffers;            ///< The number of buffers in the pool.
-    uint16_t mFreeBuffers;             ///< The number of free message buffers.
-    uint16_t m6loSendMessages;         ///< The number of messages in the 6lo send queue.
-    uint16_t m6loSendBuffers;          ///< The number of buffers in the 6lo send queue.
-    uint16_t m6loReassemblyMessages;   ///< The number of messages in the 6LoWPAN reassembly queue.
-    uint16_t m6loReassemblyBuffers;    ///< The number of buffers in the 6LoWPAN reassembly queue.
-    uint16_t mIp6Messages;             ///< The number of messages in the IPv6 send queue.
-    uint16_t mIp6Buffers;              ///< The number of buffers in the IPv6 send queue.
-    uint16_t mMplMessages;             ///< The number of messages in the MPL send queue.
-    uint16_t mMplBuffers;              ///< The number of buffers in the MPL send queue.
-    uint16_t mMleMessages;             ///< The number of messages in the MLE send queue.
-    uint16_t mMleBuffers;              ///< The number of buffers in the MLE send queue.
-    uint16_t mArpMessages;             ///< The number of messages in the ARP send queue.
-    uint16_t mArpBuffers;              ///< The number of buffers in the ARP send queue.
-    uint16_t mCoapMessages;            ///< The number of messages in the CoAP send queue.
-    uint16_t mCoapBuffers;             ///< The number of buffers in the CoAP send queue.
-    uint16_t mCoapSecureMessages;      ///< The number of messages in the CoAP secure send queue.
-    uint16_t mCoapSecureBuffers;       ///< The number of buffers in the CoAP secure send queue.
-    uint16_t mApplicationCoapMessages; ///< The number of messages in the application CoAP send queue.
-    uint16_t mApplicationCoapBuffers;  ///< The number of buffers in the application CoAP send queue.
-} otBufferInfo;
-
-/**
  * This enumeration defines the OpenThread message priority levels.
  *
  */
@@ -297,6 +269,35 @@ typedef struct
 {
     void *mData; ///< Opaque data used by the implementation.
 } otMessageQueue;
+
+/**
+ * This structure represents information about a message queue.
+ *
+ */
+typedef struct otMessageQueueInfo
+{
+    uint16_t mNumMessages; ///< Number of messages in the queue.
+    uint16_t mNumBuffers;  ///< Number of data buffers used by messages in the queue.
+    uint32_t mTotalBytes;  ///< Total number of bytes used by all messages in the queue.
+} otMessageQueueInfo;
+
+/**
+ * This structure represents the message buffer information for different queues used by OpenThread stack.
+ *
+ */
+typedef struct otBufferInfo
+{
+    uint16_t           mTotalBuffers;         ///< The total number of buffers in the messages pool.
+    uint16_t           mFreeBuffers;          ///< The number of free buffers.
+    otMessageQueueInfo m6loSendQueue;         ///< Info about 6LoWPAN send queue.
+    otMessageQueueInfo m6loReassemblyQueue;   ///< Info about 6LoWPAN reassembly queue.
+    otMessageQueueInfo mIp6Queue;             ///< Info about IPv6 send queue.
+    otMessageQueueInfo mMplQueue;             ///< Info about MPL send queue.
+    otMessageQueueInfo mMleQueue;             ///< Info about MLE delayed message queue.
+    otMessageQueueInfo mCoapQueue;            ///< Info about CoAP/TMF send queue.
+    otMessageQueueInfo mCoapSecureQueue;      ///< Info about CoAP secure send queue.
+    otMessageQueueInfo mApplicationCoapQueue; ///< Info about application CoAP send queue.
+} otBufferInfo;
 
 /**
  * Initialize the message queue.

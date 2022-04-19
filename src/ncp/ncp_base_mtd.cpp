@@ -2682,27 +2682,28 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_IP_RX_FAILURE>(v
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MSG_BUFFER_COUNTERS>(void)
 {
-    otError      error;
+    otError      error = OT_ERROR_NONE;
     otBufferInfo bufferInfo;
 
     otMessageGetBufferInfo(mInstance, &bufferInfo);
 
     SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mTotalBuffers));
     SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mFreeBuffers));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loSendMessages));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loSendBuffers));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loReassemblyMessages));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loReassemblyBuffers));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mIp6Messages));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mIp6Buffers));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMplMessages));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMplBuffers));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMleMessages));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMleBuffers));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mArpMessages));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mArpBuffers));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mCoapMessages));
-    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mCoapBuffers));
+
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loSendQueue.mNumMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loSendQueue.mNumBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loReassemblyQueue.mNumMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.m6loReassemblyQueue.mNumBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mIp6Queue.mNumMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mIp6Queue.mNumBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMplQueue.mNumMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMplQueue.mNumBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMleQueue.mNumMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mMleQueue.mNumBuffers));
+    SuccessOrExit(error = mEncoder.WriteUint16(0)); // Write zero for ARP for backward compatibility.
+    SuccessOrExit(error = mEncoder.WriteUint16(0));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mCoapQueue.mNumMessages));
+    SuccessOrExit(error = mEncoder.WriteUint16(bufferInfo.mCoapQueue.mNumBuffers));
 
 exit:
     return error;

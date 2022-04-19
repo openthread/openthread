@@ -1345,6 +1345,8 @@ class MessageQueue : public otMessageQueue
     friend class PriorityQueue;
 
 public:
+    typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
+
     /**
      * This enumeration represents a position (head or tail) in the queue. This is used to specify where a new message
      * should be added in the queue.
@@ -1418,13 +1420,17 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
-     * This method returns the number of messages and buffers enqueued.
+     * This method gets the information about number of messages and buffers in the queue.
      *
-     * @param[out]  aMessageCount  Returns the number of messages enqueued.
-     * @param[out]  aBufferCount   Returns the number of buffers enqueued.
+     * This method updates `aInfo` and adds number of message/buffers in the message queue to the corresponding member
+     * variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method (e.g.,
+     * clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues to add
+     * up the number of messages/buffers on different queues.
+     *
+     * @param[out] aInfo  A reference to `Info` structure to update.ni
      *
      */
-    void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
+    void GetInfo(Info &aInfo) const;
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the queue entries and should not be used
@@ -1454,6 +1460,8 @@ class PriorityQueue : private Clearable<PriorityQueue>
     friend class MessagePool;
 
 public:
+    typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
+
     /**
      * This constructor initializes the priority queue.
      *
@@ -1532,16 +1540,7 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
-     * This method returns the number of messages and buffers enqueued.
-     *
-     * @param[out]  aMessageCount  Returns the number of messages enqueued.
-     * @param[out]  aBufferCount   Returns the number of buffers enqueued.
-     *
-     */
-    void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
-
-    /**
-     * This method returns the tail of the list (last message in the list)
+     * This method returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
@@ -1549,12 +1548,25 @@ public:
     Message *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
 
     /**
-     * This method returns the tail of the list (last message in the list)
+     * This method returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
      */
     const Message *GetTail(void) const;
+
+    /**
+     * This method gets the information about number of messages and buffers in the priority queue.
+     *
+     * This method updates `aInfo` array and adds number of message/buffers in the message queue to the corresponding
+     * member variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method
+     * (e.g., clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues
+     * to add up the number of messages/buffers on different queues.
+     *
+     * @param[out] aInfo  A reference to an `Info` structure to update.
+     *
+     */
+    void GetInfo(Info &aInfo) const;
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the queue entries and should not be used

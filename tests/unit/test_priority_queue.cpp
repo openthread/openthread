@@ -47,11 +47,12 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
     ot::Message *            message;
     ot::Message *            msgArg;
     int8_t                   curPriority = ot::Message::kNumPriorities;
-    uint16_t                 msgCount, bufCount;
+    ot::PriorityQueue::Info  info;
 
     // Check the `GetInfo`
-    aPriorityQueue.GetInfo(msgCount, bufCount);
-    VerifyOrQuit(msgCount == aExpectedLength, "GetInfo() result does not match expected len.");
+    memset(&info, 0, sizeof(info));
+    aPriorityQueue.GetInfo(info);
+    VerifyOrQuit(info.mNumMessages == aExpectedLength, "GetInfo() result does not match expected len.");
 
     va_start(args, aExpectedLength);
 
