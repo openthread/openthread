@@ -555,7 +555,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
             break;
 
         case Tlv::kExtendedPanId:
-            mac.SetExtendedPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
+            aInstance.Get<MeshCoP::ExtendedPanIdManager>().SetExtPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
             break;
 
         case Tlv::kNetworkName:

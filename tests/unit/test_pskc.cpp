@@ -44,7 +44,7 @@ void TestMinimumPassphrase(void)
     const char            passphrase[]   = "123456";
     otInstance *          instance       = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
-                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc));
+                                            static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, OT_PSKC_MAX_SIZE) == 0);
     testFreeInstance(instance);
 }
@@ -74,7 +74,7 @@ void TestMaximumPassphrase(void)
 
     otInstance *instance = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
-                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc));
+                                            static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc.m8)) == 0);
     testFreeInstance(instance);
 }
@@ -89,7 +89,7 @@ void TestExampleInSpec(void)
 
     otInstance *instance = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("Test Network"),
-                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc));
+                                            static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc.m8)) == 0);
     testFreeInstance(instance);
 }

@@ -49,6 +49,7 @@
 #include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/extended_panid.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/network_data_types.hpp"
 
@@ -428,7 +429,7 @@ public:
      * @param[in] aExtendedPanId   An Extended PAN ID.
      *
      */
-    void SetFromExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId);
+    void SetFromExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId);
 
 } OT_TOOL_PACKED_END;
 

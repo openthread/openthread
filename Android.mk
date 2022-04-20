@@ -280,6 +280,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/meshcop/dataset_updater.cpp                            \
     src/core/meshcop/dtls.cpp                                       \
     src/core/meshcop/energy_scan_client.cpp                         \
+    src/core/meshcop/extended_panid.cpp                             \
     src/core/meshcop/joiner.cpp                                     \
     src/core/meshcop/joiner_router.cpp                              \
     src/core/meshcop/meshcop.cpp                                    \

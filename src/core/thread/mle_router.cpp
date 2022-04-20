@@ -2889,7 +2889,7 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
     Tlv                          tlv;
     MeshCoP::Tlv                 meshcopTlv;
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
-    Mac::ExtendedPanId           extPanId;
+    MeshCoP::ExtendedPanId       extPanId;
     uint16_t                     offset;
     uint16_t                     end;
 
@@ -2921,7 +2921,7 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
 
         case MeshCoP::Tlv::kExtendedPanId:
             SuccessOrExit(error = Tlv::Read<MeshCoP::ExtendedPanIdTlv>(aMessage, offset, extPanId));
-            VerifyOrExit(Get<Mac::Mac>().GetExtendedPanId() != extPanId, error = kErrorDrop);
+            VerifyOrExit(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId() != extPanId, error = kErrorDrop);
 
             break;
 
@@ -3018,7 +3018,8 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     SuccessOrExit(error = discoveryResponse.AppendTo(*message));
 
     // Extended PAN ID TLV
-    SuccessOrExit(error = Tlv::Append<MeshCoP::ExtendedPanIdTlv>(*message, Get<Mac::Mac>().GetExtendedPanId()));
+    SuccessOrExit(
+        error = Tlv::Append<MeshCoP::ExtendedPanIdTlv>(*message, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
 
     // Network Name TLV
     networkName.Init();

@@ -47,6 +47,7 @@
 #include "common/string.hpp"
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/extended_panid.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
@@ -445,7 +446,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, Mac::ExtendedPanId>
+class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, MeshCoP::ExtendedPanId>
 {
 public:
     /**
@@ -473,7 +474,7 @@ public:
      * @returns The Extended PAN ID value.
      *
      */
-    const Mac::ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const MeshCoP::ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID value.
@@ -481,10 +482,10 @@ public:
      * @param[in]  aExtendedPanId  An Extended PAN ID value.
      *
      */
-    void SetExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
+    void SetExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
 
 private:
-    Mac::ExtendedPanId mExtendedPanId;
+    MeshCoP::ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

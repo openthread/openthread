@@ -402,22 +402,6 @@ public:
     void SetPanId(PanId aPanId);
 
     /**
-     * This method returns the IEEE 802.15.4 Extended PAN Identifier.
-     *
-     * @returns The IEEE 802.15.4 Extended PAN Identifier.
-     *
-     */
-    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
-
-    /**
-     * This method sets the IEEE 802.15.4 Extended PAN Identifier.
-     *
-     * @param[in]  aExtendedPanId  The IEEE 802.15.4 Extended PAN Identifier.
-     *
-     */
-    void SetExtendedPanId(const ExtendedPanId &aExtendedPanId);
-
-    /**
      * This method returns the maximum number of frame retries during direct transmission.
      *
      * @returns The maximum number of retries during direct transmission.
@@ -870,10 +854,9 @@ private:
 #endif
     static const char *OperationToString(Operation aOperation);
 
-    static const otExtAddress    sMode2ExtAddress;
-    static const otExtendedPanId sExtendedPanidInit;
-    static const char            sNetworkNameInit[];
-    static const char            sDomainNameInit[];
+    static const otExtAddress sMode2ExtAddress;
+    static const char         sNetworkNameInit[];
+    static const char         sDomainNameInit[];
 
     bool mEnabled : 1;
     bool mShouldTxPollBeforeData : 1;
@@ -885,17 +868,16 @@ private:
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
 #endif
-    Operation     mOperation;
-    uint16_t      mPendingOperations;
-    uint8_t       mBeaconSequence;
-    uint8_t       mDataSequence;
-    uint8_t       mBroadcastTransmitCount;
-    PanId         mPanId;
-    uint8_t       mPanChannel;
-    uint8_t       mRadioChannel;
-    ChannelMask   mSupportedChannelMask;
-    ExtendedPanId mExtendedPanId;
-    NetworkName   mNetworkName;
+    Operation   mOperation;
+    uint16_t    mPendingOperations;
+    uint8_t     mBeaconSequence;
+    uint8_t     mDataSequence;
+    uint8_t     mBroadcastTransmitCount;
+    PanId       mPanId;
+    uint8_t     mPanChannel;
+    uint8_t     mRadioChannel;
+    ChannelMask mSupportedChannelMask;
+    NetworkName mNetworkName;
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     DomainName mDomainName;
 #endif

@@ -55,19 +55,19 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
 
 const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 {
-    return &AsCoreType(aInstance).Get<Mac::Mac>().GetExtendedPanId();
+    return &AsCoreType(aInstance).Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
 }
 
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
-    Error                     error    = kErrorNone;
-    Instance &                instance = AsCoreType(aInstance);
-    const Mac::ExtendedPanId &extPanId = AsCoreType(aExtendedPanId);
-    Mle::MeshLocalPrefix      prefix;
+    Error                         error    = kErrorNone;
+    Instance &                    instance = AsCoreType(aInstance);
+    const MeshCoP::ExtendedPanId &extPanId = AsCoreType(aExtendedPanId);
+    Mle::MeshLocalPrefix          prefix;
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    instance.Get<Mac::Mac>().SetExtendedPanId(extPanId);
+    instance.Get<MeshCoP::ExtendedPanIdManager>().SetExtPanId(extPanId);
 
     prefix.SetFromExtendedPanId(extPanId);
     instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(prefix);
