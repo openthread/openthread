@@ -645,6 +645,27 @@ add_executable(ot-test-ndproxy-table
     test_ndproxy_table.cpp
 )
 
+add_executable(ot-test-network-name
+    test_network_name.cpp
+)
+
+target_include_directories(ot-test-network-name
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-network-name
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-network-name
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-network-name COMMAND ot-test-network-name)
+
 target_include_directories(ot-test-ndproxy-table
     PRIVATE
         ${COMMON_INCLUDES}

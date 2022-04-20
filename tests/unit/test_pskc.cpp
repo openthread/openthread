@@ -43,7 +43,8 @@ void TestMinimumPassphrase(void)
     const otExtendedPanId xpanid         = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
     const char            passphrase[]   = "123456";
     otInstance *          instance       = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
+    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
+                                            *reinterpret_cast<const ot::MeshCoP::NetworkName *>("OpenThread"),
                                             static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, OT_PSKC_MAX_SIZE) == 0);
     testFreeInstance(instance);
@@ -73,7 +74,8 @@ void TestMaximumPassphrase(void)
                               "123456781234567";
 
     otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
+    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
+                                            *reinterpret_cast<const ot::MeshCoP::NetworkName *>("OpenThread"),
                                             static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc.m8)) == 0);
     testFreeInstance(instance);
@@ -88,7 +90,8 @@ void TestExampleInSpec(void)
     const char            passphrase[]   = "12SECRETPASSWORD34";
 
     otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("Test Network"),
+    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
+                                            *reinterpret_cast<const ot::MeshCoP::NetworkName *>("Test Network"),
                                             static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
     VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc.m8)) == 0);
     testFreeInstance(instance);

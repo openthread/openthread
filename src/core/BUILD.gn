@@ -521,6 +521,8 @@ openthread_core_files = [
   "meshcop/meshcop_leader.hpp",
   "meshcop/meshcop_tlvs.cpp",
   "meshcop/meshcop_tlvs.hpp",
+  "meshcop/network_name.cpp",
+  "meshcop/network_name.hpp",
   "meshcop/panid_query_client.cpp",
   "meshcop/panid_query_client.hpp",
   "meshcop/timestamp.cpp",

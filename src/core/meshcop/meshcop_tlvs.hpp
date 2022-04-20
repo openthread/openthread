@@ -48,6 +48,7 @@
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
+#include "meshcop/network_name.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
@@ -521,7 +522,7 @@ public:
      * @returns The Network Name value (as `NameData`).
      *
      */
-    Mac::NameData GetNetworkName(void) const;
+    NameData GetNetworkName(void) const;
 
     /**
      * This method sets the Network Name value.
@@ -529,10 +530,10 @@ public:
      * @param[in] aNameData   A Network Name value (as `NameData`).
      *
      */
-    void SetNetworkName(const Mac::NameData &aNameData);
+    void SetNetworkName(const NameData &aNameData);
 
 private:
-    char mNetworkName[Mac::NetworkName::kMaxSize];
+    char mNetworkName[NetworkName::kMaxSize];
 } OT_TOOL_PACKED_END;
 
 /**

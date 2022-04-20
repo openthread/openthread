@@ -115,7 +115,7 @@ exit:
     return tlv;
 }
 
-Mac::NameData NetworkNameTlv::GetNetworkName(void) const
+NameData NetworkNameTlv::GetNetworkName(void) const
 {
     uint8_t len = GetLength();
 
@@ -124,10 +124,10 @@ Mac::NameData NetworkNameTlv::GetNetworkName(void) const
         len = sizeof(mNetworkName);
     }
 
-    return Mac::NameData(mNetworkName, len);
+    return NameData(mNetworkName, len);
 }
 
-void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
+void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
 {
     uint8_t len;
 

@@ -421,7 +421,7 @@ private:
  *
  */
 Error GeneratePskc(const char *                  aPassPhrase,
-                   const Mac::NetworkName &      aNetworkName,
+                   const MeshCoP::NetworkName &  aNetworkName,
                    const MeshCoP::ExtendedPanId &aExtPanId,
                    Pskc &                        aPskc);
 
