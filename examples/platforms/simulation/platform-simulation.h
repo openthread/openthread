@@ -69,6 +69,7 @@ enum
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
     OT_SIM_EVENT_RADIO_COMM         = 6,
     OT_SIM_EVENT_RADIO_TX_DONE      = 7,
+    OT_SIM_EVENT_CHANNEL_BUSY       = 8,
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
@@ -163,10 +164,21 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 /**
  * This function signals Tx Done to the radio (instead of echo frames).
  *
- * @param[in]  aInstance   A pointer to the OpenThread instance.
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  pktSeq     Packet sequence number to be confirmed as sent.
  *
  */
-void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf);
+void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq);
+
+/**
+ * This function inputs the parameter used to simulate a CCA procedure.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  channel    Channel number in use.
+ * @param[in]  busyUntil  Until what time CCA should read as channel busy.
+ *
+ */
+void platformSimulateCca(otInstance *aInstance, uint8_t channel, uint64_t channelBusyUntil);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.

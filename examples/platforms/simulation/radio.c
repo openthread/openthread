@@ -71,6 +71,7 @@ extern int          sSockFd;
 extern uint16_t     sPortOffset;
 static otRadioState sLastReportedState  = OT_RADIO_STATE_DISABLED;
 static bool         sRxDoneAfterAckSent = false;
+static uint64_t     sCcaBusyuntil;
 #else
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
@@ -260,7 +261,7 @@ void reportRadioStatusToOtns(otRadioState aState)
         event.mDelay       = 0;
         event.mEvent       = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
-        n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s", radioStateToString(aState));
+        n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s,%d", radioStateToString(aState),sCurrentChannel);
 
         assert(n > 0);
 
@@ -535,14 +536,14 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    // OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aFrame);
 
     assert(aInstance != NULL);
     assert(aFrame != NULL);
 
     otError error = OT_ERROR_INVALID_STATE;
-
+bsReport("platTransmit");
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
         setRadioState(OT_RADIO_STATE_TRANSMIT);
@@ -735,7 +736,7 @@ exit:
 }
 
 void radioSendMessage(otInstance *aInstance)
-{
+{bsReport("send message");
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (sTransmitFrame.mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
@@ -811,9 +812,9 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
     radioReceive(aInstance);
 }
 
-void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
+void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq)
 {
-    bool isTxDone = false;
+    bool isTxDone  = false;
 
     OT_UNUSED_VARIABLE(aInstance);
     // OT_UNUSED_VARIABLE(aBuf);
@@ -826,7 +827,7 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
         sRxDoneAfterAckSent = false;
         confirmRxDone(aInstance, OT_ERROR_NONE);
     }
-    else if (otMacFrameGetSequence(&sTransmitFrame) == aBuf[0]) // Data[0] is the sequence number
+    else if (otMacFrameGetSequence(&sTransmitFrame) == pktSeq)
     {bsReport("Is echo frame");
         // Radio sState keeps in OT_RADIO_STATE_RECEIVE even when sending an ack.
         // For energy accuracy, we make a report without changing the sState.
@@ -839,8 +840,6 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
             isTxDone = true;
         }
     }
-
-
 
     if (isTxDone)
     {bsReport("Regular set to Rx");
@@ -862,6 +861,17 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t *aBuf)
 
 exit:
     return;
+}
+
+void platformSimulateCca(otInstance *aInstance, uint8_t channel, uint64_t channelBusyUntil) {
+    OT_UNUSED_VARIABLE(aInstance);
+    
+    sCcaBusyuntil = channelBusyUntil;
+
+    char buf[20];
+    snprintf(buf, 20, "CCA %d received %lu", channel,channelBusyUntil);
+    bsReport(buf);
+    
 }
 #else
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)

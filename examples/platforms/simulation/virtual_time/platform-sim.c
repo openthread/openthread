@@ -94,6 +94,7 @@ static void receiveEvent(otInstance *aInstance)
 {
     struct Event event;
     ssize_t      rval = recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
+    uint64_t     channelBusyUntil;
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
@@ -117,7 +118,13 @@ static void receiveEvent(otInstance *aInstance)
         break;
     
     case OT_SIM_EVENT_RADIO_TX_DONE:
-        platformRadioTxDone(aInstance, event.mData);
+        // Data[0] is the sequence number
+        platformRadioTxDone(aInstance, event.mData[0]);
+        break;
+        
+    case OT_SIM_EVENT_CHANNEL_BUSY:
+        memcpy(&channelBusyUntil, event.mData+1, sizeof(channelBusyUntil));
+        platformSimulateCca(aInstance, event.mData[0], channelBusyUntil);
         break;
 
     default:
