@@ -1741,7 +1741,7 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
     static const char *const kMessageActionStrings[] = {
         "Received",                    // (0) kMessageReceive
         "Sent",                        // (1) kMessageTransmit
-        "Prepping indir tx",           // (2) kMessagePrepareIndirect
+        "Preparing indir tx",          // (2) kMessagePrepareIndirect
         "Dropping",                    // (3) kMessageDrop
         "Dropping (reassembly queue)", // (4) kMessageReassemblyDrop
         "Evicting",                    // (5) kMessageEvict
