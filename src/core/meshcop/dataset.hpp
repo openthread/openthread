@@ -308,7 +308,7 @@ public:
          * @returns The Network Name in the Dataset.
          *
          */
-        const Mac::NetworkName &GetNetworkName(void) const { return AsCoreType(&mNetworkName); }
+        const NetworkName &GetNetworkName(void) const { return AsCoreType(&mNetworkName); }
 
         /**
          * This method sets the Network Name in the Dataset.
@@ -316,7 +316,7 @@ public:
          * @param[in] aNetworkNameData   A Network Name Data.
          *
          */
-        void SetNetworkName(const Mac::NameData &aNetworkNameData)
+        void SetNetworkName(const NameData &aNetworkNameData)
         {
             IgnoreError(AsCoreType(&mNetworkName).Set(aNetworkNameData));
             mComponents.mIsNetworkNamePresent = true;

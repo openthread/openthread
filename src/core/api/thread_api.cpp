@@ -200,7 +200,7 @@ otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6A
 
 const char *otThreadGetNetworkName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetNetworkName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString();
 }
 
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
@@ -209,7 +209,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    error = AsCoreType(aInstance).Get<Mac::Mac>().SetNetworkName(aNetworkName);
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);
     AsCoreType(aInstance).Get<MeshCoP::ActiveDataset>().Clear();
     AsCoreType(aInstance).Get<MeshCoP::PendingDataset>().Clear();
 
@@ -220,7 +220,7 @@ exit:
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 const char *otThreadGetDomainName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetDomainName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsCString();
 }
 
 otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
@@ -229,7 +229,7 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    error = AsCoreType(aInstance).Get<Mac::Mac>().SetDomainName(aDomainName);
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetDomainName(aDomainName);
 
 exit:
     return error;

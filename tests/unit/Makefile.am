@@ -142,6 +142,7 @@ check_PROGRAMS                                                     += \
     ot-test-ndproxy-table                                             \
     ot-test-netif                                                     \
     ot-test-network-data                                              \
+    ot-test-network-name                                              \
     ot-test-pool                                                      \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
@@ -300,6 +301,10 @@ ot_test_message_queue_SOURCES       = $(COMMON_SOURCES) test_message_queue.cpp
 ot_test_multicast_listeners_table_LDADD = $(COMMON_LDADD)
 ot_test_multicast_listeners_table_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)
 ot_test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listeners_table.cpp
+
+ot_test_network_name_LDADD          = $(COMMON_LDADD)
+ot_test_network_name_LIBTOOLFLAGS   = $(COMMON_LIBTOOLFLAGS)
+ot_test_network_name_SOURCES        = $(COMMON_SOURCES) test_network_name.cpp
 
 ot_test_spinel_buffer_LDADD         = $(COMMON_LDADD)
 ot_test_spinel_buffer_LIBTOOLFLAGS  = $(COMMON_LIBTOOLFLAGS)

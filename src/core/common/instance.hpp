@@ -72,6 +72,7 @@
 #include "meshcop/border_agent.hpp"
 #include "meshcop/dataset_updater.hpp"
 #include "meshcop/extended_panid.hpp"
+#include "meshcop/network_name.hpp"
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_metrics.hpp"
@@ -705,6 +706,11 @@ template <> inline Coap::CoapSecure &Instance::Get(void)
 template <> inline MeshCoP::ExtendedPanIdManager &Instance::Get(void)
 {
     return mThreadNetif.mExtendedPanIdManager;
+}
+
+template <> inline MeshCoP::NetworkNameManager &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkNameManager;
 }
 
 template <> inline MeshCoP::ActiveDataset &Instance::Get(void)

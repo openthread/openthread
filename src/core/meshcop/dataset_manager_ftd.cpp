@@ -352,7 +352,7 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
     {
-        Mac::NameData nameData = Get<Mac::Mac>().GetNetworkName().GetAsData();
+        MeshCoP::NameData nameData = Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData();
 
         IgnoreError(dataset.SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }

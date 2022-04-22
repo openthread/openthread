@@ -242,6 +242,7 @@ SOURCES_COMMON                                  = \
     meshcop/meshcop.cpp                           \
     meshcop/meshcop_leader.cpp                    \
     meshcop/meshcop_tlvs.cpp                      \
+    meshcop/network_name.cpp                      \
     meshcop/panid_query_client.cpp                \
     meshcop/timestamp.cpp                         \
     net/checksum.cpp                              \
@@ -543,6 +544,7 @@ HEADERS_COMMON                                  = \
     meshcop/meshcop.hpp                           \
     meshcop/meshcop_leader.hpp                    \
     meshcop/meshcop_tlvs.hpp                      \
+    meshcop/network_name.hpp                      \
     meshcop/panid_query_client.hpp                \
     meshcop/timestamp.hpp                         \
     net/checksum.hpp                              \

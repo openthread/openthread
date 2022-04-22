@@ -324,68 +324,6 @@ public:
     void SetSupportedChannelMask(const ChannelMask &aMask);
 
     /**
-     * This method returns the IEEE 802.15.4 Network Name.
-     *
-     * @returns The IEEE 802.15.4 Network Name.
-     *
-     */
-    const NetworkName &GetNetworkName(void) const { return mNetworkName; }
-
-    /**
-     * This method sets the IEEE 802.15.4 Network Name.
-     *
-     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
-     *
-     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetNetworkName(const char *aNameString);
-
-    /**
-     * This method sets the IEEE 802.15.4 Network Name.
-     *
-     * @param[in]  aNameData     A name data (pointer to char buffer and length).
-     *
-     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetNetworkName(const NameData &aNameData);
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    /**
-     * This method returns the Thread Domain Name.
-     *
-     * @returns The Thread Domain Name.
-     *
-     */
-    const DomainName &GetDomainName(void) const { return mDomainName; }
-
-    /**
-     * This method sets the Thread Domain Name.
-     *
-     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
-     *
-     * @retval kErrorNone          Successfully set the Thread Domain Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetDomainName(const char *aNameString);
-
-    /**
-     * This method sets the Thread Domain Name.
-     *
-     * @param[in]  aNameData     A name data (pointer to char buffer and length).
-     *
-     * @retval kErrorNone          Successfully set the Thread Domain Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetDomainName(const NameData &aNameData);
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
-    /**
      * This method returns the IEEE 802.15.4 PAN ID.
      *
      * @returns The IEEE 802.15.4 PAN ID.
@@ -836,7 +774,6 @@ private:
     Error ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
-    Error SignalNetworkNameChange(Error aError);
 
     void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
@@ -855,8 +792,6 @@ private:
     static const char *OperationToString(Operation aOperation);
 
     static const otExtAddress sMode2ExtAddress;
-    static const char         sNetworkNameInit[];
-    static const char         sDomainNameInit[];
 
     bool mEnabled : 1;
     bool mShouldTxPollBeforeData : 1;
@@ -877,10 +812,6 @@ private:
     uint8_t     mPanChannel;
     uint8_t     mRadioChannel;
     ChannelMask mSupportedChannelMask;
-    NetworkName mNetworkName;
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    DomainName mDomainName;
-#endif
     uint8_t     mScanChannel;
     uint16_t    mScanDuration;
     ChannelMask mScanChannelMask;

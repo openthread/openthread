@@ -328,7 +328,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
 
     networkName.Init();
-    networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
+    networkName.SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
     SuccessOrExit(error = networkName.AppendTo(*message));
 
     IgnoreError(Get<ActiveDataset>().Read(dataset));

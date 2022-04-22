@@ -49,6 +49,7 @@
 #include "meshcop/joiner.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop_leader.hpp"
+#include "meshcop/network_name.hpp"
 #include "net/dhcp6.hpp"
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
@@ -201,6 +202,7 @@ private:
     MeshCoP::ActiveDataset        mActiveDataset;
     MeshCoP::PendingDataset       mPendingDataset;
     MeshCoP::ExtendedPanIdManager mExtendedPanIdManager;
+    MeshCoP::NetworkNameManager   mNetworkNameManager;
     Ip6::Filter                   mIp6Filter;
     KeyManager                    mKeyManager;
     Lowpan::Lowpan                mLowpan;

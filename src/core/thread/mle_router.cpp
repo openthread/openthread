@@ -3023,7 +3023,7 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
 
     // Network Name TLV
     networkName.Init();
-    networkName.SetNetworkName(Get<Mac::Mac>().GetNetworkName().GetAsData());
+    networkName.SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
     SuccessOrExit(error = networkName.AppendTo(*message));
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
