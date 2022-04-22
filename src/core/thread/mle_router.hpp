@@ -587,33 +587,20 @@ private:
     Error AppendPendingDataset(Message &aMessage);
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
-    void  HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    void  HandleLinkAccept(const Message &         aMessage,
-                           const Ip6::MessageInfo &aMessageInfo,
-                           uint32_t                aKeySequence,
-                           Neighbor *              aNeighbor);
-    Error HandleLinkAccept(const Message &         aMessage,
-                           const Ip6::MessageInfo &aMessageInfo,
-                           uint32_t                aKeySequence,
-                           Neighbor *              aNeighbor,
-                           bool                    aRequest);
-    void  HandleLinkAcceptAndRequest(const Message &         aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     uint32_t                aKeySequence,
-                                     Neighbor *              aNeighbor);
-    Error HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *);
-    void  HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    void  HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  HandleChildUpdateResponse(const Message &         aMessage,
-                                    const Ip6::MessageInfo &aMessageInfo,
-                                    uint32_t                aKeySequence,
-                                    Neighbor *              aNeighbor);
-    void  HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
+    void  HandleLinkRequest(RxInfo &aRxInfo);
+    void  HandleLinkAccept(RxInfo &aRxInfo);
+    Error HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
+    void  HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
+    Error HandleAdvertisement(RxInfo &aRxInfo);
+    void  HandleParentRequest(RxInfo &aRxInfo);
+    void  HandleChildIdRequest(RxInfo &aRxInfo);
+    void  HandleChildUpdateRequest(RxInfo &aRxInfo);
+    void  HandleChildUpdateResponse(RxInfo &aRxInfo);
+    void  HandleDataRequest(RxInfo &aRxInfo);
     void  HandleNetworkDataUpdateRouter(void);
-    void  HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleDiscoveryRequest(RxInfo &aRxInfo);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    void HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
+    void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
     Error ProcessRouteTlv(const RouteTlv &aRoute);
