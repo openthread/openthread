@@ -4298,66 +4298,56 @@ bool MleRouter::HasMinDowngradeNeighborRouters(void)
 
 bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId)
 {
-    bool rval = true;
+    uint8_t routerCount = 0;
+    bool    rval        = true;
 
     // process local neighbor routers
     for (Router &router : Get<RouterTable>().Iterate())
     {
-        uint8_t localLinkQuality = 0;
-        uint8_t peerLinkQuality  = 0;
-        uint8_t routerCount      = 0;
+        uint8_t localLinkQuality;
+        uint8_t peerLinkQuality;
 
-        if (router.GetRouterId() == mRouterId)
+        if (!router.IsStateValid() || router.GetRouterId() == mRouterId || router.GetRouterId() == aRouterId)
         {
             routerCount++;
             continue;
         }
 
-        // check if neighbor is valid
-        if (router.IsStateValid())
+        localLinkQuality = router.GetLinkInfo().GetLinkQuality();
+
+        if (localLinkQuality > router.GetLinkQualityOut())
         {
-            // if neighbor is just peer
-            if (router.GetRouterId() == aRouterId)
-            {
-                routerCount++;
-                continue;
-            }
-
-            localLinkQuality = router.GetLinkInfo().GetLinkQuality();
-
-            if (localLinkQuality > router.GetLinkQualityOut())
-            {
-                localLinkQuality = router.GetLinkQualityOut();
-            }
-
-            if (localLinkQuality >= 2)
-            {
-                // check if this neighbor router is in peer Route64 TLV
-                if (!aRoute.IsRouterIdSet(router.GetRouterId()))
-                {
-                    ExitNow(rval = false);
-                }
-
-                // get the peer's two-way link quality to this router
-                peerLinkQuality = aRoute.GetLinkQualityIn(routerCount);
-
-                if (peerLinkQuality > aRoute.GetLinkQualityOut(routerCount))
-                {
-                    peerLinkQuality = aRoute.GetLinkQualityOut(routerCount);
-                }
-
-                // compare local link quality to this router with peer's
-                if (peerLinkQuality >= localLinkQuality)
-                {
-                    routerCount++;
-                    continue;
-                }
-
-                ExitNow(rval = false);
-            }
+            localLinkQuality = router.GetLinkQualityOut();
         }
 
-        routerCount++;
+        if (localLinkQuality < 2)
+        {
+            routerCount++;
+            continue;
+        }
+
+        // check if this neighbor router is in peer Route64 TLV
+        if (!aRoute.IsRouterIdSet(router.GetRouterId()))
+        {
+            ExitNow(rval = false);
+        }
+
+        // get the peer's two-way link quality to this router
+        peerLinkQuality = aRoute.GetLinkQualityIn(routerCount);
+
+        if (peerLinkQuality > aRoute.GetLinkQualityOut(routerCount))
+        {
+            peerLinkQuality = aRoute.GetLinkQualityOut(routerCount);
+        }
+
+        // compare local link quality to this router with peer's
+        if (peerLinkQuality >= localLinkQuality)
+        {
+            routerCount++;
+            continue;
+        }
+
+        ExitNow(rval = false);
     }
 
 exit:
