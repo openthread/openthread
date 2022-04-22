@@ -1680,6 +1680,12 @@ private:
         kDataRequestActive, // Data Request has been sent, Data Response is expected.
     };
 
+    enum SecuritySuite : uint8_t
+    {
+        k154Security = 0,   // Security suite value indicating that MLE message is not secured.
+        kNoSecurity  = 255, // Security suite value indicating that MLE message is secured.
+    };
+
     struct DelayedResponseMetadata
     {
         Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
@@ -1691,95 +1697,29 @@ private:
     };
 
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class SecurityHeader
     {
     public:
-        enum SecuritySuite : uint8_t
-        {
-            k154Security = 0,
-            kNoSecurity  = 255,
-        };
+        void InitSecurityControl(void) { mSecurityControl = kKeyIdMode2Mic32; }
+        bool IsSecurityControlValid(void) const { return (mSecurityControl == kKeyIdMode2Mic32); }
 
-        void Init(void)
-        {
-            mSecuritySuite   = k154Security;
-            mSecurityControl = Mac::Frame::kSecEncMic32;
-        }
-
-        bool IsValid(void) const
-        {
-            return (mSecuritySuite == kNoSecurity) ||
-                   (mSecuritySuite == k154Security &&
-                    mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32));
-        }
-
-        uint8_t GetLength(void) const
-        {
-            return sizeof(mSecuritySuite) + sizeof(mCommand) +
-                   ((mSecuritySuite == k154Security)
-                        ? sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex)
-                        : 0);
-        }
-
-        SecuritySuite GetSecuritySuite(void) const { return static_cast<SecuritySuite>(mSecuritySuite); }
-        void SetSecuritySuite(SecuritySuite aSecuritySuite) { mSecuritySuite = static_cast<uint8_t>(aSecuritySuite); }
-
-        uint8_t GetHeaderLength(void) const
-        {
-            return sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
-        }
-
-        const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(&mSecuritySuite); }
-        uint8_t        GetSecurityControl(void) const { return mSecurityControl; }
-
-        bool IsKeyIdMode2(void) const
-        {
-            return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode2;
-        }
-
-        void SetKeyIdMode2(void)
-        {
-            mSecurityControl = (mSecurityControl & ~Mac::Frame::kKeyIdModeMask) | Mac::Frame::kKeyIdMode2;
-        }
+        uint32_t GetFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mFrameCounter); }
+        void     SetFrameCounter(uint32_t aCounter) { mFrameCounter = Encoding::LittleEndian::HostSwap32(aCounter); }
 
         uint32_t GetKeyId(void) const { return Encoding::BigEndian::HostSwap32(mKeySource); }
-
-        void SetKeyId(uint32_t aKeySequence)
+        void     SetKeyId(uint32_t aKeySequence)
         {
             mKeySource = Encoding::BigEndian::HostSwap32(aKeySequence);
             mKeyIndex  = (aKeySequence & 0x7f) + 1;
         }
 
-        uint32_t GetFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mFrameCounter); }
-        void     SetFrameCounter(uint32_t aFrameCounter)
-        {
-            mFrameCounter = Encoding::LittleEndian::HostSwap32(aFrameCounter);
-        }
-
-        Command GetCommand(void) const
-        {
-            return static_cast<Command>((mSecuritySuite == kNoSecurity) ? mSecurityControl : mCommand);
-        }
-
-        void SetCommand(Command aCommand)
-        {
-            if (mSecuritySuite == kNoSecurity)
-            {
-                mSecurityControl = static_cast<uint8_t>(aCommand);
-            }
-            else
-            {
-                mCommand = static_cast<uint8_t>(aCommand);
-            }
-        }
-
     private:
-        uint8_t  mSecuritySuite;
+        static constexpr uint8_t kKeyIdMode2Mic32 = (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32);
+
         uint8_t  mSecurityControl;
         uint32_t mFrameCounter;
         uint32_t mKeySource;
         uint8_t  mKeyIndex;
-        uint8_t  mCommand;
     } OT_TOOL_PACKED_END;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

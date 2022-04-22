@@ -1048,23 +1048,34 @@ exit:
 
 Error Mle::AppendHeader(Message &aMessage, Command aCommand)
 {
-    Error  error = kErrorNone;
-    Header header;
+    Error   error         = kErrorNone;
+    uint8_t securitySuite = k154Security;
 
-    header.Init();
-
-    if (aCommand == kCommandDiscoveryRequest || aCommand == kCommandDiscoveryResponse)
+    switch (aCommand)
     {
-        header.SetSecuritySuite(Header::kNoSecurity);
+    case kCommandDiscoveryRequest:
+    case kCommandDiscoveryResponse:
+        securitySuite = kNoSecurity;
+        break;
+
+    default:
+        break;
     }
-    else
+
+    SuccessOrExit(error = aMessage.Append(securitySuite));
+
+    if (securitySuite == k154Security)
     {
-        header.SetKeyIdMode2();
+        SecurityHeader securityHeader;
+
+        // The other fields in security header are updated in the
+        // message in `SendMessage()` before message is sent.
+
+        securityHeader.InitSecurityControl();
+        SuccessOrExit(error = aMessage.Append(securityHeader));
     }
 
-    header.SetCommand(aCommand);
-
-    SuccessOrExit(error = aMessage.AppendBytes(&header, header.GetLength()));
+    error = aMessage.Append<uint8_t>(aCommand);
 
 exit:
     return error;
@@ -2676,41 +2687,42 @@ exit:
 
 Error Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
-    Error            error = kErrorNone;
-    Header           header;
+    Error            error  = kErrorNone;
+    uint16_t         offset = 0;
+    uint8_t          securitySuite;
     Ip6::MessageInfo messageInfo;
 
-    IgnoreError(aMessage.Read(0, header));
+    IgnoreError(aMessage.Read(offset, securitySuite));
+    offset += sizeof(securitySuite);
 
-    if (header.GetSecuritySuite() == Header::k154Security)
+    if (securitySuite == k154Security)
     {
-        uint32_t       keySequence;
+        SecurityHeader header;
         uint8_t        nonce[Crypto::AesCcm::kNonceSize];
         uint8_t        tag[kMleSecurityTagSize];
         Crypto::AesCcm aesCcm;
 
+        IgnoreError(aMessage.Read(offset, header));
+
         header.SetFrameCounter(Get<KeyManager>().GetMleFrameCounter());
+        header.SetKeyId(Get<KeyManager>().GetCurrentKeySequence());
 
-        keySequence = Get<KeyManager>().GetCurrentKeySequence();
-        header.SetKeyId(keySequence);
-
-        aMessage.WriteBytes(0, &header, header.GetLength());
+        aMessage.Write(offset, header);
+        offset += sizeof(SecurityHeader);
 
         Crypto::AesCcm::GenerateNonce(Get<Mac::Mac>().GetExtAddress(), Get<KeyManager>().GetMleFrameCounter(),
                                       Mac::Frame::kSecEncMic32, nonce);
 
         aesCcm.SetKey(Get<KeyManager>().GetCurrentMleKey());
-        aesCcm.Init(16 + 16 + header.GetHeaderLength(), aMessage.GetLength() - (header.GetLength() - 1), sizeof(tag),
-                    nonce, sizeof(nonce));
+
+        aesCcm.Init(sizeof(Ip6::Address) + sizeof(Ip6::Address) + sizeof(SecurityHeader), aMessage.GetLength() - offset,
+                    kMleSecurityTagSize, nonce, sizeof(nonce));
 
         aesCcm.Header(mLinkLocal64.GetAddress());
         aesCcm.Header(aDestination);
-        aesCcm.Header(header.GetBytes() + 1, header.GetHeaderLength());
+        aesCcm.Header(header);
 
-        aMessage.SetOffset(header.GetLength() - 1);
-
-        aesCcm.Payload(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset(),
-                       Crypto::AesCcm::kEncrypt);
+        aesCcm.Payload(aMessage, offset, aMessage.GetLength() - offset, Crypto::AesCcm::kEncrypt);
 
         aesCcm.Finalize(tag);
         SuccessOrExit(error = aMessage.Append(tag));
@@ -2753,41 +2765,40 @@ void Mle::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageI
 
 void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error              error = kErrorNone;
-    Header             header;
-    uint32_t           keySequence;
-    const KeyMaterial *mleKey;
-    uint32_t           frameCounter;
-    uint8_t            messageTag[kMleSecurityTagSize];
-    uint8_t            nonce[Crypto::AesCcm::kNonceSize];
-    Mac::ExtAddress    extAddr;
-    Crypto::AesCcm     aesCcm;
-    uint16_t           length;
-    uint8_t            tag[kMleSecurityTagSize];
-    uint8_t            command;
-    Neighbor *         neighbor;
-    bool               skipLoggingError = false;
+    Error           error = kErrorNone;
+    uint8_t         securitySuite;
+    SecurityHeader  header;
+    uint32_t        keySequence;
+    uint32_t        frameCounter;
+    uint8_t         messageTag[kMleSecurityTagSize];
+    uint8_t         nonce[Crypto::AesCcm::kNonceSize];
+    Mac::ExtAddress extAddr;
+    Crypto::AesCcm  aesCcm;
+    uint8_t         tag[kMleSecurityTagSize];
+    uint8_t         command;
+    Neighbor *      neighbor;
+    bool            skipLoggingError = false;
 
-    LogDebg("Receive UDP message");
+    LogDebg("Receive MLE message");
 
     VerifyOrExit(aMessageInfo.GetLinkInfo() != nullptr);
     VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = kErrorParse);
 
-    length = aMessage.ReadBytes(aMessage.GetOffset(), &header, sizeof(header));
-    VerifyOrExit(header.IsValid() && header.GetLength() <= length, error = kErrorParse);
+    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), securitySuite));
+    aMessage.MoveOffset(sizeof(securitySuite));
 
-    if (header.GetSecuritySuite() == Header::kNoSecurity)
+    if (securitySuite == kNoSecurity)
     {
-        aMessage.MoveOffset(header.GetLength());
+        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), command));
+        aMessage.MoveOffset(sizeof(command));
 
-        switch (header.GetCommand())
+        switch (command)
         {
 #if OPENTHREAD_FTD
         case kCommandDiscoveryRequest:
             Get<MleRouter>().HandleDiscoveryRequest(aMessage, aMessageInfo);
             break;
 #endif
-
         case kCommandDiscoveryResponse:
             Get<DiscoverScanner>().HandleDiscoveryResponse(aMessage, aMessageInfo);
             break;
@@ -2800,38 +2811,36 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     }
 
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
-    VerifyOrExit(header.GetSecuritySuite() == Header::k154Security, error = kErrorParse);
+    VerifyOrExit(securitySuite == k154Security, error = kErrorParse);
 
-    keySequence = header.GetKeyId();
+    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), header));
+    aMessage.MoveOffset(sizeof(header));
 
-    if (keySequence == Get<KeyManager>().GetCurrentKeySequence())
-    {
-        mleKey = &Get<KeyManager>().GetCurrentMleKey();
-    }
-    else
-    {
-        mleKey = &Get<KeyManager>().GetTemporaryMleKey(keySequence);
-    }
+    VerifyOrExit(header.IsSecurityControlValid(), error = kErrorParse);
 
-    VerifyOrExit(aMessage.GetOffset() + header.GetLength() + sizeof(messageTag) <= aMessage.GetLength(),
+    keySequence  = header.GetKeyId();
+    frameCounter = header.GetFrameCounter();
+
+    VerifyOrExit(aMessage.GetOffset() + sizeof(command) + sizeof(messageTag) <= aMessage.GetLength(),
                  error = kErrorParse);
-    aMessage.MoveOffset(header.GetLength() - 1);
 
     IgnoreError(aMessage.Read(aMessage.GetLength() - sizeof(messageTag), messageTag));
     SuccessOrExit(error = aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
 
     aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
-    frameCounter = header.GetFrameCounter();
     Crypto::AesCcm::GenerateNonce(extAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
 
-    aesCcm.SetKey(*mleKey);
-    aesCcm.Init(sizeof(aMessageInfo.GetPeerAddr()) + sizeof(aMessageInfo.GetSockAddr()) + header.GetHeaderLength(),
+    aesCcm.SetKey((keySequence == Get<KeyManager>().GetCurrentKeySequence())
+                      ? Get<KeyManager>().GetCurrentMleKey()
+                      : Get<KeyManager>().GetTemporaryMleKey(keySequence));
+
+    aesCcm.Init(sizeof(Ip6::Address) + sizeof(Ip6::Address) + sizeof(SecurityHeader),
                 aMessage.GetLength() - aMessage.GetOffset(), sizeof(messageTag), nonce, sizeof(nonce));
 
     aesCcm.Header(aMessageInfo.GetPeerAddr());
     aesCcm.Header(aMessageInfo.GetSockAddr());
-    aesCcm.Header(header.GetBytes() + 1, header.GetHeaderLength());
+    aesCcm.Header(header);
 
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     aesCcm.Payload(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset(),
