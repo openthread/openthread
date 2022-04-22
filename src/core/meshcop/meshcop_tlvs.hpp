@@ -447,7 +447,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, MeshCoP::ExtendedPanId>
+class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, ExtendedPanId>
 {
 public:
     /**
@@ -475,7 +475,7 @@ public:
      * @returns The Extended PAN ID value.
      *
      */
-    const MeshCoP::ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID value.
@@ -483,10 +483,10 @@ public:
      * @param[in]  aExtendedPanId  An Extended PAN ID value.
      *
      */
-    void SetExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
+    void SetExtendedPanId(const ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
 
 private:
-    MeshCoP::ExtendedPanId mExtendedPanId;
+    ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

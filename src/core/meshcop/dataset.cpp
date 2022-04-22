@@ -555,12 +555,11 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
             break;
 
         case Tlv::kExtendedPanId:
-            aInstance.Get<MeshCoP::ExtendedPanIdManager>().SetExtPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
+            aInstance.Get<ExtendedPanIdManager>().SetExtPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
             break;
 
         case Tlv::kNetworkName:
-            IgnoreError(
-                aInstance.Get<MeshCoP::NetworkNameManager>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
+            IgnoreError(aInstance.Get<NetworkNameManager>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
             break;
 
         case Tlv::kNetworkKey:

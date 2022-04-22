@@ -304,7 +304,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().Stop();
+    Get<BorderAgent>().Stop();
 #endif
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
@@ -359,7 +359,7 @@ Error Commissioner::Stop(ResignMode aResignMode)
     }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().Start();
+    Get<BorderAgent>().Start();
 #endif
 
 exit:
@@ -687,7 +687,7 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
     Error            error = kErrorNone;
     Coap::Message *  message;
     Tmf::MessageInfo messageInfo(GetInstance());
-    MeshCoP::Tlv     tlv;
+    Tlv              tlv;
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -700,7 +700,7 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
 
     if (aLength > 0)
     {
-        tlv.SetType(MeshCoP::Tlv::kGet);
+        tlv.SetType(Tlv::kGet);
         tlv.SetLength(aLength);
         SuccessOrExit(error = message->Append(tlv));
         SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
@@ -752,12 +752,12 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const Dataset &aDataset, cons
 
     if (aDataset.IsLocatorSet())
     {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(*message, aDataset.GetLocator()));
+        SuccessOrExit(error = Tlv::Append<BorderAgentLocatorTlv>(*message, aDataset.GetLocator()));
     }
 
     if (aDataset.IsSessionIdSet())
     {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, aDataset.GetSessionId()));
+        SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, aDataset.GetSessionId()));
     }
 
     if (aDataset.IsSteeringDataSet())

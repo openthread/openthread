@@ -303,7 +303,7 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
     VerifyOrExit(aEvents.ContainsAny(kEventThreadRoleChanged | kEventCommissionerStateChanged));
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled());
+    VerifyOrExit(Get<Commissioner>().IsDisabled());
 #endif
 
     if (Get<Mle::MleRouter>().IsAttached())

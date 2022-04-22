@@ -420,10 +420,10 @@ private:
  * @retval kErrorInvalidArgs   If the length of passphrase is out of range.
  *
  */
-Error GeneratePskc(const char *                  aPassPhrase,
-                   const MeshCoP::NetworkName &  aNetworkName,
-                   const MeshCoP::ExtendedPanId &aExtPanId,
-                   Pskc &                        aPskc);
+Error GeneratePskc(const char *         aPassPhrase,
+                   const NetworkName &  aNetworkName,
+                   const ExtendedPanId &aExtPanId,
+                   Pskc &               aPskc);
 
 /**
  * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.

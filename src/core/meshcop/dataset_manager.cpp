@@ -227,10 +227,10 @@ void DatasetManager::SignalDatasetChange(void) const
 
 Error DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 {
-    Error                          error;
-    const MeshCoP::ChannelMaskTlv *channelMaskTlv;
-    uint32_t                       mask;
-    Dataset                        dataset;
+    Error                 error;
+    const ChannelMaskTlv *channelMaskTlv;
+    uint32_t              mask;
+    Dataset               dataset;
 
     SuccessOrExit(error = Read(dataset));
 

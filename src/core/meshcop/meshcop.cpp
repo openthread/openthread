@@ -316,10 +316,10 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-Error GeneratePskc(const char *                  aPassPhrase,
-                   const MeshCoP::NetworkName &  aNetworkName,
-                   const MeshCoP::ExtendedPanId &aExtPanId,
-                   Pskc &                        aPskc)
+Error GeneratePskc(const char *         aPassPhrase,
+                   const NetworkName &  aNetworkName,
+                   const ExtendedPanId &aExtPanId,
+                   Pskc &               aPskc)
 {
     Error      error        = kErrorNone;
     const char saltPrefix[] = "Thread";
