@@ -70,6 +70,7 @@ namespace ot {
 
 namespace Crypto {
 
+class AesCcm;
 class Sha256;
 class HmacSha256;
 
@@ -262,6 +263,7 @@ class Message : public otMessage, public Buffer
     friend class Checksum;
     friend class Crypto::HmacSha256;
     friend class Crypto::Sha256;
+    friend class Crypto::AesCcm;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
