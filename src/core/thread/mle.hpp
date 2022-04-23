@@ -974,12 +974,14 @@ protected:
     };
 
     /**
-     * This method allocates a new message buffer for preparing an MLE message.
+     * This method allocates and initializes new MLE message for a given command.
+     *
+     * @param[in] aCommand   The MLE command.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
-    Message *NewMleMessage(void);
+    Message *NewMleMessage(Command aCommand);
 
     /**
      * This method sets the device role.
@@ -1004,18 +1006,6 @@ protected:
      *
      */
     void SetAttachState(AttachState aState);
-
-    /**
-     * This method appends an MLE header to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aCommand  The MLE Command Type.
-     *
-     * @retval kErrorNone    Successfully appended the header.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the header.
-     *
-     */
-    Error AppendHeader(Message &aMessage, Command aCommand);
 
     /**
      * This method appends a Source Address TLV to a message.
