@@ -331,7 +331,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     networkName.SetNetworkName(Get<NetworkNameManager>().GetNetworkName().GetAsData());
     SuccessOrExit(error = networkName.AppendTo(*message));
 
-    IgnoreError(Get<ActiveDataset>().Read(dataset));
+    IgnoreError(Get<ActiveDatasetManager>().Read(dataset));
 
     if ((tlv = dataset.GetTlv<ActiveTimestampTlv>()) != nullptr)
     {

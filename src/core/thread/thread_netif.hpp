@@ -199,17 +199,17 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;
 #endif
-    MeshCoP::ActiveDataset        mActiveDataset;
-    MeshCoP::PendingDataset       mPendingDataset;
-    MeshCoP::ExtendedPanIdManager mExtendedPanIdManager;
-    MeshCoP::NetworkNameManager   mNetworkNameManager;
-    Ip6::Filter                   mIp6Filter;
-    KeyManager                    mKeyManager;
-    Lowpan::Lowpan                mLowpan;
-    Mac::Mac                      mMac;
-    MeshForwarder                 mMeshForwarder;
-    Mle::MleRouter                mMleRouter;
-    Mle::DiscoverScanner          mDiscoverScanner;
+    MeshCoP::ActiveDatasetManager  mActiveDataset;
+    MeshCoP::PendingDatasetManager mPendingDataset;
+    MeshCoP::ExtendedPanIdManager  mExtendedPanIdManager;
+    MeshCoP::NetworkNameManager    mNetworkNameManager;
+    Ip6::Filter                    mIp6Filter;
+    KeyManager                     mKeyManager;
+    Lowpan::Lowpan                 mLowpan;
+    Mac::Mac                       mMac;
+    MeshForwarder                  mMeshForwarder;
+    Mle::MleRouter                 mMleRouter;
+    Mle::DiscoverScanner           mDiscoverScanner;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioSelector mRadioSelector;
 #endif

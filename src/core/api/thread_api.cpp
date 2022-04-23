@@ -72,8 +72,8 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *a
     prefix.SetFromExtendedPanId(extPanId);
     instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(prefix);
 
-    instance.Get<MeshCoP::ActiveDataset>().Clear();
-    instance.Get<MeshCoP::PendingDataset>().Clear();
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -123,8 +123,8 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 
     instance.Get<KeyManager>().SetNetworkKey(AsCoreType(aKey));
 
-    instance.Get<MeshCoP::ActiveDataset>().Clear();
-    instance.Get<MeshCoP::PendingDataset>().Clear();
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -141,8 +141,8 @@ otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<KeyManager>().SetNetworkKeyRef((aKeyRef));
-    instance.Get<MeshCoP::ActiveDataset>().Clear();
-    instance.Get<MeshCoP::PendingDataset>().Clear();
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -171,8 +171,8 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetMeshLocalPrefix(AsCoreType(aMeshLocalPrefix));
-    AsCoreType(aInstance).Get<MeshCoP::ActiveDataset>().Clear();
-    AsCoreType(aInstance).Get<MeshCoP::PendingDataset>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -210,8 +210,8 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);
-    AsCoreType(aInstance).Get<MeshCoP::ActiveDataset>().Clear();
-    AsCoreType(aInstance).Get<MeshCoP::PendingDataset>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;

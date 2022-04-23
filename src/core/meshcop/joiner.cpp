@@ -581,7 +581,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
     datasetInfo.SetChannel(Get<Mac::Mac>().GetPanChannel());
     datasetInfo.SetPanId(Get<Mac::Mac>().GetPanId());
 
-    IgnoreError(Get<ActiveDataset>().Save(datasetInfo));
+    IgnoreError(Get<ActiveDatasetManager>().Save(datasetInfo));
 
     LogInfo("Joiner successful!");
 

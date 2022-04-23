@@ -44,7 +44,7 @@ using namespace ot;
 
 otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDataset>().CreateNewNetwork(AsCoreType(aDataset));
+    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().CreateNewNetwork(AsCoreType(aDataset));
 }
 
 uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance)

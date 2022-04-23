@@ -713,12 +713,12 @@ template <> inline MeshCoP::NetworkNameManager &Instance::Get(void)
     return mThreadNetif.mNetworkNameManager;
 }
 
-template <> inline MeshCoP::ActiveDataset &Instance::Get(void)
+template <> inline MeshCoP::ActiveDatasetManager &Instance::Get(void)
 {
     return mThreadNetif.mActiveDataset;
 }
 
-template <> inline MeshCoP::PendingDataset &Instance::Get(void)
+template <> inline MeshCoP::PendingDatasetManager &Instance::Get(void)
 {
     return mThreadNetif.mPendingDataset;
 }
