@@ -336,7 +336,7 @@ template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
 {
     if (aArgs[0].IsEmpty())
     {
-        OutputLine("Commissioner id: %s", otCommissionerGetId(GetInstancePtr()));
+        OutputLine("%s", otCommissionerGetId(GetInstancePtr()));
         return OT_ERROR_NONE;
     }
 
