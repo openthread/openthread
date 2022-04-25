@@ -64,7 +64,7 @@ void cbuf_copy_from_message(void* arr, size_t arr_offset, const void* buffer, si
 /* Writes data to the back of the circular buffer using the specified copier. */
 size_t cbuf_write(struct cbufhead* chdr, const void* data, size_t data_offset, size_t data_len, cbuf_copier_t copy_from);
 
-/* Reads data from the front ofthe circular buffer using the specified copier. */
+/* Reads data from the front of the circular buffer using the specified copier. */
 size_t cbuf_read(struct cbufhead* chdr, void* data, size_t data_offset, size_t numbytes, int pop, cbuf_copier_t copy_into);
 
 /* Reads data at the specified offset, in bytes, from the front of the circular buffer using the specified copier. */
@@ -85,12 +85,15 @@ size_t cbuf_size(struct cbufhead* chdr);
 /* Returns true if the circular buffer is empty, and false if it is not empty. */
 bool cbuf_empty(struct cbufhead* chdr);
 
+/* Rotates the circular buffer's data so that the "used" portion begins at the beginning of the buffer. */
+void cbuf_contiguify(struct cbufhead* chdr, uint8_t* bitmap);
+
 /* Populates the provided otLinkedBuffers to reference the data currently in the circular buffer. */
 void cbuf_reference(const struct cbufhead* chdr, struct otLinkedBuffer* first, struct otLinkedBuffer* second);
 
 /* Writes DATA at the end of the circular buffer without making it available for
    reading. This data is said to be "out-of-sequence". OFFSET is position at
-   which to write these bytes, relative to the positoin where cbuf_write would
+   which to write these bytes, relative to the position where cbuf_write would
    write them. Each bit in the BITMAP corresponds to a byte in the circular
    buffer; the bits corresponding to the bytes containing the newly written
    data are set. The index of the first byte written is stored into FIRSTINDEX,

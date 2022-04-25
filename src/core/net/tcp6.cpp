@@ -234,7 +234,11 @@ Error Tcp::Endpoint::ReceiveByReference(const otLinkedBuffer *&aBuffer)
 
 Error Tcp::Endpoint::ReceiveContiguify(void)
 {
-    return kErrorNotImplemented;
+    struct tcpcb &tp = GetTcb();
+
+    cbuf_contiguify(&tp.recvbuf, tp.reassbmp);
+
+    return kErrorNone;
 }
 
 Error Tcp::Endpoint::CommitReceive(size_t aNumBytes, uint32_t aFlags)
