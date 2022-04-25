@@ -204,7 +204,7 @@ otError otCommissionerStart(otInstance *                 aInstance,
 otError otCommissionerStop(otInstance *aInstance);
 
 /**
- * This method returns the Commissioner Id.
+ * This function returns the Commissioner Id.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
