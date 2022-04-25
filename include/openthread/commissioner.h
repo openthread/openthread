@@ -214,7 +214,7 @@ otError otCommissionerStop(otInstance *aInstance);
 const char *otCommissionerGetId(otInstance *aInstance);
 
 /**
- * This method sets the Commissioner Id.
+ * This function sets the Commissioner Id.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aId           A pointer to a string character array. Must be null terminated.
