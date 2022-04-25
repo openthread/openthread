@@ -322,10 +322,6 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
 
-#if !defined(IFA_RT_PRIORITY)
-#define IFA_RT_PRIORITY 9
-#endif
-
 void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
 {
     uint8_t        len = RTA_LENGTH(aLen);
