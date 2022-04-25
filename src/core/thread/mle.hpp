@@ -944,6 +944,36 @@ protected:
     };
 
     /**
+     * This structure represents a received MLE message containing additional information about the message (e.g.
+     * key sequence, neighbor from which it was received).
+     *
+     */
+    struct RxInfo
+    {
+        /**
+         * This constructor initializes the `RxInfo`
+         *
+         * @param[in] aMessage       The received MLE message.
+         * @param[in] aMessageInfo   The `Ip6::MessageInfo` associated with message.
+         *
+         */
+        RxInfo(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+            : mMessage(aMessage)
+            , mMessageInfo(aMessageInfo)
+            , mFrameCounter(0)
+            , mKeySequence(0)
+            , mNeighbor(nullptr)
+        {
+        }
+
+        Message &               mMessage;      ///< The MLE message.
+        const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
+        uint32_t                mFrameCounter; ///< The frame counter from aux security header.
+        uint32_t                mKeySequence;  ///< The key sequence from the aux security header.
+        Neighbor *              mNeighbor;     ///< Neighbor from which message was received (can be `nullptr`).
+    };
+
+    /**
      * This method allocates a new message buffer for preparing an MLE message.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
@@ -1753,31 +1783,23 @@ private:
     void        ScheduleMessageTransmissionTimer(void);
     Error       ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer);
 
-    void HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    void HandleChildIdResponse(const Message &         aMessage,
-                               const Ip6::MessageInfo &aMessageInfo,
-                               const Neighbor *        aNeighbor);
-    void HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    void HandleChildUpdateResponse(const Message &         aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   const Neighbor *        aNeighbor);
-    void HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
-    void HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    void HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleAdvertisement(RxInfo &aRxInfo);
+    void HandleChildIdResponse(RxInfo &aRxInfo);
+    void HandleChildUpdateRequest(RxInfo &aRxInfo);
+    void HandleChildUpdateResponse(RxInfo &aRxInfo);
+    void HandleDataResponse(RxInfo &aRxInfo);
+    void HandleParentResponse(RxInfo &aRxInfo);
+    void HandleAnnounce(RxInfo &aRxInfo);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    void HandleLinkMetricsManagementRequest(const Message &         aMessage,
-                                            const Ip6::MessageInfo &aMessageInfo,
-                                            Neighbor *              aNeighbor);
+    void HandleLinkMetricsManagementRequest(RxInfo &aRxInfo);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    void HandleLinkMetricsManagementResponse(const Message &         aMessage,
-                                             const Ip6::MessageInfo &aMessageInfo,
-                                             Neighbor *              aNeighbor);
+    void HandleLinkMetricsManagementResponse(RxInfo &aRxInfo);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    void HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+    void HandleLinkProbe(RxInfo &aRxInfo);
 #endif
-    Error HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error HandleLeaderData(RxInfo &aRxInfo);
     void  ProcessAnnounce(void);
     bool  HasUnregisteredAddress(void);
 

@@ -2766,6 +2766,7 @@ void Mle::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageI
 void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error           error = kErrorNone;
+    RxInfo          rxInfo(aMessage, aMessageInfo);
     uint8_t         securitySuite;
     SecurityHeader  header;
     uint32_t        keySequence;
@@ -2796,11 +2797,11 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         {
 #if OPENTHREAD_FTD
         case kCommandDiscoveryRequest:
-            Get<MleRouter>().HandleDiscoveryRequest(aMessage, aMessageInfo);
+            Get<MleRouter>().HandleDiscoveryRequest(rxInfo);
             break;
 #endif
         case kCommandDiscoveryResponse:
-            Get<DiscoverScanner>().HandleDiscoveryResponse(aMessage, aMessageInfo);
+            Get<DiscoverScanner>().HandleDiscoveryResponse(rxInfo);
             break;
 
         default:
@@ -2916,38 +2917,42 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     }
 #endif
 
+    rxInfo.mKeySequence  = keySequence;
+    rxInfo.mFrameCounter = frameCounter;
+    rxInfo.mNeighbor     = neighbor;
+
     switch (command)
     {
     case kCommandAdvertisement:
-        HandleAdvertisement(aMessage, aMessageInfo, neighbor);
+        HandleAdvertisement(rxInfo);
         break;
 
     case kCommandDataResponse:
-        HandleDataResponse(aMessage, aMessageInfo, neighbor);
+        HandleDataResponse(rxInfo);
         break;
 
     case kCommandParentResponse:
-        HandleParentResponse(aMessage, aMessageInfo, keySequence);
+        HandleParentResponse(rxInfo);
         break;
 
     case kCommandChildIdResponse:
-        HandleChildIdResponse(aMessage, aMessageInfo, neighbor);
+        HandleChildIdResponse(rxInfo);
         break;
 
     case kCommandAnnounce:
-        HandleAnnounce(aMessage, aMessageInfo);
+        HandleAnnounce(rxInfo);
         break;
 
     case kCommandChildUpdateRequest:
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
-            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo);
+            Get<MleRouter>().HandleChildUpdateRequest(rxInfo);
         }
         else
 #endif
         {
-            HandleChildUpdateRequest(aMessage, aMessageInfo, neighbor);
+            HandleChildUpdateRequest(rxInfo);
         }
 
         break;
@@ -2956,63 +2961,63 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
-            Get<MleRouter>().HandleChildUpdateResponse(aMessage, aMessageInfo, keySequence, neighbor);
+            Get<MleRouter>().HandleChildUpdateResponse(rxInfo);
         }
         else
 #endif
         {
-            HandleChildUpdateResponse(aMessage, aMessageInfo, neighbor);
+            HandleChildUpdateResponse(rxInfo);
         }
 
         break;
 
 #if OPENTHREAD_FTD
     case kCommandLinkRequest:
-        Get<MleRouter>().HandleLinkRequest(aMessage, aMessageInfo, neighbor);
+        Get<MleRouter>().HandleLinkRequest(rxInfo);
         break;
 
     case kCommandLinkAccept:
-        Get<MleRouter>().HandleLinkAccept(aMessage, aMessageInfo, keySequence, neighbor);
+        Get<MleRouter>().HandleLinkAccept(rxInfo);
         break;
 
     case kCommandLinkAcceptAndRequest:
-        Get<MleRouter>().HandleLinkAcceptAndRequest(aMessage, aMessageInfo, keySequence, neighbor);
+        Get<MleRouter>().HandleLinkAcceptAndRequest(rxInfo);
         break;
 
     case kCommandDataRequest:
-        Get<MleRouter>().HandleDataRequest(aMessage, aMessageInfo, neighbor);
+        Get<MleRouter>().HandleDataRequest(rxInfo);
         break;
 
     case kCommandParentRequest:
-        Get<MleRouter>().HandleParentRequest(aMessage, aMessageInfo);
+        Get<MleRouter>().HandleParentRequest(rxInfo);
         break;
 
     case kCommandChildIdRequest:
-        Get<MleRouter>().HandleChildIdRequest(aMessage, aMessageInfo, keySequence);
+        Get<MleRouter>().HandleChildIdRequest(rxInfo);
         break;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     case kCommandTimeSync:
-        Get<MleRouter>().HandleTimeSync(aMessage, aMessageInfo, neighbor);
+        Get<MleRouter>().HandleTimeSync(rxInfo);
         break;
 #endif
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     case kCommandLinkMetricsManagementRequest:
-        HandleLinkMetricsManagementRequest(aMessage, aMessageInfo, neighbor);
+        HandleLinkMetricsManagementRequest(rxInfo);
         break;
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     case kCommandLinkMetricsManagementResponse:
-        HandleLinkMetricsManagementResponse(aMessage, aMessageInfo, neighbor);
+        HandleLinkMetricsManagementResponse(rxInfo);
         break;
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     case kCommandLinkProbe:
-        HandleLinkProbe(aMessage, aMessageInfo, neighbor);
+        HandleLinkProbe(rxInfo);
         break;
 #endif
 
@@ -3048,7 +3053,7 @@ exit:
     }
 }
 
-void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
+void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 {
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
@@ -3057,24 +3062,24 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
     uint16_t   delay;
 
     // Source Address
-    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aMessage, sourceAddress));
+    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-    Log(kMessageReceive, kTypeAdvertisement, aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log(kMessageReceive, kTypeAdvertisement, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
+    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
 
     if (!IsDetached())
     {
 #if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
-            SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aMessage, aMessageInfo, aNeighbor));
+            SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aRxInfo));
         }
         else
 #endif
         {
-            if ((aNeighbor == &mParent) && (mParent.GetRloc16() != sourceAddress))
+            if ((aRxInfo.mNeighbor == &mParent) && (mParent.GetRloc16() != sourceAddress))
             {
                 // Remove stale parent.
                 IgnoreError(BecomeDetached());
@@ -3089,7 +3094,7 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
         ExitNow();
 
     case kRoleChild:
-        VerifyOrExit(aNeighbor == &mParent);
+        VerifyOrExit(aRxInfo.mNeighbor == &mParent);
 
         if ((mParent.GetRloc16() == sourceAddress) && (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
                                                        leaderData.GetLeaderRouterId() != GetLeaderId()))
@@ -3101,7 +3106,7 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
             {
                 RouteTlv route;
 
-                if ((Tlv::FindTlv(aMessage, route) == kErrorNone) && route.IsValid())
+                if ((Tlv::FindTlv(aRxInfo.mMessage, route) == kErrorNone) && route.IsValid())
                 {
                     // Overwrite Route Data
                     IgnoreError(Get<MleRouter>().ProcessRouteTlv(route));
@@ -3117,21 +3122,21 @@ void Mle::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &a
 
     case kRoleRouter:
     case kRoleLeader:
-        VerifyOrExit(aNeighbor && aNeighbor->IsStateValid());
+        VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
         break;
     }
 
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
     }
 
 exit:
     LogProcessError(kTypeAdvertisement, error);
 }
 
-void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
+void Mle::HandleDataResponse(RxInfo &aRxInfo)
 {
     Error error;
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
@@ -3139,19 +3144,20 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
     uint16_t length;
 #endif
 
-    Log(kMessageReceive, kTypeDataResponse, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeDataResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = kErrorDrop);
+    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorDrop);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    if (Tlv::FindTlvValueOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) == kErrorNone)
+    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) ==
+        kErrorNone)
     {
-        Get<LinkMetrics::LinkMetrics>().HandleReport(aMessage, metricsReportValueOffset, length,
-                                                     aMessageInfo.GetPeerAddr());
+        Get<LinkMetrics::LinkMetrics>().HandleReport(aRxInfo.mMessage, metricsReportValueOffset, length,
+                                                     aRxInfo.mMessageInfo.GetPeerAddr());
     }
 #endif
 
-    error = HandleLeaderData(aMessage, aMessageInfo);
+    error = HandleLeaderData(aRxInfo);
 
     if (mDataRequestState == kDataRequestNone && !IsRxOnWhenIdle())
     {
@@ -3173,7 +3179,7 @@ bool Mle::IsNetworkDataNewer(const LeaderData &aLeaderData)
                                    Get<NetworkData::Leader>().GetVersion(GetNetworkDataType()));
 }
 
-Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Mle::HandleLeaderData(RxInfo &aRxInfo)
 {
     Error                     error = kErrorNone;
     LeaderData                leaderData;
@@ -3189,7 +3195,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
     Tlv                       tlv;
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
+    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
 
     if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
         (leaderData.GetWeighting() != mLeaderData.GetWeighting()) || (leaderData.GetLeaderRouterId() != GetLeaderId()))
@@ -3210,7 +3216,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
     // Active Timestamp
-    switch (Tlv::Find<ActiveTimestampTlv>(aMessage, activeTimestamp))
+    switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, activeTimestamp))
     {
     case kErrorNone:
         hasActiveTimestamp = true;
@@ -3220,7 +3226,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
         if (!IsLeader() && (MeshCoP::Timestamp::Compare(&activeTimestamp, timestamp) != 0) &&
-            (Tlv::FindTlvOffset(aMessage, Tlv::kActiveDataset, activeDatasetOffset) != kErrorNone))
+            (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kActiveDataset, activeDatasetOffset) != kErrorNone))
         {
             ExitNow(dataRequest = true);
         }
@@ -3235,7 +3241,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
     // Pending Timestamp
-    switch (Tlv::Find<PendingTimestampTlv>(aMessage, pendingTimestamp))
+    switch (Tlv::Find<PendingTimestampTlv>(aRxInfo.mMessage, pendingTimestamp))
     {
     case kErrorNone:
         hasPendingTimestamp = true;
@@ -3245,7 +3251,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
         if (!IsLeader() && (MeshCoP::Timestamp::Compare(&pendingTimestamp, timestamp) != 0) &&
-            (Tlv::FindTlvOffset(aMessage, Tlv::kPendingDataset, pendingDatasetOffset) != kErrorNone))
+            (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kPendingDataset, pendingDatasetOffset) != kErrorNone))
         {
             ExitNow(dataRequest = true);
         }
@@ -3259,11 +3265,11 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         ExitNow(error = kErrorParse);
     }
 
-    if (Tlv::FindTlvOffset(aMessage, Tlv::kNetworkData, networkDataOffset) == kErrorNone)
+    if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset) == kErrorNone)
     {
         error = Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
                                                           leaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                          GetNetworkDataType(), aMessage, networkDataOffset);
+                                                          GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset);
         SuccessOrExit(error);
     }
     else
@@ -3284,8 +3290,8 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         {
             if (activeDatasetOffset > 0)
             {
-                IgnoreError(aMessage.Read(activeDatasetOffset, tlv));
-                IgnoreError(Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aMessage,
+                IgnoreError(aRxInfo.mMessage.Read(activeDatasetOffset, tlv));
+                IgnoreError(Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aRxInfo.mMessage,
                                                                activeDatasetOffset + sizeof(tlv), tlv.GetLength()));
             }
         }
@@ -3295,8 +3301,8 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         {
             if (pendingDatasetOffset > 0)
             {
-                IgnoreError(aMessage.Read(pendingDatasetOffset, tlv));
-                IgnoreError(Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aMessage,
+                IgnoreError(aRxInfo.mMessage.Read(pendingDatasetOffset, tlv));
+                IgnoreError(Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aRxInfo.mMessage,
                                                                 pendingDatasetOffset + sizeof(tlv), tlv.GetLength()));
             }
         }
@@ -3311,7 +3317,7 @@ exit:
         static const uint8_t tlvs[] = {Tlv::kNetworkData};
         uint16_t             delay;
 
-        if (aMessageInfo.GetSockAddr().IsMulticast())
+        if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
         {
             delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
         }
@@ -3323,7 +3329,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
     }
     else if (error == kErrorNone)
     {
@@ -3432,10 +3438,10 @@ exit:
     return rval;
 }
 
-void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence)
+void Mle::HandleParentResponse(RxInfo &aRxInfo)
 {
     Error                 error    = kErrorNone;
-    const ThreadLinkInfo *linkInfo = aMessageInfo.GetThreadLinkInfo();
+    const ThreadLinkInfo *linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
     Challenge             response;
     uint16_t              version;
     uint16_t              sourceAddress;
@@ -3455,19 +3461,19 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
 #endif
 
     // Source Address
-    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aMessage, sourceAddress));
+    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-    Log(kMessageReceive, kTypeParentResponse, aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log(kMessageReceive, kTypeParentResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Version
-    SuccessOrExit(error = Tlv::Find<VersionTlv>(aMessage, version));
+    SuccessOrExit(error = Tlv::Find<VersionTlv>(aRxInfo.mMessage, version));
     VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = kErrorParse);
 
     // Response
-    SuccessOrExit(error = ReadResponse(aMessage, response));
+    SuccessOrExit(error = ReadResponse(aRxInfo.mMessage, response));
     VerifyOrExit(response == mParentRequestChallenge, error = kErrorParse);
 
-    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddress);
+    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddress);
 
     if (IsChild() && mParent.GetExtAddress() == extAddress)
     {
@@ -3475,10 +3481,10 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     }
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
+    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
 
     // Link Margin
-    SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aMessage, linkMarginFromTlv));
+    SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginFromTlv));
 
     linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->GetRss());
 
@@ -3490,12 +3496,12 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
 
     // Connectivity
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, connectivity));
+    SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, connectivity));
     VerifyOrExit(connectivity.IsValid(), error = kErrorParse);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL Accuracy
-    if (Tlv::FindTlv(aMessage, clockAccuracy) != kErrorNone)
+    if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
     {
         clockAccuracy.SetCslClockAccuracy(kCslWorstCrystalPpm);
         clockAccuracy.SetCslUncertainty(kCslWorstUncertainty);
@@ -3585,12 +3591,12 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     }
 
     // Link/MLE Frame Counters
-    SuccessOrExit(error = ReadFrameCounters(aMessage, linkFrameCounter, mleFrameCounter));
+    SuccessOrExit(error = ReadFrameCounters(aRxInfo.mMessage, linkFrameCounter, mleFrameCounter));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Time Parameter
-    if (Tlv::FindTlv(aMessage, timeParameter) == kErrorNone)
+    if (Tlv::FindTlv(aRxInfo.mMessage, timeParameter) == kErrorNone)
     {
         VerifyOrExit(timeParameter.IsValid());
 
@@ -3609,7 +3615,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Challenge
-    SuccessOrExit(error = ReadChallenge(aMessage, mParentCandidateChallenge));
+    SuccessOrExit(error = ReadChallenge(aRxInfo.mMessage, mParentCandidateChallenge));
 
     mParentCandidate.SetExtAddress(extAddress);
     mParentCandidate.SetRloc16(sourceAddress);
@@ -3624,7 +3630,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     mParentCandidate.ResetLinkFailures();
     mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
-    mParentCandidate.SetKeySequence(aKeySequence);
+    mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mParentCandidate.SetCslClockAccuracy(clockAccuracy.GetCslClockAccuracy());
     mParentCandidate.SetCslClockUncertainty(clockAccuracy.GetCslUncertainty());
@@ -3645,9 +3651,7 @@ exit:
     LogProcessError(kTypeParentResponse, error);
 }
 
-void Mle::HandleChildIdResponse(const Message &         aMessage,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                const Neighbor *        aNeighbor)
+void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 {
     Error              error = kErrorNone;
     LeaderData         leaderData;
@@ -3659,35 +3663,35 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     uint16_t           offset;
 
     // Source Address
-    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aMessage, sourceAddress));
+    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-    Log(kMessageReceive, kTypeChildIdResponse, aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log(kMessageReceive, kTypeChildIdResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
-    VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = kErrorSecurity);
+    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorSecurity);
 
     VerifyOrExit(mAttachState == kAttachStateChildIdRequest);
 
     // ShortAddress
-    SuccessOrExit(error = Tlv::Find<Address16Tlv>(aMessage, shortAddress));
+    SuccessOrExit(error = Tlv::Find<Address16Tlv>(aRxInfo.mMessage, shortAddress));
     VerifyOrExit(RouterIdMatch(sourceAddress, shortAddress), error = kErrorRejected);
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
+    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
 
     // Network Data
-    error = Tlv::FindTlvOffset(aMessage, Tlv::kNetworkData, networkDataOffset);
+    error = Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset);
     SuccessOrExit(error);
 
     // Active Timestamp
-    switch (Tlv::Find<ActiveTimestampTlv>(aMessage, timestamp))
+    switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
         // Active Dataset
-        if (Tlv::FindTlvOffset(aMessage, Tlv::kActiveDataset, offset) == kErrorNone)
+        if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kActiveDataset, offset) == kErrorNone)
         {
-            IgnoreError(aMessage.Read(offset, tlv));
-            SuccessOrExit(
-                error = Get<MeshCoP::ActiveDataset>().Save(timestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
+            IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
+            SuccessOrExit(error = Get<MeshCoP::ActiveDataset>().Save(timestamp, aRxInfo.mMessage, offset + sizeof(tlv),
+                                                                     tlv.GetLength()));
         }
         break;
 
@@ -3705,15 +3709,15 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     }
 
     // Pending Timestamp
-    switch (Tlv::Find<PendingTimestampTlv>(aMessage, timestamp))
+    switch (Tlv::Find<PendingTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
         // Pending Dataset
-        if (Tlv::FindTlvOffset(aMessage, Tlv::kPendingDataset, offset) == kErrorNone)
+        if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kPendingDataset, offset) == kErrorNone)
         {
-            IgnoreError(aMessage.Read(offset, tlv));
-            IgnoreError(
-                Get<MeshCoP::PendingDataset>().Save(timestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
+            IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
+            IgnoreError(Get<MeshCoP::PendingDataset>().Save(timestamp, aRxInfo.mMessage, offset + sizeof(tlv),
+                                                            tlv.GetLength()));
         }
         break;
 
@@ -3727,9 +3731,9 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Sync to Thread network time
-    if (aMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ)
+    if (aRxInfo.mMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ)
     {
-        Get<TimeSync>().HandleTimeSyncMessage(aMessage);
+        Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
     }
 #endif
 
@@ -3744,7 +3748,7 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     {
         RouteTlv route;
 
-        if (Tlv::FindTlv(aMessage, route) == kErrorNone)
+        if (Tlv::FindTlv(aRxInfo.mMessage, route) == kErrorNone)
         {
             SuccessOrExit(error = Get<MleRouter>().ProcessRouteTlv(route));
         }
@@ -3763,7 +3767,7 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
 
     IgnoreError(Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
                                                           leaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                          GetNetworkDataType(), aMessage, networkDataOffset));
+                                                          GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset));
 
     SetStateChild(shortAddress);
 
@@ -3781,7 +3785,7 @@ exit:
     LogProcessError(kTypeChildIdResponse, error);
 }
 
-void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
+void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
     static const uint8_t kMaxResponseTlvs = 6;
 
@@ -3793,12 +3797,12 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
     uint8_t       numTlvs                = 0;
 
     // Source Address
-    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aMessage, sourceAddress));
+    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
-    Log(kMessageReceive, kTypeChildUpdateRequestOfParent, aMessageInfo.GetPeerAddr(), sourceAddress);
+    Log(kMessageReceive, kTypeChildUpdateRequestOfParent, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Challenge
-    switch (ReadChallenge(aMessage, challenge))
+    switch (ReadChallenge(aRxInfo.mMessage, challenge))
     {
     case kErrorNone:
         tlvs[numTlvs++] = Tlv::kResponse;
@@ -3812,11 +3816,11 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
         ExitNow(error = kErrorParse);
     }
 
-    if (aNeighbor == &mParent)
+    if (aRxInfo.mNeighbor == &mParent)
     {
         uint8_t status;
 
-        switch (Tlv::Find<StatusTlv>(aMessage, status))
+        switch (Tlv::Find<StatusTlv>(aRxInfo.mMessage, status))
         {
         case kErrorNone:
             VerifyOrExit(status != StatusTlv::kError, IgnoreError(BecomeDetached()));
@@ -3834,11 +3838,11 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
         }
 
         // Leader Data, Network Data, Active Timestamp, Pending Timestamp
-        SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
+        SuccessOrExit(error = HandleLeaderData(aRxInfo));
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         CslClockAccuracyTlv cslClockAccuracyTlv;
-        if (Tlv::FindTlv(aMessage, cslClockAccuracyTlv) == kErrorNone)
+        if (Tlv::FindTlv(aRxInfo.mMessage, cslClockAccuracyTlv) == kErrorNone)
         {
             // MUST include CSL timeout TLV when request includes CSL accuracy
             tlvs[numTlvs++] = Tlv::kCslTimeout;
@@ -3852,7 +3856,7 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
     }
 
     // TLV Request
-    switch (FindTlvRequest(aMessage, requestedTlvs))
+    switch (FindTlvRequest(aRxInfo.mMessage, requestedTlvs))
     {
     case kErrorNone:
         for (uint8_t i = 0; i < requestedTlvs.mNumTlvs; i++)
@@ -3873,9 +3877,9 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if ((aNeighbor != nullptr) && (challenge.mLength != 0))
+    if ((aRxInfo.mNeighbor != nullptr) && (challenge.mLength != 0))
     {
-        aNeighbor->ClearLastRxFragmentTag();
+        aRxInfo.mNeighbor->ClearLastRxFragmentTag();
     }
 #endif
 
@@ -3885,9 +3889,7 @@ exit:
     LogProcessError(kTypeChildUpdateRequestOfParent, error);
 }
 
-void Mle::HandleChildUpdateResponse(const Message &         aMessage,
-                                    const Ip6::MessageInfo &aMessageInfo,
-                                    const Neighbor *        aNeighbor)
+void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 {
     Error     error = kErrorNone;
     uint8_t   status;
@@ -3901,17 +3903,17 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
     CslClockAccuracyTlv clockAccuracy;
 #endif
 
-    Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aRxInfo.mMessageInfo.GetPeerAddr());
 
     switch (mRole)
     {
     case kRoleDetached:
-        SuccessOrExit(error = ReadResponse(aMessage, response));
+        SuccessOrExit(error = ReadResponse(aRxInfo.mMessage, response));
         VerifyOrExit(response == mParentRequestChallenge, error = kErrorSecurity);
         break;
 
     case kRoleChild:
-        VerifyOrExit((aNeighbor == &mParent) && mParent.IsStateValid(), error = kErrorSecurity);
+        VerifyOrExit((aRxInfo.mNeighbor == &mParent) && mParent.IsStateValid(), error = kErrorSecurity);
         break;
 
     default:
@@ -3920,20 +3922,20 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
     }
 
     // Status
-    if (Tlv::Find<StatusTlv>(aMessage, status) == kErrorNone)
+    if (Tlv::Find<StatusTlv>(aRxInfo.mMessage, status) == kErrorNone)
     {
         IgnoreError(BecomeDetached());
         ExitNow();
     }
 
     // Mode
-    SuccessOrExit(error = Tlv::Find<ModeTlv>(aMessage, mode));
+    SuccessOrExit(error = Tlv::Find<ModeTlv>(aRxInfo.mMessage, mode));
     VerifyOrExit(DeviceMode(mode) == mDeviceMode, error = kErrorDrop);
 
     switch (mRole)
     {
     case kRoleDetached:
-        SuccessOrExit(error = ReadFrameCounters(aMessage, linkFrameCounter, mleFrameCounter));
+        SuccessOrExit(error = ReadFrameCounters(aRxInfo.mMessage, linkFrameCounter, mleFrameCounter));
 
         mParent.GetLinkFrameCounters().SetAll(linkFrameCounter);
         mParent.SetLinkAckFrameCounter(linkFrameCounter);
@@ -3948,7 +3950,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
     case kRoleChild:
         // Source Address
-        SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aMessage, sourceAddress));
+        SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
         if (RouterIdFromRloc16(sourceAddress) != RouterIdFromRloc16(GetRloc16()))
         {
@@ -3957,10 +3959,10 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
         }
 
         // Leader Data, Network Data, Active Timestamp, Pending Timestamp
-        SuccessOrExit(error = HandleLeaderData(aMessage, aMessageInfo));
+        SuccessOrExit(error = HandleLeaderData(aRxInfo));
 
         // Timeout optional
-        switch (Tlv::Find<TimeoutTlv>(aMessage, timeout))
+        switch (Tlv::Find<TimeoutTlv>(aRxInfo.mMessage, timeout))
         {
         case kErrorNone:
             mTimeout = timeout;
@@ -3973,7 +3975,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         // CSL Accuracy
-        if (Tlv::FindTlv(aMessage, clockAccuracy) != kErrorNone)
+        if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
         {
             Get<Mac::Mac>().SetCslParentClockAccuracy(clockAccuracy.GetCslClockAccuracy());
             Get<Mac::Mac>().SetCslParentUncertainty(clockAccuracy.GetCslUncertainty());
@@ -4012,7 +4014,7 @@ exit:
     LogProcessError(kTypeChildUpdateResponseOfParent, error);
 }
 
-void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Mle::HandleAnnounce(RxInfo &aRxInfo)
 {
     Error                     error = kErrorNone;
     ChannelTlv                channelTlv;
@@ -4021,15 +4023,15 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
     uint8_t                   channel;
     uint16_t                  panId;
 
-    Log(kMessageReceive, kTypeAnnounce, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, channelTlv));
+    SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, channelTlv));
     VerifyOrExit(channelTlv.IsValid(), error = kErrorParse);
 
     channel = static_cast<uint8_t>(channelTlv.GetChannel());
 
-    SuccessOrExit(error = Tlv::Find<ActiveTimestampTlv>(aMessage, timestamp));
-    SuccessOrExit(error = Tlv::Find<PanIdTlv>(aMessage, panId));
+    SuccessOrExit(error = Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp));
+    SuccessOrExit(error = Tlv::Find<PanIdTlv>(aRxInfo.mMessage, panId));
 
     localTimestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
 
@@ -4061,7 +4063,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
         SendAnnounce(channel);
 
 #if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        SendAnnounce(channel, aMessageInfo.GetPeerAddr());
+        SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
 #endif
     }
     else
@@ -4081,19 +4083,18 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
-                                             const Ip6::MessageInfo &aMessageInfo,
-                                             Neighbor *              aNeighbor)
+void Mle::HandleLinkMetricsManagementRequest(RxInfo &aRxInfo)
 {
     Error               error = kErrorNone;
     LinkMetrics::Status status;
 
-    Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aNeighbor != nullptr, error = kErrorInvalidState);
+    VerifyOrExit(aRxInfo.mNeighbor != nullptr, error = kErrorInvalidState);
 
-    SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleManagementRequest(aMessage, *aNeighbor, status));
-    error = SendLinkMetricsManagementResponse(aMessageInfo.GetPeerAddr(), status);
+    SuccessOrExit(
+        error = Get<LinkMetrics::LinkMetrics>().HandleManagementRequest(aRxInfo.mMessage, *aRxInfo.mNeighbor, status));
+    error = SendLinkMetricsManagementResponse(aRxInfo.mMessageInfo.GetPeerAddr(), status);
 
 exit:
     LogProcessError(kTypeLinkMetricsManagementRequest, error);
@@ -4102,17 +4103,16 @@ exit:
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-void Mle::HandleLinkMetricsManagementResponse(const Message &         aMessage,
-                                              const Ip6::MessageInfo &aMessageInfo,
-                                              Neighbor *              aNeighbor)
+void Mle::HandleLinkMetricsManagementResponse(RxInfo &aRxInfo)
 {
     Error error = kErrorNone;
 
-    Log(kMessageReceive, kTypeLinkMetricsManagementResponse, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeLinkMetricsManagementResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aNeighbor != nullptr, error = kErrorInvalidState);
+    VerifyOrExit(aRxInfo.mNeighbor != nullptr, error = kErrorInvalidState);
 
-    error = Get<LinkMetrics::LinkMetrics>().HandleManagementResponse(aMessage, aMessageInfo.GetPeerAddr());
+    error =
+        Get<LinkMetrics::LinkMetrics>().HandleManagementResponse(aRxInfo.mMessage, aRxInfo.mMessageInfo.GetPeerAddr());
 
 exit:
     LogProcessError(kTypeLinkMetricsManagementResponse, error);
@@ -4120,16 +4120,16 @@ exit:
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
+void Mle::HandleLinkProbe(RxInfo &aRxInfo)
 {
     Error   error = kErrorNone;
     uint8_t seriesId;
 
-    Log(kMessageReceive, kTypeLinkProbe, aMessageInfo.GetPeerAddr());
+    Log(kMessageReceive, kTypeLinkProbe, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleLinkProbe(aMessage, seriesId));
-    aNeighbor->AggregateLinkMetrics(seriesId, LinkMetrics::SeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
-                                    aMessage.GetAverageRss());
+    SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleLinkProbe(aRxInfo.mMessage, seriesId));
+    aRxInfo.mNeighbor->AggregateLinkMetrics(seriesId, LinkMetrics::SeriesInfo::kSeriesTypeLinkProbe,
+                                            aRxInfo.mMessage.GetAverageLqi(), aRxInfo.mMessage.GetAverageRss());
 
 exit:
     LogProcessError(kTypeLinkProbe, error);
