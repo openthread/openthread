@@ -221,6 +221,7 @@ const char *otCommissionerGetId(otInstance *aInstance);
  *
  * @retval OT_ERROR_NONE            Successfully set the Commissioner Id.
  * @retval OT_ERROR_INVALID_ARGS    Given name is too long.
+ * @retval OT_ERROR_INVALID_STATE   The commissioner is active and id cannot be changed.
  *
  */
 otError otCommissionerSetId(otInstance *aInstance, const char *aId);
