@@ -334,7 +334,7 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<ExtendedPanIdTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<ExtendedPanIdManager>().GetExtPanId()));
     }
 
     if (dataset.GetTlv<MeshLocalPrefixTlv>() == nullptr)
@@ -352,7 +352,7 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
     {
-        MeshCoP::NameData nameData = Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData();
+        NameData nameData = Get<NetworkNameManager>().GetNetworkName().GetAsData();
 
         IgnoreError(dataset.SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }

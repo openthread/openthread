@@ -339,7 +339,7 @@ public:
          * @returns The Extended PAN ID in the Dataset.
          *
          */
-        const MeshCoP::ExtendedPanId &GetExtendedPanId(void) const { return AsCoreType(&mExtendedPanId); }
+        const ExtendedPanId &GetExtendedPanId(void) const { return AsCoreType(&mExtendedPanId); }
 
         /**
          * This method sets the Extended PAN ID in the Dataset.
@@ -347,7 +347,7 @@ public:
          * @param[in] aExtendedPanId   An Extended PAN ID.
          *
          */
-        void SetExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId)
+        void SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
         {
             mExtendedPanId                      = aExtendedPanId;
             mComponents.mIsExtendedPanIdPresent = true;

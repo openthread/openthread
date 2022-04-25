@@ -325,10 +325,10 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     Get<KeyManager>().GetNetworkKey(networkKey);
     SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, networkKey));
     SuccessOrExit(error = Tlv::Append<MeshLocalPrefixTlv>(*message, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
-    SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<ExtendedPanIdManager>().GetExtPanId()));
 
     networkName.Init();
-    networkName.SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
+    networkName.SetNetworkName(Get<NetworkNameManager>().GetNetworkName().GetAsData());
     SuccessOrExit(error = networkName.AppendTo(*message));
 
     IgnoreError(Get<ActiveDataset>().Read(dataset));

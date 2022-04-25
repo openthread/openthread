@@ -94,7 +94,7 @@ public:
      * @retval kErrorNoBufs         Could not allocated buffer to save Dataset.
      *
      */
-    Error RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext);
+    Error RequestUpdate(const Dataset::Info &aDataset, Callback aCallback, void *aContext);
 
     /**
      * This method cancels an ongoing (if any) Operational Dataset update request.
