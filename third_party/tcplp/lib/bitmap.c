@@ -67,7 +67,9 @@ void bmp_setrange(uint8_t* buf, size_t start, size_t len) {
     } else {
         *first_byte_set |= first_byte_mask;
         memset(first_byte_set + 1, 0xFF, (size_t) (last_byte_set - first_byte_set - 1));
-        *last_byte_set |= last_byte_mask;
+        if (last_byte_mask != 0x00) {
+            *last_byte_set |= last_byte_mask;
+        }
     }
 }
 
@@ -89,7 +91,9 @@ void bmp_clrrange(uint8_t* buf, size_t start, size_t len) {
     } else {
         *first_byte_clear &= first_byte_mask;
         memset(first_byte_clear + 1, 0x00, (size_t) (last_byte_clear - first_byte_clear - 1));
-        *last_byte_clear &= last_byte_mask;
+        if (last_byte_mask != 0xFF) {
+            *last_byte_clear &= last_byte_mask;
+        }
     }
 }
 

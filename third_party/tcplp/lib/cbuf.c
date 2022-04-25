@@ -73,67 +73,73 @@ void cbuf_copy_from_message(void* arr, size_t arr_offset, const void* buffer, si
 
 void cbuf_init(struct cbufhead* chdr, uint8_t* buf, size_t len) {
     chdr->r_index = 0;
-    chdr->w_index = 0;
+    chdr->used = 0;
     chdr->size = len;
     chdr->buf = buf;
 }
 
 size_t cbuf_used_space(struct cbufhead* chdr) {
-    if (chdr->w_index >= chdr->r_index) {
-        return chdr->w_index - chdr->r_index;
-    } else {
-        return chdr->size + chdr->w_index - chdr->r_index;
-    }
+    return chdr->used;
 }
 
-/* There's always one byte of lost space so I can distinguish between a full
-   buffer and an empty buffer. */
 size_t cbuf_free_space(struct cbufhead* chdr) {
-    return chdr->size - 1 - cbuf_used_space(chdr);
+    return chdr->size - chdr->used;
 }
 
 size_t cbuf_size(struct cbufhead* chdr) {
-    return chdr->size - 1;
+    return chdr->size;
 }
 
 bool cbuf_empty(struct cbufhead* chdr) {
-    return (chdr->w_index == chdr->r_index);
+    return chdr->used == 0;
+}
+
+static inline size_t cbuf_get_w_index(const struct cbufhead* chdr) {
+    size_t until_end = chdr->size - chdr->r_index;
+    if (chdr->used < until_end) {
+        return chdr->r_index + chdr->used;
+    } else {
+        return chdr->used - until_end;
+    }
 }
 
 size_t cbuf_write(struct cbufhead* chdr, const void* data, size_t data_offset, size_t data_len, cbuf_copier_t copy_from) {
     size_t free_space = cbuf_free_space(chdr);
     uint8_t* buf_data;
-    size_t fw_index;
+    size_t w_index;
     size_t bytes_to_end;
     if (free_space < data_len) {
         data_len = free_space;
     }
     buf_data = chdr->buf;
-    fw_index = (chdr->w_index + data_len) % chdr->size;
-    if (fw_index >= chdr->w_index) {
-        copy_from(buf_data, chdr->w_index, data, data_offset, data_len);
+    w_index = cbuf_get_w_index(chdr);
+    bytes_to_end = chdr->size - w_index;
+    if (data_len <= bytes_to_end) {
+        copy_from(buf_data, w_index, data, data_offset, data_len);
     } else {
-        bytes_to_end = chdr->size - chdr->w_index;
-        copy_from(buf_data, chdr->w_index, data, data_offset, bytes_to_end);
+        copy_from(buf_data, w_index, data, data_offset, bytes_to_end);
         copy_from(buf_data, 0, data, data_offset + bytes_to_end, data_len - bytes_to_end);
     }
-    chdr->w_index = fw_index;
+    chdr->used += data_len;
     return data_len;
 }
 
 void cbuf_read_unsafe(struct cbufhead* chdr, void* data, size_t data_offset, size_t numbytes, int pop, cbuf_copier_t copy_into) {
     uint8_t* buf_data = chdr->buf;
-    size_t fr_index = (chdr->r_index + numbytes) % chdr->size;
-    size_t bytes_to_end;
-    if (fr_index >= chdr->r_index) {
+    size_t bytes_to_end = chdr->size - chdr->r_index;
+    if (numbytes < bytes_to_end) {
         copy_into(data, data_offset, buf_data, chdr->r_index, numbytes);
+        if (pop) {
+            chdr->r_index += numbytes;
+            chdr->used -= numbytes;
+        }
     } else {
-        bytes_to_end = chdr->size - chdr->r_index;
         copy_into(data, data_offset, buf_data, chdr->r_index, bytes_to_end);
         copy_into(data, data_offset + bytes_to_end, buf_data, 0, numbytes - bytes_to_end);
-    }
-    if (pop) {
-        chdr->r_index = fr_index;
+        if (pop) {
+            chdr->r_index = numbytes - bytes_to_end;
+            chdr->used -= numbytes;
+        }
     }
 }
 
@@ -167,22 +173,24 @@ size_t cbuf_pop(struct cbufhead* chdr, size_t numbytes) {
         numbytes = used_space;
     }
     chdr->r_index = (chdr->r_index + numbytes) % chdr->size;
+    chdr->used -= numbytes;
     return numbytes;
 }
 
 void cbuf_reference(const struct cbufhead* chdr, otLinkedBuffer* first, otLinkedBuffer* second) {
-    if (chdr->w_index >= chdr->r_index) {
+    size_t until_end = chdr->size - chdr->r_index;
+    if (chdr->used <= until_end) {
         first->mNext = NULL;
         first->mData = &chdr->buf[chdr->r_index];
-        first->mLength = (uint16_t) (chdr->w_index - chdr->r_index);
+        first->mLength = (uint16_t) chdr->used;
     } else {
         first->mNext = second;
         first->mData = &chdr->buf[chdr->r_index];
-        first->mLength = (uint16_t) (chdr->size - chdr->r_index);
+        first->mLength = (uint16_t) until_end;
 
         second->mNext = NULL;
         second->mData = &chdr->buf[0];
-        second->mLength = (uint16_t) chdr->w_index;
+        second->mLength = (uint16_t) (chdr->used - until_end);
     }
 }
 
@@ -197,7 +205,7 @@ size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, 
     } else if (offset + numbytes > free_space) {
         numbytes = free_space - offset;
     }
-    start_index = (chdr->w_index + offset) % chdr->size;
+    start_index = (cbuf_get_w_index(chdr) + offset) % chdr->size;
     end_index = (start_index + numbytes) % chdr->size;
     if (end_index >= start_index) {
         copy_from(buf_data, start_index, data, data_offset, numbytes);
@@ -220,29 +228,29 @@ size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, 
 }
 
 size_t cbuf_reass_merge(struct cbufhead* chdr, size_t numbytes, uint8_t* bitmap) {
-    size_t old_w = chdr->w_index;
+    size_t old_w = cbuf_get_w_index(chdr);
     size_t free_space = cbuf_free_space(chdr);
     size_t bytes_to_end;
     if (numbytes > free_space) {
         numbytes = free_space;
     }
-    chdr->w_index = (chdr->w_index + numbytes) % chdr->size;
     if (bitmap) {
-        if (chdr->w_index >= old_w) {
+        bytes_to_end = chdr->size - old_w;
+        if (numbytes <= bytes_to_end) {
             bmp_clrrange(bitmap, old_w, numbytes);
         } else {
-            bytes_to_end = chdr->size - old_w;
             bmp_clrrange(bitmap, old_w, bytes_to_end);
             bmp_clrrange(bitmap, 0, numbytes - bytes_to_end);
         }
     }
+    chdr->used += numbytes;
     return numbytes;
 }
 
 size_t cbuf_reass_count_set(struct cbufhead* chdr, size_t offset, uint8_t* bitmap, size_t limit) {
     size_t bitmap_size = BITS_TO_BYTES(chdr->size);
     size_t until_end;
-    offset = (chdr->w_index + offset) % chdr->size;
+    offset = (cbuf_get_w_index(chdr) + offset) % chdr->size;
     until_end = bmp_countset(bitmap, bitmap_size, offset, limit);
     if (until_end >= limit || until_end < (chdr->size - offset)) {
         // If we already hit the limit, or if the streak ended before wrapping, then stop here
@@ -254,7 +262,7 @@ size_t cbuf_reass_count_set(struct cbufhead* chdr, size_t offset, uint8_t* bitma
 }
 
 int cbuf_reass_within_offset(struct cbufhead* chdr, size_t offset, size_t index) {
-    size_t range_start = chdr->w_index;
+    size_t range_start = cbuf_get_w_index(chdr);
     size_t range_end = (range_start + offset) % chdr->size;
     if (range_end >= range_start) {
         return index >= range_start && index < range_end;

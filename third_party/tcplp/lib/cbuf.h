@@ -42,7 +42,7 @@ struct otLinkedBuffer;
 /* Represents a circular buffer. */
 struct cbufhead {
     size_t r_index;
-    size_t w_index;
+    size_t used;
     size_t size;
     uint8_t* buf;
 };
@@ -105,7 +105,15 @@ size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, 
 size_t cbuf_reass_merge(struct cbufhead* chdr, size_t numbytes, uint8_t* bitmap);
 
 /* Counts the number of contiguous out-of-sequence bytes at the specified
-   OFFSET, until the count reaches the specified LIMIT. */
+   OFFSET, until the count reaches the specified LIMIT. Note that, for a given,
+   limit, this function might overcount the length of the continuous
+   out-of-sequence bytes and return a greater number; the caller is assumed to
+   handle this appropriately (i.e., treating the limit not as a hard upper
+   bound on the return value, but rather as, "I don't care if more bits than
+   this are set"). Just because the function returns something more than
+   LIMIT, it doesn't necessarily mean that more than LIMIT bits are actually
+   set. Note that LIMIT should never be set to a value greater than the number
+   of bytes in the circular buffer. */
 size_t cbuf_reass_count_set(struct cbufhead* chdr, size_t offset, uint8_t* bitmap, size_t limit);
 
 /* Returns a true value iff INDEX is the index of a byte within OFFSET bytes
