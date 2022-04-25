@@ -57,14 +57,7 @@ const char *otCommissionerGetId(otInstance *aInstance)
 
 otError otCommissionerSetId(otInstance *aInstance, const char *aId)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(AsCoreType(aInstance).Get<MeshCoP::Commissioner>().IsDisabled(), error = kErrorInvalidState);
-
-    error = AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SetId(aId);
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SetId(aId);
 }
 
 otError otCommissionerStop(otInstance *aInstance)
