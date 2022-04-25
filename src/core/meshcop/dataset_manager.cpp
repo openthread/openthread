@@ -268,7 +268,7 @@ void DatasetManager::SendSet(void)
         Dataset   pendingDataset;
         Timestamp timestamp;
 
-        IgnoreError(Get<PendingDataset>().Read(pendingDataset));
+        IgnoreError(Get<PendingDatasetManager>().Read(pendingDataset));
 
         if ((pendingDataset.GetTimestamp(Dataset::kActive, timestamp) == kErrorNone) &&
             (Timestamp::Compare(&timestamp, mLocal.GetTimestamp()) == 0))
@@ -656,22 +656,22 @@ exit:
     return error;
 }
 
-ActiveDataset::ActiveDataset(Instance &aInstance)
-    : DatasetManager(aInstance, Dataset::kActive, ActiveDataset::HandleTimer)
-    , mResourceGet(UriPath::kActiveGet, &ActiveDataset::HandleGet, this)
+ActiveDatasetManager::ActiveDatasetManager(Instance &aInstance)
+    : DatasetManager(aInstance, Dataset::kActive, ActiveDatasetManager::HandleTimer)
+    , mResourceGet(UriPath::kActiveGet, &ActiveDatasetManager::HandleGet, this)
 #if OPENTHREAD_FTD
-    , mResourceSet(UriPath::kActiveSet, &ActiveDataset::HandleSet, this)
+    , mResourceSet(UriPath::kActiveSet, &ActiveDatasetManager::HandleSet, this)
 #endif
 {
     Get<Tmf::Agent>().AddResource(mResourceGet);
 }
 
-bool ActiveDataset::IsPartiallyComplete(void) const
+bool ActiveDatasetManager::IsPartiallyComplete(void) const
 {
     return mLocal.IsSaved() && !mTimestampValid;
 }
 
-bool ActiveDataset::IsCommissioned(void) const
+bool ActiveDatasetManager::IsCommissioned(void) const
 {
     Dataset::Info datasetInfo;
     bool          isValid = false;
@@ -685,7 +685,10 @@ exit:
     return isValid;
 }
 
-Error ActiveDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+Error ActiveDatasetManager::Save(const Timestamp &aTimestamp,
+                                 const Message &  aMessage,
+                                 uint16_t         aOffset,
+                                 uint8_t          aLength)
 {
     Error   error = kErrorNone;
     Dataset dataset;
@@ -698,39 +701,39 @@ exit:
     return error;
 }
 
-void ActiveDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void ActiveDatasetManager::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
+    static_cast<ActiveDatasetManager *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
-void ActiveDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void ActiveDatasetManager::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
     DatasetManager::HandleGet(aMessage, aMessageInfo);
 }
 
-void ActiveDataset::HandleTimer(Timer &aTimer)
+void ActiveDatasetManager::HandleTimer(Timer &aTimer)
 {
-    aTimer.Get<ActiveDataset>().HandleTimer();
+    aTimer.Get<ActiveDatasetManager>().HandleTimer();
 }
 
-PendingDataset::PendingDataset(Instance &aInstance)
-    : DatasetManager(aInstance, Dataset::kPending, PendingDataset::HandleTimer)
-    , mDelayTimer(aInstance, PendingDataset::HandleDelayTimer)
-    , mResourceGet(UriPath::kPendingGet, &PendingDataset::HandleGet, this)
+PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
+    : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
+    , mDelayTimer(aInstance, PendingDatasetManager::HandleDelayTimer)
+    , mResourceGet(UriPath::kPendingGet, &PendingDatasetManager::HandleGet, this)
 #if OPENTHREAD_FTD
-    , mResourceSet(UriPath::kPendingSet, &PendingDataset::HandleSet, this)
+    , mResourceSet(UriPath::kPendingSet, &PendingDatasetManager::HandleSet, this)
 #endif
 {
     Get<Tmf::Agent>().AddResource(mResourceGet);
 }
 
-void PendingDataset::Clear(void)
+void PendingDatasetManager::Clear(void)
 {
     DatasetManager::Clear();
     mDelayTimer.Stop();
 }
 
-void PendingDataset::ClearNetwork(void)
+void PendingDatasetManager::ClearNetwork(void)
 {
     Dataset dataset;
 
@@ -739,7 +742,7 @@ void PendingDataset::ClearNetwork(void)
     IgnoreError(DatasetManager::Save(dataset));
 }
 
-Error PendingDataset::Save(const Dataset::Info &aDatasetInfo)
+Error PendingDatasetManager::Save(const Dataset::Info &aDatasetInfo)
 {
     Error error;
 
@@ -750,7 +753,7 @@ exit:
     return error;
 }
 
-Error PendingDataset::Save(const otOperationalDatasetTlvs &aDataset)
+Error PendingDatasetManager::Save(const otOperationalDatasetTlvs &aDataset)
 {
     Error error;
 
@@ -761,7 +764,7 @@ exit:
     return error;
 }
 
-Error PendingDataset::Save(const Dataset &aDataset)
+Error PendingDatasetManager::Save(const Dataset &aDataset)
 {
     Error error;
 
@@ -772,7 +775,10 @@ exit:
     return error;
 }
 
-Error PendingDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+Error PendingDatasetManager::Save(const Timestamp &aTimestamp,
+                                  const Message &  aMessage,
+                                  uint16_t         aOffset,
+                                  uint8_t          aLength)
 {
     Error   error = kErrorNone;
     Dataset dataset;
@@ -786,7 +792,7 @@ exit:
     return error;
 }
 
-void PendingDataset::StartDelayTimer(void)
+void PendingDatasetManager::StartDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
     Dataset        dataset;
@@ -810,12 +816,12 @@ void PendingDataset::StartDelayTimer(void)
     }
 }
 
-void PendingDataset::HandleDelayTimer(Timer &aTimer)
+void PendingDatasetManager::HandleDelayTimer(Timer &aTimer)
 {
-    aTimer.Get<PendingDataset>().HandleDelayTimer();
+    aTimer.Get<PendingDatasetManager>().HandleDelayTimer();
 }
 
-void PendingDataset::HandleDelayTimer(void)
+void PendingDatasetManager::HandleDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
     Dataset        dataset;
@@ -840,7 +846,7 @@ void PendingDataset::HandleDelayTimer(void)
 
     dataset.ConvertToActive();
 
-    Get<ActiveDataset>().Save(dataset);
+    Get<ActiveDatasetManager>().Save(dataset);
 
     Clear();
 
@@ -848,19 +854,19 @@ exit:
     return;
 }
 
-void PendingDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void PendingDatasetManager::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
+    static_cast<PendingDatasetManager *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
-void PendingDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+void PendingDatasetManager::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
     DatasetManager::HandleGet(aMessage, aMessageInfo);
 }
 
-void PendingDataset::HandleTimer(Timer &aTimer)
+void PendingDatasetManager::HandleTimer(Timer &aTimer)
 {
-    aTimer.Get<PendingDataset>().HandleTimer();
+    aTimer.Get<PendingDatasetManager>().HandleTimer();
 }
 
 } // namespace MeshCoP

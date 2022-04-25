@@ -228,7 +228,7 @@ Error MleRouter::BecomeLeader(void)
     uint8_t maxRouterId;
 #endif
 
-    VerifyOrExit(!Get<MeshCoP::ActiveDataset>().IsPartiallyComplete(), error = kErrorInvalidState);
+    VerifyOrExit(!Get<MeshCoP::ActiveDatasetManager>().IsPartiallyComplete(), error = kErrorInvalidState);
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsLeader(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
@@ -277,8 +277,8 @@ void MleRouter::StopLeader(void)
 {
     Get<Tmf::Agent>().RemoveResource(mAddressSolicit);
     Get<Tmf::Agent>().RemoveResource(mAddressRelease);
-    Get<MeshCoP::ActiveDataset>().StopLeader();
-    Get<MeshCoP::PendingDataset>().StopLeader();
+    Get<MeshCoP::ActiveDatasetManager>().StopLeader();
+    Get<MeshCoP::PendingDatasetManager>().StopLeader();
     StopAdvertiseTrickleTimer();
     Get<NetworkData::Leader>().Stop();
     Get<ThreadNetif>().UnsubscribeAllRoutersMulticast();
@@ -401,8 +401,8 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
 
 void MleRouter::SetStateLeader(uint16_t aRloc16)
 {
-    IgnoreError(Get<MeshCoP::ActiveDataset>().Restore());
-    IgnoreError(Get<MeshCoP::PendingDataset>().Restore());
+    IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
+    IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
     SetRloc16(aRloc16);
 
     SetRole(kRoleLeader);
@@ -420,8 +420,8 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
 
     Get<NetworkData::Leader>().Start();
-    Get<MeshCoP::ActiveDataset>().StartLeader();
-    Get<MeshCoP::PendingDataset>().StartLeader();
+    Get<MeshCoP::ActiveDatasetManager>().StartLeader();
+    Get<MeshCoP::PendingDatasetManager>().StartLeader();
     Get<Tmf::Agent>().AddResource(mAddressSolicit);
     Get<Tmf::Agent>().AddResource(mAddressRelease);
     Get<Ip6::Ip6>().SetForwardingEnabled(true);
@@ -2295,7 +2295,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     {
     case kErrorNone:
         needsActiveDatasetTlv =
-            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDataset>().GetTimestamp()) != 0);
+            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()) != 0);
         break;
     case kErrorNotFound:
         break;
@@ -2309,7 +2309,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     {
     case kErrorNone:
         needsPendingDatasetTlv =
-            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDataset>().GetTimestamp()) != 0);
+            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDatasetManager>().GetTimestamp()) != 0);
         break;
     case kErrorNotFound:
         break;
@@ -2759,7 +2759,7 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
     switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
-        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDataset>().GetTimestamp()) == 0)
+        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()) == 0)
         {
             break;
         }
@@ -2778,7 +2778,7 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
     switch (Tlv::Find<PendingTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
-        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDataset>().GetTimestamp()) == 0)
+        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDatasetManager>().GetTimestamp()) == 0)
         {
             break;
         }
@@ -4246,12 +4246,12 @@ Error MleRouter::AppendRoute(Message &aMessage, Neighbor *aNeighbor)
 
 Error MleRouter::AppendActiveDataset(Message &aMessage)
 {
-    return Get<MeshCoP::ActiveDataset>().AppendMleDatasetTlv(aMessage);
+    return Get<MeshCoP::ActiveDatasetManager>().AppendMleDatasetTlv(aMessage);
 }
 
 Error MleRouter::AppendPendingDataset(Message &aMessage)
 {
-    return Get<MeshCoP::PendingDataset>().AppendMleDatasetTlv(aMessage);
+    return Get<MeshCoP::PendingDatasetManager>().AppendMleDatasetTlv(aMessage);
 }
 
 bool MleRouter::HasMinDowngradeNeighborRouters(void)

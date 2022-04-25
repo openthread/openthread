@@ -244,8 +244,8 @@ void Mle::Stop(StopMode aMode)
 {
     if (aMode == kUpdateNetworkDatasets)
     {
-        Get<MeshCoP::ActiveDataset>().HandleDetach();
-        Get<MeshCoP::PendingDataset>().HandleDetach();
+        Get<MeshCoP::ActiveDatasetManager>().HandleDetach();
+        Get<MeshCoP::PendingDatasetManager>().HandleDetach();
     }
 
     VerifyOrExit(!IsDisabled());
@@ -315,8 +315,8 @@ void Mle::Restore(void)
     Settings::NetworkInfo networkInfo;
     Settings::ParentInfo  parentInfo;
 
-    IgnoreError(Get<MeshCoP::ActiveDataset>().Restore());
-    IgnoreError(Get<MeshCoP::PendingDataset>().Restore());
+    IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
+    IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Get<DuaManager>().Restore();
@@ -481,7 +481,7 @@ Error Mle::BecomeDetached(void)
     // not in reattach stage after reset
     if (mReattachState == kReattachStop)
     {
-        Get<MeshCoP::PendingDataset>().HandleDetach();
+        Get<MeshCoP::PendingDatasetManager>().HandleDetach();
     }
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -521,7 +521,7 @@ void Mle::Attach(AttachMode aMode)
 
     if (mReattachState == kReattachStart)
     {
-        if (Get<MeshCoP::ActiveDataset>().Restore() == kErrorNone)
+        if (Get<MeshCoP::ActiveDatasetManager>().Restore() == kErrorNone)
         {
             mReattachState = kReattachActive;
         }
@@ -1458,7 +1458,7 @@ Error Mle::AppendXtalAccuracy(Message &aMessage)
 Error Mle::AppendActiveTimestamp(Message &aMessage)
 {
     Error                     error     = kErrorNone;
-    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
+    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
     VerifyOrExit(timestamp != nullptr);
     error = Tlv::Append<ActiveTimestampTlv>(aMessage, *timestamp);
@@ -1470,7 +1470,7 @@ exit:
 Error Mle::AppendPendingTimestamp(Message &aMessage)
 {
     Error                     error     = kErrorNone;
-    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::PendingDataset>().GetTimestamp();
+    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
 
     VerifyOrExit(timestamp != nullptr && timestamp->GetSeconds() != 0);
     error = Tlv::Append<PendingTimestampTlv>(aMessage, *timestamp);
@@ -1910,9 +1910,9 @@ bool Mle::PrepareAnnounceState(void)
     Mac::ChannelMask channelMask;
 
     VerifyOrExit(!IsChild() && (mReattachState == kReattachStop) &&
-                 (Get<MeshCoP::ActiveDataset>().IsPartiallyComplete() || !IsFullThreadDevice()));
+                 (Get<MeshCoP::ActiveDatasetManager>().IsPartiallyComplete() || !IsFullThreadDevice()));
 
-    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != kErrorNone)
+    if (Get<MeshCoP::ActiveDatasetManager>().GetChannelMask(channelMask) != kErrorNone)
     {
         channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
     }
@@ -1936,9 +1936,9 @@ uint32_t Mle::Reattach(void)
 
     if (mReattachState == kReattachActive)
     {
-        if (Get<MeshCoP::PendingDataset>().Restore() == kErrorNone)
+        if (Get<MeshCoP::PendingDatasetManager>().Restore() == kErrorNone)
         {
-            IgnoreError(Get<MeshCoP::PendingDataset>().ApplyConfiguration());
+            IgnoreError(Get<MeshCoP::PendingDatasetManager>().ApplyConfiguration());
             mReattachState = kReattachPending;
             SetAttachState(kAttachStateStart);
             delay = 1 + Random::NonCrypto::GetUint32InRange(0, kAttachStartJitter);
@@ -1951,7 +1951,7 @@ uint32_t Mle::Reattach(void)
     else if (mReattachState == kReattachPending)
     {
         mReattachState = kReattachStop;
-        IgnoreError(Get<MeshCoP::ActiveDataset>().Restore());
+        IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
     }
 
     VerifyOrExit(mReattachState == kReattachStop);
@@ -2617,7 +2617,7 @@ Error Mle::GetNextAnnouceChannel(uint8_t &aChannel) const
 
     Mac::ChannelMask channelMask;
 
-    if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != kErrorNone)
+    if (Get<MeshCoP::ActiveDatasetManager>().GetChannelMask(channelMask) != kErrorNone)
     {
         channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
     }
@@ -3221,7 +3221,7 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     case kErrorNone:
         hasActiveTimestamp = true;
 
-        timestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
+        timestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
@@ -3246,7 +3246,7 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     case kErrorNone:
         hasPendingTimestamp = true;
 
-        timestamp = Get<MeshCoP::PendingDataset>().GetTimestamp();
+        timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
@@ -3291,8 +3291,8 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
             if (activeDatasetOffset > 0)
             {
                 IgnoreError(aRxInfo.mMessage.Read(activeDatasetOffset, tlv));
-                IgnoreError(Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aRxInfo.mMessage,
-                                                               activeDatasetOffset + sizeof(tlv), tlv.GetLength()));
+                IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Save(
+                    activeTimestamp, aRxInfo.mMessage, activeDatasetOffset + sizeof(tlv), tlv.GetLength()));
             }
         }
 
@@ -3302,8 +3302,8 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
             if (pendingDatasetOffset > 0)
             {
                 IgnoreError(aRxInfo.mMessage.Read(pendingDatasetOffset, tlv));
-                IgnoreError(Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aRxInfo.mMessage,
-                                                                pendingDatasetOffset + sizeof(tlv), tlv.GetLength()));
+                IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(
+                    pendingTimestamp, aRxInfo.mMessage, pendingDatasetOffset + sizeof(tlv), tlv.GetLength()));
             }
         }
     }
@@ -3690,8 +3690,8 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
         if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kActiveDataset, offset) == kErrorNone)
         {
             IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
-            SuccessOrExit(error = Get<MeshCoP::ActiveDataset>().Save(timestamp, aRxInfo.mMessage, offset + sizeof(tlv),
-                                                                     tlv.GetLength()));
+            SuccessOrExit(error = Get<MeshCoP::ActiveDatasetManager>().Save(timestamp, aRxInfo.mMessage,
+                                                                            offset + sizeof(tlv), tlv.GetLength()));
         }
         break;
 
@@ -3705,7 +3705,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     // clear Pending Dataset if device succeed to reattach using stored Pending Dataset
     if (mReattachState == kReattachPending)
     {
-        Get<MeshCoP::PendingDataset>().Clear();
+        Get<MeshCoP::PendingDatasetManager>().Clear();
     }
 
     // Pending Timestamp
@@ -3716,13 +3716,13 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
         if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kPendingDataset, offset) == kErrorNone)
         {
             IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
-            IgnoreError(Get<MeshCoP::PendingDataset>().Save(timestamp, aRxInfo.mMessage, offset + sizeof(tlv),
-                                                            tlv.GetLength()));
+            IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(timestamp, aRxInfo.mMessage, offset + sizeof(tlv),
+                                                                   tlv.GetLength()));
         }
         break;
 
     case kErrorNotFound:
-        Get<MeshCoP::PendingDataset>().ClearNetwork();
+        Get<MeshCoP::PendingDatasetManager>().ClearNetwork();
         break;
 
     default:
@@ -4033,7 +4033,7 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     SuccessOrExit(error = Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp));
     SuccessOrExit(error = Tlv::Find<PanIdTlv>(aRxInfo.mMessage, panId));
 
-    localTimestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
+    localTimestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
     if (MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) > 0)
     {

@@ -363,16 +363,16 @@ private:
     void *                   mMgmtSetCallbackContext;
 };
 
-class ActiveDataset : public DatasetManager, private NonCopyable
+class ActiveDatasetManager : public DatasetManager, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the ActiveDataset object.
+     * This constructor initializes the ActiveDatasetManager object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    explicit ActiveDataset(Instance &aInstance);
+    explicit ActiveDatasetManager(Instance &aInstance);
 
     /**
      * This method indicates whether the Active Dataset is partially complete.
@@ -505,16 +505,16 @@ private:
 #endif
 };
 
-class PendingDataset : public DatasetManager, private NonCopyable
+class PendingDatasetManager : public DatasetManager, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the PendingDataset object.
+     * This constructor initializes the PendingDatasetManager object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit PendingDataset(Instance &aInstance);
+    explicit PendingDatasetManager(Instance &aInstance);
 
     /**
      * This method clears the Pending Operational Dataset.
