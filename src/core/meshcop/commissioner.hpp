@@ -257,7 +257,7 @@ public:
      * @returns The Commissioner Id.
      *
      */
-    const char *GetId(void) const { return mCommissionerId.GetCommissionerId(); }
+    const char *GetId(void) const { return mCommissionerId; }
 
     /**
      * This method sets the Commissioner Id.
@@ -621,11 +621,11 @@ private:
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient    mEnergyScan;
     PanIdQueryClient    mPanIdQuery;
-    CommissionerIdTlv   mCommissionerId;
 
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
     char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
+    char mCommissionerId[CommissionerIdTlv::kMaxLength + 1];
 
     State mState;
 

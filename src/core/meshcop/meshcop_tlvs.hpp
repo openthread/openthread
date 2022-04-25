@@ -887,12 +887,11 @@ public:
     {
         uint16_t length = StringLength(aCommissionerId, sizeof(mCommissionerId));
         memcpy(mCommissionerId, aCommissionerId, length);
-        mCommissionerId[length] = '\0';
         SetLength(static_cast<uint8_t>(length));
     }
 
 private:
-    char mCommissionerId[kMaxLength + 1];
+    char mCommissionerId[kMaxLength];
 } OT_TOOL_PACKED_END;
 
 /**

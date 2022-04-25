@@ -86,8 +86,7 @@ Commissioner::Commissioner(Instance &aInstance)
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mCommissionerAloc.mScopeOverrideValid = true;
 
-    mCommissionerId.Init();
-    mCommissionerId.SetCommissionerId("OpenThread Commissioner");
+    SetId("OpenThread Commissioner");
 
     mProvisioningUrl[0] = '\0';
 }
@@ -321,7 +320,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     SuccessOrExit(error = SendPetition());
     SetState(kStatePetition);
 
-    LogInfo("start commissioner %s", mCommissionerId.GetCommissionerId());
+    LogInfo("start commissioner %s", mCommissionerId);
 
 exit:
     if ((error != kErrorNone) && (error != kErrorAlready))
@@ -375,14 +374,20 @@ exit:
 Error Commissioner::SetId(const char *aId)
 {
     Error   error = kErrorNone;
-    uint8_t len   = static_cast<uint8_t>(StringLength(aId, ot::MeshCoP::CommissionerIdTlv::kMaxLength));
+    uint8_t len;
+
+    VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(aId != nullptr);
+    VerifyOrExit(IsValidUtf8String(aId), error = kErrorInvalidArgs);
+
+    len = static_cast<uint8_t>(StringLength(aId, sizeof(mCommissionerId)));
 
     // CommissionerIdTlv::SetCommissionerId trims the string to the maximum array size.
     // Prevent this from happening returning an error.
-    VerifyOrExit((0 < len) && (len < mCommissionerId.kMaxLength), error = kErrorInvalidArgs);
+    VerifyOrExit(len < CommissionerIdTlv::kMaxLength, error = kErrorInvalidArgs);
 
-    mCommissionerId.Init();
-    mCommissionerId.SetCommissionerId(aId);
+    memcpy(mCommissionerId, aId, len);
+    mCommissionerId[len] = '\0';
 
 exit:
     return error;
@@ -836,7 +841,7 @@ Error Commissioner::SendPetition(void)
     Error             error   = kErrorNone;
     Coap::Message *   message = nullptr;
     Tmf::MessageInfo  messageInfo(GetInstance());
-    CommissionerIdTlv commissionerId;
+    CommissionerIdTlv commissionerIdTlv;
 
     mTransmitAttempts++;
 
@@ -845,8 +850,10 @@ Error Commissioner::SendPetition(void)
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderPetition));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    SuccessOrExit(error = mCommissionerId.AppendTo(*message));
+    commissionerIdTlv.Init();
+    commissionerIdTlv.SetCommissionerId(mCommissionerId);
 
+    SuccessOrExit(error = commissionerIdTlv.AppendTo(*message));
     SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(
         error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, Commissioner::HandleLeaderPetitionResponse, this));
