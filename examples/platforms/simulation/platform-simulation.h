@@ -175,10 +175,10 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq);
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  * @param[in]  channel    Channel number in use.
- * @param[in]  busyUntil  Until what time CCA should read as channel busy.
+ * @param[in]  duration  Until what time CCA should read as channel busy.
  *
  */
-void platformSimulateCca(otInstance *aInstance, uint8_t channel, uint64_t channelBusyUntil);
+void platformSimulateCca(otInstance *aInstance, uint8_t channel, uint64_t duration);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
@@ -252,6 +252,14 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  *
  */
 bool platformRadioIsTransmitPending(void);
+
+/**
+ * This function checks if radio is waiting for a Tx Done signal from the simulator.
+ *
+ * @returns Whether radio TxDone signal is pending.
+ *
+ */
+bool platformRadioTxDonePending(void);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
