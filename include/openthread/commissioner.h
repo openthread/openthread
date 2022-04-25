@@ -219,8 +219,8 @@ const char *otCommissionerGetId(otInstance *aInstance);
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aId           A pointer to a string character array. Must be null terminated.
  *
- * @retval kErrorNone          Successfully set the Commissioner Id.
- * @retval kErrorInvalidArgs   Given name is too long.
+ * @retval OT_ERROR_NONE            Successfully set the Commissioner Id.
+ * @retval OT_ERROR_INVALID_ARGS    Given name is too long.
  *
  */
 otError otCommissionerSetId(otInstance *aInstance, const char *aId);
