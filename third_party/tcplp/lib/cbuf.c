@@ -177,6 +177,95 @@ size_t cbuf_pop(struct cbufhead* chdr, size_t numbytes) {
     return numbytes;
 }
 
+static void cbuf_swap(struct cbufhead* chdr, uint8_t* bitmap, size_t start_1, size_t start_2, size_t length) {
+    size_t i;
+
+    /* Swap the data regions. */
+    for (i = 0; i != length; i++) {
+        uint8_t temp = chdr->buf[start_1 + i];
+        chdr->buf[start_1 + i] = chdr->buf[start_2 + i];
+        chdr->buf[start_2 + i] = temp;
+    }
+
+    /* Swap the bitmaps. */
+    if (bitmap) {
+        bmp_swap(bitmap, start_1, start_2, length);
+    }
+}
+
+void cbuf_contiguify(struct cbufhead* chdr, uint8_t* bitmap) {
+    /*
+     * We treat contiguify as a special case of rotation. In principle, we
+     * could make this more efficient by inspecting R_INDEX, W_INDEX, and the
+     * bitmap to only move around in-sequence data and buffered out-of-sequence
+     * data, while ignoring the other bytes in the circular buffer. We leave
+     * this as an optimization to implement if/when it becomes necessary.
+     *
+     * The rotation algorithm is recursive. It is parameterized by three
+     * arguments. START_IDX is the index of the first element of the subarray
+     * that is being rotated. END_IDX is one plus the index of the last element
+     * of the subarray that is being rotated. MOVE_TO_START_IDX is the index of
+     * the element that should be located at START_IDX after the rotation.
+     *
+     * The algorithm is as follows. First, identify the largest block of data
+     * starting at MOVE_TO_START_IDX that can be swapped with data starting at
+     * START_IDX. If MOVE_TO_START_IDX is right at the midpoint of the array,
+     * then we're done. If it isn't, then we can treat the block of data that
+     * was just swapped to the beginning of the array as "done", and then
+     * complete the rotation by recursively rotating the rest of the array.
+     *
+     * Here's an example. Suppose that the array is "1 2 3 4 5 6 7 8 9" and
+     * MOVE_TO_START_IDX is the index of the element "3". First, we swap "1 2"
+     * AND "3 4" to get "3 4 1 2 5 6 7 8 9". Then, we recursively rotate the
+     * subarray "1 2 5 6 7 8 9", with MOVE_TO_START_IDX being the index of the
+     * element "5". The final array is "3 4 5 6 7 8 9 1 2".
+     *
+     * Here's another example. Suppose that the array is "1 2 3 4 5 6 7 8 9"
+     * and MOVE_TO_START_IDX is the index of the element "6". First, we swap
+     * "1 2 3 4" and "6 7 8 9" to get "6 7 8 9 5 1 2 3 4". Then, we recursively
+     * rotate the subarray "5 1 2 3 4", with MOVE_TO_START_IDX being the index
+     * of the element "1". The final array is "6 7 8 9 1 2 3 4 5".
+     *
+     * In order for this to work, it's important that the blocks that we
+     * choose are maximally large. If, in the first example, we swap only the
+     * elements "1" and "3", then the algorithm won't work. Note that "1 2" and
+     * "3 4" corresponds to maximally large blocks because if we make the
+     * blocks any bigger, they would overlap (e.g., "1 2 3" and "3 4 5"). In
+     * the second example, the block "6 7 8 9" is maximally large because we
+     * reach the end of the subarray.
+     *
+     * The algorithm above is tail-recursive (i.e., there's no more work to do
+     * after recursively rotating the subarray), so we write it as a while
+     * loop below. Each iteration of the while loop identifies the blocks to
+     * swap, swaps the blocks, and then sets up the indices such that the
+     * next iteration of the loop rotates the appropriate subarray.
+     *
+     * The performance of the algorithm is linear in the length of the array,
+     * with constant space overhead.
+     */
+    size_t start_idx = 0;
+    const size_t end_idx = chdr->size;
+    size_t move_to_start_idx = chdr->r_index;
+
+    /* Invariant: start_idx <= move_to_start_idx <= end_idx */
+    while (start_idx < move_to_start_idx && move_to_start_idx < end_idx) {
+        size_t distance_from_start = move_to_start_idx - start_idx;
+        size_t distance_to_end = end_idx - move_to_start_idx;
+        if (distance_from_start <= distance_to_end) {
+            cbuf_swap(chdr, bitmap, start_idx, move_to_start_idx, distance_from_start);
+            start_idx = move_to_start_idx;
+            move_to_start_idx = move_to_start_idx + distance_from_start;
+        } else {
+            cbuf_swap(chdr, bitmap, start_idx, move_to_start_idx, distance_to_end);
+            start_idx = start_idx + distance_to_end;
+            // move_to_start_idx does not change
+        }
+    }
+
+    /* Finally, fix up the indices. */
+    chdr->r_index = 0;
+}
+
 void cbuf_reference(const struct cbufhead* chdr, otLinkedBuffer* first, otLinkedBuffer* second) {
     size_t until_end = chdr->size - chdr->r_index;
     if (chdr->used <= until_end) {
