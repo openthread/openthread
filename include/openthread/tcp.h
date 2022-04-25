@@ -294,7 +294,7 @@ typedef struct otTcpEndpointInitializeArgs
  * select a smaller buffer size.
  *
  */
-#define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2599
+#define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2598
 
 /**
  * @def OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS
@@ -306,7 +306,7 @@ typedef struct otTcpEndpointInitializeArgs
  * so), then it may be advisable to select a large buffer size manually.
  *
  */
-#define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4158
+#define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4157
 
 /**
  * Initializes a TCP endpoint.
