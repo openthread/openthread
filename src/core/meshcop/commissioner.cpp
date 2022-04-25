@@ -86,7 +86,7 @@ Commissioner::Commissioner(Instance &aInstance)
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mCommissionerAloc.mScopeOverrideValid = true;
 
-    SetId("OpenThread Commissioner");
+    IgnoreError(SetId("OpenThread Commissioner"));
 
     mProvisioningUrl[0] = '\0';
 }
