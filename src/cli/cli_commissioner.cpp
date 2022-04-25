@@ -334,13 +334,20 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
 
 template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
 {
+    otError error;
+
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otCommissionerGetId(GetInstancePtr()));
-        return OT_ERROR_NONE;
+        ExitNow(error = OT_ERROR_NONE);
+    }
+    else
+    {
+        error = otCommissionerSetId(GetInstancePtr(), aArgs[0].GetCString());
     }
 
-    return otCommissionerSetId(GetInstancePtr(), aArgs[0].GetCString());
+exit:
+    return error;
 }
 
 template <> otError Commissioner::Process<Cmd("start")>(Arg aArgs[])
