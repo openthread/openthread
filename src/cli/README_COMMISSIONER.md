@@ -208,7 +208,7 @@ Get the in mesh commissioner id.
 
 ```bash
 > commissioner id
-Commissioner id:  OpenThread Commissioner
+OpenThread Commissioner
 Done
 ```
 
