@@ -339,14 +339,13 @@ template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otCommissionerGetId(GetInstancePtr()));
-        ExitNow(error = OT_ERROR_NONE);
+        error = OT_ERROR_NONE;
     }
     else
     {
         error = otCommissionerSetId(GetInstancePtr(), aArgs[0].GetCString());
     }
 
-exit:
     return error;
 }
 
