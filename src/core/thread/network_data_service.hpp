@@ -174,25 +174,6 @@ public:
      */
     struct Info
     {
-        /**
-         * This method indicates whether or not the sequence number from the current `Info` is ahead of (more recent
-         * than) the sequence number from another `Info`.
-         *
-         * The sequence numbers comparison follows the Serial Number Arithmetic logic from RFC-1982. It is semantically
-         * equivalent to `GetSequenceNumber() > aOther.GetSequenceNumber()` while handling roll-over of the `uint8_t`
-         * values.
-         *
-         * @param[in] aOther   The other `Info` to compare with.
-         *
-         * @retval TRUE  The `Info` is ahead of @p aOther.
-         * @retval FALSE The `Info` is not ahead of @p aOther.
-         *
-         */
-        bool IsSequenceNumberAheadOf(const Info &aOther) const
-        {
-            return SerialNumber::IsGreater(mSequenceNumber, aOther.mSequenceNumber);
-        }
-
         Ip6::Address mAnycastAddress; ///< The anycast address associated with the DNS/SRP servers.
         uint8_t      mSequenceNumber; ///< Sequence number used to notify SRP client if they need to re-register.
     };

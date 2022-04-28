@@ -70,6 +70,7 @@ namespace ot {
 
 namespace Crypto {
 
+class AesCcm;
 class Sha256;
 class HmacSha256;
 
@@ -203,15 +204,16 @@ protected:
 #endif
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
 
-        uint8_t mType : 3;          // The message type.
-        uint8_t mSubType : 4;       // The message sub type.
-        bool    mDirectTx : 1;      // Whether a direct transmission is required.
-        bool    mLinkSecurity : 1;  // Whether link security is enabled.
-        uint8_t mPriority : 2;      // The message priority level (higher value is higher priority).
-        bool    mInPriorityQ : 1;   // Whether the message is queued in normal or priority queue.
-        bool    mTxSuccess : 1;     // Whether the direct tx of the message was successful.
-        bool    mDoNotEvict : 1;    // Whether this message may be evicted.
-        bool    mMulticastLoop : 1; // Whether this multicast message may be looped back.
+        uint8_t mType : 3;             // The message type.
+        uint8_t mSubType : 4;          // The message sub type.
+        bool    mDirectTx : 1;         // Whether a direct transmission is required.
+        bool    mLinkSecurity : 1;     // Whether link security is enabled.
+        uint8_t mPriority : 2;         // The message priority level (higher value is higher priority).
+        bool    mInPriorityQ : 1;      // Whether the message is queued in normal or priority queue.
+        bool    mTxSuccess : 1;        // Whether the direct tx of the message was successful.
+        bool    mDoNotEvict : 1;       // Whether this message may be evicted.
+        bool    mMulticastLoop : 1;    // Whether this multicast message may be looped back.
+        bool    mResolvingAddress : 1; // Whether the message is pending an address query resolution.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
         bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
@@ -261,6 +263,7 @@ class Message : public otMessage, public Buffer
     friend class Checksum;
     friend class Crypto::HmacSha256;
     friend class Crypto::Sha256;
+    friend class Crypto::AesCcm;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
@@ -1031,6 +1034,23 @@ public:
     void SetDoNotEvict(bool aDoNotEvict) { GetMetadata().mDoNotEvict = aDoNotEvict; }
 
     /**
+     * This method indicates whether the message is waiting for an address query resolution.
+     *
+     * @retval TRUE   If the message is waiting for address query resolution.
+     * @retval FALSE  If the message is not waiting for address query resolution.
+     *
+     */
+    bool IsResolvingAddress(void) const { return GetMetadata().mResolvingAddress; }
+
+    /**
+     * This method sets whether the message is waiting for an address query resolution.
+     *
+     * @param[in] aResolvingAddress    TRUE if message is waiting for address resolution, FALSE otherwise.
+     *
+     */
+    void SetResolvingAddress(bool aResolvingAddress) { GetMetadata().mResolvingAddress = aResolvingAddress; }
+
+    /**
      * This method indicates whether or not link security is enabled for the message.
      *
      * @retval TRUE   If link security is enabled.
@@ -1327,6 +1347,8 @@ class MessageQueue : public otMessageQueue
     friend class PriorityQueue;
 
 public:
+    typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
+
     /**
      * This enumeration represents a position (head or tail) in the queue. This is used to specify where a new message
      * should be added in the queue.
@@ -1400,13 +1422,17 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
-     * This method returns the number of messages and buffers enqueued.
+     * This method gets the information about number of messages and buffers in the queue.
      *
-     * @param[out]  aMessageCount  Returns the number of messages enqueued.
-     * @param[out]  aBufferCount   Returns the number of buffers enqueued.
+     * This method updates `aInfo` and adds number of message/buffers in the message queue to the corresponding member
+     * variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method (e.g.,
+     * clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues to add
+     * up the number of messages/buffers on different queues.
+     *
+     * @param[out] aInfo  A reference to `Info` structure to update.ni
      *
      */
-    void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
+    void GetInfo(Info &aInfo) const;
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the queue entries and should not be used
@@ -1436,6 +1462,8 @@ class PriorityQueue : private Clearable<PriorityQueue>
     friend class MessagePool;
 
 public:
+    typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
+
     /**
      * This constructor initializes the priority queue.
      *
@@ -1514,16 +1542,7 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
-     * This method returns the number of messages and buffers enqueued.
-     *
-     * @param[out]  aMessageCount  Returns the number of messages enqueued.
-     * @param[out]  aBufferCount   Returns the number of buffers enqueued.
-     *
-     */
-    void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
-
-    /**
-     * This method returns the tail of the list (last message in the list)
+     * This method returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
@@ -1531,12 +1550,25 @@ public:
     Message *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
 
     /**
-     * This method returns the tail of the list (last message in the list)
+     * This method returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
      */
     const Message *GetTail(void) const;
+
+    /**
+     * This method gets the information about number of messages and buffers in the priority queue.
+     *
+     * This method updates `aInfo` array and adds number of message/buffers in the message queue to the corresponding
+     * member variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method
+     * (e.g., clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues
+     * to add up the number of messages/buffers on different queues.
+     *
+     * @param[out] aInfo  A reference to an `Info` structure to update.
+     *
+     */
+    void GetInfo(Info &aInfo) const;
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the queue entries and should not be used

@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for MAC types such as Address, Extended PAN Identifier, Network Name, etc.
+ *   This file includes definitions for MAC types.
  */
 
 #ifndef MAC_TYPES_HPP_
@@ -552,165 +552,6 @@ private:
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
 };
 
-/**
- * This structure represents an IEEE 802.15.4 Extended PAN Identifier.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>, public Clearable<ExtendedPanId>
-{
-public:
-    static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
-
-    /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
-     *
-     */
-    typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This method converts an address to a string.
-     *
-     * @returns An `InfoString` containing the string representation of the Extended PAN Identifier.
-     *
-     */
-    InfoString ToString(void) const;
-
-} OT_TOOL_PACKED_END;
-
-/**
- * This class represents a name string as data (pointer to a char buffer along with a length).
- *
- * @note The char array does NOT need to be null terminated.
- *
- */
-class NameData : private Data<kWithUint8Length>
-{
-    friend class NetworkName;
-
-public:
-    /**
-     * This constructor initializes the NameData object.
-     *
-     * @param[in] aBuffer   A pointer to a `char` buffer (does not need to be null terminated).
-     * @param[in] aLength   The length (number of chars) in the buffer.
-     *
-     */
-    NameData(const char *aBuffer, uint8_t aLength) { Init(aBuffer, aLength); }
-
-    /**
-     * This method returns the pointer to char buffer (not necessarily null terminated).
-     *
-     * @returns The pointer to the char buffer.
-     *
-     */
-    const char *GetBuffer(void) const { return reinterpret_cast<const char *>(GetBytes()); }
-
-    /**
-     * This method returns the length (number of chars in buffer).
-     *
-     * @returns The name length.
-     *
-     */
-    uint8_t GetLength(void) const { return Data<kWithUint8Length>::GetLength(); }
-
-    /**
-     * This method copies the name data into a given char buffer with a given size.
-     *
-     * The given buffer is cleared (`memset` to zero) before copying the name into it. The copied string
-     * in @p aBuffer is NOT necessarily null terminated.
-     *
-     * @param[out] aBuffer   A pointer to a buffer where to copy the name into.
-     * @param[in]  aMaxSize  Size of @p aBuffer (maximum number of chars to write into @p aBuffer).
-     *
-     * @returns The actual number of chars copied into @p aBuffer.
-     *
-     */
-    uint8_t CopyTo(char *aBuffer, uint8_t aMaxSize) const;
-};
-
-/**
- * This structure represents an IEEE802.15.4 Network Name.
- *
- */
-class NetworkName : public otNetworkName, public Unequatable<NetworkName>
-{
-public:
-    /**
-     * This constant specified the maximum number of chars in Network Name (excludes null char).
-     *
-     */
-    static constexpr uint8_t kMaxSize = OT_NETWORK_NAME_MAX_SIZE;
-
-    /**
-     * This constructor initializes the IEEE802.15.4 Network Name as an empty string.
-     *
-     */
-    NetworkName(void) { m8[0] = '\0'; }
-
-    /**
-     * This method gets the IEEE802.15.4 Network Name as a null terminated C string.
-     *
-     * @returns The Network Name as a null terminated C string array.
-     *
-     */
-    const char *GetAsCString(void) const { return m8; }
-
-    /**
-     * This method gets the IEEE802.15.4 Network Name as NameData.
-     *
-     * @returns The Network Name as NameData.
-     *
-     */
-    NameData GetAsData(void) const;
-
-    /**
-     * This method sets the IEEE 802.15.4 Network Name from a given null terminated C string.
-     *
-     * This method also validates that the given @p aNameString follows UTF-8 encoding and can fit in `kMaxSize`
-     * chars.
-     *
-     * @param[in] aNameString      A name C string.
-     *
-     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
-     * @retval kErrorAlready       The name is already set to the same string.
-     * @retval kErrorInvalidArgs   Given name is invalid (too long or does not follow UTF-8 encoding).
-     *
-     */
-    Error Set(const char *aNameString);
-
-    /**
-     * This method sets the IEEE 802.15.4 Network Name.
-     *
-     * @param[in]  aNameData           A reference to name data.
-     *
-     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
-     * @retval kErrorAlready       The name is already set to the same string.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error Set(const NameData &aNameData);
-
-    /**
-     * This method overloads operator `==` to evaluate whether or not two given `NetworkName` objects are equal.
-     *
-     * @param[in]  aOther  The other `NetworkName` to compare with.
-     *
-     * @retval TRUE   If the two are equal.
-     * @retval FALSE  If the two are not equal.
-     *
-     */
-    bool operator==(const NetworkName &aOther) const;
-};
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-/**
- * This type represents a Thread Domain Name.
- *
- */
-typedef NetworkName DomainName;
-#endif
-
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 /**
@@ -1024,8 +865,6 @@ private:
 
 DefineCoreType(otExtAddress, Mac::ExtAddress);
 DefineCoreType(otMacKey, Mac::Key);
-DefineCoreType(otExtendedPanId, Mac::ExtendedPanId);
-DefineCoreType(otNetworkName, Mac::NetworkName);
 
 } // namespace ot
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,48 +28,42 @@
 
 /**
  * @file
- *   This file implements of MLE types and constants.
+ *   This file implements Extended PAN ID management.
+ *
  */
 
-#include "mle_types.hpp"
+#include "extended_panid.hpp"
 
-#include "common/code_utils.hpp"
+#include "common/locator_getters.hpp"
+#include "common/notifier.hpp"
 
 namespace ot {
-namespace Mle {
+namespace MeshCoP {
 
-void DeviceMode::Get(ModeConfig &aModeConfig) const
-{
-    aModeConfig.mRxOnWhenIdle = IsRxOnWhenIdle();
-    aModeConfig.mDeviceType   = IsFullThreadDevice();
-    aModeConfig.mNetworkData  = (GetNetworkDataType() == NetworkData::kFullSet);
-}
+const otExtendedPanId ExtendedPanIdManager::sExtendedPanidInit = {
+    {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
+};
 
-void DeviceMode::Set(const ModeConfig &aModeConfig)
-{
-    mMode = kModeReserved;
-    mMode |= aModeConfig.mRxOnWhenIdle ? kModeRxOnWhenIdle : 0;
-    mMode |= aModeConfig.mDeviceType ? kModeFullThreadDevice : 0;
-    mMode |= aModeConfig.mNetworkData ? kModeFullNetworkData : 0;
-}
-
-DeviceMode::InfoString DeviceMode::ToString(void) const
+ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 {
     InfoString string;
 
-    string.Append("rx-on:%s ftd:%s full-net:%s", ToYesNo(IsRxOnWhenIdle()), ToYesNo(IsFullThreadDevice()),
-                  ToYesNo(GetNetworkDataType() == NetworkData::kFullSet));
+    string.AppendHexBytes(m8, sizeof(ExtendedPanId));
 
     return string;
 }
 
-void MeshLocalPrefix::SetFromExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId)
+ExtendedPanIdManager::ExtendedPanIdManager(Instance &aInstance)
+    : InstanceLocator(aInstance)
 {
-    m8[0] = 0xfd;
-    memcpy(&m8[1], aExtendedPanId.m8, 5);
-    m8[6] = 0x00;
-    m8[7] = 0x00;
+    mExtendedPanId.Clear();
+    SetExtPanId(AsCoreType(&sExtendedPanidInit));
 }
 
-} // namespace Mle
+void ExtendedPanIdManager::SetExtPanId(const ExtendedPanId &aExtendedPanId)
+{
+    IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, kEventThreadExtPanIdChanged));
+}
+
+} // namespace MeshCoP
 } // namespace ot

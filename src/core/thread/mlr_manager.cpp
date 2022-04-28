@@ -399,7 +399,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
     Error            error   = kErrorNone;
     Mle::MleRouter & mle     = Get<Mle::MleRouter>();
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
     Ip6AddressesTlv  addressesTlv;
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
@@ -444,8 +444,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
                                                       Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
-    messageInfo.SetSockAddr(mle.GetMeshLocal16());
+    messageInfo.SetSockAddrToRloc();
 
     error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseContext);
 

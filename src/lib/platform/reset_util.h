@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,50 +26,42 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements of MLE types and constants.
- */
+#ifndef OT_LIB_PLATFORM_RESET_UTIL_H_
+#define OT_LIB_PLATFORM_RESET_UTIL_H_
 
-#include "mle_types.hpp"
+#if defined(OPENTHREAD_ENABLE_COVERAGE) && OPENTHREAD_ENABLE_COVERAGE && defined(__GNUC__)
+#if __GNUC__ >= 11
+void __gcov_dump();
+void __gcov_reset();
 
-#include "common/code_utils.hpp"
-
-namespace ot {
-namespace Mle {
-
-void DeviceMode::Get(ModeConfig &aModeConfig) const
+static void flush_gcov(void)
 {
-    aModeConfig.mRxOnWhenIdle = IsRxOnWhenIdle();
-    aModeConfig.mDeviceType   = IsFullThreadDevice();
-    aModeConfig.mNetworkData  = (GetNetworkDataType() == NetworkData::kFullSet);
+    __gcov_dump();
+    __gcov_reset();
 }
+#else
+void __gcov_flush(void);
+#define flush_gcov __gcov_flush
+#endif // __GNUC__ >= 11
+#else
+#define flush_gcov()
+#endif // defined(OPENTHREAD_ENABLE_COVERAGE) && OPENTHREAD_ENABLE_COVERAGE && defined(__GNUC__)
 
-void DeviceMode::Set(const ModeConfig &aModeConfig)
-{
-    mMode = kModeReserved;
-    mMode |= aModeConfig.mRxOnWhenIdle ? kModeRxOnWhenIdle : 0;
-    mMode |= aModeConfig.mDeviceType ? kModeFullThreadDevice : 0;
-    mMode |= aModeConfig.mNetworkData ? kModeFullNetworkData : 0;
-}
+#if defined(__linux__) || defined(__APPLE__)
+#include <setjmp.h>
+#include <unistd.h>
+jmp_buf gResetJump;
 
-DeviceMode::InfoString DeviceMode::ToString(void) const
-{
-    InfoString string;
+#define OT_SETUP_RESET_JUMP(kArgv) \
+    if (setjmp(gResetJump))        \
+    {                              \
+        alarm(0);                  \
+        flush_gcov();              \
+        execvp(kArgv[0], kArgv);   \
+    }
 
-    string.Append("rx-on:%s ftd:%s full-net:%s", ToYesNo(IsRxOnWhenIdle()), ToYesNo(IsFullThreadDevice()),
-                  ToYesNo(GetNetworkDataType() == NetworkData::kFullSet));
+#else
+#define OT_SETUP_RESET_JUMP(ARGV)
+#endif // defined(__linux__) || defined(__APPLE__)
 
-    return string;
-}
-
-void MeshLocalPrefix::SetFromExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId)
-{
-    m8[0] = 0xfd;
-    memcpy(&m8[1], aExtendedPanId.m8, 5);
-    m8[6] = 0x00;
-    m8[7] = 0x00;
-}
-
-} // namespace Mle
-} // namespace ot
+#endif // OT_LIB_PLATFORM_RESET_UTIL_H_

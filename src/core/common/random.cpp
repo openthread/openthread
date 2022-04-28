@@ -31,21 +31,20 @@
  *   This file provides an implementation of OpenThread random number generation manager class.
  */
 
-#include "random_manager.hpp"
+#include "random.hpp"
 
 #include <openthread/platform/entropy.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/random.hpp"
-#include "crypto/mbedtls.hpp"
 
 namespace ot {
+namespace Random {
 
-uint16_t                     RandomManager::sInitCount = 0;
-RandomManager::NonCryptoPrng RandomManager::sPrng;
+uint16_t               Manager::sInitCount = 0;
+Manager::NonCryptoPrng Manager::sPrng;
 
-RandomManager::RandomManager(void)
+Manager::Manager(void)
 {
     uint32_t seed;
 
@@ -66,7 +65,7 @@ exit:
     sInitCount++;
 }
 
-RandomManager::~RandomManager(void)
+Manager::~Manager(void)
 {
     OT_ASSERT(sInitCount > 0);
 
@@ -81,7 +80,7 @@ exit:
     return;
 }
 
-uint32_t RandomManager::NonCryptoGetUint32(void)
+uint32_t Manager::NonCryptoGetUint32(void)
 {
     OT_ASSERT(sInitCount > 0);
 
@@ -91,7 +90,7 @@ uint32_t RandomManager::NonCryptoGetUint32(void)
 //-------------------------------------------------------------------
 // NonCryptoPrng
 
-void RandomManager::NonCryptoPrng::Init(uint32_t aSeed)
+void Manager::NonCryptoPrng::Init(uint32_t aSeed)
 {
     // The PRNG has a cycle of length 1 for the below two initial
     // seeds. For all other seed values the cycle is ~2^31 long.
@@ -104,7 +103,7 @@ void RandomManager::NonCryptoPrng::Init(uint32_t aSeed)
     mState = aSeed;
 }
 
-uint32_t RandomManager::NonCryptoPrng::GetNext(void)
+uint32_t Manager::NonCryptoPrng::GetNext(void)
 {
     uint32_t mlcg, p, q;
     uint64_t tmpstate;
@@ -126,4 +125,44 @@ uint32_t RandomManager::NonCryptoPrng::GetNext(void)
     return mlcg;
 }
 
+//-------------------------------------------------------------------
+
+namespace NonCrypto {
+
+uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
+{
+    OT_ASSERT(aMax > aMin);
+
+    return (aMin + (GetUint8() % (aMax - aMin)));
+}
+
+uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
+{
+    OT_ASSERT(aMax > aMin);
+    return (aMin + (GetUint16() % (aMax - aMin)));
+}
+
+uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
+{
+    OT_ASSERT(aMax > aMin);
+    return (aMin + (GetUint32() % (aMax - aMin)));
+}
+
+void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
+{
+    while (aSize-- != 0)
+    {
+        *aBuffer++ = GetUint8();
+    }
+}
+
+uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
+{
+    aJitter = (aJitter <= aValue) ? aJitter : static_cast<uint16_t>(aValue);
+
+    return aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
+}
+
+} // namespace NonCrypto
+} // namespace Random
 } // namespace ot

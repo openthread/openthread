@@ -944,6 +944,36 @@ protected:
     };
 
     /**
+     * This structure represents a received MLE message containing additional information about the message (e.g.
+     * key sequence, neighbor from which it was received).
+     *
+     */
+    struct RxInfo
+    {
+        /**
+         * This constructor initializes the `RxInfo`
+         *
+         * @param[in] aMessage       The received MLE message.
+         * @param[in] aMessageInfo   The `Ip6::MessageInfo` associated with message.
+         *
+         */
+        RxInfo(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+            : mMessage(aMessage)
+            , mMessageInfo(aMessageInfo)
+            , mFrameCounter(0)
+            , mKeySequence(0)
+            , mNeighbor(nullptr)
+        {
+        }
+
+        Message &               mMessage;      ///< The MLE message.
+        const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
+        uint32_t                mFrameCounter; ///< The frame counter from aux security header.
+        uint32_t                mKeySequence;  ///< The key sequence from the aux security header.
+        Neighbor *              mNeighbor;     ///< Neighbor from which message was received (can be `nullptr`).
+    };
+
+    /**
      * This method allocates a new message buffer for preparing an MLE message.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
@@ -1680,6 +1710,12 @@ private:
         kDataRequestActive, // Data Request has been sent, Data Response is expected.
     };
 
+    enum SecuritySuite : uint8_t
+    {
+        k154Security = 0,   // Security suite value indicating that MLE message is not secured.
+        kNoSecurity  = 255, // Security suite value indicating that MLE message is secured.
+    };
+
     struct DelayedResponseMetadata
     {
         Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
@@ -1691,95 +1727,29 @@ private:
     };
 
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class SecurityHeader
     {
     public:
-        enum SecuritySuite : uint8_t
-        {
-            k154Security = 0,
-            kNoSecurity  = 255,
-        };
+        void InitSecurityControl(void) { mSecurityControl = kKeyIdMode2Mic32; }
+        bool IsSecurityControlValid(void) const { return (mSecurityControl == kKeyIdMode2Mic32); }
 
-        void Init(void)
-        {
-            mSecuritySuite   = k154Security;
-            mSecurityControl = Mac::Frame::kSecEncMic32;
-        }
-
-        bool IsValid(void) const
-        {
-            return (mSecuritySuite == kNoSecurity) ||
-                   (mSecuritySuite == k154Security &&
-                    mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32));
-        }
-
-        uint8_t GetLength(void) const
-        {
-            return sizeof(mSecuritySuite) + sizeof(mCommand) +
-                   ((mSecuritySuite == k154Security)
-                        ? sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex)
-                        : 0);
-        }
-
-        SecuritySuite GetSecuritySuite(void) const { return static_cast<SecuritySuite>(mSecuritySuite); }
-        void SetSecuritySuite(SecuritySuite aSecuritySuite) { mSecuritySuite = static_cast<uint8_t>(aSecuritySuite); }
-
-        uint8_t GetHeaderLength(void) const
-        {
-            return sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
-        }
-
-        const uint8_t *GetBytes(void) const { return reinterpret_cast<const uint8_t *>(&mSecuritySuite); }
-        uint8_t        GetSecurityControl(void) const { return mSecurityControl; }
-
-        bool IsKeyIdMode2(void) const
-        {
-            return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode2;
-        }
-
-        void SetKeyIdMode2(void)
-        {
-            mSecurityControl = (mSecurityControl & ~Mac::Frame::kKeyIdModeMask) | Mac::Frame::kKeyIdMode2;
-        }
+        uint32_t GetFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mFrameCounter); }
+        void     SetFrameCounter(uint32_t aCounter) { mFrameCounter = Encoding::LittleEndian::HostSwap32(aCounter); }
 
         uint32_t GetKeyId(void) const { return Encoding::BigEndian::HostSwap32(mKeySource); }
-
-        void SetKeyId(uint32_t aKeySequence)
+        void     SetKeyId(uint32_t aKeySequence)
         {
             mKeySource = Encoding::BigEndian::HostSwap32(aKeySequence);
             mKeyIndex  = (aKeySequence & 0x7f) + 1;
         }
 
-        uint32_t GetFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mFrameCounter); }
-        void     SetFrameCounter(uint32_t aFrameCounter)
-        {
-            mFrameCounter = Encoding::LittleEndian::HostSwap32(aFrameCounter);
-        }
-
-        Command GetCommand(void) const
-        {
-            return static_cast<Command>((mSecuritySuite == kNoSecurity) ? mSecurityControl : mCommand);
-        }
-
-        void SetCommand(Command aCommand)
-        {
-            if (mSecuritySuite == kNoSecurity)
-            {
-                mSecurityControl = static_cast<uint8_t>(aCommand);
-            }
-            else
-            {
-                mCommand = static_cast<uint8_t>(aCommand);
-            }
-        }
-
     private:
-        uint8_t  mSecuritySuite;
+        static constexpr uint8_t kKeyIdMode2Mic32 = (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32);
+
         uint8_t  mSecurityControl;
         uint32_t mFrameCounter;
         uint32_t mKeySource;
         uint8_t  mKeyIndex;
-        uint8_t  mCommand;
     } OT_TOOL_PACKED_END;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -1813,31 +1783,23 @@ private:
     void        ScheduleMessageTransmissionTimer(void);
     Error       ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer);
 
-    void HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    void HandleChildIdResponse(const Message &         aMessage,
-                               const Ip6::MessageInfo &aMessageInfo,
-                               const Neighbor *        aNeighbor);
-    void HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    void HandleChildUpdateResponse(const Message &         aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   const Neighbor *        aNeighbor);
-    void HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
-    void HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    void HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleAdvertisement(RxInfo &aRxInfo);
+    void HandleChildIdResponse(RxInfo &aRxInfo);
+    void HandleChildUpdateRequest(RxInfo &aRxInfo);
+    void HandleChildUpdateResponse(RxInfo &aRxInfo);
+    void HandleDataResponse(RxInfo &aRxInfo);
+    void HandleParentResponse(RxInfo &aRxInfo);
+    void HandleAnnounce(RxInfo &aRxInfo);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    void HandleLinkMetricsManagementRequest(const Message &         aMessage,
-                                            const Ip6::MessageInfo &aMessageInfo,
-                                            Neighbor *              aNeighbor);
+    void HandleLinkMetricsManagementRequest(RxInfo &aRxInfo);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    void HandleLinkMetricsManagementResponse(const Message &         aMessage,
-                                             const Ip6::MessageInfo &aMessageInfo,
-                                             Neighbor *              aNeighbor);
+    void HandleLinkMetricsManagementResponse(RxInfo &aRxInfo);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    void HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
+    void HandleLinkProbe(RxInfo &aRxInfo);
 #endif
-    Error HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error HandleLeaderData(RxInfo &aRxInfo);
     void  ProcessAnnounce(void);
     bool  HasUnregisteredAddress(void);
 

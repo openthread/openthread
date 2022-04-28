@@ -558,7 +558,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {
     Error            error;
     Coap::Message *  message;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -568,10 +568,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aEid));
 
-    messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
-
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    messageInfo.SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast();
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
@@ -676,7 +673,7 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
 {
     Error            error;
     Coap::Message *  message;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -689,15 +686,12 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
 
     if (aDestination == nullptr)
     {
-        messageInfo.GetPeerAddr().SetToRealmLocalAllRoutersMulticast();
+        messageInfo.SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast();
     }
     else
     {
-        messageInfo.SetPeerAddr(*aDestination);
+        messageInfo.SetSockAddrToRlocPeerAddrTo(*aDestination);
     }
-
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
@@ -852,7 +846,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
 {
     Error            error;
     Coap::Message *  message;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -869,9 +863,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
         SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, *aLastTransactionTime));
     }
 
-    messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    messageInfo.SetSockAddrToRlocPeerAddrTo(aDestination);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 

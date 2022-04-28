@@ -47,6 +47,8 @@
 #include "common/string.hpp"
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/extended_panid.hpp"
+#include "meshcop/network_name.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
@@ -445,7 +447,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, Mac::ExtendedPanId>
+class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, ExtendedPanId>
 {
 public:
     /**
@@ -473,7 +475,7 @@ public:
      * @returns The Extended PAN ID value.
      *
      */
-    const Mac::ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID value.
@@ -481,10 +483,10 @@ public:
      * @param[in]  aExtendedPanId  An Extended PAN ID value.
      *
      */
-    void SetExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
+    void SetExtendedPanId(const ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
 
 private:
-    Mac::ExtendedPanId mExtendedPanId;
+    ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -520,7 +522,7 @@ public:
      * @returns The Network Name value (as `NameData`).
      *
      */
-    Mac::NameData GetNetworkName(void) const;
+    NameData GetNetworkName(void) const;
 
     /**
      * This method sets the Network Name value.
@@ -528,10 +530,10 @@ public:
      * @param[in] aNameData   A Network Name value (as `NameData`).
      *
      */
-    void SetNetworkName(const Mac::NameData &aNameData);
+    void SetNetworkName(const NameData &aNameData);
 
 private:
-    char mNetworkName[Mac::NetworkName::kMaxSize];
+    char mNetworkName[NetworkName::kMaxSize];
 } OT_TOOL_PACKED_END;
 
 /**

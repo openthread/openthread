@@ -238,7 +238,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/log.cpp                                         \
     src/core/common/message.cpp                                     \
     src/core/common/notifier.cpp                                    \
-    src/core/common/random_manager.cpp                              \
+    src/core/common/random.cpp                                      \
     src/core/common/settings.cpp                                    \
     src/core/common/string.cpp                                      \
     src/core/common/tasklet.cpp                                     \
@@ -280,11 +280,13 @@ LOCAL_SRC_FILES                                                  := \
     src/core/meshcop/dataset_updater.cpp                            \
     src/core/meshcop/dtls.cpp                                       \
     src/core/meshcop/energy_scan_client.cpp                         \
+    src/core/meshcop/extended_panid.cpp                             \
     src/core/meshcop/joiner.cpp                                     \
     src/core/meshcop/joiner_router.cpp                              \
     src/core/meshcop/meshcop.cpp                                    \
     src/core/meshcop/meshcop_leader.cpp                             \
     src/core/meshcop/meshcop_tlvs.cpp                               \
+    src/core/meshcop/network_name.cpp                               \
     src/core/meshcop/panid_query_client.cpp                         \
     src/core/meshcop/timestamp.cpp                                  \
     src/core/net/checksum.cpp                                       \

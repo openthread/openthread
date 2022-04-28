@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
 #include "common/instance.hpp"
+#include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
 #include "net/checksum.hpp"
@@ -71,28 +72,31 @@ static_assert(offsetof(Tcp::Listener, mTcbListen) == 0, "mTcbListen field in otT
 Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, Tcp::HandleTimer)
+    , mTasklet(aInstance, Tcp::HandleTasklet)
     , mEphemeralPort(kDynamicPortMin)
 {
     OT_UNUSED_VARIABLE(mEphemeralPort);
 }
 
-Error Tcp::Endpoint::Initialize(Instance &aInstance, otTcpEndpointInitializeArgs &aArgs)
+Error Tcp::Endpoint::Initialize(Instance &aInstance, const otTcpEndpointInitializeArgs &aArgs)
 {
     Error         error;
     struct tcpcb &tp = GetTcb();
+
+    memset(&tp, 0x00, sizeof(tp));
 
     SuccessOrExit(error = aInstance.Get<Tcp>().mEndpoints.Add(*this));
 
     mContext                  = aArgs.mContext;
     mEstablishedCallback      = aArgs.mEstablishedCallback;
     mSendDoneCallback         = aArgs.mSendDoneCallback;
-    mSendReadyCallback        = aArgs.mSendReadyCallback;
+    mForwardProgressCallback  = aArgs.mForwardProgressCallback;
     mReceiveAvailableCallback = aArgs.mReceiveAvailableCallback;
     mDisconnectedCallback     = aArgs.mDisconnectedCallback;
 
     memset(mTimers, 0x00, sizeof(mTimers));
     memset(&mSockAddr, 0x00, sizeof(mSockAddr));
-    memset(&tp, 0x00, sizeof(tp));
+    mPendingCallbacks = 0;
 
     /*
      * Initialize buffers --- formerly in initialize_tcb.
@@ -186,22 +190,34 @@ exit:
 
 Error Tcp::Endpoint::SendByReference(otLinkedBuffer &aBuffer, uint32_t aFlags)
 {
+    Error         error;
     struct tcpcb &tp = GetTcb();
 
-    return BsdErrorToOtError(tcp_usr_send(&tp, (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0, &aBuffer, 0));
+    size_t backlogBefore = GetBacklogBytes();
+    size_t sent          = aBuffer.mLength;
+
+    SuccessOrExit(error = BsdErrorToOtError(tcp_usr_send(&tp, (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0, &aBuffer, 0)));
+
+    PostCallbacksAfterSend(sent, backlogBefore);
+
+exit:
+    return error;
 }
 
 Error Tcp::Endpoint::SendByExtension(size_t aNumBytes, uint32_t aFlags)
 {
     Error         error;
-    bool          moreToCome = (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0;
-    struct tcpcb &tp         = GetTcb();
+    bool          moreToCome    = (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0;
+    struct tcpcb &tp            = GetTcb();
+    size_t        backlogBefore = GetBacklogBytes();
     int           bsdError;
 
     VerifyOrExit(lbuf_head(&tp.sendbuf) != nullptr, error = kErrorInvalidState);
 
     bsdError = tcp_usr_send(&tp, moreToCome ? 1 : 0, nullptr, aNumBytes);
     SuccessOrExit(error = BsdErrorToOtError(bsdError));
+
+    PostCallbacksAfterSend(aNumBytes, backlogBefore);
 
 exit:
     return error;
@@ -428,6 +444,49 @@ exit:
     return calledUserCallback;
 }
 
+void Tcp::Endpoint::PostCallbacksAfterSend(size_t aSent, size_t aBacklogBefore)
+{
+    size_t backlogAfter = GetBacklogBytes();
+
+    if (backlogAfter < aBacklogBefore + aSent && mForwardProgressCallback != nullptr)
+    {
+        mPendingCallbacks |= kForwardProgressCallbackFlag;
+        GetInstance().Get<Tcp>().mTasklet.Post();
+    }
+}
+
+bool Tcp::Endpoint::FirePendingCallbacks(void)
+{
+    bool calledUserCallback = false;
+
+    if ((mPendingCallbacks & kForwardProgressCallbackFlag) != 0 && mForwardProgressCallback != nullptr)
+    {
+        mForwardProgressCallback(this, GetSendBufferBytes(), GetBacklogBytes());
+        calledUserCallback = true;
+    }
+
+    mPendingCallbacks = 0;
+
+    return calledUserCallback;
+}
+
+size_t Tcp::Endpoint::GetSendBufferBytes(void) const
+{
+    const struct tcpcb &tp = GetTcb();
+    return lbuf_used_space(&tp.sendbuf);
+}
+
+size_t Tcp::Endpoint::GetInFlightBytes(void) const
+{
+    const struct tcpcb &tp = GetTcb();
+    return tp.snd_max - tp.snd_una;
+}
+
+size_t Tcp::Endpoint::GetBacklogBytes(void) const
+{
+    return GetSendBufferBytes() - GetInFlightBytes();
+}
+
 Address &Tcp::Endpoint::GetLocalIp6Address(void)
 {
     return *reinterpret_cast<Address *>(&GetTcb().laddr);
@@ -465,7 +524,7 @@ exit:
     return matches;
 }
 
-Error Tcp::Listener::Initialize(Instance &aInstance, otTcpListenerInitializeArgs &aArgs)
+Error Tcp::Listener::Initialize(Instance &aInstance, const otTcpListenerInitializeArgs &aArgs)
 {
     Error                error;
     struct tcpcb_listen *tpl = &GetTcbListen();
@@ -606,13 +665,14 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
         int                  nextAction;
         struct tcpcb *       tp = &endpoint->GetTcb();
 
-        otLinkedBuffer *priorHead = lbuf_head(&tp->sendbuf);
+        otLinkedBuffer *priorHead    = lbuf_head(&tp->sendbuf);
+        size_t          priorBacklog = endpoint->GetSendBufferBytes() - endpoint->GetInFlightBytes();
 
         memset(&sig, 0x00, sizeof(sig));
         nextAction = tcp_input(ip6Header, tcpHeader, &aMessage, tp, nullptr, &sig);
         if (nextAction != RELOOKUP_REQUIRED)
         {
-            ProcessSignals(*endpoint, priorHead, sig);
+            ProcessSignals(*endpoint, priorHead, priorBacklog, sig);
             ExitNow();
         }
         /* If the matching socket was in the TIME-WAIT state, then we try passive sockets. */
@@ -634,14 +694,23 @@ exit:
     return error;
 }
 
-void Tcp::ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct tcplp_signals &aSignals)
+void Tcp::ProcessSignals(Endpoint &            aEndpoint,
+                         otLinkedBuffer *      aPriorHead,
+                         size_t                aPriorBacklog,
+                         struct tcplp_signals &aSignals)
 {
+    VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
+    if (aSignals.conn_established && aEndpoint.mEstablishedCallback != nullptr)
+    {
+        aEndpoint.mEstablishedCallback(&aEndpoint);
+    }
+
     VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
     if (aEndpoint.mSendDoneCallback != nullptr)
     {
         otLinkedBuffer *curr = aPriorHead;
 
-        for (int i = 0; i != aSignals.links_popped; i++)
+        for (uint32_t i = 0; i != aSignals.links_popped; i++)
         {
             otLinkedBuffer *next = curr->mNext;
 
@@ -654,13 +723,19 @@ void Tcp::ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct
     }
 
     VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
-    if (aSignals.conn_established && aEndpoint.mEstablishedCallback != nullptr)
+    if (aEndpoint.mForwardProgressCallback != nullptr)
     {
-        aEndpoint.mEstablishedCallback(&aEndpoint);
+        size_t backlogBytes = aEndpoint.GetBacklogBytes();
+
+        if (aSignals.bytes_acked > 0 || backlogBytes < aPriorBacklog)
+        {
+            aEndpoint.mForwardProgressCallback(&aEndpoint, aEndpoint.GetSendBufferBytes(), backlogBytes);
+            aEndpoint.mPendingCallbacks &= ~kForwardProgressCallbackFlag;
+        }
     }
 
     VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
-    if ((aSignals.recvbuf_notempty || aSignals.rcvd_fin) && aEndpoint.mReceiveAvailableCallback != nullptr)
+    if ((aSignals.recvbuf_added || aSignals.rcvd_fin) && aEndpoint.mReceiveAvailableCallback != nullptr)
     {
         aEndpoint.mReceiveAvailableCallback(&aEndpoint, cbuf_used_space(&aEndpoint.GetTcb().recvbuf),
                                             aEndpoint.GetTcb().reass_fin_index != -1,
@@ -843,6 +918,25 @@ restart:
     else
     {
         LogDebg("Did not reset main TCP timer");
+    }
+}
+
+void Tcp::HandleTasklet(Tasklet &aTasklet)
+{
+    OT_ASSERT(&aTasklet == &aTasklet.Get<Tcp>().mTasklet);
+    LogDebg("TCP tasklet invoked");
+    aTasklet.Get<Tcp>().ProcessCallbacks();
+}
+
+void Tcp::ProcessCallbacks(void)
+{
+    for (Endpoint &endpoint : mEndpoints)
+    {
+        if (endpoint.FirePendingCallbacks())
+        {
+            mTasklet.Post();
+            break;
+        }
     }
 }
 

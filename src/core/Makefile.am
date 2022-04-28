@@ -194,7 +194,7 @@ SOURCES_COMMON                                  = \
     common/log.cpp                                \
     common/message.cpp                            \
     common/notifier.cpp                           \
-    common/random_manager.cpp                     \
+    common/random.cpp                             \
     common/settings.cpp                           \
     common/string.cpp                             \
     common/tasklet.cpp                            \
@@ -236,11 +236,13 @@ SOURCES_COMMON                                  = \
     meshcop/dataset_updater.cpp                   \
     meshcop/dtls.cpp                              \
     meshcop/energy_scan_client.cpp                \
+    meshcop/extended_panid.cpp                    \
     meshcop/joiner.cpp                            \
     meshcop/joiner_router.cpp                     \
     meshcop/meshcop.cpp                           \
     meshcop/meshcop_leader.cpp                    \
     meshcop/meshcop_tlvs.cpp                      \
+    meshcop/network_name.cpp                      \
     meshcop/panid_query_client.cpp                \
     meshcop/timestamp.cpp                         \
     net/checksum.cpp                              \
@@ -338,7 +340,7 @@ RADIO_SOURCES_COMMON                       = \
     common/error.cpp                         \
     common/instance.cpp                      \
     common/log.cpp                           \
-    common/random_manager.cpp                \
+    common/random.cpp                        \
     common/string.cpp                        \
     common/tasklet.cpp                       \
     common/timer.cpp                         \
@@ -456,7 +458,6 @@ HEADERS_COMMON                                  = \
     common/pool.hpp                               \
     common/ptr_wrapper.hpp                        \
     common/random.hpp                             \
-    common/random_manager.hpp                     \
     common/retain_ptr.hpp                         \
     common/serial_number.hpp                      \
     common/settings.hpp                           \
@@ -537,11 +538,13 @@ HEADERS_COMMON                                  = \
     meshcop/dataset_updater.hpp                   \
     meshcop/dtls.hpp                              \
     meshcop/energy_scan_client.hpp                \
+    meshcop/extended_panid.hpp                    \
     meshcop/joiner.hpp                            \
     meshcop/joiner_router.hpp                     \
     meshcop/meshcop.hpp                           \
     meshcop/meshcop_leader.hpp                    \
     meshcop/meshcop_tlvs.hpp                      \
+    meshcop/network_name.hpp                      \
     meshcop/panid_query_client.hpp                \
     meshcop/timestamp.hpp                         \
     net/checksum.hpp                              \

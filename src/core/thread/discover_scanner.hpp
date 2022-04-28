@@ -167,7 +167,7 @@ private:
     void          Stop(void) { HandleDiscoverComplete(); }
 
     // Methods used from `Mle`
-    void HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const;
 
     void        HandleDiscoverComplete(void);
     static void HandleTimer(Timer &aTimer);

@@ -104,7 +104,7 @@ set(COMMON_SOURCES
     common/log.cpp
     common/message.cpp
     common/notifier.cpp
-    common/random_manager.cpp
+    common/random.cpp
     common/settings.cpp
     common/string.cpp
     common/tasklet.cpp
@@ -146,11 +146,13 @@ set(COMMON_SOURCES
     meshcop/dataset_updater.cpp
     meshcop/dtls.cpp
     meshcop/energy_scan_client.cpp
+    meshcop/extended_panid.cpp
     meshcop/joiner.cpp
     meshcop/joiner_router.cpp
     meshcop/meshcop.cpp
     meshcop/meshcop_leader.cpp
     meshcop/meshcop_tlvs.cpp
+    meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
     meshcop/timestamp.cpp
     net/checksum.cpp
@@ -248,7 +250,7 @@ set(RADIO_COMMON_SOURCES
     common/error.cpp
     common/instance.cpp
     common/log.cpp
-    common/random_manager.cpp
+    common/random.cpp
     common/string.cpp
     common/tasklet.cpp
     common/timer.cpp

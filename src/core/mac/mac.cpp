@@ -63,16 +63,6 @@ const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
 
-const otExtendedPanId Mac::sExtendedPanidInit = {
-    {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
-};
-
-const char Mac::sNetworkNameInit[] = "OpenThread";
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-const char Mac::sDomainNameInit[] = "DefaultDomain";
-#endif
-
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
@@ -123,17 +113,11 @@ Mac::Mac(Instance &aInstance)
 
     mCcaSuccessRateTracker.Clear();
     ResetCounters();
-    mExtendedPanId.Clear();
 
     SetEnabled(true);
     mLinks.Enable();
 
     Get<KeyManager>().UpdateKeyMaterial();
-    SetExtendedPanId(AsCoreType(&sExtendedPanidInit));
-    IgnoreError(SetNetworkName(sNetworkNameInit));
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    IgnoreError(SetDomainName(sDomainNameInit));
-#endif
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
@@ -446,52 +430,6 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
     IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
-Error Mac::SetNetworkName(const char *aNameString)
-{
-    return SignalNetworkNameChange(mNetworkName.Set(aNameString));
-}
-
-Error Mac::SetNetworkName(const NameData &aNameData)
-{
-    return SignalNetworkNameChange(mNetworkName.Set(aNameData));
-}
-
-Error Mac::SignalNetworkNameChange(Error aError)
-{
-    switch (aError)
-    {
-    case kErrorNone:
-        Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
-        break;
-
-    case kErrorAlready:
-        Get<Notifier>().SignalIfFirst(kEventThreadNetworkNameChanged);
-        aError = kErrorNone;
-        break;
-
-    default:
-        break;
-    }
-
-    return aError;
-}
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-Error Mac::SetDomainName(const char *aNameString)
-{
-    Error error = mDomainName.Set(aNameString);
-
-    return (error == kErrorAlready) ? kErrorNone : error;
-}
-
-Error Mac::SetDomainName(const NameData &aNameData)
-{
-    Error error = mDomainName.Set(aNameData);
-
-    return (error == kErrorAlready) ? kErrorNone : error;
-}
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
 void Mac::SetPanId(PanId aPanId)
 {
     SuccessOrExit(Get<Notifier>().Update(mPanId, aPanId, kEventThreadPanIdChanged));
@@ -499,11 +437,6 @@ void Mac::SetPanId(PanId aPanId)
 
 exit:
     return;
-}
-
-void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
-{
-    IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, kEventThreadExtPanIdChanged));
 }
 
 void Mac::RequestDirectFrameTransmission(void)

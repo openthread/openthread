@@ -54,7 +54,7 @@ DatasetUpdater::DatasetUpdater(Instance &aInstance)
 {
 }
 
-Error DatasetUpdater::RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext)
+Error DatasetUpdater::RequestUpdate(const Dataset::Info &aDataset, Callback aCallback, void *aContext)
 {
     Error    error   = kErrorNone;
     Message *message = nullptr;
@@ -105,15 +105,15 @@ void DatasetUpdater::HandleTimer(void)
 
 void DatasetUpdater::PreparePendingDataset(void)
 {
-    Dataset                dataset;
-    MeshCoP::Dataset::Info requestedDataset;
-    Error                  error;
+    Dataset       dataset;
+    Dataset::Info requestedDataset;
+    Error         error;
 
     VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
     IgnoreError(mDataset->Read(0, requestedDataset));
 
-    error = Get<ActiveDataset>().Read(dataset);
+    error = Get<ActiveDatasetManager>().Read(dataset);
 
     if (error != kErrorNone)
     {
@@ -139,9 +139,9 @@ void DatasetUpdater::PreparePendingDataset(void)
     {
         Timestamp timestamp;
 
-        if (Get<PendingDataset>().GetTimestamp() != nullptr)
+        if (Get<PendingDatasetManager>().GetTimestamp() != nullptr)
         {
-            timestamp = *Get<PendingDataset>().GetTimestamp();
+            timestamp = *Get<PendingDatasetManager>().GetTimestamp();
         }
 
         timestamp.AdvanceRandomTicks();
@@ -154,7 +154,7 @@ void DatasetUpdater::PreparePendingDataset(void)
         tlv->GetTimestamp().AdvanceRandomTicks();
     }
 
-    SuccessOrExit(error = Get<PendingDataset>().Save(dataset));
+    SuccessOrExit(error = Get<PendingDatasetManager>().Save(dataset));
 
 exit:
     if (error != kErrorNone)
@@ -178,8 +178,8 @@ void DatasetUpdater::Finish(Error aError)
 
 void DatasetUpdater::HandleNotifierEvents(Events aEvents)
 {
-    MeshCoP::Dataset::Info requestedDataset;
-    MeshCoP::Dataset::Info dataset;
+    Dataset::Info requestedDataset;
+    Dataset::Info dataset;
 
     VerifyOrExit(mDataset != nullptr);
 
@@ -187,7 +187,7 @@ void DatasetUpdater::HandleNotifierEvents(Events aEvents)
 
     IgnoreError(mDataset->Read(0, requestedDataset));
 
-    if (aEvents.Contains(kEventActiveDatasetChanged) && Get<MeshCoP::ActiveDataset>().Read(dataset) == kErrorNone)
+    if (aEvents.Contains(kEventActiveDatasetChanged) && Get<ActiveDatasetManager>().Read(dataset) == kErrorNone)
     {
         if (requestedDataset.IsSubsetOf(dataset))
         {
@@ -199,7 +199,7 @@ void DatasetUpdater::HandleNotifierEvents(Events aEvents)
         }
     }
 
-    if (aEvents.Contains(kEventPendingDatasetChanged) && Get<MeshCoP::PendingDataset>().Read(dataset) == kErrorNone)
+    if (aEvents.Contains(kEventPendingDatasetChanged) && Get<PendingDatasetManager>().Read(dataset) == kErrorNone)
     {
         if (!requestedDataset.IsSubsetOf(dataset))
         {

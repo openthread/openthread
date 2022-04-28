@@ -253,49 +253,53 @@ exit:
 
 void Instance::GetBufferInfo(BufferInfo &aInfo)
 {
-    uint16_t messages, buffers;
-
     aInfo.Clear();
 
     aInfo.mTotalBuffers = Get<MessagePool>().GetTotalBufferCount();
     aInfo.mFreeBuffers  = Get<MessagePool>().GetFreeBufferCount();
 
-    Get<MeshForwarder>().GetSendQueue().GetInfo(aInfo.m6loSendMessages, aInfo.m6loSendBuffers);
-
-    Get<MeshForwarder>().GetReassemblyQueue().GetInfo(aInfo.m6loReassemblyMessages, aInfo.m6loReassemblyBuffers);
-
-#if OPENTHREAD_FTD
-    Get<MeshForwarder>().GetResolvingQueue().GetInfo(aInfo.mArpMessages, aInfo.mArpBuffers);
-#endif
-
-    Get<Ip6::Ip6>().GetSendQueue().GetInfo(aInfo.mIp6Messages, aInfo.mIp6Buffers);
+    Get<MeshForwarder>().GetSendQueue().GetInfo(aInfo.m6loSendQueue);
+    Get<MeshForwarder>().GetReassemblyQueue().GetInfo(aInfo.m6loReassemblyQueue);
+    Get<Ip6::Ip6>().GetSendQueue().GetInfo(aInfo.mIp6Queue);
 
 #if OPENTHREAD_FTD
-    Get<Ip6::Mpl>().GetBufferedMessageSet().GetInfo(aInfo.mMplMessages, aInfo.mMplBuffers);
+    Get<Ip6::Mpl>().GetBufferedMessageSet().GetInfo(aInfo.mMplQueue);
 #endif
 
-    Get<Mle::MleRouter>().GetMessageQueue().GetInfo(aInfo.mMleMessages, aInfo.mMleBuffers);
+    Get<Mle::MleRouter>().GetMessageQueue().GetInfo(aInfo.mMleQueue);
 
-    Get<Tmf::Agent>().GetRequestMessages().GetInfo(aInfo.mCoapMessages, aInfo.mCoapBuffers);
-    Get<Tmf::Agent>().GetCachedResponses().GetInfo(messages, buffers);
-    aInfo.mCoapMessages += messages;
-    aInfo.mCoapBuffers += buffers;
+    Get<Tmf::Agent>().GetRequestMessages().GetInfo(aInfo.mCoapQueue);
+    Get<Tmf::Agent>().GetCachedResponses().GetInfo(aInfo.mCoapQueue);
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
-    Get<Coap::CoapSecure>().GetRequestMessages().GetInfo(aInfo.mCoapSecureMessages, aInfo.mCoapSecureBuffers);
-    Get<Coap::CoapSecure>().GetCachedResponses().GetInfo(messages, buffers);
-    aInfo.mCoapSecureMessages += messages;
-    aInfo.mCoapSecureBuffers += buffers;
+    Get<Coap::CoapSecure>().GetRequestMessages().GetInfo(aInfo.mCoapSecureQueue);
+    Get<Coap::CoapSecure>().GetCachedResponses().GetInfo(aInfo.mCoapSecureQueue);
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    GetApplicationCoap().GetRequestMessages().GetInfo(aInfo.mApplicationCoapMessages, aInfo.mApplicationCoapBuffers);
-    GetApplicationCoap().GetCachedResponses().GetInfo(messages, buffers);
-    aInfo.mApplicationCoapMessages += messages;
-    aInfo.mApplicationCoapBuffers += buffers;
+    GetApplicationCoap().GetRequestMessages().GetInfo(aInfo.mApplicationCoapQueue);
+    GetApplicationCoap().GetCachedResponses().GetInfo(aInfo.mApplicationCoapQueue);
 #endif
 }
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+
+void Instance::SetLogLevel(LogLevel aLogLevel)
+{
+    if (aLogLevel != sLogLevel)
+    {
+        sLogLevel = aLogLevel;
+        otPlatLogHandleLevelChanged(sLogLevel);
+    }
+}
+
+extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+}
+
+#endif
 
 } // namespace ot

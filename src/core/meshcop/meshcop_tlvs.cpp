@@ -115,7 +115,7 @@ exit:
     return tlv;
 }
 
-Mac::NameData NetworkNameTlv::GetNetworkName(void) const
+NameData NetworkNameTlv::GetNetworkName(void) const
 {
     uint8_t len = GetLength();
 
@@ -124,10 +124,10 @@ Mac::NameData NetworkNameTlv::GetNetworkName(void) const
         len = sizeof(mNetworkName);
     }
 
-    return Mac::NameData(mNetworkName, len);
+    return NameData(mNetworkName, len);
 }
 
-void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
+void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
 {
     uint8_t len;
 
@@ -280,9 +280,9 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_2);
         entry->SetMask(aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK);
 
-        length += sizeof(MeshCoP::ChannelMaskEntry);
+        length += sizeof(ChannelMaskEntry);
 
-        entry = static_cast<MeshCoP::ChannelMaskEntry *>(entry->GetNext());
+        entry = static_cast<ChannelMaskEntry *>(entry->GetNext());
     }
 #endif
 
@@ -294,7 +294,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_0);
         entry->SetMask(aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK);
 
-        length += sizeof(MeshCoP::ChannelMaskEntry);
+        length += sizeof(ChannelMaskEntry);
     }
 #endif
 
@@ -306,7 +306,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
         entry->SetChannelPage(OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE);
         entry->SetMask(aChannelMask & OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK);
 
-        length += sizeof(MeshCoP::ChannelMaskEntry);
+        length += sizeof(ChannelMaskEntry);
     }
 #endif
 

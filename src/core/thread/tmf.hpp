@@ -37,11 +37,90 @@
 #include "openthread-core-config.h"
 
 #include "coap/coap.hpp"
+#include "common/locator.hpp"
 
 namespace ot {
 namespace Tmf {
 
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
+
+/**
+ * This class represents message information for a TMF message.
+ *
+ * This is sub-class of `Ip6::MessageInfo` intended for use when sending TMF messages.
+ *
+ */
+class MessageInfo : public InstanceLocator, public Ip6::MessageInfo
+{
+public:
+    /**
+     * This constructor initializes the `MessageInfo`.
+     *
+     * The peer port is set to `Tmf::kUdpPort` and all other properties are cleared (set to zero).
+     *
+     * @param[in] aInstance    The OpenThread instance.
+     *
+     */
+    explicit MessageInfo(Instance &aInstance)
+        : InstanceLocator(aInstance)
+    {
+        SetPeerPort(kUdpPort);
+    }
+
+    /**
+     * This method sets the local socket port to TMF port.
+     *
+     */
+    void SetSockPortToTmf(void) { SetSockPort(kUdpPort); }
+
+    /**
+     * This method sets the local socket address to mesh-local RLOC address.
+     *
+     */
+    void SetSockAddrToRloc(void);
+
+    /**
+     * This method sets the local socket address to RLOC address and the peer socket address to leader ALOC.
+     *
+     * @retval kErrorNone      Successfully set the addresses.
+     * @retval kErrorDetached  Cannot set leader ALOC since device is currently detached.
+     *
+     */
+    Error SetSockAddrToRlocPeerAddrToLeaderAloc(void);
+
+    /**
+     * This method sets the local socket address to RLOC address and the peer socket address to leader RLOC.
+     *
+     * @retval kErrorNone      Successfully set the addresses.
+     * @retval kErrorDetached  Cannot set leader RLOC since device is currently detached.
+     *
+     */
+    Error SetSockAddrToRlocPeerAddrToLeaderRloc(void);
+
+    /**
+     * This method sets the local socket address to RLOC address and the peer socket address to realm-local all
+     * routers multicast address.
+     *
+     */
+    void SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void);
+
+    /**
+     * This method sets the local socket address to RLOC address and the peer socket address to a router RLOC based on
+     * a given RLOC16.
+     *
+     * @param[in] aRloc16     The RLOC16 to use for peer address.
+     *
+     */
+    void SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16);
+
+    /**
+     * This method sets the local socket address to RLOC address and the peer socket address to a given address.
+     *
+     * @param[in] aPeerAddress  The peer address.
+     *
+     */
+    void SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress);
+};
 
 /**
  * This class implements functionality of the Thread TMF agent.

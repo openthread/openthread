@@ -101,6 +101,10 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mTxPaused(false)
     , mSendBusy(false)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    , mDelayNextTx(false)
+    , mTxDelayTimer(aInstance, HandleTxDelayTimer)
+#endif
     , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask)
 #if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
@@ -143,6 +147,11 @@ void MeshForwarder::Stop(void)
 #if OPENTHREAD_FTD
     mIndirectSender.Stop();
     mFragmentPriorityList.Clear();
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    mTxDelayTimer.Stop();
+    mDelayNextTx = false;
 #endif
 
     mEnabled     = false;
@@ -237,6 +246,20 @@ void MeshForwarder::ResumeMessageTransmissions(void)
     }
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+void MeshForwarder::HandleTxDelayTimer(Timer &aTimer)
+{
+    aTimer.Get<MeshForwarder>().HandleTxDelayTimer();
+}
+
+void MeshForwarder::HandleTxDelayTimer(void)
+{
+    mDelayNextTx = false;
+    mScheduleTransmissionTask.Post();
+    LogDebg("Tx delay timer expired");
+}
+#endif
+
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
     aTasklet.Get<MeshForwarder>().ScheduleTransmissionTask();
@@ -245,6 +268,10 @@ void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
     VerifyOrExit(!mSendBusy && !mTxPaused);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    VerifyOrExit(!mDelayNextTx);
+#endif
 
     mSendMessage = PrepareNextDirectTransmission();
     VerifyOrExit(mSendMessage != nullptr);
@@ -267,7 +294,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
-        if (!curMessage->IsDirectTransmission())
+        if (!curMessage->IsDirectTransmission() || curMessage->IsResolvingAddress())
         {
             nextMessage = curMessage->GetNext();
             continue;
@@ -311,12 +338,9 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
             ExitNow();
 
 #if OPENTHREAD_FTD
-
         case kErrorAddressQuery:
-            mSendQueue.Dequeue(*curMessage);
-            mResolvingQueue.Enqueue(*curMessage);
+            curMessage->SetResolvingAddress(true);
             continue;
-
 #endif
 
         default:
@@ -998,6 +1022,18 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, Error aError)
     mSendBusy = false;
 
     VerifyOrExit(mEnabled);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    if (mDelayNextTx && (aError == kErrorNone))
+    {
+        mTxDelayTimer.Start(kTxDelayInterval);
+        LogDebg("Start tx delay timer for %u msec", kTxDelayInterval);
+    }
+    else
+    {
+        mDelayNextTx = false;
+    }
+#endif
 
     if (!aFrame.IsEmpty())
     {

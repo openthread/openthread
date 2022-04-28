@@ -109,6 +109,7 @@ source_set("openthread") {
     "srp_server.h",
     "tasklet.h",
     "tcp.h",
+    "tcp_ext.h",
     "thread.h",
     "thread_ftd.h",
     "trel.h",

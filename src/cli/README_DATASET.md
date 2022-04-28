@@ -497,7 +497,7 @@ Done
 
 ### securitypolicy
 
-Usage: `dataset securitypolicy [<rotationtime> [onrcbCepR]]`
+Usage: `dataset securitypolicy [<rotationtime> [onrcCepR]]`
 
 Get security policy.
 
@@ -513,7 +513,6 @@ Set security policy.
 - n: Native Commissioning using PSKc is allowed.
 - r: Thread 1.x Routers are enabled.
 - c: External Commissioner authentication is allowed using PSKc.
-- b: Thread 1.x Beacons are enabled.
 - C: Thread 1.2 Commercial Commissioning is enabled.
 - e: Thread 1.2 Autonomous Enrollment is enabled.
 - p: Thread 1.2 Network Key Provisioning is enabled.

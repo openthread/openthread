@@ -51,7 +51,7 @@
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
-#include "common/random_manager.hpp"
+#include "common/random.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
@@ -71,6 +71,8 @@
 #include "crypto/mbedtls.hpp"
 #include "meshcop/border_agent.hpp"
 #include "meshcop/dataset_updater.hpp"
+#include "meshcop/extended_panid.hpp"
+#include "meshcop/network_name.hpp"
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_metrics.hpp"
@@ -207,7 +209,7 @@ public:
      * @param[in] aLogLevel  A log level.
      *
      */
-    static void SetLogLevel(LogLevel aLogLevel) { sLogLevel = aLogLevel; }
+    static void SetLogLevel(LogLevel aLogLevel);
 #endif
 
     /**
@@ -331,7 +333,7 @@ private:
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    // RandomManager is initialized before other objects. Note that it
+    // Random::Manager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     static Utils::Heap sHeap;
@@ -339,7 +341,7 @@ private:
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-    RandomManager mRandomManager;
+    Random::Manager mRandomManager;
 
     // Radio is initialized before other member variables
     // (particularly, SubMac and Mac) to allow them to use its methods
@@ -701,12 +703,22 @@ template <> inline Coap::CoapSecure &Instance::Get(void)
 }
 #endif
 
-template <> inline MeshCoP::ActiveDataset &Instance::Get(void)
+template <> inline MeshCoP::ExtendedPanIdManager &Instance::Get(void)
+{
+    return mThreadNetif.mExtendedPanIdManager;
+}
+
+template <> inline MeshCoP::NetworkNameManager &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkNameManager;
+}
+
+template <> inline MeshCoP::ActiveDatasetManager &Instance::Get(void)
 {
     return mThreadNetif.mActiveDataset;
 }
 
-template <> inline MeshCoP::PendingDataset &Instance::Get(void)
+template <> inline MeshCoP::PendingDatasetManager &Instance::Get(void)
 {
     return mThreadNetif.mPendingDataset;
 }
