@@ -75,8 +75,9 @@ typedef enum
 typedef struct otSrpClientHostInfo
 {
     const char *         mName;         ///< Host name (label) string (NULL if not yet set).
-    const otIp6Address * mAddresses;    ///< Pointer to an array of host IPv6 addresses (NULL if not yet set).
+    const otIp6Address * mAddresses;    ///< Array of host IPv6 addresses (NULL if not set or auto address is enabled).
     uint8_t              mNumAddresses; ///< Number of IPv6 addresses in `mAddresses` array.
+    bool                 mAutoAddress;  ///< Indicates whether auto address mode is enabled or not.
     otSrpClientItemState mState;        ///< Host info state.
 } otSrpClientHostInfo;
 
@@ -429,6 +430,27 @@ const otSrpClientHostInfo *otSrpClientGetHostInfo(otInstance *aInstance);
 otError otSrpClientSetHostName(otInstance *aInstance, const char *aName);
 
 /**
+ * This function enables auto host address mode.
+ *
+ * When enabled host IPv6 addresses are automatically set by SRP client using all the unicast addresses on Thread netif
+ * excluding all link-local and mesh-local addresses. If there is no valid address, then Mesh Local EID address is
+ * added. The SRP client will automatically re-register when/if addresses on Thread netif are updated (new addresses
+ * are added or existing addresses are removed).
+ *
+ * The auto host address mode can be enabled before start or during operation of SRP client except when the host info
+ * is being removed (client is busy handling a remove request from an call to `otSrpClientRemoveHostAndServices()` and
+ * host info still being in  either `STATE_TO_REMOVE` or `STATE_REMOVING` states).
+ *
+ * After auto host address mode is enabled, it can be disabled by a call to `otSrpClientSetHostAddresses()` which
+ * then explicitly sets the host addresses.
+ *
+ * @retval OT_ERROR_NONE            Successfully enabled auto host address mode.
+ * @retval OT_ERROR_INVALID_STATE   Host is being removed and therefore cannot enable auto host address mode.
+ *
+ */
+otError otSrpClientEnableAutoHostAddress(otInstance *aInstance);
+
+/**
  * This function sets/updates the list of host IPv6 address.
  *
  * Host IPv6 addresses can be set/changed before start or during operation of SRP client (e.g. to add/remove or change
@@ -441,6 +463,9 @@ otError otSrpClientSetHostName(otInstance *aInstance, const char *aName);
  *
  * After a successful call to this function, `otSrpClientCallback` will be called to report the status of the address
  * registration with SRP server.
+ *
+ * Calling this function disables auto host address mode if it was previously enabled from a successful call to
+ * `otSrpClientEnableAutoHostAddress()`.
  *
  * @param[in] aInstance           A pointer to the OpenThread instance.
  * @param[in] aIp6Addresses       A pointer to the an array containing the host IPv6 addresses.

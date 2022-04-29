@@ -1146,6 +1146,10 @@ class NodeImpl:
         self.send_command(f'srp client host clear')
         self._expect_done()
 
+    def srp_client_enable_auto_host_address(self):
+        self.send_command(f'srp client host address auto')
+        self._expect_done()
+
     def srp_client_set_host_address(self, *addrs: str):
         self.send_command(f'srp client host address {" ".join(addrs)}')
         self._expect_done()

@@ -124,6 +124,11 @@ otError otSrpClientSetHostName(otInstance *aInstance, const char *aName)
     return AsCoreType(aInstance).Get<Srp::Client>().SetHostName(aName);
 }
 
+otError otSrpClientEnableAutoHostAddress(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Client>().EnableAutoHostAddress();
+}
+
 otError otSrpClientSetHostAddresses(otInstance *aInstance, const otIp6Address *aIp6Addresses, uint8_t aNumAddresses)
 {
     return AsCoreType(aInstance).Get<Srp::Client>().SetHostAddresses(AsCoreTypePtr(aIp6Addresses), aNumAddresses);
