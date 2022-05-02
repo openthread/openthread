@@ -42,6 +42,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
+#include "crypto/aes_ccm.hpp"
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
@@ -1827,6 +1828,12 @@ private:
                         uint8_t                aCslClockAccuracy,
                         uint8_t                aCslUncertainty);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
+
+    Error ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
+                                 Message &               aMessage,
+                                 const Ip6::MessageInfo &aMessageInfo,
+                                 uint16_t                aCmdOffset,
+                                 const SecurityHeader &  aHeader);
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
