@@ -229,4 +229,15 @@
 #error "OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET was removed (no longer applicable with TREL over DNS-SD)."
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT
+ *
+ * This setting configures the TREL UDP port number.
+ * Define as 0 to use an ephemeral port number.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT
+#define OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT 0
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_
