@@ -45,14 +45,6 @@ import serial
 from Queue import Queue
 from serial.serialutil import SerialException
 
-TESTHARNESS_1_1 = '1.1'
-TESTHARNESS_1_2 = '1.2'
-
-if 'Thread1.2' in __file__:
-    TESTHARNESS_VERSION = TESTHARNESS_1_2
-else:
-    TESTHARNESS_VERSION = TESTHARNESS_1_1
-
 from GRLLibs.ThreadPacket.PlatformPackets import (
     PlatformDiagnosticPacket,
     PlatformPackets,
@@ -69,10 +61,9 @@ from GRLLibs.UtilityModules.enums import (
     PlatformDiagnosticPacket_Type,
 )
 
-if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-    from GRLLibs.UtilityModules.enums import DevCapb
-    import commissioner
-    from commissioner_impl import OTCommissioner
+from GRLLibs.UtilityModules.enums import DevCapb
+import commissioner
+from commissioner_impl import OTCommissioner
 
 from IThci import IThci
 
@@ -202,17 +193,16 @@ class OpenThreadTHCI(object):
     _cmdPrefix = ''
     _lineSepX = LINESEPX
 
-    if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-        _ROLE_MODE_DICT = {
-            Thread_Device_Role.Leader: 'rdn',
-            Thread_Device_Role.Router: 'rdn',
-            Thread_Device_Role.SED: '-',
-            Thread_Device_Role.EndDevice: 'rn',
-            Thread_Device_Role.REED: 'rdn',
-            Thread_Device_Role.EndDevice_FED: 'rdn',
-            Thread_Device_Role.EndDevice_MED: 'rn',
-            Thread_Device_Role.SSED: '-',
-        }
+    _ROLE_MODE_DICT = {
+        Thread_Device_Role.Leader: 'rdn',
+        Thread_Device_Role.Router: 'rdn',
+        Thread_Device_Role.SED: '-',
+        Thread_Device_Role.EndDevice: 'rn',
+        Thread_Device_Role.REED: 'rdn',
+        Thread_Device_Role.EndDevice_FED: 'rdn',
+        Thread_Device_Role.EndDevice_MED: 'rn',
+        Thread_Device_Role.SSED: '-',
+    }
 
     def __init__(self, **kwargs):
         """initialize the serial port and default network parameters
@@ -426,8 +416,7 @@ class OpenThreadTHCI(object):
         self._connect()
         if not self.IsBorderRouter:
             self.__detectZephyr()
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-            self.__discoverDeviceCapability()
+        self.__discoverDeviceCapability()
         self.UIStatusMsg = self.getVersionNumber()
 
         if self.firmwarePrefix in self.UIStatusMsg:
@@ -566,9 +555,7 @@ class OpenThreadTHCI(object):
                 Thread_Device_Role.REED,
         ]:
             self.__setRouterSelectionJitter(1)
-        elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and self.deviceRole in [
-                Thread_Device_Role.BR_1, Thread_Device_Role.BR_2
-        ]:
+        elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
             self.IsBackboneRouter = True
             self.__setRouterSelectionJitter(1)
 
@@ -897,7 +884,7 @@ class OpenThreadTHCI(object):
                 macAddr64 = self.__executeCommand('eui64')[0]
             elif bType == MacType.HashMac:
                 macAddr64 = self.__executeCommand('joiner id')[0]
-            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and bType == MacType.EthMac and self.IsBorderRouter:
+            elif bType == MacType.EthMac and self.IsBorderRouter:
                 return self._deviceGetEtherMac()
             else:
                 macAddr64 = self.__executeCommand('extaddr')[0]
@@ -1143,7 +1130,7 @@ class OpenThreadTHCI(object):
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
-        elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
+        elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
             print('join as BBR')
             mode = 'rdn'
             if self.AutoDUTEnable is False:
@@ -1153,7 +1140,7 @@ class OpenThreadTHCI(object):
             print('join as sleepy end device')
             mode = '-'
             self.__setPollPeriod(self.__sedPollPeriod)
-        elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId == Thread_Device_Role.SSED:
+        elif eRoleId == Thread_Device_Role.SSED:
             print('join as SSED')
             mode = '-'
             self.setCSLperiod(self.cslPeriod)
@@ -1670,11 +1657,10 @@ class OpenThreadTHCI(object):
             False: fail to configure the border router with a given prefix entry
         """
         print('%s call configBorderRouter' % self)
-        assert TESTHARNESS_VERSION == TESTHARNESS_1_2 or P_dp == 0
         assert (ipaddress.IPv6Network(P_Prefix.decode()))
 
         # turn off default domain prefix if configBorderRouter is called before joining network
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2 and P_dp == 0 and not self.__isOpenThreadRunning():
+        if P_dp == 0 and not self.__isOpenThreadRunning():
             self.__useDefaultDomainPrefix = False
 
         parameter = ''
@@ -2603,13 +2589,10 @@ class OpenThreadTHCI(object):
             cmd += pskc
 
         if listSecurityPolicy is not None:
-            if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-                if self.DeviceCapability == DevCapb.V1_1:
-                    cmd += '0c03'
-                else:
-                    cmd += '0c04'
-            else:
+            if self.DeviceCapability == DevCapb.V1_1:
                 cmd += '0c03'
+            else:
+                cmd += '0c04'
 
             rotationTime = 0
             policyBits = 0
@@ -2651,10 +2634,9 @@ class OpenThreadTHCI(object):
             flags0 = ('%x' % (policyBits & 0x00ff)).ljust(2, '0')
             cmd += flags0
 
-            if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-                if self.DeviceCapability != DevCapb.V1_1:
-                    flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
-                    cmd += flags1
+            if self.DeviceCapability != DevCapb.V1_1:
+                flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
+                cmd += flags1
 
         if xCommissioningSessionId is not None:
             cmd += '0b02'
@@ -3339,7 +3321,6 @@ class OpenThreadTHCI(object):
 
     @API
     def role_transition(self, role):
-        assert TESTHARNESS_VERSION == TESTHARNESS_1_2
         cmd = 'mode %s' % OpenThreadTHCI._ROLE_MODE_DICT[role]
         return self.__executeCommand(cmd)[-1] == 'Done'
 
