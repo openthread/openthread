@@ -1031,37 +1031,59 @@ const LeaderData &Mle::GetLeaderData(void)
     return mLeaderData;
 }
 
-Message *Mle::NewMleMessage(void)
+Message *Mle::NewMleMessage(Command aCommand)
 {
+    Error             error = kErrorNone;
     Message *         message;
     Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
+    Message::SubType  subType;
+    uint8_t           securitySuite;
 
     message = mSocket.NewMessage(0, settings);
-    VerifyOrExit(message != nullptr);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    message->SetSubType(Message::kSubTypeMleGeneral);
-
-exit:
-    return message;
-}
-
-Error Mle::AppendHeader(Message &aMessage, Command aCommand)
-{
-    Error   error         = kErrorNone;
-    uint8_t securitySuite = k154Security;
+    securitySuite = k154Security;
+    subType       = Message::kSubTypeMleGeneral;
 
     switch (aCommand)
     {
+    case kCommandAnnounce:
+        subType = Message::kSubTypeMleAnnounce;
+        break;
+
     case kCommandDiscoveryRequest:
-    case kCommandDiscoveryResponse:
+        subType       = Message::kSubTypeMleDiscoverRequest;
         securitySuite = kNoSecurity;
+        break;
+
+    case kCommandDiscoveryResponse:
+        subType       = Message::kSubTypeMleDiscoverResponse;
+        securitySuite = kNoSecurity;
+        break;
+
+    case kCommandChildUpdateRequest:
+        subType = Message::kSubTypeMleChildUpdateRequest;
+        break;
+
+    case kCommandDataResponse:
+        subType = Message::kSubTypeMleDataResponse;
+        break;
+
+    case kCommandChildIdRequest:
+        subType = Message::kSubTypeMleChildIdRequest;
+        break;
+
+    case kCommandDataRequest:
+        subType = Message::kSubTypeMleDataRequest;
         break;
 
     default:
         break;
     }
 
-    SuccessOrExit(error = aMessage.Append(securitySuite));
+    message->SetSubType(subType);
+
+    SuccessOrExit(error = message->Append(securitySuite));
 
     if (securitySuite == k154Security)
     {
@@ -1071,13 +1093,14 @@ Error Mle::AppendHeader(Message &aMessage, Command aCommand)
         // message in `SendMessage()` before message is sent.
 
         securityHeader.InitSecurityControl();
-        SuccessOrExit(error = aMessage.Append(securityHeader));
+        SuccessOrExit(error = message->Append(securityHeader));
     }
 
-    error = aMessage.Append<uint8_t>(aCommand);
+    error = message->Append<uint8_t>(aCommand);
 
 exit:
-    return error;
+    FreeAndNullMessageOnError(message, error);
+    return message;
 }
 
 Error Mle::AppendSourceAddress(Message &aMessage) const
@@ -2117,8 +2140,7 @@ void Mle::SendParentRequest(ParentRequestType aType)
         break;
     }
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandParentRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandParentRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
     SuccessOrExit(error = AppendChallenge(*message, mParentRequestChallenge));
     SuccessOrExit(error = AppendScanMask(*message, scanMask));
@@ -2180,9 +2202,7 @@ Error Mle::SendChildIdRequest(void)
         }
     }
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(Message::kSubTypeMleChildIdRequest);
-    SuccessOrExit(error = AppendHeader(*message, kCommandChildIdRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandChildIdRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendResponse(*message, mParentCandidateChallenge));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
     SuccessOrExit(error = AppendMleFrameCounter(*message));
@@ -2234,9 +2254,7 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
 
     RemoveDelayedDataRequestMessage(aDestination);
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(Message::kSubTypeMleDataRequest);
-    SuccessOrExit(error = AppendHeader(*message, kCommandDataRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandDataRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
 
     if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
@@ -2419,9 +2437,7 @@ Error Mle::SendChildUpdateRequest(void)
     mChildUpdateRequestState = kChildUpdateRequestActive;
     ScheduleMessageTransmissionTimer();
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
-    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
 
     switch (mRole)
@@ -2488,8 +2504,7 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
     Message *    message;
     bool         checkAddress = false;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateResponse));
+    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
 
@@ -2574,11 +2589,9 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     Message *          message = nullptr;
 
     VerifyOrExit(Get<Mac::Mac>().GetSupportedChannelMask().ContainsChannel(aChannel), error = kErrorInvalidArgs);
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMleMessage(kCommandAnnounce)) != nullptr, error = kErrorNoBufs);
     message->SetLinkSecurityEnabled(true);
-    message->SetSubType(Message::kSubTypeMleAnnounce);
     message->SetChannel(aChannel);
-    SuccessOrExit(error = AppendHeader(*message, kCommandAnnounce));
 
     channel.Init();
     channel.SetChannelPage(0);
@@ -2639,8 +2652,7 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
     Tlv      tlv;
     ot::Tlv  statusSubTlv;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementResponse));
+    VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementResponse)) != nullptr, error = kErrorNoBufs);
 
     tlv.SetType(Tlv::kLinkMetricsManagement);
     statusSubTlv.SetType(LinkMetrics::SubTlv::kStatus);
@@ -2666,8 +2678,7 @@ Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, ui
     Message *message;
     Tlv      tlv;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandLinkProbe));
+    VerifyOrExit((message = NewMleMessage(kCommandLinkProbe)) != nullptr, error = kErrorNoBufs);
 
     tlv.SetType(Tlv::kLinkProbe);
     tlv.SetLength(sizeof(aSeriesId) + aLength);
@@ -4666,8 +4677,7 @@ Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, co
     Message *message;
     Tlv      tlv;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementRequest)) != nullptr, error = kErrorNoBufs);
 
     // Link Metrics Management TLV
     tlv.SetType(Tlv::kLinkMetricsManagement);

@@ -105,10 +105,8 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         mScanChannels.Intersect(aScanChannels);
     }
 
-    VerifyOrExit((message = Get<Mle>().NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(Message::kSubTypeMleDiscoverRequest);
+    VerifyOrExit((message = Get<Mle>().NewMleMessage(Mle::kCommandDiscoveryRequest)) != nullptr, error = kErrorNoBufs);
     message->SetPanId(aPanId);
-    SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Mle::kCommandDiscoveryRequest));
 
     // Prepare sub-TLV MeshCoP Discovery Request.
     discoveryRequest.Init();
