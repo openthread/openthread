@@ -231,7 +231,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 
 void otPlatSettingsWipe(otInstance *aInstance)
 {
-    otPlatSettingsInit(aInstance);
+    otPlatSettingsInit(aInstance, NULL, 0);
 }
 
 #endif // OPENTHREAD_SETTINGS_RAM
