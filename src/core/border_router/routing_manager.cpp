@@ -286,7 +286,7 @@ void RoutingManager::Stop(void)
 
     if (mIsAdvertisingLocalOnLinkPrefix)
     {
-        RemoveExternalRoute(mLocalOnLinkPrefix);
+        UnpublishExternalRoute(mLocalOnLinkPrefix);
 
         // Start deprecating the local on-link prefix to send a PIO
         // with zero preferred lifetime in `SendRouterAdvertisement`.
@@ -296,7 +296,7 @@ void RoutingManager::Stop(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     if (mIsAdvertisingLocalNat64Prefix)
     {
-        RemoveExternalRoute(mLocalNat64Prefix);
+        UnpublishExternalRoute(mLocalNat64Prefix);
         mIsAdvertisingLocalNat64Prefix = false;
     }
 #endif
@@ -542,7 +542,7 @@ bool RoutingManager::IsOmrPrefixAddedToLocalNetworkData(void) const
     return Get<NetworkData::Local>().ContainsOnMeshPrefix(mLocalOmrPrefix);
 }
 
-Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
+Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
 {
     Error                            error;
     NetworkData::ExternalRouteConfig routeConfig;
@@ -555,36 +555,31 @@ Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreferen
     routeConfig.mNat64      = aNat64;
     routeConfig.mPreference = aRoutePreference;
 
-    error = Get<NetworkData::Local>().AddHasRoutePrefix(routeConfig);
+    error = Get<NetworkData::Publisher>().PublishExternalRoute(routeConfig);
+
     if (error != kErrorNone)
     {
-        LogWarn("Failed to add external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
-    }
-    else
-    {
-        Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        LogInfo("Adding external route %s", aPrefix.ToString().AsCString());
+        LogWarn("Failed to publish external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
     }
 
     return error;
 }
 
-void RoutingManager::RemoveExternalRoute(const Ip6::Prefix &aPrefix)
+void RoutingManager::UnpublishExternalRoute(const Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(mIsRunning);
 
-    SuccessOrExit(error = Get<NetworkData::Local>().RemoveHasRoutePrefix(aPrefix));
+    error = Get<NetworkData::Publisher>().UnpublishPrefix(aPrefix);
 
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    LogInfo("Removing external route %s", aPrefix.ToString().AsCString());
-
-exit:
     if (error != kErrorNone)
     {
-        LogWarn("Failed to remove external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
+        LogWarn("Failed to unpublish route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
     }
+
+exit:
+    return;
 }
 
 const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
@@ -613,7 +608,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     if (smallestOnLinkPrefix == nullptr)
     {
         if (mIsAdvertisingLocalOnLinkPrefix ||
-            (AddExternalRoute(mLocalOnLinkPrefix, NetworkData::kRoutePreferenceMedium) == kErrorNone))
+            (PublishExternalRoute(mLocalOnLinkPrefix, NetworkData::kRoutePreferenceMedium) == kErrorNone))
         {
             newOnLinkPrefix = &mLocalOnLinkPrefix;
         }
@@ -650,7 +645,7 @@ void RoutingManager::HandleOnLinkPrefixDeprecateTimer(Timer &aTimer)
 void RoutingManager::HandleOnLinkPrefixDeprecateTimer(void)
 {
     LogInfo("Local on-link prefix %s expired", mLocalOnLinkPrefix.ToString().AsCString());
-    RemoveExternalRoute(mLocalOnLinkPrefix);
+    UnpublishExternalRoute(mLocalOnLinkPrefix);
 }
 
 void RoutingManager::DeprecateOnLinkPrefix(void)
@@ -694,7 +689,7 @@ void RoutingManager::EvaluateNat64Prefix(void)
 
         // Advertise local NAT64 prefix.
         if (!mIsAdvertisingLocalNat64Prefix &&
-            AddExternalRoute(mLocalNat64Prefix, NetworkData::kRoutePreferenceLow, /* aNat64= */ true) == kErrorNone)
+            PublishExternalRoute(mLocalNat64Prefix, NetworkData::kRoutePreferenceLow, /* aNat64= */ true) == kErrorNone)
         {
             mIsAdvertisingLocalNat64Prefix = true;
         }
@@ -706,7 +701,7 @@ void RoutingManager::EvaluateNat64Prefix(void)
         LogNote("Withdrawing local NAT64 prefix since a smaller one %s exists.",
                 smallestNat64Prefix.ToString().AsCString());
 
-        RemoveExternalRoute(mLocalNat64Prefix);
+        UnpublishExternalRoute(mLocalNat64Prefix);
         mIsAdvertisingLocalNat64Prefix = false;
     }
 }
@@ -1250,7 +1245,7 @@ bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOpt
 
         if (!mDiscoveredPrefixes.IsFull())
         {
-            SuccessOrExit(AddExternalRoute(prefix, NetworkData::kRoutePreferenceMedium));
+            SuccessOrExit(PublishExternalRoute(prefix, NetworkData::kRoutePreferenceMedium));
             existingPrefix  = mDiscoveredPrefixes.PushBack();
             *existingPrefix = onLinkPrefix;
             needReevaluate  = true;
@@ -1362,7 +1357,7 @@ void RoutingManager::UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption 
 
         if (!mDiscoveredPrefixes.IsFull())
         {
-            SuccessOrExit(AddExternalRoute(prefix, omrPrefix.mRoutePreference));
+            SuccessOrExit(PublishExternalRoute(prefix, omrPrefix.mRoutePreference));
             existingPrefix = mDiscoveredPrefixes.PushBack();
         }
         else
@@ -1400,7 +1395,7 @@ void RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
             (!prefix.mIsOnLinkPrefix &&
              (mAdvertisedOmrPrefixes.Contains(prefix.mPrefix) || NetworkDataContainsOmrPrefix(prefix.mPrefix))))
         {
-            RemoveExternalRoute(prefix.mPrefix);
+            UnpublishExternalRoute(prefix.mPrefix);
         }
         else
         {
