@@ -333,8 +333,8 @@ private:
     Error PublishLocalOmrPrefix(void);
     void  UnpublishLocalOmrPrefix(void);
     bool  IsOmrPrefixAddedToLocalNetworkData(void) const;
-    Error AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
-    void  RemoveExternalRoute(const Ip6::Prefix &aPrefix);
+    Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
+    void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);
     void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix);

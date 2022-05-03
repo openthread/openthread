@@ -43,6 +43,12 @@
             "or OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE"
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && (OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES < \
+                                                (OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES + 4))
+#error "OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES needs to support more entries when "\
+       "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is enabled to accommodate for max on-link prefixes"
+#endif
+
 #include <openthread/netdata_publisher.h>
 
 #include "common/clearable.hpp"
