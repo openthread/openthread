@@ -194,7 +194,7 @@ private:
     static constexpr uint8_t kMaxOmrPrefixNum = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
 
     // The maximum number of prefixes to discover on the infra link.
-    static constexpr uint8_t kMaxDiscoveredPrefixNum = 8;
+    static constexpr uint8_t kMaxDiscoveredPrefixNum = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
 
     static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
     static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; // The length of an On-link prefix. In bits.
