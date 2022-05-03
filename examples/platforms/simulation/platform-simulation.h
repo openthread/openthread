@@ -69,7 +69,7 @@ enum
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
     OT_SIM_EVENT_RADIO_COMM         = 6,
     OT_SIM_EVENT_RADIO_TX_DONE      = 7,
-    OT_SIM_EVENT_CHANNEL_BUSY       = 8,
+    OT_SIM_EVENT_CHANNEL_ACTIVITY   = 8,
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
@@ -175,10 +175,10 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq);
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  * @param[in]  channel    Channel number in use.
- * @param[in]  duration  Until what time CCA should read as channel busy.
+ * @param[in]  value      CCA result (0 for no activity, 255 busy).
  *
  */
-void platformSimulateCca(otInstance *aInstance, uint8_t channel, uint64_t duration);
+void platformChannelActivity(otInstance *aInstance, uint8_t channel, int8_t value);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
@@ -259,7 +259,7 @@ bool platformRadioIsTransmitPending(void);
  * @returns Whether radio TxDone signal is pending.
  *
  */
-bool platformRadioTxDonePending(void);
+bool platformRadioTaskPending(void);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 

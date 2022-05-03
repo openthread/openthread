@@ -90,11 +90,10 @@ void otSimSendEvent(const struct Event *aEvent)
     }
 }
 
-static void receiveEvent(otInstance *aInstance, bool checkOnlyTxDone)
+static void receiveEvent(otInstance *aInstance)
 {
     struct Event event;
     ssize_t      rval = recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
-    uint64_t     channelBusyDuration;
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
@@ -103,39 +102,32 @@ static void receiveEvent(otInstance *aInstance, bool checkOnlyTxDone)
     }
 
     platformAlarmAdvanceNow(event.mDelay);
-
-    if (checkOnlyTxDone && event.mEvent == OT_SIM_EVENT_RADIO_TX_DONE)
+    switch (event.mEvent)
     {
-        // Data[0] is the sequence number
+    case OT_SIM_EVENT_ALARM_FIRED:
+        break;
+
+    case OT_SIM_EVENT_RADIO_COMM:
+        platformRadioReceive(aInstance, event.mData, event.mDataLength);
+        break;
+
+    case OT_SIM_EVENT_UART_WRITE:
+        otPlatUartReceived(event.mData, event.mDataLength);
+        break;
+    
+    case OT_SIM_EVENT_RADIO_TX_DONE:
         platformRadioTxDone(aInstance, event.mData[0]);
-    }
-    else
-    {
-        switch (event.mEvent)
-        {
-        case OT_SIM_EVENT_ALARM_FIRED:
-            break;
-
-        case OT_SIM_EVENT_RADIO_COMM:
-            platformRadioReceive(aInstance, event.mData, event.mDataLength);
-            break;
-
-        case OT_SIM_EVENT_UART_WRITE:
-            otPlatUartReceived(event.mData, event.mDataLength);
-            break;
+        break;
         
-        case OT_SIM_EVENT_RADIO_TX_DONE:
-            platformRadioTxDone(aInstance, event.mData[0]);
-            break;
-            
-        case OT_SIM_EVENT_CHANNEL_BUSY:
-            memcpy(&channelBusyDuration, event.mData+1, sizeof(channelBusyDuration));
-            platformSimulateCca(aInstance, event.mData[0], channelBusyDuration);
-            break;
+    case OT_SIM_EVENT_CHANNEL_ACTIVITY:
+#if OPENTHREAD_SIMULATION_CCA
+        // Data[0] is the channel, Data[1] is the CCA value (0-255)
+        platformChannelActivity(aInstance, event.mData[0], (int8_t)event.mData[1]);
+#endif
+        break;
 
-        default:
-            assert(false);
-        }
+    default:
+        assert(false);
     }
 }
 
@@ -306,7 +298,7 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
 #endif
 
-    if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && (!platformRadioIsTransmitPending() || platformRadioTxDonePending()))
+    if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && (!platformRadioIsTransmitPending() || platformRadioTaskPending()))
     {
         platformSendSleepEvent();
 
@@ -320,7 +312,7 @@ void otSysProcessDrivers(otInstance *aInstance)
 
         if (rval > 0 && FD_ISSET(sSockFd, &read_fds))
         {
-            receiveEvent(aInstance, platformRadioIsTransmitPending());
+            receiveEvent(aInstance);
         }
     }
 
