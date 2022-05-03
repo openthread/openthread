@@ -287,22 +287,6 @@ void requestCcaToOtns(uint8_t channel)
     otSimSendEvent(&event);
 }
 
-void bsReport(const char *s)
-{
-    int          n;
-    struct Event event;
-
-    event.mDelay       = 0;
-    event.mEvent       = OT_SIM_EVENT_OTNS_STATUS_PUSH;
-
-    n = snprintf((char *)event.mData, sizeof(event.mData), "[%lu]<%i> bsReport=%s", otPlatTimeGet(), sCcaEdThresh, s);
-
-    assert(n > 0);
-
-    event.mDataLength = (uint16_t)n;
-    otSimSendEvent(&event);
-}
-
 void setRadioState(otRadioState aState)
 {
     if (!sRadioTransmitting && aState != OT_RADIO_STATE_TRANSMIT)
@@ -547,12 +531,6 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
         setRadioState(OT_RADIO_STATE_TRANSMIT); // Keep this call after sCurrentChannel is set.
     }
 
-    if (error != OT_ERROR_NONE) {
-        bsReport("error at plat TX");
-    } else {
-        bsReport("Plat req TX");
-    }
-
     return error;
 }
 
@@ -566,7 +544,7 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 }
 
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
-{bsReport("Plat get RSSI");
+{
     OT_UNUSED_VARIABLE(aInstance);
 
     assert(aInstance != NULL);
@@ -621,7 +599,7 @@ void platformTransmitReturn(otInstance *aInstance, otRadioFrame *frame, otRadioF
     }
     else
 #endif
-    {bsReport("Told plat Tx is done");
+    {
         otPlatRadioTxDone(aInstance, frame, ack, error);
     }
 }
@@ -636,14 +614,14 @@ static void radioReceive(otInstance *aInstance)
 
     // Unable to simulate SFD, so use the rx done timestamp instead.
     sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();
-bsReport("Processing received frame");
+
     if (sTxWait && otMacFrameIsAckRequested(&sTransmitFrame))
-    {bsReport("is TX waiting");
+    {
         isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
     }
 
     if (isTxDone)
-    {bsReport("Regular set to Rx");
+    {
         platformTransmitReturn(aInstance, &sTransmitFrame, (isAck ? &sReceiveFrame : NULL), OT_ERROR_NONE);
     }
     else if (!isAck || sPromiscuous)
@@ -782,8 +760,7 @@ void platformChannelActivity(otInstance *aInstance, uint8_t channel, int8_t valu
 void simulateCca(otInstance *aInstance, uint8_t channel)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    
-    bsReport("CCA Started *********************************************************");
+
     sCcaPending = true;
     requestCcaToOtns(channel);
     otPlatAlarmMicroStartAt(aInstance, otPlatAlarmMicroGetNow(), CCA_DURATION_US);
@@ -844,7 +821,6 @@ void setupTransmission(otInstance *aInstance)
 exit:
     if (error == OT_ERROR_ALREADY)
     {
-        bsReport("STill transmitting failed *********************************************************");
         // Radio is already transmiting, wait for it to end
         if (sTransmittingUntil > otPlatTimeGet())
         {
@@ -880,7 +856,7 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq)
     sTransmittingUntil = 0;
 
     if (sAckTxDonePending)
-    {bsReport("Got ack TxDone Signal");
+    {
         sAckTxDonePending = false;
         setRadioState(sState);
     }
@@ -889,11 +865,11 @@ void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq)
         // Radio sState keeps in OT_RADIO_STATE_RECEIVE even when sending an ack.
         // For energy accuracy, we make a report without changing the sState.
         if (otMacFrameIsAckRequested(&sTransmitFrame))
-        {bsReport("changed to Rx for ack reception");
+        {
             reportRadioStatusToOtns(OT_RADIO_STATE_RECEIVE);
         }
         else
-        {bsReport("Regular set to Rx");
+        {
             platformTransmitReturn(aInstance, &sTransmitFrame, NULL, OT_ERROR_NONE);
         }
     }
@@ -1045,7 +1021,7 @@ void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 }
 
 otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
-{bsReport("scanning");
+{
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aScanChannel);
     OT_UNUSED_VARIABLE(aScanDuration);
