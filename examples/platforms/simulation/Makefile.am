@@ -58,6 +58,7 @@ PLATFORM_SOURCES                          = \
     trel.c                                  \
     uart.c                                  \
     virtual_time/alarm-sim.c                \
+    virtual_time/radio-sim.c                \
     virtual_time/platform-sim.c             \
     $(NULL)
 
