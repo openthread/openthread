@@ -782,7 +782,11 @@ bool platformRadioIsTransmitPending(void)
 
 bool platformRadioTaskPending(void)
 {
+#if OPENTHREAD_SIMULATION_CCA
     return sAckTxDonePending || sCcaPending;
+#else
+    return sAckTxDonePending;
+#endif
 }
 
 void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq)
@@ -821,8 +825,12 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
     OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-    // Do not send if radio is transmitting an ack.
+    // Do not send if radio is transmitting an ack nor waiting for CCA.
+#if OPENTHREAD_SIMULATION_CCA
     if (platformRadioIsTransmitPending() && !sAckTxDonePending && !sCcaPending)
+#else
+    if (platformRadioIsTransmitPending() && !sAckTxDonePending)
+#endif
     {
         setupTransmission(aInstance);
     }
