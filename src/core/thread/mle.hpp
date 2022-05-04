@@ -327,10 +327,7 @@ public:
      * @returns A reference to the Mesh Local Prefix.
      *
      */
-    const MeshLocalPrefix &GetMeshLocalPrefix(void) const
-    {
-        return static_cast<const MeshLocalPrefix &>(mMeshLocal16.GetAddress().GetPrefix());
-    }
+    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocal16.GetAddress().GetPrefix(); }
 
     /**
      * This method sets the Mesh Local Prefix.
@@ -338,7 +335,7 @@ public:
      * @param[in]  aMeshLocalPrefix  A reference to the Mesh Local Prefix.
      *
      */
-    void SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix);
+    void SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
@@ -1755,7 +1752,7 @@ private:
         void     MarkAsNotInUse(void) { SetAloc16(kNotInUse); }
         uint16_t GetAloc16(void) const { return GetAddress().GetIid().GetLocator(); }
         void     SetAloc16(uint16_t aAloc16) { GetAddress().GetIid().SetLocator(aAloc16); }
-        void     ApplyMeshLocalPrefix(const MeshLocalPrefix &aPrefix) { GetAddress().SetPrefix(aPrefix); }
+        void     ApplyMeshLocalPrefix(const Ip6::NetworkPrefix &aPrefix) { GetAddress().SetPrefix(aPrefix); }
     };
 #endif
 
@@ -1901,6 +1898,8 @@ private:
 #endif
 
     otMleCounters mCounters;
+
+    static const otMeshLocalPrefix sMeshLocalPrefixInit;
 
     Ip6::Netif::UnicastAddress   mLinkLocal64;
     Ip6::Netif::UnicastAddress   mMeshLocal64;

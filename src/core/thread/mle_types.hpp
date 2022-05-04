@@ -416,24 +416,6 @@ private:
 };
 
 /**
- * This class represents a Mesh Local Prefix.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class MeshLocalPrefix : public Ip6::NetworkPrefix
-{
-public:
-    /**
-     * This method derives and sets the Mesh Local Prefix from an Extended PAN ID.
-     *
-     * @param[in] aExtendedPanId   An Extended PAN ID.
-     *
-     */
-    void SetFromExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId);
-
-} OT_TOOL_PACKED_END;
-
-/**
  * This class represents the Thread Leader Data.
  *
  */
@@ -578,7 +560,6 @@ typedef Mac::Key Key;
 
 } // namespace Mle
 
-DefineCoreType(otMeshLocalPrefix, Mle::MeshLocalPrefix);
 DefineCoreType(otLeaderData, Mle::LeaderData);
 DefineMapEnum(otDeviceRole, Mle::DeviceRole);
 

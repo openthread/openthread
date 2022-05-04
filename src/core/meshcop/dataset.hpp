@@ -370,7 +370,10 @@ public:
          * @returns The Mesh Local Prefix in the Dataset.
          *
          */
-        const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const { return AsCoreType(&mMeshLocalPrefix); }
+        const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const
+        {
+            return static_cast<const Ip6::NetworkPrefix &>(mMeshLocalPrefix);
+        }
 
         /**
          * This method sets the Mesh Local Prefix in the Dataset.
@@ -378,7 +381,7 @@ public:
          * @param[in] aMeshLocalPrefix   A Mesh Local Prefix.
          *
          */
-        void SetMeshLocalPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix)
+        void SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix)
         {
             mMeshLocalPrefix                      = aMeshLocalPrefix;
             mComponents.mIsMeshLocalPrefixPresent = true;
