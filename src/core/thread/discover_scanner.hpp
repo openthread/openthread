@@ -113,7 +113,7 @@ public:
      * @param[in]  aFilterIndexes     A pointer to `FilterIndexes` to use for filtering (when enabled).
      *                                If set to `nullptr`, filter indexes are derived from hash of factory-assigned
      *                                EUI64.
-     * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
+     * @param[in]  aCallback          A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *
      * @retval kErrorNone           Successfully started a Thread Discovery Scan.
@@ -167,7 +167,7 @@ private:
     void          Stop(void) { HandleDiscoverComplete(); }
 
     // Methods used from `Mle`
-    void HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const;
 
     void        HandleDiscoverComplete(void);
     static void HandleTimer(Timer &aTimer);

@@ -73,12 +73,12 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     mChannel         = preferredChannels.ChooseRandomChannel();
     mChannelMask     = supportedChannels.GetMask();
     mPanId           = Mac::GenerateRandomPanId();
-    static_cast<SecurityPolicy &>(mSecurityPolicy).SetToDefault();
+    AsCoreType(&mSecurityPolicy).SetToDefault();
 
-    SuccessOrExit(error = static_cast<NetworkKey &>(mNetworkKey).GenerateRandom());
-    SuccessOrExit(error = static_cast<Pskc &>(mPskc).GenerateRandom());
+    SuccessOrExit(error = AsCoreType(&mNetworkKey).GenerateRandom());
+    SuccessOrExit(error = AsCoreType(&mPskc).GenerateRandom());
     SuccessOrExit(error = Random::Crypto::FillBuffer(mExtendedPanId.m8, sizeof(mExtendedPanId.m8)));
-    SuccessOrExit(error = static_cast<Ip6::NetworkPrefix &>(mMeshLocalPrefix).GenerateRandomUla());
+    SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
     snprintf(mNetworkName.m8, sizeof(mNetworkName), "OpenThread-%04x", mPanId);
 
@@ -340,7 +340,7 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
     if (aDatasetInfo.IsNetworkNamePresent())
     {
-        Mac::NameData nameData = aDatasetInfo.GetNetworkName().GetAsData();
+        NameData nameData = aDatasetInfo.GetNetworkName().GetAsData();
 
         IgnoreError(SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }
@@ -435,12 +435,14 @@ Error Dataset::SetTlv(const Tlv &aTlv)
     return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength());
 }
 
-Error Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
-    Error error = kErrorInvalidArgs;
+    Error error = kErrorParse;
 
     SuccessOrExit(aMessage.Read(aOffset, mTlvs, aLength));
     mLength = aLength;
+
+    VerifyOrExit(IsValid(), error = kErrorParse);
 
     mUpdateTime = TimerMilli::GetNow();
     error       = kErrorNone;
@@ -553,11 +555,11 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
             break;
 
         case Tlv::kExtendedPanId:
-            mac.SetExtendedPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
+            aInstance.Get<ExtendedPanIdManager>().SetExtPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
             break;
 
         case Tlv::kNetworkName:
-            IgnoreError(mac.SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
+            IgnoreError(aInstance.Get<NetworkNameManager>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
             break;
 
         case Tlv::kNetworkKey:

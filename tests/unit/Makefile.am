@@ -128,6 +128,7 @@ check_PROGRAMS                                                     += \
     ot-test-heap-string                                               \
     ot-test-hkdf-sha256                                               \
     ot-test-hmac-sha256                                               \
+    ot-test-ip6-header                                                \
     ot-test-ip-address                                                \
     ot-test-link-quality                                              \
     ot-test-linked-list                                               \
@@ -141,6 +142,7 @@ check_PROGRAMS                                                     += \
     ot-test-ndproxy-table                                             \
     ot-test-netif                                                     \
     ot-test-network-data                                              \
+    ot-test-network-name                                              \
     ot-test-pool                                                      \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
@@ -260,6 +262,10 @@ ot_test_hmac_sha256_LDADD           = $(COMMON_LDADD)
 ot_test_hmac_sha256_LIBTOOLFLAGS    = $(COMMON_LIBTOOLFLAGS)
 ot_test_hmac_sha256_SOURCES         = $(COMMON_SOURCES) test_hmac_sha256.cpp
 
+ot_test_ip6_header_LDADD            = $(COMMON_LDADD)
+ot_test_ip6_header_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
+ot_test_ip6_header_SOURCES          = $(COMMON_SOURCES) test_ip6_header.cpp
+
 ot_test_ip_address_LDADD            = $(COMMON_LDADD)
 ot_test_ip_address_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
 ot_test_ip_address_SOURCES          = $(COMMON_SOURCES) test_ip_address.cpp
@@ -295,6 +301,10 @@ ot_test_message_queue_SOURCES       = $(COMMON_SOURCES) test_message_queue.cpp
 ot_test_multicast_listeners_table_LDADD = $(COMMON_LDADD)
 ot_test_multicast_listeners_table_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)
 ot_test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listeners_table.cpp
+
+ot_test_network_name_LDADD          = $(COMMON_LDADD)
+ot_test_network_name_LIBTOOLFLAGS   = $(COMMON_LIBTOOLFLAGS)
+ot_test_network_name_SOURCES        = $(COMMON_SOURCES) test_network_name.cpp
 
 ot_test_spinel_buffer_LDADD         = $(COMMON_LDADD)
 ot_test_spinel_buffer_LIBTOOLFLAGS  = $(COMMON_LIBTOOLFLAGS)

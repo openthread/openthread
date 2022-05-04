@@ -72,7 +72,7 @@ public:
     /**
      * This constructor initializes the DTLS object.
      *
-     * @param[in]  aNetif               A reference to the Thread network interface.
+     * @param[in]  aInstance            A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
      *
      */

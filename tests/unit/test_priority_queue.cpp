@@ -42,15 +42,17 @@
 // This function verifies the content of the priority queue to match the passed in messages
 void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpectedLength, ...)
 {
-    va_list      args;
-    ot::Message *message;
-    ot::Message *msgArg;
-    int8_t       curPriority = ot::Message::kNumPriorities;
-    uint16_t     msgCount, bufCount;
+    const ot::PriorityQueue &constQueue = aPriorityQueue;
+    va_list                  args;
+    ot::Message *            message;
+    ot::Message *            msgArg;
+    int8_t                   curPriority = ot::Message::kNumPriorities;
+    ot::PriorityQueue::Info  info;
 
     // Check the `GetInfo`
-    aPriorityQueue.GetInfo(msgCount, bufCount);
-    VerifyOrQuit(msgCount == aExpectedLength, "GetInfo() result does not match expected len.");
+    memset(&info, 0, sizeof(info));
+    aPriorityQueue.GetInfo(info);
+    VerifyOrQuit(info.mNumMessages == aExpectedLength, "GetInfo() result does not match expected len.");
 
     va_start(args, aExpectedLength);
 
@@ -106,6 +108,30 @@ void VerifyPriorityQueueContent(ot::PriorityQueue &aPriorityQueue, int aExpected
     }
 
     va_end(args);
+
+    // Check range-based `for` loop iteration using non-const iterator
+
+    message = aPriorityQueue.GetHead();
+
+    for (ot::Message &msg : aPriorityQueue)
+    {
+        VerifyOrQuit(message == &msg, "`for` loop iteration does not match expected");
+        message = message->GetNext();
+    }
+
+    VerifyOrQuit(message == nullptr, "`for` loop iteration resulted in fewer entries than expected");
+
+    // Check  range-base `for` iteration using const iterator
+
+    message = aPriorityQueue.GetHead();
+
+    for (const ot::Message &constMsg : constQueue)
+    {
+        VerifyOrQuit(message == &constMsg, "`for` loop iteration does not match expected");
+        message = message->GetNext();
+    }
+
+    VerifyOrQuit(message == nullptr, "`for` loop iteration resulted in fewer entries than expected");
 }
 
 // This function verifies the content of the message queue to match the passed in messages
@@ -289,6 +315,56 @@ void TestPriorityQueue(void)
     queue.Dequeue(*msgLow[0]);
     VerifyPriorityQueueContent(queue, 1, msgNor[0]);
     VerifyMsgQueueContent(messageQueue, 1, msgNor[1]);
+
+    queue.Dequeue(*msgNor[0]);
+    VerifyPriorityQueueContent(queue, 0);
+    messageQueue.Dequeue(*msgNor[1]);
+    VerifyMsgQueueContent(messageQueue, 0);
+
+    for (ot::Message *message : msgNor)
+    {
+        SuccessOrQuit(message->SetPriority(ot::Message::kPriorityNormal));
+    }
+
+    // Range-based `for` and dequeue during iteration
+
+    for (uint16_t removeIndex = 0; removeIndex < 4; removeIndex++)
+    {
+        uint16_t index = 0;
+
+        queue.Enqueue(*msgNor[0]);
+        queue.Enqueue(*msgNor[1]);
+        queue.Enqueue(*msgNor[2]);
+        queue.Enqueue(*msgNor[3]);
+        VerifyPriorityQueueContent(queue, 4, msgNor[0], msgNor[1], msgNor[2], msgNor[3]);
+
+        // While iterating over the queue remove the entry at `removeIndex`
+        for (ot::Message &message : queue)
+        {
+            if (index == removeIndex)
+            {
+                queue.Dequeue(message);
+            }
+
+            VerifyOrQuit(&message == msgNor[index++]);
+        }
+
+        index = 0;
+
+        // Iterate over the queue and remove all
+        for (ot::Message &message : queue)
+        {
+            if (index == removeIndex)
+            {
+                index++;
+            }
+
+            VerifyOrQuit(&message == msgNor[index++]);
+            queue.Dequeue(message);
+        }
+
+        VerifyPriorityQueueContent(queue, 0);
+    }
 
     testFreeInstance(instance);
 }

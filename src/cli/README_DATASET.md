@@ -44,7 +44,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
    PSKc: c23a76e98f1a6483639b1ac1271e2e27
-   Security Policy: 0, onrcb
+   Security Policy: 0, onrc
    Done
    ```
 
@@ -103,7 +103,7 @@ After the device successfully attaches to a Thread network, the device will retr
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
    PSKc: c23a76e98f1a6483639b1ac1271e2e27
-   Security Policy: 0, onrcb
+   Security Policy: 0, onrc
    Done
    ```
 
@@ -180,7 +180,7 @@ Network Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
 PSKc: c23a76e98f1a6483639b1ac1271e2e27
-Security Policy: 0, onrcb
+Security Policy: 0, onrc
 Done
 ```
 
@@ -359,7 +359,7 @@ Usage: `dataset mgmtsetcommand <active|pending> [TLV Type list] [-x]`
 Send MGMT_ACTIVE_SET or MGMT_PENDING_SET.
 
 ```bash
-> dataset mgmtsetcommand active activetimestamp 123 securitypolicy 1 onrcb
+> dataset mgmtsetcommand active activetimestamp 123 securitypolicy 1 onrc
 Done
 ```
 
@@ -441,7 +441,7 @@ Network Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
 PSKc: c23a76e98f1a6483639b1ac1271e2e27
-Security Policy: 0, onrcb
+Security Policy: 0, onrc
 Done
 ```
 
@@ -497,13 +497,13 @@ Done
 
 ### securitypolicy
 
-Usage: `dataset securitypolicy [<rotationtime> [onrcbCepR]]`
+Usage: `dataset securitypolicy [<rotationtime> [onrcCepR]]`
 
 Get security policy.
 
 ```bash
 > dataset securitypolicy
-672 onrcb
+672 onrc
 Done
 ```
 
@@ -513,14 +513,13 @@ Set security policy.
 - n: Native Commissioning using PSKc is allowed.
 - r: Thread 1.x Routers are enabled.
 - c: External Commissioner authentication is allowed using PSKc.
-- b: Thread 1.x Beacons are enabled.
 - C: Thread 1.2 Commercial Commissioning is enabled.
 - e: Thread 1.2 Autonomous Enrollment is enabled.
 - p: Thread 1.2 Network Key Provisioning is enabled.
 - R: Non-CCM routers are allowed in Thread 1.2 CCM networks.
 
 ```bash
-> dataset securitypolicy 672 onrcb
+> dataset securitypolicy 672 onrc
 Done
 ```
 

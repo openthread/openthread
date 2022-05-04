@@ -94,7 +94,10 @@ public:
          * @returns The Extended PAN Identifier of the TREL peer.
          *
          */
-        const Mac::ExtendedPanId &GetExtPanId(void) const { return static_cast<const Mac::ExtendedPanId &>(mExtPanId); }
+        const MeshCoP::ExtendedPanId &GetExtPanId(void) const
+        {
+            return static_cast<const MeshCoP::ExtendedPanId &>(mExtPanId);
+        }
 
         /**
          * This method returns the IPv6 socket address of the discovered TREL peer.
@@ -137,7 +140,7 @@ public:
         };
 
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
-        void SetExtPanId(const Mac::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
+        void SetExtPanId(const MeshCoP::ExtendedPanId &aExtPanId) { mExtPanId = aExtPanId; }
         void SetSockAddr(const Ip6::SockAddr &aSockAddr) { mSockAddr = aSockAddr; }
         void Log(const char *aAction) const;
     };
@@ -241,9 +244,9 @@ private:
 
     static void HandleRegisterServiceTask(Tasklet &aTasklet);
     void        RegisterService(void);
-    Error       ParsePeerInfoTxtData(const Peer::Info &  aInfo,
-                                     Mac::ExtAddress &   aExtAddress,
-                                     Mac::ExtendedPanId &aExtPanId) const;
+    Error       ParsePeerInfoTxtData(const Peer::Info &      aInfo,
+                                     Mac::ExtAddress &       aExtAddress,
+                                     MeshCoP::ExtendedPanId &aExtPanId) const;
     Peer *      GetNewPeerEntry(void);
     void        RemovePeerEntry(Peer &aEntry);
 

@@ -162,6 +162,19 @@ typedef enum otLogRegion
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
 
 /**
+ * This function handles OpenThread log level changes.
+ *
+ * This platform function is called whenever the OpenThread log level changes.
+ * This platform function is optional since an empty weak implementation has been provided.
+ *
+ * @note Only applicable when `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1`.
+ *
+ * @param[in]  aLogLevel  The new OpenThread log level.
+ *
+ */
+void otPlatLogHandleLevelChanged(otLogLevel aLogLevel);
+
+/**
  * @}
  *
  */

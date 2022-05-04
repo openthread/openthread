@@ -158,7 +158,7 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
 /**
  * This function converts all uppercase letter characters in a given string to lowercase.
  *
- * @param[inout] aString   A pointer to the string to convert.
+ * @param[in,out] aString   A pointer to the string to convert.
  *
  */
 void StringConvertToLowercase(char *aString);
@@ -166,7 +166,7 @@ void StringConvertToLowercase(char *aString);
 /**
  * This function converts all lowercase letter characters in a given string to uppercase.
  *
- * @param[inout] aString   A pointer to the string to convert.
+ * @param[in,out] aString   A pointer to the string to convert.
  *
  */
 void StringConvertToUppercase(char *aString);

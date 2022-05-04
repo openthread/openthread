@@ -389,9 +389,9 @@ typedef otError (*otCoapBlockwiseReceiveHook)(void *         aContext,
  * is enabled.
  *
  * @param[in]       aContext     A pointer to application-specific context.
- * @param[inout]    aBlock       A pointer to where the block segment can be written to.
+ * @param[in,out]   aBlock       A pointer to where the block segment can be written to.
  * @param[in]       aPosition    The position in a sequence from which to obtain the block segment.
- * @param[inout]    aBlockLength On entry, the maximum block segment length in bytes.
+ * @param[in,out]   aBlockLength On entry, the maximum block segment length in bytes.
  * @param[out]      aMore        A pointer to the flag if more block segments will follow.
  *
  * @warning By changing the value of aBlockLength, the block size of the whole exchange is
@@ -485,9 +485,9 @@ typedef struct otCoapTxParameters
 /**
  * This function initializes the CoAP header.
  *
- * @param[inout] aMessage   A pointer to the CoAP message to initialize.
- * @param[in]    aType      CoAP message type.
- * @param[in]    aCode      CoAP message code.
+ * @param[in,out] aMessage   A pointer to the CoAP message to initialize.
+ * @param[in]     aType      CoAP message type.
+ * @param[in]     aCode      CoAP message code.
  *
  */
 void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
@@ -497,10 +497,10 @@ void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode);
  *
  * @note Both message ID and token are set according to @p aRequest.
  *
- * @param[inout] aResponse  A pointer to the CoAP response message.
- * @param[in]    aRequest   A pointer to the CoAP request message.
- * @param[in]    aType      CoAP message type.
- * @param[in]    aCode      CoAP message code.
+ * @param[in,out]  aResponse  A pointer to the CoAP response message.
+ * @param[in]      aRequest   A pointer to the CoAP request message.
+ * @param[in]      aType      CoAP message type.
+ * @param[in]      aCode      CoAP message code.
  *
  * @retval OT_ERROR_NONE     Successfully initialized the response message.
  * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to initialize the response message.
@@ -511,9 +511,9 @@ otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aReques
 /**
  * This function sets the Token value and length in a header.
  *
- * @param[inout]  aMessage          A pointer to the CoAP message.
- * @param[in]     aToken            A pointer to the Token value.
- * @param[in]     aTokenLength      The Length of @p aToken.
+ * @param[in,out]  aMessage          A pointer to the CoAP message.
+ * @param[in]      aToken            A pointer to the Token value.
+ * @param[in]      aTokenLength      The Length of @p aToken.
  *
  * @retval OT_ERROR_NONE     Successfully set the Token value.
  * @retval OT_ERROR_NO_BUFS  Insufficient buffers to set the Token value.
@@ -524,8 +524,8 @@ otError otCoapMessageSetToken(otMessage *aMessage, const uint8_t *aToken, uint8_
 /**
  * This function sets the Token length and randomizes its value.
  *
- * @param[inout]  aMessage      A pointer to the CoAP message.
- * @param[in]     aTokenLength  The Length of a Token to set.
+ * @param[in,out]  aMessage      A pointer to the CoAP message.
+ * @param[in]      aTokenLength  The Length of a Token to set.
  *
  */
 void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength);
@@ -540,8 +540,8 @@ void otCoapMessageGenerateToken(otMessage *aMessage, uint8_t aTokenLength);
  * and if the desired format type code isn't listed in otCoapOptionContentFormat,
  * this base function should be used instead.
  *
- * @param[inout]  aMessage          A pointer to the CoAP message.
- * @param[in]     aContentFormat    One of the content formats listed in
+ * @param[in,out]  aMessage          A pointer to the CoAP message.
+ * @param[in]      aContentFormat    One of the content formats listed in
  *                                  otCoapOptionContentFormat above.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
@@ -554,10 +554,10 @@ otError otCoapMessageAppendContentFormatOption(otMessage *aMessage, otCoapOption
 /**
  * This function appends a CoAP option in a header.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aNumber   The CoAP Option number.
- * @param[in]     aLength   The CoAP Option length.
- * @param[in]     aValue    A pointer to the CoAP value.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aNumber   The CoAP Option number.
+ * @param[in]      aLength   The CoAP Option length.
+ * @param[in]      aValue    A pointer to the CoAP value.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -570,9 +570,9 @@ otError otCoapMessageAppendOption(otMessage *aMessage, uint16_t aNumber, uint16_
  * This function appends an unsigned integer CoAP option as specified in
  * https://tools.ietf.org/html/rfc7252#section-3.2
  *
- * @param[inout]  aMessage A pointer to the CoAP message.
- * @param[in]     aNumber  The CoAP Option number.
- * @param[in]     aValue   The CoAP Option unsigned integer value.
+ * @param[in,out]  aMessage A pointer to the CoAP message.
+ * @param[in]      aNumber  The CoAP Option number.
+ * @param[in]      aValue   The CoAP Option unsigned integer value.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -585,8 +585,8 @@ otError otCoapMessageAppendUintOption(otMessage *aMessage, uint16_t aNumber, uin
 /**
  * This function appends an Observe option.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aObserve  Observe field value.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aObserve  Observe field value.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -598,8 +598,8 @@ otError otCoapMessageAppendObserveOption(otMessage *aMessage, uint32_t aObserve)
 /**
  * This function appends a Uri-Path option.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aUriPath  A pointer to a NULL-terminated string.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aUriPath  A pointer to a NULL-terminated string.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -621,10 +621,10 @@ uint16_t otCoapBlockSizeFromExponent(otCoapBlockSzx aSize);
 /**
  * This function appends a Block2 option
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aNum      Current block number.
- * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
- * @param[in]     aSize     Block Size Exponent.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aNum      Current block number.
+ * @param[in]      aMore     Boolean to indicate more blocks are to be sent.
+ * @param[in]      aSize     Block Size Exponent.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -636,10 +636,10 @@ otError otCoapMessageAppendBlock2Option(otMessage *aMessage, uint32_t aNum, bool
 /**
  * This function appends a Block1 option
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aNum      Current block number.
- * @param[in]     aMore     Boolean to indicate more blocks are to be sent.
- * @param[in]     aSize     Block Size Exponent.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aNum      Current block number.
+ * @param[in]      aMore     Boolean to indicate more blocks are to be sent.
+ * @param[in]      aSize     Block Size Exponent.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -651,8 +651,8 @@ otError otCoapMessageAppendBlock1Option(otMessage *aMessage, uint32_t aNum, bool
 /**
  * This function appends a Proxy-Uri option.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aUriPath  A pointer to a NULL-terminated string.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aUriPath  A pointer to a NULL-terminated string.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -664,8 +664,8 @@ otError otCoapMessageAppendProxyUriOption(otMessage *aMessage, const char *aUriP
 /**
  * This function appends a Max-Age option.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aMaxAge   The Max-Age value.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aMaxAge   The Max-Age value.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -677,8 +677,8 @@ otError otCoapMessageAppendMaxAgeOption(otMessage *aMessage, uint32_t aMaxAge);
 /**
  * This function appends a single Uri-Query option.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
- * @param[in]     aUriQuery A pointer to NULL-terminated string, which should contain a single key=value pair.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
+ * @param[in]      aUriQuery A pointer to NULL-terminated string, which should contain a single key=value pair.
  *
  * @retval OT_ERROR_NONE          Successfully appended the option.
  * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
@@ -689,7 +689,7 @@ otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQ
 /**
  * This function adds Payload Marker indicating beginning of the payload to the CoAP header.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message.
+ * @param[in,out]  aMessage  A pointer to the CoAP message.
  *
  * @retval OT_ERROR_NONE     Payload Marker successfully added.
  * @retval OT_ERROR_NO_BUFS  Header Payload Marker exceeds the buffer size.
@@ -720,8 +720,8 @@ otCoapCode otCoapMessageGetCode(const otMessage *aMessage);
 /**
  * This function sets the Code value.
  *
- * @param[inout]  aMessage  A pointer to the CoAP message to initialize.
- * @param[in]     aCode     CoAP message code.
+ * @param[in,out]  aMessage  A pointer to the CoAP message to initialize.
+ * @param[in]      aCode     CoAP message code.
  *
  */
 void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode);
@@ -769,8 +769,8 @@ const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
 /**
  * This function initialises an iterator for the options in the given message.
  *
- * @param[inout]  aIterator A pointer to the CoAP message option iterator.
- * @param[in]     aMessage  A pointer to the CoAP message.
+ * @param[in,out]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in]      aMessage  A pointer to the CoAP message.
  *
  * @retval  OT_ERROR_NONE   Successfully initialised.
  * @retval  OT_ERROR_PARSE  Message state is inconsistent.
@@ -792,7 +792,7 @@ const otCoapOption *otCoapOptionIteratorGetFirstOptionMatching(otCoapOptionItera
 /**
  * This function returns a pointer to the first option.
  *
- * @param[inout]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in,out]  aIterator A pointer to the CoAP message option iterator.
  *
  * @returns A pointer to the first option. If no option is present NULL pointer is returned.
  *
@@ -813,7 +813,7 @@ const otCoapOption *otCoapOptionIteratorGetNextOptionMatching(otCoapOptionIterat
 /**
  * This function returns a pointer to the next option.
  *
- * @param[inout]  aIterator A pointer to the CoAP message option iterator.
+ * @param[in,out]  aIterator A pointer to the CoAP message option iterator.
  *
  * @returns A pointer to the next option. If no more options are present NULL pointer is returned.
  *
@@ -824,7 +824,7 @@ const otCoapOption *otCoapOptionIteratorGetNextOption(otCoapOptionIterator *aIte
  * This function fills current option value into @p aValue assuming the current value is an unsigned integer encoded
  * according to https://tools.ietf.org/html/rfc7252#section-3.2
  *
- * @param[inout]    aIterator   A pointer to the CoAP message option iterator.
+ * @param[in,out]   aIterator   A pointer to the CoAP message option iterator.
  * @param[out]      aValue      A pointer to an unsigned integer to receive the option value.
  *
  * @retval  OT_ERROR_NONE       Successfully filled value.
@@ -838,8 +838,8 @@ otError otCoapOptionIteratorGetOptionUintValue(otCoapOptionIterator *aIterator, 
 /**
  * This function fills current option value into @p aValue.
  *
- * @param[inout]  aIterator A pointer to the CoAP message option iterator.
- * @param[out]    aValue    A pointer to a buffer to receive the option value.
+ * @param[in,out]  aIterator A pointer to the CoAP message option iterator.
+ * @param[out]     aValue    A pointer to a buffer to receive the option value.
  *
  * @retval  OT_ERROR_NONE       Successfully filled value.
  * @retval  OT_ERROR_NOT_FOUND  No current option.

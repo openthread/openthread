@@ -49,6 +49,7 @@
 #include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/extended_panid.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/network_data_types.hpp"
 
@@ -192,19 +193,6 @@ enum DeviceRole : uint8_t
     kRoleChild    = OT_DEVICE_ROLE_CHILD,    ///< The Thread Child role.
     kRoleRouter   = OT_DEVICE_ROLE_ROUTER,   ///< The Thread Router role.
     kRoleLeader   = OT_DEVICE_ROLE_LEADER,   ///< The Thread Leader role.
-};
-
-/**
- * MLE Attach modes
- *
- */
-enum AttachMode : uint8_t
-{
-    kAttachAny           = 0, ///< Attach to any Thread partition.
-    kAttachSame1         = 1, ///< Attach to the same Thread partition (attempt 1 when losing connectivity).
-    kAttachSame2         = 2, ///< Attach to the same Thread partition (attempt 2 when losing connectivity).
-    kAttachBetter        = 3, ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
-    kAttachSameDowngrade = 4, ///< Attach to the same Thread partition during downgrade process.
 };
 
 constexpr uint16_t kAloc16Leader                      = 0xfc00;
@@ -441,7 +429,7 @@ public:
      * @param[in] aExtendedPanId   An Extended PAN ID.
      *
      */
-    void SetFromExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId);
+    void SetFromExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId);
 
 } OT_TOOL_PACKED_END;
 

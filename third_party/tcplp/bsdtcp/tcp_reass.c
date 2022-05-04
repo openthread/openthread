@@ -51,7 +51,7 @@
  * not need to update it if only part of the segment is trimmed off.
  */
 int
-tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_t data_offset, struct signals* sig)
+tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_t data_offset, struct tcplp_signals* sig)
 {
 	size_t mergeable, written;
 	size_t offset;
@@ -103,8 +103,8 @@ present:
 		KASSERT(merged == mergeable, ("Reassembly merge out of bounds: tried to merge %d, but merged %d", (int) mergeable, (int) merged));
 		if (tpiscantrcv(tp)) {
 			cbuf_pop(&tp->recvbuf, merged); // So no data really enters the buffer
-		} else if (usedbefore == 0 && merged > 0) {
-			sig->recvbuf_notempty = true;
+		} else if (merged > 0) {
+			sig->recvbuf_added = true;
 		}
 	} else {
 		/* If there is data in the buffer AND we can't receive more, then that must be because we received a FIN,

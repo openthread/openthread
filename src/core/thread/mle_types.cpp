@@ -63,7 +63,7 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
     return string;
 }
 
-void MeshLocalPrefix::SetFromExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId)
+void MeshLocalPrefix::SetFromExtendedPanId(const MeshCoP::ExtendedPanId &aExtendedPanId)
 {
     m8[0] = 0xfd;
     memcpy(&m8[1], aExtendedPanId.m8, 5);

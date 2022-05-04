@@ -687,7 +687,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
     SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, aTimeSinceLastTransaction));
 
     {
-        const Mac::NameData nameData = Get<Mac::Mac>().GetNetworkName().GetAsData();
+        const MeshCoP::NameData nameData = Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData();
 
         SuccessOrExit(error = Tlv::Append<ThreadNetworkNameTlv>(*message, nameData.GetBuffer(), nameData.GetLength()));
     }

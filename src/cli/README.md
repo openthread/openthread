@@ -107,6 +107,7 @@ Done
 - [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 - [state](#state)
 - [srp](README_SRP.md)
+- [tcp](README_TCP.md)
 - [thread](#thread-start)
 - [trel](#trel)
 - [tvcheck](#tvcheck-enable)
@@ -324,17 +325,6 @@ Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
 Done
 ```
 
-### bbr skipseqnuminc
-
-Skip increase of Sequence Number when updating the local BBR Dataset from the Network Data.
-
-Only for testing/reference device.
-
-```bash
-> bbr skipseqnuminc
-Done
-```
-
 ### ba
 
 Show current Border Agent information.
@@ -409,19 +399,25 @@ Done
 
 Show the current message buffer information.
 
+- The `total` shows total number of message buffers in pool.
+- The `free` shows the number of free message buffers.
+- This is then followed by info about different queues used by OpenThread stack, each line representing info about a queue.
+  - The first number shows number messages in the queue.
+  - The second number shows number of buffers used by all messages in the queue.
+  - The third number shows total number of bytes of all messages in the queue.
+
 ```bash
 > bufferinfo
 total: 40
 free: 40
-6lo send: 0 0
-6lo reas: 0 0
-ip6: 0 0
-mpl: 0 0
-mle: 0 0
-arp: 0 0
-coap: 0 0
-coap secure: 0 0
-application coap: 0 0
+6lo send: 0 0 0
+6lo reas: 0 0 0
+ip6: 0 0 0
+mpl: 0 0 0
+mle: 0 0 0
+coap: 0 0 0
+coap secure: 0 0 0
+application coap: 0 0 0
 Done
 ```
 
@@ -2491,9 +2487,9 @@ Perform an IEEE 802.15.4 Active Scan.
 
 ```bash
 > scan
-| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
-+---+------------------+------------------+------+------------------+----+-----+-----+
-| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+| PAN  | MAC Address      | Ch | dBm | LQI |
++------+------------------+----+-----+-----+
+| ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
 Done
 ```
 

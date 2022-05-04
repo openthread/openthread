@@ -88,6 +88,47 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
     const otExtAddress *addrPtr = nullptr;
     otJoinerDiscerner   discerner;
 
+    if (aArgs[0] == "table")
+    {
+        uint16_t     iter = 0;
+        otJoinerInfo joinerInfo;
+
+        static const char *const kJoinerTableTitles[] = {"ID", "PSKd", "Expiration"};
+
+        static const uint8_t kJoinerTableColumnWidths[] = {
+            23,
+            34,
+            12,
+        };
+
+        OutputTableHeader(kJoinerTableTitles, kJoinerTableColumnWidths);
+
+        while (otCommissionerGetNextJoinerInfo(GetInstancePtr(), &iter, &joinerInfo) == OT_ERROR_NONE)
+        {
+            switch (joinerInfo.mType)
+            {
+            case OT_JOINER_INFO_TYPE_ANY:
+                OutputFormat("| %21s", "*");
+                break;
+
+            case OT_JOINER_INFO_TYPE_EUI64:
+                OutputFormat("|      ");
+                OutputExtAddress(joinerInfo.mSharedId.mEui64);
+                break;
+
+            case OT_JOINER_INFO_TYPE_DISCERNER:
+                OutputFormat("| 0x%016llx/%2u", static_cast<unsigned long long>(joinerInfo.mSharedId.mDiscerner.mValue),
+                             joinerInfo.mSharedId.mDiscerner.mLength);
+                break;
+            }
+
+            OutputFormat(" | %32s | %10d |", joinerInfo.mPskd.m8, joinerInfo.mExpirationTime);
+            OutputLine("");
+        }
+
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
     VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     memset(&discerner, 0, sizeof(discerner));

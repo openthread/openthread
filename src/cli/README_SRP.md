@@ -25,7 +25,7 @@ Network Key: 7fcbae4153cc2955c28440c15d4d4219
 Network Name: OpenThread-f7af
 PAN ID: 0xf7af
 PSKc: b658e40f174e3a11be149b302ef07a0f
-Security Policy: 672, onrcb
+Security Policy: 672, onrc
 Done
 > dataset commit active
 Done

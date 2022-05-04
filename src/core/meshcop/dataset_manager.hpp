@@ -272,6 +272,9 @@ protected:
      * @param[in]  aOffset     The offset where the Operational Dataset begins.
      * @param[in]  aLength     The length of the Operational Dataset.
      *
+     * @retval kErrorNone     Successfully parsed the Dataset from the @p aMessage and saved it.
+     * @retval kErrorParse    Could not parse the Dataset from @p aMessage.
+     *
      */
     Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
@@ -360,16 +363,16 @@ private:
     void *                   mMgmtSetCallbackContext;
 };
 
-class ActiveDataset : public DatasetManager, private NonCopyable
+class ActiveDatasetManager : public DatasetManager, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the ActiveDataset object.
+     * This constructor initializes the ActiveDatasetManager object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    explicit ActiveDataset(Instance &aInstance);
+    explicit ActiveDatasetManager(Instance &aInstance);
 
     /**
      * This method indicates whether the Active Dataset is partially complete.
@@ -418,6 +421,9 @@ public:
      * @param[in]  aMessage    The message buffer.
      * @param[in]  aOffset     The offset where the Operational Dataset begins.
      * @param[in]  aLength     The length of the Operational Dataset.
+     *
+     * @retval kErrorNone     Successfully parsed the Dataset from the @p aMessage and saved it.
+     * @retval kErrorParse    Could not parse the Dataset from @p aMessage.
      *
      */
     Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
@@ -499,16 +505,16 @@ private:
 #endif
 };
 
-class PendingDataset : public DatasetManager, private NonCopyable
+class PendingDatasetManager : public DatasetManager, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the PendingDataset object.
+     * This constructor initializes the PendingDatasetManager object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit PendingDataset(Instance &aInstance);
+    explicit PendingDatasetManager(Instance &aInstance);
 
     /**
      * This method clears the Pending Operational Dataset.

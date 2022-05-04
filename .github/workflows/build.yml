@@ -84,6 +84,7 @@ jobs:
     name: package-${{ matrix.compiler }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - compiler: gcc
@@ -144,6 +145,7 @@ jobs:
     name: arm-gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - gcc_ver: 4
@@ -184,8 +186,9 @@ jobs:
     name: gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
-        gcc_ver: [5, 6, 7, 8, 9, 10]
+        gcc_ver: [5, 6, 7, 8, 9, 10, 11]
     env:
       CC: gcc-${{ matrix.gcc_ver }}
       CXX: g++-${{ matrix.gcc_ver }}
@@ -196,6 +199,11 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        case ${{ matrix.gcc_ver }} in
+          11)
+            sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+            ;;
+        esac
         sudo apt-get --no-install-recommends install -y gcc-${{ matrix.gcc_ver }} g++-${{ matrix.gcc_ver }} ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
@@ -206,6 +214,7 @@ jobs:
     name: clang-${{ matrix.clang_ver }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
     env:
@@ -228,6 +237,7 @@ jobs:
     name: clang-m32-${{ matrix.clang_ver }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
     env:
@@ -273,6 +283,7 @@ jobs:
   macos:
     name: macos-${{ matrix.CC }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - CC: clang

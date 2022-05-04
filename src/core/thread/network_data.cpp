@@ -34,6 +34,7 @@
 #include "network_data.hpp"
 
 #include "coap/coap_message.hpp"
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -328,7 +329,7 @@ bool NetworkData::ContainsService(const ServiceConfig &aService) const
     return contains;
 }
 
-bool NetworkData::ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRloc16) const
+bool NetworkData::ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const
 {
     bool     contains = true;
     Iterator iterator = kIteratorInit;
@@ -344,7 +345,7 @@ bool NetworkData::ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRlo
         config.mExternalRoute = &route;
         config.mService       = &service;
 
-        SuccessOrExit(aComapre.Iterate(iterator, aRloc16, config));
+        SuccessOrExit(aCompare.Iterate(iterator, aRloc16, config));
 
         if (((config.mOnMeshPrefix != nullptr) && !ContainsOnMeshPrefix(*config.mOnMeshPrefix)) ||
             ((config.mExternalRoute != nullptr) && !ContainsExternalRoute(*config.mExternalRoute)) ||
@@ -641,9 +642,9 @@ Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
 {
     Error            error   = kErrorNone;
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -662,9 +663,7 @@ Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
 
-    IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
 
     LogInfo("Sent server data notification");
@@ -707,6 +706,114 @@ Error NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const
 
 exit:
     return error;
+}
+
+Error NetworkData::FindBorderRouters(RoleFilter aRoleFilter, uint16_t aRlocs[], uint8_t &aRlocsLength) const
+{
+    class Rlocs // Wrapper over an array of RLOC16s.
+    {
+    public:
+        Rlocs(RoleFilter aRoleFilter, uint16_t *aRlocs, uint8_t aRlocsMaxLength)
+            : mRoleFilter(aRoleFilter)
+            , mRlocs(aRlocs)
+            , mLength(0)
+            , mMaxLength(aRlocsMaxLength)
+        {
+        }
+
+        uint8_t GetLength(void) const { return mLength; }
+
+        Error AddRloc16(uint16_t aRloc16)
+        {
+            // Add `aRloc16` into the array if it matches `RoleFilter` and
+            // it is not in the array already. If we need to add the `aRloc16`
+            // but there is no more room in the array, return `kErrorNoBufs`.
+
+            Error   error = kErrorNone;
+            uint8_t index;
+
+            switch (mRoleFilter)
+            {
+            case kAnyRole:
+                break;
+
+            case kRouterRoleOnly:
+                VerifyOrExit(Mle::Mle::IsActiveRouter(aRloc16));
+                break;
+
+            case kChildRoleOnly:
+                VerifyOrExit(!Mle::Mle::IsActiveRouter(aRloc16));
+                break;
+            }
+
+            for (index = 0; index < mLength; index++)
+            {
+                if (mRlocs[index] == aRloc16)
+                {
+                    break;
+                }
+            }
+
+            if (index == mLength)
+            {
+                VerifyOrExit(mLength < mMaxLength, error = kErrorNoBufs);
+                mRlocs[mLength++] = aRloc16;
+            }
+
+        exit:
+            return error;
+        }
+
+    private:
+        RoleFilter mRoleFilter;
+        uint16_t * mRlocs;
+        uint8_t    mLength;
+        uint8_t    mMaxLength;
+    };
+
+    Error               error = kErrorNone;
+    Rlocs               rlocs(aRoleFilter, aRlocs, aRlocsLength);
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig route;
+    OnMeshPrefixConfig  prefix;
+
+    while (GetNextExternalRoute(iterator, route) == kErrorNone)
+    {
+        SuccessOrExit(error = rlocs.AddRloc16(route.mRloc16));
+    }
+
+    iterator = kIteratorInit;
+
+    while (GetNextOnMeshPrefix(iterator, prefix) == kErrorNone)
+    {
+        if (!prefix.mDefaultRoute || !prefix.mOnMesh)
+        {
+            continue;
+        }
+
+        SuccessOrExit(error = rlocs.AddRloc16(prefix.mRloc16));
+    }
+
+exit:
+    aRlocsLength = rlocs.GetLength();
+    return error;
+}
+
+uint8_t NetworkData::CountBorderRouters(RoleFilter aRoleFilter) const
+{
+    // We use an over-estimate of max number of border routers in the
+    // Network Data using the facts that network data is limited to 254
+    // bytes and that an external route entry uses at minimum 3 bytes
+    // for RLOC16 and flag, so `ceil(254/3) = 85`.
+
+    static constexpr uint16_t kMaxRlocs = 85;
+
+    uint16_t rlocs[kMaxRlocs];
+    uint8_t  rlocsLength = kMaxRlocs;
+
+    SuccessOrAssert(FindBorderRouters(aRoleFilter, rlocs, rlocsLength));
+
+    return rlocsLength;
 }
 
 } // namespace NetworkData

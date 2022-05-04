@@ -57,7 +57,7 @@ void lbuf_extend(struct lbufhead* buffer, size_t numbytes) {
     buffer->tail->mLength += numbytes;
 }
 
-size_t lbuf_pop(struct lbufhead* buffer, size_t numbytes, int* ntraversed) {
+size_t lbuf_pop(struct lbufhead* buffer, size_t numbytes, uint32_t* ntraversed) {
     otLinkedBuffer* curr = buffer->head;
     size_t bytesleft = numbytes;
     size_t curroffset = buffer->offset;
@@ -109,6 +109,6 @@ int lbuf_getrange(struct lbufhead* buffer, size_t offset, size_t numbytes,
     return 0;
 }
 
-size_t lbuf_used_space(struct lbufhead* buffer) {
+size_t lbuf_used_space(const struct lbufhead* buffer) {
     return buffer->length;
 }

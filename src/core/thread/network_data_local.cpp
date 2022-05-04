@@ -184,12 +184,6 @@ void Local::UpdateRloc(PrefixTlv &aPrefixTlv)
     }
 }
 
-bool Local::IsConsistent(void) const
-{
-    return Get<Leader>().ContainsEntriesFrom(*this, Get<Mle::MleRouter>().GetRloc16()) &&
-           ContainsEntriesFrom(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16());
-}
-
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -293,6 +287,12 @@ void Local::UpdateRloc(void)
     }
 }
 
+bool Local::IsConsistent(void) const
+{
+    return Get<Leader>().ContainsEntriesFrom(*this, Get<Mle::MleRouter>().GetRloc16()) &&
+           ContainsEntriesFrom(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16());
+}
+
 Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext)
 {
     Error    error = kErrorNone;
@@ -308,9 +308,7 @@ Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *
 
     UpdateRloc();
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     VerifyOrExit(!IsConsistent(), error = kErrorNotFound);
-#endif
 
     if (mOldRloc == rloc)
     {

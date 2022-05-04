@@ -161,6 +161,8 @@ exit:
 
 void platformSetUp(void)
 {
+    VerifyOrExit(!gDryRun);
+
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneSetUp();
 #endif
@@ -184,6 +186,9 @@ void platformSetUp(void)
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(gInstance, processStateChange, gInstance));
 #endif
+
+exit:
+    return;
 }
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
@@ -203,6 +208,8 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
 void platformTearDown(void)
 {
+    VerifyOrExit(!gDryRun);
+
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     ot::Posix::Daemon::Get().TearDown();
 #endif
@@ -222,6 +229,9 @@ void platformTearDown(void)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneTearDown();
 #endif
+
+exit:
+    return;
 }
 
 void platformDeinit(void)
@@ -230,6 +240,10 @@ void platformDeinit(void)
     virtualTimeDeinit();
 #endif
     platformRadioDeinit();
+
+    // For Dry-Run option, only the radio is initialized.
+    VerifyOrExit(!gDryRun);
+
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     ot::Posix::Udp::Get().Deinit();
 #endif
@@ -247,6 +261,9 @@ void platformDeinit(void)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneDeinit();
 #endif
+
+exit:
+    return;
 }
 
 void otSysDeinit(void)
@@ -263,9 +280,9 @@ void otSysDeinit(void)
 /**
  * This function try selecting the given file descriptors in nonblocking mode.
  *
- * @param[inout]    aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]    aWriteFdSet  A pointer to the write file descriptors.
- * @param[inout]    aErrorFdSet  A pointer to the error file descriptors.
+ * @param[in,out]   aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]   aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]   aErrorFdSet  A pointer to the error file descriptors.
  * @param[in]       aMaxFd       The max file descriptor.
  *
  * @returns The value returned from select().

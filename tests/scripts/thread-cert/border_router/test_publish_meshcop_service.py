@@ -130,6 +130,12 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.check_meshcop_service(br1, host)
         self.check_meshcop_service(br2, host)
 
+        br1.factory_reset()
+        br1.set_network_name('ot-br-1-3')
+        self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
+        self.check_meshcop_service(br1, host)
+        self.check_meshcop_service(br2, host)
+
     def check_meshcop_service(self, br, host):
         services = self.discover_all_meshcop_services(host)
         for service in services:

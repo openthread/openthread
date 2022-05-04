@@ -195,20 +195,68 @@ exit:
 
 Error Manager::FindPreferredDnsSrpAnycastInfo(DnsSrpAnycast::Info &aInfo) const
 {
+    Error               error = kErrorNotFound;
     Iterator            iterator;
     DnsSrpAnycast::Info info;
-    bool                found = false;
+    DnsSrpAnycast::Info maxNumericalSeqNumInfo;
+
+    // Determine the entry with largest seq number in two ways:
+    // `aInfo` will track the largest using serial number arithmetic
+    // comparison, while `maxNumericalSeqNumInfo` tracks the largest
+    // using normal numerical comparison.
 
     while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
     {
-        if (!found || info.IsSequenceNumberAheadOf(aInfo))
+        if (error == kErrorNotFound)
+        {
+            aInfo                  = info;
+            maxNumericalSeqNumInfo = info;
+            error                  = kErrorNone;
+            continue;
+        }
+
+        if (SerialNumber::IsGreater(info.mSequenceNumber, aInfo.mSequenceNumber))
         {
             aInfo = info;
-            found = true;
+        }
+
+        if (info.mSequenceNumber > maxNumericalSeqNumInfo.mSequenceNumber)
+        {
+            maxNumericalSeqNumInfo = info;
         }
     }
 
-    return found ? kErrorNone : kErrorNotFound;
+    SuccessOrExit(error);
+
+    // Check that the largest seq number using serial number arithmetic is
+    // well-defined (i.e., the seq number is larger than all other seq
+    // numbers values). If it is not, we prefer `maxNumericalSeqNumInfo`.
+
+    iterator.Reset();
+
+    while (GetNextDnsSrpAnycastInfo(iterator, info) == kErrorNone)
+    {
+        constexpr uint8_t kMidValue = (NumericLimits<uint8_t>::kMax / 2) + 1;
+        uint8_t           seqNumber = info.mSequenceNumber;
+        uint8_t           diff;
+
+        if (seqNumber == aInfo.mSequenceNumber)
+        {
+            continue;
+        }
+
+        diff = seqNumber - aInfo.mSequenceNumber;
+
+        if ((diff == kMidValue) || !SerialNumber::IsGreater(aInfo.mSequenceNumber, seqNumber))
+        {
+            aInfo = maxNumericalSeqNumInfo;
+
+            break;
+        }
+    }
+
+exit:
+    return error;
 }
 
 Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info &aInfo) const
@@ -239,6 +287,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
 
                 aInfo.mSockAddr.SetAddress(serverData->GetAddress());
                 aInfo.mSockAddr.SetPort(serverData->GetPort());
+                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 ExitNow();
             }
 
@@ -250,6 +299,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                 aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
                                                                  aIterator.mServerSubTlv->GetServer16());
                 aInfo.mSockAddr.SetPort(Encoding::BigEndian::ReadUint16(data.GetBytes()));
+                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 ExitNow();
             }
         }
@@ -271,6 +321,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
             dnsServiceData = reinterpret_cast<const DnsSrpUnicast::ServiceData *>(serviceData.GetBytes());
             aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
             aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
+            aInfo.mOrigin = DnsSrpUnicast::kFromServiceData;
             ExitNow();
         }
 

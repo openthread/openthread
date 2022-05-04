@@ -89,6 +89,10 @@ build_all_features()
     # Build Thread 1.2 with full features and OT_ASSERT=OFF
     reset_source
     "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_ASSERT=OFF
+
+    # Build with RAM settings
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_SETTINGS_RAM=ON
 }
 
 build_toranj()

@@ -93,8 +93,8 @@ static inline const char *levelToString(otLogLevel aLogLevel)
 /**
  * Function for printing actual timestamp.
  *
- * @param[inout]  aLogString Pointer to the log buffer.
- * @param[in]     aMaxSize   Maximum size of the log buffer.
+ * @param[in,out]  aLogString Pointer to the log buffer.
+ * @param[in]      aMaxSize   Maximum size of the log buffer.
  *
  * @returns  Number of bytes successfully written to the log buffer.
  */
@@ -108,9 +108,9 @@ static inline int logTimestamp(char *aLogString, uint16_t aMaxSize)
 /**
  * Function for printing log level.
  *
- * @param[inout]  aLogString  Pointer to log buffer.
- * @param[in]     aMaxSize    Maximum size of log buffer.
- * @param[in]     aLogLevel   Log level.
+ * @param[in,out]  aLogString  Pointer to log buffer.
+ * @param[in]      aMaxSize    Maximum size of log buffer.
+ * @param[in]      aLogLevel   Log level.
  *
  * @returns  Number of bytes successfully written to the log buffer.
  */

@@ -3,8 +3,11 @@
 # To compile with PKCS11: add "-lpkcs11-helper" to LDFLAGS
 
 CFLAGS	?= -O2
-WARNING_CFLAGS ?= -Wall -Wextra
+WARNING_CFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral
 LDFLAGS ?=
+
+# Set this to -v to see the details of failing test cases
+TEST_FLAGS ?= $(if $(filter-out 0 OFF Off off NO No no FALSE False false N n,$(CTEST_OUTPUT_ON_FAILURE)),-v,)
 
 # Include public header files from ../include, test-specific header files
 # from ./include, and private header files (used by some invasive tests)
@@ -49,13 +52,16 @@ LOCAL_LDFLAGS += -lws2_32
 ifdef SHARED
 SHARED_SUFFIX=.$(DLEXT)
 endif
-PYTHON ?= python
 else
 DLEXT ?= so
 EXEXT=
 SHARED_SUFFIX=
-# python2 for POSIX since FreeBSD has only python2 as default.
-PYTHON ?= python2
+endif
+
+ifdef WINDOWS
+PYTHON ?= python
+else
+PYTHON ?= $(shell if type python3 >/dev/null 2>/dev/null; then echo python3; else echo python; fi)
 endif
 
 # Zlib shared library extensions:
@@ -84,8 +90,16 @@ MBEDTLS_TEST_OBJS=$(patsubst %.c,%.o,$(wildcard src/*.c src/drivers/*.c))
 
 mbedtls_test: $(MBEDTLS_TEST_OBJS)
 
+TEST_OBJS_DEPS = $(wildcard include/test/*.h include/test/*/*.h)
+ifdef RECORD_PSA_STATUS_COVERAGE_LOG
+# Explicitly depend on this header because on a clean copy of the source tree,
+# it doesn't exist yet and must be generated as part of the build, and
+# therefore the wildcard enumeration above doesn't include it.
+TEST_OBJS_DEPS += include/test/instrument_record_status.h
+endif
+
 # Rule to compile common test C files in src folder
-src/%.o : src/%.c
+src/%.o : src/%.c $(TEST_OBJS_DEPS)
 	echo "  CC    $<"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) -o $@ -c $<
 
@@ -121,20 +135,16 @@ C_FILES := $(addsuffix .c,$(APPS))
 		-o .
 
 
-$(BINARIES): %$(EXEXT): %.c $(MBEDLIBS) $(MBEDTLS_TEST_OBJS)
+$(BINARIES): %$(EXEXT): %.c $(MBEDLIBS) $(TEST_OBJS_DEPS) $(MBEDTLS_TEST_OBJS)
 	echo "  CC    $<"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) $< $(MBEDTLS_TEST_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-# Some test suites require additional header files.
-$(filter test_suite_psa_crypto%, $(BINARIES)): include/test/psa_crypto_helpers.h
-$(addprefix embedded_,$(filter test_suite_psa_crypto%, $(APPS))): embedded_%: TESTS/mbedtls/%/psa_crypto_helpers.h
-$(filter test_suite_psa_%, $(BINARIES)): include/test/psa_helpers.h
-$(addprefix embedded_,$(filter test_suite_psa_%, $(APPS))): embedded_%: TESTS/mbedtls/%/psa_helpers.h
-
 clean:
 ifndef WINDOWS
-	rm -rf $(BINARIES) *.c *.datax TESTS
+	rm -rf $(BINARIES) *.c *.datax
 	rm -f src/*.o src/drivers/*.o src/libmbed*
+	rm -f include/test/instrument_record_status.h
+	rm -rf libtestdriver1
 else
 	if exist *.c del /Q /F *.c
 	if exist *.exe del /Q /F *.exe
@@ -142,52 +152,61 @@ else
 	if exist src/*.o del /Q /F src/*.o
 	if exist src/drivers/*.o del /Q /F src/drivers/*.o
 	if exist src/libmbed* del /Q /F src/libmed*
-ifneq ($(wildcard TESTS/.*),)
-	rmdir /Q /S TESTS
-endif
+	if exist include/test/instrument_record_status.h del /Q /F include/test/instrument_record_status.h
 endif
 
 # Test suites caught by SKIP_TEST_SUITES are built but not executed.
 check: $(BINARIES)
-	perl scripts/run-test-suites.pl --skip=$(SKIP_TEST_SUITES)
+	perl scripts/run-test-suites.pl $(TEST_FLAGS) --skip=$(SKIP_TEST_SUITES)
 
 test: check
 
-# Create separate targets for generating embedded tests.
-EMBEDDED_TESTS := $(addprefix embedded_,$(APPS))
+# Generate test library
 
-# Generate test code for target.
-
-.SECONDEXPANSION:
-$(EMBEDDED_TESTS): embedded_%: suites/$$(firstword $$(subst ., ,$$*)).function suites/%.data scripts/generate_test_code.py suites/helpers.function suites/main_test.function suites/target_test.function
-	echo "  Gen  ./TESTS/mbedtls/$*/$*.c"
-	$(PYTHON) scripts/generate_test_code.py -f suites/$(firstword $(subst ., ,$*)).function \
-		-d suites/$*.data \
-		-t suites/main_test.function \
-		-p suites/target_test.function \
-		-s suites  \
-		--helpers-file suites/helpers.function \
-		-o ./TESTS/mbedtls/$*
-
-generate-target-tests: $(EMBEDDED_TESTS)
-
-define copy_header_to_target
-TESTS/mbedtls/$(1)/$(2): include/test/$(2)
-	echo "  Copy ./$$@"
-ifndef WINDOWS
-	mkdir -p $$(@D)
-	cp $$< $$@
-else
-	mkdir $$(@D)
-	copy $$< $$@
-endif
-
+# Perl code that is executed to transform each original line from a library
+# source file into the corresponding line in the test driver copy of the
+# library. Add a LIBTESTDRIVER1_/libtestdriver1_ to mbedtls_xxx and psa_xxx
+# symbols.
+define libtestdriver1_rewrite :=
+	s!^(\s*#\s*include\s*[\"<])(mbedtls|psa)/!$${1}libtestdriver1/include/$${2}/!; \
+	next if /^\s*#\s*include/; \
+	s/\b(?=MBEDTLS_|PSA_)/LIBTESTDRIVER1_/g; \
+	s/\b(?=mbedtls_|psa_)/libtestdriver1_/g;
 endef
-$(foreach app, $(APPS), $(foreach file, $(notdir $(wildcard include/test/*.h)), \
-	$(eval $(call copy_header_to_target,$(app),$(file)))))
+
+libtestdriver1.a:
+	# Copy the library and fake a 3rdparty Makefile include.
+	rm -Rf ./libtestdriver1
+	mkdir ./libtestdriver1
+	cp -Rf ../library ./libtestdriver1
+	cp -Rf ../include ./libtestdriver1
+	mkdir ./libtestdriver1/3rdparty
+	touch ./libtestdriver1/3rdparty/Makefile.inc
+
+	# Set the test driver base (minimal) configuration.
+	cp ./include/test/drivers/config_test_driver.h ./libtestdriver1/include/mbedtls/config.h
+
+	# Set the PSA cryptography configuration for the test library.
+	# It is set from the copied include/psa/crypto_config.h of the Mbed TLS
+        # library the test library is intended to be linked with extended by
+        # ./include/test/drivers/crypto_config_test_driver_extension.h to
+        # mirror the PSA_ACCEL_* macros.
+	mv ./libtestdriver1/include/psa/crypto_config.h ./libtestdriver1/include/psa/crypto_config.h.bak
+	head -n -1 ./libtestdriver1/include/psa/crypto_config.h.bak > ./libtestdriver1/include/psa/crypto_config.h
+	cat ./include/test/drivers/crypto_config_test_driver_extension.h >> ./libtestdriver1/include/psa/crypto_config.h
+	echo "#endif /* PSA_CRYPTO_CONFIG_H */" >> ./libtestdriver1/include/psa/crypto_config.h
+
+	# Prefix MBEDTLS_* PSA_* symbols with LIBTESTDRIVER1_ as well as
+	# mbedtls_* psa_* symbols with libtestdriver1_ to avoid symbol clash
+	# when this test driver library is linked with the Mbed TLS library.
+	perl -pi -e '$(libtestdriver1_rewrite)' ./libtestdriver1/library/*.[ch]
+	perl -pi -e '$(libtestdriver1_rewrite)' ./libtestdriver1/include/*/*.h
+
+	$(MAKE) -C ./libtestdriver1/library CFLAGS="-I../../ $(CFLAGS)" LDFLAGS="$(LDFLAGS)" libmbedcrypto.a
+	cp ./libtestdriver1/library/libmbedcrypto.a ../library/libtestdriver1.a
 
 ifdef RECORD_PSA_STATUS_COVERAGE_LOG
-$(BINARIES): include/test/instrument_record_status.h
 include/test/instrument_record_status.h: ../include/psa/crypto.h Makefile
+	echo "  Gen  $@"
 	sed <../include/psa/crypto.h >$@ -n 's/^psa_status_t \([A-Za-z0-9_]*\)(.*/#define \1(...) RECORD_STATUS("\1", \1(__VA_ARGS__))/p'
 endif

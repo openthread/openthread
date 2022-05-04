@@ -55,7 +55,8 @@ check_datetime()
 EOF
 
     OPENTHREAD_PROJECT_CFLAGS="-I$PWD -DOPENTHREAD_CONFIG_FILE=\\\"openthread-config-datetime.h\\\" \
-        -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"openthread-core-posix-config.h\\\"" \
+        -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\\\"openthread-core-posix-config.h\\\" \
+        -std=c99" \
         make showcommands ot-cli
     grep "$datetime" -ao "out/target/product/generic/system/bin/ot-cli"
     make clean-ot-cli

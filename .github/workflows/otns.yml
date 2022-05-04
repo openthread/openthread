@@ -132,6 +132,7 @@ jobs:
     name: Stress ${{ matrix.suite }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - suite: "network-forming"

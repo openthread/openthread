@@ -353,11 +353,11 @@ public:
     /**
      * This method iterates through previously saved frames in the buffer, getting a next frame in the queue.
      *
-     * @param[inout] aFrame   On entry, should point to a previous saved frame or nullptr to get the first frame.
-     *                        On exit, the pointer variable is updated to next frame or set to nullptr if there are
-     * none.
-     * @param[inout] aLength  On entry, should be a reference to the frame length of the previous saved frame.
-     *                        On exit, the reference is updated to the frame length (number of bytes) of next frame.
+     * @param[in,out] aFrame   On entry, should point to a previous saved frame or nullptr to get the first frame.
+     *                         On exit, the pointer variable is updated to next frame or set to nullptr if there are
+     *                         none.
+     * @param[in,out] aLength  On entry, should be a reference to the frame length of the previous saved frame.
+     *                         On exit, the reference is updated to the frame length (number of bytes) of next frame.
      *
      * @retval OT_ERROR_NONE       Updated @aFrame and @aLength successfully with the next saved frame.
      * @retval OT_ERROR_NOT_FOUND  No more saved frame in the buffer.

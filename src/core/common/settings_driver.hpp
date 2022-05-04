@@ -66,13 +66,19 @@ public:
     /**
      * This method initializes the settings storage driver.
      *
+     * @param[in]  aSensitiveKeys        A pointer to an array containing the list of sensitive keys.
+     * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
+     *
      */
-    void Init(void)
+    void Init(const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength)
     {
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+        OT_UNUSED_VARIABLE(aSensitiveKeys);
+        OT_UNUSED_VARIABLE(aSensitiveKeysLength);
+
         mFlash.Init();
 #else
-        otPlatSettingsInit(GetInstancePtr());
+        otPlatSettingsInit(GetInstancePtr(), aSensitiveKeys, aSensitiveKeysLength);
 #endif
     }
 
@@ -84,23 +90,6 @@ public:
     {
 #if !OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
         otPlatSettingsDeinit(GetInstancePtr());
-#endif
-    }
-
-    /**
-     * This method sets the critical keys that should be stored in a secure area.
-     *
-     * @param[in]  aKeys        A pointer to an array containing the list of critical keys.
-     * @param[in]  aKeysLength  The number of entries in the @p aKeys array.
-     *
-     */
-    void SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
-    {
-#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
-        OT_UNUSED_VARIABLE(aKeys);
-        OT_UNUSED_VARIABLE(aKeysLength);
-#else
-        otPlatSettingsSetCriticalKeys(GetInstancePtr(), aKeys, aKeysLength);
 #endif
     }
 
@@ -155,15 +144,15 @@ public:
     /**
      * This method fetches the value identified by @p aKey at a given @p aIndex.
      *
-     * @param[in]     aKey          The key associated with the requested value.
-     * @param[in]     aIndex        The index of the specific item to get.
-     * @param[out]    aValue        A pointer to where the value of the setting should be written.
-     *                              May be `nullptr` if just testing for the presence or length of a key.
-     * @param[inout]  aValueLength  A pointer to the length of the value.
-     *                              When called, this should point to an integer containing the maximum bytes that
-     *                              can be written to @p aValue.
-     *                              At return, the actual length of the setting is written.
-     *                              May be `nullptr` if performing a presence check.
+     * @param[in]      aKey          The key associated with the requested value.
+     * @param[in]      aIndex        The index of the specific item to get.
+     * @param[out]     aValue        A pointer to where the value of the setting should be written.
+     *                               May be `nullptr` if just testing for the presence or length of a key.
+     * @param[in,out]  aValueLength  A pointer to the length of the value.
+     *                               When called, this should point to an integer containing the maximum bytes that
+     *                               can be written to @p aValue.
+     *                               At return, the actual length of the setting is written.
+     *                               May be `nullptr` if performing a presence check.
      *
      * @retval kErrorNone        The value was fetched successfully.
      * @retval kErrorNotFound    The key was not found.
@@ -185,14 +174,14 @@ public:
     /**
      * This method fetches the value identified by @p aKey.
      *
-     * @param[in]     aKey          The key associated with the requested value.
-     * @param[out]    aValue        A pointer to where the value of the setting should be written.
-     *                              May be `nullptr` if just testing for the presence or length of a key.
-     * @param[inout]  aValueLength  A pointer to the length of the value.
-     *                              When called, this should point to an integer containing the maximum bytes that
-     *                              can be written to @p aValue.
-     *                              At return, the actual length of the setting is written.
-     *                              May be `nullptr` if performing a presence check.
+     * @param[in]      aKey          The key associated with the requested value.
+     * @param[out]     aValue        A pointer to where the value of the setting should be written.
+     *                               May be `nullptr` if just testing for the presence or length of a key.
+     * @param[in,out]  aValueLength  A pointer to the length of the value.
+     *                               When called, this should point to an integer containing the maximum bytes that
+     *                               can be written to @p aValue.
+     *                               At return, the actual length of the setting is written.
+     *                               May be `nullptr` if performing a presence check.
      *
      * @retval kErrorNone        The value was fetched successfully.
      * @retval kErrorNotFound    The key was not found.

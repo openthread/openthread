@@ -165,7 +165,7 @@ public:
     /**
      * This static method checks a given argument string against "enable" or "disable" commands.
      *
-     * @param[in]  aArgs    The argument string to parse.
+     * @param[in]  aArg     The argument string to parse.
      * @param[out] aEnable  Boolean variable to return outcome on success.
      *                      Set to TRUE for "enable" command, and FALSE for "disable" command.
      *
@@ -178,9 +178,9 @@ public:
     /**
      * This method sets the user command table.
      *
-     * @param[in]  aUserCommands  A pointer to an array with user commands.
-     * @param[in]  aLength        @p aUserCommands length.
-     * @param[in]  aContext       @p aUserCommands length.
+     * @param[in]  aCommands  A pointer to an array with user commands.
+     * @param[in]  aLength    @p aUserCommands length.
+     * @param[in]  aContext   @p aUserCommands length.
      *
      */
     void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
@@ -377,7 +377,6 @@ private:
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
     static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
 #endif
-    void        OutputScanTableHeader(void);
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
