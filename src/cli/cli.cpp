@@ -3564,7 +3564,19 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
     }
     else if (aArgs[0] == "meshlocal")
     {
-        OutputIp6PrefixLine(*otThreadGetMeshLocalPrefix(GetInstancePtr()));
+        if (aArgs[1].IsEmpty())
+        {
+            OutputIp6PrefixLine(*otThreadGetMeshLocalPrefix(GetInstancePtr()));
+        }
+        else
+        {
+            otIp6Prefix prefix;
+
+            SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(prefix));
+            VerifyOrExit(prefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
+            error =
+                otThreadSetMeshLocalPrefix(GetInstancePtr(), reinterpret_cast<otMeshLocalPrefix *>(&prefix.mPrefix));
+        }
     }
     else
     {
