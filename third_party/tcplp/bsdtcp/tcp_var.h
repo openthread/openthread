@@ -161,7 +161,7 @@ struct tcpcb_listen {
 #define SACKHOLE_POOL_SIZE MAX_SACKHOLES
 #define SACKHOLE_BMP_SIZE BITS_TO_BYTES(SACKHOLE_POOL_SIZE)
 
-struct signals;
+struct tcplp_signals;
 
 /*
  * Tcp control block, one per tcp; fields:
@@ -577,14 +577,14 @@ int	 tcp_twcheck(struct tcpcb*, struct tcphdr *, int);
 void tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otInstance* instance,
     int tlen, int rstreason);
 int tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
-          struct signals* sig);
+          struct tcplp_signals* sig);
 int	 tcp_output(struct tcpcb *);
 void tcpip_maketemplate(struct tcpcb *, struct tcptemp*);
 void	 tcpip_fillheaders(struct tcpcb *, otMessageInfo *, void *);
 uint64_t	 tcp_maxmtu6(struct tcpcb*, struct tcp_ifcap *);
 int	 tcp_addoptions(struct tcpopt *, uint8_t *);
 int	 tcp_mssopt(struct tcpcb*);
-int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, otMessage *, off_t, struct signals*);
+int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, otMessage *, off_t, struct tcplp_signals*);
 void tcp_sack_init(struct tcpcb *); // Sam: new function that I added
 void	 tcp_sack_doack(struct tcpcb *, struct tcpopt *, tcp_seq);
 void	 tcp_update_sack_list(struct tcpcb *tp, tcp_seq rcv_laststart, tcp_seq rcv_lastend);

@@ -248,6 +248,21 @@ void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode
     }
 }
 
+#if !OPENTHREAD_RADIO
+void AesCcm::Payload(Message &aMessage, uint16_t aOffset, uint16_t aLength, Mode aMode)
+{
+    Message::MutableChunk chunk;
+
+    aMessage.GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        Payload(chunk.GetBytes(), chunk.GetBytes(), chunk.GetLength(), aMode);
+        aMessage.GetNextChunk(aLength, chunk);
+    }
+}
+#endif
+
 void AesCcm::Finalize(void *aTag)
 {
     uint8_t *tagBytes = reinterpret_cast<uint8_t *>(aTag);

@@ -331,7 +331,6 @@ public:
      * @tparam       SimpleTlvType   The simple TLV type to find (must be a sub-class of `SimpleTlvInfo`)
      *
      * @param[in]    aMessage        A reference to the message.
-     * @param[in]    aType           The TLV type to search for.
      * @param[out]   aValue          A reference to the value object to output the read value.
      *
      * @retval kErrorNone         The TLV was found and read successfully. @p aValue is updated.

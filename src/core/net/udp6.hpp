@@ -306,8 +306,8 @@ public:
         /**
          * This constructor initializes the UDP receiver.
          *
-         * @param[in]   aUdpHandler     A pointer to the function to handle UDP message.
-         * @param[in]   aContext        A pointer to arbitrary context information.
+         * @param[in]   aHandler     A pointer to the function to handle UDP message.
+         * @param[in]   aContext     A pointer to arbitrary context information.
          *
          */
         Receiver(otUdpHandler aHandler, void *aContext)
@@ -329,7 +329,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class Header : public Clearable<Header>
     {
     public:
         static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.

@@ -1198,7 +1198,8 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 
     elapsed = curTime - mCslLastSync.GetValue();
 
-    semiWindow = elapsed * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy) / 1000000;
+    semiWindow = static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
+                                       (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy) / 1000000);
     semiWindow += mCslParentUncert * kUsPerUncertUnit;
 
     aAhead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;

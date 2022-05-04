@@ -140,9 +140,9 @@ public:
     /**
      * This method iterates through filter entries.
      *
-     * @param[inout]  aIterator  A reference to the MAC filter iterator context.
-     *                           To get the first in-use address filter, set it to OT_MAC_FILTER_ITERATOR_INIT.
-     * @param[out]     aEntry    A reference to where the information is placed.
+     * @param[in,out]  aIterator  A reference to the MAC filter iterator context.
+     *                            To get the first in-use address filter, set it to OT_MAC_FILTER_ITERATOR_INIT.
+     * @param[out]     aEntry     A reference to where the information is placed.
      *
      * @retval kErrorNone      Successfully retrieved the next address filter entry.
      * @retval kErrorNotFound  No subsequent entry exists.
@@ -198,11 +198,11 @@ public:
     /**
      * This method iterates through RssIn filter entry.
      *
-     * @param[inout]  aIterator  A reference to the MAC filter iterator context. To get the first in-use RssIn
-     *                           filter entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
-     * @param[out]    aEntry     A reference to where the information is placed. The last entry would have the
-     *                           Extended Address as all 0xff to indicate the default received signal strength
-     *                           if it was set.
+     * @param[in,out]  aIterator  A reference to the MAC filter iterator context. To get the first in-use RssIn
+     *                            filter entry, it should be set to OT_MAC_FILTER_ITERATOR_INIT.
+     * @param[out]     aEntry     A reference to where the information is placed. The last entry would have the
+     *                            Extended Address as all 0xff to indicate the default received signal strength
+     *                            if it was set.
      *
      * @retval kErrorNone      Successfully retrieved the next RssIn filter entry.
      * @retval kErrorNotFound  No subsequent entry exists.

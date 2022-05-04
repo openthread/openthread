@@ -435,7 +435,7 @@ public:
      * If no buffer space is available, this method will discard and clear the current input frame and return the
      * error status `OT_ERROR_NO_BUFS`.
      *
-     * @param[in]  aExtAddress          A pointer to a buffer containing the EUI64 value.
+     * @param[in]  aEui64               A pointer to a buffer containing the EUI64 value.
      *
      * @retval OT_ERROR_NONE            Successfully added given value to the frame.
      * @retval OT_ERROR_NO_BUFS         Insufficient buffer space available to add the EUI64 value.

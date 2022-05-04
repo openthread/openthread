@@ -127,11 +127,11 @@ typedef struct otServiceConfig
 /**
  * This method provides a full or stable copy of the Partition's Thread Network Data.
  *
- * @param[in]     aInstance    A pointer to an OpenThread instance.
- * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
- * @param[out]    aData        A pointer to the data buffer.
- * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
- *                             On exit, number of copied bytes.
+ * @param[in]      aInstance    A pointer to an OpenThread instance.
+ * @param[in]      aStable      TRUE when copying the stable version, FALSE when copying the full version.
+ * @param[out]     aData        A pointer to the data buffer.
+ * @param[in,out]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
+ *                              On exit, number of copied bytes.
  *
  */
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
@@ -139,10 +139,10 @@ otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_
 /**
  * This function gets the next On Mesh Prefix in the partition's Network Data.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
-                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
+                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]     aConfig    A pointer to where the On Mesh Prefix information will be placed.
  *
  * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
@@ -155,10 +155,10 @@ otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
 /**
  * This function gets the next external route in the partition's Network Data.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first external route entry
-                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the External Route information will be placed.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first external route entry
+                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]     aConfig    A pointer to where the External Route information will be placed.
  *
  * @retval OT_ERROR_NONE       Successfully found the next External Route.
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
@@ -169,10 +169,10 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
 /**
  * This function gets the next service in the partition's Network Data.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first service entry
-                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to where the service information will be placed.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first service entry
+                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]     aConfig    A pointer to where the service information will be placed.
  *
  * @retval OT_ERROR_NONE       Successfully found the next service.
  * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the partition's Network Data.

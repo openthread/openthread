@@ -471,7 +471,7 @@ public:
      *
      * @param[out] aData                Reference to pointer variable to output the data.
      *                                  On success, the pointer variable is updated.
-     * @param[out] aDataLength          Reference to variable to output the data length (number of bytes).
+     * @param[out] aDataLen             Reference to variable to output the data length (number of bytes).
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.
@@ -488,7 +488,7 @@ public:
      *
      * @param[out] aData                Reference to pointer variable to output the data.
      *                                  On success, the pointer variable is updated.
-     * @param[out] aDataLength          Reference to variable to out the data length (number of bytes).
+     * @param[out] aDataLen             Reference to variable to out the data length (number of bytes).
      *
      * @retval OT_ERROR_NONE            Successfully read the value.
      * @retval OT_ERROR_PARSE           Failed to parse/decode the value.

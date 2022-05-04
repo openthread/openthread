@@ -68,9 +68,7 @@
 #include <openthread/openthread-system.h>
 #include <openthread/platform/misc.h>
 
-#ifndef OPENTHREAD_ENABLE_COVERAGE
-#define OPENTHREAD_ENABLE_COVERAGE 0
-#endif
+#include "lib/platform/reset_util.h"
 
 /**
  * This function initializes NCP app.
@@ -89,7 +87,7 @@ void otAppNcpUpdate(otSysMainloopContext *aContext);
 /**
  * This function updates the file descriptor sets with file descriptors used by console.
  *
- * @param[inout]    aMainloop   A pointer to the mainloop context.
+ * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
  */
 void otAppNcpProcess(const otSysMainloopContext *aContext);
@@ -111,7 +109,7 @@ void otAppCliDeinit(void);
 /**
  * This function updates the file descriptor sets with file descriptors used by console.
  *
- * @param[inout]    aMainloop   A pointer to the mainloop context.
+ * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
  */
 void otAppCliUpdate(otSysMainloopContext *aMainloop);
@@ -131,10 +129,6 @@ typedef struct PosixConfig
     bool             mPrintRadioVersion; ///< Whether to print radio firmware version.
     bool             mIsVerbose;         ///< Whether to print log to stderr.
 } PosixConfig;
-
-static jmp_buf gResetJump;
-
-void __gcov_flush();
 
 /**
  * This enumeration defines the argument return values.
@@ -370,14 +364,7 @@ int main(int argc, char *argv[])
     prctl(PR_SET_PDEATHSIG, SIGHUP);
 #endif
 
-    if (setjmp(gResetJump))
-    {
-        alarm(0);
-#if OPENTHREAD_ENABLE_COVERAGE
-        __gcov_flush();
-#endif
-        execvp(argv[0], argv);
-    }
+    OT_SETUP_RESET_JUMP(argv);
 
     ParseArg(argc, argv, &config);
     openlog(argv[0], LOG_PID | (config.mIsVerbose ? LOG_PERROR : 0), LOG_DAEMON);

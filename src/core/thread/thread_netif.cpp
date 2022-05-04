@@ -82,6 +82,8 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
+    , mExtendedPanIdManager(aInstance)
+    , mNetworkNameManager(aInstance)
     , mIp6Filter(aInstance)
     , mKeyManager(aInstance)
     , mLowpan(aInstance)

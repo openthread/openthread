@@ -198,6 +198,11 @@ private:
 
     static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
     static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; // The length of an On-link prefix. In bits.
+    static constexpr uint8_t kBrUlaPrefixLength  = 48;                    // The length of a BR ULA prefix. In bits.
+    static constexpr uint8_t kNat64PrefixLength  = 96;                    // The length of a NAT64 prefix. In bits.
+
+    static constexpr uint16_t kOmrPrefixSubnetId   = 1; // The subnet ID of an OMR prefix within a BR ULA prefix.
+    static constexpr uint16_t kNat64PrefixSubnetId = 2; // The subnet ID of a NAT64 prefix within a BR ULA prefix.
 
     // The maximum number of initial Router Advertisements.
     static constexpr uint32_t kMaxInitRtrAdvertisements = 3;
@@ -214,7 +219,9 @@ private:
     static constexpr uint32_t kRtrSolicitationInterval     = 4;      // Interval between RSs. In sec.
     static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;      // Max delay for initial solicitation. In sec.
     static constexpr uint32_t kRoutingPolicyEvaluationJitter = 1000; // Jitter for routing policy evaluation. In msec.
-    static constexpr uint32_t kRtrSolicitationRetryDelay     = 60;   // The delay before retrying failed RS tx. In Sec.
+    static constexpr uint32_t kRtrSolicitationRetryDelay =
+        kRtrSolicitationInterval;                             // The delay before retrying failed RS tx. In Sec.
+    static constexpr uint32_t kMinDelayBetweenRtrAdvs = 3000; // Min delay (msec) between consecutive RAs.
 
     // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
     // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
@@ -289,14 +296,15 @@ private:
     void  HandleNotifierEvents(Events aEvents);
     bool  IsInitialized(void) const { return mInfraIfIndex != 0; }
     bool  IsEnabled(void) const { return mIsEnabled; }
-    Error LoadOrGenerateRandomOmrPrefix(void);
+    Error LoadOrGenerateRandomBrUlaPrefix(void);
+    void  GenerateOmrPrefix(void);
     Error LoadOrGenerateRandomOnLinkPrefix(void);
 
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
-    Error LoadOrGenerateRandomNat64Prefix(void);
-    void  EvaluateNat64Prefix(void);
+    void GenerateNat64Prefix(void);
+    void EvaluateNat64Prefix(void);
 #endif
 
     void  EvaluateRoutingPolicy(void);
@@ -338,6 +346,7 @@ private:
     bool UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage);
     void ResetDiscoveredPrefixStaleTimer(void);
 
+    static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
     static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
@@ -358,8 +367,11 @@ private:
     // messages will be sent.
     uint32_t mInfraIfIndex;
 
-    // The OMR prefix loaded from local persistent storage or randomly
-    // generated if non is found in persistent storage.
+    // The /48 BR ULA prefix loaded from local persistent storage or
+    // randomly generated if none is found in persistent storage.
+    Ip6::Prefix mBrUlaPrefix;
+
+    // The OMR prefix allocated from the /48 BR ULA prefix.
     Ip6::Prefix mLocalOmrPrefix;
 
     // The advertised OMR prefixes. For a stable Thread network without
@@ -381,8 +393,7 @@ private:
     TimeMilli  mTimeAdvertisedOnLinkPrefix;
     TimerMilli mOnLinkPrefixDeprecateTimer;
 
-    // The NAT64 prefix loaded from local persistent storage or
-    // randomly generated if none is found in persistent storage.
+    // The NAT64 prefix allocated from the /48 BR ULA prefix.
     Ip6::Prefix mLocalNat64Prefix;
 
     // True if the local NAT64 prefix is advertised in Thread network.
@@ -404,7 +415,8 @@ private:
     TimerMilli mDiscoveredPrefixInvalidTimer;
     TimerMilli mDiscoveredPrefixStaleTimer;
 
-    uint32_t mRouterAdvertisementCount;
+    uint32_t  mRouterAdvertisementCount;
+    TimeMilli mLastRouterAdvertisementSendTime;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
     TimerMilli mVicariousRouterSolicitTimer;

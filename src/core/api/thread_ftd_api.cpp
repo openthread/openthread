@@ -296,8 +296,8 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     AsCoreType(aInstance).Get<KeyManager>().SetPskc(AsCoreType(aPskc));
-    AsCoreType(aInstance).Get<MeshCoP::ActiveDataset>().Clear();
-    AsCoreType(aInstance).Get<MeshCoP::PendingDataset>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -313,8 +313,8 @@ otError otThreadSetPskcRef(otInstance *aInstance, otPskcRef aKeyRef)
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<KeyManager>().SetPskcRef(aKeyRef);
-    instance.Get<MeshCoP::ActiveDataset>().Clear();
-    instance.Get<MeshCoP::PendingDataset>().Clear();
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;

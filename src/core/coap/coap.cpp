@@ -79,18 +79,15 @@ void CoapBase::ClearRequests(const Ip6::Address &aAddress)
 
 void CoapBase::ClearRequests(const Ip6::Address *aAddress)
 {
-    Message *nextMessage;
-
-    for (Message *message = mPendingRequests.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mPendingRequests)
     {
         Metadata metadata;
 
-        nextMessage = message->GetNextCoapMessage();
-        metadata.ReadFrom(*message);
+        metadata.ReadFrom(message);
 
         if ((aAddress == nullptr) || (metadata.mSourceAddress == *aAddress))
         {
-            FinalizeCoapTransaction(*message, metadata, nullptr, nullptr, kErrorAbort);
+            FinalizeCoapTransaction(message, metadata, nullptr, nullptr, kErrorAbort);
         }
     }
 }
@@ -421,19 +418,16 @@ void CoapBase::HandleRetransmissionTimer(void)
     TimeMilli        now      = TimerMilli::GetNow();
     TimeMilli        nextTime = now.GetDistantFuture();
     Metadata         metadata;
-    Message *        nextMessage;
     Ip6::MessageInfo messageInfo;
 
-    for (Message *message = mPendingRequests.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mPendingRequests)
     {
-        nextMessage = message->GetNextCoapMessage();
-
-        metadata.ReadFrom(*message);
+        metadata.ReadFrom(message);
 
         if (now >= metadata.mNextTimerShot)
         {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-            if (message->IsRequest() && metadata.mObserve && metadata.mAcknowledged)
+            if (message.IsRequest() && metadata.mObserve && metadata.mAcknowledged)
             {
                 // This is a RFC7641 subscription.  Do not time out.
                 continue;
@@ -443,7 +437,7 @@ void CoapBase::HandleRetransmissionTimer(void)
             if (!metadata.mConfirmable || (metadata.mRetransmissionsRemaining == 0))
             {
                 // No expected response or acknowledgment.
-                FinalizeCoapTransaction(*message, metadata, nullptr, nullptr, kErrorResponseTimeout);
+                FinalizeCoapTransaction(message, metadata, nullptr, nullptr, kErrorResponseTimeout);
                 continue;
             }
 
@@ -451,7 +445,7 @@ void CoapBase::HandleRetransmissionTimer(void)
             metadata.mRetransmissionsRemaining--;
             metadata.mRetransmissionTimeout *= 2;
             metadata.mNextTimerShot = now + metadata.mRetransmissionTimeout;
-            metadata.UpdateIn(*message);
+            metadata.UpdateIn(message);
 
             // Retransmit
             if (!metadata.mAcknowledged)
@@ -465,7 +459,7 @@ void CoapBase::HandleRetransmissionTimer(void)
 #endif
                 messageInfo.SetMulticastLoop(metadata.mMulticastLoop);
 
-                SendCopy(*message, messageInfo);
+                SendCopy(message, messageInfo);
             }
         }
 
@@ -498,17 +492,15 @@ void CoapBase::FinalizeCoapTransaction(Message &               aRequest,
 Error CoapBase::AbortTransaction(ResponseHandler aHandler, void *aContext)
 {
     Error    error = kErrorNotFound;
-    Message *nextMessage;
     Metadata metadata;
 
-    for (Message *message = mPendingRequests.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mPendingRequests)
     {
-        nextMessage = message->GetNextCoapMessage();
-        metadata.ReadFrom(*message);
+        metadata.ReadFrom(message);
 
         if (metadata.mResponseHandler == aHandler && metadata.mResponseContext == aContext)
         {
-            FinalizeCoapTransaction(*message, metadata, nullptr, nullptr, kErrorAbort);
+            FinalizeCoapTransaction(message, metadata, nullptr, nullptr, kErrorAbort);
             error = kErrorNone;
         }
     }
@@ -965,11 +957,11 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
                                       const Ip6::MessageInfo &aMessageInfo,
                                       Metadata &              aMetadata)
 {
-    Message *message;
+    Message *request = nullptr;
 
-    for (message = mPendingRequests.GetHead(); message != nullptr; message = message->GetNextCoapMessage())
+    for (Message &message : mPendingRequests)
     {
-        aMetadata.ReadFrom(*message);
+        aMetadata.ReadFrom(message);
 
         if (((aMetadata.mDestinationAddress == aMessageInfo.GetPeerAddr()) ||
              aMetadata.mDestinationAddress.IsMulticast() ||
@@ -980,8 +972,9 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
             {
             case kTypeReset:
             case kTypeAck:
-                if (aResponse.GetMessageId() == message->GetMessageId())
+                if (aResponse.GetMessageId() == message.GetMessageId())
                 {
+                    request = &message;
                     ExitNow();
                 }
 
@@ -989,8 +982,9 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
 
             case kTypeConfirmable:
             case kTypeNonConfirmable:
-                if (aResponse.IsTokenEqual(*message))
+                if (aResponse.IsTokenEqual(message))
                 {
+                    request = &message;
                     ExitNow();
                 }
 
@@ -1000,7 +994,7 @@ Message *CoapBase::FindRelatedRequest(const Message &         aResponse,
     }
 
 exit:
-    return message;
+    return request;
 }
 
 void CoapBase::Receive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1449,25 +1443,26 @@ exit:
 
 const Message *ResponsesQueue::FindMatchedResponse(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo) const
 {
-    Message *message;
+    const Message *response = nullptr;
 
-    for (message = mQueue.GetHead(); message != nullptr; message = message->GetNextCoapMessage())
+    for (const Message &message : mQueue)
     {
-        if (message->GetMessageId() == aRequest.GetMessageId())
+        if (message.GetMessageId() == aRequest.GetMessageId())
         {
             ResponseMetadata metadata;
 
-            metadata.ReadFrom(*message);
+            metadata.ReadFrom(message);
 
             if ((metadata.mMessageInfo.GetPeerPort() == aMessageInfo.GetPeerPort()) &&
                 (metadata.mMessageInfo.GetPeerAddr() == aMessageInfo.GetPeerAddr()))
             {
+                response = &message;
                 break;
             }
         }
     }
 
-    return message;
+    return response;
 }
 
 void ResponsesQueue::EnqueueResponse(Message &               aMessage,
@@ -1506,15 +1501,15 @@ void ResponsesQueue::UpdateQueue(void)
     // `kMaxCachedResponses` remove the one with earliest dequeue
     // time.
 
-    for (Message *message = mQueue.GetHead(); message != nullptr; message = message->GetNextCoapMessage())
+    for (Message &message : mQueue)
     {
         ResponseMetadata metadata;
 
-        metadata.ReadFrom(*message);
+        metadata.ReadFrom(message);
 
         if ((earliestMsg == nullptr) || (metadata.mDequeueTime < earliestDequeueTime))
         {
-            earliestMsg         = message;
+            earliestMsg         = &message;
             earliestDequeueTime = metadata.mDequeueTime;
         }
 
@@ -1546,19 +1541,16 @@ void ResponsesQueue::HandleTimer(void)
 {
     TimeMilli now             = TimerMilli::GetNow();
     TimeMilli nextDequeueTime = now.GetDistantFuture();
-    Message * nextMessage;
 
-    for (Message *message = mQueue.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mQueue)
     {
         ResponseMetadata metadata;
 
-        nextMessage = message->GetNextCoapMessage();
-
-        metadata.ReadFrom(*message);
+        metadata.ReadFrom(message);
 
         if (now >= metadata.mDequeueTime)
         {
-            DequeueResponse(*message);
+            DequeueResponse(message);
             continue;
         }
 

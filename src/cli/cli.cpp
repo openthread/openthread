@@ -262,7 +262,7 @@ void Interpreter::ProcessLine(char *aBuf)
     LogInput(args);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag"))
+    if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
     {
         OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
         ExitNow(error = OT_ERROR_INVALID_STATE);
@@ -543,13 +543,6 @@ template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
             }
 #endif
         }
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        else if (aArgs[0] == "skipseqnuminc")
-        {
-            otBackboneRouterConfigSkipSeqNumIncrease(GetInstancePtr(), true);
-            ExitNow(error = OT_ERROR_NONE);
-        }
-#endif
         SuccessOrExit(error = ProcessBackboneRouterLocal(aArgs));
     }
 
@@ -763,21 +756,19 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 
     struct BufferInfoName
     {
-        const uint16_t otBufferInfo::*mNumMessagesPtr;
-        const uint16_t otBufferInfo::*mNumBuffersPtr;
-        const char *                  mName;
+        const otMessageQueueInfo otBufferInfo::*mQueuePtr;
+        const char *                            mName;
     };
 
     static const BufferInfoName kBufferInfoNames[] = {
-        {&otBufferInfo::m6loSendMessages, &otBufferInfo::m6loSendBuffers, "6lo send"},
-        {&otBufferInfo::m6loReassemblyMessages, &otBufferInfo::m6loReassemblyBuffers, "6lo reas"},
-        {&otBufferInfo::mIp6Messages, &otBufferInfo::mIp6Buffers, "ip6"},
-        {&otBufferInfo::mMplMessages, &otBufferInfo::mMplBuffers, "mpl"},
-        {&otBufferInfo::mMleMessages, &otBufferInfo::mMleBuffers, "mle"},
-        {&otBufferInfo::mArpMessages, &otBufferInfo::mArpBuffers, "arp"},
-        {&otBufferInfo::mCoapMessages, &otBufferInfo::mCoapBuffers, "coap"},
-        {&otBufferInfo::mCoapSecureMessages, &otBufferInfo::mCoapSecureBuffers, "coap secure"},
-        {&otBufferInfo::mApplicationCoapMessages, &otBufferInfo::mApplicationCoapBuffers, "application coap"},
+        {&otBufferInfo::m6loSendQueue, "6lo send"},
+        {&otBufferInfo::m6loReassemblyQueue, "6lo reas"},
+        {&otBufferInfo::mIp6Queue, "ip6"},
+        {&otBufferInfo::mMplQueue, "mpl"},
+        {&otBufferInfo::mMleQueue, "mle"},
+        {&otBufferInfo::mCoapQueue, "coap"},
+        {&otBufferInfo::mCoapSecureQueue, "coap secure"},
+        {&otBufferInfo::mApplicationCoapQueue, "application coap"},
     };
 
     otBufferInfo bufferInfo;
@@ -789,7 +780,8 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 
     for (const BufferInfoName &info : kBufferInfoNames)
     {
-        OutputLine("%s: %d %d", info.mName, bufferInfo.*info.mNumMessagesPtr, bufferInfo.*info.mNumBuffersPtr);
+        OutputLine("%s: %u %u %u", info.mName, (bufferInfo.*info.mQueuePtr).mNumMessages,
+                   (bufferInfo.*info.mQueuePtr).mNumBuffers, (bufferInfo.*info.mQueuePtr).mTotalBytes);
     }
 
     return OT_ERROR_NONE;
@@ -1478,7 +1470,15 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
     SuccessOrExit(error = otThreadDiscover(GetInstancePtr(), scanChannels, OT_PANID_BROADCAST, false, false,
                                            &Interpreter::HandleActiveScanResult, this));
 
-    OutputScanTableHeader();
+    static const char *const kScanTableTitles[] = {
+        "Network Name", "Extended PAN", "PAN", "MAC Address", "Ch", "dBm", "LQI",
+    };
+
+    static const uint8_t kScanTableColumnWidths[] = {
+        18, 18, 6, 18, 4, 5, 5,
+    };
+
+    OutputTableHeader(kScanTableTitles, kScanTableColumnWidths);
 
     error = OT_ERROR_PENDING;
 
@@ -3905,7 +3905,11 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
     }
     else
     {
-        OutputScanTableHeader();
+        static const char *const kScanTableTitles[]       = {"PAN", "MAC Address", "Ch", "dBm", "LQI"};
+        static const uint8_t     kScanTableColumnWidths[] = {6, 18, 4, 5, 5};
+
+        OutputTableHeader(kScanTableTitles, kScanTableColumnWidths);
+
         SuccessOrExit(error = otLinkActiveScan(GetInstancePtr(), scanChannels, scanDuration,
                                                &Interpreter::HandleActiveScanResult, this));
     }
@@ -3914,19 +3918,6 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
 
 exit:
     return error;
-}
-
-void Interpreter::OutputScanTableHeader(void)
-{
-    static const char *const kScanTableTitles[] = {
-        "J", "Network Name", "Extended PAN", "PAN", "MAC Address", "Ch", "dBm", "LQI",
-    };
-
-    static const uint8_t kScanTableColumnWidths[] = {
-        3, 18, 18, 6, 18, 4, 5, 5,
-    };
-
-    OutputTableHeader(kScanTableTitles, kScanTableColumnWidths);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
@@ -3942,13 +3933,14 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
         ExitNow();
     }
 
-    OutputFormat("| %d ", aResult->mIsJoinable);
+    if (aResult->mDiscover)
+    {
+        OutputFormat("| %-16s ", aResult->mNetworkName.m8);
 
-    OutputFormat("| %-16s ", aResult->mNetworkName.m8);
-
-    OutputFormat("| ");
-    OutputBytes(aResult->mExtendedPanId.m8);
-    OutputFormat(" ");
+        OutputFormat("| ");
+        OutputBytes(aResult->mExtendedPanId.m8);
+        OutputFormat(" ");
+    }
 
     OutputFormat("| %04x | ", aResult->mPanId);
     OutputExtAddress(aResult->mExtAddress);

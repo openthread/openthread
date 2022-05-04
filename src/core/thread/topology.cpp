@@ -154,6 +154,19 @@ bool Neighbor::MatchesFilter(StateFilter aFilter) const
     return matches;
 }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+void Neighbor::SetLastRxFragmentTag(uint16_t aTag)
+{
+    mLastRxFragmentTag     = (aTag == 0) ? 0xffff : aTag;
+    mLastRxFragmentTagTime = TimerMilli::GetNow();
+}
+
+bool Neighbor::IsLastRxFragmentTagSet(void) const
+{
+    return (mLastRxFragmentTag != 0) && (TimerMilli::GetNow() <= mLastRxFragmentTagTime + kLastRxFragmentTagTimeout);
+}
+#endif
+
 void Neighbor::GenerateChallenge(void)
 {
     IgnoreError(

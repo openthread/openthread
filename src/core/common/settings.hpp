@@ -47,15 +47,12 @@
 #include "common/settings_driver.hpp"
 #include "crypto/ecdsa.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/dataset.hpp"
 #include "net/ip6_address.hpp"
 #include "utils/flash.hpp"
 #include "utils/slaac_address.hpp"
 
 namespace ot {
-
-namespace MeshCoP {
-class Dataset;
-}
 
 class Settings;
 
@@ -118,15 +115,18 @@ public:
         kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
         kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
         kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
+        kKeyLegacyOmrPrefix   = OT_SETTINGS_KEY_LEGACY_OMR_PREFIX,
         kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
-        kKeyNat64Prefix       = OT_SETTINGS_KEY_NAT64_PREFIX,
+        kKeyLegacyNat64Prefix = OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX,
+        kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
     };
 
-    static constexpr Key kLastKey = kKeyNat64Prefix; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyBrUlaPrefix; ///< The last (numerically) enumerator value in `Key`.
+    static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
+                  "Core settings keys overlap with vendor reserved keys");
 
     /**
      * This structure represents the device's own network information for settings storage.
@@ -477,7 +477,7 @@ public:
         /**
          * This method sets the Thread device mode.
          *
-         * @param[in] aRloc16  The Thread device mode.
+         * @param[in] aMode  The Thread device mode.
          *
          */
         void SetMode(uint8_t aMode) { mMode = aMode; }
@@ -570,18 +570,33 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This class defines constants and types for OMR prefix settings.
+     * This class defines constants and types for BR ULA prefix settings.
      *
      */
-    class OmrPrefix
+    class BrUlaPrefix
     {
     public:
-        static constexpr Key kKey = kKeyOmrPrefix; ///< The associated key.
+        static constexpr Key kKey = kKeyBrUlaPrefix; ///< The associated key.
 
         typedef Ip6::Prefix ValueType; ///< The associated value type.
 
     private:
-        OmrPrefix(void) = default;
+        BrUlaPrefix(void) = default;
+    };
+
+    /**
+     * This class defines constants and types for legacy OMR prefix settings.
+     *
+     */
+    class LegacyOmrPrefix
+    {
+    public:
+        static constexpr Key kKey = kKeyLegacyOmrPrefix; ///< The associated key.
+
+        typedef Ip6::Prefix ValueType; ///< The associated value type.
+
+    private:
+        LegacyOmrPrefix(void) = default;
     };
 
     /**
@@ -598,23 +613,6 @@ public:
     private:
         OnLinkPrefix(void) = default;
     };
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
-    /**
-     * This class defines constants and types for NAT64 prefix settings.
-     *
-     */
-    class Nat64Prefix
-    {
-    public:
-        static constexpr Key kKey = kKeyNat64Prefix; ///< The associated key.
-
-        typedef Ip6::Prefix ValueType; ///< The associated value type.
-
-    private:
-        Nat64Prefix(void) = default;
-    };
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
@@ -798,38 +796,38 @@ public:
     /**
      * This method saves the Operational Dataset (active or pending).
      *
-     * @param[in]   aIsActive   Indicates whether Dataset is active or pending.
+     * @param[in]   aType       The Dataset type (active or pending) to save.
      * @param[in]   aDataset    A reference to a `Dataset` object to be saved.
      *
      * @retval kErrorNone             Successfully saved the Dataset.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset);
+    Error SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset);
 
     /**
      * This method reads the Operational Dataset (active or pending).
      *
-     * @param[in]   aIsActive             Indicates whether Dataset is active or pending.
-     * @param[out]  aDataset              A reference to a `Dataset` object to output the read content.
+     * @param[in]   aType            The Dataset type (active or pending) to read.
+     * @param[out]  aDataset         A reference to a `Dataset` object to output the read content.
      *
      * @retval kErrorNone             Successfully read the Dataset.
      * @retval kErrorNotFound         No corresponding value in the setting store.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const;
+    Error ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const;
 
     /**
      * This method deletes the Operational Dataset (active/pending) from settings.
      *
-     * @param[in]   aIsActive            Indicates whether Dataset is active or pending.
+     * @param[in]   aType            The Dataset type (active or pending) to delete.
      *
      * @retval kErrorNone            Successfully deleted the Dataset.
      * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    Error DeleteOperationalDataset(bool aIsActive);
+    Error DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
 
     /**
      * This template method reads a specified settings entry.
@@ -921,7 +919,7 @@ public:
      *
      * @tparam EntryType              The settings entry type.
      *
-     * @param[in] aEntry              The entry value to be saved.
+     * @param[in] aValue              The entry value to be saved.
      *
      * @retval kErrorNone             Successfully saved Network Info in settings.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
@@ -1113,13 +1111,15 @@ private:
     };
 #endif
 
+    static Key KeyForDatasetType(MeshCoP::Dataset::Type aType);
+
     Error ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const;
     Error SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength);
     Error DeleteEntry(Key aKey);
 
     static void Log(Action aAction, Error aError, Key aKey, const void *aValue = nullptr);
 
-    static const uint16_t kCriticalKeys[];
+    static const uint16_t kSensitiveKeys[];
 };
 
 } // namespace ot

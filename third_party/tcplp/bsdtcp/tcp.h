@@ -43,8 +43,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define __func__ "BSD TCP function"
-
 #define KASSERT(COND, MSG) if (!(COND)) tcplp_sys_panic MSG
 
 typedef	uint32_t tcp_seq;

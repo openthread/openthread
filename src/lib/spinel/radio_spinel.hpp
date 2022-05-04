@@ -858,7 +858,7 @@ public:
 private:
     enum
     {
-        kMaxSpinelFrame        = SpinelInterface::kMaxFrameSize,
+        kMaxSpinelFrame        = SPINEL_FRAME_MAX_SIZE,
         kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
         kVersionStringSize     = 128,  ///< Max size of version string.
         kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.

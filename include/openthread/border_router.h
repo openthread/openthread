@@ -137,11 +137,11 @@ otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefi
 /**
  * This method provides a full or stable copy of the local Thread Network Data.
  *
- * @param[in]     aInstance    A pointer to an OpenThread instance.
- * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
- * @param[out]    aData        A pointer to the data buffer.
- * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
- *                             On exit, number of copied bytes.
+ * @param[in]      aInstance    A pointer to an OpenThread instance.
+ * @param[in]      aStable      TRUE when copying the stable version, FALSE when copying the full version.
+ * @param[out]     aData        A pointer to the data buffer.
+ * @param[in,out]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
+ *                              On exit, number of copied bytes.
  */
 otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
@@ -177,10 +177,10 @@ otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefi
 /**
  * This function gets the next On Mesh Prefix in the local Network Data.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
-                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to the On Mesh Prefix information.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
+                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]     aConfig    A pointer to the On Mesh Prefix information.
  *
  * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
@@ -222,10 +222,10 @@ otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPre
 /**
  * This function gets the next external route in the local Network Data.
  *
- * @param[in]     aInstance  A pointer to an OpenThread instance.
- * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first external route entry
-                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
- * @param[out]    aConfig    A pointer to the External Route information.
+ * @param[in]      aInstance  A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first external route entry
+                              it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]     aConfig    A pointer to the External Route information.
  *
  * @retval OT_ERROR_NONE       Successfully found the next External Route.
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.

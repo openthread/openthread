@@ -476,6 +476,16 @@ const char *Message::CodeToString(void) const
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
+Message::Iterator MessageQueue::begin(void)
+{
+    return Message::Iterator(GetHead());
+}
+
+Message::ConstIterator MessageQueue::begin(void) const
+{
+    return Message::ConstIterator(GetHead());
+}
+
 Error Option::Iterator::Init(const Message &aMessage)
 {
     Error    error  = kErrorParse;
