@@ -45,9 +45,11 @@
 #include "meshcop/border_agent.hpp"
 #include "meshcop/commissioner.hpp"
 #include "meshcop/dataset_manager.hpp"
+#include "meshcop/extended_panid.hpp"
 #include "meshcop/joiner.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop_leader.hpp"
+#include "meshcop/network_name.hpp"
 #include "net/dhcp6.hpp"
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
@@ -197,15 +199,17 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;
 #endif
-    MeshCoP::ActiveDataset  mActiveDataset;
-    MeshCoP::PendingDataset mPendingDataset;
-    Ip6::Filter             mIp6Filter;
-    KeyManager              mKeyManager;
-    Lowpan::Lowpan          mLowpan;
-    Mac::Mac                mMac;
-    MeshForwarder           mMeshForwarder;
-    Mle::MleRouter          mMleRouter;
-    Mle::DiscoverScanner    mDiscoverScanner;
+    MeshCoP::ActiveDatasetManager  mActiveDataset;
+    MeshCoP::PendingDatasetManager mPendingDataset;
+    MeshCoP::ExtendedPanIdManager  mExtendedPanIdManager;
+    MeshCoP::NetworkNameManager    mNetworkNameManager;
+    Ip6::Filter                    mIp6Filter;
+    KeyManager                     mKeyManager;
+    Lowpan::Lowpan                 mLowpan;
+    Mac::Mac                       mMac;
+    MeshForwarder                  mMeshForwarder;
+    Mle::MleRouter                 mMleRouter;
+    Mle::DiscoverScanner           mDiscoverScanner;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioSelector mRadioSelector;
 #endif

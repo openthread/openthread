@@ -67,6 +67,9 @@ enum
     OT_SIM_EVENT_UART_WRITE         = 2,
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
+    OT_SIM_EVENT_RADIO_COMM         = 6,
+    OT_SIM_EVENT_RADIO_TX_DONE      = 7,
+    OT_SIM_EVENT_CHANNEL_ACTIVITY   = 8,
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
@@ -159,11 +162,30 @@ void platformRadioDeinit(void);
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength);
 
 /**
+ * This function signals Tx Done to the radio (instead of echo frames).
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  pktSeq     Packet sequence number to be confirmed as sent.
+ *
+ */
+void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq);
+
+/**
+ * This function inputs the parameter used to simulate a CCA procedure.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  channel    Channel number in use.
+ * @param[in]  value      CCA result (0 for no activity, 255 busy).
+ *
+ */
+void platformChannelActivity(otInstance *aInstance, uint8_t channel, int8_t value);
+
+/**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
  *
- * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
  *
  */
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
@@ -187,9 +209,9 @@ void platformRandomInit(void);
 /**
  * This function updates the file descriptor sets with file descriptors used by the UART driver.
  *
- * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
  *
  */
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
@@ -231,6 +253,14 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  */
 bool platformRadioIsTransmitPending(void);
 
+/**
+ * This function checks if radio is waiting for a Tx Done signal from the simulator.
+ *
+ * @returns Whether radio TxDone signal is pending.
+ *
+ */
+bool platformRadioTaskPending(void);
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 /**
@@ -250,10 +280,10 @@ void platformTrelDeinit(void);
 /**
  * This function updates the file descriptor sets with file descriptors used by the TREL.
  *
- * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[inout]  aTimeout     A pointer to the timeout.
- * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]  aTimeout     A pointer to the timeout.
+ * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
  *
  */
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd);

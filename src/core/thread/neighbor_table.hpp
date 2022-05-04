@@ -194,9 +194,9 @@ public:
      * This method gets the next neighbor information. It is used to iterate through the entries of
      * the neighbor table.
      *
-     * @param[inout]  aIterator  A reference to the iterator context. To get the first neighbor entry
-                                 it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
-     * @param[out]    aNeighInfo The neighbor information.
+     * @param[in,out]  aIterator  A reference to the iterator context. To get the first neighbor entry
+                                  it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
+     * @param[out]     aNeighInfo The neighbor information.
      *
      * @retval kErrorNone         Successfully found the next neighbor entry in table.
      * @retval kErrorNotFound     No subsequent neighbor entry exists in the table.

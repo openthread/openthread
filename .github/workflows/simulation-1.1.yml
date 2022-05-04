@@ -150,6 +150,7 @@ jobs:
     name: cli-mtd MESSAGE_USE_HEAP=${{ matrix.message_use_heap }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         message_use_heap: [0, 1]
     env:

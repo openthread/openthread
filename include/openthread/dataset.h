@@ -152,7 +152,6 @@ typedef struct otSecurityPolicy
     bool    mNativeCommissioningEnabled : 1;     ///< Native Commissioning using PSKc is allowed
     bool    mRoutersEnabled : 1;                 ///< Thread 1.0/1.1.x Routers are enabled
     bool    mExternalCommissioningEnabled : 1;   ///< External Commissioner authentication is allowed
-    bool    mBeaconsEnabled : 1;                 ///< Thread 1.0/1.1.x Beacons are enabled
     bool    mCommercialCommissioningEnabled : 1; ///< Commercial Commissioning is enabled
     bool    mAutonomousEnrollmentEnabled : 1;    ///< Autonomous Enrollment is enabled
     bool    mNetworkKeyProvisioningEnabled : 1;  ///< Network Key Provisioning is enabled

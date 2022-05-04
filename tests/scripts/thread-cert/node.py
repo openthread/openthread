@@ -2085,15 +2085,11 @@ class NodeImpl:
         if result == 1:
             networks = []
             for line in self._expect_command_output()[2:]:
-                _, J, networkname, extpanid, panid, extaddr, channel, dbm, lqi, _ = map(str.strip, line.split('|'))
-                J = bool(int(J))
+                _, panid, extaddr, channel, dbm, lqi, _ = map(str.strip, line.split('|'))
                 panid = int(panid, 16)
                 channel, dbm, lqi = map(int, (channel, dbm, lqi))
 
                 networks.append({
-                    'joinable': J,
-                    'networkname': networkname,
-                    'extpanid': extpanid,
                     'panid': panid,
                     'extaddr': extaddr,
                     'channel': channel,
@@ -2149,7 +2145,13 @@ class NodeImpl:
         return result
 
     def reset(self):
-        self.send_command('reset', expect_command_echo=False)
+        self._reset('reset')
+
+    def factory_reset(self):
+        self._reset('factoryreset')
+
+    def _reset(self, cmd):
+        self.send_command(cmd, expect_command_echo=False)
         time.sleep(self.RESET_DELAY)
         # Send a "version" command and drain the CLI output after reset
         self.send_command('version', expect_command_echo=False)
@@ -3142,13 +3144,13 @@ class LinuxHost():
         """Enable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} up')
+        self.bash(f'ip link set {self.ETH_DEV} up')
 
     def disable_ether(self):
         """Disable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} down')
+        self.bash(f'ip link set {self.ETH_DEV} down')
 
     def get_ether_addrs(self):
         output = self.bash(f'ip -6 addr list dev {self.ETH_DEV}')

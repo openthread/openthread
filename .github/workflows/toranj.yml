@@ -40,10 +40,11 @@ jobs:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       if: "github.ref != 'refs/heads/main'"
 
-  toranj:
-    name: toranj-${{ matrix.TORANJ_RADIO }}
+  toranj-ncp:
+    name: toranj-ncp-${{ matrix.TORANJ_RADIO }}
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
         TORANJ_RADIO: ['15.4', 'trel', 'multi']
     env:
@@ -82,12 +83,47 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: "matrix.TORANJ_RADIO != 'multi'"
       with:
-        name: cov-toranj-${{ matrix.TORANJ_RADIO }}
+        name: cov-toranj-ncp-${{ matrix.TORANJ_RADIO }}
+        path: tmp/coverage.info
+
+  toranj-cli:
+    name: toranj-cli-${{ matrix.TORANJ_RADIO }}
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        TORANJ_RADIO: ['15.4']
+    env:
+      COVERAGE: 1
+      TORANJ_RADIO : ${{ matrix.TORANJ_RADIO }}
+      TORANJ_CLI: 1
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build & Run
+      run: |
+        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
+    - name: Generate Coverage
+      if: "matrix.TORANJ_RADIO != 'multi'"
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      if: "matrix.TORANJ_RADIO != 'multi'"
+      with:
+        name: cov-toranj-cli-${{ matrix.TORANJ_RADIO }}
         path: tmp/coverage.info
 
   upload-coverage:
     needs:
-    - toranj
+    - toranj-ncp
+    - toranj-cli
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2

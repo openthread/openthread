@@ -330,7 +330,7 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...)
 {
 }
 
-OT_TOOL_WEAK void otPlatSettingsInit(otInstance *)
+OT_TOOL_WEAK void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t)
 {
 }
 

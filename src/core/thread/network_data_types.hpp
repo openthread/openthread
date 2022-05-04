@@ -90,6 +90,18 @@ enum RoutePreference : int8_t
 };
 
 /**
+ * This enumeration represents the border router RLOC role filter used when searching for border routers in the Network
+ * Data.
+ *
+ */
+enum RoleFilter : uint8_t
+{
+    kAnyRole,        ///< Include devices in any role.
+    kRouterRoleOnly, ///< Include devices that act as Thread router.
+    kChildRoleOnly,  ///< Include devices that act as Thread child (end-device).
+};
+
+/**
  * This function indicates whether a given `int8_t` preference value is a valid route preference (i.e., one of the
  * values from `RoutePreference` enumeration).
  *

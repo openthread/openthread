@@ -642,7 +642,7 @@ public:
          * `kMinKeepAliveInterval`, otherwise `kErrorInvalidArgs` is returned.
          *
          * @param[in] aInactivityTimeout  The Inactivity timeout (in msec).
-         * @param[in] aKeepAliveTimeout   The Keep Alive timeout (in msec).
+         * @param[in] aKeepAliveInterval  The Keep Alive interval (in msec).
          *
          * @retval kErrorNone          Successfully set the timeouts and sent a Keep Alive message.
          * @retval kErrorInvalidArgs   The given timeouts are not valid.

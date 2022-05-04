@@ -43,11 +43,13 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/timer.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/dns_types.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
+#include "thread/network_data_service.hpp"
 
 /**
  * @file
@@ -68,6 +70,9 @@ namespace Srp {
 class Client : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+
+    using DnsSrpUnicast = NetworkData::Service::DnsSrpUnicast;
+    using DnsSrpAnycast = NetworkData::Service::DnsSrpAnycast;
 
 public:
     /**
@@ -355,7 +360,7 @@ public:
      * Note that a call to `Stop()` will also disable the auto-start mode.
      *
      */
-    void DisableAutoStartMode(void) { mAutoStartModeEnabled = false; }
+    void DisableAutoStartMode(void) { mAutoStart.SetState(AutoStart::kDisabled); }
 
     /**
      * This method indicates the current state of auto-start mode (enabled or disabled).
@@ -363,7 +368,7 @@ public:
      * @returns TRUE if the auto-start mode is enabled, FALSE otherwise.
      *
      */
-    bool IsAutoStartModeEnabled(void) const { return mAutoStartModeEnabled; }
+    bool IsAutoStartModeEnabled(void) const { return mAutoStart.GetState() != AutoStart::kDisabled; }
 
     /**
      * This method indicates whether or not the current SRP server's address is selected by auto-start.
@@ -371,7 +376,7 @@ public:
      * @returns TRUE if the SRP server's address is selected by auto-start, FALSE otherwise.
      *
      */
-    bool IsServerSelectedByAutoStart(void) const { return mAutoStartDidSelectServer; }
+    bool IsServerSelectedByAutoStart(void) const { return mAutoStart.HasSelectedServer(); }
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
     /**
@@ -422,7 +427,7 @@ public:
      * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
      * It only changes any future SRP update messages (i.e adding new services and/or refreshes of existing services).
      *
-     * @param[in] The lease interval (in seconds). If zero, the default value `kDefaultLease` would be used.
+     * @param[in] aInterval  The lease interval (in seconds). If zero, the default value `kDefaultLease` would be used.
      *
      */
     void SetLeaseInterval(uint32_t aInterval) { mLeaseInterval = GetBoundedLeaseInterval(aInterval, kDefaultLease); }
@@ -441,7 +446,8 @@ public:
      * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
      * It only changes any future SRP update messages (i.e adding new services and/or refreshes of existing services).
      *
-     * @param[in] The key lease interval (in seconds). If zero, the default value `kDefaultKeyLease` would be used.
+     * @param[in] aInterval The key lease interval (in seconds). If zero, the default value `kDefaultKeyLease` would be
+     *                      used.
      *
      */
     void SetKeyLeaseInterval(uint32_t aInterval)
@@ -576,9 +582,9 @@ public:
      * any previously registered services with the server. In this case, caller can `SetHostName()` and then request
      * `RemoveHostAndServices()` with `aSendUnregToServer` as `true`.
      *
-     * @param[in] aRemoveKeyLease     A boolean indicating whether or not the host key lease should also be removed.
-     * @param[in] aSendUnregToServer   A boolean indicating whether to send update to server when host info is not
-     *                                registered.
+     * @param[in] aShouldRemoveKeyLease  A boolean indicating whether or not the host key lease should also be removed.
+     * @param[in] aSendUnregToServer     A boolean indicating whether to send update to server when host info is not
+     *                                   registered.
      *
      * @retval kErrorNone      The removal of host and services started successfully. The `Callback` will be called
      *                         to report the status.
@@ -668,7 +674,7 @@ private:
         OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER;
 #endif
 
-    static constexpr uint16_t kUdpPayloadSize = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
+    static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
     // -------------------------------
     // Lease related constants
@@ -789,6 +795,54 @@ private:
         kKeepRetryInterval,
     };
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    class AutoStart : Clearable<AutoStart>
+    {
+    public:
+        enum State : uint8_t{
+            kDisabled,                 // AutoStart is disabled.
+            kSelectedNone,             // AutoStart is enabled but not yet selected any servers.
+            kSelectedUnicastPreferred, // AutoStart selected a preferred unicast entry (address in service data).
+            kSelectedAnycast,          // AutoStart selected an anycast entry with `mAnycastSeqNum`.
+            kSelectedUnicast,          // AutoStart selected a unicast entry (address in server data).
+        };
+
+        AutoStart(void);
+        bool    HasSelectedServer(void) const;
+        State   GetState(void) const { return mState; }
+        void    SetState(State aState);
+        uint8_t GetAnycastSeqNum(void) const { return mAnycastSeqNum; }
+        void    SetAnycastSeqNum(uint8_t aAnycastSeqNum) { mAnycastSeqNum = aAnycastSeqNum; }
+        void    SetCallback(AutoStartCallback aCallback, void *aContext);
+        void    InvokeCallback(const Ip6::SockAddr *aServerSockAddr) const;
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+        uint8_t GetTimoutFailureCount(void) const { return mTimoutFailureCount; }
+        void    ResetTimoutFailureCount(void) { mTimoutFailureCount = 0; }
+        void    IncrementTimoutFailureCount(void)
+        {
+            if (mTimoutFailureCount < NumericLimits<uint8_t>::kMax)
+            {
+                mTimoutFailureCount++;
+            }
+        }
+#endif
+
+    private:
+        static constexpr bool kDefaultMode = OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE;
+
+        static const char *StateToString(State aState);
+
+        AutoStartCallback mCallback;
+        void *            mContext;
+        State             mState;
+        uint8_t           mAnycastSeqNum;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+        uint8_t mTimoutFailureCount; // Number of no-response timeout failures with the currently selected server.
+#endif
+    };
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+
     struct Info : public Clearable<Info>
     {
         static constexpr uint16_t kUnknownOffset = 0; // Unknown offset value (used when offset is not yet set).
@@ -838,7 +892,8 @@ private:
     static void  HandleTimer(Timer &aTimer);
     void         HandleTimer(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    void ProcessAutoStart(void);
+    void  ProcessAutoStart(void);
+    Error SelectUnicastEntry(DnsSrpUnicast::Origin aOrigin, DnsSrpUnicast::Info &aInfo) const;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
     void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
 #endif
@@ -858,11 +913,6 @@ private:
     State   mState;
     uint8_t mTxFailureRetryCount : 4;
     bool    mShouldRemoveKeyLease : 1;
-#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    bool mAutoStartModeEnabled : 1;
-    bool mAutoStartDidSelectServer : 1;
-    bool mAutoStartIsUsingAnycastAddress : 1;
-#endif
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
 #endif
@@ -877,22 +927,15 @@ private:
 
     Ip6::Udp::Socket mSocket;
 
-    Callback mCallback;
-    void *   mCallbackContext;
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    AutoStartCallback mAutoStartCallback;
-    void *            mAutoStartContext;
-    uint8_t           mServerSequenceNumber;
-#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-    uint8_t mTimoutFailureCount;
-#endif
-#endif
-
+    Callback            mCallback;
+    void *              mCallbackContext;
     const char *        mDomainName;
     HostInfo            mHostInfo;
     LinkedList<Service> mServices;
     TimerMilli          mTimer;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    AutoStart mAutoStart;
+#endif
 };
 
 } // namespace Srp

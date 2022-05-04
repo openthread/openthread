@@ -303,7 +303,7 @@ public:
     /**
      * This method sets the ROUTER_UPGRADE_THRESHOLD value.
      *
-     * @returns The ROUTER_UPGRADE_THRESHOLD value.
+     * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
      *
      */
     void SetRouterUpgradeThreshold(uint8_t aThreshold) { mRouterUpgradeThreshold = aThreshold; }
@@ -319,7 +319,7 @@ public:
     /**
      * This method sets the ROUTER_DOWNGRADE_THRESHOLD value.
      *
-     * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
+     * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
      *
      */
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
@@ -575,6 +575,11 @@ private:
     static constexpr uint32_t kStateUpdatePeriod             = 1000; // State update period (in msec).
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500;  // Max delay for unsol Data Response (in msec).
 
+    // Threshold to accept a router upgrade request with reason
+    // `kBorderRouterRequst` (number of BRs acting as router in
+    // Network Data).
+    static constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
+
     Error AppendConnectivity(Message &aMessage);
     Error AppendChildAddresses(Message &aMessage, Child &aChild);
     Error AppendRoute(Message &aMessage, Neighbor *aNeighbor = nullptr);
@@ -582,33 +587,20 @@ private:
     Error AppendPendingDataset(Message &aMessage);
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
-    void  HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
-    void  HandleLinkAccept(const Message &         aMessage,
-                           const Ip6::MessageInfo &aMessageInfo,
-                           uint32_t                aKeySequence,
-                           Neighbor *              aNeighbor);
-    Error HandleLinkAccept(const Message &         aMessage,
-                           const Ip6::MessageInfo &aMessageInfo,
-                           uint32_t                aKeySequence,
-                           Neighbor *              aNeighbor,
-                           bool                    aRequest);
-    void  HandleLinkAcceptAndRequest(const Message &         aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     uint32_t                aKeySequence,
-                                     Neighbor *              aNeighbor);
-    Error HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *);
-    void  HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    void  HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void  HandleChildUpdateResponse(const Message &         aMessage,
-                                    const Ip6::MessageInfo &aMessageInfo,
-                                    uint32_t                aKeySequence,
-                                    Neighbor *              aNeighbor);
-    void  HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
+    void  HandleLinkRequest(RxInfo &aRxInfo);
+    void  HandleLinkAccept(RxInfo &aRxInfo);
+    Error HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
+    void  HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
+    Error HandleAdvertisement(RxInfo &aRxInfo);
+    void  HandleParentRequest(RxInfo &aRxInfo);
+    void  HandleChildIdRequest(RxInfo &aRxInfo);
+    void  HandleChildUpdateRequest(RxInfo &aRxInfo);
+    void  HandleChildUpdateResponse(RxInfo &aRxInfo);
+    void  HandleDataRequest(RxInfo &aRxInfo);
     void  HandleNetworkDataUpdateRouter(void);
-    void  HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleDiscoveryRequest(RxInfo &aRxInfo);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    void HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
+    void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
     Error ProcessRouteTlv(const RouteTlv &aRoute);
@@ -616,6 +608,7 @@ private:
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     void  SendAddressRelease(void);
     void  SendAddressSolicitResponse(const Coap::Message &   aRequest,
+                                     ThreadStatusTlv::Status aResponseStatus,
                                      const Router *          aRouter,
                                      const Ip6::MessageInfo &aMessageInfo);
     void  SendAdvertisement(void);

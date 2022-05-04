@@ -39,6 +39,7 @@
 #include <openthread/tcp.h>
 
 #include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -46,7 +47,17 @@
 #include "net/ip6_headers.hpp"
 #include "net/socket.hpp"
 
-#include "../../third_party/tcplp/tcplp.h"
+/*
+ * These structures and functions are forward-declared here to avoid
+ * #includ'ing third_party/tcplp/tcplp.h in this header file.
+ */
+extern "C" {
+struct tcpcb;
+struct tcpcb_listen;
+struct tcplp_signals;
+void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
+void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
+}
 
 namespace ot {
 namespace Ip6 {
@@ -96,7 +107,7 @@ public:
          * @retval kErrorFailed  Failed to open the TCP endpoint.
          *
          */
-        Error Initialize(Instance &aInstance, otTcpEndpointInitializeArgs &aArgs);
+        Error Initialize(Instance &aInstance, const otTcpEndpointInitializeArgs &aArgs);
 
         /**
          * Obtains the Instance that was associated with this Endpoint upon
@@ -351,12 +362,11 @@ public:
         /**
          * Checks if this Endpoint is in the closed state.
          */
-        bool IsClosed(void) const { return GetTcb().t_state == TCP6S_CLOSED; }
+        bool IsClosed(void) const;
 
     private:
         friend void ::tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
         friend void ::tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
-        friend void ::tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
 
         enum : uint8_t
         {
@@ -374,17 +384,19 @@ public:
         void CancelTimer(uint8_t aTimerFlag);
         bool FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, TimeMilli &aEarliestFutureExpiry);
 
-        Address &      GetLocalIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcb().laddr); }
-        const Address &GetLocalIp6Address(void) const { return *reinterpret_cast<const Address *>(&GetTcb().laddr); }
-        Address &      GetForeignIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcb().faddr); }
-        const Address &GetForeignIp6Address(void) const { return *reinterpret_cast<const Address *>(&GetTcb().faddr); }
+        void PostCallbacksAfterSend(size_t aSent, size_t aBacklogBefore);
+        bool FirePendingCallbacks(void);
+
+        size_t GetSendBufferBytes(void) const;
+        size_t GetInFlightBytes(void) const;
+        size_t GetBacklogBytes(void) const;
+
+        Address &      GetLocalIp6Address(void);
+        const Address &GetLocalIp6Address(void) const;
+        Address &      GetForeignIp6Address(void);
+        const Address &GetForeignIp6Address(void) const;
         bool           Matches(const MessageInfo &aMessageInfo) const;
     };
-
-    static_assert(sizeof(struct tcpcb) == sizeof(Endpoint::mTcb), "mTcb field in otTcpEndpoint is sized incorrectly");
-    static_assert(alignof(struct tcpcb) == alignof(decltype(Endpoint::mTcb)),
-                  "mTcb field in otTcpEndpoint is aligned incorrectly");
-    static_assert(offsetof(Endpoint, mTcb) == 0, "mTcb field in otTcpEndpoint has nonzero offset");
 
     /**
      * This class represents a TCP/IPv6 listener.
@@ -413,7 +425,7 @@ public:
          * @retval kErrorFailed  Failed to open the TCP listener.
          *
          */
-        Error Initialize(Instance &aInstance, otTcpListenerInitializeArgs &aArgs);
+        Error Initialize(Instance &aInstance, const otTcpListenerInitializeArgs &aArgs);
 
         /**
          * Obtains the otInstance that was associated with this Listener upon
@@ -505,29 +517,20 @@ public:
         /**
          * Checks if this Listener is in the closed state.
          */
-        bool IsClosed(void) const { return GetTcbListen().t_state == TCP6S_CLOSED; }
+        bool IsClosed(void) const;
 
     private:
-        Address &      GetLocalIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcbListen().laddr); }
-        const Address &GetLocalIp6Address(void) const
-        {
-            return *reinterpret_cast<const Address *>(&GetTcbListen().laddr);
-        }
-        bool Matches(const MessageInfo &aMessageInfo) const;
+        Address &      GetLocalIp6Address(void);
+        const Address &GetLocalIp6Address(void) const;
+        bool           Matches(const MessageInfo &aMessageInfo) const;
     };
-
-    static_assert(sizeof(struct tcpcb_listen) == sizeof(Listener::mTcbListen),
-                  "mTcbListen field in otTcpListener is sized incorrectly");
-    static_assert(alignof(struct tcpcb_listen) == alignof(decltype(Listener::mTcbListen)),
-                  "mTcbListen field in otTcpListener is aligned incorrectly");
-    static_assert(offsetof(Listener, mTcbListen) == 0, "mTcbListen field in otTcpEndpoint has nonzero offset");
 
     /**
      * This class implements TCP header parsing.
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class Header : public Clearable<Header>
     {
     public:
         static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.
@@ -660,7 +663,16 @@ private:
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
 
-    void ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct signals &aSignals);
+    static constexpr uint8_t kEstablishedCallbackFlag      = (1 << 0);
+    static constexpr uint8_t kSendDoneCallbackFlag         = (1 << 1);
+    static constexpr uint8_t kForwardProgressCallbackFlag  = (1 << 2);
+    static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
+    static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
+
+    void ProcessSignals(Endpoint &            aEndpoint,
+                        otLinkedBuffer *      aPriorHead,
+                        size_t                aPriorBacklog,
+                        struct tcplp_signals &aSignals);
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
@@ -668,7 +680,11 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        ProcessTimers(void);
 
+    static void HandleTasklet(Tasklet &aTasklet);
+    void        ProcessCallbacks(void);
+
     TimerMilli mTimer;
+    Tasklet    mTasklet;
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;

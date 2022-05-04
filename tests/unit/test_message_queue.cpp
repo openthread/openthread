@@ -46,9 +46,10 @@ static ot::MessagePool *sMessagePool;
 // This function verifies the content of the message queue to match the passed in messages
 void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLength, ...)
 {
-    va_list      args;
-    ot::Message *message;
-    ot::Message *msgArg;
+    const ot::MessageQueue &constQueue = aMessageQueue;
+    va_list                 args;
+    ot::Message *           message;
+    ot::Message *           msgArg;
 
     va_start(args, aExpectedLength);
 
@@ -69,17 +70,41 @@ void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLen
             aExpectedLength--;
         }
 
-        VerifyOrQuit(aExpectedLength == 0, "less entries than expected");
+        VerifyOrQuit(aExpectedLength == 0, "fewer entries than expected");
     }
 
     va_end(args);
+
+    // Check range-based `for` loop iteration using non-const iterator
+
+    message = aMessageQueue.GetHead();
+
+    for (ot::Message &msg : aMessageQueue)
+    {
+        VerifyOrQuit(message == &msg, "`for` loop iteration does not match expected");
+        message = message->GetNext();
+    }
+
+    VerifyOrQuit(message == nullptr, "`for` loop iteration resulted in fewer entries than expected");
+
+    // Check  range-base `for` iteration using const iterator
+
+    message = aMessageQueue.GetHead();
+
+    for (const ot::Message &constMsg : constQueue)
+    {
+        VerifyOrQuit(message == &constMsg, "`for` loop iteration does not match expected");
+        message = message->GetNext();
+    }
+
+    VerifyOrQuit(message == nullptr, "`for` loop iteration resulted in fewer entries than expected");
 }
 
 void TestMessageQueue(void)
 {
-    ot::MessageQueue messageQueue;
-    ot::Message *    messages[kNumTestMessages];
-    uint16_t         msgCount, bufferCount;
+    ot::MessageQueue       messageQueue;
+    ot::Message *          messages[kNumTestMessages];
+    ot::MessageQueue::Info info;
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr);
@@ -119,8 +144,9 @@ void TestMessageQueue(void)
     VerifyMessageQueueContent(messageQueue, 5, messages[0], messages[1], messages[2], messages[3], messages[4]);
 
     // Check the GetInfo()
-    messageQueue.GetInfo(msgCount, bufferCount);
-    VerifyOrQuit(msgCount == 5, "MessageQueue::GetInfo() failed.");
+    memset(&info, 0, sizeof(info));
+    messageQueue.GetInfo(info);
+    VerifyOrQuit(info.mNumMessages == 5, "MessageQueue::GetInfo() failed.");
 
     // Remove from head
     messageQueue.Dequeue(*messages[0]);
@@ -173,6 +199,47 @@ void TestMessageQueue(void)
     VerifyMessageQueueContent(messageQueue, 1, messages[0]);
     messageQueue.Dequeue(*messages[0]);
     VerifyMessageQueueContent(messageQueue, 0);
+
+    // Range-based `for` and dequeue during iteration
+
+    for (uint16_t removeIndex = 0; removeIndex < 5; removeIndex++)
+    {
+        uint16_t index = 0;
+
+        messageQueue.Enqueue(*messages[0]);
+        messageQueue.Enqueue(*messages[1]);
+        messageQueue.Enqueue(*messages[2]);
+        messageQueue.Enqueue(*messages[3]);
+        messageQueue.Enqueue(*messages[4]);
+        VerifyMessageQueueContent(messageQueue, 5, messages[0], messages[1], messages[2], messages[3], messages[4]);
+
+        // While iterating over the queue remove the entry at `removeIndex`
+        for (ot::Message &message : messageQueue)
+        {
+            if (index == removeIndex)
+            {
+                messageQueue.Dequeue(message);
+            }
+
+            VerifyOrQuit(&message == messages[index++]);
+        }
+
+        index = 0;
+
+        // Iterate over the queue and remove all
+        for (ot::Message &message : messageQueue)
+        {
+            if (index == removeIndex)
+            {
+                index++;
+            }
+
+            VerifyOrQuit(&message == messages[index++]);
+            messageQueue.Dequeue(message);
+        }
+
+        VerifyMessageQueueContent(messageQueue, 0);
+    }
 
     testFreeInstance(sInstance);
 }

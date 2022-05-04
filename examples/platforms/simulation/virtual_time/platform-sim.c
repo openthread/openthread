@@ -102,18 +102,28 @@ static void receiveEvent(otInstance *aInstance)
     }
 
     platformAlarmAdvanceNow(event.mDelay);
-
     switch (event.mEvent)
     {
     case OT_SIM_EVENT_ALARM_FIRED:
         break;
 
-    case OT_SIM_EVENT_RADIO_RECEIVED:
+    case OT_SIM_EVENT_RADIO_COMM:
         platformRadioReceive(aInstance, event.mData, event.mDataLength);
         break;
 
     case OT_SIM_EVENT_UART_WRITE:
         otPlatUartReceived(event.mData, event.mDataLength);
+        break;
+
+    case OT_SIM_EVENT_RADIO_TX_DONE:
+        platformRadioTxDone(aInstance, event.mData[0]);
+        break;
+
+    case OT_SIM_EVENT_CHANNEL_ACTIVITY:
+#if OPENTHREAD_SIMULATION_CCA
+        // Data[0] is the channel, Data[1] is the CCA value (0-255)
+        platformChannelActivity(aInstance, event.mData[0], (int8_t)event.mData[1]);
+#endif
         break;
 
     default:
@@ -288,7 +298,8 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
 #endif
 
-    if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && !platformRadioIsTransmitPending())
+    if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 &&
+        (!platformRadioIsTransmitPending() || platformRadioTaskPending()))
     {
         platformSendSleepEvent();
 

@@ -168,10 +168,10 @@ public:
     /**
      * This method provides full or stable copy of the Thread Network Data.
      *
-     * @param[in]    aType        The Network Data type to copy, the full set or stable subset.
-     * @param[out]   aData        A pointer to the data buffer to copy the Network Data into.
-     * @param[inout] aDataLength  On entry, size of the data buffer pointed to by @p aData.
-     *                            On exit, number of copied bytes.
+     * @param[in]     aType        The Network Data type to copy, the full set or stable subset.
+     * @param[out]    aData        A pointer to the data buffer to copy the Network Data into.
+     * @param[in,out] aDataLength  On entry, size of the data buffer pointed to by @p aData.
+     *                             On exit, number of copied bytes.
      *
      * @retval kErrorNone       Successfully copied Thread Network Data.
      * @retval kErrorNoBufs     Not enough space in @p aData to fully copy Thread Network Data.
@@ -194,8 +194,8 @@ public:
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[out]    aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
+     * @param[in,out]  aIterator  A reference to the Network Data iterator.
+     * @param[out]     aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
      *
      * @retval kErrorNone       Successfully found the next On Mesh prefix.
      * @retval kErrorNotFound   No subsequent On Mesh prefix exists in the Thread Network Data.
@@ -206,9 +206,9 @@ public:
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data for a given RLOC16.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
+     * @param[in,out]  aIterator  A reference to the Network Data iterator.
+     * @param[in]      aRloc16    The RLOC16 value.
+     * @param[out]     aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
      *
      * @retval kErrorNone       Successfully found the next On Mesh prefix.
      * @retval kErrorNotFound   No subsequent On Mesh prefix exists in the Thread Network Data.
@@ -219,8 +219,8 @@ public:
     /**
      * This method provides the next external route in the Thread Network Data.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[out]    aConfig    A reference to a config variable where the external route information will be placed.
+     * @param[in,out]  aIterator  A reference to the Network Data iterator.
+     * @param[out]     aConfig    A reference to a config variable where the external route information will be placed.
      *
      * @retval kErrorNone       Successfully found the next external route.
      * @retval kErrorNotFound   No subsequent external route exists in the Thread Network Data.
@@ -231,9 +231,9 @@ public:
     /**
      * This method provides the next external route in the Thread Network Data for a given RLOC16.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aConfig    A reference to a config variable where the external route information will be placed.
+     * @param[in,out]  aIterator  A reference to the Network Data iterator.
+     * @param[in]      aRloc16    The RLOC16 value.
+     * @param[out]     aConfig    A reference to a config variable where the external route information will be placed.
      *
      * @retval kErrorNone       Successfully found the next external route.
      * @retval kErrorNotFound   No subsequent external route exists in the Thread Network Data.
@@ -244,8 +244,8 @@ public:
     /**
      * This method provides the next service in the Thread Network Data.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[out]    aConfig    A reference to a config variable where the service information will be placed.
+     * @param[in,out]  aIterator  A reference to the Network Data iterator.
+     * @param[out]     aConfig    A reference to a config variable where the service information will be placed.
      *
      * @retval kErrorNone       Successfully found the next service.
      * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
@@ -256,9 +256,9 @@ public:
     /**
      * This method provides the next service in the Thread Network Data for a given RLOC16.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[in]     aRloc16    The RLOC16 value.
-     * @param[out]    aConfig    A reference to a config variable where the service information will be placed.
+     * @param[in,out]  aIterator  A reference to the Network Data iterator.
+     * @param[in]      aRloc16    The RLOC16 value.
+     * @param[out]     aConfig    A reference to a config variable where the service information will be placed.
      *
      * @retval kErrorNone       Successfully found the next service.
      * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
@@ -310,19 +310,56 @@ public:
      * @retval FALSE if Network Data does not contains all the same entries as in @p aCompare for @p aRloc16.
      *
      */
-    bool ContainsEntriesFrom(const NetworkData &aComapre, uint16_t aRloc16) const;
+    bool ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const;
 
     /**
      * This method provides the next server RLOC16 in the Thread Network Data.
      *
-     * @param[inout]  aIterator  A reference to the Network Data iterator.
-     * @param[out]    aRloc16    The RLOC16 value.
+     * @param[in,out]  aIterator  A reference to the Network Data iterator.
+     * @param[out]     aRloc16    The RLOC16 value.
      *
      * @retval kErrorNone       Successfully found the next server.
      * @retval kErrorNotFound   No subsequent server exists in the Thread Network Data.
      *
      */
     Error GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
+
+    /**
+     * This method finds and returns the list of RLOCs of border routers providing external IPv6 connectivity.
+     *
+     * A border router is considered to provide external IPv6 connectivity if it has added at least one external route
+     * entry, or an on-mesh prefix with default-route and on-mesh flags set.
+     *
+     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * full set and not the stable subset).
+     *
+     * @param[in]      aRoleFilter   Indicates which devices to include (any role, router role only, or child only).
+     * @param[out]     aRlocs        Array to output the list of RLOCs.
+     * @param[in,out]  aRlocsLength  On entry, @p aRlocs array length (max number of elements).
+     *                               On exit, number RLOC16 entries added in @p aRlocs.
+     *
+     * @retval kErrorNone     Successfully found all RLOC16s and updated @p aRlocs and @p aRlocsLength.
+     * @retval kErrorNoBufs   Ran out of space in @p aRlocs array. @p aRlocs and @p aRlocsLength are still updated up
+     *                        to the maximum array length.
+     *
+     */
+    Error FindBorderRouters(RoleFilter aRoleFilter, uint16_t aRlocs[], uint8_t &aRlocsLength) const;
+
+    /**
+     * This method counts the number of border routers providing external IPv6 connectivity.
+     *
+     * A border router is considered to provide external IPv6 connectivity if it has added at least one external route
+     * entry, or an on-mesh prefix with default-route and on-mesh flags set.
+     *
+     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * full set and not the stable subset).
+     *
+     * @param[in] aRoleFilter   Indicates which RLOCs to include (any role, router only, or child only).
+     *
+     * @returns The number of border routers in Thread Network Data matching @p aRoleFilter.
+     *
+     */
+    uint8_t CountBorderRouters(RoleFilter aRoleFilter) const;
 
 protected:
     /**

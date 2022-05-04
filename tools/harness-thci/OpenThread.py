@@ -45,14 +45,6 @@ import serial
 from Queue import Queue
 from serial.serialutil import SerialException
 
-TESTHARNESS_1_1 = '1.1'
-TESTHARNESS_1_2 = '1.2'
-
-if 'Thread1.2' in __file__:
-    TESTHARNESS_VERSION = TESTHARNESS_1_2
-else:
-    TESTHARNESS_VERSION = TESTHARNESS_1_1
-
 from GRLLibs.ThreadPacket.PlatformPackets import (
     PlatformDiagnosticPacket,
     PlatformPackets,
@@ -69,10 +61,9 @@ from GRLLibs.UtilityModules.enums import (
     PlatformDiagnosticPacket_Type,
 )
 
-if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-    from GRLLibs.UtilityModules.enums import DevCapb
-    import commissioner
-    from commissioner_impl import OTCommissioner
+from GRLLibs.UtilityModules.enums import DevCapb
+import commissioner
+from commissioner_impl import OTCommissioner
 
 from IThci import IThci
 
@@ -202,17 +193,16 @@ class OpenThreadTHCI(object):
     _cmdPrefix = ''
     _lineSepX = LINESEPX
 
-    if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-        _ROLE_MODE_DICT = {
-            Thread_Device_Role.Leader: 'rdn',
-            Thread_Device_Role.Router: 'rdn',
-            Thread_Device_Role.SED: '-',
-            Thread_Device_Role.EndDevice: 'rn',
-            Thread_Device_Role.REED: 'rdn',
-            Thread_Device_Role.EndDevice_FED: 'rdn',
-            Thread_Device_Role.EndDevice_MED: 'rn',
-            Thread_Device_Role.SSED: '-',
-        }
+    _ROLE_MODE_DICT = {
+        Thread_Device_Role.Leader: 'rdn',
+        Thread_Device_Role.Router: 'rdn',
+        Thread_Device_Role.SED: '-',
+        Thread_Device_Role.EndDevice: 'rn',
+        Thread_Device_Role.REED: 'rdn',
+        Thread_Device_Role.EndDevice_FED: 'rdn',
+        Thread_Device_Role.EndDevice_MED: 'rn',
+        Thread_Device_Role.SSED: '-',
+    }
 
     def __init__(self, **kwargs):
         """initialize the serial port and default network parameters
@@ -426,8 +416,7 @@ class OpenThreadTHCI(object):
         self._connect()
         if not self.IsBorderRouter:
             self.__detectZephyr()
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-            self.__discoverDeviceCapability()
+        self.__discoverDeviceCapability()
         self.UIStatusMsg = self.getVersionNumber()
 
         if self.firmwarePrefix in self.UIStatusMsg:
@@ -533,17 +522,6 @@ class OpenThreadTHCI(object):
         cmd = 'macfilter addr ' + mode
         return self.__executeCommand(cmd)[-1] == 'Done'
 
-    def __skipSeqNoIncrease(self):
-        """skip sequence number increase when recovering BBR Dataset from Network Data
-
-        Returns:
-            True: successful to set the behavior.
-            False: fail to set the behavior.
-        """
-        print('call __skipSeqNoIncrease()')
-        cmd = 'bbr skipseqnuminc'
-        return self.__executeCommand(cmd)[-1] == 'Done'
-
     def __startOpenThread(self):
         """start OpenThread stack
 
@@ -577,9 +555,7 @@ class OpenThreadTHCI(object):
                 Thread_Device_Role.REED,
         ]:
             self.__setRouterSelectionJitter(1)
-        elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and self.deviceRole in [
-                Thread_Device_Role.BR_1, Thread_Device_Role.BR_2
-        ]:
+        elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
             self.IsBackboneRouter = True
             self.__setRouterSelectionJitter(1)
 
@@ -592,15 +568,10 @@ class OpenThreadTHCI(object):
             if self.__useDefaultDomainPrefix:
                 self.__addDefaultDomainPrefix()
 
-            self._deviceBeforeThreadStart()
-
         self.__executeCommand('ifconfig up')
         self.__executeCommand('thread start')
         self.isPowerDown = False
         return True
-
-    def _deviceBeforeThreadStart(self):
-        pass
 
     def __stopOpenThread(self):
         """stop OpenThread stack
@@ -680,26 +651,6 @@ class OpenThreadTHCI(object):
                 pass
 
         return None
-
-    def __convertIp6PrefixStringToIp6Address(self, strIp6Prefix):
-        """convert IPv6 prefix string to IPv6 dotted-quad format
-           for example:
-           2001000000000000 -> 2001:0000:0000:0000::
-
-        Args:
-            strIp6Prefix: IPv6 address string
-
-        Returns:
-            IPv6 address dotted-quad format
-        """
-        prefix1 = strIp6Prefix.rstrip('L')
-        prefix2 = self.__lstrip0x(prefix1)
-        hexPrefix = str(prefix2).ljust(16, '0')
-        hexIter = iter(hexPrefix)
-        finalMac = ':'.join(a + b + c + d for a, b, c, d in zip(hexIter, hexIter, hexIter, hexIter))
-        prefix = str(finalMac)
-        strIp6Prefix = prefix[:19]
-        return strIp6Prefix + '::'
 
     # pylint: disable=no-self-use
     def __convertLongToHex(self, iValue, fillZeros=None):
@@ -933,7 +884,7 @@ class OpenThreadTHCI(object):
                 macAddr64 = self.__executeCommand('eui64')[0]
             elif bType == MacType.HashMac:
                 macAddr64 = self.__executeCommand('joiner id')[0]
-            elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and bType == MacType.EthMac and self.IsBorderRouter:
+            elif bType == MacType.EthMac and self.IsBorderRouter:
                 return self._deviceGetEtherMac()
             else:
                 macAddr64 = self.__executeCommand('extaddr')[0]
@@ -1179,19 +1130,17 @@ class OpenThreadTHCI(object):
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
-        elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
+        elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
             print('join as BBR')
             mode = 'rdn'
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
-                # skip increase of Sequence Number for BBR-TC-02
-                self.__skipSeqNoIncrease()
         elif eRoleId == Thread_Device_Role.SED:
             print('join as sleepy end device')
             mode = '-'
             self.__setPollPeriod(self.__sedPollPeriod)
-        elif TESTHARNESS_VERSION == TESTHARNESS_1_2 and eRoleId == Thread_Device_Role.SSED:
+        elif eRoleId == Thread_Device_Role.SSED:
             print('join as SSED')
             mode = '-'
             self.setCSLperiod(self.cslPeriod)
@@ -1498,7 +1447,7 @@ class OpenThreadTHCI(object):
                                           ModuleHelper.Default_NwkName)
         self.pskc = hex(stretchedPSKc).rstrip('L').lstrip('0x')
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
-        self.securityPolicyFlags = 'onrcb'
+        self.securityPolicyFlags = 'onrc'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         # self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds
@@ -1662,17 +1611,15 @@ class OpenThreadTHCI(object):
         """remove the configured prefix on a border router
 
         Args:
-            prefixEntry: a on-mesh prefix entry
+            prefixEntry: a on-mesh prefix entry in IPv6 dotted-quad format
 
         Returns:
             True: successful to remove the prefix entry from border router
             False: fail to remove the prefix entry from border router
         """
         print('%s call removeRouterPrefix' % self)
-        print(prefixEntry)
-        prefix = self.__convertIp6PrefixStringToIp6Address(str(prefixEntry))
-        prefixLen = 64
-        cmd = 'prefix remove %s/%d' % (prefix, prefixLen)
+        assert (ipaddress.IPv6Network(prefixEntry.decode()))
+        cmd = 'prefix remove %s/64' % prefixEntry
         print(cmd)
         if self.__executeCommand(cmd)[-1] == 'Done':
             # send server data ntf to leader
@@ -1683,7 +1630,7 @@ class OpenThreadTHCI(object):
     @API
     def configBorderRouter(
         self,
-        P_Prefix=None,
+        P_Prefix="fd00:7d03:7d03:7d03::",
         P_stable=1,
         P_default=1,
         P_slaac_preferred=0,
@@ -1696,7 +1643,7 @@ class OpenThreadTHCI(object):
         """configure the border router with a given prefix entry parameters
 
         Args:
-            P_Prefix: IPv6 prefix that is available on the Thread Network
+            P_Prefix: IPv6 prefix that is available on the Thread Network in IPv6 dotted-quad format
             P_stable: true if the default router is expected to be stable network data
             P_default: true if border router offers the default route for P_Prefix
             P_slaac_preferred: true if allowing auto-configure address using P_Prefix
@@ -1710,25 +1657,12 @@ class OpenThreadTHCI(object):
             False: fail to configure the border router with a given prefix entry
         """
         print('%s call configBorderRouter' % self)
-        assert TESTHARNESS_VERSION == TESTHARNESS_1_2 or P_dp == 0
+        assert (ipaddress.IPv6Network(P_Prefix.decode()))
 
         # turn off default domain prefix if configBorderRouter is called before joining network
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2 and P_dp == 0 and not self.__isOpenThreadRunning():
+        if P_dp == 0 and not self.__isOpenThreadRunning():
             self.__useDefaultDomainPrefix = False
 
-        if TESTHARNESS_VERSION == TESTHARNESS_1_2 and self.IsBackboneRouter:
-            # TestHarness 1.2 converts 0x2001000000000000 to "2001000000000000"
-            if P_Prefix is None:
-                P_Prefix = 0xfd007d037d037d03
-
-            P_Prefix = '%016x' % P_Prefix
-        else:
-            # TestHarness 1.1 converts 2001000000000000 to "2001000000000000" (it's wrong, but not fixed yet.)
-            P_Prefix = str(P_Prefix)
-            int(P_Prefix, 16)
-
-        prefix = self.__convertIp6PrefixStringToIp6Address(P_Prefix)
-        print(prefix)
         parameter = ''
         prf = ''
 
@@ -1764,7 +1698,7 @@ class OpenThreadTHCI(object):
         else:
             pass
 
-        cmd = 'prefix add %s/64 %s %s' % (prefix, parameter, prf)
+        cmd = 'prefix add %s/64 %s %s' % (P_Prefix, parameter, prf)
         print(cmd)
         if self.__executeCommand(cmd)[-1] == 'Done':
             # if prefix configured before starting OpenThread stack
@@ -1882,7 +1816,7 @@ class OpenThreadTHCI(object):
         """configure border router with a given external route prefix entry
 
         Args:
-            P_Prefix: IPv6 prefix for the route
+            P_Prefix: IPv6 prefix for the route in IPv6 dotted-quad format
             P_Stable: is true if the external route prefix is stable network data
             R_Preference: a two-bit signed integer indicating Router preference
                           1: high
@@ -1894,10 +1828,9 @@ class OpenThreadTHCI(object):
             False: fail to configure the border router with a given external route prefix
         """
         print('%s call configExternalRouter' % self)
-        print(P_Prefix)
+        assert (ipaddress.IPv6Network(P_Prefix.decode()))
         prf = ''
         stable = ''
-        prefix = self.__convertIp6PrefixStringToIp6Address(str(P_Prefix))
         if R_Preference == 1:
             prf = 'high'
         elif R_Preference == 0:
@@ -1909,9 +1842,9 @@ class OpenThreadTHCI(object):
 
         if P_stable:
             stable += 's'
-            cmd = 'route add %s/64 %s %s' % (prefix, stable, prf)
+            cmd = 'route add %s/64 %s %s' % (P_Prefix, stable, prf)
         else:
-            cmd = 'route add %s/64 %s' % (prefix, prf)
+            cmd = 'route add %s/64 %s' % (P_Prefix, prf)
         print(cmd)
 
         if self.__executeCommand(cmd)[-1] == 'Done':
@@ -2656,13 +2589,10 @@ class OpenThreadTHCI(object):
             cmd += pskc
 
         if listSecurityPolicy is not None:
-            if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-                if self.DeviceCapability == DevCapb.V1_1:
-                    cmd += '0c03'
-                else:
-                    cmd += '0c04'
-            else:
+            if self.DeviceCapability == DevCapb.V1_1:
                 cmd += '0c03'
+            else:
+                cmd += '0c04'
 
             rotationTime = 0
             policyBits = 0
@@ -2704,10 +2634,9 @@ class OpenThreadTHCI(object):
             flags0 = ('%x' % (policyBits & 0x00ff)).ljust(2, '0')
             cmd += flags0
 
-            if TESTHARNESS_VERSION == TESTHARNESS_1_2:
-                if self.DeviceCapability != DevCapb.V1_1:
-                    flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
-                    cmd += flags1
+            if self.DeviceCapability != DevCapb.V1_1:
+                flags1 = ('%x' % ((policyBits & 0xff00) >> 8)).ljust(2, '0')
+                cmd += flags1
 
         if xCommissioningSessionId is not None:
             cmd += '0b02'
@@ -3016,6 +2945,11 @@ class OpenThreadTHCI(object):
             False: fail to set BBR Dataset
         """
         assert not (SeqNumInc and SeqNum is not None), "Must not specify both SeqNumInc and SeqNum"
+
+        if (MlrTimeout and MlrTimeout != self.bbrMlrTimeout) or (ReRegDelay and ReRegDelay != self.bbrReRegDelay):
+            if SeqNum is None:
+                SeqNumInc = True
+
         if SeqNumInc:
             if self.bbrSeqNum in (126, 127):
                 self.bbrSeqNum = 0
@@ -3023,6 +2957,8 @@ class OpenThreadTHCI(object):
                 self.bbrSeqNum = 128
             else:
                 self.bbrSeqNum = (self.bbrSeqNum + 1) % 256
+        else:
+            self.bbrSeqNum = SeqNum
 
         return self.__configBbrDataset(SeqNum=self.bbrSeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
 
@@ -3272,7 +3208,7 @@ class OpenThreadTHCI(object):
         return dua
 
     def __addDefaultDomainPrefix(self):
-        self.configBorderRouter(P_dp=1, P_slaac_preferred=1, P_stable=1, P_on_mesh=1, P_default=1)
+        self.configBorderRouter(P_dp=1, P_stable=1, P_on_mesh=1, P_default=1)
 
     def __setDUA(self, sDua):
         """specify the DUA before Thread Starts."""
@@ -3309,7 +3245,7 @@ class OpenThreadTHCI(object):
     @API
     def setMLRtimeout(self, iMsecs):
         """Setup BBR MLR Timeout to `iMsecs` seconds."""
-        self.__configBbrDataset(MlrTimeout=iMsecs)
+        self.setBbrDataset(MlrTimeout=iMsecs)
 
     @API
     def stopListeningToAddr(self, sAddr):
@@ -3385,7 +3321,6 @@ class OpenThreadTHCI(object):
 
     @API
     def role_transition(self, role):
-        assert TESTHARNESS_VERSION == TESTHARNESS_1_2
         cmd = 'mode %s' % OpenThreadTHCI._ROLE_MODE_DICT[role]
         return self.__executeCommand(cmd)[-1] == 'Done'
 

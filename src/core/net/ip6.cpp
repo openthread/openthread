@@ -229,7 +229,7 @@ Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
     messageInfo.GetPeerAddr().SetToRealmLocalAllMplForwarders();
 
-    tunnelHeader.Init();
+    tunnelHeader.InitVersionTrafficClassFlow();
     tunnelHeader.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
     tunnelHeader.SetDestination(messageInfo.GetPeerAddr());
@@ -454,9 +454,9 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     Header   header;
     uint16_t payloadLength = aMessage.GetLength();
 
-    header.Init();
+    header.InitVersionTrafficClassFlow();
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
-    header.SetEcn(aMessageInfo.mEcn);
+    header.SetEcn(aMessageInfo.GetEcn());
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
 
@@ -651,6 +651,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         fragmentHeader.SetOffset(offset);
 
         VerifyOrExit((fragment = NewMessage(0)) != nullptr, error = kErrorNoBufs);
+        IgnoreError(fragment->SetPriority(aMessage.GetPriority()));
         SuccessOrExit(error = fragment->SetLength(aMessage.GetOffset() + sizeof(fragmentHeader) + payloadFragment));
 
         header.SetPayloadLength(payloadFragment + sizeof(fragmentHeader));
@@ -708,13 +709,14 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
         ExitNow();
     }
 
-    for (message = mReassemblyList.GetHead(); message; message = message->GetNext())
+    for (Message &msg : mReassemblyList)
     {
-        SuccessOrExit(error = message->Read(0, headerBuffer));
+        SuccessOrExit(error = msg.Read(0, headerBuffer));
 
-        if (message->GetDatagramTag() == fragmentHeader.GetIdentification() &&
+        if (msg.GetDatagramTag() == fragmentHeader.GetIdentification() &&
             headerBuffer.GetSource() == header.GetSource() && headerBuffer.GetDestination() == header.GetDestination())
         {
+            message = &msg;
             break;
         }
     }
@@ -738,7 +740,7 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
         mReassemblyList.Enqueue(*message);
         SuccessOrExit(error = message->SetLength(aMessage.GetOffset()));
 
-        message->SetTimeout(kIp6ReassemblyTimeout);
+        message->SetTimestampToNow();
         message->SetOffset(0);
         message->SetDatagramTag(fragmentHeader.GetIdentification());
 
@@ -816,22 +818,16 @@ void Ip6::HandleTimeTick(void)
 
 void Ip6::UpdateReassemblyList(void)
 {
-    Message *next;
+    TimeMilli now = TimerMilli::GetNow();
 
-    for (Message *message = mReassemblyList.GetHead(); message; message = next)
+    for (Message &message : mReassemblyList)
     {
-        next = message->GetNext();
-
-        if (message->GetTimeout() > 0)
-        {
-            message->DecrementTimeout();
-        }
-        else
+        if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kIp6ReassemblyTimeout))
         {
             LogNote("Reassembly timeout.");
-            SendIcmpError(*message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
+            SendIcmpError(message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
 
-            mReassemblyList.DequeueAndFree(*message);
+            mReassemblyList.DequeueAndFree(message);
         }
     }
 }
@@ -1093,7 +1089,7 @@ Error Ip6::SendRaw(Message &aMessage, bool aFromHost)
     MessageInfo messageInfo;
     bool        freed = false;
 
-    SuccessOrExit(error = header.Init(aMessage));
+    SuccessOrExit(error = header.ParseFrom(aMessage));
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
 
     messageInfo.SetPeerAddr(header.GetSource());
@@ -1135,12 +1131,13 @@ start:
     forwardHost       = false;
     shouldFreeMessage = true;
 
-    SuccessOrExit(error = header.Init(aMessage));
+    SuccessOrExit(error = header.ParseFrom(aMessage));
 
     messageInfo.Clear();
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
     messageInfo.SetHopLimit(header.GetHopLimit());
+    messageInfo.SetEcn(header.GetEcn());
     messageInfo.SetLinkInfo(aLinkMessageInfo);
 
     // determine destination of packet
@@ -1215,7 +1212,7 @@ start:
         {
             // Remove encapsulating header and start over.
             aMessage.RemoveHeader(aMessage.GetOffset());
-            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, aMessage, nullptr, kErrorNone);
+            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, aMessage);
             goto start;
         }
 
@@ -1491,6 +1488,23 @@ const char *Ip6::IpProtoToString(uint8_t aIpProto)
     static_assert(Stringify::IsSorted(kIpProtoTable), "kIpProtoTable is not sorted");
 
     return Stringify::Lookup(aIpProto, kIpProtoTable, "Unknown");
+}
+
+const char *Ip6::EcnToString(Ecn aEcn)
+{
+    static const char *const kEcnStrings[] = {
+        "no", // (0) kEcnNotCapable
+        "e1", // (1) kEcnCapable1  (ECT1)
+        "e0", // (2) kEcnCapable0  (ECT0)
+        "ce", // (3) kEcnMarked    (Congestion Encountered)
+    };
+
+    static_assert(0 == kEcnNotCapable, "kEcnNotCapable value is incorrect");
+    static_assert(1 == kEcnCapable1, "kEcnCapable1 value is incorrect");
+    static_assert(2 == kEcnCapable0, "kEcnCapable0 value is incorrect");
+    static_assert(3 == kEcnMarked, "kEcnMarked value is incorrect");
+
+    return kEcnStrings[aEcn];
 }
 
 // LCOV_EXCL_STOP

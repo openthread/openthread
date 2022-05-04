@@ -209,8 +209,8 @@ public:
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
-     * @param[in]  aX509Certificate   A pointer to the PEM formatted X509 PEM certificate.
-     * @param[in]  aX509CertLength    The length of certificate.
+     * @param[in]  aX509Cert          A pointer to the PEM formatted X509 PEM certificate.
+     * @param[in]  aX509Length        The length of certificate.
      * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
      * @param[in]  aPrivateKeyLength  The length of the private key.
      *

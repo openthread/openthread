@@ -311,7 +311,7 @@ public:
     /**
      * This method sets the client LinkLayerAddress.
      *
-     * @param[in]  aLinkLayerAddress The client LinkLayerAddress.
+     * @param[in]  aDuidLinkLayerAddress  The client LinkLayerAddress.
      *
      */
     void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress)
@@ -382,7 +382,7 @@ public:
     /**
      * This method sets the server LinkLayerAddress.
      *
-     * @param[in]  aLinkLayerAddress The server LinkLayerAddress.
+     * @param[in]  aDuidLinkLayerAddress  The server LinkLayerAddress.
      *
      */
     void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress)
@@ -428,7 +428,7 @@ public:
     /**
      * This method sets the client IAID.
      *
-     * @param[in]  aIaId  The client IAID.
+     * @param[in]  aIaid  The client IAID.
      *
      */
     void SetIaid(uint32_t aIaid) { mIaid = HostSwap32(aIaid); }

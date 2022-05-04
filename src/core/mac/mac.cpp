@@ -63,16 +63,6 @@ const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
 
-const otExtendedPanId Mac::sExtendedPanidInit = {
-    {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
-};
-
-const char Mac::sNetworkNameInit[] = "OpenThread";
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-const char Mac::sDomainNameInit[] = "DefaultDomain";
-#endif
-
 Mac::Mac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
@@ -123,17 +113,11 @@ Mac::Mac(Instance &aInstance)
 
     mCcaSuccessRateTracker.Clear();
     ResetCounters();
-    mExtendedPanId.Clear();
 
     SetEnabled(true);
     mLinks.Enable();
 
     Get<KeyManager>().UpdateKeyMaterial();
-    SetExtendedPanId(AsCoreType(&sExtendedPanidInit));
-    IgnoreError(SetNetworkName(sNetworkNameInit));
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    IgnoreError(SetDomainName(sDomainNameInit));
-#endif
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
@@ -224,11 +208,8 @@ bool Mac::IsInTransmitState(void) const
 
 Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
 {
-    Error                error = kErrorNone;
-    Address              address;
-    const Beacon *       beacon        = nullptr;
-    const BeaconPayload *beaconPayload = nullptr;
-    uint16_t             payloadLength;
+    Error   error = kErrorNone;
+    Address address;
 
     memset(&aResult, 0, sizeof(ActiveScanResult));
 
@@ -248,22 +229,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
     aResult.mRssi    = aBeaconFrame->GetRssi();
     aResult.mLqi     = aBeaconFrame->GetLqi();
 
-    payloadLength = aBeaconFrame->GetPayloadLength();
-
-    beacon        = reinterpret_cast<const Beacon *>(aBeaconFrame->GetPayload());
-    beaconPayload = reinterpret_cast<const BeaconPayload *>(beacon->GetPayload());
-
-    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
-    {
-        aResult.mVersion    = beaconPayload->GetProtocolVersion();
-        aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
-        aResult.mIsNative   = beaconPayload->IsNative();
-        IgnoreError(AsCoreType(&aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
-        VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = kErrorParse);
-        aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
-    }
-
-    LogBeacon("Received", *beaconPayload);
+    LogBeacon("Received");
 
 exit:
     return error;
@@ -464,52 +430,6 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
     IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
-Error Mac::SetNetworkName(const char *aNameString)
-{
-    return SignalNetworkNameChange(mNetworkName.Set(aNameString));
-}
-
-Error Mac::SetNetworkName(const NameData &aNameData)
-{
-    return SignalNetworkNameChange(mNetworkName.Set(aNameData));
-}
-
-Error Mac::SignalNetworkNameChange(Error aError)
-{
-    switch (aError)
-    {
-    case kErrorNone:
-        Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
-        break;
-
-    case kErrorAlready:
-        Get<Notifier>().SignalIfFirst(kEventThreadNetworkNameChanged);
-        aError = kErrorNone;
-        break;
-
-    default:
-        break;
-    }
-
-    return aError;
-}
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-Error Mac::SetDomainName(const char *aNameString)
-{
-    Error error = mDomainName.Set(aNameString);
-
-    return (error == kErrorAlready) ? kErrorNone : error;
-}
-
-Error Mac::SetDomainName(const NameData &aNameData)
-{
-    Error error = mDomainName.Set(aNameData);
-
-    return (error == kErrorAlready) ? kErrorNone : error;
-}
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
 void Mac::SetPanId(PanId aPanId)
 {
     SuccessOrExit(Get<Notifier>().Update(mPanId, aPanId, kEventThreadPanIdChanged));
@@ -517,11 +437,6 @@ void Mac::SetPanId(PanId aPanId)
 
 exit:
     return;
-}
-
-void Mac::SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
-{
-    IgnoreError(Get<Notifier>().Update(mExtendedPanId, aExtendedPanId, kEventThreadExtPanIdChanged));
 }
 
 void Mac::RequestDirectFrameTransmission(void)
@@ -797,11 +712,9 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame *      frame;
-    uint8_t        beaconLength;
-    uint16_t       fcf;
-    Beacon *       beacon        = nullptr;
-    BeaconPayload *beaconPayload = nullptr;
+    TxFrame *frame;
+    uint16_t fcf;
+    Beacon * beacon = nullptr;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -818,32 +731,8 @@ TxFrame *Mac::PrepareBeacon(void)
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
-    beaconLength = sizeof(*beacon);
 
-    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
-
-    if (Get<KeyManager>().GetSecurityPolicy().mBeaconsEnabled)
-    {
-        beaconPayload->Init();
-
-        if (IsJoinable())
-        {
-            beaconPayload->SetJoiningPermitted();
-        }
-        else
-        {
-            beaconPayload->ClearJoiningPermitted();
-        }
-
-        beaconPayload->SetNetworkName(mNetworkName.GetAsData());
-        beaconPayload->SetExtendedPanId(mExtendedPanId);
-
-        beaconLength += sizeof(*beaconPayload);
-    }
-
-    frame->SetPayloadLength(beaconLength);
-
-    LogBeacon("Sending", *beaconPayload);
+    LogBeacon("Sending");
 
     return frame;
 }
@@ -2234,6 +2123,7 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
     {
     case kErrorAbort:
     case kErrorNoFrameReceived:
+    case kErrorAddressFiltered:
     case kErrorDestinationAddressFiltered:
         logLevel = kLogLevelDebg;
         break;
@@ -2275,9 +2165,9 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
     }
 }
 
-void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const
+void Mac::LogBeacon(const char *aActionText) const
 {
-    LogInfo("%s Beacon, %s", aActionText, aBeaconPayload.ToInfoString().AsCString());
+    LogInfo("%s Beacon", aActionText);
 }
 
 #else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -2286,7 +2176,7 @@ void Mac::LogFrameRxFailure(const RxFrame *, Error) const
 {
 }
 
-void Mac::LogBeacon(const char *, const BeaconPayload &) const
+void Mac::LogBeacon(const char *) const
 {
 }
 

@@ -379,7 +379,7 @@ public:
      * @tparam kTableNumColumns   The number columns in the table.
      *
      * @param[in] aTitles   An array specifying the table column titles.
-     * @param[in] aWidth    An array specifying the table column widths (in number of chars).
+     * @param[in] aWidths   An array specifying the table column widths (in number of chars).
      *
      */
     template <uint8_t kTableNumColumns>
@@ -399,7 +399,7 @@ public:
      *
      * @tparam kTableNumColumns   The number columns in the table.
      *
-     * @param[in] aWidth    An array specifying the table column widths (in number of chars).
+     * @param[in] aWidths   An array specifying the table column widths (in number of chars).
      *
      */
     template <uint8_t kTableNumColumns> void OutputTableSeparator(const uint8_t (&aWidths)[kTableNumColumns])

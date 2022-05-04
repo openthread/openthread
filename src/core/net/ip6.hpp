@@ -43,6 +43,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/time_ticker.hpp"
@@ -51,6 +52,7 @@
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/ip6_mpl.hpp"
+#include "net/ip6_types.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
 #include "net/tcp6.hpp"
@@ -108,18 +110,6 @@ class Ip6 : public InstanceLocator, private NonCopyable
     friend class Mpl;
 
 public:
-    /**
-     * The max datagram length (in bytes) of an IPv6 message.
-     *
-     */
-    static constexpr uint16_t kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
-
-    /**
-     * The max datagram length (in bytes) of an unfragmented IPv6 message.
-     *
-     */
-    static constexpr uint16_t kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM;
-
     /**
      * This constructor initializes the object.
      *
@@ -301,12 +291,22 @@ public:
     /**
      * This static method converts an IP protocol number to a string.
      *
-     * @param[in] aIpPorto  An IP protocol number.
+     * @param[in] aIpProto  An IP protocol number.
      *
      * @returns The string representation of @p aIpProto.
      *
      */
     static const char *IpProtoToString(uint8_t aIpProto);
+
+    /**
+     * This static method converts an IP header ECN value to a string.
+     *
+     * @param[in] aEcn   The 2-bit ECN value.
+     *
+     * @returns The string representation of @p aEcn.
+     *
+     */
+    static const char *EcnToString(Ecn aEcn);
 
 private:
     static constexpr uint8_t kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;

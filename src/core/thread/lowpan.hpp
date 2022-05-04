@@ -279,12 +279,12 @@ public:
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aIp6Header              A reference where the IPv6 header will be placed.
-     * @param[out]  aCommpressedNextHeader  A boolean reference to output whether next header is compressed or not.
-     * @param[in]   aMacSource              The MAC source address.
-     * @param[in]   aMacDest                The MAC destination address.
-     * @param[in]   aBuf                    A pointer to the LOWPAN_IPHC header.
-     * @param[in]   aBufLength              The number of bytes in @p aBuf.
+     * @param[out]  aIp6Header             A reference where the IPv6 header will be placed.
+     * @param[out]  aCompressedNextHeader  A boolean reference to output whether next header is compressed or not.
+     * @param[in]   aMacSource             The MAC source address.
+     * @param[in]   aMacDest               The MAC destination address.
+     * @param[in]   aBuf                   A pointer to the LOWPAN_IPHC header.
+     * @param[in]   aBufLength             The number of bytes in @p aBuf.
      *
      * @returns The size of the compressed header in bytes or -1 if decompression fails.
      *

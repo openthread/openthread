@@ -50,10 +50,8 @@ namespace ot {
  * This template function is `constexpr`. The template arguments are expected to be deduced by the compiler allowing
  * callers to simply use `GetArrayLength(aArray)`.
  *
- * @tparam  Type     The array element type.
- * @tparam  kLength  The array length.
- *
- * @param[in] aArray   A reference to the array.
+ * @tparam  Type          The array element type.
+ * @tparam  kArrayLength  The array length.
  *
  * @returns The array length (number of elements in the array).
  *
@@ -69,8 +67,8 @@ template <typename Type, uint16_t kArrayLength> constexpr inline uint16_t GetArr
  * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
  * not point to an actual element in array, and thus should not be dereferenced.
  *
- * @tparam  Type     The array element type.
- * @tparam  kLength  The array length.
+ * @tparam  Type          The array element type.
+ * @tparam  kArrayLength  The array length.
  *
  * @param[in] aArray   A reference to the array.
  *
@@ -88,8 +86,8 @@ template <typename Type, uint16_t kArrayLength> inline Type *GetArrayEnd(Type (&
  * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
  * not point to an actual element in array, and thus should not be dereferenced.
  *
- * @tparam  Type     The array element type.
- * @tparam  kLength  The array length.
+ * @tparam  Type          The array element type.
+ * @tparam  kArrayLength  The array length.
  *
  * @param[in] aArray   A reference to the array.
  *

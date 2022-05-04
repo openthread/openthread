@@ -81,7 +81,7 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
 {
     Error                 error;
     Coap::Message *       message = nullptr;
-    Ip6::MessageInfo      messageInfo;
+    Tmf::MessageInfo      messageInfo(GetInstance());
     otCoapResponseHandler handler = nullptr;
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
@@ -113,11 +113,10 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
     }
     else
     {
-        messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+        messageInfo.SetSockAddrToRloc();
     }
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, handler, this));
 
@@ -467,7 +466,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     Error                error   = kErrorNone;
     Coap::Message *      message = nullptr;
     NetworkDiagnosticTlv networkDiagnosticTlv;
-    Ip6::MessageInfo     messageInfo;
+    Tmf::MessageInfo     messageInfo(GetInstance());
 
     VerifyOrExit(aMessage.IsPostRequest(), error = kErrorDrop);
 
@@ -495,17 +494,16 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
         SuccessOrExit(error = message->SetPayloadMarker());
     }
 
-    if (aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast())
+    if (aMessageInfo.GetPeerAddr().IsLinkLocal())
     {
         messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetLinkLocalAddress());
     }
     else
     {
-        messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+        messageInfo.SetSockAddrToRloc();
     }
 
     messageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -561,7 +559,7 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
 {
     Error            error;
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
     VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -583,11 +581,10 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     }
     else
     {
-        messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+        messageInfo.SetSockAddrToRloc();
     }
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 

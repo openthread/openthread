@@ -271,7 +271,7 @@ private:
     static constexpr uint32_t kRetxPollPeriod       = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
     static constexpr uint32_t kFastPollPeriod       = 188;
     static constexpr uint32_t kMinPollPeriod        = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
-    static constexpr uint32_t kMaxExternalPeriod    = ((1 << 26) - 1); //< ~18.6 hours.
+    static constexpr uint32_t kMaxExternalPeriod    = ((1 << 26) - 1); // ~18.6 hours.
 
     void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t        CalculatePollPeriod(void) const;
@@ -285,17 +285,17 @@ private:
 
     TimeMilli mTimerStartTime;
     uint32_t  mPollPeriod;
-    uint32_t  mExternalPollPeriod : 26; //< In milliseconds.
-    uint8_t   mFastPollsUsers : 6;      //< Number of callers which request fast polls.
+    uint32_t  mExternalPollPeriod : 26; // In milliseconds.
+    uint8_t   mFastPollsUsers : 6;      // Number of callers which request fast polls.
 
     TimerMilli mTimer;
 
-    bool    mEnabled : 1;              //< Indicates whether data polling is enabled/started.
-    bool    mAttachMode : 1;           //< Indicates whether in attach mode (to use attach poll period).
-    bool    mRetxMode : 1;             //< Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
-    uint8_t mPollTimeoutCounter : 4;   //< Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
-    uint8_t mPollTxFailureCounter : 4; //< Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
-    uint8_t mRemainingFastPolls : 4;   //< Number of remaining fast polls when in transient fast polling mode.
+    bool    mEnabled : 1;              // Indicates whether data polling is enabled/started.
+    bool    mAttachMode : 1;           // Indicates whether in attach mode (to use attach poll period).
+    bool    mRetxMode : 1;             // Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
+    uint8_t mPollTimeoutCounter : 4;   // Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
+    uint8_t mPollTxFailureCounter : 4; // Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
+    uint8_t mRemainingFastPolls : 4;   // Number of remaining fast polls when in transient fast polling mode.
 };
 
 /**

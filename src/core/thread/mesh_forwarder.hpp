@@ -311,15 +311,6 @@ public:
      */
     void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
 
-#if OPENTHREAD_FTD
-    /**
-     * This method returns a reference to the resolving queue.
-     *
-     * @returns  A reference to the resolving queue.
-     *
-     */
-    const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
-#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
      * This method handles a deferred ack.
@@ -342,6 +333,8 @@ private:
     static constexpr uint8_t kReassemblyTimeout      = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT; // in seconds.
     static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
     static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
+
+    static constexpr uint32_t kTxDelayInterval = OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_INTERVAL; // In msec
 
     enum MessageAction : uint8_t
     {
@@ -429,7 +422,7 @@ private:
                           Ip6::Header &       aIp6Header);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    Message *GetDirectTransmission(void);
+    Message *PrepareNextDirectTransmission(void);
     void     HandleMesh(uint8_t *             aFrame,
                         uint16_t              aFrameLength,
                         const Mac::Address &  aMacSource,
@@ -512,7 +505,15 @@ private:
     void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);
 
-    void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, Error aError);
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    static void HandleTxDelayTimer(Timer &aTimer);
+    void        HandleTxDelayTimer(void);
+#endif
+
+    void LogMessage(MessageAction       aAction,
+                    const Message &     aMessage,
+                    Error               aError   = kErrorNone,
+                    const Mac::Address *aAddress = nullptr);
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,
@@ -531,10 +532,6 @@ private:
                                       uint16_t &     aChecksum,
                                       uint16_t &     aSourcePort,
                                       uint16_t &     aDestPort);
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    otError ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Address &aDst);
-#endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
@@ -594,6 +591,10 @@ private:
     bool         mEnabled : 1;
     bool         mTxPaused : 1;
     bool         mSendBusy : 1;
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    bool       mDelayNextTx : 1;
+    TimerMilli mTxDelayTimer;
+#endif
 
     Tasklet mScheduleTransmissionTask;
 
@@ -601,7 +602,6 @@ private:
 
 #if OPENTHREAD_FTD
     FragmentPriorityList mFragmentPriorityList;
-    PriorityQueue        mResolvingQueue;
     IndirectSender       mIndirectSender;
 #endif
 

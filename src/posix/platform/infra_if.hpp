@@ -53,7 +53,7 @@ public:
     /**
      * This method updates the fd_set and timeout for mainloop.
      *
-     * @param[inout]    aContext    A reference to the mainloop context.
+     * @param[in,out]   aContext    A reference to the mainloop context.
      *
      */
     void Update(otSysMainloopContext &aContext) override;

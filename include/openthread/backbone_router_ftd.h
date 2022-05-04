@@ -273,19 +273,6 @@ void otBackboneRouterMulticastListenerClear(otInstance *aInstance);
  */
 otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6Address *aAddress, uint32_t aTimeout);
 
-/**
- * This method configures the ability to increase or not the BBR Dataset Sequence Number when a
- * BBR recovers its BBR Dataset from the Leader's Network Data.
- *
- * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
- *       Only used for certification.
- *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aSkip      Whether to skip the increase of Sequence Number or not.
- *
- */
-void otBackboneRouterConfigSkipSeqNumIncrease(otInstance *aInstance, bool aSkip);
-
 #define OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT \
     0 ///< Initializer for otBackboneRouterMulticastListenerIterator
 
@@ -304,12 +291,12 @@ typedef struct otBackboneRouterMulticastListenerInfo
 /**
  * This function gets the next Multicast Listener info (using an iterator).
  *
- * @param[in]     aInstance    A pointer to an OpenThread instance.
- * @param[inout]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
- *                             Multicast Listener. To get the first entry the iterator should be set to
- *                             OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT.
- * @param[out]    aListenerInfo  A pointer to an `otBackboneRouterMulticastListenerInfo` where information of next
- *                               Multicast Listener is placed (on success).
+ * @param[in]      aInstance      A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
+ *                                Multicast Listener. To get the first entry the iterator should be set to
+ *                                OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT.
+ * @param[out]     aListenerInfo  A pointer to an `otBackboneRouterMulticastListenerInfo` where information of next
+ *                                Multicast Listener is placed (on success).
  *
  * @retval OT_ERROR_NONE       Successfully found the next Multicast Listener info (@p aListenerInfo was successfully
  *                             updated).

@@ -205,7 +205,7 @@ public:
     /**
      * This method indicates whether a given Joiner ID matches the Discerner.
      *
-     * @param[in] aJoiner  A Joiner ID to match with the Discerner.
+     * @param[in] aJoinerId  A Joiner ID to match with the Discerner.
      *
      * @returns TRUE if the Joiner ID matches the Discerner, FALSE otherwise.
      *
@@ -420,10 +420,10 @@ private:
  * @retval kErrorInvalidArgs   If the length of passphrase is out of range.
  *
  */
-Error GeneratePskc(const char *              aPassPhrase,
-                   const Mac::NetworkName &  aNetworkName,
-                   const Mac::ExtendedPanId &aExtPanId,
-                   Pskc &                    aPskc);
+Error GeneratePskc(const char *         aPassPhrase,
+                   const NetworkName &  aNetworkName,
+                   const ExtendedPanId &aExtPanId,
+                   Pskc &               aPskc);
 
 /**
  * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.
@@ -437,7 +437,7 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 /**
  * This function gets the border agent RLOC.
  *
- * @param[in]   aNetif  A reference to the thread interface.
+ * @param[in]   aNetIf  A reference to the thread interface.
  * @param[out]  aRloc   Border agent RLOC.
  *
  * @retval kErrorNone       Successfully got the Border Agent Rloc.

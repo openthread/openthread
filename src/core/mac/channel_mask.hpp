@@ -200,7 +200,7 @@ public:
      * This method can be used to iterate over all channels in the channel mask. To get the first channel (channel with
      * lowest number) in the mask the @p aChannel should be set to `kChannelIteratorFirst`.
      *
-     * @param[inout] aChannel        A reference to a `uint8_t`.
+     * @param[in,out] aChannel       A reference to a `uint8_t`.
      *                               On entry it should contain the previous channel or `kChannelIteratorFirst`.
      *                               On exit it contains the next channel.
      *

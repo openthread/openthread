@@ -305,8 +305,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         else:
             self.__handle = SerialHandle(self.port, 115200)
 
-        self.__afterConnect()
-
     def _disconnect(self):
         if self.__handle:
             self.__handle.close()
@@ -326,9 +324,13 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     def _deviceAfterReset(self):
         self.__dumpSyslog()
         self.__truncateSyslog()
+        self.__enableAcceptRa()
         if not self.IsHost:
-            self.bash('systemctl restart otbr-agent')
+            self.__restartAgentService()
             time.sleep(2)
+
+    def __enableAcceptRa(self):
+        self.bash('sysctl net.ipv6.conf.eth0.accept_ra=2')
 
     def _beforeRegisterMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
         """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
@@ -346,16 +348,15 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.bash(cmd)
 
     @API
-    def setupHost(self, setDua=False):
+    def setupHost(self, setDp=False, setDua=False):
         self.IsHost = True
 
-        if not setDua:
-            cmd = 'ip -6 addr add 910b::1 dev eth0'
-        else:
-            cmd = 'ip -6 addr add fd00:7d03:7d03:7d03::1 dev eth0'
-        self.bash(cmd)
+        self.bash('ip -6 addr add 910b::1 dev eth0')
 
-        self.__startRadvdService()
+        if setDua:
+            self.bash('ip -6 addr add fd00:7d03:7d03:7d03::1 dev eth0')
+
+        self.__startRadvdService(setDp)
 
     def _deviceEscapeEscapable(self, string):
         """Escape CLI escapable characters in the given string.
@@ -556,38 +557,38 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         assert self.__syslog_skip_lines is not None
         self.__syslog_skip_lines = None
 
-    def _deviceBeforeThreadStart(self):
-        self.bash('sysctl net.ipv6.conf.eth0.accept_ra=2')
-
     @watched
-    def __startRadvdService(self):
+    def __startRadvdService(self, setDp=False):
         assert self.IsHost, "radvd service runs on Host only"
 
-        self.bash("""sh -c "cat >/etc/radvd.conf <<EOF
-interface eth0
-{
-    AdvSendAdvert on;
+        conf = "EOF"
+        conf += "\ninterface eth0"
+        conf += "\n{"
+        conf += "\n    AdvSendAdvert on;"
+        conf += "\n"
+        conf += "\n    MinRtrAdvInterval 3;"
+        conf += "\n    MaxRtrAdvInterval 30;"
+        conf += "\n    AdvDefaultPreference low;"
+        conf += "\n"
+        conf += "\n    prefix 910b::/64"
+        conf += "\n    {"
+        conf += "\n        AdvOnLink on;"
+        conf += "\n        AdvAutonomous on;"
+        conf += "\n        AdvRouterAddr on;"
+        conf += "\n    };"
+        if setDp:
+            conf += "\n"
+            conf += "\n    prefix fd00:7d03:7d03:7d03::/64"
+            conf += "\n    {"
+            conf += "\n        AdvOnLink on;"
+            conf += "\n        AdvAutonomous off;"
+            conf += "\n        AdvRouterAddr off;"
+            conf += "\n    };"
+        conf += "\n};"
+        conf += "\nEOF"
+        cmd = 'sh -c "cat >/etc/radvd.conf <<%s"' % conf
 
-    MinRtrAdvInterval 3;
-    MaxRtrAdvInterval 30;
-    AdvDefaultPreference low;
-
-    prefix 910b::/64
-    {
-        AdvOnLink on;
-        AdvAutonomous on;
-        AdvRouterAddr on;
-    };
-
-    prefix fd00:7d03:7d03:7d03::/64
-    {
-        AdvOnLink on;
-        AdvAutonomous off;
-        AdvRouterAddr off;
-    };
-};
-EOF"
-""")
+        self.bash(cmd)
         self.bash('service radvd restart')
         self.bash('service radvd status')
 
@@ -624,14 +625,6 @@ EOF"
         self.__cli_output_lines.append(line)
         for line in output:
             self.__cli_output_lines.append(line)
-
-    def __afterConnect(self):
-        self.__truncateSyslog()
-        self.__checkServiceStatus()
-
-    def __checkServiceStatus(self):
-        self.bash('service radvd stop')
-        self.bash('systemctl restart otbr-agent')
 
     def __restartAgentService(self):
         self.bash('systemctl restart otbr-agent')
