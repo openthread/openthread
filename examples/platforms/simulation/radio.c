@@ -677,7 +677,6 @@ void radioSendMessage(otInstance *aInstance)
     radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
-
     sTxWait = otMacFrameIsAckRequested(&sTransmitFrame);
 
     if (!sTxWait)
@@ -746,7 +745,6 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 {
     OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
-
 
     if (FD_ISSET(sRxFd, aReadFdSet))
     {

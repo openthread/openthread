@@ -82,14 +82,14 @@ enum
 
 extern int          sSockFd;
 extern uint16_t     sPortOffset;
-static otRadioState sLastReportedState    = OT_RADIO_STATE_DISABLED;
-static uint8_t      sLastReportedChannel  = 0;
-static bool         sRadioTransmitting    = false;
-static bool         sAckTxDonePending     = false;
-static uint64_t     sTransmittingUntil    = 0;
+static otRadioState sLastReportedState   = OT_RADIO_STATE_DISABLED;
+static uint8_t      sLastReportedChannel = 0;
+static bool         sRadioTransmitting   = false;
+static bool         sAckTxDonePending    = false;
+static uint64_t     sTransmittingUntil   = 0;
 
 #if OPENTHREAD_SIMULATION_CCA
-static bool     sCcaPending;
+static bool sCcaPending;
 #endif
 
 OT_TOOL_PACKED_BEGIN
@@ -134,8 +134,8 @@ enum
     kMinChannel = 11,
     kMaxChannel = 26,
 };
-static int8_t   sChannelMaxTransmitPower[kMaxChannel - kMinChannel + 1];
-static uint8_t  sCurrentChannel = kMinChannel;
+static int8_t  sChannelMaxTransmitPower[kMaxChannel - kMinChannel + 1];
+static uint8_t sCurrentChannel = kMinChannel;
 
 static bool sSrcMatchEnabled = false;
 
@@ -268,7 +268,8 @@ void reportRadioStatusToOtns(otRadioState aState)
         event.mDelay         = 0;
         event.mEvent         = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 
-        n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s,%d", radioStateToString(aState), sCurrentChannel);
+        n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s,%d", radioStateToString(aState),
+                     sCurrentChannel);
 
         assert(n > 0);
 
@@ -542,8 +543,8 @@ void platformTransmitReturn(otInstance *aInstance, otRadioFrame *frame, otRadioF
 
 static void radioReceive(otInstance *aInstance)
 {
-    bool    isTxDone = false;
-    bool    isAck    = otMacFrameIsAck(&sReceiveFrame);
+    bool isTxDone = false;
+    bool isAck    = otMacFrameIsAck(&sReceiveFrame);
 
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
@@ -687,7 +688,8 @@ void platformChannelActivity(otInstance *aInstance, uint8_t channel, int8_t valu
         {
             radioSendMessage(aInstance);
         }
-        else {
+        else
+        {
             platformTransmitReturn(aInstance, &sTransmitFrame, NULL, OT_ERROR_CHANNEL_ACCESS_FAILURE);
         }
     }
