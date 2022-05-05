@@ -3153,12 +3153,13 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
             if (IsFullThreadDevice())
             {
-                RouteTlv route;
-
-                if ((Tlv::FindTlv(aRxInfo.mMessage, route) == kErrorNone) && route.IsValid())
+                switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo))
                 {
-                    // Overwrite Route Data
-                    IgnoreError(Get<MleRouter>().ProcessRouteTlv(route));
+                case kErrorNone:
+                case kErrorNotFound:
+                    break;
+                default:
+                    ExitNow(error = kErrorParse);
                 }
             }
 #endif
@@ -3795,11 +3796,13 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice())
     {
-        RouteTlv route;
-
-        if (Tlv::FindTlv(aRxInfo.mMessage, route) == kErrorNone)
+        switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo))
         {
-            SuccessOrExit(error = Get<MleRouter>().ProcessRouteTlv(route));
+        case kErrorNone:
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
     }
 #endif

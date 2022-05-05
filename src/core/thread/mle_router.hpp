@@ -603,7 +603,8 @@ private:
     void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
-    Error ProcessRouteTlv(const RouteTlv &aRoute);
+    Error ProcessRouteTlv(RxInfo &aRxInfo);
+    Error ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv);
     void  StopAdvertiseTrickleTimer(void);
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     void  SendAddressRelease(void);
