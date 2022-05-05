@@ -66,6 +66,11 @@ from IThci import IThci
 import commissioner
 from commissioner_impl import OTCommissioner
 
+# Replace by the actual version string for the vendor's reference device
+OT11_VERSION = 'ot11_version'
+OT12_VERSION = 'ot12_version'
+OT13_VERSION = 'ot13_version'
+
 ZEPHYR_PREFIX = 'ot '
 """CLI prefix used for OpenThread commands in Zephyr systems"""
 
@@ -2720,7 +2725,12 @@ class OpenThreadTHCI(object):
 
     @API
     def ValidateDeviceFirmware(self):
-        return 'OPENTHREAD' in self.UIStatusMsg
+        if self.DeviceCapability == DevCapb.V1_1:
+            return OT11_VERSION in self.UIStatusMsg
+        elif self.DeviceCapability == (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD):
+            return OT12_VERSION in self.UIStatusMsg
+        else:
+            return OT13_VERSION in self.UIStatusMsg
 
     @API
     def setBbrDataset(self, SeqNumInc=False, SeqNum=None, MlrTimeout=None, ReRegDelay=None):
