@@ -264,8 +264,9 @@ public:
      *
      * @param[in]  aId   A pointer to a string character array. Must be null terminated.
      *
-     * @retval kErrorNone          Successfully set the Commissioner Id.
-     * @retval kErrorInvalidArgs   Given name is too long.
+ * @retval kErrorNone           Successfully set the Commissioner Id.
+ * @retval kErrorInvalidArgs    Given name is too long.
+ * @retval kErrorInvalidState   The commissioner is active and id cannot be changed.
      *
      */
     Error SetId(const char *aId);

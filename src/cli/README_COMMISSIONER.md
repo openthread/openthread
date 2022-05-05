@@ -204,7 +204,7 @@ Done
 
 Usage: `commissioner id`
 
-Get the in mesh commissioner id.
+Get the commissioner id.
 
 ```bash
 > commissioner id
@@ -214,7 +214,7 @@ Done
 
 ### id \<name\>
 
-Set the in mesh commissioner id.
+Set the commissioner id.
 
 ```bash
 > commissioner id "Custom Commissioner Id"
