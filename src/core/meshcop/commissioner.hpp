@@ -252,6 +252,26 @@ public:
     Error Stop(void) { return Stop(kSendKeepAliveToResign); }
 
     /**
+     * This method returns the Commissioner Id.
+     *
+     * @returns The Commissioner Id.
+     *
+     */
+    const char *GetId(void) const { return mCommissionerId; }
+
+    /**
+     * This method sets the Commissioner Id.
+     *
+     * @param[in]  aId   A pointer to a string character array. Must be null terminated.
+     *
+     * @retval kErrorNone           Successfully set the Commissioner Id.
+     * @retval kErrorInvalidArgs    Given name is too long.
+     * @retval kErrorInvalidState   The commissioner is active and id cannot be changed.
+     *
+     */
+    Error SetId(const char *aId);
+
+    /**
      * This method clears all Joiner entries.
      *
      */
@@ -606,6 +626,7 @@ private:
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
     char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
+    char mCommissionerId[CommissionerIdTlv::kMaxLength + 1];
 
     State mState;
 
