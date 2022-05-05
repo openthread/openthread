@@ -392,7 +392,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             raise AssertionError('Invalid interface set to send UDP: {} '
                                  'Available interface options: 0 - Thread; 1 - Ethernet'.format(interface))
         cmd = '/home/pi/reference-device/send_udp.py %s %s %s %s' % (ifname, dst, port, payload)
-        print(cmd)
         self.bash(cmd)
 
     @API
@@ -401,12 +400,10 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         dst = 'ff02::1'
 
         cmd = '/home/pi/reference-device/send_mld_query.py %s %s' % (ifname, dst)
-        print(cmd)
         self.bash(cmd)
 
     @API
     def ip_neighbors_flush(self):
-        print('%s call clear_cache' % self.port)
         # clear neigh cache on linux
         cmd1 = 'sudo ip -6 neigh flush nud all nud failed nud noarp dev eth0'
         cmd2 = 'sudo ip -6 neigh list nud all dev eth0 ' \
@@ -417,7 +414,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     @API
     def ip_neighbors_add(self, addr, lladdr, nud='noarp'):
-        print('%s ip_neighbors_add' % self.port)
         cmd1 = 'sudo ip -6 neigh delete %s dev eth0' % addr
         cmd2 = 'sudo ip -6 neigh add %s dev eth0 lladdr %s nud %s' % (addr, lladdr, nud)
         cmd = '%s ; %s' % (cmd1, cmd2)
@@ -425,7 +421,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     @API
     def get_eth_ll(self):
-        print('%s get_eth_ll' % self.port)
         cmd = "ip -6 addr list dev eth0 | grep 'inet6 fe80' | awk '{print $2}'"
         ret = self.bash(cmd)[0].split('/')[0]
         return ret
@@ -468,8 +463,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             destination: the multicast destination address of ICMPv6 echo request
             length: the size of ICMPv6 echo request payload
         """
-        print('%s call multicast_Ping' % self.port)
-        print('destination: %s' % destination)
         hop_limit = 5
 
         if self.IsHost or self.IsBackboneRouter:
@@ -639,8 +632,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     @API
     def mdns_query(self, dst='ff02::fb', service='_meshcop._udp.local', addrs_blacklist=[]):
-        print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
-
         # For BBR-TC-03 or DH test cases (empty arguments) just send a query
         if dst == 'ff02::fb' and not addrs_blacklist:
             self.bash('dig -p 5353 @%s %s ptr' % (dst, service), sudo=False)
@@ -675,7 +666,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     # Override forceSetSlaac
     @API
     def forceSetSlaac(self, slaacAddress):
-        print('forceSetSlaac %s' % slaacAddress)
         self.bash('ip -6 addr add %s/64 dev wpan0' % slaacAddress)
 
     # Override stopListeningToAddr
