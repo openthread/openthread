@@ -2177,6 +2177,15 @@ fdde:ad00:beef:0::/64
 Done
 ```
 
+### prefix meshlocal <prefix>
+
+Set the mesh local prefix.
+
+```bash
+> prefix meshlocal fdde:ad00:beef:0::/64
+Done
+```
+
 ### prefix remove \<prefix\>
 
 Invalidate a prefix in the Network Data.
