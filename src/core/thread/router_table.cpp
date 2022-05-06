@@ -323,7 +323,7 @@ exit:
 
 void RouterTable::RemoveRouterLink(Router &aRouter)
 {
-    aRouter.SetLinkQualityOut(0);
+    aRouter.SetLinkQualityOut(kLinkQuality0);
     aRouter.SetLastHeard(TimerMilli::GetNow());
 
     for (Router *cur = GetFirstEntry(); cur != nullptr; cur = GetNextEntry(cur))

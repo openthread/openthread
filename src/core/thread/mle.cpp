@@ -1769,8 +1769,8 @@ void Mle::HandleAttachTimer(Timer &aTimer)
 
 bool Mle::HasAcceptableParentCandidate(void) const
 {
-    bool    hasAcceptableParent = false;
-    uint8_t linkQuality;
+    bool        hasAcceptableParent = false;
+    LinkQuality linkQuality;
 
     VerifyOrExit(mParentCandidate.IsStateParentResponse());
 
@@ -1786,7 +1786,7 @@ bool Mle::HasAcceptableParentCandidate(void) const
         // candidate and forward to REED stage to potentially find a
         // better parent.
         linkQuality = OT_MIN(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
-        VerifyOrExit(linkQuality == 3);
+        VerifyOrExit(linkQuality == kLinkQuality3);
         break;
 
     case kAttachStateParentRequestReed:
@@ -3398,7 +3398,7 @@ exit:
 }
 
 bool Mle::IsBetterParent(uint16_t               aRloc16,
-                         uint8_t                aLinkQuality,
+                         LinkQuality            aLinkQuality,
                          uint8_t                aLinkMargin,
                          const ConnectivityTlv &aConnectivityTlv,
                          uint8_t                aVersion,
@@ -3407,10 +3407,8 @@ bool Mle::IsBetterParent(uint16_t               aRloc16,
 {
     bool rval = false;
 
-    uint8_t candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
-    uint8_t candidateTwoWayLinkQuality = (candidateLinkQualityIn < mParentCandidate.GetLinkQualityOut())
-                                             ? candidateLinkQualityIn
-                                             : mParentCandidate.GetLinkQualityOut();
+    LinkQuality candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
+    LinkQuality candidateTwoWayLinkQuality = OT_MIN(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint64_t candidateCslMetric = 0;
     uint64_t cslMetric          = 0;
@@ -3498,7 +3496,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     LeaderData            leaderData;
     uint8_t               linkMarginFromTlv;
     uint8_t               linkMargin;
-    uint8_t               linkQuality;
+    LinkQuality           linkQuality;
     ConnectivityTlv       connectivity;
     uint32_t              linkFrameCounter;
     uint32_t              mleFrameCounter;
