@@ -117,10 +117,8 @@ void PanIdQueryServer::SendConflict(void)
     Tmf::MessageInfo        messageInfo(GetInstance());
     Coap::Message *         message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kPanIdConflict));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kPanIdConflict);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     channelMask.Init();
     channelMask.SetChannelMask(mChannelMask);

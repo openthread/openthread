@@ -435,7 +435,7 @@ public:
     void SetDefaultHandler(RequestHandler aHandler, void *aContext);
 
     /**
-     * This method creates a new message with a CoAP header.
+     * This method allocates a new message with a CoAP header.
      *
      * @param[in]  aSettings  The message settings.
      *
@@ -445,7 +445,7 @@ public:
     Message *NewMessage(const Message::Settings &aSettings = Message::Settings::GetDefault());
 
     /**
-     * This method creates a new message with a CoAP header that has Network Control priority level.
+     * This method allocates a new message with a CoAP header that has Network Control priority level.
      *
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      *
@@ -454,6 +454,95 @@ public:
     {
         return NewMessage(Message::Settings(Message::kWithLinkSecurity, Message::kPriorityNet));
     }
+
+    /**
+     * This method allocates and initializes a new CoAP Confirmable Post message with Network Control priority level.
+     *
+     * The CoAP header is initialized as `kTypeConfirmable` and `kCodePost` with a given URI path and a randomly
+     * generated token (of default length). This method also sets the payload marker (`SetPayloadMarker()` on message.
+     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
+     * remove the payload marker when there is no payload.
+     *
+     * @param[in] aUriPath   The URI path string.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     *
+     */
+    Message *NewPriorityConfirmablePostMessage(const char *aUriPath);
+
+    /**
+     * This method allocates and initializes a new CoAP Confirmable Post message with normal priority level.
+     *
+     * The CoAP header is initialized as `kTypeConfirmable` and `kCodePost` with a given URI path and a randomly
+     * generated token (of default length). This method also sets the payload marker (calling `SetPayloadMarker()`).
+     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
+     * remove the payload marker when there is no payload.
+     *
+     * @param[in] aUriPath   The URI path string.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     *
+     */
+    Message *NewConfirmablePostMessage(const char *aUriPath);
+
+    /**
+     * This method allocates and initializes a new CoAP Non-confirmable Post message with Network Control priority
+     * level.
+     *
+     * The CoAP header is initialized as `kTypeNonConfirmable` and `kCodePost` with a given URI path and a randomly
+     * generated token (of default length). This method also sets the payload marker (calling `SetPayloadMarker()`).
+     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
+     * remove the payload marker when there is no payload.
+     *
+     * @param[in] aUriPath   The URI path string.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     *
+     */
+    Message *NewPriorityNonConfirmablePostMessage(const char *aUriPath);
+
+    /**
+     * This method allocates and initializes a new CoAP Non-confirmable Post message with normal priority level.
+     *
+     * The CoAP header is initialized as `kTypeNonConfirmable` and `kCodePost` with a given URI path and a randomly
+     * generated token (of default length). This method also sets the payload marker (calling `SetPayloadMarker()`).
+     * Even if message has no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and
+     * remove the payload marker when there is no payload.
+     *
+     * @param[in] aUriPath   The URI path string.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     *
+     */
+    Message *NewNonConfirmablePostMessage(const char *aUriPath);
+
+    /**
+     * This method allocates and initializes a new CoAP response message with Network Control priority level for a
+     * given request message.
+     *
+     * The CoAP header is initialized as `kTypeAck` with `kCodeChanged`. The token and message ID is copied from
+     * @p aRequest. This method also sets the payload marker (calling `SetPayloadMarker()`). Even if message has
+     * no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and remove the payload
+     * marker when there is no payload.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     *
+     */
+    Message *NewPriorityResponseMessage(const Message &aRequest);
+
+    /**
+     * This method allocates and initializes a new CoAP response message with regular priority level for a given
+     * request message.
+     *
+     * The CoAP header is initialized as `kTypeAck` with `kCodeChanged`. The token and message ID is copied from
+     * @p aRequest. This method also sets the payload marker (calling `SetPayloadMarker()`). Even if message has
+     * no payload, calling `SetPayloadMarker()` is harmless, since `SendMessage()` will check and remove the payload
+     * marker when there is no payload.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     *
+     */
+    Message *NewResponseMessage(const Message &aRequest);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
@@ -717,6 +806,9 @@ private:
         otCoapBlockwiseTransmitHook mBlockwiseTransmitHook; // Function pointer called on Block1 response reception.
 #endif
     };
+
+    Message *InitMessage(Message *aMessage, Type aType, const char *aUriPath);
+    Message *InitResponse(Message *aMessage, const Message &aResponse);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     void        HandleRetransmissionTimer(void);
