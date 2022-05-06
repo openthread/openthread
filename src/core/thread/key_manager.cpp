@@ -343,13 +343,13 @@ void KeyManager::UpdateKeyMaterial(void)
         Mac::KeyMaterial prevKey;
         Mac::KeyMaterial nextKey;
 
-        curKey.SetFrom(hashKeys.GetMacKey());
+        curKey.SetFrom(hashKeys.GetMacKey(), /* aIsExportable */ true);
 
         ComputeKeys(mKeySequence - 1, hashKeys);
-        prevKey.SetFrom(hashKeys.GetMacKey());
+        prevKey.SetFrom(hashKeys.GetMacKey(), /* aIsExportable */ true);
 
         ComputeKeys(mKeySequence + 1, hashKeys);
-        nextKey.SetFrom(hashKeys.GetMacKey());
+        nextKey.SetFrom(hashKeys.GetMacKey(), /* aIsExportable */ true);
 
         Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey, curKey, nextKey);
     }
