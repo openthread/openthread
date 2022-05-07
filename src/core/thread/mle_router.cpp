@@ -1764,6 +1764,41 @@ exit:
     LogProcessError(kTypeParentRequest, error);
 }
 
+bool MleRouter::HasNeighborWithGoodLinkQuality(void) const
+{
+    bool    haveNeighbor = true;
+    uint8_t linkMargin;
+
+    linkMargin =
+        LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), mParent.GetLinkInfo().GetLastRss());
+
+    if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
+    {
+        ExitNow();
+    }
+
+    for (Router &router : Get<RouterTable>().Iterate())
+    {
+        if (!router.IsStateValid())
+        {
+            continue;
+        }
+
+        linkMargin =
+            LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), router.GetLinkInfo().GetLastRss());
+
+        if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
+        {
+            ExitNow();
+        }
+    }
+
+    haveNeighbor = false;
+
+exit:
+    return haveNeighbor;
+}
+
 void MleRouter::HandleTimeTick(void)
 {
     bool routerStateUpdate = false;
@@ -1833,7 +1868,7 @@ void MleRouter::HandleTimeTick(void)
     case kRoleChild:
         if (routerStateUpdate)
         {
-            if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold)
+            if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold && HasNeighborWithGoodLinkQuality())
             {
                 // upgrade to Router
                 IgnoreError(BecomeRouter(ThreadStatusTlv::kTooFewRouters));

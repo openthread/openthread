@@ -633,6 +633,7 @@ private:
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild);
     void  UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId);
     bool  UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, bool &aResetAdvInterval);
+    bool  HasNeighborWithGoodLinkQuality(void) const;
 
     static void HandleAddressSolicitResponse(void *               aContext,
                                              otMessage *          aMessage,
