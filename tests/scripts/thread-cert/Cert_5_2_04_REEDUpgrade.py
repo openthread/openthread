@@ -187,7 +187,7 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         self.simulator.go(REED_ADVERTISEMENT_INTERVAL + REED_ADVERTISEMENT_MAX_JITTER)
 
         self.nodes[MED].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.collect_ipaddrs()
 
         mleid = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
@@ -352,43 +352,45 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
         #              - TLV Request TLV: Link Margin
         #              - Version TLV
 
-        pkts.filter_wpan_src64(REED).\
-            filter_LLARMA().\
-            filter_mle_cmd(MLE_LINK_REQUEST).\
-            filter(lambda p: {
-                              CHALLENGE_TLV,
-                              LEADER_DATA_TLV,
-                              SOURCE_ADDRESS_TLV,
-                              VERSION_TLV,
-                              TLV_REQUEST_TLV,
-                              LINK_MARGIN_TLV
-                              } <= set(p.mle.tlv.type)
-                   ).\
-            must_next()
+        with pkts.save_index():
+            pkts.filter_wpan_src64(REED).\
+                filter_LLARMA().\
+                filter_mle_cmd(MLE_LINK_REQUEST).\
+                filter(lambda p: {
+                                 CHALLENGE_TLV,
+                                 LEADER_DATA_TLV,
+                                 SOURCE_ADDRESS_TLV,
+                                 VERSION_TLV,
+                                 TLV_REQUEST_TLV,
+                                 LINK_MARGIN_TLV
+                                 } <= set(p.mle.tlv.type)
+                       ).\
+                must_next()
 
         # Step 11: The REED MLE Child ID Response MUST be properly
         #          formatted with MED_1’s new 16-bit address.
 
-        pkts.filter_wpan_src64(REED).\
-            filter_wpan_dst64(MED).\
-            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
-            filter(lambda p: {
-                              ADDRESS16_TLV,
-                              LEADER_DATA_TLV,
-                              NETWORK_DATA_TLV,
-                              SOURCE_ADDRESS_TLV,
-                              ROUTE64_TLV
-                              } <= set(p.mle.tlv.type) or\
-                             {
-                              ADDRESS16_TLV,
-                              LEADER_DATA_TLV,
-                              NETWORK_DATA_TLV,
-                              SOURCE_ADDRESS_TLV
-                              } <= set(p.mle.tlv.type) and\
-                   p.mle.tlv.source_addr != REED_RLOC16 and\
-                   p.mle.tlv.addr16 != MED_RLOC16
-                   ).\
-                   must_next()
+        with pkts.save_index():
+            pkts.filter_wpan_src64(REED).\
+                filter_wpan_dst64(MED).\
+                filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+                filter(lambda p: {
+                                 ADDRESS16_TLV,
+                                 LEADER_DATA_TLV,
+                                 NETWORK_DATA_TLV,
+                                 SOURCE_ADDRESS_TLV,
+                                 ROUTE64_TLV
+                                 } <= set(p.mle.tlv.type) or\
+                                 {
+                                 ADDRESS16_TLV,
+                                 LEADER_DATA_TLV,
+                                 NETWORK_DATA_TLV,
+                                 SOURCE_ADDRESS_TLV
+                                 } <= set(p.mle.tlv.type) and\
+                       p.mle.tlv.source_addr != REED_RLOC16 and\
+                       p.mle.tlv.addr16 != MED_RLOC16
+                       ).\
+                must_next()
 
         # Step 12: The Leader MUST respond with an ICMPv6 Echo Reply
 
