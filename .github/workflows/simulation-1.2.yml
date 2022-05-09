@@ -330,7 +330,6 @@ jobs:
 
   delete-coverage-artifacts:
     needs: upload-coverage
-    if: always()
     runs-on: ubuntu-20.04
     steps:
     - uses: geekyeggo/delete-artifact@1-glob-support
