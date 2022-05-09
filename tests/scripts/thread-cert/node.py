@@ -614,7 +614,7 @@ class NodeImpl:
 
         super().__init__(nodeid, **kwargs)
 
-        self.set_extpanid(config.EXTENDED_PANID)
+        self.set_mesh_local_prefix(config.MESH_LOCAL_PREFIX)
         self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
 
     def _expect(self, pattern, timeout=-1, *args, **kwargs):
@@ -1416,6 +1416,14 @@ class NodeImpl:
     def get_extpanid(self):
         self.send_command('extpanid')
         return self._expect_result('[0-9a-fA-F]{16}')
+
+    def get_mesh_local_prefix(self):
+        self.send_command('prefix meshlocal')
+        return self._expect_command_output()[0]
+
+    def set_mesh_local_prefix(self, mesh_local_prefix):
+        self.send_command('prefix meshlocal %s' % mesh_local_prefix)
+        self._expect_done()
 
     def get_joiner_id(self):
         self.send_command('joiner id')
