@@ -166,6 +166,15 @@ void Radio::Init(void)
         VerifyOrDie(str == nullptr, OT_EXIT_INVALID_ARGUMENTS);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+    {
+        const char *enableCoex = mRadioUrl.GetValue("enable-coex");
+        if (enableCoex != nullptr)
+        {
+            SuccessOrDie(sRadioSpinel.SetCoexEnabled(enableCoex[0] != '0'));
+        }
+    }
+#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 }
 
 } // namespace Posix
