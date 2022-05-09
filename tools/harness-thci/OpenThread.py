@@ -69,7 +69,7 @@ from commissioner_impl import OTCommissioner
 # Replace by the actual version string for the vendor's reference device
 OT11_VERSION = 'OPENTHREAD'
 OT12_VERSION = 'OPENTHREAD'
-OT13_VERSION = 'NotSupported'
+OT13_VERSION = 'OPENTHREAD'
 
 # Supported device capabilites in this THCI implementation
 OT11_CAPBS = DevCapb.V1_1
