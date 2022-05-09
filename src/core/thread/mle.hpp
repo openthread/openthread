@@ -1811,7 +1811,7 @@ private:
     bool     HasAcceptableParentCandidate(void) const;
 
     bool IsBetterParent(uint16_t               aRloc16,
-                        uint8_t                aLinkQuality,
+                        LinkQuality            aLinkQuality,
                         uint8_t                aLinkMargin,
                         const ConnectivityTlv &aConnectivityTlv,
                         uint8_t                aVersion,

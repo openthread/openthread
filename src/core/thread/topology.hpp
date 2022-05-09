@@ -1397,7 +1397,7 @@ public:
      * @returns The link quality out value for this router.
      *
      */
-    uint8_t GetLinkQualityOut(void) const { return mLinkQualityOut; }
+    LinkQuality GetLinkQualityOut(void) const { return static_cast<LinkQuality>(mLinkQualityOut); }
 
     /**
      * This method sets the link quality out value for this router.
@@ -1405,7 +1405,7 @@ public:
      * @param[in]  aLinkQuality  The link quality out value for this router.
      *
      */
-    void SetLinkQualityOut(uint8_t aLinkQuality) { mLinkQualityOut = aLinkQuality; }
+    void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
     /**
      * This method get the route cost to this router.

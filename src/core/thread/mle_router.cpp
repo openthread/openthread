@@ -1602,12 +1602,12 @@ exit:
 
 bool MleRouter::UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, bool &aResetAdvInterval)
 {
-    bool    changed = false;
-    uint8_t linkQuality;
-    uint8_t myRouterId;
-    uint8_t myRouteCount;
-    uint8_t oldLinkCost;
-    Router *nextHop;
+    bool        changed = false;
+    LinkQuality linkQuality;
+    uint8_t     myRouterId;
+    uint8_t     myRouteCount;
+    uint8_t     oldLinkCost;
+    Router *    nextHop;
 
     myRouterId = RouterIdFromRloc16(GetRloc16());
     VerifyOrExit(aRoute.IsRouterIdSet(myRouterId));
@@ -4017,15 +4017,18 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     case kRoleChild:
         switch (mParent.GetLinkInfo().GetLinkQuality())
         {
-        case 1:
+        case kLinkQuality0:
+            break;
+
+        case kLinkQuality1:
             aTlv.SetLinkQuality1(aTlv.GetLinkQuality1() + 1);
             break;
 
-        case 2:
+        case kLinkQuality2:
             aTlv.SetLinkQuality2(aTlv.GetLinkQuality2() + 1);
             break;
 
-        case 3:
+        case kLinkQuality3:
             aTlv.SetLinkQuality3(aTlv.GetLinkQuality3() + 1);
             break;
         }
@@ -4055,7 +4058,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     for (Router &router : Get<RouterTable>().Iterate())
     {
-        uint8_t linkQuality;
+        LinkQuality linkQuality;
 
         if (router.GetRloc16() == GetRloc16())
         {
@@ -4078,15 +4081,18 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
         switch (linkQuality)
         {
-        case 1:
+        case kLinkQuality0:
+            break;
+
+        case kLinkQuality1:
             aTlv.SetLinkQuality1(aTlv.GetLinkQuality1() + 1);
             break;
 
-        case 2:
+        case kLinkQuality2:
             aTlv.SetLinkQuality2(aTlv.GetLinkQuality2() + 1);
             break;
 
-        case 3:
+        case kLinkQuality3:
             aTlv.SetLinkQuality3(aTlv.GetLinkQuality3() + 1);
             break;
         }
@@ -4208,8 +4214,8 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 
         if (router.GetRloc16() == GetRloc16())
         {
-            aTlv.SetLinkQualityIn(routerCount, 0);
-            aTlv.SetLinkQualityOut(routerCount, 0);
+            aTlv.SetLinkQualityIn(routerCount, kLinkQuality0);
+            aTlv.SetLinkQualityOut(routerCount, kLinkQuality0);
             aTlv.SetRouteCost(routerCount, 1);
         }
         else

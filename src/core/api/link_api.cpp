@@ -288,7 +288,7 @@ uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)
 int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality)
 {
     return LinkQualityInfo::ConvertLinkQualityToRss(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
-                                                    aLinkQuality);
+                                                    static_cast<LinkQuality>(aLinkQuality));
 }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
