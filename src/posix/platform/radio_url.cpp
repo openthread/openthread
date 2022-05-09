@@ -91,8 +91,8 @@ const char *otSysGetRadioUrlHelpString(void)
     return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_RADIO_URL_HELP_MAX_POWER_TABLE
            "    region[=region-code]          Set the radio's region code.\n"
            "    cca-threshold[=dbm]           Set the radio's CCA ED threshold in dBm measured at antenna connector.\n"
-           "    enable-coex[=1|0]             If not specified, RCP coex operates as its default configuration.\n"
-           "                                  Disable coex by 0, and enable it by other values.\n"
+           "    enable-coex[=1|0]             If not specified, RCP coex operates with its default configuration.\n"
+           "                                  Disable coex with 0, and enable it with other values.\n"
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
            "    ncp-dataset                   Retrieve dataset from ncp.\n"
            "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
