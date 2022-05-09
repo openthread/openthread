@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 import mle
 import network_layer
@@ -56,7 +57,7 @@ class Router_5_1_01(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER_1].start()
-        self.simulator.go(7)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER_1].get_state(), 'router')
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)

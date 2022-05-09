@@ -106,7 +106,7 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
         self.nodes[LEADER].register_netdata()
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[SED1].start()

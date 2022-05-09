@@ -77,7 +77,7 @@ class TestAnycast(thread_cert.TestCase):
 
         for i in range(ROUTER2, ROUTER5 + 1):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
             self.nodes[i].udp_start('::', TEST_UDP_PORT)
 

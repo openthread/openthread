@@ -90,7 +90,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual('leader', br.get_state())
 
         router.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
         self.simulator.go(10)

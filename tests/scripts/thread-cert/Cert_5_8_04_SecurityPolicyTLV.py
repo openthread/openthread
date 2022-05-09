@@ -30,6 +30,7 @@
 import unittest
 
 from mesh_cop import TlvType
+import config
 import thread_cert
 from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, LEADER_ALOC, NM_COMMISSIONER_SESSION_ID_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_SECURITY_POLICY_TLV, NM_NETWORK_KEY_TLV, MLE_DISCOVERY_RESPONSE
 from pktverify.packet_verifier import PacketVerifier
@@ -115,7 +116,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER_1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER_1].get_state(), 'router')
 
         self.nodes[COMMISSIONER_1].commissioner_start()

@@ -147,7 +147,7 @@ class Cert_9_2_06_DatasetDissemination(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.simulator.get_messages_sent_by(LEADER)
         self.nodes[COMMISSIONER].commissioner_start()
@@ -156,7 +156,7 @@ class Cert_9_2_06_DatasetDissemination(thread_cert.TestCase):
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
         msg = leader_messages.next_coap_message('2.04', assert_enabled=True)
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[MED].start()

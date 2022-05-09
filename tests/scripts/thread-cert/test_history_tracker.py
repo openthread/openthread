@@ -30,6 +30,8 @@
 import os
 import unittest
 import sys
+
+import config
 import thread_cert
 
 # Test description:

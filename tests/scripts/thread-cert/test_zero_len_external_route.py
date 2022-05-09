@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 
 # Test description:
@@ -80,7 +81,7 @@ class ZeroLengthExternalRoute(thread_cert.TestCase):
 
         router1.start()
         router2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(router1.get_state(), 'router')
         self.assertEqual(router2.get_state(), 'router')
 

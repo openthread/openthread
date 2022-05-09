@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_RESPONSE, MLE_DATA_REQUEST, MLE_DATA_RESPONSE, TLV_REQUEST_TLV, NETWORK_DATA_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -124,7 +125,7 @@ class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
 
         for i in range(ROUTER1, ROUTER15 + 1):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[REED1].start()

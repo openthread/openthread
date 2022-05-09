@@ -99,7 +99,7 @@ class TestSrpServerAnycastMode(thread_cert.TestCase):
 
         client.start()
         browser.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
         self.assertEqual(browser.get_state(), 'router')
 

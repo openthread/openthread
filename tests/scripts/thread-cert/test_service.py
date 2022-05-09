@@ -96,7 +96,7 @@ class Test_Service(thread_cert.TestCase):
 
         self.nodes[ROUTER1].start()
         self.nodes[ROUTER2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 

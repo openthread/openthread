@@ -103,7 +103,7 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
         self.nodes[DUT_ROUTER2].start()
         self.nodes[ROUTER3].start()
         self.nodes[MED1].start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[DUT_ROUTER2].get_state(), 'router')

@@ -89,7 +89,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         server1.start()
         server2.start()
         server3.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(server1.get_state(), 'router')
         self.assertEqual(server2.get_state(), 'router')
         self.assertEqual(server3.get_state(), 'router')

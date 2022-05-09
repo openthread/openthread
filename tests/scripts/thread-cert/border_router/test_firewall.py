@@ -86,7 +86,7 @@ class Firewall(thread_cert.TestCase):
 
         router1.start()
         host.start(start_radvd=True)
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router1.get_state())
 
         br1.set_domain_prefix(config.DOMAIN_PREFIX, 'prosD')

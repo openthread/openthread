@@ -101,7 +101,7 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
         for i in range(2, 5):
             self.nodes[i].start()
 
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[REED1].get_state(), 'child')
@@ -110,7 +110,7 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
         self.nodes[ROUTER2].start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
         self.assertEqual(self.nodes[REED1].get_state(), 'router')
 

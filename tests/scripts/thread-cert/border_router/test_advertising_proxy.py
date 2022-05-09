@@ -90,7 +90,7 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(server.srp_server_get_state(), 'running')
 
         client.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', client.get_state())
 
         #
@@ -309,7 +309,7 @@ class SrpClientRemoveNonExistingHost(thread_cert.TestCase):
         self.assertEqual(server.srp_server_get_state(), 'running')
 
         client.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', client.get_state())
 
         # Immediately remove a non-existing host.

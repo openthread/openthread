@@ -80,11 +80,11 @@ class TestPing(thread_cert.TestCase):
         self.assertEqual('leader', router1.get_state())
 
         router2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router2.get_state())
 
         router3.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router3.get_state())
 
         # 1. ROUTER_1 pings ROUTER_2.

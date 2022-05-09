@@ -76,7 +76,7 @@ class Cert_5_6_2_NetworkDataRouterAsBr(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')

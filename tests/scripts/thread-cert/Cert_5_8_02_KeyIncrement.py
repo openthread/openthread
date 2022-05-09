@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_RESPONSE
 from pktverify.packet_verifier import PacketVerifier
@@ -59,7 +60,7 @@ class Cert_5_8_2_KeyIncrement(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), "leader")
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), "router")
 
         self.collect_ipaddrs()

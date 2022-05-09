@@ -31,6 +31,7 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -88,12 +89,12 @@ class SrpNameConflicts(thread_cert.TestCase):
 
         client_1.srp_server_set_enabled(False)
         client_1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client_1.get_state(), 'router')
 
         client_2.srp_server_set_enabled(False)
         client_2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client_2.get_state(), 'router')
 
         #

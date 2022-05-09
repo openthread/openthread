@@ -28,6 +28,7 @@
 #
 import unittest
 
+import config
 import thread_cert
 
 # Test description:
@@ -92,7 +93,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertEqual('leader', br1.get_state())
 
         router.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
         #
@@ -100,7 +101,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         #         its local nat64 prefix to Network Data.
         #
         br2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
         # Only 1 NAT64 prefix in Network Data.

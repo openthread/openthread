@@ -34,6 +34,7 @@ from mle import TlvType
 from pktverify import consts
 from pktverify.packet_verifier import PacketVerifier
 
+import config
 import thread_cert
 
 LEADER = 1
@@ -78,7 +79,7 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER_1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER_1].get_state(), 'router')
 
         self.nodes[REED_1].start()

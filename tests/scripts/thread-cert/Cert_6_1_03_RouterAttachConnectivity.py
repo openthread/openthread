@@ -79,7 +79,7 @@ class Cert_6_1_3_RouterAttachConnectivity(thread_cert.TestCase):
         for i in range(2, 5):
             self.nodes[i].start()
 
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         for i in range(2, 5):
             self.assertEqual(self.nodes[i].get_state(), 'router')
