@@ -354,7 +354,7 @@ void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, 
 }
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
-bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo)
+static bool IsOmrAddress(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo)
 {
     otIp6Prefix addressPrefix{*aAddressInfo.mAddress, aAddressInfo.mPrefixLength};
 
@@ -670,7 +670,7 @@ exit:
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
 
-bool HasAddedOmrRoute(const otIp6Prefix &aOmrPrefix)
+static bool HasAddedOmrRoute(const otIp6Prefix &aOmrPrefix)
 {
     bool found = false;
 
@@ -747,8 +747,6 @@ static void UpdateOmrRoutes(otInstance *aInstance)
             otLogInfoPlat("[netif] Successfully added an OMR route %s in kernel: %s", prefixString);
         }
     }
-exit:
-    return;
 }
 
 #endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__

@@ -175,12 +175,12 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This method indicates whether or not the Thread Network Data contains a given OMR prefix.
+     * This method indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
      *
      * @param[in]  aPrefix   The OMR prefix to check.
      *
-     * @retval TRUE  if Network Data contains OMR prefix @p aPrefix.
-     * @retval FALSE if Network Data does not contain OMR prefix @p aPrefix.
+     * @retval TRUE  If @p aPrefix is a valid OMR prefix and Network Data contains @p aPrefix.
+     * @retval FALSE Otherwise.
      *
      */
     bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix);
