@@ -1378,6 +1378,45 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix)
+{
+    PrefixTlv *prefixTlv;
+    bool       contains = false;
+
+    VerifyOrExit(BorderRouter::RoutingManager::IsValidOmrPrefix(aPrefix));
+
+    prefixTlv = FindPrefix(aPrefix);
+    VerifyOrExit(prefixTlv != nullptr);
+
+    for (int i = 0; i < 2; i++)
+    {
+        const BorderRouterTlv *borderRouter = prefixTlv->FindSubTlv<BorderRouterTlv>(/* aStable */ (i == 0));
+
+        if (borderRouter == nullptr)
+        {
+            continue;
+        }
+
+        for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+             entry                          = entry->GetNext())
+        {
+            OnMeshPrefixConfig config;
+
+            config.SetFrom(*prefixTlv, *borderRouter, *entry);
+
+            if (BorderRouter::RoutingManager::IsValidOmrPrefix(config))
+            {
+                ExitNow(contains = true);
+            }
+        }
+    }
+
+exit:
+    return contains;
+}
+#endif
+
 } // namespace NetworkData
 } // namespace ot
 

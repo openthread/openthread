@@ -185,6 +185,25 @@ public:
      */
     Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
 
+    /**
+     * This method checks if the on-mesh prefix configuration is a valid OMR prefix.
+     *
+     * @param[in] aOnMeshPrefixConfig  The on-mesh prefix configuration to check.
+     *
+     * @returns  Whether the on-mesh prefix configuration is a valid OMR prefix.
+     *
+     */
+    static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
+
+    /**
+     * This method checks if the OMR prefix is valid (i.e. GUA/ULA prefix with length being 64).
+     *
+     * @param[in]  aOmrPrefix  The OMR prefix to check.
+     * @returns    Whether the OMR prefix is valid.
+     *
+     */
+    static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
+
 private:
     typedef NetworkData::RoutePreference RoutePreference;
 
@@ -347,8 +366,6 @@ private:
     void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
-    static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
-    static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
