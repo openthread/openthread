@@ -98,6 +98,8 @@ child_table = wpan.parse_child_table_result(parent.get(wpan.WPAN_THREAD_CHILD_TA
 verify(len(child_table) == 1)
 verify(int(child_table[0].timeout, 0) == CHILD_TIMEOUT)
 
+time.sleep(1)
+
 # Enabling allowlisting on parent
 #
 # Since child is not in parent's allowlist, the data polls from child
