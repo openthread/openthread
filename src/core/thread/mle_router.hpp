@@ -580,11 +580,6 @@ private:
     // Network Data).
     static constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
 
-    Error AppendConnectivity(Message &aMessage);
-    Error AppendChildAddresses(Message &aMessage, Child &aChild);
-    Error AppendRoute(Message &aMessage, Neighbor *aNeighbor = nullptr);
-    Error AppendActiveDataset(Message &aMessage);
-    Error AppendPendingDataset(Message &aMessage);
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
     void  HandleLinkRequest(RxInfo &aRxInfo);

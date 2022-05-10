@@ -822,7 +822,7 @@ protected:
     static constexpr uint16_t kMleMaxResponseDelay = 1000u; ///< Max delay before responding to a multicast request.
 
     /**
-     * This enumeration type is used in `AppendAddressRegistration()` to determine which addresses to include in the
+     * This enumeration type is used in `AppendAddressRegistrationTlv()` to determine which addresses to include in the
      * appended Address Registration TLV.
      *
      */
@@ -942,6 +942,421 @@ protected:
     };
 
     /**
+     * This class represents an MLE Tx message.
+     *
+     */
+    class TxMessage : public Message
+    {
+    public:
+        /**
+         * This method appends a Source Address TLV to the message.
+         *
+         * @retval kErrorNone    Successfully appended the Source Address TLV.
+         * @retval kErrorNoBufs  Insufficient buffers available to append the Source Address TLV.
+         *
+         */
+        Error AppendSourceAddressTlv(void);
+
+        /**
+         * This method appends a Mode TLV to the message.
+         *
+         * @param[in]  aMode     The Device Mode.
+         *
+         * @retval kErrorNone    Successfully appended the Mode TLV.
+         * @retval kErrorNoBufs  Insufficient buffers available to append the Mode TLV.
+         *
+         */
+        Error AppendModeTlv(DeviceMode aMode);
+
+        /**
+         * This method appends a Timeout TLV to the message.
+         *
+         * @param[in]  aTimeout  The Timeout value.
+         *
+         * @retval kErrorNone    Successfully appended the Timeout TLV.
+         * @retval kErrorNoBufs  Insufficient buffers available to append the Timeout TLV.
+         *
+         */
+        Error AppendTimeoutTlv(uint32_t aTimeout);
+
+        /**
+         * This method appends a Challenge TLV to the message.
+         *
+         * @param[in]  aChallenge        A pointer to the Challenge value.
+         * @param[in]  aChallengeLength  The length of the Challenge value in bytes.
+         *
+         * @retval kErrorNone    Successfully appended the Challenge TLV.
+         * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
+         *
+         */
+        Error AppendChallengeTlv(const uint8_t *aChallenge, uint8_t aChallengeLength);
+
+        /**
+         * This method appends a Challenge TLV to the message.
+         *
+         * @param[in] aChallenge A reference to the Challenge data.
+         *
+         * @retval kErrorNone    Successfully appended the Challenge TLV.
+         * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
+         *
+         */
+        Error AppendChallengeTlv(const Challenge &aChallenge);
+
+        /**
+         * This method appends a Response TLV to the message.
+         *
+         * @param[in] aResponse  A reference to the Response data.
+         *
+         * @retval kErrorNone    Successfully appended the Response TLV.
+         * @retval kErrorNoBufs  Insufficient buffers available to append the Response TLV.
+         *
+         */
+        Error AppendResponseTlv(const Challenge &aResponse);
+
+        /**
+         * This method appends a Link Frame Counter TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Link Frame Counter TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Link Frame Counter TLV.
+         *
+         */
+        Error AppendLinkFrameCounterTlv(void);
+
+        /**
+         * This method appends an MLE Frame Counter TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Frame Counter TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the MLE Frame Counter TLV.
+         *
+         */
+        Error AppendMleFrameCounterTlv(void);
+
+        /**
+         * This method appends an Address16 TLV to the message.
+         *
+         * @param[in]  aRloc16    The RLOC16 value.
+         *
+         * @retval kErrorNone     Successfully appended the Address16 TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Address16 TLV.
+         *
+         */
+        Error AppendAddress16Tlv(uint16_t aRloc16);
+
+        /**
+         * This method appends a Network Data TLV to the message.
+         *
+         * @param[in]  aType      The Network Data type to append, full set or stable subset.
+         *
+         * @retval kErrorNone     Successfully appended the Network Data TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Network Data TLV.
+         *
+         */
+        Error AppendNetworkDataTlv(NetworkData::Type aType);
+
+        /**
+         * This method appends a TLV Request TLV to the message.
+         *
+         * @param[in]  aTlvs        A pointer to the list of TLV types.
+         * @param[in]  aTlvsLength  The number of TLV types in @p aTlvs
+         *
+         * @retval kErrorNone     Successfully appended the TLV Request TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the TLV Request TLV.
+         *
+         */
+        Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);
+
+        /**
+         * This method appends a Leader Data TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Leader Data TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Leader Data TLV.
+         *
+         */
+        Error AppendLeaderDataTlv(void);
+
+        /**
+         * This method appends a Scan Mask TLV to th message.
+         *
+         * @param[in]  aScanMask  The Scan Mask value.
+         *
+         * @retval kErrorNone     Successfully appended the Scan Mask TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Scan Mask TLV.
+         *
+         */
+        Error AppendScanMaskTlv(uint8_t aScanMask);
+
+        /**
+         * This method appends a Status TLV to the message.
+         *
+         * @param[in] aStatus     The Status value.
+         *
+         * @retval kErrorNone     Successfully appended the Status TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Status TLV.
+         *
+         */
+        Error AppendStatusTlv(StatusTlv::Status aStatus);
+
+        /**
+         * This method appends a Link Margin TLV to the message.
+         *
+         * @param[in] aLinkMargin The Link Margin value.
+         *
+         * @retval kErrorNone     Successfully appended the Link Margin TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Link Margin TLV.
+         *
+         */
+        Error AppendLinkMarginTlv(uint8_t aLinkMargin);
+
+        /**
+         * This method appends a Version TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Version TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Version TLV.
+         *
+         */
+        Error AppendVersionTlv(void);
+
+        /**
+         * This method appends an Address Registration TLV to the message.
+         *
+         * @param[in]  aMode      Determines which addresses to include in the TLV (see `AddressRegistrationMode`).
+         *
+         * @retval kErrorNone     Successfully appended the Address Registration TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Address Registration TLV.
+         *
+         */
+        Error AppendAddressRegistrationTlv(AddressRegistrationMode aMode = kAppendAllAddresses);
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        /**
+         * This method appends a Time Request TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Time Request TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Time Request TLV.
+         *
+         */
+        Error AppendTimeRequestTlv(void);
+
+        /**
+         * This method appends a Time Parameter TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Time Parameter TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Time Parameter TLV.
+         *
+         */
+        Error AppendTimeParameterTlv(void);
+#endif
+        /**
+         * This method appends a XTAL Accuracy TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the XTAL Accuracy TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the XTAl Accuracy TLV.
+         *
+         */
+        Error AppendXtalAccuracyTlv(void);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        /**
+         * This method appends a CSL Channel TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the CSL Channel TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Channel TLV.
+         *
+         */
+        Error AppendCslChannelTlv(void);
+
+        /**
+         * This method appends a CSL Sync Timeout TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the CSL Timeout TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Timeout TLV.
+         *
+         */
+        Error AppendCslTimeoutTlv(void);
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        /**
+         * This method appends a CSL Clock Accuracy TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the CSL Accuracy TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Accuracy TLV.
+         *
+         */
+        Error AppendCslClockAccuracyTlv(void);
+#endif
+
+        /**
+         * This method appends a Active Timestamp TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Active Timestamp TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Active Timestamp TLV.
+         *
+         */
+        Error AppendActiveTimestampTlv(void);
+
+        /**
+         * This method appends a Pending Timestamp TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Pending Timestamp TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Pending Timestamp TLV.
+         *
+         */
+        Error AppendPendingTimestampTlv(void);
+
+#if OPENTHREAD_FTD
+        /**
+         * This method appends a Route TLV to the message.
+         *
+         * @param[in] aNeighbor   A pointer to the intended destination  (can be `nullptr`).
+         *
+         * @retval kErrorNone     Successfully appended the Route TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Route TLV.
+         *
+         */
+        Error AppendRouteTlv(Neighbor *aNeighbor = nullptr);
+
+        /**
+         * This method appends a Active Dataset TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Active Dataset TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Active Dataset TLV.
+         *
+         */
+        Error AppendActiveDatasetTlv(void);
+
+        /**
+         * This method appends a Pending Dataset TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Pending Dataset TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Pending Dataset TLV.
+         *
+         */
+        Error AppendPendingDatasetTlv(void);
+
+        /**
+         * This method appends a Connectivity TLV to the message.
+         *
+         * @retval kErrorNone     Successfully appended the Connectivity TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Connectivity TLV.
+         *
+         */
+        Error AppendConnectivityTlv(void);
+
+        /**
+         * This method appends a Address Registration TLV to the message with addresses from a given child.
+         *
+         * @param[in] aChild  The child to include its list of addresses in the Address Registration TLV.
+         *
+         * @retval kErrorNone     Successfully appended the Connectivity TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the Connectivity TLV.
+         *
+         */
+        Error AppendAddresseRegisterationTlv(Child &aChild);
+#endif // OPENTHREAD_FTD
+
+        /**
+         * This method submits the MLE message to the UDP socket to be sent.
+         *
+         * @param[in]  aDestination  A reference to the IPv6 address of the destination.
+         *
+         * @retval kErrorNone     Successfully submitted the MLE message.
+         * @retval kErrorNoBufs   Insufficient buffers to form the rest of the MLE message.
+         *
+         */
+        Error SendTo(const Ip6::Address &aDestination);
+
+        /**
+         * This method enqueues the message to be sent after a given delay.
+         *
+         * @param[in]  aDestination         The IPv6 address of the recipient of the message.
+         * @param[in]  aDelay               The delay in milliseconds before transmission of the message.
+         *
+         * @retval kErrorNone     Successfully queued the message to transmit after the delay.
+         * @retval kErrorNoBufs   Insufficient buffers to queue the message.
+         *
+         */
+        Error SendAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
+    };
+
+    /**
+     * This class represents an MLE Rx message.
+     *
+     */
+    class RxMessage : public Message
+    {
+    public:
+        /**
+         * This method reads Challenge TLV from the message.
+         *
+         * @param[out] aChallenge        A reference to the Challenge data where to output the read value.
+         *
+         * @retval kErrorNone       Successfully read the Challenge TLV.
+         * @retval kErrorNotFound   Challenge TLV was not found in the message.
+         * @retval kErrorParse      Challenge TLV was found but could not be parsed.
+         *
+         */
+        Error ReadChallengeTlv(Challenge &aChallenge) const;
+
+        /**
+         * This method reads Response TLV from the message.
+         *
+         * @param[out] aResponse        A reference to the Response data where to output the read value.
+         *
+         * @retval kErrorNone       Successfully read the Response TLV.
+         * @retval kErrorNotFound   Response TLV was not found in the message.
+         * @retval kErrorParse      Response TLV was found but could not be parsed.
+         *
+         */
+        Error ReadResponseTlv(Challenge &aResponse) const;
+
+        /**
+         * This method reads Link and MLE Frame Counters from the message.
+         *
+         * Link Frame Counter TLV must be present in the message and its value is read into @p aLinkFrameCounter. If MLE
+         * Frame Counter TLV is present in the message, its value is read into @p aMleFrameCounter. If the MLE Frame
+         * Counter TLV is not present in the message, then @p aMleFrameCounter is set to the same value as
+         * @p aLinkFrameCounter.
+         *
+         * @param[out] aLinkFrameCounter  A reference to an `uint32_t` to output the Link Frame Counter.
+         * @param[out] aMleFrameCounter   A reference to an `uint32_t` to output the MLE Frame Counter.
+         *
+         * @retval kErrorNone       Successfully read the counters.
+         * @retval kErrorNotFound   Link Frame Counter TLV was not found in the message.
+         * @retval kErrorParse      TLVs are not well-formed.
+         *
+         */
+        Error ReadFrameCounterTlvs(uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
+
+        /**
+         * This method reads TLV Request TLV from the message.
+         *
+         * @param[out] aRequestedTlvs   A reference to output the read list of requested TLVs.
+         *
+         * @retval kErrorNone       Successfully read the TLV.
+         * @retval kErrorNotFound   TLV was not found in the message.
+         * @retval kErrorParse      TLV was found but could not be parsed.
+         *
+         */
+        Error ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const;
+
+        /**
+         * This method reads Leader Data TLV from a message.
+         *
+         * @param[out] aLeaderData     A reference to output the Leader Data.
+         *
+         * @retval kErrorNone       Successfully read the TLV.
+         * @retval kErrorNotFound   TLV was not found in the message.
+         * @retval kErrorParse      TLV was found but could not be parsed.
+         *
+         */
+        Error ReadLeaderDataTlv(LeaderData &aLeaderData) const;
+
+    private:
+        Error ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuffer) const;
+    };
+
+    /**
      * This structure represents a received MLE message containing additional information about the message (e.g.
      * key sequence, neighbor from which it was received).
      *
@@ -956,7 +1371,7 @@ protected:
          *
          */
         RxInfo(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-            : mMessage(aMessage)
+            : mMessage(static_cast<RxMessage &>(aMessage))
             , mMessageInfo(aMessageInfo)
             , mFrameCounter(0)
             , mKeySequence(0)
@@ -964,7 +1379,7 @@ protected:
         {
         }
 
-        Message &               mMessage;      ///< The MLE message.
+        RxMessage &             mMessage;      ///< The MLE message.
         const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
         uint32_t                mFrameCounter; ///< The frame counter from aux security header.
         uint32_t                mKeySequence;  ///< The key sequence from the aux security header.
@@ -979,7 +1394,7 @@ protected:
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
-    Message *NewMleMessage(Command aCommand);
+    TxMessage *NewMleMessage(Command aCommand);
 
     /**
      * This method sets the device role.
@@ -1004,370 +1419,6 @@ protected:
      *
      */
     void SetAttachState(AttachState aState);
-
-    /**
-     * This method appends a Source Address TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone    Successfully appended the Source Address TLV.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the Source Address TLV.
-     *
-     */
-    Error AppendSourceAddress(Message &aMessage) const;
-
-    /**
-     * This method appends a Mode TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aMode     The Device Mode.
-     *
-     * @retval kErrorNone    Successfully appended the Mode TLV.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the Mode TLV.
-     *
-     */
-    Error AppendMode(Message &aMessage, DeviceMode aMode);
-
-    /**
-     * This method appends a Timeout TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aTimeout  The Timeout value.
-     *
-     * @retval kErrorNone    Successfully appended the Timeout TLV.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the Timeout TLV.
-     *
-     */
-    Error AppendTimeout(Message &aMessage, uint32_t aTimeout);
-
-    /**
-     * This method appends a Challenge TLV to a message.
-     *
-     * @param[in]  aMessage          A reference to the message.
-     * @param[in]  aChallenge        A pointer to the Challenge value.
-     * @param[in]  aChallengeLength  The length of the Challenge value in bytes.
-     *
-     * @retval kErrorNone    Successfully appended the Challenge TLV.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
-     *
-     */
-    Error AppendChallenge(Message &aMessage, const uint8_t *aChallenge, uint8_t aChallengeLength);
-
-    /**
-     * This method appends a Challenge TLV to a message.
-     *
-     * @param[in]  aMessage          A reference to the message.
-     * @param[in]  aChallenge        A reference to the Challenge data.
-     *
-     * @retval kErrorNone    Successfully appended the Challenge TLV.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
-     *
-     */
-    Error AppendChallenge(Message &aMessage, const Challenge &aChallenge);
-
-    /**
-     * This method reads Challenge TLV from a message.
-     *
-     * @param[in]  aMessage          A reference to the message.
-     * @param[out] aChallenge        A reference to the Challenge data where to output the read value.
-     *
-     * @retval kErrorNone       Successfully read the Challenge TLV.
-     * @retval kErrorNotFound   Challenge TLV was not found in the message.
-     * @retval kErrorParse      Challenge TLV was found but could not be parsed.
-     *
-     */
-    Error ReadChallenge(const Message &aMessage, Challenge &aChallenge);
-
-    /**
-     * This method appends a Response TLV to a message.
-     *
-     * @param[in]  aMessage         A reference to the message.
-     * @param[in]  aResponse        A reference to the Response data.
-     *
-     * @retval kErrorNone    Successfully appended the Response TLV.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the Response TLV.
-     *
-     */
-    Error AppendResponse(Message &aMessage, const Challenge &aResponse);
-
-    /**
-     * This method reads Response TLV from a message.
-     *
-     * @param[in]  aMessage         A reference to the message.
-     * @param[out] aResponse        A reference to the Response data where to output the read value.
-     *
-     * @retval kErrorNone       Successfully read the Response TLV.
-     * @retval kErrorNotFound   Response TLV was not found in the message.
-     * @retval kErrorParse      Response TLV was found but could not be parsed.
-     *
-     */
-    Error ReadResponse(const Message &aMessage, Challenge &aResponse);
-
-    /**
-     * This method appends a Link Frame Counter TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Link Frame Counter TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Link Frame Counter TLV.
-     *
-     */
-    Error AppendLinkFrameCounter(Message &aMessage);
-
-    /**
-     * This method reads Link and MLE Frame Counters from a message.
-     *
-     * Link Frame Counter TLV must be present in the message and its value is read into @p aLinkFrameCounter. If MLE
-     * Frame Counter TLV is present in the message, its value is read into @p aMleFrameCounter. If the MLE Frame
-     * Counter TLV is not present in the message, then @p aMleFrameCounter is set to same value as @p aLinkFrameCounter.
-     *
-     * @param[in]  aMessage           A reference to the message to read from.
-     * @param[out] aLinkFrameCounter  A reference to an `uint32_t` to output the Link Frame Counter.
-     * @param[out] aMleFrameCounter   A reference to an `uint32_t` to output the MLE Frame Counter.
-     *
-     * @retval kErrorNone       Successfully read the counters.
-     * @retval kErrorNotFound   Link Frame Counter TLV was not found in the message.
-     * @retval kErrorParse      TLVs are not well-formed.
-     *
-     */
-    Error ReadFrameCounters(const Message &aMessage, uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
-
-    /**
-     * This method appends an MLE Frame Counter TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Frame Counter TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the MLE Frame Counter TLV.
-     *
-     */
-    Error AppendMleFrameCounter(Message &aMessage);
-
-    /**
-     * This method appends an Address16 TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aRloc16   The RLOC16 value.
-     *
-     * @retval kErrorNone     Successfully appended the Address16 TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Address16 TLV.
-     *
-     */
-    Error AppendAddress16(Message &aMessage, uint16_t aRloc16);
-
-    /**
-     * This method appends a Network Data TLV to the message.
-     *
-     * @param[in]  aMessage     A reference to the message.
-     * @param[in]  aType        The Network Data type to append, full set or stable subset.
-     *
-     * @retval kErrorNone     Successfully appended the Network Data TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Network Data TLV.
-     *
-     */
-    Error AppendNetworkData(Message &aMessage, NetworkData::Type aType);
-
-    /**
-     * This method appends a TLV Request TLV to a message.
-     *
-     * @param[in]  aMessage     A reference to the message.
-     * @param[in]  aTlvs        A pointer to the list of TLV types.
-     * @param[in]  aTlvsLength  The number of TLV types in @p aTlvs
-     *
-     * @retval kErrorNone     Successfully appended the TLV Request TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the TLV Request TLV.
-     *
-     */
-    Error AppendTlvRequest(Message &aMessage, const uint8_t *aTlvs, uint8_t aTlvsLength);
-
-    /**
-     * This method reads TLV Request TLV from a message.
-     *
-     * @param[in]  aMessage         A reference to the message.
-     * @param[out] aRequestedTlvs   A reference to output the read list of requested TLVs.
-     *
-     * @retval kErrorNone       Successfully read the TLV.
-     * @retval kErrorNotFound   TLV was not found in the message.
-     * @retval kErrorParse      TLV was found but could not be parsed.
-     *
-     */
-    Error FindTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs);
-
-    /**
-     * This method appends a Leader Data TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Leader Data TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Leader Data TLV.
-     *
-     */
-    Error AppendLeaderData(Message &aMessage);
-
-    /**
-     * This method reads Leader Data TLV from a message.
-     *
-     * @param[in]  aMessage        A reference to the message.
-     * @param[out] aLeaderData     A reference to output the Leader Data.
-     *
-     * @retval kErrorNone       Successfully read the TLV.
-     * @retval kErrorNotFound   TLV was not found in the message.
-     * @retval kErrorParse      TLV was found but could not be parsed.
-     *
-     */
-    Error ReadLeaderData(const Message &aMessage, LeaderData &aLeaderData);
-
-    /**
-     * This method appends a Scan Mask TLV to a message.
-     *
-     * @param[in]  aMessage   A reference to the message.
-     * @param[in]  aScanMask  The Scan Mask value.
-     *
-     * @retval kErrorNone     Successfully appended the Scan Mask TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Scan Mask TLV.
-     *
-     */
-    Error AppendScanMask(Message &aMessage, uint8_t aScanMask);
-
-    /**
-     * This method appends a Status TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aStatus   The Status value.
-     *
-     * @retval kErrorNone     Successfully appended the Status TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Status TLV.
-     *
-     */
-    Error AppendStatus(Message &aMessage, StatusTlv::Status aStatus);
-
-    /**
-     * This method appends a Link Margin TLV to a message.
-     *
-     * @param[in]  aMessage     A reference to the message.
-     * @param[in]  aLinkMargin  The Link Margin value.
-     *
-     * @retval kErrorNone     Successfully appended the Link Margin TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Link Margin TLV.
-     *
-     */
-    Error AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin);
-
-    /**
-     * This method appends a Version TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Version TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Version TLV.
-     *
-     */
-    Error AppendVersion(Message &aMessage);
-
-    /**
-     * This method appends an Address Registration TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aMode     Determines which addresses to include in the TLV (see `AddressRegistrationMode`).
-     *
-     * @retval kErrorNone     Successfully appended the Address Registration TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Address Registration TLV.
-     *
-     */
-    Error AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode = kAppendAllAddresses);
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    /**
-     * This method appends a Time Request TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Time Request TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Time Request TLV.
-     *
-     */
-    Error AppendTimeRequest(Message &aMessage);
-
-    /**
-     * This method appends a Time Parameter TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Time Parameter TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Time Parameter TLV.
-     *
-     */
-    Error AppendTimeParameter(Message &aMessage);
-
-    /**
-     * This method appends a XTAL Accuracy TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the XTAL Accuracy TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the XTAl Accuracy TLV.
-     *
-     */
-    Error AppendXtalAccuracy(Message &aMessage);
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * This method appends a CSL Channel TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the CSL Channel TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Channel TLV.
-     *
-     */
-    Error AppendCslChannel(Message &aMessage);
-
-    /**
-     * This method appends a CSL Sync Timeout TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the CSL Timeout TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Timeout TLV.
-     *
-     */
-    Error AppendCslTimeout(Message &aMessage);
-#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    /**
-     * This method appends a CSL Clock Accuracy TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the CSL Accuracy TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Accuracy TLV.
-     */
-    Error AppendCslClockAccuracy(Message &aMessage);
-#endif
-
-    /**
-     * This method appends a Active Timestamp TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Active Timestamp TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Active Timestamp TLV.
-     *
-     */
-    Error AppendActiveTimestamp(Message &aMessage);
-
-    /**
-     * This method appends a Pending Timestamp TLV to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully appended the Pending Timestamp TLV.
-     * @retval kErrorNoBufs   Insufficient buffers available to append the Pending Timestamp TLV.
-     *
-     */
-    Error AppendPendingTimestamp(Message &aMessage);
 
     /**
      * This method checks if the destination is reachable.
@@ -1435,18 +1486,6 @@ protected:
     Error SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const Challenge &aChallenge);
 
     /**
-     * This method submits an MLE message to the UDP socket.
-     *
-     * @param[in]  aMessage      A reference to the message.
-     * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     *
-     * @retval kErrorNone     Successfully submitted the MLE message.
-     * @retval kErrorNoBufs   Insufficient buffers to form the rest of the MLE message.
-     *
-     */
-    Error SendMessage(Message &aMessage, const Ip6::Address &aDestination);
-
-    /**
      * This method sets the RLOC16 assigned to the Thread interface.
      *
      * @param[in]  aRloc16  The RLOC16 to set.
@@ -1475,19 +1514,6 @@ protected:
      *
      */
     void SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
-
-    /**
-     * This method adds a message to the message queue. The queued message will be transmitted after given delay.
-     *
-     * @param[in]  aMessage             The message to transmit after given delay.
-     * @param[in]  aDestination         The IPv6 address of the recipient of the message.
-     * @param[in]  aDelay               The delay in milliseconds before transmission of the message.
-     *
-     * @retval kErrorNone     Successfully queued the message to transmit after the delay.
-     * @retval kErrorNoBufs   Insufficient buffers to queue the message.
-     *
-     */
-    Error AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     /**
@@ -1763,13 +1789,12 @@ private:
     void        HandleAttachTimer(void);
     static void HandleDelayedResponseTimer(Timer &aTimer);
     void        HandleDelayedResponseTimer(void);
-    void        SendDelayedResponse(Message &aMessage, const DelayedResponseMetadata &aMetadata);
+    void        SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata);
     static void HandleMessageTransmissionTimer(Timer &aTimer);
     void        HandleMessageTransmissionTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        ScheduleMessageTransmissionTimer(void);
-    Error       ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer);
 
     void HandleAdvertisement(RxInfo &aRxInfo);
     void HandleChildIdResponse(RxInfo &aRxInfo);

@@ -67,7 +67,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                 void *                  aContext)
 {
     Error                           error   = kErrorNone;
-    Message *                       message = nullptr;
+    Mle::TxMessage *                message = nullptr;
     Tlv                             tlv;
     Ip6::Address                    destination;
     MeshCoP::DiscoveryRequestTlv    discoveryRequest;
@@ -136,7 +136,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
 
     destination.SetToLinkLocalAllRoutersMulticast();
 
-    SuccessOrExit(error = Get<Mle>().SendMessage(*message, destination));
+    SuccessOrExit(error = message->SendTo(destination));
 
     if ((aPanId == Mac::kPanIdBroadcast) && (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast))
     {
