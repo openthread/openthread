@@ -66,6 +66,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
+ *
+ * Specifies maximum number of discovered prefixes (on-link prefixes on the infra link) maintained by routing manager.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES 8
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
  *
  * Define to 1 to enable Border Routing Vicarious Router Solicitation.
