@@ -66,6 +66,17 @@ from IThci import IThci
 import commissioner
 from commissioner_impl import OTCommissioner
 
+# Replace by the actual version string for the vendor's reference device
+OT11_VERSION = 'OPENTHREAD'
+OT12_VERSION = 'OPENTHREAD'
+OT13_VERSION = 'OPENTHREAD'
+
+# Supported device capabilites in this THCI implementation
+OT11_CAPBS = DevCapb.V1_1
+OT12_CAPBS = (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD)
+OT12BR_CAPBS = (DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm)
+OT13_CAPBS = DevCapb.NotSpecified
+
 ZEPHYR_PREFIX = 'ot '
 """CLI prefix used for OpenThread commands in Zephyr systems"""
 
@@ -2720,7 +2731,16 @@ class OpenThreadTHCI(object):
 
     @API
     def ValidateDeviceFirmware(self):
-        return 'OPENTHREAD' in self.UIStatusMsg
+        assert not self.IsBorderRouter, "Method not expected to be used with border router devices"
+
+        if self.DeviceCapability == OT11_CAPBS:
+            return OT11_VERSION in self.UIStatusMsg
+        elif self.DeviceCapability == OT12_CAPBS:
+            return OT12_VERSION in self.UIStatusMsg
+        elif self.DeviceCapability == OT13_CAPBS:
+            return OT13_VERSION in self.UIStatusMsg
+        else:
+            return False
 
     @API
     def setBbrDataset(self, SeqNumInc=False, SeqNum=None, MlrTimeout=None, ReRegDelay=None):
@@ -3105,17 +3125,17 @@ class OpenThreadTHCI(object):
         """Discover device capability according to version"""
         if self.IsBorderRouter:
             self.log("Setting capability of BR {}: DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm".format(self))
-            self.DeviceCapability = (DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm)
+            self.DeviceCapability = OT12BR_CAPBS
         else:
             # Get Thread stack version to distinguish device capability.
             thver = self.__executeCommand('thread version')[0]
 
             if thver in ['1.2', '3']:
                 self.log("Setting capability of {}: DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD".format(self))
-                self.DeviceCapability = (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD)
+                self.DeviceCapability = OT12_CAPBS
             elif thver in ['1.1', '2']:
                 self.log("Setting capability of {}: DevCapb.V1_1".format(self))
-                self.DeviceCapability = DevCapb.V1_1
+                self.DeviceCapability = OT11_CAPBS
             else:
                 self.log("Capability not specified for {}".format(self))
                 self.DeviceCapability = DevCapb.NotSpecified
