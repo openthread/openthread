@@ -1236,6 +1236,8 @@ void Server::SendResponse(const Dns::UpdateHeader &   aHeader,
         LogInfo("Send success response");
     }
 
+    UpdateResponseCounters(aResponseCode);
+
 exit:
     if (error != kErrorNone)
     {
@@ -1282,6 +1284,8 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     SuccessOrExit(error = GetSocket().SendTo(*response, aMessageInfo));
 
     LogInfo("Send success response with granted lease: %u and key lease: %u", aLease, aKeyLease);
+
+    UpdateResponseCounters(Dns::UpdateHeader::kResponseSuccess);
 
 exit:
     if (error != kErrorNone)
@@ -1482,6 +1486,31 @@ const char *Server::AddressModeToString(AddressMode aMode)
     return kAddressModeStrings[aMode];
 }
 
+void Server::UpdateResponseCounters(Dns::UpdateHeader::Response aResponseCode)
+{
+    switch (aResponseCode)
+    {
+    case Dns::UpdateHeader::kResponseSuccess:
+        ++mResponseCounters.mSuccess;
+        break;
+    case Dns::UpdateHeader::kResponseServerFailure:
+        ++mResponseCounters.mServerFailure;
+        break;
+    case Dns::UpdateHeader::kResponseFormatError:
+        ++mResponseCounters.mFormatError;
+        break;
+    case Dns::UpdateHeader::kResponseNameExists:
+        ++mResponseCounters.mNameExists;
+        break;
+    case Dns::UpdateHeader::kResponseRefused:
+        ++mResponseCounters.mRefused;
+        break;
+    default:
+        ++mResponseCounters.mOther;
+        break;
+    }
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // Server::Service
 
@@ -1538,6 +1567,18 @@ TimeMilli Server::Service::GetExpireTime(void) const
 TimeMilli Server::Service::GetKeyExpireTime(void) const
 {
     return mUpdateTime + Time::SecToMsec(mDescription->mKeyLease);
+}
+
+void Server::Service::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
+{
+    TimeMilli now           = TimerMilli::GetNow();
+    TimeMilli expireTime    = GetExpireTime();
+    TimeMilli keyExpireTime = GetKeyExpireTime();
+
+    aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
+    aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
+    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
+    aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
 }
 
 bool Server::Service::MatchesInstanceName(const char *aInstanceName) const
@@ -1737,6 +1778,18 @@ TimeMilli Server::Host::GetExpireTime(void) const
 TimeMilli Server::Host::GetKeyExpireTime(void) const
 {
     return mUpdateTime + Time::SecToMsec(mKeyLease);
+}
+
+void Server::Host::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
+{
+    TimeMilli now           = TimerMilli::GetNow();
+    TimeMilli expireTime    = GetExpireTime();
+    TimeMilli keyExpireTime = GetKeyExpireTime();
+
+    aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
+    aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
+    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
+    aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
 }
 
 const Server::Service *Server::Host::FindNextService(const Service *aPrevService,

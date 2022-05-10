@@ -130,6 +130,12 @@ public:
     typedef otSrpServerServiceUpdateId ServiceUpdateId;
 
     /**
+     * The SRP server lease information of a host/service.
+     *
+     */
+    typedef otSrpServerLeaseInfo LeaseInfo;
+
+    /**
      * This enumeration represents the address mode used by the SRP server.
      *
      * Address mode specifies how the address and port number are determined by the SRP server and how this info ins
@@ -302,6 +308,22 @@ public:
         const Host &GetHost(void) const { return *mDescription->mHost; }
 
         /**
+         * This method returns the LEASE time of the service.
+         *
+         * @returns  The LEASE time in seconds.
+         *
+         */
+        uint32_t GetLease(void) const { return mDescription->mLease; }
+
+        /**
+         * This method returns the KEY-LEASE time of the key of the service.
+         *
+         * @returns  The KEY-LEASE time in seconds.
+         *
+         */
+        uint32_t GetKeyLease(void) const { return mDescription->mKeyLease; }
+
+        /**
          * This method returns the expire time (in milliseconds) of the service.
          *
          * @returns  The service expire time in milliseconds.
@@ -316,6 +338,15 @@ public:
          *
          */
         TimeMilli GetKeyExpireTime(void) const;
+
+        /**
+         * This method gets the LEASE and KEY-LEASE information of a given service.
+         *
+         * @param[out]  aLeaseInfo  A reference to a LeaseInfo instance. It contains the LEASE time, KEY-LEASE time,
+         *                          remaining LEASE time and the remaining KEY-LEASE time.
+         *
+         */
+        void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
 
         /**
          * This method indicates whether this service matches a given service instance name.
@@ -451,6 +482,15 @@ public:
          *
          */
         uint32_t GetKeyLease(void) const { return mKeyLease; }
+
+        /**
+         * This method gets the LEASE and KEY-LEASE information of a given host.
+         *
+         * @param[out]  aLeaseInfo  A reference to a LeaseInfo instance. It contains the LEASE time, KEY-LEASE time,
+         *                          remaining LEASE time and the remaining KEY-LEASE time.
+         *
+         */
+        void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
 
         /**
          * This method returns the KEY resource record of the host.
@@ -705,6 +745,14 @@ public:
     State GetState(void) const { return mState; }
 
     /**
+     * This method tells the port the SRP server is listening to.
+     *
+     * @returns  An integer that represents the port of the server. It returns 0 if the SRP server is not running.
+     *
+     */
+    uint16_t GetPort(void) const { return IsRunning() ? mPort : 0; }
+
+    /**
      * This method enables/disables the SRP server.
      *
      * @param[in]  aEnabled  A boolean to enable/disable the SRP server.
@@ -744,6 +792,14 @@ public:
      *
      */
     const Host *GetNextHost(const Host *aHost);
+
+    /**
+     * This method returns the response counters of the SRP server.
+     *
+     * @returns  A pointer to the response counters of the SRP server.
+     *
+     */
+    const otSrpServerResponseCounters *GetResponseCounters(void) const { return &mResponseCounters; }
 
     /**
      * This method receives the service update result from service handler set by
@@ -886,6 +942,8 @@ private:
     const UpdateMetadata *FindOutstandingUpdate(const MessageMetadata &aMessageMetadata) const;
     static const char *   AddressModeToString(AddressMode aMode);
 
+    void UpdateResponseCounters(Dns::Header::Response aResponseCode);
+
     Ip6::Udp::Socket                mSocket;
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
     void *                          mServiceUpdateHandlerContext;
@@ -906,6 +964,8 @@ private:
     AddressMode     mAddressMode;
     uint8_t         mAnycastSequenceNumber;
     bool            mHasRegisteredAnyService : 1;
+
+    otSrpServerResponseCounters mResponseCounters;
 };
 
 } // namespace Srp

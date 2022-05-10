@@ -57,6 +57,11 @@ otSrpServerState otSrpServerGetState(otInstance *aInstance)
     return MapEnum(AsCoreType(aInstance).Get<Srp::Server>().GetState());
 }
 
+uint16_t otSrpServerGetPort(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().GetPort();
+}
+
 otSrpServerAddressMode otSrpServerGetAddressMode(otInstance *aInstance)
 {
     return MapEnum(AsCoreType(aInstance).Get<Srp::Server>().GetAddressMode());
@@ -109,6 +114,11 @@ const otSrpServerHost *otSrpServerGetNextHost(otInstance *aInstance, const otSrp
     return AsCoreType(aInstance).Get<Srp::Server>().GetNextHost(AsCoreTypePtr(aHost));
 }
 
+const otSrpServerResponseCounters *otSrpServerGetResponseCounters(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().GetResponseCounters();
+}
+
 bool otSrpServerHostIsDeleted(const otSrpServerHost *aHost)
 {
     return AsCoreType(aHost).IsDeleted();
@@ -122,6 +132,16 @@ const char *otSrpServerHostGetFullName(const otSrpServerHost *aHost)
 const otIp6Address *otSrpServerHostGetAddresses(const otSrpServerHost *aHost, uint8_t *aAddressesNum)
 {
     return AsCoreType(aHost).GetAddresses(*aAddressesNum);
+}
+
+void otSrpServerHostGetLeaseInfo(const otSrpServerHost *aHost, otSrpServerLeaseInfo *aLeaseInfo)
+{
+    AsCoreType(aHost).GetLeaseInfo(*aLeaseInfo);
+}
+
+uint32_t otSrpServerHostGetKeyLease(const otSrpServerHost *aHost)
+{
+    return AsCoreType(aHost).GetKeyLease();
 }
 
 const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost *   aHost,
@@ -194,6 +214,11 @@ const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, 
 const otSrpServerHost *otSrpServerServiceGetHost(const otSrpServerService *aService)
 {
     return &AsCoreType(aService).GetHost();
+}
+
+void otSrpServerServiceGetLeaseInfo(const otSrpServerService *aService, otSrpServerLeaseInfo *aLeaseInfo)
+{
+    AsCoreType(aService).GetLeaseInfo(*aLeaseInfo);
 }
 
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
