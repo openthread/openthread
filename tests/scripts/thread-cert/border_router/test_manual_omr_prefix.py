@@ -26,7 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-
+import ipaddress
 import unittest
 import thread_cert
 
@@ -93,15 +93,20 @@ class ManualOmrsPrefix(thread_cert.TestCase):
         self.simulator.go(10)
 
         if expect_withdraw:
-            self.assertEqual(br1.get_netdata_omr_prefixes(), [prefix])
+            self._assert_prefixes_equal(br1.get_netdata_omr_prefixes(), [prefix])
         else:
-            self.assertEqual(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix()])
+            self._assert_prefixes_equal(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix()])
 
         br2.remove_prefix(prefix)
         br2.register_netdata()
         self.simulator.go(10)
-        self.assertEqual(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix()])
+        self._assert_prefixes_equal(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix()])
         self.simulator.go(3)
+
+    def _assert_prefixes_equal(self, prefixes1, prefixes2):
+        prefixes1 = sorted([ipaddress.IPv6Network(p) for p in prefixes1])
+        prefixes2 = sorted([ipaddress.IPv6Network(p) for p in prefixes2])
+        self.assertEqual(prefixes1, prefixes2)
 
 
 if __name__ == '__main__':
