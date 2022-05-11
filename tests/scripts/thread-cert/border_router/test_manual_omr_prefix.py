@@ -79,21 +79,29 @@ class ManualOmrsPrefix(thread_cert.TestCase):
 
         # Add a smaller OMR prefix. Verify BR_1 withdraws its OMR prefix.
         self._test_manual_omr_prefix('2001::/64', 'paros', expect_withdraw=True)
+        # Add a bigger OMR prefix. Verify BR_1 does not withdraw its OMR prefix.
+        self._test_manual_omr_prefix('fdff:ffff:1::/64', 'paros', expect_withdraw=False)
+        # Add a high preference bigger OMR prefix. Verify BR_1 withdraws its OMR prefix.
+        self._test_manual_omr_prefix('fdff:ffff:2::/64', 'paros', expect_withdraw=True, prf='high')
         # Add a smaller but invalid OMR prefix (P_on_mesh = 0). Verify BR_1 does not withdraw its OMR prefix.
         self._test_manual_omr_prefix('2002::/64', 'pars', expect_withdraw=False)
         # Add a smaller but invalid OMR prefix (P_stable = 0). Verify BR_1 does not withdraw its OMR prefix.
         self._test_manual_omr_prefix('2003::/64', 'paro', expect_withdraw=False)
 
-    def _test_manual_omr_prefix(self, prefix, flags, expect_withdraw):
+    def _test_manual_omr_prefix(self, prefix, flags, expect_withdraw, prf='med'):
         br1 = self.nodes[BR_1]
         br2 = self.nodes[BR_2]
 
-        br2.add_prefix(prefix, flags)
+        br2.add_prefix(prefix, flags, prf=prf)
         br2.register_netdata()
         self.simulator.go(10)
 
+        is_omr_prefix = ('a' in flags and 'o' in flags and 's' in flags and 'D' not in flags)
+
         if expect_withdraw:
             self._assert_prefixes_equal(br1.get_netdata_omr_prefixes(), [prefix])
+        elif is_omr_prefix:
+            self._assert_prefixes_equal(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix(), prefix])
         else:
             self._assert_prefixes_equal(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix()])
 

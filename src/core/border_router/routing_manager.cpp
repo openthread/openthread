@@ -405,7 +405,8 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
-    Ip6::Prefix *                   smallestOmrPrefix       = nullptr;
+    Ip6::Prefix *                   electedOmrPrefix = nullptr;
+    signed int                      electedOmrPrefixPreference;
     Ip6::Prefix *                   publishedLocalOmrPrefix = nullptr;
 
     OT_ASSERT(mIsRunning);
@@ -431,9 +432,11 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
             continue;
         }
 
-        if (smallestOmrPrefix == nullptr || (prefix < *smallestOmrPrefix))
+        if (electedOmrPrefix == nullptr || onMeshPrefixConfig.mPreference > electedOmrPrefixPreference ||
+            (onMeshPrefixConfig.mPreference == electedOmrPrefixPreference && prefix < *electedOmrPrefix))
         {
-            smallestOmrPrefix = aNewOmrPrefixes.Back();
+            electedOmrPrefix           = aNewOmrPrefixes.Back();
+            electedOmrPrefixPreference = onMeshPrefixConfig.mPreference;
         }
 
         if (prefix == mLocalOmrPrefix)
@@ -458,16 +461,16 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
     }
     else
     {
-        OT_ASSERT(smallestOmrPrefix != nullptr);
+        OT_ASSERT(electedOmrPrefix != nullptr);
 
-        if (*smallestOmrPrefix == mLocalOmrPrefix)
+        if (*electedOmrPrefix == mLocalOmrPrefix)
         {
             IgnoreError(PublishLocalOmrPrefix());
         }
         else if (IsOmrPrefixAddedToLocalNetworkData())
         {
             LogInfo("EvaluateOmrPrefix: There is already a smaller OMR prefix %s in the Thread network",
-                    smallestOmrPrefix->ToString().AsCString());
+                    electedOmrPrefix->ToString().AsCString());
 
             UnpublishLocalOmrPrefix();
 
