@@ -377,7 +377,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 5
+#define SPINEL_RCP_API_VERSION 6
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -4730,6 +4730,24 @@ enum
      *
      */
     SPINEL_PROP_RCP_ENH_ACK_PROBING = SPINEL_PROP_RCP_EXT__BEGIN + 3,
+
+    /// CSL Accuracy
+    /** Format: `C`
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * The current CSL rx/tx scheduling drift, in units of ± ppm.
+     *
+     */
+    SPINEL_PROP_RCP_CSL_ACCURACY = SPINEL_PROP_RCP_EXT__BEGIN + 4,
+
+    /// CSL Uncertainty
+    /** Format: `C`
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * The current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
+     *
+     */
+    SPINEL_PROP_RCP_CSL_UNCERTAINTY = SPINEL_PROP_RCP_EXT__BEGIN + 5,
 
     SPINEL_PROP_RCP_EXT__END = 0x900,
 

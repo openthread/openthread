@@ -176,14 +176,4 @@
 #endif
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_CSL_UNCERT
- *
- * The Uncertainty of the scheduling CSL of transmission by the parent, in ±10 us units.
- *
- */
-#ifndef OPENTHREAD_CONFIG_PLATFORM_CSL_UNCERT
-#define OPENTHREAD_CONFIG_PLATFORM_CSL_UNCERT UINT8_MAX
-#endif
-
 #endif // CONFIG_PLATFORM_H_

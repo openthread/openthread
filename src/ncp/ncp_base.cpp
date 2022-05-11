@@ -1547,6 +1547,20 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_CSL_ACCURACY>(void)
+{
+    return mEncoder.WriteUint8(otPlatRadioGetCslAccuracy(mInstance));
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_CSL_UNCERTAINTY>(void)
+{
+    return mEncoder.WriteUint8(otPlatRadioGetCslClockUncertainty(mInstance));
+}
+#endif
+
 otError NcpBase::EncodeChannelMask(uint32_t aChannelMask)
 {
     otError error = OT_ERROR_NONE;

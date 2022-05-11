@@ -2461,5 +2461,29 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ConfigureEnhAckProbing(o
 }
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <typename InterfaceType, typename ProcessContextType>
+uint8_t RadioSpinel<InterfaceType, ProcessContextType>::GetCslAccuracy(void)
+{
+    uint8_t accuracy = UINT8_MAX;
+    otError error    = Get(SPINEL_PROP_RCP_CSL_ACCURACY, SPINEL_DATATYPE_UINT8_S, &accuracy);
+
+    LogIfFail("Get CSL Accuracy failed", error);
+    return accuracy;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <typename InterfaceType, typename ProcessContextType>
+uint8_t RadioSpinel<InterfaceType, ProcessContextType>::GetCslUncertainty(void)
+{
+    uint8_t uncertainty = UINT8_MAX;
+    otError error       = Get(SPINEL_PROP_RCP_CSL_UNCERTAINTY, SPINEL_DATATYPE_UINT8_S, &uncertainty);
+
+    LogIfFail("Get CSL Uncertainty failed", error);
+    return uncertainty;
+}
+#endif
+
 } // namespace Spinel
 } // namespace ot
