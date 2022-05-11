@@ -809,7 +809,9 @@ inline uint8_t Radio::GetCslAccuracy(void)
 {
     return otPlatRadioGetCslAccuracy(GetInstancePtr());
 }
+#endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 inline uint8_t Radio::GetCslClockUncertainty(void)
 {
     return otPlatRadioGetCslClockUncertainty(GetInstancePtr());
