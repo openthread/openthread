@@ -132,9 +132,47 @@
  * This setting configures the prefix route metric on the Thread network interface.
  * Define as 0 to use use the default prefix route metric.
  *
+ * Note: The feature works on Linux kernel v4.18+.
+ *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC
 #define OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+ *
+ * Define as 1 to add OMR routes to POSIX kernel when OMR prefixes are changed in netdata.
+ *
+ * Note: This feature can be used to add OMR routes with non-default priority. Unlike
+ * `OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC`, it works on Linux kernels before v4.18.
+ * However, `OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC` should be preferred on Linux kernel v4.18+.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY
+ *
+ * This macro defines the priority of OMR routes added to kernel. The larger the number, the lower the priority. We
+ * need to assign a high priority to such routes so that kernel prefers the Thread link rather than infrastructure.
+ * Otherwise we may unnecessarily transmit packets via infrastructure, which potentially causes looping issue.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY
+#define OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY 1
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM
+ *
+ * This macro defines the max number of OMR routes that can be added to kernel.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM
+#define OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES
 #endif
 
 /**
@@ -227,6 +265,17 @@
 
 #ifdef OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
 #error "OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET was removed (no longer applicable with TREL over DNS-SD)."
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT
+ *
+ * This setting configures the TREL UDP port number.
+ * Define as 0 to use an ephemeral port number.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT
+#define OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT 0
 #endif
 
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

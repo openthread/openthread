@@ -1165,18 +1165,19 @@ void SubMac::HandleCslTimer(void)
         }
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
-        if (mState == kStateCslSample)
+
+        if (RadioSupportsReceiveTiming())
         {
-            if (RadioSupportsReceiveTiming())
+            if (mState != kStateDisabled && mCslChannel)
             {
                 IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, mCslSampleTime.GetValue() - periodUs - timeAhead,
                                                    timeAhead + timeAfter));
             }
-            else
-            {
-                IgnoreError(Get<Radio>().Receive(mCslChannel));
-                LogDebg("CSL sample %u, duration %u", mCslTimer.GetNow().GetValue(), timeAhead + timeAfter);
-            }
+        }
+        else if (mState == kStateCslSample)
+        {
+            IgnoreError(Get<Radio>().Receive(mCslChannel));
+            LogDebg("CSL sample %u, duration %u", mCslTimer.GetNow().GetValue(), timeAhead + timeAfter);
         }
         break;
 

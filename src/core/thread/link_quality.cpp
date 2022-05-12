@@ -131,7 +131,7 @@ void LqiAverager::Add(uint8_t aLqi)
 void LinkQualityInfo::Clear(void)
 {
     mRssAverager.Clear();
-    SetLinkQuality(0);
+    SetLinkQuality(kLinkQuality0);
     mLastRss = OT_RADIO_RSSI_INVALID;
 
     mFrameErrorRate.Clear();
@@ -186,31 +186,31 @@ uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
     return static_cast<uint8_t>(linkMargin);
 }
 
-uint8_t LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
+LinkQuality LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
 {
     return CalculateLinkQuality(aLinkMargin, kNoLinkQuality);
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss)
+LinkQuality LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss)
 {
     return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, aRss));
 }
 
-int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality)
+int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, LinkQuality aLinkQuality)
 {
     int8_t linkmargin = 0;
 
     switch (aLinkQuality)
     {
-    case 3:
+    case kLinkQuality3:
         linkmargin = kLinkQuality3LinkMargin;
         break;
 
-    case 2:
+    case kLinkQuality2:
         linkmargin = kLinkQuality2LinkMargin;
         break;
 
-    case 1:
+    case kLinkQuality1:
         linkmargin = kLinkQuality1LinkMargin;
         break;
 
@@ -222,7 +222,7 @@ int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLin
     return linkmargin + aNoiseFloor;
 }
 
-uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
+LinkQuality LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
 {
     // Static private method to calculate the link quality from a given
     // link margin while taking into account the last link quality
@@ -230,8 +230,8 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     // there is no previous value for link quality, the constant
     // kNoLinkQuality should be passed as the second argument.
 
-    uint8_t threshold1, threshold2, threshold3;
-    uint8_t linkQuality = 0;
+    uint8_t     threshold1, threshold2, threshold3;
+    LinkQuality linkQuality = kLinkQuality0;
 
     threshold1 = kThreshold1;
     threshold2 = kThreshold2;
@@ -262,15 +262,15 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
 
     if (aLinkMargin > threshold3)
     {
-        linkQuality = 3;
+        linkQuality = kLinkQuality3;
     }
     else if (aLinkMargin > threshold2)
     {
-        linkQuality = 2;
+        linkQuality = kLinkQuality2;
     }
     else if (aLinkMargin > threshold1)
     {
-        linkQuality = 1;
+        linkQuality = kLinkQuality1;
     }
 
     return linkQuality;

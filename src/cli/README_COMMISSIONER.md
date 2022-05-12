@@ -200,6 +200,27 @@ Get current commissioner session id.
 Done
 ```
 
+### id
+
+Usage: `commissioner id`
+
+Get the commissioner id.
+
+```bash
+> commissioner id
+OpenThread Commissioner
+Done
+```
+
+### id \<name\>
+
+Set the commissioner id.
+
+```bash
+> commissioner id "Custom Commissioner Id"
+Done
+```
+
 ### start
 
 Usage: `commissioner start`

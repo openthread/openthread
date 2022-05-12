@@ -404,12 +404,8 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    message->InitAsConfirmablePost();
-    SuccessOrExit(message->GenerateRandomToken(Coap::Message::kDefaultTokenLength));
-    SuccessOrExit(message->AppendUriPathOptions(UriPath::kMlr));
-    SuccessOrExit(message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kMlr);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     addressesTlv.Init();
     addressesTlv.SetLength(sizeof(Ip6::Address) * aAddressNum);

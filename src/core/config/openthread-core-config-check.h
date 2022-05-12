@@ -619,4 +619,8 @@
        "SRP host uses dynamic heap array to store addresses so no need for config on max number of addresses".
 #endif
 
+#ifdef OPENTHREAD_CONFIG_PLATFORM_CSL_UNCERT
+#error "OPENTHREAD_CONFIG_PLATFORM_CSL_UNCERT was removed and no longer supported"
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

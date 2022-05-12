@@ -46,7 +46,6 @@
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
-#include "crypto/aes_ccm.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/netif.hpp"
@@ -64,6 +63,10 @@ namespace ot {
 namespace Mle {
 
 RegisterLogModule("Mle");
+
+const otMeshLocalPrefix Mle::sMeshLocalPrefixInit = {
+    {0xfd, 0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0x00},
+};
 
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -115,8 +118,6 @@ Mle::Mle(Instance &aInstance)
     , mParentResponseCb(nullptr)
     , mParentResponseCbContext(nullptr)
 {
-    MeshLocalPrefix meshLocalPrefix;
-
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
 
@@ -130,8 +131,6 @@ Mle::Mle(Instance &aInstance)
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
 
     mLeaderAloc.InitAsThreadOriginRealmLocalScope();
-
-    meshLocalPrefix.SetFromExtendedPanId(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
 
     mMeshLocal64.InitAsThreadOriginRealmLocalScope();
     mMeshLocal64.GetAddress().GetIid().GenerateRandom();
@@ -151,7 +150,7 @@ Mle::Mle(Instance &aInstance)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
-    SetMeshLocalPrefix(meshLocalPrefix);
+    SetMeshLocalPrefix(AsCoreType(&sMeshLocalPrefixInit));
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
@@ -824,7 +823,7 @@ void Mle::UpdateLinkLocalAddress(void)
     Get<Notifier>().Signal(kEventThreadLinkLocalAddrChanged);
 }
 
-void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
+void Mle::SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix)
 {
     VerifyOrExit(GetMeshLocalPrefix() != aMeshLocalPrefix,
                  Get<Notifier>().SignalIfFirst(kEventThreadMeshLocalAddrChanged));
@@ -1032,37 +1031,59 @@ const LeaderData &Mle::GetLeaderData(void)
     return mLeaderData;
 }
 
-Message *Mle::NewMleMessage(void)
+Message *Mle::NewMleMessage(Command aCommand)
 {
+    Error             error = kErrorNone;
     Message *         message;
     Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
+    Message::SubType  subType;
+    uint8_t           securitySuite;
 
     message = mSocket.NewMessage(0, settings);
-    VerifyOrExit(message != nullptr);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    message->SetSubType(Message::kSubTypeMleGeneral);
-
-exit:
-    return message;
-}
-
-Error Mle::AppendHeader(Message &aMessage, Command aCommand)
-{
-    Error   error         = kErrorNone;
-    uint8_t securitySuite = k154Security;
+    securitySuite = k154Security;
+    subType       = Message::kSubTypeMleGeneral;
 
     switch (aCommand)
     {
+    case kCommandAnnounce:
+        subType = Message::kSubTypeMleAnnounce;
+        break;
+
     case kCommandDiscoveryRequest:
-    case kCommandDiscoveryResponse:
+        subType       = Message::kSubTypeMleDiscoverRequest;
         securitySuite = kNoSecurity;
+        break;
+
+    case kCommandDiscoveryResponse:
+        subType       = Message::kSubTypeMleDiscoverResponse;
+        securitySuite = kNoSecurity;
+        break;
+
+    case kCommandChildUpdateRequest:
+        subType = Message::kSubTypeMleChildUpdateRequest;
+        break;
+
+    case kCommandDataResponse:
+        subType = Message::kSubTypeMleDataResponse;
+        break;
+
+    case kCommandChildIdRequest:
+        subType = Message::kSubTypeMleChildIdRequest;
+        break;
+
+    case kCommandDataRequest:
+        subType = Message::kSubTypeMleDataRequest;
         break;
 
     default:
         break;
     }
 
-    SuccessOrExit(error = aMessage.Append(securitySuite));
+    message->SetSubType(subType);
+
+    SuccessOrExit(error = message->Append(securitySuite));
 
     if (securitySuite == k154Security)
     {
@@ -1072,13 +1093,14 @@ Error Mle::AppendHeader(Message &aMessage, Command aCommand)
         // message in `SendMessage()` before message is sent.
 
         securityHeader.InitSecurityControl();
-        SuccessOrExit(error = aMessage.Append(securityHeader));
+        SuccessOrExit(error = message->Append(securityHeader));
     }
 
-    error = aMessage.Append<uint8_t>(aCommand);
+    error = message->Append<uint8_t>(aCommand);
 
 exit:
-    return error;
+    FreeAndNullMessageOnError(message, error);
+    return message;
 }
 
 Error Mle::AppendSourceAddress(Message &aMessage) const
@@ -1747,8 +1769,8 @@ void Mle::HandleAttachTimer(Timer &aTimer)
 
 bool Mle::HasAcceptableParentCandidate(void) const
 {
-    bool    hasAcceptableParent = false;
-    uint8_t linkQuality;
+    bool        hasAcceptableParent = false;
+    LinkQuality linkQuality;
 
     VerifyOrExit(mParentCandidate.IsStateParentResponse());
 
@@ -1764,7 +1786,7 @@ bool Mle::HasAcceptableParentCandidate(void) const
         // candidate and forward to REED stage to potentially find a
         // better parent.
         linkQuality = OT_MIN(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
-        VerifyOrExit(linkQuality == 3);
+        VerifyOrExit(linkQuality == kLinkQuality3);
         break;
 
     case kAttachStateParentRequestReed:
@@ -2118,8 +2140,7 @@ void Mle::SendParentRequest(ParentRequestType aType)
         break;
     }
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandParentRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandParentRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
     SuccessOrExit(error = AppendChallenge(*message, mParentRequestChallenge));
     SuccessOrExit(error = AppendScanMask(*message, scanMask));
@@ -2181,9 +2202,7 @@ Error Mle::SendChildIdRequest(void)
         }
     }
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(Message::kSubTypeMleChildIdRequest);
-    SuccessOrExit(error = AppendHeader(*message, kCommandChildIdRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandChildIdRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendResponse(*message, mParentCandidateChallenge));
     SuccessOrExit(error = AppendLinkFrameCounter(*message));
     SuccessOrExit(error = AppendMleFrameCounter(*message));
@@ -2235,9 +2254,7 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
 
     RemoveDelayedDataRequestMessage(aDestination);
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(Message::kSubTypeMleDataRequest);
-    SuccessOrExit(error = AppendHeader(*message, kCommandDataRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandDataRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
 
     if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
@@ -2420,9 +2437,7 @@ Error Mle::SendChildUpdateRequest(void)
     mChildUpdateRequestState = kChildUpdateRequestActive;
     ScheduleMessageTransmissionTimer();
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    message->SetSubType(Message::kSubTypeMleChildUpdateRequest);
-    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
 
     switch (mRole)
@@ -2489,8 +2504,7 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
     Message *    message;
     bool         checkAddress = false;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandChildUpdateResponse));
+    VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
 
@@ -2575,11 +2589,9 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     Message *          message = nullptr;
 
     VerifyOrExit(Get<Mac::Mac>().GetSupportedChannelMask().ContainsChannel(aChannel), error = kErrorInvalidArgs);
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMleMessage(kCommandAnnounce)) != nullptr, error = kErrorNoBufs);
     message->SetLinkSecurityEnabled(true);
-    message->SetSubType(Message::kSubTypeMleAnnounce);
     message->SetChannel(aChannel);
-    SuccessOrExit(error = AppendHeader(*message, kCommandAnnounce));
 
     channel.Init();
     channel.SetChannelPage(0);
@@ -2640,8 +2652,7 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
     Tlv      tlv;
     ot::Tlv  statusSubTlv;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementResponse));
+    VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementResponse)) != nullptr, error = kErrorNoBufs);
 
     tlv.SetType(Tlv::kLinkMetricsManagement);
     statusSubTlv.SetType(LinkMetrics::SubTlv::kStatus);
@@ -2667,8 +2678,7 @@ Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, ui
     Message *message;
     Tlv      tlv;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandLinkProbe));
+    VerifyOrExit((message = NewMleMessage(kCommandLinkProbe)) != nullptr, error = kErrorNoBufs);
 
     tlv.SetType(Tlv::kLinkProbe);
     tlv.SetLength(sizeof(aSeriesId) + aLength);
@@ -2685,6 +2695,98 @@ exit:
 }
 #endif
 
+Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
+                                  Message &               aMessage,
+                                  const Ip6::MessageInfo &aMessageInfo,
+                                  uint16_t                aCmdOffset,
+                                  const SecurityHeader &  aHeader)
+{
+    // This method performs MLE message security. Based on `aMode` it
+    // can be used to encrypt and append tag to `aMessage` or to
+    // decrypt and validate the tag in a received `aMessage` (which is
+    // then removed from `aMessage`).
+    //
+    // `aCmdOffset` in both cases specifies the offset in `aMessage`
+    // to the start of MLE payload (i.e., the command field).
+    //
+    // When decrypting, possible errors are:
+    // `kErrorNone` decrypted and verified tag, tag is also removed.
+    // `kErrorParse` message does not contain the tag
+    // `kErrorSecurity` message tag is invalid.
+    //
+    // When encrypting, possible errors are:
+    // `kErrorNone` message encrypted and tag appended to message.
+    // `kErrorNoBufs` could not grow the message to append the tag.
+
+    Error               error = kErrorNone;
+    Crypto::AesCcm      aesCcm;
+    uint8_t             nonce[Crypto::AesCcm::kNonceSize];
+    uint8_t             tag[kMleSecurityTagSize];
+    Mac::ExtAddress     extAddress;
+    uint32_t            keySequence;
+    uint16_t            payloadLength   = aMessage.GetLength() - aCmdOffset;
+    const Ip6::Address *senderAddress   = &aMessageInfo.GetSockAddr();
+    const Ip6::Address *receiverAddress = &aMessageInfo.GetPeerAddr();
+
+    switch (aMode)
+    {
+    case Crypto::AesCcm::kEncrypt:
+        // Use the initialized values for `senderAddress`,
+        // `receiverAddress` and `payloadLength`
+        break;
+
+    case Crypto::AesCcm::kDecrypt:
+        senderAddress   = &aMessageInfo.GetPeerAddr();
+        receiverAddress = &aMessageInfo.GetSockAddr();
+        // Ensure message contains command field (uint8_t) and
+        // tag. Then exclude the tag from payload to decrypt.
+        VerifyOrExit(aCmdOffset + sizeof(uint8_t) + kMleSecurityTagSize <= aMessage.GetLength(), error = kErrorParse);
+        payloadLength -= kMleSecurityTagSize;
+        break;
+    }
+
+    senderAddress->GetIid().ConvertToExtAddress(extAddress);
+    Crypto::AesCcm::GenerateNonce(extAddress, aHeader.GetFrameCounter(), Mac::Frame::kSecEncMic32, nonce);
+
+    keySequence = aHeader.GetKeyId();
+
+    aesCcm.SetKey(keySequence == Get<KeyManager>().GetCurrentKeySequence()
+                      ? Get<KeyManager>().GetCurrentMleKey()
+                      : Get<KeyManager>().GetTemporaryMleKey(keySequence));
+
+    aesCcm.Init(sizeof(Ip6::Address) + sizeof(Ip6::Address) + sizeof(SecurityHeader), payloadLength,
+                kMleSecurityTagSize, nonce, sizeof(nonce));
+
+    aesCcm.Header(*senderAddress);
+    aesCcm.Header(*receiverAddress);
+    aesCcm.Header(aHeader);
+
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    if (aMode == Crypto::AesCcm::kDecrypt)
+    {
+        // Skip decrypting the message under fuzz build mode
+        IgnoreError(aMessage.SetLength(aMessage.GetLength() - kMleSecurityTagSize));
+        ExitNow();
+    }
+#endif
+
+    aesCcm.Payload(aMessage, aCmdOffset, payloadLength, aMode);
+    aesCcm.Finalize(tag);
+
+    if (aMode == Crypto::AesCcm::kEncrypt)
+    {
+        SuccessOrExit(error = aMessage.Append(tag));
+    }
+    else
+    {
+        VerifyOrExit(aMessage.Compare(aMessage.GetLength() - kMleSecurityTagSize, tag), error = kErrorSecurity);
+        IgnoreError(aMessage.SetLength(aMessage.GetLength() - kMleSecurityTagSize));
+    }
+
+exit:
+    return error;
+}
+
 Error Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
     Error            error  = kErrorNone;
@@ -2692,48 +2794,30 @@ Error Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
     uint8_t          securitySuite;
     Ip6::MessageInfo messageInfo;
 
+    messageInfo.SetPeerAddr(aDestination);
+    messageInfo.SetSockAddr(mLinkLocal64.GetAddress());
+    messageInfo.SetPeerPort(kUdpPort);
+    messageInfo.SetHopLimit(kMleHopLimit);
+
     IgnoreError(aMessage.Read(offset, securitySuite));
     offset += sizeof(securitySuite);
 
     if (securitySuite == k154Security)
     {
         SecurityHeader header;
-        uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-        uint8_t        tag[kMleSecurityTagSize];
-        Crypto::AesCcm aesCcm;
+
+        // Update the fields in the security header
 
         IgnoreError(aMessage.Read(offset, header));
-
         header.SetFrameCounter(Get<KeyManager>().GetMleFrameCounter());
         header.SetKeyId(Get<KeyManager>().GetCurrentKeySequence());
-
         aMessage.Write(offset, header);
         offset += sizeof(SecurityHeader);
 
-        Crypto::AesCcm::GenerateNonce(Get<Mac::Mac>().GetExtAddress(), Get<KeyManager>().GetMleFrameCounter(),
-                                      Mac::Frame::kSecEncMic32, nonce);
-
-        aesCcm.SetKey(Get<KeyManager>().GetCurrentMleKey());
-
-        aesCcm.Init(sizeof(Ip6::Address) + sizeof(Ip6::Address) + sizeof(SecurityHeader), aMessage.GetLength() - offset,
-                    kMleSecurityTagSize, nonce, sizeof(nonce));
-
-        aesCcm.Header(mLinkLocal64.GetAddress());
-        aesCcm.Header(aDestination);
-        aesCcm.Header(header);
-
-        aesCcm.Payload(aMessage, offset, aMessage.GetLength() - offset, Crypto::AesCcm::kEncrypt);
-
-        aesCcm.Finalize(tag);
-        SuccessOrExit(error = aMessage.Append(tag));
+        SuccessOrExit(error = ProcessMessageSecurity(Crypto::AesCcm::kEncrypt, aMessage, messageInfo, offset, header));
 
         Get<KeyManager>().IncrementMleFrameCounter();
     }
-
-    messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(mLinkLocal64.GetAddress());
-    messageInfo.SetPeerPort(kUdpPort);
-    messageInfo.SetHopLimit(kMleHopLimit);
 
     SuccessOrExit(error = mSocket.SendTo(aMessage, messageInfo));
 
@@ -2771,14 +2855,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     SecurityHeader  header;
     uint32_t        keySequence;
     uint32_t        frameCounter;
-    uint8_t         messageTag[kMleSecurityTagSize];
-    uint8_t         nonce[Crypto::AesCcm::kNonceSize];
     Mac::ExtAddress extAddr;
-    Crypto::AesCcm  aesCcm;
-    uint8_t         tag[kMleSecurityTagSize];
     uint8_t         command;
     Neighbor *      neighbor;
-    bool            skipLoggingError = false;
 
     LogDebg("Receive MLE message");
 
@@ -2822,42 +2901,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     keySequence  = header.GetKeyId();
     frameCounter = header.GetFrameCounter();
 
-    VerifyOrExit(aMessage.GetOffset() + sizeof(command) + sizeof(messageTag) <= aMessage.GetLength(),
-                 error = kErrorParse);
-
-    IgnoreError(aMessage.Read(aMessage.GetLength() - sizeof(messageTag), messageTag));
-    SuccessOrExit(error = aMessage.SetLength(aMessage.GetLength() - sizeof(messageTag)));
-
-    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
-
-    Crypto::AesCcm::GenerateNonce(extAddr, frameCounter, Mac::Frame::kSecEncMic32, nonce);
-
-    aesCcm.SetKey((keySequence == Get<KeyManager>().GetCurrentKeySequence())
-                      ? Get<KeyManager>().GetCurrentMleKey()
-                      : Get<KeyManager>().GetTemporaryMleKey(keySequence));
-
-    aesCcm.Init(sizeof(Ip6::Address) + sizeof(Ip6::Address) + sizeof(SecurityHeader),
-                aMessage.GetLength() - aMessage.GetOffset(), sizeof(messageTag), nonce, sizeof(nonce));
-
-    aesCcm.Header(aMessageInfo.GetPeerAddr());
-    aesCcm.Header(aMessageInfo.GetSockAddr());
-    aesCcm.Header(header);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset(),
-                   Crypto::AesCcm::kDecrypt);
-    aesCcm.Finalize(tag);
-
-    if (memcmp(messageTag, tag, sizeof(tag)) != 0)
-    {
-        // We skip logging security check failures for broadcast MLE
-        // messages since it can be common to receive such messages
-        // from adjacent Thread networks.
-        skipLoggingError =
-            (aMessageInfo.GetSockAddr().IsMulticast() && aMessageInfo.GetThreadLinkInfo()->IsDstPanIdBroadcast());
-        ExitNow(error = kErrorSecurity);
-    }
-#endif
+    SuccessOrExit(
+        error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessageInfo, aMessage.GetOffset(), header));
 
     if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
     {
@@ -2867,6 +2912,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     IgnoreError(aMessage.Read(aMessage.GetOffset(), command));
     aMessage.MoveOffset(sizeof(command));
 
+    aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
     neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
                                                     : mNeighborTable.FindNeighbor(extAddr);
 
@@ -3047,7 +3093,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #endif
 
 exit:
-    if (!skipLoggingError)
+    // We skip logging failures for broadcast MLE messages since it
+    // can be common to receive such messages from adjacent Thread
+    // networks.
+    if (!aMessageInfo.GetSockAddr().IsMulticast() || !aMessageInfo.GetThreadLinkInfo()->IsDstPanIdBroadcast())
     {
         LogProcessError(kTypeGenericUdp, error);
     }
@@ -3104,12 +3153,13 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
             if (IsFullThreadDevice())
             {
-                RouteTlv route;
-
-                if ((Tlv::FindTlv(aRxInfo.mMessage, route) == kErrorNone) && route.IsValid())
+                switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo))
                 {
-                    // Overwrite Route Data
-                    IgnoreError(Get<MleRouter>().ProcessRouteTlv(route));
+                case kErrorNone:
+                case kErrorNotFound:
+                    break;
+                default:
+                    ExitNow(error = kErrorParse);
                 }
             }
 #endif
@@ -3348,7 +3398,7 @@ exit:
 }
 
 bool Mle::IsBetterParent(uint16_t               aRloc16,
-                         uint8_t                aLinkQuality,
+                         LinkQuality            aLinkQuality,
                          uint8_t                aLinkMargin,
                          const ConnectivityTlv &aConnectivityTlv,
                          uint8_t                aVersion,
@@ -3357,10 +3407,8 @@ bool Mle::IsBetterParent(uint16_t               aRloc16,
 {
     bool rval = false;
 
-    uint8_t candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
-    uint8_t candidateTwoWayLinkQuality = (candidateLinkQualityIn < mParentCandidate.GetLinkQualityOut())
-                                             ? candidateLinkQualityIn
-                                             : mParentCandidate.GetLinkQualityOut();
+    LinkQuality candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
+    LinkQuality candidateTwoWayLinkQuality = OT_MIN(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint64_t candidateCslMetric = 0;
     uint64_t cslMetric          = 0;
@@ -3448,7 +3496,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     LeaderData            leaderData;
     uint8_t               linkMarginFromTlv;
     uint8_t               linkMargin;
-    uint8_t               linkQuality;
+    LinkQuality           linkQuality;
     ConnectivityTlv       connectivity;
     uint32_t              linkFrameCounter;
     uint32_t              mleFrameCounter;
@@ -3746,11 +3794,13 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice())
     {
-        RouteTlv route;
-
-        if (Tlv::FindTlv(aRxInfo.mMessage, route) == kErrorNone)
+        switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo))
         {
-            SuccessOrExit(error = Get<MleRouter>().ProcessRouteTlv(route));
+        case kErrorNone:
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
         }
     }
 #endif
@@ -4628,8 +4678,7 @@ Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, co
     Message *message;
     Tlv      tlv;
 
-    VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementRequest));
+    VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementRequest)) != nullptr, error = kErrorNoBufs);
 
     // Link Metrics Management TLV
     tlv.SetType(Tlv::kLinkMetricsManagement);

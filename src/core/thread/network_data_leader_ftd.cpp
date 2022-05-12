@@ -307,10 +307,8 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     uint8_t *             data   = nullptr;
     uint8_t               length = 0;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     commDataTlv = GetCommissioningData();
 
@@ -361,10 +359,8 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::StateTlv>(*message, aState));
 
@@ -1381,6 +1377,45 @@ Error Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aCon
 exit:
     return error;
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix)
+{
+    PrefixTlv *prefixTlv;
+    bool       contains = false;
+
+    VerifyOrExit(BorderRouter::RoutingManager::IsValidOmrPrefix(aPrefix));
+
+    prefixTlv = FindPrefix(aPrefix);
+    VerifyOrExit(prefixTlv != nullptr);
+
+    for (int i = 0; i < 2; i++)
+    {
+        const BorderRouterTlv *borderRouter = prefixTlv->FindSubTlv<BorderRouterTlv>(/* aStable */ (i == 0));
+
+        if (borderRouter == nullptr)
+        {
+            continue;
+        }
+
+        for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+             entry                          = entry->GetNext())
+        {
+            OnMeshPrefixConfig config;
+
+            config.SetFrom(*prefixTlv, *borderRouter, *entry);
+
+            if (BorderRouter::RoutingManager::IsValidOmrPrefix(config))
+            {
+                ExitNow(contains = true);
+            }
+        }
+    }
+
+exit:
+    return contains;
+}
+#endif
 
 } // namespace NetworkData
 } // namespace ot

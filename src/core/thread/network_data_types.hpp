@@ -169,6 +169,7 @@ class OnMeshPrefixConfig : public otBorderRouterConfig,
                            public Equatable<OnMeshPrefixConfig>
 {
     friend class NetworkData;
+    friend class Leader;
     friend class Local;
     friend class Publisher;
 

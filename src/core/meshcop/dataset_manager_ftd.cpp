@@ -73,20 +73,20 @@ Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 
 Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Tlv                  tlv;
-    uint16_t             offset                   = aMessage.GetOffset();
-    bool                 isUpdateFromCommissioner = false;
-    bool                 doesAffectConnectivity   = false;
-    bool                 doesAffectNetworkKey     = false;
-    bool                 hasNetworkKey            = false;
-    StateTlv::State      state                    = StateTlv::kReject;
-    Dataset              dataset;
-    Timestamp            activeTimestamp;
-    ChannelTlv           channel;
-    uint16_t             sessionId;
-    Mle::MeshLocalPrefix meshLocalPrefix;
-    NetworkKey           networkKey;
-    uint16_t             panId;
+    Tlv                tlv;
+    uint16_t           offset                   = aMessage.GetOffset();
+    bool               isUpdateFromCommissioner = false;
+    bool               doesAffectConnectivity   = false;
+    bool               doesAffectNetworkKey     = false;
+    bool               hasNetworkKey            = false;
+    StateTlv::State    state                    = StateTlv::kReject;
+    Dataset            dataset;
+    Timestamp          activeTimestamp;
+    ChannelTlv         channel;
+    uint16_t           sessionId;
+    Ip6::NetworkPrefix meshLocalPrefix;
+    NetworkKey         networkKey;
+    uint16_t           panId;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
@@ -270,10 +270,8 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 

@@ -682,7 +682,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MeshLocalPrefixTlv : public Tlv, public SimpleTlvInfo<Tlv::kMeshLocalPrefix, Mle::MeshLocalPrefix>
+class MeshLocalPrefixTlv : public Tlv, public SimpleTlvInfo<Tlv::kMeshLocalPrefix, Ip6::NetworkPrefix>
 {
 public:
     /**
@@ -718,7 +718,7 @@ public:
      * @returns The Mesh Local Prefix value.
      *
      */
-    const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
+    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
 
     /**
      * This method sets the Mesh Local Prefix value.
@@ -726,10 +726,10 @@ public:
      * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix value.
      *
      */
-    void SetMeshLocalPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
+    void SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
 
 private:
-    Mle::MeshLocalPrefix mMeshLocalPrefix;
+    Ip6::NetworkPrefix mMeshLocalPrefix;
 } OT_TOOL_PACKED_END;
 
 class SteeringData;

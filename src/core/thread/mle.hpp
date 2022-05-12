@@ -42,6 +42,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
+#include "crypto/aes_ccm.hpp"
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
@@ -326,10 +327,7 @@ public:
      * @returns A reference to the Mesh Local Prefix.
      *
      */
-    const MeshLocalPrefix &GetMeshLocalPrefix(void) const
-    {
-        return static_cast<const MeshLocalPrefix &>(mMeshLocal16.GetAddress().GetPrefix());
-    }
+    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocal16.GetAddress().GetPrefix(); }
 
     /**
      * This method sets the Mesh Local Prefix.
@@ -337,7 +335,7 @@ public:
      * @param[in]  aMeshLocalPrefix  A reference to the Mesh Local Prefix.
      *
      */
-    void SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix);
+    void SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
@@ -974,12 +972,14 @@ protected:
     };
 
     /**
-     * This method allocates a new message buffer for preparing an MLE message.
+     * This method allocates and initializes new MLE message for a given command.
+     *
+     * @param[in] aCommand   The MLE command.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
-    Message *NewMleMessage(void);
+    Message *NewMleMessage(Command aCommand);
 
     /**
      * This method sets the device role.
@@ -1004,18 +1004,6 @@ protected:
      *
      */
     void SetAttachState(AttachState aState);
-
-    /**
-     * This method appends an MLE header to a message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aCommand  The MLE Command Type.
-     *
-     * @retval kErrorNone    Successfully appended the header.
-     * @retval kErrorNoBufs  Insufficient buffers available to append the header.
-     *
-     */
-    Error AppendHeader(Message &aMessage, Command aCommand);
 
     /**
      * This method appends a Source Address TLV to a message.
@@ -1764,7 +1752,7 @@ private:
         void     MarkAsNotInUse(void) { SetAloc16(kNotInUse); }
         uint16_t GetAloc16(void) const { return GetAddress().GetIid().GetLocator(); }
         void     SetAloc16(uint16_t aAloc16) { GetAddress().GetIid().SetLocator(aAloc16); }
-        void     ApplyMeshLocalPrefix(const MeshLocalPrefix &aPrefix) { GetAddress().SetPrefix(aPrefix); }
+        void     ApplyMeshLocalPrefix(const Ip6::NetworkPrefix &aPrefix) { GetAddress().SetPrefix(aPrefix); }
     };
 #endif
 
@@ -1820,13 +1808,19 @@ private:
     bool     HasAcceptableParentCandidate(void) const;
 
     bool IsBetterParent(uint16_t               aRloc16,
-                        uint8_t                aLinkQuality,
+                        LinkQuality            aLinkQuality,
                         uint8_t                aLinkMargin,
                         const ConnectivityTlv &aConnectivityTlv,
                         uint8_t                aVersion,
                         uint8_t                aCslClockAccuracy,
                         uint8_t                aCslUncertainty);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
+
+    Error ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
+                                 Message &               aMessage,
+                                 const Ip6::MessageInfo &aMessageInfo,
+                                 uint16_t                aCmdOffset,
+                                 const SecurityHeader &  aHeader);
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
@@ -1904,6 +1898,8 @@ private:
 #endif
 
     otMleCounters mCounters;
+
+    static const otMeshLocalPrefix sMeshLocalPrefixInit;
 
     Ip6::Netif::UnicastAddress   mLinkLocal64;
     Ip6::Netif::UnicastAddress   mMeshLocal64;

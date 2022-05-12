@@ -204,6 +204,29 @@ otError otCommissionerStart(otInstance *                 aInstance,
 otError otCommissionerStop(otInstance *aInstance);
 
 /**
+ * This function returns the Commissioner Id.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ *
+ * @returns The Commissioner Id.
+ *
+ */
+const char *otCommissionerGetId(otInstance *aInstance);
+
+/**
+ * This function sets the Commissioner Id.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aId           A pointer to a string character array. Must be null terminated.
+ *
+ * @retval OT_ERROR_NONE            Successfully set the Commissioner Id.
+ * @retval OT_ERROR_INVALID_ARGS    Given name is too long.
+ * @retval OT_ERROR_INVALID_STATE   The commissioner is active and id cannot be changed.
+ *
+ */
+otError otCommissionerSetId(otInstance *aInstance, const char *aId);
+
+/**
  * This function adds a Joiner entry.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.

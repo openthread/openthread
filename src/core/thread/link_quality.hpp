@@ -227,6 +227,21 @@ private:
 };
 
 /**
+ * This enumeration represents the link quality constants.
+ *
+ * Link Quality is an integer in [0, 3]. A higher link quality indicates a more usable link, with 0 indicating that the
+ * link is non-existent or unusable.
+ *
+ */
+enum LinkQuality : uint8_t
+{
+    kLinkQuality0 = 0, ///< Link quality 0 (non-existent link)
+    kLinkQuality1 = 1, ///< Link quality 1
+    kLinkQuality2 = 2, ///< Link quality 2
+    kLinkQuality3 = 3, ///< Link quality 3
+};
+
+/**
  * This class encapsulates/stores all relevant information about quality of a link, including average received signal
  * strength (RSS), last RSS, link margin, and link quality.
  *
@@ -312,7 +327,7 @@ public:
      * @returns The current link quality value (value 0-3 as per Thread specification).
      *
      */
-    uint8_t GetLinkQuality(void) const { return mLinkQuality; }
+    LinkQuality GetLinkQuality(void) const { return mLinkQuality; }
 
     /**
      * Returns the most recent RSS value.
@@ -391,7 +406,7 @@ public:
      * @returns The link quality value (0-3).
      *
      */
-    static uint8_t ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin);
+    static LinkQuality ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin);
 
     /**
      * This method converts a received signal strength value to a link quality value.
@@ -402,7 +417,7 @@ public:
      * @returns The link quality value (0-3).
      *
      */
-    static uint8_t ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss);
+    static LinkQuality ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss);
 
     /**
      * This method converts a link quality value to a typical received signal strength value.
@@ -415,7 +430,7 @@ public:
      * @returns The typical platform RSSI.
      *
      */
-    static int8_t ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality);
+    static int8_t ConvertLinkQualityToRss(int8_t aNoiseFloor, LinkQuality aLinkQuality);
 
 private:
     // Constants for obtaining link quality from link margin:
@@ -432,12 +447,12 @@ private:
 
     static constexpr uint8_t kNoLinkQuality = 0xff; // Indicate that there is no previous/last link quality.
 
-    void SetLinkQuality(uint8_t aLinkQuality) { mLinkQuality = aLinkQuality; }
+    void SetLinkQuality(LinkQuality aLinkQuality) { mLinkQuality = aLinkQuality; }
 
-    static uint8_t CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality);
+    static LinkQuality CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality);
 
     RssAverager mRssAverager;
-    uint8_t     mLinkQuality;
+    LinkQuality mLinkQuality;
     int8_t      mLastRss;
 
     SuccessRateTracker mFrameErrorRate;

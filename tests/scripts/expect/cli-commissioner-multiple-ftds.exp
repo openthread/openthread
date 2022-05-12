@@ -1,0 +1,139 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2022, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+spawn_node 3
+spawn_node 2
+spawn_node 1
+
+setup_leader
+setup_node 3 "rdn" "router"
+setup_node 2 "rdn" "router"
+
+sleep 2
+
+###########################################
+# Verify topology and commissioners
+
+switch_node 3
+send "state\n"
+expect "router"
+send "commissioner state\n"
+expect "disabled"
+
+switch_node 2
+send "state\n"
+expect "router"
+send "commissioner state\n"
+expect "disabled"
+
+switch_node 1
+send "state\n"
+expect "leader"
+send "commissioner state\n"
+expect "active"
+
+###########################################
+# Starting a commissioner on the same partition with the same ID makes
+# the active commissioner resign and become disabled.
+
+switch_node 2
+send "commissioner start\n"
+expect "Done"
+wait_for "commissioner state" "active"
+switch_node 1
+sleep 5
+wait_for "commissioner state" "disabled"
+
+switch_node 3
+send "commissioner start\n"
+expect "Done"
+wait_for "commissioner state" "active"
+sleep 5
+switch_node 2
+wait_for "commissioner state" "disabled"
+
+switch_node 1
+send "commissioner start\n"
+expect "Done"
+wait_for "commissioner state" "active"
+sleep 5
+switch_node 3
+wait_for "commissioner state" "disabled"
+
+###########################################
+# Starting another commissioner on the same partition, using a different ID avoids
+# the previous problem of overriding the active commissioner.
+
+switch_node 2
+send "commissioner id COMMISSIONER_2\n"
+expect "Done"
+send "commissioner start\n"
+expect "Done"
+wait_for "commissioner state" "petitioning"
+wait_for "commissioner state" "disabled"
+
+switch_node 1
+send "commissioner state\n"
+expect "active"
+
+switch_node 3
+send "commissioner id COMMISSIONER_3\n"
+expect "Done"
+send "commissioner start\n"
+expect "Done"
+wait_for "commissioner state" "petitioning"
+wait_for "commissioner state" "disabled"
+
+switch_node 1
+send "commissioner state\n"
+expect "active"
+
+###########################################
+# Stop active commissioner and start another one
+send "commissioner stop\n"
+
+switch_node 2
+send "commissioner id COMMISSIONER_2\n"
+expect "Done"
+send "commissioner start\n"
+expect "Done"
+wait_for "commissioner state" "petitioning"
+wait_for "commissioner state" "active"
+
+switch_node 1
+send "commissioner start\n"
+expect "Done"
+wait_for "commissioner state" "petitioning"
+wait_for "commissioner state" "disabled"
+
+###########################################
+dispose_all

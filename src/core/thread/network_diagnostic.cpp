@@ -84,23 +84,18 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
     Tmf::MessageInfo      messageInfo(GetInstance());
     otCoapResponseHandler handler = nullptr;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
     if (aDestination.IsMulticast())
     {
-        SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kDiagnosticGetQuery));
+        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(UriPath::kDiagnosticGetQuery);
         messageInfo.SetMulticastLoop(true);
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
-        SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticGetRequest));
+        message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticGetRequest);
     }
 
-    if (aCount > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aCount > 0)
     {
@@ -485,14 +480,8 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
         }
     }
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticGetAnswer));
-
-    if (networkDiagnosticTlv.GetLength() > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticGetAnswer);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aMessageInfo.GetPeerAddr().IsLinkLocal())
     {
@@ -538,10 +527,8 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kErrorParse);
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aMessage));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewResponseMessage(aMessage);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -561,14 +548,8 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     Coap::Message *  message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticReset));
-
-    if (aCount > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticReset);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aCount > 0)
     {
