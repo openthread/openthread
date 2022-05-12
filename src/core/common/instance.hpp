@@ -430,6 +430,11 @@ DefineCoreType(otBufferInfo, Instance::BufferInfo);
 
 // Specializations of the `Get<Type>()` method.
 
+template <> inline Instance &Instance::Get(void)
+{
+    return *this;
+}
+
 template <> inline Radio &Instance::Get(void)
 {
     return mRadio;

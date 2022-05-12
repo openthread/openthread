@@ -258,7 +258,7 @@ static_assert(sizeof(Buffer) >= kBufferSize, "Buffer size if not valid");
  * This class represents a message.
  *
  */
-class Message : public otMessage, public Buffer
+class Message : public otMessage, public Buffer, public GetProvider<Message>
 {
     friend class Checksum;
     friend class Crypto::HmacSha256;
@@ -409,6 +409,14 @@ public:
     private:
         static const otMessageSettings kDefault;
     };
+
+    /**
+     * This method returns a reference to the OpenThread Instance which owns the `Message`.
+     *
+     * @returns A reference to the `Instance`.
+     *
+     */
+    Instance &GetInstance(void) const;
 
     /**
      * This method frees this message buffer.
@@ -1662,6 +1670,11 @@ private:
     Pool<Buffer, kNumBuffers> mBufferPool;
 #endif
 };
+
+inline Instance &Message::GetInstance(void) const
+{
+    return GetMessagePool()->GetInstance();
+}
 
 /**
  * @}
