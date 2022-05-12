@@ -59,7 +59,7 @@
  * @defgroup api-ip6                  IPv6
  * @defgroup api-srp                  SRP
  * @defgroup api-ping-sender          Ping Sender
- * @defgroup api-tcp-group
+ * @defgroup api-tcp-group            TCP
  *
  * @{
  *
