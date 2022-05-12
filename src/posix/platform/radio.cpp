@@ -614,7 +614,7 @@ uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-uint8_t otPlatRadioGetCslClockUncertainty(otInstance *aInstance)
+uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
