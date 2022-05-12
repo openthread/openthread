@@ -1064,7 +1064,7 @@ uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance);
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  *
- * @returns The current CSL Uncertainty in units of 10 us.
+ * @returns The CSL Uncertainty in units of 10 us.
  *
  */
 uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance);

@@ -475,7 +475,7 @@ public:
     /**
      * Get the fixed uncertainty of the Device for scheduling CSL Transmissions in units of 10 microseconds.
      *
-     * @returns The current CSL Uncertainty in units of 10 us.
+     * @returns The CSL Uncertainty in units of 10 us.
      *
      */
     uint8_t GetCslUncertainty(void);
