@@ -63,14 +63,10 @@ otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *a
     Error                         error    = kErrorNone;
     Instance &                    instance = AsCoreType(aInstance);
     const MeshCoP::ExtendedPanId &extPanId = AsCoreType(aExtendedPanId);
-    Mle::MeshLocalPrefix          prefix;
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<MeshCoP::ExtendedPanIdManager>().SetExtPanId(extPanId);
-
-    prefix.SetFromExtendedPanId(extPanId);
-    instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(prefix);
 
     instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
     instance.Get<MeshCoP::PendingDatasetManager>().Clear();

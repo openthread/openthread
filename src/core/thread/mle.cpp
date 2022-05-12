@@ -64,6 +64,10 @@ namespace Mle {
 
 RegisterLogModule("Mle");
 
+const otMeshLocalPrefix Mle::sMeshLocalPrefixInit = {
+    {0xfd, 0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0x00},
+};
+
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRetrieveNewNetworkData(false)
@@ -114,8 +118,6 @@ Mle::Mle(Instance &aInstance)
     , mParentResponseCb(nullptr)
     , mParentResponseCbContext(nullptr)
 {
-    MeshLocalPrefix meshLocalPrefix;
-
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
 
@@ -129,8 +131,6 @@ Mle::Mle(Instance &aInstance)
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
 
     mLeaderAloc.InitAsThreadOriginRealmLocalScope();
-
-    meshLocalPrefix.SetFromExtendedPanId(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
 
     mMeshLocal64.InitAsThreadOriginRealmLocalScope();
     mMeshLocal64.GetAddress().GetIid().GenerateRandom();
@@ -150,7 +150,7 @@ Mle::Mle(Instance &aInstance)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
-    SetMeshLocalPrefix(meshLocalPrefix);
+    SetMeshLocalPrefix(AsCoreType(&sMeshLocalPrefixInit));
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
@@ -823,7 +823,7 @@ void Mle::UpdateLinkLocalAddress(void)
     Get<Notifier>().Signal(kEventThreadLinkLocalAddrChanged);
 }
 
-void Mle::SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix)
+void Mle::SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix)
 {
     VerifyOrExit(GetMeshLocalPrefix() != aMeshLocalPrefix,
                  Get<Notifier>().SignalIfFirst(kEventThreadMeshLocalAddrChanged));

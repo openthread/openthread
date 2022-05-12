@@ -44,7 +44,6 @@ import simulator
 import sniffer
 from tlvs_parsing import SubTlvsFactory
 
-# This extended address will generate the MESH_LOCAL_PREFIX
 MESH_LOCAL_PREFIX = 'fd00:db8::/64'
 MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fd00:0?db8:0{0,4}:0{0,4}'
 ROUTING_LOCATOR = '64/:0:ff:fe00:/16'

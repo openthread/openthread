@@ -1009,6 +1009,7 @@ private:
 
 } // namespace Ip6
 
+DefineCoreType(otIp6NetworkPrefix, Ip6::NetworkPrefix);
 DefineCoreType(otIp6Prefix, Ip6::Prefix);
 DefineCoreType(otIp6InterfaceIdentifier, Ip6::InterfaceIdentifier);
 DefineCoreType(otIp6Address, Ip6::Address);
