@@ -844,19 +844,21 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
 
     if (aNewOnLinkPrefix != nullptr)
     {
+        RouterAdv::PrefixInfoOption *pio;
+
         OT_ASSERT(aNewOnLinkPrefix == &mLocalOnLinkPrefix);
+        OT_ASSERT(bufferLength + sizeof(RouterAdv::PrefixInfoOption) <= sizeof(buffer));
 
-        RouterAdv::PrefixInfoOption pio;
+        pio = reinterpret_cast<RouterAdv::PrefixInfoOption *>(buffer + bufferLength);
 
-        pio.SetOnLink(true);
-        pio.SetAutoAddrConfig(true);
-        pio.SetValidLifetime(kDefaultOnLinkPrefixLifetime);
-        pio.SetPreferredLifetime(kDefaultOnLinkPrefixLifetime);
-        pio.SetPrefix(*aNewOnLinkPrefix);
+        pio->Init();
+        pio->SetOnLinkFlag();
+        pio->SetAutoAddrConfigFlag();
+        pio->SetValidLifetime(kDefaultOnLinkPrefixLifetime);
+        pio->SetPreferredLifetime(kDefaultOnLinkPrefixLifetime);
+        pio->SetPrefix(*aNewOnLinkPrefix);
 
-        OT_ASSERT(bufferLength + pio.GetSize() <= sizeof(buffer));
-        memcpy(buffer + bufferLength, &pio, pio.GetSize());
-        bufferLength += pio.GetSize();
+        bufferLength += pio->GetSize();
 
         if (!mIsAdvertisingLocalOnLinkPrefix)
         {
@@ -865,28 +867,31 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
         }
 
         LogInfo("Send on-link prefix %s in PIO (preferred lifetime = %u seconds, valid lifetime = %u seconds)",
-                aNewOnLinkPrefix->ToString().AsCString(), pio.GetPreferredLifetime(), pio.GetValidLifetime());
+                aNewOnLinkPrefix->ToString().AsCString(), pio->GetPreferredLifetime(), pio->GetValidLifetime());
 
         mTimeAdvertisedOnLinkPrefix = TimerMilli::GetNow();
     }
     else if (mOnLinkPrefixDeprecateTimer.IsRunning())
     {
-        RouterAdv::PrefixInfoOption pio;
+        RouterAdv::PrefixInfoOption *pio;
 
-        pio.SetOnLink(true);
-        pio.SetAutoAddrConfig(true);
-        pio.SetValidLifetime(TimeMilli::MsecToSec(mOnLinkPrefixDeprecateTimer.GetFireTime() - TimerMilli::GetNow()));
+        OT_ASSERT(bufferLength + sizeof(RouterAdv::PrefixInfoOption) <= sizeof(buffer));
+
+        pio = reinterpret_cast<RouterAdv::PrefixInfoOption *>(buffer + bufferLength);
+
+        pio->Init();
+        pio->SetOnLinkFlag();
+        pio->SetAutoAddrConfigFlag();
+        pio->SetValidLifetime(TimeMilli::MsecToSec(mOnLinkPrefixDeprecateTimer.GetFireTime() - TimerMilli::GetNow()));
 
         // Set zero preferred lifetime to immediately deprecate the advertised on-link prefix.
-        pio.SetPreferredLifetime(0);
-        pio.SetPrefix(mLocalOnLinkPrefix);
+        pio->SetPreferredLifetime(0);
+        pio->SetPrefix(mLocalOnLinkPrefix);
 
-        OT_ASSERT(bufferLength + pio.GetSize() <= sizeof(buffer));
-        memcpy(buffer + bufferLength, &pio, pio.GetSize());
-        bufferLength += pio.GetSize();
+        bufferLength += pio->GetSize();
 
         LogInfo("Send on-link prefix %s in PIO (preferred lifetime = %u seconds, valid lifetime = %u seconds)",
-                mLocalOnLinkPrefix.ToString().AsCString(), pio.GetPreferredLifetime(), pio.GetValidLifetime());
+                mLocalOnLinkPrefix.ToString().AsCString(), pio->GetPreferredLifetime(), pio->GetValidLifetime());
     }
 
     // Invalidate the advertised OMR prefixes if they are no longer in the new OMR prefix array.
@@ -895,15 +900,19 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
     {
         if (!aNewOmrPrefixes.Contains(advertisedOmrPrefix))
         {
-            RouterAdv::RouteInfoOption rio;
+            RouterAdv::RouteInfoOption *rio;
+
+            OT_ASSERT(bufferLength + RouterAdv::RouteInfoOption::OptionSizeForPrefix(advertisedOmrPrefix.GetLength()) <=
+                      sizeof(buffer));
+
+            rio = reinterpret_cast<RouterAdv::RouteInfoOption *>(buffer + bufferLength);
 
             // Set zero route lifetime to immediately invalidate the advertised OMR prefix.
-            rio.SetRouteLifetime(0);
-            rio.SetPrefix(advertisedOmrPrefix);
+            rio->Init();
+            rio->SetRouteLifetime(0);
+            rio->SetPrefix(advertisedOmrPrefix);
 
-            OT_ASSERT(bufferLength + rio.GetSize() <= sizeof(buffer));
-            memcpy(buffer + bufferLength, &rio, rio.GetSize());
-            bufferLength += rio.GetSize();
+            bufferLength += rio->GetSize();
 
             LogInfo("Stop advertising OMR prefix %s on interface %u", advertisedOmrPrefix.ToString().AsCString(),
                     mInfraIfIndex);
@@ -912,14 +921,18 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
 
     for (const Ip6::Prefix &newOmrPrefix : aNewOmrPrefixes)
     {
-        RouterAdv::RouteInfoOption rio;
+        RouterAdv::RouteInfoOption *rio;
 
-        rio.SetRouteLifetime(kDefaultOmrPrefixLifetime);
-        rio.SetPrefix(newOmrPrefix);
+        OT_ASSERT(bufferLength + RouterAdv::RouteInfoOption::OptionSizeForPrefix(newOmrPrefix.GetLength()) <=
+                  sizeof(buffer));
 
-        OT_ASSERT(bufferLength + rio.GetSize() <= sizeof(buffer));
-        memcpy(buffer + bufferLength, &rio, rio.GetSize());
-        bufferLength += rio.GetSize();
+        rio = reinterpret_cast<RouterAdv::RouteInfoOption *>(buffer + bufferLength);
+
+        rio->Init();
+        rio->SetRouteLifetime(kDefaultOmrPrefixLifetime);
+        rio->SetPrefix(newOmrPrefix);
+
+        bufferLength += rio->GetSize();
 
         LogInfo("Send OMR prefix %s in RIO (valid lifetime = %u seconds)", newOmrPrefix.ToString().AsCString(),
                 kDefaultOmrPrefixLifetime);
@@ -969,7 +982,11 @@ bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
 
 bool RoutingManager::IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio)
 {
-    return IsValidOnLinkPrefix(aPio.GetPrefix()) && aPio.GetOnLink() && aPio.GetAutoAddrConfig();
+    Ip6::Prefix prefix;
+
+    aPio.GetPrefix(prefix);
+
+    return IsValidOnLinkPrefix(prefix) && aPio.IsOnLinkFlagSet() && aPio.IsAutoAddrConfigFlagSet();
 }
 
 bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
@@ -1214,10 +1231,12 @@ exit:
 // routing policy evaluation.
 bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio)
 {
-    Ip6::Prefix     prefix         = aPio.GetPrefix();
+    Ip6::Prefix     prefix;
     bool            needReevaluate = false;
     ExternalPrefix  onLinkPrefix;
     ExternalPrefix *existingPrefix = nullptr;
+
+    aPio.GetPrefix(prefix);
 
     if (!IsValidOnLinkPrefix(aPio))
     {
@@ -1307,9 +1326,11 @@ exit:
 // from the Thread network).
 void RoutingManager::UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption &aRio)
 {
-    Ip6::Prefix     prefix = aRio.GetPrefix();
+    Ip6::Prefix     prefix;
     ExternalPrefix  omrPrefix;
     ExternalPrefix *existingPrefix = nullptr;
+
+    aRio.GetPrefix(prefix);
 
     if (!IsValidOmrPrefix(prefix))
     {
