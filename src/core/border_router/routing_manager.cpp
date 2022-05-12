@@ -340,7 +340,7 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
 
     VerifyOrExit(IsInitialized() && mIsRunning, error = kErrorDrop);
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = kErrorDrop);
-    VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(*icmp6Header), error = kErrorParse);
+    VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(Ip6::Icmp::Header), error = kErrorParse);
 
     icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aBuffer);
 
