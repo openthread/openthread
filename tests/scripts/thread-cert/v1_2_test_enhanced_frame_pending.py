@@ -46,6 +46,7 @@ import unittest
 import pexpect
 
 import thread_cert
+import config
 import common
 
 LEADER = 1

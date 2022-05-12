@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ROUTE64_TLV, MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV, LINK_LAYER_FRAME_COUNTER_TLV, RESPONSE_TLV, LINK_MARGIN_TLV, CONNECTIVITY_TLV, TIMEOUT_TLV, TLV_REQUEST_TLV, ADDRESS16_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -76,15 +77,15 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER3].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
         self.nodes[LEADER1].reset()

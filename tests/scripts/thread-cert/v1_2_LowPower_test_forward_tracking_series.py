@@ -35,6 +35,7 @@ from pktverify import consts
 from pktverify.null_field import nullField
 from pktverify.packet_verifier import PacketVerifier
 
+import config
 import thread_cert
 
 LEADER = 1

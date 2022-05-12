@@ -204,7 +204,7 @@ class test_router_reattach(thread_cert.TestCase):
 
         for i in range(2, 33):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[2].reset()

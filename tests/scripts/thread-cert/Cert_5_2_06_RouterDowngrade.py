@@ -216,7 +216,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
 
         for i in range(2, 24):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
         self.collect_rloc16s()
 
@@ -224,7 +224,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
         # so we don't need to ensure ROUTER23 has a better link quality on
         # posix.
         self.nodes[ROUTER23].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER23].get_state(), 'router')
 
         self.simulator.go(10)

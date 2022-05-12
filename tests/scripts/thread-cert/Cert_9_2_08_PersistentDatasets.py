@@ -115,11 +115,11 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[DUT].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         if self.TOPOLOGY[DUT]['mode'] == 'rdn':
             self.assertEqual(self.nodes[DUT].get_state(), 'router')
         else:
@@ -156,7 +156,7 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
 
         self.assertEqual(self.nodes[DUT].get_panid(), PANID_INIT)
         self.assertEqual(self.nodes[DUT].get_channel(), CHANNEL_INIT)
-        self.simulator.go(30)
+        self.simulator.go(60)
 
         self.assertEqual(self.nodes[DUT].get_panid(), COMMISSIONER_PENDING_PANID)
         self.assertEqual(self.nodes[DUT].get_channel(), COMMISSIONER_PENDING_CHANNEL)

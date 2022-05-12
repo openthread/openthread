@@ -95,12 +95,12 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
         server.srp_server_set_enabled(True)
 
         br2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
         client.start()
 
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', client.get_state())
 
         self.simulator.go(10)

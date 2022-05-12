@@ -106,7 +106,7 @@ class MdnsRestart(thread_cert.TestCase):
         self.simulator.go(5)
 
         br2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
         ed1.start()

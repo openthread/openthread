@@ -174,11 +174,11 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
 
         for i in range(2, 17):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[DUT_REED].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.simulator.go(ROUTER_SELECTION_JITTER)
 
         self.collect_rloc16s()

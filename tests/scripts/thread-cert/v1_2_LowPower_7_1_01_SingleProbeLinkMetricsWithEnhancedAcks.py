@@ -32,6 +32,7 @@ import unittest
 from config import ADDRESS_TYPE
 from pktverify import consts
 
+import config
 import thread_cert
 
 LEADER = 1

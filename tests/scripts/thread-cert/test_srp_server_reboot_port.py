@@ -32,6 +32,7 @@ import logging
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -79,7 +80,7 @@ class SrpServerRebootPort(thread_cert.TestCase):
 
         server.srp_server_set_enabled(True)
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'router')
 
         #

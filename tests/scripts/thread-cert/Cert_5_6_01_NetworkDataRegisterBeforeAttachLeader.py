@@ -86,7 +86,7 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(thread_cert.TestCase):
         self.simulator.go(5)
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED1].start()

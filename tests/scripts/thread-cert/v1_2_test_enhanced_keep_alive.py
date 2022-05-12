@@ -30,6 +30,7 @@
 import unittest
 
 import thread_cert
+import config
 import mle
 
 LEADER = 1

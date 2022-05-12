@@ -29,7 +29,9 @@
 
 import unittest
 
+import config
 import thread_cert
+
 # Test description:
 #   This test verifies the SRP client lease changing works as expected.
 #
@@ -87,7 +89,7 @@ class SrpClientChangeLeaseTime(thread_cert.TestCase):
 
         client.srp_server_set_enabled(False)
         client.start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
         #

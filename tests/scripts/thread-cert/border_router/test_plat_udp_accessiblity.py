@@ -72,7 +72,7 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         br.srp_server_set_enabled(True)
 
         router.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
         # Router1 can ping to/from the Host on infra link.

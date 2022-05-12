@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import mle
 import thread_cert
 from pktverify import consts

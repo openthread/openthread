@@ -91,7 +91,7 @@ class Cert_5_3_5_RoutingLinkQuality(thread_cert.TestCase):
 
         for router in range(DUT_ROUTER1, ROUTER3 + 1):
             self.nodes[router].start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         for router in range(DUT_ROUTER1, ROUTER3 + 1):
             self.assertEqual(self.nodes[router].get_state(), 'router')

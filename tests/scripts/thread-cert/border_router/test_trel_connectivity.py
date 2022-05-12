@@ -28,7 +28,9 @@
 #
 import unittest
 
+import config
 import thread_cert
+
 # Test description:
 #   This test verifies TREL connectivity.
 #
@@ -124,7 +126,7 @@ class TestTrelConnectivity(thread_cert.TestCase):
         self.wait_node_state(router2, 'router', 10)
 
         # Allow the network to stabilize
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         self.collect_ipaddrs()
         self.collect_rloc16s()

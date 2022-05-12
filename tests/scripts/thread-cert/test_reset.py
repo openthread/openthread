@@ -60,7 +60,7 @@ class TestReset(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        self.simulator.go(7)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].start()
@@ -78,7 +78,7 @@ class TestReset(thread_cert.TestCase):
 
         self.nodes[ROUTER].reset()
         self.nodes[ROUTER].start()
-        self.simulator.go(7)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].reset()

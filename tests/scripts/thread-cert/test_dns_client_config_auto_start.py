@@ -30,6 +30,7 @@
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -76,14 +77,14 @@ class DnsClientConfigAutoStart(thread_cert.TestCase):
         self.assertEqual(leader.get_state(), 'leader')
 
         router.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(router.get_state(), 'router')
 
         # On leader set DNS config explicitly.
 
         leader.dns_set_config(DEFAULT_ADDRESS)
-        config = leader.dns_get_config()
-        self.assertEqual(config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
+        dns_config = leader.dns_get_config()
+        self.assertEqual(dns_config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
 
         # Start leader to act as SRP server.
 
@@ -101,27 +102,27 @@ class DnsClientConfigAutoStart(thread_cert.TestCase):
         srp_server_address = router.srp_client_get_server_address()
         self.assertEqual(leader.srp_client_get_server_address(), srp_server_address)
 
-        config = router.dns_get_config()
-        self.assertEqual(config['Server'], '[{}]:53'.format(srp_server_address))
+        dns_config = router.dns_get_config()
+        self.assertEqual(dns_config['Server'], '[{}]:53'.format(srp_server_address))
 
         # Verify that on leader the default DNS config remains
         # as before (the address explicitly set earlier).
 
-        config = leader.dns_get_config()
-        self.assertEqual(config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
+        dns_config = leader.dns_get_config()
+        self.assertEqual(dns_config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
 
         # On leader clear DNS config (the explicitly set address)
         # and verify that it adopts the SRP server address.
 
         leader.dns_set_config("::")
-        config = leader.dns_get_config()
-        self.assertEqual(config['Server'], '[{}]:53'.format(srp_server_address))
+        dns_config = leader.dns_get_config()
+        self.assertEqual(dns_config['Server'], '[{}]:53'.format(srp_server_address))
 
         # On leader set DNS config explicitly again.
 
         leader.dns_set_config(DEFAULT_ADDRESS)
-        config = leader.dns_get_config()
-        self.assertEqual(config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
+        dns_config = leader.dns_get_config()
+        self.assertEqual(dns_config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
 
         # Stop SRP server on leader and start it on router.
 
@@ -137,12 +138,12 @@ class DnsClientConfigAutoStart(thread_cert.TestCase):
         # Verify that config on router gets changed while on leader
         # it remains unchanged.
 
-        config = router.dns_get_config()
+        dns_config = router.dns_get_config()
         srp_server_address = router.srp_client_get_server_address()
-        self.assertEqual(config['Server'], '[{}]:53'.format(srp_server_address))
+        self.assertEqual(dns_config['Server'], '[{}]:53'.format(srp_server_address))
 
-        config = leader.dns_get_config()
-        self.assertEqual(config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
+        dns_config = leader.dns_get_config()
+        self.assertEqual(dns_config['Server'], '[{}]:53'.format(DEFAULT_ADDRESS))
 
 
 if __name__ == '__main__':
