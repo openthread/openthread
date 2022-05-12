@@ -59,8 +59,15 @@
  * @defgroup api-ip6                  IPv6
  * @defgroup api-srp                  SRP
  * @defgroup api-ping-sender          Ping Sender
+ * @defgroup api-tcp-group
+ *
+ * @{
+ *
  * @defgroup api-tcp                  TCP
  * @defgroup api-tcp-ext              TCP Abstractions
+ *
+ * @}
+ *
  * @defgroup api-udp-group            UDP
  *
  * @{
