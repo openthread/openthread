@@ -42,6 +42,7 @@ SSED_1 = 3
 
 
 class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
             'version': '1.2',

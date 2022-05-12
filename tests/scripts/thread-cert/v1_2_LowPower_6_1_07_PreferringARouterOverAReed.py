@@ -43,7 +43,7 @@ DUT = 4
 
 
 class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
-
+    USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
             'version': '1.2',

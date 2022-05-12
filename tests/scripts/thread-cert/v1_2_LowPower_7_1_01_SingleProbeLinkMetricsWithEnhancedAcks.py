@@ -42,6 +42,7 @@ POLL_PERIOD = 3000  # 3s
 
 
 class LowPower_7_1_01(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
             'version': '1.2',
