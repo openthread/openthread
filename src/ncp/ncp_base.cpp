@@ -1557,7 +1557,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_CSL_ACCURACY>(voi
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_CSL_UNCERTAINTY>(void)
 {
-    return mEncoder.WriteUint8(otPlatRadioGetCslClockUncertainty(mInstance));
+    return mEncoder.WriteUint8(otPlatRadioGetCslUncertainty(mInstance));
 }
 #endif
 

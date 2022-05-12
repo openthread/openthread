@@ -473,12 +473,12 @@ public:
     uint8_t GetCslAccuracy(void);
 
     /**
-     * Get the current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
+     * Get the fixed uncertainty of the Device for scheduling CSL Transmissions in units of 10 microseconds.
      *
-     * @returns The current CSL Clock Uncertainty in units of 10 us.
+     * @returns The CSL Uncertainty in units of 10 us.
      *
      */
-    uint8_t GetCslClockUncertainty(void);
+    uint8_t GetCslUncertainty(void);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     /**
@@ -812,9 +812,9 @@ inline uint8_t Radio::GetCslAccuracy(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-inline uint8_t Radio::GetCslClockUncertainty(void)
+inline uint8_t Radio::GetCslUncertainty(void)
 {
-    return otPlatRadioGetCslClockUncertainty(GetInstancePtr());
+    return otPlatRadioGetCslUncertainty(GetInstancePtr());
 }
 #endif
 
@@ -981,7 +981,7 @@ inline uint8_t Radio::GetCslAccuracy(void)
     return UINT8_MAX;
 }
 
-inline uint8_t Radio::GetCslClockUncertainty(void)
+inline uint8_t Radio::GetCslUncertainty(void)
 {
     return UINT8_MAX;
 }

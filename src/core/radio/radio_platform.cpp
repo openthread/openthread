@@ -250,7 +250,7 @@ OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
     return UINT8_MAX;
 }
 
-OT_TOOL_WEAK uint8_t otPlatRadioGetCslClockUncertainty(otInstance *aInstance)
+OT_TOOL_WEAK uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
