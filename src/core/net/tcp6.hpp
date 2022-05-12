@@ -83,7 +83,7 @@ public:
      * This class represents an endpoint of a TCP/IPv6 connection.
      *
      */
-    class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>
+    class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>, public GetProvider<Endpoint>
     {
         friend class Tcp;
         friend class LinkedList<Endpoint>;
@@ -118,7 +118,7 @@ public:
          * @returns  The Instance pointer associated with this Endpoint.
          *
          */
-        Instance &GetInstance(void);
+        Instance &GetInstance(void) const;
 
         /**
          * Obtains the context pointer that was associated this Endpoint upon
@@ -402,7 +402,7 @@ public:
      * This class represents a TCP/IPv6 listener.
      *
      */
-    class Listener : public otTcpListener, public LinkedListEntry<Listener>
+    class Listener : public otTcpListener, public LinkedListEntry<Listener>, public GetProvider<Listener>
     {
         friend class LinkedList<Listener>;
 
@@ -436,7 +436,7 @@ public:
          * @returns  The otInstance pointer associated with this Listener.
          *
          */
-        Instance &GetInstance(void);
+        Instance &GetInstance(void) const;
 
         /**
          * Obtains the context pointer that was associated with this Listener upon
