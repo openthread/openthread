@@ -250,6 +250,14 @@ private:
     static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
                   "invalid RA STALE time");
 
+    enum State : uint8_t
+    {
+        kStateUninitialized,
+        kStateDisabled,
+        kStateEnabledIdle,
+        kStateEnabledRunning,
+    };
+
     // This struct represents an external prefix which is
     // discovered on the infrastructure interface.
     struct ExternalPrefix : public Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
@@ -296,12 +304,13 @@ private:
     typedef Array<Ip6::Prefix, kMaxOmrPrefixNum>           OmrPrefixArray;
     typedef Array<ExternalPrefix, kMaxDiscoveredPrefixNum> ExternalPrefixArray;
 
+    State GetState(void) const { return mState; }
+    void  SetState(State aState);
     void  EvaluateState(void);
     void  Start(void);
     void  Stop(void);
     void  HandleNotifierEvents(Events aEvents);
-    bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
-    bool  IsEnabled(void) const { return mIsEnabled; }
+    bool  IsInitialized(void) const { return GetState() != kStateUninitialized; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
     void  GenerateOmrPrefix(void);
     void  GenerateOnLinkPrefix(void);
@@ -356,13 +365,9 @@ private:
     static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
-    // Indicates whether the Routing Manager is running (started).
-    bool mIsRunning;
+    static const char *StateToString(State aState);
 
-    // Indicates whether the Routing manager is enabled. The Routing
-    // Manager will be stopped if we are disabled.
-    bool mIsEnabled;
-
+    State   mState;
     InfraIf mInfraIf;
 
     // The /48 BR ULA prefix loaded from local persistent storage or

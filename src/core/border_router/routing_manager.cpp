@@ -61,8 +61,7 @@ RegisterLogModule("BorderRouter");
 
 RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mIsRunning(false)
-    , mIsEnabled(false)
+    , mState(kStateUninitialized)
     , mInfraIf(aInstance)
     , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
@@ -102,7 +101,9 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 #endif
     GenerateOnLinkPrefix();
 
-    error = mInfraIf.HandleStateChanged(mInfraIf.GetIfIndex(), aInfraIfIsRunning);
+    SuccessOrExit(error = mInfraIf.HandleStateChanged(mInfraIf.GetIfIndex(), aInfraIfIsRunning));
+
+    SetState(kStateDisabled);
 
 exit:
     if (error != kErrorNone)
@@ -117,12 +118,29 @@ Error RoutingManager::SetEnabled(bool aEnabled)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    switch (GetState())
+    {
+    case kStateUninitialized:
+        error = kErrorInvalidState;
+        break;
 
-    VerifyOrExit(aEnabled != mIsEnabled);
+    case kStateDisabled:
+        VerifyOrExit(aEnabled);
+        SetState(kStateEnabledIdle);
+        EvaluateState();
+        break;
 
-    mIsEnabled = aEnabled;
-    EvaluateState();
+    case kStateEnabledIdle:
+        VerifyOrExit(!aEnabled);
+        SetState(kStateDisabled);
+        break;
+
+    case kStateEnabledRunning:
+        VerifyOrExit(!aEnabled);
+        Stop();
+        SetState(kStateDisabled);
+        break;
+    }
 
 exit:
     return error;
@@ -233,32 +251,45 @@ void RoutingManager::GenerateOnLinkPrefix(void)
     LogNote("Local on-link prefix: %s", mLocalOnLinkPrefix.ToString().AsCString());
 }
 
-void RoutingManager::EvaluateState(void)
+void RoutingManager::SetState(State aState)
 {
-    if (mIsEnabled && Get<Mle::MleRouter>().IsAttached() && mInfraIf.IsRunning())
+    if (aState != mState)
     {
-        Start();
-    }
-    else
-    {
-        Stop();
+        LogInfo("State: %s -> %s", StateToString(mState), StateToString(aState));
+        mState = aState;
     }
 }
 
-void RoutingManager::Start(void)
+void RoutingManager::EvaluateState(void)
 {
-    if (!mIsRunning)
-    {
-        LogInfo("Border Routing manager started");
+    bool canRun = mInfraIf.IsRunning() && Get<Mle::Mle>().IsAttached();
 
-        mIsRunning = true;
+    switch (GetState())
+    {
+    case kStateUninitialized:
+    case kStateDisabled:
+        break;
+
+    case kStateEnabledIdle:
+        VerifyOrExit(canRun);
+        SetState(kStateEnabledRunning);
         StartRouterSolicitationDelay();
+        break;
+
+    case kStateEnabledRunning:
+        VerifyOrExit(!canRun);
+        Stop();
+        SetState(kStateEnabledIdle);
+        break;
     }
+
+exit:
+    return;
 }
 
 void RoutingManager::Stop(void)
 {
-    VerifyOrExit(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     UnpublishLocalOmrPrefix();
 
@@ -299,20 +330,13 @@ void RoutingManager::Stop(void)
     mRouterSolicitCount = 0;
 
     mRoutingPolicyTimer.Stop();
-
-    LogInfo("Border Routing manager stopped");
-
-    mIsRunning = false;
-
-exit:
-    return;
 }
 
 void RoutingManager::HandleReceived(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
     const Ip6::Icmp::Header *icmp6Header;
 
-    VerifyOrExit(mIsRunning);
+    VerifyOrExit(GetState() == kStateEnabledRunning);
 
     icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aPacket.GetBytes());
 
@@ -334,40 +358,43 @@ exit:
 
 void RoutingManager::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit(IsInitialized() && IsEnabled());
-
-    if (aEvents.Contains(kEventThreadRoleChanged))
+    switch (GetState())
     {
-        EvaluateState();
-    }
+    case kStateUninitialized:
+    case kStateDisabled:
+        break;
 
-    if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
-    {
-        // Invalidate discovered prefixes because OMR Prefixes in Network Data may change.
-        InvalidateDiscoveredPrefixes();
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
-    }
-
-    if (aEvents.Contains(kEventThreadExtPanIdChanged))
-    {
-        if (mIsAdvertisingLocalOnLinkPrefix)
+    case kStateEnabledRunning:
+        if (aEvents.Contains(kEventThreadNetdataChanged))
         {
-            UnpublishExternalRoute(mLocalOnLinkPrefix);
-            // TODO: consider deprecating/invalidating existing
-            // on-link prefix
-            mIsAdvertisingLocalOnLinkPrefix = false;
-        }
-
-        GenerateOnLinkPrefix();
-
-        if (mIsRunning)
-        {
+            // Invalidate discovered prefixes because OMR Prefixes in Network Data may change.
+            InvalidateDiscoveredPrefixes();
             StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
         }
-    }
 
-exit:
-    return;
+        if (aEvents.Contains(kEventThreadExtPanIdChanged))
+        {
+            if (mIsAdvertisingLocalOnLinkPrefix)
+            {
+                UnpublishExternalRoute(mLocalOnLinkPrefix);
+                // TODO: consider deprecating/invalidating existing
+                // on-link prefix
+                mIsAdvertisingLocalOnLinkPrefix = false;
+            }
+
+            GenerateOnLinkPrefix();
+            StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+        }
+
+        OT_FALL_THROUGH;
+
+    case kStateEnabledIdle:
+        if (aEvents.Contains(kEventThreadRoleChanged))
+        {
+            EvaluateState();
+        }
+        break;
+    }
 }
 
 void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
@@ -378,7 +405,7 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
     signed int                      electedOmrPrefixPreference = 0;
     Ip6::Prefix *                   publishedLocalOmrPrefix    = nullptr;
 
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
     {
@@ -459,7 +486,7 @@ Error RoutingManager::PublishLocalOmrPrefix(void)
     Error                           error = kErrorNone;
     NetworkData::OnMeshPrefixConfig omrPrefixConfig;
 
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     VerifyOrExit(!IsOmrPrefixAddedToLocalNetworkData());
 
@@ -492,7 +519,7 @@ void RoutingManager::UnpublishLocalOmrPrefix(void)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(mIsRunning);
+    VerifyOrExit(GetState() == kStateEnabledRunning);
 
     VerifyOrExit(IsOmrPrefixAddedToLocalNetworkData());
 
@@ -519,7 +546,7 @@ Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePref
     Error                            error;
     NetworkData::ExternalRouteConfig routeConfig;
 
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     routeConfig.Clear();
     routeConfig.SetPrefix(aPrefix);
@@ -541,7 +568,7 @@ void RoutingManager::UnpublishExternalRoute(const Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(mIsRunning);
+    VerifyOrExit(GetState() == kStateEnabledRunning);
 
     error = Get<NetworkData::Publisher>().UnpublishPrefix(aPrefix);
 
@@ -632,7 +659,7 @@ void RoutingManager::DeprecateOnLinkPrefix(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 void RoutingManager::EvaluateNat64Prefix(void)
 {
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
     NetworkData::ExternalRouteConfig config;
@@ -685,7 +712,7 @@ void RoutingManager::EvaluateNat64Prefix(void)
 // OMR and NAT64 prefix in the Thread network.
 void RoutingManager::EvaluateRoutingPolicy(void)
 {
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     const Ip6::Prefix *newOnLinkPrefix = nullptr;
     OmrPrefixArray     newOmrPrefixes;
@@ -732,7 +759,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
 void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli)
 {
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     StartRoutingPolicyEvaluationDelay(Random::NonCrypto::GetUint32InRange(0, aJitterMilli));
 }
@@ -1121,7 +1148,7 @@ uint32_t RoutingManager::ExternalPrefix::GetPrefixExpireDelay(uint32_t aValidLif
 
 void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
     using RouterAdv::Option;
@@ -1478,7 +1505,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     TimeMilli maxOnlinkPrefixStaleTime      = now;
     bool      requireCheckStaleOnlinkPrefix = false;
 
-    OT_ASSERT(mIsRunning);
+    OT_ASSERT(GetState() == kStateEnabledRunning);
 
     // The stale timer triggers sending RS to check the state of On-Link/OMR prefixes and host RA messages.
     // The rules for calculating the next stale time:
@@ -1532,6 +1559,23 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
         mDiscoveredPrefixStaleTimer.FireAt(nextStaleTime);
         LogDebg("Prefix stale timer scheduled in %lu ms", nextStaleTime - now);
     }
+}
+
+const char *RoutingManager::StateToString(State aState)
+{
+    static const char *const kStateStrings[] = {
+        "Uninitialized",  // (0) kStateUninitialized
+        "Disabled",       // (1) kStateDisabled
+        "EnabledIdle",    // (2) kStateEnabledIdleIdle
+        "EnabledRunning", // (3) kStateEnabledRunning
+    };
+
+    static_assert(0 == kStateUninitialized, "kStateUninitialized value is incorrect");
+    static_assert(1 == kStateDisabled, "kStateDisabled value is incorrect");
+    static_assert(2 == kStateEnabledIdle, "kStateEnabledIdle value is incorrect");
+    static_assert(3 == kStateEnabledRunning, "kStateEnabledRunning value is incorrect");
+
+    return kStateStrings[aState];
 }
 
 } // namespace BorderRouter
