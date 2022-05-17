@@ -383,7 +383,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     {
         if (mIsAdvertisingLocalOnLinkPrefix)
         {
-            RemoveExternalRoute(mLocalOnLinkPrefix);
+            UnpublishExternalRoute(mLocalOnLinkPrefix);
             // TODO: consider deprecating/invalidating existing
             // on-link prefix
             mIsAdvertisingLocalOnLinkPrefix = false;
