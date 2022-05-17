@@ -243,47 +243,39 @@ private:
     static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
                   "invalid RA STALE time");
 
-    // This struct represents an external prefix which is
-    // discovered on the infrastructure interface.
-    struct ExternalPrefix : public Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
+    // A prefix discovered from Router Advert msg from infra netif
+    class ExternalPrefix : private Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
     {
-        Ip6::Prefix mPrefix;
-        uint32_t    mValidLifetime;
+    public:
+        void               InitFrom(const RouterAdv::PrefixInfoOption &aPio);
+        void               InitFrom(const RouterAdv::RouteInfoOption &aRio);
+        bool               IsOnLinkPrefix(void) const { return mIsOnLinkPrefix; }
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        const TimeMilli &  GetLastUpdateTime(void) const { return mLastUpdateTime; }
+        uint32_t           GetValidLifetime(void) const { return mValidLifetime; }
+        void               ClearValidLifetime(void) { mValidLifetime = 0; }
+        TimeMilli          GetExpireTime(void) const { return mLastUpdateTime + GetPrefixExpireDelay(mValidLifetime); }
+        TimeMilli          GetStaleTime(void) const;
+        bool               operator==(const ExternalPrefix &aPrefix) const;
 
-        union
-        {
-            // Preferred Lifetime of on-link prefix, available
-            // only when `mIsOnLinkPrefix` is TRUE.
-            uint32_t mPreferredLifetime;
+        // Methods to use when `IsOnLinkPrefix()`
+        uint32_t GetPreferredLifetime(void) const { return mPreferredLifetime; }
+        void     ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
+        bool     IsDeprecated(void) const;
+        void     AdoptValidAndPreferredLiftimesFrom(const ExternalPrefix &Prefix);
 
-            // The preference of this route, available
-            // only when `mIsOnLinkPrefix` is FALSE.
-            RoutePreference mRoutePreference;
-        };
-        TimeMilli mTimeLastUpdate;
-        bool      mIsOnLinkPrefix;
+        // Method to use when `!IsOnlinkPrefix()`
+        RoutePreference GetRoutePreference(void) const { return mRoutePreference; }
 
-        bool operator==(const ExternalPrefix &aPrefix) const
-        {
-            return mPrefix == aPrefix.mPrefix && mIsOnLinkPrefix == aPrefix.mIsOnLinkPrefix;
-        }
-
-        bool IsDeprecated(void) const
-        {
-            OT_ASSERT(mIsOnLinkPrefix);
-
-            return mTimeLastUpdate + TimeMilli::SecToMsec(mPreferredLifetime) <= TimerMilli::GetNow();
-        }
-
-        TimeMilli GetExpireTime(void) const { return mTimeLastUpdate + GetPrefixExpireDelay(mValidLifetime); }
-        TimeMilli GetStaleTime(void) const
-        {
-            uint32_t delay = OT_MIN(kRtrAdvStaleTime, mIsOnLinkPrefix ? mPreferredLifetime : mValidLifetime);
-
-            return mTimeLastUpdate + TimeMilli::SecToMsec(delay);
-        }
-
+    private:
         static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
+
+        Ip6::Prefix     mPrefix;
+        TimeMilli       mLastUpdateTime;
+        uint32_t        mValidLifetime;
+        uint32_t        mPreferredLifetime; // Applicable when prefix is on-link.
+        RoutePreference mRoutePreference;   // Applicable when prefix is not on-link
+        bool            mIsOnLinkPrefix;
     };
 
     typedef Array<Ip6::Prefix, kMaxOmrPrefixNum>           OmrPrefixArray;
