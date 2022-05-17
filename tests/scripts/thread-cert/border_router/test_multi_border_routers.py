@@ -216,8 +216,10 @@ class MultiBorderRouters(thread_cert.TestCase):
 
         # Both Router1 and Router2 can ping to/from the Host on infra link.
         for router in [router1, router2]:
-            self.assertTrue(router.ping(host.get_matched_ula_addresses(br2_on_link_prefix)[0]))
-            self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
+            host_ula = host.get_matched_ula_addresses(br2_on_link_prefix)[0]
+            router_ula = router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
+            self.assertTrue(router.ping(host_ula))
+            self.assertTrue(host.ping(router_ula, interface=host_ula, backbone=True))
 
 
 if __name__ == '__main__':
