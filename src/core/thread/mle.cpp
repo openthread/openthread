@@ -1031,15 +1031,15 @@ const LeaderData &Mle::GetLeaderData(void)
     return mLeaderData;
 }
 
-Message *Mle::NewMleMessage(Command aCommand)
+Mle::TxMessage *Mle::NewMleMessage(Command aCommand)
 {
     Error             error = kErrorNone;
-    Message *         message;
+    TxMessage *       message;
     Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
     Message::SubType  subType;
     uint8_t           securitySuite;
 
-    message = mSocket.NewMessage(0, settings);
+    message = static_cast<TxMessage *>(mSocket.NewMessage(0, settings));
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     securitySuite = k154Security;
@@ -1090,7 +1090,7 @@ Message *Mle::NewMleMessage(Command aCommand)
         SecurityHeader securityHeader;
 
         // The other fields in security header are updated in the
-        // message in `SendMessage()` before message is sent.
+        // message in `TxMessage::SendTo()` before message is sent.
 
         securityHeader.InitSecurityControl();
         SuccessOrExit(error = message->Append(securityHeader));
@@ -1103,48 +1103,48 @@ exit:
     return message;
 }
 
-Error Mle::AppendSourceAddress(Message &aMessage) const
+Error Mle::TxMessage::AppendSourceAddressTlv(void)
 {
-    return Tlv::Append<SourceAddressTlv>(aMessage, GetRloc16());
+    return Tlv::Append<SourceAddressTlv>(*this, Get<Mle>().GetRloc16());
 }
 
-Error Mle::AppendStatus(Message &aMessage, StatusTlv::Status aStatus)
+Error Mle::TxMessage::AppendStatusTlv(StatusTlv::Status aStatus)
 {
-    return Tlv::Append<StatusTlv>(aMessage, aStatus);
+    return Tlv::Append<StatusTlv>(*this, aStatus);
 }
 
-Error Mle::AppendMode(Message &aMessage, DeviceMode aMode)
+Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode)
 {
-    return Tlv::Append<ModeTlv>(aMessage, aMode.Get());
+    return Tlv::Append<ModeTlv>(*this, aMode.Get());
 }
 
-Error Mle::AppendTimeout(Message &aMessage, uint32_t aTimeout)
+Error Mle::TxMessage::AppendTimeoutTlv(uint32_t aTimeout)
 {
-    return Tlv::Append<TimeoutTlv>(aMessage, aTimeout);
+    return Tlv::Append<TimeoutTlv>(*this, aTimeout);
 }
 
-Error Mle::AppendChallenge(Message &aMessage, const Challenge &aChallenge)
+Error Mle::TxMessage::AppendChallengeTlv(const Challenge &aChallenge)
 {
-    return Tlv::Append<ChallengeTlv>(aMessage, aChallenge.mBuffer, aChallenge.mLength);
+    return Tlv::Append<ChallengeTlv>(*this, aChallenge.mBuffer, aChallenge.mLength);
 }
 
-Error Mle::AppendChallenge(Message &aMessage, const uint8_t *aChallenge, uint8_t aChallengeLength)
+Error Mle::TxMessage::AppendChallengeTlv(const uint8_t *aChallenge, uint8_t aChallengeLength)
 {
-    return Tlv::Append<ChallengeTlv>(aMessage, aChallenge, aChallengeLength);
+    return Tlv::Append<ChallengeTlv>(*this, aChallenge, aChallengeLength);
 }
 
-Error Mle::AppendResponse(Message &aMessage, const Challenge &aResponse)
+Error Mle::TxMessage::AppendResponseTlv(const Challenge &aResponse)
 {
-    return Tlv::Append<ResponseTlv>(aMessage, aResponse.mBuffer, aResponse.mLength);
+    return Tlv::Append<ResponseTlv>(*this, aResponse.mBuffer, aResponse.mLength);
 }
 
-Error Mle::ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer)
+Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuffer) const
 {
     Error    error;
     uint16_t offset;
     uint16_t length;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, aTlvType, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, aTlvType, offset, length));
     VerifyOrExit(length >= kMinChallengeSize, error = kErrorParse);
 
     if (length > kMaxChallengeSize)
@@ -1152,24 +1152,24 @@ Error Mle::ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Ch
         length = kMaxChallengeSize;
     }
 
-    aMessage.ReadBytes(offset, aBuffer.mBuffer, length);
+    ReadBytes(offset, aBuffer.mBuffer, length);
     aBuffer.mLength = static_cast<uint8_t>(length);
 
 exit:
     return error;
 }
 
-Error Mle::ReadChallenge(const Message &aMessage, Challenge &aChallenge)
+Error Mle::RxMessage::ReadChallengeTlv(Challenge &aChallenge) const
 {
-    return ReadChallengeOrResponse(aMessage, Tlv::kChallenge, aChallenge);
+    return ReadChallengeOrResponse(Tlv::kChallenge, aChallenge);
 }
 
-Error Mle::ReadResponse(const Message &aMessage, Challenge &aResponse)
+Error Mle::RxMessage::ReadResponseTlv(Challenge &aResponse) const
 {
-    return ReadChallengeOrResponse(aMessage, Tlv::kResponse, aResponse);
+    return ReadChallengeOrResponse(Tlv::kResponse, aResponse);
 }
 
-Error Mle::AppendLinkFrameCounter(Message &aMessage)
+Error Mle::TxMessage::AppendLinkFrameCounterTlv(void)
 {
     uint32_t counter;
 
@@ -1184,21 +1184,21 @@ Error Mle::AppendLinkFrameCounter(Message &aMessage)
     Get<KeyManager>().SetAllMacFrameCounters(counter);
 #endif
 
-    return Tlv::Append<LinkFrameCounterTlv>(aMessage, counter);
+    return Tlv::Append<LinkFrameCounterTlv>(*this, counter);
 }
 
-Error Mle::AppendMleFrameCounter(Message &aMessage)
+Error Mle::TxMessage::AppendMleFrameCounterTlv(void)
 {
-    return Tlv::Append<MleFrameCounterTlv>(aMessage, Get<KeyManager>().GetMleFrameCounter());
+    return Tlv::Append<MleFrameCounterTlv>(*this, Get<KeyManager>().GetMleFrameCounter());
 }
 
-Error Mle::ReadFrameCounters(const Message &aMessage, uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const
+Error Mle::RxMessage::ReadFrameCounterTlvs(uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const
 {
     Error error;
 
-    SuccessOrExit(error = Tlv::Find<LinkFrameCounterTlv>(aMessage, aLinkFrameCounter));
+    SuccessOrExit(error = Tlv::Find<LinkFrameCounterTlv>(*this, aLinkFrameCounter));
 
-    switch (Tlv::Find<MleFrameCounterTlv>(aMessage, aMleFrameCounter))
+    switch (Tlv::Find<MleFrameCounterTlv>(*this, aMleFrameCounter))
     {
     case kErrorNone:
         break;
@@ -1214,30 +1214,30 @@ exit:
     return error;
 }
 
-Error Mle::AppendAddress16(Message &aMessage, uint16_t aRloc16)
+Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16)
 {
-    return Tlv::Append<Address16Tlv>(aMessage, aRloc16);
+    return Tlv::Append<Address16Tlv>(*this, aRloc16);
 }
 
-Error Mle::AppendLeaderData(Message &aMessage)
+Error Mle::TxMessage::AppendLeaderDataTlv(void)
 {
     LeaderDataTlv leaderDataTlv;
 
-    mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet));
-    mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kStableSubset));
+    Get<Mle>().mLeaderData.SetDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet));
+    Get<Mle>().mLeaderData.SetStableDataVersion(Get<NetworkData::Leader>().GetVersion(NetworkData::kStableSubset));
 
     leaderDataTlv.Init();
-    leaderDataTlv.Set(mLeaderData);
+    leaderDataTlv.Set(Get<Mle>().mLeaderData);
 
-    return leaderDataTlv.AppendTo(aMessage);
+    return leaderDataTlv.AppendTo(*this);
 }
 
-Error Mle::ReadLeaderData(const Message &aMessage, LeaderData &aLeaderData)
+Error Mle::RxMessage::ReadLeaderDataTlv(LeaderData &aLeaderData) const
 {
     Error         error;
     LeaderDataTlv leaderDataTlv;
 
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, leaderDataTlv));
+    SuccessOrExit(error = Tlv::FindTlv(*this, leaderDataTlv));
     VerifyOrExit(leaderDataTlv.IsValid(), error = kErrorParse);
     leaderDataTlv.Get(aLeaderData);
 
@@ -1245,61 +1245,61 @@ exit:
     return error;
 }
 
-Error Mle::AppendNetworkData(Message &aMessage, NetworkData::Type aType)
+Error Mle::TxMessage::AppendNetworkDataTlv(NetworkData::Type aType)
 {
     Error   error = kErrorNone;
     uint8_t networkData[NetworkData::NetworkData::kMaxSize];
     uint8_t length;
 
-    VerifyOrExit(!mRetrieveNewNetworkData, error = kErrorInvalidState);
+    VerifyOrExit(!Get<Mle>().mRetrieveNewNetworkData, error = kErrorInvalidState);
 
     length = sizeof(networkData);
     IgnoreError(Get<NetworkData::Leader>().CopyNetworkData(aType, networkData, length));
 
-    error = Tlv::Append<NetworkDataTlv>(aMessage, networkData, length);
+    error = Tlv::Append<NetworkDataTlv>(*this, networkData, length);
 
 exit:
     return error;
 }
 
-Error Mle::AppendTlvRequest(Message &aMessage, const uint8_t *aTlvs, uint8_t aTlvsLength)
+Error Mle::TxMessage::AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength)
 {
-    return Tlv::Append<TlvRequestTlv>(aMessage, aTlvs, aTlvsLength);
+    return Tlv::Append<TlvRequestTlv>(*this, aTlvs, aTlvsLength);
 }
 
-Error Mle::FindTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs)
+Error Mle::RxMessage::ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const
 {
     Error    error;
     uint16_t offset;
     uint16_t length;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Tlv::kTlvRequest, offset, length));
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kTlvRequest, offset, length));
 
     if (length > sizeof(aRequestedTlvs.mTlvs))
     {
         length = sizeof(aRequestedTlvs.mTlvs);
     }
 
-    aMessage.ReadBytes(offset, aRequestedTlvs.mTlvs, length);
+    ReadBytes(offset, aRequestedTlvs.mTlvs, length);
     aRequestedTlvs.mNumTlvs = static_cast<uint8_t>(length);
 
 exit:
     return error;
 }
 
-Error Mle::AppendScanMask(Message &aMessage, uint8_t aScanMask)
+Error Mle::TxMessage::AppendScanMaskTlv(uint8_t aScanMask)
 {
-    return Tlv::Append<ScanMaskTlv>(aMessage, aScanMask);
+    return Tlv::Append<ScanMaskTlv>(*this, aScanMask);
 }
 
-Error Mle::AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin)
+Error Mle::TxMessage::AppendLinkMarginTlv(uint8_t aLinkMargin)
 {
-    return Tlv::Append<LinkMarginTlv>(aMessage, aLinkMargin);
+    return Tlv::Append<LinkMarginTlv>(*this, aLinkMargin);
 }
 
-Error Mle::AppendVersion(Message &aMessage)
+Error Mle::TxMessage::AppendVersionTlv(void)
 {
-    return Tlv::Append<VersionTlv>(aMessage, kThreadVersion);
+    return Tlv::Append<VersionTlv>(*this, kThreadVersion);
 }
 
 bool Mle::HasUnregisteredAddress(void)
@@ -1330,7 +1330,7 @@ exit:
     return retval;
 }
 
-Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode)
+Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode)
 {
     Error                    error = kErrorNone;
     Tlv                      tlv;
@@ -1338,18 +1338,18 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
     Lowpan::Context          context;
     uint8_t                  length      = 0;
     uint8_t                  counter     = 0;
-    uint16_t                 startOffset = aMessage.GetLength();
+    uint16_t                 startOffset = GetLength();
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Ip6::Address domainUnicastAddress;
 #endif
 
     tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = aMessage.Append(tlv));
+    SuccessOrExit(error = Append(tlv));
 
     // Prioritize ML-EID
     entry.SetContextId(kMeshLocalPrefixContextId);
-    entry.SetIid(GetMeshLocal64().GetIid());
-    SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
+    entry.SetIid(Get<Mle>().GetMeshLocal64().GetIid());
+    SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
     length += entry.GetLength();
 
     // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
@@ -1367,7 +1367,7 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
         // Prioritize DUA, compressed entry
         entry.SetContextId(context.mContextId);
         entry.SetIid(domainUnicastAddress.GetIid());
-        SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
+        SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
         length += entry.GetLength();
         counter++;
     }
@@ -1375,8 +1375,8 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
 
     for (const Ip6::Netif::UnicastAddress &addr : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        if (addr.GetAddress().IsLinkLocal() || IsRoutingLocator(addr.GetAddress()) ||
-            IsAnycastLocator(addr.GetAddress()) || addr.GetAddress() == GetMeshLocal64())
+        if (addr.GetAddress().IsLinkLocal() || Get<Mle>().IsRoutingLocator(addr.GetAddress()) ||
+            Get<Mle>().IsAnycastLocator(addr.GetAddress()) || addr.GetAddress() == Get<Mle>().GetMeshLocal64())
         {
             continue;
         }
@@ -1402,7 +1402,7 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
             entry.SetIp6Address(addr.GetAddress());
         }
 
-        SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
+        SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
@@ -1414,9 +1414,9 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
     // indirect transmission. Since Thread 1.2, non-sleepy MED should
     // also register external multicast addresses of scope larger than
     // realm with a 1.2 or higher parent.
-    if (!IsRxOnWhenIdle()
+    if (!Get<Mle>().IsRxOnWhenIdle()
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-        || !GetParent().IsThreadVersion1p1()
+        || !Get<Mle>().GetParent().IsThreadVersion1p1()
 #endif
     )
     {
@@ -1425,7 +1425,7 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
             // For Thread 1.2 MED, skip multicast address with scope not
             // larger than realm local when registering.
-            if (IsRxOnWhenIdle() && !addr.GetAddress().IsMulticastLargerThanRealmLocal())
+            if (Get<Mle>().IsRxOnWhenIdle() && !addr.GetAddress().IsMulticastLargerThanRealmLocal())
             {
                 continue;
             }
@@ -1433,7 +1433,7 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
 
             entry.SetUncompressed();
             entry.SetIp6Address(addr.GetAddress());
-            SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));
+            SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
             length += entry.GetLength();
 
             counter++;
@@ -1447,20 +1447,20 @@ exit:
     if (error == kErrorNone && length > 0)
     {
         tlv.SetLength(length);
-        aMessage.Write(startOffset, tlv);
+        Write(startOffset, tlv);
     }
 
     return error;
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-Error Mle::AppendTimeRequest(Message &aMessage)
+Error Mle::TxMessage::AppendTimeRequestTlv(void)
 {
     // `TimeRequestTlv` has no value.
-    return Tlv::Append<TimeRequestTlv>(aMessage, nullptr, 0);
+    return Tlv::Append<TimeRequestTlv>(*this, nullptr, 0);
 }
 
-Error Mle::AppendTimeParameter(Message &aMessage)
+Error Mle::TxMessage::AppendTimeParameterTlv(void)
 {
     TimeParameterTlv tlv;
 
@@ -1468,41 +1468,41 @@ Error Mle::AppendTimeParameter(Message &aMessage)
     tlv.SetTimeSyncPeriod(Get<TimeSync>().GetTimeSyncPeriod());
     tlv.SetXtalThreshold(Get<TimeSync>().GetXtalThreshold());
 
-    return tlv.AppendTo(aMessage);
+    return tlv.AppendTo(*this);
 }
 
-Error Mle::AppendXtalAccuracy(Message &aMessage)
+Error Mle::TxMessage::AppendXtalAccuracyTlv(void)
 {
-    return Tlv::Append<XtalAccuracyTlv>(aMessage, otPlatTimeGetXtalAccuracy());
+    return Tlv::Append<XtalAccuracyTlv>(*this, otPlatTimeGetXtalAccuracy());
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-Error Mle::AppendActiveTimestamp(Message &aMessage)
+Error Mle::TxMessage::AppendActiveTimestampTlv(void)
 {
     Error                     error     = kErrorNone;
     const MeshCoP::Timestamp *timestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
     VerifyOrExit(timestamp != nullptr);
-    error = Tlv::Append<ActiveTimestampTlv>(aMessage, *timestamp);
+    error = Tlv::Append<ActiveTimestampTlv>(*this, *timestamp);
 
 exit:
     return error;
 }
 
-Error Mle::AppendPendingTimestamp(Message &aMessage)
+Error Mle::TxMessage::AppendPendingTimestampTlv(void)
 {
     Error                     error     = kErrorNone;
     const MeshCoP::Timestamp *timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
 
     VerifyOrExit(timestamp != nullptr && timestamp->GetSeconds() != 0);
-    error = Tlv::Append<PendingTimestampTlv>(aMessage, *timestamp);
+    error = Tlv::Append<PendingTimestampTlv>(*this, *timestamp);
 
 exit:
     return error;
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-Error Mle::AppendCslChannel(Message &aMessage)
+Error Mle::TxMessage::AppendCslChannelTlv(void)
 {
     Error         error = kErrorNone;
     CslChannelTlv cslChannel;
@@ -1517,16 +1517,17 @@ Error Mle::AppendCslChannel(Message &aMessage)
     cslChannel.SetChannelPage(0);
     cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());
 
-    SuccessOrExit(error = aMessage.Append(cslChannel));
+    SuccessOrExit(error = Append(cslChannel));
 
 exit:
     return error;
 }
 
-Error Mle::AppendCslTimeout(Message &aMessage)
+Error Mle::TxMessage::AppendCslTimeoutTlv(void)
 {
     OT_ASSERT(Get<Mac::Mac>().IsCslEnabled());
-    return Tlv::Append<CslTimeoutTlv>(aMessage, mCslTimeout == 0 ? mTimeout : mCslTimeout);
+    return Tlv::Append<CslTimeoutTlv>(*this,
+                                      Get<Mle>().mCslTimeout == 0 ? Get<Mle>().mTimeout : Get<Mle>().mCslTimeout);
 }
 
 void Mle::SetCslTimeout(uint32_t aTimeout)
@@ -1548,7 +1549,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-Error Mle::AppendCslClockAccuracy(Message &aMessage)
+Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
 {
     Error               error = kErrorNone;
     CslClockAccuracyTlv cslClockAccuracy;
@@ -1558,7 +1559,7 @@ Error Mle::AppendCslClockAccuracy(Message &aMessage)
     cslClockAccuracy.SetCslClockAccuracy(Get<Radio>().GetCslAccuracy());
     cslClockAccuracy.SetCslUncertainty(Get<Radio>().GetCslUncertainty());
 
-    SuccessOrExit(error = aMessage.Append(cslClockAccuracy));
+    SuccessOrExit(error = Append(cslClockAccuracy));
 
 exit:
     return error;
@@ -2054,7 +2055,7 @@ void Mle::HandleDelayedResponseTimer(void)
         else
         {
             mDelayedResponses.Dequeue(message);
-            SendDelayedResponse(message, metadata);
+            SendDelayedResponse(static_cast<TxMessage &>(message), metadata);
         }
     }
 
@@ -2064,7 +2065,7 @@ void Mle::HandleDelayedResponseTimer(void)
     }
 }
 
-void Mle::SendDelayedResponse(Message &aMessage, const DelayedResponseMetadata &aMetadata)
+void Mle::SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata)
 {
     Error error = kErrorNone;
 
@@ -2072,11 +2073,11 @@ void Mle::SendDelayedResponse(Message &aMessage, const DelayedResponseMetadata &
 
     if (aMessage.GetSubType() == Message::kSubTypeMleDataRequest)
     {
-        SuccessOrExit(error = AppendActiveTimestamp(aMessage));
-        SuccessOrExit(error = AppendPendingTimestamp(aMessage));
+        SuccessOrExit(error = aMessage.AppendActiveTimestampTlv());
+        SuccessOrExit(error = aMessage.AppendPendingTimestampTlv());
     }
 
-    SuccessOrExit(error = SendMessage(aMessage, aMetadata.mDestination));
+    SuccessOrExit(error = aMessage.SendTo(aMetadata.mDestination));
 
     Log(kMessageSend, kTypeGenericDelayed, aMetadata.mDestination);
 
@@ -2123,7 +2124,7 @@ void Mle::RemoveDelayedMessage(Message::SubType aSubType, MessageType aMessageTy
 void Mle::SendParentRequest(ParentRequestType aType)
 {
     Error        error = kErrorNone;
-    Message *    message;
+    TxMessage *  message;
     uint8_t      scanMask = 0;
     Ip6::Address destination;
 
@@ -2141,16 +2142,16 @@ void Mle::SendParentRequest(ParentRequestType aType)
     }
 
     VerifyOrExit((message = NewMleMessage(kCommandParentRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendMode(*message, mDeviceMode));
-    SuccessOrExit(error = AppendChallenge(*message, mParentRequestChallenge));
-    SuccessOrExit(error = AppendScanMask(*message, scanMask));
-    SuccessOrExit(error = AppendVersion(*message));
+    SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
+    SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
+    SuccessOrExit(error = message->AppendScanMaskTlv(scanMask));
+    SuccessOrExit(error = message->AppendVersionTlv());
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    SuccessOrExit(error = AppendTimeRequest(*message));
+    SuccessOrExit(error = message->AppendTimeRequestTlv());
 #endif
 
     destination.SetToLinkLocalAllRoutersMulticast();
-    SuccessOrExit(error = SendMessage(*message, destination));
+    SuccessOrExit(error = message->SendTo(destination));
 
     switch (aType)
     {
@@ -2181,7 +2182,7 @@ Error Mle::SendChildIdRequest(void)
     Error        error   = kErrorNone;
     uint8_t      tlvs[]  = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
     uint8_t      tlvsLen = sizeof(tlvs);
-    Message *    message = nullptr;
+    TxMessage *  message = nullptr;
     Ip6::Address destination;
 
     if (mParent.GetExtAddress() == mParentCandidate.GetExtAddress())
@@ -2203,29 +2204,29 @@ Error Mle::SendChildIdRequest(void)
     }
 
     VerifyOrExit((message = NewMleMessage(kCommandChildIdRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendResponse(*message, mParentCandidateChallenge));
-    SuccessOrExit(error = AppendLinkFrameCounter(*message));
-    SuccessOrExit(error = AppendMleFrameCounter(*message));
-    SuccessOrExit(error = AppendMode(*message, mDeviceMode));
-    SuccessOrExit(error = AppendTimeout(*message, mTimeout));
-    SuccessOrExit(error = AppendVersion(*message));
+    SuccessOrExit(error = message->AppendResponseTlv(mParentCandidateChallenge));
+    SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
+    SuccessOrExit(error = message->AppendMleFrameCounterTlv());
+    SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
+    SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
+    SuccessOrExit(error = message->AppendVersionTlv());
 
     if (!IsFullThreadDevice())
     {
-        SuccessOrExit(error = AppendAddressRegistration(*message, mAddressRegistrationMode));
+        SuccessOrExit(error = message->AppendAddressRegistrationTlv(mAddressRegistrationMode));
 
         // no need to request the last Route64 TLV for MTD
         tlvsLen -= 1;
     }
 
-    SuccessOrExit(error = AppendTlvRequest(*message, tlvs, tlvsLen));
-    SuccessOrExit(error = AppendActiveTimestamp(*message));
-    SuccessOrExit(error = AppendPendingTimestamp(*message));
+    SuccessOrExit(error = message->AppendTlvRequestTlv(tlvs, tlvsLen));
+    SuccessOrExit(error = message->AppendActiveTimestampTlv());
+    SuccessOrExit(error = message->AppendPendingTimestampTlv());
 
     mParentCandidate.SetState(Neighbor::kStateValid);
 
     destination.SetToLinkLocalAddress(mParentCandidate.GetExtAddress());
-    SuccessOrExit(error = SendMessage(*message, destination));
+    SuccessOrExit(error = message->SendTo(destination));
 
     Log(kMessageSend,
         (mAddressRegistrationMode == kAppendMeshLocalOnly) ? kTypeChildIdRequestShort : kTypeChildIdRequest,
@@ -2249,13 +2250,13 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
                            const uint8_t *     aExtraTlvs,
                            uint8_t             aExtraTlvsLength)
 {
-    Error    error = kErrorNone;
-    Message *message;
+    Error      error = kErrorNone;
+    TxMessage *message;
 
     RemoveDelayedDataRequestMessage(aDestination);
 
     VerifyOrExit((message = NewMleMessage(kCommandDataRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
+    SuccessOrExit(error = message->AppendTlvRequestTlv(aTlvs, aTlvsLength));
 
     if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
     {
@@ -2264,15 +2265,15 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
 
     if (aDelay)
     {
-        SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
+        SuccessOrExit(error = message->SendAfterDelay(aDestination, aDelay));
         Log(kMessageDelay, kTypeDataRequest, aDestination);
     }
     else
     {
-        SuccessOrExit(error = AppendActiveTimestamp(*message));
-        SuccessOrExit(error = AppendPendingTimestamp(*message));
+        SuccessOrExit(error = message->AppendActiveTimestampTlv());
+        SuccessOrExit(error = message->AppendPendingTimestampTlv());
 
-        SuccessOrExit(error = SendMessage(*message, aDestination));
+        SuccessOrExit(error = message->SendTo(aDestination));
         Log(kMessageSend, kTypeDataRequest, aDestination);
 
         if (!IsRxOnWhenIdle())
@@ -2424,7 +2425,7 @@ Error Mle::SendChildUpdateRequest(void)
 {
     Error                   error = kErrorNone;
     Ip6::Address            destination;
-    Message *               message = nullptr;
+    TxMessage *             message = nullptr;
     AddressRegistrationMode mode    = kAppendAllAddresses;
 
     if (!mParent.IsStateValidOrRestoring())
@@ -2438,25 +2439,25 @@ Error Mle::SendChildUpdateRequest(void)
     ScheduleMessageTransmissionTimer();
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendMode(*message, mDeviceMode));
+    SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
 
     switch (mRole)
     {
     case kRoleDetached:
         mParentRequestChallenge.GenerateRandom();
-        SuccessOrExit(error = AppendChallenge(*message, mParentRequestChallenge));
+        SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
         mode = kAppendMeshLocalOnly;
         break;
 
     case kRoleChild:
-        SuccessOrExit(error = AppendSourceAddress(*message));
-        SuccessOrExit(error = AppendLeaderData(*message));
-        SuccessOrExit(error = AppendTimeout(*message, mTimeout));
+        SuccessOrExit(error = message->AppendSourceAddressTlv());
+        SuccessOrExit(error = message->AppendLeaderDataTlv());
+        SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
-            SuccessOrExit(error = AppendCslChannel(*message));
-            SuccessOrExit(error = AppendCslTimeout(*message));
+            SuccessOrExit(error = message->AppendCslChannelTlv());
+            SuccessOrExit(error = message->AppendCslTimeoutTlv());
         }
 #endif
         break;
@@ -2470,11 +2471,11 @@ Error Mle::SendChildUpdateRequest(void)
 
     if (!IsFullThreadDevice())
     {
-        SuccessOrExit(error = AppendAddressRegistration(*message, mode));
+        SuccessOrExit(error = message->AppendAddressRegistrationTlv(mode));
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
-    SuccessOrExit(error = SendMessage(*message, destination));
+    SuccessOrExit(error = message->SendTo(destination));
 
     Log(kMessageSend, kTypeChildUpdateRequestOfParent, destination);
 
@@ -2501,23 +2502,23 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
-    Message *    message;
+    TxMessage *  message;
     bool         checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = AppendSourceAddress(*message));
-    SuccessOrExit(error = AppendLeaderData(*message));
+    SuccessOrExit(error = message->AppendSourceAddressTlv());
+    SuccessOrExit(error = message->AppendLeaderDataTlv());
 
     for (int i = 0; i < aNumTlvs; i++)
     {
         switch (aTlvs[i])
         {
         case Tlv::kTimeout:
-            SuccessOrExit(error = AppendTimeout(*message, mTimeout));
+            SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
             break;
 
         case Tlv::kStatus:
-            SuccessOrExit(error = AppendStatus(*message, StatusTlv::kError));
+            SuccessOrExit(error = message->AppendStatusTlv(StatusTlv::kError));
             break;
 
         case Tlv::kAddressRegistration:
@@ -2528,29 +2529,29 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
                 // addresses to register we follow up with a "Child Update
                 // Request".
 
-                SuccessOrExit(error = AppendAddressRegistration(*message, kAppendMeshLocalOnly));
+                SuccessOrExit(error = message->AppendAddressRegistrationTlv(kAppendMeshLocalOnly));
                 checkAddress = true;
             }
 
             break;
 
         case Tlv::kResponse:
-            SuccessOrExit(error = AppendResponse(*message, aChallenge));
+            SuccessOrExit(error = message->AppendResponseTlv(aChallenge));
             break;
 
         case Tlv::kLinkFrameCounter:
-            SuccessOrExit(error = AppendLinkFrameCounter(*message));
+            SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
             break;
 
         case Tlv::kMleFrameCounter:
-            SuccessOrExit(error = AppendMleFrameCounter(*message));
+            SuccessOrExit(error = message->AppendMleFrameCounterTlv());
             break;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         case Tlv::kCslTimeout:
             if (Get<Mac::Mac>().IsCslEnabled())
             {
-                SuccessOrExit(error = AppendCslTimeout(*message));
+                SuccessOrExit(error = message->AppendCslTimeoutTlv());
             }
             break;
 #endif
@@ -2558,7 +2559,7 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
-    SuccessOrExit(error = SendMessage(*message, destination));
+    SuccessOrExit(error = message->SendTo(destination));
 
     Log(kMessageSend, kTypeChildUpdateResponseOfParent, destination);
 
@@ -2586,7 +2587,7 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     Error              error = kErrorNone;
     ChannelTlv         channel;
     MeshCoP::Timestamp activeTimestamp;
-    Message *          message = nullptr;
+    TxMessage *        message = nullptr;
 
     VerifyOrExit(Get<Mac::Mac>().GetSupportedChannelMask().ContainsChannel(aChannel), error = kErrorInvalidArgs);
     VerifyOrExit((message = NewMleMessage(kCommandAnnounce)) != nullptr, error = kErrorNoBufs);
@@ -2607,13 +2608,13 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
         break;
 
     case kNormalAnnounce:
-        SuccessOrExit(error = AppendActiveTimestamp(*message));
+        SuccessOrExit(error = message->AppendActiveTimestampTlv());
         break;
     }
 
     SuccessOrExit(error = Tlv::Append<PanIdTlv>(*message, Get<Mac::Mac>().GetPanId()));
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    SuccessOrExit(error = message->SendTo(aDestination));
 
     LogInfo("Send Announce on channel %d", aChannel);
 
@@ -2647,10 +2648,10 @@ bool Mle::HasMoreChannelsToAnnouce(void) const
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus)
 {
-    Error    error = kErrorNone;
-    Message *message;
-    Tlv      tlv;
-    ot::Tlv  statusSubTlv;
+    Error      error = kErrorNone;
+    TxMessage *message;
+    Tlv        tlv;
+    ot::Tlv    statusSubTlv;
 
     VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementResponse)) != nullptr, error = kErrorNoBufs);
 
@@ -2663,7 +2664,7 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
     SuccessOrExit(error = message->Append(statusSubTlv));
     SuccessOrExit(error = message->Append(aStatus));
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    SuccessOrExit(error = message->SendTo(aDestination));
 
 exit:
     FreeMessageOnError(message, error);
@@ -2674,9 +2675,9 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength)
 {
-    Error    error = kErrorNone;
-    Message *message;
-    Tlv      tlv;
+    Error      error = kErrorNone;
+    TxMessage *message;
+    Tlv        tlv;
 
     VerifyOrExit((message = NewMleMessage(kCommandLinkProbe)) != nullptr, error = kErrorNoBufs);
 
@@ -2687,7 +2688,7 @@ Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, ui
     SuccessOrExit(error = message->Append(aSeriesId));
     SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    SuccessOrExit(error = message->SendTo(aDestination));
 
 exit:
     FreeMessageOnError(message, error);
@@ -2787,7 +2788,7 @@ exit:
     return error;
 }
 
-Error Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
+Error Mle::TxMessage::SendTo(const Ip6::Address &aDestination)
 {
     Error            error  = kErrorNone;
     uint16_t         offset = 0;
@@ -2795,11 +2796,11 @@ Error Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
     Ip6::MessageInfo messageInfo;
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetSockAddr(mLinkLocal64.GetAddress());
+    messageInfo.SetSockAddr(Get<Mle>().mLinkLocal64.GetAddress());
     messageInfo.SetPeerPort(kUdpPort);
     messageInfo.SetHopLimit(kMleHopLimit);
 
-    IgnoreError(aMessage.Read(offset, securitySuite));
+    IgnoreError(Read(offset, securitySuite));
     offset += sizeof(securitySuite);
 
     if (securitySuite == k154Security)
@@ -2808,24 +2809,25 @@ Error Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 
         // Update the fields in the security header
 
-        IgnoreError(aMessage.Read(offset, header));
+        IgnoreError(Read(offset, header));
         header.SetFrameCounter(Get<KeyManager>().GetMleFrameCounter());
         header.SetKeyId(Get<KeyManager>().GetCurrentKeySequence());
-        aMessage.Write(offset, header);
+        Write(offset, header);
         offset += sizeof(SecurityHeader);
 
-        SuccessOrExit(error = ProcessMessageSecurity(Crypto::AesCcm::kEncrypt, aMessage, messageInfo, offset, header));
+        SuccessOrExit(
+            error = Get<Mle>().ProcessMessageSecurity(Crypto::AesCcm::kEncrypt, *this, messageInfo, offset, header));
 
         Get<KeyManager>().IncrementMleFrameCounter();
     }
 
-    SuccessOrExit(error = mSocket.SendTo(aMessage, messageInfo));
+    SuccessOrExit(error = Get<Mle>().mSocket.SendTo(*this, messageInfo));
 
 exit:
     return error;
 }
 
-Error Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
+Error Mle::TxMessage::SendAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay)
 {
     Error                   error = kErrorNone;
     DelayedResponseMetadata metadata;
@@ -2833,10 +2835,10 @@ Error Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestinatio
     metadata.mSendTime    = TimerMilli::GetNow() + aDelay;
     metadata.mDestination = aDestination;
 
-    SuccessOrExit(error = metadata.AppendTo(aMessage));
-    mDelayedResponses.Enqueue(aMessage);
+    SuccessOrExit(error = metadata.AppendTo(*this));
+    Get<Mle>().mDelayedResponses.Enqueue(*this);
 
-    mDelayedResponseTimer.FireAtIfEarlier(metadata.mSendTime);
+    Get<Mle>().mDelayedResponseTimer.FireAtIfEarlier(metadata.mSendTime);
 
 exit:
     return error;
@@ -3116,7 +3118,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     Log(kMessageReceive, kTypeAdvertisement, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
     if (!IsDetached())
     {
@@ -3245,7 +3247,7 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     Tlv                       tlv;
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
     if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
         (leaderData.GetWeighting() != mLeaderData.GetWeighting()) || (leaderData.GetLeaderRouterId() != GetLeaderId()))
@@ -3518,7 +3520,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = kErrorParse);
 
     // Response
-    SuccessOrExit(error = ReadResponse(aRxInfo.mMessage, response));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadResponseTlv(response));
     VerifyOrExit(response == mParentRequestChallenge, error = kErrorParse);
 
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddress);
@@ -3529,7 +3531,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     }
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
     // Link Margin
     SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginFromTlv));
@@ -3639,7 +3641,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     }
 
     // Link/MLE Frame Counters
-    SuccessOrExit(error = ReadFrameCounters(aRxInfo.mMessage, linkFrameCounter, mleFrameCounter));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadFrameCounterTlvs(linkFrameCounter, mleFrameCounter));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
@@ -3663,7 +3665,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Challenge
-    SuccessOrExit(error = ReadChallenge(aRxInfo.mMessage, mParentCandidateChallenge));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadChallengeTlv(mParentCandidateChallenge));
 
     mParentCandidate.SetExtAddress(extAddress);
     mParentCandidate.SetRloc16(sourceAddress);
@@ -3724,7 +3726,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     VerifyOrExit(RouterIdMatch(sourceAddress, shortAddress), error = kErrorRejected);
 
     // Leader Data
-    SuccessOrExit(error = ReadLeaderData(aRxInfo.mMessage, leaderData));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
     // Network Data
     error = Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset);
@@ -3852,7 +3854,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     Log(kMessageReceive, kTypeChildUpdateRequestOfParent, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
     // Challenge
-    switch (ReadChallenge(aRxInfo.mMessage, challenge))
+    switch (aRxInfo.mMessage.ReadChallengeTlv(challenge))
     {
     case kErrorNone:
         tlvs[numTlvs++] = Tlv::kResponse;
@@ -3906,7 +3908,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     }
 
     // TLV Request
-    switch (FindTlvRequest(aRxInfo.mMessage, requestedTlvs))
+    switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvs))
     {
     case kErrorNone:
         for (uint8_t i = 0; i < requestedTlvs.mNumTlvs; i++)
@@ -3958,7 +3960,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     switch (mRole)
     {
     case kRoleDetached:
-        SuccessOrExit(error = ReadResponse(aRxInfo.mMessage, response));
+        SuccessOrExit(error = aRxInfo.mMessage.ReadResponseTlv(response));
         VerifyOrExit(response == mParentRequestChallenge, error = kErrorSecurity);
         break;
 
@@ -3985,7 +3987,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     switch (mRole)
     {
     case kRoleDetached:
-        SuccessOrExit(error = ReadFrameCounters(aRxInfo.mMessage, linkFrameCounter, mleFrameCounter));
+        SuccessOrExit(error = aRxInfo.mMessage.ReadFrameCounterTlvs(linkFrameCounter, mleFrameCounter));
 
         mParent.GetLinkFrameCounters().SetAll(linkFrameCounter);
         mParent.SetLinkAckFrameCounter(linkFrameCounter);
@@ -4674,9 +4676,9 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength)
 {
-    Error    error = kErrorNone;
-    Message *message;
-    Tlv      tlv;
+    Error      error = kErrorNone;
+    TxMessage *message;
+    Tlv        tlv;
 
     VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementRequest)) != nullptr, error = kErrorNoBufs);
 
@@ -4687,7 +4689,7 @@ Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, co
     SuccessOrExit(error = message->AppendBytes(&tlv, sizeof(tlv)));
     SuccessOrExit(error = message->AppendBytes(aSubTlvs, aLength));
 
-    SuccessOrExit(error = SendMessage(*message, aDestination));
+    SuccessOrExit(error = message->SendTo(aDestination));
 
 exit:
     FreeMessageOnError(message, error);
