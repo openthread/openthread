@@ -401,11 +401,14 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
             continue;
         }
 
-        if (electedOmrPrefix == nullptr || onMeshPrefixConfig.mPreference > electedOmrPrefixPreference ||
-            (onMeshPrefixConfig.mPreference == electedOmrPrefixPreference && prefix < *electedOmrPrefix))
+        if (onMeshPrefixConfig.mPreferred)
         {
-            electedOmrPrefix           = aNewOmrPrefixes.Back();
-            electedOmrPrefixPreference = onMeshPrefixConfig.mPreference;
+            if (electedOmrPrefix == nullptr || onMeshPrefixConfig.mPreference > electedOmrPrefixPreference ||
+                (onMeshPrefixConfig.mPreference == electedOmrPrefixPreference && prefix < *electedOmrPrefix))
+            {
+                electedOmrPrefix           = aNewOmrPrefixes.Back();
+                electedOmrPrefixPreference = onMeshPrefixConfig.mPreference;
+            }
         }
 
         if (prefix == mLocalOmrPrefix)
@@ -416,9 +419,9 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
 
     // Decide if we need to add or remove our local OMR prefix.
 
-    if (aNewOmrPrefixes.IsEmpty())
+    if (electedOmrPrefix == nullptr)
     {
-        LogInfo("EvaluateOmrPrefix: No valid OMR prefixes found in Thread network");
+        LogInfo("EvaluateOmrPrefix: No preferred OMR prefixes found in Thread network");
 
         if (PublishLocalOmrPrefix() == kErrorNone)
         {
@@ -430,8 +433,6 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
     }
     else
     {
-        OT_ASSERT(electedOmrPrefix != nullptr);
-
         if (*electedOmrPrefix == mLocalOmrPrefix)
         {
             IgnoreError(PublishLocalOmrPrefix());
