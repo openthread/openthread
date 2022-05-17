@@ -28,6 +28,7 @@
 #
 import logging
 import unittest
+from ipaddress import IPv6Network
 
 import config
 import thread_cert
@@ -325,6 +326,25 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_GUA)[0]))
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
+
+        #
+        # Case 7. Test if Border Router changes on-link prefix when
+        #         Extended PAN ID changes.
+        #
+
+        prefixA = br.get_br_on_link_prefix()
+
+        router.commissioner_start()
+        self.simulator.go(5)
+
+        router.send_mgmt_active_set(
+            active_timestamp=100,
+            extended_panid='0001020304050607',
+        )
+        self.simulator.go(10)
+
+        prefixB = br.get_br_on_link_prefix()
+        self.assertNotEqual(IPv6Network(prefixA), IPv6Network(prefixB))
 
 
 if __name__ == '__main__':

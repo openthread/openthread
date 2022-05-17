@@ -67,6 +67,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
             'version': '1.2',
             'channel': CHANNEL1,
             'router_selection_jitter': 1,
+            'extended_panid': '0001020304050607'
         },
         ROUTER1: {
             'name': 'Router_1',
@@ -74,6 +75,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
             'version': '1.2',
             'channel': CHANNEL1,
             'router_selection_jitter': 1,
+            'extended_panid': '0001020304050607'
         },
         BR2: {
             'name': 'BR_2',
@@ -82,6 +84,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
             'version': '1.2',
             'channel': CHANNEL2,
             'router_selection_jitter': 1,
+            'extended_panid': '08090a0b0c0d0e0f'
         },
         ROUTER2: {
             'name': 'Router_2',
@@ -89,6 +92,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
             'version': '1.2',
             'channel': CHANNEL2,
             'router_selection_jitter': 1,
+            'extended_panid': '08090a0b0c0d0e0f'
         },
         HOST: {
             'name': 'Host',

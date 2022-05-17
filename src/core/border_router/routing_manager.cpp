@@ -47,6 +47,7 @@
 #include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
+#include "meshcop/extended_panid.hpp"
 #include "net/ip6.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
@@ -101,7 +102,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     GenerateNat64Prefix();
 #endif
-    SuccessOrExit(error = LoadOrGenerateRandomOnLinkPrefix());
+    GenerateOnLinkPrefix();
 
     mInfraIfIndex = aInfraIfIndex;
 
@@ -222,37 +223,18 @@ void RoutingManager::GenerateNat64Prefix(void)
 }
 #endif
 
-Error RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
+void RoutingManager::GenerateOnLinkPrefix(void)
 {
-    Error error     = kErrorNone;
-    bool  generated = false;
+    MeshCoP::ExtendedPanId extPanId = Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
 
-    if (Get<Settings>().Read<Settings::OnLinkPrefix>(mLocalOnLinkPrefix) != kErrorNone ||
-        !mLocalOnLinkPrefix.IsUniqueLocal())
-    {
-        Ip6::NetworkPrefix randomOnLinkPrefix;
+    mLocalOnLinkPrefix.mPrefix.mFields.m8[0] = 0xfd;
+    // Global ID: 40 most significant bits of Extended PAN ID
+    memcpy(mLocalOnLinkPrefix.mPrefix.mFields.m8 + 1, extPanId.m8, 5);
+    // Subnet ID: 16 least significant bits of Extended PAN ID
+    memcpy(mLocalOnLinkPrefix.mPrefix.mFields.m8 + 6, extPanId.m8 + 6, 2);
+    mLocalOnLinkPrefix.SetLength(kOnLinkPrefixLength);
 
-        error = randomOnLinkPrefix.GenerateRandomUla();
-        if (error != kErrorNone)
-        {
-            LogCrit("Failed to generate random on-link prefix");
-            ExitNow();
-        }
-
-        mLocalOnLinkPrefix.Set(randomOnLinkPrefix);
-        mLocalOnLinkPrefix.SetSubnetId(0);
-
-        IgnoreError(Get<Settings>().Save<Settings::OnLinkPrefix>(mLocalOnLinkPrefix));
-        generated = true;
-    }
-
-    OT_UNUSED_VARIABLE(generated);
-
-    LogNote("Local on-link prefix: %s (%s)", mLocalOnLinkPrefix.ToString().AsCString(),
-            generated ? "generated" : "loaded");
-
-exit:
-    return error;
+    LogNote("Local on-link prefix: %s", mLocalOnLinkPrefix.ToString().AsCString());
 }
 
 void RoutingManager::EvaluateState(void)
@@ -395,6 +377,24 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
         // Invalidate discovered prefixes because OMR Prefixes in Network Data may change.
         InvalidateDiscoveredPrefixes();
         StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+    }
+
+    if (aEvents.Contains(kEventThreadExtPanIdChanged))
+    {
+        if (mIsAdvertisingLocalOnLinkPrefix)
+        {
+            RemoveExternalRoute(mLocalOnLinkPrefix);
+            // TODO: consider deprecating/invalidating existing
+            // on-link prefix
+            mIsAdvertisingLocalOnLinkPrefix = false;
+        }
+
+        GenerateOnLinkPrefix();
+
+        if (mIsRunning)
+        {
+            StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+        }
     }
 
 exit:
