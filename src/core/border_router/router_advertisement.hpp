@@ -60,6 +60,8 @@ namespace ot {
 namespace BorderRouter {
 namespace RouterAdv {
 
+typedef NetworkData::RoutePreference RoutePreference; ///< Route Preference
+
 /**
  * This class represents the variable length options in Neighbor Discovery messages.
  *
@@ -324,8 +326,6 @@ public:
     static constexpr uint16_t kMinSize = kLengthUnit;      ///< Minimum size (in bytes) of a Route Info Option
     static constexpr Type     kType    = Type::kRouteInfo; ///< Route Information Option Type.
 
-    typedef NetworkData::RoutePreference RoutePreference; ///< Route Preference
-
     /**
      * This method initializes the option setting the type and clearing (setting to zero) all other fields.
      *
@@ -447,14 +447,13 @@ private:
 static_assert(sizeof(RouteInfoOption) == 8, "invalid RouteInfoOption structure");
 
 /**
- * This class implements the Router Advertisement message.
+ * This class implements the Router Advertisement message header.
  *
- * See section 4.2 of RFC 4861 for definition of this message.
- * https://tools.ietf.org/html/rfc4861#section-4.2
+ * See section 2.2 of RFC 4191 [https://datatracker.ietf.org/doc/html/rfc4191]
  *
  */
 OT_TOOL_PACKED_BEGIN
-class RouterAdvMessage : public Unequatable<RouterAdvMessage>
+class RouterAdvMessage : public Equatable<RouterAdvMessage>, private Clearable<RouterAdvMessage>
 {
 public:
     /**
@@ -476,70 +475,70 @@ public:
      * @param[in]  aChecksum  The checksum value.
      *
      */
-    void SetChecksum(uint16_t aChecksum) { mHeader.SetChecksum(aChecksum); }
+    void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
 
     /**
      * This method sets the Router Lifetime in seconds.
      *
-     * Zero Router Lifetime means we are not a default router.
-     *
      * @param[in]  aRouterLifetime  The router lifetime in seconds.
      *
      */
-    void SetRouterLifetime(uint16_t aRouterLifetime)
-    {
-        mHeader.mData.m16[kRouteLifetimeIdx] = HostSwap16(aRouterLifetime);
-    }
+    void SetRouterLifetime(uint16_t aRouterLifetime) { mRouterLifetime = HostSwap16(aRouterLifetime); }
 
     /**
-     * This method returns the Router Lifetime.
+     * This method gets the Router Lifetime (in seconds).
      *
-     * Zero Router Lifetime means we are not a default router.
+     * Router Lifetime set to zero indicates that the sender is not a default router.
      *
      * @returns  The router lifetime in seconds.
      *
      */
-    uint16_t GetRouterLifetime(void) const { return HostSwap16(mHeader.mData.m16[kRouteLifetimeIdx]); }
+    uint16_t GetRouterLifetime(void) const { return HostSwap16(mRouterLifetime); }
 
     /**
-     * This method returns the Managed Address Configuration ('m') flag.
+     * This method sets the default router preference.
      *
-     * @returns  A boolean which indicates whether the 'm' flag is set.
+     * @param[in]  aPreference  The router preference.
      *
      */
-    bool GetManagedAddrConfig(void) const { return (mHeader.mData.m8[kReservedIdx] & kManagedAddressConfigMask) != 0; }
+    void SetDefaultRouterPreference(RoutePreference aPreference);
 
     /**
-     * This method overloads the assignment operator.
+     * This method gets the default router preference.
+     *
+     * @returns  The router preference.
      *
      */
-    const RouterAdvMessage &operator=(const RouterAdvMessage &aOther);
-
-    /**
-     * This method overloads operator `==` to evaluate whether or not
-     * two instances of `RouterAdvMessage` are equal.
-     *
-     * @param[in]  aOther  The other `RouterAdvMessage` instance to compare with.
-     *
-     * @retval TRUE   If the two `RouterAdvMessage` instances are equal.
-     * @retval FALSE  If the two `RouterAdvMessage` instances are not equal.
-     *
-     */
-    bool operator==(const RouterAdvMessage &aOther) const;
+    RoutePreference GetDefaultRouterPreference(void) const;
 
 private:
-    // The index of Route Lifetime in ICMPv6 Header Data. In unit of 2 octets.
-    static constexpr uint8_t kRouteLifetimeIdx = 1;
+    // Router Advertisement Message
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |     Code      |          Checksum             |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  | Cur Hop Limit |M|O|H|Prf|Resvd|       Router Lifetime         |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                         Reachable Time                        |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                          Retrans Timer                        |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |   Options ...
+    //  +-+-+-+-+-+-+-+-+-+-+-+-
 
-    // The index of Reserved byte in ICMPv6 Header Data. In unit of 1 octet.
-    static constexpr uint8_t kReservedIdx = 1;
+    static constexpr uint8_t kPreferenceOffset = 3;
+    static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
 
-    // The bitmask of the Managed Address Configuration ('m') flag.
-    static constexpr uint8_t kManagedAddressConfigMask = 0x80;
-
-    Ip6::Icmp::Header mHeader;        // The common ICMPv6 header.
-    uint32_t          mReachableTime; // The reachable time. In milliseconds.
-    uint32_t          mRetransTimer;  // The retransmission timer. In milliseconds.
+    uint8_t  mType;
+    uint8_t  mCode;
+    uint16_t mChecksum;
+    uint8_t  mCurHopLimit;
+    uint8_t  mFlags;
+    uint16_t mRouterLifetime;
+    uint32_t mReachableTime;
+    uint32_t mRetransTimer;
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouterAdvMessage) == 16, "invalid RouterAdvMessage structure");
