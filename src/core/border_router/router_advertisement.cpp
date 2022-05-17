@@ -40,9 +40,7 @@
 #include "common/code_utils.hpp"
 
 namespace ot {
-
 namespace BorderRouter {
-
 namespace RouterAdv {
 
 const Option *Option::GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength)
@@ -70,41 +68,16 @@ exit:
     return reinterpret_cast<const Option *>(nextOption);
 }
 
-PrefixInfoOption::PrefixInfoOption(void)
-    : Option(Type::kPrefixInfo, sizeof(*this) / kLengthUnit)
-    , mPrefixLength(0)
-    , mReserved1(0)
-    , mValidLifetime(0)
-    , mPreferredLifetime(0)
-    , mReserved2(0)
+//----------------------------------------------------------------------------------------------------------------------
+// PrefixInfoOption
+
+void PrefixInfoOption::Init(void)
 {
+    Clear();
+    SetType(Type::kPrefixInfo);
+    SetSize(sizeof(PrefixInfoOption));
+
     OT_UNUSED_VARIABLE(mReserved2);
-
-    mPrefix.Clear();
-}
-
-void PrefixInfoOption::SetOnLink(bool aOnLink)
-{
-    if (aOnLink)
-    {
-        mReserved1 |= kOnLinkFlagMask;
-    }
-    else
-    {
-        mReserved1 &= ~kOnLinkFlagMask;
-    }
-}
-
-void PrefixInfoOption::SetAutoAddrConfig(bool aAutoAddrConfig)
-{
-    if (aAutoAddrConfig)
-    {
-        mReserved1 |= kAutoConfigFlagMask;
-    }
-    else
-    {
-        mReserved1 &= ~kAutoConfigFlagMask;
-    }
 }
 
 void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
@@ -113,61 +86,88 @@ void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
     mPrefix       = AsCoreType(&aPrefix.mPrefix);
 }
 
-Ip6::Prefix PrefixInfoOption::GetPrefix(void) const
+void PrefixInfoOption::GetPrefix(Ip6::Prefix &aPrefix) const
 {
-    Ip6::Prefix prefix;
-
-    prefix.Set(mPrefix.GetBytes(), mPrefixLength);
-    return prefix;
+    aPrefix.Set(mPrefix.GetBytes(), mPrefixLength);
 }
 
-RouteInfoOption::RouteInfoOption(void)
-    : Option(Type::kRouteInfo, 0)
-    , mPrefixLength(0)
-    , mReserved(0)
-    , mRouteLifetime(0)
+bool PrefixInfoOption::IsValid(void) const
 {
-    OT_UNUSED_VARIABLE(mReserved);
+    return (GetSize() >= sizeof(*this)) && (mPrefixLength <= Ip6::Prefix::kMaxLength) &&
+           (GetPreferredLifetime() <= GetValidLifetime());
+}
 
-    mPrefix.Clear();
+//----------------------------------------------------------------------------------------------------------------------
+// RouteInfoOption
+
+void RouteInfoOption::Init(void)
+{
+    Clear();
+    SetType(Type::kRouteInfo);
 }
 
 void RouteInfoOption::SetPreference(RoutePreference aPreference)
 {
-    mReserved &= ~kPreferenceMask;
-    mReserved |= (NetworkData::RoutePreferenceToValue(aPreference) << kPreferenceOffset) & kPreferenceMask;
+    mResvdPrf &= ~kPreferenceMask;
+    mResvdPrf |= (NetworkData::RoutePreferenceToValue(aPreference) << kPreferenceOffset) & kPreferenceMask;
 }
 
 RouteInfoOption::RoutePreference RouteInfoOption::GetPreference(void) const
 {
-    return NetworkData::RoutePreferenceFromValue((mReserved & kPreferenceMask) >> kPreferenceOffset);
+    return NetworkData::RoutePreferenceFromValue((mResvdPrf & kPreferenceMask) >> kPreferenceOffset);
 }
 
 void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
 {
-    // The total length (in bytes) of a Router Information Option
-    // is: (8 bytes fixed option header) + (0, 8, or 16 bytes prefix).
-    // Because the length of the option must be padded with 8 bytes,
-    // the length of the prefix (in bits) must be padded with 64 bits.
-    SetLength((aPrefix.mLength + kLengthUnit * CHAR_BIT - 1) / (kLengthUnit * CHAR_BIT) + 1);
-
+    SetLength(OptionLengthForPrefix(aPrefix.mLength));
     mPrefixLength = aPrefix.mLength;
-    mPrefix       = AsCoreType(&aPrefix.mPrefix);
+    memcpy(GetPrefixBytes(), aPrefix.GetBytes(), aPrefix.GetBytesSize());
 }
 
-Ip6::Prefix RouteInfoOption::GetPrefix(void) const
+void RouteInfoOption::GetPrefix(Ip6::Prefix &aPrefix) const
 {
-    Ip6::Prefix prefix;
-
-    prefix.Set(mPrefix.GetBytes(), mPrefixLength);
-    return prefix;
+    aPrefix.Set(GetPrefixBytes(), mPrefixLength);
 }
 
 bool RouteInfoOption::IsValid(void) const
 {
-    return (GetLength() == 1 || GetLength() == 2 || GetLength() == 3) &&
-           (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT) && NetworkData::IsRoutePreferenceValid(GetPreference());
+    return (GetSize() >= kMinSize) && (mPrefixLength <= Ip6::Prefix::kMaxLength) &&
+           (GetLength() >= OptionLengthForPrefix(mPrefixLength)) &&
+           NetworkData::IsRoutePreferenceValid(GetPreference());
 }
+
+uint8_t RouteInfoOption::OptionLengthForPrefix(uint8_t aPrefixLength)
+{
+    static constexpr uint8_t kMaxPrefixLenForOptionLen1 = 0;
+    static constexpr uint8_t kMaxPrefixLenForOptionLen2 = 64;
+
+    uint8_t length;
+
+    // The Option Length can be 1, 2, or 3 depending on the prefix
+    // length
+    //
+    // - 1 when prefix len is zero.
+    // - 2 when prefix len is less then or equal to 64.
+    // - 3 otherwise.
+
+    if (aPrefixLength == kMaxPrefixLenForOptionLen1)
+    {
+        length = 1;
+    }
+    else if (aPrefixLength <= kMaxPrefixLenForOptionLen2)
+    {
+        length = 2;
+    }
+    else
+    {
+        length = 3;
+    }
+
+    return length;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// RouterAdvMessage
 
 void RouterAdvMessage::SetToDefault(void)
 {
@@ -196,6 +196,9 @@ bool RouterAdvMessage::operator==(const RouterAdvMessage &aOther) const
            mReachableTime == aOther.mReachableTime && mRetransTimer == aOther.mRetransTimer;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+// RouterAdvMessage
+
 RouterSolicitMessage::RouterSolicitMessage(void)
 {
     mHeader.Clear();
@@ -203,9 +206,7 @@ RouterSolicitMessage::RouterSolicitMessage(void)
 }
 
 } // namespace RouterAdv
-
 } // namespace BorderRouter
-
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

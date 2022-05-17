@@ -68,6 +68,14 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+ *
+ * Define to 1 to enable Border Routing support.
+ *
+ */
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
  *
  * Define to 1 to enable Commissioner support.
