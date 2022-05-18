@@ -565,7 +565,7 @@ Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePref
         LogWarn("Failed to publish external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
     }
 
-    return error;
+    return (error == kErrorAlready) ? kErrorNone : error;
 }
 
 void RoutingManager::UnpublishExternalRoute(const Ip6::Prefix &aPrefix)
