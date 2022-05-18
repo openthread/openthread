@@ -1309,43 +1309,29 @@ exit:
 
 bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromHost) const
 {
-    OT_UNUSED_VARIABLE(aFromHost);
+    bool shouldForward = false;
 
-    bool rval = false;
-
-    if (aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMessageInfo.GetSockAddr().IsMulticast() || aMessageInfo.GetSockAddr().IsLinkLocal())
     {
-        // multicast
-        ExitNow(rval = true);
-    }
-    else if (aMessageInfo.GetSockAddr().IsLinkLocal())
-    {
-        // on-link link-local address
-        ExitNow(rval = true);
+        shouldForward = true;
     }
     else if (IsOnLink(aMessageInfo.GetSockAddr()))
     {
-        // on-link global address
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        ExitNow(rval = (aFromHost ||
-                        !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aMessageInfo.GetSockAddr())));
+        shouldForward =
+            (aFromHost || !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aMessageInfo.GetSockAddr()));
 #else
-        ExitNow(rval = true);
+        OT_UNUSED_VARIABLE(aFromHost);
+        shouldForward = true;
 #endif
     }
     else if (Get<ThreadNetif>().RouteLookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), nullptr) ==
              kErrorNone)
     {
-        // route
-        ExitNow(rval = true);
-    }
-    else
-    {
-        ExitNow(rval = false);
+        shouldForward = true;
     }
 
-exit:
-    return rval;
+    return shouldForward;
 }
 
 const Netif::UnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
