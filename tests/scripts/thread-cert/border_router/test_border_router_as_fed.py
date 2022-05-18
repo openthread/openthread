@@ -87,7 +87,7 @@ class TestBorderRouterAsFed(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('child', br.get_state())
 
-        self.simulator.go(10)
+        self.simulator.go(20)
         self.assertEqual('child', br.get_state())
 
         # Leader can ping to/from the Host on infra link.
