@@ -65,6 +65,7 @@ Server::Server(Instance &aInstance)
     , mQueryUnsubscribe(nullptr)
     , mTimer(aInstance, Server::HandleTimer)
 {
+    mCounters.Clear();
 }
 
 Error Server::Start(void)
@@ -173,11 +174,19 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
 #endif
 
     // Resolve the question using query callbacks if SRP server failed to resolve the questions.
-    if (responseHeader.GetAnswerCount() == 0 &&
-        kErrorNone == ResolveByQueryCallbacks(responseHeader, *responseMessage, compressInfo, aMessageInfo))
+    if (responseHeader.GetAnswerCount() == 0)
     {
-        resolveByQueryCallbacks = true;
+        if (kErrorNone == ResolveByQueryCallbacks(responseHeader, *responseMessage, compressInfo, aMessageInfo))
+        {
+            resolveByQueryCallbacks = true;
+        }
     }
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    else
+    {
+        ++mCounters.mResolvedBySrp;
+    }
+#endif
 
 exit:
     if (error == kErrorNone && !resolveByQueryCallbacks)
@@ -220,6 +229,8 @@ void Server::SendResponse(Header                  aHeader,
     {
         LogInfo("send DNS-SD reply: %s, RCODE=%d", ErrorToString(error), aResponseCode);
     }
+
+    UpdateResponseCounters(aResponseCode);
 }
 
 Header::Response Server::AddQuestions(const Header &    aRequestHeader,
@@ -842,7 +853,7 @@ Server::QueryTransaction *Server::NewQuery(const Header &          aResponseHead
             continue;
         }
 
-        query.Init(aResponseHeader, aResponseMessage, aCompressInfo, aMessageInfo);
+        query.Init(aResponseHeader, aResponseMessage, aCompressInfo, aMessageInfo, GetInstance());
         ExitNow(newQuery = &query);
     }
 
@@ -1194,10 +1205,12 @@ void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseC
 void Server::QueryTransaction::Init(const Header &          aResponseHeader,
                                     Message &               aResponseMessage,
                                     const NameCompressInfo &aCompressInfo,
-                                    const Ip6::MessageInfo &aMessageInfo)
+                                    const Ip6::MessageInfo &aMessageInfo,
+                                    Instance &              aInstance)
 {
     OT_ASSERT(mResponseMessage == nullptr);
 
+    InstanceLocatorInit::Init(aInstance);
     mResponseHeader  = aResponseHeader;
     mResponseMessage = &aResponseMessage;
     mCompressInfo    = aCompressInfo;
@@ -1209,8 +1222,33 @@ void Server::QueryTransaction::Finalize(Header::Response aResponseMessage, Ip6::
 {
     OT_ASSERT(mResponseMessage != nullptr);
 
-    SendResponse(mResponseHeader, aResponseMessage, *mResponseMessage, mMessageInfo, aSocket);
+    Get<Server>().SendResponse(mResponseHeader, aResponseMessage, *mResponseMessage, mMessageInfo, aSocket);
     mResponseMessage = nullptr;
+}
+
+void Server::UpdateResponseCounters(Header::Response aResponseCode)
+{
+    switch (aResponseCode)
+    {
+    case UpdateHeader::kResponseSuccess:
+        ++mCounters.mSuccessResponse;
+        break;
+    case UpdateHeader::kResponseServerFailure:
+        ++mCounters.mServerFailureResponse;
+        break;
+    case UpdateHeader::kResponseFormatError:
+        ++mCounters.mFormatErrorResponse;
+        break;
+    case UpdateHeader::kResponseNameError:
+        ++mCounters.mNameErrorResponse;
+        break;
+    case UpdateHeader::kResponseNotImplemented:
+        ++mCounters.mNotImplementedResponse;
+        break;
+    default:
+        ++mCounters.mOtherResponse;
+        break;
+    }
 }
 
 } // namespace ServiceDiscovery
