@@ -1192,20 +1192,32 @@ void Server::HandleUpdate(Host &aHost, const MessageMetadata &aMetadata)
     }
 
 exit:
-    if ((error == kErrorNone) && (mServiceUpdateHandler != nullptr))
+    InformUpdateHandlerOrCommit(error, aHost, aMetadata);
+}
+
+void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const MessageMetadata &aMetadata)
+{
+    if ((aError == kErrorNone) && (mServiceUpdateHandler != nullptr))
     {
         UpdateMetadata *update = UpdateMetadata::Allocate(GetInstance(), aHost, aMetadata);
 
-        mOutstandingUpdates.Push(*update);
-        mOutstandingUpdatesTimer.FireAtIfEarlier(update->GetExpireTime());
+        if (update != nullptr)
+        {
+            mOutstandingUpdates.Push(*update);
+            mOutstandingUpdatesTimer.FireAtIfEarlier(update->GetExpireTime());
 
-        LogInfo("SRP update handler is notified (updatedId = %u)", update->GetId());
-        mServiceUpdateHandler(update->GetId(), &aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+            LogInfo("SRP update handler is notified (updatedId = %u)", update->GetId());
+            mServiceUpdateHandler(update->GetId(), &aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+            ExitNow();
+        }
+
+        aError = kErrorNoBufs;
     }
-    else
-    {
-        CommitSrpUpdate(error, aHost, aMetadata);
-    }
+
+    CommitSrpUpdate(aError, aHost, aMetadata);
+
+exit:
+    return;
 }
 
 void Server::SendResponse(const Dns::UpdateHeader &   aHeader,
