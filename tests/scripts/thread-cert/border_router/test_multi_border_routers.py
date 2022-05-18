@@ -191,13 +191,12 @@ class MultiBorderRouters(thread_cert.TestCase):
         br2_omr_prefix = br2.get_br_omr_prefix()
         self.assertEqual(br2_omr_prefix, br2.get_netdata_omr_prefixes()[0])
 
-        # There should be no changes to the external route for the
-        # on-link prefix, given that the on-link prefix is derived
-        # from the Extended PAN ID.
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 1)
+        # Only BR2 will keep the route for BR1's on-link prefix
+        # and add route for on-link prefix of its own.
+        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 2)
 
         br2_on_link_prefix = br2.get_br_on_link_prefix()
         self.assertEqual(set(map(IPv6Network, br2.get_netdata_non_nat64_prefixes())),

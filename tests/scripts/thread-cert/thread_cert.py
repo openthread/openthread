@@ -183,8 +183,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
-            if 'extended_panid' in params:
-                self.nodes[i].set_extpanid(params['extended_panid'])
             if 'partition_id' in params:
                 self.nodes[i].set_preferred_partition_id(params['partition_id'])
             if 'channel' in params:

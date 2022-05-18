@@ -317,7 +317,7 @@ private:
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
     void  GenerateOmrPrefix(void);
-    void  GenerateOnLinkPrefix(void);
+    Error LoadOrGenerateRandomOnLinkPrefix(void);
 
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
