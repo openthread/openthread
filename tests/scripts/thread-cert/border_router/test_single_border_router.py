@@ -85,7 +85,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         br.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
 
         router.start()
@@ -216,7 +216,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         br.enable_br()
 
         # It takes around 10 seconds to start sending RA messages.
-        self.simulator.go(15)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.collect_ipaddrs()
 
         logging.info("BR     addrs: %r", br.get_addrs())

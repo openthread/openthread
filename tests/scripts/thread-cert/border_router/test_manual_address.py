@@ -71,7 +71,7 @@ class ManualAddressConfig(thread_cert.TestCase):
         router = self.nodes[ROUTER]
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 

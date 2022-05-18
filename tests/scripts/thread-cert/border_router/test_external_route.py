@@ -93,11 +93,11 @@ class ExternalRoutes(thread_cert.TestCase):
         host = self.nodes[HOST]
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
 
         br2.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
         router1.start()
