@@ -316,6 +316,34 @@ void otSrpClientDisableAutoStartMode(otInstance *aInstance);
 bool otSrpClientIsAutoStartModeEnabled(otInstance *aInstance);
 
 /**
+ * This function gets the TTL value in every record included in SRP update requests.
+ *
+ * Note that this is the TTL requested by the SRP client. The server may choose to accept a different TTL.
+ *
+ * By default, the TTL will equal the lease interval. Passing 0 or a value larger than the lease interval via
+ * `otSrpClientSetTtl()` will also cause the TTL to equal the lease interval.
+ *
+ * @param[in] aInstance  A pointer to the OpenThread instance.
+ *
+ * @returns The TTL (in seconds).
+ *
+ */
+uint32_t otSrpClientGetTtl(otInstance *aInstance);
+
+/**
+ * This function sets the TTL value in every record included in SRP update requests.
+ *
+ * Changing the TTL does not impact the TTL of already registered services/host-info.
+ * It only affects future SRP update messages (i.e., adding new services and/or refreshes of the existing services).
+ *
+ * @param[in] aInstance   A pointer to the OpenThread instance.
+ * @param[in] aTtl        The TTL (in seconds). If value is zero or greater than lease interval, the TTL is set to the
+ *                        lease interval.
+ *
+ */
+void otSrpClientSetTtl(otInstance *aInstance, uint32_t aTtl);
+
+/**
  * This function gets the lease interval used in SRP update requests.
  *
  * Note that this is the lease duration requested by the SRP client. The server may choose to accept a different lease

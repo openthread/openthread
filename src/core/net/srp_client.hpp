@@ -411,6 +411,31 @@ public:
     void SetCallback(Callback aCallback, void *aContext);
 
     /**
+     * This method gets the TTL used in SRP update requests.
+     *
+     * Note that this is the TTL requested by the SRP client. The server may choose to accept a different TTL.
+     *
+     * By default, the TTL will equal the lease interval. Passing 0 or a value larger than the lease interval via
+     * `otSrpClientSetTtl()` will also cause the TTL to equal the lease interval.
+     *
+     * @returns The TTL (in seconds).
+     *
+     */
+    uint32_t GetTtl(void) const { return (0 < mTtl && mTtl < mLeaseInterval) ? mTtl : mLeaseInterval; }
+
+    /**
+     * This method sets the TTL used in SRP update requests.
+     *
+     * Changing the TTL does not impact the TTL of already registered services/host-info.
+     * It only changes any future SRP update messages (i.e adding new services and/or refreshes of existing services).
+     *
+     * @param[in] aTtl  The TTL (in seconds). If value is zero or greater than lease interval, the TTL is set to the
+     *                  lease interval.
+     *
+     */
+    void SetTtl(uint32_t aTtl) { mTtl = aTtl; }
+
+    /**
      * This method gets the lease interval used in SRP update requests.
      *
      * Note that this is lease duration that would be requested by the SRP client. Server may choose to accept a
@@ -922,6 +947,7 @@ private:
 
     TimeMilli mLeaseRenewTime;
     uint32_t  mAcceptedLeaseInterval;
+    uint32_t  mTtl;
     uint32_t  mLeaseInterval;
     uint32_t  mKeyLeaseInterval;
 

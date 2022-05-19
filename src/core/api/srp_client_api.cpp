@@ -84,6 +84,16 @@ bool otSrpClientIsAutoStartModeEnabled(otInstance *aInstance)
 }
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
+uint32_t otSrpClientGetTtl(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Client>().GetTtl();
+}
+
+void otSrpClientSetTtl(otInstance *aInstance, uint32_t aTtl)
+{
+    return AsCoreType(aInstance).Get<Srp::Client>().SetTtl(aTtl);
+}
+
 uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Srp::Client>().GetLeaseInterval();
