@@ -34,7 +34,7 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies Vicarious Router Solicitation.
+#   This test verifies on-link prefix configuration.
 #
 # Topology:
 #    -------------(eth)----------------------------
