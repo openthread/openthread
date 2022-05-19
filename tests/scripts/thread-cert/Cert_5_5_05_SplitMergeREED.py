@@ -176,10 +176,10 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
         router1_pkts.range(_start_idx).must_next()
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
 
-        # filter MLE_ADVERTISEMENT with 15 routing table entry:
-        # 1 byte ID Sequence + 8 bytes ID Mask + 15 bytes Routing Table Entry =
-        # 24 (Router64 tlv length)
-        pkts.range(_start_idx).filter_mle_cmd(MLE_ADVERTISEMENT).filter(lambda p: 24 in p.mle.tlv.len).must_next()
+        # filter MLE_ADVERTISEMENT with 16 routing table entry:
+        # 1 byte ID Sequence + 8 bytes ID Mask + 16 bytes Routing Table Entry =
+        # 25 (Router64 tlv length)
+        pkts.range(_start_idx).filter_mle_cmd(MLE_ADVERTISEMENT).filter(lambda p: 25 in p.mle.tlv.len).must_next()
         _end_idx = pkts.index
 
         # Step 2: The DUT MUST NOT attempt to become an active router by sending an Address Solicit Request
