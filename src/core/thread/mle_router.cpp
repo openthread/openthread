@@ -4493,7 +4493,6 @@ Error MleRouter::DetachGracefully(otDetachGracefullyCallback aCallback, void *aC
         ExitNow(error = Mle::DetachGracefully(aCallback, aContext));
     }
 
-    OT_ASSERT(IsDisabled() || IsDetached() || IsRouter() || IsLeader());
 
     VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
 
