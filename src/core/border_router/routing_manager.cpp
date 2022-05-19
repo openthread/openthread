@@ -279,10 +279,9 @@ void RoutingManager::Stop(void)
     }
 #endif
     // Use empty OMR & on-link prefixes to invalidate possible advertised prefixes.
-    SendRouterAdvertisement(OmrPrefixArray(), nullptr);
+    SendRouterAdvertisement(OmrPrefixArray());
 
     mAdvertisedOmrPrefixes.Clear();
-    mIsAdvertisingLocalOnLinkPrefix = false;
     mOnLinkPrefixDeprecateTimer.Stop();
 
     InvalidateAllDiscoveredPrefixes();
@@ -555,14 +554,12 @@ exit:
     return;
 }
 
-const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
+void RoutingManager::EvaluateOnLinkPrefix(void)
 {
-    const Ip6::Prefix *newOnLinkPrefix      = nullptr;
     const Ip6::Prefix *smallestOnLinkPrefix = nullptr;
 
     // We don't evaluate on-link prefix if we are doing Router Solicitation.
-    VerifyOrExit(!IsRouterSolicitationInProgress(),
-                 newOnLinkPrefix = (mIsAdvertisingLocalOnLinkPrefix ? &mLocalOnLinkPrefix : nullptr));
+    VerifyOrExit(!IsRouterSolicitationInProgress());
 
     for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
     {
@@ -580,10 +577,18 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     // We start advertising our local on-link prefix if there is no existing one.
     if (smallestOnLinkPrefix == nullptr)
     {
-        if (mIsAdvertisingLocalOnLinkPrefix ||
+        if (!mIsAdvertisingLocalOnLinkPrefix &&
             (PublishExternalRoute(mLocalOnLinkPrefix, NetworkData::kRoutePreferenceMedium) == kErrorNone))
         {
-            newOnLinkPrefix = &mLocalOnLinkPrefix;
+            mIsAdvertisingLocalOnLinkPrefix = true;
+            LogInfo("Start advertising on-link prefix %s on %s", mLocalOnLinkPrefix.ToString().AsCString(),
+                    mInfraIf.ToString().AsCString());
+
+            // Call `InvalidateDiscoveredPrefixes()` after setting
+            // `mIsAdvertisingLocalOnLinkPrefix` to remove on-link
+            // prefix in case it was discovered and included in
+            // `mDiscoveredPrefixes` list earlier.
+            InvalidateDiscoveredPrefixes();
         }
 
         mOnLinkPrefixDeprecateTimer.Stop();
@@ -594,11 +599,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     // the same smallest on-link prefix and the application-specific prefix is not used.
     else if (mIsAdvertisingLocalOnLinkPrefix)
     {
-        if (mLocalOnLinkPrefix < *smallestOnLinkPrefix)
-        {
-            newOnLinkPrefix = &mLocalOnLinkPrefix;
-        }
-        else
+        if (!(mLocalOnLinkPrefix < *smallestOnLinkPrefix))
         {
             LogInfo("EvaluateOnLinkPrefix: There is already smaller on-link prefix %s on %s",
                     smallestOnLinkPrefix->ToString().AsCString(), mInfraIf.ToString().AsCString());
@@ -607,7 +608,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     }
 
 exit:
-    return newOnLinkPrefix;
+    return;
 }
 
 void RoutingManager::HandleOnLinkPrefixDeprecateTimer(Timer &aTimer)
@@ -641,6 +642,8 @@ void RoutingManager::HandleOnLinkPrefixDeprecateTimer(void)
 void RoutingManager::DeprecateOnLinkPrefix(void)
 {
     OT_ASSERT(mIsAdvertisingLocalOnLinkPrefix);
+
+    mIsAdvertisingLocalOnLinkPrefix = false;
 
     LogInfo("Deprecate local on-link prefix %s", mLocalOnLinkPrefix.ToString().AsCString());
     mOnLinkPrefixDeprecateTimer.StartAt(mTimeAdvertisedOnLinkPrefix,
@@ -705,20 +708,19 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 {
     OT_ASSERT(mIsRunning);
 
-    const Ip6::Prefix *newOnLinkPrefix = nullptr;
-    OmrPrefixArray     newOmrPrefixes;
+    OmrPrefixArray newOmrPrefixes;
 
     LogInfo("Evaluating routing policy");
 
     // 0. Evaluate on-link, OMR and NAT64 prefixes.
-    newOnLinkPrefix = EvaluateOnLinkPrefix();
+    EvaluateOnLinkPrefix();
     EvaluateOmrPrefix(newOmrPrefixes);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     EvaluateNat64Prefix();
 #endif
 
     // 1. Send Router Advertisement message if necessary.
-    SendRouterAdvertisement(newOmrPrefixes, newOnLinkPrefix);
+    SendRouterAdvertisement(newOmrPrefixes);
 
     if (newOmrPrefixes.IsEmpty())
     {
@@ -743,18 +745,8 @@ void RoutingManager::EvaluateRoutingPolicy(void)
         StartRoutingPolicyEvaluationDelay(Time::SecToMsec(nextSendDelay));
     }
 
-    // 3. Update advertised on-link & OMR prefixes information.
-    {
-        bool wasAdvertisingLocalOnLinkPrefix = mIsAdvertisingLocalOnLinkPrefix;
-
-        mIsAdvertisingLocalOnLinkPrefix = (newOnLinkPrefix == &mLocalOnLinkPrefix);
-        if (!wasAdvertisingLocalOnLinkPrefix && mIsAdvertisingLocalOnLinkPrefix)
-        {
-            InvalidateDiscoveredPrefixes();
-        }
-
-        mAdvertisedOmrPrefixes = newOmrPrefixes;
-    }
+    // 3. Update OMR prefixes information.
+    mAdvertisedOmrPrefixes = newOmrPrefixes;
 }
 
 void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli)
@@ -824,9 +816,7 @@ Error RoutingManager::SendRouterSolicitation(void)
 // This method sends Router Advertisement messages to advertise on-link prefix and route for OMR prefix.
 // @param[in]  aNewOmrPrefixes   An array of the new OMR prefixes to be advertised.
 //                               Empty array means we should stop advertising OMR prefixes.
-// @param[in]  aOnLinkPrefix     A pointer to the new on-link prefix to be advertised.
-//                               `nullptr` means we should stop advertising on-link prefix.
-void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix)
+void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes)
 {
     uint8_t  buffer[kMaxRouterAdvMessageLength];
     uint16_t bufferLength = 0;
@@ -835,11 +825,10 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
     memcpy(buffer, &mRouterAdvMessage, sizeof(mRouterAdvMessage));
     bufferLength += sizeof(mRouterAdvMessage);
 
-    if (aNewOnLinkPrefix != nullptr)
+    if (mIsAdvertisingLocalOnLinkPrefix)
     {
         RouterAdv::PrefixInfoOption *pio;
 
-        OT_ASSERT(aNewOnLinkPrefix == &mLocalOnLinkPrefix);
         OT_ASSERT(bufferLength + sizeof(RouterAdv::PrefixInfoOption) <= sizeof(buffer));
 
         pio = reinterpret_cast<RouterAdv::PrefixInfoOption *>(buffer + bufferLength);
@@ -849,18 +838,12 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
         pio->SetAutoAddrConfigFlag();
         pio->SetValidLifetime(kDefaultOnLinkPrefixLifetime);
         pio->SetPreferredLifetime(kDefaultOnLinkPrefixLifetime);
-        pio->SetPrefix(*aNewOnLinkPrefix);
+        pio->SetPrefix(mLocalOnLinkPrefix);
 
         bufferLength += pio->GetSize();
 
-        if (!mIsAdvertisingLocalOnLinkPrefix)
-        {
-            LogInfo("Start advertising new on-link prefix %s on %s", aNewOnLinkPrefix->ToString().AsCString(),
-                    mInfraIf.ToString().AsCString());
-        }
-
         LogInfo("Send on-link prefix %s in PIO (preferred lifetime = %u seconds, valid lifetime = %u seconds)",
-                aNewOnLinkPrefix->ToString().AsCString(), pio->GetPreferredLifetime(), pio->GetValidLifetime());
+                mLocalOnLinkPrefix.ToString().AsCString(), pio->GetPreferredLifetime(), pio->GetValidLifetime());
 
         mTimeAdvertisedOnLinkPrefix = TimerMilli::GetNow();
     }
