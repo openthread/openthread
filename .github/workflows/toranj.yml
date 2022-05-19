@@ -139,7 +139,7 @@ jobs:
       run: |
         script/test combine_coverage
     - name: Upload Coverage
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v2
       with:
         files: final.info
         fail_ci_if_error: true
