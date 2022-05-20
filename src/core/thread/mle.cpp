@@ -4812,10 +4812,5 @@ void Mle::HandleStopThreadTask(void)
     Stop();
 }
 
-bool Mle::IsDetachingGracefully(void)
-{
-    return mDetachGracefullyTimer.IsRunning();
-}
-
 } // namespace Mle
 } // namespace ot

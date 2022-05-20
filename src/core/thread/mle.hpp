@@ -1670,7 +1670,7 @@ protected:
      * @retval FALSE Not detaching.
      *
      */
-    bool IsDetachingGracefully(void);
+    bool IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
 
     Ip6::Netif::UnicastAddress mLeaderAloc; ///< Leader anycast locator
 
