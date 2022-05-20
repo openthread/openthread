@@ -48,8 +48,8 @@
 #endif
 
 #include <openthread/netdata.h>
-#include <openthread/platform/infra_if.h>
 
+#include "border_router/infra_if.hpp"
 #include "border_router/router_advertisement.hpp"
 #include "common/array.hpp"
 #include "common/error.hpp"
@@ -73,6 +73,7 @@ namespace BorderRouter {
 class RoutingManager : public InstanceLocator
 {
     friend class ot::Notifier;
+    friend class ot::Instance;
 
 public:
     /**
@@ -155,35 +156,21 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 
     /**
-     * This method receives an ICMPv6 message on the infrastructure interface.
+     * This method processes a received ICMPv6 message from the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.
      *
-     * @param[in]  aInfraIfIndex  The infrastructure interface index.
+     * @param[in]  aPacket        The received ICMPv6 packet.
      * @param[in]  aSrcAddress    The source address this message is sent from.
-     * @param[in]  aBuffer        THe ICMPv6 message buffer.
-     * @param[in]  aLength        The length of the ICMPv6 message buffer.
      *
      */
-    void RecvIcmp6Message(uint32_t            aInfraIfIndex,
-                          const Ip6::Address &aSrcAddress,
-                          const uint8_t *     aBuffer,
-                          uint16_t            aBufferLength);
+    void HandleReceived(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
 
     /**
      * This method handles infrastructure interface state changes.
      *
-     * @param[in]  aInfraIfIndex  The index of the infrastructure interface.
-     * @param[in]  aIsRunning     A boolean that indicates whether the infrastructure
-     *                            interface is running.
-     *
-     * @retval  kErrorNone          Successfully updated the infra interface status.
-     * @retval  kErrorInvalidState  The Routing Manager is not initialized.
-     * @retval  kErrorInvalidArgs   The @p aInfraIfIndex doesn't match the infra interface
-     *                              the Routing Manager is initialized with.
-     *
      */
-    Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
+    void HandleInfraIfStateChanged(void) { EvaluateState(); }
 
     /**
      * This method checks if the on-mesh prefix configuration is a valid OMR prefix.
@@ -313,7 +300,7 @@ private:
     void  Start(void);
     void  Stop(void);
     void  HandleNotifierEvents(Events aEvents);
-    bool  IsInitialized(void) const { return mInfraIfIndex != 0; }
+    bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
     void  GenerateOmrPrefix(void);
@@ -355,8 +342,8 @@ private:
     static void HandleOnLinkPrefixDeprecateTimer(Timer &aTimer);
 
     void DeprecateOnLinkPrefix(void);
-    void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
-    void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
+    void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
+    void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
     void UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption &aRio);
     void InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix = nullptr, bool aIsOnLinkPrefix = true);
@@ -376,13 +363,7 @@ private:
     // Manager will be stopped if we are disabled.
     bool mIsEnabled;
 
-    // Indicates whether the infra interface is running. The Routing
-    // Manager will be stopped when the Infra interface is not running.
-    bool mInfraIfIsRunning;
-
-    // The index of the infra interface on which Router Advertisement
-    // messages will be sent.
-    uint32_t mInfraIfIndex;
+    InfraIf mInfraIf;
 
     // The /48 BR ULA prefix loaded from local persistent storage or
     // randomly generated if none is found in persistent storage.
