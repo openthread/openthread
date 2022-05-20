@@ -207,6 +207,9 @@ typedef void (*otDetachGracefullyCallback)(void *aContext);
  *
  * The interface must be up when calling this function.
  *
+ * Calling this function with @p aEnabled set to FALSE stops any ongoing processes of detaching started by
+ * otThreadDetachGracefully(). Its callback will be called.
+ *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  TRUE if Thread is enabled, FALSE otherwise.
  *
