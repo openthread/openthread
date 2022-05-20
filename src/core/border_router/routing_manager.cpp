@@ -616,8 +616,25 @@ void RoutingManager::HandleOnLinkPrefixDeprecateTimer(Timer &aTimer)
 
 void RoutingManager::HandleOnLinkPrefixDeprecateTimer(void)
 {
+    bool discoveredLocalOnLinkPrefix = false;
+
+    OT_ASSERT(!mIsAdvertisingLocalOnLinkPrefix);
+
     LogInfo("Local on-link prefix %s expired", mLocalOnLinkPrefix.ToString().AsCString());
-    UnpublishExternalRoute(mLocalOnLinkPrefix);
+
+    for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
+    {
+        if (prefix.mIsOnLinkPrefix && prefix.mPrefix == mLocalOnLinkPrefix)
+        {
+            discoveredLocalOnLinkPrefix = true;
+            break;
+        }
+    }
+
+    if (!discoveredLocalOnLinkPrefix)
+    {
+        UnpublishExternalRoute(mLocalOnLinkPrefix);
+    }
 }
 
 void RoutingManager::DeprecateOnLinkPrefix(void)
