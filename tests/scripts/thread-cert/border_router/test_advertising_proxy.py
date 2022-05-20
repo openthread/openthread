@@ -85,7 +85,7 @@ class SingleHostAndService(thread_cert.TestCase):
         server.srp_server_set_enabled(True)
         server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
         server.start()
-        self.simulator.go(10)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', server.get_state())
         self.assertEqual(server.srp_server_get_state(), 'running')
 
@@ -304,7 +304,7 @@ class SrpClientRemoveNonExistingHost(thread_cert.TestCase):
         server.srp_server_set_enabled(True)
         server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
         server.start()
-        self.simulator.go(10)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', server.get_state())
         self.assertEqual(server.srp_server_get_state(), 'running')
 

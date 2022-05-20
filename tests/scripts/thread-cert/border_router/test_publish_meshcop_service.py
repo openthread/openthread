@@ -92,7 +92,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         # TODO enable this line when renaming with mDNSResponder is stable
         # self.check_meshcop_service(br1, host)
         br1.start()
-        self.simulator.go(20)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         self.check_meshcop_service(br1, host)
 
@@ -103,7 +103,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.stop()
         br1.set_network_name('ot-br1-1')
         br1.start()
-        self.simulator.go(10)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.check_meshcop_service(br1, host)
 
         # verify that there are two meshcop services
@@ -111,7 +111,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2.start()
         br2.disable_backbone_router()
         br2.enable_br()
-        self.simulator.go(25)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
 
         service_instances = host.browse_mdns_services('_meshcop._udp')
         self.assertEqual(len(service_instances), 2)

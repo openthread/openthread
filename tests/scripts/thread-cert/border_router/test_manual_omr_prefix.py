@@ -28,6 +28,8 @@
 #
 import ipaddress
 import unittest
+
+import config
 import thread_cert
 
 # Test description:
@@ -65,7 +67,7 @@ class ManualOmrsPrefix(thread_cert.TestCase):
         br2 = self.nodes[BR_2]
 
         br1.start()
-        self.simulator.go(10)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
 
         self.simulator.go(10)
@@ -73,7 +75,7 @@ class ManualOmrsPrefix(thread_cert.TestCase):
 
         br2.disable_br()
         br2.start()
-        self.simulator.go(15)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
         self.assertEqual(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix()])
 
