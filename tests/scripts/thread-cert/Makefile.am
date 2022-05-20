@@ -196,6 +196,7 @@ EXTRA_DIST                                                         = \
     test_srp_server_anycast_mode.py                                  \
     test_srp_server_reboot_port.py                                   \
     test_srp_sub_type.py                                             \
+    test_srp_ttl.py                                                  \
     test_zero_len_external_route.py                                  \
     thread_cert.py                                                   \
     tlvs_parsing.py                                                  \
@@ -270,6 +271,7 @@ check_SCRIPTS                                                      = \
     test_srp_server_anycast_mode.py                                  \
     test_srp_server_reboot_port.py                                   \
     test_srp_sub_type.py                                             \
+    test_srp_ttl.py                                                  \
     test_zero_len_external_route.py                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \

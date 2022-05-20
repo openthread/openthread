@@ -87,6 +87,16 @@ void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
     AsCoreType(aInstance).Get<Srp::Server>().SetEnabled(aEnabled);
 }
 
+void otSrpServerGetTtlConfig(otInstance *aInstance, otSrpServerTtlConfig *aTtlConfig)
+{
+    AsCoreType(aInstance).Get<Srp::Server>().GetTtlConfig(AsCoreType(aTtlConfig));
+}
+
+otError otSrpServerSetTtlConfig(otInstance *aInstance, const otSrpServerTtlConfig *aTtlConfig)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().SetTtlConfig(AsCoreType(aTtlConfig));
+}
+
 void otSrpServerGetLeaseConfig(otInstance *aInstance, otSrpServerLeaseConfig *aLeaseConfig)
 {
     AsCoreType(aInstance).Get<Srp::Server>().GetLeaseConfig(AsCoreType(aLeaseConfig));
@@ -202,6 +212,11 @@ uint16_t otSrpServerServiceGetWeight(const otSrpServerService *aService)
 uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService)
 {
     return AsCoreType(aService).GetPriority();
+}
+
+uint32_t otSrpServerServiceGetTtl(const otSrpServerService *aService)
+{
+    return AsCoreType(aService).GetTtl();
 }
 
 const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, uint16_t *aDataLength)
