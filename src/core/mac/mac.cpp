@@ -482,7 +482,7 @@ Error Mac::RequestDataPollTransmission(void)
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
-    VerifyOrExit(!IsActiveOrPending(kOperationTransmitPoll), error = kErrorAlready);
+    VerifyOrExit(!IsActiveOrPending(kOperationTransmitPoll));
 
     // We ensure data frame and data poll tx requests are handled in the
     // order they are requested. So if we have a pending direct data frame

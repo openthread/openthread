@@ -228,7 +228,6 @@ public:
      * This method requests transmission of a data poll (MAC Data Request) frame.
      *
      * @retval kErrorNone          Data poll transmission request is scheduled successfully.
-     * @retval kErrorAlready       MAC is busy sending earlier poll transmission request.
      * @retval kErrorInvalidState  The MAC layer is not enabled.
      *
      */

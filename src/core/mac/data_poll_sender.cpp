@@ -123,11 +123,6 @@ exit:
         StopPolling();
         break;
 
-    case kErrorAlready:
-        LogDebg("Data poll tx requested when a previous data request still in send queue.");
-        ScheduleNextPoll(kUsePreviousPollPeriod);
-        break;
-
     default:
         LogWarn("Unexpected error %s requesting data poll", ErrorToString(error));
         ScheduleNextPoll(kRecalculatePollPeriod);
