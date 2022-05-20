@@ -112,7 +112,7 @@ void RouteInfoOption::SetPreference(RoutePreference aPreference)
     mResvdPrf |= (NetworkData::RoutePreferenceToValue(aPreference) << kPreferenceOffset) & kPreferenceMask;
 }
 
-RouteInfoOption::RoutePreference RouteInfoOption::GetPreference(void) const
+RoutePreference RouteInfoOption::GetPreference(void) const
 {
     return NetworkData::RoutePreferenceFromValue((mResvdPrf & kPreferenceMask) >> kPreferenceOffset);
 }
@@ -171,29 +171,24 @@ uint8_t RouteInfoOption::OptionLengthForPrefix(uint8_t aPrefixLength)
 
 void RouterAdvMessage::SetToDefault(void)
 {
-    mHeader.Clear();
-    mHeader.SetType(Ip6::Icmp::Header::kTypeRouterAdvert);
-    mReachableTime = 0;
-    mRetransTimer  = 0;
+    OT_UNUSED_VARIABLE(mCode);
+    OT_UNUSED_VARIABLE(mCurHopLimit);
+    OT_UNUSED_VARIABLE(mReachableTime);
+    OT_UNUSED_VARIABLE(mRetransTimer);
+
+    Clear();
+    mType = Ip6::Icmp::Header::kTypeRouterAdvert;
 }
 
-const RouterAdvMessage &RouterAdvMessage::operator=(const RouterAdvMessage &aOther)
+RoutePreference RouterAdvMessage::GetDefaultRouterPreference(void) const
 {
-    mHeader = aOther.mHeader;
-
-    // Set zero value and let platform do the calculation.
-    mHeader.SetChecksum(0);
-
-    mReachableTime = aOther.mReachableTime;
-    mRetransTimer  = aOther.mRetransTimer;
-
-    return *this;
+    return NetworkData::RoutePreferenceFromValue((mFlags & kPreferenceMask) >> kPreferenceOffset);
 }
 
-bool RouterAdvMessage::operator==(const RouterAdvMessage &aOther) const
+void RouterAdvMessage::SetDefaultRouterPreference(RoutePreference aPreference)
 {
-    return memcmp(&mHeader.mData, &aOther.mHeader.mData, sizeof(mHeader.mData)) == 0 &&
-           mReachableTime == aOther.mReachableTime && mRetransTimer == aOther.mRetransTimer;
+    mFlags &= ~kPreferenceMask;
+    mFlags |= (NetworkData::RoutePreferenceToValue(aPreference) << kPreferenceOffset) & kPreferenceMask;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

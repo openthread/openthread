@@ -1455,6 +1455,7 @@ bool RoutingManager::UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *a
     oldRouterAdvMessage = mRouterAdvMessage;
 
     mTimeRouterAdvMessageLastUpdate = TimerMilli::GetNow();
+
     if (aRouterAdvMessage == nullptr || aRouterAdvMessage->GetRouterLifetime() == 0)
     {
         mRouterAdvMessage.SetToDefault();
@@ -1462,7 +1463,12 @@ bool RoutingManager::UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *a
     }
     else
     {
-        mRouterAdvMessage               = *aRouterAdvMessage;
+        // The checksum is set to zero in `mRouterAdvMessage`
+        // which indicates to platform that it needs to do the
+        // calculation and update it.
+
+        mRouterAdvMessage = *aRouterAdvMessage;
+        mRouterAdvMessage.SetChecksum(0);
         mLearntRouterAdvMessageFromHost = true;
     }
 
