@@ -525,6 +525,11 @@ exit:
     return error;
 }
 
+template <> otError SrpClient::Process<Cmd("ttl")>(Arg aArgs[])
+{
+    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetTtl, otSrpClientSetTtl);
+}
+
 void SrpClient::HandleCallback(otError                    aError,
                                const otSrpClientHostInfo *aHostInfo,
                                const otSrpClientService * aServices,
@@ -578,7 +583,7 @@ otError SrpClient::Process(Arg aArgs[])
     static constexpr Command kCommands[] = {
         CmdEntry("autostart"),     CmdEntry("callback"), CmdEntry("host"),    CmdEntry("keyleaseinterval"),
         CmdEntry("leaseinterval"), CmdEntry("server"),   CmdEntry("service"), CmdEntry("start"),
-        CmdEntry("state"),         CmdEntry("stop"),
+        CmdEntry("state"),         CmdEntry("stop"),     CmdEntry("ttl"),
     };
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");

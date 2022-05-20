@@ -245,6 +245,7 @@ Client::Client(Instance &aInstance)
     , mUpdateMessageId(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
     , mAcceptedLeaseInterval(0)
+    , mTtl(0)
     , mLeaseInterval(kDefaultLease)
     , mKeyLeaseInterval(kDefaultKeyLease)
     , mSocket(aInstance)
@@ -911,7 +912,7 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
     // to NONE and TTL to zero (RFC 2136 - section 2.5.4).
 
     rr.Init(Dns::ResourceRecord::kTypePtr, removing ? Dns::PtrRecord::kClassNone : Dns::PtrRecord::kClassInternet);
-    rr.SetTtl(removing ? 0 : mLeaseInterval);
+    rr.SetTtl(removing ? 0 : GetTtl());
     offset = aMessage.GetLength();
     SuccessOrExit(error = aMessage.Append(rr));
 
@@ -970,7 +971,7 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
 
     SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, aMessage));
     srv.Init();
-    srv.SetTtl(mLeaseInterval);
+    srv.SetTtl(GetTtl());
     srv.SetPriority(aService.GetPriority());
     srv.SetWeight(aService.GetWeight());
     srv.SetPort(aService.GetPort());
@@ -1024,7 +1025,7 @@ Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) c
     // AAAA RRs
 
     rr.Init(Dns::ResourceRecord::kTypeAaaa);
-    rr.SetTtl(mLeaseInterval);
+    rr.SetTtl(GetTtl());
     rr.SetLength(sizeof(Ip6::Address));
 
     for (uint8_t index = 0; index < mHostInfo.GetNumAddresses(); index++)
@@ -1051,7 +1052,7 @@ Error Client::AppendKeyRecord(Message &aMessage, Info &aInfo) const
     Crypto::Ecdsa::P256::PublicKey publicKey;
 
     key.Init();
-    key.SetTtl(mLeaseInterval);
+    key.SetTtl(GetTtl());
     key.SetFlags(Dns::KeyRecord::kAuthConfidPermitted, Dns::KeyRecord::kOwnerNonZone,
                  Dns::KeyRecord::kSignatoryFlagGeneral);
     key.SetProtocol(Dns::KeyRecord::kProtocolDnsSec);

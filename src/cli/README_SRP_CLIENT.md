@@ -15,6 +15,7 @@ Usage : `srp client [command] ...`
 - [start](#start)
 - [state](#state)
 - [stop](#stop)
+- [ttl](#ttl)
 
 ## Command Details
 
@@ -36,6 +37,7 @@ service
 start
 state
 stop
+ttl
 Done
 ```
 
@@ -407,5 +409,25 @@ Stop the SRP client.
 
 ```bash
 > srp client stop
+Done
+```
+
+### ttl
+
+Usage: `srp client ttl [value]`
+
+Get the TTL (in seconds).
+
+```bash
+> srp client ttl
+7200
+Done
+>
+```
+
+Set the TTL.
+
+```bash
+> srp client ttl 3600
 Done
 ```

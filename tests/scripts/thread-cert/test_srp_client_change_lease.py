@@ -50,9 +50,11 @@ DEFAULT_LEASE_TIME = 7200
 LEASE_TIME = 60
 NEW_LEASE_TIME = 120
 KEY_LEASE_TIME = 240
+NEW_TTL = 10
 
 assert LEASE_TIME < KEY_LEASE_TIME
 assert NEW_LEASE_TIME < KEY_LEASE_TIME
+assert NEW_TTL < NEW_LEASE_TIME
 
 
 class SrpClientChangeLeaseTime(thread_cert.TestCase):
@@ -112,6 +114,14 @@ class SrpClientChangeLeaseTime(thread_cert.TestCase):
         self.simulator.go(KEY_LEASE_TIME * 2)
         self.assertEqual(client.srp_client_get_host_state(), 'Registered')
 
+        client.srp_client_set_ttl(NEW_TTL)
+        self.simulator.go(NEW_LEASE_TIME)
+        self.assertEqual(client.srp_client_get_host_state(), 'Registered')
+
+        client.srp_client_set_ttl(0)
+        self.simulator.go(NEW_LEASE_TIME)
+        self.assertEqual(client.srp_client_get_host_state(), 'Registered')
+
     def verify(self, pv):
         pkts: PacketFilter = pv.pkts
         pv.summary.show()
@@ -120,6 +130,10 @@ class SrpClientChangeLeaseTime(thread_cert.TestCase):
 
         pkts.filter_wpan_src64(CLIENT_SRC64).filter('dns.flags.response == 0 and dns.resp.ttl == {DEFAULT_LEASE_TIME}',
                                                     DEFAULT_LEASE_TIME=DEFAULT_LEASE_TIME).must_next()
+        pkts.filter_wpan_src64(CLIENT_SRC64).filter('dns.flags.response == 0 and dns.resp.ttl == {NEW_LEASE_TIME}',
+                                                    NEW_LEASE_TIME=NEW_LEASE_TIME).must_next()
+        pkts.filter_wpan_src64(CLIENT_SRC64).filter('dns.flags.response == 0 and dns.resp.ttl == {NEW_TTL}',
+                                                    NEW_TTL=NEW_TTL).must_next()
         pkts.filter_wpan_src64(CLIENT_SRC64).filter('dns.flags.response == 0 and dns.resp.ttl == {NEW_LEASE_TIME}',
                                                     NEW_LEASE_TIME=NEW_LEASE_TIME).must_next()
 
