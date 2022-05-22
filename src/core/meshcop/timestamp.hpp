@@ -60,6 +60,29 @@ class Timestamp : public Clearable<Timestamp>
 {
 public:
     /**
+     * This method returns the timestamp values in uint64_t (same construction
+     * as the value fields of Active or Pending Timestamp TLV).
+     *
+     */
+    uint64_t GetUint64(void) const
+    {
+        return (GetSeconds() << kSecondsOffset) | static_cast<uint64_t>(GetTicks() << kTicksOffset) |
+               static_cast<uint64_t>(GetAuthoritative());
+    }
+
+    /**
+     * This method sets the timestamp values with uint64_t (same construction
+     * as the value fields of Active or Pending Timestamp TLV).
+     *
+     */
+    void SetUint64(uint64_t value)
+    {
+        SetSeconds(value >> kSecondsOffset);
+        SetTicks((value & kTicksMask) >> kTicksOffset);
+        SetAuthoritative(value & kAuthoritativeMask);
+    }
+
+    /**
      * This method returns the Seconds value.
      *
      * @returns The Seconds value.
@@ -144,6 +167,7 @@ public:
     static int Compare(const Timestamp *aFirst, const Timestamp *aSecond);
 
 private:
+    static constexpr uint8_t  kSecondsOffset       = 16;
     static constexpr uint8_t  kTicksOffset         = 1;
     static constexpr uint16_t kTicksMask           = 0x7fff << kTicksOffset;
     static constexpr uint16_t kMaxRandomTicks      = 0x7fff;

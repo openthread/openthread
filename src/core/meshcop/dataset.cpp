@@ -43,6 +43,7 @@
 #include "common/log.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "meshcop/timestamp.hpp"
 #include "thread/mle_tlvs.hpp"
 
 namespace ot {
@@ -69,10 +70,16 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
 
     Clear();
 
-    mActiveTimestamp = 1;
-    mChannel         = preferredChannels.ChooseRandomChannel();
-    mChannelMask     = supportedChannels.GetMask();
-    mPanId           = Mac::GenerateRandomPanId();
+    {
+        Timestamp timestamp;
+
+        timestamp.Clear();
+        timestamp.SetSeconds(1);
+        mActiveTimestamp = timestamp.GetUint64();
+    }
+    mChannel     = preferredChannels.ChooseRandomChannel();
+    mChannelMask = supportedChannels.GetMask();
+    mPanId       = Mac::GenerateRandomPanId();
     AsCoreType(&mSecurityPolicy).SetToDefault();
 
     SuccessOrExit(error = AsCoreType(&mNetworkKey).GenerateRandom());
@@ -193,7 +200,7 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         switch (cur->GetType())
         {
         case Tlv::kActiveTimestamp:
-            aDatasetInfo.SetActiveTimestamp(As<ActiveTimestampTlv>(cur)->GetTimestamp().GetSeconds());
+            aDatasetInfo.SetActiveTimestamp(As<ActiveTimestampTlv>(cur)->GetTimestamp().GetUint64());
             break;
 
         case Tlv::kChannel:
@@ -237,7 +244,7 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
             break;
 
         case Tlv::kPendingTimestamp:
-            aDatasetInfo.SetPendingTimestamp(As<PendingTimestampTlv>(cur)->GetTimestamp().GetSeconds());
+            aDatasetInfo.SetPendingTimestamp(As<PendingTimestampTlv>(cur)->GetTimestamp().GetUint64());
             break;
 
         case Tlv::kPskc:
@@ -289,7 +296,7 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
         Timestamp timestamp;
 
         timestamp.Clear();
-        timestamp.SetSeconds(aDatasetInfo.GetActiveTimestamp());
+        timestamp.SetUint64(aDatasetInfo.GetActiveTimestamp());
         IgnoreError(SetTlv(Tlv::kActiveTimestamp, timestamp));
     }
 
@@ -298,7 +305,7 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
         Timestamp timestamp;
 
         timestamp.Clear();
-        timestamp.SetSeconds(aDatasetInfo.GetPendingTimestamp());
+        timestamp.SetUint64(aDatasetInfo.GetPendingTimestamp());
         IgnoreError(SetTlv(Tlv::kPendingTimestamp, timestamp));
     }
 

@@ -40,6 +40,12 @@ pp_map = {1: 1, 0: 0, 3: -1, 2: -2}
 UDP_TEST_PORT = 12345
 
 
+# Creates a Thread Timestamp value from given seconds.
+# The ticks and authoritative_source are default to 0.
+def timestamp_from_seconds(seconds: int):
+    return (seconds << 16)
+
+
 # Get the signed parent priority from the byte that parent priority is in.
 def map_pp(pp_byte):
     return pp_map[((pp_byte & 0xC0) >> 6)]

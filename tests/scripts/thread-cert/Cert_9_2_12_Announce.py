@@ -31,6 +31,7 @@ import unittest
 
 import config
 import thread_cert
+from common import timestamp_from_seconds
 from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_PARENT_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_ANNOUNCE, CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
 
@@ -39,11 +40,11 @@ ROUTER1 = 2
 LEADER2 = 3
 MED = 4
 
-DATASET1_TIMESTAMP = 20
+DATASET1_TIMESTAMP = timestamp_from_seconds(20)
 DATASET1_CHANNEL = 11
 DATASET1_PANID = 0xface
 
-DATASET2_TIMESTAMP = 10
+DATASET2_TIMESTAMP = timestamp_from_seconds(10)
 DATASET2_CHANNEL = 12
 DATASET2_PANID = 0xafce
 

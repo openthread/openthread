@@ -31,6 +31,7 @@ import unittest
 
 import config
 import thread_cert
+from common import timestamp_from_seconds
 from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_DATA_RESPONSE, MLE_DATA_REQUEST, MGMT_ACTIVE_SET_URI, MGMT_PENDING_SET_URI, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, PENDING_OPERATION_DATASET_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_KEY_TLV, NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV, NM_DELAY_TIMER_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.addrs import Ipv6Addr
@@ -40,6 +41,7 @@ KEY2 = 'ffeeddccbbaa99887766554433221100'
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
+TIMESTAMP_INIT = timestamp_from_seconds(1)
 
 COMMISSIONER = 1
 LEADER = 2
@@ -57,7 +59,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'active_dataset': {
-                'timestamp': 1,
+                'timestamp': TIMESTAMP_INIT,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
                 'network_key': KEY1
@@ -68,7 +70,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'active_dataset': {
-                'timestamp': 1,
+                'timestamp': TIMESTAMP_INIT,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
                 'network_key': KEY1
@@ -80,7 +82,7 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         ROUTER1: {
             'name': 'ROUTER_1',
             'active_dataset': {
-                'timestamp': 1,
+                'timestamp': TIMESTAMP_INIT,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
                 'network_key': KEY1
@@ -132,20 +134,21 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=20000, network_name='GRL')
+        self.nodes[COMMISSIONER].send_mgmt_active_set(active_timestamp=timestamp_from_seconds(20000),
+                                                      network_name='GRL')
         self.simulator.go(5)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=20,
-            active_timestamp=20,
+            pending_timestamp=timestamp_from_seconds(20),
+            active_timestamp=timestamp_from_seconds(20),
             delay_timer=20,
             network_name='Shouldnotbe',
         )
         self.simulator.go(30)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=20,
-            active_timestamp=20,
+            pending_timestamp=timestamp_from_seconds(20),
+            active_timestamp=timestamp_from_seconds(20),
             delay_timer=300,
             network_name='MyHouse',
             network_key=KEY2,

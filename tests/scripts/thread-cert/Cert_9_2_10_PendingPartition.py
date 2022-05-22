@@ -31,11 +31,13 @@ import unittest
 
 import config
 import thread_cert
+from common import timestamp_from_seconds
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_DATA_REQUEST, MLE_DATA_RESPONSE, MLE_CHILD_UPDATE_REQUEST, MLE_CHILD_UPDATE_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, ACTIVE_OPERATION_DATASET_TLV, PENDING_OPERATION_DATASET_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS, LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, NM_COMMISSIONER_SESSION_ID_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV, NM_ACTIVE_TIMESTAMP_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
+TIMESTAMP_INIT = timestamp_from_seconds(15)
 
 CHANNEL_FINAL = 16
 PANID_FINAL = 0xafce
@@ -56,7 +58,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'active_dataset': {
-                'timestamp': 15,
+                'timestamp': TIMESTAMP_INIT,
                 'channel': 19
             },
             'mode': 'rdn',
@@ -65,7 +67,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'active_dataset': {
-                'timestamp': 15,
+                'timestamp': TIMESTAMP_INIT,
                 'channel': 19
             },
             'mode': 'rdn',
@@ -75,7 +77,7 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         ROUTER1: {
             'name': 'ROUTER',
             'active_dataset': {
-                'timestamp': 15,
+                'timestamp': TIMESTAMP_INIT,
                 'channel': 19
             },
             'mode': 'rdn',
@@ -122,8 +124,8 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=30,
-            active_timestamp=165,
+            pending_timestamp=timestamp_from_seconds(30),
+            active_timestamp=timestamp_from_seconds(165),
             delay_timer=250,
             channel=CHANNEL_FINAL,
             panid=PANID_FINAL,

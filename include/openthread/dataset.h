@@ -221,19 +221,19 @@ typedef struct otOperationalDatasetComponents
  */
 typedef struct otOperationalDataset
 {
-    uint64_t                       mActiveTimestamp;  ///< Active Timestamp
-    uint64_t                       mPendingTimestamp; ///< Pending Timestamp
-    otNetworkKey                   mNetworkKey;       ///< Network Key
-    otNetworkName                  mNetworkName;      ///< Network Name
-    otExtendedPanId                mExtendedPanId;    ///< Extended PAN ID
-    otMeshLocalPrefix              mMeshLocalPrefix;  ///< Mesh Local Prefix
-    uint32_t                       mDelay;            ///< Delay Timer
-    otPanId                        mPanId;            ///< PAN ID
-    uint16_t                       mChannel;          ///< Channel
-    otPskc                         mPskc;             ///< PSKc
-    otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
-    otChannelMask                  mChannelMask;      ///< Channel Mask
-    otOperationalDatasetComponents mComponents;       ///< Specifies which components are set in the Dataset.
+    uint64_t          mActiveTimestamp;  ///< Active Timestamp (value: (seconds << 16) | (ticks << 1) | authoritive))
+    uint64_t          mPendingTimestamp; ///< Pending Timestamp (value: (seconds << 16) | (ticks << 1) | authoritive))
+    otNetworkKey      mNetworkKey;       ///< Network Key
+    otNetworkName     mNetworkName;      ///< Network Name
+    otExtendedPanId   mExtendedPanId;    ///< Extended PAN ID
+    otMeshLocalPrefix mMeshLocalPrefix;  ///< Mesh Local Prefix
+    uint32_t          mDelay;            ///< Delay Timer
+    otPanId           mPanId;            ///< PAN ID
+    uint16_t          mChannel;          ///< Channel
+    otPskc            mPskc;             ///< PSKc
+    otSecurityPolicy  mSecurityPolicy;   ///< Security Policy
+    otChannelMask     mChannelMask;      ///< Channel Mask
+    otOperationalDatasetComponents mComponents; ///< Specifies which components are set in the Dataset.
 } otOperationalDataset;
 
 /**

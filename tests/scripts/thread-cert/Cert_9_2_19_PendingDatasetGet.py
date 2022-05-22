@@ -32,6 +32,7 @@ import unittest
 import config
 import mesh_cop
 import thread_cert
+from common import timestamp_from_seconds
 from pktverify.consts import MGMT_PENDING_GET_URI, MGMT_PENDING_SET_URI, NM_CHANNEL_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PSKC_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_KEY_TLV, NM_SECURITY_POLICY_TLV, NM_PENDING_TIMESTAMP_TLV, NM_DELAY_TIMER_TLV, LEADER_ALOC
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
@@ -94,10 +95,10 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         self.simulator.go(2)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            active_timestamp=60,
+            active_timestamp=timestamp_from_seconds(60),
             delay_timer=60000,
             panid=0xAFCE,
-            pending_timestamp=30,
+            pending_timestamp=timestamp_from_seconds(30),
         )
         self.simulator.go(2)
 
@@ -164,7 +165,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
                               NM_DELAY_TIMER_TLV,
                               NM_PAN_ID_TLV
                              } <= set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.active_tstamp == 60 and\
+                   p.thread_meshcop.tlv.active_tstamp == timestamp_from_seconds(60) and\
                    p.thread_meshcop.tlv.pan_id == [0xafce] and\
                    p.thread_meshcop.tlv.delay_timer == 60000
                    ).\
