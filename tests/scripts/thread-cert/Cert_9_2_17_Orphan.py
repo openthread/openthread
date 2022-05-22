@@ -31,7 +31,6 @@ import unittest
 
 import config
 import thread_cert
-from common import timestamp_from_seconds
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_ANNOUNCE, CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV
 from pktverify.packet_verifier import PacketVerifier
 
@@ -52,7 +51,7 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
         LEADER1: {
             'name': 'LEADER_1',
             'active_dataset': {
-                'timestamp': timestamp_from_seconds(10),
+                'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL1,
                 'channel_mask': CHANNEL_MASK
@@ -63,7 +62,7 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
         LEADER2: {
             'name': 'LEADER_2',
             'active_dataset': {
-                'timestamp': timestamp_from_seconds(20),
+                'timestamp': 20,
                 'panid': PANID_INIT,
                 'channel': CHANNEL2,
                 'channel_mask': CHANNEL_MASK

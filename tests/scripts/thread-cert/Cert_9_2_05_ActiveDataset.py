@@ -31,7 +31,6 @@ import unittest
 
 import config
 import thread_cert
-from common import timestamp_from_seconds
 from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_SET_URI, NETWORK_DATA_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ACTIVE_OPERATION_DATASET_TLV, NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_KEY_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV
 from pktverify.packet_verifier import PacketVerifier
 
@@ -93,7 +92,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         #         with new values in the TLVs that don’t affect connectivity
         #         binary = new pskc and security policy [3600, 0b11100000]
         self.nodes[ROUTER].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(100),
+            active_timestamp=100,
             channel_mask=0x3fff800,
             extended_panid='000db80000000001',
             mesh_local='fd00:0db8::',
@@ -110,7 +109,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         #         new values in the TLVs that don’t affect connectivity
         #         binary = new pskc and security policy [3600, 0b11110000]
         self.nodes[ROUTER].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(100),
+            active_timestamp=100,
             channel_mask=0x1fff800,
             extended_panid='000db80000000002',
             mesh_local='fd00:0db8::',
@@ -127,7 +126,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         #         new values in the TLVs that don’t affect connectivity
         #         binary = new pskc and security policy [3600, 0b11111000] and BogusTLV=0x400
         self.nodes[ROUTER].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(101),
+            active_timestamp=101,
             channel_mask=0xfff800,
             extended_panid='000db80000000003',
             mesh_local='fd00:0db8::',
@@ -143,7 +142,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         #          attempt to set Channel TLV to an unsupported channel + all of other TLVs
         #          binary = pskc and security policy step 9
         self.nodes[ROUTER].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(102),
+            active_timestamp=102,
             channel_mask=0x1fff800,
             extended_panid='000db80000000003',
             mesh_local='fd00:0db8::',
@@ -200,7 +199,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                              } <= set(p.mle.tlv.type) and\
-                   p.mle.tlv.active_tstamp == timestamp_from_seconds(100) and\
+                   p.mle.tlv.active_tstamp == 100 and\
                    (p.mle.tlv.leader_data.data_version -
                    _pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -244,7 +243,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                               NM_PSKC_TLV,
                               NM_SECURITY_POLICY_TLV
                              } <= set(p.thread_meshcop.tlv.type) and\
-                   p.mle.tlv.active_tstamp == timestamp_from_seconds(100) and\
+                   p.mle.tlv.active_tstamp == 100 and\
                    p.thread_meshcop.tlv.chan_mask_mask == '001fffc0' and\
                    p.thread_meshcop.tlv.xpan_id == '000db80000000001' and\
                    p.thread_meshcop.tlv.net_name == ['TEST_1'] and\
@@ -293,7 +292,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                              } <= set(p.mle.tlv.type) and\
-                   p.mle.tlv.active_tstamp == timestamp_from_seconds(101) and\
+                   p.mle.tlv.active_tstamp == 101 and\
                    (p.mle.tlv.leader_data.data_version -
                    _dr_pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -337,7 +336,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                               NM_PSKC_TLV,
                               NM_SECURITY_POLICY_TLV
                              } <= set(p.thread_meshcop.tlv.type) and\
-                   p.mle.tlv.active_tstamp == timestamp_from_seconds(101) and\
+                   p.mle.tlv.active_tstamp == 101 and\
                    p.thread_meshcop.tlv.chan_mask_mask == '001fff00' and\
                    p.thread_meshcop.tlv.xpan_id == '000db80000000003' and\
                    p.thread_meshcop.tlv.net_name == ['TEST_3'] and\

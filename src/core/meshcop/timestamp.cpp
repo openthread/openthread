@@ -40,11 +40,7 @@ namespace MeshCoP {
 
 int Timestamp::Compare(const Timestamp *aFirst, const Timestamp *aSecond)
 {
-    int      rval;
-    uint64_t firstSeconds;
-    uint64_t secondSeconds;
-    uint16_t firstTicks;
-    uint16_t secondTicks;
+    int rval;
 
     if (aFirst == nullptr)
     {
@@ -62,26 +58,18 @@ int Timestamp::Compare(const Timestamp *aFirst, const Timestamp *aSecond)
 
     // Both are non-null.
 
-    firstSeconds  = aFirst->GetSeconds();
-    secondSeconds = aSecond->GetSeconds();
-
-    if (firstSeconds != secondSeconds)
-    {
-        ExitNow(rval = (firstSeconds > secondSeconds) ? 1 : -1);
-    }
-
-    firstTicks  = aFirst->GetTicks();
-    secondTicks = aSecond->GetTicks();
-
-    if (firstTicks != secondTicks)
-    {
-        ExitNow(rval = (firstTicks > secondTicks) ? 1 : -1);
-    }
-
-    rval = 0;
+    rval = Compare(*aFirst, *aSecond);
 
 exit:
     return rval;
+}
+
+int Timestamp::Compare(const Timestamp &aFirst, const Timestamp &aSecond)
+{
+    uint64_t firstValue  = HostSwap64(aFirst.mValue);
+    uint64_t secondValue = HostSwap64(aSecond.mValue);
+
+    return firstValue < secondValue ? -1 : (firstValue == secondValue ? 0 : 1);
 }
 
 void Timestamp::AdvanceRandomTicks(void)

@@ -31,13 +31,11 @@ import unittest
 
 import config
 import thread_cert
-from common import timestamp_from_seconds
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_CHILD_ID_REQUEST, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, ADDRESS_REGISTRATION_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
-TIMESTAMP_INIT = timestamp_from_seconds(15)
 
 PANID_FINAL = 0xabcd
 
@@ -54,7 +52,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -64,7 +62,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -75,7 +73,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
         ROUTER1: {
             'name': 'ROUTER_1',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -85,7 +83,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
         ROUTER2: {
             'name': 'ROUTER_2',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 15,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -115,8 +113,8 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=timestamp_from_seconds(10),
-            active_timestamp=timestamp_from_seconds(70),
+            pending_timestamp=10,
+            active_timestamp=70,
             delay_timer=600000,
             mesh_local='fd00:0db9::',
         )
@@ -131,8 +129,8 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
         self.simulator.go(100)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=timestamp_from_seconds(20),
-            active_timestamp=timestamp_from_seconds(80),
+            pending_timestamp=20,
+            active_timestamp=80,
             delay_timer=200000,
             mesh_local='fd00:0db7::',
             panid=PANID_FINAL,

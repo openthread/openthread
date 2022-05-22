@@ -31,7 +31,6 @@ import unittest
 
 import config
 import thread_cert
-from common import timestamp_from_seconds
 from pktverify.consts import MLE_PARENT_REQUEST, MLE_DATA_RESPONSE, MLE_DATA_REQUEST, MGMT_PENDING_SET_URI, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, TLV_REQUEST_TLV, NETWORK_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_DELAY_TIMER_TLV, PENDING_OPERATION_DATASET_TLV, NWD_COMMISSIONING_DATA_TLV
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
@@ -41,7 +40,6 @@ KEY2 = 'ffeeddccbbaa99887766554433221100'
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
-TIMESTAMP_INIT = timestamp_from_seconds(10)
 
 COMMISSIONER = 1
 LEADER = 2
@@ -84,7 +82,7 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
                 'network_key': KEY1
@@ -95,7 +93,7 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
                 'network_key': KEY1
@@ -106,7 +104,7 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
         ROUTER1: {
             'name': 'ROUTER',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
                 'network_key': KEY1
@@ -162,8 +160,8 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
         self.collect_ipaddrs()
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=timestamp_from_seconds(10),
-            active_timestamp=timestamp_from_seconds(70),
+            pending_timestamp=10,
+            active_timestamp=70,
             delay_timer=60000,
             network_key=KEY2,
         )
@@ -179,8 +177,8 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
         self.assertTrue(self.nodes[ROUTER1].ping(ipaddr))
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=timestamp_from_seconds(20),
-            active_timestamp=timestamp_from_seconds(30),
+            pending_timestamp=20,
+            active_timestamp=30,
             delay_timer=500000,
             network_key=KEY1,
         )
@@ -241,8 +239,8 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
         pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(LEADER).\
             filter_LLANMA().\
-            filter(lambda p: p.mle.tlv.active_tstamp == timestamp_from_seconds(10) and\
-                   p.mle.tlv.pending_tstamp == timestamp_from_seconds(10) and\
+            filter(lambda p: p.mle.tlv.active_tstamp == 10 and\
+                   p.mle.tlv.pending_tstamp == 10 and\
                    (p.mle.tlv.leader_data.data_version -
                    _pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -284,7 +282,7 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
                    NM_BORDER_AGENT_LOCATOR_TLV in p.thread_meshcop.tlv.type and\
                    p.thread_meshcop.tlv.delay_timer > 200000 and\
                    p.thread_meshcop.tlv.master_key == KEY2 and\
-                   p.thread_meshcop.tlv.active_tstamp == timestamp_from_seconds(70)
+                   p.thread_meshcop.tlv.active_tstamp == 70
                    ).\
             must_next()
 
@@ -328,8 +326,8 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
         pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(LEADER).\
             filter_LLANMA().\
-            filter(lambda p: p.mle.tlv.active_tstamp == timestamp_from_seconds(70) and\
-                   p.mle.tlv.pending_tstamp == timestamp_from_seconds(20) and\
+            filter(lambda p: p.mle.tlv.active_tstamp == 70 and\
+                   p.mle.tlv.pending_tstamp == 20 and\
                    (p.mle.tlv.leader_data.data_version -
                    _dr_pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -369,11 +367,11 @@ class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
                    NWD_COMMISSIONING_DATA_TLV in p.thread_nwd.tlv.type and\
                    NM_COMMISSIONER_SESSION_ID_TLV in p.thread_meshcop.tlv.type and\
                    NM_BORDER_AGENT_LOCATOR_TLV in p.thread_meshcop.tlv.type and\
-                   p.mle.tlv.active_tstamp == timestamp_from_seconds(70) and\
-                   p.mle.tlv.pending_tstamp == timestamp_from_seconds(20) and\
+                   p.mle.tlv.active_tstamp == 70 and\
+                   p.mle.tlv.pending_tstamp == 20 and\
                    p.thread_meshcop.tlv.delay_timer > 300000 and\
                    p.thread_meshcop.tlv.master_key == KEY1 and\
-                   p.thread_meshcop.tlv.active_tstamp == timestamp_from_seconds(30)
+                   p.thread_meshcop.tlv.active_tstamp == 30
                    ).\
             must_next()
 

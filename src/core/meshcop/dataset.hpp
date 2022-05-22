@@ -203,7 +203,13 @@ public:
          * @returns The Active Timestamp in the Dataset.
          *
          */
-        uint64_t GetActiveTimestamp(void) const { return mActiveTimestamp; }
+        Timestamp GetActiveTimestamp(void) const
+        {
+            Timestamp timestamp;
+
+            timestamp.SetFromTimestamp(mActiveTimestamp);
+            return timestamp;
+        }
 
         /**
          * This method sets the Active Timestamp in the Dataset.
@@ -211,9 +217,9 @@ public:
          * @param[in] aTimestamp   A Timestamp value.
          *
          */
-        void SetActiveTimestamp(uint64_t aTimestamp)
+        void SetActiveTimestamp(Timestamp aTimestamp)
         {
-            mActiveTimestamp                      = aTimestamp;
+            mActiveTimestamp                      = aTimestamp.GetTimestamp();
             mComponents.mIsActiveTimestampPresent = true;
         }
 
@@ -234,7 +240,13 @@ public:
          * @returns The Pending Timestamp in the Dataset.
          *
          */
-        uint64_t GetPendingTimestamp(void) const { return mPendingTimestamp; }
+        Timestamp GetPendingTimestamp(void) const
+        {
+            Timestamp timestamp;
+
+            timestamp.SetFromTimestamp(mPendingTimestamp);
+            return timestamp;
+        }
 
         /**
          * This method sets the Pending Timestamp in the Dataset.
@@ -242,9 +254,9 @@ public:
          * @param[in] aTimestamp   A Timestamp value.
          *
          */
-        void SetPendingTimestamp(uint64_t aTimestamp)
+        void SetPendingTimestamp(Timestamp aTimestamp)
         {
-            mPendingTimestamp                      = aTimestamp;
+            mPendingTimestamp                      = aTimestamp.GetTimestamp();
             mComponents.mIsPendingTimestampPresent = true;
         }
 

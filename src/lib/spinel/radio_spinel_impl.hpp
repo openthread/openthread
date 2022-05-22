@@ -752,7 +752,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
      * Initially set Active Timestamp to 0. This is to allow the node to join the network
      * yet retrieve the full Active Dataset from a neighboring device if one exists.
      */
-    opDataset.mActiveTimestamp                      = 0;
+    memset(&opDataset.mActiveTimestamp, 0, sizeof(opDataset.mActiveTimestamp));
     opDataset.mComponents.mIsActiveTimestampPresent = true;
 
     SuccessOrExit(error = dataset.SetFrom(static_cast<MeshCoP::Dataset::Info &>(opDataset)));

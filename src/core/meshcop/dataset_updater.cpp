@@ -41,6 +41,7 @@
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
+#include "meshcop/timestamp.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -193,7 +194,7 @@ void DatasetUpdater::HandleNotifierEvents(Events aEvents)
         {
             Finish(kErrorNone);
         }
-        else if (requestedDataset.GetActiveTimestamp() <= dataset.GetActiveTimestamp())
+        else if (Timestamp::Compare(requestedDataset.GetActiveTimestamp(), dataset.GetActiveTimestamp()) <= 0)
         {
             Finish(kErrorAlready);
         }

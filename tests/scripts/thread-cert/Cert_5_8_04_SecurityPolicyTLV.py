@@ -32,7 +32,6 @@ import unittest
 from mesh_cop import TlvType
 import config
 import thread_cert
-from common import timestamp_from_seconds
 from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, LEADER_ALOC, NM_COMMISSIONER_SESSION_ID_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_SECURITY_POLICY_TLV, NM_NETWORK_KEY_TLV, MLE_DISCOVERY_RESPONSE
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.layer_fields import nullField
@@ -42,7 +41,6 @@ LEADER = 1
 COMMISSIONER_1 = 2
 COMMISSIONER_2 = 3
 THREAD_NODE = 4
-TIMESTAMP_INIT = timestamp_from_seconds(1)
 
 # Test Purpose and Description:
 # -----------------------------
@@ -77,7 +75,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 1,
                 'channel': 19,
                 'network_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrc']
@@ -87,7 +85,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         COMMISSIONER_1: {
             'name': 'COMMISSIONER_1',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 1,
                 'channel': 19,
                 'network_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrc']
@@ -103,7 +101,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         THREAD_NODE: {
             'name': 'THREAD_NODE',
             'active_dataset': {
-                'timestamp': TIMESTAMP_INIT,
+                'timestamp': 1,
                 'channel': 19,
                 'network_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrc']
@@ -135,7 +133,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         # Step 5
         # Disabling O-Bit security_policy = [3600, 0b01110000]
         self.nodes[COMMISSIONER_1].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(15),
+            active_timestamp=15,
             security_policy=[3600, 'nrc'],
         )
         self.simulator.go(5)
@@ -148,7 +146,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         # Step 9
         # Disabling N-Bit security_policy = [3600, 0b10110000]
         self.nodes[COMMISSIONER_1].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(20),
+            active_timestamp=20,
             security_policy=[3600, 'orc'],
         )
         self.simulator.go(5)
@@ -163,7 +161,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         # Step 13
         # Disabling B-Bit security_policy = [3600, 0b11110000]
         self.nodes[COMMISSIONER_1].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(25),
+            active_timestamp=25,
             security_policy=[3600, 'onrc'],
         )
         self.simulator.go(5)
@@ -178,7 +176,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         # Step 17
         # Disabling R-Bit security_policy = [3600, 0b11010000]
         self.nodes[COMMISSIONER_1].send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(30),
+            active_timestamp=30,
             security_policy=[3600, 'onc'],
         )
         self.simulator.go(5)
@@ -239,7 +237,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
                              }  == set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.active_tstamp == timestamp_from_seconds(15) and\
+                   p.thread_meshcop.tlv.active_tstamp == 15 and\
                    (p.thread_meshcop.tlv.sec_policy_o == 0 or
                     p.thread_meshcop.tlv.unknown == '0e1077')).\
             must_next()
@@ -292,7 +290,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
                              }  == set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.active_tstamp == timestamp_from_seconds(20) and\
+                   p.thread_meshcop.tlv.active_tstamp == 20 and\
                    (p.thread_meshcop.tlv.sec_policy_n == 0 or
                     p.thread_meshcop.tlv.unknown == '0e10b7')).\
             must_next()
@@ -330,7 +328,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
                              }  == set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.active_tstamp == timestamp_from_seconds(25) and\
+                   p.thread_meshcop.tlv.active_tstamp == 25 and\
                    (p.thread_meshcop.tlv.sec_policy_b == 0 or
                     p.thread_meshcop.tlv.unknown == '0e10f7')).\
             must_next()
@@ -376,7 +374,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                               NM_ACTIVE_TIMESTAMP_TLV,
                               NM_SECURITY_POLICY_TLV
                              }  == set(p.thread_meshcop.tlv.type) and\
-                   p.thread_meshcop.tlv.active_tstamp == timestamp_from_seconds(30) and\
+                   p.thread_meshcop.tlv.active_tstamp == 30 and\
                    (p.thread_meshcop.tlv.sec_policy_r == 0 or
                     p.thread_meshcop.tlv.unknown == '0e10d7')).\
             must_next()
@@ -397,7 +395,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_DATA_RESPONSE).\
-            filter(lambda p: p.mle.tlv.active_tstamp == timestamp_from_seconds(30)).\
+            filter(lambda p: p.mle.tlv.active_tstamp == 30).\
             must_next()
 
         # Step 20: The DUT MUST send a unicast MLE Data Response to Commissioner_1.
@@ -407,7 +405,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
             filter_wpan_dst64(COMMISSIONER_1). \
             filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter(lambda p:
-                   p.mle.tlv.active_tstamp == timestamp_from_seconds(30) and\
+                   p.mle.tlv.active_tstamp == 30 and\
                    (p.thread_meshcop.tlv.sec_policy_r == 0 or
                     p.thread_meshcop.tlv.unknown == '0e10d7')).\
             must_next()

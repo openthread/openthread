@@ -214,6 +214,17 @@ typedef struct otOperationalDatasetComponents
 } otOperationalDatasetComponents;
 
 /**
+ * This structure represents a Thread Dataset timestamp.
+ *
+ */
+typedef struct otTimestamp
+{
+    uint64_t mSeconds : 48;
+    uint64_t mTicks : 15;
+    uint64_t mAuthoritative : 1;
+} otTimestamp;
+
+/**
  * This structure represents an Active or Pending Operational Dataset.
  *
  * Components in Dataset are optional. `mComponets` structure specifies which components are present in the Dataset.
@@ -221,19 +232,19 @@ typedef struct otOperationalDatasetComponents
  */
 typedef struct otOperationalDataset
 {
-    uint64_t          mActiveTimestamp;  ///< Active Timestamp (value: (seconds << 16) | (ticks << 1) | authoritive))
-    uint64_t          mPendingTimestamp; ///< Pending Timestamp (value: (seconds << 16) | (ticks << 1) | authoritive))
-    otNetworkKey      mNetworkKey;       ///< Network Key
-    otNetworkName     mNetworkName;      ///< Network Name
-    otExtendedPanId   mExtendedPanId;    ///< Extended PAN ID
-    otMeshLocalPrefix mMeshLocalPrefix;  ///< Mesh Local Prefix
-    uint32_t          mDelay;            ///< Delay Timer
-    otPanId           mPanId;            ///< PAN ID
-    uint16_t          mChannel;          ///< Channel
-    otPskc            mPskc;             ///< PSKc
-    otSecurityPolicy  mSecurityPolicy;   ///< Security Policy
-    otChannelMask     mChannelMask;      ///< Channel Mask
-    otOperationalDatasetComponents mComponents; ///< Specifies which components are set in the Dataset.
+    otTimestamp                    mActiveTimestamp;  ///< Active Timestamp
+    otTimestamp                    mPendingTimestamp; ///< Pending Timestamp
+    otNetworkKey                   mNetworkKey;       ///< Network Key
+    otNetworkName                  mNetworkName;      ///< Network Name
+    otExtendedPanId                mExtendedPanId;    ///< Extended PAN ID
+    otMeshLocalPrefix              mMeshLocalPrefix;  ///< Mesh Local Prefix
+    uint32_t                       mDelay;            ///< Delay Timer
+    otPanId                        mPanId;            ///< PAN ID
+    uint16_t                       mChannel;          ///< Channel
+    otPskc                         mPskc;             ///< PSKc
+    otSecurityPolicy               mSecurityPolicy;   ///< Security Policy
+    otChannelMask                  mChannelMask;      ///< Channel Mask
+    otOperationalDatasetComponents mComponents;       ///< Specifies which components are set in the Dataset.
 } otOperationalDataset;
 
 /**

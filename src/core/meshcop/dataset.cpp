@@ -70,16 +70,12 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
 
     Clear();
 
-    {
-        Timestamp timestamp;
-
-        timestamp.Clear();
-        timestamp.SetSeconds(1);
-        mActiveTimestamp = timestamp.GetUint64();
-    }
-    mChannel     = preferredChannels.ChooseRandomChannel();
-    mChannelMask = supportedChannels.GetMask();
-    mPanId       = Mac::GenerateRandomPanId();
+    mActiveTimestamp.mSeconds       = 1;
+    mActiveTimestamp.mTicks         = 0;
+    mActiveTimestamp.mAuthoritative = 0;
+    mChannel                        = preferredChannels.ChooseRandomChannel();
+    mChannelMask                    = supportedChannels.GetMask();
+    mPanId                          = Mac::GenerateRandomPanId();
     AsCoreType(&mSecurityPolicy).SetToDefault();
 
     SuccessOrExit(error = AsCoreType(&mNetworkKey).GenerateRandom());
@@ -200,7 +196,7 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         switch (cur->GetType())
         {
         case Tlv::kActiveTimestamp:
-            aDatasetInfo.SetActiveTimestamp(As<ActiveTimestampTlv>(cur)->GetTimestamp().GetUint64());
+            aDatasetInfo.SetActiveTimestamp(As<ActiveTimestampTlv>(cur)->GetTimestamp());
             break;
 
         case Tlv::kChannel:
@@ -244,7 +240,7 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
             break;
 
         case Tlv::kPendingTimestamp:
-            aDatasetInfo.SetPendingTimestamp(As<PendingTimestampTlv>(cur)->GetTimestamp().GetUint64());
+            aDatasetInfo.SetPendingTimestamp(As<PendingTimestampTlv>(cur)->GetTimestamp());
             break;
 
         case Tlv::kPskc:
@@ -293,20 +289,12 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
     if (aDatasetInfo.IsActiveTimestampPresent())
     {
-        Timestamp timestamp;
-
-        timestamp.Clear();
-        timestamp.SetUint64(aDatasetInfo.GetActiveTimestamp());
-        IgnoreError(SetTlv(Tlv::kActiveTimestamp, timestamp));
+        IgnoreError(SetTlv(Tlv::kActiveTimestamp, aDatasetInfo.GetActiveTimestamp()));
     }
 
     if (aDatasetInfo.IsPendingTimestampPresent())
     {
-        Timestamp timestamp;
-
-        timestamp.Clear();
-        timestamp.SetUint64(aDatasetInfo.GetPendingTimestamp());
-        IgnoreError(SetTlv(Tlv::kPendingTimestamp, timestamp));
+        IgnoreError(SetTlv(Tlv::kPendingTimestamp, aDatasetInfo.GetPendingTimestamp()));
     }
 
     if (aDatasetInfo.IsDelayPresent())

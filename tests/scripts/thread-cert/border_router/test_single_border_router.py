@@ -32,7 +32,6 @@ from ipaddress import IPv6Network
 
 import config
 import thread_cert
-from common import timestamp_from_seconds
 
 # Test description:
 #   This test verifies bi-directional connectivity between Thread end device
@@ -339,7 +338,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         router.send_mgmt_active_set(
-            active_timestamp=timestamp_from_seconds(100),
+            active_timestamp=100,
             extended_panid='0001020304050607',
         )
         self.simulator.go(10)
