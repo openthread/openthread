@@ -2409,7 +2409,22 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::SetRadioRegion(uint16_t aRegionCode)
 {
-    return Set(SPINEL_PROP_PHY_REGION_CODE, SPINEL_DATATYPE_UINT16_S, aRegionCode);
+    otError error;
+
+    error = Set(SPINEL_PROP_PHY_REGION_CODE, SPINEL_DATATYPE_UINT16_S, aRegionCode);
+
+    if (error == OT_ERROR_NONE)
+    {
+        otLogInfoPlat("Set region code \"%c%c\" successfully", static_cast<char>(aRegionCode >> 8),
+                      static_cast<char>(aRegionCode));
+    }
+    else
+    {
+        otLogWarnPlat("Failed to set region code \"%c%c\": %s", static_cast<char>(aRegionCode >> 8),
+                      static_cast<char>(aRegionCode), otThreadErrorToString(error));
+    }
+
+    return error;
 }
 
 template <typename InterfaceType, typename ProcessContextType>
