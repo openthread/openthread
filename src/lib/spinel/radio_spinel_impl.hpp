@@ -2415,7 +2415,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetRadioRegion(uint16_t 
 
     if (error == OT_ERROR_NONE)
     {
-        otLogInfoPlat("Set region code \"%c%c\" successfully", static_cast<char>(aRegionCode >> 8),
+        otLogNotePlat("Set region code \"%c%c\" successfully", static_cast<char>(aRegionCode >> 8),
                       static_cast<char>(aRegionCode));
     }
     else
