@@ -208,11 +208,13 @@ bool Mac::IsInTransmitState(void) const
 
 Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
 {
-    Error                error = kErrorNone;
-    Address              address;
-    const Beacon *       beacon        = nullptr;
+    Error   error = kErrorNone;
+    Address address;
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     const BeaconPayload *beaconPayload = nullptr;
+    const Beacon *       beacon        = nullptr;
     uint16_t             payloadLength;
+#endif
 
     memset(&aResult, 0, sizeof(ActiveScanResult));
 
@@ -232,6 +234,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
     aResult.mRssi    = aBeaconFrame->GetRssi();
     aResult.mLqi     = aBeaconFrame->GetLqi();
 
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     payloadLength = aBeaconFrame->GetPayloadLength();
 
     beacon        = reinterpret_cast<const Beacon *>(aBeaconFrame->GetPayload());
@@ -246,6 +249,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
         VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = kErrorParse);
         aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
     }
+#endif
 
     LogBeacon("Received");
 
