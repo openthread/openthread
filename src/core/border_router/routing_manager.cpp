@@ -616,8 +616,25 @@ void RoutingManager::HandleOnLinkPrefixDeprecateTimer(Timer &aTimer)
 
 void RoutingManager::HandleOnLinkPrefixDeprecateTimer(void)
 {
+    bool discoveredLocalOnLinkPrefix = false;
+
+    OT_ASSERT(!mIsAdvertisingLocalOnLinkPrefix);
+
     LogInfo("Local on-link prefix %s expired", mLocalOnLinkPrefix.ToString().AsCString());
-    UnpublishExternalRoute(mLocalOnLinkPrefix);
+
+    for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
+    {
+        if (prefix.mIsOnLinkPrefix && prefix.mPrefix == mLocalOnLinkPrefix)
+        {
+            discoveredLocalOnLinkPrefix = true;
+            break;
+        }
+    }
+
+    if (!discoveredLocalOnLinkPrefix)
+    {
+        UnpublishExternalRoute(mLocalOnLinkPrefix);
+    }
 }
 
 void RoutingManager::DeprecateOnLinkPrefix(void)
@@ -726,8 +743,17 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     }
 
     // 3. Update advertised on-link & OMR prefixes information.
-    mIsAdvertisingLocalOnLinkPrefix = (newOnLinkPrefix == &mLocalOnLinkPrefix);
-    mAdvertisedOmrPrefixes          = newOmrPrefixes;
+    {
+        bool wasAdvertisingLocalOnLinkPrefix = mIsAdvertisingLocalOnLinkPrefix;
+
+        mIsAdvertisingLocalOnLinkPrefix = (newOnLinkPrefix == &mLocalOnLinkPrefix);
+        if (!wasAdvertisingLocalOnLinkPrefix && mIsAdvertisingLocalOnLinkPrefix)
+        {
+            InvalidateDiscoveredPrefixes();
+        }
+
+        mAdvertisedOmrPrefixes = newOmrPrefixes;
+    }
 }
 
 void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli)
@@ -1382,6 +1408,9 @@ void RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
 
     for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
     {
+        bool isAdvertisedLocalOnLinkPrefix =
+            mIsAdvertisingLocalOnLinkPrefix && prefix.mIsOnLinkPrefix && mLocalOnLinkPrefix == prefix.mPrefix;
+
         if (
             // Invalidate specified prefix
             (aPrefix != nullptr && prefix.mPrefix == *aPrefix && prefix.mIsOnLinkPrefix == aIsOnLinkPrefix) ||
@@ -1389,9 +1418,14 @@ void RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
             (prefix.GetExpireTime() <= now) ||
             // Invalidate Local OMR prefixes
             (!prefix.mIsOnLinkPrefix &&
-             (mAdvertisedOmrPrefixes.Contains(prefix.mPrefix) || NetworkDataContainsOmrPrefix(prefix.mPrefix))))
+             (mAdvertisedOmrPrefixes.Contains(prefix.mPrefix) || NetworkDataContainsOmrPrefix(prefix.mPrefix))) ||
+            // Remove local on-link prefix if the BR is advertising on-link prefix
+            isAdvertisedLocalOnLinkPrefix)
         {
-            UnpublishExternalRoute(prefix.mPrefix);
+            if (!isAdvertisedLocalOnLinkPrefix)
+            {
+                UnpublishExternalRoute(prefix.mPrefix);
+            }
         }
         else
         {
