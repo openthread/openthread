@@ -291,7 +291,7 @@ private:
     void  GenerateOmrPrefix(void);
     void  GenerateOnLinkPrefix(void);
 
-    const Ip6::Prefix *EvaluateOnLinkPrefix(void);
+    void EvaluateOnLinkPrefix(void);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     void GenerateNat64Prefix(void);
@@ -309,7 +309,7 @@ private:
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);
-    void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix);
+    void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes);
     bool  IsRouterSolicitationInProgress(void) const;
 
     static void HandleRouterSolicitTimer(Timer &aTimer);
