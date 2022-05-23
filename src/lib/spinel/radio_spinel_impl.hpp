@@ -2230,6 +2230,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(sp
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpTimeout(void)
 {
+    otLogCritPlat("Handle RCP timeout");
+
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailed = true;
 #else
@@ -2309,6 +2311,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     }
 
     --mRcpFailureCount;
+    otLogNotePlat("RCP recovery is done");
 
 exit:
     return;
