@@ -73,9 +73,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
     , mRouterAdvertisementCount(0)
     , mLastRouterAdvertisementSendTime(TimerMilli::GetNow() - kMinDelayBetweenRtrAdvs)
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    , mVicariousRouterSolicitTimer(aInstance, HandleVicariousRouterSolicitTimer)
-#endif
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
@@ -292,9 +289,6 @@ void RoutingManager::Stop(void)
 
     mRouterAdvertisementCount = 0;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    mVicariousRouterSolicitTimer.Stop();
-#endif
     mRouterSolicitTimer.Stop();
     mRouterSolicitCount = 0;
 
@@ -787,10 +781,6 @@ void RoutingManager::StartRouterSolicitationDelay(void)
 
     OT_ASSERT(mRouterSolicitCount == 0);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    mVicariousRouterSolicitTimer.Stop();
-#endif
-
     static_assert(kMaxRtrSolicitationDelay > 0, "invalid maximum Router Solicitation delay");
     randomDelay = Random::NonCrypto::GetUint32InRange(0, Time::SecToMsec(kMaxRtrSolicitationDelay));
 
@@ -991,27 +981,6 @@ bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
     return !aOnLinkPrefix.IsLinkLocal() && !aOnLinkPrefix.IsMulticast();
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-void RoutingManager::HandleVicariousRouterSolicitTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().HandleVicariousRouterSolicitTimer();
-}
-
-void RoutingManager::HandleVicariousRouterSolicitTimer(void)
-{
-    LogInfo("Vicarious router solicitation time out");
-
-    for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
-    {
-        if (prefix.mTimeLastUpdate <= mTimeVicariousRouterSolicitStart)
-        {
-            StartRouterSolicitationDelay();
-            break;
-        }
-    }
-}
-#endif
-
 void RoutingManager::HandleRouterSolicitTimer(Timer &aTimer)
 {
     aTimer.Get<RoutingManager>().HandleRouterSolicitTimer();
@@ -1117,14 +1086,6 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
 
     LogInfo("Received Router Solicitation from %s on %s", aSrcAddress.ToString().AsCString(),
             mInfraIf.ToString().AsCString());
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    if (!mVicariousRouterSolicitTimer.IsRunning())
-    {
-        mTimeVicariousRouterSolicitStart = TimerMilli::GetNow();
-        mVicariousRouterSolicitTimer.Start(Time::SecToMsec(kVicariousSolicitationTime));
-    }
-#endif
 
     // Schedule routing policy evaluation with random jitter to respond with Router Advertisement.
     StartRoutingPolicyEvaluationJitter(kRaReplyJitter);

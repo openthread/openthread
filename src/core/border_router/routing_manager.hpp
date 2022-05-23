@@ -237,13 +237,6 @@ private:
     // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
     static constexpr uint32_t kRtrAdvStaleTime = 1800;
 
-    // The VICARIOUS_SOLICIT_TIME in seconds. The Routing Manager will consider
-    // the discovered prefixes invalid if they are not refreshed after receiving
-    // a Router Solicitation message.
-    // The value is equal to Router Solicitation timeout.
-    static constexpr uint32_t kVicariousSolicitationTime =
-        kRtrSolicitationInterval * (kMaxRtrSolicitations - 1) + kMaxRtrSolicitationDelay;
-
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
     static_assert(kDefaultOmrPrefixLifetime >= kMaxRtrAdvInterval, "invalid default OMR prefix lifetime");
     static_assert(kDefaultOnLinkPrefixLifetime >= kMaxRtrAdvInterval, "invalid default on-link prefix lifetime");
@@ -327,10 +320,6 @@ private:
     void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix);
     bool  IsRouterSolicitationInProgress(void) const;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    static void HandleVicariousRouterSolicitTimer(Timer &aTimer);
-    void        HandleVicariousRouterSolicitTimer(void);
-#endif
     static void HandleRouterSolicitTimer(Timer &aTimer);
     void        HandleRouterSolicitTimer(void);
     static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
@@ -416,10 +405,6 @@ private:
     uint32_t  mRouterAdvertisementCount;
     TimeMilli mLastRouterAdvertisementSendTime;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    TimerMilli mVicariousRouterSolicitTimer;
-    TimeMilli  mTimeVicariousRouterSolicitStart;
-#endif
     TimerMilli mRouterSolicitTimer;
     TimeMilli  mTimeRouterSolicitStart;
     uint8_t    mRouterSolicitCount;
