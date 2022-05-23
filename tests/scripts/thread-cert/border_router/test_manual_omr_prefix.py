@@ -31,6 +31,8 @@ import unittest
 
 import config
 import thread_cert
+from pktverify.consts import ICMPV6_RA_OPT_TYPE_RIO
+from pktverify.packet_verifier import PacketVerifier
 
 # Test description:
 # The purpose of this test case is to verify that BR can handle manually added OMR prefixes properly.
@@ -89,6 +91,28 @@ class ManualOmrsPrefix(thread_cert.TestCase):
         self._test_manual_omr_prefix('2002::/64', 'pars', expect_withdraw=False)
         # Add a smaller but invalid OMR prefix (P_stable = 0). Verify BR_1 does not withdraw its OMR prefix.
         self._test_manual_omr_prefix('2003::/64', 'paro', expect_withdraw=False)
+        # Add a deprecating OMR prefix (P_preferred = 0). Verify BR_1 does not withdraw its OMR prefix.
+        self._test_manual_omr_prefix('2004::/64', 'aros', expect_withdraw=False)
+
+        self.collect_ipaddrs()
+        self.collect_extra_vars(BR_1_OMR_PREFIX=br1.get_br_omr_prefix())
+
+    def verify(self, pv: PacketVerifier):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        BR_1_ETH = pv.vars['BR_1_ETH']
+
+        BR_1_OMR_PREFIX = pv.vars['BR_1_OMR_PREFIX']
+        assert BR_1_OMR_PREFIX.endswith('::/64')
+        BR_1_OMR_PREFIX = BR_1_OMR_PREFIX[:-3]
+
+        # Filter all ICMPv6 RA messages advertised by BR_1
+        ra_pkts = pkts.filter_eth_src(BR_1_ETH).filter_icmpv6_nd_ra()
+
+        # Verify BR_1 sends RA RIO for both BR OMR prefix and deprecating OMR prefix (i.e. 2004::/64)
+        ra_pkts.filter(lambda p: ICMPV6_RA_OPT_TYPE_RIO in p.icmpv6.opt.type and '2004::' in p.icmpv6.opt.prefix and
+                       BR_1_OMR_PREFIX in p.icmpv6.opt.prefix).must_next()
 
     def _test_manual_omr_prefix(self, prefix, flags, expect_withdraw, prf='med'):
         br1 = self.nodes[BR_1]
