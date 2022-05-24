@@ -1671,18 +1671,11 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::WaitResponse(void)
     do
     {
         uint64_t now;
-        uint64_t remain;
 
         now = otPlatTimeGet();
-        if (end <= now)
+        if ((end <= now) || (mSpinelInterface.WaitForFrame(end - now) != OT_ERROR_NONE))
         {
-            HandleRcpTimeout();
-            ExitNow(mError = OT_ERROR_NONE);
-        }
-        remain = end - now;
-
-        if (mSpinelInterface.WaitForFrame(remain) != OT_ERROR_NONE)
-        {
+            otLogWarnPlat("Wait for response timeout");
             HandleRcpTimeout();
             ExitNow(mError = OT_ERROR_NONE);
         }
@@ -2230,8 +2223,6 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(sp
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpTimeout(void)
 {
-    otLogCritPlat("Handle RCP timeout");
-
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailed = true;
 #else
