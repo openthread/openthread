@@ -486,7 +486,6 @@ bool otLinkIsEnergyScanInProgress(otInstance *aInstance);
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
  * @retval OT_ERROR_NONE           Successfully enqueued an IEEE 802.15.4 Data Request message.
- * @retval OT_ERROR_ALREADY        An IEEE 802.15.4 Data Request message is already enqueued.
  * @retval OT_ERROR_INVALID_STATE  Device is not in rx-off-when-idle mode.
  * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
  *

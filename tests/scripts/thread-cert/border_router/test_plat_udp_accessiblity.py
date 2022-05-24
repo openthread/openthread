@@ -67,7 +67,7 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         router = self.nodes[ROUTER]
 
         br.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
         br.srp_server_set_enabled(True)
 

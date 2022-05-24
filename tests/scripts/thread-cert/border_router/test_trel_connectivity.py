@@ -126,7 +126,7 @@ class TestTrelConnectivity(thread_cert.TestCase):
         self.wait_node_state(router2, 'router', 10)
 
         # Allow the network to stabilize
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
 
         self.collect_ipaddrs()
         self.collect_rloc16s()

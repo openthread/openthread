@@ -93,7 +93,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
-        self.simulator.go(10)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.collect_ipaddrs()
 
         logging.info("BR      addrs: %r", br.get_addrs())

@@ -623,4 +623,8 @@
 #error "OPENTHREAD_CONFIG_PLATFORM_CSL_UNCERT was removed and no longer supported"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
+#error "OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE was removed and no longer supported"
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

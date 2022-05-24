@@ -34,7 +34,7 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies Vicarious Router Solicitation.
+#   This test verifies on-link prefix configuration.
 #
 # Topology:
 #    -------------(eth)----------------------------
@@ -112,7 +112,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.simulator.go(5)
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
 
         router1.start()
@@ -139,7 +139,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
         host.kill_radvd_service()
 
         br2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br2.get_state())
 
         router2.start()

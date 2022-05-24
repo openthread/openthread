@@ -1180,6 +1180,16 @@ class NodeImpl:
         self.send_command(cmd)
         return int(self._expect_result('\d+'))
 
+    def srp_client_set_ttl(self, ttl: int):
+        cmd = f'srp client ttl {ttl}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_client_get_ttl(self) -> int:
+        cmd = 'srp client ttl'
+        self.send_command(cmd)
+        return int(self._expect_result('\d+'))
+
     #
     # TREL utilities
     #

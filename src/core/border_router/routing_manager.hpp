@@ -48,8 +48,8 @@
 #endif
 
 #include <openthread/netdata.h>
-#include <openthread/platform/infra_if.h>
 
+#include "border_router/infra_if.hpp"
 #include "border_router/router_advertisement.hpp"
 #include "common/array.hpp"
 #include "common/error.hpp"
@@ -73,6 +73,7 @@ namespace BorderRouter {
 class RoutingManager : public InstanceLocator
 {
     friend class ot::Notifier;
+    friend class ot::Instance;
 
 public:
     /**
@@ -155,35 +156,21 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 
     /**
-     * This method receives an ICMPv6 message on the infrastructure interface.
+     * This method processes a received ICMPv6 message from the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.
      *
-     * @param[in]  aInfraIfIndex  The infrastructure interface index.
+     * @param[in]  aPacket        The received ICMPv6 packet.
      * @param[in]  aSrcAddress    The source address this message is sent from.
-     * @param[in]  aBuffer        THe ICMPv6 message buffer.
-     * @param[in]  aLength        The length of the ICMPv6 message buffer.
      *
      */
-    void RecvIcmp6Message(uint32_t            aInfraIfIndex,
-                          const Ip6::Address &aSrcAddress,
-                          const uint8_t *     aBuffer,
-                          uint16_t            aBufferLength);
+    void HandleReceived(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
 
     /**
      * This method handles infrastructure interface state changes.
      *
-     * @param[in]  aInfraIfIndex  The index of the infrastructure interface.
-     * @param[in]  aIsRunning     A boolean that indicates whether the infrastructure
-     *                            interface is running.
-     *
-     * @retval  kErrorNone          Successfully updated the infra interface status.
-     * @retval  kErrorInvalidState  The Routing Manager is not initialized.
-     * @retval  kErrorInvalidArgs   The @p aInfraIfIndex doesn't match the infra interface
-     *                              the Routing Manager is initialized with.
-     *
      */
-    Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
+    void HandleInfraIfStateChanged(void) { EvaluateState(); }
 
     /**
      * This method checks if the on-mesh prefix configuration is a valid OMR prefix.
@@ -250,60 +237,45 @@ private:
     // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
     static constexpr uint32_t kRtrAdvStaleTime = 1800;
 
-    // The VICARIOUS_SOLICIT_TIME in seconds. The Routing Manager will consider
-    // the discovered prefixes invalid if they are not refreshed after receiving
-    // a Router Solicitation message.
-    // The value is equal to Router Solicitation timeout.
-    static constexpr uint32_t kVicariousSolicitationTime =
-        kRtrSolicitationInterval * (kMaxRtrSolicitations - 1) + kMaxRtrSolicitationDelay;
-
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
     static_assert(kDefaultOmrPrefixLifetime >= kMaxRtrAdvInterval, "invalid default OMR prefix lifetime");
     static_assert(kDefaultOnLinkPrefixLifetime >= kMaxRtrAdvInterval, "invalid default on-link prefix lifetime");
     static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
                   "invalid RA STALE time");
 
-    // This struct represents an external prefix which is
-    // discovered on the infrastructure interface.
-    struct ExternalPrefix : public Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
+    // A prefix discovered from Router Advert msg from infra netif
+    class ExternalPrefix : private Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
     {
-        Ip6::Prefix mPrefix;
-        uint32_t    mValidLifetime;
+    public:
+        void               InitFrom(const RouterAdv::PrefixInfoOption &aPio);
+        void               InitFrom(const RouterAdv::RouteInfoOption &aRio);
+        bool               IsOnLinkPrefix(void) const { return mIsOnLinkPrefix; }
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        const TimeMilli &  GetLastUpdateTime(void) const { return mLastUpdateTime; }
+        uint32_t           GetValidLifetime(void) const { return mValidLifetime; }
+        void               ClearValidLifetime(void) { mValidLifetime = 0; }
+        TimeMilli          GetExpireTime(void) const { return mLastUpdateTime + GetPrefixExpireDelay(mValidLifetime); }
+        TimeMilli          GetStaleTime(void) const;
+        bool               operator==(const ExternalPrefix &aPrefix) const;
 
-        union
-        {
-            // Preferred Lifetime of on-link prefix, available
-            // only when `mIsOnLinkPrefix` is TRUE.
-            uint32_t mPreferredLifetime;
+        // Methods to use when `IsOnLinkPrefix()`
+        uint32_t GetPreferredLifetime(void) const { return mPreferredLifetime; }
+        void     ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
+        bool     IsDeprecated(void) const;
+        void     AdoptValidAndPreferredLiftimesFrom(const ExternalPrefix &Prefix);
 
-            // The preference of this route, available
-            // only when `mIsOnLinkPrefix` is FALSE.
-            RoutePreference mRoutePreference;
-        };
-        TimeMilli mTimeLastUpdate;
-        bool      mIsOnLinkPrefix;
+        // Method to use when `!IsOnlinkPrefix()`
+        RoutePreference GetRoutePreference(void) const { return mRoutePreference; }
 
-        bool operator==(const ExternalPrefix &aPrefix) const
-        {
-            return mPrefix == aPrefix.mPrefix && mIsOnLinkPrefix == aPrefix.mIsOnLinkPrefix;
-        }
-
-        bool IsDeprecated(void) const
-        {
-            OT_ASSERT(mIsOnLinkPrefix);
-
-            return mTimeLastUpdate + TimeMilli::SecToMsec(mPreferredLifetime) <= TimerMilli::GetNow();
-        }
-
-        TimeMilli GetExpireTime(void) const { return mTimeLastUpdate + GetPrefixExpireDelay(mValidLifetime); }
-        TimeMilli GetStaleTime(void) const
-        {
-            uint32_t delay = OT_MIN(kRtrAdvStaleTime, mIsOnLinkPrefix ? mPreferredLifetime : mValidLifetime);
-
-            return mTimeLastUpdate + TimeMilli::SecToMsec(delay);
-        }
-
+    private:
         static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
+
+        Ip6::Prefix     mPrefix;
+        TimeMilli       mLastUpdateTime;
+        uint32_t        mValidLifetime;
+        uint32_t        mPreferredLifetime; // Applicable when prefix is on-link.
+        RoutePreference mRoutePreference;   // Applicable when prefix is not on-link
+        bool            mIsOnLinkPrefix;
     };
 
     typedef Array<Ip6::Prefix, kMaxOmrPrefixNum>           OmrPrefixArray;
@@ -313,13 +285,13 @@ private:
     void  Start(void);
     void  Stop(void);
     void  HandleNotifierEvents(Events aEvents);
-    bool  IsInitialized(void) const { return mInfraIfIndex != 0; }
+    bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
     void  GenerateOmrPrefix(void);
     void  GenerateOnLinkPrefix(void);
 
-    const Ip6::Prefix *EvaluateOnLinkPrefix(void);
+    void EvaluateOnLinkPrefix(void);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     void GenerateNat64Prefix(void);
@@ -337,13 +309,9 @@ private:
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);
-    void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix);
+    void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes);
     bool  IsRouterSolicitationInProgress(void) const;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    static void HandleVicariousRouterSolicitTimer(Timer &aTimer);
-    void        HandleVicariousRouterSolicitTimer(void);
-#endif
     static void HandleRouterSolicitTimer(Timer &aTimer);
     void        HandleRouterSolicitTimer(void);
     static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
@@ -355,8 +323,8 @@ private:
     static void HandleOnLinkPrefixDeprecateTimer(Timer &aTimer);
 
     void DeprecateOnLinkPrefix(void);
-    void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
-    void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
+    void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
+    void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
     void UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption &aRio);
     void InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix = nullptr, bool aIsOnLinkPrefix = true);
@@ -376,13 +344,7 @@ private:
     // Manager will be stopped if we are disabled.
     bool mIsEnabled;
 
-    // Indicates whether the infra interface is running. The Routing
-    // Manager will be stopped when the Infra interface is not running.
-    bool mInfraIfIsRunning;
-
-    // The index of the infra interface on which Router Advertisement
-    // messages will be sent.
-    uint32_t mInfraIfIndex;
+    InfraIf mInfraIf;
 
     // The /48 BR ULA prefix loaded from local persistent storage or
     // randomly generated if none is found in persistent storage.
@@ -435,10 +397,6 @@ private:
     uint32_t  mRouterAdvertisementCount;
     TimeMilli mLastRouterAdvertisementSendTime;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_VICARIOUS_RS_ENABLE
-    TimerMilli mVicariousRouterSolicitTimer;
-    TimeMilli  mTimeVicariousRouterSolicitStart;
-#endif
     TimerMilli mRouterSolicitTimer;
     TimeMilli  mTimeRouterSolicitStart;
     uint8_t    mRouterSolicitCount;

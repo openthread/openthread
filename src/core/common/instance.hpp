@@ -972,6 +972,11 @@ template <> inline BorderRouter::RoutingManager &Instance::Get(void)
 {
     return mRoutingManager;
 }
+
+template <> inline BorderRouter::InfraIf &Instance::Get(void)
+{
+    return mRoutingManager.mInfraIf;
+}
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE

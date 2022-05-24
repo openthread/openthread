@@ -89,7 +89,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
 
         router.start()
@@ -101,7 +101,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         #         its local nat64 prefix to Network Data.
         #
         br2.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
         # Only 1 NAT64 prefix in Network Data.
@@ -129,7 +129,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertNotEqual(br1_nat64_prefix, br1.get_netdata_nat64_prefix()[0])
 
         br1.enable_br()
-        self.simulator.go(30)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
 
         # NAT64 prefix in Network Data is still advertised by BR2.
         self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
