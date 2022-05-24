@@ -89,7 +89,8 @@ const char *otSysGetRadioUrlHelpString(void)
 #endif
 
     return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_RADIO_URL_HELP_MAX_POWER_TABLE
-           "    region[=region-code]          Set the radio's region code.\n"
+           "    region[=region-code]          Set the radio's region code. The region code format must be the\n"
+           "                                  2-bytes ascii representation of the ISO 3166 alpha-2 code.\n"
            "    cca-threshold[=dbm]           Set the radio's CCA ED threshold in dBm measured at antenna connector.\n"
            "    enable-coex[=1|0]             If not specified, RCP coex operates with its default configuration.\n"
            "                                  Disable coex with 0, and enable it with other values.\n"
