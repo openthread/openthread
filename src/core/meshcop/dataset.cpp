@@ -289,12 +289,18 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
     if (aDatasetInfo.IsActiveTimestampPresent())
     {
-        IgnoreError(SetTlv(Tlv::kActiveTimestamp, aDatasetInfo.GetActiveTimestamp()));
+        Timestamp activeTimestamp;
+
+        aDatasetInfo.GetActiveTimestamp(activeTimestamp);
+        IgnoreError(SetTlv(Tlv::kActiveTimestamp, activeTimestamp));
     }
 
     if (aDatasetInfo.IsPendingTimestampPresent())
     {
-        IgnoreError(SetTlv(Tlv::kPendingTimestamp, aDatasetInfo.GetPendingTimestamp()));
+        Timestamp pendingTimestamp;
+
+        aDatasetInfo.GetPendingTimestamp(pendingTimestamp);
+        IgnoreError(SetTlv(Tlv::kPendingTimestamp, pendingTimestamp));
     }
 
     if (aDatasetInfo.IsDelayPresent())

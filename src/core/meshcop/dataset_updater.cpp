@@ -194,9 +194,17 @@ void DatasetUpdater::HandleNotifierEvents(Events aEvents)
         {
             Finish(kErrorNone);
         }
-        else if (Timestamp::Compare(requestedDataset.GetActiveTimestamp(), dataset.GetActiveTimestamp()) <= 0)
+        else
         {
-            Finish(kErrorAlready);
+            Timestamp requestedDatasetTimestamp;
+            Timestamp activeDatasetTimestamp;
+
+            requestedDataset.GetActiveTimestamp(requestedDatasetTimestamp);
+            dataset.GetActiveTimestamp(activeDatasetTimestamp);
+            if (Timestamp::Compare(requestedDatasetTimestamp, activeDatasetTimestamp) <= 0)
+            {
+                Finish(kErrorAlready);
+            }
         }
     }
 

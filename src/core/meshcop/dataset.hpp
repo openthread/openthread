@@ -203,13 +203,7 @@ public:
          * @returns The Active Timestamp in the Dataset.
          *
          */
-        Timestamp GetActiveTimestamp(void) const
-        {
-            Timestamp timestamp;
-
-            timestamp.SetFromTimestamp(mActiveTimestamp);
-            return timestamp;
-        }
+        void GetActiveTimestamp(Timestamp &aTimestamp) const { aTimestamp.SetFromTimestamp(mActiveTimestamp); }
 
         /**
          * This method sets the Active Timestamp in the Dataset.
@@ -240,13 +234,7 @@ public:
          * @returns The Pending Timestamp in the Dataset.
          *
          */
-        Timestamp GetPendingTimestamp(void) const
-        {
-            Timestamp timestamp;
-
-            timestamp.SetFromTimestamp(mPendingTimestamp);
-            return timestamp;
-        }
+        void GetPendingTimestamp(Timestamp &aTimestamp) const { aTimestamp.SetFromTimestamp(mPendingTimestamp); }
 
         /**
          * This method sets the Pending Timestamp in the Dataset.
