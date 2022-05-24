@@ -327,7 +327,7 @@ private:
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
     void UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption &aRio);
-    void InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix = nullptr, bool aIsOnLinkPrefix = true);
+    void InvalidateDiscoveredPrefixes(void);
     void InvalidateAllDiscoveredPrefixes(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     bool UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage);
