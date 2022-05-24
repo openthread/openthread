@@ -1567,7 +1567,7 @@ private:
     char            mNetworkName[kMaxSize];
     otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
-#endif
+#endif // OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
 
 /**
  * This class implements CSL IE data structure.

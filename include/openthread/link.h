@@ -379,19 +379,22 @@ typedef struct otMacCounters
  */
 typedef struct otActiveScanResult
 {
-    otExtAddress    mExtAddress;     ///< IEEE 802.15.4 Extended Address
-    otNetworkName   mNetworkName;    ///< Thread Network Name
-    otExtendedPanId mExtendedPanId;  ///< Thread Extended PAN ID
-    otSteeringData  mSteeringData;   ///< Steering Data
-    uint16_t        mPanId;          ///< IEEE 802.15.4 PAN ID
-    uint16_t        mJoinerUdpPort;  ///< Joiner UDP Port
-    uint8_t         mChannel;        ///< IEEE 802.15.4 Channel
-    int8_t          mRssi;           ///< RSSI (dBm)
-    uint8_t         mLqi;            ///< LQI
-    unsigned int    mVersion : 4;    ///< Version
-    bool            mIsNative : 1;   ///< Native Commissioner flag
-    bool            mDiscover : 1;   ///< Result from MLE Discovery
-    bool            mIsJoinable : 1; ///< Joining Permitted flag
+    otExtAddress    mExtAddress;    ///< IEEE 802.15.4 Extended Address
+    otNetworkName   mNetworkName;   ///< Thread Network Name
+    otExtendedPanId mExtendedPanId; ///< Thread Extended PAN ID
+    otSteeringData  mSteeringData;  ///< Steering Data
+    uint16_t        mPanId;         ///< IEEE 802.15.4 PAN ID
+    uint16_t        mJoinerUdpPort; ///< Joiner UDP Port
+    uint8_t         mChannel;       ///< IEEE 802.15.4 Channel
+    int8_t          mRssi;          ///< RSSI (dBm)
+    uint8_t         mLqi;           ///< LQI
+    unsigned int    mVersion : 4;   ///< Version
+    bool            mIsNative : 1;  ///< Native Commissioner flag
+    bool            mDiscover : 1;  ///< Result from MLE Discovery
+
+    // Applicable/Required only when beacon payload parsing feature
+    // (`OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE`) is enabled.
+    bool mIsJoinable : 1; ///< Joining Permitted flag
 } otActiveScanResult;
 
 /**
