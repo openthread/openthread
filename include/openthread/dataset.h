@@ -220,8 +220,8 @@ typedef struct otOperationalDatasetComponents
 typedef struct otTimestamp
 {
     uint64_t mSeconds : 48;
-    uint64_t mTicks : 15;
-    uint64_t mAuthoritative : 1;
+    uint16_t mTicks : 15;
+    bool     mAuthoritative : 1;
 } otTimestamp;
 
 /**
