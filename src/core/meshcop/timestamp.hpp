@@ -49,7 +49,8 @@
 namespace ot {
 namespace MeshCoP {
 
-using ot::Encoding::BigEndian::HostSwap64;
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * This class implements Timestamp generation and parsing.
@@ -92,7 +93,10 @@ public:
      * @returns The Seconds value.
      *
      */
-    uint64_t GetSeconds(void) const { return (HostSwap64(mValue) & kSecondsMask) >> kSecondsOffset; }
+    uint64_t GetSeconds(void) const
+    {
+        return (static_cast<uint64_t>(HostSwap16(mSeconds16)) << 32) + HostSwap32(mSeconds32);
+    }
 
     /**
      * This method sets the Seconds value.
@@ -102,7 +106,8 @@ public:
      */
     void SetSeconds(uint64_t aSeconds)
     {
-        mValue = HostSwap64((HostSwap64(mValue) & ~kSecondsMask) | ((aSeconds << kSecondsOffset) & kSecondsMask));
+        mSeconds16 = HostSwap16(static_cast<uint16_t>(aSeconds >> 32));
+        mSeconds32 = HostSwap32(static_cast<uint32_t>(aSeconds & 0xffffffff));
     }
 
     /**
@@ -111,7 +116,7 @@ public:
      * @returns The Ticks value.
      *
      */
-    uint16_t GetTicks(void) const { return (HostSwap64(mValue) & kTicksMask) >> kTicksOffset; }
+    uint16_t GetTicks(void) const { return HostSwap16(mTicks) >> kTicksOffset; }
 
     /**
      * This method sets the Ticks value.
@@ -121,8 +126,7 @@ public:
      */
     void SetTicks(uint16_t aTicks)
     {
-        mValue = HostSwap64((HostSwap64(mValue) & ~kTicksMask) |
-                            ((static_cast<uint64_t>(aTicks) << kTicksOffset) & kTicksMask));
+        mTicks = HostSwap16((HostSwap16(mTicks) & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask));
     }
 
     /**
@@ -131,7 +135,7 @@ public:
      * @returns The Authoritative value.
      *
      */
-    bool GetAuthoritative(void) const { return (HostSwap64(mValue) & kAuthoritativeMask) != 0; }
+    bool GetAuthoritative(void) const { return (HostSwap16(mTicks) & kAuthoritativeMask) != 0; }
 
     /**
      * This method sets the Authoritative value.
@@ -141,8 +145,8 @@ public:
      */
     void SetAuthoritative(bool aAuthoritative)
     {
-        mValue = HostSwap64((HostSwap64(mValue) & ~kAuthoritativeMask) |
-                            ((static_cast<uint64_t>(aAuthoritative) << kAuthoritativeOffset) & kAuthoritativeMask));
+        mTicks = HostSwap16((HostSwap16(mTicks) & kTicksMask) |
+                            ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask));
     }
 
     /**
@@ -181,15 +185,15 @@ public:
     static int Compare(const Timestamp &aFirst, const Timestamp &aSecond);
 
 private:
-    static constexpr uint8_t  kSecondsOffset       = 16;
-    static constexpr uint64_t kSecondsMask         = 0xffffffffffffULL << kSecondsOffset;
     static constexpr uint8_t  kTicksOffset         = 1;
-    static constexpr uint64_t kTicksMask           = 0x7fffULL << kTicksOffset;
+    static constexpr uint16_t kTicksMask           = 0x7fff << kTicksOffset;
     static constexpr uint16_t kMaxRandomTicks      = 0x7fff;
     static constexpr uint8_t  kAuthoritativeOffset = 0;
-    static constexpr uint64_t kAuthoritativeMask   = 1ULL << kAuthoritativeOffset;
+    static constexpr uint16_t kAuthoritativeMask   = 1 << kAuthoritativeOffset;
 
-    uint64_t mValue;
+    uint16_t mSeconds16; // bits 32-47
+    uint32_t mSeconds32; // bits 0-31
+    uint16_t mTicks;
 } OT_TOOL_PACKED_END;
 
 } // namespace MeshCoP

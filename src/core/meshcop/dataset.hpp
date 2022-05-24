@@ -217,7 +217,7 @@ public:
          * @param[in] aTimestamp   A Timestamp value.
          *
          */
-        void SetActiveTimestamp(Timestamp aTimestamp)
+        void SetActiveTimestamp(const Timestamp &aTimestamp)
         {
             mActiveTimestamp                      = aTimestamp.GetTimestamp();
             mComponents.mIsActiveTimestampPresent = true;
@@ -254,7 +254,7 @@ public:
          * @param[in] aTimestamp   A Timestamp value.
          *
          */
-        void SetPendingTimestamp(Timestamp aTimestamp)
+        void SetPendingTimestamp(const Timestamp &aTimestamp)
         {
             mPendingTimestamp                      = aTimestamp.GetTimestamp();
             mComponents.mIsPendingTimestampPresent = true;
