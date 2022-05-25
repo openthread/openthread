@@ -37,6 +37,8 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1" ]
     } else if (openthread_config_thread_version == "1.2") {
       defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2" ]
+    } else if (openthread_config_thread_version == "1.3") {
+      defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3" ]
     } else if (openthread_config_thread_version != "") {
       assert(false,
              "Unrecognized Thread version: ${openthread_config_thread_version}")

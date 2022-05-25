@@ -93,7 +93,7 @@ build_all_features()
         "-DOPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE=1"
     )
 
-    local options_1_2=(
+    local options_1_3=(
         "-DOPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1"
         "-DOPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1"
         "-DOPENTHREAD_CONFIG_DUA_ENABLE=1"
@@ -110,15 +110,15 @@ build_all_features()
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
 
-    # Build Thread 1.2 with full features and logs
-    export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
+    # Build Thread 1.3 with full features and logs
+    export CPPFLAGS="${options[*]} ${options_1_3[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
     reset_source
-    make -f examples/Makefile-simulation THREAD_VERSION=1.2
+    make -f examples/Makefile-simulation THREAD_VERSION=1.3
 
-    # Build Thread 1.2 with full features and full logs
-    export CPPFLAGS="${options[*]} ${options_1_2[*]}"
+    # Build Thread 1.3 with full features and full logs
+    export CPPFLAGS="${options[*]} ${options_1_3[*]}"
     reset_source
-    make -f examples/Makefile-simulation THREAD_VERSION=1.2 FULL_LOGS=1
+    make -f examples/Makefile-simulation THREAD_VERSION=1.3 FULL_LOGS=1
 
     # Build Thread 1.1 with ASSERT disabled
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_ASSERT_ENABLE=0"

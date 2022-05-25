@@ -118,7 +118,7 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
             .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
             .filter_mle_has_tlv(TlvType.CHALLENGE, TlvType.MODE) \
             .filter(lambda p: p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 0) \
-            .filter(lambda p: p.mle.tlv.version == 3) \
+            .filter(lambda p: p.mle.tlv.version >= config.THREAD_VERSION_1_2) \
             .filter(lambda p: p.ipv6.hlim == 255) \
             .filter_LLARMA() \
             .must_next()
@@ -127,7 +127,7 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
         pkts.filter_wpan_src64(ROUTER_1) \
             .filter_wpan_dst64(DUT) \
             .filter_mle_cmd(consts.MLE_PARENT_RESPONSE) \
-            .filter(lambda p: p.mle.tlv.version == 2) \
+            .filter(lambda p: p.mle.tlv.version == config.THREAD_VERSION_1_1) \
             .must_next()
 
         # Step 5 - DUT sends another multicast MLE Parent Request to the all-routers multicast with the Scan Mask TLV
@@ -136,7 +136,7 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
             .filter_mle_cmd(consts.MLE_PARENT_REQUEST) \
             .filter_mle_has_tlv(TlvType.CHALLENGE, TlvType.MODE) \
             .filter(lambda p: p.mle.tlv.scan_mask.r == 1 and p.mle.tlv.scan_mask.e == 1) \
-            .filter(lambda p: p.mle.tlv.version == consts.THREAD_VERSION_1_2) \
+            .filter(lambda p: p.mle.tlv.version >= consts.THREAD_VERSION_1_2) \
             .filter(lambda p: p.ipv6.hlim == 255) \
             .filter_LLARMA() \
             .must_next()
@@ -152,7 +152,7 @@ class LowPower_6_1_07_PreferringARouterOverAReed_Base(thread_cert.TestCase):
             .filter_mle_cmd(consts.MLE_CHILD_ID_REQUEST) \
             .filter_wpan_dst64(ROUTER_1) \
             .filter_mle_has_tlv(TlvType.ADDRESS_REGISTRATION, TlvType.LINK_LAYER_FRAME_COUNTER, TlvType.MODE, TlvType.RESPONSE, TlvType.TIMEOUT, TlvType.TLV_REQUEST) \
-            .filter(lambda p: p.mle.tlv.version == consts.THREAD_VERSION_1_2) \
+            .filter(lambda p: p.mle.tlv.version >= consts.THREAD_VERSION_1_2) \
             .must_next()
 
 
