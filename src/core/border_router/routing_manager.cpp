@@ -1015,10 +1015,12 @@ void RoutingManager::HandleRouterSolicitTimer(void)
                 }
                 else
                 {
-                    InvalidateDiscoveredPrefixes(&prefix.GetPrefix(), prefix.IsOnLinkPrefix());
+                    prefix.ClearValidLifetime();
                 }
             }
         }
+
+        InvalidateDiscoveredPrefixes();
 
         // Invalidate the learned RA message if it is not refreshed during Router Solicitation.
         if (mTimeRouterAdvMessageLastUpdate <= mTimeRouterSolicitStart)
@@ -1246,23 +1248,23 @@ void RoutingManager::UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption 
     LogInfo("Discovered OMR prefix (%s, %u seconds) from %s", prefix.ToString().AsCString(), aRio.GetRouteLifetime(),
             mInfraIf.ToString().AsCString());
 
-    if (aRio.GetRouteLifetime() == 0)
-    {
-        InvalidateDiscoveredPrefixes(&prefix, /* aIsOnLinkPrefix */ false);
-        ExitNow();
-    }
-
     omrPrefix.InitFrom(aRio);
 
     existingPrefix = mDiscoveredPrefixes.Find(omrPrefix);
 
-    if (existingPrefix == nullptr)
+    if (omrPrefix.GetValidLifetime() == 0)
     {
-        if (omrPrefix.GetValidLifetime() == 0)
+        if (existingPrefix != nullptr)
         {
-            ExitNow();
+            existingPrefix->ClearValidLifetime();
+            InvalidateDiscoveredPrefixes();
         }
 
+        ExitNow();
+    }
+
+    if (existingPrefix == nullptr)
+    {
         if (!mDiscoveredPrefixes.IsFull())
         {
             SuccessOrExit(PublishExternalRoute(prefix, omrPrefix.GetRoutePreference()));
@@ -1284,7 +1286,7 @@ exit:
     return;
 }
 
-void RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bool aIsOnLinkPrefix)
+void RoutingManager::InvalidateDiscoveredPrefixes(void)
 {
     TimeMilli           now                      = TimerMilli::GetNow();
     uint8_t             remainingOnLinkPrefixNum = 0;
@@ -1298,8 +1300,6 @@ void RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
             mIsAdvertisingLocalOnLinkPrefix && prefix.IsOnLinkPrefix() && mLocalOnLinkPrefix == prefix.GetPrefix();
 
         if (
-            // Invalidate specified prefix
-            (aPrefix != nullptr && prefix.GetPrefix() == *aPrefix && prefix.IsOnLinkPrefix() == aIsOnLinkPrefix) ||
             // Invalidate expired prefix
             (prefix.GetExpireTime() <= now) ||
             // Invalidate Local OMR prefixes
