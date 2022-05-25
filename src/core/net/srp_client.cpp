@@ -1783,7 +1783,6 @@ Error Client::SelectUnicastEntry(DnsSrpUnicast::Origin aOrigin, DnsSrpUnicast::I
     Error                                   error = kErrorNotFound;
     DnsSrpUnicast::Info                     unicastInfo;
     NetworkData::Service::Manager::Iterator iterator;
-    uint16_t                                numServers = 0;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
     Settings::SrpClientInfo savedInfo;
     bool                    hasSavedServerInfo = false;
@@ -1820,16 +1819,10 @@ Error Client::SelectUnicastEntry(DnsSrpUnicast::Origin aOrigin, DnsSrpUnicast::I
             ExitNow();
         }
 #endif
-        numServers++;
 
-        // Choose a server randomly (with uniform distribution) from
-        // the list of servers. As we iterate through server entries,
-        // with probability `1/numServers`, we choose to switch the
-        // current selected server with the new entry. This approach
-        // results in a uniform/same probability of selection among
-        // all server entries.
+        // Prefer the numerically lowest server address
 
-        if ((numServers == 1) || (Random::NonCrypto::GetUint16InRange(0, numServers) == 0))
+        if ((error == kErrorNotFound) || (unicastInfo.mSockAddr.GetAddress() < aInfo.mSockAddr.GetAddress()))
         {
             aInfo = unicastInfo;
             error = kErrorNone;
