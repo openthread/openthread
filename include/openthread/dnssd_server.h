@@ -148,6 +148,22 @@ typedef enum
 } otDnssdQueryType;
 
 /**
+ * This structure contains the counters of DNS-SD server.
+ *
+ */
+typedef struct otDnssdCounters
+{
+    uint32_t mSuccessResponse;        ///< The number of successful responses
+    uint32_t mServerFailureResponse;  ///< The number of server failure responses
+    uint32_t mFormatErrorResponse;    ///< The number of format error responses
+    uint32_t mNameErrorResponse;      ///< The number of name error responses
+    uint32_t mNotImplementedResponse; ///< The number of 'not implemented' responses
+    uint32_t mOtherResponse;          ///< The number of other responses
+
+    uint32_t mResolvedBySrp; ///< The number of queries completely resolved by the local SRP server
+} otDnssdCounters;
+
+/**
  * This function sets DNS-SD server query callbacks.
  *
  * The DNS-SD server calls @p aSubscribe to subscribe to a service or service instance to resolve a DNS-SD query and @p
@@ -218,6 +234,16 @@ const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuer
  *
  */
 otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE]);
+
+/**
+ * This function returns the counters of the DNS-SD server.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ * @returns  A pointer to the counters of the DNS-SD server.
+ *
+ */
+const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance);
 
 /**
  * @}
