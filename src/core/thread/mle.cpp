@@ -82,7 +82,6 @@ Mle::Mle(Instance &aInstance)
     , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer)
     , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer)
     , mDetachGracefullyTimer(aInstance, Mle::HandleDetachGracefullyTimer)
-    , mStopThreadTask(aInstance, Mle::HandleStopThreadTask)
     , mParentLeaderCost(0)
     , mDetachGracefullyCallback(nullptr)
     , mDetachGracefullyContext(nullptr)
@@ -263,10 +262,7 @@ void Mle::Stop(StopMode aMode)
     SetRole(kRoleDisabled);
 
 exit:
-    if (IsDetachingGracefully())
-    {
-        mDetachGracefullyTimer.Stop();
-    }
+    mDetachGracefullyTimer.Stop();
 
     if (mDetachGracefullyCallback != nullptr)
     {
@@ -4777,16 +4773,32 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(IsChild());
-
     VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
+
+    OT_ASSERT(mDetachGracefullyCallback == nullptr);
 
     mDetachGracefullyCallback = aCallback;
     mDetachGracefullyContext  = aContext;
 
-    mDetachGracefullyTimer.Start(kDetachGracefullyTimeout);
+    if (IsChild() || IsRouter())
+    {
+        mDetachGracefullyTimer.Start(kDetachGracefullyTimeout);
+    }
+    else
+    {
+        mDetachGracefullyTimer.Start(0);
+    }
 
-    IgnoreError(SendChildUpdateRequest(/*aTimeout=*/0));
+    if (IsChild())
+    {
+        IgnoreError(SendChildUpdateRequest(/*aTimeout=*/0));
+    }
+#if OPENTHREAD_FTD
+    else if (IsRouter())
+    {
+        Get<MleRouter>().SendAddressRelease(&Mle::HandleDetachGracefullyAddressReleaseResponse, this);
+    }
+#endif
 
 exit:
     return error;
@@ -4802,15 +4814,27 @@ void Mle::HandleDetachGracefullyTimer(void)
     Stop();
 }
 
-void Mle::HandleStopThreadTask(Tasklet &aTasklet)
+#if OPENTHREAD_FTD
+void Mle::HandleDetachGracefullyAddressReleaseResponse(void *               aContext,
+                                                       otMessage *          aMessage,
+                                                       const otMessageInfo *aMessageInfo,
+                                                       Error                aResult)
 {
-    aTasklet.Get<Mle>().HandleStopThreadTask();
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+    OT_UNUSED_VARIABLE(aResult);
+
+    static_cast<MleRouter *>(aContext)->HandleDetachGracefullyAddressReleaseResponse();
 }
 
-void Mle::HandleStopThreadTask(void)
+void Mle::HandleDetachGracefullyAddressReleaseResponse(void)
 {
-    Stop();
+    if (IsDetachingGracefully())
+    {
+        Stop();
+    }
 }
+#endif // OPENTHREAD_FTD
 
 } // namespace Mle
 } // namespace ot

@@ -187,13 +187,15 @@ public:
     Error BecomeChild(void);
 
     /**
-     * This function sets the child timeout to 0 and then stops Thread protocol operation.
+     * This function notifies other nodes in the network (if any) and then stops Thread protocol operation.
+     *
+     * It sends an Address Release if it's a router, or sets its child timeout to 0 if it's a child.
      *
      * @param[in] aCallback A pointer to a function that is called upon finishing detaching.
      * @param[in] aContext  A pointer to callback application-specific context.
      *
-     * @retval OT_ERROR_NONE         Successfully started detaching.
-     * @retval OT_ERROR_ALREADY      Not currently attached.
+     * @retval OT_ERROR_NONE Successfully started detaching.
+     * @retval OT_ERROR_BUSY Detaching is already in progress.
      *
      */
     Error DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext);
@@ -1689,7 +1691,6 @@ protected:
     TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
     TimerMilli    mDetachGracefullyTimer;
-    Tasklet       mStopThreadTask;
     uint8_t       mParentLeaderCost;
 
     otDetachGracefullyCallback mDetachGracefullyCallback;
@@ -1825,9 +1826,15 @@ private:
     void        ScheduleMessageTransmissionTimer(void);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
-    static void HandleStopThreadTask(Tasklet &aTasklet);
-    void        HandleStopThreadTask(void);
     Error       SendChildUpdateRequest(uint32_t aTimeout);
+
+#if OPENTHREAD_FTD
+    static void HandleDetachGracefullyAddressReleaseResponse(void *               aContext,
+                                                             otMessage *          aMessage,
+                                                             const otMessageInfo *aMessageInfo,
+                                                             Error                aResult);
+    void        HandleDetachGracefullyAddressReleaseResponse(void);
+#endif
 
     void HandleAdvertisement(RxInfo &aRxInfo);
     void HandleChildIdResponse(RxInfo &aRxInfo);

@@ -515,8 +515,6 @@ private:
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     History mHistory;
 #endif
-
-    bool mDetachAsync : 1;
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE

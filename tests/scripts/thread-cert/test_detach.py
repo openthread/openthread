@@ -154,8 +154,9 @@ class TestDetach(thread_cert.TestCase):
         leader.thread_stop()
         router1.detach(is_async=True)
         self.assertEqual(router1.get_state(), 'router')
-        router1.send_command('thread stop')
-        router1.expect_finished_detaching()
+        router1.thread_stop()
+        self.assertEqual(router1.get_state(), 'disabled')
+        router1.detach()
         self.assertEqual(router1.get_state(), 'disabled')
 
     def verify(self, pv: PacketVerifier):

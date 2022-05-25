@@ -1457,11 +1457,16 @@ template <> otError Interpreter::Process<Cmd("detach")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = otThreadDetachGracefully(GetInstancePtr(), &Interpreter::HandleDetachGracefullyResult, this));
-
-    mDetachAsync = (aArgs[0] == "async");
-
-    error = mDetachAsync ? OT_ERROR_NONE : OT_ERROR_PENDING;
+    if (aArgs[0] == "async")
+    {
+        SuccessOrExit(error = otThreadDetachGracefully(GetInstancePtr(), nullptr, nullptr));
+    }
+    else
+    {
+        SuccessOrExit(error =
+                          otThreadDetachGracefully(GetInstancePtr(), &Interpreter::HandleDetachGracefullyResult, this));
+        error = OT_ERROR_PENDING;
+    }
 
 exit:
     return error;
@@ -4925,11 +4930,7 @@ void Interpreter::HandleDetachGracefullyResult(void *aContext)
 void Interpreter::HandleDetachGracefullyResult(void)
 {
     OutputLine("Finished detaching");
-
-    if (!mDetachAsync)
-    {
-        OutputResult(OT_ERROR_NONE);
-    }
+    OutputResult(OT_ERROR_NONE);
 }
 
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)

@@ -571,18 +571,13 @@ public:
 #endif
 
     /**
-     * This function notifies other nodes in the network (if any) and then stops Thread protocol operation.
+     * This function sends an Address Release.
      *
-     * It sends an Address Release if it's a router, or sets its child timeout to 0 if it's a child.
-     *
-     * @param[in] aCallback A pointer to a function that is called upon finishing detaching.
-     * @param[in] aContext  A pointer to callback application-specific context.
-     *
-     * @retval OT_ERROR_NONE Successfully started detaching.
-     * @retval OT_ERROR_BUSY Detaching is already in progress.
+     * @param[in] aResponseHandler        A pointer to a function that is called upon response reception or time-out.
+     * @param[in] aResponseHandlerContext A pointer to callback application-specific context.
      *
      */
-    Error DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext);
+    void SendAddressRelease(Coap::ResponseHandler aResponseHandler = nullptr, void *aResponseHandlerContext = nullptr);
 
 private:
     static constexpr uint16_t kDiscoveryMaxJitter            = 250;  // Max jitter delay Discovery Responses (in msec).
@@ -616,7 +611,6 @@ private:
     Error ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv);
     void  StopAdvertiseTrickleTimer(void);
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
-    void  SendAddressRelease(Coap::ResponseHandler aResponseHandler = nullptr, void *aResponseHandlerContext = nullptr);
     void  SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                      ThreadStatusTlv::Status aResponseStatus,
                                      const Router *          aRouter,
@@ -657,14 +651,6 @@ private:
     void        HandleAddressRelease(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleDetachGracefullyAddressReleaseResponse(void *               aContext,
-                                                             otMessage *          aMessage,
-                                                             const otMessageInfo *aMessageInfo,
-                                                             Error                aResult);
-    void        HandleDetachGracefullyAddressReleaseResponse(otMessage *          aMessage,
-                                                             const otMessageInfo *aMessageInfo,
-                                                             Error                aResult);
 
     static bool IsSingleton(const RouteTlv &aRouteTlv);
 
