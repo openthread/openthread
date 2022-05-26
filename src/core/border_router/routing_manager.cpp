@@ -550,26 +550,22 @@ exit:
 
 void RoutingManager::EvaluateOnLinkPrefix(void)
 {
-    const Ip6::Prefix *smallestOnLinkPrefix = nullptr;
+    const ExternalPrefix *onLinkPrefix = nullptr;
 
     // We don't evaluate on-link prefix if we are doing Router Solicitation.
     VerifyOrExit(!IsRouterSolicitationInProgress());
 
     for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
     {
-        if (!prefix.IsOnLinkPrefix() || prefix.IsDeprecated())
+        if (prefix.IsOnLinkPrefix() && !prefix.IsDeprecated())
         {
-            continue;
-        }
-
-        if (smallestOnLinkPrefix == nullptr || (prefix.GetPrefix() < *smallestOnLinkPrefix))
-        {
-            smallestOnLinkPrefix = &prefix.GetPrefix();
+            onLinkPrefix = &prefix;
+            break;
         }
     }
 
     // We start advertising our local on-link prefix if there is no existing one.
-    if (smallestOnLinkPrefix == nullptr)
+    if (onLinkPrefix == nullptr)
     {
         if (!mIsAdvertisingLocalOnLinkPrefix &&
             (PublishExternalRoute(mLocalOnLinkPrefix, NetworkData::kRoutePreferenceMedium) == kErrorNone))
@@ -587,18 +583,11 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
 
         mOnLinkPrefixDeprecateTimer.Stop();
     }
-    // When an application-specific on-link prefix is received and it is bigger than the
-    // advertised prefix, we will not remove the advertised prefix. In this case, there
-    // will be two on-link prefixes on the infra link. But all BRs will still converge to
-    // the same smallest on-link prefix and the application-specific prefix is not used.
     else if (mIsAdvertisingLocalOnLinkPrefix)
     {
-        if (!(mLocalOnLinkPrefix < *smallestOnLinkPrefix))
-        {
-            LogInfo("EvaluateOnLinkPrefix: There is already smaller on-link prefix %s on %s",
-                    smallestOnLinkPrefix->ToString().AsCString(), mInfraIf.ToString().AsCString());
-            DeprecateOnLinkPrefix();
-        }
+        LogInfo("EvaluateOnLinkPrefix: There is an on-link prefix %s on %s",
+                onLinkPrefix->GetPrefix().ToString().AsCString(), mInfraIf.ToString().AsCString());
+        DeprecateOnLinkPrefix();
     }
 
 exit:
