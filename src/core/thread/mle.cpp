@@ -4786,6 +4786,8 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
     }
     else
     {
+        // If the device is a leader, or it's already detached or disabled, we start the timer with zero duration to
+        // stop and invoke the callback when the timer fires, so the operation finishes immediately and asynchronously.
         mDetachGracefullyTimer.Start(0);
     }
 
