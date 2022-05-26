@@ -1288,50 +1288,59 @@ exit:
 
 void RoutingManager::InvalidateDiscoveredPrefixes(void)
 {
-    TimeMilli           now                      = TimerMilli::GetNow();
-    uint8_t             remainingOnLinkPrefixNum = 0;
-    ExternalPrefixArray remainingPrefixes;
+    TimeMilli now                  = TimerMilli::GetNow();
+    TimeMilli nextExpireTime       = now.GetDistantFuture();
+    bool      containsOnLinkPrefix = false;
 
     mDiscoveredPrefixInvalidTimer.Stop();
 
-    for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
+    for (ExternalPrefixArray::IndexType index = 0; index < mDiscoveredPrefixes.GetLength();)
     {
-        bool isAdvertisedLocalOnLinkPrefix =
+        ExternalPrefix &prefix = mDiscoveredPrefixes[index];
+        bool            isAdvertisedLocalOnLinkPrefix =
             mIsAdvertisingLocalOnLinkPrefix && prefix.IsOnLinkPrefix() && mLocalOnLinkPrefix == prefix.GetPrefix();
 
-        if (
-            // Invalidate expired prefix
-            (prefix.GetExpireTime() <= now) ||
-            // Invalidate Local OMR prefixes
+        // We invalidate expired prefixes, or local OMR prefixes
+        // (either in `mAdvertisedOmrPrefixes` or in Thread Network
+        // Data), or if the prefix matches the local on-link prefix
+        // (when local on-link prefix is being advertised).
+
+        if ((prefix.GetExpireTime() <= now) ||
             (!prefix.IsOnLinkPrefix() && (mAdvertisedOmrPrefixes.Contains(prefix.GetPrefix()) ||
                                           NetworkDataContainsOmrPrefix(prefix.GetPrefix()))) ||
-            // Remove local on-link prefix if the BR is advertising on-link prefix
             isAdvertisedLocalOnLinkPrefix)
         {
             if (!isAdvertisedLocalOnLinkPrefix)
             {
                 UnpublishExternalRoute(prefix.GetPrefix());
             }
+
+            // Remove the prefix from the array by replacing it with
+            // last entry in the array (we copy the popped last entry
+            // into `prefix` entry at current `index`). Also in this
+            // case, the `index` is not incremented.
+
+            prefix = *mDiscoveredPrefixes.PopBack();
         }
         else
         {
-            mDiscoveredPrefixInvalidTimer.FireAtIfEarlier(prefix.GetExpireTime());
+            nextExpireTime = OT_MIN(nextExpireTime, prefix.GetExpireTime());
+            containsOnLinkPrefix |= prefix.IsOnLinkPrefix();
 
-            IgnoreError(remainingPrefixes.PushBack(prefix));
-
-            if (prefix.IsOnLinkPrefix())
-            {
-                ++remainingOnLinkPrefixNum;
-            }
+            index++;
         }
     }
 
-    mDiscoveredPrefixes = remainingPrefixes;
-
-    if (remainingOnLinkPrefixNum == 0 && !mIsAdvertisingLocalOnLinkPrefix)
+    if (nextExpireTime != now.GetDistantFuture())
     {
-        // There are no valid on-link prefixes on infra link now, start Router Solicitation
-        // To discover more on-link prefixes or timeout to advertise my local on-link prefix.
+        mDiscoveredPrefixInvalidTimer.FireAt(nextExpireTime);
+    }
+
+    if (!containsOnLinkPrefix && !mIsAdvertisingLocalOnLinkPrefix)
+    {
+        // There are no valid on-link prefixes on infra link now, start
+        // Router Solicitation to discover more on-link prefixes or
+        // time out to advertise the local on-link prefix.
         StartRouterSolicitationDelay();
     }
 }
