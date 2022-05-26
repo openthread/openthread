@@ -68,13 +68,18 @@ def main():
     if args[0] == '-s':
         is_sender = True
         args.pop(0)
+    elif args[0] == '-u':
+        is_multicast_receiver = False
+        args.pop(0)
+    else:
+        is_multicast_receiver = True
 
     ifname, group = args
 
     if is_sender:
         sender(ifname, group)
     else:
-        receiver(ifname, group)
+        receiver(ifname, group, is_multicast_receiver=is_multicast_receiver)
 
 
 def sender(ifname, group):
@@ -94,7 +99,7 @@ def sender(ifname, group):
         time.sleep(1)
 
 
-def receiver(ifname, group):
+def receiver(ifname, group, is_multicast_receiver=True):
     # Look up multicast group address in name server and find out IP version
     addrinfo = socket.getaddrinfo(group, None)[0]
     assert addrinfo[0] == socket.AF_INET6
@@ -110,11 +115,12 @@ def receiver(ifname, group):
     # Bind it to the port
     s.bind(('', MYPORT))
 
-    group_bin = socket.inet_pton(addrinfo[0], addrinfo[4][0])
-    # Join group
-    interface_index = if_nametoindex(ifname)
-    mreq = group_bin + struct.pack('@I', interface_index)
-    s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
+    if is_multicast_receiver:
+        group_bin = socket.inet_pton(addrinfo[0], addrinfo[4][0])
+        # Join group
+        interface_index = if_nametoindex(ifname)
+        mreq = group_bin + struct.pack('@I', interface_index)
+        s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
 
     # Loop, printing any data we receive
     while True:
