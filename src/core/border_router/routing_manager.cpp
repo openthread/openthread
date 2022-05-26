@@ -578,11 +578,25 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
             LogInfo("Start advertising on-link prefix %s on %s", mLocalOnLinkPrefix.ToString().AsCString(),
                     mInfraIf.ToString().AsCString());
 
-            // Call `InvalidateDiscoveredPrefixes()` after setting
-            // `mIsAdvertisingLocalOnLinkPrefix` to remove on-link
-            // prefix in case it was discovered and included in
-            // `mDiscoveredPrefixes` list earlier.
-            InvalidateDiscoveredPrefixes();
+            // We go through `mDiscoveredPrefixes` list to check if the
+            // local on-link prefix was previously discovered and
+            // included in the list and if so we remove it from list.
+            //
+            // Note that `UpdateDiscoveredOnLinkPrefix()` will also
+            // check and not add local on-link prefix in the discovered
+            // prefix list while we are advertising the local on-link
+            // prefix.
+
+            for (ExternalPrefix &prefix : mDiscoveredPrefixes)
+            {
+                if (prefix.IsOnLinkPrefix() && mLocalOnLinkPrefix == prefix.GetPrefix())
+                {
+                    // To remove the prefix from the list, we copy the
+                    // popped last entry into `prefix` entry.
+                    prefix = *mDiscoveredPrefixes.PopBack();
+                    break;
+                }
+            }
         }
 
         mOnLinkPrefixDeprecateTimer.Stop();
@@ -1297,23 +1311,16 @@ void RoutingManager::InvalidateDiscoveredPrefixes(void)
     for (ExternalPrefixArray::IndexType index = 0; index < mDiscoveredPrefixes.GetLength();)
     {
         ExternalPrefix &prefix = mDiscoveredPrefixes[index];
-        bool            isAdvertisedLocalOnLinkPrefix =
-            mIsAdvertisingLocalOnLinkPrefix && prefix.IsOnLinkPrefix() && mLocalOnLinkPrefix == prefix.GetPrefix();
 
         // We invalidate expired prefixes, or local OMR prefixes
         // (either in `mAdvertisedOmrPrefixes` or in Thread Network
-        // Data), or if the prefix matches the local on-link prefix
-        // (when local on-link prefix is being advertised).
+        // Data).
 
         if ((prefix.GetExpireTime() <= now) ||
-            (!prefix.IsOnLinkPrefix() && (mAdvertisedOmrPrefixes.Contains(prefix.GetPrefix()) ||
-                                          NetworkDataContainsOmrPrefix(prefix.GetPrefix()))) ||
-            isAdvertisedLocalOnLinkPrefix)
+            (!prefix.IsOnLinkPrefix() &&
+             (mAdvertisedOmrPrefixes.Contains(prefix.GetPrefix()) || NetworkDataContainsOmrPrefix(prefix.GetPrefix()))))
         {
-            if (!isAdvertisedLocalOnLinkPrefix)
-            {
-                UnpublishExternalRoute(prefix.GetPrefix());
-            }
+            UnpublishExternalRoute(prefix.GetPrefix());
 
             // Remove the prefix from the array by replacing it with
             // last entry in the array (we copy the popped last entry
