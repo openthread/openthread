@@ -695,6 +695,8 @@ private:
     uint8_t mRouterSelectionJitter;        ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.
 
+    uint8_t mLinkRequestDelay;
+
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     uint8_t mBackboneRouterRegistrationDelay; ///< Delay before registering Backbone Router service.
