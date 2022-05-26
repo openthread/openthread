@@ -156,18 +156,21 @@ exit:
 
 void MulticastRoutingManager::UpdateMldReport(const Ip6::Address &aAddress, bool isAdd)
 {
-    struct ipv6_mreq ipv6mr;
-    otError          error = OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aAddress);
+    OT_UNUSED_VARIABLE(isAdd);
 
-    ipv6mr.ipv6mr_interface = if_nametoindex(gBackboneNetifName);
-    memcpy(&ipv6mr.ipv6mr_multiaddr, aAddress.GetBytes(), sizeof(ipv6mr.ipv6mr_multiaddr));
-    error = (setsockopt(mMulticastRouterSock, IPPROTO_IPV6, (isAdd ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP),
-                        (void *)&ipv6mr, sizeof(ipv6mr))
-                 ? OT_ERROR_FAILED
-                 : OT_ERROR_NONE);
-
-    LogResult(error, "MulticastRoutingManager: %s: address %s %s", __FUNCTION__, aAddress.ToString().AsCString(),
-              (isAdd ? "Added" : "Removed"));
+    //    struct ipv6_mreq ipv6mr;
+    //    otError          error = OT_ERROR_NONE;
+    //
+    //    ipv6mr.ipv6mr_interface = if_nametoindex(gBackboneNetifName);
+    //    memcpy(&ipv6mr.ipv6mr_multiaddr, aAddress.GetBytes(), sizeof(ipv6mr.ipv6mr_multiaddr));
+    //    error = (setsockopt(mMulticastRouterSock, IPPROTO_IPV6, (isAdd ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP),
+    //                        (void *)&ipv6mr, sizeof(ipv6mr))
+    //                 ? OT_ERROR_FAILED
+    //                 : OT_ERROR_NONE);
+    //
+    //    LogResult(error, "MulticastRoutingManager: %s: address %s %s", __FUNCTION__, aAddress.ToString().AsCString(),
+    //              (isAdd ? "Added" : "Removed"));
 }
 
 bool MulticastRoutingManager::HasMulticastListener(const Ip6::Address &aAddress) const
