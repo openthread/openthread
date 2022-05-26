@@ -195,8 +195,6 @@ exit:
 
 void RoutingManager::GenerateOmrPrefix(void)
 {
-    IgnoreError(Get<Settings>().Delete<Settings::LegacyOmrPrefix>());
-
     mLocalOmrPrefix = mBrUlaPrefix;
     mLocalOmrPrefix.SetSubnetId(kOmrPrefixSubnetId);
     mLocalOmrPrefix.SetLength(kOmrPrefixLength);

@@ -112,15 +112,11 @@ public:
         kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
         kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
         kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
-        kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
         kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
         kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeyLegacyOmrPrefix   = OT_SETTINGS_KEY_LEGACY_OMR_PREFIX,
-        kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
-        kKeyLegacyNat64Prefix = OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX,
         kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
     };
 
@@ -583,37 +579,7 @@ public:
     private:
         BrUlaPrefix(void) = default;
     };
-
-    /**
-     * This class defines constants and types for legacy OMR prefix settings.
-     *
-     */
-    class LegacyOmrPrefix
-    {
-    public:
-        static constexpr Key kKey = kKeyLegacyOmrPrefix; ///< The associated key.
-
-        typedef Ip6::Prefix ValueType; ///< The associated value type.
-
-    private:
-        LegacyOmrPrefix(void) = default;
-    };
-
-    /**
-     * This class defines constants and types for on-link prefix settings.
-     *
-     */
-    class OnLinkPrefix
-    {
-    public:
-        static constexpr Key kKey = kKeyOnLinkPrefix; ///< The associated key.
-
-        typedef Ip6::Prefix ValueType; ///< The associated value type.
-
-    private:
-        OnLinkPrefix(void) = default;
-    };
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     /**
