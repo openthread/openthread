@@ -1482,7 +1482,7 @@ private:
     uint8_t  mPendingAddressSpec;
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
 /**
  * This class implements IEEE 802.15.4 Beacon Payload generation and parsing.
  *
@@ -1491,16 +1491,28 @@ OT_TOOL_PACKED_BEGIN
 class BeaconPayload
 {
 public:
-    static constexpr uint8_t kProtocolId    = 3;      ///< Thread Protocol ID.
-    static constexpr uint8_t kVersionOffset = 4;      ///< Version field bit offset.
-    static constexpr uint8_t kNativeFlag    = 1 << 3; ///< Native Commissioner flag.
-    static constexpr uint8_t kJoiningFlag   = 1 << 0; ///< Joining Permitted flag.
+    static constexpr uint8_t kProtocolId      = 3;                     ///< Thread Protocol ID.
+    static constexpr uint8_t kProtocolVersion = 2;                     ///< Thread Protocol version.
+    static constexpr uint8_t kVersionOffset   = 4;                     ///< Version field bit offset.
+    static constexpr uint8_t kVersionMask     = 0xf << kVersionOffset; ///< Version field mask.
+    static constexpr uint8_t kNativeFlag      = 1 << 3;                ///< Native Commissioner flag.
+    static constexpr uint8_t kJoiningFlag     = 1 << 0;                ///< Joining Permitted flag.
 
     /**
      * This constant specified the maximum number of chars in Network Name (excludes null char).
      *
      */
     static constexpr uint8_t kMaxSize = OT_NETWORK_NAME_MAX_SIZE;
+
+    /**
+     * This method initializes the Beacon Payload.
+     *
+     */
+    void Init(void)
+    {
+        mProtocolId = kProtocolId;
+        mFlags      = kProtocolVersion << kVersionOffset;
+    }
 
     /**
      * This method indicates whether or not the beacon appears to be a valid Thread Beacon Payload.
@@ -1537,6 +1549,18 @@ public:
     bool IsNative(void) const { return (mFlags & kNativeFlag) != 0; }
 
     /**
+     * This method clears the Native Commissioner flag.
+     *
+     */
+    void ClearNative(void) { mFlags &= ~kNativeFlag; }
+
+    /**
+     * This method sets the Native Commissioner flag.
+     *
+     */
+    void SetNative(void) { mFlags |= kNativeFlag; }
+
+    /**
      * This method indicates whether or not the Joining Permitted flag is set.
      *
      * @retval TRUE   If the Joining Permitted flag is set.
@@ -1544,6 +1568,26 @@ public:
      *
      */
     bool IsJoiningPermitted(void) const { return (mFlags & kJoiningFlag) != 0; }
+
+    /**
+     * This method clears the Joining Permitted flag.
+     *
+     */
+    void ClearJoiningPermitted(void) { mFlags &= ~kJoiningFlag; }
+
+    /**
+     * This method sets the Joining Permitted flag.
+     *
+     */
+    void SetJoiningPermitted(void)
+    {
+        mFlags |= kJoiningFlag;
+
+#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != 2 // check against kProtocolVersion
+        mFlags &= ~kVersionMask;
+        mFlags |= OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION << kVersionOffset;
+#endif
+    }
 
     /**
      * This method gets the Network Name field.
@@ -1554,6 +1598,14 @@ public:
     const char *GetNetworkName(void) const { return mNetworkName; }
 
     /**
+     * This method sets the Network Name field.
+     *
+     * @param[in]  aNameData  The Network Name (as a `NameData`).
+     *
+     */
+    void SetNetworkName(const char *aNetworkName) { memcpy(mNetworkName, aNetworkName, sizeof(mNetworkName)); }
+
+    /**
      * This method returns the Extended PAN ID field.
      *
      * @returns The Extended PAN ID field.
@@ -1561,13 +1613,21 @@ public:
      */
     const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
+    /**
+     * This method sets the Extended PAN ID field.
+     *
+     * @param[in]  aExtPanId  An Extended PAN ID.
+     *
+     */
+    void SetExtendedPanId(const otExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
+
 private:
     uint8_t         mProtocolId;
     uint8_t         mFlags;
     char            mNetworkName[kMaxSize];
     otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
 
 /**
  * This class implements CSL IE data structure.

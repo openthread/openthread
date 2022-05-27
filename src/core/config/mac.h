@@ -500,14 +500,14 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+ * @def OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
  *
  * This setting configures if the beacon payload parsing needs to be enabled in MAC. This is optional and is disabled by
  * default because Thread 1.2.1 has removed support for beacon payloads.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
-#define OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
+#define OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE 0
 #endif
 
 #endif // CONFIG_MAC_H_
