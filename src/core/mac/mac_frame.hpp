@@ -1592,7 +1592,7 @@ public:
     /**
      * This method gets the Network Name field.
      *
-     * @returns The Network Name field as `NameData`.
+     * @returns The Network Name field as a string.
      *
      */
     const char *GetNetworkName(void) const { return mNetworkName; }
@@ -1600,7 +1600,7 @@ public:
     /**
      * This method sets the Network Name field.
      *
-     * @param[in]  aNameData  The Network Name (as a `NameData`).
+     * @param[in]  aNetworkName  The Network Name as a string.
      *
      */
     void SetNetworkName(const char *aNetworkName) { memcpy(mNetworkName, aNetworkName, sizeof(mNetworkName)); }
