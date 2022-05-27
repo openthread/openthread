@@ -539,7 +539,7 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     static const uint8_t routerTlvs[]        = {Tlv::kLinkMargin};
     static const uint8_t validNeighborTlvs[] = {Tlv::kLinkMargin, Tlv::kRoute};
     Error                error               = kErrorNone;
-    TxMessage *          message;
+    TxMessage *          message             = nullptr;
     Ip6::Address         destination;
 
     VerifyOrExit(mLinkRequestDelay == 0 && mChallengeTimeout == 0);
