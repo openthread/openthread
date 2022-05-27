@@ -184,6 +184,7 @@ EXTRA_DIST                                                         = \
     test_reset.py                                                    \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
+    test_router_upgrade.py                                           \
     test_service.py                                                  \
     test_set_mliid.py                                                \
     test_srp_auto_start_mode.py                                      \
@@ -258,6 +259,7 @@ check_SCRIPTS                                                      = \
     test_reset.py                                                    \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
+    test_router_upgrade.py                                           \
     test_service.py                                                  \
     test_srp_auto_start_mode.py                                      \
     test_srp_client_remove_host.py                                   \
