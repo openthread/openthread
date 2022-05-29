@@ -60,8 +60,6 @@ OT_TOOL_PACKED_BEGIN
 class Timestamp : public Clearable<Timestamp>
 {
 public:
-    Timestamp(void) { Clear(); } // Suppress warning of accessing uninitialzed mValue
-
     /**
      * This method converts the timestamp to `otTimestamp`.
      *
