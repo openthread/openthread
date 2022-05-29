@@ -63,10 +63,10 @@ public:
     Timestamp(void) { Clear(); } // Suppress warning of accessing uninitialzed mValue
 
     /**
-     * This method returns the timestamp as `otTimestamp`.
+     * This method converts the timestamp to `otTimestamp`.
      *
      */
-    otTimestamp GetTimestamp(void) const;
+    void ConvertTo(otTimestamp &aTimestamp) const;
 
     /**
      * This method sets the timestamp from `otTimestamp`.

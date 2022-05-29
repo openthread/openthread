@@ -213,7 +213,7 @@ public:
          */
         void SetActiveTimestamp(const Timestamp &aTimestamp)
         {
-            mActiveTimestamp                      = aTimestamp.GetTimestamp();
+            aTimestamp.ConvertTo(mActiveTimestamp);
             mComponents.mIsActiveTimestampPresent = true;
         }
 
@@ -244,7 +244,7 @@ public:
          */
         void SetPendingTimestamp(const Timestamp &aTimestamp)
         {
-            mPendingTimestamp                      = aTimestamp.GetTimestamp();
+            aTimestamp.ConvertTo(mPendingTimestamp);
             mComponents.mIsPendingTimestampPresent = true;
         }
 

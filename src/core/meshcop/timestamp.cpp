@@ -38,14 +38,11 @@
 namespace ot {
 namespace MeshCoP {
 
-otTimestamp Timestamp::GetTimestamp(void) const
+void Timestamp::ConvertTo(otTimestamp &aTimestamp) const
 {
-    otTimestamp timestamp;
-
-    timestamp.mSeconds       = GetSeconds();
-    timestamp.mTicks         = GetTicks();
-    timestamp.mAuthoritative = GetAuthoritative();
-    return timestamp;
+    aTimestamp.mSeconds       = GetSeconds();
+    aTimestamp.mTicks         = GetTicks();
+    aTimestamp.mAuthoritative = GetAuthoritative();
 }
 
 void Timestamp::SetFromTimestamp(otTimestamp aTimestamp)
