@@ -70,7 +70,7 @@ public:
      * This method sets the timestamp from `otTimestamp`.
      *
      */
-    void SetFromTimestamp(otTimestamp aTimestamp);
+    void SetFromTimestamp(const otTimestamp &aTimestamp);
 
     /**
      * This method returns the Seconds value.

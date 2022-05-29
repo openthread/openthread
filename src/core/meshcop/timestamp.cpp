@@ -45,7 +45,7 @@ void Timestamp::ConvertTo(otTimestamp &aTimestamp) const
     aTimestamp.mAuthoritative = GetAuthoritative();
 }
 
-void Timestamp::SetFromTimestamp(otTimestamp aTimestamp)
+void Timestamp::SetFromTimestamp(const otTimestamp &aTimestamp)
 {
     SetSeconds(aTimestamp.mSeconds);
     SetTicks(aTimestamp.mTicks);
