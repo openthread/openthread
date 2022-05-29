@@ -1232,9 +1232,7 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
 
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP));
-        SuccessOrExit(error = mEncoder.WriteUint64((activeTimestamp.mSeconds << 16) |
-                                                   static_cast<uint64_t>(activeTimestamp.mTicks << 1) |
-                                                   static_cast<uint64_t>(activeTimestamp.mAuthoritative)));
+        SuccessOrExit(error = mEncoder.WriteUint64(activeTimestamp.mSeconds));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1244,9 +1242,7 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
 
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_PENDING_TIMESTAMP));
-        SuccessOrExit(error = mEncoder.WriteUint64((pendingTimestamp.mSeconds << 16) |
-                                                   static_cast<uint64_t>(pendingTimestamp.mTicks << 1) |
-                                                   static_cast<uint64_t>(pendingTimestamp.mAuthoritative)));
+        SuccessOrExit(error = mEncoder.WriteUint64(pendingTimestamp.mSeconds));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1408,12 +1404,9 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
             if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
-                uint64_t activeTimestampValue;
-
-                SuccessOrExit(error = mDecoder.ReadUint64(activeTimestampValue));
-                aDataset.mActiveTimestamp.mSeconds       = (activeTimestampValue >> 16);
-                aDataset.mActiveTimestamp.mTicks         = (activeTimestampValue >> 1) & 0x7fff;
-                aDataset.mActiveTimestamp.mAuthoritative = (activeTimestampValue & 1);
+                SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mActiveTimestamp.mSeconds));
+                aDataset.mActiveTimestamp.mTicks         = 0;
+                aDataset.mActiveTimestamp.mAuthoritative = false;
             }
 
             aDataset.mComponents.mIsActiveTimestampPresent = true;
@@ -1423,12 +1416,9 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
             if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
-                uint64_t pendingTimestampValue;
-
-                SuccessOrExit(error = mDecoder.ReadUint64(pendingTimestampValue));
-                aDataset.mPendingTimestamp.mSeconds       = (pendingTimestampValue >> 16);
-                aDataset.mPendingTimestamp.mTicks         = (pendingTimestampValue >> 1) & 0x7fff;
-                aDataset.mPendingTimestamp.mAuthoritative = (pendingTimestampValue & 1);
+                SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mPendingTimestamp.mSeconds));
+                aDataset.mPendingTimestamp.mTicks         = 0;
+                aDataset.mPendingTimestamp.mAuthoritative = false;
             }
 
             aDataset.mComponents.mIsPendingTimestampPresent = true;
