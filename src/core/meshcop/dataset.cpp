@@ -72,7 +72,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
 
     mActiveTimestamp.mSeconds       = 1;
     mActiveTimestamp.mTicks         = 0;
-    mActiveTimestamp.mAuthoritative = 0;
+    mActiveTimestamp.mAuthoritative = false;
     mChannel                        = preferredChannels.ChooseRandomChannel();
     mChannelMask                    = supportedChannels.GetMask();
     mPanId                          = Mac::GenerateRandomPanId();

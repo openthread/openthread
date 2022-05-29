@@ -214,7 +214,7 @@ typedef struct otOperationalDatasetComponents
 } otOperationalDatasetComponents;
 
 /**
- * This structure represents a Thread Dataset timestamp.
+ * This structure represents a Thread Dataset timestamp component.
  *
  */
 typedef struct otTimestamp

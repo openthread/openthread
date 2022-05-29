@@ -212,7 +212,7 @@ template <> otError Dataset::Process<Cmd("activetimestamp")>(Arg aArgs[])
     {
         SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mActiveTimestamp.mSeconds));
         sDataset.mActiveTimestamp.mTicks               = 0;
-        sDataset.mActiveTimestamp.mAuthoritative       = 0;
+        sDataset.mActiveTimestamp.mAuthoritative       = false;
         sDataset.mComponents.mIsActiveTimestampPresent = true;
     }
 
@@ -432,7 +432,7 @@ template <> otError Dataset::Process<Cmd("pendingtimestamp")>(Arg aArgs[])
     {
         SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mPendingTimestamp.mSeconds));
         sDataset.mPendingTimestamp.mTicks               = 0;
-        sDataset.mPendingTimestamp.mAuthoritative       = 0;
+        sDataset.mPendingTimestamp.mAuthoritative       = false;
         sDataset.mComponents.mIsPendingTimestampPresent = true;
     }
 
@@ -456,7 +456,7 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
             arg++;
             SuccessOrExit(error = arg->ParseAsUint64(dataset.mActiveTimestamp.mSeconds));
             dataset.mActiveTimestamp.mTicks               = 0;
-            dataset.mActiveTimestamp.mAuthoritative       = 0;
+            dataset.mActiveTimestamp.mAuthoritative       = false;
             dataset.mComponents.mIsActiveTimestampPresent = true;
         }
         else if (*arg == "pendingtimestamp")
@@ -464,7 +464,7 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
             arg++;
             SuccessOrExit(error = arg->ParseAsUint64(dataset.mPendingTimestamp.mSeconds));
             dataset.mPendingTimestamp.mTicks               = 0;
-            dataset.mPendingTimestamp.mAuthoritative       = 0;
+            dataset.mPendingTimestamp.mAuthoritative       = false;
             dataset.mComponents.mIsPendingTimestampPresent = true;
         }
         else if (*arg == "networkkey")
