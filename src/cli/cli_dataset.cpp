@@ -210,10 +210,7 @@ template <> otError Dataset::Process<Cmd("activetimestamp")>(Arg aArgs[])
     }
     else
     {
-        uint64_t activeTimestampSeconds;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint64(activeTimestampSeconds));
-        sDataset.mActiveTimestamp.mSeconds             = activeTimestampSeconds;
+        SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mActiveTimestamp.mSeconds));
         sDataset.mActiveTimestamp.mTicks               = 0;
         sDataset.mActiveTimestamp.mAuthoritative       = 0;
         sDataset.mComponents.mIsActiveTimestampPresent = true;
@@ -433,10 +430,7 @@ template <> otError Dataset::Process<Cmd("pendingtimestamp")>(Arg aArgs[])
     }
     else
     {
-        uint64_t pendingTimestampSeconds;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint64(pendingTimestampSeconds));
-        sDataset.mPendingTimestamp.mSeconds             = pendingTimestampSeconds;
+        SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mPendingTimestamp.mSeconds));
         sDataset.mPendingTimestamp.mTicks               = 0;
         sDataset.mPendingTimestamp.mAuthoritative       = 0;
         sDataset.mComponents.mIsPendingTimestampPresent = true;
@@ -459,22 +453,16 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
     {
         if (*arg == "activetimestamp")
         {
-            uint64_t activeTimestampSeconds;
-
             arg++;
-            SuccessOrExit(error = arg->ParseAsUint64(activeTimestampSeconds));
-            dataset.mActiveTimestamp.mSeconds             = activeTimestampSeconds;
+            SuccessOrExit(error = arg->ParseAsUint64(dataset.mActiveTimestamp.mSeconds));
             dataset.mActiveTimestamp.mTicks               = 0;
             dataset.mActiveTimestamp.mAuthoritative       = 0;
             dataset.mComponents.mIsActiveTimestampPresent = true;
         }
         else if (*arg == "pendingtimestamp")
         {
-            uint64_t pendingTimestampSeconds;
-
             arg++;
-            SuccessOrExit(error = arg->ParseAsUint64(pendingTimestampSeconds));
-            dataset.mPendingTimestamp.mSeconds             = pendingTimestampSeconds;
+            SuccessOrExit(error = arg->ParseAsUint64(dataset.mPendingTimestamp.mSeconds));
             dataset.mPendingTimestamp.mTicks               = 0;
             dataset.mPendingTimestamp.mAuthoritative       = 0;
             dataset.mComponents.mIsPendingTimestampPresent = true;
