@@ -38,6 +38,23 @@
 namespace ot {
 namespace MeshCoP {
 
+otTimestamp Timestamp::GetTimestamp(void) const
+{
+    otTimestamp timestamp;
+
+    timestamp.mSeconds       = GetSeconds();
+    timestamp.mTicks         = GetTicks();
+    timestamp.mAuthoritative = GetAuthoritative();
+    return timestamp;
+}
+
+void Timestamp::SetFromTimestamp(otTimestamp aTimestamp)
+{
+    SetSeconds(aTimestamp.mSeconds);
+    SetTicks(aTimestamp.mTicks);
+    SetAuthoritative(aTimestamp.mAuthoritative);
+}
+
 int Timestamp::Compare(const Timestamp *aFirst, const Timestamp *aSecond)
 {
     int rval;

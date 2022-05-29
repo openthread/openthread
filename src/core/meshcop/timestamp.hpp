@@ -66,26 +66,13 @@ public:
      * This method returns the timestamp as `otTimestamp`.
      *
      */
-    otTimestamp GetTimestamp(void) const
-    {
-        otTimestamp timestamp;
-
-        timestamp.mSeconds       = GetSeconds();
-        timestamp.mTicks         = GetTicks();
-        timestamp.mAuthoritative = GetAuthoritative();
-        return timestamp;
-    }
+    otTimestamp GetTimestamp(void) const;
 
     /**
      * This method sets the timestamp from `otTimestamp`.
      *
      */
-    void SetFromTimestamp(otTimestamp aTimestamp)
-    {
-        SetSeconds(aTimestamp.mSeconds);
-        SetTicks(aTimestamp.mTicks);
-        SetAuthoritative(aTimestamp.mAuthoritative);
-    }
+    void SetFromTimestamp(otTimestamp aTimestamp);
 
     /**
      * This method returns the Seconds value.
