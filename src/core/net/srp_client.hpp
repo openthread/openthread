@@ -854,6 +854,26 @@ private:
         kKeepRetryInterval,
     };
 
+    class SingleServiceMode
+    {
+    public:
+        SingleServiceMode(void)
+            : mEnabled(false)
+            , mService(nullptr)
+        {
+        }
+
+        void     Enable(void) { mEnabled = true, mService = nullptr; }
+        void     Disable(void) { mEnabled = false; }
+        bool     IsEnabled(void) const { return mEnabled; }
+        Service *GetService(void) { return mService; }
+        void     SetService(Service &aService) { mService = &aService; }
+
+    private:
+        bool     mEnabled;
+        Service *mService;
+    };
+
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     class AutoStart : Clearable<AutoStart>
     {
@@ -995,6 +1015,7 @@ private:
     const char *        mDomainName;
     HostInfo            mHostInfo;
     LinkedList<Service> mServices;
+    SingleServiceMode   mSingleServiceMode;
     TimerMilli          mTimer;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     AutoStart mAutoStart;

@@ -335,6 +335,8 @@ void Client::Stop(Requester aRequester, StopMode aMode)
 
     VerifyOrExit(GetState() != kStateStopped);
 
+    mSingleServiceMode.Disable();
+
     // State changes:
     //   kAdding     -> kToRefresh
     //   kRefreshing -> kToRefresh
@@ -402,6 +404,8 @@ void Client::Pause(void)
         /* (6) kRegistered -> */ kRegistered,
         /* (7) kRemoved    -> */ kRemoved,
     };
+
+    mSingleServiceMode.Disable();
 
     // State changes:
     //   kAdding     -> kToRefresh
@@ -710,6 +714,11 @@ void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
 
     for (Service &service : mServices)
     {
+        if (mSingleServiceMode.IsEnabled() && mSingleServiceMode.GetService() != &service)
+        {
+            continue;
+        }
+
         service.SetState(aNewStates[service.GetState()]);
     }
 
@@ -768,9 +777,21 @@ void Client::SendUpdate(void)
 
     Error    error   = kErrorNone;
     Message *message = mSocket.NewMessage(0);
+    uint32_t length;
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = PrepareUpdateMessage(*message));
+
+    length = message->GetLength() + sizeof(Ip6::Udp::Header) + sizeof(Ip6::Header);
+
+    if (length >= Ip6::kMaxDatagramLength)
+    {
+        LogInfo("Msg len %u is larger than MTU, enabling single service mode", length);
+        mSingleServiceMode.Enable();
+        IgnoreError(message->SetLength(0));
+        SuccessOrExit(error = PrepareUpdateMessage(*message));
+    }
+
     SuccessOrExit(error = mSocket.SendTo(*message, Ip6::MessageInfo()));
 
     LogInfo("Send update");
@@ -808,6 +829,7 @@ exit:
 
         LogInfo("Failed to send update: %s", ErrorToString(error));
 
+        mSingleServiceMode.Disable();
         FreeMessage(message);
 
         SetState(kStateToRetry);
@@ -882,6 +904,11 @@ Error Client::PrepareUpdateMessage(Message &aMessage)
         for (Service &service : mServices)
         {
             SuccessOrExit(error = AppendServiceInstructions(service, aMessage, info));
+
+            if (mSingleServiceMode.IsEnabled() && (mSingleServiceMode.GetService() != nullptr))
+            {
+                break;
+            }
         }
     }
 
@@ -1053,6 +1080,11 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
         SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
     }
 #endif
+
+    if (mSingleServiceMode.IsEnabled())
+    {
+        mSingleServiceMode.SetService(aService);
+    }
 
 exit:
     return error;
@@ -1473,6 +1505,7 @@ void Client::ProcessResponse(Message &aMessage)
     //   kRemoving   -> kRemoved
 
     ChangeHostAndServiceStates(kNewStateOnUpdateDone);
+    mSingleServiceMode.Disable();
 
     HandleUpdateDone();
     UpdateState();
@@ -1742,6 +1775,7 @@ void Client::HandleTimer(void)
         break;
 
     case kStateUpdating:
+        mSingleServiceMode.Disable();
         LogRetryWaitInterval();
         LogInfo("Timed out, no response");
         GrowRetryWaitInterval();
