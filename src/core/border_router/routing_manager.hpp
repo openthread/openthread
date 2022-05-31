@@ -55,6 +55,7 @@
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
+#include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
 #include "thread/network_data.hpp"
@@ -278,7 +279,27 @@ private:
         bool            mIsOnLinkPrefix;
     };
 
-    typedef Array<Ip6::Prefix, kMaxOmrPrefixNum>           OmrPrefixArray;
+    class OmrPrefix // An OMR Prefix
+    {
+    public:
+        static constexpr uint16_t       kInfoStringSize = 60;
+        typedef String<kInfoStringSize> InfoString;
+
+        void               Init(const Ip6::Prefix &aPrefix, RoutePreference aPreference);
+        void               InitFrom(NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        RoutePreference    GetPreference(void) const { return mPreference; }
+        void               SetPreference(RoutePreference aPreference) { mPreference = aPreference; }
+        bool               Matches(const Ip6::Prefix &aPrefix) const { return mPrefix == aPrefix; }
+        bool               IsFavoredOver(const OmrPrefix &aOther) const;
+        InfoString         ToString(void) const;
+
+    private:
+        Ip6::Prefix     mPrefix;
+        RoutePreference mPreference;
+    };
+
+    typedef Array<OmrPrefix, kMaxOmrPrefixNum>             OmrPrefixArray;
     typedef Array<ExternalPrefix, kMaxDiscoveredPrefixNum> ExternalPrefixArray;
 
     void  EvaluateState(void);

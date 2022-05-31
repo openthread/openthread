@@ -190,6 +190,14 @@ public:
      */
     Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
+    /**
+     * This method gets the preference.
+     *
+     * @return The preference.
+     *
+     */
+    RoutePreference GetPreference(void) const { return RoutePreferenceFromValue(RoutePreferenceToValue(mPreference)); }
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
      * This method indicates whether or not the prefix configuration is valid.
