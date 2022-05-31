@@ -210,7 +210,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
 {
     Error   error = kErrorNone;
     Address address;
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     const BeaconPayload *beaconPayload = nullptr;
     const Beacon *       beacon        = nullptr;
     uint16_t             payloadLength;
@@ -234,7 +234,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
     aResult.mRssi    = aBeaconFrame->GetRssi();
     aResult.mLqi     = aBeaconFrame->GetLqi();
 
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
     payloadLength = aBeaconFrame->GetPayloadLength();
 
     beacon        = reinterpret_cast<const Beacon *>(aBeaconFrame->GetPayload());
@@ -734,13 +734,11 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame *frame;
-    uint16_t fcf;
-    Beacon * beacon = nullptr;
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
+    TxFrame *      frame;
+    uint16_t       fcf;
+    Beacon *       beacon = nullptr;
     uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
-#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -758,7 +756,6 @@ TxFrame *Mac::PrepareBeacon(void)
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
 
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
     beaconLength = sizeof(*beacon);
 
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
@@ -780,7 +777,6 @@ TxFrame *Mac::PrepareBeacon(void)
     beaconLength += sizeof(*beaconPayload);
 
     frame->SetPayloadLength(beaconLength);
-#endif
 
     LogBeacon("Sending");
 

@@ -1482,7 +1482,6 @@ private:
     uint8_t  mPendingAddressSpec;
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
 /**
  * This class implements IEEE 802.15.4 Beacon Payload generation and parsing.
  *
@@ -1627,7 +1626,6 @@ private:
     char            mNetworkName[kMaxSize];
     otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_ENABLE
 
 /**
  * This class implements CSL IE data structure.
