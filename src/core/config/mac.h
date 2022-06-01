@@ -513,12 +513,12 @@
 /**
  * @def OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
  *
- * This setting configures if the beacon payload needs to be enabled in outgoing beacon frames. This is optional but it
- * is enabled by default because to enable backward compatability.
+ * This setting configures if the beacon payload needs to be enabled in outgoing beacon frames. This is optional and is disabled by
+ * default because Thread 1.2.1 has removed support for beacon payloads.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
-#define OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE 1
+#define OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE 0
 #endif
 
 #endif // CONFIG_MAC_H_
