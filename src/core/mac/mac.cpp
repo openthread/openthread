@@ -737,6 +737,10 @@ TxFrame *Mac::PrepareBeacon(void)
     TxFrame *frame;
     uint16_t fcf;
     Beacon * beacon = nullptr;
+#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
+    uint8_t        beaconLength;
+    BeaconPayload *beaconPayload = nullptr;
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -753,6 +757,30 @@ TxFrame *Mac::PrepareBeacon(void)
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
+
+#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
+    beaconLength = sizeof(*beacon);
+
+    beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
+
+    beaconPayload->Init();
+
+    if (IsJoinable())
+    {
+        beaconPayload->SetJoiningPermitted();
+    }
+    else
+    {
+        beaconPayload->ClearJoiningPermitted();
+    }
+
+    beaconPayload->SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
+    beaconPayload->SetExtendedPanId(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+
+    beaconLength += sizeof(*beaconPayload);
+
+    frame->SetPayloadLength(beaconLength);
+#endif
 
     LogBeacon("Sending");
 
