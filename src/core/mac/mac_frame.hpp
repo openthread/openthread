@@ -43,6 +43,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/network_name.hpp"
 
 namespace ot {
 namespace Mac {
@@ -1591,18 +1592,18 @@ public:
     /**
      * This method gets the Network Name field.
      *
-     * @returns The Network Name field as a string.
+     * @returns The Network Name field as `NameData`.
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName; }
+    MeshCoP::NameData GetNetworkName(void) const { return MeshCoP::NameData(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method sets the Network Name field.
      *
-     * @param[in]  aNetworkName  The Network Name as a string.
+     * @param[in]  aNameData  The Network Name (as a `NameData`).
      *
      */
-    void SetNetworkName(const char *aNetworkName) { memcpy(mNetworkName, aNetworkName, sizeof(mNetworkName)); }
+    void SetNetworkName(const MeshCoP::NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method returns the Extended PAN ID field.
@@ -1623,7 +1624,7 @@ public:
 private:
     uint8_t         mProtocolId;
     uint8_t         mFlags;
-    char            mNetworkName[kMaxSize];
+    char            mNetworkName[MeshCoP::NetworkName::kMaxSize];
     otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 

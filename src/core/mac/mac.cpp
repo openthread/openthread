@@ -771,7 +771,7 @@ TxFrame *Mac::PrepareBeacon(void)
         beaconPayload->ClearJoiningPermitted();
     }
 
-    beaconPayload->SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString());
+    beaconPayload->SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
     beaconPayload->SetExtendedPanId(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
 
     beaconLength += sizeof(*beaconPayload);
