@@ -1499,12 +1499,6 @@ public:
     static constexpr uint8_t kJoiningFlag     = 1 << 0;                ///< Joining Permitted flag.
 
     /**
-     * This constant specified the maximum number of chars in Network Name (excludes null char).
-     *
-     */
-    static constexpr uint8_t kMaxSize = OT_NETWORK_NAME_MAX_SIZE;
-
-    /**
      * This method initializes the Beacon Payload.
      *
      */
