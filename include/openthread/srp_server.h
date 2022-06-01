@@ -156,6 +156,16 @@ typedef enum otSrpServerAddressMode
 } otSrpServerAddressMode;
 
 /**
+ * This structure includes SRP server TTL configurations.
+ *
+ */
+typedef struct otSrpServerTtlConfig
+{
+    uint32_t mMinTtl; ///< The minimum TTL in seconds.
+    uint32_t mMaxTtl; ///< The maximum TTL in seconds.
+} otSrpServerTtlConfig;
+
+/**
  * This structure includes SRP server LEASE and KEY-LEASE configurations.
  *
  */
@@ -297,6 +307,30 @@ otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t a
  *
  */
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function returns SRP server TTL configuration.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aTtlConfig  A pointer to an `otSrpServerTtlConfig` instance.
+ *
+ */
+void otSrpServerGetTtlConfig(otInstance *aInstance, otSrpServerTtlConfig *aTtlConfig);
+
+/**
+ * This function sets SRP server TTL configuration.
+ *
+ * The granted TTL will always be no greater than the max lease interval configured via `otSrpServerSetLeaseConfig()`,
+ * regardless of the minimum and maximum TTL configuration.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aTtlConfig  A pointer to an `otSrpServerTtlConfig` instance.
+ *
+ * @retval  OT_ERROR_NONE          Successfully set the TTL configuration.
+ * @retval  OT_ERROR_INVALID_ARGS  The TTL configuration is not valid.
+ *
+ */
+otError otSrpServerSetTtlConfig(otInstance *aInstance, const otSrpServerTtlConfig *aTtlConfig);
 
 /**
  * This function returns SRP server LEASE and KEY-LEASE configurations.
@@ -616,6 +650,16 @@ uint16_t otSrpServerServiceGetWeight(const otSrpServerService *aService);
  *
  */
 uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService);
+
+/**
+ * This function returns the TTL of the service instance.
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ *
+ * @returns  The TTL of the service instance..
+ *
+ */
+uint32_t otSrpServerServiceGetTtl(const otSrpServerService *aService);
 
 /**
  * This function returns the TXT record data of the service instance.
