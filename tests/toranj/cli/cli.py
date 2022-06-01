@@ -458,6 +458,7 @@ class Node(object):
                'port': '12345',
                'priority': '0',
                'weight': '0',
+               'ttl': '7200',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -478,8 +479,8 @@ class Node(object):
             if service['deleted'] == 'true':
                 service_list.append(service)
                 continue
-            # 'subtypes', port', 'priority', 'weight'
-            for i in range(0, 4):
+            # 'subtypes', port', 'priority', 'weight', 'ttl'
+            for i in range(0, 5):
                 key_value = outputs.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
             txt_entries = outputs.pop(0).strip().split('[')[1].strip(' ]').split(',')

@@ -641,6 +641,7 @@ private:
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild);
     void  UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId);
     bool  UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, bool &aResetAdvInterval);
+    bool  HasNeighborWithGoodLinkQuality(void) const;
 
     static void HandleAddressSolicitResponse(void *               aContext,
                                              otMessage *          aMessage,
@@ -702,6 +703,8 @@ private:
 
     uint8_t mRouterSelectionJitter;        ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.
+
+    uint8_t mLinkRequestDelay;
 
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

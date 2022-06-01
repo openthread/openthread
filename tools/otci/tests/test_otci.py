@@ -533,7 +533,7 @@ class TestOTCI(unittest.TestCase):
         node2.joiner_start("TEST123")
         node2.wait(10, expect_line="Join success")
         node2.thread_start()
-        node2.wait(5)
+        node2.wait(10)
         assert node2.get_state() == "router"
 
     def _test_otci_multi_nodes(self, leader, commissioner, child1, child2):
@@ -587,7 +587,7 @@ class TestOTCI(unittest.TestCase):
         commissioner.set_network_key(TEST_NETWORKKEY)
         commissioner.thread_start()
 
-        commissioner.wait(5)
+        commissioner.wait(10)
 
         self.assertEqual('router', commissioner.get_state())
 

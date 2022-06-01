@@ -85,6 +85,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionIdTimeout(0)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
+    , mLinkRequestDelay(0)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mBackboneRouterRegistrationDelay(0)
@@ -196,6 +197,7 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     mRouterSelectionJitterTimeout = 0;
+    mLinkRequestDelay             = 0;
 
     switch (mRole)
     {
@@ -293,7 +295,7 @@ void MleRouter::HandleDetachStart(void)
 
 void MleRouter::HandleChildStart(AttachMode aMode)
 {
-    // reset `rejected` flag whenever REED becomes child.
+    mLinkRequestDelay       = 0;
     mAddressSolicitRejected = false;
 
     mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
@@ -496,6 +498,11 @@ void MleRouter::SendAdvertisement(void)
     // children to detach.
     VerifyOrExit(!mAddressSolicitPending);
 
+    // Suppress MLE Advertisements before sending multicast Link Request.
+    //
+    // Before sending the multicast Link Request message, no links have been established to neighboring routers.
+    VerifyOrExit(mLinkRequestDelay == 0);
+
     VerifyOrExit((message = NewMleMessage(kCommandAdvertisement)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
@@ -532,8 +539,10 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     static const uint8_t routerTlvs[]        = {Tlv::kLinkMargin};
     static const uint8_t validNeighborTlvs[] = {Tlv::kLinkMargin, Tlv::kRoute};
     Error                error               = kErrorNone;
-    TxMessage *          message;
+    TxMessage *          message             = nullptr;
     Ip6::Address         destination;
+
+    VerifyOrExit(mLinkRequestDelay == 0 && mChallengeTimeout == 0);
 
     destination.Clear();
 
@@ -1422,6 +1431,12 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         ExitNow();
 
     case kRoleRouter:
+        if (mLinkRequestDelay > 0 && route.IsRouterIdSet(mRouterId))
+        {
+            mLinkRequestDelay = 0;
+            IgnoreError(SendLinkRequest(nullptr));
+        }
+
         router = mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != nullptr);
 
@@ -1749,11 +1764,51 @@ exit:
     LogProcessError(kTypeParentRequest, error);
 }
 
+bool MleRouter::HasNeighborWithGoodLinkQuality(void) const
+{
+    bool    haveNeighbor = true;
+    uint8_t linkMargin;
+
+    linkMargin =
+        LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), mParent.GetLinkInfo().GetLastRss());
+
+    if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
+    {
+        ExitNow();
+    }
+
+    for (Router &router : Get<RouterTable>().Iterate())
+    {
+        if (!router.IsStateValid())
+        {
+            continue;
+        }
+
+        linkMargin =
+            LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), router.GetLinkInfo().GetLastRss());
+
+        if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
+        {
+            ExitNow();
+        }
+    }
+
+    haveNeighbor = false;
+
+exit:
+    return haveNeighbor;
+}
+
 void MleRouter::HandleTimeTick(void)
 {
     bool routerStateUpdate = false;
 
     VerifyOrExit(IsFullThreadDevice(), Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMleRouter));
+
+    if (mLinkRequestDelay > 0 && --mLinkRequestDelay == 0)
+    {
+        IgnoreError(SendLinkRequest(nullptr));
+    }
 
     if (mChallengeTimeout > 0)
     {
@@ -1813,7 +1868,7 @@ void MleRouter::HandleTimeTick(void)
     case kRoleChild:
         if (routerStateUpdate)
         {
-            if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold)
+            if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold && HasNeighborWithGoodLinkQuality())
             {
                 // upgrade to Router
                 IgnoreError(BecomeRouter(ThreadStatusTlv::kTooFewRouters));
@@ -3784,12 +3839,12 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
         leader->SetNextHop(RouterIdFromRloc16(mParent.GetRloc16()));
     }
 
-    IgnoreError(SendLinkRequest(nullptr));
-
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {
         IgnoreError(SendChildIdResponse(child));
     }
+
+    mLinkRequestDelay = kMulticastLinkRequestDelay;
 
 exit:
     // Send announce after received address solicit reply if needed

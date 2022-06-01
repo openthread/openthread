@@ -149,6 +149,30 @@ otError SrpServer::ProcessDisable(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+otError SrpServer::ProcessTtl(Arg aArgs[])
+{
+    otError              error = OT_ERROR_NONE;
+    otSrpServerTtlConfig ttlConfig;
+
+    if (aArgs[0].IsEmpty())
+    {
+        otSrpServerGetTtlConfig(GetInstancePtr(), &ttlConfig);
+        OutputLine("min ttl: %u", ttlConfig.mMinTtl);
+        OutputLine("max ttl: %u", ttlConfig.mMaxTtl);
+    }
+    else
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(ttlConfig.mMinTtl));
+        SuccessOrExit(error = aArgs[1].ParseAsUint32(ttlConfig.mMaxTtl));
+        VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        error = otSrpServerSetTtlConfig(GetInstancePtr(), &ttlConfig);
+    }
+
+exit:
+    return error;
+}
+
 otError SrpServer::ProcessLease(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
@@ -289,6 +313,7 @@ otError SrpServer::ProcessService(Arg aArgs[])
             OutputLine(kIndentSize, "port: %hu", otSrpServerServiceGetPort(service));
             OutputLine(kIndentSize, "priority: %hu", otSrpServerServiceGetPriority(service));
             OutputLine(kIndentSize, "weight: %hu", otSrpServerServiceGetWeight(service));
+            OutputLine(kIndentSize, "ttl: %hu", otSrpServerServiceGetTtl(service));
 
             txtData = otSrpServerServiceGetTxtData(service, &txtDataLength);
             OutputFormat(kIndentSize, "TXT: ");

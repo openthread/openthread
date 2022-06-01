@@ -1482,6 +1482,93 @@ private:
     uint8_t  mPendingAddressSpec;
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+/**
+ * This class implements IEEE 802.15.4 Beacon Payload generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class BeaconPayload
+{
+public:
+    static constexpr uint8_t kProtocolId    = 3;      ///< Thread Protocol ID.
+    static constexpr uint8_t kVersionOffset = 4;      ///< Version field bit offset.
+    static constexpr uint8_t kNativeFlag    = 1 << 3; ///< Native Commissioner flag.
+    static constexpr uint8_t kJoiningFlag   = 1 << 0; ///< Joining Permitted flag.
+
+    /**
+     * This constant specified the maximum number of chars in Network Name (excludes null char).
+     *
+     */
+    static constexpr uint8_t kMaxSize = OT_NETWORK_NAME_MAX_SIZE;
+
+    /**
+     * This method indicates whether or not the beacon appears to be a valid Thread Beacon Payload.
+     *
+     * @retval TRUE   If the beacon appears to be a valid Thread Beacon Payload.
+     * @retval FALSE  If the beacon does not appear to be a valid Thread Beacon Payload.
+     *
+     */
+    bool IsValid(void) const { return (mProtocolId == kProtocolId); }
+
+    /**
+     * This method returns the Protocol ID value.
+     *
+     * @returns the Protocol ID value.
+     *
+     */
+    uint8_t GetProtocolId(void) const { return mProtocolId; }
+
+    /**
+     * This method returns the Protocol Version value.
+     *
+     * @returns The Protocol Version value.
+     *
+     */
+    uint8_t GetProtocolVersion(void) const { return mFlags >> kVersionOffset; }
+
+    /**
+     * This method indicates whether or not the Native Commissioner flag is set.
+     *
+     * @retval TRUE   If the Native Commissioner flag is set.
+     * @retval FALSE  If the Native Commissioner flag is not set.
+     *
+     */
+    bool IsNative(void) const { return (mFlags & kNativeFlag) != 0; }
+
+    /**
+     * This method indicates whether or not the Joining Permitted flag is set.
+     *
+     * @retval TRUE   If the Joining Permitted flag is set.
+     * @retval FALSE  If the Joining Permitted flag is not set.
+     *
+     */
+    bool IsJoiningPermitted(void) const { return (mFlags & kJoiningFlag) != 0; }
+
+    /**
+     * This method gets the Network Name field.
+     *
+     * @returns The Network Name field as `NameData`.
+     *
+     */
+    const char *GetNetworkName(void) const { return mNetworkName; }
+
+    /**
+     * This method returns the Extended PAN ID field.
+     *
+     * @returns The Extended PAN ID field.
+     *
+     */
+    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+
+private:
+    uint8_t         mProtocolId;
+    uint8_t         mFlags;
+    char            mNetworkName[kMaxSize];
+    otExtendedPanId mExtendedPanId;
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+
 /**
  * This class implements CSL IE data structure.
  *

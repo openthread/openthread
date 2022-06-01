@@ -111,8 +111,8 @@ public:
                   uint32_t                        aTimeSinceLastTransaction);
 
         void Update(uint16_t aRloc16, uint32_t aTimeSinceLastTransaction);
-        void IncreaseDadAttampts(void) { mDadAttempts++; }
-        bool IsDadAttamptsComplete() const { return mDadAttempts == Mle::kDuaDadRepeats; }
+        void IncreaseDadAttempts(void) { mDadAttempts++; }
+        bool IsDadAttemptsComplete() const { return mDadAttempts == Mle::kDuaDadRepeats; }
 
         Ip6::InterfaceIdentifier mAddressIid;
         Ip6::InterfaceIdentifier mMeshLocalIid;

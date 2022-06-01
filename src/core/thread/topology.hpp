@@ -552,20 +552,20 @@ public:
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method indicates whether or not it is a valid Thread 1.1 neighbor.
+     * This method indicates whether or not it is Thread 1.1.
      *
-     * @returns TRUE if it is a valid Thread 1.1 neighbor, FALSE otherwise.
+     * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
      */
     bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
 
     /**
-     * This method indicates whether or not it is a valid Thread 1.2 neighbor.
+     * This method indicates whether or not neighbor is Thread 1.2 or higher..
      *
-     * @returns TRUE if it is a valid Thread 1.2 neighbor, FALSE otherwise.
+     * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_2; }
+    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2; }
 
     /**
      * This method indicates whether Thread version supports CSL.
@@ -573,7 +573,7 @@ public:
      * @returns TRUE if CSL is supported, FALSE otherwise.
      *
      */
-    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2() && !IsRxOnWhenIdle(); }
+    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2OrHigher() && !IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.

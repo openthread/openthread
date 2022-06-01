@@ -184,6 +184,7 @@ EXTRA_DIST                                                         = \
     test_reset.py                                                    \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
+    test_router_upgrade.py                                           \
     test_service.py                                                  \
     test_set_mliid.py                                                \
     test_srp_auto_start_mode.py                                      \
@@ -195,6 +196,7 @@ EXTRA_DIST                                                         = \
     test_srp_server_anycast_mode.py                                  \
     test_srp_server_reboot_port.py                                   \
     test_srp_sub_type.py                                             \
+    test_srp_ttl.py                                                  \
     test_zero_len_external_route.py                                  \
     thread_cert.py                                                   \
     tlvs_parsing.py                                                  \
@@ -258,6 +260,7 @@ check_SCRIPTS                                                      = \
     test_reset.py                                                    \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
+    test_router_upgrade.py                                           \
     test_service.py                                                  \
     test_srp_auto_start_mode.py                                      \
     test_srp_client_remove_host.py                                   \
@@ -268,6 +271,7 @@ check_SCRIPTS                                                      = \
     test_srp_server_anycast_mode.py                                  \
     test_srp_server_reboot_port.py                                   \
     test_srp_sub_type.py                                             \
+    test_srp_ttl.py                                                  \
     test_zero_len_external_route.py                                  \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \

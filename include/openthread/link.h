@@ -391,6 +391,10 @@ typedef struct otActiveScanResult
     unsigned int    mVersion : 4;   ///< Version
     bool            mIsNative : 1;  ///< Native Commissioner flag
     bool            mDiscover : 1;  ///< Result from MLE Discovery
+
+    // Applicable/Required only when beacon payload parsing feature
+    // (`OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE`) is enabled.
+    bool mIsJoinable : 1; ///< Joining Permitted flag
 } otActiveScanResult;
 
 /**

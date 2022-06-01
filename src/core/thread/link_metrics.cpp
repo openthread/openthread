@@ -117,7 +117,7 @@ Error LinkMetrics::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, co
     Neighbor *  neighbor         = GetNeighborFromLinkLocalAddr(aDestination);
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
+    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
 
     if (aMetrics != nullptr)
     {
@@ -150,7 +150,7 @@ Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &    
     Neighbor *   neighbor          = GetNeighborFromLinkLocalAddr(aDestination);
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
+    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
 
     // Directly transform `aMetrics` into TypeIdFlags and put them into `subTlvs`
     if (aMetrics != nullptr)
@@ -187,7 +187,7 @@ Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination
     Neighbor *         neighbor = GetNeighborFromLinkLocalAddr(aDestination);
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
+    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
 
     if (aEnhAckFlags == kEnhAckClear)
     {
@@ -227,7 +227,7 @@ Error LinkMetrics::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeri
     Neighbor *neighbor = GetNeighborFromLinkLocalAddr(aDestination);
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
+    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
 
     VerifyOrExit(aLength <= LinkMetrics::kLinkProbeMaxLen && aSeriesId != kQueryIdSingleProbe &&
                      aSeriesId != kSeriesIdAllSeries,

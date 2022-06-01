@@ -210,6 +210,11 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
 {
     Error   error = kErrorNone;
     Address address;
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+    const BeaconPayload *beaconPayload = nullptr;
+    const Beacon *       beacon        = nullptr;
+    uint16_t             payloadLength;
+#endif
 
     memset(&aResult, 0, sizeof(ActiveScanResult));
 
@@ -228,6 +233,23 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
     aResult.mChannel = aBeaconFrame->GetChannel();
     aResult.mRssi    = aBeaconFrame->GetRssi();
     aResult.mLqi     = aBeaconFrame->GetLqi();
+
+#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
+    payloadLength = aBeaconFrame->GetPayloadLength();
+
+    beacon        = reinterpret_cast<const Beacon *>(aBeaconFrame->GetPayload());
+    beaconPayload = reinterpret_cast<const BeaconPayload *>(beacon->GetPayload());
+
+    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
+    {
+        aResult.mVersion    = beaconPayload->GetProtocolVersion();
+        aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
+        aResult.mIsNative   = beaconPayload->IsNative();
+        IgnoreError(AsCoreType(&aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
+        VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = kErrorParse);
+        aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
+    }
+#endif
 
     LogBeacon("Received");
 

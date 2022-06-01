@@ -588,7 +588,7 @@ void BorderAgent::Start(void)
     mState        = kStateStarted;
     mUdpProxyPort = 0;
 
-    LogInfo("Border Agent start listening on port %d", kBorderAgentUdpPort);
+    LogInfo("Border Agent start listening on port %u", GetUdpPort());
 
 exit:
     if (error != kErrorNone)
