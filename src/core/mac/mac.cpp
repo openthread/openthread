@@ -734,11 +734,13 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame *      frame;
-    uint16_t       fcf;
-    Beacon *       beacon = nullptr;
+    TxFrame *frame;
+    uint16_t fcf;
+    Beacon * beacon = nullptr;
+#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
@@ -756,6 +758,7 @@ TxFrame *Mac::PrepareBeacon(void)
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
 
+#if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     beaconLength = sizeof(*beacon);
 
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
@@ -777,6 +780,7 @@ TxFrame *Mac::PrepareBeacon(void)
     beaconLength += sizeof(*beaconPayload);
 
     frame->SetPayloadLength(beaconLength);
+#endif
 
     LogBeacon("Sending");
 

@@ -510,4 +510,15 @@
 #define OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
+ *
+ * This setting configures if the beacon payload needs to be enabled in outgoing beacon frames. This is optional but it
+ * is enabled by default because to enable backward compatability.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
+#define OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE 1
+#endif
+
 #endif // CONFIG_MAC_H_
