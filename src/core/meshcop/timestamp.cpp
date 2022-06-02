@@ -85,6 +85,8 @@ int Timestamp::Compare(const Timestamp &aFirst, const Timestamp &aSecond)
     uint64_t secondSeconds;
     uint16_t firstTicks;
     uint16_t secondTicks;
+    bool     firstAuthoritative;
+    bool     secondAuthoritative;
 
     firstSeconds  = aFirst.GetSeconds();
     secondSeconds = aSecond.GetSeconds();
@@ -100,6 +102,14 @@ int Timestamp::Compare(const Timestamp &aFirst, const Timestamp &aSecond)
     if (firstTicks != secondTicks)
     {
         ExitNow(rval = (firstTicks > secondTicks) ? 1 : -1);
+    }
+
+    firstAuthoritative  = aFirst.GetAuthoritative();
+    secondAuthoritative = aSecond.GetAuthoritative();
+
+    if (firstAuthoritative != secondAuthoritative)
+    {
+        ExitNow(rval = firstAuthoritative ? 1 : -1);
     }
 
     rval = 0;
