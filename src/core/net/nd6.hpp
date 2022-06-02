@@ -28,18 +28,16 @@
 
 /**
  * @file
- *   This file includes definitions for IPv6 Router Advertisement.
+ *   This file includes definitions for IPv6 Neighbor Discovery (ND).
  *
- * See RFC 4861: Neighbor Discovery for IP version 6 (https://tools.ietf.org/html/rfc4861).
+ * See RFC 4861 (https://tools.ietf.org/html/rfc4861) and RFC 4191 (https://tools.ietf.org/html/rfc4191).
  *
  */
 
-#ifndef ROUTER_ADVERTISEMENT_HPP_
-#define ROUTER_ADVERTISEMENT_HPP_
+#ifndef ND6_HPP_
+#define ND6_HPP_
 
 #include "openthread-core-config.h"
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <stdint.h>
 
@@ -57,8 +55,8 @@ using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 namespace ot {
-namespace BorderRouter {
-namespace RouterAdv {
+namespace Ip6 {
+namespace Nd {
 
 typedef NetworkData::RoutePreference RoutePreference; ///< Route Preference
 
@@ -256,15 +254,15 @@ public:
      * @param[in]  aPrefix  The prefix contained in this option.
      *
      */
-    void SetPrefix(const Ip6::Prefix &aPrefix);
+    void SetPrefix(const Prefix &aPrefix);
 
     /**
      * This method gets the prefix in this option.
      *
-     * @param[out] aPrefix   Reference to an `Ip6::Prefix` to return the prefix.
+     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
      *
      */
-    void GetPrefix(Ip6::Prefix &aPrefix) const;
+    void GetPrefix(Prefix &aPrefix) const;
 
     /**
      * This method indicates whether or not the option is valid.
@@ -303,12 +301,12 @@ private:
     static constexpr uint8_t kAutoConfigFlagMask = 0x40; // Autonomous address-configuration flag.
     static constexpr uint8_t kOnLinkFlagMask     = 0x80; // On-link flag.
 
-    uint8_t      mPrefixLength;      // The prefix length in bits.
-    uint8_t      mFlags;             // The flags field.
-    uint32_t     mValidLifetime;     // The valid lifetime of the prefix.
-    uint32_t     mPreferredLifetime; // The preferred lifetime of the prefix.
-    uint32_t     mReserved2;         // The reserved field.
-    Ip6::Address mPrefix;            // The prefix.
+    uint8_t  mPrefixLength;      // The prefix length in bits.
+    uint8_t  mFlags;             // The flags field.
+    uint32_t mValidLifetime;     // The valid lifetime of the prefix.
+    uint32_t mPreferredLifetime; // The preferred lifetime of the prefix.
+    uint32_t mReserved2;         // The reserved field.
+    Address  mPrefix;            // The prefix.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(PrefixInfoOption) == 32, "invalid PrefixInfoOption structure");
@@ -370,15 +368,15 @@ public:
      * @param[in]  aPrefix  The prefix contained in this option.
      *
      */
-    void SetPrefix(const Ip6::Prefix &aPrefix);
+    void SetPrefix(const Prefix &aPrefix);
 
     /**
      * This method gets the prefix in this option.
      *
-     * @param[out] aPrefix   Reference to an `Ip6::Prefix` to return the prefix.
+     * @param[out] aPrefix   Reference to a `Prefix` to return the prefix.
      *
      */
-    void GetPrefix(Ip6::Prefix &aPrefix) const;
+    void GetPrefix(Prefix &aPrefix) const;
 
     /**
      * This method tells whether this option is valid.
@@ -561,15 +559,13 @@ public:
     RouterSolicitMessage(void);
 
 private:
-    Ip6::Icmp::Header mHeader; // The common ICMPv6 header.
+    Icmp::Header mHeader; // The common ICMPv6 header.
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouterSolicitMessage) == 8, "invalid RouterSolicitMessage structure");
 
-} // namespace RouterAdv
-} // namespace BorderRouter
+} // namespace Nd
+} // namespace Ip6
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
-#endif // ROUTER_ADVERTISEMENT_HPP_
+#endif // ND6_HPP_
