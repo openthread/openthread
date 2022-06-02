@@ -360,6 +360,11 @@ if (OT_TREL)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
 endif()
 
+option(OT_TX_BEACON_PAYLOAD "enable Thread beacon payload in outgoing beacons")
+if (OT_TX_BEACON_PAYLOAD)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE=1")
+endif()
+
 option(OT_UDP_FORWARD "enable UDP forward support")
 if(OT_UDP_FORWARD)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1")
