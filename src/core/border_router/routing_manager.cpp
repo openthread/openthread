@@ -365,85 +365,98 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
-    Ip6::Prefix *                   electedOmrPrefix           = nullptr;
-    signed int                      electedOmrPrefixPreference = 0;
-    Ip6::Prefix *                   publishedLocalOmrPrefix    = nullptr;
+    OmrPrefix *                     favoredOmrEntry = nullptr;
+    OmrPrefix *                     localOmrEntry   = nullptr;
 
     OT_ASSERT(mIsRunning);
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
     {
-        const Ip6::Prefix &prefix = onMeshPrefixConfig.GetPrefix();
+        OmrPrefix *entry;
 
         if (!IsValidOmrPrefix(onMeshPrefixConfig))
         {
             continue;
         }
 
-        if (aNewOmrPrefixes.Contains(prefix))
-        {
-            // Ignore duplicate prefixes.
-            continue;
-        }
+        entry = aNewOmrPrefixes.FindMatching(onMeshPrefixConfig.GetPrefix());
 
-        if (aNewOmrPrefixes.PushBack(prefix) != kErrorNone)
+        if (entry != nullptr)
         {
-            LogWarn("EvaluateOmrPrefix: Too many OMR prefixes, ignoring prefix %s", prefix.ToString().AsCString());
-            continue;
+            // Update the entry if we find the same prefix with higher
+            // preference in network data
+
+            if (onMeshPrefixConfig.GetPreference() <= entry->GetPreference())
+            {
+                continue;
+            }
+
+            entry->SetPreference(onMeshPrefixConfig.GetPreference());
+        }
+        else
+        {
+            entry = aNewOmrPrefixes.PushBack();
+
+            if (entry == nullptr)
+            {
+                LogWarn("EvaluateOmrPrefix: Too many OMR prefixes, ignoring prefix %s",
+                        onMeshPrefixConfig.GetPrefix().ToString().AsCString());
+                continue;
+            }
+
+            entry->InitFrom(onMeshPrefixConfig);
         }
 
         if (onMeshPrefixConfig.mPreferred)
         {
-            if (electedOmrPrefix == nullptr || onMeshPrefixConfig.mPreference > electedOmrPrefixPreference ||
-                (onMeshPrefixConfig.mPreference == electedOmrPrefixPreference && prefix < *electedOmrPrefix))
+            if ((favoredOmrEntry == nullptr) || (entry->IsFavoredOver(*favoredOmrEntry)))
             {
-                electedOmrPrefix           = aNewOmrPrefixes.Back();
-                electedOmrPrefixPreference = onMeshPrefixConfig.mPreference;
+                favoredOmrEntry = entry;
             }
         }
 
-        if (prefix == mLocalOmrPrefix)
+        if (entry->GetPrefix() == mLocalOmrPrefix)
         {
-            publishedLocalOmrPrefix = aNewOmrPrefixes.Back();
+            localOmrEntry = entry;
         }
     }
 
     // Decide if we need to add or remove our local OMR prefix.
 
-    if (electedOmrPrefix == nullptr)
+    if (favoredOmrEntry == nullptr)
     {
         LogInfo("EvaluateOmrPrefix: No preferred OMR prefixes found in Thread network");
 
-        if (PublishLocalOmrPrefix() == kErrorNone)
-        {
-            IgnoreError(aNewOmrPrefixes.PushBack(mLocalOmrPrefix));
-        }
-
         // The `aNewOmrPrefixes` remains empty if we fail to publish
         // the local OMR prefix.
+        SuccessOrExit(PublishLocalOmrPrefix());
+
+        localOmrEntry = aNewOmrPrefixes.PushBack();
+        VerifyOrExit(localOmrEntry != nullptr);
+
+        localOmrEntry->Init(mLocalOmrPrefix, NetworkData::kRoutePreferenceMedium);
     }
-    else
+    else if (favoredOmrEntry == localOmrEntry)
     {
-        if (*electedOmrPrefix == mLocalOmrPrefix)
-        {
-            IgnoreError(PublishLocalOmrPrefix());
-        }
-        else if (IsOmrPrefixAddedToLocalNetworkData())
-        {
-            LogInfo("EvaluateOmrPrefix: There is already a preferred OMR prefix %s (pref=%d) in the Thread network",
-                    electedOmrPrefix->ToString().AsCString(), electedOmrPrefixPreference);
+        IgnoreError(PublishLocalOmrPrefix());
+    }
+    else if (IsOmrPrefixAddedToLocalNetworkData())
+    {
+        LogInfo("EvaluateOmrPrefix: There is already a preferred OMR prefix %s in the Thread network",
+                favoredOmrEntry->ToString().AsCString());
 
-            UnpublishLocalOmrPrefix();
+        UnpublishLocalOmrPrefix();
 
+        if (localOmrEntry != nullptr)
+        {
             // Remove the local OMR prefix from the list by overwriting it
-            // with the last element and then popping it from the list.
-            if (publishedLocalOmrPrefix != nullptr)
-            {
-                *publishedLocalOmrPrefix = *aNewOmrPrefixes.Back();
-                aNewOmrPrefixes.PopBack();
-            }
+            // with popped last entry in the list.
+            *localOmrEntry = *aNewOmrPrefixes.PopBack();
         }
     }
+
+exit:
+    return;
 }
 
 Error RoutingManager::PublishLocalOmrPrefix(void)
@@ -874,13 +887,14 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
 
     // Invalidate the advertised OMR prefixes if they are no longer in the new OMR prefix array.
 
-    for (const Ip6::Prefix &advertisedOmrPrefix : mAdvertisedOmrPrefixes)
+    for (const OmrPrefix &advertisedOmrPrefix : mAdvertisedOmrPrefixes)
     {
-        if (!aNewOmrPrefixes.Contains(advertisedOmrPrefix))
+        if (!aNewOmrPrefixes.ContainsMatching(advertisedOmrPrefix.GetPrefix()))
         {
             RouterAdv::RouteInfoOption *rio;
 
-            OT_ASSERT(bufferLength + RouterAdv::RouteInfoOption::OptionSizeForPrefix(advertisedOmrPrefix.GetLength()) <=
+            OT_ASSERT(bufferLength + RouterAdv::RouteInfoOption::OptionSizeForPrefix(
+                                         advertisedOmrPrefix.GetPrefix().GetLength()) <=
                       sizeof(buffer));
 
             rio = reinterpret_cast<RouterAdv::RouteInfoOption *>(buffer + bufferLength);
@@ -888,7 +902,7 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
             // Set zero route lifetime to immediately invalidate the advertised OMR prefix.
             rio->Init();
             rio->SetRouteLifetime(0);
-            rio->SetPrefix(advertisedOmrPrefix);
+            rio->SetPrefix(advertisedOmrPrefix.GetPrefix());
 
             bufferLength += rio->GetSize();
 
@@ -897,18 +911,20 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
         }
     }
 
-    for (const Ip6::Prefix &newOmrPrefix : aNewOmrPrefixes)
+    for (const OmrPrefix &newOmrPrefix : aNewOmrPrefixes)
     {
         RouterAdv::RouteInfoOption *rio;
 
-        OT_ASSERT(bufferLength + RouterAdv::RouteInfoOption::OptionSizeForPrefix(newOmrPrefix.GetLength()) <=
+        OT_ASSERT(bufferLength +
+                      RouterAdv::RouteInfoOption::OptionSizeForPrefix(newOmrPrefix.GetPrefix().GetLength()) <=
                   sizeof(buffer));
 
         rio = reinterpret_cast<RouterAdv::RouteInfoOption *>(buffer + bufferLength);
 
         rio->Init();
         rio->SetRouteLifetime(kDefaultOmrPrefixLifetime);
-        rio->SetPrefix(newOmrPrefix);
+        rio->SetPreference(newOmrPrefix.GetPreference());
+        rio->SetPrefix(newOmrPrefix.GetPrefix());
 
         bufferLength += rio->GetSize();
 
@@ -1254,7 +1270,7 @@ void RoutingManager::UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption 
     //    messages are usually faster than Thread Network Data propagation).
     // They are the reasons why we need both the checks.
 
-    VerifyOrExit(!mAdvertisedOmrPrefixes.Contains(prefix));
+    VerifyOrExit(!mAdvertisedOmrPrefixes.ContainsMatching(prefix));
     VerifyOrExit(!NetworkDataContainsOmrPrefix(prefix));
 
     LogInfo("Discovered OMR prefix (%s, %u seconds) from %s", prefix.ToString().AsCString(), aRio.GetRouteLifetime(),
@@ -1315,8 +1331,8 @@ void RoutingManager::InvalidateDiscoveredPrefixes(void)
         // Data).
 
         if ((prefix.GetExpireTime() <= now) ||
-            (!prefix.IsOnLinkPrefix() &&
-             (mAdvertisedOmrPrefixes.Contains(prefix.GetPrefix()) || NetworkDataContainsOmrPrefix(prefix.GetPrefix()))))
+            (!prefix.IsOnLinkPrefix() && (mAdvertisedOmrPrefixes.ContainsMatching(prefix.GetPrefix()) ||
+                                          NetworkDataContainsOmrPrefix(prefix.GetPrefix()))))
         {
             UnpublishExternalRoute(prefix.GetPrefix());
 
@@ -1558,6 +1574,52 @@ uint32_t RoutingManager::ExternalPrefix::GetPrefixExpireDelay(uint32_t aValidLif
     }
 
     return delay;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// OmrPrefix
+
+void RoutingManager::OmrPrefix::Init(const Ip6::Prefix &aPrefix, RoutePreference aPreference)
+{
+    mPrefix     = aPrefix;
+    mPreference = aPreference;
+}
+
+void RoutingManager::OmrPrefix::InitFrom(NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
+{
+    Init(aOnMeshPrefixConfig.GetPrefix(), aOnMeshPrefixConfig.GetPreference());
+}
+
+bool RoutingManager::OmrPrefix::IsFavoredOver(const OmrPrefix &aOther) const
+{
+    // This method determines whether this OMR prefix is favored
+    // over `aOther` prefix. A prefix with higher preference is
+    // favored. If the preference is the same, then the smaller
+    // prefix (in the sense defined by `Ip6::Prefix`) is favored.
+
+    return (mPreference > aOther.mPreference) || ((mPreference == aOther.mPreference) && (mPrefix < aOther.mPrefix));
+}
+
+RoutingManager::OmrPrefix::InfoString RoutingManager::OmrPrefix::ToString(void) const
+{
+    InfoString string;
+
+    string.Append("%s (prf:", mPrefix.ToString().AsCString());
+
+    switch (mPreference)
+    {
+    case NetworkData::kRoutePreferenceHigh:
+        string.Append("high)");
+        break;
+    case NetworkData::kRoutePreferenceMedium:
+        string.Append("med)");
+        break;
+    case NetworkData::kRoutePreferenceLow:
+        string.Append("low)");
+        break;
+    }
+
+    return string;
 }
 
 } // namespace BorderRouter
