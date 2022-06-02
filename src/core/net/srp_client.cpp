@@ -76,10 +76,20 @@ void Client::HostInfo::SetState(ItemState aState)
     }
 }
 
+void Client::HostInfo::EnableAutoAddress(void)
+{
+    mAddresses    = nullptr;
+    mNumAddresses = 0;
+    mAutoAddress  = true;
+
+    LogInfo("HostInfo enabled auto address", GetNumAddresses());
+}
+
 void Client::HostInfo::SetAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddresses)
 {
     mAddresses    = aAddresses;
     mNumAddresses = aNumAddresses;
+    mAutoAddress  = false;
 
     LogInfo("HostInfo set %d addrs", GetNumAddresses());
 
@@ -239,6 +249,7 @@ Client::Client(Instance &aInstance)
     , mState(kStateStopped)
     , mTxFailureRetryCount(0)
     , mShouldRemoveKeyLease(false)
+    , mAutoHostAddressAddedMeshLocal(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mServiceKeyRecordEnabled(false)
 #endif
@@ -415,6 +426,22 @@ void Client::HandleNotifierEvents(Events aEvents)
         ProcessAutoStart();
     }
 #endif
+
+    if (mHostInfo.IsAutoAddressEnabled())
+    {
+        Events::Flags eventFlags = (kEventIp6AddressAdded | kEventIp6AddressRemoved);
+
+        if (mAutoHostAddressAddedMeshLocal)
+        {
+            eventFlags |= kEventThreadMeshLocalAddrChanged;
+        }
+
+        if (aEvents.ContainsAny(eventFlags))
+        {
+            IgnoreError(UpdateHostInfoStateOnAddressChange());
+            UpdateState();
+        }
+    }
 }
 
 void Client::HandleRoleChanged(void)
@@ -466,11 +493,37 @@ exit:
     return error;
 }
 
+Error Client::EnableAutoHostAddress(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!mHostInfo.IsAutoAddressEnabled());
+    SuccessOrExit(error = UpdateHostInfoStateOnAddressChange());
+
+    mHostInfo.EnableAutoAddress();
+    UpdateState();
+
+exit:
+    return error;
+}
+
 Error Client::SetHostAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddresses)
 {
     Error error = kErrorNone;
 
     VerifyOrExit((aAddresses != nullptr) && (aNumAddresses > 0), error = kErrorInvalidArgs);
+    SuccessOrExit(error = UpdateHostInfoStateOnAddressChange());
+
+    mHostInfo.SetAddresses(aAddresses, aNumAddresses);
+    UpdateState();
+
+exit:
+    return error;
+}
+
+Error Client::UpdateHostInfoStateOnAddressChange(void)
+{
+    Error error = kErrorNone;
 
     VerifyOrExit((mHostInfo.GetState() != kToRemove) && (mHostInfo.GetState() != kRemoving),
                  error = kErrorInvalidState);
@@ -483,9 +536,6 @@ Error Client::SetHostAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddre
     {
         mHostInfo.SetState(kToRefresh);
     }
-
-    mHostInfo.SetAddresses(aAddresses, aNumAddresses);
-    UpdateState();
 
 exit:
     return error;
@@ -1008,10 +1058,9 @@ exit:
     return error;
 }
 
-Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const
+Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo)
 {
-    Error               error = kErrorNone;
-    Dns::ResourceRecord rr;
+    Error error = kErrorNone;
 
     //----------------------------------
     // Host Description Instruction
@@ -1024,22 +1073,61 @@ Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) c
 
     // AAAA RRs
 
-    rr.Init(Dns::ResourceRecord::kTypeAaaa);
-    rr.SetTtl(GetTtl());
-    rr.SetLength(sizeof(Ip6::Address));
-
-    for (uint8_t index = 0; index < mHostInfo.GetNumAddresses(); index++)
+    if (mHostInfo.IsAutoAddressEnabled())
     {
-        SuccessOrExit(error = AppendHostName(aMessage, aInfo));
-        SuccessOrExit(error = aMessage.Append(rr));
-        SuccessOrExit(error = aMessage.Append(mHostInfo.GetAddress(index)));
-        aInfo.mRecordCount++;
+        // Append all addresses on Thread netif excluding link-local and
+        // mesh-local addresses. If no address is appended, we include
+        // the mesh local address.
+
+        mAutoHostAddressAddedMeshLocal = true;
+
+        for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+        {
+            if (unicastAddress.GetAddress().IsLinkLocal() ||
+                Get<Mle::Mle>().IsMeshLocalAddress(unicastAddress.GetAddress()))
+            {
+                continue;
+            }
+
+            SuccessOrExit(error = AppendAaaaRecord(unicastAddress.GetAddress(), aMessage, aInfo));
+            mAutoHostAddressAddedMeshLocal = false;
+        }
+
+        if (mAutoHostAddressAddedMeshLocal)
+        {
+            SuccessOrExit(error = AppendAaaaRecord(Get<Mle::Mle>().GetMeshLocal64(), aMessage, aInfo));
+        }
+    }
+    else
+    {
+        for (uint8_t index = 0; index < mHostInfo.GetNumAddresses(); index++)
+        {
+            SuccessOrExit(error = AppendAaaaRecord(mHostInfo.GetAddress(index), aMessage, aInfo));
+        }
     }
 
     // KEY RR
 
     SuccessOrExit(error = AppendHostName(aMessage, aInfo));
     SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
+
+exit:
+    return error;
+}
+
+Error Client::AppendAaaaRecord(const Ip6::Address &aAddress, Message &aMessage, Info &aInfo) const
+{
+    Error               error;
+    Dns::ResourceRecord rr;
+
+    rr.Init(Dns::ResourceRecord::kTypeAaaa);
+    rr.SetTtl(GetTtl());
+    rr.SetLength(sizeof(Ip6::Address));
+
+    SuccessOrExit(error = AppendHostName(aMessage, aInfo));
+    SuccessOrExit(error = aMessage.Append(rr));
+    SuccessOrExit(error = aMessage.Append(aAddress));
+    aInfo.mRecordCount++;
 
 exit:
     return error;
@@ -1519,7 +1607,7 @@ void Client::UpdateState(void)
         // host address, otherwise no need to send SRP update message.
         // The exception is when removing host info where we allow
         // for empty service list.
-        VerifyOrExit(!mServices.IsEmpty() && (mHostInfo.GetNumAddresses() > 0));
+        VerifyOrExit(!mServices.IsEmpty() && (mHostInfo.IsAutoAddressEnabled() || (mHostInfo.GetNumAddresses() > 0)));
 
         // Fall through
 
