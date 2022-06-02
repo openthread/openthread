@@ -815,6 +815,30 @@ class NodeImpl:
         self.send_command('thread stop')
         self._expect_done()
 
+    def detach(self, is_async=False):
+        cmd = 'detach'
+        if is_async:
+            cmd += ' async'
+
+        self.send_command(cmd)
+
+        if is_async:
+            self._expect_done()
+            return
+
+        end = self.simulator.now() + 4
+        while True:
+            self.simulator.go(1)
+            try:
+                self._expect_done(timeout=0.1)
+                return
+            except (pexpect.TIMEOUT, socket.timeout):
+                if self.simulator.now() > end:
+                    raise
+
+    def expect_finished_detaching(self):
+        self._expect('Finished detaching')
+
     def commissioner_start(self):
         cmd = 'commissioner start'
         self.send_command(cmd)

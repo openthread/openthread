@@ -452,6 +452,9 @@ private:
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
+    static void HandleDetachGracefullyResult(void *aContext);
+    void        HandleDetachGracefullyResult(void);
+
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
     {
         static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);

@@ -3730,7 +3730,7 @@ exit:
     return error;
 }
 
-void MleRouter::SendAddressRelease(void)
+void MleRouter::SendAddressRelease(Coap::ResponseHandler aResponseHandler, void *aResponseHandlerContext)
 {
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
@@ -3744,7 +3744,8 @@ void MleRouter::SendAddressRelease(void)
 
     SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderRloc());
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error =
+                      Get<Tmf::Agent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseHandlerContext));
 
     Log(kMessageSend, kTypeAddressRelease, messageInfo.GetPeerAddr());
 

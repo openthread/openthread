@@ -160,6 +160,7 @@ EXTRA_DIST                                                         = \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_dataset_updater.py                                          \
+    test_detach.py                                                   \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
@@ -236,6 +237,7 @@ check_SCRIPTS                                                      = \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_dataset_updater.py                                          \
+    test_detach.py                                                   \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \

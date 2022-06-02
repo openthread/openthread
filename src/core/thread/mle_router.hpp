@@ -570,6 +570,15 @@ public:
     void SetThreadVersionCheckEnabled(bool aEnabled) { mThreadVersionCheckEnabled = aEnabled; }
 #endif
 
+    /**
+     * This function sends an Address Release.
+     *
+     * @param[in] aResponseHandler        A pointer to a function that is called upon response reception or time-out.
+     * @param[in] aResponseHandlerContext A pointer to callback application-specific context.
+     *
+     */
+    void SendAddressRelease(Coap::ResponseHandler aResponseHandler = nullptr, void *aResponseHandlerContext = nullptr);
+
 private:
     static constexpr uint16_t kDiscoveryMaxJitter            = 250;  // Max jitter delay Discovery Responses (in msec).
     static constexpr uint32_t kStateUpdatePeriod             = 1000; // State update period (in msec).
@@ -602,7 +611,6 @@ private:
     Error ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv);
     void  StopAdvertiseTrickleTimer(void);
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
-    void  SendAddressRelease(void);
     void  SendAddressSolicitResponse(const Coap::Message &   aRequest,
                                      ThreadStatusTlv::Status aResponseStatus,
                                      const Router *          aRouter,
