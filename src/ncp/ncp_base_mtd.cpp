@@ -1228,17 +1228,21 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
+        const otTimestamp &activeTimestamp = aDataset.mActiveTimestamp;
+
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP));
-        SuccessOrExit(error = mEncoder.WriteUint64(aDataset.mActiveTimestamp));
+        SuccessOrExit(error = mEncoder.WriteUint64(activeTimestamp.mSeconds));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
+        const otTimestamp &pendingTimestamp = aDataset.mPendingTimestamp;
+
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_PENDING_TIMESTAMP));
-        SuccessOrExit(error = mEncoder.WriteUint64(aDataset.mPendingTimestamp));
+        SuccessOrExit(error = mEncoder.WriteUint64(pendingTimestamp.mSeconds));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1400,7 +1404,9 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
             if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
-                SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mActiveTimestamp));
+                SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mActiveTimestamp.mSeconds));
+                aDataset.mActiveTimestamp.mTicks         = 0;
+                aDataset.mActiveTimestamp.mAuthoritative = false;
             }
 
             aDataset.mComponents.mIsActiveTimestampPresent = true;
@@ -1410,7 +1416,9 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
             if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
-                SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mPendingTimestamp));
+                SuccessOrExit(error = mDecoder.ReadUint64(aDataset.mPendingTimestamp.mSeconds));
+                aDataset.mPendingTimestamp.mTicks         = 0;
+                aDataset.mPendingTimestamp.mAuthoritative = false;
             }
 
             aDataset.mComponents.mIsPendingTimestampPresent = true;
