@@ -4113,7 +4113,15 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
 
     localTimestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
-    if (MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) > 0)
+    if (timestamp.IsOrphanTimestamp() || MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) < 0)
+    {
+        SendAnnounce(channel);
+
+#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
+        SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
+#endif
+    }
+    else if (MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) > 0)
     {
         // No action is required if device is detached, and current
         // channel and pan-id match the values from the received MLE
@@ -4135,14 +4143,6 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
         mAttachCounter = 0;
 
         LogNote("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
-    }
-    else if (MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) < 0)
-    {
-        SendAnnounce(channel);
-
-#if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
-#endif
     }
     else
     {
