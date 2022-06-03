@@ -37,13 +37,17 @@ if(NOT DEFINED OT_PLATFORM_LIB_RCP)
     set(OT_PLATFORM_LIB_RCP ${OT_PLATFORM_LIB})
 endif()
 
+if(NOT DEFINED OT_MBEDTLS_RCP)
+    set(OT_MBEDTLS_RCP ${OT_MBEDTLS})
+endif()
+
 target_link_libraries(ot-cli-radio PRIVATE
     openthread-cli-radio
     ${OT_PLATFORM_LIB_RCP}
     openthread-radio-cli
     ${OT_PLATFORM_LIB_RCP}
     openthread-cli-radio
-    ${OT_MBEDTLS}
+    ${OT_MBEDTLS_RCP}
     ot-config
 )
 
