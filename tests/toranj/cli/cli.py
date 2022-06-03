@@ -329,6 +329,9 @@ class Node(object):
     def srp_client_clear_host(self):
         self._cli_no_output('srp client host clear')
 
+    def srp_client_enable_auto_host_address(self):
+        self._cli_no_output('srp client host address auto')
+
     def srp_client_set_host_address(self, *addrs):
         self._cli_no_output('srp client host address', *addrs)
 

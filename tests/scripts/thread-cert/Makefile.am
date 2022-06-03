@@ -188,6 +188,7 @@ EXTRA_DIST                                                         = \
     test_router_upgrade.py                                           \
     test_service.py                                                  \
     test_set_mliid.py                                                \
+    test_srp_auto_host_address.py                                    \
     test_srp_auto_start_mode.py                                      \
     test_srp_client_remove_host.py                                   \
     test_srp_client_save_server_info.py                              \
@@ -264,6 +265,7 @@ check_SCRIPTS                                                      = \
     test_router_reattach.py                                          \
     test_router_upgrade.py                                           \
     test_service.py                                                  \
+    test_srp_auto_host_address.py                                    \
     test_srp_auto_start_mode.py                                      \
     test_srp_client_remove_host.py                                   \
     test_srp_client_save_server_info.py                              \
