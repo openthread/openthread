@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes implementations for IPv6 Neighbor Discovery (ND).
+ *   This file includes implementations for IPv6 Neighbor Discovery (ND6).
  *
  */
 
@@ -41,29 +41,44 @@ namespace ot {
 namespace Ip6 {
 namespace Nd {
 
-const Option *Option::GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength)
+//----------------------------------------------------------------------------------------------------------------------
+// Option::Iterator
+
+Option::Iterator::Iterator(void)
+    : mOption(nullptr)
+    , mEnd(nullptr)
 {
-    const uint8_t *nextOption = nullptr;
-    const uint8_t *bufferEnd  = aBuffer + aBufferLength;
+    // An empty iterator (used to indicate `end()` of list).
+}
 
-    VerifyOrExit(aBuffer != nullptr, nextOption = nullptr);
+Option::Iterator::Iterator(const void *aStart, const void *aEnd)
+    : mOption(nullptr)
+    , mEnd(reinterpret_cast<const Option *>(aEnd))
+{
+    // Note that `Validate()` uses `mEnd` so can only be called after
+    // `mEnd` is set.
 
-    if (aCurOption == nullptr)
-    {
-        nextOption = aBuffer;
-    }
-    else
-    {
-        nextOption = reinterpret_cast<const uint8_t *>(aCurOption) + aCurOption->GetSize();
-    }
+    mOption = Validate(reinterpret_cast<const Option *>(aStart));
+}
 
-    VerifyOrExit(nextOption + sizeof(Option) <= bufferEnd, nextOption = nullptr);
-    VerifyOrExit(reinterpret_cast<const Option *>(nextOption)->GetSize() > 0, nextOption = nullptr);
-    VerifyOrExit(nextOption + reinterpret_cast<const Option *>(nextOption)->GetSize() <= bufferEnd,
-                 nextOption = nullptr);
+const Option *Option::Iterator::Next(const Option *aOption)
+{
+    return reinterpret_cast<const Option *>(reinterpret_cast<const uint8_t *>(aOption) + aOption->GetSize());
+}
 
-exit:
-    return reinterpret_cast<const Option *>(nextOption);
+void Option::Iterator::Advance(void)
+{
+    mOption = (mOption != nullptr) ? Validate(Next(mOption)) : nullptr;
+}
+
+const Option *Option::Iterator::Validate(const Option *aOption) const
+{
+    // Check if `aOption` is well-formed and fits in the range
+    // up to `mEnd`. Returns `aOption` if it is valid, `nullptr`
+    // otherwise.
+
+    return ((aOption != nullptr) && ((aOption + 1) <= mEnd) && aOption->IsValid() && (Next(aOption) <= mEnd)) ? aOption
+                                                                                                              : nullptr;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +87,7 @@ exit:
 void PrefixInfoOption::Init(void)
 {
     Clear();
-    SetType(Type::kPrefixInfo);
+    SetType(kTypePrefixInfo);
     SetSize(sizeof(PrefixInfoOption));
 
     OT_UNUSED_VARIABLE(mReserved2);
@@ -101,7 +116,7 @@ bool PrefixInfoOption::IsValid(void) const
 void RouteInfoOption::Init(void)
 {
     Clear();
-    SetType(Type::kRouteInfo);
+    SetType(kTypeRouteInfo);
 }
 
 void RouteInfoOption::SetPreference(RoutePreference aPreference)
@@ -165,9 +180,9 @@ uint8_t RouteInfoOption::OptionLengthForPrefix(uint8_t aPrefixLength)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// RouterAdvMessage
+// RouterAdverMessage::Header
 
-void RouterAdvMessage::SetToDefault(void)
+void RouterAdvertMessage::Header::SetToDefault(void)
 {
     OT_UNUSED_VARIABLE(mCode);
     OT_UNUSED_VARIABLE(mCurHopLimit);
@@ -178,15 +193,79 @@ void RouterAdvMessage::SetToDefault(void)
     mType = Icmp::Header::kTypeRouterAdvert;
 }
 
-RoutePreference RouterAdvMessage::GetDefaultRouterPreference(void) const
+RoutePreference RouterAdvertMessage::Header::GetDefaultRouterPreference(void) const
 {
     return NetworkData::RoutePreferenceFromValue((mFlags & kPreferenceMask) >> kPreferenceOffset);
 }
 
-void RouterAdvMessage::SetDefaultRouterPreference(RoutePreference aPreference)
+void RouterAdvertMessage::Header::SetDefaultRouterPreference(RoutePreference aPreference)
 {
     mFlags &= ~kPreferenceMask;
     mFlags |= (NetworkData::RoutePreferenceToValue(aPreference) << kPreferenceOffset) & kPreferenceMask;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// RouterAdverMessage
+
+Option *RouterAdvertMessage::AppendOption(uint16_t aOptionSize)
+{
+    // This method appends an option with a given size to the RA
+    // message by reserving space in the data buffer if there is
+    // room. On success returns pointer to the option, on failure
+    // returns `nullptr`. The returned option needs to be
+    // initialized and populated by the caller.
+
+    Option * option    = nullptr;
+    uint32_t newLength = mData.GetLength();
+
+    newLength += aOptionSize;
+    VerifyOrExit(newLength <= mMaxLength);
+
+    option = reinterpret_cast<Option *>(AsNonConst(GetDataEnd()));
+    mData.SetLength(static_cast<uint16_t>(newLength));
+
+exit:
+    return option;
+}
+
+Error RouterAdvertMessage::AppendPrefixInfoOption(const Prefix &aPrefix,
+                                                  uint32_t      aValidLifetime,
+                                                  uint32_t      aPreferredLifetime)
+{
+    Error             error = kErrorNone;
+    PrefixInfoOption *pio;
+
+    pio = static_cast<PrefixInfoOption *>(AppendOption(sizeof(PrefixInfoOption)));
+    VerifyOrExit(pio != nullptr, error = kErrorNoBufs);
+
+    pio->Init();
+    pio->SetOnLinkFlag();
+    pio->SetAutoAddrConfigFlag();
+    pio->SetValidLifetime(aValidLifetime);
+    pio->SetPreferredLifetime(aPreferredLifetime);
+    pio->SetPrefix(aPrefix);
+
+exit:
+    return error;
+}
+
+Error RouterAdvertMessage::AppendRouteInfoOption(const Prefix &  aPrefix,
+                                                 uint32_t        aRouteLifetime,
+                                                 RoutePreference aPreference)
+{
+    Error            error = kErrorNone;
+    RouteInfoOption *rio;
+
+    rio = static_cast<RouteInfoOption *>(AppendOption(RouteInfoOption::OptionSizeForPrefix(aPrefix.GetLength())));
+    VerifyOrExit(rio != nullptr, error = kErrorNoBufs);
+
+    rio->Init();
+    rio->SetRouteLifetime(aRouteLifetime);
+    rio->SetPreference(aPreference);
+    rio->SetPrefix(aPrefix);
+
+exit:
+    return error;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

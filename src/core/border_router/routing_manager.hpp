@@ -351,7 +351,7 @@ private:
     void InvalidateDiscoveredPrefixes(void);
     void InvalidateAllDiscoveredPrefixes(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
-    bool UpdateRouterAdvMessage(const Ip6::Nd::RouterAdvMessage *aRouterAdvMessage);
+    bool UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
     void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
@@ -408,9 +408,9 @@ private:
     // The RA header and parameters for the infra interface.
     // This value is initialized with `RouterAdvMessage::SetToDefault`
     // and updated with RA messages initiated from infra interface.
-    Ip6::Nd::RouterAdvMessage mRouterAdvMessage;
-    TimeMilli                 mTimeRouterAdvMessageLastUpdate;
-    bool                      mLearntRouterAdvMessageFromHost;
+    Ip6::Nd::RouterAdvertMessage::Header mRouterAdvertHeader;
+    TimeMilli                            mTimeRouterAdvMessageLastUpdate;
+    bool                                 mLearntRouterAdvMessageFromHost;
 
     TimerMilli mDiscoveredPrefixInvalidTimer;
     TimerMilli mDiscoveredPrefixStaleTimer;

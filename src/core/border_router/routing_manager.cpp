@@ -828,128 +828,76 @@ Error RoutingManager::SendRouterSolicitation(void)
     return mInfraIf.Send(packet, destAddress);
 }
 
-// This method sends Router Advertisement messages to advertise on-link prefix and route for OMR prefix.
-// @param[in]  aNewOmrPrefixes   An array of the new OMR prefixes to be advertised.
-//                               Empty array means we should stop advertising OMR prefixes.
 void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes)
 {
-    uint8_t  buffer[kMaxRouterAdvMessageLength];
-    uint16_t bufferLength = 0;
+    uint8_t                      buffer[kMaxRouterAdvMessageLength];
+    Ip6::Nd::RouterAdvertMessage raMsg(mRouterAdvertHeader, buffer);
 
-    static_assert(sizeof(mRouterAdvMessage) <= sizeof(buffer), "RA buffer too small");
-    memcpy(buffer, &mRouterAdvMessage, sizeof(mRouterAdvMessage));
-    bufferLength += sizeof(mRouterAdvMessage);
+    // Append PIO for local on-link prefix. Ensure it is either being
+    // advertised or deprecated.
 
-    if (mIsAdvertisingLocalOnLinkPrefix)
+    if (mIsAdvertisingLocalOnLinkPrefix || mOnLinkPrefixDeprecateTimer.IsRunning())
     {
-        Ip6::Nd::PrefixInfoOption *pio;
+        uint32_t validLifetime     = kDefaultOnLinkPrefixLifetime;
+        uint32_t preferredLifetime = kDefaultOnLinkPrefixLifetime;
 
-        OT_ASSERT(bufferLength + sizeof(Ip6::Nd::PrefixInfoOption) <= sizeof(buffer));
-
-        pio = reinterpret_cast<Ip6::Nd::PrefixInfoOption *>(buffer + bufferLength);
-
-        pio->Init();
-        pio->SetOnLinkFlag();
-        pio->SetAutoAddrConfigFlag();
-        pio->SetValidLifetime(kDefaultOnLinkPrefixLifetime);
-        pio->SetPreferredLifetime(kDefaultOnLinkPrefixLifetime);
-        pio->SetPrefix(mLocalOnLinkPrefix);
-
-        bufferLength += pio->GetSize();
-
-        LogInfo("Send on-link prefix %s in PIO (preferred lifetime = %u seconds, valid lifetime = %u seconds)",
-                mLocalOnLinkPrefix.ToString().AsCString(), pio->GetPreferredLifetime(), pio->GetValidLifetime());
-
-        mTimeAdvertisedOnLinkPrefix = TimerMilli::GetNow();
-    }
-    else if (mOnLinkPrefixDeprecateTimer.IsRunning())
-    {
-        Ip6::Nd::PrefixInfoOption *pio;
-
-        OT_ASSERT(bufferLength + sizeof(Ip6::Nd::PrefixInfoOption) <= sizeof(buffer));
-
-        pio = reinterpret_cast<Ip6::Nd::PrefixInfoOption *>(buffer + bufferLength);
-
-        pio->Init();
-        pio->SetOnLinkFlag();
-        pio->SetAutoAddrConfigFlag();
-        pio->SetValidLifetime(TimeMilli::MsecToSec(mOnLinkPrefixDeprecateTimer.GetFireTime() - TimerMilli::GetNow()));
-
-        // Set zero preferred lifetime to immediately deprecate the advertised on-link prefix.
-        pio->SetPreferredLifetime(0);
-        pio->SetPrefix(mLocalOnLinkPrefix);
-
-        bufferLength += pio->GetSize();
-
-        LogInfo("Send on-link prefix %s in PIO (preferred lifetime = %u seconds, valid lifetime = %u seconds)",
-                mLocalOnLinkPrefix.ToString().AsCString(), pio->GetPreferredLifetime(), pio->GetValidLifetime());
-    }
-
-    // Invalidate the advertised OMR prefixes if they are no longer in the new OMR prefix array.
-
-    for (const OmrPrefix &advertisedOmrPrefix : mAdvertisedOmrPrefixes)
-    {
-        if (!aNewOmrPrefixes.ContainsMatching(advertisedOmrPrefix.GetPrefix()))
+        if (mOnLinkPrefixDeprecateTimer.IsRunning())
         {
-            Ip6::Nd::RouteInfoOption *rio;
+            validLifetime     = TimeMilli::MsecToSec(mOnLinkPrefixDeprecateTimer.GetFireTime() - TimerMilli::GetNow());
+            preferredLifetime = 0;
+        }
 
-            OT_ASSERT(bufferLength +
-                          Ip6::Nd::RouteInfoOption::OptionSizeForPrefix(advertisedOmrPrefix.GetPrefix().GetLength()) <=
-                      sizeof(buffer));
+        SuccessOrAssert(raMsg.AppendPrefixInfoOption(mLocalOnLinkPrefix, validLifetime, preferredLifetime));
 
-            rio = reinterpret_cast<Ip6::Nd::RouteInfoOption *>(buffer + bufferLength);
+        if (mIsAdvertisingLocalOnLinkPrefix)
+        {
+            mTimeAdvertisedOnLinkPrefix = TimerMilli::GetNow();
+        }
 
-            // Set zero route lifetime to immediately invalidate the advertised OMR prefix.
-            rio->Init();
-            rio->SetRouteLifetime(0);
-            rio->SetPrefix(advertisedOmrPrefix.GetPrefix());
+        LogInfo("RouterAdvert: Added PIO for %s (valid=%u, preferred=%u)", mLocalOnLinkPrefix.ToString().AsCString(),
+                validLifetime, preferredLifetime);
+    }
 
-            bufferLength += rio->GetSize();
+    // Invalidate previously advertised OMR prefixes if they are no
+    // longer in the new OMR prefix array.
 
-            LogInfo("Stop advertising OMR prefix %s on %s", advertisedOmrPrefix.ToString().AsCString(),
-                    mInfraIf.ToString().AsCString());
+    for (const OmrPrefix &omrPrefix : mAdvertisedOmrPrefixes)
+    {
+        if (!aNewOmrPrefixes.ContainsMatching(omrPrefix.GetPrefix()))
+        {
+            SuccessOrAssert(
+                raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), /* aRouteLifetime */ 0, omrPrefix.GetPreference()));
+
+            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", omrPrefix.ToString().AsCString());
         }
     }
 
-    for (const OmrPrefix &newOmrPrefix : aNewOmrPrefixes)
+    for (const OmrPrefix &omrPrefix : aNewOmrPrefixes)
     {
-        Ip6::Nd::RouteInfoOption *rio;
+        SuccessOrAssert(
+            raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), kDefaultOmrPrefixLifetime, omrPrefix.GetPreference()));
 
-        OT_ASSERT(bufferLength + Ip6::Nd::RouteInfoOption::OptionSizeForPrefix(newOmrPrefix.GetPrefix().GetLength()) <=
-                  sizeof(buffer));
-
-        rio = reinterpret_cast<Ip6::Nd::RouteInfoOption *>(buffer + bufferLength);
-
-        rio->Init();
-        rio->SetRouteLifetime(kDefaultOmrPrefixLifetime);
-        rio->SetPreference(newOmrPrefix.GetPreference());
-        rio->SetPrefix(newOmrPrefix.GetPrefix());
-
-        bufferLength += rio->GetSize();
-
-        LogInfo("Send OMR prefix %s in RIO (valid lifetime = %u seconds)", newOmrPrefix.ToString().AsCString(),
+        LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", omrPrefix.ToString().AsCString(),
                 kDefaultOmrPrefixLifetime);
     }
 
-    // Send the message only when there are options.
-    if (bufferLength > sizeof(mRouterAdvMessage))
+    if (raMsg.ContainsAnyOptions())
     {
-        Error                error;
-        Ip6::Address         destAddress;
-        InfraIf::Icmp6Packet packet;
+        Error        error;
+        Ip6::Address destAddress;
 
         ++mRouterAdvertisementCount;
 
-        packet.Init(buffer, bufferLength);
         destAddress.SetToLinkLocalAllNodesMulticast();
 
-        error = mInfraIf.Send(packet, destAddress);
+        error = mInfraIf.Send(raMsg.GetAsPacket(), destAddress);
 
         if (error == kErrorNone)
         {
             mLastRouterAdvertisementSendTime = TimerMilli::GetNow();
             LogInfo("Sent Router Advertisement on %s", mInfraIf.ToString().AsCString());
-            DumpDebg("[BR-CERT] direction=send | type=RA |", buffer, bufferLength);
+            DumpDebg("[BR-CERT] direction=send | type=RA |", raMsg.GetAsPacket().GetBytes(),
+                     raMsg.GetAsPacket().GetLength());
         }
         else
         {
@@ -1052,7 +1000,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         // Invalidate the learned RA message if it is not refreshed during Router Solicitation.
         if (mTimeRouterAdvMessageLastUpdate <= mTimeRouterSolicitStart)
         {
-            UpdateRouterAdvMessage(/* aRouterAdvMessage */ nullptr);
+            UpdateRouterAdvertHeader(/* aRouterAdvertMessage */ nullptr);
         }
 
         mRouterSolicitCount = 0;
@@ -1105,51 +1053,30 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
 
 void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
-    OT_ASSERT(mIsRunning);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
-    bool                             needReevaluate = false;
-    const uint8_t *                  optionsBegin;
-    uint16_t                         optionsLength;
-    const Ip6::Nd::Option *          option;
-    const Ip6::Nd::RouterAdvMessage *routerAdvMessage;
+    bool                         needReevaluate = false;
+    Ip6::Nd::RouterAdvertMessage routerAdvMessage(aPacket);
 
-    VerifyOrExit(aPacket.GetLength() >= sizeof(Ip6::Nd::RouterAdvMessage));
+    OT_ASSERT(mIsRunning);
+
+    VerifyOrExit(routerAdvMessage.IsValid());
 
     LogInfo("Received Router Advertisement from %s on %s", aSrcAddress.ToString().AsCString(),
             mInfraIf.ToString().AsCString());
     DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
 
-    routerAdvMessage = reinterpret_cast<const Ip6::Nd::RouterAdvMessage *>(aPacket.GetBytes());
-    optionsBegin     = aPacket.GetBytes() + sizeof(Ip6::Nd::RouterAdvMessage);
-    optionsLength    = aPacket.GetLength() - sizeof(Ip6::Nd::RouterAdvMessage);
-
-    option = nullptr;
-    while ((option = Ip6::Nd::Option::GetNextOption(option, optionsBegin, optionsLength)) != nullptr)
+    for (const Ip6::Nd::Option &option : routerAdvMessage)
     {
-        switch (option->GetType())
+        switch (option.GetType())
         {
-        case Ip6::Nd::Option::Type::kPrefixInfo:
-        {
-            const Ip6::Nd::PrefixInfoOption *pio = static_cast<const Ip6::Nd::PrefixInfoOption *>(option);
+        case Ip6::Nd::Option::kTypePrefixInfo:
+            needReevaluate |= UpdateDiscoveredOnLinkPrefix(static_cast<const Ip6::Nd::PrefixInfoOption &>(option));
+            break;
 
-            if (pio->IsValid())
-            {
-                needReevaluate |= UpdateDiscoveredOnLinkPrefix(*pio);
-            }
-        }
-        break;
-
-        case Ip6::Nd::Option::Type::kRouteInfo:
-        {
-            const Ip6::Nd::RouteInfoOption *rio = static_cast<const Ip6::Nd::RouteInfoOption *>(option);
-
-            if (rio->IsValid())
-            {
-                UpdateDiscoveredOmrPrefix(*rio);
-            }
-        }
-        break;
+        case Ip6::Nd::Option::kTypeRouteInfo:
+            UpdateDiscoveredOmrPrefix(static_cast<const Ip6::Nd::RouteInfoOption &>(option));
+            break;
 
         default:
             break;
@@ -1160,7 +1087,7 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
     // initiated from the infra interface.
     if (mInfraIf.HasAddress(aSrcAddress))
     {
-        needReevaluate |= UpdateRouterAdvMessage(routerAdvMessage);
+        needReevaluate |= UpdateRouterAdvertHeader(&routerAdvMessage);
     }
 
     if (needReevaluate)
@@ -1181,6 +1108,8 @@ bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const Ip6::Nd::PrefixInfoOptio
     bool            needReevaluate = false;
     ExternalPrefix  onLinkPrefix;
     ExternalPrefix *existingPrefix = nullptr;
+
+    VerifyOrExit(aPio.IsValid());
 
     aPio.GetPrefix(prefix);
 
@@ -1242,6 +1171,8 @@ void RoutingManager::UpdateDiscoveredOmrPrefix(const Ip6::Nd::RouteInfoOption &a
     Ip6::Prefix     prefix;
     ExternalPrefix  omrPrefix;
     ExternalPrefix *existingPrefix = nullptr;
+
+    VerifyOrExit(aRio.IsValid());
 
     aRio.GetPrefix(prefix);
 
@@ -1390,35 +1321,36 @@ bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) co
     return contain;
 }
 
-// Update the `mRouterAdvMessage` with given Router Advertisement message.
-// Returns a boolean which indicates whether there are changes of `mRouterAdvMessage`.
-bool RoutingManager::UpdateRouterAdvMessage(const Ip6::Nd::RouterAdvMessage *aRouterAdvMessage)
+bool RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage)
 {
-    Ip6::Nd::RouterAdvMessage oldRouterAdvMessage;
+    // Updates the `mRouterAdvertHeader` from the given RA message.
+    // Returns a boolean which indicates whether there was any changes
+    // to `mRouterAdvertHeader`.
 
-    oldRouterAdvMessage = mRouterAdvMessage;
+    Ip6::Nd::RouterAdvertMessage::Header oldHeader;
 
+    oldHeader                       = mRouterAdvertHeader;
     mTimeRouterAdvMessageLastUpdate = TimerMilli::GetNow();
 
-    if (aRouterAdvMessage == nullptr || aRouterAdvMessage->GetRouterLifetime() == 0)
+    if (aRouterAdvertMessage == nullptr || aRouterAdvertMessage->GetHeader().GetRouterLifetime() == 0)
     {
-        mRouterAdvMessage.SetToDefault();
+        mRouterAdvertHeader.SetToDefault();
         mLearntRouterAdvMessageFromHost = false;
     }
     else
     {
-        // The checksum is set to zero in `mRouterAdvMessage`
+        // The checksum is set to zero in `mRouterAdvertHeader`
         // which indicates to platform that it needs to do the
         // calculation and update it.
 
-        mRouterAdvMessage = *aRouterAdvMessage;
-        mRouterAdvMessage.SetChecksum(0);
+        mRouterAdvertHeader = aRouterAdvertMessage->GetHeader();
+        mRouterAdvertHeader.SetChecksum(0);
         mLearntRouterAdvMessageFromHost = true;
     }
 
     ResetDiscoveredPrefixStaleTimer();
 
-    return (mRouterAdvMessage != oldRouterAdvMessage);
+    return (mRouterAdvertHeader != oldHeader);
 }
 
 void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
