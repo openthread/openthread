@@ -718,6 +718,8 @@ void Server::ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata)
     // Parse lease time and validate signature.
     SuccessOrExit(error = ProcessAdditionalSection(host, aMessage, aMetadata));
 
+    SuccessOrExit(error = ValidateServiceSubTypes(*host, aMetadata));
+
     HandleUpdate(*host, aMetadata);
 
 exit:
@@ -1199,6 +1201,68 @@ exit:
     return error;
 }
 
+Error Server::ValidateServiceSubTypes(Host &aHost, const MessageMetadata &aMetadata)
+{
+    Error error = kErrorNone;
+    Host *existingHost;
+
+    // Verify that there is a matching base type service for all
+    // sub-type services in `aHost` (which is from the received
+    // and parsed SRP Update message).
+
+    for (const Service &service : aHost.GetServices())
+    {
+        if (service.IsSubType() && (aHost.FindBaseService(service.GetInstanceName()) == nullptr))
+        {
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
+            char subLabel[Dns::Name::kMaxLabelSize];
+
+            IgnoreError(service.GetServiceSubTypeLabel(subLabel, sizeof(subLabel)));
+            LogWarn("Message contains instance %s with subtype %s without base type", service.GetInstanceName(),
+                    subLabel);
+#endif
+
+            ExitNow(error = kErrorParse);
+        }
+    }
+
+    // SRP server must treat the update instructions for a service type
+    // and all its sub-types as atomic, i.e., when a service and its
+    // sub-types are being updated, whatever information appears in the
+    // SRP Update is the entirety of information about that service and
+    // its sub-types. Any previously registered sub-type that does not
+    // appear in a new SRP Update, must be removed.
+    //
+    // We go though the list of registered services for the same host
+    // and if the base service is included in the new SRP Update
+    // message, we add any previously registered service sub-type that
+    // does not appear in new Update message as "deleted".
+
+    existingHost = mHosts.FindMatching(aHost.GetFullName());
+    VerifyOrExit(existingHost != nullptr);
+
+    for (const Service &baseService : existingHost->GetServices())
+    {
+        if (baseService.IsSubType() || (aHost.FindBaseService(baseService.GetInstanceName()) == nullptr))
+        {
+            continue;
+        }
+
+        for (const Service &subService : existingHost->GetServices())
+        {
+            if (!subService.IsSubType() || !subService.MatchesInstanceName(baseService.GetInstanceName()))
+            {
+                continue;
+            }
+
+            SuccessOrExit(error = aHost.AddCopyOfServiceAsDeletedIfNotPresent(subService, aMetadata.mRxTime));
+        }
+    }
+
+exit:
+    return error;
+}
+
 void Server::HandleUpdate(Host &aHost, const MessageMetadata &aMetadata)
 {
     Error error = kErrorNone;
@@ -1224,15 +1288,7 @@ void Server::HandleUpdate(Host &aHost, const MessageMetadata &aMetadata)
             continue;
         }
 
-        if (aHost.FindService(service.GetServiceName(), service.GetInstanceName()) == nullptr)
-        {
-            Service *newService = aHost.AddNewService(service.GetServiceName(), service.GetInstanceName(),
-                                                      service.IsSubType(), aMetadata.mRxTime);
-
-            VerifyOrExit(newService != nullptr, error = kErrorNoBufs);
-            newService->mDescription->mUpdateTime = aMetadata.mRxTime;
-            newService->mIsDeleted                = true;
-        }
+        SuccessOrExit(error = aHost.AddCopyOfServiceAsDeletedIfNotPresent(service, aMetadata.mRxTime));
     }
 
 exit:
@@ -1959,6 +2015,25 @@ exit:
     return;
 }
 
+Error Server::Host::AddCopyOfServiceAsDeletedIfNotPresent(const Service &aService, TimeMilli aUpdateTime)
+{
+    Error    error = kErrorNone;
+    Service *newService;
+
+    VerifyOrExit(FindService(aService.GetServiceName(), aService.GetInstanceName()) == nullptr);
+
+    newService =
+        AddNewService(aService.GetServiceName(), aService.GetInstanceName(), aService.IsSubType(), aUpdateTime);
+
+    VerifyOrExit(newService != nullptr, error = kErrorNoBufs);
+
+    newService->mDescription->mUpdateTime = aUpdateTime;
+    newService->mIsDeleted                = true;
+
+exit:
+    return error;
+}
+
 void Server::Host::FreeAllServices(void)
 {
     while (!mServices.IsEmpty())
@@ -2062,6 +2137,17 @@ const Server::Service *Server::Host::FindService(const char *aServiceName, const
 Server::Service *Server::Host::FindService(const char *aServiceName, const char *aInstanceName)
 {
     return AsNonConst(AsConst(this)->FindService(aServiceName, aInstanceName));
+}
+
+const Server::Service *Server::Host::FindBaseService(const char *aInstanceName) const
+{
+    return FindNextService(/*a PrevService */ nullptr, kFlagsBaseTypeServiceOnly, /* aServiceName */ nullptr,
+                           aInstanceName);
+}
+
+Server::Service *Server::Host::FindBaseService(const char *aInstanceName)
+{
+    return AsNonConst(AsConst(this)->FindBaseService(aInstanceName));
 }
 
 Error Server::Host::AddIp6Address(const Ip6::Address &aIp6Address)
