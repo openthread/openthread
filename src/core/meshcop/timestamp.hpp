@@ -141,6 +141,15 @@ public:
     void AdvanceRandomTicks(void);
 
     /**
+     * This method indicates whether the timestamp indicates an MLE Orphan Announce message.
+     *
+     * @retval TRUE   The timestamp indicates an Orphan Announce message.
+     * @retval FALSE  If the timestamp does not indicate an Orphan Announce message.
+     *
+     */
+    bool IsOrphanTimestamp(void) const { return GetSeconds() == 0 && GetTicks() == 0 && GetAuthoritative(); }
+
+    /**
      * This static method compares two timestamps.
      *
      * Either one or both @p aFirst or @p aSecond can be `nullptr`. A non-null timestamp is considered greater than
