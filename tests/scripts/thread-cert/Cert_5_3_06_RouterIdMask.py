@@ -179,10 +179,16 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
                 filter_LLANMA().\
                 filter_mle_cmd(MLE_ADVERTISEMENT).\
                 must_next()
+            # Time between MLE Advertisements after reset can be up to 3.5 seconds
+            # 0.0s: Reset Interval, reset interval to 1 seconds, random interval at 0.5 second
+            # 0.5s: Transmit MLE Advertisement
+            # 1.0s: Set interval to 2 seconds, random interval at 2 seconds
+            # 3.0s: Receive MLE Advertisement, reset interval to 1 second, random interval at 1.0 second
+            # 4.0s: Transmit MLE Advertisement
             pkts.filter_wpan_src64(LEADER).\
                 filter_LLANMA().\
                 filter_mle_cmd(MLE_ADVERTISEMENT).\
-                filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= 3).\
+                filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= 4).\
                 must_next()
         # check router cost before and after the re-attach
         pkts.filter_wpan_src64(LEADER).\
