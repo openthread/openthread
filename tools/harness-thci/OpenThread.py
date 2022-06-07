@@ -1144,6 +1144,10 @@ class OpenThreadTHCI(object):
                         self, timeout * 2))
                 else:
                     return False
+
+        if self.IsBorderRouter:
+            self._waitBorderRoutingStabilize()
+
         return True
 
     @API
@@ -1607,6 +1611,30 @@ class OpenThreadTHCI(object):
                 return self.__executeCommand('netdata register')[-1] == 'Done'
         else:
             return False
+
+    @watched
+    def getNetworkData(self):
+        lines = self.__executeCommand('netdata show')
+        prefixes, routes, services = [], [], []
+        classify = None
+
+        for line in lines:
+            if line == 'Prefixes:':
+                classify = prefixes
+            elif line == 'Routes:':
+                classify = routes
+            elif line == 'Services:':
+                classify = services
+            elif line == 'Done':
+                classify = None
+            else:
+                classify.append(line)
+
+        return {
+            'Prefixes': prefixes,
+            'Routes': routes,
+            'Services': services,
+        }
 
     @API
     def setNetworkIDTimeout(self, iNwkIDTimeOut):
@@ -3110,6 +3138,14 @@ class OpenThreadTHCI(object):
     @API
     def setLeaderWeight(self, iWeight=72):
         self.__executeCommand('leaderweight %d' % iWeight)
+
+    @watched
+    def isBorderRoutingEnabled(self):
+        try:
+            self.__executeCommand('br omrprefix')
+            return True
+        except CommandError:
+            return False
 
     def __detectZephyr(self):
         """Detect if the device is running Zephyr and adapt in that case"""
