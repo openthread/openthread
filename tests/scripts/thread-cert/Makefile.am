@@ -193,6 +193,7 @@ EXTRA_DIST                                                         = \
     test_srp_client_remove_host.py                                   \
     test_srp_client_save_server_info.py                              \
     test_srp_lease.py                                                \
+    test_srp_many_services_mtu_check.py                              \
     test_srp_name_conflicts.py                                       \
     test_srp_register_single_service.py                              \
     test_srp_server_anycast_mode.py                                  \
@@ -270,6 +271,7 @@ check_SCRIPTS                                                      = \
     test_srp_client_remove_host.py                                   \
     test_srp_client_save_server_info.py                              \
     test_srp_lease.py                                                \
+    test_srp_many_services_mtu_check.py                              \
     test_srp_name_conflicts.py                                       \
     test_srp_register_single_service.py                              \
     test_srp_server_anycast_mode.py                                  \
