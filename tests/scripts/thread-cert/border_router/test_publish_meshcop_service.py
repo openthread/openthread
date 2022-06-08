@@ -161,7 +161,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.assertEqual((state_bitmap >> 8 & 1), br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
         self.assertEqual(service_data['txt']['nn'], br.get_network_name())
         self.assertEqual(service_data['txt']['rv'], '1')
-        self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0'])
+        self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0', '1.3.0'])
 
     def discover_all_meshcop_services(self, host):
         instance_names = host.browse_mdns_services('_meshcop._udp')
