@@ -82,11 +82,11 @@ class ManualOmrsPrefix(thread_cert.TestCase):
         self.assertEqual(br1.get_netdata_omr_prefixes(), [br1.get_br_omr_prefix()])
 
         # Add a smaller OMR prefix. Verify BR_1 withdraws its OMR prefix.
-        self._test_manual_omr_prefix('2001::/64', 'paros', expect_withdraw=True)
+        self._test_manual_omr_prefix('2001::/64', 'paros', expect_withdraw=True, prf='low')
         # Add a bigger OMR prefix. Verify BR_1 does not withdraw its OMR prefix.
-        self._test_manual_omr_prefix('fdff:ffff:1::/64', 'paros', expect_withdraw=False, prf='med')
+        self._test_manual_omr_prefix('fdff:ffff:1::/64', 'paros', expect_withdraw=False, prf='low')
         # Add a high preference bigger OMR prefix. Verify BR_1 withdraws its OMR prefix.
-        self._test_manual_omr_prefix('fdff:ffff:2::/64', 'paros', expect_withdraw=True, prf='high')
+        self._test_manual_omr_prefix('fdff:ffff:2::/64', 'paros', expect_withdraw=True, prf='med')
         # Add a smaller but invalid OMR prefix (P_on_mesh = 0). Verify BR_1 does not withdraw its OMR prefix.
         self._test_manual_omr_prefix('2002::/64', 'pars', expect_withdraw=False)
         # Add a smaller but invalid OMR prefix (P_stable = 0). Verify BR_1 does not withdraw its OMR prefix.
