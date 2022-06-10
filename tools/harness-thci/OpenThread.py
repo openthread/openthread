@@ -404,6 +404,7 @@ class OpenThreadTHCI(object):
             self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
 
         self.mac = params.get('EUI')
+        self.backboneNetif = params.get('BackboneNetif') or 'eth0'
 
         self.UIStatusMsg = ''
         self.AutoDUTEnable = False
