@@ -61,7 +61,7 @@ ROUTER1, ROUTER2, ROUTER3 = 3, 4, 5
 LINK_ESTABLISH_DELAY_THRESHOLD = 3
 
 
-class TestRouterUpgrade(thread_cert.TestCase):
+class TestRouterMulticastLinkRequest(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
@@ -108,6 +108,7 @@ class TestRouterUpgrade(thread_cert.TestCase):
         self.nodes[REED].start()
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[REED].get_state(), 'router')
+        self.simulator.go(LINK_ESTABLISH_DELAY_THRESHOLD + 3)
 
     def verify(self, pv: PacketVerifier):
         pkts = pv.pkts
