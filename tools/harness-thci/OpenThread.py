@@ -76,7 +76,7 @@ OT11_CAPBS = DevCapb.V1_1
 OT12_CAPBS = (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD)
 OT12BR_CAPBS = (DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm)
 OT13_CAPBS = (DevCapb.C_FTD13 | DevCapb.C_MTD13)
-OT13BR_CAPBS = (DevCapb.C_BR13 | DevCapb.C_Host13 | DevCapb.C_Comm)
+OT13BR_CAPBS = (DevCapb.C_BR13 | DevCapb.C_Host13)
 
 ZEPHYR_PREFIX = 'ot '
 """CLI prefix used for OpenThread commands in Zephyr systems"""
@@ -3129,7 +3129,7 @@ class OpenThreadTHCI(object):
             self.log("Setting capability of {}: (DevCapb.C_FTD13 | DevCapb.C_MTD13)".format(self))
             self.DeviceCapability = OT13_CAPBS
         elif thver in ['1.3', '4'] and self.IsBorderRouter:
-            self.log("Setting capability of {}: (DevCapb.C_BR13 | DevCapb.C_Host13 | DevCapb.C_Comm)".format(self))
+            self.log("Setting capability of {}: (DevCapb.C_BR13 | DevCapb.C_Host13)".format(self))
             self.DeviceCapability = OT13BR_CAPBS
         elif thver in ['1.2', '3'] and not self.IsBorderRouter:
             self.log("Setting capability of {}: DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD".format(self))
