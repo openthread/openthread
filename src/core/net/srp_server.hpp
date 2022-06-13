@@ -585,6 +585,7 @@ public:
                                            bool        aIsSubType,
                                            TimeMilli   aUpdateTime);
         void                 RemoveService(Service *aService, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
+        Error                AddCopyOfServiceAsDeletedIfNotPresent(const Service &aService, TimeMilli aUpdateTime);
         void                 FreeAllServices(void);
         void                 ClearResources(void);
         Error                MergeServicesAndResourcesFrom(Host &aHost);
@@ -594,6 +595,8 @@ public:
         const RetainPtr<Service::Description> FindServiceDescription(const char *aInstanceName) const;
         Service *                             FindService(const char *aServiceName, const char *aInstanceName);
         const Service *                       FindService(const char *aServiceName, const char *aInstanceName) const;
+        Service *                             FindBaseService(const char *aInstanceName);
+        const Service *                       FindBaseService(const char *aInstanceName) const;
 
         Host *                    mNext;
         Heap::String              mFullName;
@@ -977,6 +980,7 @@ private:
                           uint16_t                      aSigRdataOffset,
                           uint16_t                      aSigRdataLength,
                           const char *                  aSignerName) const;
+    Error ValidateServiceSubTypes(Host &aHost, const MessageMetadata &aMetadata);
     Error ProcessZoneSection(const Message &aMessage, MessageMetadata &aMetadata) const;
     Error ProcessHostDescriptionInstruction(Host &                 aHost,
                                             const Message &        aMessage,
