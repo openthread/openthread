@@ -3126,10 +3126,10 @@ class OpenThreadTHCI(object):
         """Discover device capability according to version"""
         thver = self.__executeCommand('thread version')[0]
         if thver in ['1.3', '4'] and not self.IsBorderRouter:
-            self.log("Setting capability of {}: (DevCapb.C_BR13 | DevCapb.C_Host13 | DevCapb.C_Comm)".format(self))
+            self.log("Setting capability of {}: (DevCapb.C_FTD13 | DevCapb.C_MTD13)".format(self))
             self.DeviceCapability = OT13_CAPBS
         elif thver in ['1.3', '4'] and self.IsBorderRouter:
-            self.log("Setting capability of {}: (DevCapb.C_FTD13 | DevCapb.C_MTD13)".format(self))
+            self.log("Setting capability of {}: (DevCapb.C_BR13 | DevCapb.C_Host13 | DevCapb.C_Comm)".format(self))
             self.DeviceCapability = OT13BR_CAPBS
         elif thver in ['1.2', '3'] and not self.IsBorderRouter:
             self.log("Setting capability of {}: DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD".format(self))
