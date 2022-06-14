@@ -50,7 +50,6 @@
 #include <openthread/netdata.h>
 
 #include "border_router/infra_if.hpp"
-#include "border_router/router_advertisement.hpp"
 #include "common/array.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
@@ -58,6 +57,7 @@
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
+#include "net/nd6.hpp"
 #include "thread/network_data.hpp"
 
 namespace ot {
@@ -248,8 +248,8 @@ private:
     class ExternalPrefix : private Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
     {
     public:
-        void               InitFrom(const RouterAdv::PrefixInfoOption &aPio);
-        void               InitFrom(const RouterAdv::RouteInfoOption &aRio);
+        void               InitFrom(const Ip6::Nd::PrefixInfoOption &aPio);
+        void               InitFrom(const Ip6::Nd::RouteInfoOption &aRio);
         bool               IsOnLinkPrefix(void) const { return mIsOnLinkPrefix; }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         const TimeMilli &  GetLastUpdateTime(void) const { return mLastUpdateTime; }
@@ -346,16 +346,16 @@ private:
     void DeprecateOnLinkPrefix(void);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
-    bool UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
-    void UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption &aRio);
+    bool UpdateDiscoveredOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
+    void UpdateDiscoveredOmrPrefix(const Ip6::Nd::RouteInfoOption &aRio);
     void InvalidateDiscoveredPrefixes(void);
     void InvalidateAllDiscoveredPrefixes(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
-    bool UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage);
+    bool UpdateRouterAdvMessage(const Ip6::Nd::RouterAdvMessage *aRouterAdvMessage);
     void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
-    static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio);
+    static bool IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
     // Indicates whether the Routing Manager is running (started).
@@ -408,9 +408,9 @@ private:
     // The RA header and parameters for the infra interface.
     // This value is initialized with `RouterAdvMessage::SetToDefault`
     // and updated with RA messages initiated from infra interface.
-    RouterAdv::RouterAdvMessage mRouterAdvMessage;
-    TimeMilli                   mTimeRouterAdvMessageLastUpdate;
-    bool                        mLearntRouterAdvMessageFromHost;
+    Ip6::Nd::RouterAdvMessage mRouterAdvMessage;
+    TimeMilli                 mTimeRouterAdvMessageLastUpdate;
+    bool                      mLearntRouterAdvMessageFromHost;
 
     TimerMilli mDiscoveredPrefixInvalidTimer;
     TimerMilli mDiscoveredPrefixStaleTimer;

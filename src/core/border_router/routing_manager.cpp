@@ -816,9 +816,9 @@ bool RoutingManager::IsRouterSolicitationInProgress(void) const
 
 Error RoutingManager::SendRouterSolicitation(void)
 {
-    Ip6::Address                    destAddress;
-    RouterAdv::RouterSolicitMessage routerSolicit;
-    InfraIf::Icmp6Packet            packet;
+    Ip6::Address                  destAddress;
+    Ip6::Nd::RouterSolicitMessage routerSolicit;
+    InfraIf::Icmp6Packet          packet;
 
     OT_ASSERT(IsInitialized());
 
@@ -842,11 +842,11 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
 
     if (mIsAdvertisingLocalOnLinkPrefix)
     {
-        RouterAdv::PrefixInfoOption *pio;
+        Ip6::Nd::PrefixInfoOption *pio;
 
-        OT_ASSERT(bufferLength + sizeof(RouterAdv::PrefixInfoOption) <= sizeof(buffer));
+        OT_ASSERT(bufferLength + sizeof(Ip6::Nd::PrefixInfoOption) <= sizeof(buffer));
 
-        pio = reinterpret_cast<RouterAdv::PrefixInfoOption *>(buffer + bufferLength);
+        pio = reinterpret_cast<Ip6::Nd::PrefixInfoOption *>(buffer + bufferLength);
 
         pio->Init();
         pio->SetOnLinkFlag();
@@ -864,11 +864,11 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
     }
     else if (mOnLinkPrefixDeprecateTimer.IsRunning())
     {
-        RouterAdv::PrefixInfoOption *pio;
+        Ip6::Nd::PrefixInfoOption *pio;
 
-        OT_ASSERT(bufferLength + sizeof(RouterAdv::PrefixInfoOption) <= sizeof(buffer));
+        OT_ASSERT(bufferLength + sizeof(Ip6::Nd::PrefixInfoOption) <= sizeof(buffer));
 
-        pio = reinterpret_cast<RouterAdv::PrefixInfoOption *>(buffer + bufferLength);
+        pio = reinterpret_cast<Ip6::Nd::PrefixInfoOption *>(buffer + bufferLength);
 
         pio->Init();
         pio->SetOnLinkFlag();
@@ -891,13 +891,13 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
     {
         if (!aNewOmrPrefixes.ContainsMatching(advertisedOmrPrefix.GetPrefix()))
         {
-            RouterAdv::RouteInfoOption *rio;
+            Ip6::Nd::RouteInfoOption *rio;
 
-            OT_ASSERT(bufferLength + RouterAdv::RouteInfoOption::OptionSizeForPrefix(
-                                         advertisedOmrPrefix.GetPrefix().GetLength()) <=
+            OT_ASSERT(bufferLength +
+                          Ip6::Nd::RouteInfoOption::OptionSizeForPrefix(advertisedOmrPrefix.GetPrefix().GetLength()) <=
                       sizeof(buffer));
 
-            rio = reinterpret_cast<RouterAdv::RouteInfoOption *>(buffer + bufferLength);
+            rio = reinterpret_cast<Ip6::Nd::RouteInfoOption *>(buffer + bufferLength);
 
             // Set zero route lifetime to immediately invalidate the advertised OMR prefix.
             rio->Init();
@@ -913,13 +913,12 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
 
     for (const OmrPrefix &newOmrPrefix : aNewOmrPrefixes)
     {
-        RouterAdv::RouteInfoOption *rio;
+        Ip6::Nd::RouteInfoOption *rio;
 
-        OT_ASSERT(bufferLength +
-                      RouterAdv::RouteInfoOption::OptionSizeForPrefix(newOmrPrefix.GetPrefix().GetLength()) <=
+        OT_ASSERT(bufferLength + Ip6::Nd::RouteInfoOption::OptionSizeForPrefix(newOmrPrefix.GetPrefix().GetLength()) <=
                   sizeof(buffer));
 
-        rio = reinterpret_cast<RouterAdv::RouteInfoOption *>(buffer + bufferLength);
+        rio = reinterpret_cast<Ip6::Nd::RouteInfoOption *>(buffer + bufferLength);
 
         rio->Init();
         rio->SetRouteLifetime(kDefaultOmrPrefixLifetime);
@@ -978,7 +977,7 @@ bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
            (aOmrPrefix.mLength >= 3 && (aOmrPrefix.GetBytes()[0] & 0xE0) == 0x20);
 }
 
-bool RoutingManager::IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio)
+bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio)
 {
     Ip6::Prefix prefix;
 
@@ -1109,35 +1108,30 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
     OT_ASSERT(mIsRunning);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
-    using RouterAdv::Option;
-    using RouterAdv::PrefixInfoOption;
-    using RouterAdv::RouteInfoOption;
-    using RouterAdv::RouterAdvMessage;
+    bool                             needReevaluate = false;
+    const uint8_t *                  optionsBegin;
+    uint16_t                         optionsLength;
+    const Ip6::Nd::Option *          option;
+    const Ip6::Nd::RouterAdvMessage *routerAdvMessage;
 
-    bool                    needReevaluate = false;
-    const uint8_t *         optionsBegin;
-    uint16_t                optionsLength;
-    const Option *          option;
-    const RouterAdvMessage *routerAdvMessage;
-
-    VerifyOrExit(aPacket.GetLength() >= sizeof(RouterAdvMessage));
+    VerifyOrExit(aPacket.GetLength() >= sizeof(Ip6::Nd::RouterAdvMessage));
 
     LogInfo("Received Router Advertisement from %s on %s", aSrcAddress.ToString().AsCString(),
             mInfraIf.ToString().AsCString());
     DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
 
-    routerAdvMessage = reinterpret_cast<const RouterAdvMessage *>(aPacket.GetBytes());
-    optionsBegin     = aPacket.GetBytes() + sizeof(RouterAdvMessage);
-    optionsLength    = aPacket.GetLength() - sizeof(RouterAdvMessage);
+    routerAdvMessage = reinterpret_cast<const Ip6::Nd::RouterAdvMessage *>(aPacket.GetBytes());
+    optionsBegin     = aPacket.GetBytes() + sizeof(Ip6::Nd::RouterAdvMessage);
+    optionsLength    = aPacket.GetLength() - sizeof(Ip6::Nd::RouterAdvMessage);
 
     option = nullptr;
-    while ((option = Option::GetNextOption(option, optionsBegin, optionsLength)) != nullptr)
+    while ((option = Ip6::Nd::Option::GetNextOption(option, optionsBegin, optionsLength)) != nullptr)
     {
         switch (option->GetType())
         {
-        case Option::Type::kPrefixInfo:
+        case Ip6::Nd::Option::Type::kPrefixInfo:
         {
-            const PrefixInfoOption *pio = static_cast<const PrefixInfoOption *>(option);
+            const Ip6::Nd::PrefixInfoOption *pio = static_cast<const Ip6::Nd::PrefixInfoOption *>(option);
 
             if (pio->IsValid())
             {
@@ -1146,9 +1140,9 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
         }
         break;
 
-        case Option::Type::kRouteInfo:
+        case Ip6::Nd::Option::Type::kRouteInfo:
         {
-            const RouteInfoOption *rio = static_cast<const RouteInfoOption *>(option);
+            const Ip6::Nd::RouteInfoOption *rio = static_cast<const Ip6::Nd::RouteInfoOption *>(option);
 
             if (rio->IsValid())
             {
@@ -1181,7 +1175,7 @@ exit:
 // Adds or deprecates a discovered on-link prefix (new external routes may be added
 // to the Thread network). Returns a boolean which indicates whether we need to do
 // routing policy evaluation.
-bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio)
+bool RoutingManager::UpdateDiscoveredOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio)
 {
     Ip6::Prefix     prefix;
     bool            needReevaluate = false;
@@ -1243,7 +1237,7 @@ exit:
 
 // Adds or removes a discovered OMR prefix (external route will be added to or removed
 // from the Thread network).
-void RoutingManager::UpdateDiscoveredOmrPrefix(const RouterAdv::RouteInfoOption &aRio)
+void RoutingManager::UpdateDiscoveredOmrPrefix(const Ip6::Nd::RouteInfoOption &aRio)
 {
     Ip6::Prefix     prefix;
     ExternalPrefix  omrPrefix;
@@ -1398,9 +1392,9 @@ bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) co
 
 // Update the `mRouterAdvMessage` with given Router Advertisement message.
 // Returns a boolean which indicates whether there are changes of `mRouterAdvMessage`.
-bool RoutingManager::UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage)
+bool RoutingManager::UpdateRouterAdvMessage(const Ip6::Nd::RouterAdvMessage *aRouterAdvMessage)
 {
-    RouterAdv::RouterAdvMessage oldRouterAdvMessage;
+    Ip6::Nd::RouterAdvMessage oldRouterAdvMessage;
 
     oldRouterAdvMessage = mRouterAdvMessage;
 
@@ -1493,7 +1487,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 //---------------------------------------------------------------------------------------------------------------------
 // ExtneralPrefix
 
-void RoutingManager::ExternalPrefix::InitFrom(const RouterAdv::PrefixInfoOption &aPio)
+void RoutingManager::ExternalPrefix::InitFrom(const Ip6::Nd::PrefixInfoOption &aPio)
 {
     Clear();
     aPio.GetPrefix(mPrefix);
@@ -1503,7 +1497,7 @@ void RoutingManager::ExternalPrefix::InitFrom(const RouterAdv::PrefixInfoOption 
     mLastUpdateTime    = TimerMilli::GetNow();
 }
 
-void RoutingManager::ExternalPrefix::InitFrom(const RouterAdv::RouteInfoOption &aRio)
+void RoutingManager::ExternalPrefix::InitFrom(const Ip6::Nd::RouteInfoOption &aRio)
 {
     Clear();
     aRio.GetPrefix(mPrefix);

@@ -28,20 +28,18 @@
 
 /**
  * @file
- *   This file includes implementations for ICMPv6 Router Advertisement.
+ *   This file includes implementations for IPv6 Neighbor Discovery (ND).
  *
  */
 
-#include "border_router/router_advertisement.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#include "nd6.hpp"
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 
 namespace ot {
-namespace BorderRouter {
-namespace RouterAdv {
+namespace Ip6 {
+namespace Nd {
 
 const Option *Option::GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength)
 {
@@ -80,20 +78,20 @@ void PrefixInfoOption::Init(void)
     OT_UNUSED_VARIABLE(mReserved2);
 }
 
-void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
+void PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
 {
     mPrefixLength = aPrefix.mLength;
     mPrefix       = AsCoreType(&aPrefix.mPrefix);
 }
 
-void PrefixInfoOption::GetPrefix(Ip6::Prefix &aPrefix) const
+void PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
 {
     aPrefix.Set(mPrefix.GetBytes(), mPrefixLength);
 }
 
 bool PrefixInfoOption::IsValid(void) const
 {
-    return (GetSize() >= sizeof(*this)) && (mPrefixLength <= Ip6::Prefix::kMaxLength) &&
+    return (GetSize() >= sizeof(*this)) && (mPrefixLength <= Prefix::kMaxLength) &&
            (GetPreferredLifetime() <= GetValidLifetime());
 }
 
@@ -117,21 +115,21 @@ RoutePreference RouteInfoOption::GetPreference(void) const
     return NetworkData::RoutePreferenceFromValue((mResvdPrf & kPreferenceMask) >> kPreferenceOffset);
 }
 
-void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
+void RouteInfoOption::SetPrefix(const Prefix &aPrefix)
 {
     SetLength(OptionLengthForPrefix(aPrefix.mLength));
     mPrefixLength = aPrefix.mLength;
     memcpy(GetPrefixBytes(), aPrefix.GetBytes(), aPrefix.GetBytesSize());
 }
 
-void RouteInfoOption::GetPrefix(Ip6::Prefix &aPrefix) const
+void RouteInfoOption::GetPrefix(Prefix &aPrefix) const
 {
     aPrefix.Set(GetPrefixBytes(), mPrefixLength);
 }
 
 bool RouteInfoOption::IsValid(void) const
 {
-    return (GetSize() >= kMinSize) && (mPrefixLength <= Ip6::Prefix::kMaxLength) &&
+    return (GetSize() >= kMinSize) && (mPrefixLength <= Prefix::kMaxLength) &&
            (GetLength() >= OptionLengthForPrefix(mPrefixLength)) &&
            NetworkData::IsRoutePreferenceValid(GetPreference());
 }
@@ -177,7 +175,7 @@ void RouterAdvMessage::SetToDefault(void)
     OT_UNUSED_VARIABLE(mRetransTimer);
 
     Clear();
-    mType = Ip6::Icmp::Header::kTypeRouterAdvert;
+    mType = Icmp::Header::kTypeRouterAdvert;
 }
 
 RoutePreference RouterAdvMessage::GetDefaultRouterPreference(void) const
@@ -197,11 +195,9 @@ void RouterAdvMessage::SetDefaultRouterPreference(RoutePreference aPreference)
 RouterSolicitMessage::RouterSolicitMessage(void)
 {
     mHeader.Clear();
-    mHeader.SetType(Ip6::Icmp::Header::kTypeRouterSolicit);
+    mHeader.SetType(Icmp::Header::kTypeRouterSolicit);
 }
 
-} // namespace RouterAdv
-} // namespace BorderRouter
+} // namespace Nd
+} // namespace Ip6
 } // namespace ot
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
