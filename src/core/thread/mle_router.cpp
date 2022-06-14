@@ -4161,58 +4161,6 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     aTlv.SetSedDatagramCount(OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT);
 }
 
-Error Mle::TxMessage::AppendConnectivityTlv(void)
-{
-    ConnectivityTlv tlv;
-
-    tlv.Init();
-    Get<MleRouter>().FillConnectivityTlv(tlv);
-
-    return tlv.AppendTo(*this);
-}
-
-Error Mle::TxMessage::AppendAddresseRegisterationTlv(Child &aChild)
-{
-    Error                    error;
-    Tlv                      tlv;
-    AddressRegistrationEntry entry;
-    Lowpan::Context          context;
-    uint8_t                  length      = 0;
-    uint16_t                 startOffset = GetLength();
-
-    tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = Append(tlv));
-
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
-    {
-        if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != kErrorNone)
-        {
-            // uncompressed entry
-            entry.SetUncompressed();
-            entry.SetIp6Address(address);
-        }
-        else if (context.mContextId != kMeshLocalPrefixContextId)
-        {
-            // compressed entry
-            entry.SetContextId(context.mContextId);
-            entry.SetIid(address.GetIid());
-        }
-        else
-        {
-            continue;
-        }
-
-        SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
-        length += entry.GetLength();
-    }
-
-    tlv.SetLength(length);
-    Write(startOffset, tlv);
-
-exit:
-    return error;
-}
-
 void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 {
     uint8_t     routerIdSequence = mRouterTable.GetRouterIdSequence();
@@ -4312,26 +4260,6 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
     }
 
     aTlv.SetRouteDataLength(routerCount);
-}
-
-Error Mle::TxMessage::AppendRouteTlv(Neighbor *aNeighbor)
-{
-    RouteTlv tlv;
-
-    tlv.Init();
-    Get<MleRouter>().FillRouteTlv(tlv, aNeighbor);
-
-    return tlv.AppendTo(*this);
-}
-
-Error Mle::TxMessage::AppendActiveDatasetTlv(void)
-{
-    return Get<MeshCoP::ActiveDatasetManager>().AppendMleDatasetTlv(*this);
-}
-
-Error Mle::TxMessage::AppendPendingDatasetTlv(void)
-{
-    return Get<MeshCoP::PendingDatasetManager>().AppendMleDatasetTlv(*this);
 }
 
 bool MleRouter::HasMinDowngradeNeighborRouters(void)
