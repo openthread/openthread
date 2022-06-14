@@ -266,8 +266,10 @@ public:
     /**
      * This method overloads operator `<` to compare two prefixes.
      *
-     * A prefix with shorter length is considered smaller than the one with longer length. If the prefix lengths are
-     * equal, then the prefix bytes are compared directly.
+     * If the two prefixes have the same length N, then the bytes are compared directly (as two big-endian N-bit
+     * numbers). If the two prefix have different lengths, the shorter prefix is padded by `0` bit up to the longer
+     * prefix length N before the bytes are compared (as big-endian N-bit numbers). If all bytes are equal, the prefix
+     * with shorter length is considered smaller.
      *
      * @param[in] aOther  The other prefix to compare against.
      *

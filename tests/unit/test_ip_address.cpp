@@ -274,6 +274,17 @@ void TestIp6AddressSetPrefix(void)
     }
 }
 
+ot::Ip6::Prefix PrefixFrom(const char *aAddressString, uint8_t aPrefixLength)
+{
+    ot::Ip6::Prefix  prefix;
+    ot::Ip6::Address address;
+
+    SuccessOrQuit(address.FromString(aAddressString));
+    prefix.Set(address.GetBytes(), aPrefixLength);
+
+    return prefix;
+}
+
 void TestIp6Prefix(void)
 {
     const uint8_t kPrefixes[][OT_IP6_ADDRESS_SIZE] = {
@@ -349,6 +360,38 @@ void TestIp6Prefix(void)
                 VerifyOrQuit((prefix < prefix2) == isPrefixSmaller);
                 VerifyOrQuit((prefix2 < prefix) == !isPrefixSmaller);
             }
+        }
+    }
+
+    {
+        struct TestCase
+        {
+            ot::Ip6::Prefix mPrefixA;
+            ot::Ip6::Prefix mPrefixB;
+        };
+
+        TestCase kTestCases[] = {
+            {PrefixFrom("fd00::", 16), PrefixFrom("fd01::", 16)},
+            {PrefixFrom("fc00::", 16), PrefixFrom("fd00::", 16)},
+            {PrefixFrom("fd00::", 15), PrefixFrom("fd00::", 16)},
+            {PrefixFrom("fd00::", 16), PrefixFrom("fd00:0::", 32)},
+            {PrefixFrom("2001:0:0:0::", 64), PrefixFrom("fd00::", 8)},
+            {PrefixFrom("2001:dba::", 32), PrefixFrom("fd12:3456:1234:abcd::", 64)},
+            {PrefixFrom("910b:1000:0::", 48), PrefixFrom("910b:2000::", 32)},
+            {PrefixFrom("::", 0), PrefixFrom("fd00::", 8)},
+            {PrefixFrom("::", 0), PrefixFrom("::", 16)},
+            {PrefixFrom("fd00:2:2::", 33), PrefixFrom("fd00:2:2::", 35)},
+            {PrefixFrom("1:2:3:ffff::", 62), PrefixFrom("1:2:3:ffff::", 63)},
+        };
+
+        printf("\nCompare Prefixes:\n");
+
+        for (const TestCase &testCase : kTestCases)
+        {
+            printf(" %26s  <  %s\n", testCase.mPrefixA.ToString().AsCString(),
+                   testCase.mPrefixB.ToString().AsCString());
+            VerifyOrQuit(testCase.mPrefixA < testCase.mPrefixB);
+            VerifyOrQuit(!(testCase.mPrefixB < testCase.mPrefixA));
         }
     }
 }
