@@ -35,6 +35,7 @@
 
 #include "common/array.hpp"
 #include "common/debug.hpp"
+#include "common/equatable.hpp"
 #include "common/instance.hpp"
 #include "common/type_traits.hpp"
 
@@ -175,7 +176,7 @@ void TestArrayCopyAndFindMatching(void)
 {
     constexpr uint16_t kMaxSize = 10;
 
-    struct Entry
+    struct Entry : public Unequatable<Entry>
     {
         Entry(void) = default;
 
@@ -185,7 +186,7 @@ void TestArrayCopyAndFindMatching(void)
         {
         }
 
-        bool operator==(const Entry &aOther) { return (mName == aOther.mName) && (mYear == aOther.mYear); }
+        bool operator==(const Entry &aOther) const { return (mName == aOther.mName) && (mYear == aOther.mYear); }
         bool Matches(const char *aName) const { return strcmp(aName, mName) == 0; }
         bool Matches(uint16_t aYear) const { return aYear == mYear; }
 
@@ -270,6 +271,51 @@ void TestArrayCopyAndFindMatching(void)
     VerifyOrQuit(!array2.ContainsMatching("PS6"));
     VerifyOrQuit(array2.FindMatching(static_cast<uint16_t>(2001)) == nullptr);
     VerifyOrQuit(!array2.ContainsMatching(static_cast<uint16_t>(2001)));
+
+    // Test removing of entries at every index.
+
+    array1 = array2;
+
+    for (const Entry &entryToRemove : array1)
+    {
+        Entry *match;
+
+        // Test `Remove()`
+
+        array2 = array1;
+        match  = array2.Find(entryToRemove);
+        VerifyOrQuit(match != nullptr);
+        array2.Remove(*match);
+
+        VerifyOrQuit(array2.GetLength() == array1.GetLength() - 1);
+
+        for (const Entry &entry : array2)
+        {
+            VerifyOrQuit(entry != entryToRemove);
+            VerifyOrQuit(array1.Contains(entry));
+        }
+
+        // Test `RemoveMatching()`
+
+        array2 = array1;
+        array2.RemoveMatching(entryToRemove.mName);
+
+        printf("\nArray after `RemoveMatching()` on entry %s\n", entryToRemove.mName);
+
+        VerifyOrQuit(array2.GetLength() == array1.GetLength() - 1);
+
+        for (const Entry &entry : array2)
+        {
+            printf("- Name:%-3s Year:%d\n", entry.mName, entry.mYear);
+            VerifyOrQuit(entry != entryToRemove);
+            VerifyOrQuit(array1.Contains(entry));
+        }
+
+        // Test `RemoveMatchin()` with a non-existing match
+
+        array2.RemoveMatching(entryToRemove.mName);
+        VerifyOrQuit(array2.GetLength() == array1.GetLength() - 1);
+    }
 
     printf("\n");
 }
