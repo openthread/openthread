@@ -70,11 +70,13 @@ typedef NetworkData::RoutePreference RoutePreference; ///< Route Preference
 OT_TOOL_PACKED_BEGIN
 class Option
 {
+    friend class RouterAdvertMessage;
+
 public:
-    enum class Type : uint8_t
+    enum Type : uint8_t
     {
-        kPrefixInfo = 3,  ///< Prefix Information Option.
-        kRouteInfo  = 24, ///< Route Information Option.
+        kTypePrefixInfo = 3,  ///< Prefix Information Option.
+        kTypeRouteInfo  = 24, ///< Route Information Option.
     };
 
     static constexpr uint16_t kLengthUnit = 8; ///< The unit of length in octets.
@@ -85,7 +87,7 @@ public:
      * @returns  The option type.
      *
      */
-    Type GetType(void) const { return mType; }
+    uint8_t GetType(void) const { return mType; }
 
     /**
      * This method sets the option type.
@@ -131,18 +133,6 @@ public:
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This helper method returns a pointer to the next valid option in the buffer.
-     *
-     * @param[in]  aCurOption     The current option. Use `nullptr` to get the first option.
-     * @param[in]  aBuffer        The buffer within which the options are held.
-     * @param[in]  aBufferLength  The length of the buffer.
-     *
-     * @returns  A pointer to the next option if there are a valid one. Otherwise, `nullptr`.
-     *
-     */
-    static const Option *GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength);
-
-    /**
      * This method indicates whether or not this option is valid.
      *
      * @retval TRUE   The option is valid.
@@ -152,7 +142,27 @@ public:
     bool IsValid(void) const { return mLength > 0; }
 
 private:
-    Type    mType;   // Type of the option.
+    class Iterator : public Unequatable<Iterator>
+    {
+    public:
+        Iterator(void);
+        Iterator(const void *aStart, const void *aEnd);
+
+        const Option &operator*(void) { return *mOption; }
+        void          operator++(void) { Advance(); }
+        void          operator++(int) { Advance(); }
+        bool          operator==(const Iterator &aOther) const { return mOption == aOther.mOption; }
+
+    private:
+        static const Option *Next(const Option *aOption);
+        void                 Advance(void);
+        const Option *       Validate(const Option *aOption) const;
+
+        const Option *mOption;
+        const Option *mEnd;
+    };
+
+    uint8_t mType;   // Type of the option.
     uint8_t mLength; // Length of the option in unit of 8 octets, including the `mType` and `mLength` fields.
 } OT_TOOL_PACKED_END;
 
@@ -166,7 +176,7 @@ OT_TOOL_PACKED_BEGIN
 class PrefixInfoOption : public Option, private Clearable<PrefixInfoOption>
 {
 public:
-    static constexpr Type kType = Type::kPrefixInfo; ///< Prefix Information Option Type.
+    static constexpr Type kType = kTypePrefixInfo; ///< Prefix Information Option Type.
 
     /**
      * This method initializes the Prefix Info option with proper type and length and sets all other fields to zero.
@@ -321,8 +331,8 @@ OT_TOOL_PACKED_BEGIN
 class RouteInfoOption : public Option, private Clearable<RouteInfoOption>
 {
 public:
-    static constexpr uint16_t kMinSize = kLengthUnit;      ///< Minimum size (in bytes) of a Route Info Option
-    static constexpr Type     kType    = Type::kRouteInfo; ///< Route Information Option Type.
+    static constexpr uint16_t kMinSize = kLengthUnit;    ///< Minimum size (in bytes) of a Route Info Option
+    static constexpr Type     kType    = kTypeRouteInfo; ///< Route Information Option Type.
 
     /**
      * This method initializes the option setting the type and clearing (setting to zero) all other fields.
@@ -445,101 +455,219 @@ private:
 static_assert(sizeof(RouteInfoOption) == 8, "invalid RouteInfoOption structure");
 
 /**
- * This class implements the Router Advertisement message header.
- *
- * See section 2.2 of RFC 4191 [https://datatracker.ietf.org/doc/html/rfc4191]
+ * This class represents a Router Advertisement message.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class RouterAdvMessage : public Equatable<RouterAdvMessage>, private Clearable<RouterAdvMessage>
+class RouterAdvertMessage
 {
 public:
     /**
-     * This constructor initializes the Router Advertisement message with
-     * zero router lifetime, reachable time and retransmission timer.
+     * This class implements the RA message header.
+     *
+     * See section 2.2 of RFC 4191 [https://datatracker.ietf.org/doc/html/rfc4191]
      *
      */
-    RouterAdvMessage(void) { SetToDefault(); }
+    OT_TOOL_PACKED_BEGIN
+    class Header : public Equatable<Header>, private Clearable<Header>
+    {
+    public:
+        /**
+         * This constructor initializes the Router Advertisement message with
+         * zero router lifetime, reachable time and retransmission timer.
+         *
+         */
+        Header(void) { SetToDefault(); }
+
+        /**
+         * This method sets the RA message to default values.
+         *
+         */
+        void SetToDefault(void);
+
+        /**
+         * This method sets the checksum value.
+         *
+         * @param[in]  aChecksum  The checksum value.
+         *
+         */
+        void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+
+        /**
+         * This method sets the Router Lifetime in seconds.
+         *
+         * @param[in]  aRouterLifetime  The router lifetime in seconds.
+         *
+         */
+        void SetRouterLifetime(uint16_t aRouterLifetime) { mRouterLifetime = HostSwap16(aRouterLifetime); }
+
+        /**
+         * This method gets the Router Lifetime (in seconds).
+         *
+         * Router Lifetime set to zero indicates that the sender is not a default router.
+         *
+         * @returns  The router lifetime in seconds.
+         *
+         */
+        uint16_t GetRouterLifetime(void) const { return HostSwap16(mRouterLifetime); }
+
+        /**
+         * This method sets the default router preference.
+         *
+         * @param[in]  aPreference  The router preference.
+         *
+         */
+        void SetDefaultRouterPreference(RoutePreference aPreference);
+
+        /**
+         * This method gets the default router preference.
+         *
+         * @returns  The router preference.
+         *
+         */
+        RoutePreference GetDefaultRouterPreference(void) const;
+
+    private:
+        // Router Advertisement Message
+        //
+        //   0                   1                   2                   3
+        //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |     Type      |     Code      |          Checksum             |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  | Cur Hop Limit |M|O|H|Prf|Resvd|       Router Lifetime         |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |                         Reachable Time                        |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |                          Retrans Timer                        |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |   Options ...
+        //  +-+-+-+-+-+-+-+-+-+-+-+-
+
+        static constexpr uint8_t kPreferenceOffset = 3;
+        static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
+
+        uint8_t  mType;
+        uint8_t  mCode;
+        uint16_t mChecksum;
+        uint8_t  mCurHopLimit;
+        uint8_t  mFlags;
+        uint16_t mRouterLifetime;
+        uint32_t mReachableTime;
+        uint32_t mRetransTimer;
+    } OT_TOOL_PACKED_END;
+
+    static_assert(sizeof(Header) == 16, "Invalid RA `Header`");
+
+    typedef Data<kWithUint16Length> Icmp6Packet; ///< A data buffer containing an ICMPv6 packet.
 
     /**
-     * This method sets the RA message to default values.
+     * This constructor initializes the RA message from a received packet data buffer.
+     *
+     * @param[in] aPacket   A received packet data.
      *
      */
-    void SetToDefault(void);
+    explicit RouterAdvertMessage(const Icmp6Packet &aPacket)
+        : mData(aPacket)
+        , mMaxLength(0)
+    {
+    }
 
     /**
-     * This method sets the checksum value.
+     * This template constructor initializes the RA message with a given header using a given buffer to store the RA
+     * message.
      *
-     * @param[in]  aChecksum  The checksum value.
+     * @tparam kBufferSize   The size of the buffer used to store the RA message.
+     *
+     * @param[in] aHeader    The RA message header.
+     * @param[in] aBuffer    The data buffer to store the RA message in.
      *
      */
-    void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+    template <uint16_t kBufferSize>
+    RouterAdvertMessage(const Header &aHeader, uint8_t (&aBuffer)[kBufferSize])
+        : mMaxLength(kBufferSize)
+    {
+        static_assert(kBufferSize >= sizeof(Header), "Buffer for RA msg is too small");
+
+        memcpy(aBuffer, &aHeader, sizeof(Header));
+        mData.Init(aBuffer, sizeof(Header));
+    }
 
     /**
-     * This method sets the Router Lifetime in seconds.
+     * This method gets the RA message as an `Icmp6Packet`.
      *
-     * @param[in]  aRouterLifetime  The router lifetime in seconds.
+     * @returns The RA message as an `Icmp6Packet`.
      *
      */
-    void SetRouterLifetime(uint16_t aRouterLifetime) { mRouterLifetime = HostSwap16(aRouterLifetime); }
+    const Icmp6Packet &GetAsPacket(void) const { return mData; }
 
     /**
-     * This method gets the Router Lifetime (in seconds).
+     * This method indicates whether or not the RA message is valid.
      *
-     * Router Lifetime set to zero indicates that the sender is not a default router.
-     *
-     * @returns  The router lifetime in seconds.
+     * @retval TRUE   If the RA message is valid.
+     * @retval FALSE  If the RA message is not valid.
      *
      */
-    uint16_t GetRouterLifetime(void) const { return HostSwap16(mRouterLifetime); }
+    bool IsValid(void) const { return (mData.GetBytes() != nullptr) && (mData.GetLength() >= sizeof(Header)); }
 
     /**
-     * This method sets the default router preference.
+     * This method gets the RA message's header.
      *
-     * @param[in]  aPreference  The router preference.
+     * @returns The RA message's header.
      *
      */
-    void SetDefaultRouterPreference(RoutePreference aPreference);
+    const Header &GetHeader(void) const { return *reinterpret_cast<const Header *>(mData.GetBytes()); }
 
     /**
-     * This method gets the default router preference.
+     * This method appends a Prefix Info Option to the RA message.
      *
-     * @returns  The router preference.
+     * The appended Prefix Info Option will have both on-link (L) and autonomous address-configuration (A) flags set.
+     *
+     * @param[in] aPrefix             The prefix.
+     * @param[in] aValidLifetime      The valid lifetime in seconds.
+     * @param[in] aPreferredLifetime  The preferred lifetime in seconds.
+     *
+     * @retval kErrorNone    Option is appended successfully.
+     * @retval kErrorNoBufs  No more space in the buffer to append the option.
      *
      */
-    RoutePreference GetDefaultRouterPreference(void) const;
+    Error AppendPrefixInfoOption(const Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
+
+    /**
+     * This method appends a Route Info Option to the RA message.
+     *
+     * @param[in] aPrefix             The prefix.
+     * @param[in] aRouteLifetime      The route lifetime in seconds.
+     * @param[in] aPreference         The route preference.
+     *
+     * @retval kErrorNone    Option is appended successfully.
+     * @retval kErrorNoBufs  No more space in the buffer to append the option.
+     *
+     */
+    Error AppendRouteInfoOption(const Prefix &aPrefix, uint32_t aRouteLifetime, RoutePreference aPreference);
+
+    /**
+     * This method indicates whether or not the RA message contains any options.
+     *
+     * @retval TRUE   If the RA message contains at least one option.
+     * @retval FALSE  If the RA message contains no options.
+     *
+     */
+    bool ContainsAnyOptions(void) const { return (mData.GetLength() > sizeof(Header)); }
+
+    // The following methods are intended to support range-based `for`
+    // loop iteration over `Option`s in the RA message.
+
+    Option::Iterator begin(void) const { return Option::Iterator(GetOptionStart(), GetDataEnd()); }
+    Option::Iterator end(void) const { return Option::Iterator(); }
 
 private:
-    // Router Advertisement Message
-    //
-    //   0                   1                   2                   3
-    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |     Type      |     Code      |          Checksum             |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  | Cur Hop Limit |M|O|H|Prf|Resvd|       Router Lifetime         |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |                         Reachable Time                        |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |                          Retrans Timer                        |
-    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  |   Options ...
-    //  +-+-+-+-+-+-+-+-+-+-+-+-
+    const uint8_t *GetOptionStart(void) const { return (mData.GetBytes() + sizeof(Header)); }
+    const uint8_t *GetDataEnd(void) const { return mData.GetBytes() + mData.GetLength(); }
+    Option *       AppendOption(uint16_t aOptionSize);
 
-    static constexpr uint8_t kPreferenceOffset = 3;
-    static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
-
-    uint8_t  mType;
-    uint8_t  mCode;
-    uint16_t mChecksum;
-    uint8_t  mCurHopLimit;
-    uint8_t  mFlags;
-    uint16_t mRouterLifetime;
-    uint32_t mReachableTime;
-    uint32_t mRetransTimer;
-} OT_TOOL_PACKED_END;
-
-static_assert(sizeof(RouterAdvMessage) == 16, "invalid RouterAdvMessage structure");
+    Data<kWithUint16Length> mData;
+    uint16_t                mMaxLength;
+};
 
 /**
  * This class implements the Router Solicitation message.
