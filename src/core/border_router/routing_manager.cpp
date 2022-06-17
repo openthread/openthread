@@ -434,7 +434,7 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
         localOmrEntry = aNewOmrPrefixes.PushBack();
         VerifyOrExit(localOmrEntry != nullptr);
 
-        localOmrEntry->Init(mLocalOmrPrefix, NetworkData::kRoutePreferenceMedium);
+        localOmrEntry->Init(mLocalOmrPrefix, NetworkData::kRoutePreferenceLow);
     }
     else if (favoredOmrEntry == localOmrEntry)
     {
@@ -475,7 +475,7 @@ Error RoutingManager::PublishLocalOmrPrefix(void)
     omrPrefixConfig.mPreferred    = true;
     omrPrefixConfig.mOnMesh       = true;
     omrPrefixConfig.mDefaultRoute = false;
-    omrPrefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
+    omrPrefixConfig.mPreference   = NetworkData::kRoutePreferenceLow;
 
     error = Get<NetworkData::Local>().AddOnMeshPrefix(omrPrefixConfig);
     if (error != kErrorNone)
