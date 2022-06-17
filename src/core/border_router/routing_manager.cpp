@@ -1371,14 +1371,15 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     // Check for stale Router Advertisement Message if learnt from Host.
     if (mLearntRouterAdvMessageFromHost)
     {
-        TimeMilli routerAdvMessageStaleTime = mTimeRouterAdvMessageLastUpdate + Time::SecToMsec(kRtrAdvStaleTime);
+        TimeMilli routerAdvMessageStaleTime =
+            OT_MAX(mTimeRouterAdvMessageLastUpdate + Time::SecToMsec(kRtrAdvStaleTime), now);
 
         nextStaleTime = OT_MIN(nextStaleTime, routerAdvMessageStaleTime);
     }
 
     for (ExternalPrefix &externalPrefix : mDiscoveredPrefixes)
     {
-        TimeMilli prefixStaleTime = externalPrefix.GetStaleTime();
+        TimeMilli prefixStaleTime = OT_MAX(externalPrefix.GetStaleTime(), now);
 
         if (externalPrefix.IsOnLinkPrefix())
         {
