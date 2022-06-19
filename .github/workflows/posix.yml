@@ -183,6 +183,7 @@ jobs:
     name: pty-linux OT_DAEMON=${{ matrix.OT_DAEMON }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         OT_DAEMON: ['off', 'on']
     env:
@@ -227,6 +228,7 @@ jobs:
     name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
     runs-on: macos-10.15
     strategy:
+      fail-fast: false
       matrix:
         OT_DAEMON: ['off', 'on']
     env:
@@ -291,14 +293,13 @@ jobs:
       run: |
         script/test combine_coverage
     - name: Upload Coverage
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v2
       with:
         files: final.info
         fail_ci_if_error: true
 
   delete-coverage-artifacts:
     needs: upload-coverage
-    if: always()
     runs-on: ubuntu-20.04
     steps:
     - uses: geekyeggo/delete-artifact@1-glob-support

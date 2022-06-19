@@ -39,6 +39,7 @@
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "net/ip6_address.hpp"
+#include "net/ip6_types.hpp"
 
 namespace ot {
 
@@ -72,7 +73,7 @@ public:
      * @returns A reference to the local socket address.
      *
      */
-    Address &GetSockAddr(void) { return *static_cast<Address *>(&mSockAddr); }
+    Address &GetSockAddr(void) { return AsCoreType(&mSockAddr); }
 
     /**
      * This method returns a reference to the local socket address.
@@ -80,7 +81,7 @@ public:
      * @returns A reference to the local socket address.
      *
      */
-    const Address &GetSockAddr(void) const { return *static_cast<const Address *>(&mSockAddr); }
+    const Address &GetSockAddr(void) const { return AsCoreType(&mSockAddr); }
 
     /**
      * This method sets the local socket address.
@@ -112,7 +113,7 @@ public:
      * @returns A reference to the peer socket address.
      *
      */
-    Address &GetPeerAddr(void) { return *static_cast<Address *>(&mPeerAddr); }
+    Address &GetPeerAddr(void) { return AsCoreType(&mPeerAddr); }
 
     /**
      * This method returns a reference to the peer socket address.
@@ -120,7 +121,7 @@ public:
      * @returns A reference to the peer socket address.
      *
      */
-    const Address &GetPeerAddr(void) const { return *static_cast<const Address *>(&mPeerAddr); }
+    const Address &GetPeerAddr(void) const { return AsCoreType(&mPeerAddr); }
 
     /**
      * This method sets the peer's socket address.
@@ -209,7 +210,7 @@ public:
      * @returns The ECN status, as represented in the IP header.
      *
      */
-    uint8_t GetEcn(void) const { return mEcn; }
+    Ecn GetEcn(void) const { return static_cast<Ecn>(mEcn); }
 
     /**
      * This method sets the ECN status.
@@ -217,7 +218,7 @@ public:
      * @param[in]  aEcn  The ECN status, as represented in the IP header.
      *
      */
-    void SetEcn(uint8_t aEcn) { mEcn = aEcn; }
+    void SetEcn(Ecn aEcn) { mEcn = aEcn; }
 
     /**
      * This method indicates whether peer is via the host interface.
@@ -298,7 +299,7 @@ public:
      * @returns A reference to the IPv6 address.
      *
      */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
+    Address &GetAddress(void) { return AsCoreType(&mAddress); }
 
     /**
      * This method returns a reference to the IPv6 address.
@@ -306,7 +307,7 @@ public:
      * @returns A reference to the IPv6 address.
      *
      */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
+    const Address &GetAddress(void) const { return AsCoreType(&mAddress); }
 
     /**
      * This method sets the IPv6 address.

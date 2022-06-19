@@ -164,7 +164,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
 
         for i in range(2, 17):
             self.nodes[i].start()
-            self.simulator.go(10)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[REED].start()

@@ -43,8 +43,10 @@
 #include <mbedtls/pem.h>
 #endif
 
+#include "common/code_utils.hpp"
 #include "common/error.hpp"
 #include "common/heap.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -167,6 +169,17 @@ Error MbedTls::MapError(int aMbedTlsError)
 
     return error;
 }
+
+#if !OPENTHREAD_RADIO
+
+int MbedTls::CryptoSecurePrng(void *, unsigned char *aBuffer, size_t aSize)
+{
+    IgnoreError(ot::Random::Crypto::FillBuffer(aBuffer, static_cast<uint16_t>(aSize)));
+
+    return 0;
+}
+
+#endif // !OPENTHREAD_RADIO
 
 } // namespace Crypto
 } // namespace ot

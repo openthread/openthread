@@ -37,6 +37,8 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1" ]
     } else if (openthread_config_thread_version == "1.2") {
       defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2" ]
+    } else if (openthread_config_thread_version == "1.3") {
+      defines += [ "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3" ]
     } else if (openthread_config_thread_version != "") {
       assert(false,
              "Unrecognized Thread version: ${openthread_config_thread_version}")
@@ -259,11 +261,14 @@ if (openthread_enable_core_config_args) {
     if (openthread_config_full_logs) {
       defines += [ "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG" ]
       defines += [ "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1" ]
-      defines += [ "OPENTHREAD_CONFIG_LOG_PREPEND_REGION=1" ]
     }
 
     if (openthread_config_otns_enable) {
       defines += [ "OPENTHREAD_CONFIG_OTNS_ENABLE=1" ]
+    }
+
+    if (openthread_config_coexistence_enable) {
+      defines += [ "OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1" ]
     }
   }
 }
@@ -316,7 +321,6 @@ openthread_core_files = [
   "api/diags_api.cpp",
   "api/dns_api.cpp",
   "api/dns_server_api.cpp",
-  "api/entropy_api.cpp",
   "api/error_api.cpp",
   "api/heap_api.cpp",
   "api/history_tracker_api.cpp",
@@ -347,6 +351,7 @@ openthread_core_files = [
   "api/tcp_api.cpp",
   "api/thread_api.cpp",
   "api/thread_ftd_api.cpp",
+  "api/trel_api.cpp",
   "api/udp_api.cpp",
   "backbone_router/backbone_tmf.cpp",
   "backbone_router/backbone_tmf.hpp",
@@ -360,9 +365,8 @@ openthread_core_files = [
   "backbone_router/multicast_listeners_table.hpp",
   "backbone_router/ndproxy_table.cpp",
   "backbone_router/ndproxy_table.hpp",
-  "border_router/infra_if_platform.cpp",
-  "border_router/router_advertisement.cpp",
-  "border_router/router_advertisement.hpp",
+  "border_router/infra_if.cpp",
+  "border_router/infra_if.hpp",
   "border_router/routing_manager.cpp",
   "border_router/routing_manager.hpp",
   "coap/coap.cpp",
@@ -376,6 +380,8 @@ openthread_core_files = [
   "common/arg_macros.hpp",
   "common/array.hpp",
   "common/as_core_type.hpp",
+  "common/binary_search.cpp",
+  "common/binary_search.hpp",
   "common/bit_vector.hpp",
   "common/clearable.hpp",
   "common/code_utils.hpp",
@@ -393,6 +399,7 @@ openthread_core_files = [
   "common/heap.cpp",
   "common/heap.hpp",
   "common/heap_allocatable.hpp",
+  "common/heap_array.hpp",
   "common/heap_data.cpp",
   "common/heap_data.hpp",
   "common/heap_string.cpp",
@@ -403,7 +410,8 @@ openthread_core_files = [
   "common/linked_list.hpp",
   "common/locator.hpp",
   "common/locator_getters.hpp",
-  "common/logging.cpp",
+  "common/log.cpp",
+  "common/log.hpp",
   "common/logging.hpp",
   "common/message.cpp",
   "common/message.hpp",
@@ -416,10 +424,10 @@ openthread_core_files = [
   "common/owning_list.hpp",
   "common/pool.hpp",
   "common/ptr_wrapper.hpp",
+  "common/random.cpp",
   "common/random.hpp",
-  "common/random_manager.cpp",
-  "common/random_manager.hpp",
   "common/retain_ptr.hpp",
+  "common/serial_number.hpp",
   "common/settings.cpp",
   "common/settings.hpp",
   "common/settings_driver.hpp",
@@ -447,6 +455,7 @@ openthread_core_files = [
   "crypto/crypto_platform.cpp",
   "crypto/ecdsa.cpp",
   "crypto/ecdsa.hpp",
+  "crypto/ecdsa_tinycrypt.cpp",
   "crypto/hkdf_sha256.cpp",
   "crypto/hkdf_sha256.hpp",
   "crypto/hmac_sha256.cpp",
@@ -501,6 +510,8 @@ openthread_core_files = [
   "meshcop/dtls.hpp",
   "meshcop/energy_scan_client.cpp",
   "meshcop/energy_scan_client.hpp",
+  "meshcop/extended_panid.cpp",
+  "meshcop/extended_panid.hpp",
   "meshcop/joiner.cpp",
   "meshcop/joiner.hpp",
   "meshcop/joiner_router.cpp",
@@ -511,6 +522,8 @@ openthread_core_files = [
   "meshcop/meshcop_leader.hpp",
   "meshcop/meshcop_tlvs.cpp",
   "meshcop/meshcop_tlvs.hpp",
+  "meshcop/network_name.cpp",
+  "meshcop/network_name.hpp",
   "meshcop/panid_query_client.cpp",
   "meshcop/panid_query_client.hpp",
   "meshcop/timestamp.cpp",
@@ -524,6 +537,8 @@ openthread_core_files = [
   "net/dhcp6_server.hpp",
   "net/dns_client.cpp",
   "net/dns_client.hpp",
+  "net/dns_dso.cpp",
+  "net/dns_dso.hpp",
   "net/dns_types.cpp",
   "net/dns_types.hpp",
   "net/dnssd_server.cpp",
@@ -542,6 +557,9 @@ openthread_core_files = [
   "net/ip6_headers.hpp",
   "net/ip6_mpl.cpp",
   "net/ip6_mpl.hpp",
+  "net/ip6_types.hpp",
+  "net/nd6.cpp",
+  "net/nd6.hpp",
   "net/nd_agent.cpp",
   "net/nd_agent.hpp",
   "net/netif.cpp",
@@ -670,8 +688,6 @@ openthread_core_files = [
   "utils/history_tracker.hpp",
   "utils/jam_detector.cpp",
   "utils/jam_detector.hpp",
-  "utils/lookup_table.cpp",
-  "utils/lookup_table.hpp",
   "utils/otns.cpp",
   "utils/otns.hpp",
   "utils/parse_cmdline.cpp",
@@ -692,10 +708,12 @@ openthread_radio_sources = [
   "api/logging_api.cpp",
   "api/random_noncrypto_api.cpp",
   "api/tasklet_api.cpp",
+  "common/binary_search.cpp",
+  "common/binary_search.hpp",
   "common/error.hpp",
   "common/instance.cpp",
-  "common/logging.cpp",
-  "common/random_manager.cpp",
+  "common/log.cpp",
+  "common/random.cpp",
   "common/string.cpp",
   "common/tasklet.cpp",
   "common/timer.cpp",
@@ -714,7 +732,6 @@ openthread_radio_sources = [
   "radio/radio_callbacks.cpp",
   "radio/radio_platform.cpp",
   "thread/link_quality.cpp",
-  "utils/lookup_table.cpp",
   "utils/parse_cmdline.cpp",
 ]
 
@@ -742,6 +759,7 @@ source_set("libopenthread_core_config") {
     "config/dhcp6_server.h",
     "config/diag.h",
     "config/dns_client.h",
+    "config/dns_dso.h",
     "config/dnssd_server.h",
     "config/dtls.h",
     "config/history_tracker.h",
@@ -751,10 +769,10 @@ source_set("libopenthread_core_config") {
     "config/link_raw.h",
     "config/logging.h",
     "config/mac.h",
+    "config/misc.h",
     "config/mle.h",
     "config/netdata_publisher.h",
     "config/openthread-core-config-check.h",
-    "config/openthread-core-default-config.h",
     "config/parent_search.h",
     "config/ping_sender.h",
     "config/platform.h",

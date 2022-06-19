@@ -33,81 +33,81 @@
 
 #include "settings.hpp"
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "meshcop/dataset.hpp"
 #include "thread/mle.hpp"
 
 namespace ot {
+
+RegisterLogModule("Settings");
 
 //---------------------------------------------------------------------------------------------------------------------
 // SettingsBase
 
 // LCOV_EXCL_START
 
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void SettingsBase::NetworkInfo::Log(Action aAction) const
 {
-    otLogInfoCore(
-        "[settings] %s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%hu, keyseq:0x%x, ...",
-        ActionToString(aAction), GetRloc16(), GetExtAddress().ToString().AsCString(),
-        Mle::Mle::RoleToString(static_cast<Mle::DeviceRole>(GetRole())), GetDeviceMode(), GetVersion(),
-        GetKeySequence());
+    LogInfo("%s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%hu, keyseq:0x%x, ...",
+            ActionToString(aAction), GetRloc16(), GetExtAddress().ToString().AsCString(),
+            Mle::Mle::RoleToString(static_cast<Mle::DeviceRole>(GetRole())), GetDeviceMode(), GetVersion(),
+            GetKeySequence());
 
-    otLogInfoCore("[settings] ... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%s}", GetPreviousPartitionId(),
-                  GetMleFrameCounter(), GetMacFrameCounter(), GetMeshLocalIid().ToString().AsCString());
+    LogInfo("... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%s}", GetPreviousPartitionId(), GetMleFrameCounter(),
+            GetMacFrameCounter(), GetMeshLocalIid().ToString().AsCString());
 }
 
 void SettingsBase::ParentInfo::Log(Action aAction) const
 {
-    otLogInfoCore("[settings] %s ParentInfo {extaddr:%s, version:%hu}", ActionToString(aAction),
-                  GetExtAddress().ToString().AsCString(), GetVersion());
+    LogInfo("%s ParentInfo {extaddr:%s, version:%hu}", ActionToString(aAction), GetExtAddress().ToString().AsCString(),
+            GetVersion());
 }
 
 #if OPENTHREAD_FTD
 void SettingsBase::ChildInfo::Log(Action aAction) const
 {
-    otLogInfoCore("[settings] %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:%hu}",
-                  ActionToString(aAction), GetRloc16(), GetExtAddress().ToString().AsCString(), GetTimeout(), GetMode(),
-                  GetVersion());
+    LogInfo("%s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:%hu}", ActionToString(aAction),
+            GetRloc16(), GetExtAddress().ToString().AsCString(), GetTimeout(), GetMode(), GetVersion());
 }
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 void SettingsBase::DadInfo::Log(Action aAction) const
 {
-    otLogInfoCore("[settings] %s DadInfo {DadCounter:%2d}", ActionToString(aAction), GetDadCounter());
+    LogInfo("%s DadInfo {DadCounter:%2d}", ActionToString(aAction), GetDadCounter());
 }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 void SettingsBase::LogPrefix(Action aAction, Key aKey, const Ip6::Prefix &aPrefix)
 {
-    otLogInfoCore("[settings] %s %s %s", ActionToString(aAction), KeyToString(aKey), aPrefix.ToString().AsCString());
+    LogInfo("%s %s %s", ActionToString(aAction), KeyToString(aKey), aPrefix.ToString().AsCString());
 }
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
 void SettingsBase::SrpClientInfo::Log(Action aAction) const
 {
-    otLogInfoCore("[settings] %s SrpClientInfo {Server:[%s]:%u}", ActionToString(aAction),
-                  GetServerAddress().ToString().AsCString(), GetServerPort());
+    LogInfo("%s SrpClientInfo {Server:[%s]:%u}", ActionToString(aAction), GetServerAddress().ToString().AsCString(),
+            GetServerPort());
 }
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
 void SettingsBase::SrpServerInfo::Log(Action aAction) const
 {
-    otLogInfoCore("[settings] %s SrpServerInfo {port:%u}", ActionToString(aAction), GetPort());
+    LogInfo("%s SrpServerInfo {port:%u}", ActionToString(aAction), GetPort());
 }
 #endif
 
-#endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 const char *SettingsBase::ActionToString(Action aAction)
 {
     static const char *const kActionStrings[] = {
@@ -134,9 +134,9 @@ const char *SettingsBase::ActionToString(Action aAction)
 
     return kActionStrings[aAction];
 }
-#endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 const char *SettingsBase::KeyToString(Key aKey)
 {
     static const char *const kKeyStrings[] = {
@@ -146,14 +146,16 @@ const char *SettingsBase::KeyToString(Key aKey)
         "NetworkInfo",       // (3)  kKeyNetworkInfo
         "ParentInfo",        // (4)  kKeyParentInfo
         "ChildInfo",         // (5)  kKeyChildInfo
-        "",                  // (6)  kKeyReserved
+        "",                  // (6)  Removed (previously auto-start).
         "SlaacIidSecretKey", // (7)  kKeySlaacIidSecretKey
         "DadInfo",           // (8)  kKeyDadInfo
-        "OmrPrefix",         // (9)  kKeyOmrPrefix
-        "OnLinkPrefix",      // (10) kKeyOnLinkPrefix
+        "",                  // (9)  Removed (previously OMR prefix).
+        "",                  // (10) Removed (previously on-link prefix).
         "SrpEcdsaKey",       // (11) kKeySrpEcdsaKey
         "SrpClientInfo",     // (12) kKeySrpClientInfo
         "SrpServerInfo",     // (13) kKeySrpServerInfo
+        "",                  // (14) Removed (previously NAT64 prefix)
+        "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
     };
 
     static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
@@ -161,30 +163,28 @@ const char *SettingsBase::KeyToString(Key aKey)
     static_assert(3 == kKeyNetworkInfo, "kKeyNetworkInfo value is incorrect");
     static_assert(4 == kKeyParentInfo, "kKeyParentInfo value is incorrect");
     static_assert(5 == kKeyChildInfo, "kKeyChildInfo value is incorrect");
-    static_assert(6 == kKeyReserved, "kKeyReserved value is incorrect");
     static_assert(7 == kKeySlaacIidSecretKey, "kKeySlaacIidSecretKey value is incorrect");
     static_assert(8 == kKeyDadInfo, "kKeyDadInfo value is incorrect");
-    static_assert(9 == kKeyOmrPrefix, "kKeyOmrPrefix value is incorrect");
-    static_assert(10 == kKeyOnLinkPrefix, "kKeyOnLinkPrefix value is incorrect");
     static_assert(11 == kKeySrpEcdsaKey, "kKeySrpEcdsaKey value is incorrect");
     static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
     static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
+    static_assert(15 == kKeyBrUlaPrefix, "kKeyBrUlaPrefix value is incorrect");
 
-    static_assert(kLastKey == kKeySrpServerInfo, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyBrUlaPrefix, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
     return kKeyStrings[aKey];
 }
-#endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 
 // LCOV_EXCL_STOP
 
 //---------------------------------------------------------------------------------------------------------------------
 // Settings
 
-// This array contains critical keys that should be stored in the secure area.
-const uint16_t Settings::kCriticalKeys[] = {
+// This array contains sensitive keys that should be stored in the secure area.
+const uint16_t Settings::kSensitiveKeys[] = {
     SettingsBase::kKeyActiveDataset,
     SettingsBase::kKeyPendingDataset,
     SettingsBase::kKeySrpEcdsaKey,
@@ -192,8 +192,7 @@ const uint16_t Settings::kCriticalKeys[] = {
 
 void Settings::Init(void)
 {
-    Get<SettingsDriver>().Init();
-    Get<SettingsDriver>().SetCriticalKeys(kCriticalKeys, OT_ARRAY_LENGTH(kCriticalKeys));
+    Get<SettingsDriver>().Init(kSensitiveKeys, GetArrayLength(kSensitiveKeys));
 }
 
 void Settings::Deinit(void)
@@ -204,12 +203,17 @@ void Settings::Deinit(void)
 void Settings::Wipe(void)
 {
     Get<SettingsDriver>().Wipe();
-    otLogInfoCore("[settings] Wiped all info");
+    LogInfo("Wiped all info");
 }
 
-Error Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset)
+Settings::Key Settings::KeyForDatasetType(MeshCoP::Dataset::Type aType)
 {
-    Key   key   = (aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    return (aType == MeshCoP::Dataset::kActive) ? kKeyActiveDataset : kKeyPendingDataset;
+}
+
+Error Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
+{
+    Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetSize());
 
     Log(kActionSave, error, key);
@@ -217,13 +221,12 @@ Error Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &a
     return error;
 }
 
-Error Settings::ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const
+Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const
 {
     Error    error  = kErrorNone;
     uint16_t length = MeshCoP::Dataset::kMaxSize;
 
-    SuccessOrExit(error = Get<SettingsDriver>().Get(aIsActive ? kKeyActiveDataset : kKeyPendingDataset,
-                                                    aDataset.GetBytes(), &length));
+    SuccessOrExit(error = Get<SettingsDriver>().Get(KeyForDatasetType(aType), aDataset.GetBytes(), &length));
     VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = kErrorNotFound);
 
     aDataset.SetSize(length);
@@ -232,9 +235,9 @@ exit:
     return error;
 }
 
-Error Settings::DeleteOperationalDataset(bool aIsActive)
+Error Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
 {
-    Key   key   = (aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Delete(key);
 
     Log(kActionDelete, error, key);
@@ -353,13 +356,11 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
     OT_UNUSED_VARIABLE(aError);
     OT_UNUSED_VARIABLE(aValue);
 
-#if OPENTHREAD_CONFIG_LOG_UTIL
-
     if (aError != kErrorNone)
     {
         // Log error if log level is at "warn" or higher.
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
         const char *actionText = "";
 
         switch (aAction)
@@ -393,9 +394,9 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
             ExitNow();
         }
 
-        otLogWarnCore("[settings] Error %s %s %s", ErrorToString(aError), actionText, KeyToString(aKey));
+        LogWarn("Error %s %s %s", ErrorToString(aError), actionText, KeyToString(aKey));
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 
         ExitNow();
     }
@@ -403,7 +404,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
     // We reach here when `aError` is `kErrorNone`.
     // Log success if log level is at "info" or higher.
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     if (aValue != nullptr)
     {
         switch (aKey)
@@ -429,8 +430,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-        case kKeyOmrPrefix:
-        case kKeyOnLinkPrefix:
+        case kKeyBrUlaPrefix:
             LogPrefix(aAction, aKey, *reinterpret_cast<const Ip6::Prefix *>(aValue));
             break;
 #endif
@@ -459,13 +459,11 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 
     if (aValue == nullptr)
     {
-        otLogInfoCore("[settings] %s %s", ActionToString(aAction), KeyToString(aKey));
+        LogInfo("%s %s", ActionToString(aAction), KeyToString(aKey));
     }
-#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 exit:
-
-#endif // OPENTHREAD_CONFIG_LOG_UTIL
     return;
 }
 

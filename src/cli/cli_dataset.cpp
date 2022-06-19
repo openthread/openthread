@@ -45,19 +45,18 @@
 namespace ot {
 namespace Cli {
 
-constexpr Dataset::Command Dataset::sCommands[];
-otOperationalDataset       Dataset::sDataset;
+otOperationalDataset Dataset::sDataset;
 
 otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        OutputLine("Pending Timestamp: %lu", aDataset.mPendingTimestamp);
+        OutputLine("Pending Timestamp: %lu", aDataset.mPendingTimestamp.mSeconds);
     }
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        OutputLine("Active Timestamp: %lu", aDataset.mActiveTimestamp);
+        OutputLine("Active Timestamp: %lu", aDataset.mActiveTimestamp.mSeconds);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -119,38 +118,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     return OT_ERROR_NONE;
 }
 
-otError Dataset::Process(Arg aArgs[])
-{
-    otError        error = OT_ERROR_INVALID_COMMAND;
-    const Command *command;
-
-    if (aArgs[0].IsEmpty())
-    {
-        ExitNow(error = Print(sDataset));
-    }
-
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
-    VerifyOrExit(command != nullptr);
-
-    error = (this->*command->mHandler)(aArgs + 1);
-
-exit:
-    return error;
-}
-
-otError Dataset::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError Dataset::ProcessInit(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("init")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -183,7 +151,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessActive(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("active")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -206,7 +174,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPending(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("pending")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -229,7 +197,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessActiveTimestamp(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("activetimestamp")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -237,12 +205,14 @@ otError Dataset::ProcessActiveTimestamp(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsActiveTimestampPresent)
         {
-            OutputLine("%lu", sDataset.mActiveTimestamp);
+            OutputLine("%lu", sDataset.mActiveTimestamp.mSeconds);
         }
     }
     else
     {
-        SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mActiveTimestamp));
+        SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mActiveTimestamp.mSeconds));
+        sDataset.mActiveTimestamp.mTicks               = 0;
+        sDataset.mActiveTimestamp.mAuthoritative       = false;
         sDataset.mComponents.mIsActiveTimestampPresent = true;
     }
 
@@ -250,7 +220,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessChannel(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("channel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -271,7 +241,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessChannelMask(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("channelmask")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -292,7 +262,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessClear(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("clear")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -300,7 +270,7 @@ otError Dataset::ProcessClear(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Dataset::ProcessCommit(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("commit")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -316,7 +286,7 @@ otError Dataset::ProcessCommit(Arg aArgs[])
     return error;
 }
 
-otError Dataset::ProcessDelay(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("delay")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -337,7 +307,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessExtPanId(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("extpanid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -358,7 +328,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMeshLocalPrefix(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("meshlocalprefix")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -384,7 +354,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessNetworkKey(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("networkkey")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -405,7 +375,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessNetworkName(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("networkname")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -426,7 +396,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPanId(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("panid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -447,7 +417,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPendingTimestamp(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("pendingtimestamp")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -455,12 +425,14 @@ otError Dataset::ProcessPendingTimestamp(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsPendingTimestampPresent)
         {
-            OutputLine("%lu", sDataset.mPendingTimestamp);
+            OutputLine("%lu", sDataset.mPendingTimestamp.mSeconds);
         }
     }
     else
     {
-        SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mPendingTimestamp));
+        SuccessOrExit(error = aArgs[0].ParseAsUint64(sDataset.mPendingTimestamp.mSeconds));
+        sDataset.mPendingTimestamp.mTicks               = 0;
+        sDataset.mPendingTimestamp.mAuthoritative       = false;
         sDataset.mComponents.mIsPendingTimestampPresent = true;
     }
 
@@ -468,7 +440,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMgmtSetCommand(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
 {
     otError              error = OT_ERROR_NONE;
     otOperationalDataset dataset;
@@ -482,14 +454,18 @@ otError Dataset::ProcessMgmtSetCommand(Arg aArgs[])
         if (*arg == "activetimestamp")
         {
             arg++;
+            SuccessOrExit(error = arg->ParseAsUint64(dataset.mActiveTimestamp.mSeconds));
+            dataset.mActiveTimestamp.mTicks               = 0;
+            dataset.mActiveTimestamp.mAuthoritative       = false;
             dataset.mComponents.mIsActiveTimestampPresent = true;
-            SuccessOrExit(error = arg->ParseAsUint64(dataset.mActiveTimestamp));
         }
         else if (*arg == "pendingtimestamp")
         {
             arg++;
+            SuccessOrExit(error = arg->ParseAsUint64(dataset.mPendingTimestamp.mSeconds));
+            dataset.mPendingTimestamp.mTicks               = 0;
+            dataset.mPendingTimestamp.mAuthoritative       = false;
             dataset.mComponents.mIsPendingTimestampPresent = true;
-            SuccessOrExit(error = arg->ParseAsUint64(dataset.mPendingTimestamp));
         }
         else if (*arg == "networkkey")
         {
@@ -583,7 +559,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMgmtGetCommand(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("mgmtgetcommand")>(Arg aArgs[])
 {
     otError                        error = OT_ERROR_NONE;
     otOperationalDatasetComponents datasetComponents;
@@ -676,7 +652,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessPskc(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("pskc")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -743,11 +719,6 @@ void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
         OutputFormat("c");
     }
 
-    if (aSecurityPolicy.mBeaconsEnabled)
-    {
-        OutputFormat("b");
-    }
-
     if (aSecurityPolicy.mCommercialCommissioningEnabled)
     {
         OutputFormat("C");
@@ -803,10 +774,6 @@ otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aA
             policy.mExternalCommissioningEnabled = true;
             break;
 
-        case 'b':
-            policy.mBeaconsEnabled = true;
-            break;
-
         case 'C':
             policy.mCommercialCommissioningEnabled = true;
             break;
@@ -839,7 +806,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessSecurityPolicy(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("securitypolicy")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -862,7 +829,7 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessSet(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("set")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
     MeshCoP::Dataset::Type datasetType;
@@ -907,7 +874,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
 
-otError Dataset::ProcessUpdater(Arg aArgs[])
+template <> otError Dataset::Process<Cmd("updater")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -942,6 +909,66 @@ void Dataset::HandleDatasetUpdater(otError aError)
 }
 
 #endif // OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+
+otError Dataset::Process(Arg aArgs[])
+{
+#define CmdEntry(aCommandString)                               \
+    {                                                          \
+        aCommandString, &Dataset::Process<Cmd(aCommandString)> \
+    }
+
+    static constexpr Command kCommands[] = {
+        CmdEntry("active"),
+        CmdEntry("activetimestamp"),
+        CmdEntry("channel"),
+        CmdEntry("channelmask"),
+        CmdEntry("clear"),
+        CmdEntry("commit"),
+        CmdEntry("delay"),
+        CmdEntry("extpanid"),
+        CmdEntry("init"),
+        CmdEntry("meshlocalprefix"),
+        CmdEntry("mgmtgetcommand"),
+        CmdEntry("mgmtsetcommand"),
+        CmdEntry("networkkey"),
+        CmdEntry("networkname"),
+        CmdEntry("panid"),
+        CmdEntry("pending"),
+        CmdEntry("pendingtimestamp"),
+        CmdEntry("pskc"),
+        CmdEntry("securitypolicy"),
+        CmdEntry("set"),
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+        CmdEntry("updater"),
+#endif
+    };
+
+#undef CmdEntry
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
+
+    if (aArgs[0].IsEmpty())
+    {
+        ExitNow(error = Print(sDataset));
+    }
+
+    if (aArgs[0] == "help")
+    {
+        OutputCommandTable(kCommands);
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
+    VerifyOrExit(command != nullptr);
+
+    error = (this->*command->mHandler)(aArgs + 1);
+
+exit:
+    return error;
+}
 
 } // namespace Cli
 } // namespace ot

@@ -42,7 +42,7 @@ void DeviceMode::Get(ModeConfig &aModeConfig) const
 {
     aModeConfig.mRxOnWhenIdle = IsRxOnWhenIdle();
     aModeConfig.mDeviceType   = IsFullThreadDevice();
-    aModeConfig.mNetworkData  = IsFullNetworkData();
+    aModeConfig.mNetworkData  = (GetNetworkDataType() == NetworkData::kFullSet);
 }
 
 void DeviceMode::Set(const ModeConfig &aModeConfig)
@@ -57,18 +57,10 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
 {
     InfoString string;
 
-    string.Append("rx-on:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no", IsFullThreadDevice() ? "yes" : "no",
-                  IsFullNetworkData() ? "yes" : "no");
+    string.Append("rx-on:%s ftd:%s full-net:%s", ToYesNo(IsRxOnWhenIdle()), ToYesNo(IsFullThreadDevice()),
+                  ToYesNo(GetNetworkDataType() == NetworkData::kFullSet));
 
     return string;
-}
-
-void MeshLocalPrefix::SetFromExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId)
-{
-    m8[0] = 0xfd;
-    memcpy(&m8[1], aExtendedPanId.m8, 5);
-    m8[6] = 0x00;
-    m8[7] = 0x00;
 }
 
 } // namespace Mle

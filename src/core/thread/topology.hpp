@@ -45,6 +45,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
@@ -56,6 +57,7 @@
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/network_data_types.hpp"
 #include "thread/radio_selector.hpp"
 
 namespace ot {
@@ -353,12 +355,12 @@ public:
     bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device requests Full Network Data.
+     * This method gets the Network Data type (full set or stable subset) that the device requests.
      *
-     * @returns TRUE if requests Full Network Data, FALSE otherwise.
+     * @returns The Network Data type.
      *
      */
-    bool IsFullNetworkData(void) const { return GetDeviceMode().IsFullNetworkData(); }
+    NetworkData::Type GetNetworkDataType(void) const { return GetDeviceMode().GetNetworkDataType(); }
 
     /**
      * This method sets all bytes of the Extended Address to zero.
@@ -499,7 +501,7 @@ public:
     /**
      * This method clears the last received fragment tag.
      *
-     * The last received fragment tag is used for detect duplicate frames (receievd over different radios) when
+     * The last received fragment tag is used for detect duplicate frames (received over different radios) when
      * multi-radio feature is enabled.
      *
      */
@@ -521,15 +523,15 @@ public:
      * @param[in] aTag   The new tag value.
      *
      */
-    void SetLastRxFragmentTag(uint16_t aTag) { mLastRxFragmentTag = (aTag == 0) ? 0xffff : aTag; }
+    void SetLastRxFragmentTag(uint16_t aTag);
 
     /**
-     * This method indicates whether the last received fragment tag is set or not.
+     * This method indicates whether or not the last received fragment tag is set and valid (i.e., not yet timed out).
      *
-     * @returns TRUE if the last received fragment tag is set, FALSE otherwise.
+     * @returns TRUE if the last received fragment tag is set and valid, FALSE otherwise.
      *
      */
-    bool IsLastRxFragmentTagSet(void) const { return (mLastRxFragmentTag != 0); }
+    bool IsLastRxFragmentTagSet(void) const;
 
     /**
      * This method indicates whether the last received fragment tag is strictly after a given tag value.
@@ -545,25 +547,25 @@ public:
      * before @p aTag.
      *
      */
-    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return ((aTag - mLastRxFragmentTag) & (1U << 15)) != 0; }
+    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return SerialNumber::IsGreater(mLastRxFragmentTag, aTag); }
 
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method indicates whether or not it is a valid Thread 1.1 neighbor.
+     * This method indicates whether or not it is Thread 1.1.
      *
-     * @returns TRUE if it is a valid Thread 1.1 neighbor, FALSE otherwise.
+     * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
      */
     bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
 
     /**
-     * This method indicates whether or not it is a valid Thread 1.2 neighbor.
+     * This method indicates whether or not neighbor is Thread 1.2 or higher..
      *
-     * @returns TRUE if it is a valid Thread 1.2 neighbor, FALSE otherwise.
+     * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_2; }
+    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2; }
 
     /**
      * This method indicates whether Thread version supports CSL.
@@ -571,7 +573,7 @@ public:
      * @returns TRUE if CSL is supported, FALSE otherwise.
      *
      */
-    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2() && !IsRxOnWhenIdle(); }
+    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2OrHigher() && !IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
@@ -692,7 +694,7 @@ public:
     /**
      * This method adds a new LinkMetrics::SeriesInfo to the neighbor's list.
      *
-     * @param[in]    A reference to the new SeriesInfo.
+     * @param[in]  aSeriesInfo  A reference to the new SeriesInfo.
      *
      */
     void AddForwardTrackingSeriesInfo(LinkMetrics::SeriesInfo &aSeriesInfo);
@@ -776,6 +778,11 @@ protected:
     void Init(Instance &aInstance);
 
 private:
+    enum : uint32_t
+    {
+        kLastRxFragmentTagTimeout = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT, ///< Frag tag timeout in msec.
+    };
+
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
     TimeMilli       mLastHeard; ///< Time when last heard.
     union
@@ -795,7 +802,8 @@ private:
     } mValidPending;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    uint16_t mLastRxFragmentTag; ///< Last received fragment tag
+    uint16_t  mLastRxFragmentTag;     ///< Last received fragment tag
+    TimeMilli mLastRxFragmentTagTime; ///< The time last fragment tag was received and set.
 #endif
 
     uint32_t mKeySequence; ///< Current key sequence
@@ -921,7 +929,7 @@ public:
         /**
          * This method gets the current `Child` IPv6 Address to which the iterator is pointing.
          *
-         * @returns  A pointer to the associated IPv6 Address, or nullptr if iterator is done.
+         * @returns  A pointer to the associated IPv6 Address, or `nullptr` if iterator is done.
          *
          */
         const Ip6::Address *GetAddress(void) const;
@@ -1357,7 +1365,7 @@ public:
         Neighbor::Init(aInstance);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         SetCslClockAccuracy(kCslWorstCrystalPpm);
-        SetCslClockUncertainty(kCslWorstUncertainty);
+        SetCslUncertainty(kCslWorstUncertainty);
 #endif
     }
 
@@ -1389,7 +1397,7 @@ public:
      * @returns The link quality out value for this router.
      *
      */
-    uint8_t GetLinkQualityOut(void) const { return mLinkQualityOut; }
+    LinkQuality GetLinkQualityOut(void) const { return static_cast<LinkQuality>(mLinkQualityOut); }
 
     /**
      * This method sets the link quality out value for this router.
@@ -1397,7 +1405,7 @@ public:
      * @param[in]  aLinkQuality  The link quality out value for this router.
      *
      */
-    void SetLinkQualityOut(uint8_t aLinkQuality) { mLinkQualityOut = aLinkQuality; }
+    void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
     /**
      * This method get the route cost to this router.
@@ -1427,7 +1435,7 @@ public:
     /**
      * This method sets the CSL clock accuracy of this router.
      *
-     * @param[in]  aCost  The CSL clock accuracy of this router.
+     * @param[in]  aCslClockAccuracy  The CSL clock accuracy of this router.
      *
      */
     void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
@@ -1438,15 +1446,15 @@ public:
      * @returns The CSL clock uncertainty of this router.
      *
      */
-    uint8_t GetCslClockUncertainty(void) const { return mCslClockUncertainty; }
+    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
 
     /**
      * This method sets the CSL clock uncertainty of this router.
      *
-     * @param[in]  aCost  The CSL clock uncertainty of this router.
+     * @param[in]  aCslUncertainty  The CSL clock uncertainty of this router.
      *
      */
-    void SetCslClockUncertainty(uint8_t aCslClockUncertainty) { mCslClockUncertainty = aCslClockUncertainty; }
+    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
 #endif
 
 private:
@@ -1459,8 +1467,8 @@ private:
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint8_t mCslClockAccuracy;    ///< Crystal accuracy, in units of ± ppm.
-    uint8_t mCslClockUncertainty; ///< Scheduling uncertainty, in units of 10 us.
+    uint8_t mCslClockAccuracy; ///< Crystal accuracy, in units of ± ppm.
+    uint8_t mCslUncertainty;   ///< Scheduling uncertainty, in units of 10 us.
 #endif
 };
 

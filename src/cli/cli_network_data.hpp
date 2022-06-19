@@ -39,8 +39,6 @@
 #include <openthread/netdata.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -53,6 +51,18 @@ class NetworkData : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
+
+    /**
+     * This constant specifies the string size for representing Network Data prefix/route entry flags.
+     *
+     * BorderRouter (OnMeshPrefix) TLV uses `uint16_t` for its flags and ExternalRoute uses `uint8_t`, though some of
+     * the bits are not currently used and reserved for future, so 17 chars string (16 flags plus null char at end of
+     * string) covers current and future flags.
+     *
+     */
+    static constexpr uint16_t kFlagsStringSize = 17;
+
+    typedef char FlagsString[kFlagsStringSize]; ///< Flags String type (char array of `kFlagsStringSize`).
 
     /**
      * Constructor
@@ -97,46 +107,47 @@ public:
      */
     void OutputService(const otServiceConfig &aConfig);
 
+    /**
+     * This method converts the flags from a given prefix config to string.
+     *
+     * @param[in]  aConfig  The prefix config.
+     * @param[out] aString  The string to populate from @a Config flags.
+     *
+     */
+    static void PrefixFlagsToString(const otBorderRouterConfig &aConfig, FlagsString &aString);
+
+    /**
+     * This method converts the flags from a given route config to string.
+     *
+     * @param[in]  aConfig  The route config.
+     * @param[out] aString  The string to populate from @a Config flags.
+     *
+     */
+    static void RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString);
+
+    /**
+     * This static method converts a route preference value to human-readable string.
+     *
+     * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
+     *
+     * @returns A string representation @p aPreference.
+     *
+     */
+    static const char *PreferenceToString(signed int aPreference);
+
 private:
-    struct Command
-    {
-        const char *mName;
-        otError (NetworkData::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<NetworkData>;
 
-    otError ProcessHelp(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-    otError ProcessPublish(Arg aArgs[]);
-    otError ProcessUnpublish(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    otError ProcessRegister(Arg aArgs[]);
-#endif
-    otError ProcessShow(Arg aArgs[]);
-    otError ProcessSteeringData(Arg aArgs[]);
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-    otError OutputBinary(void);
-    void    OutputPrefixes(void);
-    void    OutputRoutes(void);
-    void    OutputServices(void);
-    void    OutputPreference(signed int aPreference);
+    otError GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal);
+    otError GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal);
+    otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
 
-    static constexpr Command sCommands[] = {
-        {"help", &NetworkData::ProcessHelp},
-#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-        {"publish", &NetworkData::ProcessPublish},
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-        {"register", &NetworkData::ProcessRegister},
-#endif
-        {"show", &NetworkData::ProcessShow},
-        {"steeringdata", &NetworkData::ProcessSteeringData},
-#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-        {"unpublish", &NetworkData::ProcessUnpublish},
-#endif
-    };
-
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    otError OutputBinary(bool aLocal);
+    void    OutputPrefixes(bool aLocal);
+    void    OutputRoutes(bool aLocal);
+    void    OutputServices(bool aLocal);
 };
 
 } // namespace Cli

@@ -44,8 +44,6 @@ import simulator
 import sniffer
 from tlvs_parsing import SubTlvsFactory
 
-# This extended address will generate the MESH_LOCAL_PREFIX
-EXTENDED_PANID = '000db80000000000'
 MESH_LOCAL_PREFIX = 'fd00:db8::/64'
 MESH_LOCAL_PREFIX_REGEX_PATTERN = '^fd00:0?db8:0{0,4}:0{0,4}'
 ROUTING_LOCATOR = '64/:0:ff:fe00:/16'
@@ -127,6 +125,8 @@ RSSI = {
 SNIFFER_ID = int(os.getenv('SNIFFER_ID', 34))
 PANID = 0xface
 
+ROUTER_STARTUP_DELAY = 10
+BORDER_ROUTER_STARTUP_DELAY = 20
 MAX_NEIGHBOR_AGE = 100
 INFINITE_COST_TIMEOUT = 90
 
@@ -146,6 +146,11 @@ LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 
 THREAD_VERSION_1_1 = 2
 THREAD_VERSION_1_2 = 3
+THREAD_VERSION_1_3 = 4
+
+PACKET_VERIFICATION_NONE = 0
+PACKET_VERIFICATION_DEFAULT = 1
+PACKET_VERIFICATION_TREL = 2
 
 
 def create_default_network_data_prefix_sub_tlvs_factories():

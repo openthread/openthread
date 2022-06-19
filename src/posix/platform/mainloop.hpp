@@ -52,7 +52,7 @@ public:
     /**
      * This method registers events in the mainloop.
      *
-     * @param[inout]    aContext    A reference to the mainloop context.
+     * @param[in,out]   aContext    A reference to the mainloop context.
      *
      */
     virtual void Update(otSysMainloopContext &aContext) = 0;
@@ -85,7 +85,7 @@ public:
     /**
      * This method updates event polls in the mainloop context.
      *
-     * @param[inout]    aContext    A reference to the mainloop context.
+     * @param[in,out]   aContext    A reference to the mainloop context.
      *
      */
     void Update(otSysMainloopContext &aContext);

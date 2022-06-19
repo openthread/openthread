@@ -133,22 +133,19 @@ typedef struct otCryptoContext
 /**
  * Initialize the Crypto module.
  *
- * @retval OT_ERROR_NONE          Successfully initialized Crypto module.
- * @retval OT_ERROR_FAILED        Failed to initialize Crypto module.
- *
  */
-otError otPlatCryptoInit(void);
+void otPlatCryptoInit(void);
 
 /**
  * Import a key into PSA ITS.
  *
- * @param[inout] aKeyRef           Pointer to the key ref to be used for crypto operations.
- * @param[in]    aKeyType          Key Type encoding for the key.
- * @param[in]    aKeyAlgorithm     Key algorithm encoding for the key.
- * @param[in]    aKeyUsage         Key Usage encoding for the key (combinations of `OT_CRYPTO_KEY_USAGE_*`).
- * @param[in]    aKeyPersistence   Key Persistence for this key
- * @param[in]    aKey              Actual key to be imported.
- * @param[in]    aKeyLen           Length of the key to be imported.
+ * @param[in,out] aKeyRef           Pointer to the key ref to be used for crypto operations.
+ * @param[in]     aKeyType          Key Type encoding for the key.
+ * @param[in]     aKeyAlgorithm     Key algorithm encoding for the key.
+ * @param[in]     aKeyUsage         Key Usage encoding for the key (combinations of `OT_CRYPTO_KEY_USAGE_*`).
+ * @param[in]     aKeyPersistence   Key Persistence for this key
+ * @param[in]     aKey              Actual key to be imported.
+ * @param[in]     aKeyLen           Length of the key to be imported.
  *
  * @retval OT_ERROR_NONE          Successfully imported the key.
  * @retval OT_ERROR_FAILED        Failed to import the key.
@@ -377,7 +374,7 @@ otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
  *
  * @param[in]  aContext           Operation context for HKDF operation.
  * @param[in]  aSalt              Pointer to the Salt for HKDF.
- * @param[in]  aInfoLength        length of Salt.
+ * @param[in]  aSaltLength        Length of Salt.
  * @param[in]  aInputKey          Pointer to the input key.
  *
  * @retval OT_ERROR_NONE          HKDF Extract was successful.
@@ -458,7 +455,6 @@ otError otPlatCryptoSha256Update(otCryptoContext *aContext, const void *aBuf, ui
  * Finish SHA-256 operation.
  *
  * @param[in]  aContext           Context for SHA-256 operation.
- * @param[in]  aContextSize       Context size SHA-256 operation.
  * @param[in]  aHash              A pointer to the output buffer, where hash needs to be stored.
  * @param[in]  aHashSize          The length of @p aHash in bytes.
  *
@@ -468,6 +464,30 @@ otError otPlatCryptoSha256Update(otCryptoContext *aContext, const void *aBuf, ui
  *
  */
 otError otPlatCryptoSha256Finish(otCryptoContext *aContext, uint8_t *aHash, uint16_t aHashSize);
+
+/**
+ * Initialize cryptographically-secure pseudorandom number generator (CSPRNG).
+ *
+ */
+void otPlatCryptoRandomInit(void);
+
+/**
+ * Deinitialize cryptographically-secure pseudorandom number generator (CSPRNG).
+ *
+ */
+void otPlatCryptoRandomDeinit(void);
+
+/**
+ * Fills a given buffer with cryptographically secure random bytes.
+ *
+ * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize    Size of buffer (number of bytes to fill).
+ *
+ * @retval OT_ERROR_NONE     Successfully filled buffer with random values.
+ * @retval OT_ERROR_FAILED   Operation failed.
+ *
+ */
+otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize);
 
 /**
  * @}

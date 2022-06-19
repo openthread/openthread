@@ -55,25 +55,21 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout)
 
 const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 {
-    return &AsCoreType(aInstance).Get<Mac::Mac>().GetExtendedPanId();
+    return &AsCoreType(aInstance).Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
 }
 
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
-    Error                     error    = kErrorNone;
-    Instance &                instance = AsCoreType(aInstance);
-    const Mac::ExtendedPanId &extPanId = AsCoreType(aExtendedPanId);
-    Mle::MeshLocalPrefix      prefix;
+    Error                         error    = kErrorNone;
+    Instance &                    instance = AsCoreType(aInstance);
+    const MeshCoP::ExtendedPanId &extPanId = AsCoreType(aExtendedPanId);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    instance.Get<Mac::Mac>().SetExtendedPanId(extPanId);
+    instance.Get<MeshCoP::ExtendedPanIdManager>().SetExtPanId(extPanId);
 
-    prefix.SetFromExtendedPanId(extPanId);
-    instance.Get<Mle::MleRouter>().SetMeshLocalPrefix(prefix);
-
-    instance.Get<MeshCoP::ActiveDataset>().Clear();
-    instance.Get<MeshCoP::PendingDataset>().Clear();
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -123,8 +119,8 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 
     instance.Get<KeyManager>().SetNetworkKey(AsCoreType(aKey));
 
-    instance.Get<MeshCoP::ActiveDataset>().Clear();
-    instance.Get<MeshCoP::PendingDataset>().Clear();
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -141,8 +137,8 @@ otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<KeyManager>().SetNetworkKeyRef((aKeyRef));
-    instance.Get<MeshCoP::ActiveDataset>().Clear();
-    instance.Get<MeshCoP::PendingDataset>().Clear();
+    instance.Get<MeshCoP::ActiveDatasetManager>().Clear();
+    instance.Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -171,8 +167,8 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetMeshLocalPrefix(AsCoreType(aMeshLocalPrefix));
-    AsCoreType(aInstance).Get<MeshCoP::ActiveDataset>().Clear();
-    AsCoreType(aInstance).Get<MeshCoP::PendingDataset>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -200,7 +196,7 @@ otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6A
 
 const char *otThreadGetNetworkName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetNetworkName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString();
 }
 
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
@@ -209,9 +205,9 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    error = AsCoreType(aInstance).Get<Mac::Mac>().SetNetworkName(aNetworkName);
-    AsCoreType(aInstance).Get<MeshCoP::ActiveDataset>().Clear();
-    AsCoreType(aInstance).Get<MeshCoP::PendingDataset>().Clear();
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);
+    AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
+    AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
 
 exit:
     return error;
@@ -220,7 +216,7 @@ exit:
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 const char *otThreadGetDomainName(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetDomainName().GetAsCString();
+    return AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().GetDomainName().GetAsCString();
 }
 
 otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
@@ -229,7 +225,7 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    error = AsCoreType(aInstance).Get<Mac::Mac>().SetDomainName(aDomainName);
+    error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetDomainName(aDomainName);
 
 exit:
     return error;
@@ -295,7 +291,7 @@ otError otThreadBecomeDetached(otInstance *aInstance)
 
 otError otThreadBecomeChild(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild(Mle::kAttachAny);
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild();
 }
 
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
@@ -500,5 +496,10 @@ bool otThreadIsAnycastLocateInProgress(otInstance *aInstance)
     return AsCoreType(aInstance).Get<AnycastLocator>().IsInProgress();
 }
 #endif
+
+otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallback aCallback, void *aContext)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().DetachGracefully(aCallback, aContext);
+}
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD

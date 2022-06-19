@@ -74,13 +74,6 @@ public:
      *
      * The function pointer has the syntax `void (*Callback)(Error aError, void *aContext)`.
      *
-     * @param[in] aError   The error status.
-     *                     kErrorNone           indicates Dataset update successfully finished.
-     *                     kErrorInvalidState   indicates failure due invalid state (MLE being disabled).
-     *                     kErrorAlready        indicates failure due to another device within network requesting a
-     *                                          conflicting Dataset update.
-     * @param[in] aContext A pointer to the arbitrary context provided by the user.
-     *
      */
     typedef otDatasetUpdaterCallback Callback;
 
@@ -101,7 +94,7 @@ public:
      * @retval kErrorNoBufs         Could not allocated buffer to save Dataset.
      *
      */
-    Error RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext);
+    Error RequestUpdate(const Dataset::Info &aDataset, Callback aCallback, void *aContext);
 
     /**
      * This method cancels an ongoing (if any) Operational Dataset update request.

@@ -276,7 +276,7 @@ public:
     /**
      * This method removes a stored child information from non-volatile memory.
      *
-     * @param[in]  aChildRloc16     A reference to the child to remove from non-volatile memory.
+     * @param[in]  aChild     A reference to the child to remove from non-volatile memory.
      *
      */
     void RemoveStoredChild(const Child &aChild);

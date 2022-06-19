@@ -28,6 +28,7 @@
 #
 import logging
 import unittest
+from ipaddress import IPv6Network
 
 import config
 import thread_cert
@@ -84,11 +85,11 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         br.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
 
         router.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
         #
@@ -102,13 +103,13 @@ class SingleBorderRouter(thread_cert.TestCase):
         logging.info("ROUTER  addrs: %r", router.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br.get_prefixes()), 1)
-        self.assertEqual(len(router.get_prefixes()), 1)
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertEqual(len(router.get_routes()), 1)
+        self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
-        omr_prefix = br.get_prefixes()[0]
-        external_route = br.get_routes()[0]
+        omr_prefix = br.get_br_omr_prefix()
+        on_link_prefix = br.get_br_on_link_prefix()
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -142,10 +143,10 @@ class SingleBorderRouter(thread_cert.TestCase):
 
         self.assertGreaterEqual(len(host.get_addrs()), 2)
 
-        self.assertEqual(len(br.get_prefixes()), 2)
-        self.assertEqual(len(router.get_prefixes()), 2)
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertEqual(len(router.get_routes()), 1)
+        self.assertEqual(len(br.get_netdata_omr_prefixes()), 2)
+        self.assertEqual(len(router.get_netdata_omr_prefixes()), 2)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 2)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 2)
@@ -168,16 +169,16 @@ class SingleBorderRouter(thread_cert.TestCase):
         logging.info("ROUTER addrs: %r", router.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br.get_prefixes()), 1)
-        self.assertEqual(len(router.get_prefixes()), 1)
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertEqual(len(router.get_routes()), 1)
+        self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
         # The same local OMR and on-link prefix should be re-register.
-        self.assertEqual(br.get_prefixes(), [omr_prefix])
-        self.assertEqual(router.get_prefixes(), [omr_prefix])
-        self.assertEqual(br.get_routes(), [external_route])
-        self.assertEqual(router.get_routes(), [external_route])
+        self.assertEqual(br.get_netdata_omr_prefixes(), [omr_prefix])
+        self.assertEqual(router.get_netdata_omr_prefixes(), [omr_prefix])
+        self.assertEqual(br.get_netdata_non_nat64_prefixes(), [on_link_prefix])
+        self.assertEqual(router.get_netdata_non_nat64_prefixes(), [on_link_prefix])
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -215,23 +216,23 @@ class SingleBorderRouter(thread_cert.TestCase):
         br.enable_br()
 
         # It takes around 10 seconds to start sending RA messages.
-        self.simulator.go(15)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.collect_ipaddrs()
 
         logging.info("BR     addrs: %r", br.get_addrs())
         logging.info("ROUTER addrs: %r", router.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br.get_prefixes()), 1)
-        self.assertEqual(len(router.get_prefixes()), 1)
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertEqual(len(router.get_routes()), 1)
+        self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
         # The same local OMR and on-link prefix should be re-registered.
-        self.assertEqual(br.get_prefixes(), [omr_prefix])
-        self.assertEqual(router.get_prefixes(), [omr_prefix])
-        self.assertEqual(br.get_routes(), [external_route])
-        self.assertEqual(router.get_routes(), [external_route])
+        self.assertEqual(br.get_netdata_omr_prefixes(), [omr_prefix])
+        self.assertEqual(router.get_netdata_omr_prefixes(), [omr_prefix])
+        self.assertEqual(br.get_netdata_non_nat64_prefixes(), [on_link_prefix])
+        self.assertEqual(router.get_netdata_non_nat64_prefixes(), [on_link_prefix])
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -267,25 +268,25 @@ class SingleBorderRouter(thread_cert.TestCase):
 
         br.enable_ether()
 
-        # The routing manager may fail to send RS and will wait for 60 seconds
+        # The routing manager may fail to send RS and will wait for 4 seconds
         # before retrying.
-        self.simulator.go(80)
+        self.simulator.go(20)
         self.collect_ipaddrs()
 
         logging.info("BR     addrs: %r", br.get_addrs())
         logging.info("ROUTER addrs: %r", router.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br.get_prefixes()), 1)
-        self.assertEqual(len(router.get_prefixes()), 1)
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertEqual(len(router.get_routes()), 1)
+        self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
         # The same local OMR and on-link prefix should be re-registered.
-        self.assertEqual(br.get_prefixes(), [omr_prefix])
-        self.assertEqual(router.get_prefixes(), [omr_prefix])
-        self.assertEqual(br.get_routes(), [external_route])
-        self.assertEqual(router.get_routes(), [external_route])
+        self.assertEqual(br.get_netdata_omr_prefixes(), [omr_prefix])
+        self.assertEqual(router.get_netdata_omr_prefixes(), [omr_prefix])
+        self.assertEqual(br.get_netdata_non_nat64_prefixes(), [on_link_prefix])
+        self.assertEqual(router.get_netdata_non_nat64_prefixes(), [on_link_prefix])
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -319,12 +320,31 @@ class SingleBorderRouter(thread_cert.TestCase):
         br.start_radvd_service(prefix=config.ONLINK_GUA_PREFIX, slaac=True)
         self.simulator.go(5)
 
-        self.assertEqual(len(br.get_routes()), 2)
-        self.assertEqual(len(router.get_routes()), 2)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 2)
 
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_GUA)[0]))
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
+
+        #
+        # Case 7. Test if Border Router changes on-link prefix when
+        #         Extended PAN ID changes.
+        #
+
+        prefixA = br.get_br_on_link_prefix()
+
+        router.commissioner_start()
+        self.simulator.go(5)
+
+        router.send_mgmt_active_set(
+            active_timestamp=100,
+            extended_panid='0001020304050607',
+        )
+        self.simulator.go(10)
+
+        prefixB = br.get_br_on_link_prefix()
+        self.assertNotEqual(IPv6Network(prefixA), IPv6Network(prefixB))
 
 
 if __name__ == '__main__':

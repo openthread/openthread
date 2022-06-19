@@ -35,6 +35,7 @@
 
 #include <string.h>
 
+#include "common/code_utils.hpp"
 #include "common/new.hpp"
 #include "lib/spinel/radio_spinel.hpp"
 #include "posix/platform/radio.hpp"
@@ -166,6 +167,15 @@ void Radio::Init(void)
         VerifyOrDie(str == nullptr, OT_EXIT_INVALID_ARGUMENTS);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+    {
+        const char *enableCoex = mRadioUrl.GetValue("enable-coex");
+        if (enableCoex != nullptr)
+        {
+            SuccessOrDie(sRadioSpinel.SetCoexEnabled(enableCoex[0] != '0'));
+        }
+    }
+#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 }
 
 } // namespace Posix
@@ -594,12 +604,23 @@ uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
     return sRadioSpinel.GetBusSpeed();
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return 0;
+    return sRadioSpinel.GetCslAccuracy();
 }
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return sRadioSpinel.GetCslUncertainty();
+}
+#endif
 
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
 {

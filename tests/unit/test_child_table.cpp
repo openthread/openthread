@@ -31,6 +31,7 @@
 #include <openthread/config.h>
 
 #include "test_util.h"
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "thread/child_table.hpp"
@@ -290,7 +291,7 @@ void TestChildTable(void)
         },
     };
 
-    const uint16_t testListLength = OT_ARRAY_LENGTH(testChildList);
+    const uint16_t testListLength = GetArrayLength(testChildList);
 
     uint16_t testNumAllowedChildren = 2;
 

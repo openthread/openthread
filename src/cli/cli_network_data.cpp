@@ -43,22 +43,9 @@
 namespace ot {
 namespace Cli {
 
-constexpr NetworkData::Command NetworkData::sCommands[];
-
-void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
+void NetworkData::PrefixFlagsToString(const otBorderRouterConfig &aConfig, FlagsString &aString)
 {
-    enum
-    {
-        // BorderRouter flag is `uint16_t` (though some of the bits are
-        // reserved for future use), so we use 17 chars string (16 flags
-        // plus null char at end of string).
-        kMaxFlagStringSize = 17,
-    };
-
-    char  flagsString[kMaxFlagStringSize];
-    char *flagsPtr = &flagsString[0];
-
-    OutputIp6Prefix(aConfig.mPrefix);
+    char *flagsPtr = &aString[0];
 
     if (aConfig.mPreferred)
     {
@@ -106,31 +93,27 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
     }
 
     *flagsPtr = '\0';
+}
 
-    if (flagsPtr != &flagsString[0])
+void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
+{
+    FlagsString flagsString;
+
+    OutputIp6Prefix(aConfig.mPrefix);
+
+    PrefixFlagsToString(aConfig, flagsString);
+
+    if (flagsString[0] != '\0')
     {
         OutputFormat(" %s", flagsString);
     }
 
-    OutputPreference(aConfig.mPreference);
-
-    OutputLine(" %04x", aConfig.mRloc16);
+    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
-void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
+void NetworkData::RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString)
 {
-    enum
-    {
-        // ExternalRoute flag is `uint8_t` (though some of the bits are
-        // reserved for future use), so we use 9 chars string (8 flags
-        // plus null char at end of string).
-        kMaxFlagStringSize = 9,
-    };
-
-    char  flagsString[kMaxFlagStringSize];
-    char *flagsPtr = &flagsString[0];
-
-    OutputIp6Prefix(aConfig.mPrefix);
+    char *flagsPtr = &aString[0];
 
     if (aConfig.mStable)
     {
@@ -143,36 +126,47 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
     }
 
     *flagsPtr = '\0';
+}
 
-    if (flagsPtr != &flagsString[0])
+void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
+{
+    FlagsString flagsString;
+
+    OutputIp6Prefix(aConfig.mPrefix);
+
+    RouteFlagsToString(aConfig, flagsString);
+
+    if (flagsString[0] != '\0')
     {
         OutputFormat(" %s", flagsString);
     }
 
-    OutputPreference(aConfig.mPreference);
-
-    OutputLine(" %04x", aConfig.mRloc16);
+    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
-void NetworkData::OutputPreference(signed int aPreference)
+const char *NetworkData::PreferenceToString(signed int aPreference)
 {
+    const char *str = "";
+
     switch (aPreference)
     {
     case OT_ROUTE_PREFERENCE_LOW:
-        OutputFormat(" low");
+        str = "low";
         break;
 
     case OT_ROUTE_PREFERENCE_MED:
-        OutputFormat(" med");
+        str = "med";
         break;
 
     case OT_ROUTE_PREFERENCE_HIGH:
-        OutputFormat(" high");
+        str = "high";
         break;
 
     default:
         break;
     }
+
+    return str;
 }
 
 void NetworkData::OutputService(const otServiceConfig &aConfig)
@@ -190,20 +184,8 @@ void NetworkData::OutputService(const otServiceConfig &aConfig)
     OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
 }
 
-otError NetworkData::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-otError NetworkData::ProcessPublish(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -265,7 +247,7 @@ exit:
     return error;
 }
 
-otError NetworkData::ProcessUnpublish(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("unpublish")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -297,7 +279,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-otError NetworkData::ProcessRegister(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("register")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -314,7 +296,7 @@ exit:
 }
 #endif
 
-otError NetworkData::ProcessSteeringData(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("steeringdata")>(Arg aArgs[])
 {
     otError           error;
     otExtAddress      addr;
@@ -345,52 +327,124 @@ exit:
     return error;
 }
 
-void NetworkData::OutputPrefixes(void)
+otError NetworkData::GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal)
+{
+    otError error;
+
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        error = otBorderRouterGetNextOnMeshPrefix(GetInstancePtr(), aIterator, aConfig);
+#else
+        error = OT_ERROR_NOT_FOUND;
+#endif
+    }
+    else
+    {
+        error = otNetDataGetNextOnMeshPrefix(GetInstancePtr(), aIterator, aConfig);
+    }
+
+    return error;
+}
+
+void NetworkData::OutputPrefixes(bool aLocal)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig  config;
 
     OutputLine("Prefixes:");
 
-    while (otNetDataGetNextOnMeshPrefix(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
+    while (GetNextPrefix(&iterator, &config, aLocal) == OT_ERROR_NONE)
     {
         OutputPrefix(config);
     }
 }
 
-void NetworkData::OutputRoutes(void)
+otError NetworkData::GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal)
+{
+    otError error;
+
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        error = otBorderRouterGetNextRoute(GetInstancePtr(), aIterator, aConfig);
+#else
+        error = OT_ERROR_NOT_FOUND;
+#endif
+    }
+    else
+    {
+        error = otNetDataGetNextRoute(GetInstancePtr(), aIterator, aConfig);
+    }
+
+    return error;
+}
+
+void NetworkData::OutputRoutes(bool aLocal)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
 
     OutputLine("Routes:");
 
-    while (otNetDataGetNextRoute(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
+    while (GetNextRoute(&iterator, &config, aLocal) == OT_ERROR_NONE)
     {
         OutputRoute(config);
     }
 }
 
-void NetworkData::OutputServices(void)
+otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal)
+{
+    otError error;
+
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+        error = otServerGetNextService(GetInstancePtr(), aIterator, aConfig);
+#else
+        error = OT_ERROR_NOT_FOUND;
+#endif
+    }
+    else
+    {
+        error = otNetDataGetNextService(GetInstancePtr(), aIterator, aConfig);
+    }
+
+    return error;
+}
+
+void NetworkData::OutputServices(bool aLocal)
 {
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otServiceConfig       config;
 
     OutputLine("Services:");
 
-    while (otNetDataGetNextService(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
+    while (GetNextService(&iterator, &config, aLocal) == OT_ERROR_NONE)
     {
         OutputService(config);
     }
 }
 
-otError NetworkData::OutputBinary(void)
+otError NetworkData::OutputBinary(bool aLocal)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
     uint8_t data[255];
     uint8_t len = sizeof(data);
 
-    SuccessOrExit(error = otNetDataGet(GetInstancePtr(), false, data, &len));
+    if (aLocal)
+    {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+        error = otBorderRouterGetNetData(GetInstancePtr(), false, data, &len);
+#else
+        error = OT_ERROR_NOT_IMPLEMENTED;
+#endif
+    }
+    else
+    {
+        error = otNetDataGet(GetInstancePtr(), false, data, &len);
+    }
+    SuccessOrExit(error);
 
     OutputBytesLine(data, static_cast<uint8_t>(len));
 
@@ -398,37 +452,79 @@ exit:
     return error;
 }
 
-otError NetworkData::ProcessShow(Arg aArgs[])
+template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_INVALID_ARGS;
+    otError error  = OT_ERROR_INVALID_ARGS;
+    bool    local  = false;
+    bool    binary = false;
 
-    if (aArgs[0].IsEmpty())
+    for (uint8_t i = 0; !aArgs[i].IsEmpty(); i++)
     {
-        OutputPrefixes();
-        OutputRoutes();
-        OutputServices();
+        if (aArgs[i] == "local")
+        {
+            local = true;
+        }
+        else if (aArgs[i] == "-x")
+        {
+            binary = true;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+    if (binary)
+    {
+        error = OutputBinary(local);
+    }
+    else
+    {
+        OutputPrefixes(local);
+        OutputRoutes(local);
+        OutputServices(local);
         error = OT_ERROR_NONE;
     }
-    else if (aArgs[0] == "-x")
-    {
-        error = OutputBinary();
-    }
 
+exit:
     return error;
 }
 
 otError NetworkData::Process(Arg aArgs[])
 {
+#define CmdEntry(aCommandString)                                   \
+    {                                                              \
+        aCommandString, &NetworkData::Process<Cmd(aCommandString)> \
+    }
+
+    static constexpr Command kCommands[] = {
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+        CmdEntry("publish"),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+        CmdEntry("register"),
+#endif
+        CmdEntry("show"),
+        CmdEntry("steeringdata"),
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+        CmdEntry("unpublish"),
+#endif
+    };
+
+#undef CmdEntry
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
-    if (aArgs[0].IsEmpty())
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
     {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
     }
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);

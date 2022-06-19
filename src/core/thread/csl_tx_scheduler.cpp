@@ -31,11 +31,13 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/time.hpp"
 #include "mac/mac.hpp"
 
 namespace ot {
+
+RegisterLogModule("CslTxScheduler");
 
 CslTxScheduler::Callbacks::Callbacks(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -253,8 +255,8 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         OT_ASSERT(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
 
         aChild.IncrementCslTxAttempts();
-        otLogInfoMac("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
-                     kMaxCslTriggeredTxAttempts);
+        LogInfo("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
+                kMaxCslTriggeredTxAttempts);
 
         if (aChild.GetCslTxAttempts() >= kMaxCslTriggeredTxAttempts)
         {

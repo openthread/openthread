@@ -151,7 +151,8 @@ public:
         kQueryTypeInverse  = 1,
         kQueryTypeStatus   = 2,
         kQueryTypeNotify   = 4,
-        kQueryTypeUpdate   = 5
+        kQueryTypeUpdate   = 5,
+        kQueryTypeDso      = 6,
     };
 
     /**
@@ -273,6 +274,7 @@ public:
         kResponseRecordNotExists = 8,  ///< Some RRset that ought to exist, does not exist.
         kResponseNotAuth         = 9,  ///< Service is not authoritative for zone.
         kResponseNotZone         = 10, ///< A name is not in the zone.
+        kDsoTypeNotImplemented   = 11, ///< DSO TLV TYPE is not implemented.
         kResponseBadName         = 20, ///< Bad name.
         kResponseBadAlg          = 21, ///< Bad algorithm.
         kResponseBadTruncation   = 22, ///< Bad truncation.
@@ -312,6 +314,7 @@ public:
      * - kResponseRecordNotExists (8) : Some RRset that ought to exist, does not exist  -> kErrorNotFound
      * - kResponseNotAuth (9)         : Service is not authoritative for zone           -> kErrorSecurity
      * - kResponseNotZone (10)        : A name is not in the zone                       -> kErrorParse
+     * - kDsoTypeNotImplemented (11)  : DSO TLV Type is not implemented                 -> kErrorNotImplemented
      * - kResponseBadName (20)        : Bad name                                        -> kErrorParse
      * - kResponseBadAlg (21)         : Bad algorithm                                   -> kErrorSecurity
      * - kResponseBadTruncation (22)  : Bad truncation                                  -> kErrorParse
@@ -673,7 +676,7 @@ public:
      * contain dot '.' character, which, for example, is useful for "Service Instance Names" where <Instance> portion
      * is a user-friendly name and can contain dot characters.
      *
-     * @param[in] aLabel              The label string to append. MUST NOT be nullptr.
+     * @param[in] aLabel              The label string to append. MUST NOT be `nullptr`.
      * @param[in] aMessage            The message to append to.
      *
      * @retval kErrorNone         Successfully encoded and appended the name label to @p aMessage.
@@ -692,7 +695,7 @@ public:
      * whole label. This allows the label string to even contain dot '.' character, which, for example, is useful for
      * "Service Instance Names" where <Instance> portion is a user-friendly name and can contain dot characters.
      *
-     * @param[in] aLabel         The label string to append. MUST NOT be nullptr.
+     * @param[in] aLabel         The label string to append. MUST NOT be `nullptr`.
      * @param[in] aLength        The length of the label to append.
      * @param[in] aMessage       The message to append to.
      *
@@ -715,7 +718,7 @@ public:
      * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
      * ends with a dot character, e.g., "host-1.test." is treated same as "host-1.test".
      *
-     * @param[in]  aLabels            A name label string. Can be nullptr (then treated as "").
+     * @param[in]  aLabels            A name label string. Can be `nullptr` (then treated as "").
      * @param[in]  aMessage           The message to which to append the encoded name.
      *
      * @retval kErrorNone         Successfully encoded and appended the name label(s) to @p aMessage.
@@ -741,7 +744,7 @@ public:
      * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
      * ends with a dot character, e.g., "host-1.test." is treated same as "host-1.test".
      *
-     * @param[in]  aLabels            A name label string. Can be nullptr (then treated as "").
+     * @param[in]  aLabels            A name label string. Can be `nullptr` (then treated as "").
      * @param[in]  aLength            The max length of the name labels to encode.
      * @param[in]  aMessage           The message to which to append the encoded name.
      *
@@ -789,7 +792,7 @@ public:
      * This method validates that the @p aName is a valid name format, i.e. no empty labels, and labels are
      * `kMaxLabelLength` (63) characters or less, and the name is `kMaxLength` (255) characters or less.
      *
-     * @param[in]  aName              A name string. Can be nullptr (then treated as "." or root).
+     * @param[in]  aName              A name string. Can be `nullptr` (then treated as "." or root).
      * @param[in]  aMessage           The message to append to.
      *
      * @retval kErrorNone         Successfully encoded and appended the name to @p aMessage.
@@ -802,9 +805,9 @@ public:
     /**
      * This static method parses and skips over a full name in a message.
      *
-     * @param[in]    aMessage         The message to parse the name from. `aMessage.GetOffset()` MUST point to
+     * @param[in]     aMessage        The message to parse the name from. `aMessage.GetOffset()` MUST point to
      *                                the start of DNS header (this is used to handle compressed names).
-     * @param[inout] aOffset          On input the offset in @p aMessage pointing to the start of the name field.
+     * @param[in,out] aOffset         On input the offset in @p aMessage pointing to the start of the name field.
      *                                On exit (when parsed successfully), @p aOffset is updated to point to the byte
      *                                after the end of name field.
      *
@@ -826,13 +829,13 @@ public:
      * Unlike `ReadName()` which requires and verifies that the read label to contain no dot '.' character, this method
      * allows the read label to include any character.
      *
-     * @param[in]    aMessage         The message to read the label from. `aMessage.GetOffset()` MUST point to
+     * @param[in]      aMessage       The message to read the label from. `aMessage.GetOffset()` MUST point to
      *                                the start of DNS header (this is used to handle compressed names).
-     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the label to read.
+     * @param[in,out]  aOffset        On input, the offset in @p aMessage pointing to the start of the label to read.
      *                                On exit, when successfully read, @p aOffset is updated to point to the start of
      *                                the next label.
-     * @param[out]   aLabelBuffer     A pointer to a char array to output the read label as a null-terminated C string.
-     * @param[inout] aLabelLength     On input, the maximum number chars in @p aLabelBuffer array.
+     * @param[out]     aLabelBuffer   A pointer to a char array to output the read label as a null-terminated C string.
+     * @param[in,out]  aLabelLength   On input, the maximum number chars in @p aLabelBuffer array.
      *                                On output, when label is successfully read, @p aLabelLength is updated to return
      *                                the label's length (number of chars in the label string, excluding the null char).
      *
@@ -853,13 +856,13 @@ public:
      * This method verifies that the read labels in message do not contain any dot character, otherwise it returns
      * `kErrorParse`).
      *
-     * @param[in]    aMessage         The message to read the name from. `aMessage.GetOffset()` MUST point to
-     *                                the start of DNS header (this is used to handle compressed names).
-     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
-     *                                On exit (when parsed successfully), @p aOffset is updated to point to the byte
-     *                                after the end of name field.
-     * @param[out]   aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string.
-     * @param[inout] aNameBufferSize  The maximum number of chars in @p aNameBuffer array.
+     * @param[in]     aMessage         The message to read the name from. `aMessage.GetOffset()` MUST point to
+     *                                 the start of DNS header (this is used to handle compressed names).
+     * @param[in,out] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
+     *                                 On exit (when parsed successfully), @p aOffset is updated to point to the byte
+     *                                 after the end of name field.
+     * @param[out]    aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string.
+     * @param[in,out] aNameBufferSize  The maximum number of chars in @p aNameBuffer array.
      *
      * @retval kErrorNone         Successfully read the name, @p aNameBuffer and @p Offset are updated.
      * @retval kErrorParse        Name could not be parsed (invalid format).
@@ -877,12 +880,12 @@ public:
      * Unlike `CompareName()` which requires the labels in the the name string to contain no dot '.' character, this
      * method allows @p aLabel to include any character.
      *
-     * @param[in]    aMessage         The message to read the label from to compare. `aMessage.GetOffset()` MUST point
+     * @param[in]     aMessage        The message to read the label from to compare. `aMessage.GetOffset()` MUST point
      *                                to the start of DNS header (this is used to handle compressed names).
-     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the label to read.
+     * @param[in,out] aOffset         On input, the offset in @p aMessage pointing to the start of the label to read.
      *                                On exit and only when label is successfully read and does match @p aLabel,
      *                                @p aOffset is updated to point to the start of the next label.
-     * @param[in]    aLabel           A pointer to a null terminated string containing the label to compare with.
+     * @param[in]     aLabel          A pointer to a null terminated string containing the label to compare with.
      *
      * @retval kErrorNone          The label from @p aMessage matches @p aLabel. @p aOffset is updated.
      * @retval kErrorNotFound      The label from @p aMessage does not match @p aLabel (note that @p aOffset is not
@@ -903,14 +906,14 @@ public:
      * The @p aName must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
      * E.g., "example.com", "example.com." (same as previous one), "local.", "default.service.arpa", "." or "" (root).
      *
-     * @param[in]    aMessage         The message to read the name from and compare with @p aName.
+     * @param[in]     aMessage        The message to read the name from and compare with @p aName.
      *                                `aMessage.GetOffset()` MUST point to the start of DNS header (this is used to
      *                                handle compressed names).
-     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
+     * @param[in,out] aOffset         On input, the offset in @p aMessage pointing to the start of the name field.
      *                                On exit (when parsed successfully independent of whether the read name matches
      *                                @p aName or not), @p aOffset is updated to point to the byte after the end of
      *                                the name field.
-     * @param[in]    aName            A pointer to a null terminated string containing the name to compare with.
+     * @param[in]     aName           A pointer to a null terminated string containing the name to compare with.
      *
      * @retval kErrorNone          The name from @p aMessage matches @p aName. @p aOffset is updated.
      * @retval kErrorNotFound      The name from @p aMessage does not match @p aName. @p aOffset is updated.
@@ -935,15 +938,15 @@ public:
      * If the name in @p aMessage can be parsed fully (independent of whether the name matches or not with the name
      * from @p aMessage2), the @p aOffset is updated (note that @p aOffset2 for @p aMessage2 is not changed).
      *
-     * @param[in]    aMessage         The message to read the name from and compare. `aMessage.GetOffset()` MUST point
+     * @param[in]     aMessage        The message to read the name from and compare. `aMessage.GetOffset()` MUST point
      *                                to the start of DNS header (this is used to handle compressed names).
-     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
+     * @param[in,out] aOffset         On input, the offset in @p aMessage pointing to the start of the name field.
      *                                On exit (when parsed successfully independent of whether the read name matches
      *                                or not), @p aOffset is updated to point to the byte after the end of the name
      *                                field.
-     * @param[in]    aMessage2        The second message to read the name from and compare with name from @p aMessage.
+     * @param[in]     aMessage2       The second message to read the name from and compare with name from @p aMessage.
      *                                `aMessage2.GetOffset()` MUST point to the start of DNS header.
-     * @param[in]    aOffset2         The offset in @p aMessage2 pointing to the start of the name field.
+     * @param[in]     aOffset2        The offset in @p aMessage2 pointing to the start of the name field.
      *
      * @retval kErrorNone       The name from @p aMessage matches the name from @p aMessage2. @p aOffset is updated.
      * @retval kErrorNotFound   The name from @p aMessage does not match the name from @p aMessage2. @p aOffset is
@@ -959,13 +962,13 @@ public:
      *
      * If @p aName is empty (not specified), then any name in @p aMessage is considered a match to it.
      *
-     * @param[in]    aMessage         The message to read the name from and compare. `aMessage.GetOffset()` MUST point
+     * @param[in]     aMessage        The message to read the name from and compare. `aMessage.GetOffset()` MUST point
      *                                to the start of DNS header (this is used to handle compressed names).
-     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
+     * @param[in,out] aOffset         On input, the offset in @p aMessage pointing to the start of the name field.
      *                                On exit (when parsed successfully independent of whether the read name matches
      *                                or not), @p aOffset is updated to point to the byte after the end of the name
      *                                field.
-     * @param[in]    aName            A reference to a name to compare with.
+     * @param[in]     aName           A reference to a name to compare with.
      *
      * @retval kErrorNone          The name from @p aMessage matches @p aName. @p aOffset is updated.
      * @retval kErrorNotFound      The name from @p aMessage does not match @p aName. @p aOffset is updated.
@@ -1134,7 +1137,17 @@ public:
      * @param[in] aValueLength   Number of bytes in @p aValue buffer.
      *
      */
-    TxtEntry(const char *aKey, const uint8_t *aValue, uint8_t aValueLength)
+    TxtEntry(const char *aKey, const uint8_t *aValue, uint8_t aValueLength) { Init(aKey, aValue, aValueLength); }
+
+    /**
+     * This method initializes a `TxtEntry` object.
+     *
+     * @param[in] aKey           A pointer to the key string.
+     * @param[in] aValue         A pointer to a buffer containing the value.
+     * @param[in] aValueLength   Number of bytes in @p aValue buffer.
+     *
+     */
+    void Init(const char *aKey, const uint8_t *aValue, uint8_t aValueLength)
     {
         mKey         = aKey;
         mValue       = aValue;
@@ -1323,12 +1336,12 @@ public:
     /**
      * This static method parses and skips over a given number of resource records in a message from a given offset.
      *
-     * @param[in]    aMessage     The message from which to parse/read the resource records. `aMessage.GetOffset()`
-     *                            MUST point to the start of DNS header.
-     * @param[inout] aOffset      On input the offset in @p aMessage pointing to the start of the first record.
-     *                            On exit (when parsed successfully), @p aOffset is updated to point to the byte after
-     *                            the last parsed record.
-     * @param[in]    aNumRecords  Number of resource records to parse.
+     * @param[in]     aMessage     The message from which to parse/read the resource records. `aMessage.GetOffset()`
+     *                             MUST point to the start of DNS header.
+     * @param[in,out] aOffset      On input the offset in @p aMessage pointing to the start of the first record.
+     *                             On exit (when parsed successfully), @p aOffset is updated to point to the byte after
+     *                             the last parsed record.
+     * @param[in]     aNumRecords  Number of resource records to parse.
      *
      * @retval kErrorNone      Parsed records successfully. @p aOffset is updated.
      * @retval kErrorParse     Could not parse the records from @p aMessage (e.g., ran out of bytes in @p aMessage).
@@ -1339,17 +1352,17 @@ public:
     /**
      * This static method searches in a given message to find the first resource record matching a given record name.
      *
-     * @param[in]    aMessage        The message in which to search for a matching resource record.
+     * @param[in]     aMessage       The message in which to search for a matching resource record.
      *                               `aMessage.GetOffset()` MUST point to the start of DNS header.
-     * @param[inout] aOffset         On input, the offset in @p aMessage pointing to the start of the first record.
+     * @param[in,out] aOffset        On input, the offset in @p aMessage pointing to the start of the first record.
      *                               On exit, if a matching record is found, @p aOffset is updated to point to the byte
      *                               after the record name.
      *                               If a matching record could not be found, @p aOffset is updated to point to the byte
      *                               after the last record that was checked.
-     * @param[inout] aNumRecords     On input, the maximum number of records to check (starting from @p aOffset).
+     * @param[in,out] aNumRecords    On input, the maximum number of records to check (starting from @p aOffset).
      *                               On exit and if a matching record is found, @p aNumRecords is updated to give the
      *                               number of remaining records after @p aOffset (excluding the matching record).
-     * @param[in]    aName           The record name to match against.
+     * @param[in]     aName          The record name to match against.
      *
      * @retval kErrorNone         A matching record was found. @p aOffset, @p aNumRecords are updated.
      * @retval kErrorNotFound     A matching record could not be found. @p aOffset and @p aNumRecords are updated.
@@ -1369,19 +1382,19 @@ public:
      * to after the last byte read from the message and copied into @p aRecord. This allows the caller to read any
      * remaining fields in the record data.
      *
-     * @tparam       RecordType      The resource record type (i.e., a sub-class of `ResourceRecord`).
+     * @tparam        RecordType     The resource record type (i.e., a sub-class of `ResourceRecord`).
      *
-     * @param[in]    aMessage        The message to search within for matching resource records.
+     * @param[in]     aMessage       The message to search within for matching resource records.
      *                               `aMessage.GetOffset()` MUST point to the start of DNS header.
-     * @param[inout] aOffset         On input, the offset in @p aMessage pointing to the start of the first record.
+     * @param[in,out] aOffset        On input, the offset in @p aMessage pointing to the start of the first record.
      *                               On exit and only if a matching record is found, @p aOffset is updated to point to
      *                               the last read byte in the record (allowing caller to read any remaining fields in
      *                               the record data from the message).
-     * @param[in]    aNumRecords     The maximum number of records to check (starting from @p aOffset).
-     * @param[in]    aIndex          The matching record index to find. @p aIndex value of zero returns the first
+     * @param[in]     aNumRecords    The maximum number of records to check (starting from @p aOffset).
+     * @param[in]     aIndex         The matching record index to find. @p aIndex value of zero returns the first
      *                               matching record.
-     * @param[in]    aName           The record name to match against.
-     * @param[in]    aRecord         A reference to a record object to read a matching record into.
+     * @param[in]     aName          The record name to match against.
+     * @param[in]     aRecord        A reference to a record object to read a matching record into.
      *                               If a matching record is found, `sizeof(RecordType)` bytes from @p aMessage are
      *                               read and copied into @p aRecord.
      *
@@ -1419,15 +1432,15 @@ public:
      * example, when reading a SRV record using `SrvRecord` type, @p aOffset would point to after the last field in
      * `SrvRecord`  which is the start of "target host domain name" field.
      *
-     * @tparam       RecordType      The resource record type (i.e., a sub-class of `ResourceRecord`).
+     * @tparam        RecordType     The resource record type (i.e., a sub-class of `ResourceRecord`).
      *
-     * @param[in]    aMessage        The message from which to read the record.
-     * @param[inout] aOffset         On input, the offset in @p aMessage pointing to the byte after the record name.
+     * @param[in]     aMessage       The message from which to read the record.
+     * @param[in,out] aOffset        On input, the offset in @p aMessage pointing to the byte after the record name.
      *                               On exit, if a matching record is read, @p aOffset is updated to point to the last
      *                               read byte in the record.
      *                               If a matching record could not be read, @p aOffset is updated to point to the byte
      *                               after the entire record (skipping over the record).
-     * @param[out]   aRecord         A reference to a record to read a matching record into.
+     * @param[out]    aRecord        A reference to a record to read a matching record into.
      *                               If a matching record is found, `sizeof(RecordType)` bytes from @p aMessage are
      *                               read and copied into @p aRecord.
      *
@@ -1546,14 +1559,14 @@ public:
      * This method also verifies that the CNAME record is well-formed (e.g., the record data length `GetLength()`
      * matches the CNAME encoded name).
      *
-     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     * @param[in]      aMessage         The message to read from. `aMessage.GetOffset()` MUST point to the start of
      *                                  DNS header.
-     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of CNAME name field.
+     * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of CNAME name field.
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire PTR record (skipping over the record).
-     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
-     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     * @param[out]     aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be `nullptr`).
+     * @param[in]      aNameBufferSize  The size of @p aNameBuffer.
      *
      * @retval kErrorNone           The CNAME name was read successfully. @p aOffset and @p aNameBuffer are updated.
      * @retval kErrorParse          The CNAME record in @p aMessage could not be parsed (invalid format).
@@ -1597,14 +1610,14 @@ public:
      * This method also verifies that the PTR record is well-formed (e.g., the record data length `GetLength()` matches
      * the PTR encoded name).
      *
-     * @param[in]     aMessage          The message to read from.  `aMessage.GetOffset()` MUST point to the start of
+     * @param[in]      aMessage         The message to read from.  `aMessage.GetOffset()` MUST point to the start of
      *                                  DNS header.
-     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of PTR name field.
+     * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of PTR name field.
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire PTR record (skipping over the record).
-     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
-     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     * @param[out]     aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be `nullptr`).
+     * @param[in]      aNameBufferSize  The size of @p aNameBuffer.
      *
      * @retval kErrorNone           The PTR name was read successfully. @p aOffset and @p aNameBuffer are updated.
      * @retval kErrorParse          The PTR record in @p aMessage could not be parsed (invalid format).
@@ -1630,17 +1643,17 @@ public:
      * intended for "Service Instance Name" where first label (`<Instance>` portion) can be a user-friendly string and
      * can contain dot character.
      *
-     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
-     *                                  DNS header.
-     * @param[inout]  aOffset           On input, the offset in @p aMessage to the start of PTR name field.
-     *                                  On exit, when successfully read, @p aOffset is updated to point to the byte
-     *                                  after the entire PTR record (skipping over the record).
-     * @param[out]    aLabelBuffer      A pointer to a char array to output the first label as a null-terminated C
-     *                                  string (MUST NOT be nullptr).
-     * @param[in]     aLabelBufferSize  The size of @p aLabelBuffer.
-     * @param[out]    aNameBuffer       A pointer to a char array to output the rest of name (after first label). Can
-     *                                  be `nullptr` if caller is only interested in the first label.
-     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     * @param[in]      aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     *                                   DNS header.
+     * @param[in,out]  aOffset           On input, the offset in @p aMessage to the start of PTR name field.
+     *                                   On exit, when successfully read, @p aOffset is updated to point to the byte
+     *                                   after the entire PTR record (skipping over the record).
+     * @param[out]     aLabelBuffer      A pointer to a char array to output the first label as a null-terminated C
+     *                                   string (MUST NOT be `nullptr`).
+     * @param[in]      aLabelBufferSize  The size of @p aLabelBuffer.
+     * @param[out]     aNameBuffer       A pointer to a char array to output the rest of name (after first label). Can
+     *                                   be `nullptr` if caller is only interested in the first label.
+     * @param[in]      aNameBufferSize   The size of @p aNameBuffer.
      *
      * @retval kErrorNone    The PTR name was read successfully. @p aOffset, @aLabelBuffer and @aNameBuffer are updated.
      * @retval kErrorParse   The PTR record in @p aMessage could not be parsed (invalid format).
@@ -1681,12 +1694,12 @@ public:
      *
      * This method also checks if the TXT data is well-formed by calling `VerifyTxtData()`.
      *
-     * @param[in]     aMessage          The message to read from.
-     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of TXT record data.
+     * @param[in]      aMessage         The message to read from.
+     * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of TXT record data.
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire TXT record (skipping over the record).
-     * @param[out]    aTxtBuffer        A pointer to a byte array to output the read TXT data.
-     * @param[inout]  aTxtBufferSize    On input, the size of @p aTxtBuffer (max bytes that can be read).
+     * @param[out]     aTxtBuffer       A pointer to a byte array to output the read TXT data.
+     * @param[in,out]  aTxtBufferSize   On input, the size of @p aTxtBuffer (max bytes that can be read).
      *                                  On exit, @p aTxtBufferSize gives number of bytes written to @p aTxtBuffer.
      *
      * @retval kErrorNone           The TXT data was read successfully. @p aOffset, @p aTxtBuffer and @p aTxtBufferSize
@@ -1835,14 +1848,14 @@ public:
      * This method also verifies that the SRV record is well-formed (e.g., the record data length `GetLength()` matches
      * the SRV encoded name).
      *
-     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     * @param[in]      aMessage         The message to read from. `aMessage.GetOffset()` MUST point to the start of
      *                                  DNS header.
-     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of target host name field.
+     * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of target host name field.
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the entire SRV record (skipping over the record).
-     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
-     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     * @param[out]     aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be `nullptr`).
+     * @param[in]      aNameBufferSize  The size of @p aNameBuffer.
      *
      * @retval kErrorNone            The host name was read successfully. @p aOffset and @p aNameBuffer are updated.
      * @retval kErrorParse           The SRV record in @p aMessage could not be parsed (invalid format).
@@ -2238,14 +2251,14 @@ public:
     /**
      * This method parses and reads the SIG signer name from a message.
      *
-     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of DNS
+     * @param[in]      aMessage         The message to read from. `aMessage.GetOffset()` MUST point to the start of DNS
      *                                  header.
-     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of signer name field.
+     * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of signer name field.
      *                                  On exit when successfully read, @p aOffset is updated to point to the byte
      *                                  after the name field (i.e., start of signature field).
-     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
-     *                                  (MUST NOT be nullptr).
-     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     * @param[out]     aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be `nullptr`).
+     * @param[in]      aNameBufferSize  The size of @p aNameBuffer.
      *
      * @retval kErrorNone           The name was read successfully. @p aOffset and @p aNameBuffer are updated.
      * @retval kErrorParse          The SIG record in @p aMessage could not be parsed (invalid format).

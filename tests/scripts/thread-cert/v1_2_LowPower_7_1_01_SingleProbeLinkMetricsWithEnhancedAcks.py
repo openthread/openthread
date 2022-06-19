@@ -32,6 +32,7 @@ import unittest
 from config import ADDRESS_TYPE
 from pktverify import consts
 
+import config
 import thread_cert
 
 LEADER = 1
@@ -42,6 +43,7 @@ POLL_PERIOD = 3000  # 3s
 
 
 class LowPower_7_1_01(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
             'version': '1.2',

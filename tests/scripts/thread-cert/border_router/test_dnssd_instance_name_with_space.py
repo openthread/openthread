@@ -90,17 +90,17 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
         self.simulator.go(5)
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         server.srp_server_set_enabled(True)
 
         br2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
         client.start()
 
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', client.get_state())
 
         self.simulator.go(10)
@@ -115,6 +115,7 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
 
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br1.get_rloc()))
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br2.get_rloc()))
+        self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME.lower(), server=br2.get_rloc()))
 
         # check if PTR query works
         dig_result = digger.dns_dig(server_addr, SERVICE_FULL_NAME, 'PTR')

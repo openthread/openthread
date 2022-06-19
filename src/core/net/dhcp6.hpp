@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/message.hpp"
@@ -309,7 +311,7 @@ public:
     /**
      * This method sets the client LinkLayerAddress.
      *
-     * @param[in]  aLinkLayerAddress The client LinkLayerAddress.
+     * @param[in]  aDuidLinkLayerAddress  The client LinkLayerAddress.
      *
      */
     void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress)
@@ -380,7 +382,7 @@ public:
     /**
      * This method sets the server LinkLayerAddress.
      *
-     * @param[in]  aLinkLayerAddress The server LinkLayerAddress.
+     * @param[in]  aDuidLinkLayerAddress  The server LinkLayerAddress.
      *
      */
     void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress)
@@ -426,7 +428,7 @@ public:
     /**
      * This method sets the client IAID.
      *
-     * @param[in]  aIaId  The client IAID.
+     * @param[in]  aIaid  The client IAID.
      *
      */
     void SetIaid(uint32_t aIaid) { mIaid = HostSwap32(aIaid); }
@@ -667,5 +669,7 @@ public:
 
 } // namespace Dhcp6
 } // namespace ot
+
+#endif // #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE || OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 #endif // DHCP6_HPP_

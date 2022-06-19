@@ -36,7 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
@@ -45,6 +45,8 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("DataPollSender");
 
 DataPollSender::DataPollSender(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -112,22 +114,17 @@ exit:
     switch (error)
     {
     case kErrorNone:
-        otLogDebgMac("Sending data poll");
+        LogDebg("Sending data poll");
         ScheduleNextPoll(kUsePreviousPollPeriod);
         break;
 
     case kErrorInvalidState:
-        otLogWarnMac("Data poll tx requested while data polling was not enabled!");
+        LogWarn("Data poll tx requested while data polling was not enabled!");
         StopPolling();
         break;
 
-    case kErrorAlready:
-        otLogDebgMac("Data poll tx requested when a previous data request still in send queue.");
-        ScheduleNextPoll(kUsePreviousPollPeriod);
-        break;
-
     default:
-        otLogWarnMac("Unexpected error %s requesting data poll", ErrorToString(error));
+        LogWarn("Unexpected error %s requesting data poll", ErrorToString(error));
         ScheduleNextPoll(kRecalculatePollPeriod);
         break;
     }
@@ -216,7 +213,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
     if (!aFrame.IsEmpty())
     {
         IgnoreError(aFrame.GetDstAddr(macDest));
-        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+        Get<MeshForwarder>().UpdateNeighborOnSentFrame(aFrame, aError, macDest, /* aIsDataPoll */ true);
     }
 
     if (GetParent().IsStateInvalid())
@@ -259,8 +256,14 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
     default:
         mPollTxFailureCounter++;
 
-        otLogInfoMac("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
-                     kMaxPollRetxAttempts);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
+                (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts
+                                                                         : kMaxPollRetxAttempts);
+#else
+        LogInfo("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
+                kMaxPollRetxAttempts);
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (mPollTxFailureCounter <
@@ -304,7 +307,7 @@ void DataPollSender::HandlePollTimeout(void)
 
     mPollTimeoutCounter++;
 
-    otLogInfoMac("Data poll timeout, retry:%d/%d", mPollTimeoutCounter, kQuickPollsAfterTimeout);
+    LogInfo("Data poll timeout, retry:%d/%d", mPollTimeoutCounter, kQuickPollsAfterTimeout);
 
     if (mPollTimeoutCounter < kQuickPollsAfterTimeout)
     {
@@ -542,7 +545,8 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
-        period = OT_MIN(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
+        period    = OT_MIN(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
+        pollAhead = static_cast<uint32_t>(kRetxPollPeriod);
     }
 #endif
 

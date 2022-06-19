@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_LINK_REQUEST, MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_SOL_URI, VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV, NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -125,11 +126,11 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
 
         for i in range(ROUTER2, ROUTER15 + 1):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[REED1].start()
@@ -175,10 +176,10 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
         router1_pkts.range(_start_idx).must_next()
         router1_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
 
-        # filter MLE_ADVERTISEMENT with 15 routing table entry:
-        # 1 byte ID Sequence + 8 bytes ID Mask + 15 bytes Routing Table Entry =
-        # 24 (Router64 tlv length)
-        pkts.range(_start_idx).filter_mle_cmd(MLE_ADVERTISEMENT).filter(lambda p: 24 in p.mle.tlv.len).must_next()
+        # filter MLE_ADVERTISEMENT with 16 routing table entry:
+        # 1 byte ID Sequence + 8 bytes ID Mask + 16 bytes Routing Table Entry =
+        # 25 (Router64 tlv length)
+        pkts.range(_start_idx).filter_mle_cmd(MLE_ADVERTISEMENT).filter(lambda p: 25 in p.mle.tlv.len).must_next()
         _end_idx = pkts.index
 
         # Step 2: The DUT MUST NOT attempt to become an active router by sending an Address Solicit Request

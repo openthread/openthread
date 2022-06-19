@@ -82,6 +82,11 @@ if(OT_BORDER_ROUTING)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1")
 endif()
 
+option(OT_BORDER_ROUTING_NAT64 "enable border routing NAT64 support")
+if(OT_BORDER_ROUTING_NAT64)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1")
+endif()
+
 if(NOT OT_EXTERNAL_MBEDTLS)
     set(OT_MBEDTLS mbedtls)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1")
@@ -177,6 +182,11 @@ endif()
 option(OT_DNS_CLIENT "enable DNS client support")
 if(OT_DNS_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1")
+endif()
+
+option(OT_DNS_DSO "enable DNS Stateful Operations (DSO) support")
+if(OT_DNS_DSO)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_DSO_ENABLE=1")
 endif()
 
 option(OT_DNSSD_SERVER "enable DNS-SD server support")
@@ -350,6 +360,11 @@ if (OT_TREL)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
 endif()
 
+option(OT_TX_BEACON_PAYLOAD "enable Thread beacon payload in outgoing beacons")
+if (OT_TX_BEACON_PAYLOAD)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE=1")
+endif()
+
 option(OT_UDP_FORWARD "enable UDP forward support")
 if(OT_UDP_FORWARD)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1")
@@ -360,13 +375,17 @@ if(OT_UPTIME)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UPTIME_ENABLE=1")
 endif()
 
+option(OT_FIREWALL "enable firewall")
+if (OT_FIREWALL)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE=1")
+endif()
+
 option(OT_FULL_LOGS "enable full logs")
 if(OT_FULL_LOGS)
     if(NOT OT_LOG_LEVEL)
         target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG")
     endif()
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_PREPEND_REGION=1")
 endif()
 
 option(OT_OTNS "enable OTNS support")
@@ -380,6 +399,8 @@ if(OT_RCP_RESTORATION_MAX_COUNT MATCHES "^[0-9]+$")
 else()
     message(FATAL_ERROR "Invalid max RCP restoration count: ${OT_RCP_RESTORATION_MAX_COUNT}")
 endif()
+
+option(OT_EXCLUDE_TCPLP_LIB "exclude TCPlp library from build")
 
 # Checks
 if(OT_PLATFORM_UDP AND OT_UDP_FORWARD)

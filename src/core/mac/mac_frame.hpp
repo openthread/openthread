@@ -43,6 +43,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/network_name.hpp"
 
 namespace ot {
 namespace Mac {
@@ -93,7 +94,7 @@ public:
     /**
      * This method sets the IE Element Id.
      *
-     * @param[in]  aID  The IE Element Id.
+     * @param[in]  aId  The IE Element Id.
      *
      */
     void SetId(uint16_t aId)
@@ -155,7 +156,7 @@ public:
     /**
      * This method returns the Vendor OUI.
      *
-     * @returns the Vendor OUI.
+     * @returns The Vendor OUI.
      *
      */
     uint32_t GetVendorOui(void) const { return ReadUint24(mOui); }
@@ -171,7 +172,7 @@ public:
     /**
      * This method returns the Vendor IE sub-type.
      *
-     * @returns the Vendor IE sub-type.
+     * @returns The Vendor IE sub-type.
      *
      */
     uint8_t GetSubType(void) const { return mSubType; }
@@ -179,7 +180,7 @@ public:
     /**
      * This method sets the Vendor IE sub-type.
      *
-     * @param[in] the Vendor IE sub-type.
+     * @param[in]  aSubType  The Vendor IE sub-type.
      *
      */
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
@@ -364,8 +365,8 @@ public:
     /**
      * This method initializes the MAC header.
      *
-     * @param[in]  aFcf          The Frame Control field.
-     * @param[in]  aSecurityCtl  The Security Control field.
+     * @param[in]  aFcf              The Frame Control field.
+     * @param[in]  aSecurityControl  The Security Control field.
      *
      */
     void InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl);
@@ -663,7 +664,7 @@ public:
     /**
      * This method gets the Key Identifier Mode.
      *
-     * @param[out]  aSecurityLevel  The Key Identifier Mode.
+     * @param[out]  aKeyIdMode  The Key Identifier Mode.
      *
      * @retval kErrorNone  Successfully retrieved the Key Identifier Mode.
      *
@@ -899,7 +900,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, nullptr if not found.
+     * @returns A pointer to the Time IE, `nullptr` if not found.
      *
      */
     TimeIe *GetTimeIe(void) { return AsNonConst(AsConst(this)->GetTimeIe()); }
@@ -907,7 +908,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, nullptr if not found.
+     * @returns A pointer to the Time IE, `nullptr` if not found.
      *
      */
     const TimeIe *GetTimeIe(void) const;
@@ -937,7 +938,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, nullptr if not found.
+     * @returns A pointer to the Header IE, `nullptr` if not found.
      *
      */
     uint8_t *GetHeaderIe(uint8_t aIeId) { return AsNonConst(AsConst(this)->GetHeaderIe(aIeId)); }
@@ -947,7 +948,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, nullptr if not found.
+     * @returns A pointer to the Header IE, `nullptr` if not found.
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
@@ -959,7 +960,7 @@ public:
      *
      * @param[in] aSubType  The sub type of the Thread IE.
      *
-     * @returns A pointer to the Thread IE, nullptr if not found.
+     * @returns A pointer to the Thread IE, `nullptr` if not found.
      *
      */
     uint8_t *GetThreadIe(uint8_t aSubType) { return AsNonConst(AsConst(this)->GetThreadIe(aSubType)); }
@@ -971,7 +972,7 @@ public:
      *
      * @param[in] aSubType  The sub type of the Thread IE.
      *
-     * @returns A pointer to the Thread IE, nullptr if not found.
+     * @returns A pointer to the Thread IE, `nullptr` if not found.
      *
      */
     const uint8_t *GetThreadIe(uint8_t aSubType) const;
@@ -1497,14 +1498,6 @@ public:
     static constexpr uint8_t kNativeFlag      = 1 << 3;                ///< Native Commissioner flag.
     static constexpr uint8_t kJoiningFlag     = 1 << 0;                ///< Joining Permitted flag.
 
-    static constexpr uint16_t kInfoStringSize = 92; ///< Max chars for the info string (@sa ToInfoString()).
-
-    /**
-     * This type defines the fixed-length `String` object returned from `ToInfoString()` method.
-     *
-     */
-    typedef String<kInfoStringSize> InfoString;
-
     /**
      * This method initializes the Beacon Payload.
      *
@@ -1596,7 +1589,7 @@ public:
      * @returns The Network Name field as `NameData`.
      *
      */
-    NameData GetNetworkName(void) const { return NameData(mNetworkName, sizeof(mNetworkName)); }
+    MeshCoP::NameData GetNetworkName(void) const { return MeshCoP::NameData(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method sets the Network Name field.
@@ -1604,7 +1597,7 @@ public:
      * @param[in]  aNameData  The Network Name (as a `NameData`).
      *
      */
-    void SetNetworkName(const NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
+    void SetNetworkName(const MeshCoP::NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
 
     /**
      * This method returns the Extended PAN ID field.
@@ -1612,7 +1605,7 @@ public:
      * @returns The Extended PAN ID field.
      *
      */
-    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID field.
@@ -1620,21 +1613,13 @@ public:
      * @param[in]  aExtPanId  An Extended PAN ID.
      *
      */
-    void SetExtendedPanId(const ExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
-
-    /**
-     * This method returns information about the Beacon as a `InfoString`.
-     *
-     * @returns An `InfoString` representing the beacon payload.
-     *
-     */
-    InfoString ToInfoString(void) const;
+    void SetExtendedPanId(const otExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
 
 private:
-    uint8_t       mProtocolId;
-    uint8_t       mFlags;
-    char          mNetworkName[NetworkName::kMaxSize];
-    ExtendedPanId mExtendedPanId;
+    uint8_t         mProtocolId;
+    uint8_t         mFlags;
+    char            mNetworkName[MeshCoP::NetworkName::kMaxSize];
+    otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

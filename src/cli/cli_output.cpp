@@ -40,12 +40,14 @@
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include <openthread/dns.h>
 #endif
+#include <openthread/logging.h>
 
-#include "common/logging.hpp"
 #include "common/string.hpp"
 
 namespace ot {
 namespace Cli {
+
+const char OutputBase::kUnknownString[] = "unknown";
 
 Output::Output(otInstance *aInstance, otCliOutputCallback aCallback, void *aCallbackContext)
     : mInstance(aInstance)
@@ -277,7 +279,7 @@ void Output::OutputFormatV(const char *aFormat, va_list aArguments)
 
         if (lineEnd > mOutputString)
         {
-            otLogNoteCli("Output: %s", mOutputString);
+            otLogCli(OT_LOG_LEVEL_DEBG, "Output: %s", mOutputString);
         }
 
         lineEnd++;
@@ -318,7 +320,7 @@ void Output::OutputFormatV(const char *aFormat, va_list aArguments)
 
     if (truncated)
     {
-        otLogNoteCli("Output: %s ...", mOutputString);
+        otLogCli(OT_LOG_LEVEL_DEBG, "Output: %s ...", mOutputString);
         mOutputLength = 0;
     }
 
@@ -337,7 +339,7 @@ void Output::LogInput(const Arg *aArgs)
         inputString.Append(isFirst ? "%s" : " %s", aArgs->GetCString());
     }
 
-    otLogNoteCli("Input: %s", inputString.AsCString());
+    otLogCli(OT_LOG_LEVEL_DEBG, "Input: %s", inputString.AsCString());
 }
 #endif
 

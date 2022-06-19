@@ -56,7 +56,7 @@ otError SrpServer::Process(Arg aArgs[])
         ExitNow();
     }
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);
@@ -114,23 +114,19 @@ otError SrpServer::ProcessDomain(Arg aArgs[])
 
 otError SrpServer::ProcessState(Arg aArgs[])
 {
+    static const char *const kStateStrings[] = {
+        "disabled", // (0) OT_SRP_SERVER_STATE_DISABLED
+        "running",  // (1) OT_SRP_SERVER_STATE_RUNNING
+        "stopped",  // (2) OT_SRP_SERVER_STATE_STOPPED
+    };
+
     OT_UNUSED_VARIABLE(aArgs);
 
-    switch (otSrpServerGetState(GetInstancePtr()))
-    {
-    case OT_SRP_SERVER_STATE_DISABLED:
-        OutputLine("disabled");
-        break;
-    case OT_SRP_SERVER_STATE_RUNNING:
-        OutputLine("running");
-        break;
-    case OT_SRP_SERVER_STATE_STOPPED:
-        OutputLine("stopped");
-        break;
-    default:
-        OutputLine("invalid state");
-        break;
-    }
+    static_assert(0 == OT_SRP_SERVER_STATE_DISABLED, "OT_SRP_SERVER_STATE_DISABLED value is incorrect");
+    static_assert(1 == OT_SRP_SERVER_STATE_RUNNING, "OT_SRP_SERVER_STATE_RUNNING value is incorrect");
+    static_assert(2 == OT_SRP_SERVER_STATE_STOPPED, "OT_SRP_SERVER_STATE_STOPPED value is incorrect");
+
+    OutputLine("%s", Stringify(otSrpServerGetState(GetInstancePtr()), kStateStrings));
 
     return OT_ERROR_NONE;
 }
@@ -151,6 +147,30 @@ otError SrpServer::ProcessDisable(Arg aArgs[])
     otSrpServerSetEnabled(GetInstancePtr(), /* aEnabled */ false);
 
     return OT_ERROR_NONE;
+}
+
+otError SrpServer::ProcessTtl(Arg aArgs[])
+{
+    otError              error = OT_ERROR_NONE;
+    otSrpServerTtlConfig ttlConfig;
+
+    if (aArgs[0].IsEmpty())
+    {
+        otSrpServerGetTtlConfig(GetInstancePtr(), &ttlConfig);
+        OutputLine("min ttl: %u", ttlConfig.mMinTtl);
+        OutputLine("max ttl: %u", ttlConfig.mMaxTtl);
+    }
+    else
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(ttlConfig.mMinTtl));
+        SuccessOrExit(error = aArgs[1].ParseAsUint32(ttlConfig.mMaxTtl));
+        VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        error = otSrpServerSetTtlConfig(GetInstancePtr(), &ttlConfig);
+    }
+
+exit:
+    return error;
 }
 
 otError SrpServer::ProcessLease(Arg aArgs[])
@@ -216,7 +236,7 @@ otError SrpServer::ProcessHost(Arg aArgs[])
             }
         }
 
-        OutputFormat("]\r\n");
+        OutputLine("]");
     }
 
 exit:
@@ -293,6 +313,7 @@ otError SrpServer::ProcessService(Arg aArgs[])
             OutputLine(kIndentSize, "port: %hu", otSrpServerServiceGetPort(service));
             OutputLine(kIndentSize, "priority: %hu", otSrpServerServiceGetPriority(service));
             OutputLine(kIndentSize, "weight: %hu", otSrpServerServiceGetWeight(service));
+            OutputLine(kIndentSize, "ttl: %hu", otSrpServerServiceGetTtl(service));
 
             txtData = otSrpServerServiceGetTxtData(service, &txtDataLength);
             OutputFormat(kIndentSize, "TXT: ");

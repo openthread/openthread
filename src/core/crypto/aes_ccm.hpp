@@ -40,6 +40,8 @@
 
 #include <openthread/platform/crypto.h>
 #include "common/error.hpp"
+#include "common/message.hpp"
+#include "common/type_traits.hpp"
 #include "crypto/aes_ecb.hpp"
 #include "crypto/storage.hpp"
 #include "mac/mac_types.hpp"
@@ -126,15 +128,45 @@ public:
     void Header(const void *aHeader, uint32_t aHeaderLength);
 
     /**
+     * This method processes the header.
+     *
+     * @tparam    ObjectType   The object type.
+     *
+     * @param[in] aObject      A reference to the object to add to header.
+     *
+     */
+    template <typename ObjectType> void Header(const ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        Header(&aObject, sizeof(ObjectType));
+    }
+
+    /**
      * This method processes the payload.
      *
-     * @param[inout]  aPlainText   A pointer to the plaintext.
-     * @param[inout]  aCipherText  A pointer to the ciphertext.
-     * @param[in]     aLength      Payload length in bytes.
-     * @param[in]     aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
+     * @param[in,out]  aPlainText   A pointer to the plaintext.
+     * @param[in,out]  aCipherText  A pointer to the ciphertext.
+     * @param[in]      aLength      Payload length in bytes.
+     * @param[in]      aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
      *
      */
     void Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode aMode);
+
+#if !OPENTHREAD_RADIO
+    /**
+     * This method processes the payload within a given message.
+     *
+     * This method encrypts/decrypts the payload content in place within the @p aMessage.
+     *
+     * @param[in,out]  aMessage     The message to read from and update.
+     * @param[in]      aOffset      The offset in @p aMessage to start of payload.
+     * @param[in]      aLength      Payload length in bytes.
+     * @param[in]      aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
+     *
+     */
+    void Payload(Message &aMessage, uint16_t aOffset, uint16_t aLength, Mode aMode);
+#endif
 
     /**
      * This method returns the tag length in bytes.

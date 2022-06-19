@@ -33,8 +33,8 @@
 
 /* samkumar: Removed some #ifdef guards around constants needed for TCPlp. */
 
-#ifndef _NETINET_TCP_FSM_H_
-#define	_NETINET_TCP_FSM_H_
+#ifndef TCPLP_NETINET_TCP_FSM_H_
+#define	TCPLP_NETINET_TCP_FSM_H_
 
 #include "types.h"
 

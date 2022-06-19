@@ -103,7 +103,7 @@ class AnycastLocator(thread_cert.TestCase):
 
         for node in nodes[1:]:
             node.start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(node.get_state(), 'router')
 
         #

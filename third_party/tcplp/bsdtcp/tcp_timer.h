@@ -38,8 +38,8 @@
  * parameters) and global statistics (e.g. tcp_keepcnt).
  */
 
-#ifndef _NETINET_TCP_TIMER_H_
-#define _NETINET_TCP_TIMER_H_
+#ifndef TCPLP_NETINET_TCP_TIMER_H_
+#define TCPLP_NETINET_TCP_TIMER_H_
 
 #include "tcp_var.h"
 
@@ -154,11 +154,15 @@ static const int	tcp_backoff[TCP_MAXRXTSHIFT + 1] =
 
 static const int tcp_totbackoff = 2559;	/* sum of tcp_backoff[] */
 
-void tcp_timer_delack(struct tcpcb* tp);
-void tcp_timer_keep(struct tcpcb* tp);
-void tcp_timer_persist(struct tcpcb* tp);
-void tcp_timer_2msl(struct tcpcb* tp);
-void tcp_timer_rexmt(struct tcpcb *tp);
+/*
+ * samkumar: Changed return value to int to indicate whether connection was
+ * dropped or not.
+ */
+int tcp_timer_delack(struct tcpcb* tp);
+int tcp_timer_keep(struct tcpcb* tp);
+int tcp_timer_persist(struct tcpcb* tp);
+int tcp_timer_2msl(struct tcpcb* tp);
+int tcp_timer_rexmt(struct tcpcb *tp);
 int tcp_timer_active(struct tcpcb *tp, uint32_t timer_type);
 
 /*

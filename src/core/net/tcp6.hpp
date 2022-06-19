@@ -39,12 +39,25 @@
 #include <openthread/tcp.h>
 
 #include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/socket.hpp"
+
+/*
+ * These structures and functions are forward-declared here to avoid
+ * #includ'ing third_party/tcplp/tcplp.h in this header file.
+ */
+extern "C" {
+struct tcpcb;
+struct tcpcb_listen;
+struct tcplp_signals;
+void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
+void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
+}
 
 namespace ot {
 namespace Ip6 {
@@ -70,9 +83,10 @@ public:
      * This class represents an endpoint of a TCP/IPv6 connection.
      *
      */
-    class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>
+    class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>, public GetProvider<Endpoint>
     {
         friend class Tcp;
+        friend class LinkedList<Endpoint>;
 
     public:
         /**
@@ -93,7 +107,7 @@ public:
          * @retval kErrorFailed  Failed to open the TCP endpoint.
          *
          */
-        Error Initialize(Instance &aInstance, otTcpEndpointInitializeArgs &aArgs);
+        Error Initialize(Instance &aInstance, const otTcpEndpointInitializeArgs &aArgs);
 
         /**
          * Obtains the Instance that was associated with this Endpoint upon
@@ -104,7 +118,7 @@ public:
          * @returns  The Instance pointer associated with this Endpoint.
          *
          */
-        Instance &GetInstance(void);
+        Instance &GetInstance(void) const;
 
         /**
          * Obtains the context pointer that was associated this Endpoint upon
@@ -236,7 +250,7 @@ public:
          * @retval kErrorNone    Successfully completed the operation.
          * @retval kErrorFailed  Failed to complete the operation.
          */
-        Error ReceiveByReference(const otLinkedBuffer *&aBuffer) const;
+        Error ReceiveByReference(const otLinkedBuffer *&aBuffer);
 
         /**
          * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -329,7 +343,31 @@ public:
          */
         Error Deinitialize(void);
 
+        /**
+         * Converts a reference to a struct tcpcb to a reference to its
+         * enclosing Endpoint.
+         */
+        static Endpoint &FromTcb(struct tcpcb &aTcb) { return *reinterpret_cast<Endpoint *>(&aTcb); }
+
+        /**
+         * Obtains a reference to this Endpoint's struct tcpcb.
+         */
+        struct tcpcb &GetTcb(void) { return *reinterpret_cast<struct tcpcb *>(&mTcb); }
+
+        /**
+         * Obtains a const reference to this Endpoint's struct tcpcb.
+         */
+        const struct tcpcb &GetTcb(void) const { return *reinterpret_cast<const struct tcpcb *>(&mTcb); }
+
+        /**
+         * Checks if this Endpoint is in the closed state.
+         */
+        bool IsClosed(void) const;
+
     private:
+        friend void ::tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
+        friend void ::tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
+
         enum : uint8_t
         {
             kTimerDelack       = 0,
@@ -345,14 +383,29 @@ public:
         void SetTimer(uint8_t aTimerFlag, uint32_t aDelay);
         void CancelTimer(uint8_t aTimerFlag);
         bool FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, TimeMilli &aEarliestFutureExpiry);
+
+        void PostCallbacksAfterSend(size_t aSent, size_t aBacklogBefore);
+        bool FirePendingCallbacks(void);
+
+        size_t GetSendBufferBytes(void) const;
+        size_t GetInFlightBytes(void) const;
+        size_t GetBacklogBytes(void) const;
+
+        Address &      GetLocalIp6Address(void);
+        const Address &GetLocalIp6Address(void) const;
+        Address &      GetForeignIp6Address(void);
+        const Address &GetForeignIp6Address(void) const;
+        bool           Matches(const MessageInfo &aMessageInfo) const;
     };
 
     /**
      * This class represents a TCP/IPv6 listener.
      *
      */
-    class Listener : public otTcpListener, public LinkedListEntry<Listener>
+    class Listener : public otTcpListener, public LinkedListEntry<Listener>, public GetProvider<Listener>
     {
+        friend class LinkedList<Listener>;
+
     public:
         /**
          * Initializes a TCP listener.
@@ -372,7 +425,7 @@ public:
          * @retval kErrorFailed  Failed to open the TCP listener.
          *
          */
-        Error Initialize(Instance &aInstance, otTcpListenerInitializeArgs &aArgs);
+        Error Initialize(Instance &aInstance, const otTcpListenerInitializeArgs &aArgs);
 
         /**
          * Obtains the otInstance that was associated with this Listener upon
@@ -383,7 +436,7 @@ public:
          * @returns  The otInstance pointer associated with this Listener.
          *
          */
-        Instance &GetInstance(void);
+        Instance &GetInstance(void) const;
 
         /**
          * Obtains the context pointer that was associated with this Listener upon
@@ -438,6 +491,38 @@ public:
          *
          */
         Error Deinitialize(void);
+
+        /**
+         * Converts a reference to a struct tcpcb_listen to a reference to its
+         * enclosing Listener.
+         */
+        static Listener &FromTcbListen(struct tcpcb_listen &aTcbListen)
+        {
+            return *reinterpret_cast<Listener *>(&aTcbListen);
+        }
+
+        /**
+         * Obtains a reference to this Listener's struct tcpcb_listen.
+         */
+        struct tcpcb_listen &GetTcbListen(void) { return *reinterpret_cast<struct tcpcb_listen *>(&mTcbListen); }
+
+        /**
+         * Obtains a const reference to this Listener's struct tcpcb_listen.
+         */
+        const struct tcpcb_listen &GetTcbListen(void) const
+        {
+            return *reinterpret_cast<const struct tcpcb_listen *>(&mTcbListen);
+        }
+
+        /**
+         * Checks if this Listener is in the closed state.
+         */
+        bool IsClosed(void) const;
+
+    private:
+        Address &      GetLocalIp6Address(void);
+        const Address &GetLocalIp6Address(void) const;
+        bool           Matches(const MessageInfo &aMessageInfo) const;
     };
 
     /**
@@ -445,7 +530,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class Header : public Clearable<Header>
     {
     public:
         static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.
@@ -546,6 +631,31 @@ public:
      */
     Error HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
 
+    /**
+     * Automatically selects a local address and/or port for communication with the specified peer.
+     *
+     * @param[in] aPeer         The peer's address and port.
+     * @param[in,out] aToBind   The SockAddr into which to store the selected address and/or port.
+     * @param[in] aBindAddress  If true, the local address is selected; if not, the current address
+     *                          in @p aToBind is treated as a given.
+     * @param[in] aBindPort     If true, the local port is selected; if not, the current port in
+     *                          @p aToBind is treated as a given.
+     *
+     * @returns  True if successful, false otherwise.
+     *
+     */
+    bool AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, bool aBindPort);
+
+    /**
+     * Checks if an Endpoint is in the list of initialized endpoints.
+     */
+    bool IsInitialized(const Endpoint &aEndpoint) const { return mEndpoints.Contains(aEndpoint); }
+
+    /**
+     * Checks if a Listener is in the list of initialized Listeners.
+     */
+    bool IsInitialized(const Listener &aListener) const { return mListeners.Contains(aListener); }
+
 private:
     enum
     {
@@ -553,10 +663,28 @@ private:
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
 
+    static constexpr uint8_t kEstablishedCallbackFlag      = (1 << 0);
+    static constexpr uint8_t kSendDoneCallbackFlag         = (1 << 1);
+    static constexpr uint8_t kForwardProgressCallbackFlag  = (1 << 2);
+    static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
+    static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
+
+    void ProcessSignals(Endpoint &            aEndpoint,
+                        otLinkedBuffer *      aPriorHead,
+                        size_t                aPriorBacklog,
+                        struct tcplp_signals &aSignals);
+
+    static Error BsdErrorToOtError(int aBsdError);
+    bool         CanBind(const SockAddr &aSockName);
+
     static void HandleTimer(Timer &aTimer);
     void        ProcessTimers(void);
 
+    static void HandleTasklet(Tasklet &aTasklet);
+    void        ProcessCallbacks(void);
+
     TimerMilli mTimer;
+    Tasklet    mTasklet;
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;

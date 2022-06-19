@@ -30,8 +30,8 @@
  * $FreeBSD$
  */
 
-#ifndef _NETINET_TCP_VAR_H_
-#define _NETINET_TCP_VAR_H_
+#ifndef TCPLP_NETINET_TCP_VAR_H_
+#define TCPLP_NETINET_TCP_VAR_H_
 
 /* For memmove(). */
 #include <string.h>
@@ -49,8 +49,6 @@
 #include "tcp.h"
 #include "types.h"
 #include "ip6.h"
-
-#include "sys/queue.h"
 
 /* Implement byte-order-specific functions using OpenThread. */
 uint16_t tcplp_sys_hostswap16(uint16_t hostport);
@@ -104,7 +102,19 @@ struct sackhole {
 	tcp_seq start;		/* start seq no. of hole */
 	tcp_seq end;		/* end seq no. */
 	tcp_seq rxmit;		/* next seq. no in hole to be retransmitted */
-	TAILQ_ENTRY(sackhole) scblink;	/* scoreboard linkage */
+
+	/*
+	 * samkumar: I'm using this instead of the TAILQ_ENTRY macro to avoid
+	 * including sys/queue.h from this file. It's undesirable to include
+	 * sys/queue.h from this file because this file is part of the external
+	 * interface to TCPlp, and sys/queue.h pollutes the global namespace.
+	 * The original code that uses TAILQ_ENTRY is in a comment below.
+	 */
+	struct {
+		struct sackhole *tqe_next;	/* next element */
+		struct sackhole **tqe_prev;	/* address of previous next element */
+	} scblink;	/* scoreboard linkage */
+	// TAILQ_ENTRY(sackhole) scblink;	/* scoreboard linkage */
 };
 
 struct sackhint {
@@ -151,7 +161,7 @@ struct tcpcb_listen {
 #define SACKHOLE_POOL_SIZE MAX_SACKHOLES
 #define SACKHOLE_BMP_SIZE BITS_TO_BYTES(SACKHOLE_POOL_SIZE)
 
-struct signals;
+struct tcplp_signals;
 
 /*
  * Tcp control block, one per tcp; fields:
@@ -200,7 +210,7 @@ struct tcpcb {
 	int	t_segqlen;		/* segment reassembly queue length */
 #endif
 
-	int	t_dupacks;		/* consecutive dup acks recd */
+	int32_t	t_dupacks;		/* consecutive dup acks recd */
 
 #if 0
 	struct tcp_timer *t_timers;	/* All the TCP timers in one struct */
@@ -228,8 +238,8 @@ struct tcpcb {
 
 	tcp_seq	rcv_nxt;		/* receive next */
 	tcp_seq	rcv_adv;		/* advertised window */
-	uint64_t	rcv_wnd;		/* receive window */
 	tcp_seq	rcv_up;			/* receive urgent pointer */
+	uint64_t	rcv_wnd;		/* receive window */
 
 	uint64_t	snd_wnd;		/* send window */
 	uint64_t	snd_cwnd;		/* congestion-controlled window */
@@ -251,22 +261,37 @@ struct tcpcb {
 //	uint32_t	t_bw_spare1;		/* unused */
 //	tcp_seq	t_bw_spare2;		/* unused */
 
-	int	t_rxtcur;		/* current retransmit value (ticks) */
+	int32_t	t_rxtcur;		/* current retransmit value (ticks) */
 	uint32_t	t_maxseg;		/* maximum segment size */
-	int	t_srtt;			/* smoothed round-trip time */
-	int	t_rttvar;		/* variance in round-trip time */
+	int32_t	t_srtt;			/* smoothed round-trip time */
+	int32_t	t_rttvar;		/* variance in round-trip time */
 
-	int	t_rxtshift;		/* log(2) of rexmt exp. backoff */
+	int32_t	t_rxtshift;		/* log(2) of rexmt exp. backoff */
 	uint32_t	t_rttmin;		/* minimum rtt allowed */
 	uint32_t	t_rttbest;		/* best rtt we've seen */
+
+	int32_t	t_softerror;		/* possible error not yet reported */
+
 	uint64_t	t_rttupdated;		/* number of times rtt sampled */
 	uint64_t	max_sndwnd;		/* largest window peer has offered */
-
-	int	t_softerror;		/* possible error not yet reported */
 /* out-of-band data */
 //	char	t_oobflags;		/* have some */
 //	char	t_iobc;			/* input character */
+
+	tcp_seq	last_ack_sent;
+/* experimental */
+	tcp_seq	snd_recover_prev;	/* snd_recover prior to retransmit */
+	uint64_t	snd_cwnd_prev;		/* cwnd prior to retransmit */
+	uint64_t	snd_ssthresh_prev;	/* ssthresh prior to retransmit */
+//	int	t_sndzerowin;		/* zero-window updates sent */
+	uint32_t	t_badrxtwin;		/* window for retransmit recovery */
+	uint8_t	snd_limited;		/* segments limited transmitted */
+
 /* RFC 1323 variables */
+/*
+ * samkumar: Moved "RFC 1323 variables" after "experimental" to reduce
+ * compiler-inserted padding.
+ */
 	uint8_t	snd_scale;		/* window scaling for send window */
 	uint8_t	rcv_scale;		/* window scaling for recv window */
 	uint8_t	request_r_scale;	/* pending window scaling */
@@ -274,27 +299,28 @@ struct tcpcb {
 	uint32_t	ts_recent_age;		/* when last updated */
 	u_int32_t  ts_offset;		/* our timestamp offset */
 
-	tcp_seq	last_ack_sent;
-/* experimental */
-	uint64_t	snd_cwnd_prev;		/* cwnd prior to retransmit */
-	uint64_t	snd_ssthresh_prev;	/* ssthresh prior to retransmit */
-	tcp_seq	snd_recover_prev;	/* snd_recover prior to retransmit */
-//	int	t_sndzerowin;		/* zero-window updates sent */
-	uint32_t	t_badrxtwin;		/* window for retransmit recovery */
-	uint8_t	snd_limited;		/* segments limited transmitted */
-
 /* SACK related state */
-	int	snd_numholes;		/* number of holes seen by sender */
-	TAILQ_HEAD(sackhole_head, sackhole) snd_holes;
+	int32_t	snd_numholes;		/* number of holes seen by sender */
+	/*
+	 * samkumar: I replaced the TAILQ_HEAD macro invocation (commented out
+	 * below) with the code it stands for, to avoid having to #include
+	 * sys/queue.h in this file. See the comment above in struct sackhole for
+	 * more info.
+	 */
+	struct sackhole_head {
+		struct sackhole *tqh_first;	/* first element */
+		struct sackhole **tqh_last;	/* addr of last next element */
+	} snd_holes;
+	// TAILQ_HEAD(sackhole_head, sackhole) snd_holes;
 					/* SACK scoreboard (sorted) */
 	tcp_seq	snd_fack;		/* last seq number(+1) sack'd by rcv'r*/
-	int	rcv_numsacks;		/* # distinct sack blks present */
+	int32_t	rcv_numsacks;		/* # distinct sack blks present */
 	struct sackblk sackblks[MAX_SACK_BLKS]; /* seq nos. of sack blocks */
 	tcp_seq sack_newdata;		/* New data xmitted in this recovery
 					   episode starts at this seq number */
 	struct sackhint	sackhint;	/* SACK scoreboard hint */
 
-	int	t_rttlow;		/* smallest observed RTT */
+	int32_t	t_rttlow;		/* smallest observed RTT */
 #if 0
 	u_int32_t	rfbuf_ts;	/* recv buffer autoscaling timestamp */
 	int	rfbuf_cnt;		/* recv buffer autoscaling byte count */
@@ -303,7 +329,7 @@ struct tcpcb {
 //	int	t_sndrexmitpack;	/* retransmit packets sent */
 //	int	t_rcvoopack;		/* out-of-order packets received */
 //	void	*t_toe;			/* TOE pcb pointer */
-	int	t_bytes_acked;		/* # bytes acked during current RTT */
+	int32_t	t_bytes_acked;		/* # bytes acked during current RTT */
 //	struct cc_algo	*cc_algo;	/* congestion control algorithm */
 	struct cc_var	ccv[1];		/* congestion control specific vars */
 #if 0
@@ -551,14 +577,14 @@ int	 tcp_twcheck(struct tcpcb*, struct tcphdr *, int);
 void tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otInstance* instance,
     int tlen, int rstreason);
 int tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
-          struct signals* sig);
+          struct tcplp_signals* sig);
 int	 tcp_output(struct tcpcb *);
 void tcpip_maketemplate(struct tcpcb *, struct tcptemp*);
 void	 tcpip_fillheaders(struct tcpcb *, otMessageInfo *, void *);
 uint64_t	 tcp_maxmtu6(struct tcpcb*, struct tcp_ifcap *);
 int	 tcp_addoptions(struct tcpopt *, uint8_t *);
 int	 tcp_mssopt(struct tcpcb*);
-int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, otMessage *, off_t, struct signals*);
+int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, otMessage *, off_t, struct tcplp_signals*);
 void tcp_sack_init(struct tcpcb *); // Sam: new function that I added
 void	 tcp_sack_doack(struct tcpcb *, struct tcpopt *, tcp_seq);
 void	 tcp_update_sack_list(struct tcpcb *tp, tcp_seq rcv_laststart, tcp_seq rcv_lastend);

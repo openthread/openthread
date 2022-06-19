@@ -43,7 +43,7 @@ build_cc2538()
         "DNS_CLIENT=1"
         "JOINER=1"
         "SLAAC=1"
-        # cc2538 does not have enough resources to support Thread 1.2
+        # cc2538 does not have enough resources to support Thread 1.3
         "THREAD_VERSION=1.1"
     )
 

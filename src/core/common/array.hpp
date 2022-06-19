@@ -45,6 +45,61 @@
 namespace ot {
 
 /**
+ * This function returns the length of a given array (number of elements in the array).
+ *
+ * This template function is `constexpr`. The template arguments are expected to be deduced by the compiler allowing
+ * callers to simply use `GetArrayLength(aArray)`.
+ *
+ * @tparam  Type          The array element type.
+ * @tparam  kArrayLength  The array length.
+ *
+ * @returns The array length (number of elements in the array).
+ *
+ */
+template <typename Type, uint16_t kArrayLength> constexpr inline uint16_t GetArrayLength(const Type (&)[kArrayLength])
+{
+    return kArrayLength;
+}
+
+/**
+ * This function returns a pointer to end of a given array (pointing to the past-the-end element).
+ *
+ * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
+ * not point to an actual element in array, and thus should not be dereferenced.
+ *
+ * @tparam  Type          The array element type.
+ * @tparam  kArrayLength  The array length.
+ *
+ * @param[in] aArray   A reference to the array.
+ *
+ * @returns Pointer to the past-the-end element.
+ *
+ */
+template <typename Type, uint16_t kArrayLength> inline Type *GetArrayEnd(Type (&aArray)[kArrayLength])
+{
+    return &aArray[kArrayLength];
+}
+
+/**
+ * This function returns a pointer to end of a given array (pointing to the past-the-end element).
+ *
+ * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
+ * not point to an actual element in array, and thus should not be dereferenced.
+ *
+ * @tparam  Type          The array element type.
+ * @tparam  kArrayLength  The array length.
+ *
+ * @param[in] aArray   A reference to the array.
+ *
+ * @returns Pointer to the past-the-end element.
+ *
+ */
+template <typename Type, uint16_t kArrayLength> inline const Type *GetArrayEnd(const Type (&aArray)[kArrayLength])
+{
+    return &aArray[kArrayLength];
+}
+
+/**
  * This template class represents an array of elements with a fixed max size.
  *
  * @tparam Type        The array element type.
@@ -256,6 +311,27 @@ public:
     IndexType IndexOf(const Type &aElement) const { return static_cast<IndexType>(&aElement - &mElements[0]); }
 
     /**
+     * This method removes an element from the array.
+     *
+     * The @p aElement MUST be from the array, otherwise the behavior of this method is undefined.
+     *
+     * To remove @p aElement, it is replaced by the last element in array, so the order of items in the array can
+     * change after a call to this method.
+     *
+     * The method uses assignment `=` operator on `Type` to copy the last element in place of @p aElement.
+     *
+     */
+    void Remove(Type &aElement)
+    {
+        Type *lastElement = PopBack();
+
+        if (lastElement != &aElement)
+        {
+            aElement = *lastElement;
+        }
+    }
+
+    /**
      * This method finds the first match of a given entry in the array.
      *
      * This method uses `==` operator on `Type` to compare the array element with @p aEntry.
@@ -317,7 +393,7 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with elements in the array.
      *
-     * @returns A pointer to the matched array element, or nullptr if a match could not be found.
+     * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
      *
      */
     template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
@@ -336,7 +412,7 @@ public:
      *
      * @param[in]  aIndicator  An indicator to match with elements in the array.
      *
-     * @returns A pointer to the matched array element, or nullptr if a match could not be found.
+     * @returns A pointer to the matched array element, or `nullptr` if a match could not be found.
      *
      */
     template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
@@ -373,6 +449,32 @@ public:
     template <typename Indicator> bool ContainsMatching(const Indicator &aIndicator) const
     {
         return FindMatching(aIndicator) != nullptr;
+    }
+
+    /**
+     * This template method removes the first element in the array matching a given indicator.
+     *
+     * This method behaves similar to `Remove()`, i.e., the matched element (if found) is replaced with the last element
+     * in the array (using `=` operator on `Type`). So the order of items in the array can change after a call to this
+     * method.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     */
+    template <typename Indicator> void RemoveMatching(const Indicator &aIndicator)
+    {
+        Type *entry = FindMatching(aIndicator);
+
+        if (entry != nullptr)
+        {
+            Remove(*entry);
+        }
     }
 
     /**

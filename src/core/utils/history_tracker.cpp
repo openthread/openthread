@@ -52,6 +52,9 @@ namespace Utils {
 HistoryTracker::HistoryTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, HandleTimer)
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
+    , mPreviousNetworkData(aInstance, mNetworkDataTlvBuffer, 0, sizeof(mNetworkDataTlvBuffer))
+#endif
 {
     mTimer.Start(kAgeCheckPeriod);
 }
@@ -291,6 +294,86 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
+void HistoryTracker::RecordNetworkDataChange(void)
+{
+    NetworkData::Iterator            iterator;
+    NetworkData::OnMeshPrefixConfig  prefix;
+    NetworkData::ExternalRouteConfig route;
+
+    // On mesh prefix entries
+
+    iterator = NetworkData::kIteratorInit;
+
+    while (mPreviousNetworkData.GetNextOnMeshPrefix(iterator, prefix) == kErrorNone)
+    {
+        if (!Get<NetworkData::Leader>().ContainsOnMeshPrefix(prefix))
+        {
+            RecordOnMeshPrefixEvent(kNetDataEntryRemoved, prefix);
+        }
+    }
+
+    iterator = NetworkData::kIteratorInit;
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefix) == kErrorNone)
+    {
+        if (!mPreviousNetworkData.ContainsOnMeshPrefix(prefix))
+        {
+            RecordOnMeshPrefixEvent(kNetDataEntryAdded, prefix);
+        }
+    }
+
+    // External route entries
+
+    iterator = NetworkData::kIteratorInit;
+
+    while (mPreviousNetworkData.GetNextExternalRoute(iterator, route) == kErrorNone)
+    {
+        if (!Get<NetworkData::Leader>().ContainsExternalRoute(route))
+        {
+            RecordExternalRouteEvent(kNetDataEntryRemoved, route);
+        }
+    }
+
+    iterator = NetworkData::kIteratorInit;
+
+    while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, route) == kErrorNone)
+    {
+        if (!mPreviousNetworkData.ContainsExternalRoute(route))
+        {
+            RecordExternalRouteEvent(kNetDataEntryAdded, route);
+        }
+    }
+
+    SuccessOrAssert(Get<NetworkData::Leader>().CopyNetworkData(NetworkData::kFullSet, mPreviousNetworkData));
+}
+
+void HistoryTracker::RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix)
+{
+    OnMeshPrefixInfo *entry = mOnMeshPrefixHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+    entry->mPrefix = aPrefix;
+    entry->mEvent  = aEvent;
+
+exit:
+    return;
+}
+
+void HistoryTracker::RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute)
+{
+    ExternalRouteInfo *entry = mExternalRouteHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+    entry->mRoute = aRoute;
+    entry->mEvent = aEvent;
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
+
 void HistoryTracker::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadRlocAdded | kEventThreadRlocRemoved |
@@ -298,6 +381,13 @@ void HistoryTracker::HandleNotifierEvents(Events aEvents)
     {
         RecordNetworkInfo();
     }
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        RecordNetworkDataChange();
+    }
+#endif
 }
 
 void HistoryTracker::HandleTimer(Timer &aTimer)
@@ -313,6 +403,8 @@ void HistoryTracker::HandleTimer(void)
     mRxHistory.UpdateAgedEntries();
     mTxHistory.UpdateAgedEntries();
     mNeighborHistory.UpdateAgedEntries();
+    mOnMeshPrefixHistory.UpdateAgedEntries();
+    mExternalRouteHistory.UpdateAgedEntries();
 
     mTimer.Start(kAgeCheckPeriod);
 }
@@ -323,21 +415,22 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 
     if (aEntryAge >= kMaxAge)
     {
-        writer.Append("more than %u days", kMaxAge / kOneDayInMsec);
+        writer.Append("more than %u days", kMaxAge / Time::kOneDayInMsec);
     }
     else
     {
-        uint32_t days = aEntryAge / kOneDayInMsec;
+        uint32_t days = aEntryAge / Time::kOneDayInMsec;
 
         if (days > 0)
         {
             writer.Append("%u day%s ", days, (days == 1) ? "" : "s");
-            aEntryAge -= days * kOneDayInMsec;
+            aEntryAge -= days * Time::kOneDayInMsec;
         }
 
-        writer.Append("%02u:%02u:%02u.%03u", (aEntryAge / kOneHourInMsec),
-                      (aEntryAge % kOneHourInMsec) / kOneMinuteInMsec,
-                      (aEntryAge % kOneMinuteInMsec) / kOneSecondInMsec, (aEntryAge % kOneSecondInMsec));
+        writer.Append("%02u:%02u:%02u.%03u", (aEntryAge / Time::kOneHourInMsec),
+                      (aEntryAge % Time::kOneHourInMsec) / Time::kOneMinuteInMsec,
+                      (aEntryAge % Time::kOneMinuteInMsec) / Time::kOneSecondInMsec,
+                      (aEntryAge % Time::kOneSecondInMsec));
     }
 }
 

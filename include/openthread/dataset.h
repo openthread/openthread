@@ -152,7 +152,6 @@ typedef struct otSecurityPolicy
     bool    mNativeCommissioningEnabled : 1;     ///< Native Commissioning using PSKc is allowed
     bool    mRoutersEnabled : 1;                 ///< Thread 1.0/1.1.x Routers are enabled
     bool    mExternalCommissioningEnabled : 1;   ///< External Commissioner authentication is allowed
-    bool    mBeaconsEnabled : 1;                 ///< Thread 1.0/1.1.x Beacons are enabled
     bool    mCommercialCommissioningEnabled : 1; ///< Commercial Commissioning is enabled
     bool    mAutonomousEnrollmentEnabled : 1;    ///< Autonomous Enrollment is enabled
     bool    mNetworkKeyProvisioningEnabled : 1;  ///< Network Key Provisioning is enabled
@@ -215,6 +214,17 @@ typedef struct otOperationalDatasetComponents
 } otOperationalDatasetComponents;
 
 /**
+ * This structure represents a Thread Dataset timestamp component.
+ *
+ */
+typedef struct otTimestamp
+{
+    uint64_t mSeconds;
+    uint16_t mTicks;
+    bool     mAuthoritative;
+} otTimestamp;
+
+/**
  * This structure represents an Active or Pending Operational Dataset.
  *
  * Components in Dataset are optional. `mComponets` structure specifies which components are present in the Dataset.
@@ -222,8 +232,8 @@ typedef struct otOperationalDatasetComponents
  */
 typedef struct otOperationalDataset
 {
-    uint64_t                       mActiveTimestamp;  ///< Active Timestamp
-    uint64_t                       mPendingTimestamp; ///< Pending Timestamp
+    otTimestamp                    mActiveTimestamp;  ///< Active Timestamp
+    otTimestamp                    mPendingTimestamp; ///< Pending Timestamp
     otNetworkKey                   mNetworkKey;       ///< Network Key
     otNetworkName                  mNetworkName;      ///< Network Name
     otExtendedPanId                mExtendedPanId;    ///< Extended PAN ID

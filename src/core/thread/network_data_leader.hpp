@@ -85,20 +85,14 @@ public:
     void Reset(void);
 
     /**
-     * This method returns the Thread Network Data version.
+     * This method returns the Data Version value for a type (full set or stable subset).
      *
-     * @returns The Thread Network Data version.
+     * @param[in] aType   The Network Data type (full set or stable subset).
      *
-     */
-    uint8_t GetVersion(void) const { return mVersion; }
-
-    /**
-     * This method returns the Thread Network Data stable version.
-     *
-     * @returns The Thread Network Data stable version.
+     * @returns The Data Version value for @p aType.
      *
      */
-    uint8_t GetStableVersion(void) const { return mStableVersion; }
+    uint8_t GetVersion(Type aType) const { return (aType == kFullSet) ? mVersion : mStableVersion; }
 
     /**
      * This method retrieves the 6LoWPAN Context information based on a given IPv6 address.
@@ -157,7 +151,7 @@ public:
      *
      * @param[in]  aVersion        The Version value.
      * @param[in]  aStableVersion  The Stable Version value.
-     * @param[in]  aStableOnly     TRUE if storing only the stable data, FALSE otherwise.
+     * @param[in]  aType           The Network Data type to set, the full set or stable subset.
      * @param[in]  aMessage        A reference to the MLE message.
      * @param[in]  aMessageOffset  The offset in @p aMessage for the Network Data TLV.
      *
@@ -167,14 +161,14 @@ public:
      */
     Error SetNetworkData(uint8_t        aVersion,
                          uint8_t        aStableVersion,
-                         bool           aStableOnly,
+                         Type           aType,
                          const Message &aMessage,
                          uint16_t       aMessageOffset);
 
     /**
      * This method returns a pointer to the Commissioning Data.
      *
-     * @returns A pointer to the Commissioning Data or nullptr if no Commissioning Data exists.
+     * @returns A pointer to the Commissioning Data or `nullptr` if no Commissioning Data exists.
      *
      */
     CommissioningDataTlv *GetCommissioningData(void) { return AsNonConst(AsConst(this)->GetCommissioningData()); }
@@ -182,7 +176,7 @@ public:
     /**
      * This method returns a pointer to the Commissioning Data.
      *
-     * @returns A pointer to the Commissioning Data or nullptr if no Commissioning Data exists.
+     * @returns A pointer to the Commissioning Data or `nullptr` if no Commissioning Data exists.
      *
      */
     const CommissioningDataTlv *GetCommissioningData(void) const;
@@ -192,7 +186,7 @@ public:
      *
      * @param[in]  aType  The TLV type value.
      *
-     * @returns A pointer to the Commissioning Data Sub-TLV or nullptr if no Sub-TLV exists.
+     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no Sub-TLV exists.
      *
      */
     MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
@@ -205,7 +199,7 @@ public:
      *
      * @param[in]  aType  The TLV type value.
      *
-     * @returns A pointer to the Commissioning Data Sub-TLV or nullptr if no Sub-TLV exists.
+     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no Sub-TLV exists.
      *
      */
     const MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const;
@@ -272,6 +266,20 @@ public:
                        const ServiceData &aServiceData,
                        bool               aServerStable,
                        uint8_t &          aServiceId) const;
+
+    /**
+     * This methods gets the preferred NAT64 prefix from network data.
+     *
+     * The returned prefix is the highest preference external route entry in Network Data with NAT64 flag set. If there
+     * are multiple such entries the first one is returned.
+     *
+     * @param[out] aConfig      A reference to an `ExternalRouteConfig` to return the prefix.
+     *
+     * @retval kErrorNone       Found the NAT64 prefix and updated @p aConfig.
+     * @retval kErrorNotFound   Could not find any NAT64 entry.
+     *
+     */
+    Error GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
 
 protected:
     uint8_t mStableVersion;

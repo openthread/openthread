@@ -139,7 +139,7 @@ public:
      * @param[in] aPointer   The pointer to compare with.
      *
      * @retval TRUE   If `Ptr` is equal to @p aPointer.
-     * @retval FLASE  If `Ptr` is not equal to @p aPointer.
+     * @retval FALSE  If `Ptr` is not equal to @p aPointer.
      *
      */
     bool operator==(const Type *aPointer) const { return (mPointer == aPointer); }
@@ -150,7 +150,7 @@ public:
      * @param[in] aPointer   The pointer to compare with.
      *
      * @retval TRUE   If `Ptr` is not equal to @p aPointer.
-     * @retval FLASE  If `Ptr` is equal to @p aPointer.
+     * @retval FALSE  If `Ptr` is equal to @p aPointer.
      *
      */
     bool operator!=(const Type *aPointer) const { return (mPointer != aPointer); }
@@ -161,7 +161,7 @@ public:
      * @param[in] aOther   The other `Ptr` to compare with.
      *
      * @retval TRUE   If `Ptr` is equal to @p aOther.
-     * @retval FLASE  If `Ptr` is not equal to @p aOther.
+     * @retval FALSE  If `Ptr` is not equal to @p aOther.
      *
      */
     bool operator==(const Ptr &aOther) const { return (mPointer == aOther.mPointer); }
@@ -172,7 +172,7 @@ public:
      * @param[in] aOther   The other `Ptr` to compare with.
      *
      * @retval TRUE   If `Ptr` is not equal to @p aOther.
-     * @retval FLASE  If `Ptr` is equal to @p aOther.
+     * @retval FALSE  If `Ptr` is equal to @p aOther.
      *
      */
     bool operator!=(const Ptr &aOther) const { return (mPointer != aOther.mPointer); }

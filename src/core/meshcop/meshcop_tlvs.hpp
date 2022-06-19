@@ -47,6 +47,8 @@
 #include "common/string.hpp"
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/extended_panid.hpp"
+#include "meshcop/network_name.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
@@ -139,7 +141,7 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    Tlv *GetNext(void) { return static_cast<Tlv *>(ot::Tlv::GetNext()); }
+    Tlv *GetNext(void) { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -147,7 +149,7 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    const Tlv *GetNext(void) const { return static_cast<const Tlv *>(ot::Tlv::GetNext()); }
+    const Tlv *GetNext(void) const { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -203,7 +205,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
@@ -218,7 +220,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static const Tlv *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType);
@@ -230,12 +232,12 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static TlvType *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength)
     {
-        return static_cast<TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
     }
 
     /**
@@ -245,12 +247,12 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static const TlvType *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength)
     {
-        return static_cast<const TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
     }
 
 } OT_TOOL_PACKED_END;
@@ -445,7 +447,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, Mac::ExtendedPanId>
+class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, ExtendedPanId>
 {
 public:
     /**
@@ -473,7 +475,7 @@ public:
      * @returns The Extended PAN ID value.
      *
      */
-    const Mac::ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
 
     /**
      * This method sets the Extended PAN ID value.
@@ -481,10 +483,10 @@ public:
      * @param[in]  aExtendedPanId  An Extended PAN ID value.
      *
      */
-    void SetExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
+    void SetExtendedPanId(const ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
 
 private:
-    Mac::ExtendedPanId mExtendedPanId;
+    ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -520,7 +522,7 @@ public:
      * @returns The Network Name value (as `NameData`).
      *
      */
-    Mac::NameData GetNetworkName(void) const;
+    NameData GetNetworkName(void) const;
 
     /**
      * This method sets the Network Name value.
@@ -528,10 +530,10 @@ public:
      * @param[in] aNameData   A Network Name value (as `NameData`).
      *
      */
-    void SetNetworkName(const Mac::NameData &aNameData);
+    void SetNetworkName(const NameData &aNameData);
 
 private:
-    char mNetworkName[Mac::NetworkName::kMaxSize];
+    char mNetworkName[NetworkName::kMaxSize];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -680,7 +682,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MeshLocalPrefixTlv : public Tlv, public SimpleTlvInfo<Tlv::kMeshLocalPrefix, Mle::MeshLocalPrefix>
+class MeshLocalPrefixTlv : public Tlv, public SimpleTlvInfo<Tlv::kMeshLocalPrefix, Ip6::NetworkPrefix>
 {
 public:
     /**
@@ -716,7 +718,7 @@ public:
      * @returns The Mesh Local Prefix value.
      *
      */
-    const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
+    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
 
     /**
      * This method sets the Mesh Local Prefix value.
@@ -724,10 +726,10 @@ public:
      * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix value.
      *
      */
-    void SetMeshLocalPrefix(const Mle::MeshLocalPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
+    void SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
 
 private:
-    Mle::MeshLocalPrefix mMeshLocalPrefix;
+    Ip6::NetworkPrefix mMeshLocalPrefix;
 } OT_TOOL_PACKED_END;
 
 class SteeringData;
@@ -827,7 +829,7 @@ public:
     /**
      * This method sets the Border Agent Locator value.
      *
-     * @param[in]  aBorderAgentLocator  The Border Agent Locator value.
+     * @param[in]  aLocator  The Border Agent Locator value.
      *
      */
     void SetBorderAgentLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
@@ -930,7 +932,7 @@ public:
     /**
      * This method sets the Commissioner Session ID value.
      *
-     * @param[in]  aCommissionerSessionId  The Commissioner Session ID value.
+     * @param[in]  aSessionId  The Commissioner Session ID value.
      *
      */
     void SetCommissionerSessionId(uint16_t aSessionId) { mSessionId = HostSwap16(aSessionId); }
@@ -1464,7 +1466,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
+     * @returns A pointer to first Channel Mask Entry or `nullptr` if not found.
      *
      */
     const ChannelMaskEntryBase *GetFirstEntry(void) const;
@@ -1472,7 +1474,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
+     * @returns A pointer to first Channel Mask Entry or `nullptr` if not found.
      *
      */
     ChannelMaskEntryBase *GetFirstEntry(void);
@@ -1500,7 +1502,7 @@ public:
     /**
      * This method sets the Channel Mask Entries.
      *
-     * @param[in]  aMask  The Channel Mask value.
+     * @param[in]  aChannelMask  The Channel Mask value.
      *
      */
     void SetChannelMask(uint32_t aChannelMask);

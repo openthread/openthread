@@ -26,9 +26,6 @@
 #
 
 _openthread_config_file = ""
-if (current_os == "fuchsia") {
-  _openthread_config_file = "<openthread-config-android.h>"
-}
 
 declare_args() {
   # OpenThread config header.
@@ -234,6 +231,9 @@ if (openthread_enable_core_config_args) {
     # Enable builtin mbedtls management
     openthread_config_enable_builtin_mbedtls_management =
         openthread_external_mbedtls == ""
+
+    # Enable radio coexistence
+    openthread_config_coexistence_enable = false
   }
 }
 

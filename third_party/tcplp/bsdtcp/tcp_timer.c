@@ -59,14 +59,15 @@ int V_tcp_pmtud_blackhole_activated_min_mss = 0;
 /*
  * samkumar: I changed these functions to accept "struct tcpcb* tp" their
  * argument instead of "void *xtp". This is possible since we're no longer
- * relying on FreeBSD's callout subsystem in TCPlp.
+ * relying on FreeBSD's callout subsystem in TCPlp. I also changed them to
+ * return 1 if the connection is dropped, or 0 otherwise.
  */
 
-void
+int
 tcp_timer_delack(struct tcpcb* tp)
 {
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_DELACK), ("Delack timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_DELACK), ("Delack timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_DELACK);
 
 	/*
@@ -80,16 +81,17 @@ tcp_timer_delack(struct tcpcb* tp)
 	 */
 	tp->t_flags |= TF_ACKNOW;
 	(void) tcp_output(tp);
+	return 0;
 }
 
-void
+int
 tcp_timer_keep(struct tcpcb* tp)
 {
 	uint32_t ticks = tcplp_sys_get_ticks();
 	struct tcptemp t_template;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_KEEP), ("Keep timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_KEEP), ("Keep timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_KEEP);
 
 	/*
@@ -158,20 +160,22 @@ tcp_timer_keep(struct tcpcb* tp)
 	 * that handled debug tracing/probes, vnet, and locking. I removed that
 	 * code.
 	 */
-	return;
+	return 0;
 
 dropit:
 	tp = tcp_drop(tp, ETIMEDOUT);
 	(void) tp; /* samkumar: prevent a compiler warning */
+	return 1;
 }
 
-void
+int
 tcp_timer_persist(struct tcpcb* tp)
 {
 	uint32_t ticks = tcplp_sys_get_ticks();
+	int dropped = 0;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_PERSIST), ("Persist timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_PERSIST), ("Persist timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_PERSIST); // mark that this timer is no longer active
 
 	/*
@@ -202,6 +206,7 @@ tcp_timer_persist(struct tcpcb* tp)
 	    (ticks - tp->t_rcvtime >= tcp_maxpersistidle ||
 	     ticks - tp->t_rcvtime >= TCP_REXMTVAL(tp) * tcp_totbackoff)) {
 		tp = tcp_drop(tp, ETIMEDOUT);
+		dropped = 1;
 		goto out;
 	}
 
@@ -212,12 +217,13 @@ tcp_timer_persist(struct tcpcb* tp)
 	if (tp->t_state > TCPS_CLOSE_WAIT &&
 	    (ticks - tp->t_rcvtime) >= TCPTV_PERSMAX) {
 		tp = tcp_drop(tp, ETIMEDOUT);
+		dropped = 1;
 		goto out;
 	}
 
 	tcp_setpersist(tp);
 	tp->t_flags |= TF_FORCEDATA;
-	tcplp_sys_log("Persist output: %zu bytes in sendbuf\n", lbuf_used_space(&tp->sendbuf));
+	tcplp_sys_log("Persist output: %zu bytes in sendbuf", lbuf_used_space(&tp->sendbuf));
 	(void) tcp_output(tp);
 	tp->t_flags &= ~TF_FORCEDATA;
 
@@ -227,16 +233,17 @@ out:
 	 * tracing/probes, vnet, and locking. I removed that code.
 	 */
 	(void) tp; /* samkumar: prevent a compiler warning */
-	return;
+	return dropped;
 }
 
-void
+int
 tcp_timer_2msl(struct tcpcb* tp)
 {
 	uint32_t ticks = tcplp_sys_get_ticks();
+	int dropped = 0;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_2MSL), ("2MSL timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_2MSL), ("2MSL timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_2MSL);
 
 	/*
@@ -281,7 +288,8 @@ tcp_timer_2msl(struct tcpcb* tp)
 	if (tp->t_state == TCP6S_TIME_WAIT) {
 		tp = tcp_close(tp);
 		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
-		return;
+		dropped = 1;
+		return dropped;
 	}
 	/*
 	 * samkumar: This if statement also used to check that an inpcb is still
@@ -297,6 +305,7 @@ tcp_timer_2msl(struct tcpcb* tp)
 	    tpiscantrcv(tp)) {
 		tp = tcp_close(tp);
 		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
+		dropped = 1;
 	} else {
 		if (ticks - tp->t_rcvtime <= TP_MAXIDLE(tp)) {
 			/*
@@ -308,22 +317,25 @@ tcp_timer_2msl(struct tcpcb* tp)
 		} else {
 			tp = tcp_close(tp);
 			tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
+			dropped = 1;
 		}
 	}
 	/*
 	 * samkumar: There used to be some code here that handled debug
 	 * tracing/probes, vnet, and locking. I removed that code.
 	 */
+	return dropped;
 }
 
-void
+int
 tcp_timer_rexmt(struct tcpcb *tp)
 {
 	int rexmt;
 	uint32_t ticks = tcplp_sys_get_ticks();
+	int dropped = 0;
 
 	/* samkumar: I added this, to replace the code I removed below. */
-	KASSERT(tpistimeractive(tp, TT_REXMT), ("Rexmt timer running, but unmarked\n"));
+	KASSERT(tpistimeractive(tp, TT_REXMT), ("Rexmt timer running, but unmarked"));
 	tpcleartimeractive(tp, TT_REXMT);
 
 	/*
@@ -342,12 +354,13 @@ tcp_timer_rexmt(struct tcpcb *tp)
 	 * been acked within retransmit interval.  Back off
 	 * to a longer retransmit interval and retransmit one segment.
 	 */
-	tcplp_sys_log("rxtshift is %d\n", (int) tp->t_rxtshift);
+	tcplp_sys_log("rxtshift is %d", (int) tp->t_rxtshift);
 	if (++tp->t_rxtshift > TCP_MAXRXTSHIFT) {
 		tp->t_rxtshift = TCP_MAXRXTSHIFT;
 
 		tp = tcp_drop(tp, tp->t_softerror ?
 			      tp->t_softerror : ETIMEDOUT);
+		dropped = 1;
 		goto out;
 	}
 	if (tp->t_state == TCPS_SYN_SENT) {
@@ -450,7 +463,7 @@ out:
 	 * tracing/probes, vnet, and locking. I removed that code.
 	 */
 	(void) tp; /* samkumar: Prevent a compiler warning */
-	return;
+	return dropped;
 }
 
 int
@@ -464,8 +477,7 @@ tcp_timer_activate(struct tcpcb *tp, uint32_t timer_type, uint32_t delta) {
 	if (delta) {
 		tpmarktimeractive(tp, timer_type);
 		if (tpistimeractive(tp, TT_REXMT) && tpistimeractive(tp, TT_PERSIST)) {
-			char* msg = "TCP CRITICAL FAILURE: Retransmit and Persist timers are simultaneously running!\n";
-			tcplp_sys_log("%s\n", msg);
+			tcplp_sys_panic("TCP CRITICAL FAILURE: Retransmit and Persist timers are simultaneously running!");
 		}
 		tcplp_sys_set_timer(tp, timer_type, (uint32_t) delta);
 	} else {

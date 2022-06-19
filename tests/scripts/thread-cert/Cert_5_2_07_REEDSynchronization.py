@@ -151,7 +151,7 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
 
         for i in range(2, 17):
             self.nodes[i].start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         for i in range(2, 17):
             self.assertEqual(self.nodes[i].get_state(), 'router')

@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_UPDATE_REQUEST, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV
 from pktverify.packet_verifier import PacketVerifier

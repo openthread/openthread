@@ -196,6 +196,13 @@ char ToUppercase(char aChar)
     return aChar;
 }
 
+const char *ToYesNo(bool aBool)
+{
+    static const char *const kYesNoStrings[] = {"no", "yes"};
+
+    return kYesNoStrings[aBool];
+}
+
 StringWriter::StringWriter(char *aBuffer, uint16_t aSize)
     : mBuffer(aBuffer)
     , mLength(0)

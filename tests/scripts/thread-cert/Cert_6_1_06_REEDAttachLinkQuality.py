@@ -99,7 +99,7 @@ class Cert_6_1_6_REEDAttachLinkQuality_Base(thread_cert.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[MTD].start()

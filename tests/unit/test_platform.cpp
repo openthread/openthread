@@ -330,7 +330,7 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...)
 {
 }
 
-OT_TOOL_WEAK void otPlatSettingsInit(otInstance *)
+OT_TOOL_WEAK void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t)
 {
 }
 
@@ -446,29 +446,21 @@ OT_TOOL_WEAK void otPlatOtnsStatus(const char *)
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-
-OT_TOOL_WEAK void otPlatTrelUdp6Init(otInstance *, const otIp6Address *, uint16_t)
+OT_TOOL_WEAK void otPlatTrelEnable(otInstance *, uint16_t *)
 {
 }
 
-OT_TOOL_WEAK void otPlatTrelUdp6UpdateAddress(otInstance *, const otIp6Address *)
+OT_TOOL_WEAK void otPlatTrelDisable(otInstance *)
 {
 }
 
-OT_TOOL_WEAK void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *, const otIp6Address *)
+OT_TOOL_WEAK void otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *)
 {
 }
 
-OT_TOOL_WEAK otError otPlatTrelUdp6SendTo(otInstance *, const uint8_t *, uint16_t, const otIp6Address *)
+OT_TOOL_WEAK void otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t)
 {
-    return OT_ERROR_ABORT;
 }
-
-OT_TOOL_WEAK otError otPlatTrelUdp6SetTestMode(otInstance *, bool)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -557,4 +549,33 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
 
     return OT_ERROR_NONE;
 }
+
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+
+OT_TOOL_WEAK void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+}
+
+OT_TOOL_WEAK void otPlatDsoConnect(otPlatDsoConnection *aConnection, const otSockAddr *aPeerSockAddr)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+}
+
+OT_TOOL_WEAK void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMessage);
+}
+
+OT_TOOL_WEAK void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMode aMode)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMode);
+}
+
+#endif // #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+
 } // extern "C"

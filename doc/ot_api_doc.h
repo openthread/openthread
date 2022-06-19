@@ -59,7 +59,16 @@
  * @defgroup api-ip6                  IPv6
  * @defgroup api-srp                  SRP
  * @defgroup api-ping-sender          Ping Sender
+ *
+ * @defgroup api-tcp-group            TCP
+ *
+ * @{
+ *
  * @defgroup api-tcp                  TCP
+ * @defgroup api-tcp-ext              TCP Abstractions
+ *
+ * @}
+ *
  * @defgroup api-udp-group            UDP
  *
  * @{
@@ -84,6 +93,7 @@
  * @defgroup api-message              Message
  *
  * @defgroup api-multi-radio          Multi Radio Link
+ * @defgroup api-trel                 TREL - Thread Stack
  *
  * @defgroup api-thread               Thread
  *
@@ -120,13 +130,12 @@
  * @}
  *
  * @defgroup api-cli                  Command Line Interface
- * @defgroup api-crypto               Crypto
- * @defgroup api-entropy              Entropy Source
- * @defgroup api-factory-diagnostics  Factory Diagnostics
+ * @defgroup api-crypto               Crypto - Thread Stack
+ * @defgroup api-factory-diagnostics  Factory Diagnostics - Thread Stack
  * @defgroup api-heap                 Heap
  * @defgroup api-history-tracker      History Tracker
  * @defgroup api-jam-detection        Jam Detection
- * @defgroup api-logging              Logging
+ * @defgroup api-logging              Logging - Thread Stack
  * @defgroup api-ncp                  Network Co-Processor
  * @defgroup api-network-time         Network Time Synchronization
  * @defgroup api-random-group         Random Number Generator
@@ -154,9 +163,10 @@
  * @{
  *
  * @defgroup plat-alarm               Alarm
+ * @defgroup plat-crypto              Crypto - Platform
  * @defgroup plat-entropy             Entropy
- * @defgroup plat-factory-diagnostics Factory Diagnostics
- * @defgroup plat-logging             Logging
+ * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
+ * @defgroup plat-logging             Logging - Platform
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
  * @defgroup plat-misc                Miscellaneous
@@ -166,7 +176,7 @@
  * @defgroup plat-spi-slave           SPI Slave
  * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
- * @defgroup plat-trel                TREL
+ * @defgroup plat-trel                TREL - Platform
  *
  * @}
  *

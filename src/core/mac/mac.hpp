@@ -40,6 +40,7 @@
 #include <openthread/platform/time.h>
 
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time.hpp"
@@ -227,7 +228,6 @@ public:
      * This method requests transmission of a data poll (MAC Data Request) frame.
      *
      * @retval kErrorNone          Data poll transmission request is scheduled successfully.
-     * @retval kErrorAlready       MAC is busy sending earlier poll transmission request.
      * @retval kErrorInvalidState  The MAC layer is not enabled.
      *
      */
@@ -323,68 +323,6 @@ public:
     void SetSupportedChannelMask(const ChannelMask &aMask);
 
     /**
-     * This method returns the IEEE 802.15.4 Network Name.
-     *
-     * @returns The IEEE 802.15.4 Network Name.
-     *
-     */
-    const NetworkName &GetNetworkName(void) const { return mNetworkName; }
-
-    /**
-     * This method sets the IEEE 802.15.4 Network Name.
-     *
-     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
-     *
-     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetNetworkName(const char *aNameString);
-
-    /**
-     * This method sets the IEEE 802.15.4 Network Name.
-     *
-     * @param[in]  aNameData     A name data (pointer to char buffer and length).
-     *
-     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetNetworkName(const NameData &aNameData);
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    /**
-     * This method returns the Thread Domain Name.
-     *
-     * @returns The Thread Domain Name.
-     *
-     */
-    const DomainName &GetDomainName(void) const { return mDomainName; }
-
-    /**
-     * This method sets the Thread Domain Name.
-     *
-     * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
-     *
-     * @retval kErrorNone          Successfully set the Thread Domain Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetDomainName(const char *aNameString);
-
-    /**
-     * This method sets the Thread Domain Name.
-     *
-     * @param[in]  aNameData     A name data (pointer to char buffer and length).
-     *
-     * @retval kErrorNone          Successfully set the Thread Domain Name.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error SetDomainName(const NameData &aNameData);
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
-    /**
      * This method returns the IEEE 802.15.4 PAN ID.
      *
      * @returns The IEEE 802.15.4 PAN ID.
@@ -399,22 +337,6 @@ public:
      *
      */
     void SetPanId(PanId aPanId);
-
-    /**
-     * This method returns the IEEE 802.15.4 Extended PAN Identifier.
-     *
-     * @returns The IEEE 802.15.4 Extended PAN Identifier.
-     *
-     */
-    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
-
-    /**
-     * This method sets the IEEE 802.15.4 Extended PAN Identifier.
-     *
-     * @param[in]  aExtendedPanId  The IEEE 802.15.4 Extended PAN Identifier.
-     *
-     */
-    void SetExtendedPanId(const ExtendedPanId &aExtendedPanId);
 
     /**
      * This method returns the maximum number of frame retries during direct transmission.
@@ -456,7 +378,7 @@ public:
     /**
      * This method is called to handle a received frame.
      *
-     * @param[in]  aFrame  A pointer to the received frame, or nullptr if the receive operation was aborted.
+     * @param[in]  aFrame  A pointer to the received frame, or `nullptr` if the receive operation was aborted.
      * @param[in]  aError  kErrorNone when successfully received a frame,
      *                     kErrorAbort when reception was aborted and a frame was not received.
      *
@@ -479,7 +401,7 @@ public:
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
      * @param[in] aFrame      The transmitted frame.
-     * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
+     * @param[in] aAckFrame   A pointer to the ACK frame, or `nullptr` if no ACK was received.
      * @param[in] aError      kErrorNone when the frame was transmitted successfully,
      *                        kErrorNoAck when the frame was transmitted but no ACK was received,
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -499,7 +421,7 @@ public:
      * This method is called to handle transmit events.
      *
      * @param[in]  aFrame      The frame that was transmitted.
-     * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
+     * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
      * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
      *                         kErrorNoAck when the frame was transmitted but no ACK was received,
      *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
@@ -512,13 +434,13 @@ public:
      * This method returns if an active scan is in progress.
      *
      */
-    bool IsActiveScanInProgress(void) const { return (mOperation == kOperationActiveScan) || (mPendingActiveScan); }
+    bool IsActiveScanInProgress(void) const { return IsActiveOrPending(kOperationActiveScan); }
 
     /**
      * This method returns if an energy scan is in progress.
      *
      */
-    bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
+    bool IsEnergyScanInProgress(void) const { return IsActiveOrPending(kOperationEnergyScan); }
 
 #if OPENTHREAD_FTD
     /**
@@ -544,7 +466,7 @@ public:
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
-     * or nullptr to disable the callback.
+     *                               or `nullptr` to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
@@ -826,6 +748,10 @@ private:
 #endif
 
     void     UpdateIdleMode(void);
+    bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
+    bool     IsActiveOrPending(Operation aOperation) const;
+    void     SetPending(Operation aOperation) { mPendingOperations |= (1U << aOperation); }
+    void     ClearPending(Operation aOperation) { mPendingOperations &= ~(1U << aOperation); }
     void     StartOperation(Operation aOperation);
     void     FinishOperation(void);
     void     PerformNextOperation(void);
@@ -847,11 +773,10 @@ private:
     Error ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
-    Error SignalNetworkNameChange(Error aError);
 
     void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
-    void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
+    void LogBeacon(const char *aActionText) const;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     uint8_t GetTimeIeOffset(const Frame &aFrame);
@@ -865,24 +790,9 @@ private:
 #endif
     static const char *OperationToString(Operation aOperation);
 
-    static const otExtAddress    sMode2ExtAddress;
-    static const otExtendedPanId sExtendedPanidInit;
-    static const char            sNetworkNameInit[];
-    static const char            sDomainNameInit[];
+    static const otExtAddress sMode2ExtAddress;
 
     bool mEnabled : 1;
-    bool mPendingActiveScan : 1;
-    bool mPendingEnergyScan : 1;
-    bool mPendingTransmitBeacon : 1;
-    bool mPendingTransmitDataDirect : 1;
-#if OPENTHREAD_FTD
-    bool mPendingTransmitDataIndirect : 1;
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    bool mPendingTransmitDataCsl : 1;
-#endif
-#endif
-    bool mPendingTransmitPoll : 1;
-    bool mPendingWaitingForData : 1;
     bool mShouldTxPollBeforeData : 1;
     bool mRxOnWhenIdle : 1;
     bool mPromiscuous : 1;
@@ -892,20 +802,15 @@ private:
     bool mShouldDelaySleep : 1;
     bool mDelayingSleep : 1;
 #endif
-
-    Operation     mOperation;
-    uint8_t       mBeaconSequence;
-    uint8_t       mDataSequence;
-    uint8_t       mBroadcastTransmitCount;
-    PanId         mPanId;
-    uint8_t       mPanChannel;
-    uint8_t       mRadioChannel;
-    ChannelMask   mSupportedChannelMask;
-    ExtendedPanId mExtendedPanId;
-    NetworkName   mNetworkName;
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    DomainName mDomainName;
-#endif
+    Operation   mOperation;
+    uint16_t    mPendingOperations;
+    uint8_t     mBeaconSequence;
+    uint8_t     mDataSequence;
+    uint8_t     mBroadcastTransmitCount;
+    PanId       mPanId;
+    uint8_t     mPanChannel;
+    uint8_t     mRadioChannel;
+    ChannelMask mSupportedChannelMask;
     uint8_t     mScanChannel;
     uint16_t    mScanDuration;
     ChannelMask mScanChannelMask;
@@ -944,7 +849,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#endif
 
     KeyMaterial mMode2KeyMaterial;
 };

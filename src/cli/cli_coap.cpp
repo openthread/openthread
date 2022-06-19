@@ -44,8 +44,6 @@
 namespace ot {
 namespace Cli {
 
-constexpr Coap::Command Coap::sCommands[];
-
 Coap::Coap(Output &aOutput)
     : OutputWrapper(aOutput)
     , mUseDefaultRequestTxParameters(true)
@@ -144,7 +142,7 @@ void Coap::PrintPayload(otMessage *aMessage)
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-otError Coap::ProcessCancel(Arg aArgs[])
+template <> otError Coap::Process<Cmd("cancel")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -152,19 +150,7 @@ otError Coap::ProcessCancel(Arg aArgs[])
 }
 #endif
 
-otError Coap::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError Coap::ProcessResource(Arg aArgs[])
+template <> otError Coap::Process<Cmd("resource")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -203,7 +189,7 @@ exit:
     return error;
 }
 
-otError Coap::ProcessSet(Arg aArgs[])
+template <> otError Coap::Process<Cmd("set")>(Arg aArgs[])
 {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otMessage *   notificationMessage = nullptr;
@@ -264,14 +250,14 @@ exit:
     return error;
 }
 
-otError Coap::ProcessStart(Arg aArgs[])
+template <> otError Coap::Process<Cmd("start")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
     return otCoapStart(GetInstancePtr(), OT_DEFAULT_COAP_PORT);
 }
 
-otError Coap::ProcessStop(Arg aArgs[])
+template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -284,7 +270,7 @@ otError Coap::ProcessStop(Arg aArgs[])
     return otCoapStop(GetInstancePtr());
 }
 
-otError Coap::ProcessParameters(Arg aArgs[])
+template <> otError Coap::Process<Cmd("parameters")>(Arg aArgs[])
 {
     otError             error = OT_ERROR_NONE;
     bool *              defaultTxParameters;
@@ -342,28 +328,28 @@ exit:
     return error;
 }
 
-otError Coap::ProcessGet(Arg aArgs[])
+template <> otError Coap::Process<Cmd("get")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_GET);
 }
 
-otError Coap::ProcessPost(Arg aArgs[])
+template <> otError Coap::Process<Cmd("post")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_POST);
 }
 
-otError Coap::ProcessPut(Arg aArgs[])
+template <> otError Coap::Process<Cmd("put")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_PUT);
 }
 
-otError Coap::ProcessDelete(Arg aArgs[])
+template <> otError Coap::Process<Cmd("delete")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_DELETE);
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-otError Coap::ProcessObserve(Arg aArgs[])
+template <> otError Coap::Process<Cmd("observe")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_GET, /* aCoapObserve */ true);
 }
@@ -577,17 +563,44 @@ exit:
 
 otError Coap::Process(Arg aArgs[])
 {
-    otError        error = OT_ERROR_INVALID_ARGS;
-    const Command *command;
-
-    if (aArgs[0].IsEmpty())
-    {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
+#define CmdEntry(aCommandString)                            \
+    {                                                       \
+        aCommandString, &Coap::Process<Cmd(aCommandString)> \
     }
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
-    VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
+    static constexpr Command kCommands[] = {
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        CmdEntry("cancel"),
+#endif
+        CmdEntry("delete"),
+        CmdEntry("get"),
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+        CmdEntry("observe"),
+#endif
+        CmdEntry("parameters"),
+        CmdEntry("post"),
+        CmdEntry("put"),
+        CmdEntry("resource"),
+        CmdEntry("set"),
+        CmdEntry("start"),
+        CmdEntry("stop"),
+    };
+
+#undef CmdEntry
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
+
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
+    {
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? OT_ERROR_INVALID_ARGS : OT_ERROR_NONE);
+    }
+
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
+    VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);
 

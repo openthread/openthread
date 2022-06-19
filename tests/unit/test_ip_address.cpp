@@ -28,14 +28,10 @@
 
 #include <limits.h>
 
-#include "common/encoding.hpp"
 #include "net/ip4_address.hpp"
 #include "net/ip6_address.hpp"
-#include "net/ip6_headers.hpp"
 
 #include "test_util.h"
-
-using ot::Encoding::BigEndian::ReadUint16;
 
 template <typename AddressType> struct TestVector
 {
@@ -278,6 +274,17 @@ void TestIp6AddressSetPrefix(void)
     }
 }
 
+ot::Ip6::Prefix PrefixFrom(const char *aAddressString, uint8_t aPrefixLength)
+{
+    ot::Ip6::Prefix  prefix;
+    ot::Ip6::Address address;
+
+    SuccessOrQuit(address.FromString(aAddressString));
+    prefix.Set(address.GetBytes(), aPrefixLength);
+
+    return prefix;
+}
+
 void TestIp6Prefix(void)
 {
     const uint8_t kPrefixes[][OT_IP6_ADDRESS_SIZE] = {
@@ -355,6 +362,38 @@ void TestIp6Prefix(void)
             }
         }
     }
+
+    {
+        struct TestCase
+        {
+            ot::Ip6::Prefix mPrefixA;
+            ot::Ip6::Prefix mPrefixB;
+        };
+
+        TestCase kTestCases[] = {
+            {PrefixFrom("fd00::", 16), PrefixFrom("fd01::", 16)},
+            {PrefixFrom("fc00::", 16), PrefixFrom("fd00::", 16)},
+            {PrefixFrom("fd00::", 15), PrefixFrom("fd00::", 16)},
+            {PrefixFrom("fd00::", 16), PrefixFrom("fd00:0::", 32)},
+            {PrefixFrom("2001:0:0:0::", 64), PrefixFrom("fd00::", 8)},
+            {PrefixFrom("2001:dba::", 32), PrefixFrom("fd12:3456:1234:abcd::", 64)},
+            {PrefixFrom("910b:1000:0::", 48), PrefixFrom("910b:2000::", 32)},
+            {PrefixFrom("::", 0), PrefixFrom("fd00::", 8)},
+            {PrefixFrom("::", 0), PrefixFrom("::", 16)},
+            {PrefixFrom("fd00:2:2::", 33), PrefixFrom("fd00:2:2::", 35)},
+            {PrefixFrom("1:2:3:ffff::", 62), PrefixFrom("1:2:3:ffff::", 63)},
+        };
+
+        printf("\nCompare Prefixes:\n");
+
+        for (const TestCase &testCase : kTestCases)
+        {
+            printf(" %26s  <  %s\n", testCase.mPrefixA.ToString().AsCString(),
+                   testCase.mPrefixB.ToString().AsCString());
+            VerifyOrQuit(testCase.mPrefixA < testCase.mPrefixB);
+            VerifyOrQuit(!(testCase.mPrefixB < testCase.mPrefixA));
+        }
+    }
 }
 
 void TestIp4Ip6Translation(void)
@@ -407,61 +446,6 @@ void TestIp4Ip6Translation(void)
     }
 }
 
-void TestIp6Header(void)
-{
-    ot::Ip6::Header  header;
-    ot::Ip6::Address source;
-    ot::Ip6::Address destination;
-    const uint8_t *  headerBytes = reinterpret_cast<const uint8_t *>(&header);
-
-    enum : uint16_t
-    {
-        kPayloadLength = 650,
-    };
-
-    enum : uint8_t
-    {
-        kHopLimit = 0xd1,
-    };
-
-    memset(&header, 0, sizeof(header));
-
-    SuccessOrQuit(source.FromString("0102:0304:0506:0708:090a:0b0c:0d0e:0f12"), "Address::FromString() failed");
-    SuccessOrQuit(destination.FromString("1122:3344:5566::7788:99aa:bbcc:ddee:ff23"), "Address::FromString() failed");
-
-    header.Init();
-    VerifyOrQuit(header.IsVersion6(), "Header::Init() failed");
-
-    header.SetDscp(ot::Ip6::kDscpCs7);
-    header.SetPayloadLength(kPayloadLength);
-    header.SetNextHeader(ot::Ip6::kProtoUdp);
-    header.SetHopLimit(kHopLimit);
-    header.SetSource(source);
-    header.SetDestination(destination);
-
-    VerifyOrQuit(header.IsValid());
-    VerifyOrQuit(header.IsVersion6());
-
-    VerifyOrQuit(header.GetDscp() == ot::Ip6::kDscpCs7);
-    VerifyOrQuit(header.GetPayloadLength() == kPayloadLength);
-    VerifyOrQuit(header.GetNextHeader() == ot::Ip6::kProtoUdp);
-    VerifyOrQuit(header.GetHopLimit() == kHopLimit);
-    VerifyOrQuit(header.GetSource() == source);
-    VerifyOrQuit(header.GetDestination() == destination);
-
-    // Verify the offsets to different fields.
-
-    VerifyOrQuit(ReadUint16(headerBytes + ot::Ip6::Header::kPayloadLengthFieldOffset) == kPayloadLength,
-                 "kPayloadLengthFieldOffset is incorrect");
-    VerifyOrQuit(headerBytes[ot::Ip6::Header::kNextHeaderFieldOffset] == ot::Ip6::kProtoUdp,
-                 "kNextHeaderFieldOffset is incorrect");
-    VerifyOrQuit(headerBytes[ot::Ip6::Header::kHopLimitFieldOffset] == kHopLimit, "kHopLimitFieldOffset is incorrect");
-    VerifyOrQuit(memcmp(&headerBytes[ot::Ip6::Header::kSourceFieldOffset], &source, sizeof(source)) == 0,
-                 "kSourceFieldOffset is incorrect");
-    VerifyOrQuit(memcmp(&headerBytes[ot::Ip6::Header::kDestinationFieldOffset], &destination, sizeof(destination)) == 0,
-                 "kSourceFieldOffset is incorrect");
-}
-
 int main(void)
 {
     TestIp6AddressSetPrefix();
@@ -469,7 +453,6 @@ int main(void)
     TestIp6AddressFromString();
     TestIp6Prefix();
     TestIp4Ip6Translation();
-    TestIp6Header();
     printf("All tests passed\n");
     return 0;
 }

@@ -176,6 +176,7 @@ otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6A
                                                                                     TimerMilli::GetNow() + aTimeout);
 }
 #endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

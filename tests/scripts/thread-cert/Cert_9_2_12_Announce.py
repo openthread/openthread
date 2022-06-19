@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_PARENT_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_ANNOUNCE, CHANNEL_TLV, PAN_ID_TLV, ACTIVE_TIMESTAMP_TLV, LINK_LOCAL_ALL_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
@@ -99,7 +100,7 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
         self.simulator.go(3)
 
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[LEADER2].start()

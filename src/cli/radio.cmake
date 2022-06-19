@@ -46,10 +46,14 @@ target_sources(openthread-cli-radio
         cli_output.cpp
 )
 
+if(NOT DEFINED OT_MBEDTLS_RCP)
+    set(OT_MBEDTLS_RCP ${OT_MBEDTLS})
+endif()
+
 target_link_libraries(openthread-cli-radio
     PUBLIC
         openthread-radio
     PRIVATE
-        ${OT_MBEDTLS}
+        ${OT_MBEDTLS_RCP}
         ot-config
 )

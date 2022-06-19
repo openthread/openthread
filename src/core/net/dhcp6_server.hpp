@@ -167,7 +167,7 @@ private:
          * @param[in]  aContextId        The 6LoWPAN Context ID.
          *
          */
-        void Set(const Ip6::Prefix &aPrefix, const Mle::MeshLocalPrefix &aMeshLocalPrefix, uint8_t aContextId)
+        void Set(const Ip6::Prefix &aPrefix, const Ip6::NetworkPrefix &aMeshLocalPrefix, uint8_t aContextId)
         {
             mPrefix = aPrefix;
 

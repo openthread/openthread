@@ -39,7 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/settings.hpp"
 #include "crypto/storage.hpp"
 #include "meshcop/dataset.hpp"
@@ -48,6 +48,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("DatasetLocal");
 
 DatasetLocal::DatasetLocal(Instance &aInstance, Dataset::Type aType)
     : InstanceLocator(aInstance)
@@ -64,7 +66,7 @@ void DatasetLocal::Clear(void)
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DestroySecurelyStoredKeys();
 #endif
-    IgnoreError(Get<Settings>().DeleteOperationalDataset(IsActive()));
+    IgnoreError(Get<Settings>().DeleteOperationalDataset(mType));
     mTimestamp.Clear();
     mTimestampPresent = false;
     mSaved            = false;
@@ -92,7 +94,7 @@ Error DatasetLocal::Read(Dataset &aDataset) const
     uint32_t       elapsed;
     Error          error;
 
-    error = Get<Settings>().ReadOperationalDataset(IsActive(), aDataset);
+    error = Get<Settings>().ReadOperationalDataset(mType, aDataset);
     VerifyOrExit(error == kErrorNone, aDataset.mLength = 0);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -187,9 +189,9 @@ Error DatasetLocal::Save(const Dataset &aDataset)
     if (aDataset.GetSize() == 0)
     {
         // do not propagate error back
-        IgnoreError(Get<Settings>().DeleteOperationalDataset(IsActive()));
+        IgnoreError(Get<Settings>().DeleteOperationalDataset(mType));
         mSaved = false;
-        otLogInfoMeshCoP("%s dataset deleted", Dataset::TypeToString(mType));
+        LogInfo("%s dataset deleted", Dataset::TypeToString(mType));
     }
     else
     {
@@ -199,13 +201,13 @@ Error DatasetLocal::Save(const Dataset &aDataset)
 
         dataset.Set(GetType(), aDataset);
         MoveKeysToSecureStorage(dataset);
-        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), dataset));
+        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(mType, dataset));
 #else
-        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(IsActive(), aDataset));
+        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(mType, aDataset));
 #endif
 
         mSaved = true;
-        otLogInfoMeshCoP("%s dataset set", Dataset::TypeToString(mType));
+        LogInfo("%s dataset set", Dataset::TypeToString(mType));
     }
 
     mTimestampPresent = (aDataset.GetTimestamp(mType, mTimestamp) == kErrorNone);
@@ -268,16 +270,27 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
     KeyRef         pskcRef       = IsActive() ? kActiveDatasetPskcRef : kPendingDatasetPskcRef;
     NetworkKeyTlv *networkKeyTlv = aDataset.GetTlv<NetworkKeyTlv>();
     PskcTlv *      pskcTlv       = aDataset.GetTlv<PskcTlv>();
+    bool           moveKeys      = false;
     size_t         keyLen;
+    Error          error;
 
     if (networkKeyTlv != nullptr)
     {
         // If the dataset contains a network key, its real value must have been moved to
         // the secure storage upon saving the dataset, so restore it back now.
         NetworkKey networkKey;
-        SuccessOrAssert(ExportKey(networkKeyRef, networkKey.m8, NetworkKey::kSize, keyLen));
-        OT_ASSERT(keyLen == NetworkKey::kSize);
-        networkKeyTlv->SetNetworkKey(networkKey);
+        error = ExportKey(networkKeyRef, networkKey.m8, NetworkKey::kSize, keyLen);
+
+        if (error != kErrorNone)
+        {
+            // If ExportKey fails, key is not in secure storage and is stored in settings
+            moveKeys = true;
+        }
+        else
+        {
+            OT_ASSERT(keyLen == NetworkKey::kSize);
+            networkKeyTlv->SetNetworkKey(networkKey);
+        }
     }
 
     if (pskcTlv != nullptr)
@@ -285,9 +298,29 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
         // If the dataset contains a PSKC, its real value must have been moved to
         // the secure storage upon saving the dataset, so restore it back now.
         Pskc pskc;
-        SuccessOrAssert(ExportKey(pskcRef, pskc.m8, Pskc::kSize, keyLen));
-        OT_ASSERT(keyLen == Pskc::kSize);
-        pskcTlv->SetPskc(pskc);
+        error = ExportKey(pskcRef, pskc.m8, Pskc::kSize, keyLen);
+
+        if (error != kErrorNone)
+        {
+            // If ExportKey fails, key is not in secure storage and is stored in settings
+            moveKeys = true;
+        }
+        else
+        {
+            OT_ASSERT(keyLen == Pskc::kSize);
+            pskcTlv->SetPskc(pskc);
+        }
+    }
+
+    if (moveKeys)
+    {
+        // Clear the networkkey and Pskc stored in the settings and move them to secure storage.
+        // Store the network key and PSKC in the secure storage instead of settings.
+        Dataset dataset;
+
+        dataset.Set(GetType(), aDataset);
+        MoveKeysToSecureStorage(dataset);
+        SuccessOrAssert(error = Get<Settings>().SaveOperationalDataset(mType, dataset));
     }
 }
 #endif

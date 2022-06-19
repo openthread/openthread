@@ -15,6 +15,8 @@ Usage : `history [command] ...`
 - [ipmaddr](#ipmaddr)
 - [neighbor](#neighbor)
 - [netinfo](#netinfo)
+- [prefix](#prefix)
+- [route](#route)
 - [rx](#rx)
 - [rxtx](#rxtx)
 - [tx](#tx)
@@ -52,6 +54,8 @@ ipaddr
 ipmaddr
 neighbor
 netinfo
+prefix
+route
 rx
 rxtx
 tx
@@ -67,7 +71,7 @@ Print the unicast IPv6 address history. Each entry provides:
 
 - Event: Added or Removed.
 - Address: Unicast address along with its prefix length (in bits).
-- Origin: Thread, SLAAC, DHCPv6, or Manual.
+- Origin: thread, slaac, dhcp6, or manual.
 - Address Scope.
 - Flags: Preferred, Valid, and RLOC (whether the address is RLOC).
 
@@ -77,15 +81,15 @@ Print the unicast IPv6 address history as table.
 > history ipaddr
 | Age                  | Event   | Address / PrefixLength                      | Origin |Scope| P | V | R |
 +----------------------+---------+---------------------------------------------+--------+-----+---+---+---+
-|         00:00:04.991 | Removed | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | SLAAC  |  14 | Y | Y | N |
-|         00:00:44.647 | Added   | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | SLAAC  |  14 | Y | Y | N |
-|         00:01:07.199 | Added   | fd00:0:0:0:0:0:0:1/64                       | Manual |  14 | Y | Y | N |
-|         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:fc00/64          | Thread |   3 | N | Y | N |
-|         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | Thread |   3 | N | Y | Y |
-|         00:02:20.107 | Removed | fdde:ad00:beef:0:0:ff:fe00:5400/64          | Thread |   3 | N | Y | Y |
-|         00:02:21.575 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | Thread |   3 | N | Y | Y |
-|         00:02:21.575 | Added   | fdde:ad00:beef:0:ecea:c4fc:ad96:4655/64     | Thread |   3 | N | Y | N |
-|         00:02:23.904 | Added   | fe80:0:0:0:3c12:a4d2:fbe0:31ad/64           | Thread |   2 | Y | Y | N |
+|         00:00:04.991 | Removed | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
+|         00:00:44.647 | Added   | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
+|         00:01:07.199 | Added   | fd00:0:0:0:0:0:0:1/64                       | manual |  14 | Y | Y | N |
+|         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:fc00/64          | thread |   3 | N | Y | N |
+|         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+|         00:02:20.107 | Removed | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+|         00:02:21.575 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+|         00:02:21.575 | Added   | fdde:ad00:beef:0:ecea:c4fc:ad96:4655/64     | thread |   3 | N | Y | N |
+|         00:02:23.904 | Added   | fe80:0:0:0:3c12:a4d2:fbe0:31ad/64           | thread |   2 | Y | Y | N |
 Done
 ```
 
@@ -93,11 +97,11 @@ Print the unicast IPv6 address history as a list (the last 5 entries).
 
 ```bash
 > history ipaddr list 5
-00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:SLAAC scope:14 preferred:yes valid:yes rloc:no
-00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:SLAAC scope:14 preferred:yes valid:yes rloc:no
-00:01:22.535 -> event:Added address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:Manual scope:14 preferred:yes valid:yes rloc:no
-00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:Thread scope:3 preferred:no valid:yes rloc:no
-00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:Thread scope:3 preferred:no valid:yes rloc:yes
+00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
+00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
+00:01:22.535 -> event:Added address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:manual scope:14 preferred:yes valid:yes rloc:no
+00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:no
+00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:yes
 Done
 ```
 
@@ -240,6 +244,96 @@ Print only the latest 2 entries.
 +----------------------+----------+------+--------+--------------+
 |         00:02:05.451 | router   | rdn  | 0x6000 |    151029327 |
 |         00:04:04.719 | child    | rdn  | 0x2001 |    151029327 |
+Done
+```
+
+### prefix
+
+Usage `history prefix [list] [<num-entries>]`
+
+Print the Network Data on mesh prefix history. Each item provides:
+
+- Event (`Added` or `Removed`)
+- Prefix
+- Flags
+- Preference (`high`, `med`, `low`)
+- RLOC16
+
+The flags are as follows:
+
+- `p`: Preferred flag
+- `a`: Stateless IPv6 Address Autoconfiguration flag
+- `d`: DHCPv6 IPv6 Address Configuration flag
+- `c`: DHCPv6 Other Configuration flag
+- `r`: Default Route flag
+- `o`: On Mesh flag
+- `s`: Stable flag
+- `n`: Nd Dns flag
+- `D`: Domain Prefix flag
+
+Print the history as a table.
+
+```bash
+> history prefix
+| Age                  | Event   | Prefix                                      | Flags     | Pref | RLOC16 |
++----------------------+---------+---------------------------------------------+-----------+------+--------+
+|         00:00:10.663 | Added   | fd00:1111:2222:3333::/64                    | paro      | med  | 0x5400 |
+|         00:01:02.054 | Removed | fd00:dead:beef:1::/64                       | paros     | high | 0x5400 |
+|         00:01:21.136 | Added   | fd00:abba:cddd:0::/64                       | paos      | med  | 0x5400 |
+|         00:01:45.144 | Added   | fd00:dead:beef:1::/64                       | paros     | high | 0x3c00 |
+|         00:01:50.944 | Added   | fd00:dead:beef:1::/64                       | paros     | high | 0x5400 |
+|         00:01:59.887 | Added   | fd00:dead:beef:1::/64                       | paros     | med  | 0x8800 |
+Done
+```
+
+Print the history as a list.
+
+```bash
+> history prefix list
+00:04:12.487 -> event:Added prefix:fd00:1111:2222:3333::/64 flags:paro pref:med rloc16:0x5400
+00:05:03.878 -> event:Removed prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x5400
+00:05:22.960 -> event:Added prefix:fd00:abba:cddd:0::/64 flags:paos pref:med rloc16:0x5400
+00:05:46.968 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x3c00
+00:05:52.768 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x5400
+00:06:01.711 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:med rloc16:0x8800
+```
+
+### prefix
+
+Usage `history route [list] [<num-entries>]`
+
+Print the Network Data external route history. Each item provides:
+
+- Event (`Added` or `Removed`)
+- Route
+- Flags
+- Preference (`high`, `med`, `low`)
+- RLOC16
+
+The flags are as follows:
+
+- `s`: Stable flag
+- `n`: NAT64 flag
+
+Print the history as a table.
+
+```bash
+history route
+| Age                  | Event   | Route                                       | Flags     | Pref | RLOC16 |
++----------------------+---------+---------------------------------------------+-----------+------+--------+
+|         00:00:05.456 | Removed | fd00:1111:0::/48                            | s         | med  | 0x3c00 |
+|         00:00:29.310 | Added   | fd00:1111:0::/48                            | s         | med  | 0x3c00 |
+|         00:00:42.822 | Added   | fd00:1111:0::/48                            | s         | med  | 0x5400 |
+|         00:01:27.688 | Added   | fd00:aaaa:bbbb:cccc::/64                    | s         | med  | 0x8800 |
+Done
+```
+
+Print the history as a list (last two entries).
+
+```bash
+> history route list 2
+00:00:48.704 -> event:Removed route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
+00:01:12.558 -> event:Added route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
 Done
 ```
 

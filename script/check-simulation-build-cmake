@@ -53,25 +53,26 @@ build_all_features()
         -DOT_FTD=OFF \
         -DOT_MTD=OFF
 
-    # Thread 1.2 options
+    # Thread 1.3 options
     local options=(
+        "-DOT_BACKBONE_ROUTER=ON"
+        "-DOT_BORDER_ROUTING=ON"
+        "-DOT_CSL_RECEIVER=ON"
+        "-DOT_MLR=ON"
         "-DOT_OTNS=ON"
         "-DOT_SIMULATION_VIRTUAL_TIME=ON"
-        "-DOT_THREAD_VERSION=1.2"
-        "-DOT_MLR=ON"
-        "-DOT_BACKBONE_ROUTER=ON"
-        "-DOT_CSL_RECEIVER=ON"
+        "-DOT_THREAD_VERSION=1.3"
     )
 
-    # Build Thread 1.2 with full features
+    # Build Thread 1.3 with full features
     reset_source
     "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON
 
-    # Build Thread 1.2 Backbone Router without DUA ND Proxying
+    # Build Thread 1.3 Backbone Router without DUA ND Proxying
     reset_source
     "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF
 
-    # Build Thread 1.2 Backbone Router without Multicast Routing
+    # Build Thread 1.3 Backbone Router without Multicast Routing
     reset_source
     "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF
 
@@ -81,13 +82,17 @@ build_all_features()
         -DOT_THREAD_VERSION=1.1 \
         -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp
 
-    # Build Thread 1.2 with no additional features
+    # Build Thread 1.3 with no additional features
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.2
+    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.3
 
-    # Build Thread 1.2 with full features and OT_ASSERT=OFF
+    # Build Thread 1.3 with full features and OT_ASSERT=OFF
     reset_source
     "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_ASSERT=OFF
+
+    # Build with RAM settings
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_SETTINGS_RAM=ON
 }
 
 build_toranj()

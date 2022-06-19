@@ -34,6 +34,7 @@ BIG_ENDIAN                ?= 0
 BORDER_AGENT              ?= 0
 BORDER_ROUTER             ?= 0
 BORDER_ROUTING            ?= 0
+BORDER_ROUTING_NAT64	  ?= 0
 COAP                      ?= 0
 COAP_BLOCK                ?= 0
 COAP_OBSERVE              ?= 0
@@ -51,6 +52,7 @@ DIAGNOSTIC                ?= 0
 DISABLE_DOC               ?= 0
 DISABLE_TOOLS             ?= 0
 DNS_CLIENT                ?= 0
+DNS_DSO                   ?= 0
 DNSSD_SERVER              ?= 0
 DUA                       ?= 0
 DYNAMIC_LOG_LEVEL         ?= 0
@@ -84,7 +86,7 @@ SLAAC                     ?= 1
 SNTP_CLIENT               ?= 0
 SRP_CLIENT                ?= 0
 SRP_SERVER                ?= 0
-THREAD_VERSION            ?= 1.2
+THREAD_VERSION            ?= 1.3
 TIME_SYNC                 ?= 0
 TREL                      ?= 0
 UDP_FORWARD               ?= 0
@@ -113,6 +115,10 @@ endif
 
 ifeq ($(BORDER_ROUTING),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1
+endif
+
+ifeq ($(BORDER_ROUTING_NAT64),1)
+COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1
 endif
 
 ifeq ($(COAP),1)
@@ -195,6 +201,10 @@ endif
 
 ifeq ($(DNS_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1
+endif
+
+ifeq ($(DNS_DSO),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_DSO_ENABLE=1
 endif
 
 ifeq ($(DNSSD_SERVER),1)
@@ -323,6 +333,8 @@ ifeq ($(THREAD_VERSION),1.1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=2
 else ifeq ($(THREAD_VERSION),1.2)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=3
+else ifeq ($(THREAD_VERSION),1.3)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=4
 endif
 
 ifeq ($(TIME_SYNC),1)
@@ -378,5 +390,5 @@ endif
 COMMONCFLAGS += -DOPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT=${RCP_RESTORATION_MAX_COUNT}
 
 ifeq ($(FULL_LOGS),1)
-COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG -DOPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1 -DOPENTHREAD_CONFIG_LOG_PREPEND_REGION=1
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG -DOPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1
 endif

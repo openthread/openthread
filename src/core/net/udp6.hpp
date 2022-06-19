@@ -97,7 +97,7 @@ public:
          * @returns A reference to the local socket address.
          *
          */
-        SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
+        SockAddr &GetSockName(void) { return AsCoreType(&mSockName); }
 
         /**
          * This method returns the local socket address.
@@ -105,7 +105,7 @@ public:
          * @returns A reference to the local socket address.
          *
          */
-        const SockAddr &GetSockName(void) const { return *static_cast<const SockAddr *>(&mSockName); }
+        const SockAddr &GetSockName(void) const { return AsCoreType(&mSockName); }
 
         /**
          * This method returns the peer's socket address.
@@ -113,7 +113,7 @@ public:
          * @returns A reference to the peer's socket address.
          *
          */
-        SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
+        SockAddr &GetPeerName(void) { return AsCoreType(&mPeerName); }
 
         /**
          * This method returns the peer's socket address.
@@ -121,7 +121,7 @@ public:
          * @returns A reference to the peer's socket address.
          *
          */
-        const SockAddr &GetPeerName(void) const { return *static_cast<const SockAddr *>(&mPeerName); }
+        const SockAddr &GetPeerName(void) const { return AsCoreType(&mPeerName); }
 
     private:
         bool Matches(const MessageInfo &aMessageInfo) const;
@@ -155,7 +155,7 @@ public:
          * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
          * @param[in]  aSettings  The message settings (default is used if not provided).
          *
-         * @returns A pointer to the message or nullptr if no buffers are available.
+         * @returns A pointer to the message or `nullptr` if no buffers are available.
          *
          */
         Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
@@ -306,8 +306,8 @@ public:
         /**
          * This constructor initializes the UDP receiver.
          *
-         * @param[in]   aUdpHandler     A pointer to the function to handle UDP message.
-         * @param[in]   aContext        A pointer to arbitrary context information.
+         * @param[in]   aHandler     A pointer to the function to handle UDP message.
+         * @param[in]   aContext     A pointer to arbitrary context information.
          *
          */
         Receiver(otUdpHandler aHandler, void *aContext)
@@ -329,7 +329,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Header
+    class Header : public Clearable<Header>
     {
     public:
         static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.
@@ -527,7 +527,7 @@ public:
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      * @param[in]  aSettings  The message settings.
      *
-     * @returns A pointer to the message or nullptr if no buffers are available.
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
      *
      */
     Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());

@@ -70,10 +70,8 @@ namespace FactoryDiags {
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 
 const struct Diags::Command Diags::sCommands[] = {
-    {"channel", &Diags::ProcessChannel},
-    {"power", &Diags::ProcessPower},
-    {"start", &Diags::ProcessStart},
-    {"stop", &Diags::ProcessStop},
+    {"channel", &Diags::ProcessChannel}, {"echo", &Diags::ProcessEcho}, {"power", &Diags::ProcessPower},
+    {"start", &Diags::ProcessStart},     {"stop", &Diags::ProcessStop},
 };
 
 Diags::Diags(Instance &aInstance)
@@ -108,6 +106,43 @@ Error Diags::ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
     SuccessOrExit(error = ParseLong(aArgs[0], value));
 
     otPlatDiagTxPowerSet(static_cast<int8_t>(value));
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
+Error Diags::ProcessEcho(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error error = kErrorNone;
+
+    if (aArgsLength == 1)
+    {
+        snprintf(aOutput, aOutputMaxLen, "%s\r\n", aArgs[0]);
+    }
+    else if ((aArgsLength == 2) && (strcmp(aArgs[0], "-n") == 0))
+    {
+        const uint8_t kReservedLen = 3; // 1 byte '\r', 1 byte '\n' and 1 byte '\0'
+        uint32_t      outputMaxLen = static_cast<uint32_t>(aOutputMaxLen) - kReservedLen;
+        long          value;
+        uint32_t      i;
+        uint32_t      number;
+
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        number = static_cast<uint32_t>(value);
+        number = (number < outputMaxLen) ? number : outputMaxLen;
+
+        for (i = 0; i < number; i++)
+        {
+            aOutput[i] = '0' + i % 10;
+        }
+
+        snprintf(&aOutput[i], aOutputMaxLen - i, "\r\n");
+    }
+    else
+    {
+        error = kErrorInvalidArgs;
+    }
 
 exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
@@ -160,6 +195,7 @@ Diags::Diags(Instance &aInstance)
     , mTxPower(0)
     , mTxLen(0)
     , mRepeatActive(false)
+    , mDiagSendOn(false)
 {
     mStats.Clear();
 }
@@ -378,6 +414,7 @@ void Diags::TransmitPacket(void)
         mTxPacket->mPsdu[i] = i;
     }
 
+    mDiagSendOn = true;
     IgnoreError(Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket)));
 }
 
@@ -480,6 +517,9 @@ void Diags::ReceiveDone(otRadioFrame *aFrame, Error aError)
 
 void Diags::TransmitDone(Error aError)
 {
+    VerifyOrExit(mDiagSendOn);
+    mDiagSendOn = false;
+
     if (aError == kErrorNone)
     {
         mStats.mSentPackets++;

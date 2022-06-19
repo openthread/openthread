@@ -40,8 +40,6 @@
 
 #include "cli/cli_config.h"
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
@@ -81,11 +79,7 @@ private:
     static constexpr uint16_t kShortAddrBroadcast = 0xffff;
     static constexpr int8_t   kInvalidRss         = OT_RADIO_RSSI_INVALID;
 
-    struct Command
-    {
-        const char *mName;
-        otError (History::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<History>;
 
     enum RxTx : uint8_t
     {
@@ -94,37 +88,16 @@ private:
         kRxTx,
     };
 
-    otError ProcessHelp(Arg aArgs[]);
-    otError ProcessIpAddr(Arg aArgs[]);
-    otError ProcessIpMulticastAddr(Arg aArgs[]);
-    otError ProcessNetInfo(Arg aArgs[]);
-    otError ProcessNeighbor(Arg aArgs[]);
-    otError ProcessRx(Arg aArgs[]);
-    otError ProcessRxTx(Arg aArgs[]);
-    otError ProcessTx(Arg aArgs[]);
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) const;
     otError ProcessRxTxHistory(RxTx aRxTx, Arg aArgs[]);
     void    OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
     void    OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
 
-    static const char *AddressOriginToString(uint8_t aOrigin);
     static const char *MessagePriorityToString(uint8_t aPriority);
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
-
-    static constexpr Command sCommands[] = {
-        {"help", &History::ProcessHelp},
-        {"ipaddr", &History::ProcessIpAddr},
-        {"ipmaddr", &History::ProcessIpMulticastAddr},
-        {"neighbor", &History::ProcessNeighbor},
-        {"netinfo", &History::ProcessNetInfo},
-        {"rx", &History::ProcessRx},
-        {"rxtx", &History::ProcessRxTx},
-        {"tx", &History::ProcessTx},
-    };
-
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
 };
 
 } // namespace Cli

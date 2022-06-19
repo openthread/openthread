@@ -39,7 +39,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common/logging.hpp"
+#include <openthread/logging.h>
+
 #include "utils/code_utils.h"
 
 #if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM

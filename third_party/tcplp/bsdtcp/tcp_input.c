@@ -103,7 +103,7 @@ static void	 tcp_dooptions(struct tcpopt *, uint8_t *, int, int);
 static void
 tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
     struct tcpcb *tp, int drop_hdrlen, int tlen, uint8_t iptos,
-    struct signals* sig);
+    struct tcplp_signals* sig);
 static void	 tcp_xmit_timer(struct tcpcb *, int);
 void tcp_hc_get(/*struct in_conninfo *inc*/ struct tcpcb* tp, struct hc_metrics_lite *hc_metrics_lite);
 static void	 tcp_newreno_partial_ack(struct tcpcb *, struct tcphdr *);
@@ -213,7 +213,7 @@ cc_conn_init(struct tcpcb *tp)
 
 	/* samkumar: print statement for debugging. Resurrect with DEBUG macro? */
 #ifdef INSTRUMENT_TCP
-	printf("TCP CC_INIT %u %d %d\n", (unsigned int) get_micros(), (int) tp->snd_cwnd, (int) tp->snd_ssthresh);
+	tcplp_sys_log("TCP CC_INIT %u %d %d", (unsigned int) tcplp_sys_get_millis(), (int) tp->snd_cwnd, (int) tp->snd_ssthresh);
 #endif
 }
 
@@ -255,7 +255,7 @@ cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type)
 		tcplp_timeoutRexmitCnt++;
 #endif
 #ifdef INSTRUMENT_TCP
-		printf("TCP CC_RTO %u %d %d\n", (unsigned int) get_micros(), (int) tp->snd_cwnd, (int) tp->snd_ssthresh);
+		tcplp_sys_log("TCP CC_RTO %u %d %d", (unsigned int) tcplp_sys_get_millis(), (int) tp->snd_cwnd, (int) tp->snd_ssthresh);
 #endif
 		break;
 	case CC_RTO_ERR:
@@ -271,7 +271,7 @@ cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type)
 		tp->t_flags &= ~TF_PREVVALID;
 		tp->t_badrxtwin = 0;
 #ifdef INSTRUMENT_TCP
-		printf("TCP CC_RTO_ERR %u %d %d\n", (unsigned int) get_micros(), (int) tp->snd_cwnd, (int) tp->snd_ssthresh);
+		tcplp_sys_log("TCP CC_RTO_ERR %u %d %d", (unsigned int) tcplp_sys_get_millis(), (int) tp->snd_cwnd, (int) tp->snd_ssthresh);
 #endif
 		break;
 	}
@@ -431,7 +431,7 @@ tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otIn
 /* NOTE: tcp_fields_to_host(th) must be called before this function is called. */
 int
 tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
-          struct signals* sig)
+          struct tcplp_signals* sig)
 {
 	/*
 	 * samkumar: I significantly modified this function, compared to the
@@ -476,7 +476,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 
 	/*
 	 * samkumar: Logic that handled IPv4 was deleted below. I won't add a
-	 * comment everytime this is done, but I'm putting it here (one of the
+	 * comment every time this is done, but I'm putting it here (one of the
 	 * first instances of this) for clarity.
 	 */
 	iptos = (ntohl(ip6->ip6_flow) >> 20) & 0xff;
@@ -485,7 +485,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 	 * Check that TCP offset makes sense,
 	 * pull out TCP options and adjust length.		XXX
 	 */
-	off = th->th_off << 2;
+	off = (th->th_off_x2 >> TH_OFF_SHIFT) << 2;
 	if (off < sizeof (struct tcphdr) || off > tlen) {
 		goto drop;
 	}
@@ -664,7 +664,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 			 * put "<addrs go here>" where the address string would go.
 			 */
 			tcplp_sys_log("%s; %s: Listen socket: "
-			    "SYN is missing, segment ignored\n",
+			    "SYN is missing, segment ignored",
 			    "<addrs go here>", __func__);
 			goto dropunlock;
 		}
@@ -674,7 +674,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 		if (thflags & TH_ACK) {
 			/* samkumar: See above comment regarding tcp_log_addrs. */
 			tcplp_sys_log("%s; %s: Listen socket: "
-			    "SYN|ACK invalid, segment rejected\n",
+			    "SYN|ACK invalid, segment rejected",
 			    "<addrs go here>", __func__);
 			/* samkumar: Removed call to syncache_badack(&inc); */
 			rstreason = BANDLIM_RST_OPENPORT;
@@ -695,7 +695,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 			/* samkumar: See above comment regarding tcp_log_addrs. */
 			tcplp_sys_log("%s; %s: Listen socket: "
 			    "SYN|FIN segment ignored (based on "
-			    "sysctl setting)\n", "<addrs go here>", __func__);
+			    "sysctl setting)", "<addrs go here>", __func__);
 			goto dropunlock;
 		}
 		/*
@@ -745,7 +745,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 			/* samkumar: See above comment regarding tcp_log_addrs. */
 			tcplp_sys_log("%s; %s: Listen socket: "
 			"Connection attempt to/from self "
-			"ignored\n", "<addrs go here>", __func__);
+			"ignored", "<addrs go here>", __func__);
 			goto dropunlock;
 		}
 		if (IN6_IS_ADDR_MULTICAST(&ip6->ip6_dst) ||
@@ -753,7 +753,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 			/* samkumar: See above comment regarding tcp_log_addrs. */
 			tcplp_sys_log("%s; %s: Listen socket: "
 			"Connection attempt from/to multicast "
-			"address ignored\n", "<addrs go here>", __func__);
+			"address ignored", "<addrs go here>", __func__);
 			goto dropunlock;
 		}
 
@@ -948,7 +948,7 @@ drop:
 static void
 tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
     struct tcpcb *tp, int drop_hdrlen, int tlen, uint8_t iptos,
-    struct signals* sig)
+    struct tcplp_signals* sig)
 {
 	/*
 	 * samkumar: All code pertaining to locks, stats, and debug has been
@@ -1030,7 +1030,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	 * Parse options on any incoming segment.
 	 */
 	tcp_dooptions(&to, (uint8_t *)(th + 1),
-	    (th->th_off << 2) - sizeof(struct tcphdr),
+	    ((th->th_off_x2 >> TH_OFF_SHIFT) << 2) - sizeof(struct tcphdr),
 	    (thflags & TH_SYN) ? TO_SYN : 0);
 
 	/*
@@ -1052,12 +1052,12 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	if ((tp->t_flags & TF_RCVD_TSTMP) && !(to.to_flags & TOF_TS)) {
 		/* samkumar: See above comment regarding tcp_log_addrs. */
 		tcplp_sys_log("%s; %s: Timestamp missing, "
-			"no action\n", "<addrs go here>", __func__);
+			"no action", "<addrs go here>", __func__);
 	}
 	if (!(tp->t_flags & TF_RCVD_TSTMP) && (to.to_flags & TOF_TS)) {
 		/* samkumar: See above comment regarding tcp_log_addrs. */
 		tcplp_sys_log("%s; %s: Timestamp not expected, "
-			"no action\n", "<addrs go here>", __func__);
+			"no action", "<addrs go here>", __func__);
 	}
 
 	/*
@@ -1186,6 +1186,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				{
 					uint32_t poppedbytes = lbuf_pop(&tp->sendbuf, acked, &sig->links_popped);
 					KASSERT(poppedbytes == acked, ("More bytes were acked than are in the send buffer"));
+					sig->bytes_acked += poppedbytes;
 				}
 				if (SEQ_GT(tp->snd_una, tp->snd_recover) &&
 				    SEQ_LEQ(th->th_ack, tp->snd_recover))
@@ -1329,10 +1330,9 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 			 */
 
 			if (!tpiscantrcv(tp)) {
-				size_t usedbefore = cbuf_used_space(&tp->recvbuf);
 				cbuf_write(&tp->recvbuf, msg, otMessageGetOffset(msg) + drop_hdrlen, tlen, cbuf_copy_from_message);
-				if (usedbefore == 0 && tlen > 0) {
-					sig->recvbuf_notempty = true;
+				if (tlen > 0) {
+					sig->recvbuf_added = true;
 				}
 			} else {
 				/*
@@ -1633,7 +1633,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 		 * for legacy code, which we don't really care about in TCPlp).
 		 */
 		/* Send challenge ACK. */
-		tcplp_sys_log("Sending challenge ACK\n");
+		tcplp_sys_log("Sending challenge ACK");
 		tcp_respond(tp, tp->instance, ip6, th, tp->rcv_nxt, tp->snd_nxt, TH_ACK);
 		tp->last_ack_sent = tp->rcv_nxt;
 		goto drop;
@@ -1805,7 +1805,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 			goto drop;
 	}
 
-	tcplp_sys_log("Processing ACK\n");
+	tcplp_sys_log("Processing ACK");
 
 	/*
 	 * Ack processing.
@@ -1967,7 +1967,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					} else
 						tp->snd_cwnd += tp->t_maxseg;
 #ifdef INSTRUMENT_TCP
-					printf("TCP DUPACK\n");
+					tcplp_sys_log("TCP DUPACK");
 #endif
 					(void) tcp_output(tp);
 					goto drop;
@@ -2000,7 +2000,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					tp->t_rtttime = 0;
 
 #ifdef INSTRUMENT_TCP
-					printf("TCP DUPACK_THRESH\n");
+					tcplp_sys_log("TCP DUPACK_THRESH");
 #endif
 					if (tp->t_flags & TF_SACK_PERMIT) {
 						tp->sack_newdata = tp->snd_nxt;
@@ -2016,7 +2016,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					     tp->t_maxseg *
 					     (tp->t_dupacks - tp->snd_limited);
 #ifdef INSTRUMENT_TCP
-					printf("TCP SET_cwnd %d\n", (int) tp->snd_cwnd);
+					tcplp_sys_log("TCP SET_cwnd %d", (int) tp->snd_cwnd);
 #endif
 					if (SEQ_GT(onxt, tp->snd_nxt))
 						tp->snd_nxt = onxt;
@@ -2041,7 +2041,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					oldsndmax = tp->snd_max;
 
 #ifdef INSTRUMENT_TCP
-					printf("TCP LIM_TRANS\n");
+					tcplp_sys_log("TCP LIM_TRANS");
 #endif
 
 					KASSERT(tp->t_dupacks == 1 ||
@@ -2080,7 +2080,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 						++tp->snd_limited;
 					tp->snd_cwnd = oldcwnd;
 #ifdef INSTRUMENT_TCP
-					printf("TCP RESET_cwnd %d\n", (int) tp->snd_cwnd);
+					tcplp_sys_log("TCP RESET_cwnd %d", (int) tp->snd_cwnd);
 #endif
 					goto drop;
 				}
@@ -2132,7 +2132,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 process_ACK:
 		acked = BYTES_THIS_ACK(tp, th);
 
-		tcplp_sys_log("Bytes acked: %d\n", acked);
+		tcplp_sys_log("Bytes acked: %d", acked);
 		/*
 		 * If we just performed our first retransmit, and the ACK
 		 * arrives within our recovery window, then it was a mistake
@@ -2213,10 +2213,12 @@ process_ACK:
 			tp->snd_wnd -= usedspace;
 			poppedbytes = lbuf_pop(&tp->sendbuf, usedspace, &sig->links_popped);
 			KASSERT(poppedbytes == usedspace, ("Could not fully empty send buffer"));
+			sig->bytes_acked += poppedbytes;
 			ourfinisacked = 1;
 		} else {
 			uint32_t poppedbytes = lbuf_pop(&tp->sendbuf, acked, &sig->links_popped);
 			KASSERT(poppedbytes == acked, ("Could not remove acked bytes from send buffer"));
+			sig->bytes_acked += poppedbytes;
 			tp->snd_wnd -= acked;
 			ourfinisacked = 0;
 		}
@@ -2414,10 +2416,9 @@ step6:
 			 * sbappendstream_locked(&so->so_rcv, m, 0);).
 			 */
 			if (!tpiscantrcv(tp)) {
-				size_t usedbefore = cbuf_used_space(&tp->recvbuf);
 				cbuf_write(&tp->recvbuf, msg, otMessageGetOffset(msg) + drop_hdrlen, tlen, cbuf_copy_from_message);
-				if (usedbefore == 0 && tlen > 0) {
-					sig->recvbuf_notempty = true;
+				if (tlen > 0) {
+					sig->recvbuf_added = true;
 				}
 			} else if (tlen > 0) {
 				/*
@@ -2486,7 +2487,7 @@ step6:
 	 * that the connection is closing.
 	 */
 	if (thflags & TH_FIN) {
-		tcplp_sys_log("FIN Processing start\n");
+		tcplp_sys_log("FIN Processing start");
 		if (TCPS_HAVERCVDFIN(tp->t_state) == 0) {
 			/* samkumar: replace socantrcvmore with tpcantrcvmore */
 			tpcantrcvmore(tp);
@@ -2759,7 +2760,7 @@ tcp_xmit_timer(struct tcpcb *tp, int rtt)
 		      max(tp->t_rttmin, rtt + 2), TCPTV_REXMTMAX);
 
 #ifdef INSTRUMENT_TCP
-	printf("TCP timer %u %d %d %d\n", (unsigned int) get_micros(), rtt, (int) tp->t_srtt, (int) tp->t_rttvar);
+	tcplp_sys_log("TCP timer %u %d %d %d", (unsigned int) tcplp_sys_get_millis(), rtt, (int) tp->t_srtt, (int) tp->t_rttvar);
 #endif
 
 
@@ -3072,7 +3073,7 @@ tcp_newreno_partial_ack(struct tcpcb *tp, struct tcphdr *th)
 	tp->snd_cwnd = tp->t_maxseg + BYTES_THIS_ACK(tp, th);
 	tp->t_flags |= TF_ACKNOW;
 #ifdef INSTRUMENT_TCP
-	printf("TCP Partial_ACK\n");
+	tcplp_sys_log("TCP Partial_ACK");
 #endif
 	(void) tcp_output(tp);
 	tp->snd_cwnd = ocwnd;
@@ -3088,6 +3089,6 @@ tcp_newreno_partial_ack(struct tcpcb *tp, struct tcphdr *th)
 		tp->snd_cwnd = 0;
 	tp->snd_cwnd += tp->t_maxseg;
 #ifdef INSTRUMENT_TCP
-	printf("TCP Partial_ACK_final %d\n", (int) tp->snd_cwnd);
+	tcplp_sys_log("TCP Partial_ACK_final %d", (int) tp->snd_cwnd);
 #endif
 }

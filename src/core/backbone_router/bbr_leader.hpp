@@ -44,6 +44,7 @@
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_address.hpp"
 
@@ -175,7 +176,7 @@ public:
 private:
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void               LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const;
     void               LogDomainPrefix(DomainPrefixState aState, const Ip6::Prefix &aPrefix) const;
     static const char *StateToString(State aState);

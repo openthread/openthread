@@ -29,6 +29,7 @@
 import logging
 import unittest
 
+import config
 import thread_cert
 
 LEADER = 1
@@ -62,7 +63,7 @@ class Test_MacScan(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         results = self.nodes[LEADER].scan(result=True)
@@ -70,8 +71,6 @@ class Test_MacScan(thread_cert.TestCase):
         self.assertEqual(len(results), 1)
         network = results[0]
         self.assertEqual(network['extaddr'], self.nodes[ROUTER].get_addr64())
-        self.assertEqual(network['extpanid'], self.nodes[ROUTER].get_extpanid())
-        self.assertEqual(network['networkname'], self.nodes[ROUTER].get_network_name())
         self.assertEqual(network['channel'], CHANNEL)
 
 

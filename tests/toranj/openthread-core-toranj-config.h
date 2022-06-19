@@ -68,6 +68,14 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+ *
+ * Define to 1 to enable Border Routing support.
+ *
+ */
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
  *
  * Define to 1 to enable Commissioner support.
@@ -315,14 +323,6 @@
  *
  */
 #define OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL 1
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_PREPEND_REGION
- *
- * Define to prepend the log region to all log messages
- *
- */
-#define OPENTHREAD_CONFIG_LOG_PREPEND_REGION 1
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_SUFFIX

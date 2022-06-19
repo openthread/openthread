@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 
 # Test description:
@@ -118,7 +119,7 @@ class SrpRegister500Services(thread_cert.TestCase):
         for router in routers():
             router.srp_server_set_enabled(False)
             router.start()
-            self.simulator.go(3)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         for router in routers():
             self.assertEqual(router.get_state(), 'router')

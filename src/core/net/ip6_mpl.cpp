@@ -38,6 +38,7 @@
 #include "common/locator_getters.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
@@ -187,14 +188,12 @@ Error Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
         {
             // have existing entries for aSeedId
 
-            int8_t diff = static_cast<int8_t>(aSequence - mSeedSet[i].mSequence);
-
-            if (diff == 0)
+            if (aSequence == mSeedSet[i].mSequence)
             {
                 // already received, drop message
                 ExitNow(error = kErrorDrop);
             }
-            else if (insert == nullptr && diff < 0)
+            else if (insert == nullptr && SerialNumber::IsLess(aSequence, mSeedSet[i].mSequence))
             {
                 // insert in order of sequence
                 insert = &mSeedSet[i];
@@ -345,14 +344,10 @@ void Mpl::HandleRetransmissionTimer(void)
     TimeMilli now      = TimerMilli::GetNow();
     TimeMilli nextTime = now.GetDistantFuture();
     Metadata  metadata;
-    Message * message;
-    Message * nextMessage;
 
-    for (message = mBufferedMessageSet.GetHead(); message != nullptr; message = nextMessage)
+    for (Message &message : mBufferedMessageSet)
     {
-        nextMessage = message->GetNext();
-
-        metadata.ReadFrom(*message);
+        metadata.ReadFrom(message);
 
         if (now < metadata.mTransmissionTime)
         {
@@ -368,7 +363,7 @@ void Mpl::HandleRetransmissionTimer(void)
 
             if (metadata.mTransmissionCount < GetTimerExpirations())
             {
-                Message *messageCopy = message->Clone(message->GetLength() - sizeof(Metadata));
+                Message *messageCopy = message.Clone(message.GetLength() - sizeof(Metadata));
 
                 if (messageCopy != nullptr)
                 {
@@ -381,7 +376,7 @@ void Mpl::HandleRetransmissionTimer(void)
                 }
 
                 metadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
-                metadata.UpdateIn(*message);
+                metadata.UpdateIn(message);
 
                 if (nextTime > metadata.mTransmissionTime)
                 {
@@ -390,22 +385,22 @@ void Mpl::HandleRetransmissionTimer(void)
             }
             else
             {
-                mBufferedMessageSet.Dequeue(*message);
+                mBufferedMessageSet.Dequeue(message);
 
                 if (metadata.mTransmissionCount == GetTimerExpirations())
                 {
                     if (metadata.mTransmissionCount > 1)
                     {
-                        message->SetSubType(Message::kSubTypeMplRetransmission);
+                        message.SetSubType(Message::kSubTypeMplRetransmission);
                     }
 
-                    metadata.RemoveFrom(*message);
-                    Get<Ip6>().EnqueueDatagram(*message);
+                    metadata.RemoveFrom(message);
+                    Get<Ip6>().EnqueueDatagram(message);
                 }
                 else
                 {
                     // Stop retransmitting if the number of timer expirations is already exceeded.
-                    message->Free();
+                    message.Free();
                 }
             }
         }

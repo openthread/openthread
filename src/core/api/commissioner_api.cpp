@@ -50,9 +50,19 @@ otError otCommissionerStart(otInstance *                 aInstance,
     return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext);
 }
 
+const char *otCommissionerGetId(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().GetId();
+}
+
+otError otCommissionerSetId(otInstance *aInstance, const char *aId)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SetId(aId);
+}
+
 otError otCommissionerStop(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Stop(/* aResign */ true);
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Stop();
 }
 
 otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPskd, uint32_t aTimeout)
@@ -161,7 +171,8 @@ otError otCommissionerSendMgmtSet(otInstance *                  aInstance,
                                   const uint8_t *               aTlvs,
                                   uint8_t                       aLength)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SendMgmtCommissionerSetRequest(AsCoreType(aDataset),
+                                                                                             aTlvs, aLength);
 }
 
 uint16_t otCommissionerGetSessionId(otInstance *aInstance)

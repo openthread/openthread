@@ -100,7 +100,7 @@ class Cert_5_3_8_ChildAddressSet(thread_cert.TestCase):
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
         self.nodes[BR].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[BR].get_state(), 'router')
 
         # 1 BR: Configure BR to be a DHCPv6 server

@@ -31,6 +31,7 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -88,12 +89,12 @@ class SrpNameConflicts(thread_cert.TestCase):
 
         client_1.srp_server_set_enabled(False)
         client_1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client_1.get_state(), 'router')
 
         client_2.srp_server_set_enabled(False)
         client_2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client_2.get_state(), 'router')
 
         #
@@ -177,7 +178,35 @@ class SrpNameConflicts(thread_cert.TestCase):
         client_2.srp_client_stop()
 
         #
-        # 4. Register with different host & service instance name, it should succeed.
+        # 4. Register the same service instance label with a different service name
+        # from the second client and it should pass.
+        #
+
+        client_2.srp_client_set_host_name('my-host-2')
+        client_2.srp_client_set_host_address('2001::2')
+        client_2.srp_client_start(server.get_addrs()[0], client_2.get_srp_server_port())
+        client_2.srp_client_add_service('my-service-1', '_ipps2._tcp', 12345)
+        self.simulator.go(2)
+
+        # It is expected that the registration will be accepted.
+        client_2_service = client_2.srp_client_get_services()[0]
+        self.assertEqual(client_2_service['state'], 'Registered')
+        self.assertEqual(client_2.srp_client_get_host_state(), 'Registered')
+
+        self.assertEqual(len(server.srp_server_get_services()), 2)
+        self.assertEqual(len(server.srp_server_get_hosts()), 2)
+        self.assertEqual(server.srp_server_get_host('my-host-2')['deleted'], 'false')
+        self.assertEqual(server.srp_server_get_service('my-service-1', '_ipps2._tcp')['deleted'], 'false')
+
+        # Remove the host and all services registered on the SRP server.
+        client_2.srp_client_remove_host(remove_key=True)
+        self.simulator.go(2)
+
+        client_2.srp_client_clear_host()
+        client_2.srp_client_stop()
+
+        #
+        # 5. Register with different host & service instance name, it should succeed.
         #
 
         client_2.srp_client_set_host_name('my-host-2')
@@ -204,7 +233,7 @@ class SrpNameConflicts(thread_cert.TestCase):
         client_2.srp_client_stop()
 
         #
-        # 5. Register with the same service instance name before its KEY LEASE expires,
+        # 6. Register with the same service instance full name before its KEY LEASE expires,
         #    it is expected to fail.
         #
 
@@ -234,7 +263,7 @@ class SrpNameConflicts(thread_cert.TestCase):
         client_2.srp_client_stop()
 
         #
-        # 6. The service instance name can be re-used by another client when
+        # 7. The service instance name can be re-used by another client when
         #    the service has been permanently removed (the KEY resource is
         #    removed) from the host.
         #

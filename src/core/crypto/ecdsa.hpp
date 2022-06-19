@@ -228,7 +228,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class PublicKey
+    class PublicKey : public Equatable<PublicKey>
     {
         friend class KeyPair;
 
@@ -265,12 +265,12 @@ public:
 /**
  * This function creates an ECDSA signature.
  *
- * @param[out]    aOutput            An output buffer where ECDSA sign should be stored.
- * @param[inout]  aOutputLength      The length of the @p aOutput buffer.
- * @param[in]     aInputHash         An input hash.
- * @param[in]     aInputHashLength   The length of the @p aInputHash buffer.
- * @param[in]     aPrivateKey        A private key in PEM format.
- * @param[in]     aPrivateKeyLength  The length of the @p aPrivateKey buffer.
+ * @param[out]     aOutput            An output buffer where ECDSA sign should be stored.
+ * @param[in,out]  aOutputLength      The length of the @p aOutput buffer.
+ * @param[in]      aInputHash         An input hash.
+ * @param[in]      aInputHashLength   The length of the @p aInputHash buffer.
+ * @param[in]      aPrivateKey        A private key in PEM format.
+ * @param[in]      aPrivateKeyLength  The length of the @p aPrivateKey buffer.
  *
  * @retval  kErrorNone         ECDSA sign has been created successfully.
  * @retval  kErrorNoBufs       Output buffer is too small.

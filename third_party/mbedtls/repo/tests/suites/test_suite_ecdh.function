@@ -240,6 +240,8 @@ void ecdh_primitive_testvec( int id, data_t * rnd_buf_A, char * xA_str,
 
     rnd_info_A.buf = rnd_buf_A->x;
     rnd_info_A.length = rnd_buf_A->len;
+    rnd_info_A.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    rnd_info_A.fallback_p_rng = NULL;
 
     /* Fix rnd_buf_A->x by shifting it left if necessary */
     if( grp.nbits % 8 != 0 )
@@ -256,6 +258,8 @@ void ecdh_primitive_testvec( int id, data_t * rnd_buf_A, char * xA_str,
 
     rnd_info_B.buf = rnd_buf_B->x;
     rnd_info_B.length = rnd_buf_B->len;
+    rnd_info_B.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    rnd_info_B.fallback_p_rng = NULL;
 
     /* Fix rnd_buf_B->x by shifting it left if necessary */
     if( grp.nbits % 8 != 0 )
@@ -274,21 +278,21 @@ void ecdh_primitive_testvec( int id, data_t * rnd_buf_A, char * xA_str,
                                           mbedtls_test_rnd_buffer_rand,
                                           &rnd_info_A ) == 0 );
     TEST_ASSERT( ! mbedtls_ecp_is_zero( &qA ) );
-    TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, xA_str ) == 0 );
+    TEST_ASSERT( mbedtls_test_read_mpi( &check, 16, xA_str ) == 0 );
     TEST_ASSERT( mbedtls_mpi_cmp_mpi( &qA.X, &check ) == 0 );
-    TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, yA_str ) == 0 );
+    TEST_ASSERT( mbedtls_test_read_mpi( &check, 16, yA_str ) == 0 );
     TEST_ASSERT( mbedtls_mpi_cmp_mpi( &qA.Y, &check ) == 0 );
 
     TEST_ASSERT( mbedtls_ecdh_gen_public( &grp, &dB, &qB,
                                           mbedtls_test_rnd_buffer_rand,
                                           &rnd_info_B ) == 0 );
     TEST_ASSERT( ! mbedtls_ecp_is_zero( &qB ) );
-    TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, xB_str ) == 0 );
+    TEST_ASSERT( mbedtls_test_read_mpi( &check, 16, xB_str ) == 0 );
     TEST_ASSERT( mbedtls_mpi_cmp_mpi( &qB.X, &check ) == 0 );
-    TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, yB_str ) == 0 );
+    TEST_ASSERT( mbedtls_test_read_mpi( &check, 16, yB_str ) == 0 );
     TEST_ASSERT( mbedtls_mpi_cmp_mpi( &qB.Y, &check ) == 0 );
 
-    TEST_ASSERT( mbedtls_mpi_read_string( &check, 16, z_str ) == 0 );
+    TEST_ASSERT( mbedtls_test_read_mpi( &check, 16, z_str ) == 0 );
     TEST_ASSERT( mbedtls_ecdh_compute_shared( &grp, &zA, &qB, &dA, NULL, NULL ) == 0 );
     TEST_ASSERT( mbedtls_mpi_cmp_mpi( &zA, &check ) == 0 );
     TEST_ASSERT( mbedtls_ecdh_compute_shared( &grp, &zB, &qA, &dB, NULL, NULL ) == 0 );
@@ -362,9 +366,13 @@ void ecdh_restart( int id, data_t *dA, data_t *dB, data_t *z,
     mbedtls_ecdh_init( &srv );
     mbedtls_ecdh_init( &cli );
 
+    rnd_info_A.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    rnd_info_A.fallback_p_rng = NULL;
     rnd_info_A.buf = dA->x;
     rnd_info_A.length = dA->len;
 
+    rnd_info_B.fallback_f_rng = mbedtls_test_rnd_std_rand;
+    rnd_info_B.fallback_p_rng = NULL;
     rnd_info_B.buf = dB->x;
     rnd_info_B.length = dB->len;
 

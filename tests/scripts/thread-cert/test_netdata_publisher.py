@@ -31,6 +31,7 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -211,7 +212,7 @@ class NetDataPublisher(thread_cert.TestCase):
 
         for router in routers:
             router.start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(router.get_state(), 'router')
 
         for end_dev in end_devs:

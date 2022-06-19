@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *  This file defines the OpenThread TCP API.
+ *   This file defines the OpenThread TCP API.
  *
  */
 
@@ -64,7 +64,7 @@ typedef struct otLinkedBuffer
 {
     struct otLinkedBuffer *mNext;   ///< Pointer to the next linked buffer in the chain, or NULL if it is the end.
     const uint8_t *        mData;   ///< Pointer to data referenced by this linked buffer.
-    uint16_t               mLength; ///< Length of this linked buffer (number of bytes).
+    size_t                 mLength; ///< Length of this linked buffer (number of bytes).
 } otLinkedBuffer;
 
 struct otTcpEndpoint;
@@ -95,47 +95,74 @@ typedef void (*otTcpEstablished)(otTcpEndpoint *aEndpoint);
 typedef void (*otTcpSendDone)(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
 
 /**
- * This callback informs the application that the first @p aNumBytes in the
- * send buffer have been acknowledged by the connection peer and that their
- * underlying memory can be reclaimed by the application.
+ * This callback informs the application if forward progress has been made in
+ * transferring data from the send buffer to the recipient. This callback is
+ * not necessary for correct TCP operation. Most applications can just rely on
+ * the otTcpSendDone() callback to reclaim linked buffers once the TCP stack is
+ * done using them. The purpose of this callback is to support advanced
+ * applications that benefit from finer-grained information about how the
+ * the connection is making forward progress in transferring data to the
+ * connection peer.
  *
- * This callback is not necessary for correct TCP operation. Most applications
- * can just rely on the otTcpSendDone() callback. If an application wants
- * fine-grained feedback as memory in the send buffer becomes available again
- * (instead of waiting for an entire linked buffer's worth of data becomes
- * available) or some indication as to whether the connection is making forward
- * progress, it can register this callback.
+ * This callback's operation is closely tied to TCP's send buffer. The send
+ * buffer can be understood as having two regions. First, there is the
+ * "in-flight" region at the head (front) of the send buffer. It corresponds
+ * to data which has been sent to the recipient, but is not yet acknowledged.
+ * Second, there is the "backlog" region, which consists of all data in the
+ * send buffer that is not in the "in-flight" region. The "backlog" region
+ * corresponds to data that is queued for sending, but has not yet been sent.
  *
- * @param[in]  aEndpoint  The TCP endpoint for the connection.
- * @param[in]  aNumBytes  The number of bytes newly acknowledged by the connection peer.
+ * The callback is invoked in response to two types of events. First, the
+ * "in-flight" region of the send buffer may shrink (e.g., when the recipient
+ * acknowledges data that we sent earlier). Second, the "backlog" region of the
+ * send buffer may shrink (e.g., new data was sent out). These two conditions
+ * often occur at the same time, in response to an ACK segment from the
+ * connection peer, which is why they are combined in a single callback.
+ *
+ * The TCP stack only uses the @p aInSendBuffer bytes at the tail of the send
+ * buffer; when @p aInSendBuffer decreases by an amount x, it means that x
+ * additional bytes that were formerly at the head of the send buffer are no
+ * longer part of the send buffer and can now be reclaimed (i.e., overwritten)
+ * by the application. Note that the otLinkedBuffer structure itself can only
+ * be reclaimed once all bytes that it references are no longer part of the
+ * send buffer.
+ *
+ * This callback subsumes otTcpSendDone(), in the following sense: applications
+ * can determine when linked buffers can be reclaimed by comparing
+ * @p aInSendBuffer with how many bytes are in each linked buffer. However, we
+ * expect otTcpSendDone(), which directly conveys which otLinkedBuffers can be
+ * reclaimed, to be much simpler to use. If both callbacks are registered and
+ * are triggered by the same event (e.g., the same ACK segment received), then
+ * the otTcpSendDone() callback will be triggered first, followed by this
+ * callback.
+ *
+ * Additionally, this callback provides @p aBacklog, which indicates how many
+ * bytes of data in the send buffer are not yet in flight. For applications
+ * that only want to add data to the send buffer when there is an assurance
+ * that it will be sent out soon, it may be desirable to only send out data
+ * when @p aBacklog is suitably small (0 or close to 0). For example, an
+ * application may use @p aBacklog so that it can react to queue buildup by
+ * dropping or aggregating data to avoid creating a backlog of data.
+ *
+ * After a call to otTcpSendByReference() or otTcpSendByExtension() with a
+ * positive number of bytes, the otTcpForwardProgress() callback is guaranteed
+ * to be called, to indicate when the bytes that were added to the send buffer
+ * are sent out. The call to otTcpForwardProgress() may be made immediately
+ * after the bytes are added to the send buffer (if some of those bytes are
+ * immediately sent out, reducing the backlog), or sometime in the future (once
+ * the connection sends out some or all of the data, reducing the backlog). By
+ * "immediately," we mean that the callback is immediately scheduled for
+ * execution in a tasklet; to avoid reentrancy-related complexity, the
+ * otTcpForwardProgress() callback is never directly called from the
+ * otTcpSendByReference() or otTcpSendByExtension() functions.
+ *
+ * @param[in]  aEndpoint      The TCP endpoint for the connection.
+ * @param[in]  aInSendBuffer  The number of bytes in the send buffer (sum of "in-flight" and "backlog" regions).
+ * @param[in]  aBacklog       The number of bytes that are queued for sending but have not yet been sent (the "backlog"
+ *                            region).
  *
  */
-typedef void (*otTcpBytesAcked)(otTcpEndpoint *aEndpoint, size_t aNumBytes);
-
-/**
- * This callback informs the application that if data is added to the send
- * buffer, some of it will be transmitted immediately without delay, as opposed
- * to being queued for transmission once the peer ACKs some data.
- *
- * After a call to otTcpSendByReference() or otTcpSendByExtension(), the
- * otTcpSendReady() callback is guaranteed to be called, either immediately (if
- * the connection is already ready) or sometime in the future (once the
- * connection becomes ready for more data).
- *
- * This callback is not necessary for correct TCP operation. If more data is
- * added to the send buffer than can be transmitted without delay, it will
- * simply be queued for transmission at a later time. This callback should be
- * used only in cases where some assurance is desired that data added to the
- * send buffer will be sent soon (e.g., TCP won't wait for the recipient to
- * ACK some other data first before sending this data out). For example, you
- * may use this callback if you'd rather have your data be dropped than develop
- * a backlog of data in your send buffer. But for most applications, where this
- * isn't a concern, it's expected that one would not use this callback at all.
- *
- * @param[in]  aEndpoint  The TCP endpoint for the connection.
- *
- */
-typedef void (*otTcpSendReady)(otTcpEndpoint *aEndpoint);
+typedef void (*otTcpForwardProgress)(otTcpEndpoint *aEndpoint, size_t aInSendBuffer, size_t aBacklog);
 
 /**
  * This callback indicates the number of bytes available for consumption from
@@ -192,6 +219,16 @@ typedef enum otTcpDisconnectedReason
 typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
 
 /**
+ * OT_TCP_ENDPOINT_TCB_SIZE_BASE and OT_TCP_ENDPOINT_TCB_NUM_POINTERS are
+ * chosen such that the mTcb field of otTcpEndpoint has the same size as
+ * struct tcpcb in TCPlp. This is necessary because the mTcb field, although
+ * opaque in its declaration, is treated as struct tcpcb in the TCP
+ * implementation.
+ */
+#define OT_TCP_ENDPOINT_TCB_SIZE_BASE 368
+#define OT_TCP_ENDPOINT_TCB_NUM_PTR 36
+
+/**
  * This structure represents a TCP endpoint.
  *
  * An TCP endpoint acts an endpoint of TCP connection. It can be used to
@@ -205,19 +242,27 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
  */
 struct otTcpEndpoint
 {
-    struct otTcpEndpoint *mNext;     ///< A pointer to the next TCP endpoint (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP endpoint
-    void *                mContext;  ///< A pointer to application-specific context
+    union
+    {
+        uint8_t  mSize[OT_TCP_ENDPOINT_TCB_SIZE_BASE + OT_TCP_ENDPOINT_TCB_NUM_PTR * sizeof(void *)];
+        uint64_t mAlign;
+    } mTcb;
+
+    struct otTcpEndpoint *mNext;    ///< A pointer to the next TCP endpoint (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
-    otTcpSendReady        mSendReadyCallback;        ///< "Send ready" callback function
+    otTcpForwardProgress  mForwardProgressCallback;  ///< "Forward progress" callback function
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
 
     uint32_t mTimers[4];
 
-    /* Other implementation-defined fields go here. */
+    otLinkedBuffer mReceiveLinks[2];
+    otSockAddr     mSockAddr;
+
+    uint8_t mPendingCallbacks;
 };
 
 /**
@@ -230,8 +275,7 @@ typedef struct otTcpEndpointInitializeArgs
 
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
-    otTcpBytesAcked       mBytesAckedCallback;       ///< "Bytes acked" callback
-    otTcpSendReady        mSendReadyCallback;        ///< "Send ready" callback function
+    otTcpForwardProgress  mForwardProgressCallback;  ///< "Forward progress" callback function
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
 
@@ -281,7 +325,9 @@ typedef struct otTcpEndpointInitializeArgs
  * @retval OT_ERROR_FAILED  Failed to open the TCP endpoint.
  *
  */
-otError otTcpEndpointInitialize(otInstance *aInstance, otTcpEndpoint *aEndpoint, otTcpEndpointInitializeArgs *aArgs);
+otError otTcpEndpointInitialize(otInstance *                       aInstance,
+                                otTcpEndpoint *                    aEndpoint,
+                                const otTcpEndpointInitializeArgs *aArgs);
 
 /**
  * Obtains the otInstance that was associated with @p aEndpoint upon
@@ -438,7 +484,7 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
  *
  */
-otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
 
 /**
  * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -498,9 +544,10 @@ otError otTcpSendEndOfStream(otTcpEndpoint *aEndpoint);
  *
  * This immediately makes the TCP endpoint free for use for another connection
  * and empties the send and receive buffers, transferring ownership of any data
- * provided by the application in otTcpSendByReference() calls back to
- * the application. The TCP endpoint's callbacks and memory for the receive
- * buffer remain associated with the TCP endpoint.
+ * provided by the application in otTcpSendByReference() and
+ * otTcpSendByExtension() calls back to the application. The TCP endpoint's
+ * callbacks and memory for the receive buffer remain associated with the
+ * TCP endpoint.
  *
  * @param[in]  aEndpoint  A pointer to the TCP endpoint structure representing the TCP endpoint to abort.
  *
@@ -599,6 +646,16 @@ typedef otTcpIncomingConnectionAction (*otTcpAcceptReady)(otTcpListener *   aLis
 typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer);
 
 /**
+ * OT_TCP_LISTENER_TCB_SIZE_BASE and OT_TCP_LISTENER_TCB_NUM_POINTERS are
+ * chosen such that the mTcbListener field of otTcpListener has the same size
+ * as struct tcpcb_listen in TCPlp. This is necessary because the mTcbListen
+ * field, though opaque in its declaration, is treated as struct tcpcb in the
+ * TCP implementation.
+ */
+#define OT_TCP_LISTENER_TCB_SIZE_BASE 16
+#define OT_TCP_LISTENER_TCB_NUM_PTR 3
+
+/**
  * This structure represents a TCP listener.
  *
  * A TCP listener is used to listen for and accept incoming TCP connections.
@@ -610,14 +667,17 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
  */
 struct otTcpListener
 {
-    struct otTcpListener *mNext;     ///< A pointer to the next TCP listener (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP listener
-    void *                mContext;  ///< A pointer to application-specific context
+    union
+    {
+        uint8_t mSize[OT_TCP_LISTENER_TCB_SIZE_BASE + OT_TCP_LISTENER_TCB_NUM_PTR * sizeof(void *)];
+        void *  mAlign;
+    } mTcbListen;
+
+    struct otTcpListener *mNext;    ///< A pointer to the next TCP listener (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
     otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
-
-    /* Other implementation-defined fields go here. */
 };
 
 /**
@@ -649,7 +709,9 @@ typedef struct otTcpListenerInitializeArgs
  * @retval OT_ERROR_FAILED  Failed to open the TCP listener.
  *
  */
-otError otTcpListenerInitialize(otInstance *aInstance, otTcpListener *aListener, otTcpListenerInitializeArgs *aArgs);
+otError otTcpListenerInitialize(otInstance *                       aInstance,
+                                otTcpListener *                    aListener,
+                                const otTcpListenerInitializeArgs *aArgs);
 
 /**
  * Obtains the otInstance that was associated with @p aListener upon

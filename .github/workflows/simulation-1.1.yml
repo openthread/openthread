@@ -66,60 +66,6 @@ jobs:
         ./bootstrap
         VERBOSE=1 make -f examples/Makefile-simulation distcheck
 
-  cli-ftd-otns:
-    runs-on: ubuntu-20.04
-    env:
-      CFLAGS: -m32
-      CXXFLAGS: -m32
-      LDFLAGS: -m32
-      COVERAGE: 1
-      REFERENCE_DEVICE: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-      VIRTUAL_TIME_UART: 1
-      MAX_NETWORK_SIZE: 999
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - uses: actions/setup-go@v1
-      with:
-        go-version: '1.14'
-    - name: Set up Python 3.6
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.6
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
-        ./bootstrap
-    - name: Run OTNS Tests
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      run: |
-        export OT_DIR=$PWD
-        mkdir -p /tmp/otns
-        (
-          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
-          cd /tmp/otns
-          ./script/test py-unittests py-examples
-        )
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: cli-ftd-otns-pcaps
-        path: |
-          ./output/*/bin/*.pcap
-          ./output/*/bin/*.replay
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-cli-ftd-otns
-        path: tmp/coverage.info
-
   packet-verification:
     runs-on: ubuntu-20.04
     env:
@@ -204,6 +150,7 @@ jobs:
     name: cli-mtd MESSAGE_USE_HEAP=${{ matrix.message_use_heap }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         message_use_heap: [0, 1]
     env:
@@ -401,100 +348,8 @@ jobs:
         name: cov-multiple-instance
         path: tmp/coverage.info
 
-  ncp-gcc-m32:
-    runs-on: ubuntu-20.04
-    env:
-      CFLAGS: -m32
-      CXXFLAGS: -m32
-      LDFLAGS: -m32
-      COVERAGE: 1
-      GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      NODE_TYPE: ncp-sim
-      PYTHONUNBUFFERED: 1
-      REFERENCE_DEVICE: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        pyspineldir=$(mktemp -d -t pyspinel_XXXXXX)
-        ./script/git-tool clone https://github.com/openthread/pyspinel.git --depth 1 "${pyspineldir}"
-        cd "${pyspineldir}"
-        pip3 install .
-    - name: Build
-      run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
-    - name: Run
-      run: |
-        VERBOSE=1 make -f examples/Makefile-simulation check
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: ncp-gcc-m32-thread-cert
-        path: build/simulation/tests/scripts/thread-cert
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-ncp-gcc-m32
-        path: tmp/coverage.info
-
-  ncp-clang:
-    runs-on: ubuntu-20.04
-    env:
-      COVERAGE: 1
-      GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      NODE_TYPE: ncp-sim
-      PYTHONUNBUFFERED: 1
-      REFERENCE_DEVICE: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-      CC: clang-10
-      CXX: clang++-10
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 python3-setuptools python3-wheel llvm lcov
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        pyspineldir=$(mktemp -d -t pyspinel_XXXXXX)
-        ./script/git-tool clone https://github.com/openthread/pyspinel.git --depth 1 "${pyspineldir}"
-        cd "${pyspineldir}"
-        pip3 install .
-    - name: Build
-      run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
-    - name: Run
-      run: |
-        VERBOSE=1 make -f examples/Makefile-simulation check
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: cli-clang-thread-cert
-        path: build/simulation/tests/scripts/thread-cert
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage llvm
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-ncp-clang
-        path: tmp/coverage.info
-
   upload-coverage:
     needs:
-    - cli-ftd-otns
     - packet-verification
     - cli-ftd
     - cli-mtd
@@ -502,8 +357,6 @@ jobs:
     - expects
     - ot-commissioner
     - multiple-instance
-    - ncp-gcc-m32
-    - ncp-clang
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -519,14 +372,13 @@ jobs:
       run: |
         script/test combine_coverage
     - name: Upload Coverage
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v2
       with:
         files: final.info
         fail_ci_if_error: true
 
   delete-coverage-artifacts:
     needs: upload-coverage
-    if: always()
     runs-on: ubuntu-20.04
     steps:
     - uses: geekyeggo/delete-artifact@1-glob-support

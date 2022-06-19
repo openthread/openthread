@@ -43,6 +43,12 @@
             "or OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE"
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && (OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES < \
+                                                (OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES + 4))
+#error "OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES needs to support more entries when "\
+       "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is enabled to accommodate for max on-link prefixes"
+#endif
+
 #include <openthread/netdata_publisher.h>
 
 #include "common/clearable.hpp"
@@ -165,7 +171,7 @@ public:
      * This method indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
      *
      * @retval TRUE    The published DNS/SRP Service entry is added to the Thread Network Data.
-     * @retval FLASE   The entry is not added to Thread Network Data or there is no entry to publish.
+     * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
      *
      */
     bool IsDnsSrpServiceAdded(void) const { return mDnsSrpServiceEntry.IsAdded(); }
@@ -246,7 +252,7 @@ public:
      * @param[in] aPrefix   The prefix to check.
      *
      * @retval TRUE    The published prefix entry is added to the Thread Network Data.
-     * @retval FLASE   The entry is not added to Thread Network Data or there is no matching entry to publish.
+     * @retval FALSE   The entry is not added to Thread Network Data or there is no matching entry to publish.
      *
      */
     bool IsPrefixAdded(const Ip6::Prefix &aPrefix) const;

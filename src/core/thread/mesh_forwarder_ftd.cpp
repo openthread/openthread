@@ -36,13 +36,14 @@
 #if OPENTHREAD_FTD
 
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
+
+RegisterLogModule("MeshForwarder");
 
 Error MeshForwarder::SendMessage(Message &aMessage)
 {
@@ -102,7 +103,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
             }
         }
         else if ((neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination())) != nullptr &&
-                 !neighbor->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
+                 !neighbor->IsRxOnWhenIdle() && !aMessage.IsDirectTransmission())
         {
             // destined for a sleepy child
             Child &child = *static_cast<Child *>(neighbor);
@@ -139,111 +140,85 @@ Error MeshForwarder::SendMessage(Message &aMessage)
 
 void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
 {
-    Message *    cur, *next;
     Ip6::Address ip6Dst;
-    bool         enqueuedMessage = false;
+    bool         didUpdate = false;
 
-    for (cur = mResolvingQueue.GetHead(); cur; cur = next)
+    for (Message &message : mSendQueue)
     {
-        next = cur->GetNext();
-
-        if (cur->GetType() != Message::kTypeIp6)
+        if (!message.IsResolvingAddress())
         {
             continue;
         }
 
-        IgnoreError(cur->Read(Ip6::Header::kDestinationFieldOffset, ip6Dst));
+        IgnoreError(message.Read(Ip6::Header::kDestinationFieldOffset, ip6Dst));
 
-        if (ip6Dst == aEid)
+        if (ip6Dst != aEid)
         {
-            mResolvingQueue.Dequeue(*cur);
-
-            if (aError == kErrorNone)
-            {
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-                // Pass back to IPv6 layer for DUA destination resolved by Backbone Query
-                if (ForwardDuaToBackboneLink(*cur, ip6Dst) != kErrorNone)
-#endif
-                {
-                    mSendQueue.Enqueue(*cur);
-                    enqueuedMessage = true;
-                }
-            }
-            else
-            {
-                LogMessage(kMessageDrop, *cur, nullptr, aError);
-                cur->Free();
-            }
+            continue;
         }
+
+        if (aError != kErrorNone)
+        {
+            LogMessage(kMessageDrop, message, kErrorAddressQuery);
+            mSendQueue.DequeueAndFree(message);
+            continue;
+        }
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+        // Pass back to IPv6 layer for DUA destination resolved
+        // by Backbone Query
+        if (Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(ip6Dst) &&
+            Get<AddressResolver>().LookUp(ip6Dst) == Get<Mle::MleRouter>().GetRloc16())
+        {
+            uint8_t hopLimit;
+
+            mSendQueue.Dequeue(message);
+
+            // Avoid decreasing Hop Limit twice
+            IgnoreError(message.Read(Ip6::Header::kHopLimitFieldOffset, hopLimit));
+            hopLimit++;
+            message.Write(Ip6::Header::kHopLimitFieldOffset, hopLimit);
+
+            IgnoreError(Get<Ip6::Ip6>().HandleDatagram(message, nullptr, nullptr, /* aFromHost */ false));
+            continue;
+        }
+#endif
+
+        message.SetResolvingAddress(false);
+        didUpdate = true;
     }
 
-    if (enqueuedMessage)
+    if (didUpdate)
     {
         mScheduleTransmissionTask.Post();
     }
-
-    return;
 }
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-Error MeshForwarder::ForwardDuaToBackboneLink(Message &aMessage, const Ip6::Address &aDst)
-{
-    Error    error = kErrorNone;
-    uint16_t dstRloc16;
-    uint8_t  ttl;
-
-    VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary() && Get<BackboneRouter::Leader>().IsDomainUnicast(aDst),
-                 error = kErrorNoRoute);
-
-    IgnoreError(Get<AddressResolver>().Resolve(aDst, dstRloc16, /* aAllowAddressQuery */ false));
-    VerifyOrExit(dstRloc16 == Get<Mle::MleRouter>().GetRloc16(), error = kErrorNoRoute);
-
-    // Avoid decreasing TTL twice
-    IgnoreError(aMessage.Read(Ip6::Header::kHopLimitFieldOffset, ttl));
-    ttl++;
-    aMessage.Write(Ip6::Header::kHopLimitFieldOffset, ttl);
-
-    IgnoreError(Get<Ip6::Ip6>().HandleDatagram(aMessage, nullptr, nullptr, false));
-
-exit:
-    return error;
-}
-#endif
 
 Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 {
-    Error          error    = kErrorNotFound;
-    PriorityQueue *queues[] = {&mResolvingQueue, &mSendQueue};
-    Message *      evict    = nullptr;
+    Error    error = kErrorNotFound;
+    Message *evict = nullptr;
 
-    // search for a lower priority message to evict (choose lowest priority message among all queues)
-    for (PriorityQueue *queue : queues)
+    // Search for a lower priority message to evict
+    for (uint8_t priority = 0; priority < aPriority; priority++)
     {
-        for (uint8_t priority = 0; priority < aPriority; priority++)
+        for (Message *message = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
+             message          = message->GetNext())
         {
-            for (Message *message = queue->GetHeadForPriority(static_cast<Message::Priority>(priority)); message;
-                 message          = message->GetNext())
+            if (message->GetPriority() != priority)
             {
-                if (message->GetPriority() != priority)
-                {
-                    break;
-                }
-
-                if (message->GetDoNotEvict())
-                {
-                    continue;
-                }
-
-                evict     = message;
-                aPriority = static_cast<Message::Priority>(priority);
                 break;
             }
-        }
-    }
 
-    if (evict != nullptr)
-    {
-        ExitNow(error = kErrorNone);
+            if (message->GetDoNotEvict())
+            {
+                continue;
+            }
+
+            evict = message;
+            error = kErrorNone;
+            ExitNow();
+        }
     }
 
     for (uint8_t priority = aPriority; priority < Message::kNumPriorities; priority++)
@@ -281,30 +256,26 @@ exit:
 
 void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
 {
-    Message *nextMessage;
-
-    for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
+    for (Message &message : mSendQueue)
     {
-        nextMessage = message->GetNext();
-
-        if ((aSubType != Message::kSubTypeNone) && (aSubType != message->GetSubType()))
+        if ((aSubType != Message::kSubTypeNone) && (aSubType != message.GetSubType()))
         {
             continue;
         }
 
-        if (mIndirectSender.RemoveMessageFromSleepyChild(*message, aChild) != kErrorNone)
+        if (mIndirectSender.RemoveMessageFromSleepyChild(message, aChild) != kErrorNone)
         {
-            switch (message->GetType())
+            switch (message.GetType())
             {
             case Message::kTypeIp6:
             {
                 Ip6::Header ip6header;
 
-                IgnoreError(message->Read(0, ip6header));
+                IgnoreError(message.Read(0, ip6header));
 
                 if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(ip6header.GetDestination())))
                 {
-                    message->ClearDirectTransmission();
+                    message.ClearDirectTransmission();
                 }
 
                 break;
@@ -314,11 +285,11 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             {
                 Lowpan::MeshHeader meshHeader;
 
-                IgnoreError(meshHeader.ParseFrom(*message));
+                IgnoreError(meshHeader.ParseFrom(message));
 
                 if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination())))
                 {
-                    message->ClearDirectTransmission();
+                    message.ClearDirectTransmission();
                 }
 
                 break;
@@ -329,41 +300,38 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             }
         }
 
-        RemoveMessageIfNoPendingTx(*message);
+        RemoveMessageIfNoPendingTx(message);
     }
 }
 
 void MeshForwarder::RemoveDataResponseMessages(void)
 {
     Ip6::Header ip6Header;
-    Message *   next;
 
-    for (Message *message = mSendQueue.GetHead(); message != nullptr; message = next)
+    for (Message &message : mSendQueue)
     {
-        next = message->GetNext();
-
-        if (message->GetSubType() != Message::kSubTypeMleDataResponse)
+        if (message.GetSubType() != Message::kSubTypeMleDataResponse)
         {
             continue;
         }
 
-        IgnoreError(message->Read(0, ip6Header));
+        IgnoreError(message.Read(0, ip6Header));
 
         if (!(ip6Header.GetDestination().IsMulticast()))
         {
             for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
             {
-                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(*message, child));
+                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(message, child));
             }
         }
 
-        if (mSendMessage == message)
+        if (mSendMessage == &message)
         {
             mSendMessage = nullptr;
         }
 
-        LogMessage(kMessageDrop, *message, nullptr, kErrorNone);
-        mSendQueue.DequeueAndFree(*message);
+        LogMessage(kMessageDrop, message);
+        mSendQueue.DequeueAndFree(message);
     }
 }
 
@@ -434,6 +402,13 @@ Error MeshForwarder::UpdateMeshRoute(Message &aMessage)
     mAddMeshHeader = true;
     mMeshDest      = meshHeader.GetDestination();
     mMeshSource    = meshHeader.GetSource();
+
+#if OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    if (mMacDest.GetShort() != mMeshDest)
+    {
+        mDelayNextTx = true;
+    }
+#endif
 
 exit:
     return error;
@@ -648,6 +623,9 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
         // destination is not neighbor
         mMacSource.SetShort(mMeshSource);
         mAddMeshHeader = true;
+#if OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+        mDelayNextTx = true;
+#endif
     }
 
 exit:
@@ -820,7 +798,7 @@ void MeshForwarder::HandleMesh(uint8_t *             aFrame,
         message->SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
 #endif
 
-        LogMessage(kMessageReceive, *message, &aMacSource, kErrorNone);
+        LogMessage(kMessageReceive, *message, kErrorNone, &aMacSource);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Since the message will be forwarded, we clear the radio
@@ -837,8 +815,8 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogInfoMac("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", ErrorToString(error), aFrameLength,
-                     aMacSource.ToString().AsCString(), aLinkInfo.IsLinkSecurityEnabled() ? "yes" : "no");
+        LogInfo("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", ErrorToString(error), aFrameLength,
+                aMacSource.ToString().AsCString(), ToYesNo(aLinkInfo.IsLinkSecurityEnabled()));
         FreeMessage(message);
     }
 }
@@ -1012,8 +990,8 @@ void MeshForwarder::GetForwardFramePriority(const uint8_t *     aFrame,
 exit:
     if (error != kErrorNone)
     {
-        otLogNoteMac("Failed to get forwarded frame priority, error:%s, len:%d, src:%d, dst:%s", ErrorToString(error),
-                     aFrameLength, aMeshSource.ToString().AsCString(), aMeshDest.ToString().AsCString());
+        LogNote("Failed to get forwarded frame priority, error:%s, len:%d, src:%d, dst:%s", ErrorToString(error),
+                aFrameLength, aMeshSource.ToString().AsCString(), aMeshDest.ToString().AsCString());
     }
     else if (isFragment)
     {
@@ -1025,7 +1003,7 @@ exit:
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                            const Message &     aMessage,
@@ -1034,7 +1012,7 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
                                            uint16_t &          aOffset,
                                            Mac::Address &      aMeshSource,
                                            Mac::Address &      aMeshDest,
-                                           otLogLevel          aLogLevel)
+                                           LogLevel            aLogLevel)
 {
     Error                  error             = kErrorFailed;
     bool                   hasFragmentHeader = false;
@@ -1065,20 +1043,20 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
     radioString    = aMessage.IsRadioTypeSet() ? RadioTypeToString(aMessage.GetRadioType()) : "all";
 #endif
 
-    otLogMac(aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
-             MessageActionToString(aAction, aError), aMessage.GetLength(),
-             (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
-             (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
-             aMeshDest.ToString().AsCString(), meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0),
-             hasFragmentHeader ? "yes" : "no", aMessage.IsLinkSecurityEnabled() ? "yes" : "no",
-             (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
-             shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
-             shouldLogRadio ? ", radio:" : "", radioString);
+    LogAt(aLogLevel, "%s mesh frame, len:%d%s%s, msrc:%s, mdst:%s, hops:%d, frag:%s, sec:%s%s%s%s%s%s%s",
+          MessageActionToString(aAction, aError), aMessage.GetLength(),
+          (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
+          (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(), aMeshSource.ToString().AsCString(),
+          aMeshDest.ToString().AsCString(), meshHeader.GetHopsLeft() + ((aAction == kMessageReceive) ? 1 : 0),
+          ToYesNo(hasFragmentHeader), ToYesNo(aMessage.IsLinkSecurityEnabled()),
+          (aError == kErrorNone) ? "" : ", error:", (aError == kErrorNone) ? "" : ErrorToString(aError),
+          shouldLogRss ? ", rss:" : "", shouldLogRss ? aMessage.GetRssAverager().ToString().AsCString() : "",
+          shouldLogRadio ? ", radio:" : "", radioString);
 
     if (hasFragmentHeader)
     {
-        otLogMac(aLogLevel, "    Frag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
-                 fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
+        LogAt(aLogLevel, "    Frag tag:%04x, offset:%d, size:%d", fragmentHeader.GetDatagramTag(),
+              fragmentHeader.GetDatagramOffset(), fragmentHeader.GetDatagramSize());
 
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0);
     }
@@ -1165,7 +1143,7 @@ void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
                                     uint16_t            aOffset,
                                     const Mac::Address &aMeshSource,
                                     const Mac::Address &aMeshDest,
-                                    otLogLevel          aLogLevel)
+                                    LogLevel            aLogLevel)
 {
     uint16_t    checksum;
     uint16_t    sourcePort;
@@ -1175,8 +1153,9 @@ void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
     SuccessOrExit(DecompressIp6UdpTcpHeader(aMessage, aOffset, aMeshSource, aMeshDest, ip6Header, checksum, sourcePort,
                                             destPort));
 
-    otLogMac(aLogLevel, "    IPv6 %s msg, chksum:%04x, prio:%s", Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
-             checksum, MessagePriorityToString(aMessage));
+    LogAt(aLogLevel, "    IPv6 %s msg, chksum:%04x, ecn:%s, prio:%s",
+          Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()), checksum, Ip6::Ip6::EcnToString(ip6Header.GetEcn()),
+          MessagePriorityToString(aMessage));
 
     LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort, aLogLevel);
 
@@ -1188,7 +1167,7 @@ void MeshForwarder::LogMeshMessage(MessageAction       aAction,
                                    const Message &     aMessage,
                                    const Mac::Address *aMacAddress,
                                    Error               aError,
-                                   otLogLevel          aLogLevel)
+                                   LogLevel            aLogLevel)
 {
     uint16_t     offset;
     Mac::Address meshSource;
@@ -1210,7 +1189,7 @@ exit:
     return;
 }
 
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 // LCOV_EXCL_STOP
 

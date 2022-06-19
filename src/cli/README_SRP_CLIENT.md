@@ -15,6 +15,7 @@ Usage : `srp client [command] ...`
 - [start](#start)
 - [state](#state)
 - [stop](#stop)
+- [ttl](#ttl)
 
 ## Command Details
 
@@ -36,6 +37,7 @@ service
 start
 state
 stop
+ttl
 Done
 ```
 
@@ -137,6 +139,14 @@ name:"dev4312", state:Registered, addrs:[fd00:0:0:0:0:0:0:1234, fd00:0:0:0:0:0:0
 Done
 ```
 
+When auto host address mode is enabled.
+
+```bash
+srp client host
+name:"dev1234", state:Registered, addrs:auto
+Done
+```
+
 ### host name
 
 Usage: `srp client host name [name]`
@@ -158,9 +168,17 @@ Done
 
 ### host address
 
-Usage : `srp client host address [<address> ...]`
+Usage : `srp client host address [auto | <address> ...]`
 
-Get the list of host addresses.
+Indicate auto address mode is enabled.
+
+```bash
+> srp client host address
+auto
+Done
+```
+
+Get the list of host addresses (when auto host address is not enabled).
 
 ```bash
 > srp client host address
@@ -169,7 +187,14 @@ fd00:0:0:0:0:0:0:beef
 Done
 ```
 
-Set the list of host addresses (can be set while client is running to update the host addresses)
+Enable auto host address mode. When enabled client will automatically use all Thread netif unicast addresses excluding all link-local and mesh-local addresses. If there is no valid address, then Mesh Local EID address is added. SRP client will automatically re-register if/when addresses on Thread netif get changed (e.g., new address is added or existing address is removed).
+
+```bash
+> srp client host address auto
+Done
+```
+
+Explicitly set the list of host addresses (can be set while client is running to update the host addresses), also disabled auto host address mode.
 
 ```bash
 > srp client host address fd00::cafe
@@ -407,5 +432,25 @@ Stop the SRP client.
 
 ```bash
 > srp client stop
+Done
+```
+
+### ttl
+
+Usage: `srp client ttl [value]`
+
+Get the TTL (in seconds).
+
+```bash
+> srp client ttl
+7200
+Done
+>
+```
+
+Set the TTL.
+
+```bash
+> srp client ttl 3600
 Done
 ```

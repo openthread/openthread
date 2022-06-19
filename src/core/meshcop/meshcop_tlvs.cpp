@@ -48,39 +48,39 @@ bool Tlv::IsValid(const Tlv &aTlv)
     switch (aTlv.GetType())
     {
     case Tlv::kChannel:
-        rval = static_cast<const ChannelTlv &>(aTlv).IsValid();
+        rval = As<ChannelTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kPanId:
-        rval = static_cast<const PanIdTlv &>(aTlv).IsValid();
+        rval = As<PanIdTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kExtendedPanId:
-        rval = static_cast<const ExtendedPanIdTlv &>(aTlv).IsValid();
+        rval = As<ExtendedPanIdTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kNetworkName:
-        rval = static_cast<const NetworkNameTlv &>(aTlv).IsValid();
+        rval = As<NetworkNameTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kNetworkKey:
-        rval = static_cast<const NetworkKeyTlv &>(aTlv).IsValid();
+        rval = As<NetworkKeyTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kPskc:
-        rval = static_cast<const PskcTlv &>(aTlv).IsValid();
+        rval = As<PskcTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kMeshLocalPrefix:
-        rval = static_cast<const MeshLocalPrefixTlv &>(aTlv).IsValid();
+        rval = As<MeshLocalPrefixTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kSecurityPolicy:
-        rval = static_cast<const SecurityPolicyTlv &>(aTlv).IsValid();
+        rval = As<SecurityPolicyTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kChannelMask:
-        rval = static_cast<const ChannelMaskTlv &>(aTlv).IsValid();
+        rval = As<ChannelMaskTlv>(aTlv).IsValid();
         break;
 
     default:
@@ -115,7 +115,7 @@ exit:
     return tlv;
 }
 
-Mac::NameData NetworkNameTlv::GetNetworkName(void) const
+NameData NetworkNameTlv::GetNetworkName(void) const
 {
     uint8_t len = GetLength();
 
@@ -124,10 +124,10 @@ Mac::NameData NetworkNameTlv::GetNetworkName(void) const
         len = sizeof(mNetworkName);
     }
 
-    return Mac::NameData(mNetworkName, len);
+    return NameData(mNetworkName, len);
 }
 
-void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
+void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
 {
     uint8_t len;
 
@@ -148,8 +148,7 @@ void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
 
 bool SecurityPolicyTlv::IsValid(void) const
 {
-    return GetLength() >= sizeof(mRotationTime) && GetRotationTime() >= SecurityPolicy::kMinKeyRotationTime &&
-           GetFlagsLength() >= kThread11FlagsLength;
+    return GetLength() >= sizeof(mRotationTime) && GetFlagsLength() >= kThread11FlagsLength;
 }
 
 SecurityPolicy SecurityPolicyTlv::GetSecurityPolicy(void) const
@@ -281,9 +280,9 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_2);
         entry->SetMask(aChannelMask & OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK);
 
-        length += sizeof(MeshCoP::ChannelMaskEntry);
+        length += sizeof(ChannelMaskEntry);
 
-        entry = static_cast<MeshCoP::ChannelMaskEntry *>(entry->GetNext());
+        entry = static_cast<ChannelMaskEntry *>(entry->GetNext());
     }
 #endif
 
@@ -295,7 +294,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
         entry->SetChannelPage(OT_RADIO_CHANNEL_PAGE_0);
         entry->SetMask(aChannelMask & OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK);
 
-        length += sizeof(MeshCoP::ChannelMaskEntry);
+        length += sizeof(ChannelMaskEntry);
     }
 #endif
 
@@ -307,7 +306,7 @@ void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
         entry->SetChannelPage(OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE);
         entry->SetMask(aChannelMask & OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK);
 
-        length += sizeof(MeshCoP::ChannelMaskEntry);
+        length += sizeof(ChannelMaskEntry);
     }
 #endif
 

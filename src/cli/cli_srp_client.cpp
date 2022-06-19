@@ -42,8 +42,6 @@
 namespace ot {
 namespace Cli {
 
-constexpr SrpClient::Command SrpClient::sCommands[];
-
 static otError CopyString(char *aDest, uint16_t aDestSize, const char *aSource)
 {
     // Copies a string from `aSource` to `aDestination` (char array),
@@ -66,29 +64,9 @@ SrpClient::SrpClient(Output &aOutput)
     otSrpClientSetCallback(GetInstancePtr(), SrpClient::HandleCallback, this);
 }
 
-otError SrpClient::Process(Arg aArgs[])
-{
-    otError        error = OT_ERROR_INVALID_COMMAND;
-    const Command *command;
-
-    if (aArgs[0].IsEmpty())
-    {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
-    }
-
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
-    VerifyOrExit(command != nullptr);
-
-    error = (this->*command->mHandler)(aArgs + 1);
-
-exit:
-    return error;
-}
-
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-otError SrpClient::ProcessAutoStart(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
     bool    enable;
@@ -116,7 +94,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-otError SrpClient::ProcessCallback(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("callback")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -132,29 +110,15 @@ exit:
     return error;
 }
 
-otError SrpClient::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError SrpClient::ProcessHost(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
     if (aArgs[0].IsEmpty())
     {
         OutputHostInfo(0, *otSrpClientGetHostInfo(GetInstancePtr()));
-        ExitNow();
     }
-
-    if (aArgs[0] == "name")
+    else if (aArgs[0] == "name")
     {
         if (aArgs[1].IsEmpty())
         {
@@ -196,10 +160,21 @@ otError SrpClient::ProcessHost(Arg aArgs[])
         {
             const otSrpClientHostInfo *hostInfo = otSrpClientGetHostInfo(GetInstancePtr());
 
-            for (uint8_t index = 0; index < hostInfo->mNumAddresses; index++)
+            if (hostInfo->mAutoAddress)
             {
-                OutputIp6AddressLine(hostInfo->mAddresses[index]);
+                OutputLine("auto");
             }
+            else
+            {
+                for (uint8_t index = 0; index < hostInfo->mNumAddresses; index++)
+                {
+                    OutputIp6AddressLine(hostInfo->mAddresses[index]);
+                }
+            }
+        }
+        else if (aArgs[1] == "auto")
+        {
+            error = otSrpClientEnableAutoHostAddress(GetInstancePtr());
         }
         else
         {
@@ -267,18 +242,18 @@ exit:
     return error;
 }
 
-otError SrpClient::ProcessLeaseInterval(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
 {
     return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
 }
 
-otError SrpClient::ProcessKeyLeaseInterval(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("keyleaseinterval")>(Arg aArgs[])
 {
     return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetKeyLeaseInterval,
                                                        otSrpClientSetKeyLeaseInterval);
 }
 
-otError SrpClient::ProcessServer(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
 {
     otError           error          = OT_ERROR_NONE;
     const otSockAddr *serverSockAddr = otSrpClientGetServerAddress(GetInstancePtr());
@@ -308,7 +283,7 @@ exit:
     return error;
 }
 
-otError SrpClient::ProcessService(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
     bool    isRemove;
@@ -316,10 +291,8 @@ otError SrpClient::ProcessService(Arg aArgs[])
     if (aArgs[0].IsEmpty())
     {
         OutputServiceList(0, otSrpClientGetServices(GetInstancePtr()));
-        ExitNow();
     }
-
-    if (aArgs[0] == "add")
+    else if (aArgs[0] == "add")
     {
         error = ProcessServiceAdd(aArgs);
     }
@@ -485,19 +458,28 @@ void SrpClient::OutputHostInfo(uint8_t aIndentSize, const otSrpClientHostInfo &a
         OutputFormat("(null)");
     }
 
-    OutputFormat(", state:%s, addrs:[", otSrpClientItemStateToString(aHostInfo.mState));
+    OutputFormat(", state:%s, addrs:", otSrpClientItemStateToString(aHostInfo.mState));
 
-    for (uint8_t index = 0; index < aHostInfo.mNumAddresses; index++)
+    if (aHostInfo.mAutoAddress)
     {
-        if (index > 0)
+        OutputLine("auto");
+    }
+    else
+    {
+        OutputFormat("[");
+
+        for (uint8_t index = 0; index < aHostInfo.mNumAddresses; index++)
         {
-            OutputFormat(", ");
+            if (index > 0)
+            {
+                OutputFormat(", ");
+            }
+
+            OutputIp6Address(aHostInfo.mAddresses[index]);
         }
 
-        OutputIp6Address(aHostInfo.mAddresses[index]);
+        OutputLine("]");
     }
-
-    OutputLine("]");
 }
 
 void SrpClient::OutputServiceList(uint8_t aIndentSize, const otSrpClientService *aServices)
@@ -525,7 +507,7 @@ void SrpClient::OutputService(uint8_t aIndentSize, const otSrpClientService &aSe
                aService.mPort, aService.mPriority, aService.mWeight);
 }
 
-otError SrpClient::ProcessStart(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("start")>(Arg aArgs[])
 {
     otError    error = OT_ERROR_NONE;
     otSockAddr serverSockAddr;
@@ -540,7 +522,7 @@ exit:
     return error;
 }
 
-otError SrpClient::ProcessState(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("state")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -552,7 +534,7 @@ exit:
     return error;
 }
 
-otError SrpClient::ProcessStop(Arg aArgs[])
+template <> otError SrpClient::Process<Cmd("stop")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -561,6 +543,11 @@ otError SrpClient::ProcessStop(Arg aArgs[])
 
 exit:
     return error;
+}
+
+template <> otError SrpClient::Process<Cmd("ttl")>(Arg aArgs[])
+{
+    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetTtl, otSrpClientSetTtl);
 }
 
 void SrpClient::HandleCallback(otError                    aError,
@@ -604,6 +591,39 @@ void SrpClient::HandleCallback(otError                    aError,
         otSrpClientBuffersFreeService(GetInstancePtr(), reinterpret_cast<otSrpClientBuffersServiceEntry *>(
                                                             const_cast<otSrpClientService *>(service)));
     }
+}
+
+otError SrpClient::Process(Arg aArgs[])
+{
+#define CmdEntry(aCommandString)                                 \
+    {                                                            \
+        aCommandString, &SrpClient::Process<Cmd(aCommandString)> \
+    }
+
+    static constexpr Command kCommands[] = {
+        CmdEntry("autostart"),     CmdEntry("callback"), CmdEntry("host"),    CmdEntry("keyleaseinterval"),
+        CmdEntry("leaseinterval"), CmdEntry("server"),   CmdEntry("service"), CmdEntry("start"),
+        CmdEntry("state"),         CmdEntry("stop"),     CmdEntry("ttl"),
+    };
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
+
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
+    {
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
+    }
+
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
+    VerifyOrExit(command != nullptr);
+
+    error = (this->*command->mHandler)(aArgs + 1);
+
+exit:
+    return error;
 }
 
 } // namespace Cli

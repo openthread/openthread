@@ -41,10 +41,8 @@
  * The OpenThread feature configuration file.
  *
  */
-#if !defined(OPENTHREAD_CONFIG_FILE)
-#define OPENTHREAD_CONFIG_FILE <openthread-config-generic.h>
-#endif
-
+#if defined(OPENTHREAD_CONFIG_FILE)
 #include OPENTHREAD_CONFIG_FILE
+#endif
 
 #endif // OPENTHREAD_CONFIG_H_

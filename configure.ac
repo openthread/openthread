@@ -990,6 +990,7 @@ CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
 LIBS="${LIBS} ${NL_COVERAGE_LIBS}"
 LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
 
+CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_CONFIG_FILE='\"openthread-config-generic.h\"'"
 # At this point, we can restore the compiler flags to whatever the
 # user passed in, now that we're clear of an -Werror issues by
 # transforming -Wno-error back to -Werror.

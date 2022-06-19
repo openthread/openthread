@@ -166,6 +166,7 @@ enum OptionNumber : uint16_t
 class Message : public ot::Message
 {
     friend class Option;
+    friend class MessageQueue;
 
 public:
     static constexpr uint8_t kDefaultTokenLength = OT_COAP_DEFAULT_TOKEN_LENGTH; ///< Default token length.
@@ -203,18 +204,6 @@ public:
     void Init(Type aType, Code aCode);
 
     /**
-     * This method initializes the CoAP header as `kTypeConfirmable` and `kCodePost`.
-     *
-     */
-    void InitAsConfirmablePost(void);
-
-    /**
-     * This method initializes the CoAP header as `kTypeNonConfirmable` and `kCodePost`.
-     *
-     */
-    void InitAsNonConfirmablePost(void);
-
-    /**
      * This method initializes the CoAP header with specific Type and Code.
      *
      * @param[in]  aType              The Type value.
@@ -226,28 +215,6 @@ public:
      *
      */
     Error Init(Type aType, Code aCode, const char *aUriPath);
-
-    /**
-     * This method initializes the CoAP header as `kTypeConfirmable` and `kCodePost` with a given URI Path.
-     *
-     * @param[in]  aUriPath           A pointer to a null-terminated string.
-     *
-     * @retval kErrorNone         Successfully appended the option.
-     * @retval kErrorNoBufs       The option length exceeds the buffer size.
-     *
-     */
-    Error InitAsConfirmablePost(const char *aUriPath);
-
-    /**
-     * This method initializes the CoAP header as `kTypeNonConfirmable` and `kCodePost` with a given URI Path.
-     *
-     * @param[in]  aUriPath           A pointer to a null-terminated string.
-     *
-     * @retval kErrorNone         Successfully appended the option.
-     * @retval kErrorNoBufs       The option length exceeds the buffer size.
-     *
-     */
-    Error InitAsNonConfirmablePost(const char *aUriPath);
 
     /**
      * This method initializes the CoAP header as `kCodePost` with a given URI Path with its type determined from a
@@ -810,7 +777,7 @@ public:
      *
      * @param[in] aLength  Number of payload bytes to copy.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
     Message *Clone(uint16_t aLength) const;
@@ -822,7 +789,7 @@ public:
      * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
      * copied from the original one.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
     Message *Clone(void) const { return Clone(GetLength()); }
@@ -839,7 +806,7 @@ public:
      * This method should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
      * messages).
      *
-     * @returns A pointer to the next message in the queue or nullptr if at the end of the queue.
+     * @returns A pointer to the next message in the queue or `nullptr` if at the end of the queue.
      *
      */
     Message *GetNextCoapMessage(void) { return static_cast<Message *>(GetNext()); }
@@ -850,7 +817,7 @@ public:
      * This method should be used when the message is in a `Coap::MessageQueue` (i.e., a queue containing only CoAP
      * messages).
      *
-     * @returns A pointer to the next message in the queue or nullptr if at the end of the queue.
+     * @returns A pointer to the next message in the queue or `nullptr` if at the end of the queue.
      *
      */
     const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
@@ -956,6 +923,27 @@ private:
 #endif
     };
 
+    class ConstIterator : public ot::Message::ConstIterator
+    {
+    public:
+        using ot::Message::ConstIterator::ConstIterator;
+
+        const Message &operator*(void) { return static_cast<const Message &>(ot::Message::ConstIterator::operator*()); }
+        const Message *operator->(void)
+        {
+            return static_cast<const Message *>(ot::Message::ConstIterator::operator->());
+        }
+    };
+
+    class Iterator : public ot::Message::Iterator
+    {
+    public:
+        using ot::Message::Iterator::Iterator;
+
+        Message &operator*(void) { return static_cast<Message &>(ot::Message::Iterator::operator*()); }
+        Message *operator->(void) { return static_cast<Message *>(ot::Message::Iterator::operator->()); }
+    };
+
     static_assert(sizeof(HelpData) <= sizeof(Ip6::Header) + sizeof(Ip6::HopByHopHeader) + sizeof(Ip6::OptionMpl) +
                                           sizeof(Ip6::Udp::Header),
                   "HelpData size exceeds the size of the reserved region in the message");
@@ -1000,7 +988,15 @@ public:
      * @returns A pointer to the first message.
      *
      */
-    Message *GetHead(void) const { return static_cast<Message *>(ot::MessageQueue::GetHead()); }
+    Message *GetHead(void) { return static_cast<Message *>(ot::MessageQueue::GetHead()); }
+
+    /**
+     * This method returns a pointer to the first message.
+     *
+     * @returns A pointer to the first message.
+     *
+     */
+    const Message *GetHead(void) const { return static_cast<const Message *>(ot::MessageQueue::GetHead()); }
 
     /**
      * This method adds a message to the end of the queue.
@@ -1034,6 +1030,17 @@ public:
      *
      */
     void DequeueAndFree(Message &aMessage) { ot::MessageQueue::DequeueAndFree(aMessage); }
+
+    // The following methods are intended to support range-based `for`
+    // loop iteration over the queue entries and should not be used
+    // directly. The range-based `for` works correctly even if the
+    // current entry is removed from the queue during iteration.
+
+    Message::Iterator begin(void);
+    Message::Iterator end(void) { return Message::Iterator(); }
+
+    Message::ConstIterator begin(void) const;
+    Message::ConstIterator end(void) const { return Message::ConstIterator(); }
 };
 
 /**
@@ -1141,7 +1148,7 @@ public:
         /**
          * This methods gets a pointer to the current CoAP Option to which the iterator is currently pointing.
          *
-         * @returns A pointer to the current CoAP Option, or nullptr if iterator is done (or there was an earlier
+         * @returns A pointer to the current CoAP Option, or `nullptr` if iterator is done (or there was an earlier
          *          parse error).
          *
          */

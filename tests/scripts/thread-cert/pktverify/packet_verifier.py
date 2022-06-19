@@ -157,6 +157,14 @@ class PacketVerifier(object):
             key = self.test_info.get_node_name(i) + '_RLOC'
             self._vars[key] = rloc
 
+        for i, omr in self.test_info.omrs.items():
+            key = self.test_info.get_node_name(i) + '_OMR'
+            self._vars[key] = omr
+
+        for i, dua in self.test_info.duas.items():
+            key = self.test_info.get_node_name(i) + '_DUA'
+            self._vars[key] = dua
+
         if self.test_info.leader_aloc:
             self._vars['LEADER_ALOC'] = self.test_info.leader_aloc
 
@@ -168,7 +176,7 @@ class PacketVerifier(object):
         for i, topo in self.test_info.topology.items():
             name = self.test_info.get_node_name(i)
             if topo['version']:
-                self._vars[name + '_VERSION'] = {'1.1': 2, '1.2': 3}[topo['version']]
+                self._vars[name + '_VERSION'] = {'1.1': 2, '1.2': 3, '1.3': 4}[topo['version']]
 
     def verify_attached(self, child: str, parent: str = None, child_type: str = 'FTD', pkts=None) -> VerifyResult:
         """

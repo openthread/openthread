@@ -42,7 +42,9 @@
 
 using namespace ot;
 
-otError otTcpEndpointInitialize(otInstance *aInstance, otTcpEndpoint *aEndpoint, otTcpEndpointInitializeArgs *aArgs)
+otError otTcpEndpointInitialize(otInstance *                       aInstance,
+                                otTcpEndpoint *                    aEndpoint,
+                                const otTcpEndpointInitializeArgs *aArgs)
 {
     return AsCoreType(aEndpoint).Initialize(AsCoreType(aInstance), *aArgs);
 }
@@ -87,7 +89,7 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
     return AsCoreType(aEndpoint).SendByExtension(aNumBytes, aFlags);
 }
 
-otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer)
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer)
 {
     return AsCoreType(aEndpoint).ReceiveByReference(*aBuffer);
 }
@@ -117,7 +119,9 @@ otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint)
     return AsCoreType(aEndpoint).Deinitialize();
 }
 
-otError otTcpListenerInitialize(otInstance *aInstance, otTcpListener *aListener, otTcpListenerInitializeArgs *aArgs)
+otError otTcpListenerInitialize(otInstance *                       aInstance,
+                                otTcpListener *                    aListener,
+                                const otTcpListenerInitializeArgs *aArgs)
 {
     return AsCoreType(aListener).Initialize(AsCoreType(aInstance), *aArgs);
 }

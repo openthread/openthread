@@ -40,6 +40,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "common/binary_search.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
 
@@ -68,13 +69,13 @@ enum StringMatchMode : uint8_t
 static constexpr char kNullChar = '\0'; ///< null character.
 
 /**
- * This function returns the number of characters that precede the terminating nullptr character.
+ * This function returns the number of characters that precede the terminating null character.
  *
  * @param[in] aString      A pointer to the string.
  * @param[in] aMaxLength   The maximum length in bytes.
  *
- * @returns The number of characters that precede the terminating nullptr character or @p aMaxLength, whichever is
- * smaller.
+ * @returns The number of characters that precede the terminating null character or @p aMaxLength, whichever is
+ *          smaller.
  *
  */
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
@@ -85,7 +86,7 @@ uint16_t StringLength(const char *aString, uint16_t aMaxLength);
  * @param[in] aString     A pointer to the string.
  * @param[in] aChar       A char to search for in the string.
  *
- * @returns The pointer to first occurrence of the @p aChar in @p aString, or nullptr if cannot be found.
+ * @returns The pointer to first occurrence of the @p aChar in @p aString, or `nullptr` if cannot be found.
  *
  */
 const char *StringFind(const char *aString, char aChar);
@@ -97,7 +98,7 @@ const char *StringFind(const char *aString, char aChar);
  * @param[in] aSubString  A sub-string to search for.
  * @param[in] aMode       The string comparison mode, exact match or case insensitive match.
  *
- * @returns The pointer to first match of the @p aSubString in @p aString (using comparison @p aMode), or nullptr if
+ * @returns The pointer to first match of the @p aSubString in @p aString (using comparison @p aMode), or `nullptr` if
  *          cannot be found.
  *
  */
@@ -157,7 +158,7 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
 /**
  * This function converts all uppercase letter characters in a given string to lowercase.
  *
- * @param[inout] aString   A pointer to the string to convert.
+ * @param[in,out] aString   A pointer to the string to convert.
  *
  */
 void StringConvertToLowercase(char *aString);
@@ -165,7 +166,7 @@ void StringConvertToLowercase(char *aString);
 /**
  * This function converts all lowercase letter characters in a given string to uppercase.
  *
- * @param[inout] aString   A pointer to the string to convert.
+ * @param[in,out] aString   A pointer to the string to convert.
  *
  */
 void StringConvertToUppercase(char *aString);
@@ -193,6 +194,61 @@ char ToLowercase(char aChar);
  *
  */
 char ToUppercase(char aChar);
+
+/**
+ * This function coverts a boolean to "yes" or "no" string.
+ *
+ * @param[in] aBool  A boolean value to convert.
+ *
+ * @returns The converted string representation of @p aBool ("yes" for TRUE and "no" for FALSE).
+ *
+ */
+const char *ToYesNo(bool aBool);
+
+/**
+ * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ * Control characters are not allowed.
+ *
+ * @param[in]  aString  A null-terminated byte sequence.
+ *
+ * @retval TRUE   The sequence is a valid UTF-8 string.
+ * @retval FALSE  The sequence is not a valid UTF-8 string.
+ *
+ */
+bool IsValidUtf8String(const char *aString);
+
+/**
+ * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ * Control characters are not allowed.
+ *
+ * @param[in]  aString  A byte sequence.
+ * @param[in]  aLength  Length of the sequence.
+ *
+ * @retval TRUE   The sequence is a valid UTF-8 string.
+ * @retval FALSE  The sequence is not a valid UTF-8 string.
+ *
+ */
+bool IsValidUtf8String(const char *aString, size_t aLength);
+
+/**
+ * This `constexpr` function checks whether two given C strings are in order (alphabetical order).
+ *
+ * This is intended for use from `static_assert`, e.g., checking if a lookup table entries are sorted. It is not
+ * recommended to use this function in other situations as it uses recursion so that it can be `constexpr`.
+ *
+ * @param[in] aFirst    The first string.
+ * @param[in] aSecond   The second string.
+ *
+ * @retval TRUE  If first string is strictly before second string (alphabetical order).
+ * @retval FALSE If first string is not strictly before second string (alphabetical order).
+ *
+ */
+inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
+{
+    return (*aFirst < *aSecond)
+               ? true
+               : ((*aFirst > *aSecond) || (*aFirst == '\0') ? false : AreStringsInOrder(aFirst + 1, aSecond + 1));
+}
 
 /**
  * This class implements writing to a string buffer.
@@ -329,29 +385,59 @@ private:
 };
 
 /**
- * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
- * Control characters are not allowed.
- *
- * @param[in]  aString  A null-terminated byte sequence.
- *
- * @retval TRUE   The sequence is a valid UTF-8 string.
- * @retval FALSE  The sequence is not a valid UTF-8 string.
+ * This class provides helper methods to convert from a set of `uint16_t` values (e.g., a non-sequential `enum`) to
+ * string using binary search in a lookup table.
  *
  */
-bool IsValidUtf8String(const char *aString);
+class Stringify : public BinarySearch
+{
+public:
+    /**
+     * This class represents a entry in the lookup table.
+     *
+     */
+    class Entry
+    {
+        friend class BinarySearch;
 
-/**
- * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
- * Control characters are not allowed.
- *
- * @param[in]  aString  A byte sequence.
- * @param[in]  aLength  Length of the sequence.
- *
- * @retval TRUE   The sequence is a valid UTF-8 string.
- * @retval FALSE  The sequence is not a valid UTF-8 string.
- *
- */
-bool IsValidUtf8String(const char *aString, size_t aLength);
+    public:
+        uint16_t    mKey;    ///< The key value.
+        const char *mString; ///< The associated string.
+
+    private:
+        int Compare(uint16_t aKey) const { return (aKey == mKey) ? 0 : ((aKey > mKey) ? 1 : -1); }
+
+        constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
+        {
+            return aFirst.mKey < aSecond.mKey;
+        }
+    };
+
+    /**
+     * This static method looks up a key in a given sorted table array (using binary search) and return the associated
+     * strings with the key.
+     *
+     * @note This method requires the array to be sorted, otherwise its behavior is undefined.
+     *
+     * @tparam kLength     The array length (number of entries in the array).
+     *
+     * @param[in] aKey       The key to search for within the table.
+     * @param[in] aTable     A reference to an array of `kLength` entries.
+     * @param[in] aNotFound  A C string to return if @p aKey was not found in the table.
+     *
+     * @returns The associated string with @p aKey in @p aTable if found, or @p aNotFound otherwise.
+     *
+     */
+    template <uint16_t kLength>
+    static const char *Lookup(uint16_t aKey, const Entry (&aTable)[kLength], const char *aNotFound = "unknown")
+    {
+        const Entry *entry = BinarySearch::Find(aKey, aTable);
+
+        return (entry != nullptr) ? entry->mString : aNotFound;
+    }
+
+    Stringify(void) = delete;
+};
 
 /**
  * @}

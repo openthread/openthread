@@ -33,11 +33,11 @@ import logging
 import os
 import re
 import socket
-import string
 import subprocess
 import sys
 import time
 import traceback
+import typing
 import unittest
 from ipaddress import IPv6Address, IPv6Network
 from typing import Union, Dict, Optional, List, Any
@@ -89,6 +89,14 @@ class OtbrDocker:
                                              stdout=subprocess.DEVNULL,
                                              stderr=subprocess.DEVNULL)
 
+        try:
+            self._ot_rcp_proc.wait(1)
+        except subprocess.TimeoutExpired:
+            # We expect ot-rcp not to quit in 1 second.
+            pass
+        else:
+            raise Exception(f"ot-rcp {nodeid} exited unexpectedly!")
+
     def _get_ot_rcp_path(self) -> str:
         srcdir = os.environ['top_builddir']
         path = '%s/examples/apps/ncp/ot-rcp' % srcdir
@@ -96,6 +104,7 @@ class OtbrDocker:
         return path
 
     def _launch_docker(self):
+        logging.info(f'Docker image: {config.OTBR_DOCKER_IMAGE}')
         subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
         CI_ENV = os.getenv('CI_ENV', '').split()
         os.makedirs('/tmp/coverage/', exist_ok=True)
@@ -117,6 +126,8 @@ class OtbrDocker:
             config.OTBR_DOCKER_IMAGE,
             '-B',
             config.BACKBONE_IFNAME,
+            '--trel-url',
+            f'trel://{config.BACKBONE_IFNAME}',
         ],
                                              stdin=subprocess.DEVNULL,
                                              stdout=sys.stdout,
@@ -151,6 +162,14 @@ class OtbrDocker:
         self.stop_ot_ctl()
         self.bash('service otbr-agent stop')
 
+    def stop_mdns_service(self):
+        self.bash('service avahi-daemon stop')
+        self.bash('service mdns stop')
+
+    def start_mdns_service(self):
+        self.bash('service avahi-daemon start')
+        self.bash('service mdns start')
+
     def start_ot_ctl(self):
         cmd = f'docker exec -i {self._docker_name} ot-ctl'
         self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=30)
@@ -179,14 +198,19 @@ class OtbrDocker:
         self._shutdown_socat()
 
     def _shutdown_docker(self):
-        if self._docker_proc is not None:
+        if self._docker_proc is None:
+            return
+
+        try:
             COVERAGE = int(os.getenv('COVERAGE', '0'))
             OTBR_COVERAGE = int(os.getenv('OTBR_COVERAGE', '0'))
+            test_name = os.getenv('TEST_NAME')
+            unique_node_id = f'{test_name}-{PORT_OFFSET}-{self.nodeid}'
+
             if COVERAGE or OTBR_COVERAGE:
                 self.bash('service otbr-agent stop')
 
-                test_name = os.getenv('TEST_NAME')
-                cov_file_path = f'/tmp/coverage/coverage-{test_name}-{PORT_OFFSET}-{self.nodeid}.info'
+                cov_file_path = f'/tmp/coverage/coverage-{unique_node_id}.info'
                 # Upload OTBR code coverage if OTBR_COVERAGE=1, otherwise OpenThread code coverage.
                 if OTBR_COVERAGE:
                     codecov_cmd = f'lcov --directory . --capture --output-file {cov_file_path}'
@@ -196,6 +220,12 @@ class OtbrDocker:
 
                 self.bash(codecov_cmd)
 
+            copyCore = subprocess.run(f'docker cp {self._docker_name}:/core ./coredump_{unique_node_id}', shell=True)
+            if copyCore.returncode == 0:
+                subprocess.check_call(
+                    f'docker cp {self._docker_name}:/usr/sbin/otbr-agent ./otbr-agent_{unique_node_id}', shell=True)
+
+        finally:
             subprocess.check_call(f"docker rm -f {self._docker_name}", shell=True)
             self._docker_proc.wait()
             del self._docker_proc
@@ -411,7 +441,7 @@ class OtCli:
         cmd = './ot-cli-%s' % (mode)
 
         # For Thread 1.2 MTD node, use ot-cli-mtd build regardless of OT_CLI_PATH
-        if self.version == '1.2' and mode == 'mtd' and 'top_builddir' in os.environ:
+        if self.version != '1.1' and mode == 'mtd' and 'top_builddir' in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s %d' % (srcdir, mode, nodeid)
 
@@ -419,11 +449,11 @@ class OtCli:
         elif self.version == self.env_version:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
-            if self.version == '1.2' and self.is_bbr:
-                if 'OT_CLI_PATH_1_2_BBR' in os.environ:
-                    cmd = os.environ['OT_CLI_PATH_1_2_BBR']
-                elif 'top_builddir_1_2_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_2_bbr']
+            if self.version != '1.1' and self.is_bbr:
+                if 'OT_CLI_PATH_BBR' in os.environ:
+                    cmd = os.environ['OT_CLI_PATH_BBR']
+                elif 'top_builddir_1_3_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_3_bbr']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             # Load Thread device of the testing environment version (may be 1.1 or 1.2)
@@ -488,14 +518,14 @@ class OtCli:
 
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
-            if self.version == '1.2' and self.is_bbr:
-                if 'OT_NCP_PATH_1_2_BBR' in os.environ:
+            if self.version != '1.1' and self.is_bbr:
+                if 'OT_NCP_PATH_1_3_BBR' in os.environ:
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
-                        os.environ['OT_NCP_PATH_1_2_BBR'],
+                        os.environ['OT_NCP_PATH_1_3_BBR'],
                         args,
                     )
-                elif 'top_builddir_1_2_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_2_bbr']
+                elif 'top_builddir_1_3_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_3_bbr']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
                         cmd,
@@ -584,7 +614,7 @@ class NodeImpl:
 
         super().__init__(nodeid, **kwargs)
 
-        self.set_extpanid(config.EXTENDED_PANID)
+        self.set_mesh_local_prefix(config.MESH_LOCAL_PREFIX)
         self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
 
     def _expect(self, pattern, timeout=-1, *args, **kwargs):
@@ -635,7 +665,7 @@ class NodeImpl:
         if isinstance(pattern, str):
             pattern = re.compile(pattern)
 
-        if isinstance(pattern, re.Pattern):
+        if isinstance(pattern, typing.Pattern):
             return pattern.match(line)
         else:
             return any(NodeImpl._match_pattern(line, p) for p in pattern)
@@ -657,7 +687,7 @@ class NodeImpl:
         return lines
 
     def __is_logging_line(self, line: str) -> bool:
-        return len(line) >= 6 and line[:6] in {'[DEBG]', '[INFO]', '[NOTE]', '[WARN]', '[CRIT]', '[NONE]'}
+        return len(line) >= 3 and line[:3] in {'[D]', '[I]', '[N]', '[W]', '[C]', '[-]'}
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
@@ -785,6 +815,30 @@ class NodeImpl:
         self.send_command('thread stop')
         self._expect_done()
 
+    def detach(self, is_async=False):
+        cmd = 'detach'
+        if is_async:
+            cmd += ' async'
+
+        self.send_command(cmd)
+
+        if is_async:
+            self._expect_done()
+            return
+
+        end = self.simulator.now() + 4
+        while True:
+            self.simulator.go(1)
+            try:
+                self._expect_done(timeout=0.1)
+                return
+            except (pexpect.TIMEOUT, socket.timeout):
+                if self.simulator.now() > end:
+                    raise
+
+    def expect_finished_detaching(self):
+        self._expect('Finished detaching')
+
     def commissioner_start(self):
         cmd = 'commissioner start'
         self.send_command(cmd)
@@ -863,6 +917,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_rcp_version(self) -> str:
+        self.send_command('rcp version')
+        rcp_version = self._expect_command_output()[0].strip()
+        return rcp_version
+
     def srp_server_get_state(self):
         states = ['disabled', 'running', 'stopped']
         self.send_command('srp server state')
@@ -892,6 +951,10 @@ class NodeImpl:
 
     def srp_server_set_lease_range(self, min_lease, max_lease, min_key_lease, max_key_lease):
         self.send_command(f'srp server lease {min_lease} {max_lease} {min_key_lease} {max_key_lease}')
+        self._expect_done()
+
+    def srp_server_set_ttl_range(self, min_ttl, max_ttl):
+        self.send_command(f'srp server ttl {min_ttl} {max_ttl}')
         self._expect_done()
 
     def srp_server_get_hosts(self):
@@ -954,6 +1017,7 @@ class NodeImpl:
                'port': '12345',
                'priority': '0',
                'weight': '0',
+               'ttl': '7200',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -980,8 +1044,8 @@ class NodeImpl:
                 service_list.append(service)
                 continue
 
-            # 'subtypes', port', 'priority', 'weight'
-            for i in range(0, 4):
+            # 'subtypes', port', 'priority', 'weight', 'ttl'
+            for i in range(0, 5):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
 
@@ -1082,6 +1146,10 @@ class NodeImpl:
         self.send_command(f'srp client host clear')
         self._expect_done()
 
+    def srp_client_enable_auto_host_address(self):
+        self.send_command(f'srp client host address auto')
+        self._expect_done()
+
     def srp_client_set_host_address(self, *addrs: str):
         self.send_command(f'srp client host address {" ".join(addrs)}')
         self._expect_done()
@@ -1110,6 +1178,41 @@ class NodeImpl:
         self.send_command(cmd)
         service_lines = self._expect_command_output()
         return [self._parse_srp_client_service(line) for line in service_lines]
+
+    def srp_client_set_lease_interval(self, leaseinterval: int):
+        cmd = f'srp client leaseinterval {leaseinterval}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_client_get_lease_interval(self) -> int:
+        cmd = 'srp client leaseinterval'
+        self.send_command(cmd)
+        return int(self._expect_result('\d+'))
+
+    def srp_client_set_ttl(self, ttl: int):
+        cmd = f'srp client ttl {ttl}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_client_get_ttl(self) -> int:
+        cmd = 'srp client ttl'
+        self.send_command(cmd)
+        return int(self._expect_result('\d+'))
+
+    #
+    # TREL utilities
+    #
+
+    def get_trel_state(self) -> Union[None, bool]:
+        states = [r'Disabled', r'Enabled']
+        self.send_command('trel')
+        try:
+            return self._expect_result(states) == 'Enabled'
+        except Exception as ex:
+            if 'InvalidCommand' in str(ex):
+                return None
+
+            raise
 
     def _encode_txt_entry(self, entry):
         """Encodes the TXT entry to the DNS-SD TXT record format as a HEX string.
@@ -1356,6 +1459,14 @@ class NodeImpl:
     def get_extpanid(self):
         self.send_command('extpanid')
         return self._expect_result('[0-9a-fA-F]{16}')
+
+    def get_mesh_local_prefix(self):
+        self.send_command('prefix meshlocal')
+        return self._expect_command_output()[0]
+
+    def set_mesh_local_prefix(self, mesh_local_prefix):
+        self.send_command('prefix meshlocal %s' % mesh_local_prefix)
+        self._expect_done()
 
     def get_joiner_id(self):
         self.send_command('joiner id')
@@ -1719,7 +1830,7 @@ class NodeImpl:
         omr_addrs = []
         for addr in self.get_addrs():
             for prefix in prefixes:
-                if (addr.startswith(prefix)):
+                if (addr.startswith(prefix)) and (addr != self.__getDua()):
                     omr_addrs.append(addr)
                     break
 
@@ -1846,15 +1957,45 @@ class NodeImpl:
         self.send_command('br disable')
         self._expect_done()
 
-    def get_omr_prefix(self):
+    def get_br_omr_prefix(self):
         cmd = 'br omrprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
-    def get_on_link_prefix(self):
+    def get_netdata_omr_prefixes(self):
+        omr_prefixes = []
+        for prefix in self.get_prefixes():
+            prefix, flags = prefix.split()[:2]
+            if 'a' in flags and 'o' in flags and 's' in flags and 'D' not in flags:
+                omr_prefixes.append(prefix)
+
+        return omr_prefixes
+
+    def get_br_on_link_prefix(self):
         cmd = 'br onlinkprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
+
+    def get_netdata_non_nat64_prefixes(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' not in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
+
+    def get_br_nat64_prefix(self):
+        cmd = 'br nat64prefix'
+        self.send_command(cmd)
+        return self._expect_command_output()[0]
+
+    def get_netdata_nat64_prefix(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
@@ -1893,10 +2034,12 @@ class NodeImpl:
 
         return netdata
 
-    def add_route(self, prefix, stable=False, prf='med'):
+    def add_route(self, prefix, stable=False, nat64=False, prf='med'):
         cmd = 'route add %s ' % prefix
         if stable:
             cmd += 's'
+        if nat64:
+            cmd += 'n'
         cmd += ' %s' % prf
         self.send_command(cmd)
         self._expect_done()
@@ -1998,15 +2141,11 @@ class NodeImpl:
         if result == 1:
             networks = []
             for line in self._expect_command_output()[2:]:
-                _, J, networkname, extpanid, panid, extaddr, channel, dbm, lqi, _ = map(str.strip, line.split('|'))
-                J = bool(int(J))
+                _, panid, extaddr, channel, dbm, lqi, _ = map(str.strip, line.split('|'))
                 panid = int(panid, 16)
                 channel, dbm, lqi = map(int, (channel, dbm, lqi))
 
                 networks.append({
-                    'joinable': J,
-                    'networkname': networkname,
-                    'extpanid': extpanid,
                     'panid': panid,
                     'extaddr': extaddr,
                     'channel': channel,
@@ -2062,7 +2201,13 @@ class NodeImpl:
         return result
 
     def reset(self):
-        self.send_command('reset', expect_command_echo=False)
+        self._reset('reset')
+
+    def factory_reset(self):
+        self._reset('factoryreset')
+
+    def _reset(self, cmd):
+        self.send_command(cmd, expect_command_echo=False)
         time.sleep(self.RESET_DELAY)
         # Send a "version" command and drain the CLI output after reset
         self.send_command('version', expect_command_echo=False)
@@ -3055,13 +3200,13 @@ class LinuxHost():
         """Enable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} up')
+        self.bash(f'ip link set {self.ETH_DEV} up')
 
     def disable_ether(self):
         """Disable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} down')
+        self.bash(f'ip link set {self.ETH_DEV} down')
 
     def get_ether_addrs(self):
         output = self.bash(f'ip -6 addr list dev {self.ETH_DEV}')
@@ -3337,6 +3482,10 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
 
     def add_ipaddr(self, addr):
         cmd = f'ip -6 addr add {addr}/64 dev {self.TUN_DEV}'
+        self.bash(cmd)
+
+    def add_ipmaddr_tun(self, ip: str):
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.TUN_DEV} {ip} &'
         self.bash(cmd)
 
 

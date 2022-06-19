@@ -261,9 +261,6 @@ NcpBase::NcpBase(Instance *aInstance)
     , mRxSpinelOutOfOrderTidCounter(0)
     , mTxSpinelFrameCounter(0)
     , mDidInitialUpdates(false)
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    , mTrelTestModeEnable(true)
-#endif
     , mLogTimestampBase(0)
 {
     OT_ASSERT(mInstance != nullptr);
@@ -1550,6 +1547,20 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_CSL_ACCURACY>(void)
+{
+    return mEncoder.WriteUint8(otPlatRadioGetCslAccuracy(mInstance));
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_CSL_UNCERTAINTY>(void)
+{
+    return mEncoder.WriteUint8(otPlatRadioGetCslUncertainty(mInstance));
+}
+#endif
+
 otError NcpBase::EncodeChannelMask(uint32_t aChannelMask)
 {
     otError error = OT_ERROR_NONE;
@@ -2631,16 +2642,6 @@ extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const ch
     }
 
     va_end(args);
-}
-
-extern "C" void otPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine)
-{
-    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
-
-    if (ncp != nullptr)
-    {
-        ncp->Log(aLogLevel, aLogRegion, aLogLine);
-    }
 }
 
 #endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP)

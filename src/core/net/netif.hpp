@@ -150,7 +150,7 @@ public:
          * @returns The unicast address.
          *
          */
-        const Address &GetAddress(void) const { return static_cast<const Address &>(mAddress); }
+        const Address &GetAddress(void) const { return AsCoreType(&mAddress); }
 
         /**
          * This method returns the unicast address.
@@ -158,7 +158,7 @@ public:
          * @returns The unicast address.
          *
          */
-        Address &GetAddress(void) { return static_cast<Address &>(mAddress); }
+        Address &GetAddress(void) { return AsCoreType(&mAddress); }
 
         /**
          * This method returns the address's prefix length (in bits).
@@ -235,7 +235,7 @@ public:
          * @returns The multicast address.
          *
          */
-        const Address &GetAddress(void) const { return static_cast<const Address &>(mAddress); }
+        const Address &GetAddress(void) const { return AsCoreType(&mAddress); }
 
         /**
          * This method returns the multicast address.
@@ -243,7 +243,7 @@ public:
          * @returns The multicast address.
          *
          */
-        Address &GetAddress(void) { return static_cast<Address &>(mAddress); }
+        Address &GetAddress(void) { return AsCoreType(&mAddress); }
 
         /**
          * This method returns the next multicast address subscribed to the interface.
@@ -548,7 +548,8 @@ public:
      *
      * @retval kErrorNone          Successfully subscribed to @p aAddress.
      * @retval kErrorAlready       The multicast address is already subscribed.
-     * @retval kErrorInvalidArgs   The address indicated by @p aAddress is an internal multicast address.
+     * @retval kErrorInvalidArgs   The IP Address indicated by @p aAddress is an invalid multicast address.
+     * @retval kErrorRejected      The IP Address indicated by @p aAddress is an internal multicast address.
      * @retval kErrorNoBufs        The maximum number of allowed external multicast addresses are already added.
      *
      */
@@ -560,7 +561,7 @@ public:
      * @param[in]  aAddress  A reference to the multicast address.
      *
      * @retval kErrorNone         Successfully unsubscribed to the unicast address.
-     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorRejected     The address indicated by @p aAddress is an internal address.
      * @retval kErrorNotFound     The multicast address was not found.
      *
      */

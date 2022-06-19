@@ -41,6 +41,7 @@
 #include <openthread/multi_radio.h>
 
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "mac/mac_frame.hpp"
 #include "mac/mac_links.hpp"
@@ -172,9 +173,9 @@ public:
      * The `aMessage` will be updated to store the selected radio type (please see `Message::GetRadioType()`).
      * The `aTxFrames` will also be updated to indicate which radio links are to be used.
      *
-     * @param[inout] aMessage   The message to send.
-     * @param[in]    aMacDest   The MAC destination address.
-     * @param[inout] aTxFrames  The set of TxFrames for all radio links.
+     * @param[in,out] aMessage   The message to send.
+     * @param[in]     aMacDest   The MAC destination address.
+     * @param[in,out] aTxFrames  The set of TxFrames for all radio links.
      *
      * @returns  A reference to `mTxFrame` to use when preparing the frame for tx.
      *
@@ -198,9 +199,9 @@ private:
 
     static constexpr uint16_t kRadioPreferenceStringSize = 75;
 
-    otLogLevel     UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference);
+    LogLevel       UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference);
     Mac::RadioType Select(Mac::RadioTypes aRadioOptions, const Neighbor &aNeighbor);
-    void           Log(otLogLevel aLogLevel, const char *aActionText, Mac::RadioType aType, const Neighbor &aNeighbor);
+    void           Log(LogLevel aLogLevel, const char *aActionText, Mac::RadioType aType, const Neighbor &aNeighbor);
 
     static const Mac::RadioType sRadioSelectionOrder[Mac::kNumRadioTypes];
 };

@@ -35,6 +35,7 @@ from pktverify import consts
 from pktverify.null_field import nullField
 from pktverify.packet_verifier import PacketVerifier
 
+import config
 import thread_cert
 
 LEADER = 1
@@ -47,6 +48,7 @@ POLL_PERIOD = 2000  # 2s
 
 
 class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
             'version': '1.2',

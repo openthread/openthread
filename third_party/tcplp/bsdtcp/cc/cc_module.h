@@ -40,8 +40,8 @@
  *   http://caia.swin.edu.au/urp/newtcp/
  */
 
-#ifndef _NETINET_CC_MODULE_H_
-#define _NETINET_CC_MODULE_H_
+#ifndef TCPLP_NETINET_CC_MODULE_H_
+#define TCPLP_NETINET_CC_MODULE_H_
 
 /* samkumar: This was already commented out in FreeBSD (I didn't do it). */
 /*

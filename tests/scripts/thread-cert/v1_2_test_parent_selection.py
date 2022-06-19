@@ -30,6 +30,7 @@
 import unittest
 
 import thread_cert
+import config
 import mle
 
 LEADER_1_2 = 1
@@ -111,7 +112,7 @@ class TestParentSelection(thread_cert.TestCase):
 
         self.nodes[ROUTER_1_1].set_router_selection_jitter(1)
         self.nodes[ROUTER_1_1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER_1_1].get_state(), 'router')
 
         # Mesh Impacting Criteria - Highest Two-way link quality
@@ -157,7 +158,7 @@ class TestParentSelection(thread_cert.TestCase):
         self.nodes[REED_1_2].set_link_quality(self.nodes[ROUTER_1_2].get_addr64(), 2)
         self.nodes[ROUTER_1_2].set_router_selection_jitter(1)
         self.nodes[ROUTER_1_2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER_1_2].get_state(), 'router')
 
         # Check Parent Response
@@ -219,7 +220,7 @@ class TestParentSelection(thread_cert.TestCase):
         # MED_1_1 would attach to LEADER_1_2
 
         self.nodes[REED_1_1].set_state('router')
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[REED_1_1].get_state(), 'router')
 
         # Flush relative message queues

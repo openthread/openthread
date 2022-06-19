@@ -38,12 +38,70 @@
 
 #include <stdint.h>
 
+#include <openthread/platform/crypto.h>
+
 #include "common/debug.hpp"
 #include "common/error.hpp"
-#include "common/random_manager.hpp"
+#include "common/non_copyable.hpp"
 
 namespace ot {
 namespace Random {
+
+/**
+ * This class manages random number generator initialization/deinitialization.
+ *
+ */
+class Manager : private NonCopyable
+{
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     */
+    Manager(void);
+
+    /**
+     * This destructor deinitializes the object.
+     *
+     */
+    ~Manager(void);
+
+    /**
+     * This static method generates and returns a random value using a non-crypto Pseudo Random Number Generator.
+     *
+     * @returns    A random `uint32_t` value.
+     *
+     */
+    static uint32_t NonCryptoGetUint32(void);
+
+#if !OPENTHREAD_RADIO
+    /**
+     * This static method fills a given buffer with cryptographically secure random bytes.
+     *
+     * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
+     * @param[in]  aSize    Size of buffer (number of bytes to fill).
+     *
+     * @retval kErrorNone    Successfully filled buffer with random values.
+     *
+     */
+    static Error CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return otPlatCryptoRandomGet(aBuffer, aSize); }
+#endif
+
+private:
+    class NonCryptoPrng // A non-crypto Pseudo Random Number Generator (PRNG)
+    {
+    public:
+        void     Init(uint32_t aSeed);
+        uint32_t GetNext(void);
+
+    private:
+        uint32_t mState;
+    };
+
+    static uint16_t      sInitCount;
+    static NonCryptoPrng sPrng;
+};
+
 namespace NonCrypto {
 
 /**
@@ -54,7 +112,7 @@ namespace NonCrypto {
  */
 inline uint32_t GetUint32(void)
 {
-    return ot::RandomManager::NonCryptoGetUint32();
+    return Manager::NonCryptoGetUint32();
 }
 
 /**
@@ -86,12 +144,9 @@ inline uint16_t GetUint16(void)
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
  * @returns    A random `uint8_t` value in the given range (i.e., aMin <= random value < aMax).
+ *
  */
-inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
-{
-    OT_ASSERT(aMax > aMin);
-    return (aMin + (GetUint8() % (aMax - aMin)));
-}
+uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax);
 
 /**
  * This function generates and returns a random `uint16_t` value within a given range `[aMin, aMax)`.
@@ -102,12 +157,9 @@ inline uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
  *
  * @returns    A random `uint16_t` value in the given range (i.e., aMin <= random value < aMax).
+ *
  */
-inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
-{
-    OT_ASSERT(aMax > aMin);
-    return (aMin + (GetUint16() % (aMax - aMin)));
-}
+uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax);
 
 /**
  * This function generates and returns a random `uint32_t` value within a given range `[aMin, aMax)`.
@@ -120,11 +172,7 @@ inline uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
  * @returns    A random `uint32_t` value in the given range (i.e., aMin <= random value < aMax).
  *
  */
-inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
-{
-    OT_ASSERT(aMax > aMin);
-    return (aMin + (GetUint32() % (aMax - aMin)));
-}
+uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax);
 
 /**
  * This function fills a given buffer with random bytes.
@@ -133,13 +181,7 @@ inline uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
  * @param[in]  aSize    Size of buffer (number of bytes to fill).
  *
  */
-inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
-{
-    while (aSize-- != 0)
-    {
-        *aBuffer++ = GetUint8();
-    }
-}
+void FillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
 /**
  * This function adds a random jitter within a given range to a given value.
@@ -150,12 +192,7 @@ inline void FillBuffer(uint8_t *aBuffer, uint16_t aSize)
  * @returns    The given value with an added random jitter.
  *
  */
-inline uint32_t AddJitter(uint32_t aValue, uint16_t aJitter)
-{
-    aJitter = (aJitter <= aValue) ? aJitter : static_cast<uint16_t>(aValue);
-
-    return aValue + GetUint32InRange(0, 2 * aJitter + 1) - aJitter;
-}
+uint32_t AddJitter(uint32_t aValue, uint16_t aJitter);
 
 } // namespace NonCrypto
 
@@ -174,18 +211,7 @@ namespace Crypto {
  */
 inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize)
 {
-    return RandomManager::CryptoFillBuffer(aBuffer, aSize);
-}
-
-/**
- * This function returns initialized mbedtls_ctr_drbg_context.
- *
- * @returns  A pointer to initialized mbedtls_ctr_drbg_context.
- *
- */
-inline mbedtls_ctr_drbg_context *MbedTlsContextGet(void)
-{
-    return RandomManager::GetMbedTlsCtrDrbgContext();
+    return Manager::CryptoFillBuffer(aBuffer, aSize);
 }
 
 } // namespace Crypto

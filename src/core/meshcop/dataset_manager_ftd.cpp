@@ -46,7 +46,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
@@ -60,6 +60,8 @@
 namespace ot {
 namespace MeshCoP {
 
+RegisterLogModule("DatasetManager");
+
 Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
     Dataset dataset;
@@ -71,20 +73,20 @@ Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 
 Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Tlv                  tlv;
-    uint16_t             offset                   = aMessage.GetOffset();
-    bool                 isUpdateFromCommissioner = false;
-    bool                 doesAffectConnectivity   = false;
-    bool                 doesAffectNetworkKey     = false;
-    bool                 hasNetworkKey            = false;
-    StateTlv::State      state                    = StateTlv::kReject;
-    Dataset              dataset;
-    Timestamp            activeTimestamp;
-    ChannelTlv           channel;
-    uint16_t             sessionId;
-    Mle::MeshLocalPrefix meshLocalPrefix;
-    NetworkKey           networkKey;
-    uint16_t             panId;
+    Tlv                tlv;
+    uint16_t           offset                   = aMessage.GetOffset();
+    bool               isUpdateFromCommissioner = false;
+    bool               doesAffectConnectivity   = false;
+    bool               doesAffectNetworkKey     = false;
+    bool               hasNetworkKey            = false;
+    StateTlv::State    state                    = StateTlv::kReject;
+    Dataset            dataset;
+    Timestamp          activeTimestamp;
+    ChannelTlv         channel;
+    uint16_t           sessionId;
+    Ip6::NetworkPrefix meshLocalPrefix;
+    NetworkKey         networkKey;
+    uint16_t           panId;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
@@ -157,7 +159,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     if (GetType() == Dataset::kPending && (!hasNetworkKey || !doesAffectNetworkKey))
     {
         // no change to network key, active timestamp must be ahead
-        const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
+        const Timestamp *localActiveTimestamp = Get<ActiveDatasetManager>().GetTimestamp();
 
         VerifyOrExit(Timestamp::Compare(&activeTimestamp, localActiveTimestamp) > 0);
     }
@@ -169,7 +171,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
         isUpdateFromCommissioner = true;
 
-        localId = static_cast<const CommissionerSessionIdTlv *>(
+        localId = As<CommissionerSessionIdTlv>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
         VerifyOrExit(localId != nullptr && localId->GetCommissionerSessionId() == sessionId);
@@ -182,7 +184,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     {
         // Thread specification allows partial dataset changes for MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req
         // from Commissioner based on existing active dataset.
-        IgnoreError(Get<ActiveDataset>().Read(dataset));
+        IgnoreError(Get<ActiveDatasetManager>().Read(dataset));
     }
 
     if (GetType() == Dataset::kPending || !doesAffectConnectivity)
@@ -203,7 +205,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
             case Tlv::kDelayTimer:
             {
-                DelayTimerTlv &delayTimerTlv = static_cast<DelayTimerTlv &>(static_cast<Tlv &>(datasetTlv));
+                DelayTimerTlv &delayTimerTlv = As<DelayTimerTlv>(datasetTlv);
 
                 if (doesAffectNetworkKey && delayTimerTlv.GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
                 {
@@ -230,7 +232,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
     else
     {
-        Get<PendingDataset>().ApplyActiveDataset(activeTimestamp, aMessage);
+        Get<PendingDatasetManager>().ApplyActiveDataset(activeTimestamp, aMessage);
     }
 
     state = StateTlv::kAccept;
@@ -241,7 +243,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         const CommissionerSessionIdTlv *localSessionId;
         Ip6::Address                    destination;
 
-        localSessionId = static_cast<const CommissionerSessionIdTlv *>(
+        localSessionId = As<CommissionerSessionIdTlv>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
         VerifyOrExit(localSessionId != nullptr);
 
@@ -268,16 +270,14 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset set response");
+    LogInfo("sent dataset set response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -296,7 +296,7 @@ exit:
     return error;
 }
 
-Error ActiveDataset::GenerateLocal(void)
+Error ActiveDatasetManager::GenerateLocal(void)
 {
     Error   error = kErrorNone;
     Dataset dataset;
@@ -332,7 +332,7 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<ExtendedPanIdTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<Mac::Mac>().GetExtendedPanId()));
+        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<ExtendedPanIdManager>().GetExtPanId()));
     }
 
     if (dataset.GetTlv<MeshLocalPrefixTlv>() == nullptr)
@@ -350,7 +350,7 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
     {
-        Mac::NameData nameData = Get<Mac::Mac>().GetNetworkName().GetAsData();
+        NameData nameData = Get<NetworkNameManager>().GetNetworkName().GetAsData();
 
         IgnoreError(dataset.SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }
@@ -388,29 +388,29 @@ Error ActiveDataset::GenerateLocal(void)
     SuccessOrExit(error = mLocal.Save(dataset));
     IgnoreError(Restore());
 
-    otLogInfoMeshCoP("Generated local dataset");
+    LogInfo("Generated local dataset");
 
 exit:
     return error;
 }
 
-void ActiveDataset::StartLeader(void)
+void ActiveDatasetManager::StartLeader(void)
 {
     IgnoreError(GenerateLocal());
     Get<Tmf::Agent>().AddResource(mResourceSet);
 }
 
-void ActiveDataset::StopLeader(void)
+void ActiveDatasetManager::StopLeader(void)
 {
     Get<Tmf::Agent>().RemoveResource(mResourceSet);
 }
 
-void ActiveDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void ActiveDatasetManager::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleSet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
+    static_cast<ActiveDatasetManager *>(aContext)->HandleSet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
-void ActiveDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void ActiveDatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     SuccessOrExit(DatasetManager::HandleSet(aMessage, aMessageInfo));
     IgnoreError(ApplyConfiguration());
@@ -419,23 +419,23 @@ exit:
     return;
 }
 
-void PendingDataset::StartLeader(void)
+void PendingDatasetManager::StartLeader(void)
 {
     StartDelayTimer();
     Get<Tmf::Agent>().AddResource(mResourceSet);
 }
 
-void PendingDataset::StopLeader(void)
+void PendingDatasetManager::StopLeader(void)
 {
     Get<Tmf::Agent>().RemoveResource(mResourceSet);
 }
 
-void PendingDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void PendingDatasetManager::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleSet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
+    static_cast<PendingDatasetManager *>(aContext)->HandleSet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
-void PendingDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void PendingDatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     SuccessOrExit(DatasetManager::HandleSet(aMessage, aMessageInfo));
     StartDelayTimer();
@@ -444,7 +444,7 @@ exit:
     return;
 }
 
-void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage)
+void PendingDatasetManager::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage)
 {
     uint16_t offset = aMessage.GetOffset();
     Dataset  dataset;

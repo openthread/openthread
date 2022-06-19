@@ -83,7 +83,7 @@ class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
         self.nodes[DUT_ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
         leader_rloc = self.nodes[DUT_LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)

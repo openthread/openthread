@@ -57,7 +57,7 @@ extern "C" {
  */
 
 /**
- * @defgroup radio-types Types
+ * @defgroup radio-types Radio Types
  *
  * @brief
  *   This module includes the platform abstraction for a radio frame.
@@ -399,7 +399,7 @@ typedef struct otLinkMetrics
  */
 
 /**
- * @defgroup radio-config Configuration
+ * @defgroup radio-config Radio Configuration
  *
  * @brief
  *   This module includes the platform abstraction for radio configuration.
@@ -643,7 +643,7 @@ uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance);
  */
 
 /**
- * @defgroup radio-operation Operation
+ * @defgroup radio-operation Radio Operation
  *
  * @brief
  *   This module includes the platform abstraction for radio operations.
@@ -857,6 +857,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance);
  * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
  *
  * @retval OT_ERROR_NONE             Successfully started scanning the channel.
+ * @retval OT_ERROR_BUSY             The radio is performing enery scanning.
  * @retval OT_ERROR_NOT_IMPLEMENTED  The radio doesn't support energy scanning.
  *
  */
@@ -1060,14 +1061,14 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
 uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance);
 
 /**
- * Get the current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
+ * The fixed uncertainty of the Device for scheduling CSL Transmissions in units of 10 microseconds.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  *
- * @returns The current CSL Clock Uncertainty in units of 10 us.
+ * @returns The CSL Uncertainty in units of 10 us.
  *
  */
-uint8_t otPlatRadioGetCslClockUncertainty(otInstance *aInstance);
+uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance);
 
 /**
  * Set the max transmit power for a specific channel.
@@ -1126,8 +1127,8 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2 metrics
  *                           can be specified. The probing would be disabled if @p `aLinkMetrics` is bitwise 0.
- * @param[in]  aShortAddr    The short address of the Probing Initiator.
- * @param[in]  aExtAddr      The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
+ * @param[in]  aShortAddress The short address of the Probing Initiator.
+ * @param[in]  aExtAddress   The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
  *
  * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
  * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `NULL`.

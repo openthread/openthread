@@ -74,11 +74,16 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     , mDnssdServer(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    , mDnsDso(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(aInstance)
 #endif
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
+    , mExtendedPanIdManager(aInstance)
+    , mNetworkNameManager(aInstance)
     , mIp6Filter(aInstance)
     , mKeyManager(aInstance)
     , mLowpan(aInstance)

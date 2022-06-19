@@ -310,6 +310,7 @@ REAL_LAYER_NAMES = {
     'dns',
     'igmp',
     'mdns',
+    'dns',
 }
 
 FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop', 'ipv6inner'}
@@ -337,6 +338,27 @@ WIRESHARK_OVERRIDE_PREFS = {
 
 WIRESHARK_DECODE_AS_ENTRIES = {
     'udp.port==61631': 'coap',
+    # SRP server ports for dissecting SRP requests and responses
+    'udp.port==53535': 'dns',
+    'udp.port==53536': 'dns',
+    'udp.port==53537': 'dns',
+    'udp.port==53538': 'dns',
+    'udp.port==53539': 'dns',
+    'udp.port==53540': 'dns',
+    'udp.port==53541': 'dns',
+    'udp.port==53542': 'dns',
+    'udp.port==53543': 'dns',
+    'udp.port==53544': 'dns',
+    'udp.port==53545': 'dns',
+    'udp.port==53546': 'dns',
+    'udp.port==53547': 'dns',
+    'udp.port==53548': 'dns',
+    'udp.port==53549': 'dns',
+    'udp.port==53550': 'dns',
+    'udp.port==53551': 'dns',
+    'udp.port==53552': 'dns',
+    'udp.port==53553': 'dns',
+    'udp.port==53554': 'dns',
 }
 
 TIMEOUT_JOIN_NETWORK = 10
@@ -365,10 +387,28 @@ CSL_DEFAULT_TIMEOUT = 30
 CSL_DEFAULT_CHANNEL = 12
 
 # Thread Version TLV value
+THREAD_VERSION_1_1 = 2
 THREAD_VERSION_1_2 = 3
+THREAD_VERSION_1_3 = 4
 
 # ICMPv6 Types
 ICMPV6_TYPE_DESTINATION_UNREACHABLE = 1
+ICMPV6_TYPE_PACKET_TO_BIG = 2
+ICMPV6_TYPE_TIME_EXCEEDED = 3
+ICMPV6_TYPE_PARAMETER_PROBLEM = 4
+ICMPV6_TYPE_ECHO_REQUEST = 128
+ICMPV6_TYPE_ECHO_REPLY = 129
+
+ICMPV6_RA_OPT_TYPE_RIO = 24
+
+THREAD_ALLOWED_ICMPV6_TYPES = [
+    ICMPV6_TYPE_DESTINATION_UNREACHABLE,
+    ICMPV6_TYPE_PACKET_TO_BIG,
+    ICMPV6_TYPE_TIME_EXCEEDED,
+    ICMPV6_TYPE_PARAMETER_PROBLEM,
+    ICMPV6_TYPE_ECHO_REQUEST,
+    ICMPV6_TYPE_ECHO_REPLY,
+]
 
 # Link Metrics
 LINK_METRICS_STATUS_SUCCESS = 0

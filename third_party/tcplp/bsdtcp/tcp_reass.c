@@ -51,13 +51,13 @@
  * not need to update it if only part of the segment is trimmed off.
  */
 int
-tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_t data_offset, struct signals* sig)
+tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_t data_offset, struct tcplp_signals* sig)
 {
 	size_t mergeable, written;
 	size_t offset;
 	size_t start_index;
 	size_t usedbefore;
-	int tlen = *tlenp;
+	int tlen;
 	size_t merged = 0;
 	int flags = 0;
 
@@ -68,8 +68,10 @@ tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_
 	if (th == NULL)
 		goto present;
 
+	tlen = *tlenp;
+
 	/* Insert the new segment queue entry into place. */
-	KASSERT(SEQ_GEQ(th->th_seq, tp->rcv_nxt), ("Adding past segment to the reassembly queue\n"));
+	KASSERT(SEQ_GEQ(th->th_seq, tp->rcv_nxt), ("Adding past segment to the reassembly queue"));
 	offset = (size_t) (th->th_seq - tp->rcv_nxt);
 
 	if (cbuf_reass_count_set(&tp->recvbuf, (size_t) offset, tp->reassbmp, tlen) >= (size_t) tlen) {
@@ -81,7 +83,7 @@ tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_
 	if ((th->th_flags & TH_FIN) && (tp->reass_fin_index == -1)) {
 		tp->reass_fin_index = (int16_t) (start_index + tlen);
 	}
-	KASSERT(written == tlen, ("Reassembly write out of bounds: tried to write %d, but wrote %d\n", tlen, (int) written));
+	KASSERT(written == tlen, ("Reassembly write out of bounds: tried to write %d, but wrote %d", tlen, (int) written));
 
 present:
 	/*
@@ -98,16 +100,16 @@ present:
 			flags = TH_FIN;
 		}
 		merged = cbuf_reass_merge(&tp->recvbuf, mergeable, tp->reassbmp);
-		KASSERT(merged == mergeable, ("Reassembly merge out of bounds: tried to merge %d, but merged %d\n", (int) mergeable, (int) merged));
+		KASSERT(merged == mergeable, ("Reassembly merge out of bounds: tried to merge %d, but merged %d", (int) mergeable, (int) merged));
 		if (tpiscantrcv(tp)) {
 			cbuf_pop(&tp->recvbuf, merged); // So no data really enters the buffer
-		} else if (usedbefore == 0 && merged > 0) {
-			sig->recvbuf_notempty = true;
+		} else if (merged > 0) {
+			sig->recvbuf_added = true;
 		}
 	} else {
 		/* If there is data in the buffer AND we can't receive more, then that must be because we received a FIN,
 		   but the user hasn't yet emptied the buffer of its contents. */
-		KASSERT (tp->reass_fin_index == -2, ("Can't receive more, and data in buffer, but haven't received a FIN\n"));
+		KASSERT (tp->reass_fin_index == -2, ("Can't receive more, and data in buffer, but haven't received a FIN"));
 	}
 
 	tp->rcv_nxt += mergeable;

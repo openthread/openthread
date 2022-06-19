@@ -31,23 +31,22 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
 #   This test verifies SRP client auto-start functionality that SRP client can
-#   correctly discover and connect to SRP server.
+#   correctly discovers and connects to SRP server.
 #
 # Topology:
 #
-#   CLIENT (leader) -- SERVER1 (router)
-#      |
-#      |
-#   SERVER2 (router)
+#   Four routers, one acting as SRP client, others as SRP server.
 #
 
 CLIENT = 1
 SERVER1 = 2
 SERVER2 = 3
+SERVER3 = 4
 
 
 class SrpAutoStartMode(thread_cert.TestCase):
@@ -57,17 +56,18 @@ class SrpAutoStartMode(thread_cert.TestCase):
     TOPOLOGY = {
         CLIENT: {
             'name': 'SRP_CLIENT',
-            'networkkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         SERVER1: {
             'name': 'SRP_SERVER1',
-            'networkkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         SERVER2: {
             'name': 'SRP_SERVER2',
-            'networkkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rdn',
+        },
+        SERVER3: {
+            'name': 'SRP_SERVER3',
             'mode': 'rdn',
         },
     }
@@ -76,27 +76,38 @@ class SrpAutoStartMode(thread_cert.TestCase):
         client = self.nodes[CLIENT]
         server1 = self.nodes[SERVER1]
         server2 = self.nodes[SERVER2]
+        server3 = self.nodes[SERVER3]
 
-        #
-        # 0. Start the server & client devices.
-        #
+        #-------------------------------------------------------------------
+        # Form the network.
 
         client.srp_server_set_enabled(False)
         client.start()
         self.simulator.go(5)
         self.assertEqual(client.get_state(), 'leader')
 
-        server1.srp_server_set_enabled(True)
-        server2.srp_server_set_enabled(False)
         server1.start()
         server2.start()
-        self.simulator.go(5)
+        server3.start()
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(server1.get_state(), 'router')
         self.assertEqual(server2.get_state(), 'router')
+        self.assertEqual(server3.get_state(), 'router')
 
-        #
-        # 1. Enable auto start mode on client and check that server1 is used.
-        #
+        server1_mleid = server1.get_mleid()
+        server2_mleid = server2.get_mleid()
+        server3_mleid = server3.get_mleid()
+        anycast_port = 53
+
+        #-------------------------------------------------------------------
+        # Enable server1 with unicast address mode
+
+        server1.srp_server_set_addr_mode('unicast')
+        server1.srp_server_set_enabled(True)
+        self.simulator.go(5)
+
+        #-------------------------------------------------------------------
+        # Enable auto start mode on client and check that server1 is selected
 
         self.assertEqual(client.srp_client_get_state(), 'Disabled')
         client.srp_client_enable_auto_start_mode()
@@ -104,42 +115,174 @@ class SrpAutoStartMode(thread_cert.TestCase):
         self.simulator.go(2)
 
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertTrue(server1.has_ipaddr(client.srp_client_get_server_address()))
+        self.assertEqual(client.srp_client_get_server_address(), server1_mleid)
 
-        #
-        # 2. Disable server1 and check client is stopped/disabled.
-        #
+        #-------------------------------------------------------------------
+        # Disable server1 and check client is stopped/disabled.
 
         server1.srp_server_set_enabled(False)
         self.simulator.go(5)
         self.assertEqual(client.srp_client_get_state(), 'Disabled')
 
-        #
-        # 3. Enable server2 and check client starts again.
-        #
+        #-------------------------------------------------------------------
+        # Enable server2 with unicast address mode and check client starts
+        # again.
 
+        server1.srp_server_set_addr_mode('unicast')
         server2.srp_server_set_enabled(True)
         self.simulator.go(5)
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        server2_address = client.srp_client_get_server_address()
+        self.assertEqual(client.srp_client_get_server_address(), server2_mleid)
 
-        #
-        # 4. Enable both servers and check client stays with server2.
-        #
+        #-------------------------------------------------------------------
+        # Enable server1 and check that client stays with server2
 
         server1.srp_server_set_enabled(True)
         self.simulator.go(5)
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertEqual(client.srp_client_get_server_address(), server2_address)
+        self.assertEqual(client.srp_client_get_server_address(), server2_mleid)
 
-        #
-        # 5. Disable server2 and check client switches to server1.
-        #
+        #-------------------------------------------------------------------
+        # Disable server2 and check client switches to server1.
 
         server2.srp_server_set_enabled(False)
         self.simulator.go(5)
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertNotEqual(client.srp_client_get_server_address(), server2_address)
+        self.assertEqual(client.srp_client_get_server_address(), server1_mleid)
+
+        #-------------------------------------------------------------------
+        # Enable server2 with anycast mode seq-num 1, and check that client
+        # switched to it.
+
+        server2.srp_server_set_addr_mode('anycast')
+        server2.srp_server_set_anycast_seq_num(1)
+        server2.srp_server_set_enabled(True)
+        self.simulator.go(5)
+        server2_alocs = server2.get_ip6_address(config.ADDRESS_TYPE.ALOC)
+        self.assertEqual(server2.srp_server_get_anycast_seq_num(), 1)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertIn(client.srp_client_get_server_address(), server2_alocs)
+        self.assertEqual(client.srp_client_get_server_port(), anycast_port)
+
+        #-------------------------------------------------------------------
+        # Enable server3 with anycast mode seq-num 2, and check that client
+        # switched to it since seq number is higher.
+
+        server3.srp_server_set_addr_mode('anycast')
+        server3.srp_server_set_anycast_seq_num(2)
+        server3.srp_server_set_enabled(True)
+        self.simulator.go(5)
+        server3_alocs = server3.get_ip6_address(config.ADDRESS_TYPE.ALOC)
+        self.assertEqual(server3.srp_server_get_anycast_seq_num(), 2)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertIn(client.srp_client_get_server_address(), server3_alocs)
+        self.assertEqual(client.srp_client_get_server_port(), anycast_port)
+
+        #-------------------------------------------------------------------
+        # Disable server3 and check that client goes back to server2.
+
+        server3.srp_server_set_enabled(False)
+        self.simulator.go(5)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertIn(client.srp_client_get_server_address(), server2_alocs)
+        self.assertEqual(client.srp_client_get_server_port(), anycast_port)
+
+        #-------------------------------------------------------------------
+        # Enable server3 with anycast mode seq-num 0 (which is smaller than
+        # server2 seq-num 1) and check that client stays with server2.
+
+        server3.srp_server_set_anycast_seq_num(0)
+        server3.srp_server_set_enabled(True)
+        self.simulator.go(5)
+        self.assertEqual(server3.srp_server_get_anycast_seq_num(), 0)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertIn(client.srp_client_get_server_address(), server2_alocs)
+        self.assertEqual(client.srp_client_get_server_port(), anycast_port)
+
+        #-------------------------------------------------------------------
+        # Disable server2 and check that client goes back to server3.
+
+        server2.srp_server_set_enabled(False)
+        self.simulator.go(5)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        server3_alocs = server3.get_ip6_address(config.ADDRESS_TYPE.ALOC)
+        self.assertIn(client.srp_client_get_server_address(), server3_alocs)
+        self.assertEqual(client.srp_client_get_server_port(), anycast_port)
+
+        #-------------------------------------------------------------------
+        # Disable server3 and check that client goes back to server1 with
+        # unicast address.
+
+        server3.srp_server_set_enabled(False)
+        self.simulator.go(5)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertEqual(client.srp_client_get_server_address(), server1_mleid)
+
+        #-------------------------------------------------------------------
+        # Enable server2 with anycast mode seq-num 5, and check that client
+        # switched to it.
+
+        server2.srp_server_set_addr_mode('anycast')
+        server2.srp_server_set_anycast_seq_num(5)
+        server2.srp_server_set_enabled(True)
+        self.simulator.go(5)
+        server2_alocs = server2.get_ip6_address(config.ADDRESS_TYPE.ALOC)
+        self.assertEqual(server2.srp_server_get_anycast_seq_num(), 5)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertIn(client.srp_client_get_server_address(), server2_alocs)
+        self.assertEqual(client.srp_client_get_server_port(), anycast_port)
+
+        #-------------------------------------------------------------------
+        # Publish an entry on server3 with specific unicast address
+        # This entry should be now preferred over anycast of server2.
+
+        unicast_addr3 = 'fd00:0:0:0:0:3333:beef:cafe'
+        unicast_port3 = 1234
+        server3.netdata_publish_dnssrp_unicast(unicast_addr3, unicast_port3)
+        self.simulator.go(65)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertEqual(client.srp_client_get_server_address(), unicast_addr3)
+        self.assertEqual(client.srp_client_get_server_port(), unicast_port3)
+
+        #-------------------------------------------------------------------
+        # Publish an entry on server1 with specific unicast address
+        # Client should still stay with server3 which it originally selected.
+
+        unicast_addr1 = 'fd00:0:0:0:0:2222:beef:cafe'
+        unicast_port1 = 10203
+        server1.srp_server_set_enabled(False)
+        server1.netdata_publish_dnssrp_unicast(unicast_addr1, unicast_port1)
+        self.simulator.go(65)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertEqual(client.srp_client_get_server_address(), unicast_addr3)
+        self.assertEqual(client.srp_client_get_server_port(), unicast_port3)
+
+        #-------------------------------------------------------------------
+        # Unpublish the entry on server3. Now client should switch to entry
+        # from server1.
+
+        server3.netdata_unpublish_dnssrp()
+        self.simulator.go(65)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertEqual(client.srp_client_get_server_address(), unicast_addr1)
+        self.assertEqual(client.srp_client_get_server_port(), unicast_port1)
+
+        #-------------------------------------------------------------------
+        # Unpublish the entry on server1 and check client goes back to anycast
+        # entry from server2.
+
+        server1.netdata_unpublish_dnssrp()
+        self.simulator.go(65)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertIn(client.srp_client_get_server_address(), server2_alocs)
+        self.assertEqual(client.srp_client_get_server_port(), anycast_port)
+
+        #-------------------------------------------------------------------
+        # Finally disable server2, and check that client is disabled.
+
+        server2.srp_server_set_enabled(False)
+        self.simulator.go(5)
+        self.assertEqual(client.srp_client_get_state(), 'Disabled')
 
 
 if __name__ == '__main__':

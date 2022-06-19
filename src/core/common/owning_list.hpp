@@ -99,8 +99,8 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not nullptr the entry after this will be popped,
-     *                        otherwise (if it is nullptr) the entry at the head of the list is popped.
+     * @param[in] aPrevEntry  A pointer to a previous entry. If it is not `nullptr` the entry after this will be popped,
+     *                        otherwise (if it is `nullptr`) the entry at the head of the list is popped.
      *
      * @returns An `OwnerPtr` to the entry that was popped (set to null if there is no entry to pop).
      *
@@ -127,6 +127,27 @@ public:
     template <typename Indicator> OwnedPtr<Type> RemoveMatching(const Indicator &aIndicator)
     {
         return OwnedPtr<Type>(LinkedList<Type>::RemoveMatching(aIndicator));
+    }
+
+    /**
+     * This template method removes all entries in the list matching a given entry indicator from the list and adds
+     * them to a new list.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * The ownership of the removed entries is transferred from the original list to the @p aRemovedList.
+     *
+     * @param[in] aIndicator   An entry indicator to match against entries in the list.
+     * @param[in] aRemovedList The list to add the removed entries to.
+     *
+     */
+    template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator, OwningList &aRemovedList)
+    {
+        LinkedList<Type>::RemoveAllMatching(aIndicator, aRemovedList);
     }
 };
 

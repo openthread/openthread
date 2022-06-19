@@ -38,10 +38,12 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 namespace ot {
 namespace Trel {
+
+RegisterLogModule("TrelLink");
 
 Link::Link(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -75,6 +77,8 @@ void Link::AfterInit(void)
 
 void Link::Enable(void)
 {
+    mInterface.Enable();
+
     if (mState == kStateDisabled)
     {
         SetState(kStateSleep);
@@ -83,6 +87,8 @@ void Link::Enable(void)
 
 void Link::Disable(void)
 {
+    mInterface.Disable();
+
     if (mState != kStateDisabled)
     {
         SetState(kStateDisabled);
@@ -126,8 +132,9 @@ void Link::BeginTransmit(void)
     Mac::PanId    destPanId;
     Header::Type  type;
     Packet        txPacket;
-    Neighbor *    neighbor = nullptr;
-    Mac::RxFrame *ackFrame = nullptr;
+    Neighbor *    neighbor   = nullptr;
+    Mac::RxFrame *ackFrame   = nullptr;
+    bool          isDisovery = false;
 
     VerifyOrExit(mState == kStateTransmit);
 
@@ -163,6 +170,28 @@ void Link::BeginTransmit(void)
         }
     }
 
+    if (type == Header::kTypeBroadcast)
+    {
+        // Thread utilizes broadcast transmissions to discover
+        // neighboring devices. We determine whether this broadcast
+        // frame tx is a discovery or normal data. All messages
+        // used for discovery either disable MAC security or utilize
+        // MAC Key ID mode 2. All data communication uses MAC Key ID
+        // Mode 1.
+
+        if (!mTxFrame.GetSecurityEnabled())
+        {
+            isDisovery = true;
+        }
+        else
+        {
+            uint8_t keyIdMode;
+
+            IgnoreError(mTxFrame.GetKeyIdMode(keyIdMode));
+            isDisovery = (keyIdMode == Mac::Frame::kKeyIdMode2);
+        }
+    }
+
     if (mTxFrame.GetDstPanId(destPanId) != kErrorNone)
     {
         destPanId = Mac::kPanIdBroadcast;
@@ -192,10 +221,9 @@ void Link::BeginTransmit(void)
         txPacket.GetHeader().SetDestination(destAddr.GetExtended());
     }
 
-    otLogDebgMac("Trel: BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(),
-                 txPacket.GetPayloadLength());
+    LogDebg("BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(), txPacket.GetPayloadLength());
 
-    VerifyOrExit(mInterface.Send(txPacket) == kErrorNone, InvokeSendDone(kErrorAbort));
+    VerifyOrExit(mInterface.Send(txPacket, isDisovery) == kErrorNone, InvokeSendDone(kErrorAbort));
 
     if (mTxFrame.GetAckRequest())
     {
@@ -345,8 +373,7 @@ void Link::ProcessReceivedPacket(Packet &aPacket)
         }
     }
 
-    otLogDebgMac("Trel: ReceivedPacket() [%s] plen:%d", aPacket.GetHeader().ToString().AsCString(),
-                 aPacket.GetPayloadLength());
+    LogDebg("ReceivedPacket() [%s] plen:%d", aPacket.GetHeader().ToString().AsCString(), aPacket.GetPayloadLength());
 
     if (aPacket.GetHeader().GetAckMode() == Header::kAckRequested)
     {
@@ -377,7 +404,7 @@ void Link::HandleAck(Packet &aAckPacket)
     Neighbor *   neighbor;
     uint32_t     ackNumber;
 
-    otLogDebgMac("Trel: HandleAck() [%s]", aAckPacket.GetHeader().ToString().AsCString());
+    LogDebg("HandleAck() [%s]", aAckPacket.GetHeader().ToString().AsCString());
 
     srcAddress.SetExtended(aAckPacket.GetHeader().GetSource());
     neighbor = Get<NeighborTable>().FindNeighbor(srcAddress, Neighbor::kInStateAnyExceptInvalid);
@@ -423,15 +450,15 @@ void Link::SendAck(Packet &aRxPacket)
     ackPacket.GetHeader().SetSource(Get<Mac::Mac>().GetExtAddress());
     ackPacket.GetHeader().SetDestination(aRxPacket.GetHeader().GetSource());
 
-    otLogDebgMac("Trel: SendAck [%s]", ackPacket.GetHeader().ToString().AsCString());
+    LogDebg("SendAck [%s]", ackPacket.GetHeader().ToString().AsCString());
 
     IgnoreError(mInterface.Send(ackPacket));
 }
 
 void Link::ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError)
 {
-    otLogDebgMac("Trel: ReportDeferredAckStatus(): %s for %s", aNeighbor.GetExtAddress().ToString().AsCString(),
-                 ErrorToString(aError));
+    LogDebg("ReportDeferredAckStatus(): %s for %s", aNeighbor.GetExtAddress().ToString().AsCString(),
+            ErrorToString(aError));
 
     Get<MeshForwarder>().HandleDeferredAck(aNeighbor, aError);
 }
@@ -440,8 +467,16 @@ void Link::SetState(State aState)
 {
     if (mState != aState)
     {
-        otLogDebgMac("Trel: State: %s -> %s", StateToString(mState), StateToString(aState));
+        LogDebg("State: %s -> %s", StateToString(mState), StateToString(aState));
         mState = aState;
+    }
+}
+
+void Link::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadExtPanIdChanged))
+    {
+        mInterface.HandleExtPanIdChange();
     }
 }
 
@@ -449,14 +484,19 @@ void Link::SetState(State aState)
 
 const char *Link::StateToString(State aState)
 {
-    static const char *kStateStrings[] = {
-        "Disabled", // kStateDisabled
-        "Sleep",    // kStateSleep
-        "Receive",  // kStateReceive
-        "Transmit", // kStateTransmit
+    static const char *const kStateStrings[] = {
+        "Disabled", // (0) kStateDisabled
+        "Sleep",    // (1) kStateSleep
+        "Receive",  // (2) kStateReceive
+        "Transmit", // (3) kStateTransmit
     };
 
-    return (static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings)) ? kStateStrings[aState] : "Unknown";
+    static_assert(0 == kStateDisabled, "kStateDisabled value is incorrect");
+    static_assert(1 == kStateSleep, "kStateSleep value is incorrect");
+    static_assert(2 == kStateReceive, "kStateReceive value is incorrect");
+    static_assert(3 == kStateTransmit, "kStateTransmit value is incorrect");
+
+    return kStateStrings[aState];
 }
 
 // LCOV_EXCL_STOP

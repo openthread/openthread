@@ -48,35 +48,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
- *
- * Defines the default interface name used for TREL UDP6 platform. Empty string disables TREL platform.
- *
- */
-#ifndef OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
-#define OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME ""
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
- *
- * Defines whether the TREL UDP6 platform uses netlink socket to add/remove addresses on the TREL netif or `ioctl()`
- * command.
- *
- * When netlink is used Duplicate Address Detection (DAD) is disabled when a new address is added on the netif.
- *
- * Use of netlink is enabled by default on linux-based platforms.
- *
- */
-#ifndef OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
-#ifdef __linux__
-#define OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET 1
-#else
-#define OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET 0
-#endif
-#endif
-
-/**
  * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
  *
  * Define socket basename used by POSIX app daemon.
@@ -156,25 +127,75 @@
 #endif
 
 /**
+ * @def OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC
+ *
+ * This setting configures the prefix route metric on the Thread network interface.
+ * Define as 0 to use use the default prefix route metric.
+ *
+ * Note: The feature works on Linux kernel v4.18+.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC
+#define OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+ *
+ * Define as 1 to add OMR routes to POSIX kernel when OMR prefixes are changed in netdata.
+ *
+ * Note: This feature can be used to add OMR routes with non-default priority. Unlike
+ * `OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC`, it works on Linux kernels before v4.18.
+ * However, `OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC` should be preferred on Linux kernel v4.18+.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY
+ *
+ * This macro defines the priority of OMR routes added to kernel. The larger the number, the lower the priority. We
+ * need to assign a high priority to such routes so that kernel prefers the Thread link rather than infrastructure.
+ * Otherwise we may unnecessarily transmit packets via infrastructure, which potentially causes looping issue.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY
+#define OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY 1
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM
+ *
+ * This macro defines the max number of OMR routes that can be added to kernel.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM
+#define OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
  *
  * Define as 1 to add external routes to POSIX kernel when external routes are changed in netdata.
  *
  */
-#ifdef __linux__
 #ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 #define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 1
-#endif
 #endif
 
 /**
  * @def OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
  *
- * This macro defines the priority of external routes added to kernel.
+ * This macro defines the priority of external routes added to kernel. The larger the number, the lower the priority. We
+ * need to assign a low priority to such routes so that kernel prefers the infra link rather than thread. Otherwise we
+ * may unnecessarily transmit packets via thread, which potentially causes performance issue. In linux, normally infra
+ * link routes' metric value is not greater than 1024, hence 65535 should be big enough.
  *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
-#define OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY 512
+#define OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY 65535
 #endif
 
 /**
@@ -185,6 +206,30 @@
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM
 #define OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM 8
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+ *
+ * Define as 1 to enable firewall.
+ *
+ * The rules are implemented using ip6tables and ipset. The rules are as follows.
+ *
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m pkttype --pkt-type unicast -i $THREAD_IF -p ip -j DROP
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m set --match-set otbr-ingress-deny-src src -p ip -j DROP
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m set --match-set otbr-ingress-allow-dst dst -p ip -j ACCEPT
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -m pkttype --pkt-type unicast -p ip -j DROP
+ * ip6tables -A $OTBR_FORWARD_INGRESS_CHAIN -p ip -j ACCEPT
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE 0
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+#ifndef OPENTHREAD_POSIX_CONFIG_IPSET_BINARY
+#define OPENTHREAD_POSIX_CONFIG_IPSET_BINARY "ipset"
+#endif
 #endif
 
 #ifdef __APPLE__
@@ -210,5 +255,27 @@
 #endif
 
 #endif // __APPLE__
+
+//---------------------------------------------------------------------------------------------------------------------
+// Removed or renamed POSIX specific configs.
+
+#ifdef OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
+#error "OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME was removed (no longer applicable with TREL over DNS-SD)."
+#endif
+
+#ifdef OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+#error "OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET was removed (no longer applicable with TREL over DNS-SD)."
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT
+ *
+ * This setting configures the TREL UDP port number.
+ * Define as 0 to use an ephemeral port number.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT
+#define OPENTHREAD_POSIX_CONFIG_TREL_UDP_PORT 0
+#endif
 
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

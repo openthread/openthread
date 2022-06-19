@@ -32,6 +32,7 @@ import unittest
 import logging
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -78,7 +79,7 @@ class TestDnssdNameWithSpecialChars(thread_cert.TestCase):
         self.assertEqual(server.get_state(), 'leader')
 
         client.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
         server.srp_server_set_enabled(True)
@@ -101,6 +102,9 @@ class TestDnssdNameWithSpecialChars(thread_cert.TestCase):
         self.__verify_service(services[SPECIAL_INSTANCE_NAME])
 
         service = client.dns_resolve_service(SPECIAL_INSTANCE_NAME, '_srv._udp.default.service.arpa')
+        self.__verify_service(service)
+
+        service = client.dns_resolve_service(SPECIAL_INSTANCE_NAME.lower(), '_srv._udp.default.service.arpa')
         self.__verify_service(service)
 
     def __verify_service(self, service):

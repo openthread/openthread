@@ -477,13 +477,7 @@ _LAYER_FIELDS = {
     'icmpv6.opt.route_lifetime': _auto,
     'icmpv6.opt.route_info.flag.route_preference': _auto,
     'icmpv6.opt.route_info.flag.reserved': _auto,
-    'icmpv6.opt.prefix.valid_lifetime': _auto,
-    'icmpv6.opt.prefix.preferred_lifetime': _auto,
-    'icmpv6.opt.prefix.length': _list(_auto),
-    'icmpv6.opt.prefix.flag.reserved': _auto,
-    'icmpv6.opt.prefix.flag.r': _auto,
-    'icmpv6.opt.prefix.flag.l': _auto,
-    'icmpv6.opt.prefix.flag.a': _auto,
+    'icmpv6.opt.prefix': _list(_ipv6_addr),
     'icmpv6.opt.length': _list(_auto),
     'icmpv6.opt.reserved': _str,
     'icmpv6.nd.ra.router_lifetime': _auto,
@@ -638,7 +632,11 @@ _LAYER_FIELDS = {
     # Thread Diagnostic
     'thread_diagnostic.tlv.type': _list(_auto),
     'thread_diagnostic.tlv.len8': _list(_auto),
-    'thread_diagnostic.tlv.general': _list(_str)
+    'thread_diagnostic.tlv.general': _list(_str),
+
+    # DNS
+    'dns.resp.ttl': _auto,
+    'dns.flags.response': _auto,
 }
 
 _layer_containers = set()

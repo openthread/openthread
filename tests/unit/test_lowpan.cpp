@@ -106,7 +106,7 @@ static void Init(void)
 {
     otMeshLocalPrefix meshLocalPrefix = {{0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34}};
 
-    sInstance->Get<Mle::MleRouter>().SetMeshLocalPrefix(static_cast<Mle::MeshLocalPrefix &>(meshLocalPrefix));
+    sInstance->Get<Mle::MleRouter>().SetMeshLocalPrefix(static_cast<Ip6::NetworkPrefix &>(meshLocalPrefix));
 
     // Emulate global prefixes with contextes.
     uint8_t mockNetworkData[] = {
@@ -129,7 +129,7 @@ static void Init(void)
 
     SuccessOrQuit(message->AppendBytes(mockNetworkData, sizeof(mockNetworkData)));
 
-    IgnoreError(sInstance->Get<NetworkData::Leader>().SetNetworkData(0, 0, true, *message, 0));
+    IgnoreError(sInstance->Get<NetworkData::Leader>().SetNetworkData(0, 0, NetworkData::kStableSubset, *message, 0));
 }
 
 /**

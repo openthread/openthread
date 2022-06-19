@@ -72,4 +72,14 @@
 #define OPENTHREAD_CONFIG_MULTI_RADIO 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT
+ *
+ * Specifies the fragment tag timeout interval in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT
+#define OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT (20 * 1000)
+#endif
+
 #endif // CONFIG_RADIO_LINK_H_
