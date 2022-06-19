@@ -202,15 +202,8 @@ void Publisher::NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix
 
 void Publisher::HandleNotifierEvents(Events aEvents)
 {
-    OT_UNUSED_VARIABLE(aEvents);
-
-    bool registerWithLeader = false;
-
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    if (mDnsSrpServiceEntry.HandleNotifierEvents(aEvents))
-    {
-        registerWithLeader = true;
-    }
+    mDnsSrpServiceEntry.HandleNotifierEvents(aEvents);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -219,11 +212,6 @@ void Publisher::HandleNotifierEvents(Events aEvents)
         entry.HandleNotifierEvents(aEvents);
     }
 #endif
-
-    if (registerWithLeader)
-    {
-        Get<Notifier>().HandleServerDataUpdated();
-    }
 }
 
 void Publisher::HandleTimer(Timer &aTimer)
@@ -233,29 +221,16 @@ void Publisher::HandleTimer(Timer &aTimer)
 
 void Publisher::HandleTimer(void)
 {
-    bool registerWithLeader = false;
-
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    if (mDnsSrpServiceEntry.HandleTimer())
-    {
-        registerWithLeader = true;
-    }
+    mDnsSrpServiceEntry.HandleTimer();
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     for (PrefixEntry &entry : mPrefixEntries)
     {
-        if (entry.HandleTimer())
-        {
-            registerWithLeader = true;
-        }
+        entry.HandleTimer();
     }
 #endif
-
-    if (registerWithLeader)
-    {
-        Get<Notifier>().HandleServerDataUpdated();
-    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -364,22 +339,25 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
     }
 }
 
-bool Publisher::Entry::HandleTimer(void)
+void Publisher::Entry::HandleTimer(void)
 {
-    bool registerWithLeader = false;
-
     // Timer is used to delay adding/removing the entry. If we have
     // reached `mUpdateTime` add or remove the entry. Otherwise,
     // restart the timer (note that timer can be shared between
-    // different published entries). This method returns a `bool`
-    // indicating whether or not anything in local Network Data got
-    // changed so to notify the leader and register the changes.
+    // different published entries).
 
     VerifyOrExit((GetState() == kAdding) || (GetState() == kRemoving));
 
     if (mUpdateTime <= TimerMilli::GetNow())
     {
-        registerWithLeader = (GetState() == kAdding) ? Add() : Remove(/* aNextState */ kToAdd);
+        if (GetState() == kAdding)
+        {
+            Add();
+        }
+        else
+        {
+            Remove(/* aNextState */ kToAdd);
+        }
     }
     else
     {
@@ -387,55 +365,41 @@ bool Publisher::Entry::HandleTimer(void)
     }
 
 exit:
-    return registerWithLeader;
+    return;
 }
 
-bool Publisher::Entry::Add(void)
+void Publisher::Entry::Add(void)
 {
-    bool registerWithLeader = false;
-
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     if (Get<Publisher>().IsADnsSrpServiceEntry(*this))
     {
-        registerWithLeader = static_cast<DnsSrpServiceEntry *>(this)->Add();
-        ExitNow();
+        static_cast<DnsSrpServiceEntry *>(this)->Add();
     }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     if (Get<Publisher>().IsAPrefixEntry(*this))
     {
-        registerWithLeader = static_cast<PrefixEntry *>(this)->Add();
-        ExitNow();
+        static_cast<PrefixEntry *>(this)->Add();
     }
 #endif
-
-exit:
-    return registerWithLeader;
 }
 
-bool Publisher::Entry::Remove(State aNextState)
+void Publisher::Entry::Remove(State aNextState)
 {
-    bool registerWithLeader = false;
-
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     if (Get<Publisher>().IsADnsSrpServiceEntry(*this))
     {
-        registerWithLeader = static_cast<DnsSrpServiceEntry *>(this)->Remove(aNextState);
-        ExitNow();
+        static_cast<DnsSrpServiceEntry *>(this)->Remove(aNextState);
     }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     if (Get<Publisher>().IsAPrefixEntry(*this))
     {
-        registerWithLeader = static_cast<PrefixEntry *>(this)->Remove(aNextState);
-        ExitNow();
+        static_cast<PrefixEntry *>(this)->Remove(aNextState);
     }
 #endif
-
-exit:
-    return registerWithLeader;
 }
 
 Publisher::Entry::InfoString Publisher::Entry::ToString(bool aIncludeState) const
@@ -542,8 +506,6 @@ void Publisher::DnsSrpServiceEntry::PublishUnicast(uint16_t aPort)
 
 void Publisher::DnsSrpServiceEntry::Publish(const Info &aInfo)
 {
-    bool registerWithLeader = false;
-
     if (GetState() != kNoEntry)
     {
         if (aInfo == mInfo)
@@ -552,7 +514,7 @@ void Publisher::DnsSrpServiceEntry::Publish(const Info &aInfo)
             ExitNow();
         }
 
-        registerWithLeader = Remove(/* aNextState */ kNoEntry);
+        Remove(/* aNextState */ kNoEntry);
     }
 
     mInfo = aInfo;
@@ -560,33 +522,19 @@ void Publisher::DnsSrpServiceEntry::Publish(const Info &aInfo)
 
     Process();
 
-    if (registerWithLeader)
-    {
-        Get<Notifier>().HandleServerDataUpdated();
-    }
-
 exit:
     return;
 }
 
 void Publisher::DnsSrpServiceEntry::Unpublish(void)
 {
-    bool registerWithLeader;
-
     LogInfo("Unpublishing DNS/SRP service");
 
-    registerWithLeader = Remove(/* aNextState */ kNoEntry);
-
-    if (registerWithLeader)
-    {
-        Get<Notifier>().HandleServerDataUpdated();
-    }
+    Remove(/* aNextState */ kNoEntry);
 }
 
-bool Publisher::DnsSrpServiceEntry::HandleNotifierEvents(Events aEvents)
+void Publisher::DnsSrpServiceEntry::HandleNotifierEvents(Events aEvents)
 {
-    bool registerWithLeader = false;
-
     if ((GetType() == kTypeUnicastMeshLocalEid) && aEvents.Contains(kEventThreadMeshLocalAddrChanged))
     {
         mInfo.SetAddress(Get<Mle::Mle>().GetMeshLocal64());
@@ -599,7 +547,7 @@ bool Publisher::DnsSrpServiceEntry::HandleNotifierEvents(Events aEvents)
 
             Remove(/* aNextState */ kAdding);
             Add();
-            registerWithLeader = true;
+            Get<Notifier>().HandleServerDataUpdated();
         }
     }
 
@@ -607,15 +555,11 @@ bool Publisher::DnsSrpServiceEntry::HandleNotifierEvents(Events aEvents)
     {
         Process();
     }
-
-    return registerWithLeader;
 }
 
-bool Publisher::DnsSrpServiceEntry::Add(void)
+void Publisher::DnsSrpServiceEntry::Add(void)
 {
     // Adds the service entry to the network data.
-
-    bool registerWithLeader = false;
 
     switch (GetType())
     {
@@ -635,19 +579,17 @@ bool Publisher::DnsSrpServiceEntry::Add(void)
         break;
     }
 
-    registerWithLeader = true;
+    Get<Notifier>().HandleServerDataUpdated();
     SetState(kAdded);
     Notify(kEventEntryAdded);
 
 exit:
-    return registerWithLeader;
+    return;
 }
 
-bool Publisher::DnsSrpServiceEntry::Remove(State aNextState)
+void Publisher::DnsSrpServiceEntry::Remove(State aNextState)
 {
     // Removes the service entry from network data (if it was added).
-
-    bool registerWithLeader = false;
 
     VerifyOrExit((GetState() == kAdded) || (GetState() == kRemoving));
 
@@ -668,12 +610,11 @@ bool Publisher::DnsSrpServiceEntry::Remove(State aNextState)
         break;
     }
 
-    registerWithLeader = true;
+    Get<Notifier>().HandleServerDataUpdated();
     Notify(kEventEntryRemoved);
 
 exit:
     SetState(aNextState);
-    return registerWithLeader;
 }
 
 void Publisher::DnsSrpServiceEntry::Notify(Event aEvent) const
@@ -871,16 +812,9 @@ void Publisher::PrefixEntry::Publish(const ExternalRouteConfig &aConfig)
 
 void Publisher::PrefixEntry::Unpublish(void)
 {
-    bool registerWithLeader = false;
-
     LogInfo("Unpublishing %s", mPrefix.ToString().AsCString());
 
-    registerWithLeader = Remove(/* aNextState */ kNoEntry);
-
-    if (registerWithLeader)
-    {
-        Get<Notifier>().HandleServerDataUpdated();
-    }
+    Remove(/* aNextState */ kNoEntry);
 }
 
 void Publisher::PrefixEntry::HandleNotifierEvents(Events aEvents)
@@ -891,11 +825,9 @@ void Publisher::PrefixEntry::HandleNotifierEvents(Events aEvents)
     }
 }
 
-bool Publisher::PrefixEntry::Add(void)
+void Publisher::PrefixEntry::Add(void)
 {
     // Adds the prefix entry to the network data.
-
-    bool registerWithLeader = false;
 
     switch (mType)
     {
@@ -908,12 +840,12 @@ bool Publisher::PrefixEntry::Add(void)
         break;
     }
 
-    registerWithLeader = true;
+    Get<Notifier>().HandleServerDataUpdated();
     SetState(kAdded);
     Get<Publisher>().NotifyPrefixEntryChange(kEventEntryAdded, mPrefix);
 
 exit:
-    return registerWithLeader;
+    return;
 }
 
 Error Publisher::PrefixEntry::AddOnMeshPrefix(void)
@@ -938,11 +870,9 @@ Error Publisher::PrefixEntry::AddExternalRoute(void)
     return Get<Local>().AddHasRoutePrefix(config);
 }
 
-bool Publisher::PrefixEntry::Remove(State aNextState)
+void Publisher::PrefixEntry::Remove(State aNextState)
 {
     // Remove the prefix entry from the network data.
-
-    bool registerWithLeader = false;
 
     VerifyOrExit((GetState() == kAdded) || (GetState() == kRemoving));
 
@@ -957,12 +887,11 @@ bool Publisher::PrefixEntry::Remove(State aNextState)
         break;
     }
 
-    registerWithLeader = true;
+    Get<Notifier>().HandleServerDataUpdated();
     Get<Publisher>().NotifyPrefixEntryChange(kEventEntryRemoved, mPrefix);
 
 exit:
     SetState(aNextState);
-    return registerWithLeader;
 }
 
 void Publisher::PrefixEntry::Process(void)
