@@ -66,7 +66,7 @@ public:
     virtual void Process(const otSysMainloopContext &aContext) = 0;
 
     /**
-     * This method marks desturctor virtual.
+     * This method marks desturctor virtual method.
      *
      */
     virtual ~Source() = default;
