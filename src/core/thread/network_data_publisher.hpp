@@ -303,15 +303,15 @@ private:
         const TimeMilli &GetUpdateTime(void) const { return mUpdateTime; }
         bool             IsPreferred(uint16_t aRloc16) const;
         void             UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEntries, uint8_t aDesiredNumEntries);
-        bool             HandleTimer(void);
+        void             HandleTimer(void);
         InfoString       ToString(bool aIncludeState = true) const;
 
     public:
         bool IsAdded(void) const { return (mState == kAdded); }
 
     private:
-        bool               Add(void);
-        bool               Remove(State aNextState);
+        void               Add(void);
+        void               Remove(State aNextState);
         void               LogUpdateTime(void) const;
         static const char *StateToString(State aState);
 
@@ -331,8 +331,8 @@ private:
         void PublishUnicast(const Ip6::Address &aAddress, uint16_t aPort);
         void PublishUnicast(uint16_t aPort);
         void Unpublish(void);
-        bool HandleTimer(void) { return Entry::HandleTimer(); }
-        bool HandleNotifierEvents(Events aEvents);
+        void HandleTimer(void) { Entry::HandleTimer(); }
+        void HandleNotifierEvents(Events aEvents);
 
     private:
         static constexpr uint8_t kDesiredNumAnycast =
@@ -374,8 +374,8 @@ private:
 
         Type GetType(void) const { return mInfo.GetType(); }
         void Publish(const Info &aInfo);
-        bool Add(void);
-        bool Remove(State aNextState);
+        void Add(void);
+        void Remove(State aNextState);
         void Notify(Event aEvent) const;
         void Process(void);
         void CountAnycastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
@@ -402,7 +402,7 @@ private:
         void Publish(const OnMeshPrefixConfig &aConfig);
         void Publish(const ExternalRouteConfig &aConfig);
         void Unpublish(void);
-        bool HandleTimer(void) { return Entry::HandleTimer(); }
+        void HandleTimer(void) { Entry::HandleTimer(); }
         void HandleNotifierEvents(Events aEvents);
 
     private:
@@ -418,10 +418,10 @@ private:
             kTypeExternalRoute,
         };
 
-        bool  Add(void);
+        void  Add(void);
         Error AddOnMeshPrefix(void);
         Error AddExternalRoute(void);
-        bool  Remove(State aNextState);
+        void  Remove(State aNextState);
         void  Process(void);
         void  CountOnMeshPrefixEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
         void  CountExternalRouteEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
