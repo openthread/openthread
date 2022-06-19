@@ -46,7 +46,8 @@ namespace NetworkData {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, Notifier::HandleTimer)
+    , mTimer(aInstance, HandleTimer)
+    , mSynchronizeDataTask(aInstance, HandleSynchronizeDataTask)
     , mNextDelay(0)
     , mWaitingForResponse(false)
 {
@@ -55,7 +56,12 @@ Notifier::Notifier(Instance &aInstance)
 void Notifier::HandleServerDataUpdated(void)
 {
     mNextDelay = 0;
-    SynchronizeServerData();
+    mSynchronizeDataTask.Post();
+}
+
+void Notifier::HandleSynchronizeDataTask(Tasklet &aTasklet)
+{
+    aTasklet.Get<Notifier>().SynchronizeServerData();
 }
 
 void Notifier::SynchronizeServerData(void)
