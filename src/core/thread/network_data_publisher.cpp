@@ -89,13 +89,15 @@ void Publisher::SetPrefixCallback(PrefixCallback aCallback, void *aContext)
 
 Error Publisher::PublishOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
 {
-    Error        error;
+    Error        error = kErrorNone;
     PrefixEntry *entry;
 
     VerifyOrExit(aConfig.IsValid(GetInstance()), error = kErrorInvalidArgs);
     VerifyOrExit(aConfig.mStable, error = kErrorInvalidArgs);
 
-    SuccessOrExit(error = AllocatePrefixEntry(aConfig.GetPrefix(), entry));
+    entry = FindOrAllocatePrefixEntry(aConfig.GetPrefix());
+    VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
+
     entry->Publish(aConfig);
 
 exit:
@@ -104,13 +106,15 @@ exit:
 
 Error Publisher::PublishExternalRoute(const ExternalRouteConfig &aConfig)
 {
-    Error        error;
+    Error        error = kErrorNone;
     PrefixEntry *entry;
 
     VerifyOrExit(aConfig.IsValid(GetInstance()), error = kErrorInvalidArgs);
     VerifyOrExit(aConfig.mStable, error = kErrorInvalidArgs);
 
-    SuccessOrExit(error = AllocatePrefixEntry(aConfig.GetPrefix(), entry));
+    entry = FindOrAllocatePrefixEntry(aConfig.GetPrefix());
+    VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
+
     entry->Publish(aConfig);
 
 exit:
@@ -145,23 +149,26 @@ exit:
     return error;
 }
 
-Error Publisher::AllocatePrefixEntry(const Ip6::Prefix &aPrefix, PrefixEntry *&aEntry)
+Publisher::PrefixEntry *Publisher::FindOrAllocatePrefixEntry(const Ip6::Prefix &aPrefix)
 {
-    Error error = kErrorNoBufs;
+    // Returns a matching prefix entry if found, otherwise tries
+    // to allocate a new entry.
 
-    VerifyOrExit(FindMatchingPrefixEntry(aPrefix) == nullptr, error = kErrorAlready);
+    PrefixEntry *prefixEntry = FindMatchingPrefixEntry(aPrefix);
+
+    VerifyOrExit(prefixEntry == nullptr);
 
     for (PrefixEntry &entry : mPrefixEntries)
     {
         if (!entry.IsInUse())
         {
-            aEntry = &entry;
-            ExitNow(error = kErrorNone);
+            prefixEntry = &entry;
+            ExitNow();
         }
     }
 
 exit:
-    return error;
+    return prefixEntry;
 }
 
 Publisher::PrefixEntry *Publisher::FindMatchingPrefixEntry(const Ip6::Prefix &aPrefix)
@@ -788,25 +795,50 @@ void Publisher::PrefixEntry::Publish(const OnMeshPrefixConfig &aConfig)
 {
     LogInfo("Publishing OnMeshPrefix %s", aConfig.GetPrefix().ToString().AsCString());
 
-    mType   = kTypeOnMeshPrefix;
-    mPrefix = aConfig.GetPrefix();
-    mFlags  = aConfig.ConvertToTlvFlags();
-
-    SetState(kToAdd);
-
-    Process();
+    Publish(aConfig.GetPrefix(), aConfig.ConvertToTlvFlags(), kTypeOnMeshPrefix);
 }
 
 void Publisher::PrefixEntry::Publish(const ExternalRouteConfig &aConfig)
 {
     LogInfo("Publishing ExternalRoute %s", aConfig.GetPrefix().ToString().AsCString());
 
-    mType   = kTypeExternalRoute;
-    mPrefix = aConfig.GetPrefix();
-    mFlags  = aConfig.ConvertToTlvFlags();
+    Publish(aConfig.GetPrefix(), aConfig.ConvertToTlvFlags(), kTypeExternalRoute);
+}
+
+void Publisher::PrefixEntry::Publish(const Ip6::Prefix &aPrefix, uint16_t aNewFlags, Type aNewType)
+{
+    if (GetState() != kNoEntry)
+    {
+        // If this is an existing entry, first we check that there is
+        // a change in either type or flags. We remove the old entry
+        // from Network Data if it was added. If the only change is
+        // to flags (e.g., change to the preference level) and the
+        // entry was previously added in Network Data, we re-add it
+        // with the new flags. This ensures that changes to flags are
+        // immediately reflected in the Network Data.
+
+        State oldState = GetState();
+
+        VerifyOrExit((mType != aNewType) || (mFlags != aNewFlags));
+
+        Remove(/* aNextState */ kNoEntry);
+
+        if ((mType == aNewType) && ((oldState == kAdded) || (oldState == kRemoving)))
+        {
+            mFlags = aNewFlags;
+            Add();
+        }
+    }
+
+    VerifyOrExit(GetState() == kNoEntry);
+
+    mType   = aNewType;
+    mPrefix = aPrefix;
+    mFlags  = aNewFlags;
 
     SetState(kToAdd);
 
+exit:
     Process();
 }
 

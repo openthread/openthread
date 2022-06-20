@@ -192,12 +192,18 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
  *
  * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be TRUE).
  *
+ * A subsequent call to this method will replace a previous request for the same prefix. In particular, if the new call
+ * only changes the flags (e.g., preference level) and the prefix is already added in the Network Data, the change to
+ * flags is immediately reflected in the Network Data. This ensures that existing entries in the Network Data are not
+ * abruptly removed. Note that a change in the preference level can potentially later cause the entry to be removed
+ * from the Network Data after determining there are other nodes that are publishing the same prefix with the same or
+ * higher preference.
+ *
  * @param[in] aInstance           A pointer to an OpenThread instance.
  * @param[in] aConfig             The on-mesh prefix config to publish (MUST NOT be NULL).
  *
  * @retval OT_ERROR_NONE          The on-mesh prefix is published successfully.
  * @retval OT_ERROR_INVALID_ARGS  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).
- * @retval OT_ERROR_ALREADY       An entry with the same prefix is already in the published list.
  * @retval OT_ERROR_NO_BUFS       Could not allocate an entry for the new request. Publisher supports a limited number
  *                                of entries (shared between on-mesh prefix and external route) determined by config
  *                                `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES`.
@@ -213,12 +219,18 @@ otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouter
  *
  * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be TRUE).
  *
+ * A subsequent call to this method will replace a previous request for the same prefix. In particular, if the new call
+ * only changes the flags (e.g., preference level) and the prefix is already added in the Network Data, the change to
+ * flags is immediately reflected in the Network Data. This ensures that existing entries in the Network Data are not
+ * abruptly removed. Note that a change in the preference level can potentially later cause the entry to be removed
+ * from the Network Data after determining there are other nodes that are publishing the same prefix with the same or
+ * higher preference.
+ *
  * @param[in] aInstance           A pointer to an OpenThread instance.
  * @param[in] aConfig             The external route config to publish (MUST NOT be NULL).
  *
  * @retval OT_ERROR_NONE          The external route is published successfully.
  * @retval OT_ERROR_INVALID_ARGS  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).
- * @retval OT_ERROR_ALREADY       An entry with the same prefix is already in the published list.
  * @retval OT_ERROR_NO_BUFS       Could not allocate an entry for the new request. Publisher supports a limited number
  *                                of entries (shared between on-mesh prefix and external route) determined by config
  *                                `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES`.
