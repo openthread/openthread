@@ -64,6 +64,7 @@ source_set("openthread") {
     "history_tracker.h",
     "icmp6.h",
     "instance.h",
+    "ip4.h",
     "ip6.h",
     "jam_detection.h",
     "joiner.h",

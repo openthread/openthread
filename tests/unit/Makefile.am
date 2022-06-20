@@ -262,6 +262,10 @@ ot_test_hmac_sha256_LDADD           = $(COMMON_LDADD)
 ot_test_hmac_sha256_LIBTOOLFLAGS    = $(COMMON_LIBTOOLFLAGS)
 ot_test_hmac_sha256_SOURCES         = $(COMMON_SOURCES) test_hmac_sha256.cpp
 
+ot_test_ip4_header_LDADD            = $(COMMON_LDADD)
+ot_test_ip4_header_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
+ot_test_ip4_header_SOURCES          = $(COMMON_SOURCES) test_ip4_header.cpp
+
 ot_test_ip6_header_LDADD            = $(COMMON_LDADD)
 ot_test_ip6_header_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
 ot_test_ip6_header_SOURCES          = $(COMMON_SOURCES) test_ip6_header.cpp

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021-2022, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,85 +28,31 @@
 
 /**
  * @file
- *   This file implements IPv4 address related functionality.
+ *   This file implements IP4 headers processing.
  */
 
-#include "ip4_address.hpp"
-
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/numeric_limits.hpp"
+#include "ip4_headers.hpp"
 
 namespace ot {
 namespace Ip4 {
 
-Error Address::FromString(const char *aString)
+Error Header::ParseFrom(const Message &aMessage)
 {
-    constexpr char kSeperatorChar = '.';
-    constexpr char kNullChar      = '\0';
-
     Error error = kErrorParse;
 
-    for (uint8_t index = 0;; index++)
-    {
-        uint16_t value         = 0;
-        uint8_t  hasFirstDigit = false;
+    SuccessOrExit(aMessage.Read(0, *this));
+    VerifyOrExit(IsValid());
+    VerifyOrExit(GetTotalLength() == aMessage.GetLength());
 
-        for (char digitChar = *aString;; ++aString, digitChar = *aString)
-        {
-            if ((digitChar < '0') || (digitChar > '9'))
-            {
-                break;
-            }
-
-            value = static_cast<uint16_t>((value * 10) + static_cast<uint8_t>(digitChar - '0'));
-            VerifyOrExit(value <= NumericLimits<uint8_t>::kMax);
-            hasFirstDigit = true;
-        }
-
-        VerifyOrExit(hasFirstDigit);
-
-        mFields.m8[index] = static_cast<uint8_t>(value);
-
-        if (index == sizeof(Address) - 1)
-        {
-            break;
-        }
-
-        VerifyOrExit(*aString == kSeperatorChar);
-        aString++;
-    }
-
-    VerifyOrExit(*aString == kNullChar);
     error = kErrorNone;
 
 exit:
     return error;
 }
 
-Address::InfoString Address::ToString(void) const
+bool Header::IsValid(void) const
 {
-    InfoString string;
-
-    string.Append("%d.%d.%d.%d", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
-
-    return string;
-}
-
-Cidr::InfoString Cidr::ToString(void) const
-{
-    InfoString string;
-
-    string.Append("%s/%d", AsCoreType(&mAddress).ToString().AsCString(), mLength);
-
-    return string;
-}
-
-Address Cidr::Host(const uint32_t aHost) const
-{
-    Address ret;
-    ret.mFields.m32 = (mAddress.mFields.m32 & SubnetMask()) | (HostSwap32(aHost) & HostMask());
-    return ret;
+    return IsVersion4();
 }
 
 } // namespace Ip4

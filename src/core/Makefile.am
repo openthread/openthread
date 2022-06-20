@@ -253,6 +253,7 @@ SOURCES_COMMON                                  = \
     net/dnssd_server.cpp                          \
     net/icmp6.cpp                                 \
     net/ip4_address.cpp                           \
+    net/ip4_headers.cpp                           \
     net/ip6.cpp                                   \
     net/ip6_address.cpp                           \
     net/ip6_filter.cpp                            \
@@ -557,6 +558,8 @@ HEADERS_COMMON                                  = \
     net/dnssd_server.hpp                          \
     net/icmp6.hpp                                 \
     net/ip4_address.hpp                           \
+    net/ip4_headers.hpp                           \
+    net/ip4_types.hpp                             \
     net/ip6.hpp                                   \
     net/ip6_address.hpp                           \
     net/ip6_filter.hpp                            \

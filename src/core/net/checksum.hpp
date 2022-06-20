@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include "common/message.hpp"
+#include "net/ip4_headers.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/socket.hpp"
@@ -69,11 +70,11 @@ public:
     static Error VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
-     * This static method calculates and then updates the checksum in a given message (if UDP/ICMP6).
+     * This static method calculates and then updates the checksum in a given message (if TCP/UDP/ICMP6).
      *
      * @param[in,out] aMessage  The message to update the checksum in. The `aMessage.GetOffset()` should point to start
-     *                          of the UDP/ICMP6 header. On exit the checksum field in UDP/ICMP6 header in the message
-     *                          is updated.
+     *                          of the TCP/UDP/ICMP6 header. On exit the checksum field in TCP/UDP/ICMP(v4) header in
+     *                          the message is updated.
      * @param[in] aSource       The source address.
      * @param[in] aDestination  The destination address.
      * @param[in] aIpProto      The Internet Protocol value.
@@ -83,6 +84,29 @@ public:
                                       const Ip6::Address &aSource,
                                       const Ip6::Address &aDestination,
                                       uint8_t             aIpProto);
+
+    /**
+     * This static method calculates and then updates the checksum in a given message (if TCP/UDP/ICMP(v4)).
+     *
+     * @param[in,out] aMessage  The message to update the checksum in. The `aMessage.GetOffset()` should point to start
+     *                          of the TCP/UDP/ICMP(v4) header. On exit the checksum field in TCP/UDP/ICMP(v4) header in
+     *                          the message is updated.
+     * @param[in] aSource       The source address.
+     * @param[in] aDestination  The destination address.
+     * @param[in] aIpProto      The Internet Protocol value.
+     *
+     */
+    static void UpdateMessageChecksum(Message &           aMessage,
+                                      const Ip4::Address &aSource,
+                                      const Ip4::Address &aDestination,
+                                      uint8_t             aIpProto);
+
+    /**
+     * This static method calculates and then updates the checksum in the IPv4 header.
+     *
+     * @param[in,out] aHeader The IPv4 header to update the checksum in.
+     */
+    static void UpdateIPv4HeaderChecksum(Ip4::Header &aHeader);
 
 private:
     Checksum(void)
@@ -98,6 +122,10 @@ private:
     void     WriteToMessage(uint16_t aOffset, Message &aMessage) const;
     void     Calculate(const Ip6::Address &aSource,
                        const Ip6::Address &aDestination,
+                       uint8_t             aIpProto,
+                       const Message &     aMessage);
+    void     Calculate(const Ip4::Address &aSource,
+                       const Ip4::Address &aDestination,
                        uint8_t             aIpProto,
                        const Message &     aMessage);
 

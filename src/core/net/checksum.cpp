@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/message.hpp"
 #include "net/icmp6.hpp"
+#include "net/ip4_types.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
@@ -115,6 +116,34 @@ void Checksum::Calculate(const Ip6::Address &aSource,
     }
 }
 
+void Checksum::Calculate(const Ip4::Address &aSource,
+                         const Ip4::Address &aDestination,
+                         uint8_t             aIpProto,
+                         const Message &     aMessage)
+{
+    Message::Chunk chunk;
+    uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
+
+    // Pseudo-header for checksum calculation (RFC-2460).
+    if (aIpProto != Ip4::kProtoIcmp)
+    {
+        AddData(aSource.GetBytes(), sizeof(Ip4::Address));
+        AddData(aDestination.GetBytes(), sizeof(Ip4::Address));
+        AddUint16(length);
+        AddUint16(static_cast<uint16_t>(aIpProto));
+    }
+
+    // Add message content (from offset to the end) to checksum.
+
+    aMessage.GetFirstChunk(aMessage.GetOffset(), length, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        AddData(chunk.GetBytes(), chunk.GetLength());
+        aMessage.GetNextChunk(length, chunk);
+    }
+}
+
 Error Checksum::VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
     Checksum checksum;
@@ -150,11 +179,56 @@ void Checksum::UpdateMessageChecksum(Message &           aMessage,
         ExitNow();
     }
 
+    // Clear the checksum before calculating it.
+    aMessage.Write(aMessage.GetOffset() + headerOffset, uint16_t(0));
     checksum.Calculate(aSource, aDestination, aIpProto, aMessage);
     checksum.WriteToMessage(aMessage.GetOffset() + headerOffset, aMessage);
 
 exit:
     return;
+}
+
+void Checksum::UpdateMessageChecksum(Message &           aMessage,
+                                     const Ip4::Address &aSource,
+                                     const Ip4::Address &aDestination,
+                                     uint8_t             aIpProto)
+{
+    uint16_t headerOffset;
+    Checksum checksum;
+
+    switch (aIpProto)
+    {
+    case Ip4::kProtoTcp:
+        headerOffset = Ip4::Tcp::Header::kChecksumFieldOffset;
+        break;
+
+    case Ip4::kProtoUdp:
+        headerOffset = Ip4::Udp::Header::kChecksumFieldOffset;
+        break;
+
+    case Ip4::kProtoIcmp:
+        headerOffset = Ip4::Icmp::Header::kChecksumFieldOffset;
+        break;
+
+    default:
+        ExitNow();
+    }
+
+    // Clear the checksum before calculating it.
+    aMessage.Write(aMessage.GetOffset() + headerOffset, uint16_t(0));
+    checksum.Calculate(aSource, aDestination, aIpProto, aMessage);
+    checksum.WriteToMessage(aMessage.GetOffset() + headerOffset, aMessage);
+
+exit:
+    return;
+}
+
+void Checksum::UpdateIPv4HeaderChecksum(Ip4::Header &aHeader)
+{
+    Checksum checksum;
+    aHeader.SetChecksum(0);
+    checksum.AddData(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(aHeader));
+    aHeader.SetChecksum(HostSwap16(~checksum.GetValue()));
 }
 
 } // namespace ot
