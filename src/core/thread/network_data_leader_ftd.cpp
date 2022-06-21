@@ -60,6 +60,7 @@ RegisterLogModule("NetworkData");
 
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
+    , mWaitingForNetDataSync(false)
     , mTimer(aInstance, Leader::HandleTimer)
     , mServerData(UriPath::kServerData, &Leader::HandleServerData, this)
     , mCommissioningDataGet(UriPath::kCommissionerGet, &Leader::HandleCommissioningGet, this)
@@ -77,8 +78,15 @@ void Leader::Reset(void)
     mContextIdReuseDelay = kContextIdReuseDelay;
 }
 
-void Leader::Start(void)
+void Leader::Start(Mle::LeaderStartMode aStartMode)
 {
+    mWaitingForNetDataSync = (aStartMode == Mle::kRestoringLeaderRoleAfterReset);
+
+    if (mWaitingForNetDataSync)
+    {
+        mTimer.Start(kMaxNetDataSyncWait);
+    }
+
     Get<Tmf::Agent>().AddResource(mServerData);
     Get<Tmf::Agent>().AddResource(mCommissioningDataGet);
     Get<Tmf::Agent>().AddResource(mCommissioningDataSet);
@@ -145,6 +153,8 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
     uint16_t             rloc16;
 
     LogInfo("Received network data registration");
+
+    VerifyOrExit(!mWaitingForNetDataSync);
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator());
 
@@ -1296,10 +1306,15 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     }
 }
 
-void Leader::UpdateContextsAfterReset(void)
+void Leader::HandleNetworkDataRestoredAfterReset(void)
 {
     const PrefixTlv *prefix;
     TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
+
+    mWaitingForNetDataSync = false;
+
+    // Synchronize internal 6LoWPAN Context ID Set with the
+    // recently obtained Network Data.
 
     while ((prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
@@ -1332,6 +1347,13 @@ void Leader::HandleTimer(void)
 {
     bool contextsWaiting = false;
 
+    if (mWaitingForNetDataSync)
+    {
+        LogInfo("Timed out waiting for netdata on restoring leader role after reset");
+        IgnoreError(Get<Mle::MleRouter>().BecomeDetached());
+        ExitNow();
+    }
+
     for (uint8_t i = 0; i < kNumContextIds; i++)
     {
         if (mContextLastUsed[i].GetValue() == 0)
@@ -1353,6 +1375,9 @@ void Leader::HandleTimer(void)
     {
         mTimer.Start(kStateUpdatePeriod);
     }
+
+exit:
+    return;
 }
 
 Error Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext)
