@@ -261,6 +261,11 @@ class OpenThreadTHCI(object):
     def _onCommissionStop(self):
         """Called when commissioning stops."""
 
+    @abstractmethod
+    def __restartAgentService(self):
+        """Called when restarting the agent service"""
+        pass
+
     def __sendCommand(self, cmd, expectEcho=True):
         cmd = self._cmdPrefix + cmd
         # self.log("command: %s", cmd)
@@ -559,7 +564,10 @@ class OpenThreadTHCI(object):
         ]:
             self.__setRouterSelectionJitter(1)
         elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
-            self.IsBackboneRouter = True
+            if self.DeviceCapability == OT12BR_CAPBS:
+                self.IsBackboneRouter = True
+            else:
+                self.IsBackboneRouter = False
             self.__setRouterSelectionJitter(1)
 
         if self.IsBackboneRouter:
@@ -1072,7 +1080,10 @@ class OpenThreadTHCI(object):
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
         elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
-            print('join as BBR')
+            if self.DeviceCapability == OT12BR_CAPBS:
+                print('join as BBR')
+            else:
+                print('join as BR')
             mode = 'rdn'
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
@@ -1389,8 +1400,11 @@ class OpenThreadTHCI(object):
         # indicate that the channel has been set, in case the channel was set
         # to default when joining network
         self.hasSetChannel = False
-        # indicate whether the default domain prefix is used.
-        self.__useDefaultDomainPrefix = True
+        if self.DeviceCapability == OT12BR_CAPBS:
+            # indicate whether the default domain prefix is used.
+            self.__useDefaultDomainPrefix = True
+        else:
+            self.__useDefaultDomainPrefix = False
         self.__isUdpOpened = False
         self.IsBackboneRouter = False
         self.IsHost = False
@@ -1400,9 +1414,10 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
-        self.bbrMlrTimeout = 3600
-        self.bbrReRegDelay = 5
+        if self.DeviceCapability == OT12BR_CAPBS:
+            self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
+            self.bbrMlrTimeout = 3600
+            self.bbrReRegDelay = 5
 
         # initialize device configuration
         self.setMAC(self.mac)
@@ -3245,9 +3260,6 @@ class OpenThread(OpenThreadTHCI, IThci):
         pass
 
     def _deviceAfterReset(self):
-        pass
-
-    def __restartAgentService(self):
         pass
 
     def _beforeRegisterMulticast(self, sAddr, timeout):
