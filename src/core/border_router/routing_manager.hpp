@@ -244,39 +244,121 @@ private:
     static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
                   "invalid RA STALE time");
 
-    // A prefix discovered from Router Advert msg from infra netif
-    class ExternalPrefix : private Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
+    class DiscoveredPrefixTable : public InstanceLocator
     {
+        // This class maintains the discovered on-link and route prefixes
+        // from the received RA messages by processing PIO and RIO options
+        // from the message. It takes care of processing the RA message but
+        // delegates the decision whether to include or exclude a prefix to
+        // `RoutingManager` by calling its `ShouldProcessPrefixInfoOption()`
+        // and `ShouldProcessRouteInfoOption()` methods.
+        //
+        // It manages the lifetime of the discovered entries and publishes
+        // and unpublishes the prefixes in the Network Data (as external
+        // route) as they are added or removed.
+        //
+        // When there is any change in the table (an entry is added, removed,
+        // or modified), it signals the change to `RoutingManager` by calling
+        // `HandleDiscoveredPrefixTableChanged()` callback. A `Tasklet` is
+        // used for signalling which ensures that if there are multiple
+        // changes within the same flow of execution, the callback is
+        // invoked after all the changes are processed.
+
     public:
-        void               InitFrom(const Ip6::Nd::PrefixInfoOption &aPio);
-        void               InitFrom(const Ip6::Nd::RouteInfoOption &aRio);
-        bool               IsOnLinkPrefix(void) const { return mIsOnLinkPrefix; }
-        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
-        const TimeMilli &  GetLastUpdateTime(void) const { return mLastUpdateTime; }
-        uint32_t           GetValidLifetime(void) const { return mValidLifetime; }
-        void               ClearValidLifetime(void) { mValidLifetime = 0; }
-        TimeMilli          GetExpireTime(void) const { return mLastUpdateTime + GetPrefixExpireDelay(mValidLifetime); }
-        TimeMilli          GetStaleTime(void) const;
-        bool               operator==(const ExternalPrefix &aPrefix) const;
+        enum NetDataMode : uint8_t // Used in `Remove{}` methods
+        {
+            kUnpublishFromNetData, // Unpublish the entry from Network Data if previously published.
+            kKeepInNetData,        // Keep entry in Network Data if previously published.
+        };
 
-        // Methods to use when `IsOnLinkPrefix()`
-        uint32_t GetPreferredLifetime(void) const { return mPreferredLifetime; }
-        void     ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
-        bool     IsDeprecated(void) const;
-        void     AdoptValidAndPreferredLiftimesFrom(const ExternalPrefix &Prefix);
+        explicit DiscoveredPrefixTable(Instance &aInstance);
 
-        // Method to use when `!IsOnlinkPrefix()`
-        RoutePreference GetRoutePreference(void) const { return mRoutePreference; }
+        void ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
+                                        const Ip6::Address &                aSrcAddress);
+
+        void FindFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const;
+        bool ContainsOnLinkPrefix(const Ip6::Prefix &aPrefix) const;
+        void RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix, NetDataMode aNetDataMode);
+
+        bool ContainsRoutePrefix(const Ip6::Prefix &aPrefix) const;
+        void RemoveRoutePrefix(const Ip6::Prefix &aPrefix, NetDataMode aNetDataMode);
+
+        void RemoveAllEntries(void);
+        void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
+
+        TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
     private:
-        static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
+        static constexpr uint8_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
 
-        Ip6::Prefix     mPrefix;
-        TimeMilli       mLastUpdateTime;
-        uint32_t        mValidLifetime;
-        uint32_t        mPreferredLifetime; // Applicable when prefix is on-link.
-        RoutePreference mRoutePreference;   // Applicable when prefix is not on-link
-        bool            mIsOnLinkPrefix;
+        struct Entry : private Clearable<Entry>, public Unequatable<Entry>
+        {
+        public:
+            enum Type : uint8_t
+            {
+                kTypeOnLink,
+                kTypeRoute,
+            };
+
+            struct Matcher
+            {
+                Matcher(const Ip6::Prefix &aPrefix, Type aType)
+                    : mPrefix(aPrefix)
+                    , mType(aType)
+                {
+                }
+
+                const Ip6::Prefix &mPrefix;
+                bool               mType;
+            };
+
+            void               InitFrom(const Ip6::Nd::PrefixInfoOption &aPio);
+            void               InitFrom(const Ip6::Nd::RouteInfoOption &aRio);
+            bool               IsOnLinkPrefix(void) const { return (mType == kTypeOnLink); }
+            const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+            const TimeMilli &  GetLastUpdateTime(void) const { return mLastUpdateTime; }
+            uint32_t           GetValidLifetime(void) const { return mValidLifetime; }
+            void               ClearValidLifetime(void) { mValidLifetime = 0; }
+            TimeMilli          GetExpireTime(void) const;
+            TimeMilli          GetStaleTime(void) const;
+            bool               operator==(const Entry &aOther) const;
+            bool               Matches(const Matcher &aMatcher) const;
+
+            // Methods to use when `IsOnLinkPrefix()`
+            uint32_t GetPreferredLifetime(void) const { return mPreferredLifetime; }
+            void     ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
+            bool     IsDeprecated(void) const;
+            void     AdoptValidAndPreferredLiftimesFrom(const Entry &aEntry);
+
+            // Method to use when `!IsOnlinkPrefix()`
+            RoutePreference GetRoutePreference(void) const { return mRoutePreference; }
+
+        private:
+            static uint32_t CalculateExpireDelay(uint32_t aValidLifetime);
+
+            Ip6::Prefix     mPrefix;
+            TimeMilli       mLastUpdateTime;
+            uint32_t        mValidLifetime;
+            uint32_t        mPreferredLifetime; // Applicable when prefix is on-link.
+            RoutePreference mRoutePreference;   // Applicable when prefix is not on-link
+            Type            mType;
+        };
+
+        typedef Array<Entry, kMaxEntries> EntryArray;
+
+        void RemovePrefix(const Ip6::Prefix &aPrefix, Entry::Type aType, NetDataMode aNetDataMode);
+
+        void        ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio);
+        void        ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio);
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
+        void        RemoveExpiredEntries(void);
+        void        SignalTableChanged(void);
+        static void HandleSignalTask(Tasklet &aTasklet);
+
+        EntryArray mEntries;
+        TimerMilli mTimer;
+        Tasklet    mSignalTask;
     };
 
     class OmrPrefix // An OMR Prefix
@@ -299,8 +381,7 @@ private:
         RoutePreference mPreference;
     };
 
-    typedef Array<OmrPrefix, kMaxOmrPrefixNum>             OmrPrefixArray;
-    typedef Array<ExternalPrefix, kMaxDiscoveredPrefixNum> ExternalPrefixArray;
+    typedef Array<OmrPrefix, kMaxOmrPrefixNum> OmrPrefixArray;
 
     void  EvaluateState(void);
     void  Start(void);
@@ -346,12 +427,11 @@ private:
     void DeprecateOnLinkPrefix(void);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
-    bool UpdateDiscoveredOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
-    void UpdateDiscoveredOmrPrefix(const Ip6::Nd::RouteInfoOption &aRio);
-    void InvalidateDiscoveredPrefixes(void);
-    void InvalidateAllDiscoveredPrefixes(void);
+    bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
+    bool ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
+    void HandleDiscoveredPrefixTableChanged(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
-    bool UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
+    void UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
     void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
@@ -382,6 +462,10 @@ private:
     // advertised on infra link.
     OmrPrefixArray mAdvertisedOmrPrefixes;
 
+    // The currently favored (smallest) discovered on-link prefix.
+    // Prefix length of zero indicates there is none.
+    Ip6::Prefix mFavoredDiscoveredOnLinkPrefix;
+
     // The on-link prefix loaded from local persistent storage or
     // randomly generated if non is found in persistent storage.
     Ip6::Prefix mLocalOnLinkPrefix;
@@ -399,11 +483,7 @@ private:
     // True if the local NAT64 prefix is advertised in Thread network.
     bool mIsAdvertisingLocalNat64Prefix;
 
-    // The array of prefixes discovered on the infra link. Those
-    // prefixes consist of on-link prefix(es) and OMR prefixes
-    // advertised by BRs in another Thread Network which is connected to
-    // the same infra link.
-    ExternalPrefixArray mDiscoveredPrefixes;
+    DiscoveredPrefixTable mDiscoveredPrefixTable;
 
     // The RA header and parameters for the infra interface.
     // This value is initialized with `RouterAdvMessage::SetToDefault`
@@ -412,7 +492,6 @@ private:
     TimeMilli                            mTimeRouterAdvMessageLastUpdate;
     bool                                 mLearntRouterAdvMessageFromHost;
 
-    TimerMilli mDiscoveredPrefixInvalidTimer;
     TimerMilli mDiscoveredPrefixStaleTimer;
 
     uint32_t  mRouterAdvertisementCount;

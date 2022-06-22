@@ -42,6 +42,7 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/tasklet.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -66,6 +67,10 @@ public:
     /**
      * Call this method to inform the notifier that new server data is available.
      *
+     * This method posts a tasklet to sync new server data with leader so if there are multiple changes within the same
+     * flow of execution (multiple calls to this method) they are all synchronized together and included in the same
+     * message to the leader.
+     *
      */
     void HandleServerDataUpdated(void);
 
@@ -85,9 +90,12 @@ private:
                                    Error                aResult);
     void        HandleCoapResponse(Error aResult);
 
+    static void HandleSynchronizeDataTask(Tasklet &aTasklet);
+
     void SynchronizeServerData(void);
 
     TimerMilli mTimer;
+    Tasklet    mSynchronizeDataTask;
     uint32_t   mNextDelay;
     bool       mWaitingForResponse;
 };
