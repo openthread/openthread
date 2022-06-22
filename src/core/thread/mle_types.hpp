@@ -162,6 +162,13 @@ constexpr uint8_t kRouterSelectionJitter      = 120; ///< (in sec)
 constexpr uint8_t kRouterDowngradeThreshold = 23;
 constexpr uint8_t kRouterUpgradeThreshold   = 16;
 
+/**
+ * Threshold to accept a router upgrade request with reason `kBorderRouterRequest` (number of BRs acting as router in
+ * Network Data).
+ *
+ */
+constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
+
 constexpr uint32_t kMaxLeaderToRouterTimeout = 90;  ///< (in sec)
 constexpr uint32_t kReedAdvertiseInterval    = 570; ///< (in sec)
 constexpr uint32_t kReedAdvertiseJitter      = 60;  ///< (in sec)

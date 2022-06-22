@@ -56,6 +56,32 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+ *
+ * Define to 1 to enable mechanism on a Border Router which provides IP connectivity to request router role upgrade.
+ *
+ * This config is applicable on an `OPENTHREAD_FTD` build and when `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` is also
+ * enabled.
+ *
+ * A Border Router is considered to provide external IP connectivity if at least one of the below conditions hold:
+ *
+ * - It has added at least one external route entry.
+ * - It has added at least one prefix entry with default-route and on-mesh flags set.
+ * - It has added at least one domain prefix (domain and on-mesh flags set).
+ *
+ * A Border Router which provides IP connectivity and is acting as a REED is eligible to request a router role upgrade
+ * by sending an "Address Solicit" request to leader with status reason `BorderRouterRequest`. This reason is used when
+ * the number of active routers in the Thread mesh is above the threshold, and only if the number of existing eligible
+ * BRs (determined from the Thread Network Data) that are acting as router is less than two. This mechanism allows up
+ * to two eligible Border Routers to request router role upgrade when the number of routers is already above the
+ * threshold.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
  *
  * Define to 1 to enable Border Routing support.
