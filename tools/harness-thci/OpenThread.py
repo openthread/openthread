@@ -261,11 +261,6 @@ class OpenThreadTHCI(object):
     def _onCommissionStop(self):
         """Called when commissioning stops."""
 
-    @abstractmethod
-    def __restartAgentService(self):
-        """Called when restarting the agent service"""
-        pass
-
     def __sendCommand(self, cmd, expectEcho=True):
         cmd = self._cmdPrefix + cmd
         # self.log("command: %s", cmd)
@@ -3260,6 +3255,9 @@ class OpenThread(OpenThreadTHCI, IThci):
         pass
 
     def _deviceAfterReset(self):
+        pass
+
+    def __restartAgentService(self):
         pass
 
     def _beforeRegisterMulticast(self, sAddr, timeout):
