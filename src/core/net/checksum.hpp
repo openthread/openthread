@@ -86,7 +86,7 @@ public:
                                       uint8_t             aIpProto);
 
     /**
-     * This static method calculates and then updates the checksum in a given message (if TCP/UDP/ICMP(v4)).
+     * This static method calculates and then updates the checksum in a given IPv4 message (if TCP/UDP/ICMP(v4)).
      *
      * @param[in,out] aMessage  The message to update the checksum in. The `aMessage.GetOffset()` should point to start
      *                          of the TCP/UDP/ICMP(v4) header. On exit the checksum field in TCP/UDP/ICMP(v4) header in
@@ -102,7 +102,7 @@ public:
                                       uint8_t             aIpProto);
 
     /**
-     * This static method calculates and then updates the checksum in the IPv4 header.
+     * This static method calculates and then updates the checksum field in the IPv4 header.
      *
      * @param[in,out] aHeader The IPv4 header to update the checksum in.
      */

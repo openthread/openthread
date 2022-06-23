@@ -153,21 +153,21 @@ public:
     /**
      * This method returns the host mask (bitwise not of the subnet mask) of the CIDR.
      *
-     * @returns An uint32 for the host mask, in network byte order.
+     * @returns A uint32 for the host mask, in network byte order.
      */
     inline uint32_t HostMask() const { return HostSwap32((uint32_t(1) << uint32_t(32 - mLength)) - 1); }
 
     /**
      * This method returns the subnet mask of the CIDR.
      *
-     * @returns An uint32 for the subnet mask, in network byte order.
+     * @returns A uint32 for the subnet mask, in network byte order.
      */
     inline uint32_t SubnetMask() const { return ~HostMask(); }
 
     /**
      * This method returns an IPv4 address within the CIDR block.
      *
-     * @param[in] aHost The host bits in of the IPv4 address in host byte order. The aHost will be masked by host mask.
+     * @param[in] aHost The host part of the IPv4 address in host byte order. The aHost will be masked by host mask.
      */
     Address Host(uint32_t aHost) const;
 } OT_TOOL_PACKED_END;

@@ -437,7 +437,7 @@ void TestUdp4MessageChecksum(void)
 
 void TestIcmp4MessageChecksum(void)
 {
-    // An captured ICMP echo request (ping) message. Checksum field is removed.
+    // A captured ICMP echo request (ping) message. Checksum field is set to zero.
     const uint8_t kExampleIcmpMessage[] = "\x08\x00\x00\x00\x67\x2e\x00\x00\x62\xaf\xf1\x61\x00\x04\xfc\x24"
                                           "\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17"
                                           "\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23\x24\x25\x26\x27"

@@ -53,9 +53,6 @@ void TestIp4Header(void)
     static constexpr uint16_t kTotalLength = 84;
     static constexpr uint8_t  kTTL         = 64;
 
-    const uint16_t kFlows[] = {0x0, 0x1, 0xfff, 0xffff, 0xff00};
-    const uint8_t  kFlags[] = {0x0, 0x1, 0x3, 0xf, 0x30, 0x2f, 0x3f};
-
     Header         header;
     Address        source;
     Address        destination;
