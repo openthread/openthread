@@ -38,11 +38,14 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/log.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
 
 namespace ot {
 namespace NetworkData {
+
+RegisterLogModule("NetworkData");
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -50,11 +53,20 @@ Notifier::Notifier(Instance &aInstance)
     , mSynchronizeDataTask(aInstance, HandleSynchronizeDataTask)
     , mNextDelay(0)
     , mWaitingForResponse(false)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    , mDidRequestRouterRoleUpgrade(false)
+    , mRouterRoleUpgradeTimeout(0)
+#endif
 {
 }
 
 void Notifier::HandleServerDataUpdated(void)
 {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    mDidRequestRouterRoleUpgrade = false;
+    ScheduleRouterRoleUpgradeIfEligible();
+#endif
+
     mNextDelay = 0;
     mSynchronizeDataTask.Post();
 }
@@ -113,6 +125,18 @@ void Notifier::HandleNotifierEvents(Events aEvents)
         mNextDelay = 0;
     }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    if (aEvents.Contains(kEventThreadPartitionIdChanged))
+    {
+        mDidRequestRouterRoleUpgrade = false;
+    }
+
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadNetdataChanged | kEventThreadPartitionIdChanged))
+    {
+        ScheduleRouterRoleUpgradeIfEligible();
+    }
+#endif
+
     if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged | kEventThreadChildRemoved))
     {
         SynchronizeServerData();
@@ -157,6 +181,90 @@ void Notifier::HandleCoapResponse(Error aResult)
         OT_UNREACHABLE_CODE(break);
     }
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+
+bool Notifier::IsEligibleForRouterRoleUpgradeAsBorderRouter(void) const
+{
+    bool     isEligible = false;
+    uint16_t rloc16     = Get<Mle::Mle>().GetRloc16();
+    uint8_t  activeRouterCount;
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsRouterEligible());
+
+    // RouterUpgradeThreshold can be explicitly set to zero in some of
+    // cert tests to disallow device to become router.
+
+    VerifyOrExit(Get<Mle::MleRouter>().GetRouterUpgradeThreshold() != 0);
+
+    // Check that we are a border router providing IP connectivity and already
+    // in the leader's network data and therefore eligible to request router
+    // role upgrade with `kBorderRouterRequest` status.
+
+    VerifyOrExit(Get<Local>().ContainsBorderRouterWithRloc(rloc16) &&
+                 Get<Leader>().ContainsBorderRouterWithRloc(rloc16));
+
+    activeRouterCount = Get<RouterTable>().GetActiveRouterCount();
+    VerifyOrExit((activeRouterCount >= Get<Mle::MleRouter>().GetRouterUpgradeThreshold()) &&
+                 (activeRouterCount < Mle::kMaxRouters));
+
+    VerifyOrExit(Get<Leader>().CountBorderRouters(kRouterRoleOnly) < Mle::kRouterUpgradeBorderRouterRequestThreshold);
+    isEligible = true;
+
+exit:
+    return isEligible;
+}
+
+void Notifier::ScheduleRouterRoleUpgradeIfEligible(void)
+{
+    // We allow device to request router role upgrade using status
+    // reason `kBorderRouterRequest` once while its local network data
+    // remains unchanged. This ensures if the leader is running an
+    // older version of Thread stack which does not support
+    // `kBorderRouterRequest` reason, we do not keep trying (on no
+    // response). The boolean `mDidRequestRouterRoleUpgrade` tracks
+    // this. It is set to `false` when local network data gets changed
+    // or when partition ID gets changed (indicating a potential
+    // leader change).
+
+    VerifyOrExit(!mDidRequestRouterRoleUpgrade);
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsChild());
+    VerifyOrExit(IsEligibleForRouterRoleUpgradeAsBorderRouter() && (mRouterRoleUpgradeTimeout == 0));
+
+    mRouterRoleUpgradeTimeout = Random::NonCrypto::GetUint8InRange(1, kRouterRoleUpgradeMaxTimeout + 1);
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kNetworkDataNotifier);
+
+exit:
+    return;
+}
+
+void Notifier::HandleTimeTick(void)
+{
+    VerifyOrExit(mRouterRoleUpgradeTimeout > 0);
+
+    mRouterRoleUpgradeTimeout--;
+
+    if (mRouterRoleUpgradeTimeout == 0)
+    {
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kNetworkDataNotifier);
+
+        // Check that we are still eligible for requesting router role
+        // upgrade (note that state can change since the last time we
+        // checked and registered to receive time ticks).
+
+        if (Get<Mle::MleRouter>().IsChild() && IsEligibleForRouterRoleUpgradeAsBorderRouter())
+        {
+            LogInfo("Requesting router role as BR");
+            mDidRequestRouterRoleUpgrade = true;
+            IgnoreError(Get<Mle::MleRouter>().BecomeRouter(ThreadStatusTlv::kBorderRouterRequest));
+        }
+    }
+exit:
+    return;
+}
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE &&
+       // OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
 
 } // namespace NetworkData
 } // namespace ot
