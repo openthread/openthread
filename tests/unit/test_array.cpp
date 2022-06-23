@@ -176,6 +176,14 @@ void TestArrayCopyAndFindMatching(void)
 {
     constexpr uint16_t kMaxSize = 10;
 
+    enum MatchMode : uint8_t
+    {
+        kMatchAll,
+        kMatchNone,
+        kMatchOddYear,
+        kMatchEvenYear,
+    };
+
     struct Entry : public Unequatable<Entry>
     {
         Entry(void) = default;
@@ -190,12 +198,44 @@ void TestArrayCopyAndFindMatching(void)
         bool Matches(const char *aName) const { return strcmp(aName, mName) == 0; }
         bool Matches(uint16_t aYear) const { return aYear == mYear; }
 
+        bool Matches(MatchMode aMatchMode) const
+        {
+            bool matches = false;
+
+            switch (aMatchMode)
+            {
+            case kMatchAll:
+                matches = true;
+                break;
+            case kMatchNone:
+                matches = false;
+                break;
+            case kMatchOddYear:
+                matches = ((mYear % 2) != 0);
+                break;
+            case kMatchEvenYear:
+                matches = ((mYear % 2) == 0);
+                break;
+            }
+
+            return matches;
+        }
+
         const char *mName;
         uint16_t    mYear;
     };
 
+    static const MatchMode kMatchModes[] = {kMatchAll, kMatchNone, kMatchEvenYear, kMatchOddYear};
+
+    static const char *kMatchModeStrings[] = {
+        "kMatchAll",
+        "kMatchNone",
+        "kMatchOddYear",
+        "kMatchEvenYear",
+    };
+
     Entry ps1("PS", 1994);
-    Entry ps2("PS2", 2000);
+    Entry ps2("PS2", 1999);
     Entry ps3("PS3", 2006);
     Entry ps4("PS4", 2013);
     Entry ps5("PS5", 2020);
@@ -300,6 +340,7 @@ void TestArrayCopyAndFindMatching(void)
         array2 = array1;
         array2.RemoveMatching(entryToRemove.mName);
 
+        printf("\n- - - - - - - - - - - - - - - - - - - - - - - - ");
         printf("\nArray after `RemoveMatching()` on entry %s\n", entryToRemove.mName);
 
         VerifyOrQuit(array2.GetLength() == array1.GetLength() - 1);
@@ -315,6 +356,52 @@ void TestArrayCopyAndFindMatching(void)
 
         array2.RemoveMatching(entryToRemove.mName);
         VerifyOrQuit(array2.GetLength() == array1.GetLength() - 1);
+
+        // Test `RemoveAllMatching()` removing a single matching entry.
+
+        array2 = array1;
+        array2.RemoveAllMatching(entryToRemove.mName);
+
+        VerifyOrQuit(array2.GetLength() == array1.GetLength() - 1);
+
+        for (const Entry &entry : array2)
+        {
+            VerifyOrQuit(entry != entryToRemove);
+            VerifyOrQuit(array1.Contains(entry));
+        }
+
+        array2.RemoveAllMatching(entryToRemove.mName);
+        VerifyOrQuit(array2.GetLength() == array1.GetLength() - 1);
+
+        // Test `RemoveAllMatching()` using different match modes
+        // removing different subsets.
+
+        for (MatchMode matchMode : kMatchModes)
+        {
+            array3 = array2;
+
+            array3.RemoveAllMatching(matchMode);
+
+            printf("\nArray after `RemoveAllMatching(%s)\n", kMatchModeStrings[matchMode]);
+
+            for (const Entry &entry : array3)
+            {
+                VerifyOrQuit(!entry.Matches(matchMode));
+                VerifyOrQuit(array2.Contains(entry));
+                printf("- Name:%-3s Year:%d\n", entry.mName, entry.mYear);
+            }
+
+            for (const Entry &entry : array2)
+            {
+                if (!entry.Matches(matchMode))
+                {
+                    VerifyOrQuit(array2.Contains(entry));
+                }
+            }
+
+            array3.RemoveAllMatching(kMatchAll);
+            VerifyOrQuit(array3.IsEmpty());
+        }
     }
 
     printf("\n");
