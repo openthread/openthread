@@ -40,7 +40,7 @@ Error Header::ParseFrom(const Message &aMessage)
 {
     Error error = kErrorParse;
 
-    SuccessOrExit(aMessage.Read(0, *this));
+    SuccessOrExit(error = aMessage.Read(0, *this));
     VerifyOrExit(IsValid());
     VerifyOrExit(GetTotalLength() == aMessage.GetLength());
 

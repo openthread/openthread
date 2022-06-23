@@ -128,6 +128,7 @@ check_PROGRAMS                                                     += \
     ot-test-heap-string                                               \
     ot-test-hkdf-sha256                                               \
     ot-test-hmac-sha256                                               \
+    ot-test-ip4-header                                                \
     ot-test-ip6-header                                                \
     ot-test-ip-address                                                \
     ot-test-link-quality                                              \

@@ -64,9 +64,8 @@ struct otIp4Address
 {
     union OT_TOOL_PACKED_FIELD
     {
-        uint8_t  m8[OT_IP4_ADDRESS_SIZE];                     ///< 8-bit fields
-        uint16_t m16[OT_IP4_ADDRESS_SIZE / sizeof(uint16_t)]; ///< 16-bit fields
-        uint32_t m32;                                         ///< 32-bit fields
+        uint8_t  m8[OT_IP4_ADDRESS_SIZE]; ///< 8-bit fields
+        uint32_t m32;                     ///< 32-bit fields
     } mFields;
 } OT_TOOL_PACKED_END;
 

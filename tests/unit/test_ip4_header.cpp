@@ -41,7 +41,7 @@ void VerifyEcnDscp(const Header &aHeader, uint8_t aDscp, Ecn aEcn)
 {
     uint8_t expectedDscpEcn = static_cast<uint8_t>((aDscp << 2) + aEcn);
 
-    printf("%08x {dscp:%d, ecn:%d, flow:%d}\n", aHeader.GetDscpEcn(), aHeader.GetDscp(), aHeader.GetEcn());
+    printf("%02x {dscp:%d, ecn:%d}\n", aHeader.GetDscpEcn(), aHeader.GetDscp(), aHeader.GetEcn());
 
     VerifyOrQuit(aHeader.GetDscp() == aDscp);
     VerifyOrQuit(aHeader.GetEcn() == aEcn);

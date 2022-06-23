@@ -34,13 +34,12 @@
 #ifndef IP4_TYPES_HPP_
 #define IP4_TYPES_HPP_
 
+#include <stdint.h>
+
 #include "openthread-core-config.h"
 #include "net/ip6.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
-
-#include <stddef.h>
-#include <stdint.h>
 
 namespace ot {
 namespace Ip4 {
