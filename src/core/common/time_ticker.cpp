@@ -94,6 +94,13 @@ void TimeTicker::HandleTimer(void)
         Get<AddressResolver>().HandleTimeTick();
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    if (mReceivers & Mask(kNetworkDataNotifier))
+    {
+        Get<NetworkData::Notifier>().HandleTimeTick();
+    }
+#endif
+
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     if (mReceivers & Mask(kChildSupervisor))
     {

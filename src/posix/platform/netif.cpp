@@ -1170,12 +1170,10 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     struct sockaddr_in6 addr6;
     struct sockaddr_in6 netmask;
     uint8_t *           addrbuf;
-    unsigned int        addrlen;
     unsigned int        addrmask = 0;
     unsigned int        i;
     struct sockaddr *   sa;
     bool                is_link_local;
-    size_t              buffer_len = rtm->rtm_msglen;
 
     addr6.sin6_family   = 0;
     netmask.sin6_family = 0;
@@ -1200,7 +1198,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
         addrmask = (unsigned int)ifmam->ifmam_addrs;
     }
 #endif
-    addrlen = (unsigned int)buffer_len;
 
     if (addrmask != 0)
     {
@@ -1218,7 +1215,6 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                     if (i == RTAX_NETMASK)
                         memcpy(&netmask, sa, sizeof(sockaddr_in6));
                 }
-                addrlen -= SA_SIZE(sa);
                 addrbuf += SA_SIZE(sa);
             }
         }
