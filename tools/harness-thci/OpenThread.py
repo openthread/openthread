@@ -1395,11 +1395,8 @@ class OpenThreadTHCI(object):
         # indicate that the channel has been set, in case the channel was set
         # to default when joining network
         self.hasSetChannel = False
-        if self.DeviceCapability == OT12BR_CAPBS:
-            # indicate whether the default domain prefix is used.
-            self.__useDefaultDomainPrefix = True
-        else:
-            self.__useDefaultDomainPrefix = False
+        # indicate whether the default domain prefix is used.
+        self.__useDefaultDomainPrefix = (self.DeviceCapability == OT12BR_CAPBS)
         self.__isUdpOpened = False
         self.IsBackboneRouter = False
         self.IsHost = False
