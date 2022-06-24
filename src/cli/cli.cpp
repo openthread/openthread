@@ -2691,7 +2691,7 @@ template <> otError Interpreter::Process<Cmd("mlr")>(Arg aArgs[])
 
     if (aArgs[0] == "reg")
     {
-        otIp6Address addresses[kIp6AddressesNumMax];
+        otIp6Address addresses[OT_IP6_MAX_MLR_ADDRESSES];
         uint32_t     timeout;
         bool         hasTimeout   = false;
         uint8_t      numAddresses = 0;

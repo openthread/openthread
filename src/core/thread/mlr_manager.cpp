@@ -230,7 +230,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
 {
     Error           error;
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
-    Ip6::Address    addresses[kIp6AddressesNumMax];
+    Ip6::Address    addresses[Ip6AddressesTlv::kMaxAddresses];
     uint8_t         addressesNum = 0;
 
     VerifyOrExit(!mMlrPending, error = kErrorBusy);
@@ -243,7 +243,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
     for (Ip6::Netif::ExternalMulticastAddress &addr :
          Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addressesNum >= kIp6AddressesNumMax)
+        if (addressesNum >= Ip6AddressesTlv::kMaxAddresses)
         {
             break;
         }
@@ -260,7 +260,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
     // Append Child multicast addresses
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        if (addressesNum >= kIp6AddressesNumMax)
+        if (addressesNum >= Ip6AddressesTlv::kMaxAddresses)
         {
             break;
         }
@@ -272,7 +272,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
         {
-            if (addressesNum >= kIp6AddressesNumMax)
+            if (addressesNum >= Ip6AddressesTlv::kMaxAddresses)
             {
                 break;
             }
@@ -326,7 +326,7 @@ Error MlrManager::RegisterMulticastListeners(const otIp6Address *               
     Error error;
 
     VerifyOrExit(aAddresses != nullptr, error = kErrorInvalidArgs);
-    VerifyOrExit(aAddressNum > 0 && aAddressNum <= kIp6AddressesNumMax, error = kErrorInvalidArgs);
+    VerifyOrExit(aAddressNum > 0 && aAddressNum <= Ip6AddressesTlv::kMaxAddresses, error = kErrorInvalidArgs);
     VerifyOrExit(aContext == nullptr || aCallback != nullptr, error = kErrorInvalidArgs);
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
@@ -368,7 +368,7 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          a
 
     uint8_t                                 status;
     Error                                   error;
-    Ip6::Address                            failedAddresses[kIp6AddressesNumMax];
+    Ip6::Address                            failedAddresses[Ip6AddressesTlv::kMaxAddresses];
     uint8_t                                 failedAddressNum = 0;
     otIp6RegisterMulticastListenersCallback callback         = mRegisterMulticastListenersCallback;
     void *                                  context          = mRegisterMulticastListenersContext;
@@ -469,7 +469,7 @@ void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message *    
 
     uint8_t      status;
     Error        error;
-    Ip6::Address failedAddresses[kIp6AddressesNumMax];
+    Ip6::Address failedAddresses[Ip6AddressesTlv::kMaxAddresses];
     uint8_t      failedAddressNum = 0;
 
     error = ParseMulticastListenerRegistrationResponse(aResult, aMessage, status, failedAddresses, failedAddressNum);
@@ -520,7 +520,7 @@ Error MlrManager::ParseMulticastListenerRegistrationResponse(Error          aRes
         kErrorNone)
     {
         VerifyOrExit(addressesLength % sizeof(Ip6::Address) == 0, error = kErrorParse);
-        VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= kIp6AddressesNumMax, error = kErrorParse);
+        VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= Ip6AddressesTlv::kMaxAddresses, error = kErrorParse);
 
         for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
         {
@@ -701,7 +701,7 @@ void MlrManager::LogMulticastAddresses(void)
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 }
 
-void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIp6AddressesNumMax],
+void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[Ip6AddressesTlv::kMaxAddresses],
                                            uint8_t &           aAddressNum,
                                            const Ip6::Address &aAddress)
 {
