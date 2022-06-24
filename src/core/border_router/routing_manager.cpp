@@ -249,6 +249,7 @@ void RoutingManager::Start(void)
         LogInfo("Border Routing manager started");
 
         mIsRunning = true;
+        UpdateDiscoveredPrefixTableOnNetDataChange();
         StartRouterSolicitationDelay();
     }
 }
@@ -336,23 +337,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
-        // Remove all OMR prefixes in Network Data from the
-        // discovered prefix table.
-
-        NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-        NetworkData::OnMeshPrefixConfig prefixConfig;
-
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
-        {
-            if (!IsValidOmrPrefix(prefixConfig))
-            {
-                continue;
-            }
-
-            mDiscoveredPrefixTable.RemoveRoutePrefix(prefixConfig.GetPrefix(),
-                                                     DiscoveredPrefixTable::kUnpublishFromNetData);
-        }
-
+        UpdateDiscoveredPrefixTableOnNetDataChange();
         StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
     }
 
@@ -376,6 +361,45 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
 exit:
     return;
+}
+
+void RoutingManager::UpdateDiscoveredPrefixTableOnNetDataChange(void)
+{
+    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+    bool                            foundDefRouteOmrPrefix = false;
+
+    // Remove all OMR prefixes in Network Data from the
+    // discovered prefix table. Also check if we have
+    // an OMR prefix with default route flag.
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    {
+        if (!IsValidOmrPrefix(prefixConfig))
+        {
+            continue;
+        }
+
+        mDiscoveredPrefixTable.RemoveRoutePrefix(prefixConfig.GetPrefix(),
+                                                 DiscoveredPrefixTable::kUnpublishFromNetData);
+
+        if (prefixConfig.mDefaultRoute)
+        {
+            foundDefRouteOmrPrefix = true;
+        }
+    }
+
+    // If we find an OMR prefix with default route flag, it indicates
+    // that this prefix can be used with default route (routable beyond
+    // infra link).
+    //
+    // `DiscoveredPrefixTable` will always track which routers provide
+    // default route when processing received RA messages, but only
+    // if we see an OMR prefix with default route flag, we allow it
+    // to publish the discovered default route (as ::/0 external
+    // route) in Network Data.
+
+    mDiscoveredPrefixTable.SetAllowDefaultRouteInNetData(foundDefRouteOmrPrefix);
 }
 
 void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
@@ -1069,6 +1093,12 @@ bool RoutingManager::ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption
 
     VerifyOrExit(mIsRunning);
 
+    if (aPrefix.GetLength() == 0)
+    {
+        // Always process default route ::/0 prefix.
+        ExitNow(shouldProcess = true);
+    }
+
     if (!IsValidOmrPrefix(aPrefix))
     {
         LogInfo("Ignore RIO prefix %s since not a valid OMR prefix", aPrefix.ToString().AsCString());
@@ -1218,6 +1248,7 @@ RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance
     : InstanceLocator(aInstance)
     , mTimer(aInstance, HandleTimer)
     , mSignalTask(aInstance, HandleSignalTask)
+    , mAllowDefaultRouteInNetData(false)
 {
 }
 
@@ -1242,6 +1273,14 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
         router->mEntries.Clear();
     }
 
+    // RA message can indicate router provides default route in the RA
+    // message header and can also include an RIO for `::/0`. When
+    // processing an RA message, the preference and lifetime values
+    // in a `::/0` RIO override the preference and lifetime values in
+    // the RA header (per RFC 4191 section 3.1).
+
+    ProcessDefaultRoute(aRaMessage.GetHeader(), *router);
+
     for (const Ip6::Nd::Option &option : aRaMessage)
     {
         switch (option.GetType())
@@ -1260,6 +1299,43 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
     }
 
     RemoveRoutersWithNoEntries();
+
+exit:
+    return;
+}
+
+void RoutingManager::DiscoveredPrefixTable::ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader,
+                                                                Router &                                    aRouter)
+{
+    Entry *     entry;
+    Ip6::Prefix prefix;
+
+    prefix.Clear();
+    entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
+
+    if (entry == nullptr)
+    {
+        VerifyOrExit(aRaHeader.GetRouterLifetime() != 0);
+
+        entry = AllocateEntry();
+
+        if (entry == nullptr)
+        {
+            LogWarn("Discovered too many prefixes, ignore default route from RA header");
+            ExitNow();
+        }
+
+        entry->InitFrom(aRaHeader);
+        aRouter.mEntries.Push(*entry);
+    }
+    else
+    {
+        entry->InitFrom(aRaHeader);
+    }
+
+    UpdateNetworkDataOnChangeTo(*entry);
+    mTimer.FireAtIfEarlier(entry->GetExpireTime());
+    SignalTableChanged();
 
 exit:
     return;
@@ -1349,6 +1425,34 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd
     UpdateNetworkDataOnChangeTo(*entry);
     mTimer.FireAtIfEarlier(entry->GetExpireTime());
     SignalTableChanged();
+
+exit:
+    return;
+}
+
+void RoutingManager::DiscoveredPrefixTable::SetAllowDefaultRouteInNetData(bool aAllow)
+{
+    Entry *     favoredEntry;
+    Ip6::Prefix prefix;
+
+    VerifyOrExit(aAllow != mAllowDefaultRouteInNetData);
+
+    LogInfo("Allow default route in netdata: %s -> %s", ToYesNo(mAllowDefaultRouteInNetData), ToYesNo(aAllow));
+
+    mAllowDefaultRouteInNetData = aAllow;
+
+    prefix.Clear();
+    favoredEntry = FindFavoredEntryToPublish(prefix);
+    VerifyOrExit(favoredEntry != nullptr);
+
+    if (mAllowDefaultRouteInNetData)
+    {
+        PublishEntry(*favoredEntry);
+    }
+    else
+    {
+        UnpublishEntry(*favoredEntry);
+    }
 
 exit:
     return;
@@ -1581,10 +1685,23 @@ void RoutingManager::DiscoveredPrefixTable::UpdateNetworkDataOnChangeTo(Entry &a
     // can be a newly added entry or an existing entry that is
     // modified due to processing of a received RA message.
 
-    Entry *favoredEntry = FindFavoredEntryToPublish(aEntry.GetPrefix());
+    Entry *favoredEntry;
+
+    if (aEntry.GetPrefix().GetLength() == 0)
+    {
+        // If the change is to default route ::/0 prefix, make sure we
+        // are allowed to publish default route in Network Data.
+
+        VerifyOrExit(mAllowDefaultRouteInNetData);
+    }
+
+    favoredEntry = FindFavoredEntryToPublish(aEntry.GetPrefix());
 
     OT_ASSERT(favoredEntry != nullptr);
     PublishEntry(*favoredEntry);
+
+exit:
+    return;
 }
 
 void RoutingManager::DiscoveredPrefixTable::PublishEntry(const Entry &aEntry)
@@ -1672,6 +1789,15 @@ void RoutingManager::DiscoveredPrefixTable::HandleSignalTask(Tasklet &aTasklet)
 
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Entry
+
+void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader)
+{
+    Clear();
+    mType                    = kTypeRoute;
+    mValidLifetime           = aRaHeader.GetRouterLifetime();
+    mShared.mRoutePreference = aRaHeader.GetDefaultRouterPreference();
+    mLastUpdateTime          = TimerMilli::GetNow();
+}
 
 void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::PrefixInfoOption &aPio)
 {
