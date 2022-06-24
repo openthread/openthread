@@ -1378,7 +1378,18 @@ protected:
     struct RxInfo
     {
         /**
-         * This constructor initializes the `RxInfo`
+         * This enumeration represents a received MLE message class.
+         *
+         */
+        enum Class : uint8_t
+        {
+            kUnknown,              ///< Unknown (default value, also indicates MLE message parse error).
+            kAuthoritativeMessage, ///< Authoritative message (larger received key seq MUST be adopted).
+            kPeerMessage,          ///< Peer message (adopt only if from a known neighbor and is greater by one).
+        };
+
+        /**
+         * This constructor initializes the `RxInfo`.
          *
          * @param[in] aMessage       The received MLE message.
          * @param[in] aMessageInfo   The `Ip6::MessageInfo` associated with message.
@@ -1390,14 +1401,16 @@ protected:
             , mFrameCounter(0)
             , mKeySequence(0)
             , mNeighbor(nullptr)
+            , mClass(kUnknown)
         {
         }
 
         RxMessage &             mMessage;      ///< The MLE message.
         const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
         uint32_t                mFrameCounter; ///< The frame counter from aux security header.
-        uint32_t                mKeySequence;  ///< The key sequence from the aux security header.
+        uint32_t                mKeySequence;  ///< The key sequence from aux security header.
         Neighbor *              mNeighbor;     ///< Neighbor from which message was received (can be `nullptr`).
+        Class                   mClass;        ///< The message class (authoritative, peer, or unknown).
     };
 
     /**
@@ -1480,11 +1493,13 @@ protected:
     /**
      * This method generates an MLE Child Update Request message.
      *
+     * @param[in] aAppendChallenge   Indicates whether or not to include a Challenge TLV (even when already attached).
+     *
      * @retval kErrorNone    Successfully generated an MLE Child Update Request message.
      * @retval kErrorNoBufs  Insufficient buffers to generate the MLE Child Update Request message.
      *
      */
-    Error SendChildUpdateRequest(void);
+    Error SendChildUpdateRequest(bool aAppendChallenge = false);
 
     /**
      * This method generates an MLE Child Update Response message.
@@ -1824,9 +1839,10 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        ScheduleMessageTransmissionTimer(void);
+    void        ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
-    Error       SendChildUpdateRequest(uint32_t aTimeout);
+    Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
 
 #if OPENTHREAD_FTD
     static void HandleDetachGracefullyAddressReleaseResponse(void *               aContext,

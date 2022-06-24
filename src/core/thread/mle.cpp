@@ -1947,12 +1947,12 @@ exit:
     return;
 }
 
-Error Mle::SendChildUpdateRequest(void)
+Error Mle::SendChildUpdateRequest(bool aAppendChallenge)
 {
-    return SendChildUpdateRequest(mTimeout);
+    return SendChildUpdateRequest(aAppendChallenge, mTimeout);
 }
 
-Error Mle::SendChildUpdateRequest(uint32_t aTimeout)
+Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
 {
     Error                   error = kErrorNone;
     Ip6::Address            destination;
@@ -1972,11 +1972,15 @@ Error Mle::SendChildUpdateRequest(uint32_t aTimeout)
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
 
+    if (aAppendChallenge || IsDetached())
+    {
+        mParentRequestChallenge.GenerateRandom();
+        SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
+    }
+
     switch (mRole)
     {
     case kRoleDetached:
-        mParentRequestChallenge.GenerateRandom();
-        SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
         mode = kAppendMeshLocalOnly;
         break;
 
@@ -2381,11 +2385,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     SuccessOrExit(
         error = ProcessMessageSecurity(Crypto::AesCcm::kDecrypt, aMessage, aMessageInfo, aMessage.GetOffset(), header));
 
-    if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
-    {
-        Get<KeyManager>().SetCurrentKeySequence(keySequence);
-    }
-
     IgnoreError(aMessage.Read(aMessage.GetOffset(), command));
     aMessage.MoveOffset(sizeof(command));
 
@@ -2548,6 +2547,48 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         ExitNow(error = kErrorDrop);
     }
 
+    // In case key sequence is larger, we determine whether to adopt it
+    // or not. The `Handle{MleMsg}()` methods set the `rxInfo.mClass`
+    // based on the message command type and the included TLVs. If
+    // there is any error during parsing of the message the `mClass`
+    // remains as its default value of `RxInfo::kUnknown`. Message
+    // classes are determined based on this:
+    //
+    // Authoritative : Larger key seq MUST be adopted.
+    // Peer          : If from a known neighbor
+    //                    If difference is 1, adopt
+    //                    Otherwise don't adopt and try to re-sync with
+    //                    neighbor.
+    //                 Otherwise larger key seq MUST NOT be adopted.
+
+    if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
+    {
+        switch (rxInfo.mClass)
+        {
+        case RxInfo::kAuthoritativeMessage:
+            Get<KeyManager>().SetCurrentKeySequence(keySequence);
+            break;
+
+        case RxInfo::kPeerMessage:
+            if ((neighbor != nullptr) && neighbor->IsStateValid())
+            {
+                if (keySequence - Get<KeyManager>().GetCurrentKeySequence() == 1)
+                {
+                    Get<KeyManager>().SetCurrentKeySequence(keySequence);
+                }
+                else
+                {
+                    LogInfo("Large key seq jump in peer class msg from 0x%04x ", neighbor->GetRloc16());
+                    ReestablishLinkWithNeighbor(*neighbor);
+                }
+            }
+            break;
+
+        case RxInfo::kUnknown:
+            break;
+        }
+    }
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     // If we could not find a neighbor matching the MAC address of the
     // received MLE messages, or if the neighbor is now invalid, we
@@ -2577,6 +2618,36 @@ exit:
     {
         LogProcessError(kTypeGenericUdp, error);
     }
+}
+
+void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
+{
+    VerifyOrExit(IsAttached() && aNeighbor.IsStateValid());
+
+    if (IsChild() && (&aNeighbor == &mParent))
+    {
+        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ true));
+        ExitNow();
+    }
+
+#if OPENTHREAD_FTD
+    VerifyOrExit(IsFullThreadDevice());
+
+    if (IsActiveRouter(aNeighbor.GetRloc16()))
+    {
+        IgnoreError(Get<MleRouter>().SendLinkRequest(&aNeighbor));
+    }
+    else if (Get<ChildTable>().Contains(aNeighbor))
+    {
+        Child &child = static_cast<Child &>(aNeighbor);
+
+        child.SetState(Child::kStateChildUpdateRequest);
+        IgnoreError(Get<MleRouter>().SendChildUpdateRequest(child));
+    }
+#endif
+
+exit:
+    return;
 }
 
 void Mle::HandleAdvertisement(RxInfo &aRxInfo)
@@ -2659,6 +2730,8 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
         IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
     }
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
 exit:
     LogProcessError(kTypeAdvertisement, error);
 }
@@ -2695,6 +2768,9 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
         // happened due to the retransmission mechanism.
         Get<DataPollSender>().StopFastPolls();
     }
+
+    SuccessOrExit(error);
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
 exit:
     LogProcessError(kTypeDataResponse, error);
@@ -3050,6 +3126,8 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         mParentResponseCb(&parentinfo, mParentResponseCbContext);
     }
 
+    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
+
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice() && !IsDetached())
     {
@@ -3204,8 +3282,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
     // Network Data
-    error = Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset);
-    SuccessOrExit(error);
+    SuccessOrExit(error = Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset));
 
     // Active Timestamp
     switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp))
@@ -3308,6 +3385,8 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
     }
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
 exit:
     LogProcessError(kTypeChildIdResponse, error);
 }
@@ -3403,6 +3482,8 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if ((aRxInfo.mNeighbor != nullptr) && (challenge.mLength != 0))
     {
@@ -3432,10 +3513,20 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aRxInfo.mMessageInfo.GetPeerAddr());
 
+    switch (aRxInfo.mMessage.ReadResponseTlv(response))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        response.mLength = 0;
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
+
     switch (mRole)
     {
     case kRoleDetached:
-        SuccessOrExit(error = aRxInfo.mMessage.ReadResponseTlv(response));
         VerifyOrExit(response == mParentRequestChallenge, error = kErrorSecurity);
         break;
 
@@ -3533,6 +3624,8 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         OT_UNREACHABLE_CODE(break);
     }
 
+    aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
+
 exit:
 
     if (error == kErrorNone)
@@ -3566,6 +3659,8 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
 
     SuccessOrExit(error = Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp));
     SuccessOrExit(error = Tlv::Find<PanIdTlv>(aRxInfo.mMessage, panId));
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     localTimestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
@@ -3628,7 +3723,10 @@ void Mle::HandleLinkMetricsManagementRequest(RxInfo &aRxInfo)
 
     SuccessOrExit(
         error = Get<LinkMetrics::LinkMetrics>().HandleManagementRequest(aRxInfo.mMessage, *aRxInfo.mNeighbor, status));
+
     error = SendLinkMetricsManagementResponse(aRxInfo.mMessageInfo.GetPeerAddr(), status);
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
 exit:
     LogProcessError(kTypeLinkMetricsManagementRequest, error);
@@ -3648,6 +3746,8 @@ void Mle::HandleLinkMetricsManagementResponse(RxInfo &aRxInfo)
     error =
         Get<LinkMetrics::LinkMetrics>().HandleManagementResponse(aRxInfo.mMessage, aRxInfo.mMessageInfo.GetPeerAddr());
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
 exit:
     LogProcessError(kTypeLinkMetricsManagementResponse, error);
 }
@@ -3664,6 +3764,8 @@ void Mle::HandleLinkProbe(RxInfo &aRxInfo)
     SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleLinkProbe(aRxInfo.mMessage, seriesId));
     aRxInfo.mNeighbor->AggregateLinkMetrics(seriesId, LinkMetrics::SeriesInfo::kSeriesTypeLinkProbe,
                                             aRxInfo.mMessage.GetAverageLqi(), aRxInfo.mMessage.GetAverageRss());
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
 exit:
     LogProcessError(kTypeLinkProbe, error);
@@ -4225,7 +4327,7 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
 
     if (IsChild())
     {
-        IgnoreError(SendChildUpdateRequest(/*aTimeout=*/0));
+        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ false, /* aTimeout */ 0));
     }
 #if OPENTHREAD_FTD
     else if (IsRouter())
