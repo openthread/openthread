@@ -44,6 +44,7 @@
 #include "common/equatable.hpp"
 #include "common/error.hpp"
 #include "common/string.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Ip4 {
@@ -129,7 +130,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 OT_TOOL_PACKED_BEGIN
-class Cidr : public otIp4Cidr
+class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Address>
 {
 public:
     static constexpr uint16_t kCidrSuffixSize = 3; ///< Suffix to represent CIDR (/dd).
@@ -163,6 +164,29 @@ public:
      * @returns A uint32 for the subnet mask, in network byte order.
      */
     inline uint32_t SubnetMask() const { return ~HostMask(); }
+
+    /**
+     * This method gets the prefix as a pointer to a byte array.
+     *
+     * @returns A pointer to a byte array containing the Prefix.
+     *
+     */
+    const uint8_t *GetBytes(void) const { return mAddress.mFields.m8; }
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two prefixes are equal.
+     *
+     * @param[in]  aOther  The other prefix to compare with.
+     *
+     * @retval TRUE   If the two prefixes are equal.
+     * @retval FALSE  If the two prefixes are not equal.
+     *
+     */
+    bool operator==(const Cidr &aOther) const
+    {
+        return (mLength == aOther.mLength) &&
+               (Ip6::Prefix::MatchLength(GetBytes(), aOther.GetBytes(), OT_IP4_ADDRESS_SIZE) >= mLength);
+    }
 
     /**
      * This method returns an IPv4 address within the CIDR block.
