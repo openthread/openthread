@@ -197,6 +197,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/logging_api.cpp                                    \
     src/core/api/message_api.cpp                                    \
     src/core/api/multi_radio_api.cpp                                \
+    src/core/api/nat64_api.cpp                                      \
     src/core/api/netdata_api.cpp                                    \
     src/core/api/netdata_publisher_api.cpp                          \
     src/core/api/netdiag_api.cpp                                    \
@@ -222,6 +223,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/backbone_router/multicast_listeners_table.cpp          \
     src/core/backbone_router/ndproxy_table.cpp                      \
     src/core/border_router/infra_if.cpp                             \
+    src/core/border_router/nat64.cpp                                \
     src/core/border_router/routing_manager.cpp                      \
     src/core/coap/coap.cpp                                          \
     src/core/coap/coap_message.cpp                                  \

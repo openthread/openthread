@@ -38,8 +38,10 @@
 
 #include <string.h>
 
+#include <openthread/border_router.h>
 #include <openthread/platform/infra_if.h>
 
+#include "border_router/nat64.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -78,6 +80,9 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+    , mNat64(aInstance)
+#endif
 {
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
@@ -650,6 +655,9 @@ void RoutingManager::EvaluateNat64Prefix(void)
         {
             mIsAdvertisingLocalNat64Prefix = true;
         }
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+        mNat64.SetNat64Prefix(mLocalNat64Prefix);
+#endif
     }
     else if (mIsAdvertisingLocalNat64Prefix && smallestNat64Prefix < mLocalNat64Prefix)
     {
@@ -2006,6 +2014,66 @@ bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixCon
     }
 
     return isFavored;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+Error RoutingManager::SendPacket(Message &message)
+{
+    bool          freed = false;
+    Nat64::Result res   = mNat64.HandleIncoming(message);
+    Error         ret   = kErrorDrop;
+
+    VerifyOrExit(res == Nat64::Result::kForward);
+    // TODO: Implement the logic for sending back ICMP
+
+    ret   = Get<Ip6::Ip6>().SendRaw(message, !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+    freed = true;
+
+exit:
+    if (!freed)
+    {
+        message.Free();
+    }
+
+    return ret;
+}
+
+void RoutingManager::HandleReceived(Message &message)
+{
+    bool          freed = false;
+    Nat64::Result res;
+
+    VerifyOrExit(mInfraCallbackForTranslatedPacket != nullptr);
+
+    res = mNat64.HandleOutgoing(message);
+    VerifyOrExit(res == Nat64::Result::kForward);
+    // TODO: Implement the logic for sending back ICMP
+
+    mInfraCallbackForTranslatedPacket(&message, mInfraCallbackContext);
+    freed = true;
+
+exit:
+    if (!freed)
+    {
+        message.Free();
+    }
+}
+#else  // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+Error RoutingManager::SendPacket(Message &message)
+{
+    return Get<Ip6::Ip6>().SendRaw(message, !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+}
+
+void RoutingManager::HandleReceived(Message &message)
+{
+    mInfraCallbackForTranslatedPacket(&message, mInfraCallbackContext);
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+
+void RoutingManager::InfraReceiveCallbackWrapper(otMessage *aMessage, void *context)
+{
+    RoutingManager *this_ = reinterpret_cast<RoutingManager *>(context);
+    this_->HandleReceived(AsCoreType(aMessage));
 }
 
 //---------------------------------------------------------------------------------------------------------------------

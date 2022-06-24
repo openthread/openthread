@@ -1173,7 +1173,15 @@ template <> inline BorderRouter::InfraIf &Instance::Get(void)
 {
     return mRoutingManager.mInfraIf;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+template <> inline BorderRouter::Nat64 &Instance::Get(void)
+{
+    return mRoutingManager.mNat64;
+}
 #endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 template <> inline Srp::Server &Instance::Get(void)

@@ -63,6 +63,7 @@ set(COMMON_SOURCES
     api/logging_api.cpp
     api/message_api.cpp
     api/multi_radio_api.cpp
+    api/nat64_api.cpp
     api/netdata_api.cpp
     api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
@@ -88,6 +89,7 @@ set(COMMON_SOURCES
     backbone_router/multicast_listeners_table.cpp
     backbone_router/ndproxy_table.cpp
     border_router/infra_if.cpp
+    border_router/nat64.cpp
     border_router/routing_manager.cpp
     coap/coap.cpp
     coap/coap_message.cpp

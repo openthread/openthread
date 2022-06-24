@@ -662,6 +662,27 @@ target_link_libraries(ot-test-multicast-listeners-table
 
 add_test(NAME ot-test-multicast-listeners-table COMMAND ot-test-multicast-listeners-table)
 
+add_test(NAME ot-test-nat64 COMMAND ot-test-nat64)
+
+add_executable(ot-test-nat64
+    test_nat64.cpp
+)
+
+target_include_directories(ot-test-nat64
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-nat64
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-nat64
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
 add_executable(ot-test-ndproxy-table
     test_ndproxy_table.cpp
 )
