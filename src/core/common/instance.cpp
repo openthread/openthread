@@ -78,6 +78,121 @@ Instance::Instance(void)
     , mMessagePool(*this)
     , mIp6(*this)
     , mThreadNetif(*this)
+    , mTmfAgent(*this)
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+    , mDhcp6Client(*this)
+#endif
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+    , mDhcp6Server(*this)
+#endif
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+    , mNeighborDiscoveryAgent(*this)
+#endif
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+    , mSlaac(*this)
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+    , mDnsClient(*this)
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    , mSrpClient(*this)
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+    , mSrpClientBuffers(*this)
+#endif
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    , mDnssdServer(*this)
+#endif
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    , mDnsDso(*this)
+#endif
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+    , mSntpClient(*this)
+#endif
+    , mActiveDataset(*this)
+    , mPendingDataset(*this)
+    , mExtendedPanIdManager(*this)
+    , mNetworkNameManager(*this)
+    , mIp6Filter(*this)
+    , mKeyManager(*this)
+    , mLowpan(*this)
+    , mMac(*this)
+    , mMeshForwarder(*this)
+    , mMleRouter(*this)
+    , mDiscoverScanner(*this)
+    , mAddressResolver(*this)
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    , mRadioSelector(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    , mNetworkDataLocal(*this)
+#endif
+    , mNetworkDataLeader(*this)
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    , mNetworkDataNotifier(*this)
+#endif
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+    , mNetworkDataPublisher(*this)
+#endif
+    , mNetworkDataServiceManager(*this)
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+    , mNetworkDiagnostic(*this)
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    , mBorderAgent(*this)
+#endif
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+    , mCommissioner(*this)
+#endif
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+    , mCoapSecure(*this)
+#endif
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+    , mJoiner(*this)
+#endif
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+    , mJamDetector(*this)
+#endif
+#if OPENTHREAD_FTD
+    , mJoinerRouter(*this)
+    , mLeader(*this)
+#endif
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    , mBackboneRouterLeader(*this)
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    , mBackboneRouterLocal(*this)
+    , mBackboneRouterManager(*this)
+#endif
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+    , mMlrManager(*this)
+#endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+    , mDuaManager(*this)
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    , mSrpServer(*this)
+#endif
+
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#if OPENTHREAD_FTD
+    , mChildSupervisor(*this)
+#endif
+    , mSupervisionListener(*this)
+#endif
+    , mAnnounceBegin(*this)
+    , mPanIdQuery(*this)
+    , mEnergyScan(*this)
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+    , mAnycastLocator(*this)
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    , mTimeSync(*this)
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    , mLinkMetrics(*this)
+#endif
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mApplicationCoap(*this)
 #endif
