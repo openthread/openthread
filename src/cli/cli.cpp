@@ -1199,25 +1199,31 @@ template <> otError Interpreter::Process<Cmd("coex")>(Arg aArgs[])
             {&otRadioCoexMetrics::mNumRxGrantNone, "Grant None"},
         };
 
+        static otRadioCoexMetrics sLastTimeMetrics;
+
         otRadioCoexMetrics metrics;
 
         SuccessOrExit(error = otPlatRadioGetCoexMetrics(GetInstancePtr(), &metrics));
 
         OutputLine("Stopped: %s", metrics.mStopped ? "true" : "false");
-        OutputLine("Grant Glitch: %u", metrics.mNumGrantGlitch);
+        OutputLine("Grant Glitch: %u (%u)", metrics.mNumGrantGlitch, sLastTimeMetrics.mNumGrantGlitch);
         OutputLine("Transmit metrics");
 
         for (const RadioCoexMetricName &metric : kTxMetricNames)
         {
-            OutputLine(kIndentSize, "%s: %u", metric.mName, metrics.*metric.mValuePtr);
+            OutputLine(kIndentSize, "%s: %u (%u)", metric.mName, metrics.*metric.mValuePtr,
+                       sLastTimeMetrics.*metric.mValuePtr);
         }
 
         OutputLine("Receive metrics");
 
         for (const RadioCoexMetricName &metric : kRxMetricNames)
         {
-            OutputLine(kIndentSize, "%s: %u", metric.mName, metrics.*metric.mValuePtr);
+            OutputLine(kIndentSize, "%s: %u (%u)", metric.mName, metrics.*metric.mValuePtr,
+                       sLastTimeMetrics.*metric.mValuePtr);
         }
+
+        memcpy(&sLastTimeMetrics, &metrics, sizeof(metrics));
     }
     else
     {
