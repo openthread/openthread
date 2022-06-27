@@ -147,7 +147,6 @@ public:
     InfoString ToString(void) const;
 } OT_TOOL_PACKED_END;
 
-OT_TOOL_PACKED_BEGIN
 class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Address>
 {
 public:
@@ -217,7 +216,7 @@ public:
      * @param[in] aHost The host bits of the IPv4 address in host byte order. The aHost will be masked by host mask.
      */
     Address Host(uint32_t aHost) const;
-} OT_TOOL_PACKED_END;
+};
 } // namespace Ip4
 
 DefineCoreType(otIp4Address, Ip4::Address);

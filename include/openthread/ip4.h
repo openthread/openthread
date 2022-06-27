@@ -81,12 +81,11 @@ typedef struct otIp4Address otIp4Address;
  * This structure represents an IPv4 CIDR block.
  *
  */
-OT_TOOL_PACKED_BEGIN
 struct otIp4Cidr
 {
     otIp4Address mAddress;
     uint8_t      mLength;
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This structure represents an IPv4 CIDR block.
