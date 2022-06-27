@@ -197,7 +197,6 @@ class OpenThreadTHCI(object):
     NETWORK_ATTACHMENT_TIMEOUT = 10
 
     IsBorderRouter = False
-    IsBackboneRouter = False
     IsHost = False
 
     externalCommissioner = None
@@ -559,13 +558,9 @@ class OpenThreadTHCI(object):
         ]:
             self.__setRouterSelectionJitter(1)
         elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
-            if self.DeviceCapability == OT12BR_CAPBS:
-                self.IsBackboneRouter = True
-            else:
-                self.IsBackboneRouter = False
             self.__setRouterSelectionJitter(1)
 
-        if self.IsBackboneRouter:
+        if self.DeviceCapability == OT12BR_CAPBS:
             # Configure default BBR dataset
             self.__configBbrDataset(SeqNum=self.bbrSeqNum,
                                     MlrTimeout=self.bbrMlrTimeout,
@@ -1398,7 +1393,6 @@ class OpenThreadTHCI(object):
         # indicate whether the default domain prefix is used.
         self.__useDefaultDomainPrefix = (self.DeviceCapability == OT12BR_CAPBS)
         self.__isUdpOpened = False
-        self.IsBackboneRouter = False
         self.IsHost = False
 
         # remove stale multicast addresses

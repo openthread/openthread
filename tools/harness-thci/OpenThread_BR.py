@@ -439,7 +439,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         if hop_limit is None:
             hop_limit = 5
 
-        if self.IsHost or self.IsBackboneRouter:
+        if self.IsHost or self.DeviceCapability == OT12BR_CAPBS or self.DeviceCapability == OT13BR_CAPBS:
             ifName = 'eth0'
         else:
             ifName = 'wpan0'
@@ -465,7 +465,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         """
         hop_limit = 5
 
-        if self.IsHost or self.IsBackboneRouter:
+        if self.IsHost or self.DeviceCapability == OT12BR_CAPBS or self.DeviceCapability == OT13BR_CAPBS:
             ifName = 'eth0'
         else:
             ifName = 'wpan0'
