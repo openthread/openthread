@@ -35,7 +35,9 @@
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/numeric_limits.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Ip4 {
@@ -84,6 +86,48 @@ exit:
     return error;
 }
 
+void Address::SynthesizeFromIp6Address(uint8_t aPrefixLength, Ip6::Address &aIp6Address)
+{
+    // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added
+    // after the prefix, skipping over the bits 64 to 71 (byte at `kSkipIndex`)
+    // which must be set to zero. The suffix is set to zero (per RFC 6502).
+    //
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |PL| 0-------------32--40--48--56--64--72--80--88--96--104---------|
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |32|     prefix    |v4(32)         | u | suffix                    |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |40|     prefix        |v4(24)     | u |(8)| suffix                |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |48|     prefix            |v4(16) | u | (16)  | suffix            |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |56|     prefix                |(8)| u |  v4(24)   | suffix        |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |64|     prefix                    | u |   v4(32)      | suffix    |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |96|     prefix                                    |    v4(32)     |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
+    constexpr uint8_t kSkipIndex = 8;
+
+    uint8_t ip6Index;
+
+    OT_ASSERT((aPrefixLength == 32) || (aPrefixLength == 40) || (aPrefixLength == 48) || (aPrefixLength == 56) ||
+              (aPrefixLength == 64) || (aPrefixLength == 96));
+
+    ip6Index = aPrefixLength / CHAR_BIT;
+
+    for (uint8_t i = 0; i < Ip4::Address::kSize; i++)
+    {
+        if (ip6Index == kSkipIndex)
+        {
+            ip6Index++;
+        }
+
+        mFields.m8[i] = aIp6Address.GetBytes()[ip6Index++];
+    }
+}
+
 Address::InfoString Address::ToString(void) const
 {
     InfoString string;
@@ -107,6 +151,18 @@ Address Cidr::Host(const uint32_t aHost) const
     Address ret;
     ret.mFields.m32 = (mAddress.mFields.m32 & SubnetMask()) | (HostSwap32(aHost) & HostMask());
     return ret;
+}
+
+bool Cidr::operator==(const Cidr &aOther) const
+{
+    return (mLength == aOther.mLength) &&
+           (ot::Ip6::Prefix::MatchLength(GetBytes(), aOther.GetBytes(), Ip4::Address::kSize) >= mLength);
+}
+
+void Cidr::Set(const uint8_t *aAddress, uint8_t aLength)
+{
+    memcpy(mAddress.mFields.m8, aAddress, Ip4::Address::kSize);
+    mLength = aLength;
 }
 
 } // namespace Ip4

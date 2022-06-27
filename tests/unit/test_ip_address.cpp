@@ -446,6 +446,22 @@ void TestIp4Ip6Translation(void)
 
         VerifyOrQuit(address == expectedAddress, "Ip6::SynthesizeFromIp4Address() failed");
     }
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        const ot::Ip4::Address expectedAddress = ip4Address;
+        ot::Ip4::Address       address;
+        ot::Ip6::Address       ip6Address;
+
+        SuccessOrQuit(ip6Address.FromString(testCase.mIp6Address));
+
+        address.SynthesizeFromIp6Address(testCase.mLength, ip6Address);
+
+        printf("Ipv6Address: %-36s IPv4Addr: %-12s Expected: %s\n", testCase.mIp6Address,
+               address.ToString().AsCString(), expectedAddress.ToString().AsCString());
+
+        VerifyOrQuit(address == expectedAddress, "Ip4::SynthesizeFromIp6Address() failed");
+    }
 }
 
 void TestIp4CIDR(void)
