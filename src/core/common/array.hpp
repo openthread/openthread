@@ -478,6 +478,42 @@ public:
     }
 
     /**
+     * This template method removes all elements in the array matching a given indicator.
+     *
+     * This method behaves similar to `Remove()`, i.e., a matched element is replaced with the last element in the
+     * array (using `=` operator on `Type`). So the order of items in the array can change after a call to this method.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     */
+    template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator)
+    {
+        for (IndexType index = 0; index < GetLength();)
+        {
+            Type &entry = mElements[index];
+
+            if (entry.Matches(aIndicator))
+            {
+                Remove(entry);
+
+                // When the entry is removed from the array it is
+                // replaced with the last element. In this case, we do
+                // not increment `index`.
+            }
+            else
+            {
+                index++;
+            }
+        }
+    }
+
+    /**
      * This method overloads assignment `=` operator to copy elements from another array into the array.
      *
      * The method uses assignment `=` operator on `Type` to copy each element from @p aOtherArray into the elements of

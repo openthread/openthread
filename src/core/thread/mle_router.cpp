@@ -724,6 +724,8 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     }
 #endif
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
     SuccessOrExit(error = SendLinkAccept(aRxInfo.mMessageInfo, neighbor, requestedTlvs, challenge));
 
 exit:
@@ -1017,6 +1019,8 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     router->SetKeySequence(aRxInfo.mKeySequence);
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+
+    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
 
     if (aRequest)
     {
@@ -1762,6 +1766,8 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
         child->SetTimeout(Time::MsecToSec(kMaxChildIdRequestTimeout));
     }
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
     SendParentResponse(child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
 
 exit:
@@ -2465,6 +2471,8 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
         child->SetRequestTlv(numTlvs++, Tlv::kPendingDataset);
     }
 
+    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
+
     switch (mRole)
     {
     case kRoleDisabled:
@@ -2692,6 +2700,8 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
 
     SendChildUpdateResponse(child, aRxInfo.mMessageInfo, tlvs, tlvslength, challenge);
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
 exit:
     LogProcessError(kTypeChildUpdateRequestOfChild, error);
 }
@@ -2725,6 +2735,7 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
         break;
     case kErrorNotFound:
         VerifyOrExit(child->IsStateValid(), error = kErrorSecurity);
+        response.mLength = 0;
         break;
     default:
         ExitNow(error = kErrorNone);
@@ -2824,6 +2835,8 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     child->SetKeySequence(aRxInfo.mKeySequence);
     child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
 
+    aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
+
 exit:
     LogProcessError(kTypeChildUpdateResponseOfChild, error);
 }
@@ -2885,6 +2898,8 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
     default:
         ExitNow(error = kErrorParse);
     }
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     SendDataResponse(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, &aRxInfo.mMessage);
 
@@ -4443,6 +4458,8 @@ void MleRouter::HandleTimeSync(RxInfo &aRxInfo)
     Log(kMessageReceive, kTypeTimeSync, aRxInfo.mMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
 

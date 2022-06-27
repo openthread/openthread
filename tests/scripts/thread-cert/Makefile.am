@@ -175,6 +175,7 @@ EXTRA_DIST                                                         = \
     test_mac802154.py                                                \
     test_mac_scan.py                                                 \
     test_mle.py                                                      \
+    test_mle_msg_key_seq_jump.py                                     \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \
@@ -255,6 +256,7 @@ check_SCRIPTS                                                      = \
     test_mac802154.py                                                \
     test_mac_scan.py                                                 \
     test_mle.py                                                      \
+    test_mle_msg_key_seq_jump.py                                     \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \
