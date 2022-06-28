@@ -52,11 +52,9 @@ RegisterLogModule("Ip6Filter");
 
 bool Filter::Accept(Message &aMessage) const
 {
-    bool        rval = false;
-    Header      ip6;
-    Udp::Header udp;
-    Tcp::Header tcp;
-    uint16_t    dstport;
+    bool     rval = false;
+    Headers  headers;
+    uint16_t dstPort;
 
     // Allow all received IPv6 datagrams with link security enabled
     if (aMessage.IsLinkSecurityEnabled())
@@ -64,10 +62,11 @@ bool Filter::Accept(Message &aMessage) const
         ExitNow(rval = true);
     }
 
-    SuccessOrExit(aMessage.Read(0, ip6));
+    SuccessOrExit(headers.ParseFrom(aMessage));
 
     // Allow only link-local unicast or multicast
-    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast());
+    VerifyOrExit(headers.GetDestinationAddress().IsLinkLocal() ||
+                 headers.GetDestinationAddress().IsLinkLocalMulticast());
 
     // Allow all link-local IPv6 datagrams when Thread is not enabled
     if (Get<Mle::MleRouter>().GetRole() == Mle::kRoleDisabled)
@@ -75,14 +74,13 @@ bool Filter::Accept(Message &aMessage) const
         ExitNow(rval = true);
     }
 
-    switch (ip6.GetNextHeader())
+    dstPort = headers.GetDestinationPort();
+
+    switch (headers.GetIpProto())
     {
     case kProtoUdp:
-        SuccessOrExit(aMessage.Read(sizeof(ip6), udp));
-        dstport = udp.GetDestinationPort();
-
         // Allow MLE traffic
-        if (dstport == Mle::kUdpPort)
+        if (dstPort == Mle::kUdpPort)
         {
             ExitNow(rval = true);
         }
@@ -90,7 +88,7 @@ bool Filter::Accept(Message &aMessage) const
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         // Allow native commissioner traffic
         if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled &&
-            dstport == Get<MeshCoP::BorderAgent>().GetUdpPort())
+            dstPort == Get<MeshCoP::BorderAgent>().GetUdpPort())
         {
             ExitNow(rval = true);
         }
@@ -98,8 +96,6 @@ bool Filter::Accept(Message &aMessage) const
         break;
 
     case kProtoTcp:
-        SuccessOrExit(aMessage.Read(sizeof(ip6), tcp));
-        dstport = tcp.GetDestinationPort();
         break;
 
     default:
@@ -108,7 +104,7 @@ bool Filter::Accept(Message &aMessage) const
     }
 
     // Check against allowed unsecure port list
-    rval = mUnsecurePorts.Contains(dstport);
+    rval = mUnsecurePorts.Contains(dstPort);
 
 exit:
     return rval;

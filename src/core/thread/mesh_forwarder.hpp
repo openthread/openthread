@@ -170,7 +170,6 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class Ip6::Ip6;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
-    friend class Utils::HistoryTracker;
 
 public:
     /**
@@ -390,36 +389,23 @@ private:
     };
 #endif // OPENTHREAD_FTD
 
-    void  SendIcmpErrorIfDstUnreach(const Message &     aMessage,
-                                    const Mac::Address &aMacSource,
-                                    const Mac::Address &aMacDest);
-    Error CheckReachability(const uint8_t *     aFrame,
-                            uint16_t            aFrameLength,
-                            const Mac::Address &aMeshSource,
-                            const Mac::Address &aMeshDest);
-    void  UpdateRoutes(const uint8_t *     aFrame,
-                       uint16_t            aFrameLength,
-                       const Mac::Address &aMeshSource,
-                       const Mac::Address &aMeshDest);
-
-    Error    DecompressIp6Header(const uint8_t *     aFrame,
-                                 uint16_t            aFrameLength,
-                                 const Mac::Address &aMacSource,
-                                 const Mac::Address &aMacDest,
-                                 Ip6::Header &       aIp6Header,
-                                 uint8_t &           aHeaderLength,
-                                 bool &              aNextHeaderCompressed);
+    void     SendIcmpErrorIfDstUnreach(const Message &     aMessage,
+                                       const Mac::Address &aMacSource,
+                                       const Mac::Address &aMacDest);
+    Error    CheckReachability(const uint8_t *     aFrame,
+                               uint16_t            aFrameLength,
+                               const Mac::Address &aMeshSource,
+                               const Mac::Address &aMeshDest);
+    void     UpdateRoutes(const uint8_t *     aFrame,
+                          uint16_t            aFrameLength,
+                          const Mac::Address &aMeshSource,
+                          const Mac::Address &aMeshDest);
     Error    FrameToMessage(const uint8_t *     aFrame,
                             uint16_t            aFrameLength,
                             uint16_t            aDatagramSize,
                             const Mac::Address &aMacSource,
                             const Mac::Address &aMacDest,
                             Message *&          aMessage);
-    Error    GetIp6Header(const uint8_t *     aFrame,
-                          uint16_t            aFrameLength,
-                          const Mac::Address &aMacSource,
-                          const Mac::Address &aMacDest,
-                          Ip6::Header &       aIp6Header);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
@@ -527,25 +513,11 @@ private:
                               const Mac::Address &aMacDest,
                               bool                aIsSecure);
 
-    static Error ParseIp6UdpTcpHeader(const Message &aMessage,
-                                      Ip6::Header &  aIp6Header,
-                                      uint16_t &     aChecksum,
-                                      uint16_t &     aSourcePort,
-                                      uint16_t &     aDestPort);
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
     const char *MessagePriorityToString(const Message &aMessage);
 
 #if OPENTHREAD_FTD
-    Error DecompressIp6UdpTcpHeader(const Message &     aMessage,
-                                    uint16_t            aOffset,
-                                    const Mac::Address &aMeshSource,
-                                    const Mac::Address &aMeshDest,
-                                    Ip6::Header &       aIp6Header,
-                                    uint16_t &          aChecksum,
-                                    uint16_t &          aSourcePort,
-                                    uint16_t &          aDestPort);
     Error LogMeshFragmentHeader(MessageAction       aAction,
                                 const Message &     aMessage,
                                 const Mac::Address *aMacAddress,
@@ -565,10 +537,7 @@ private:
                          Error               aError,
                          LogLevel            aLogLevel);
 #endif
-    void LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
-                                   uint16_t     aSourcePort,
-                                   uint16_t     aDestPort,
-                                   LogLevel     aLogLevel);
+    void LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel);
     void LogIp6Message(MessageAction       aAction,
                        const Message &     aMessage,
                        const Mac::Address *aAddress,
