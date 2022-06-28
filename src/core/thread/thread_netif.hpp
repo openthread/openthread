@@ -210,6 +210,7 @@ private:
     MeshForwarder                  mMeshForwarder;
     Mle::MleRouter                 mMleRouter;
     Mle::DiscoverScanner           mDiscoverScanner;
+    AddressResolver                mAddressResolver;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioSelector mRadioSelector;
 #endif
@@ -251,7 +252,6 @@ private:
 #if OPENTHREAD_FTD
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader       mLeader;
-    AddressResolver       mAddressResolver;
 #endif // OPENTHREAD_FTD
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
