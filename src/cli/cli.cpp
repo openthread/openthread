@@ -527,7 +527,7 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
      * @endcode
      * @par api_copy
      * #otBorderRoutingGetNat64Prefix
-     */ 
+     */
     else if (aArgs[0] == "nat64prefix")
     {
         otIp6Prefix nat64Prefix;

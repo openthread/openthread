@@ -234,7 +234,7 @@ otError Joiner::Process(Arg aArgs[])
      * stop
      * Done
      * @endcode
-     * @par 
+     * @par
      * Print the `joiner` help menu.
      */
     if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
