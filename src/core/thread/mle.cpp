@@ -1106,8 +1106,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
             // addresses.
 
             mAddressRegistrationMode = kAppendAllAddresses;
-            mChildUpdateRequestState = kChildUpdateRequestPending;
-            ScheduleMessageTransmissionTimer();
+            ScheduleChildUpdateRequest();
         }
     }
 
@@ -1124,8 +1123,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
 
         if (IsChild() && !IsFullThreadDevice())
         {
-            mChildUpdateRequestState = kChildUpdateRequestPending;
-            ScheduleMessageTransmissionTimer();
+            ScheduleChildUpdateRequest();
         }
     }
 
@@ -1142,8 +1140,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
                  ))
 
         {
-            mChildUpdateRequestState = kChildUpdateRequestPending;
-            ScheduleMessageTransmissionTimer();
+            ScheduleChildUpdateRequest();
         }
     }
 
@@ -1159,8 +1156,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
         {
             if (!aEvents.Contains(kEventThreadRoleChanged))
             {
-                mChildUpdateRequestState = kChildUpdateRequestPending;
-                ScheduleMessageTransmissionTimer();
+                ScheduleChildUpdateRequest();
             }
         }
 
