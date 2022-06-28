@@ -29,11 +29,11 @@
 /**
  * @file
  * @brief
- *  This file defines the OpenThread IPv4 API for NAT64.
+ *  This file defines the OpenThread API for NAT64 on a border router.
  */
 
-#ifndef OPENTHREAD_IP4_H_
-#define OPENTHREAD_IP4_H_
+#ifndef OPENTHREAD_NAT64_H_
+#define OPENTHREAD_NAT64_H_
 
 #include <openthread/message.h>
 
@@ -42,10 +42,10 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-ip6
+ * @addtogroup api-nat64
  *
- * @brief
- *   This module includes functions that control IPv6 communication.
+ * @brief This module includes functions and structs for the NAT64 function on the border router. These functions are
+ * only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` is enabled.
  *
  * @{
  *
@@ -102,4 +102,4 @@ typedef struct otIp4Cidr otIp4Cidr;
 }
 #endif
 
-#endif
+#endif // OPENTHREAD_NAT64_H_

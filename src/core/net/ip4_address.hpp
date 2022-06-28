@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/ip4.h>
+#include <openthread/nat64.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
