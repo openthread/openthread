@@ -378,11 +378,8 @@ void TestTcp4MessageChecksum(void)
 
 void TestUdp4MessageChecksum(void)
 {
-    enum : uint16_t
-    {
-        kMinSize = sizeof(Ip4::Udp::Header),
-        kMaxSize = kBufferSize * 3 + 24,
-    };
+    constexpr uint16_t kMinSize = sizeof(Ip4::Udp::Header);
+    constexpr uint16_t kMaxSize = kBufferSize * 3 + 24;
 
     const char *kSourceAddress = "12.34.56.78";
     const char *kDestAddress   = "87.65.43.21";

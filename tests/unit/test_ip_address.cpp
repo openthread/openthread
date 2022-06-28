@@ -490,7 +490,8 @@ void TestIp4CIDR(void)
         cidr.mAddress = network;
         cidr.mLength  = testCase.mLength;
 
-        ot::Ip4::Address generated = cidr.Host(testCase.mHost);
+        ot::Ip4::Address generated;
+        generated.SynthesizeFromCidrAndHost(cidr, testCase.mHost);
 
         ot::Ip4::Address::InfoString hostAddress = generated.ToString();
         printf("CIDR: %-18s HostID: %-8x Host: %-14s Expected: %s\n", cidr.ToString().AsCString(), testCase.mHost,

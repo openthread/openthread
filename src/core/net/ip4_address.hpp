@@ -48,7 +48,7 @@
 namespace ot {
 
 namespace Ip6 {
-// Forward declation for SynthesizeFromIp4Address
+// Forward declaration for SynthesizeFromIp4Address
 class Address;
 } // namespace Ip6
 
@@ -56,6 +56,9 @@ namespace Ip4 {
 
 using Encoding::BigEndian::HostSwap16;
 using Encoding::BigEndian::HostSwap32;
+
+// Forward declaration for Address::SynthesizeFromCidrAndHost
+class Cidr;
 
 /**
  * This class represents an IPv4 address.
@@ -123,6 +126,14 @@ public:
     void SynthesizeFromIp6Address(uint8_t aPrefixLength, Ip6::Address &aIp6Address);
 
     /**
+     * This method sets the IPv4 address from the given CIDR and the host field.
+     *
+     * @param[in] aCidr The CIDR for the IPv4 address.
+     * @param[in] aHost The host bits of the IPv4 address in host byte order. The aHost will be masked by host mask.
+     */
+    void SynthesizeFromCidrAndHost(const Cidr &aCidr, uint32_t aHost);
+
+    /**
      * This method parses an IPv4 address string.
      *
      * The string MUST follow the quad-dotted notation of four decimal values (ranging from 0 to 255 each). For
@@ -173,14 +184,14 @@ public:
      *
      * @returns A uint32 for the host mask, in network byte order.
      */
-    inline uint32_t HostMask() const { return HostSwap32((uint32_t(1) << uint32_t(32 - mLength)) - 1); }
+    uint32_t HostMask(void) const { return HostSwap32((uint32_t(1) << uint32_t(32 - mLength)) - 1); }
 
     /**
      * This method returns the subnet mask of the CIDR.
      *
      * @returns A uint32 for the subnet mask, in network byte order.
      */
-    inline uint32_t SubnetMask() const { return ~HostMask(); }
+    uint32_t SubnetMask(void) const { return ~HostMask(); }
 
     /**
      * This method gets the prefix as a pointer to a byte array.
@@ -209,13 +220,6 @@ public:
      *
      */
     void Set(const uint8_t *aAddress, uint8_t aLength);
-
-    /**
-     * This method returns an IPv4 address within the CIDR block.
-     *
-     * @param[in] aHost The host bits of the IPv4 address in host byte order. The aHost will be masked by host mask.
-     */
-    Address Host(uint32_t aHost) const;
 };
 } // namespace Ip4
 

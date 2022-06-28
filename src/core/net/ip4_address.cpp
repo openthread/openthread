@@ -128,6 +128,11 @@ void Address::SynthesizeFromIp6Address(uint8_t aPrefixLength, Ip6::Address &aIp6
     }
 }
 
+void Address::SynthesizeFromCidrAndHost(const Cidr &aCidr, const uint32_t aHost)
+{
+    mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (HostSwap32(aHost) & aCidr.HostMask());
+}
+
 Address::InfoString Address::ToString(void) const
 {
     InfoString string;
@@ -144,13 +149,6 @@ Cidr::InfoString Cidr::ToString(void) const
     string.Append("%s/%d", AsCoreType(&mAddress).ToString().AsCString(), mLength);
 
     return string;
-}
-
-Address Cidr::Host(const uint32_t aHost) const
-{
-    Address ret;
-    ret.mFields.m32 = (mAddress.mFields.m32 & SubnetMask()) | (HostSwap32(aHost) & HostMask());
-    return ret;
 }
 
 bool Cidr::operator==(const Cidr &aOther) const
