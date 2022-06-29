@@ -73,7 +73,7 @@ extern "C" {
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
 /**
- * This method enables/disables the Border Routing Manager.
+ * Enables or disables the Border Routing Manager.
  *
  * @note  The Border Routing Manager is disabled by default.
  *
@@ -87,10 +87,11 @@ otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This method returns the off-mesh-routable (OMR) prefix.
+ * Gets the Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
  *
- * The randomly generated 64-bit prefix will be published
- * in the Thread network if there isn't already an OMR prefix.
+ * An OMR Prefix is a randomly generated 64-bit prefix that's published in the
+ * Thread network if there isn't already an OMR prefix. This prefix can be reached
+ * from the local Wi-Fi or Ethernet network.
  *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.
@@ -102,11 +103,10 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
- * This method returns the on-link prefix for the adjacent infrastructure link.
+ * Gets the On-Link Prefix for the adjacent infrastructure link, for example `fd41:2650:a6f5:0::/64`.
  *
- * The randomly generated 64-bit prefix will be advertised
- * on the infrastructure link if there isn't already a usable
- * on-link prefix being advertised on the link.
+ * An On-Link Prefix is a randomly generated 64-bit prefix that's advertised on the infrastructure
+ * link if there isn't already a usable on-link prefix being advertised on the link.
  *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.
@@ -118,12 +118,11 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
- * This function returns the local NAT64 prefix.
+ * Gets the local NAT64 Prefix of the Border Router.
  *
- * This prefix might not be advertised in the Thread network.
+ * NAT64 Prefix might not be advertised in the Thread network.
  *
- * This function is only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE`
- * is enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` must be enabled.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aPrefix     A pointer to where the prefix will be output to.

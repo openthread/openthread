@@ -52,8 +52,10 @@
 #include "border_router/infra_if.hpp"
 #include "common/array.hpp"
 #include "common/error.hpp"
+#include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
+#include "common/pool.hpp"
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
@@ -200,9 +202,6 @@ private:
     // The maximum number of the OMR prefixes to advertise.
     static constexpr uint8_t kMaxOmrPrefixNum = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
 
-    // The maximum number of prefixes to discover on the infra link.
-    static constexpr uint8_t kMaxDiscoveredPrefixNum = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
-
     static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
     static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; // The length of an On-link prefix. In bits.
     static constexpr uint8_t kBrUlaPrefixLength  = 48;                    // The length of a BR ULA prefix. In bits.
@@ -276,6 +275,8 @@ private:
         void ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
                                         const Ip6::Address &                aSrcAddress);
 
+        void SetAllowDefaultRouteInNetData(bool aAllow);
+
         void FindFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const;
         bool ContainsOnLinkPrefix(const Ip6::Prefix &aPrefix) const;
         void RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix, NetDataMode aNetDataMode);
@@ -289,10 +290,13 @@ private:
         TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
     private:
-        static constexpr uint8_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
+        static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
+        static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
 
-        struct Entry : private Clearable<Entry>, public Unequatable<Entry>
+        class Entry : public LinkedListEntry<Entry>, public Unequatable<Entry>, private Clearable<Entry>
         {
+            friend class LinkedListEntry<Entry>;
+
         public:
             enum Type : uint8_t
             {
@@ -312,8 +316,20 @@ private:
                 bool               mType;
             };
 
+            struct ExpirationChecker
+            {
+                explicit ExpirationChecker(TimeMilli aNow)
+                    : mNow(aNow)
+                {
+                }
+
+                TimeMilli mNow;
+            };
+
+            void               InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader);
             void               InitFrom(const Ip6::Nd::PrefixInfoOption &aPio);
             void               InitFrom(const Ip6::Nd::RouteInfoOption &aRio);
+            Type               GetType(void) const { return mType; }
             bool               IsOnLinkPrefix(void) const { return (mType == kTypeOnLink); }
             const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
             const TimeMilli &  GetLastUpdateTime(void) const { return mLastUpdateTime; }
@@ -321,44 +337,73 @@ private:
             void               ClearValidLifetime(void) { mValidLifetime = 0; }
             TimeMilli          GetExpireTime(void) const;
             TimeMilli          GetStaleTime(void) const;
+            RoutePreference    GetPreference(void) const;
             bool               operator==(const Entry &aOther) const;
             bool               Matches(const Matcher &aMatcher) const;
+            bool               Matches(const ExpirationChecker &aCheker) const;
 
             // Methods to use when `IsOnLinkPrefix()`
-            uint32_t GetPreferredLifetime(void) const { return mPreferredLifetime; }
-            void     ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
+            uint32_t GetPreferredLifetime(void) const { return mShared.mPreferredLifetime; }
+            void     ClearPreferredLifetime(void) { mShared.mPreferredLifetime = 0; }
             bool     IsDeprecated(void) const;
             void     AdoptValidAndPreferredLiftimesFrom(const Entry &aEntry);
 
             // Method to use when `!IsOnlinkPrefix()`
-            RoutePreference GetRoutePreference(void) const { return mRoutePreference; }
+            RoutePreference GetRoutePreference(void) const { return mShared.mRoutePreference; }
 
         private:
             static uint32_t CalculateExpireDelay(uint32_t aValidLifetime);
 
-            Ip6::Prefix     mPrefix;
-            TimeMilli       mLastUpdateTime;
-            uint32_t        mValidLifetime;
-            uint32_t        mPreferredLifetime; // Applicable when prefix is on-link.
-            RoutePreference mRoutePreference;   // Applicable when prefix is not on-link
-            Type            mType;
+            Entry *     mNext;
+            Ip6::Prefix mPrefix;
+            Type        mType;
+            TimeMilli   mLastUpdateTime;
+            uint32_t    mValidLifetime;
+            union
+            {
+                uint32_t        mPreferredLifetime; // Applicable when prefix is on-link.
+                RoutePreference mRoutePreference;   // Applicable when prefix is not on-link
+            } mShared;
         };
 
-        typedef Array<Entry, kMaxEntries> EntryArray;
+        struct Router
+        {
+            enum EmptyChecker : uint8_t
+            {
+                kContainsNoEntries
+            };
 
-        void RemovePrefix(const Ip6::Prefix &aPrefix, Entry::Type aType, NetDataMode aNetDataMode);
+            bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
+            bool Matches(EmptyChecker) const { return mEntries.IsEmpty(); }
 
-        void        ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio);
-        void        ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio);
+            Ip6::Address      mAddress;
+            LinkedList<Entry> mEntries;
+        };
+
+        void        ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
+        void        ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, Router &aRouter);
+        void        ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
+        bool        ContainsPrefix(const Entry::Matcher &aMatcher) const;
+        void        RemovePrefix(const Entry::Matcher &aMatcher, NetDataMode aNetDataMode);
+        void        RemoveRoutersWithNoEntries(void);
+        Entry *     AllocateEntry(void) { return mEntryPool.Allocate(); }
+        void        FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
+        void        FreeEntries(LinkedList<Entry> &aEntries);
+        void        UpdateNetworkDataOnChangeTo(Entry &aEntry);
+        Entry *     FindFavoredEntryToPublish(const Ip6::Prefix &aPrefix);
+        void        PublishEntry(const Entry &aEntry);
+        void        UnpublishEntry(const Entry &aEntry);
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
         void        RemoveExpiredEntries(void);
         void        SignalTableChanged(void);
         static void HandleSignalTask(Tasklet &aTasklet);
 
-        EntryArray mEntries;
-        TimerMilli mTimer;
-        Tasklet    mSignalTask;
+        Array<Router, kMaxRouters> mRouters;
+        Pool<Entry, kMaxEntries>   mEntryPool;
+        TimerMilli                 mTimer;
+        Tasklet                    mSignalTask;
+        bool                       mAllowDefaultRouteInNetData;
     };
 
     class OmrPrefix // An OMR Prefix
@@ -429,6 +474,7 @@ private:
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
     bool ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
+    void UpdateDiscoveredPrefixTableOnNetDataChange(void);
     void HandleDiscoveredPrefixTableChanged(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     void UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
