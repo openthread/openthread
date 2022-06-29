@@ -439,7 +439,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         if hop_limit is None:
             hop_limit = 5
 
-        if self.IsHost or self.IsBackboneRouter:
+        if self.IsHost or self.IsBorderRouter:
             ifName = self.backboneNetif
         else:
             ifName = 'wpan0'
@@ -465,7 +465,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         """
         hop_limit = 5
 
-        if self.IsHost or self.IsBackboneRouter:
+        if self.IsHost or self.IsBorderRouter:
             ifName = self.backboneNetif
         else:
             ifName = 'wpan0'
@@ -695,3 +695,30 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         """
         self.externalCommissioner.MLR([sAddr], 0)
         return True
+
+    @watched
+    def _waitBorderRoutingStabilize(self):
+        """
+        Wait for Network Data to stabilize if BORDER_ROUTING is enabled.
+        """
+        if not self.isBorderRoutingEnabled():
+            return
+
+        MAX_TIMEOUT = 30
+        MIN_TIMEOUT = 15
+        CHECK_INTERVAL = 3
+
+        time.sleep(MIN_TIMEOUT)
+
+        lastNetData = self.getNetworkData()
+        for i in range((MAX_TIMEOUT - MIN_TIMEOUT) // CHECK_INTERVAL):
+            time.sleep(CHECK_INTERVAL)
+            curNetData = self.getNetworkData()
+
+            # Wait until the Network Data is not changing, and there is OMR Prefix and External Routes available
+            if curNetData == lastNetData and len(curNetData['Prefixes']) > 0 and len(curNetData['Routes']) > 0:
+                break
+
+            lastNetData = curNetData
+
+        return lastNetData

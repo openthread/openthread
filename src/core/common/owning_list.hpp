@@ -89,7 +89,7 @@ public:
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
-     * @returns An `OwnerPtr` to the entry that was popped (set to null if list of empty).
+     * @returns An `OwnedPtr` to the entry that was popped (set to null if list of empty).
      *
      */
     OwnedPtr<Type> Pop(void) { return OwnedPtr<Type>(LinkedList<Type>::Pop()); }
@@ -102,7 +102,7 @@ public:
      * @param[in] aPrevEntry  A pointer to a previous entry. If it is not `nullptr` the entry after this will be popped,
      *                        otherwise (if it is `nullptr`) the entry at the head of the list is popped.
      *
-     * @returns An `OwnerPtr` to the entry that was popped (set to null if there is no entry to pop).
+     * @returns An `OwnedPtr` to the entry that was popped (set to null if there is no entry to pop).
      *
      */
     OwnedPtr<Type> PopAfter(Type *aPrevEntry) { return OwnedPtr<Type>(LinkedList<Type>::PopAfter(aPrevEntry)); }
@@ -121,7 +121,7 @@ public:
      *
      * @param[in] aIndicator   An entry indicator to match against entries in the list.
      *
-     * @returns An `OwnerPtr` to the entry that was removed (set to null if there is no matching entry to remove).
+     * @returns An `OwnedPtr` to the entry that was removed (set to null if there is no matching entry to remove).
      *
      */
     template <typename Indicator> OwnedPtr<Type> RemoveMatching(const Indicator &aIndicator)

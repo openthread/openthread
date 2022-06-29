@@ -101,9 +101,9 @@ build_all_features()
     )
 
     # Build Thread 1.1 with full features and no log
-    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
+    export CPPFLAGS="${options[*]}"
     reset_source
-    make -f examples/Makefile-simulation THREAD_VERSION=1.1
+    make -f examples/Makefile-simulation THREAD_VERSION=1.1 LOG_OUTPUT=NONE
 
     # Build Thread 1.1 with full features and full logs
     export CPPFLAGS="${options[*]}"
@@ -111,9 +111,9 @@ build_all_features()
     make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
 
     # Build Thread 1.3 with full features and logs
-    export CPPFLAGS="${options[*]} ${options_1_3[*]} -DOPENTHREAD_CONFIG_LOG_OUTPUT=OT_LOG_OUTPUT_NONE"
+    export CPPFLAGS="${options[*]} ${options_1_3[*]}"
     reset_source
-    make -f examples/Makefile-simulation THREAD_VERSION=1.3
+    make -f examples/Makefile-simulation THREAD_VERSION=1.3 LOG_OUTPUT=NONE
 
     # Build Thread 1.3 with full features and full logs
     export CPPFLAGS="${options[*]} ${options_1_3[*]}"

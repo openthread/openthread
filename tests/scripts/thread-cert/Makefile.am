@@ -153,6 +153,7 @@ EXTRA_DIST                                                         = \
     sniffer_transport.py                                             \
     test_anycast.py                                                  \
     test_anycast_locator.py                                          \
+    test_br_upgrade_router_role.py                                   \
     test_coap.py                                                     \
     test_coap_block.py                                               \
     test_coap_observe.py                                             \
@@ -174,6 +175,7 @@ EXTRA_DIST                                                         = \
     test_mac802154.py                                                \
     test_mac_scan.py                                                 \
     test_mle.py                                                      \
+    test_mle_msg_key_seq_jump.py                                     \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \
@@ -232,6 +234,7 @@ check_PROGRAMS                                                     = \
 check_SCRIPTS                                                      = \
     test_anycast.py                                                  \
     test_anycast_locator.py                                          \
+    test_br_upgrade_router_role.py                                   \
     test_coap.py                                                     \
     test_coap_block.py                                               \
     test_coap_observe.py                                             \
@@ -253,6 +256,7 @@ check_SCRIPTS                                                      = \
     test_mac802154.py                                                \
     test_mac_scan.py                                                 \
     test_mle.py                                                      \
+    test_mle_msg_key_seq_jump.py                                     \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \

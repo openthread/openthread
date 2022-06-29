@@ -724,6 +724,8 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     }
 #endif
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
     SuccessOrExit(error = SendLinkAccept(aRxInfo.mMessageInfo, neighbor, requestedTlvs, challenge));
 
 exit:
@@ -1017,6 +1019,8 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     router->SetKeySequence(aRxInfo.mKeySequence);
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+
+    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
 
     if (aRequest)
     {
@@ -1453,7 +1457,11 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
 
         if (routerCount > mRouterDowngradeThreshold && mRouterSelectionJitterTimeout == 0 &&
             HasMinDowngradeNeighborRouters() && HasSmallNumberOfChildren() &&
-            HasOneNeighborWithComparableConnectivity(route, routerId))
+            HasOneNeighborWithComparableConnectivity(route, routerId)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+            && !Get<NetworkData::Notifier>().IsEligibleForRouterRoleUpgradeAsBorderRouter()
+#endif
+        )
         {
             mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
         }
@@ -1757,6 +1765,8 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
         child->SetLastHeard(TimerMilli::GetNow());
         child->SetTimeout(Time::MsecToSec(kMaxChildIdRequestTimeout));
     }
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     SendParentResponse(child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
 
@@ -2461,6 +2471,8 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
         child->SetRequestTlv(numTlvs++, Tlv::kPendingDataset);
     }
 
+    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
+
     switch (mRole)
     {
     case kRoleDisabled:
@@ -2688,6 +2700,8 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
 
     SendChildUpdateResponse(child, aRxInfo.mMessageInfo, tlvs, tlvslength, challenge);
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
 exit:
     LogProcessError(kTypeChildUpdateRequestOfChild, error);
 }
@@ -2721,6 +2735,7 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
         break;
     case kErrorNotFound:
         VerifyOrExit(child->IsStateValid(), error = kErrorSecurity);
+        response.mLength = 0;
         break;
     default:
         ExitNow(error = kErrorNone);
@@ -2820,6 +2835,8 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     child->SetKeySequence(aRxInfo.mKeySequence);
     child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
 
+    aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
+
 exit:
     LogProcessError(kTypeChildUpdateResponseOfChild, error);
 }
@@ -2881,6 +2898,8 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
     default:
         ExitNow(error = kErrorParse);
     }
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     SendDataResponse(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, &aRxInfo.mMessage);
 
@@ -3920,7 +3939,7 @@ void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::Message
     case ThreadStatusTlv::kParentPartitionChange:
         break;
 
-    case ThreadStatusTlv::kBorderRouterRequst:
+    case ThreadStatusTlv::kBorderRouterRequest:
         if ((mRouterTable.GetActiveRouterCount() >= mRouterUpgradeThreshold) &&
             (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
              kRouterUpgradeBorderRouterRequestThreshold))
@@ -4161,58 +4180,6 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     aTlv.SetSedDatagramCount(OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT);
 }
 
-Error Mle::TxMessage::AppendConnectivityTlv(void)
-{
-    ConnectivityTlv tlv;
-
-    tlv.Init();
-    Get<MleRouter>().FillConnectivityTlv(tlv);
-
-    return tlv.AppendTo(*this);
-}
-
-Error Mle::TxMessage::AppendAddresseRegisterationTlv(Child &aChild)
-{
-    Error                    error;
-    Tlv                      tlv;
-    AddressRegistrationEntry entry;
-    Lowpan::Context          context;
-    uint8_t                  length      = 0;
-    uint16_t                 startOffset = GetLength();
-
-    tlv.SetType(Tlv::kAddressRegistration);
-    SuccessOrExit(error = Append(tlv));
-
-    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
-    {
-        if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != kErrorNone)
-        {
-            // uncompressed entry
-            entry.SetUncompressed();
-            entry.SetIp6Address(address);
-        }
-        else if (context.mContextId != kMeshLocalPrefixContextId)
-        {
-            // compressed entry
-            entry.SetContextId(context.mContextId);
-            entry.SetIid(address.GetIid());
-        }
-        else
-        {
-            continue;
-        }
-
-        SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
-        length += entry.GetLength();
-    }
-
-    tlv.SetLength(length);
-    Write(startOffset, tlv);
-
-exit:
-    return error;
-}
-
 void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 {
     uint8_t     routerIdSequence = mRouterTable.GetRouterIdSequence();
@@ -4312,26 +4279,6 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
     }
 
     aTlv.SetRouteDataLength(routerCount);
-}
-
-Error Mle::TxMessage::AppendRouteTlv(Neighbor *aNeighbor)
-{
-    RouteTlv tlv;
-
-    tlv.Init();
-    Get<MleRouter>().FillRouteTlv(tlv, aNeighbor);
-
-    return tlv.AppendTo(*this);
-}
-
-Error Mle::TxMessage::AppendActiveDatasetTlv(void)
-{
-    return Get<MeshCoP::ActiveDatasetManager>().AppendMleDatasetTlv(*this);
-}
-
-Error Mle::TxMessage::AppendPendingDatasetTlv(void)
-{
-    return Get<MeshCoP::PendingDatasetManager>().AppendMleDatasetTlv(*this);
 }
 
 bool MleRouter::HasMinDowngradeNeighborRouters(void)
@@ -4511,6 +4458,8 @@ void MleRouter::HandleTimeSync(RxInfo &aRxInfo)
     Log(kMessageReceive, kTypeTimeSync, aRxInfo.mMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
 

@@ -221,7 +221,6 @@ LOCAL_SRC_FILES                                                  := \
     src/core/backbone_router/multicast_listeners_table.cpp          \
     src/core/backbone_router/ndproxy_table.cpp                      \
     src/core/border_router/infra_if.cpp                             \
-    src/core/border_router/router_advertisement.cpp                 \
     src/core/border_router/routing_manager.cpp                      \
     src/core/coap/coap.cpp                                          \
     src/core/coap/coap_message.cpp                                  \
@@ -303,6 +302,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/net/ip6_filter.cpp                                     \
     src/core/net/ip6_headers.cpp                                    \
     src/core/net/ip6_mpl.cpp                                        \
+    src/core/net/nd6.cpp                                            \
     src/core/net/nd_agent.cpp                                       \
     src/core/net/netif.cpp                                          \
     src/core/net/sntp_client.cpp                                    \

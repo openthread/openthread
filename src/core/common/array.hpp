@@ -311,6 +311,27 @@ public:
     IndexType IndexOf(const Type &aElement) const { return static_cast<IndexType>(&aElement - &mElements[0]); }
 
     /**
+     * This method removes an element from the array.
+     *
+     * The @p aElement MUST be from the array, otherwise the behavior of this method is undefined.
+     *
+     * To remove @p aElement, it is replaced by the last element in array, so the order of items in the array can
+     * change after a call to this method.
+     *
+     * The method uses assignment `=` operator on `Type` to copy the last element in place of @p aElement.
+     *
+     */
+    void Remove(Type &aElement)
+    {
+        Type *lastElement = PopBack();
+
+        if (lastElement != &aElement)
+        {
+            aElement = *lastElement;
+        }
+    }
+
+    /**
      * This method finds the first match of a given entry in the array.
      *
      * This method uses `==` operator on `Type` to compare the array element with @p aEntry.
@@ -428,6 +449,68 @@ public:
     template <typename Indicator> bool ContainsMatching(const Indicator &aIndicator) const
     {
         return FindMatching(aIndicator) != nullptr;
+    }
+
+    /**
+     * This template method removes the first element in the array matching a given indicator.
+     *
+     * This method behaves similar to `Remove()`, i.e., the matched element (if found) is replaced with the last element
+     * in the array (using `=` operator on `Type`). So the order of items in the array can change after a call to this
+     * method.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     */
+    template <typename Indicator> void RemoveMatching(const Indicator &aIndicator)
+    {
+        Type *entry = FindMatching(aIndicator);
+
+        if (entry != nullptr)
+        {
+            Remove(*entry);
+        }
+    }
+
+    /**
+     * This template method removes all elements in the array matching a given indicator.
+     *
+     * This method behaves similar to `Remove()`, i.e., a matched element is replaced with the last element in the
+     * array (using `=` operator on `Type`). So the order of items in the array can change after a call to this method.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     */
+    template <typename Indicator> void RemoveAllMatching(const Indicator &aIndicator)
+    {
+        for (IndexType index = 0; index < GetLength();)
+        {
+            Type &entry = mElements[index];
+
+            if (entry.Matches(aIndicator))
+            {
+                Remove(entry);
+
+                // When the entry is removed from the array it is
+                // replaced with the last element. In this case, we do
+                // not increment `index`.
+            }
+            else
+            {
+                index++;
+            }
+        }
     }
 
     /**

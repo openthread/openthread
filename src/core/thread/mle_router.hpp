@@ -585,7 +585,7 @@ private:
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500;  // Max delay for unsol Data Response (in msec).
 
     // Threshold to accept a router upgrade request with reason
-    // `kBorderRouterRequst` (number of BRs acting as router in
+    // `kBorderRouterRequest` (number of BRs acting as router in
     // Network Data).
     static constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
 

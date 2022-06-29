@@ -814,5 +814,34 @@ uint8_t NetworkData::CountBorderRouters(RoleFilter aRoleFilter) const
     return rlocsLength;
 }
 
+bool NetworkData::ContainsBorderRouterWithRloc(uint16_t aRloc16) const
+{
+    bool                contains = false;
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig route;
+    OnMeshPrefixConfig  prefix;
+
+    while (GetNextExternalRoute(iterator, route) == kErrorNone)
+    {
+        if (route.mRloc16 == aRloc16)
+        {
+            ExitNow(contains = true);
+        }
+    }
+
+    iterator = kIteratorInit;
+
+    while (GetNextOnMeshPrefix(iterator, prefix) == kErrorNone)
+    {
+        if ((prefix.mRloc16 == aRloc16) && prefix.mOnMesh && (prefix.mDefaultRoute || prefix.mDp))
+        {
+            ExitNow(contains = true);
+        }
+    }
+
+exit:
+    return contains;
+}
+
 } // namespace NetworkData
 } // namespace ot

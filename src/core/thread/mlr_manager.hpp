@@ -192,7 +192,7 @@ private:
                                              const Ip6::Address *aFailedAddresses,
                                              uint8_t             aFailedAddressNum);
 
-    void        AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIp6AddressesNumMax],
+    void        AppendToUniqueAddressList(Ip6::Address (&aAddresses)[Ip6AddressesTlv::kMaxAddresses],
                                           uint8_t &           aAddressNum,
                                           const Ip6::Address &aAddress);
     static bool AddressListContains(const Ip6::Address *aAddressList,

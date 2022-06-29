@@ -149,7 +149,8 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        const uint16_t kRlocs[] = {0xc800, 0x5400};
+        const uint16_t kRlocs[]            = {0xc800, 0x5400};
+        const uint16_t kNonExistingRlocs[] = {0xc700, 0x0000, 0x5401};
 
         NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
@@ -179,6 +180,16 @@ void TestNetworkDataIterator(void)
         SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
         VerifyOrQuit(rlocsLength == 0);
         VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == 0);
+
+        for (uint16_t rloc16 : kRlocs)
+        {
+            VerifyOrQuit(netData.ContainsBorderRouterWithRloc(rloc16));
+        }
+
+        for (uint16_t rloc16 : kNonExistingRlocs)
+        {
+            VerifyOrQuit(!netData.ContainsBorderRouterWithRloc(rloc16));
+        }
     }
 
     {
@@ -252,9 +263,10 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        const uint16_t kRlocsAnyRole[]    = {0x1000, 0x5400, 0x0401};
-        const uint16_t kRlocsRouterRole[] = {0x1000, 0x5400};
-        const uint16_t kRlocsChildRole[]  = {0x0401};
+        const uint16_t kRlocsAnyRole[]     = {0x1000, 0x5400, 0x0401};
+        const uint16_t kRlocsRouterRole[]  = {0x1000, 0x5400};
+        const uint16_t kRlocsChildRole[]   = {0x0401};
+        const uint16_t kNonExistingRlocs[] = {0x6000, 0x0000, 0x0402};
 
         NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
@@ -297,6 +309,16 @@ void TestNetworkDataIterator(void)
         rlocsLength = GetArrayLength(kRlocsAnyRole);
         SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
         VerifyRlocsArray(rlocs, rlocsLength, kRlocsAnyRole);
+
+        for (uint16_t rloc16 : kRlocsAnyRole)
+        {
+            VerifyOrQuit(netData.ContainsBorderRouterWithRloc(rloc16));
+        }
+
+        for (uint16_t rloc16 : kNonExistingRlocs)
+        {
+            VerifyOrQuit(!netData.ContainsBorderRouterWithRloc(rloc16));
+        }
     }
 
     {
@@ -410,9 +432,10 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        const uint16_t kRlocsAnyRole[]    = {0xec00, 0x2801, 0x2800};
-        const uint16_t kRlocsRouterRole[] = {0xec00, 0x2800};
-        const uint16_t kRlocsChildRole[]  = {0x2801};
+        const uint16_t kRlocsAnyRole[]     = {0xec00, 0x2801, 0x2800};
+        const uint16_t kRlocsRouterRole[]  = {0xec00, 0x2800};
+        const uint16_t kRlocsChildRole[]   = {0x2801};
+        const uint16_t kNonExistingRlocs[] = {0x6000, 0x0000, 0x2806, 0x4c00};
 
         NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
@@ -451,6 +474,16 @@ void TestNetworkDataIterator(void)
         SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
         VerifyRlocsArray(rlocs, rlocsLength, kRlocsChildRole);
         VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == GetArrayLength(kRlocsChildRole));
+
+        for (uint16_t rloc16 : kRlocsAnyRole)
+        {
+            VerifyOrQuit(netData.ContainsBorderRouterWithRloc(rloc16));
+        }
+
+        for (uint16_t rloc16 : kNonExistingRlocs)
+        {
+            VerifyOrQuit(!netData.ContainsBorderRouterWithRloc(rloc16));
+        }
     }
 
     testFreeInstance(instance);

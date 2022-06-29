@@ -75,7 +75,8 @@ OT13_VERSION = 'OPENTHREAD'
 OT11_CAPBS = DevCapb.V1_1
 OT12_CAPBS = (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD)
 OT12BR_CAPBS = (DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm)
-OT13_CAPBS = DevCapb.NotSpecified
+OT13_CAPBS = (DevCapb.C_FTD13 | DevCapb.C_MTD13)
+OT13BR_CAPBS = (DevCapb.C_BR13 | DevCapb.C_Host13)
 
 ZEPHYR_PREFIX = 'ot '
 """CLI prefix used for OpenThread commands in Zephyr systems"""
@@ -196,7 +197,6 @@ class OpenThreadTHCI(object):
     NETWORK_ATTACHMENT_TIMEOUT = 10
 
     IsBorderRouter = False
-    IsBackboneRouter = False
     IsHost = False
 
     externalCommissioner = None
@@ -559,10 +559,9 @@ class OpenThreadTHCI(object):
         ]:
             self.__setRouterSelectionJitter(1)
         elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
-            self.IsBackboneRouter = True
             self.__setRouterSelectionJitter(1)
 
-        if self.IsBackboneRouter:
+        if self.DeviceCapability == OT12BR_CAPBS:
             # Configure default BBR dataset
             self.__configBbrDataset(SeqNum=self.bbrSeqNum,
                                     MlrTimeout=self.bbrMlrTimeout,
@@ -1072,7 +1071,10 @@ class OpenThreadTHCI(object):
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
         elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
-            print('join as BBR')
+            if self.DeviceCapability == OT12BR_CAPBS:
+                print('join as BBR')
+            else:
+                print('join as BR')
             mode = 'rdn'
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
@@ -1145,6 +1147,10 @@ class OpenThreadTHCI(object):
                         self, timeout * 2))
                 else:
                     return False
+
+        if self.IsBorderRouter:
+            self._waitBorderRoutingStabilize()
+
         return True
 
     @API
@@ -1386,9 +1392,8 @@ class OpenThreadTHCI(object):
         # to default when joining network
         self.hasSetChannel = False
         # indicate whether the default domain prefix is used.
-        self.__useDefaultDomainPrefix = True
+        self.__useDefaultDomainPrefix = (self.DeviceCapability == OT12BR_CAPBS)
         self.__isUdpOpened = False
-        self.IsBackboneRouter = False
         self.IsHost = False
 
         # remove stale multicast addresses
@@ -1396,9 +1401,10 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
-        self.bbrMlrTimeout = 3600
-        self.bbrReRegDelay = 5
+        if self.DeviceCapability == OT12BR_CAPBS:
+            self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
+            self.bbrMlrTimeout = 3600
+            self.bbrReRegDelay = 5
 
         # initialize device configuration
         self.setMAC(self.mac)
@@ -1608,6 +1614,30 @@ class OpenThreadTHCI(object):
                 return self.__executeCommand('netdata register')[-1] == 'Done'
         else:
             return False
+
+    @watched
+    def getNetworkData(self):
+        lines = self.__executeCommand('netdata show')
+        prefixes, routes, services = [], [], []
+        classify = None
+
+        for line in lines:
+            if line == 'Prefixes:':
+                classify = prefixes
+            elif line == 'Routes:':
+                classify = routes
+            elif line == 'Services:':
+                classify = services
+            elif line == 'Done':
+                classify = None
+            else:
+                classify.append(line)
+
+        return {
+            'Prefixes': prefixes,
+            'Routes': routes,
+            'Services': services,
+        }
 
     @API
     def setNetworkIDTimeout(self, iNwkIDTimeOut):
@@ -3112,6 +3142,14 @@ class OpenThreadTHCI(object):
     def setLeaderWeight(self, iWeight=72):
         self.__executeCommand('leaderweight %d' % iWeight)
 
+    @watched
+    def isBorderRoutingEnabled(self):
+        try:
+            self.__executeCommand('br omrprefix')
+            return True
+        except CommandError:
+            return False
+
     def __detectZephyr(self):
         """Detect if the device is running Zephyr and adapt in that case"""
 
@@ -3124,23 +3162,26 @@ class OpenThreadTHCI(object):
 
     def __discoverDeviceCapability(self):
         """Discover device capability according to version"""
-        if self.IsBorderRouter:
+        thver = self.__executeCommand('thread version')[0]
+        if thver in ['1.3', '4'] and not self.IsBorderRouter:
+            self.log("Setting capability of {}: (DevCapb.C_FTD13 | DevCapb.C_MTD13)".format(self))
+            self.DeviceCapability = OT13_CAPBS
+        elif thver in ['1.3', '4'] and self.IsBorderRouter:
+            self.log("Setting capability of {}: (DevCapb.C_BR13 | DevCapb.C_Host13)".format(self))
+            self.DeviceCapability = OT13BR_CAPBS
+        elif thver in ['1.2', '3'] and not self.IsBorderRouter:
+            self.log("Setting capability of {}: DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD".format(self))
+            self.DeviceCapability = OT12_CAPBS
+        elif thver in ['1.2', '3'] and self.IsBorderRouter:
             self.log("Setting capability of BR {}: DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm".format(self))
             self.DeviceCapability = OT12BR_CAPBS
+        elif thver in ['1.1', '2']:
+            self.log("Setting capability of {}: DevCapb.V1_1".format(self))
+            self.DeviceCapability = OT11_CAPBS
         else:
-            # Get Thread stack version to distinguish device capability.
-            thver = self.__executeCommand('thread version')[0]
-
-            if thver in ['1.2', '3']:
-                self.log("Setting capability of {}: DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD".format(self))
-                self.DeviceCapability = OT12_CAPBS
-            elif thver in ['1.1', '2']:
-                self.log("Setting capability of {}: DevCapb.V1_1".format(self))
-                self.DeviceCapability = OT11_CAPBS
-            else:
-                self.log("Capability not specified for {}".format(self))
-                self.DeviceCapability = DevCapb.NotSpecified
-                assert False, thver
+            self.log("Capability not specified for {}".format(self))
+            self.DeviceCapability = DevCapb.NotSpecified
+            assert False, thver
 
     @staticmethod
     def __lstrip0x(s):
