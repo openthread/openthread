@@ -45,6 +45,8 @@
 #include <openthread/instance.h>
 #include <openthread/platform/misc.h>
 
+#include "lib/spinel/radio_spinel_metrics.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -183,6 +185,14 @@ unsigned int otSysGetThreadNetifIndex(void);
  *
  */
 const char *otSysGetInfraNetifName(void);
+
+/**
+ * This method returns the radio spinel metrics.
+ *
+ * @returns The radio spinel metrics.
+ *
+ */
+const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
 
 #ifdef __cplusplus
 } // end of extern "C"

@@ -37,6 +37,7 @@
 #include <openthread/platform/radio.h>
 
 #include "openthread-spinel-config.h"
+#include "radio_spinel_metrics.h"
 #include "spinel.h"
 #include "spinel_interface.hpp"
 #include "core/radio/max_power_table.hpp"
@@ -877,6 +878,14 @@ public:
      */
     otError SendReset(uint8_t aResetType);
 
+    /**
+     * This method returns the radio Spinel metrics.
+     *
+     * @returns The radio Spinel metrics.
+     *
+     */
+    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) { return &mRadioSpinelMetrics; }
+
 private:
     enum
     {
@@ -982,6 +991,10 @@ private:
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     void RestoreProperties(void);
 #endif
+    void UpdateParseErrorCount(otError aError)
+    {
+        mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
+    }
 
     otInstance *mInstance;
 
@@ -1066,6 +1079,8 @@ private:
     int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
 
     MaxPowerTable mMaxPowerTable;
+
+    otRadioSpinelMetrics mRadioSpinelMetrics;
 };
 
 } // namespace Spinel
