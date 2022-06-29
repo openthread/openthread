@@ -576,6 +576,11 @@ template <> inline Ip6::Filter &Instance::Get(void)
     return mThreadNetif.mIp6Filter;
 }
 
+template <> inline AddressResolver &Instance::Get(void)
+{
+    return mThreadNetif.mAddressResolver;
+}
+
 #if OPENTHREAD_FTD
 
 template <> inline IndirectSender &Instance::Get(void)
@@ -599,11 +604,6 @@ template <> inline CslTxScheduler &Instance::Get(void)
     return mThreadNetif.mMeshForwarder.mIndirectSender.mCslTxScheduler;
 }
 #endif
-
-template <> inline AddressResolver &Instance::Get(void)
-{
-    return mThreadNetif.mAddressResolver;
-}
 
 template <> inline MeshCoP::Leader &Instance::Get(void)
 {

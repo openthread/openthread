@@ -91,6 +91,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mMeshForwarder(aInstance)
     , mMleRouter(aInstance)
     , mDiscoverScanner(aInstance)
+    , mAddressResolver(aInstance)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     , mRadioSelector(aInstance)
 #endif
@@ -127,7 +128,6 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_FTD
     , mJoinerRouter(aInstance)
     , mLeader(aInstance)
-    , mAddressResolver(aInstance)
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     , mBackboneRouterLeader(aInstance)
