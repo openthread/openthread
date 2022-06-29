@@ -216,7 +216,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang_ver: ["6.0", "7", "8", "9"]
+        clang_ver: ["6.0", "7", "8", "9", "10", "11", "12", "13"]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
@@ -262,6 +262,16 @@ jobs:
           submodules: true
       - name: Bootstrap
         run: |
+          sudo rm /etc/apt/sources.list.d/*
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+          echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal main
+          deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main
+          # 13
+          deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main
+          deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main
+          # 14
+          deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main
+          deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main' | sudo tee -a /etc/apt/sources.list
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} ninja-build
