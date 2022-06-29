@@ -86,7 +86,7 @@ exit:
     return error;
 }
 
-void Address::SynthesizeFromIp6Address(uint8_t aPrefixLength, Ip6::Address &aIp6Address)
+void Address::SynthesizeFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address)
 {
     // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added
     // after the prefix, skipping over the bits 64 to 71 (byte at `kSkipIndex`)
@@ -112,8 +112,7 @@ void Address::SynthesizeFromIp6Address(uint8_t aPrefixLength, Ip6::Address &aIp6
 
     uint8_t ip6Index;
 
-    OT_ASSERT((aPrefixLength == 32) || (aPrefixLength == 40) || (aPrefixLength == 48) || (aPrefixLength == 56) ||
-              (aPrefixLength == 64) || (aPrefixLength == 96));
+    OT_ASSERT(Ip6::Prefix::IsValidNat64PrefixLength(aPrefixLength));
 
     ip6Index = aPrefixLength / CHAR_BIT;
 

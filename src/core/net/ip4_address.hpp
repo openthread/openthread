@@ -95,24 +95,6 @@ public:
     void SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
     /**
-     * This method sets the host field of an IPv4 address.
-     *
-     * @param[in] aBuffer    Pointer to an array containing the IPv4 address. `kSize` bytes from the buffer
-     *                       are copied to form the IPv4 address.
-     *
-     */
-    Error SetHost(const uint32_t aPrefixLength, const uint32_t aHost)
-    {
-        if (aHost >= static_cast<uint32_t>((1 << aPrefixLength) - 1) || aHost == 0)
-        {
-            return kErrorParse;
-        }
-        uint32_t hostMask = ((1 << aPrefixLength) - 1);
-        mFields.m32       = HostSwap32(((HostSwap32(mFields.m32) & ~hostMask) | aHost));
-        return kErrorNone;
-    }
-
-    /**
      * This method sets the IPv4 address by performing NAT64 address translation from a given IPv6 address as specified
      * in RFC 6052.
      *
@@ -123,7 +105,7 @@ public:
      * @param[in] aIp6Address  The IPv6 address to translate to IPv4.
      *
      */
-    void SynthesizeFromIp6Address(uint8_t aPrefixLength, Ip6::Address &aIp6Address);
+    void SynthesizeFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address);
 
     /**
      * This method sets the IPv4 address from the given CIDR and the host field.
