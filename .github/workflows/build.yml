@@ -216,7 +216,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang_ver: ["6.0", "7", "8", "9"]
+        clang_ver: ["6.0", "7", "8", "9", "10", "11", "12", "13"]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
@@ -239,7 +239,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang_ver: ["6.0", "7", "8", "9"]
+        clang_ver: ["6.0", "7", "8", "9", "10", "11", "12", "13"]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
