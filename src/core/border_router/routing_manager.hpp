@@ -79,6 +79,8 @@ class RoutingManager : public InstanceLocator
     friend class ot::Instance;
 
 public:
+    typedef NetworkData::RoutePreference RoutePreference; ///< Route preference (high, medium, low).
+
     /**
      * This constructor initializes the routing manager.
      *
@@ -112,6 +114,29 @@ public:
      *
      */
     Error SetEnabled(bool aEnabled);
+
+    /**
+     * This method gets the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in
+     * Router Advertisement messages sent over the infrastructure link.
+     *
+     * @returns The Route Info Option preference.
+     *
+     */
+    RoutePreference GetRouteInfoOptionPreference(void) const { return mRouteInfoOptionPreference; }
+
+    /**
+     * This method sets the preference to use when advertising Route Info Options (e.g., for discovered OMR prefixes)
+     * in Router Advertisement messages sent over the infrastructure link.
+     *
+     * By default BR will use 'medium' preference level but this method allows the default value to be changed. As an
+     * example, it can be set to 'low' preference in the case where device is a temporary BR (a mobile BR or a
+     * battery-powered BR) to indicate that other BRs (if any) should be preferred over this BR on the infrastructure
+     * link.
+     *
+     * @param[in] aPreference   The route preference to use.
+     *
+     */
+    void SetRouteInfoOptionPreference(RoutePreference aPreference);
 
     /**
      * This method returns the off-mesh-routable (OMR) prefix.
@@ -195,8 +220,6 @@ public:
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
 
 private:
-    typedef NetworkData::RoutePreference RoutePreference;
-
     static constexpr uint16_t kMaxRouterAdvMessageLength = 256; // The maximum RA message length we can handle.
 
     // The maximum number of the OMR prefixes to advertise.
@@ -507,6 +530,8 @@ private:
     // manually configured OMR prefixes exist, they will also be
     // advertised on infra link.
     OmrPrefixArray mAdvertisedOmrPrefixes;
+
+    RoutePreference mRouteInfoOptionPreference;
 
     // The currently favored (smallest) discovered on-link prefix.
     // Prefix length of zero indicates there is none.

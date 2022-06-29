@@ -536,6 +536,57 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         OutputIp6PrefixLine(nat64Prefix);
     }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    /**
+     * @cli br rioprf [high\med\low]
+     *
+     * @code
+     * br rioprf
+     * med
+     * Done
+     * @endcode
+     *
+     * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
+     *
+     * @code
+     * br rioprf low
+     * Done
+     * @endcode
+     *
+     * @par api_copy
+     * #otBorderRoutingSetRouteInfoOptionPreference
+     *
+     */
+    else if ((aArgs[0] == "rioprf"))
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            OutputLine("%s",
+                       NetworkData::PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
+        }
+        else
+        {
+            otRoutePreference preference;
+
+            if (aArgs[1] == "high")
+            {
+                preference = OT_ROUTE_PREFERENCE_HIGH;
+            }
+            else if (aArgs[1] == "med")
+            {
+                preference = OT_ROUTE_PREFERENCE_MED;
+            }
+            else if (aArgs[1] == "low")
+            {
+                preference = OT_ROUTE_PREFERENCE_LOW;
+            }
+            else
+            {
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
+            }
+
+            otBorderRoutingSetRouteInfoOptionPreference(GetInstancePtr(), preference);
+        }
+    }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;

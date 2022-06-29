@@ -64,6 +64,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsRunning(false)
     , mIsEnabled(false)
     , mInfraIf(aInstance)
+    , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
     , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
     , mIsAdvertisingLocalNat64Prefix(false)
@@ -125,6 +126,19 @@ Error RoutingManager::SetEnabled(bool aEnabled)
 
 exit:
     return error;
+}
+
+void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
+{
+    VerifyOrExit(mRouteInfoOptionPreference != aPreference);
+
+    mRouteInfoOptionPreference = aPreference;
+
+    VerifyOrExit(mIsRunning);
+    StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+
+exit:
+    return;
 }
 
 Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix)
@@ -872,18 +886,18 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
         if (!aNewOmrPrefixes.ContainsMatching(omrPrefix.GetPrefix()))
         {
             SuccessOrAssert(
-                raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), /* aRouteLifetime */ 0, omrPrefix.GetPreference()));
+                raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), /* aRouteLifetime */ 0, mRouteInfoOptionPreference));
 
-            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", omrPrefix.ToString().AsCString());
+            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", omrPrefix.GetPrefix().ToString().AsCString());
         }
     }
 
     for (const OmrPrefix &omrPrefix : aNewOmrPrefixes)
     {
         SuccessOrAssert(
-            raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), kDefaultOmrPrefixLifetime, omrPrefix.GetPreference()));
+            raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), kDefaultOmrPrefixLifetime, mRouteInfoOptionPreference));
 
-        LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", omrPrefix.ToString().AsCString(),
+        LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", omrPrefix.GetPrefix().ToString().AsCString(),
                 kDefaultOmrPrefixLifetime);
     }
 
