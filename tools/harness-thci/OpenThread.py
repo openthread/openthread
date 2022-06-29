@@ -197,7 +197,6 @@ class OpenThreadTHCI(object):
     NETWORK_ATTACHMENT_TIMEOUT = 10
 
     IsBorderRouter = False
-    IsBackboneRouter = False
     IsHost = False
 
     externalCommissioner = None
@@ -559,10 +558,9 @@ class OpenThreadTHCI(object):
         ]:
             self.__setRouterSelectionJitter(1)
         elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
-            self.IsBackboneRouter = True
             self.__setRouterSelectionJitter(1)
 
-        if self.IsBackboneRouter:
+        if self.DeviceCapability == OT12BR_CAPBS:
             # Configure default BBR dataset
             self.__configBbrDataset(SeqNum=self.bbrSeqNum,
                                     MlrTimeout=self.bbrMlrTimeout,
@@ -1072,7 +1070,10 @@ class OpenThreadTHCI(object):
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
         elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
-            print('join as BBR')
+            if self.DeviceCapability == OT12BR_CAPBS:
+                print('join as BBR')
+            else:
+                print('join as BR')
             mode = 'rdn'
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
@@ -1390,9 +1391,8 @@ class OpenThreadTHCI(object):
         # to default when joining network
         self.hasSetChannel = False
         # indicate whether the default domain prefix is used.
-        self.__useDefaultDomainPrefix = True
+        self.__useDefaultDomainPrefix = (self.DeviceCapability == OT12BR_CAPBS)
         self.__isUdpOpened = False
-        self.IsBackboneRouter = False
         self.IsHost = False
 
         # remove stale multicast addresses
@@ -1400,9 +1400,10 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
-        self.bbrMlrTimeout = 3600
-        self.bbrReRegDelay = 5
+        if self.DeviceCapability == OT12BR_CAPBS:
+            self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
+            self.bbrMlrTimeout = 3600
+            self.bbrReRegDelay = 5
 
         # initialize device configuration
         self.setMAC(self.mac)

@@ -175,10 +175,10 @@ void otNetDataSetDnsSrpServicePublisherCallback(otInstance *                    
                                                 void *                                  aContext);
 
 /**
- * This function unpublishes any previously added "DNS/SRP (Anycast or Unicast) Service" entry from the Thread Network
+ * Unpublishes any previously added DNS/SRP (Anycast or Unicast) Service entry from the Thread Network
  * Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
@@ -270,9 +270,9 @@ void otNetDataSetPrefixPublisherCallback(otInstance *                     aInsta
                                          void *                           aContext);
 
 /**
- * This function unpublishes a previously published prefix (on-mesh or external route).
+ * Unpublishes a previously published On-Mesh or External Route Prefix.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` must be enabled.
  *
  * @param[in] aInstance          A pointer to an OpenThread instance.
  * @param[in] aPrefix            The prefix to unpublish (MUST NOT be NULL).

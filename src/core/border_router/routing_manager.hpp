@@ -275,6 +275,8 @@ private:
         void ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
                                         const Ip6::Address &                aSrcAddress);
 
+        void SetAllowDefaultRouteInNetData(bool aAllow);
+
         void FindFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const;
         bool ContainsOnLinkPrefix(const Ip6::Prefix &aPrefix) const;
         void RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix, NetDataMode aNetDataMode);
@@ -324,6 +326,7 @@ private:
                 TimeMilli mNow;
             };
 
+            void               InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader);
             void               InitFrom(const Ip6::Nd::PrefixInfoOption &aPio);
             void               InitFrom(const Ip6::Nd::RouteInfoOption &aRio);
             Type               GetType(void) const { return mType; }
@@ -377,6 +380,7 @@ private:
             LinkedList<Entry> mEntries;
         };
 
+        void        ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
         void        ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, Router &aRouter);
         void        ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
         bool        ContainsPrefix(const Entry::Matcher &aMatcher) const;
@@ -399,6 +403,7 @@ private:
         Pool<Entry, kMaxEntries>   mEntryPool;
         TimerMilli                 mTimer;
         Tasklet                    mSignalTask;
+        bool                       mAllowDefaultRouteInNetData;
     };
 
     class OmrPrefix // An OMR Prefix
@@ -469,6 +474,7 @@ private:
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
     bool ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
+    void UpdateDiscoveredPrefixTableOnNetDataChange(void);
     void HandleDiscoveredPrefixTableChanged(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     void UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
