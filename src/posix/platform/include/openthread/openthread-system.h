@@ -85,6 +85,26 @@ typedef struct otPlatformConfig
 } otPlatformConfig;
 
 /**
+ * This structure represents RCP interface metrics.
+ *
+ */
+typedef struct otRcpInterfaceMetrics
+{
+    uint8_t  mRcpInterfaceType;                  ///< The RCP interface type.
+    uint32_t mSpiSlaveResetCount;                ///< The number of SPI slave resets.
+    uint32_t mTransferredFrameCount;             ///< The number of transferred frames.
+    uint32_t mTransferredValidFrameCount;        ///< The number of transferred valid frames.
+    uint32_t mTransferredGarbageFrameCount;      ///< The number of transferred garbage frames.
+    uint32_t mTransferredDuplexFrameCount;       ///< The number of transferred duplex frames.
+    uint32_t mTransferredUnresponsiveFrameCount; ///< The number of transferred unresponsive frames.
+    uint32_t mRxFrameCount;                      ///< The number of received frames.
+    uint32_t mRxFrameByteCount;                  ///< The number of received bytes.
+    uint32_t mTxFrameCount;                      ///< The number of transmitted frames.
+    uint32_t mTxFrameByteCount;                  ///< The number of transmitted bytes.
+    uint32_t mTxRefusedCount;                    ///< The number of times rejected by RCP.
+} otRcpInterfaceMetrics;
+
+/**
  * This function performs all platform-specific initialization of OpenThread's drivers and initializes the OpenThread
  * instance.
  *
@@ -193,6 +213,14 @@ const char *otSysGetInfraNetifName(void);
  *
  */
 const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
+
+/**
+ * This method returns the RCP interface metrics.
+ *
+ * @returns The RCP interface metrics.
+ *
+ */
+const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void);
 
 #ifdef __cplusplus
 } // end of extern "C"

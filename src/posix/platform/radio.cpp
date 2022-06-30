@@ -665,3 +665,8 @@ const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void)
 {
     return sRadioSpinel.GetRadioSpinelMetrics();
 }
+
+const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void)
+{
+    return sRadioSpinel.GetSpinelInterface().GetRcpInterfaceMetrics();
+}

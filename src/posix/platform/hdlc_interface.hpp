@@ -169,6 +169,12 @@ public:
      */
     otError ResetConnection(void);
 
+    /**
+     * This method returns the RCP interface metrics.
+     *
+     */
+    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
+
 private:
     /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
@@ -257,6 +263,8 @@ private:
     uint32_t        mBaudRate;
     Hdlc::Decoder   mHdlcDecoder;
     const Url::Url *mRadioUrl;
+
+    otRcpInterfaceMetrics mInterfaceMetrics;
 
     // Non-copyable, intentionally not implemented.
     HdlcInterface(const HdlcInterface &);

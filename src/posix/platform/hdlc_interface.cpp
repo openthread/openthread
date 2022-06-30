@@ -135,6 +135,8 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
     , mRadioUrl(nullptr)
 {
+    memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
+    mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_UART;
 }
 
 void HdlcInterface::OnRcpReset(void)
@@ -252,6 +254,19 @@ otError HdlcInterface::Write(const uint8_t *aFrame, uint16_t aLength)
 
 exit:
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+
+    mInterfaceMetrics.mTransferredFrameCount++;
+    if (error == OT_ERROR_NONE)
+    {
+        mInterfaceMetrics.mTxFrameCount++;
+        mInterfaceMetrics.mTxFrameByteCount += aLength;
+        mInterfaceMetrics.mTransferredValidFrameCount++;
+    }
+    else
+    {
+        mInterfaceMetrics.mTransferredGarbageFrameCount++;
+    }
+
     return error;
 }
 
@@ -654,12 +669,18 @@ void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 
 void HdlcInterface::HandleHdlcFrame(otError aError)
 {
+    mInterfaceMetrics.mTransferredFrameCount++;
+
     if (aError == OT_ERROR_NONE)
     {
+        mInterfaceMetrics.mRxFrameCount++;
+        mInterfaceMetrics.mRxFrameByteCount += mReceiveFrameBuffer.GetLength();
+        mInterfaceMetrics.mTransferredValidFrameCount++;
         mReceiveFrameCallback(mReceiveFrameContext);
     }
     else
     {
+        mInterfaceMetrics.mTransferredGarbageFrameCount++;
         mReceiveFrameBuffer.DiscardFrame();
         otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
