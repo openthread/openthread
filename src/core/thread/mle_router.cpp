@@ -269,7 +269,7 @@ Error MleRouter::BecomeLeader(void)
     Get<NetworkData::Leader>().Reset();
     Get<MeshCoP::Leader>().SetEmptyCommissionerData();
 
-    SetStateLeader(Rloc16FromRouterId(leaderId));
+    SetStateLeader(Rloc16FromRouterId(leaderId), kStartingAsLeader);
 
 exit:
     return error;
@@ -401,7 +401,7 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     }
 }
 
-void MleRouter::SetStateLeader(uint16_t aRloc16)
+void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
 {
     IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
     IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
@@ -421,7 +421,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
 
-    Get<NetworkData::Leader>().Start();
+    Get<NetworkData::Leader>().Start(aStartMode);
     Get<MeshCoP::ActiveDatasetManager>().StartLeader();
     Get<MeshCoP::PendingDatasetManager>().StartLeader();
     Get<Tmf::Agent>().AddResource(mAddressSolicit);
@@ -938,7 +938,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
 
         if (mLeaderData.GetLeaderRouterId() == RouterIdFromRloc16(GetRloc16()))
         {
-            SetStateLeader(GetRloc16());
+            SetStateLeader(GetRloc16(), kRestoringLeaderRoleAfterReset);
         }
         else
         {
