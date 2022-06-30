@@ -108,7 +108,7 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
         OutputFormat(" %s", flagsString);
     }
 
-    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
+    OutputLine(" %s %04x", Interpreter::PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
 void NetworkData::RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString)
@@ -141,32 +141,7 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
         OutputFormat(" %s", flagsString);
     }
 
-    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
-}
-
-const char *NetworkData::PreferenceToString(signed int aPreference)
-{
-    const char *str = "";
-
-    switch (aPreference)
-    {
-    case OT_ROUTE_PREFERENCE_LOW:
-        str = "low";
-        break;
-
-    case OT_ROUTE_PREFERENCE_MED:
-        str = "med";
-        break;
-
-    case OT_ROUTE_PREFERENCE_HIGH:
-        str = "high";
-        break;
-
-    default:
-        break;
-    }
-
-    return str;
+    OutputLine(" %s %04x", Interpreter::PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
 void NetworkData::OutputService(const otServiceConfig &aConfig)

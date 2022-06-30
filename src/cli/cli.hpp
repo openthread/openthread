@@ -47,6 +47,7 @@
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/logging.h>
+#include <openthread/netdata.h>
 #include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
@@ -210,6 +211,29 @@ public:
      *
      */
     static const char *AddressOriginToString(uint8_t aOrigin);
+
+    /**
+     * This static method parses a given argument string as a route preference comparing it against  "high", "med", or
+     * "low".
+     *
+     * @param[in]  aArg          The argument string to parse.
+     * @param[out] aPreference   Reference to a `otRoutePreference` to return the parsed preference.
+     *
+     * @retval OT_ERROR_NONE             Successfully parsed @p aArg and updated @p aPreference.
+     * @retval OT_ERROR_INVALID_ARG      @p aArg is not a valid preference string "high", "med", or "low".
+     *
+     */
+    static otError ParsePreference(const Arg &aArg, otRoutePreference &aPreference);
+
+    /**
+     * This static method converts a route preference value to human-readable string.
+     *
+     * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
+     *
+     * @returns A string representation @p aPreference.
+     *
+     */
+    static const char *PreferenceToString(signed int aPreference);
 
 protected:
     static Interpreter *sInterpreter;
