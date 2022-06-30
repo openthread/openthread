@@ -86,7 +86,7 @@ exit:
     return error;
 }
 
-void Address::SynthesizeFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address)
+void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address)
 {
     // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added
     // after the prefix, skipping over the bits 64 to 71 (byte at `kSkipIndex`)
@@ -153,7 +153,7 @@ Cidr::InfoString Cidr::ToString(void) const
 bool Cidr::operator==(const Cidr &aOther) const
 {
     return (mLength == aOther.mLength) &&
-           (ot::Ip6::Prefix::MatchLength(GetBytes(), aOther.GetBytes(), Ip4::Address::kSize) >= mLength);
+           (Ip6::Prefix::MatchLength(GetBytes(), aOther.GetBytes(), Ip4::Address::kSize) >= mLength);
 }
 
 void Cidr::Set(const uint8_t *aAddress, uint8_t aLength)

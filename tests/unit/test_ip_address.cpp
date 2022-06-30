@@ -455,12 +455,12 @@ void TestIp4Ip6Translation(void)
 
         SuccessOrQuit(ip6Address.FromString(testCase.mIp6Address));
 
-        address.SynthesizeFromIp6Address(testCase.mLength, ip6Address);
+        address.ExtractFromIp6Address(testCase.mLength, ip6Address);
 
         printf("Ipv6Address: %-36s IPv4Addr: %-12s Expected: %s\n", testCase.mIp6Address,
                address.ToString().AsCString(), expectedAddress.ToString().AsCString());
 
-        VerifyOrQuit(address == expectedAddress, "Ip4::SynthesizeFromIp6Address() failed");
+        VerifyOrQuit(address == expectedAddress, "Ip4::ExtractFromIp6Address() failed");
     }
 }
 

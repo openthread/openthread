@@ -52,7 +52,7 @@ namespace ot {
  * @namespace ot::Ip4
  *
  * @brief
- *   This namespace includes definitions for IPv4 networking.
+ *   This namespace includes definitions for IPv4 networking used by NAT64.
  *
  */
 namespace Ip4 {
@@ -88,12 +88,12 @@ OT_TOOL_PACKED_BEGIN
 class Header : public Clearable<Header>
 {
 public:
-    static constexpr uint8_t kVersionIHLOffset         = 0;
+    static constexpr uint8_t kVersionIhlOffset         = 0;
     static constexpr uint8_t kTrafficClassOffset       = 1;
     static constexpr uint8_t kTotalLengthOffset        = 2;
     static constexpr uint8_t kIdenficationOffset       = 4;
     static constexpr uint8_t kFlagsFragmentOffset      = 6;
-    static constexpr uint8_t kTTLOffset                = 8;
+    static constexpr uint8_t kTtlOffset                = 8;
     static constexpr uint8_t kProtocolOffset           = 9;
     static constexpr uint8_t kHeaderChecksumOffset     = 10;
     static constexpr uint8_t kSourceAddressOffset      = 12;
@@ -109,19 +109,19 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method initializes the Version to 6 and sets Traffic Class and Flow fields to zero.
+     * This method initializes the Version to 4 and sets Traffic Class and Flow fields to zero.
      *
      * The other fields in the IPv4 header remain unchanged.
      *
      */
-    void InitVersionIHL(void) { SetVersionIHL(kVersIHLInit); }
+    void InitVersionIhl(void) { SetVersionIhl(kVersIhlInit); }
 
     /**
-     * This method sets the version and IHL of the IPv4 header.
+     * This method sets the version and Ihl of the IPv4 header.
      *
-     * @param[in] aVersionIHL The octet for the version and IHL field.
+     * @param[in] aVersionIhl The octet for the version and Ihl field.
      */
-    void SetVersionIHL(uint8_t aVersionIHL) { mVersIHL = aVersionIHL; }
+    void SetVersionIhl(uint8_t aVersionIhl) { mVersIhl = aVersionIhl; }
 
     /**
      * This method indicates whether or not the IPv4 Version is set to 6.
@@ -130,7 +130,7 @@ public:
      * @retval FALSE  If the IPv4 Version is not set to 4.
      *
      */
-    bool IsVersion4(void) const { return (mVersIHL & kVersionMask) == kVersion4; }
+    bool IsVersion4(void) const { return (mVersIhl & kVersionMask) == kVersion4; }
 
     /**
      * This method returns the octet for DSCP + ECN.
@@ -205,23 +205,34 @@ public:
     void SetProtocol(uint8_t aProtocol) { mProtocol = aProtocol; }
 
     /**
-     * This method sets the IPv4 header checksum, the checksum is in network endian.
+     * This method returns the IPv4 header checksum, the checksum is in host endian.
+     *
+     * @returns The checksum field in the IPv4 header.
+     *
+     */
+    uint16_t GetChecksum(void) const { return HostSwap16(mHeaderChecksum); }
+
+    /**
+     * This method sets the IPv4 header checksum, the checksum is in host endian.
      *
      * @param[in] aChecksum The checksum for the IPv4 header.
+     *
      */
-    void SetChecksum(uint16_t aChecksum) { mHeaderChecksum = aChecksum; }
+    void SetChecksum(uint16_t aChecksum) { mHeaderChecksum = HostSwap16(aChecksum); }
 
     /**
      * This method returns the IPv4 Identification value.
      *
      * @returns The IPv4 Identification value.
+     *
      */
-    uint16_t GetIdentification() { return HostSwap16(mIdentification); }
+    uint16_t GetIdentification(void) const { return HostSwap16(mIdentification); }
 
     /**
      * This method sets the IPv4 Identification value.
      *
      * @param[in] The IPv4 Identification value.
+     *
      */
     void SetIdentification(uint16_t aIdentification) { mIdentification = HostSwap16(aIdentification); }
 
@@ -231,15 +242,15 @@ public:
      * @returns The IPv4 Time-to-Live value.
      *
      */
-    uint8_t GetTTL(void) const { return mTTL; }
+    uint8_t GetTtl(void) const { return mTtl; }
 
     /**
      * This method sets the IPv4 Time-to-Live value.
      *
-     * @param[in]  aTTL  The IPv4 Time-to-Live value.
+     * @param[in]  aTtl  The IPv4 Time-to-Live value.
      *
      */
-    void SetTTL(uint8_t aTTL) { mTTL = aTTL; }
+    void SetTtl(uint8_t aTtl) { mTtl = aTtl; }
 
     /**
      * This method returns the IPv4 Source address.
@@ -303,25 +314,25 @@ public:
     Error ParseFrom(const Message &aMessage);
 
     /**
-     * This method returns the DF flag in the IPv4 header.
+     * This method returns the Df flag in the IPv4 header.
      *
      * @returns Whether don't fragment flag is set.
      */
-    bool GetDF() const { return HostSwap16(mFlagsFargmentOffset) & kFlagsDF; }
+    bool GetDf(void) const { return HostSwap16(mFlagsFargmentOffset) & kFlagsDf; }
 
     /**
-     * This method returns the MF flag in the IPv4 header.
+     * This method returns the Mf flag in the IPv4 header.
      *
      * @returns Whether more fragments flag is set.
      */
-    bool GetMF() const { return HostSwap16(mFlagsFargmentOffset) & kFlagsMF; }
+    bool GetMf(void) const { return HostSwap16(mFlagsFargmentOffset) & kFlagsMf; }
 
     /**
      * This method returns the fragment offset in the IPv4 header.
      *
      * @returns The fragment offset of the IPv4 packet.
      */
-    uint16_t GetFragmentOffset() const { return HostSwap16(mFlagsFargmentOffset) & kFragmentOffsetMask; }
+    uint16_t GetFragmentOffset(void) const { return HostSwap16(mFlagsFargmentOffset) & kFragmentOffsetMask; }
 
 private:
     // IPv4 header
@@ -336,25 +347,25 @@ private:
     // |                         Dest IP Address                       |
     // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    static constexpr uint8_t  kVersion4           = 0x40;   // Use with `mVersIHL`
-    static constexpr uint8_t  kVersionMask        = 0xf0;   // Use with `mVersIHL`
-    static constexpr uint8_t  kIHLMask            = 0x0f;   // Use with `mVersIHL`
+    static constexpr uint8_t  kVersion4           = 0x40;   // Use with `mVersIhl`
+    static constexpr uint8_t  kVersionMask        = 0xf0;   // Use with `mVersIhl`
+    static constexpr uint8_t  kIhlMask            = 0x0f;   // Use with `mVersIhl`
     static constexpr uint8_t  kDscpOffset         = 2;      // Use with `mDscpEcn`
     static constexpr uint16_t kDscpMask           = 0xfc;   // Use with `mDscpEcn`
     static constexpr uint8_t  kEcnOffset          = 0;      // Use with `mDscpEcn`
     static constexpr uint8_t  kEcnMask            = 0x03;   // Use with `mDscpEcn`
     static constexpr uint16_t kFlagsMask          = 0xe000; // Use with `mFlagsFragmentOffset`
-    static constexpr uint16_t kFlagsDF            = 0x4000; // Use with `mFlagsFragmentOffset`
-    static constexpr uint16_t kFlagsMF            = 0x2000; // Use with `mFlagsFragmentOffset`
+    static constexpr uint16_t kFlagsDf            = 0x4000; // Use with `mFlagsFragmentOffset`
+    static constexpr uint16_t kFlagsMf            = 0x2000; // Use with `mFlagsFragmentOffset`
     static constexpr uint16_t kFragmentOffsetMask = 0x1fff; // Use with `mFlagsFragmentOffset`
-    static constexpr uint32_t kVersIHLInit        = 0x45;   // Version 4, Header length = 5x8 bytes.
+    static constexpr uint32_t kVersIhlInit        = 0x45;   // Version 4, Header length = 5x8 bytes.
 
-    uint8_t  mVersIHL;
+    uint8_t  mVersIhl;
     uint8_t  mDscpEcn;
     uint16_t mTotalLength;
     uint16_t mIdentification;
     uint16_t mFlagsFargmentOffset;
-    uint8_t  mTTL;
+    uint8_t  mTtl;
     uint8_t  mProtocol;
     uint16_t mHeaderChecksum;
     Address  mSource;
@@ -396,13 +407,15 @@ public:
          * This method returns the type of the ICMP message.
          *
          * @returns The type field of the ICMP message.
+         *
          */
-        Type GetType() const { return static_cast<Type>(mType); }
+        Type GetType(void) const { return static_cast<Type>(mType); }
 
         /**
          * This method sets the type of the ICMP message.
          *
          * @param[in] aType The type of the ICMP message.
+         *
          */
         void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
 
@@ -410,13 +423,15 @@ public:
          * This method returns the code of the ICMP message.
          *
          * @returns The code field of the ICMP message.
+         *
          */
-        Code GetCode() const { return static_cast<Code>(mCode); }
+        Code GetCode(void) const { return static_cast<Code>(mCode); }
 
         /**
          * This method sets the code of the ICMP message.
          *
          * @param[in] aCode The code of the ICMP message.
+         *
          */
         void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
 
@@ -424,27 +439,31 @@ public:
          * This method sets the checksum field in the ICMP message.
          *
          * @returns The checksum of the ICMP message.
+         *
          */
-        uint16_t GetChecksum() const { return mChecksum; }
+        uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
 
         /**
          * This method sets the checksum field in the ICMP message.
          *
          * @param[in] aChecksum The checksum of the ICMP message.
+         *
          */
-        void SetChecksum(uint16_t aChecksum) { mChecksum = aChecksum; }
+        void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
 
         /**
          * This method returns the rest of header field in the ICMP message.
          *
          * @returns The rest of header field in the ICMP message. The returned buffer has 4 octets.
+         *
          */
-        const uint8_t *GetRestOfHeader() const { return mRestOfHeader; }
+        const uint8_t *GetRestOfHeader(void) const { return mRestOfHeader; }
 
         /**
          * This method sets the rest of header field in the ICMP message.
          *
          * @param[in] aRestOfHeader The rest of header field in the ICMP message. The buffer should have 4 octets.
+         *
          */
         void SetRestOfHeader(const uint8_t *aRestOfheader)
         {

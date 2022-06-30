@@ -48,7 +48,7 @@
 namespace ot {
 
 namespace Ip6 {
-// Forward declaration for SynthesizeFromIp4Address
+// Forward declaration for ExtractFromIp4Address
 class Address;
 } // namespace Ip6
 
@@ -105,13 +105,14 @@ public:
      * @param[in] aIp6Address  The IPv6 address to translate to IPv4.
      *
      */
-    void SynthesizeFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address);
+    void ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address);
 
     /**
      * This method sets the IPv4 address from the given CIDR and the host field.
      *
      * @param[in] aCidr The CIDR for the IPv4 address.
      * @param[in] aHost The host bits of the IPv4 address in host byte order. The aHost will be masked by host mask.
+     *
      */
     void SynthesizeFromCidrAndHost(const Cidr &aCidr, uint32_t aHost);
 
@@ -142,6 +143,8 @@ public:
 
 class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Address>
 {
+    friend class Address;
+
 public:
     static constexpr uint16_t kCidrSuffixSize = 3; ///< Suffix to represent CIDR (/dd).
 
@@ -160,20 +163,6 @@ public:
      *
      */
     InfoString ToString(void) const;
-
-    /**
-     * This method returns the host mask (bitwise not of the subnet mask) of the CIDR.
-     *
-     * @returns A uint32 for the host mask, in network byte order.
-     */
-    uint32_t HostMask(void) const { return HostSwap32((uint32_t(1) << uint32_t(32 - mLength)) - 1); }
-
-    /**
-     * This method returns the subnet mask of the CIDR.
-     *
-     * @returns A uint32 for the subnet mask, in network byte order.
-     */
-    uint32_t SubnetMask(void) const { return ~HostMask(); }
 
     /**
      * This method gets the prefix as a pointer to a byte array.
@@ -202,6 +191,21 @@ public:
      *
      */
     void Set(const uint8_t *aAddress, uint8_t aLength);
+
+private:
+    /**
+     * This method returns the host mask (bitwise not of the subnet mask) of the CIDR.
+     *
+     * @returns A uint32 for the host mask, in network byte order.
+     */
+    uint32_t HostMask(void) const { return HostSwap32(0xffffffff >> mLength); }
+
+    /**
+     * This method returns the subnet mask of the CIDR.
+     *
+     * @returns A uint32 for the subnet mask, in network byte order.
+     */
+    uint32_t SubnetMask(void) const { return ~HostMask(); }
 };
 } // namespace Ip4
 

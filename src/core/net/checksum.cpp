@@ -180,7 +180,7 @@ void Checksum::UpdateMessageChecksum(Message &           aMessage,
     }
 
     // Clear the checksum before calculating it.
-    aMessage.Write(aMessage.GetOffset() + headerOffset, uint16_t(0));
+    aMessage.Write<uint16_t>(aMessage.GetOffset() + headerOffset, 0);
     checksum.Calculate(aSource, aDestination, aIpProto, aMessage);
     checksum.WriteToMessage(aMessage.GetOffset() + headerOffset, aMessage);
 
@@ -215,7 +215,7 @@ void Checksum::UpdateMessageChecksum(Message &           aMessage,
     }
 
     // Clear the checksum before calculating it.
-    aMessage.Write(aMessage.GetOffset() + headerOffset, uint16_t(0));
+    aMessage.Write<uint16_t>(aMessage.GetOffset() + headerOffset, 0);
     checksum.Calculate(aSource, aDestination, aIpProto, aMessage);
     checksum.WriteToMessage(aMessage.GetOffset() + headerOffset, aMessage);
 
@@ -226,9 +226,10 @@ exit:
 void Checksum::UpdateIPv4HeaderChecksum(Ip4::Header &aHeader)
 {
     Checksum checksum;
+
     aHeader.SetChecksum(0);
     checksum.AddData(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(aHeader));
-    aHeader.SetChecksum(HostSwap16(~checksum.GetValue()));
+    aHeader.SetChecksum(~checksum.GetValue());
 }
 
 } // namespace ot

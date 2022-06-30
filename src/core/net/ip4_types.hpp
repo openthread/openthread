@@ -34,9 +34,10 @@
 #ifndef IP4_TYPES_HPP_
 #define IP4_TYPES_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdint.h>
 
-#include "openthread-core-config.h"
 #include "net/ip6.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
