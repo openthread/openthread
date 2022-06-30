@@ -401,6 +401,55 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
+otError Interpreter::ParsePreference(const Arg &aArg, otRoutePreference &aPreference)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArg == "high")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_HIGH;
+    }
+    else if (aArg == "med")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_MED;
+    }
+    else if (aArg == "low")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_LOW;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
+const char *Interpreter::PreferenceToString(signed int aPreference)
+{
+    const char *str = "";
+
+    switch (aPreference)
+    {
+    case OT_ROUTE_PREFERENCE_LOW:
+        str = "low";
+        break;
+
+    case OT_ROUTE_PREFERENCE_MED:
+        str = "med";
+        break;
+
+    case OT_ROUTE_PREFERENCE_HIGH:
+        str = "high";
+        break;
+
+    default:
+        break;
+    }
+
+    return str;
+}
+
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[])
 {
@@ -560,30 +609,13 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
     {
         if (aArgs[1].IsEmpty())
         {
-            OutputLine("%s",
-                       NetworkData::PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
+            OutputLine("%s", PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
         }
         else
         {
             otRoutePreference preference;
 
-            if (aArgs[1] == "high")
-            {
-                preference = OT_ROUTE_PREFERENCE_HIGH;
-            }
-            else if (aArgs[1] == "med")
-            {
-                preference = OT_ROUTE_PREFERENCE_MED;
-            }
-            else if (aArgs[1] == "low")
-            {
-                preference = OT_ROUTE_PREFERENCE_LOW;
-            }
-            else
-            {
-                ExitNow(error = OT_ERROR_INVALID_ARGS);
-            }
-
+            SuccessOrExit(error = ParsePreference(aArgs[1], preference));
             otBorderRoutingSetRouteInfoOptionPreference(GetInstancePtr(), preference);
         }
     }
@@ -3602,17 +3634,11 @@ otError Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
 
     for (; !aArgs->IsEmpty(); aArgs++)
     {
-        if (*aArgs == "high")
+        otRoutePreference preference;
+
+        if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
         {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_HIGH;
-        }
-        else if (*aArgs == "med")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_MED;
-        }
-        else if (*aArgs == "low")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_LOW;
+            aConfig.mPreference = preference;
         }
         else
         {
@@ -3883,6 +3909,8 @@ otError Interpreter::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
 
     for (; !aArgs->IsEmpty(); aArgs++)
     {
+        otRoutePreference preference;
+
         if (*aArgs == "s")
         {
             aConfig.mStable = true;
@@ -3891,17 +3919,9 @@ otError Interpreter::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
         {
             aConfig.mNat64 = true;
         }
-        else if (*aArgs == "high")
+        else if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
         {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_HIGH;
-        }
-        else if (*aArgs == "med")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_MED;
-        }
-        else if (*aArgs == "low")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_LOW;
+            aConfig.mPreference = preference;
         }
         else
         {
