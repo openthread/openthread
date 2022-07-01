@@ -385,7 +385,7 @@ public:
         enum Type : uint8_t
         {
             kTypeEchoReply              = 0,
-            kTypeDestinationUnreachable = 1,
+            kTypeDestinationUnreachable = 3,
             kTypeEchoRequest            = 8,
             kTypeTimeExceeded           = 11,
         };
