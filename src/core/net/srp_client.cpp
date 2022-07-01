@@ -690,7 +690,7 @@ void Client::SetState(State aState)
         break;
 
     case kStateToUpdate:
-        mTimer.Start(kUpdateTxDelay);
+        mTimer.Start(Random::NonCrypto::GetUint32InRange(kUpdateTxMinDelay, kUpdateTxMaxDelay));
         break;
 
     case kStateUpdating:

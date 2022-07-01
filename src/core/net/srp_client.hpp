@@ -777,7 +777,8 @@ private:
     // delay as specified by `kUpdateTxDelay` before sending an SRP
     // update to server. This allows the user to provide more change
     // that are then all sent in same update message.
-    static constexpr uint32_t kUpdateTxDelay = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_DELAY; // in msec.
+    static constexpr uint32_t kUpdateTxMinDelay = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY; // in msec.
+    static constexpr uint32_t kUpdateTxMaxDelay = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MAX_DELAY; // in msec.
 
     // -------------------------------
     // Retry related constants
