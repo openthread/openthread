@@ -73,6 +73,40 @@ extern "C" {
  */
 
 /**
+ * This structure represents an iterator to iterate through the Border Router's discovered prefix table.
+ *
+ * The fields in this type are opaque (intended for use by OpenThread core only) and therefore should not be
+ * accessed or used by caller.
+ *
+ * Before using an iterator, it MUST be initialized using `otBorderRoutingPrefixTableInitIterator()`.
+ *
+ */
+typedef struct otBorderRoutingPrefixTableIterator
+{
+    const void *mPtr1;
+    const void *mPtr2;
+    uint32_t    mData32;
+} otBorderRoutingPrefixTableIterator;
+
+/**
+ * This structure represents an entry from the discovered prefix table.
+ *
+ * The entries in the discovered table track the Prefix/Route Info Options in the received Router Advertisement messages
+ * from other routers on infrastructure link.
+ *
+ */
+typedef struct otBorderRoutingPrefixTableEntry
+{
+    otIp6Address      mRouterAddress;       ///< IPv6 address of the router.
+    otIp6Prefix       mPrefix;              ///< The discovered IPv6 prefix.
+    bool              mIsOnLink;            ///< Indicates whether the prefix is on-link or route prefix.
+    uint32_t          mMsecSinceLastUpdate; ///< Milliseconds since last update of this prefix.
+    uint32_t          mValidLifetime;       ///< Valid lifetime of the prefix (in seconds).
+    otRoutePreference mRoutePreference;     ///< Route preference when `mIsOnlink` is false.
+    uint32_t          mPreferredLifetime;   ///< Preferred lifetime of the on-link prefix when `mIsOnLink` is true.
+} otBorderRoutingPrefixTableEntry;
+
+/**
  * This method initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
@@ -177,6 +211,37 @@ otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPref
  *
  */
 otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * This function initializes an `otBorderRoutingPrefixTableIterator`.
+ *
+ * An iterator MUST be initialized before it is used.
+ *
+ * An iterator can be initialized again to restart from the beginning of the table.
+ *
+ * When iterating over entries in the table, to ensure the update times `mMsecSinceLastUpdate` of entries are
+ * consistent, they are given relative to the time the iterator was initialized.
+ *
+ * @param[in]  aInstance  The OpenThread instance.
+ * @param[out] aIterator  A pointer to the iterator to initialize.
+ *
+ */
+void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRoutingPrefixTableIterator *aIterator);
+
+/**
+ * This function iterates over the entries in the Border Router's discovered prefix table.
+ *
+ * @param[in]     aInstance    The OpenThread instance.
+ * @param[in,out] aIterator    A pointer to the iterator.
+ * @param[out]    aEntry       A pointer to the entry to populate.
+ *
+ * @retval OT_ERROR_NONE        Iterated to the next entry, @p aEntry and @p aIterator are updated.
+ * @retval OT_ERROR_NOT_FOUND   No more entries in the table.
+ *
+ */
+otError otBorderRoutingGetNextPrefixTableEntry(otInstance *                        aInstance,
+                                               otBorderRoutingPrefixTableIterator *aIterator,
+                                               otBorderRoutingPrefixTableEntry *   aEntry);
 
 /**
  * @}

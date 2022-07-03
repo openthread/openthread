@@ -1805,6 +1805,53 @@ void RoutingManager::DiscoveredPrefixTable::HandleSignalTask(Tasklet &aTasklet)
     aTasklet.Get<RoutingManager>().HandleDiscoveredPrefixTableChanged();
 }
 
+void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const
+{
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    iterator.SetInitTime();
+    iterator.SetRouter(mRouters.Front());
+    iterator.SetEntry(mRouters.IsEmpty() ? nullptr : mRouters[0].mEntries.GetHead());
+}
+
+Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &aIterator,
+                                                          PrefixTableEntry &   aEntry) const
+{
+    Error     error    = kErrorNone;
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    VerifyOrExit(iterator.GetRouter() != nullptr, error = kErrorNotFound);
+    OT_ASSERT(iterator.GetEntry() != nullptr);
+
+    aEntry.mRouterAddress       = iterator.GetRouter()->mAddress;
+    aEntry.mPrefix              = iterator.GetEntry()->GetPrefix();
+    aEntry.mIsOnLink            = iterator.GetEntry()->IsOnLinkPrefix();
+    aEntry.mMsecSinceLastUpdate = iterator.GetInitTime() - iterator.GetEntry()->GetLastUpdateTime();
+    aEntry.mValidLifetime       = iterator.GetEntry()->GetValidLifetime();
+    aEntry.mPreferredLifetime   = aEntry.mIsOnLink ? iterator.GetEntry()->GetPreferredLifetime() : 0;
+    aEntry.mRoutePreference =
+        static_cast<otRoutePreference>(aEntry.mIsOnLink ? 0 : iterator.GetEntry()->GetRoutePreference());
+
+    // Advance the iterator
+    iterator.SetEntry(iterator.GetEntry()->GetNext());
+
+    if (iterator.GetEntry() == nullptr)
+    {
+        if (iterator.GetRouter() != mRouters.Back())
+        {
+            iterator.SetRouter(iterator.GetRouter() + 1);
+            iterator.SetEntry(iterator.GetRouter()->mEntries.GetHead());
+        }
+        else
+        {
+            iterator.SetRouter(nullptr);
+        }
+    }
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Entry
 
