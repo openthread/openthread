@@ -169,6 +169,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/backbone_router_ftd_api.cpp                        \
     src/core/api/border_agent_api.cpp                               \
     src/core/api/border_router_api.cpp                              \
+    src/core/api/border_routing_api.cpp                             \
     src/core/api/channel_manager_api.cpp                            \
     src/core/api/channel_monitor_api.cpp                            \
     src/core/api/child_supervision_api.cpp                          \
