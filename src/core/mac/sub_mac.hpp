@@ -395,69 +395,27 @@ public:
     int8_t GetNoiseFloor(void);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
     /**
-     * This method lets `SubMac` start CSL sample.
+     * This method configures CSL parameters in 'SubMac'.
      *
-     * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer. When CslSample is
-     * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
-     * (depending on `mCslState`).
+     * @param[in]  aPeriod    The CSL period.
+     * @param[in]  aChannel   The CSL channel.
+     * @param[in]  aShortAddr The short source address of CSL receiver's peer.
+     * @param[in]  aExtAddr   The extended source address of CSL receiver's peer.
      *
-     * @param[in]  aPanChannel  The current phy channel used by the device. This param will only take effect when CSL
-     *                          channel hasn't been explicitly specified.
-     *
-     * @retval kErrorNone          Successfully entered CSL operation (sleep or receive according to CSL timer).
-     * @retval kErrorBusy          The radio was transmitting.
-     * @retval kErrorInvalidState  The radio was disabled.
+     * @retval  TRUE if CSL Period or CSL Channel changed.
+     * @retval  FALSE if CSL Period and CSL Channel did not change.
      *
      */
-    Error CslSample(uint8_t aPanChannel);
+    bool UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
 
     /**
-     * This method gets the CSL channel.
+     * This method lets `SubMac` start CSL sample mode given a configured non-zero CSL period.
      *
-     * @returns CSL channel.
-     *
-     */
-    uint8_t GetCslChannel(void) const { return mCslChannel; }
-
-    /**
-     * This method sets the CSL channel.
-     *
-     * @param[in]  aChannel  The CSL channel. `0` to set CSL Channel unspecified.
+     * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer.
      *
      */
-    void SetCslChannel(uint8_t aChannel);
-
-    /**
-     * This method indicates if CSL channel has been explicitly specified by the upper layer.
-     *
-     * @returns If CSL channel has been specified.
-     *
-     */
-    bool IsCslChannelSpecified(void) const { return mIsCslChannelSpecified; }
-
-    /**
-     * This method sets the flag representing if CSL channel has been specified.
-     *
-     */
-    void SetCslChannelSpecified(bool aIsSpecified) { mIsCslChannelSpecified = aIsSpecified; }
-
-    /**
-     * This method gets the CSL period.
-     *
-     * @returns CSL period.
-     *
-     */
-    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
-
-    /**
-     * This method sets the CSL period.
-     *
-     * @param[in]  aPeriod  The CSL period in 10 symbols.
-     *
-     */
-    void SetCslPeriod(uint16_t aPeriod);
+    void CslSample(void);
 
     /**
      * This method returns CSL parent clock accuracy, in ± ppm.
@@ -623,12 +581,6 @@ private:
     // CSL receivers would wake up `kCslReceiveTimeAhead` earlier
     // than expected sample window. The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
-
-    enum CslState : uint8_t{
-        kCslIdle,   // CSL receiver is not started.
-        kCslSample, // Sampling CSL channel.
-        kCslSleep,  // Radio in sleep.
-    };
 #endif
 
     /**
@@ -674,9 +626,6 @@ private:
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static const char *CslStateToString(CslState aCslState);
-#endif
 
     otRadioCaps  mRadioCaps;
     State        mState;
@@ -709,14 +658,14 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t   mCslPeriod;                 // The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t    mCslChannel : 7;            // The CSL sample channel (only when `mIsCslChannelSpecified` is `true`).
-    uint8_t    mIsCslChannelSpecified : 1; // Whether the CSL channel was explicitly set
-    TimeMicro  mCslSampleTime;             // The CSL sample time of the current period.
-    TimeMicro  mCslLastSync;               // The timestamp of the last successful CSL synchronization.
-    uint8_t    mCslParentAccuracy;         // Drift of timer used for scheduling CSL tx by the parent, in ± ppm.
-    uint8_t    mCslParentUncert;           // Uncertainty of the scheduling CSL of tx by the parent, in ±10 us units.
-    CslState   mCslState;
+    uint16_t mCslPeriod;      // The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t  mCslChannel : 7; // The CSL sample channel.
+    bool mIsCslSampling : 1;  // Indicates that the radio is receiving in CSL state for platforms not supporting delayed
+                              // reception.
+    TimeMicro  mCslSampleTime;     // The CSL sample time of the current period.
+    TimeMicro  mCslLastSync;       // The timestamp of the last successful CSL synchronization.
+    uint8_t    mCslParentAccuracy; // Drift of timer used for scheduling CSL tx by the parent, in ± ppm.
+    uint8_t    mCslParentUncert;   // Uncertainty of the scheduling CSL of tx by the parent, in ±10 us units.
     TimerMicro mCslTimer;
 #endif
 };

@@ -641,12 +641,6 @@ bool Mle::IsRouterOrLeader(void) const
 
 void Mle::SetStateDetached(void)
 {
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (Get<Mac::Mac>().IsCslEnabled())
-    {
-        IgnoreError(Get<Radio>().EnableCsl(0, GetParent().GetRloc16(), &GetParent().GetExtAddress()));
-    }
-#endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<BackboneRouter::Local>().Reset();
 #endif
@@ -675,6 +669,9 @@ void Mle::SetStateDetached(void)
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
 #if OPENTHREAD_FTD
     Get<Ip6::Mpl>().SetTimerExpirations(0);
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().UpdateCsl();
 #endif
 }
 
@@ -726,12 +723,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     mPreviousParentRloc = mParent.GetRloc16();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (Get<Mac::Mac>().IsCslCapable())
-    {
-        uint32_t period = IsRxOnWhenIdle() ? 0 : Get<Mac::Mac>().GetCslPeriod();
-        IgnoreError(Get<Radio>().EnableCsl(period, GetParent().GetRloc16(), &GetParent().GetExtAddress()));
-        ScheduleChildUpdateRequest();
-    }
+    Get<Mac::Mac>().UpdateCsl();
 #endif
 }
 
@@ -1834,12 +1826,7 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 
     case kChildUpdateRequestActive:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        // CSL transmitter may respond in next CSL cycle.
-        // This condition IsCslCapable() && !IsRxOnWhenIdle() is used instead of
-        // IsCslEnabled because during transitions SSED -> MED and MED -> SSED
-        // there is a delay in synchronisation of IsRxOnWhenIdle residing in MAC
-        // and in MLE, which causes below datapoll interval to be calculated incorrectly.
-        if (Get<Mac::Mac>().IsCslCapable() && !IsRxOnWhenIdle())
+        if (Get<Mac::Mac>().IsCslEnabled())
         {
             ExitNow(interval = Get<Mac::Mac>().GetCslPeriod() * kUsPerTenSymbols / 1000 +
                                static_cast<uint32_t>(kUnicastRetransmissionDelay));
@@ -4767,7 +4754,7 @@ Error Mle::TxMessage::AppendCslChannelTlv(void)
     // in CSL Channel TLV, if CSL channel is not specified, we don't append CSL Channel TLV.
     // And on transmitter side, it would also set CSL Channel for the child to `0` if it doesn't find a CSL Channel
     // TLV.
-    VerifyOrExit(Get<Mac::Mac>().IsCslChannelSpecified());
+    VerifyOrExit(Get<Mac::Mac>().GetCslChannel());
 
     cslChannel.Init();
     cslChannel.SetChannelPage(0);

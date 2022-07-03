@@ -583,7 +583,7 @@ public:
      * @returns CSL channel.
      *
      */
-    uint8_t GetCslChannel(void) const { return mLinks.GetSubMac().GetCslChannel(); }
+    uint8_t GetCslChannel(void) const { return mCslChannel; }
 
     /**
      * This method sets the CSL channel.
@@ -594,12 +594,10 @@ public:
     void SetCslChannel(uint8_t aChannel);
 
     /**
-     * This method indicates if CSL channel has been explicitly specified by the upper layer.
-     *
-     * @returns If CSL channel has been specified.
+     * This method centralizes CSL state switching conditions evaluating, configuring SubMac accordingly.
      *
      */
-    bool IsCslChannelSpecified(void) const { return mLinks.GetSubMac().IsCslChannelSpecified(); }
+    void UpdateCsl(void);
 
     /**
      * This method gets the CSL period.
@@ -607,7 +605,7 @@ public:
      * @returns CSL period in units of 10 symbols.
      *
      */
-    uint16_t GetCslPeriod(void) const { return mLinks.GetSubMac().GetCslPeriod(); }
+    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
 
     /**
      * This method sets the CSL period.
@@ -634,6 +632,15 @@ public:
      *
      */
     bool IsCslCapable(void) const;
+
+    /**
+     * This method indicates whether the device is connected to a parent which supports CSL.
+     *
+     * @retval TRUE   If parent supports CSL.
+     * @retval FALSE  If parent does not support CSL.
+     *
+     */
+    bool IsCslSupported(void) const;
 
     /**
      * This method returns CSL parent clock accuracy, in ± ppm.
@@ -820,6 +827,11 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
 #endif
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    // When Mac::mCslChannel is 0, it indicates that CSL channel has not been specified by the upper layer.
+    uint8_t  mCslChannel;
+    uint16_t mCslPeriod;
 #endif
 
     union
