@@ -79,7 +79,9 @@ class RoutingManager : public InstanceLocator
     friend class ot::Instance;
 
 public:
-    typedef NetworkData::RoutePreference RoutePreference; ///< Route preference (high, medium, low).
+    typedef NetworkData::RoutePreference       RoutePreference;     ///< Route preference (high, medium, low).
+    typedef otBorderRoutingPrefixTableIterator PrefixTableIterator; ///< Prefix Table Iterator.
+    typedef otBorderRoutingPrefixTableEntry    PrefixTableEntry;    ///< Prefix Table Entry.
 
     /**
      * This constructor initializes the routing manager.
@@ -219,6 +221,37 @@ public:
      */
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
 
+    /**
+     * This method initializes a `PrefixTableIterator`.
+     *
+     * An iterator can be initialized again to start from the beginning of the table.
+     *
+     * When iterating over entries in the table, to ensure the entry update times are consistent, they are given
+     * relative to the time the iterator was initialized.
+     *
+     * @param[out] aIterator  The iterator to initialize.
+     *
+     */
+    void InitPrefixTableIterator(PrefixTableIterator &aIterator) const
+    {
+        mDiscoveredPrefixTable.InitIterator(aIterator);
+    }
+
+    /**
+     * This method iterates over entries in the discovered prefix table.
+     *
+     * @param[in,out] aIterator  An iterator.
+     * @param[out]    aEntry     A reference to the entry to populate.
+     *
+     * @retval OT_ERROR_NONE        Got the next entry, @p aEntry is updated and @p aIterator is advanced.
+     * @retval OT_ERROR_NOT_FOUND   No more entries in the table.
+     *
+     */
+    Error GetNextPrefixTableEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
+    {
+        return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
+    }
+
 private:
     static constexpr uint16_t kMaxRouterAdvMessageLength = 256; // The maximum RA message length we can handle.
 
@@ -312,6 +345,9 @@ private:
 
         TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
+        void  InitIterator(PrefixTableIterator &aIterator) const;
+        Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
+
     private:
         static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
         static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
@@ -401,6 +437,17 @@ private:
 
             Ip6::Address      mAddress;
             LinkedList<Entry> mEntries;
+        };
+
+        class Iterator : public PrefixTableIterator
+        {
+        public:
+            const Router *GetRouter(void) const { return static_cast<const Router *>(mPtr1); }
+            void          SetRouter(const Router *aRouter) { mPtr1 = aRouter; }
+            const Entry * GetEntry(void) const { return static_cast<const Entry *>(mPtr2); }
+            void          SetEntry(const Entry *aEntry) { mPtr2 = aEntry; }
+            TimeMilli     GetInitTime(void) const { return TimeMilli(mData32); }
+            void          SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
         };
 
         void        ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);

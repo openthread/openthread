@@ -81,4 +81,16 @@ otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefi
 }
 #endif
 
+void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRoutingPrefixTableIterator *aIterator)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(*aIterator);
+}
+
+otError otBorderRoutingGetNextPrefixTableEntry(otInstance *                        aInstance,
+                                               otBorderRoutingPrefixTableIterator *aIterator,
+                                               otBorderRoutingPrefixTableEntry *   aEntry)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(*aIterator, *aEntry);
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
