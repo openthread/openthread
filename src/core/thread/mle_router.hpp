@@ -635,7 +635,7 @@ private:
                            const Message *     aRequestMessage = nullptr);
     Error SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
     void  SetStateRouter(uint16_t aRloc16);
-    void  SetStateLeader(uint16_t aRloc16);
+    void  SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild);

@@ -87,6 +87,31 @@ otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * This function gets the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in
+ * Router Advertisement messages sent over the infrastructure link.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The OMR prefix advertisement preference.
+ *
+ */
+otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance);
+
+/**
+ * This function sets the preference to use when advertising Route Info Options (e.g., for discovered OMR prefixes) in
+ * Router Advertisement messages sent over the infrastructure link.
+ *
+ * By default BR will use 'medium' preference level but this function allows the default value to be changed. As an
+ * example, it can be set to 'low' preference in the case where device is a temporary BR (a mobile BR or a
+ * battery-powered BR) to indicate that other BRs (if any) should be preferred over this BR on the infrastructure link.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ * @param[in] aPreference   The route preference to use.
+ *
+ */
+void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRoutePreference aPreference);
+
+/**
  * Gets the Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
  *
  * An OMR Prefix is a randomly generated 64-bit prefix that's published in the

@@ -54,6 +54,18 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetEnabled(aEnabled);
 }
 
+otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance)
+{
+    return static_cast<otRoutePreference>(
+        AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetRouteInfoOptionPreference());
+}
+
+void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRoutePreference aPreference)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRouteInfoOptionPreference(
+        static_cast<NetworkData::RoutePreference>(aPreference));
+}
+
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));

@@ -64,6 +64,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsRunning(false)
     , mIsEnabled(false)
     , mInfraIf(aInstance)
+    , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
     , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
     , mIsAdvertisingLocalNat64Prefix(false)
@@ -125,6 +126,19 @@ Error RoutingManager::SetEnabled(bool aEnabled)
 
 exit:
     return error;
+}
+
+void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
+{
+    VerifyOrExit(mRouteInfoOptionPreference != aPreference);
+
+    mRouteInfoOptionPreference = aPreference;
+
+    VerifyOrExit(mIsRunning);
+    StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+
+exit:
+    return;
 }
 
 Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix)
@@ -872,18 +886,18 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
         if (!aNewOmrPrefixes.ContainsMatching(omrPrefix.GetPrefix()))
         {
             SuccessOrAssert(
-                raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), /* aRouteLifetime */ 0, omrPrefix.GetPreference()));
+                raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), /* aRouteLifetime */ 0, mRouteInfoOptionPreference));
 
-            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", omrPrefix.ToString().AsCString());
+            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", omrPrefix.GetPrefix().ToString().AsCString());
         }
     }
 
     for (const OmrPrefix &omrPrefix : aNewOmrPrefixes)
     {
         SuccessOrAssert(
-            raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), kDefaultOmrPrefixLifetime, omrPrefix.GetPreference()));
+            raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), kDefaultOmrPrefixLifetime, mRouteInfoOptionPreference));
 
-        LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", omrPrefix.ToString().AsCString(),
+        LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", omrPrefix.GetPrefix().ToString().AsCString(),
                 kDefaultOmrPrefixLifetime);
     }
 
@@ -911,6 +925,68 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
                     ErrorToString(error));
         }
     }
+}
+
+bool RoutingManager::IsReceivdRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const
+{
+    // Determines whether or not a received RA message was prepared by
+    // by `RoutingManager` itself.
+
+    bool        isFromManager = false;
+    uint16_t    rioCount      = 0;
+    Ip6::Prefix prefix;
+
+    VerifyOrExit(aRaMessage.ContainsAnyOptions());
+
+    for (const Ip6::Nd::Option &option : aRaMessage)
+    {
+        switch (option.GetType())
+        {
+        case Ip6::Nd::Option::kTypePrefixInfo:
+        {
+            // PIO should match `mLocalOnLinkPrefix`.
+
+            const Ip6::Nd::PrefixInfoOption &pio = static_cast<const Ip6::Nd::PrefixInfoOption &>(option);
+
+            VerifyOrExit(pio.IsValid());
+            pio.GetPrefix(prefix);
+
+            VerifyOrExit(prefix == mLocalOnLinkPrefix);
+            break;
+        }
+
+        case Ip6::Nd::Option::kTypeRouteInfo:
+        {
+            // RIO (with non-zero lifetime) should match entries from
+            // `mAdvertisedOmrPrefixes`. We keep track of the number
+            // of matched RIOs and check after the loop ends that all
+            // entries were seen.
+
+            const Ip6::Nd::RouteInfoOption &rio = static_cast<const Ip6::Nd::RouteInfoOption &>(option);
+
+            VerifyOrExit(rio.IsValid());
+            rio.GetPrefix(prefix);
+
+            if (rio.GetRouteLifetime() != 0)
+            {
+                VerifyOrExit(mAdvertisedOmrPrefixes.ContainsMatching(prefix));
+                rioCount++;
+            }
+
+            break;
+        }
+
+        default:
+            ExitNow();
+        }
+    }
+
+    VerifyOrExit(rioCount == mAdvertisedOmrPrefixes.GetLength());
+
+    isFromManager = true;
+
+exit:
+    return isFromManager;
 }
 
 bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
@@ -1174,6 +1250,14 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
 
     Ip6::Nd::RouterAdvertMessage::Header oldHeader;
 
+    if (aRouterAdvertMessage != nullptr)
+    {
+        // We skip and do not update RA header if the received RA message
+        // was not prepared and sent by `RoutingManager` itself.
+
+        VerifyOrExit(!IsReceivdRouterAdvertFromManager(*aRouterAdvertMessage));
+    }
+
     oldHeader                       = mRouterAdvertHeader;
     mTimeRouterAdvMessageLastUpdate = TimerMilli::GetNow();
 
@@ -1203,6 +1287,9 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
 
         StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
     }
+
+exit:
+    return;
 }
 
 void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)

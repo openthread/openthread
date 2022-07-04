@@ -77,6 +77,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         },
         MED: {
             'version': '1.2',
+            'is_mtd': True,
             'allowlist': [ROUTER],
             'mode': 'rn',
         },
