@@ -232,6 +232,11 @@ private:
     uint16_t mSpiCsDelayUs;
     uint16_t mSpiSmallPacketSize;
     uint32_t mSpiSpeedHz;
+
+    uint64_t mSlaveResetCount;
+    uint64_t mSpiDuplexFrameCount;
+    uint64_t mSpiUnresponsiveFrameCount;
+
     bool     mSpiTxIsReady;
     uint16_t mSpiTxRefusedCount;
     uint16_t mSpiTxPayloadSize;

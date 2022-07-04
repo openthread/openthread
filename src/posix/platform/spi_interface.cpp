@@ -73,6 +73,9 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
     , mIntGpioValueFd(-1)
+    , mSlaveResetCount(0)
+    , mSpiDuplexFrameCount(0)
+    , mSpiUnresponsiveFrameCount(0)
     , mSpiTxIsReady(false)
     , mSpiTxRefusedCount(0)
     , mSpiTxPayloadSize(0)
@@ -511,7 +514,7 @@ otError SpiInterface::PushPullSpi(void)
                     otLogWarnPlat("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
                 }
 
-                mInterfaceMetrics.mTransferredUnresponsiveFrameCount++;
+                mSpiUnresponsiveFrameCount++;
             }
             else
             {
@@ -525,7 +528,6 @@ otError SpiInterface::PushPullSpi(void)
             }
 
             mSpiTxRefusedCount++;
-            mInterfaceMetrics.mTxRefusedCount++;
             ExitNow();
         }
 
@@ -535,7 +537,6 @@ otError SpiInterface::PushPullSpi(void)
         if (!rxFrame.IsValid() || (slaveAcceptLen > kMaxFrameSize) || (mSpiSlaveDataLen > kMaxFrameSize))
         {
             mInterfaceMetrics.mTransferredGarbageFrameCount++;
-            mInterfaceMetrics.mTxRefusedCount++;
             mSpiTxRefusedCount++;
             mSpiSlaveDataLen = 0;
 
@@ -551,9 +552,9 @@ otError SpiInterface::PushPullSpi(void)
 
         if (rxFrame.IsResetFlagSet())
         {
-            mInterfaceMetrics.mSpiSlaveResetCount++;
+            mSlaveResetCount++;
 
-            otLogNotePlat("Slave did reset (%" PRIu64 " resets so far)", mInterfaceMetrics.mSpiSlaveResetCount);
+            otLogNotePlat("Slave did reset (%" PRIu64 " resets so far)", mSlaveResetCount);
             LogStats();
         }
 
@@ -599,7 +600,6 @@ otError SpiInterface::PushPullSpi(void)
             // The slave wasn't ready for what we had to send them. Incrementing this counter will turn on rate
             // limiting so that we don't waste a ton of CPU bombarding them with useless SPI transfers.
             mSpiTxRefusedCount++;
-            mInterfaceMetrics.mTxRefusedCount++;
         }
     }
 
@@ -610,7 +610,7 @@ otError SpiInterface::PushPullSpi(void)
 
     if (successfulExchanges == 2)
     {
-        mInterfaceMetrics.mTransferredDuplexFrameCount++;
+        mSpiDuplexFrameCount++;
     }
 
 exit:
@@ -827,17 +827,16 @@ void SpiInterface::LogError(const char *aString)
 
 void SpiInterface::LogStats(void)
 {
-    otLogInfoPlat("INFO: mSpiSlaveResetCount=%" PRIu64, mInterfaceMetrics.mSpiSlaveResetCount);
-    otLogInfoPlat("INFO: mTransferredFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredFrameCount);
-    otLogInfoPlat("INFO: mTransferredValidFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredValidFrameCount);
-    otLogInfoPlat("INFO: mTransferredDuplexFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredDuplexFrameCount);
-    otLogInfoPlat("INFO: mTransferredUnresponsiveFrameCount=%" PRIu64,
-                  mInterfaceMetrics.mTransferredUnresponsiveFrameCount);
-    otLogInfoPlat("INFO: mTransferredGarbageFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredGarbageFrameCount);
-    otLogInfoPlat("INFO: mRxFrameCount=%" PRIu64, mInterfaceMetrics.mRxFrameCount);
-    otLogInfoPlat("INFO: mRxFrameByteCount=%" PRIu64, mInterfaceMetrics.mRxFrameByteCount);
-    otLogInfoPlat("INFO: mTxFrameCount=%" PRIu64, mInterfaceMetrics.mTxFrameCount);
-    otLogInfoPlat("INFO: mTxFrameByteCount=%" PRIu64, mInterfaceMetrics.mTxFrameByteCount);
+    otLogInfoPlat("INFO: SlaveResetCount=%" PRIu64, mSlaveResetCount);
+    otLogInfoPlat("INFO: SpiDuplexFrameCount=%" PRIu64, mSpiDuplexFrameCount);
+    otLogInfoPlat("INFO: SpiUnresponsiveFrameCount=%" PRIu64, mSpiUnresponsiveFrameCount);
+    otLogInfoPlat("INFO: TransferredFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredFrameCount);
+    otLogInfoPlat("INFO: TransferredValidFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredValidFrameCount);
+    otLogInfoPlat("INFO: TransferredGarbageFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredGarbageFrameCount);
+    otLogInfoPlat("INFO: RxFrameCount=%" PRIu64, mInterfaceMetrics.mRxFrameCount);
+    otLogInfoPlat("INFO: RxFrameByteCount=%" PRIu64, mInterfaceMetrics.mRxFrameByteCount);
+    otLogInfoPlat("INFO: TxFrameCount=%" PRIu64, mInterfaceMetrics.mTxFrameCount);
+    otLogInfoPlat("INFO: TxFrameByteCount=%" PRIu64, mInterfaceMetrics.mTxFrameByteCount);
 }
 } // namespace Posix
 } // namespace ot

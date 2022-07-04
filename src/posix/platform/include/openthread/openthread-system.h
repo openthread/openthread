@@ -90,18 +90,14 @@ typedef struct otPlatformConfig
  */
 typedef struct otRcpInterfaceMetrics
 {
-    uint8_t  mRcpInterfaceType;                  ///< The RCP interface type.
-    uint32_t mSpiSlaveResetCount;                ///< The number of SPI slave resets.
-    uint32_t mTransferredFrameCount;             ///< The number of transferred frames.
-    uint32_t mTransferredValidFrameCount;        ///< The number of transferred valid frames.
-    uint32_t mTransferredGarbageFrameCount;      ///< The number of transferred garbage frames.
-    uint32_t mTransferredDuplexFrameCount;       ///< The number of transferred duplex frames.
-    uint32_t mTransferredUnresponsiveFrameCount; ///< The number of transferred unresponsive frames.
-    uint32_t mRxFrameCount;                      ///< The number of received frames.
-    uint32_t mRxFrameByteCount;                  ///< The number of received bytes.
-    uint32_t mTxFrameCount;                      ///< The number of transmitted frames.
-    uint32_t mTxFrameByteCount;                  ///< The number of transmitted bytes.
-    uint32_t mTxRefusedCount;                    ///< The number of times rejected by RCP.
+    uint8_t  mRcpInterfaceType;             ///< The RCP interface type.
+    uint64_t mTransferredFrameCount;        ///< The number of transferred frames.
+    uint64_t mTransferredValidFrameCount;   ///< The number of transferred valid frames.
+    uint64_t mTransferredGarbageFrameCount; ///< The number of transferred garbage frames.
+    uint64_t mRxFrameCount;                 ///< The number of received frames.
+    uint64_t mRxFrameByteCount;             ///< The number of received bytes.
+    uint64_t mTxFrameCount;                 ///< The number of transmitted frames.
+    uint64_t mTxFrameByteCount;             ///< The number of transmitted bytes.
 } otRcpInterfaceMetrics;
 
 /**
