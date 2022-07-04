@@ -2259,7 +2259,6 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
 
     otLogWarnPlat("RCP failure detected");
 
-
     ++mRadioSpinelMetrics.mRcpRestorationCount;
     ++mRcpFailureCount;
     if (mRcpFailureCount > kMaxFailureCount)
