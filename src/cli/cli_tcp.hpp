@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/tcp.h>
+#include <openthread/tcp_ext.h>
 
 #include "cli/cli_config.h"
 #include "cli/cli_output.hpp"
@@ -85,8 +86,12 @@ private:
     otError ProcessListen(Arg aArgs[]);
     otError ProcessStopListening(Arg aArgs[]);
 
+    otError ContinueBenchmarkCircularSend(void);
+    void    CompleteBenchmark(void);
+
     static void HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint);
     static void HandleTcpSendDoneCallback(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
+    static void HandleTcpForwardProgressCallback(otTcpEndpoint *aEndpoint, size_t aInSendBuffer, size_t aBacklog);
     static void HandleTcpReceiveAvailableCallback(otTcpEndpoint *aEndpoint,
                                                   size_t         aBytesAvailable,
                                                   bool           aEndOfStream,
@@ -99,13 +104,14 @@ private:
                                                                      otTcpEndpoint *   aEndpoint,
                                                                      const otSockAddr *aPeer);
 
-    void                          HandleTcpEstablished(otTcpEndpoint *aEndpoint);
-    void                          HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
-    void                          HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
-                                                            size_t         aBytesAvailable,
-                                                            bool           aEndOfStream,
-                                                            size_t         aBytesRemaining);
-    void                          HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
+    void HandleTcpEstablished(otTcpEndpoint *aEndpoint);
+    void HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
+    void HandleTcpForwardProgress(otTcpEndpoint *aEndpoint, size_t aInSendBuffer, size_t aBacklog);
+    void HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
+                                   size_t         aBytesAvailable,
+                                   bool           aEndOfStream,
+                                   size_t         aBytesRemaining);
+    void HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
     otTcpIncomingConnectionAction HandleTcpAcceptReady(otTcpListener *   aListener,
                                                        const otSockAddr *aPeer,
                                                        otTcpEndpoint **  aAcceptInto);
@@ -133,15 +139,21 @@ private:
     bool mInitialized;
     bool mEndpointConnected;
     bool mSendBusy;
+    bool mUseCircularSendBuffer;
 
-    otLinkedBuffer mSendLink;
-    uint8_t        mSendBuffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
-    uint8_t        mReceiveBuffer[OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE];
+    otTcpCircularSendBuffer mSendBuffer;
+    otLinkedBuffer          mSendLink;
+    uint8_t                 mSendBufferBytes[OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE];
+    uint8_t                 mReceiveBufferBytes[OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE];
 
-    otLinkedBuffer mBenchmarkLinks[(sizeof(mReceiveBuffer) + sizeof(mSendBuffer) - 1) / sizeof(mSendBuffer)];
-    uint32_t       mBenchmarkBytesTotal;
-    uint32_t       mBenchmarkLinksLeft;
-    TimeMilli      mBenchmarkStart;
+    otLinkedBuffer
+              mBenchmarkLinks[(sizeof(mReceiveBufferBytes) + sizeof(mSendBufferBytes) - 1) / sizeof(mSendBufferBytes)];
+    uint32_t  mBenchmarkBytesTotal;
+    uint32_t  mBenchmarkBytesUnsent;
+    TimeMilli mBenchmarkStart;
+
+    static constexpr const char * sBenchmarkData       = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    static constexpr const size_t sBenchmarkDataLength = 52;
 };
 
 } // namespace Cli
