@@ -55,6 +55,7 @@ void lbuf_append(struct lbufhead* buffer, otLinkedBuffer* newentry) {
 
 void lbuf_extend(struct lbufhead* buffer, size_t numbytes) {
     buffer->tail->mLength += numbytes;
+    buffer->length += numbytes;
 }
 
 size_t lbuf_pop(struct lbufhead* buffer, size_t numbytes, uint32_t* ntraversed) {
