@@ -30,7 +30,9 @@
 #define OT_LIB_PLATFORM_RESET_UTIL_H_
 
 #if defined(OPENTHREAD_ENABLE_COVERAGE) && OPENTHREAD_ENABLE_COVERAGE && defined(__GNUC__)
-#if __GNUC__ >= 11 || (defined(__clang__) && (__clang_major__ >= 12))
+#if __GNUC__ >= 11 || (defined(__clang__) &&
+    (defined(__APPLE__) && (__clang_major__ >= 13)) ||
+    (!defined(__APPLE__) && (__clang_major__ >= 12)))
 void __gcov_dump();
 void __gcov_reset();
 
