@@ -1626,9 +1626,13 @@ Error MeshForwarder::GetFramePriority(const FrameData      &aFrameData,
     {
         uint16_t destPort = headers.GetUdpHeader().GetDestinationPort();
 
-        if ((destPort == Mle::kUdpPort) || (destPort == Tmf::kUdpPort))
+        if (destPort == Mle::kUdpPort)
         {
             aPriority = Message::kPriorityNet;
+        }
+        else if (Get<Tmf::Agent>().IsTmfMessage(headers.GetSourceAddress(), headers.GetDestinationAddress(), destPort))
+        {
+            aPriority = Tmf::Agent::DscpToPriority(headers.GetIp6Header().GetDscp());
         }
     }
 
