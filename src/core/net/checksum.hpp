@@ -105,6 +105,7 @@ public:
      * This static method calculates and then updates the checksum field in the IPv4 header.
      *
      * @param[in,out] aHeader The IPv4 header to update the checksum in.
+     *
      */
     static void UpdateIPv4HeaderChecksum(Ip4::Header &aHeader);
 

@@ -317,6 +317,7 @@ public:
      * This method returns the Df flag in the IPv4 header.
      *
      * @returns Whether don't fragment flag is set.
+     *
      */
     bool GetDf(void) const { return HostSwap16(mFlagsFargmentOffset) & kFlagsDf; }
 
@@ -324,6 +325,7 @@ public:
      * This method returns the Mf flag in the IPv4 header.
      *
      * @returns Whether more fragments flag is set.
+     *
      */
     bool GetMf(void) const { return HostSwap16(mFlagsFargmentOffset) & kFlagsMf; }
 
@@ -331,6 +333,7 @@ public:
      * This method returns the fragment offset in the IPv4 header.
      *
      * @returns The fragment offset of the IPv4 packet.
+     *
      */
     uint16_t GetFragmentOffset(void) const { return HostSwap16(mFlagsFargmentOffset) & kFragmentOffsetMask; }
 

@@ -332,12 +332,12 @@ void TestTcp4MessageChecksum(void)
     Ip4::Address sourceAddress;
     Ip4::Address destAddress;
 
-    SuccessOrQuit(sourceAddress.FromString(kSourceAddress));
-    SuccessOrQuit(destAddress.FromString(kDestAddress));
-
     Instance *instance = static_cast<Instance *>(testInitInstance());
 
     VerifyOrQuit(instance != nullptr);
+
+    SuccessOrQuit(sourceAddress.FromString(kSourceAddress));
+    SuccessOrQuit(destAddress.FromString(kDestAddress));
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
@@ -387,10 +387,10 @@ void TestUdp4MessageChecksum(void)
     Ip4::Address sourceAddress;
     Ip4::Address destAddress;
 
+    Instance *instance = static_cast<Instance *>(testInitInstance());
+
     SuccessOrQuit(sourceAddress.FromString(kSourceAddress));
     SuccessOrQuit(destAddress.FromString(kDestAddress));
-
-    Instance *instance = static_cast<Instance *>(testInitInstance());
 
     VerifyOrQuit(instance != nullptr);
 
@@ -440,22 +440,23 @@ void TestIcmp4MessageChecksum(void)
                                           "\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23\x24\x25\x26\x27"
                                           "\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37";
     uint16_t kChecksumForExampleMessage = 0x5594;
-
     Instance *instance = static_cast<Instance *>(testInitInstance());
-
     Message *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(kExampleIcmpMessage));
+
+    Ip4::Address source;
+    Ip4::Address dest;
+
+    uint8_t           mPayload[sizeof(kExampleIcmpMessage)];
+    Ip4::Icmp::Header icmpHeader;
+
     message->AppendBytes(kExampleIcmpMessage, sizeof(kExampleIcmpMessage));
 
     // Random IPv4 address, ICMP message checksum does not include a presudo header like TCP and UDP.
-    Ip4::Address source;
-    Ip4::Address dest;
     source.mFields.m32 = 0x12345678;
     dest.mFields.m32   = 0x87654321;
 
     Checksum::UpdateMessageChecksum(*message, source, dest, Ip4::kProtoIcmp);
 
-    uint8_t           mPayload[sizeof(kExampleIcmpMessage)];
-    Ip4::Icmp::Header icmpHeader;
     message->Read(0, icmpHeader);
     VerifyOrQuit(icmpHeader.GetChecksum() == kChecksumForExampleMessage);
 

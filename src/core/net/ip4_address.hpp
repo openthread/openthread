@@ -197,13 +197,20 @@ private:
      * This method returns the host mask (bitwise not of the subnet mask) of the CIDR.
      *
      * @returns A uint32 for the host mask, in network byte order.
+     *
      */
-    uint32_t HostMask(void) const { return HostSwap32(0xffffffff >> mLength); }
+    uint32_t HostMask(void) const
+    {
+        // Note: Using LL suffix to make it a uint64 since /32 is a valid CIDR, and right shifting 32 bits is undefined
+        // for uint32.
+        return HostSwap32(0xffffffffLL >> mLength);
+    }
 
     /**
      * This method returns the subnet mask of the CIDR.
      *
      * @returns A uint32 for the subnet mask, in network byte order.
+     *
      */
     uint32_t SubnetMask(void) const { return ~HostMask(); }
 };
