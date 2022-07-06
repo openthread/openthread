@@ -153,6 +153,17 @@ public:
     Error GetOmrPrefix(Ip6::Prefix &aPrefix);
 
     /**
+     * This method sets the off-mesh-routable (OMR) prefix.
+     *
+     * @param[out]  aPrefix  A reference to the OMR prefix.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully set the OMR prefix.
+     *
+     */
+    Error SetOmrPrefix(Ip6::Prefix &aPrefix);
+
+    /**
      * This method returns the on-link prefix for the adjacent  infrastructure link.
      *
      * The randomly generated 64-bit prefix will be advertised

@@ -128,6 +128,18 @@ void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRouteP
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
+ * This function sets the off-mesh-routable (OMR) prefix.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aPrefix           A pointer to the OMR Prefix.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully set the OMR prefix.
+ *
+ */
+otError otBorderRoutingSetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
  * Gets the On-Link Prefix for the adjacent infrastructure link, for example `fd41:2650:a6f5:0::/64`.
  *
  * An On-Link Prefix is a randomly generated 64-bit prefix that's advertised on the infrastructure

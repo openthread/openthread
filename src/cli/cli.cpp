@@ -548,6 +548,18 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
 
         SuccessOrExit(error = otBorderRoutingGetOmrPrefix(GetInstancePtr(), &omrPrefix));
         OutputIp6PrefixLine(omrPrefix);
+        if (aArgs[1].IsEmpty())
+        {
+            SuccessOrExit(error = otBorderRoutingGetOmrPrefix(GetInstancePtr(), &omrPrefix));
+            OutputIp6PrefixLine(omrPrefix);
+        }
+        else
+        {
+            SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(omrPrefix));
+            VerifyOrExit(omrPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
+            error =
+                otBorderRoutingSetOmrPrefix(GetInstancePtr(), &omrPrefix);
+        }
     }
     /**
      * @cli br onlinkprefix

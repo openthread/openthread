@@ -71,6 +71,11 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));
 }
 
+otError otBorderRoutingSetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetOmrPrefix(AsCoreType(aPrefix));
+}
+
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(AsCoreType(aPrefix));

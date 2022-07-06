@@ -364,11 +364,14 @@ Done
 
 ### br omrprefix
 
-Get the randomly generated off-mesh-routable prefix of the Border Router.
+Get (or optionally set) the randomly generated off-mesh-routable prefix of the Border Router.
 
 ```bash
 > br omrprefix
 fdfc:1ff5:1512:5622::/64
+Done
+
+> br omrprefix fdfc:1ff5:1512:5622::/64
 Done
 ```
 
