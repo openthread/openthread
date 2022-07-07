@@ -1001,7 +1001,7 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
     UpdateRecordLengthInMessage(rr, offset, aMessage);
     aInfo.mRecordCount++;
 
-    if (aService.HasSubType())
+    if (aService.HasSubType() && !removing)
     {
         const char *subTypeLabel;
         uint16_t    subServiceNameOffset = 0;
@@ -1023,7 +1023,7 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
                 SuccessOrExit(error = Dns::Name::AppendPointerLabel(subServiceNameOffset, aMessage));
             }
 
-            // `rr` is already initialized as PTR (add or remove).
+            // `rr` is already initialized as PTR.
             offset = aMessage.GetLength();
             SuccessOrExit(error = aMessage.Append(rr));
 
