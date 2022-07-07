@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/debug.hpp"
+#include "common/frame_data.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -245,6 +246,19 @@ public:
     }
 
     /**
+     * This method indicates whether or not header in a given frame is a LOWPAN_IPHC header.
+     *
+     * @param[in] aFrameData    The frame data.
+     *
+     * @retval TRUE   If the header matches the LOWPAN_IPHC dispatch value.
+     * @retval FALSE  If the header does not match the LOWPAN_IPHC dispatch value.
+     */
+    static bool IsLowpanHc(const FrameData &aFrameData)
+    {
+        return (aFrameData.GetLength() > 0) && IsLowpanHc(aFrameData.GetBytes());
+    }
+
+    /**
      * This method compresses an IPv6 header.
      *
      * @param[in]   aMessage     A reference to the IPv6 message.
@@ -260,54 +274,59 @@ public:
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aMessage         A reference where the IPv6 header will be placed.
-     * @param[in]   aMacSource       The MAC source address.
-     * @param[in]   aMacDest         The MAC destination address.
-     * @param[in]   aBuf             A pointer to the LOWPAN_IPHC header.
-     * @param[in]   aBufLength       The number of bytes in @p aBuf.
-     * @param[in]   aDatagramLength  The IPv6 datagram length.
+     * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
-     * @returns The size of the compressed header in bytes.
+     * @param[out]    aMessage         A reference where the IPv6 header will be placed.
+     * @param[in]     aMacSource       The MAC source address.
+     * @param[in]     aMacDest         The MAC destination address.
+     * @param[in,out] aFrameData       A frame data containing the LOWPAN_IPHC header.
+     * @param[in]     aDatagramLength  The IPv6 datagram length.
+     *
+     * @retval kErrorNone    The header was decompressed successfully. @p aMessage and @p aFrameData are updated.
+     * @retval kErrorParse   Failed to parse the lowpan header.
+     * @retval kErrorNoBufs  Could not grow @p aMessage to write the parsed IPv6 header.
      *
      */
-    int Decompress(Message &           aMessage,
-                   const Mac::Address &aMacSource,
-                   const Mac::Address &aMacDest,
-                   const uint8_t *     aBuf,
-                   uint16_t            aBufLength,
-                   uint16_t            aDatagramLength);
+    Error Decompress(Message &           aMessage,
+                     const Mac::Address &aMacSource,
+                     const Mac::Address &aMacDest,
+                     FrameData &         aFrameData,
+                     uint16_t            aDatagramLength);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aIp6Header             A reference where the IPv6 header will be placed.
-     * @param[out]  aCompressedNextHeader  A boolean reference to output whether next header is compressed or not.
-     * @param[in]   aMacSource             The MAC source address.
-     * @param[in]   aMacDest               The MAC destination address.
-     * @param[in]   aBuf                   A pointer to the LOWPAN_IPHC header.
-     * @param[in]   aBufLength             The number of bytes in @p aBuf.
+     * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
-     * @returns The size of the compressed header in bytes or -1 if decompression fails.
+     * @param[out]    aIp6Header             A reference where the IPv6 header will be placed.
+     * @param[out]    aCompressedNextHeader  A boolean reference to output whether next header is compressed or not.
+     * @param[in]     aMacSource             The MAC source address.
+     * @param[in]     aMacDest               The MAC destination address.
+     * @param[in,out] aFrameData             A frame data containing the LOWPAN_IPHC header.
+     *
+     * @retval kErrorNone    The header was decompressed successfully. @p aIp6Headre and @p aFrameData are updated.
+     * @retval kErrorParse   Failed to parse the lowpan header.
      *
      */
-    int DecompressBaseHeader(Ip6::Header &       aIp6Header,
-                             bool &              aCompressedNextHeader,
-                             const Mac::Address &aMacSource,
-                             const Mac::Address &aMacDest,
-                             const uint8_t *     aBuf,
-                             uint16_t            aBufLength);
+    Error DecompressBaseHeader(Ip6::Header &       aIp6Header,
+                               bool &              aCompressedNextHeader,
+                               const Mac::Address &aMacSource,
+                               const Mac::Address &aMacDest,
+                               FrameData &         aFrameData);
 
     /**
      * This method decompresses a LOWPAN_NHC UDP header.
      *
-     * @param[out]  aUdpHeader    A reference where the UDP header will be placed.
-     * @param[in]   aBuf          A pointer to the LOWPAN_NHC header.
-     * @param[in]   aBufLength    The number of bytes in @p aBuf.
+     * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
-     * @returns The size of the compressed header in bytes or -1 if decompression fails.
+     * @param[out]    aUdpHeader    A reference where the UDP header will be placed.
+     * @param[in,out] aFrameData    A frame data containing the LOWPAN_NHC header.
+     *
+     * @retval kErrorNone    The header was decompressed successfully. @p aUdpHeader and @p aFrameData are updated.
+     * @retval kErrorParse   Failed to parse the lowpan header.
      *
      */
-    int DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength);
+    Error DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFrameData);
 
     /**
      * This method decompresses the IPv6 ECN field in a LOWPAN_IPHC header.
@@ -403,8 +422,8 @@ private:
     Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, BufferWriter &aBuf);
     Error CompressUdp(Message &aMessage, BufferWriter &aBuf);
 
-    int   DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
-    int   DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
+    Error DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData);
+    Error DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength);
     Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
 
     static void  CopyContext(const Context &aContext, Ip6::Address &aAddress);
@@ -445,7 +464,7 @@ public:
      * @retval FALSE  If the header does not match the Mesh Header dispatch value.
      *
      */
-    static bool IsMeshHeader(const uint8_t *aFrame, uint16_t aFrameLength);
+    static bool IsMeshHeader(const FrameData &aFrameData);
 
     /**
      * This method parses the Mesh Header from a frame @p aFrame.
@@ -459,6 +478,19 @@ public:
      *
      */
     Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
+
+    /**
+     * This method parses the Mesh Header from a given frame data.
+     *
+     * If the Mesh Header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
+     *
+     * @param[in,out]  aFrameData    The frame data to parse from.
+     *
+     * @retval kErrorNone     Mesh Header parsed successfully. @p aFrameData is updated to skip over parsed header.
+     * @retval kErrorParse    Mesh Header could not be parsed.
+     *
+     */
+    Error ParseFrom(FrameData &aFrameData);
 
     /**
      * This method parses the Mesh Header from a given message.
@@ -542,18 +574,16 @@ public:
     uint16_t WriteTo(uint8_t *aFrame) const;
 
     /**
-     * This method writes the Mesh Header to a message at a given offset.
+     * This method appends the Mesh Header to a given message.
      *
-     * @note This method expects the @p aMessage length to be already set such that there is enough space for the
-     * entire Mesh Header to be written.
      *
-     * @param[out] aMessage  A message to write the Mesh Header into.
-     * @param[in]  aOffset   The offset at which to write the header.
+     * @param[out] aMessage  A message to append the Mesh Header to.
      *
-     * @returns The header length (number of bytes written).
+     * @retval kErrorNone    Successfully appended the Mesh Header to @p aMessage.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow @p aMessage.
      *
      */
-    uint16_t WriteTo(Message &aMessage, uint16_t aOffset) const;
+    Error AppendTo(Message &aMessage) const;
 
 private:
     static constexpr uint8_t kDispatch     = 2 << 6;
@@ -612,11 +642,13 @@ public:
      * header (dispatch byte) matches the Fragment Header dispatch value. It does not fully parse and validate the
      * Fragment Header. `ParseFrom()` method can be used to fully parse and validate the header.
      *
+     * @param[in] aFrameData   The frame data.
+     *
      * @retval TRUE   If the header matches the Fragment Header dispatch value.
      * @retval FALSE  If the header does not match the Fragment Header dispatch value.
      *
      */
-    static bool IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength);
+    static bool IsFragmentHeader(const FrameData &aFrameData);
 
     /**
      * This method parses the Fragment Header from a frame @p aFrame.
@@ -629,7 +661,20 @@ public:
      * @retval kErrorParse    Fragment header could not be parsed from @p aFrame.
      *
      */
-    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
+    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength); //~~~ REMOVE OR MAKE PRIVATE
+
+    /**
+     * This method parses the Fragment Header from a given frame data.
+     *
+     * If the Fragment Header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
+     *
+     * @param[in,out]  aFrameData    The frame data to parse from.
+     *
+     * @retval kErrorNone     Fragment Header parsed successfully. @p aFrameData is updated to skip over parsed header.
+     * @retval kErrorParse    Fragment header could not be parsed.
+     *
+     */
+    Error ParseFrom(FrameData &aFrameData);
 
     /**
      * This method parses the Fragment Header from a message.
@@ -693,6 +738,8 @@ private:
     static constexpr uint8_t kSizeIndex   = 0; // Start index of Size field in the Fragment Header byte sequence.
     static constexpr uint8_t kTagIndex    = 2; // Start index of Tag field in the Fragment Header byte sequence.
     static constexpr uint8_t kOffsetIndex = 4; // Start index of Offset field in the Fragment Header byte sequence.
+
+    static bool IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength);
 
     uint16_t mSize;
     uint16_t mTag;

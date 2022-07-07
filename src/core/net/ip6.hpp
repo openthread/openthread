@@ -42,6 +42,7 @@
 #include <openthread/udp.h>
 
 #include "common/encoding.hpp"
+#include "common/frame_data.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
@@ -416,8 +417,7 @@ public:
     /**
      * This method decompresses lowpan frame and parses the IPv6 and UDP/TCP/ICMP6 headers.
      *
-     * @param[in]  aFrame           Buffer containig the lowpan frame.
-     * @param[in]  aFrameLength     Number of bytes in @p aFrame.
+     * @param[in]  aFrameData       The lowpan frame data.
      * @param[in]  aMacSource       The MAC source address.
      * @param[in]  aMacDest         The MAC destination address.
      * @param[in]  aInstance        The OpenThread instance.
@@ -427,8 +427,7 @@ public:
      * @retval kErrorParse          Failed to parse the headers.
      *
      */
-    Error DecompressFrom(const uint8_t *     aFrame,
-                         uint16_t            aFrameLength,
+    Error DecompressFrom(const FrameData &   aFrameData,
                          const Mac::Address &aMacSource,
                          const Mac::Address &aMacDest,
                          Instance &          aInstance);

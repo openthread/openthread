@@ -1534,66 +1534,56 @@ Error Headers::DecompressFrom(const Message &     aMessage,
 {
     static constexpr uint16_t kReadLength = Lowpan::FragmentHeader::kSubsequentFragmentHeaderSize + sizeof(Headers);
 
-    uint8_t  frameBuffer[kReadLength];
-    uint16_t frameLength;
+    uint8_t   frameBuffer[kReadLength];
+    uint16_t  frameLength;
+    FrameData frameData;
 
     frameLength = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(frameBuffer));
+    frameData.Init(frameBuffer, frameLength);
 
-    return DecompressFrom(frameBuffer, frameLength, aMacSource, aMacDest, aMessage.GetInstance());
+    return DecompressFrom(frameData, aMacSource, aMacDest, aMessage.GetInstance());
 }
 
-Error Headers::DecompressFrom(const uint8_t *     aFrame,
-                              uint16_t            aFrameLength,
+Error Headers::DecompressFrom(const FrameData &   aFrameData,
                               const Mac::Address &aMacSource,
                               const Mac::Address &aMacDest,
                               Instance &          aInstance)
 {
-    Error                  error = kErrorNone;
+    Error                  error     = kErrorNone;
+    FrameData              frameData = aFrameData;
     Lowpan::FragmentHeader fragmentHeader;
-    uint16_t               fragmentHeaderLength;
-    int                    headerLength;
     bool                   nextHeaderCompressed;
 
-    if (fragmentHeader.ParseFrom(aFrame, aFrameLength, fragmentHeaderLength) == kErrorNone)
+    if (fragmentHeader.ParseFrom(frameData) == kErrorNone)
     {
         // Only the first fragment header is followed by a LOWPAN_IPHC header
         VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = kErrorNotFound);
-        aFrame += fragmentHeaderLength;
-        aFrameLength -= fragmentHeaderLength;
     }
 
-    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = kErrorNotFound);
-    headerLength = aInstance.Get<Lowpan::Lowpan>().DecompressBaseHeader(mIp6Header, nextHeaderCompressed, aMacSource,
-                                                                        aMacDest, aFrame, aFrameLength);
+    VerifyOrExit(Lowpan::Lowpan::IsLowpanHc(frameData), error = kErrorNotFound);
 
-    VerifyOrExit(headerLength > 0, error = kErrorParse);
-
-    aFrame += headerLength;
-    aFrameLength -= headerLength;
+    SuccessOrExit(error = aInstance.Get<Lowpan::Lowpan>().DecompressBaseHeader(mIp6Header, nextHeaderCompressed,
+                                                                               aMacSource, aMacDest, frameData));
 
     switch (mIp6Header.GetNextHeader())
     {
     case kProtoUdp:
         if (nextHeaderCompressed)
         {
-            headerLength = aInstance.Get<Lowpan::Lowpan>().DecompressUdpHeader(mHeader.mUdp, aFrame, aFrameLength);
-            VerifyOrExit(headerLength >= 0, error = kErrorParse);
+            SuccessOrExit(error = aInstance.Get<Lowpan::Lowpan>().DecompressUdpHeader(mHeader.mUdp, frameData));
         }
         else
         {
-            VerifyOrExit(aFrameLength >= sizeof(Udp::Header), error = kErrorParse);
-            mHeader.mUdp = *reinterpret_cast<const Udp::Header *>(aFrame);
+            SuccessOrExit(error = frameData.Read(mHeader.mUdp));
         }
         break;
 
     case kProtoTcp:
-        VerifyOrExit(aFrameLength >= sizeof(Tcp::Header), error = kErrorParse);
-        mHeader.mTcp = *reinterpret_cast<const Tcp::Header *>(aFrame);
+        SuccessOrExit(error = frameData.Read(mHeader.mTcp));
         break;
 
     case kProtoIcmp6:
-        VerifyOrExit(aFrameLength >= sizeof(Icmp::Header), error = kErrorParse);
-        mHeader.mIcmp = *reinterpret_cast<const Icmp::Header *>(aFrame);
+        SuccessOrExit(error = frameData.Read(mHeader.mIcmp));
         break;
 
     default:
