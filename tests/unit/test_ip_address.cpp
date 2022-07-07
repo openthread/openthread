@@ -497,20 +497,22 @@ void TestIp4Cidr(void)
 
     for (const TestCase &testCase : kTestCases)
     {
-        ot::Ip4::Address network;
+        ot::Ip4::Address             network;
+        ot::Ip4::Cidr                cidr;
+        ot::Ip4::Address             generated;
+        ot::Ip4::Address::InfoString hostAddress;
+
         network.FromString(testCase.mNetwork);
-        ot::Ip4::Cidr cidr;
         cidr.mAddress = network;
         cidr.mLength  = testCase.mLength;
 
-        ot::Ip4::Address generated;
         generated.SynthesizeFromCidrAndHost(cidr, testCase.mHost);
 
-        ot::Ip4::Address::InfoString hostAddress = generated.ToString();
         printf("CIDR: %-18s HostID: %-8x Host: %-14s Expected: %s\n", cidr.ToString().AsCString(), testCase.mHost,
-               hostAddress.AsCString(), testCase.mOutcome);
+               generated.ToString().AsCString(), testCase.mOutcome);
 
-        VerifyOrQuit(strcmp(hostAddress.AsCString(), testCase.mOutcome) == 0, "Ip4::Cidr::Host() failed");
+        VerifyOrQuit(strcmp(generated.ToString().AsCString(), testCase.mOutcome) == 0,
+                     "Ip4::Address::SynthesizeFromCidrAndHost() failed");
     }
 }
 

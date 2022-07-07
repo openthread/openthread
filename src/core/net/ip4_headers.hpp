@@ -138,7 +138,7 @@ public:
      * @retval The octet for DSCP and ECN.
      *
      */
-    uint8_t GetDscpEcn() const { return mDscpEcn; }
+    uint8_t GetDscpEcn(void) const { return mDscpEcn; }
 
     /**
      * This method gets the 6-bit Differentiated Services Code Point (DSCP) from Traffic Class field.
@@ -412,7 +412,7 @@ public:
          * @returns The type field of the ICMP message.
          *
          */
-        Type GetType(void) const { return static_cast<Type>(mType); }
+        uint8_t GetType(void) const { return mType; }
 
         /**
          * This method sets the type of the ICMP message.
@@ -420,7 +420,7 @@ public:
          * @param[in] aType The type of the ICMP message.
          *
          */
-        void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
+        void SetType(uint8_t aType) { mType = aType; }
 
         /**
          * This method returns the code of the ICMP message.
@@ -428,7 +428,7 @@ public:
          * @returns The code field of the ICMP message.
          *
          */
-        Code GetCode(void) const { return static_cast<Code>(mCode); }
+        uint8_t GetCode(void) const { return mCode; }
 
         /**
          * This method sets the code of the ICMP message.
@@ -436,7 +436,7 @@ public:
          * @param[in] aCode The code of the ICMP message.
          *
          */
-        void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
+        void SetCode(uint8_t aCode) { mCode = aCode; }
 
         /**
          * This method sets the checksum field in the ICMP message.

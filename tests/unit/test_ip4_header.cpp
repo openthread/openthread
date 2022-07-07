@@ -53,6 +53,11 @@ void TestIp4Header(void)
     static constexpr uint16_t kTotalLength = 84;
     static constexpr uint8_t  kTtl         = 64;
 
+    const uint8_t kDscps[]            = {0x0, 0x1, 0x3, 0xf, 0x30, 0x2f, 0x3f};
+    const Ecn     kEcns[]             = {Ecn::kEcnNotCapable, Ecn::kEcnCapable0, Ecn::kEcnCapable1, Ecn::kEcnMarked};
+    const uint8_t kExampleIp4Header[] = "\x45\x00\x00\x54\x23\xed\x00\x00\x40\x01\x41\xd1\x0a\x00\x00\xeb"
+                                        "\x0a\x00\x00\x01";
+
     Header         header;
     Address        source;
     Address        destination;
@@ -95,8 +100,6 @@ void TestIp4Header(void)
     VerifyOrQuit(memcmp(&headerBytes[Header::kDestinationAddressOffset], &destination, sizeof(destination)) == 0,
                  "Destination address is incorrect");
 
-    const uint8_t kDscps[] = {0x0, 0x1, 0x3, 0xf, 0x30, 0x2f, 0x3f};
-    const Ecn     kEcns[]  = {Ecn::kEcnNotCapable, Ecn::kEcnCapable0, Ecn::kEcnCapable1, Ecn::kEcnMarked};
     for (uint8_t dscp : kDscps)
     {
         for (Ecn ecn : kEcns)
@@ -108,8 +111,6 @@ void TestIp4Header(void)
         }
     }
 
-    const uint8_t kExampleIp4Header[] = "\x45\x00\x00\x54\x23\xed\x00\x00\x40\x01\x41\xd1\x0a\x00\x00\xeb"
-                                        "\x0a\x00\x00\x01";
     memcpy(&header, kExampleIp4Header, sizeof(header));
     VerifyOrQuit(header.IsValid());
     VerifyOrQuit(memcmp(&headerBytes[Header::kSourceAddressOffset], &source, sizeof(source)) == 0,
