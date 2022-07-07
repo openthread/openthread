@@ -71,7 +71,7 @@ class TestAnycast(thread_cert.TestCase):
 
     def test(self):
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
         self.nodes[ROUTER1].udp_start('::', TEST_UDP_PORT)
 

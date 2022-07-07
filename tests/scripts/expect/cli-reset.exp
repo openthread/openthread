@@ -38,7 +38,7 @@ expect_line "Done"
 send "thread start\n"
 expect_line "Done"
 
-sleep 3
+sleep 10
 
 send "reset\n"
 sleep 3

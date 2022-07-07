@@ -111,7 +111,7 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
 
     def test(self):
         self.nodes[DUT_LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
         for i in range(ROUTER1, MED2 + 1):

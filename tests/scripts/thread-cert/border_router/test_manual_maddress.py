@@ -76,7 +76,7 @@ class ManualMulticastAddressConfig(thread_cert.TestCase):
         host = self.nodes[HOST]
 
         br1.start()
-        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 

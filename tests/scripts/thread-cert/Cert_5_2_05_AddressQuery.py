@@ -177,7 +177,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
     def test(self):
         # 1. LEADER: DHCPv6 Server for prefix 2001::/64.
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.nodes[LEADER].add_prefix('2001::/64', 'pdros')
         self.nodes[LEADER].register_netdata()

@@ -75,7 +75,7 @@ class SrpServerRebootPort(thread_cert.TestCase):
 
         client.srp_server_set_enabled(False)
         client.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'leader')
 
         server.srp_server_set_enabled(True)

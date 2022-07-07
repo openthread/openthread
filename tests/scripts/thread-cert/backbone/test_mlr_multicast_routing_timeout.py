@@ -81,7 +81,7 @@ class TestMlrTimeout(thread_cert.TestCase):
 
         # Bring up PBBR
         self.nodes[PBBR].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', self.nodes[PBBR].get_state())
         self.nodes[PBBR].enable_backbone_router()
         self.nodes[PBBR].set_backbone_router(reg_delay=REG_DELAY, mlr_timeout=MLR_TIMEOUT)

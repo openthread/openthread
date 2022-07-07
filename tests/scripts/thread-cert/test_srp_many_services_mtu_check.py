@@ -75,7 +75,7 @@ class SrpManyServicesMtuCheck(thread_cert.TestCase):
         # Start the server & client devices.
 
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'leader')
 
         client.start()

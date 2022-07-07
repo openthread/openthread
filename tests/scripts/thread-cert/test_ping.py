@@ -76,7 +76,7 @@ class TestPing(thread_cert.TestCase):
         router3 = self.nodes[ROUTER_3]
 
         router1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', router1.get_state())
 
         router2.start()

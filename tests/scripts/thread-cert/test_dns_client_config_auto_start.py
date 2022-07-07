@@ -73,7 +73,7 @@ class DnsClientConfigAutoStart(thread_cert.TestCase):
         # Form network.
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         router.start()

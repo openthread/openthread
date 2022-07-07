@@ -76,7 +76,7 @@ class ZeroLengthExternalRoute(thread_cert.TestCase):
         # Start the nodes and form the network.
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         router1.start()

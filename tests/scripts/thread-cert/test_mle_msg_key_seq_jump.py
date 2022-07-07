@@ -94,7 +94,7 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
             node.set_key_sequence_counter(0)
 
         leader.start()
-        self.simulator.go(15)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         child.start()
@@ -104,7 +104,7 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
         self.assertEqual(reed.get_state(), 'child')
 
         router.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(router.get_state(), 'router')
 
         #-------------------------------------------------------------------

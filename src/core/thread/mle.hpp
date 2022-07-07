@@ -812,13 +812,12 @@ protected:
      */
     enum AttachState : uint8_t
     {
-        kAttachStateIdle,                ///< Not currently searching for a parent.
-        kAttachStateProcessAnnounce,     ///< Waiting to process a received Announce (to switch channel/pan-id).
-        kAttachStateStart,               ///< Starting to look for a parent.
-        kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
-        kAttachStateParentRequestReed,   ///< Searching for Routers or REEDs to attach to.
-        kAttachStateAnnounce,            ///< Send Announce messages
-        kAttachStateChildIdRequest,      ///< Sending a Child ID Request message.
+        kAttachStateIdle,            ///< Not currently searching for a parent.
+        kAttachStateProcessAnnounce, ///< Waiting to process a received Announce (to switch channel/pan-id).
+        kAttachStateStart,           ///< Starting to look for a parent.
+        kAttachStateParentRequest,   ///< Send Parent Request (current number tracked by `mParentRequestCounter`).
+        kAttachStateAnnounce,        ///< Send Announce messages
+        kAttachStateChildIdRequest,  ///< Sending a Child ID Request message.
     };
 
     /**
@@ -1698,7 +1697,8 @@ protected:
     Router        mParentCandidate;          ///< Parent candidate information.
     NeighborTable mNeighborTable;            ///< The neighbor table.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
-    AttachState   mAttachState;              ///< The parent request state.
+    AttachState   mAttachState;              ///< The attach state.
+    uint8_t       mParentRequestCounter;     ///< Number of parent requests while in `kAttachStateParentRequest`.
     ReattachState mReattachState;            ///< Reattach state
     uint16_t      mAttachCounter;            ///< Attach attempt counter.
     uint16_t      mAnnounceDelay;            ///< Delay in between sending Announce messages during attach.
@@ -1730,6 +1730,20 @@ private:
     static constexpr uint32_t kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL;
     static constexpr uint32_t kAttachBackoffDelayToResetCounter =
         OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL;
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3
+    // First attach cycle includes two Parent Requests to routers, followed by four to routers and REEDs.
+    static constexpr uint8_t kFirstAttachCycleTotalParentRequests       = 6;
+    static constexpr uint8_t kFirstAttachCycleNumParentRequestToRouters = 2;
+#else
+    // First attach cycle in Thread 1.1/1.2 includes a Parent Requests to routers, followed by one to routers and REEDs.
+    static constexpr uint8_t kFirstAttachCycleTotalParentRequests       = 2;
+    static constexpr uint8_t kFirstAttachCycleNumParentRequestToRouters = 1;
+#endif
+
+    // Next attach cycles includes one Parent Request to routers, followed by one to routers and REEDs.
+    static constexpr uint8_t kNextAttachCycleTotalParentRequests       = 2;
+    static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
 
     enum StartMode : uint8_t // Used in `Start()`.
     {
@@ -1887,6 +1901,7 @@ private:
 #endif
     uint32_t Reattach(void);
     bool     HasAcceptableParentCandidate(void) const;
+    Error    DetermineParentRequestType(ParentRequestType &aType) const;
 
     bool IsBetterParent(uint16_t               aRloc16,
                         LinkQuality            aLinkQuality,

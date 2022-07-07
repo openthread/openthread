@@ -77,7 +77,7 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
@@ -90,12 +90,12 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
         self.simulator.go(5)
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
         self.nodes[LEADER].add_allowlist(self.nodes[ROUTER].get_addr64())
         self.nodes[ROUTER].add_allowlist(self.nodes[LEADER].get_addr64())
-        self.simulator.go(20)
+        self.simulator.go(35)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')

@@ -128,7 +128,7 @@ class TestMlr(thread_cert.TestCase):
 
         # Bring up Leader
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', self.nodes[LEADER].get_state())
 
         # Bring up Router
