@@ -557,8 +557,7 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         {
             SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(omrPrefix));
             VerifyOrExit(omrPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
-            error =
-                otBorderRoutingSetOmrPrefix(GetInstancePtr(), &omrPrefix);
+            error = otBorderRoutingSetOmrPrefix(GetInstancePtr(), &omrPrefix);
         }
     }
     /**
