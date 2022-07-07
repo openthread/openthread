@@ -451,6 +451,21 @@ private:
 
     typedef Array<OmrPrefix, kMaxOmrPrefixNum> OmrPrefixArray;
 
+    class LocalOmrPrefix : InstanceLocator
+    {
+    public:
+        explicit LocalOmrPrefix(Instance &aInstance);
+        void               GenerateFrom(const Ip6::Prefix &aBrUlaPrefix);
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        Error              AddToNetData(void);
+        void               RemoveFromNetData(void);
+        bool               IsAddedInNetData(void) const { return mIsAddedInNetData; }
+
+    private:
+        Ip6::Prefix mPrefix;
+        bool        mIsAddedInNetData;
+    };
+
     void  EvaluateState(void);
     void  Start(void);
     void  Stop(void);
@@ -458,7 +473,6 @@ private:
     bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
-    void  GenerateOmrPrefix(void);
     void  GenerateOnLinkPrefix(void);
 
     void EvaluateOnLinkPrefix(void);
@@ -472,9 +486,6 @@ private:
     void  StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli);
     void  StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli);
     void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
-    Error PublishLocalOmrPrefix(void);
-    void  UnpublishLocalOmrPrefix(void);
-    bool  IsOmrPrefixAddedToLocalNetworkData(void) const;
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
@@ -521,8 +532,7 @@ private:
     // randomly generated if none is found in persistent storage.
     Ip6::Prefix mBrUlaPrefix;
 
-    // The OMR prefix allocated from the /48 BR ULA prefix.
-    Ip6::Prefix mLocalOmrPrefix;
+    LocalOmrPrefix mLocalOmrPrefix;
 
     // The advertised OMR prefixes. For a stable Thread network without
     // manually configured OMR prefixes, there should be a single OMR
