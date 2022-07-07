@@ -162,6 +162,8 @@ public:
     /**
      * This method returns the RCP interface metrics.
      *
+     * @returns The RCP interface metrics.
+     *
      */
     const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
 
