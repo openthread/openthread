@@ -884,7 +884,7 @@ public:
      * @returns The radio Spinel metrics.
      *
      */
-    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) { return &mRadioSpinelMetrics; }
+    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return &mRadioSpinelMetrics; }
 
 private:
     enum
