@@ -660,3 +660,8 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
     OT_UNUSED_VARIABLE(aDuration);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
+
+const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void)
+{
+    return sRadioSpinel.GetRadioSpinelMetrics();
+}
