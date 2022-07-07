@@ -632,19 +632,6 @@ exit:
     return error;
 }
 
-Error MeshForwarder::GetIp6Header(const uint8_t *     aFrame,
-                                  uint16_t            aFrameLength,
-                                  const Mac::Address &aMacSource,
-                                  const Mac::Address &aMacDest,
-                                  Ip6::Header &       aIp6Header)
-{
-    uint8_t headerLength;
-    bool    nextHeaderCompressed;
-
-    return DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, aIp6Header, headerLength,
-                               nextHeaderCompressed);
-}
-
 void MeshForwarder::SendIcmpErrorIfDstUnreach(const Message &     aMessage,
                                               const Mac::Address &aMacSource,
                                               const Mac::Address &aMacDest)
@@ -826,23 +813,25 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
                                  const Mac::Address &aMeshSource,
                                  const Mac::Address &aMeshDest)
 {
-    Ip6::Header ip6Header;
-    Neighbor *  neighbor;
+    Ip6::Headers ip6Headers;
+    Neighbor *   neighbor;
 
     VerifyOrExit(!aMeshDest.IsBroadcast() && aMeshSource.IsShort());
-    SuccessOrExit(GetIp6Header(aFrame, aFrameLength, aMeshSource, aMeshDest, ip6Header));
 
-    if (!ip6Header.GetSource().GetIid().IsLocator() &&
-        Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
+    SuccessOrExit(ip6Headers.DecompressFrom(aFrame, aFrameLength, aMeshSource, aMeshDest, GetInstance()));
+
+    if (!ip6Headers.GetSourceAddress().GetIid().IsLocator() &&
+        Get<NetworkData::Leader>().IsOnMesh(ip6Headers.GetSourceAddress()))
     {
         // FTDs MAY add/update EID-to-RLOC Map Cache entries by
-        // inspecting packets being received.
+        // inspecting packets being received only for on mesh
+        // addresses.
 
-        Get<AddressResolver>().UpdateSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort(),
+        Get<AddressResolver>().UpdateSnoopedCacheEntry(ip6Headers.GetSourceAddress(), aMeshSource.GetShort(),
                                                        aMeshDest.GetShort());
     }
 
-    neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetSource());
+    neighbor = Get<NeighborTable>().FindNeighbor(ip6Headers.GetSourceAddress());
     VerifyOrExit(neighbor != nullptr && !neighbor->IsFullThreadDevice());
 
     if (!Mle::Mle::RouterIdMatch(aMeshSource.GetShort(), Get<Mac::Mac>().GetShortAddress()))
@@ -1067,97 +1056,20 @@ exit:
     return error;
 }
 
-Error MeshForwarder::DecompressIp6UdpTcpHeader(const Message &     aMessage,
-                                               uint16_t            aOffset,
-                                               const Mac::Address &aMeshSource,
-                                               const Mac::Address &aMeshDest,
-                                               Ip6::Header &       aIp6Header,
-                                               uint16_t &          aChecksum,
-                                               uint16_t &          aSourcePort,
-                                               uint16_t &          aDestPort)
-{
-    Error    error = kErrorParse;
-    int      headerLength;
-    bool     nextHeaderCompressed;
-    uint8_t  frameBuffer[sizeof(Ip6::Header)];
-    uint16_t frameLength;
-    union
-    {
-        Ip6::Udp::Header udp;
-        Ip6::Tcp::Header tcp;
-    } header;
-
-    aChecksum   = 0;
-    aSourcePort = 0;
-    aDestPort   = 0;
-
-    // Read and decompress the IPv6 header
-
-    frameLength = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(frameBuffer));
-
-    headerLength = Get<Lowpan::Lowpan>().DecompressBaseHeader(aIp6Header, nextHeaderCompressed, aMeshSource, aMeshDest,
-                                                              frameBuffer, frameLength);
-    VerifyOrExit(headerLength >= 0);
-
-    aOffset += headerLength;
-
-    // Read and decompress UDP or TCP header
-
-    switch (aIp6Header.GetNextHeader())
-    {
-    case Ip6::kProtoUdp:
-        if (nextHeaderCompressed)
-        {
-            frameLength  = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(Ip6::Udp::Header));
-            headerLength = Get<Lowpan::Lowpan>().DecompressUdpHeader(header.udp, frameBuffer, frameLength);
-            VerifyOrExit(headerLength >= 0);
-        }
-        else
-        {
-            SuccessOrExit(aMessage.Read(aOffset, header.udp));
-        }
-
-        aChecksum   = header.udp.GetChecksum();
-        aSourcePort = header.udp.GetSourcePort();
-        aDestPort   = header.udp.GetDestinationPort();
-        break;
-
-    case Ip6::kProtoTcp:
-        SuccessOrExit(aMessage.Read(aOffset, header.tcp));
-        aChecksum   = header.tcp.GetChecksum();
-        aSourcePort = header.tcp.GetSourcePort();
-        aDestPort   = header.tcp.GetDestinationPort();
-        break;
-
-    default:
-        break;
-    }
-
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
 void MeshForwarder::LogMeshIpHeader(const Message &     aMessage,
                                     uint16_t            aOffset,
                                     const Mac::Address &aMeshSource,
                                     const Mac::Address &aMeshDest,
                                     LogLevel            aLogLevel)
 {
-    uint16_t    checksum;
-    uint16_t    sourcePort;
-    uint16_t    destPort;
-    Ip6::Header ip6Header;
+    Ip6::Headers headers;
 
-    SuccessOrExit(DecompressIp6UdpTcpHeader(aMessage, aOffset, aMeshSource, aMeshDest, ip6Header, checksum, sourcePort,
-                                            destPort));
+    SuccessOrExit(headers.DecompressFrom(aMessage, aOffset, aMeshSource, aMeshDest));
 
-    LogAt(aLogLevel, "    IPv6 %s msg, chksum:%04x, ecn:%s, prio:%s",
-          Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()), checksum, Ip6::Ip6::EcnToString(ip6Header.GetEcn()),
-          MessagePriorityToString(aMessage));
+    LogAt(aLogLevel, "    IPv6 %s msg, chksum:%04x, ecn:%s, prio:%s", Ip6::Ip6::IpProtoToString(headers.GetIpProto()),
+          headers.GetChecksum(), Ip6::Ip6::EcnToString(headers.GetEcn()), MessagePriorityToString(aMessage));
 
-    LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort, aLogLevel);
+    LogIp6SourceDestAddresses(headers, aLogLevel);
 
 exit:
     return;

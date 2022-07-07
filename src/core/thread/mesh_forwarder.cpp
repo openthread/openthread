@@ -469,39 +469,6 @@ void MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::
     }
 }
 
-Error MeshForwarder::DecompressIp6Header(const uint8_t *     aFrame,
-                                         uint16_t            aFrameLength,
-                                         const Mac::Address &aMacSource,
-                                         const Mac::Address &aMacDest,
-                                         Ip6::Header &       aIp6Header,
-                                         uint8_t &           aHeaderLength,
-                                         bool &              aNextHeaderCompressed)
-{
-    Error                  error = kErrorNone;
-    const uint8_t *        start = aFrame;
-    Lowpan::FragmentHeader fragmentHeader;
-    uint16_t               fragmentHeaderLength;
-    int                    headerLength;
-
-    if (fragmentHeader.ParseFrom(aFrame, aFrameLength, fragmentHeaderLength) == kErrorNone)
-    {
-        // Only the first fragment header is followed by a LOWPAN_IPHC header
-        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = kErrorNotFound);
-        aFrame += fragmentHeaderLength;
-        aFrameLength -= fragmentHeaderLength;
-    }
-
-    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame), error = kErrorNotFound);
-    headerLength = Get<Lowpan::Lowpan>().DecompressBaseHeader(aIp6Header, aNextHeaderCompressed, aMacSource, aMacDest,
-                                                              aFrame, aFrameLength);
-
-    VerifyOrExit(headerLength > 0, error = kErrorParse);
-    aHeaderLength = static_cast<uint8_t>(aFrame - start) + static_cast<uint8_t>(headerLength);
-
-exit:
-    return error;
-}
-
 Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame         = nullptr;
@@ -1525,59 +1492,27 @@ Error MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
                                       const Mac::Address &aMacDest,
                                       Message::Priority & aPriority)
 {
-    Error       error = kErrorNone;
-    Ip6::Header ip6Header;
-    uint16_t    dstPort;
-    uint8_t     headerLength;
-    bool        nextHeaderCompressed;
+    Error        error = kErrorNone;
+    Ip6::Headers headers;
 
-    SuccessOrExit(error = DecompressIp6Header(aFrame, aFrameLength, aMacSource, aMacDest, ip6Header, headerLength,
-                                              nextHeaderCompressed));
-    aPriority = Ip6::Ip6::DscpToPriority(ip6Header.GetDscp());
+    SuccessOrExit(error = headers.DecompressFrom(aFrame, aFrameLength, aMacSource, aMacDest, GetInstance()));
 
-    aFrame += headerLength;
-    aFrameLength -= headerLength;
+    aPriority = Ip6::Ip6::DscpToPriority(headers.GetIp6Header().GetDscp());
 
-    switch (ip6Header.GetNextHeader())
+    // Only ICMPv6 error messages are prioritized.
+    if (headers.IsIcmp6() && headers.GetIcmpHeader().IsError())
     {
-    case Ip6::kProtoIcmp6:
+        aPriority = Message::kPriorityNet;
+    }
 
-        VerifyOrExit(aFrameLength >= sizeof(Ip6::Icmp::Header), error = kErrorParse);
+    if (headers.IsUdp())
+    {
+        uint16_t destPort = headers.GetUdpHeader().GetDestinationPort();
 
-        // Only ICMPv6 error messages are prioritized.
-        if (reinterpret_cast<const Ip6::Icmp::Header *>(aFrame)->IsError())
+        if ((destPort == Mle::kUdpPort) || (destPort == Tmf::kUdpPort))
         {
             aPriority = Message::kPriorityNet;
         }
-
-        break;
-
-    case Ip6::kProtoUdp:
-
-        if (nextHeaderCompressed)
-        {
-            Ip6::Udp::Header udpHeader;
-
-            VerifyOrExit(Get<Lowpan::Lowpan>().DecompressUdpHeader(udpHeader, aFrame, aFrameLength) >= 0,
-                         error = kErrorParse);
-
-            dstPort = udpHeader.GetDestinationPort();
-        }
-        else
-        {
-            VerifyOrExit(aFrameLength >= sizeof(Ip6::Udp::Header), error = kErrorParse);
-            dstPort = reinterpret_cast<const Ip6::Udp::Header *>(aFrame)->GetDestinationPort();
-        }
-
-        if ((dstPort == Mle::kUdpPort) || (dstPort == Tmf::kUdpPort))
-        {
-            aPriority = Message::kPriorityNet;
-        }
-
-        break;
-
-    default:
-        break;
     }
 
 exit:
@@ -1688,52 +1623,6 @@ uint16_t MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePres
 
 // LCOV_EXCL_START
 
-Error MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
-                                          Ip6::Header &  aIp6Header,
-                                          uint16_t &     aChecksum,
-                                          uint16_t &     aSourcePort,
-                                          uint16_t &     aDestPort)
-{
-    Error error = kErrorParse;
-    union
-    {
-        Ip6::Udp::Header udp;
-        Ip6::Tcp::Header tcp;
-    } header;
-
-    aChecksum   = 0;
-    aSourcePort = 0;
-    aDestPort   = 0;
-
-    SuccessOrExit(aMessage.Read(0, aIp6Header));
-    VerifyOrExit(aIp6Header.IsVersion6());
-
-    switch (aIp6Header.GetNextHeader())
-    {
-    case Ip6::kProtoUdp:
-        SuccessOrExit(aMessage.Read(sizeof(Ip6::Header), header.udp));
-        aChecksum   = header.udp.GetChecksum();
-        aSourcePort = header.udp.GetSourcePort();
-        aDestPort   = header.udp.GetDestinationPort();
-        break;
-
-    case Ip6::kProtoTcp:
-        SuccessOrExit(aMessage.Read(sizeof(Ip6::Header), header.tcp));
-        aChecksum   = header.tcp.GetChecksum();
-        aSourcePort = header.tcp.GetSourcePort();
-        aDestPort   = header.tcp.GetDestinationPort();
-        break;
-
-    default:
-        break;
-    }
-
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
@@ -1770,31 +1659,31 @@ const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
 }
 
 #if OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES
-void MeshForwarder::LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
-                                              uint16_t     aSourcePort,
-                                              uint16_t     aDestPort,
-                                              LogLevel     aLogLevel)
+void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel)
 {
-    if (aSourcePort != 0)
+    uint16_t srcPort = aHeaders.GetSourcePort();
+    uint16_t dstPort = aHeaders.GetDestinationPort();
+
+    if (srcPort != 0)
     {
-        LogAt(aLogLevel, "    src:[%s]:%d", aIp6Header.GetSource().ToString().AsCString(), aSourcePort);
+        LogAt(aLogLevel, "    src:[%s]:%d", aHeaders.GetSourceAddress().ToString().AsCString(), srcPort);
     }
     else
     {
-        LogAt(aLogLevel, "    src:[%s]", aIp6Header.GetSource().ToString().AsCString());
+        LogAt(aLogLevel, "    src:[%s]", aHeaders.GetSourceAddress().ToString().AsCString());
     }
 
-    if (aDestPort != 0)
+    if (dstPort != 0)
     {
-        LogAt(aLogLevel, "    dst:[%s]:%d", aIp6Header.GetDestination().ToString().AsCString(), aDestPort);
+        LogAt(aLogLevel, "    dst:[%s]:%d", aHeaders.GetDestinationAddress().ToString().AsCString(), dstPort);
     }
     else
     {
-        LogAt(aLogLevel, "    dst:[%s]", aIp6Header.GetDestination().ToString().AsCString());
+        LogAt(aLogLevel, "    dst:[%s]", aHeaders.GetDestinationAddress().ToString().AsCString());
     }
 }
 #else
-void MeshForwarder::LogIp6SourceDestAddresses(Ip6::Header &, uint16_t, uint16_t, LogLevel)
+void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &, LogLevel)
 {
 }
 #endif
@@ -1805,15 +1694,12 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
                                   Error               aError,
                                   LogLevel            aLogLevel)
 {
-    Ip6::Header ip6Header;
-    uint16_t    checksum;
-    uint16_t    sourcePort;
-    uint16_t    destPort;
-    bool        shouldLogRss;
-    bool        shouldLogRadio = false;
-    const char *radioString    = "";
+    Ip6::Headers headers;
+    bool         shouldLogRss;
+    bool         shouldLogRadio = false;
+    const char * radioString    = "";
 
-    SuccessOrExit(ParseIp6UdpTcpHeader(aMessage, ip6Header, checksum, sourcePort, destPort));
+    SuccessOrExit(headers.ParseFrom(aMessage));
 
     shouldLogRss = (aAction == kMessageReceive) || (aAction == kMessageReassemblyDrop);
 
@@ -1823,8 +1709,8 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
 #endif
 
     LogAt(aLogLevel, "%s IPv6 %s msg, len:%d, chksum:%04x, ecn:%s%s%s, sec:%s%s%s, prio:%s%s%s%s%s",
-          MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(ip6Header.GetNextHeader()),
-          aMessage.GetLength(), checksum, Ip6::Ip6::EcnToString(ip6Header.GetEcn()),
+          MessageActionToString(aAction, aError), Ip6::Ip6::IpProtoToString(headers.GetIpProto()), aMessage.GetLength(),
+          headers.GetChecksum(), Ip6::Ip6::EcnToString(headers.GetEcn()),
           (aMacAddress == nullptr) ? "" : ((aAction == kMessageReceive) ? ", from:" : ", to:"),
           (aMacAddress == nullptr) ? "" : aMacAddress->ToString().AsCString(),
           ToYesNo(aMessage.IsLinkSecurityEnabled()),
@@ -1835,7 +1721,7 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
 
     if (aAction != kMessagePrepareIndirect)
     {
-        LogIp6SourceDestAddresses(ip6Header, sourcePort, destPort, aLogLevel);
+        LogIp6SourceDestAddresses(headers, aLogLevel);
     }
 
 exit:
