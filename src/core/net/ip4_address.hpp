@@ -155,7 +155,7 @@ public:
     typedef String<Address::kAddressStringSize + kCidrSuffixSize> InfoString;
 
     /**
-     * This method converts the IPv4 cidr to a string.
+     * This method converts the IPv4 CIDR to a string.
      *
      * The string format uses quad-dotted notation of four bytes in the address with the length of prefix (e.g.,
      * "127.0.0.1/32").

@@ -76,11 +76,7 @@ uint16_t CalculateChecksum(const Ip6::Address &aSource,
                            const Message &     aMessage)
 {
     // This method calculates the checksum over an IPv6 message.
-
-    enum : uint16_t
-    {
-        kMaxPayload = 1024,
-    };
+    constexpr uint16_t kMaxPayload = 1024;
 
     OT_TOOL_PACKED_BEGIN
     struct PseudoHeader
@@ -118,12 +114,8 @@ uint16_t CalculateChecksum(const Ip4::Address &aSource,
                            uint8_t             aIpProto,
                            const Message &     aMessage)
 {
-    // This method calculates the checksum over an IPv6 message.
-
-    enum : uint16_t
-    {
-        kMaxPayload = 1024,
-    };
+    // This method calculates the checksum over an IPv4 message.
+    constexpr uint16_t kMaxPayload = 1024;
 
     OT_TOOL_PACKED_BEGIN
     struct PseudoHeader
@@ -177,11 +169,8 @@ void CorruptMessage(Message &aMessage)
 
 void TestUdpMessageChecksum(void)
 {
-    enum : uint16_t
-    {
-        kMinSize = sizeof(Ip6::Udp::Header),
-        kMaxSize = kBufferSize * 3 + 24,
-    };
+    constexpr uint16_t kMinSize = sizeof(Ip6::Udp::Header);
+    constexpr uint16_t kMaxSize = kBufferSize * 3 + 24;
 
     const char *kSourceAddress = "fd00:1122:3344:5566:7788:99aa:bbcc:ddee";
     const char *kDestAddress   = "fd01:2345:6789:abcd:ef01:2345:6789:abcd";
@@ -248,11 +237,8 @@ void TestUdpMessageChecksum(void)
 
 void TestIcmp6MessageChecksum(void)
 {
-    enum : uint16_t
-    {
-        kMinSize = sizeof(Ip6::Icmp::Header),
-        kMaxSize = kBufferSize * 3 + 24,
-    };
+    constexpr uint16_t kMinSize = sizeof(Ip6::Icmp::Header);
+    constexpr uint16_t kMaxSize = kBufferSize * 3 + 24;
 
     const char *kSourceAddress = "fd00:feef:dccd:baab:9889:7667:5444:3223";
     const char *kDestAddress   = "fd01:abab:beef:cafe:1234:5678:9abc:0";
