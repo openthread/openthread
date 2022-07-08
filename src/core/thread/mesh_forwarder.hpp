@@ -471,7 +471,7 @@ private:
     Error RemoveAgedMessages(void);
 #endif
     void  SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
-    void  SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
+    void  SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers);
     Error UpdateIp6Route(Message &aMessage);
     Error UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
     void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;

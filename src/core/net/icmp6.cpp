@@ -89,32 +89,41 @@ exit:
 
 Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage)
 {
+    Error   error;
+    Headers headers;
+
+    SuccessOrExit(error = headers.ParseFrom(aMessage));
+    error = SendError(aType, aCode, aMessageInfo, headers);
+
+exit:
+    return error;
+}
+
+Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Headers &aHeaders)
+{
     Error             error = kErrorNone;
     MessageInfo       messageInfoLocal;
     Message *         message = nullptr;
     Header            icmp6Header;
-    ot::Ip6::Header   ip6Header;
     Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
 
-    SuccessOrExit(error = aMessage.Read(0, ip6Header));
-
-    if (ip6Header.GetNextHeader() == kProtoIcmp6)
+    if (aHeaders.GetIpProto() == kProtoIcmp6)
     {
-        SuccessOrExit(aMessage.Read(sizeof(ip6Header), icmp6Header));
-        VerifyOrExit(!icmp6Header.IsError());
+        VerifyOrExit(!aHeaders.GetIcmpHeader().IsError());
     }
 
     messageInfoLocal = aMessageInfo;
 
     VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(ip6Header)));
 
-    message->Write(sizeof(icmp6Header), ip6Header);
+    // Prepare the ICMPv6 error message. We only include the IPv6 header
+    // of the original message causing the error.
 
     icmp6Header.Clear();
     icmp6Header.SetType(aType);
     icmp6Header.SetCode(aCode);
-    message->Write(0, icmp6Header);
+    SuccessOrExit(error = message->Append(icmp6Header));
+    SuccessOrExit(error = message->Append(aHeaders.GetIp6Header()));
 
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*message, messageInfoLocal, kProtoIcmp6));
 
