@@ -53,6 +53,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
 
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
+    aMessage.SetTimestampToNow();
     mSendQueue.Enqueue(aMessage);
 
     switch (aMessage.GetType())
@@ -199,6 +200,11 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
     Error    error = kErrorNotFound;
     Message *evict = nullptr;
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    error = RemoveAgedMessages();
+    VerifyOrExit(error == kErrorNotFound);
+#endif
+
     // Search for a lower priority message to evict
     for (uint8_t priority = 0; priority < aPriority; priority++)
     {
@@ -245,8 +251,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
     }
 
 exit:
-
-    if (error == kErrorNone)
+    if ((error == kErrorNone) && (evict != nullptr))
     {
         RemoveMessage(*evict);
     }
@@ -881,11 +886,18 @@ void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHead
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    OT_UNUSED_VARIABLE(aFragmentLength);
+#else
+    // We can clear the entry in `mFragmentPriorityList` if it is the
+    // last fragment. But if "delay aware active queue management" is
+    // used we need to keep entry until the message is sent.
     if (aFragmentHeader.GetDatagramOffset() + aFragmentLength >= aFragmentHeader.GetDatagramSize())
     {
         entry->Clear();
     }
     else
+#endif
     {
         entry->ResetLifetime();
     }
@@ -922,6 +934,7 @@ MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList:
     {
         if (entry.IsExpired())
         {
+            entry.Clear();
             entry.mSrcRloc16   = aSrcRloc16;
             entry.mDatagramTag = aTag;
             entry.mPriority    = aPriority;

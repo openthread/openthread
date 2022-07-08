@@ -213,6 +213,7 @@ void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage)
         // the next scan channel. Also pause message tx on `MeshForwarder`
         // while listening to receive Discovery Responses.
         aMessage.SetDirectTransmission();
+        aMessage.SetTimestampToNow();
         Get<MeshForwarder>().PauseMessageTransmissions();
         mTimer.Start(kDefaultScanDuration);
         break;

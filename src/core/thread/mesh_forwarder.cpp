@@ -260,6 +260,184 @@ void MeshForwarder::HandleTxDelayTimer(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+
+Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
+{
+    // This method performs delay-aware active queue management for
+    // direct message transmission. It parses the IPv6 header from
+    // `aMessage` to determine if message is  ECN-capable. This is
+    // then used along with the message's time-in-queue to decide
+    // whether to keep the message as is, change the ECN field to
+    // mark congestion, or drop the message. If the message is to be
+    // dropped, this method clears the direct tx flag on `aMessage`
+    // and removes it from the send queue (if no pending indirect tx)
+    // and returns `kErrorDrop`. This method returns `kErrorNone`
+    // when the message is kept as is or ECN field is updated.
+
+    Error    error         = kErrorNone;
+    uint32_t timeInQueue   = TimerMilli::GetNow() - aMessage.GetTimestamp();
+    bool     shouldMarkEcn = (timeInQueue >= kTimeInQueueMarkEcn);
+    bool     isEcnCapable  = false;
+
+    VerifyOrExit(aMessage.IsDirectTransmission() && (aMessage.GetOffset() == 0));
+
+    if (aMessage.GetType() == Message::kTypeIp6)
+    {
+        Ip6::Header ip6Header;
+
+        IgnoreError(aMessage.Read(0, ip6Header));
+
+        VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(ip6Header.GetSource()));
+
+        isEcnCapable = (ip6Header.GetEcn() != Ip6::kEcnNotCapable);
+
+        if ((shouldMarkEcn && !isEcnCapable) || (timeInQueue >= kTimeInQueueDropMsg))
+        {
+            ExitNow(error = kErrorDrop);
+        }
+
+        if (shouldMarkEcn)
+        {
+            switch (ip6Header.GetEcn())
+            {
+            case Ip6::kEcnCapable0:
+            case Ip6::kEcnCapable1:
+                ip6Header.SetEcn(Ip6::kEcnMarked);
+                aMessage.Write(0, ip6Header);
+                LogMessage(kMessageMarkEcn, aMessage);
+                break;
+
+            case Ip6::kEcnMarked:
+            case Ip6::kEcnNotCapable:
+                break;
+            }
+        }
+    }
+#if OPENTHREAD_FTD
+    else if (aMessage.GetType() == Message::kType6lowpan)
+    {
+        uint16_t               headerLength = 0;
+        uint16_t               offset;
+        bool                   hasFragmentHeader = false;
+        Lowpan::FragmentHeader fragmentHeader;
+        Lowpan::MeshHeader     meshHeader;
+
+        IgnoreError(meshHeader.ParseFrom(aMessage, headerLength));
+
+        offset = headerLength;
+
+        if (fragmentHeader.ParseFrom(aMessage, offset, headerLength) == kErrorNone)
+        {
+            hasFragmentHeader = true;
+            offset += headerLength;
+        }
+
+        if (!hasFragmentHeader || (fragmentHeader.GetDatagramOffset() == 0))
+        {
+            Ip6::Ecn ecn = Get<Lowpan::Lowpan>().DecompressEcn(aMessage, offset);
+
+            isEcnCapable = (ecn != Ip6::kEcnNotCapable);
+
+            if ((shouldMarkEcn && !isEcnCapable) || (timeInQueue >= kTimeInQueueDropMsg))
+            {
+                FragmentPriorityList::Entry *entry;
+
+                entry = mFragmentPriorityList.FindEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
+
+                if (entry != nullptr)
+                {
+                    entry->MarkToDrop();
+                    entry->ResetLifetime();
+                }
+
+                ExitNow(error = kErrorDrop);
+            }
+
+            if (shouldMarkEcn)
+            {
+                switch (ecn)
+                {
+                case Ip6::kEcnCapable0:
+                case Ip6::kEcnCapable1:
+                    Get<Lowpan::Lowpan>().MarkCompressedEcn(aMessage, offset);
+                    LogMessage(kMessageMarkEcn, aMessage);
+                    break;
+
+                case Ip6::kEcnMarked:
+                case Ip6::kEcnNotCapable:
+                    break;
+                }
+            }
+        }
+        else if (hasFragmentHeader)
+        {
+            FragmentPriorityList::Entry *entry;
+
+            entry = mFragmentPriorityList.FindEntry(meshHeader.GetSource(), fragmentHeader.GetDatagramTag());
+            VerifyOrExit(entry != nullptr);
+
+            if (entry->ShouldDrop())
+            {
+                error = kErrorDrop;
+            }
+
+            // We can clear the entry if it is the last fragment and
+            // only if the message is being prepared to be sent out.
+            if (aPreparingToSend && (fragmentHeader.GetDatagramOffset() + aMessage.GetLength() - offset >=
+                                     fragmentHeader.GetDatagramSize()))
+            {
+                entry->Clear();
+            }
+        }
+    }
+#else
+    OT_UNUSED_VARIABLE(aPreparingToSend);
+#endif // OPENTHREAD_FTD
+
+exit:
+    if (error == kErrorDrop)
+    {
+        LogMessage(kMessageQueueMgmtDrop, aMessage);
+        aMessage.ClearDirectTransmission();
+        RemoveMessageIfNoPendingTx(aMessage);
+    }
+
+    return error;
+}
+
+Error MeshForwarder::RemoveAgedMessages(void)
+{
+    // This method goes through all messages in the send queue and
+    // removes all aged messages determined based on the delay-aware
+    // active queue management rules. It may also mark ECN on some
+    // messages. It returns `kErrorNone` if at least one message was
+    // removed, or `kErrorNotFound` if none was removed.
+
+    Error    error = kErrorNotFound;
+    Message *nextMessage;
+
+    for (Message *message = mSendQueue.GetHead(); message != nullptr; message = nextMessage)
+    {
+        nextMessage = message->GetNext();
+
+        // Exclude the current message being sent `mSendMessage`.
+        if ((message == mSendMessage) || !message->IsDirectTransmission())
+        {
+            continue;
+        }
+
+        if (UpdateEcnOrDrop(*message, /* aPreparingToSend */ false) == kErrorDrop)
+        {
+            error = kErrorNone;
+        }
+    }
+
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
     aTasklet.Get<MeshForwarder>().ScheduleTransmissionTask();
@@ -294,12 +472,24 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 
     for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
     {
+        // We set the `nextMessage` here but it can be updated again
+        // after the `switch(message.GetType())` since it may be
+        // evicted during message processing (e.g., from the call to
+        // `UpdateIp6Route()` due to Address Solicit).
+
+        nextMessage = curMessage->GetNext();
+
         if (!curMessage->IsDirectTransmission() || curMessage->IsResolvingAddress())
         {
-            nextMessage = curMessage->GetNext();
             continue;
         }
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+        if (UpdateEcnOrDrop(*curMessage) == kErrorDrop)
+        {
+            continue;
+        }
+#endif
         curMessage->SetDoNotEvict(true);
 
         switch (curMessage->GetType())
@@ -1634,6 +1824,10 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
         "Dropping",                    // (3) kMessageDrop
         "Dropping (reassembly queue)", // (4) kMessageReassemblyDrop
         "Evicting",                    // (5) kMessageEvict
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+        "Marked ECN",            // (6) kMessageMarkEcn
+        "Dropping (queue mgmt)", // (7) kMessageQueueMgmtDrop
+#endif
     };
 
     const char *string = kMessageActionStrings[aAction];
@@ -1644,6 +1838,10 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
     static_assert(kMessageDrop == 3, "kMessageDrop value is incorrect");
     static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
     static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    static_assert(kMessageMarkEcn == 6, "kMessageMarkEcn is incorrect");
+    static_assert(kMessageQueueMgmtDrop == 7, "kMessageQueueMgmtDrop is incorrect");
+#endif
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {
@@ -1741,12 +1939,18 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
     case kMessageReceive:
     case kMessageTransmit:
     case kMessagePrepareIndirect:
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    case kMessageMarkEcn:
+#endif
         logLevel = (aError == kErrorNone) ? kLogLevelInfo : kLogLevelNote;
         break;
 
     case kMessageDrop:
     case kMessageReassemblyDrop:
     case kMessageEvict:
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    case kMessageQueueMgmtDrop:
+#endif
         logLevel = kLogLevelNote;
         break;
     }

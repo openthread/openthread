@@ -43,6 +43,7 @@
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
+#include "net/ip6_types.hpp"
 
 namespace ot {
 
@@ -308,6 +309,29 @@ public:
      */
     int DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength);
 
+    /**
+     * This method decompresses the IPv6 ECN field in a LOWPAN_IPHC header.
+     *
+     * @param[in] aMessage  The message to read the IPHC header from.
+     * @param[in] aOffset   The offset in @p aMessage to start of IPHC header.
+     *
+     * @returns The decompressed ECN field. If the IPHC header is not valid `kEcnNotCapable` is returned.
+     *
+     */
+    Ip6::Ecn DecompressEcn(const Message &aMessage, uint16_t aOffset) const;
+
+    /**
+     * This method updates the compressed ECN field in a LOWPAN_IPHC header to `kEcnMarked`.
+     *
+     * This method MUST be used when the ECN field is not elided in the IPHC header. Note that the ECN is not elided
+     * when it is not zero (`kEcnNotCapable`).
+     *
+     * @param[in,out] aMessage  The message containing the IPHC header and to update.
+     * @param[in]     aOffset   The offset in @p aMessage to start of IPHC header.
+     *
+     */
+    void MarkCompressedEcn(Message &aMessage, uint16_t aOffset);
+
 private:
     static constexpr uint16_t kHcDispatch     = 3 << 13;
     static constexpr uint16_t kHcDispatchMask = 7 << 13;
@@ -335,6 +359,9 @@ private:
     static constexpr uint16_t kHcDstAddrMode2    = 2 << 0;
     static constexpr uint16_t kHcDstAddrMode3    = 3 << 0;
     static constexpr uint16_t kHcDstAddrModeMask = 3 << 0;
+
+    static constexpr uint8_t kEcnOffset = 6;
+    static constexpr uint8_t kEcnMask   = 3 << kEcnOffset;
 
     static constexpr uint8_t kExtHdrDispatch     = 0xe0;
     static constexpr uint8_t kExtHdrDispatchMask = 0xf0;
