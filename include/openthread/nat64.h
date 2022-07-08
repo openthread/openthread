@@ -105,7 +105,7 @@ typedef struct otIp4Cidr
  * @sa otBorderRouterSetReceiveCallback
  * @sa otBorderRouterSetNat64TranslatorEnabled
  */
-otError otBorderRouterSetIpv4CidrForNat64(otInstance *aInstance, otIp4Cidr *aCidr);
+otError otBorderRouterSetIp4CidrForNat64(otInstance *aInstance, otIp4Cidr *aCidr);
 
 /**
  * This method enables/disables the NAT64 translator.
@@ -120,7 +120,7 @@ otError otBorderRouterSetIpv4CidrForNat64(otInstance *aInstance, otIp4Cidr *aCid
  * @retval  OT_ERROR_INVALID_STATE  The NAT64 module is not configured with a valid IPv4 CIDR.
  * @retval  OT_ERROR_NONE           Successfully enabled/disabled the NAT64 translator.
  *
- * @sa otBorderRouterSetIpv4CidrForNat64
+ * @sa otBorderRouterSetIp4CidrForNat64
  */
 otError otBorderRouterSetNat64TranslatorEnabled(otInstance *aInstance, bool aEnabled);
 

@@ -64,7 +64,7 @@ void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallbac
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
 
-otError otBorderRouterSetIpv4CidrForNat64(otInstance *aInstance, otIp4Cidr *aCidr)
+otError otBorderRouterSetIp4CidrForNat64(otInstance *aInstance, otIp4Cidr *aCidr)
 {
     return AsCoreType(aInstance).Get<BorderRouter::Nat64>().SetIp4Cidr(static_cast<ot::Ip4::Cidr &>(*aCidr));
 }

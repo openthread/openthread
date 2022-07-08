@@ -209,7 +209,7 @@ otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage);
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @sa otBorderRouterSend
- * @sa otBorderRouterSetIpv4CidrForNat64
+ * @sa otBorderRouterSetIp4CidrForNat64
  * @sa otIp6IsReceiveFilterEnabled
  * @sa otIp6SetReceiveFilterEnabled
  *

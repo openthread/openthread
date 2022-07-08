@@ -92,6 +92,10 @@ else
 OPENTHREAD_PUBLIC_CFLAGS += -DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART
 endif
 
+ifdef ($(OT_NAT64_CIDR))
+OPENTHREAD_PUBLIC_CFLAGS += -DOPENTHREAD_POSIX_CONFIG_NAT64_CIDR=\\\"$(OT_NAT64_CIDR)\\\"
+endif
+
 # Enable all optional features for CI tests.
 ifeq ($(TARGET_PRODUCT),generic)
 OPENTHREAD_PUBLIC_CFLAGS                                         += \

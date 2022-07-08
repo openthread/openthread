@@ -143,6 +143,7 @@ extern int
 #include <openthread/ip6.h>
 #include <openthread/logging.h>
 #include <openthread/message.h>
+#include <openthread/nat64.h>
 #include <openthread/netdata.h>
 #include <openthread/platform/misc.h>
 
@@ -152,6 +153,7 @@ extern int
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
+otIp4Cidr    gNat64Cidr;
 
 const char *otSysGetThreadNetifName(void)
 {
@@ -273,12 +275,13 @@ enum
 };
 #endif
 
-static constexpr size_t kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
+static constexpr size_t kMaxIp6Size             = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
+static constexpr size_t kIP4IP6HeaderLengthDiff = 20;
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
 static bool sIsSyncingState = false;
 #endif
 
-#define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
+#define OPENTHREAD_POSIX_LOG_TUN_PACKETS 1
 
 #if !defined(__linux__)
 static bool UnicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddress *netAddr)
@@ -665,6 +668,52 @@ exit:
     return error;
 }
 
+static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
+{
+    constexpr unsigned int kBufSize = 128;
+    struct
+    {
+        struct nlmsghdr header;
+        struct rtmsg    msg;
+        char            buf[kBufSize];
+    } req{};
+    unsigned int netifIdx = otSysGetThreadNetifIndex();
+    otError      error    = OT_ERROR_NONE;
+
+    VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
+
+    req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
+
+    req.header.nlmsg_len  = NLMSG_LENGTH(sizeof(rtmsg));
+    req.header.nlmsg_type = RTM_NEWROUTE;
+    req.header.nlmsg_pid  = 0;
+    req.header.nlmsg_seq  = ++sNetlinkSequence;
+
+    req.msg.rtm_family   = AF_INET;
+    req.msg.rtm_src_len  = 0;
+    req.msg.rtm_dst_len  = aCidr.mLength;
+    req.msg.rtm_tos      = 0;
+    req.msg.rtm_scope    = RT_SCOPE_UNIVERSE;
+    req.msg.rtm_type     = RTN_UNICAST;
+    req.msg.rtm_table    = RT_TABLE_MAIN;
+    req.msg.rtm_protocol = RTPROT_BOOT;
+    req.msg.rtm_flags    = 0;
+
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, aCidr.mAddress.mFields.m8,
+              sizeof(aCidr.mAddress));
+    AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, aPriority);
+    AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
+
+    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    {
+        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
+exit:
+    return error;
+}
+
 #endif // __linux__ && (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE ||
        // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
 
@@ -887,14 +936,15 @@ static void processReceive(otMessage *aMessage, void *aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
 
-    char     packet[kMaxIp6Size + 4];
+    char     packetBuffer[kMaxIp6Size + 4 + kIP4IP6HeaderLengthDiff];
+    char *   packet    = &packetBuffer[kIP4IP6HeaderLengthDiff];
     otError  error     = OT_ERROR_NONE;
     uint16_t length    = otMessageGetLength(aMessage);
-    size_t   offset    = 0;
-    uint16_t maxLength = sizeof(packet) - 4;
+    uint16_t maxLength = sizeof(packetBuffer) - 4;
+
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // BSD tunnel drivers use (for legacy reasons) a 4-byte header to determine the address family of the packet
-    offset += 4;
+    packet += 4;
 #endif
 
     assert(gInstance == aContext);
@@ -902,14 +952,15 @@ static void processReceive(otMessage *aMessage, void *aContext)
 
     VerifyOrExit(sTunFd > 0);
 
-    VerifyOrExit(otMessageRead(aMessage, 0, &packet[offset], maxLength) == length, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(otMessageRead(aMessage, 0, packet, maxLength) == length, error = OT_ERROR_NO_BUFS);
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     otLogInfoPlat("[netif] Packet from NCP (%u bytes)", static_cast<uint16_t>(length));
-    otDumpInfoPlat("", &packet[offset], length);
+    otDumpInfoPlat("", packet, length);
 #endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+    packet -= 4;
     packet[0] = 0;
     packet[1] = 0;
     packet[2] = (PF_INET6 << 8) & 0xFF;
@@ -935,20 +986,12 @@ static void processTransmit(otInstance *aInstance)
     char       packet[kMaxIp6Size];
     otError    error  = OT_ERROR_NONE;
     size_t     offset = 0;
+    bool       isIp4  = false;
 
     assert(gInstance == aInstance);
 
     rval = read(sTunFd, packet, sizeof(packet));
     VerifyOrExit(rval > 0, error = OT_ERROR_FAILED);
-
-    {
-        otMessageSettings settings;
-
-        settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
-        settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
-        message                       = otIp6NewMessage(aInstance, &settings);
-        VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
-    }
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // BSD tunnel drivers have (for legacy reasons), may have a 4-byte header on them
@@ -959,6 +1002,17 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
+    isIp4 = (packet[rval] & 0xf0) == 0x40;
+
+    {
+        otMessageSettings settings;
+
+        settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
+        settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
+        message = isIp4 ? otIp6NewMessageForNat64(aInstance, &settings) : otIp6NewMessage(aInstance, &settings);
+        VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    }
+
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     otLogInfoPlat("[netif] Packet to NCP (%hu bytes)", static_cast<uint16_t>(rval));
     otDumpInfoPlat("", &packet[offset], static_cast<size_t>(rval));
@@ -966,7 +1020,7 @@ static void processTransmit(otInstance *aInstance)
 
     SuccessOrExit(error = otMessageAppend(message, &packet[offset], static_cast<uint16_t>(rval)));
 
-    error   = otIp6Send(aInstance, message);
+    error   = otBorderRouterSend(aInstance, message);
     message = nullptr;
 
 exit:
@@ -1133,6 +1187,19 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         SuccessOrExit(error = otIp6SetEnabled(aInstance, isUp));
         otLogInfoPlat("[netif] Succeeded to sync netif state with host");
     }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    if (isUp)
+    {
+        if (gNat64Cidr.mLength > 0)
+        {
+            SuccessOrExit(error = otBorderRouterSetIp4CidrForNat64(gInstance, &gNat64Cidr));
+            SuccessOrExit(error = otBorderRouterSetNat64TranslatorEnabled(gInstance, true));
+            AddIp4Route(gNat64Cidr, kExternalRoutePriority);
+            otLogInfoPlat("[netif] Succeeded to enable NAT64");
+        }
+    }
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -1754,7 +1821,8 @@ void platformNetifSetUp(void)
 #else
     otIcmp6SetEchoMode(gInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #endif
-    otIp6SetReceiveCallback(gInstance, processReceive, gInstance);
+
+    otBorderRouterSetReceiveCallback(gInstance, processReceive, gInstance);
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
