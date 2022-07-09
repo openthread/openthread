@@ -37,7 +37,6 @@
 namespace ot {
 namespace Ip4 {
 
-
 Error Address::FromString(const char *aString)
 {
     constexpr char kSeperatorChar = '.';
@@ -162,7 +161,7 @@ Error Header::ParseFrom(const Message &aMessage)
 {
     Error error = kErrorParse;
 
-    SuccessOrExit(error = aMessage.Read(0, *this));
+    SuccessOrExit(aMessage.Read(0, *this));
     VerifyOrExit(IsValid());
     VerifyOrExit(GetTotalLength() == aMessage.GetLength());
 
@@ -170,11 +169,6 @@ Error Header::ParseFrom(const Message &aMessage)
 
 exit:
     return error;
-}
-
-bool Header::IsValid(void) const
-{
-    return IsVersion4();
 }
 
 } // namespace Ip4

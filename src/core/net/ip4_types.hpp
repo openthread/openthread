@@ -31,8 +31,8 @@
  *   This file includes definitions for IPv4 packet processing.
  */
 
-#ifndef IP4_HEADERS_HPP_
-#define IP4_HEADERS_HPP_
+#ifndef IP4_TYPES_HPP_
+#define IP4_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -273,7 +273,7 @@ public:
      * @retval FALSE   If the header does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const;
+    bool IsValid(void) const { return IsVersion4(); }
 
     /**
      * This method initializes the Version to 4 and sets Traffic Class and Flow fields to zero.
@@ -668,4 +668,4 @@ DefineCoreType(otIp4Cidr, Ip4::Cidr);
 
 } // namespace ot
 
-#endif // IP4_HEADERS_HPP_
+#endif // IP4_TYPES_HPP_
