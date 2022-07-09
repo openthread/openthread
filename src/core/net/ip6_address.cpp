@@ -42,7 +42,7 @@
 #include "common/instance.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/random.hpp"
-#include "net/ip4_address.hpp"
+#include "net/ip4_types.hpp"
 #include "net/netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;

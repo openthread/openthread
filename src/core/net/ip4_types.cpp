@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021-2022, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,19 +28,15 @@
 
 /**
  * @file
- *   This file implements IPv4 address related functionality.
+ *   This file implements IP4 headers processing.
  */
 
-#include "ip4_address.hpp"
-
-#include "common/as_core_type.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/numeric_limits.hpp"
-#include "net/ip6_address.hpp"
+#include "ip4_types.hpp"
+#include "ip6_address.hpp"
 
 namespace ot {
 namespace Ip4 {
+
 
 Error Address::FromString(const char *aString)
 {
@@ -160,6 +156,25 @@ void Cidr::Set(const uint8_t *aAddress, uint8_t aLength)
 {
     memcpy(mAddress.mFields.m8, aAddress, Ip4::Address::kSize);
     mLength = aLength;
+}
+
+Error Header::ParseFrom(const Message &aMessage)
+{
+    Error error = kErrorParse;
+
+    SuccessOrExit(error = aMessage.Read(0, *this));
+    VerifyOrExit(IsValid());
+    VerifyOrExit(GetTotalLength() == aMessage.GetLength());
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+bool Header::IsValid(void) const
+{
+    return IsVersion4();
 }
 
 } // namespace Ip4

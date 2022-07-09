@@ -39,7 +39,7 @@
 #include <stdint.h>
 
 #include "common/message.hpp"
-#include "net/ip4_headers.hpp"
+#include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/socket.hpp"

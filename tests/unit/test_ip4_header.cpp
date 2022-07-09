@@ -27,7 +27,6 @@
  */
 
 #include "common/encoding.hpp"
-#include "net/ip4_headers.hpp"
 #include "net/ip4_types.hpp"
 
 #include "test_util.hpp"

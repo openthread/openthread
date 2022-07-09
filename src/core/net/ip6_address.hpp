@@ -46,11 +46,16 @@
 #include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
-#include "net/ip4_address.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
+
+namespace Ip4 {
+// Forward declaration for SynthesizeFromIp4Address
+class Address;
+} // namespace Ip4
+
 namespace Ip6 {
 
 /**

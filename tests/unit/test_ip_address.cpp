@@ -28,16 +28,15 @@
 
 #include <limits.h>
 
-#include "net/ip4_address.hpp"
-#include "net/ip6_address.hpp"
-
 #include "common/encoding.hpp"
+#include "net/ip4_types.hpp"
+#include "net/ip6_address.hpp"
 
 #include "test_util.h"
 
 template <typename AddressType> struct TestVector
 {
-    const char *  mString;
+    const char   *mString;
     const uint8_t mAddr[sizeof(AddressType)];
     ot::Error     mError;
 };
@@ -469,10 +468,10 @@ void TestIp4Cidr(void)
     using ot::Encoding::BigEndian::HostSwap32;
     struct TestCase
     {
-        const char *   mNetwork;
+        const char    *mNetwork;
         const uint8_t  mLength;
         const uint32_t mHost;
-        const char *   mOutcome;
+        const char    *mOutcome;
     };
 
     const TestCase kTestCases[] = {
