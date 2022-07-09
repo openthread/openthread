@@ -163,7 +163,87 @@ public:
      */
     void SetNat64Prefix(const Ip6::Prefix &aNat64Prefix);
 
+    /**
+     * @brief This function gets the next AddressMapping info (using an iterator).
+     *
+     * @param[in,out]  aIterator      the iterator. On success the iterator will be updated to point to next NAT64
+     * address mapping record. To get the first entry the iterator should be set to
+     * OT_NAT64_ADDRESS_MAPPING_ITERATOR_INIT.
+     * @param[out]     aMapping       an `otNat64AddressMapping` where information of next NAT64 address mapping record
+     * is placed (on success).
+     *
+     * @retval kErrorNone      Successfully found the next NAT64 address mapping info (@p aMapping was successfully
+     * updated).
+     * @retval kErrorNotFound  No subsequent NAT64 address mapping info was found.
+     *
+     */
+    Error GetNextAddressMapping(otNat64AddressMappingIterator &aIterator, otNat64AddressMapping &aMapping);
+
+    /**
+     * @brief This function gets the counters of the NAT64 translator, the counter is counted since the instance
+     * initialized.
+     *
+     * @param[out] aCounters An `otNat64Counters` where the counters of NAT64 translator will be placed.
+     *
+     */
+    void GetCounters(otNat64ProtocolCounters &aCounters) const { aCounters = mCounters; }
+
+    /**
+     * @brief This function gets the counters of the NAT64 translator, the counter is counted since the instance
+     * initialized.
+     *
+     * @param[out] aCounters An `otNat64Counters` where the counters of NAT64 translator will be placed.
+     *
+     */
+    void GetErrorCounters(otNat64ErrorCounters &aCounters) const { aCounters = mErrorCounters; }
+
+    /**
+     * Gets the configured CIDR in the NAT64 translator.
+     *
+     * @param[in]  aInstance    A pointer to an OpenThread instance.
+     * @param[out] aCidr        The `Ip4::Cidr` Where the configured CIDR will be placed.
+     *
+     * @retval kErrorNone       @p aCidr is set to the configured CIDR.
+     * @retval kErrorNotFound   The translator is not configured with an IPv4 CIDR.
+     *
+     */
+    Error GetIp4Cidr(Ip4::Cidr &aCidr);
+
+    /**
+     * Gets the configured CIDR in the NAT64 translator.
+     *
+     * @param[in]  aInstance         A pointer to an OpenThread instance.
+     * @param[out] aPrefix           The `Ip6::Prefix` where the configured NAT64 prefix will be placed.
+     *
+     * @retval kErrorNone       @p aPrefix is set to the configured prefix.
+     * @retval kErrorNotFound   The translator is not configured with an IPv6 prefix.
+     *
+     */
+    Error GetIp6Prefix(Ip6::Prefix &aPrefix);
+
 private:
+    class ProtocolCounters : public otNat64ProtocolCounters, public Clearable<ProtocolCounters>
+    {
+    public:
+        void Count6To4Packet(uint8_t aProtocol, uint64_t aPacketSize);
+        void Count4To6Packet(uint8_t aProtocol, uint64_t aPacketSize);
+    };
+
+    class ErrorCounters : public otNat64ErrorCounters, public Clearable<otNat64ErrorCounters>
+    {
+    public:
+        enum Reason : uint8_t
+        {
+            kAny              = OT_NAT64_DROP_REASON_ANY,
+            kIllegalPacket    = OT_NAT64_DROP_REASON_ILLEGAL_PACKET,
+            kUnsupportedProto = OT_NAT64_DROP_REASON_UNSUPPORTED_PROTO,
+            kNoMapping        = OT_NAT64_DROP_REASON_NO_MAPPING,
+        };
+
+        void Count4To6(Reason aReason) { mCount4To6[aReason]++; }
+        void Count6To4(Reason aReason) { mCount6To4[aReason]++; }
+    };
+
     class AddressMapping : public LinkedListEntry<AddressMapping>
     {
     public:
@@ -174,10 +254,15 @@ private:
 
         void       Touch(TimeMilli aNow) { mExpiry = aNow + kAddressMappingIdleTimeoutMsec; }
         InfoString ToString(void);
+        void       CopyTo(otNat64AddressMapping &aMapping) const;
+
+        uint64_t mId; // The unique id for a mapping session.
 
         Ip4::Address mIp4;
         Ip6::Address mIp6;
         TimeMilli    mExpiry; // The timestamp when this mapping expires, in milliseconds.
+
+        ProtocolCounters mCounters;
 
     private:
         bool Matches(const Ip4::Address &aIp4) const { return mIp4 == aIp4; }
@@ -198,6 +283,8 @@ private:
 
     static void MappingExpirerHandler(Timer &aTimer);
 
+    uint64_t mNextMappingId;
+
     Array<Ip4::Address, kAddressMappingPoolSize>  mIp4AddressPool;
     Pool<AddressMapping, kAddressMappingPoolSize> mAddressMappingPool;
     LinkedList<AddressMapping>                    mActiveAddressMappings;
@@ -206,6 +293,9 @@ private:
     Ip4::Cidr   mIp4Cidr;
 
     TimerMilli mMappingExpirer;
+
+    ProtocolCounters mCounters;
+    ErrorCounters    mErrorCounters;
 };
 
 } // namespace Nat64

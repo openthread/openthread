@@ -127,20 +127,44 @@ void Address::SynthesizeFromCidrAndHost(const Cidr &aCidr, const uint32_t aHost)
     mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (HostSwap32(aHost) & aCidr.HostMask());
 }
 
+void Address::ToString(StringWriter &aWriter) const
+{
+    aWriter.Append("%d.%d.%d.%d", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
+}
+
+void Address::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+
+    ToString(writer);
+}
+
 Address::InfoString Address::ToString(void) const
 {
     InfoString string;
 
-    string.Append("%d.%d.%d.%d", mFields.m8[0], mFields.m8[1], mFields.m8[2], mFields.m8[3]);
+    ToString(string);
 
     return string;
+}
+
+void Cidr::ToString(StringWriter &aWriter) const
+{
+    aWriter.Append("%s/%d", AsCoreType(&mAddress).ToString().AsCString(), mLength);
+}
+
+void Cidr::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+
+    ToString(writer);
 }
 
 Cidr::InfoString Cidr::ToString(void) const
 {
     InfoString string;
 
-    string.Append("%s/%d", AsCoreType(&mAddress).ToString().AsCString(), mLength);
+    ToString(string);
 
     return string;
 }

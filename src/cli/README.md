@@ -70,6 +70,7 @@ Done
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [multiradio](#multiradio)
+- [nat64](#nat64-configuredcidr)
 - [neighbor](#neighbor-list)
 - [netdata](README_NETDATA.md)
 - [netstat](#netstat)
@@ -1832,6 +1833,74 @@ This command is only available when device supports more than one radio link.
 ```bash
 > multiradio neighbor 3a65bc38dbe4a5be
 [15.4(255), TREL(255)]
+Done
+```
+
+### nat64 configuredcidr
+
+Get the configured CIDR for NAT64 translator.
+
+This command is only available when device enables NAT64 translator.
+
+```
+bash
+> nat64 configuredcidr
+192.168.64.0/24
+Done
+```
+
+### nat64 configuredprefix
+
+Get the prefix in use for NAT64.
+
+This command is only available when device enables NAT64 translator.
+
+```bash
+> nat64 configuredprefix
+fd56:eda7:17ca:2:0:0::/96
+Done
+```
+
+### nat64 mappings
+
+Get the mappings of NAT64 translator.
+
+This command is only available when device enables NAT64 translator.
+
+```bash
+> nat64 mappings
+|          | Address                   |        | 4 to 6       | 6 to 4       |
++----------+---------------------------+--------+--------------+--------------+
+| ID       | IPv6       | IPv4         | Expiry | Pkts | Bytes | Pkts | Bytes |
++----------+------------+--------------+--------+------+-------+------+-------+
+| 00021cb9 | fdc7::df79 | 192.168.64.2 |  7196s |    6 |   456 |   11 |  1928 |
+|          |                                TCP |    0 |     0 |    0 |     0 |
+|          |                                UDP |    1 |   136 |   16 |  1608 |
+|          |                               ICMP |    5 |   320 |    5 |   320 |
+```
+
+### nat64 counters
+
+Get the packet counters and error counters of NAT64 translator.
+
+This command is only available when device enables NAT64 translator.
+
+```bash
+> nat64 counters
+|               | 4 to 6                  | 6 to 4                  |
++---------------+-------------------------+-------------------------+
+| Protocol      | Pkts     | Bytes        | Pkts     | Bytes        |
++---------------+----------+--------------+----------+--------------+
+|         Total |       11 |          704 |       11 |          704 |
+|           TCP |        0 |            0 |        0 |            0 |
+|           UDP |        0 |            0 |        0 |            0 |
+|          ICMP |       11 |          704 |       11 |          704 |
+| Errors        | Pkts                    | Pkts                    |
++---------------+-------------------------+-------------------------+
+|         Total |                       8 |                       4 |
+|   Illegal Pkt |                       0 |                       0 |
+|   Unsup Proto |                       0 |                       0 |
+|    No Mapping |                       2 |                       0 |
 Done
 ```
 
