@@ -151,8 +151,8 @@ def check_parent_is_associated():
 wpan.verify_within(check_parent_is_associated, 10)
 
 # Verify that all the children are recovered and present in the parent's
-# child table again (within 5 seconds).
-wpan.verify_within(check_child_table, 9)
+# child table again.
+wpan.verify_within(check_child_table, 15)
 
 # Verify that number of state changes on all children stays as before
 # (indicating they did not get detached).
