@@ -53,6 +53,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SIMULATION_EXT_RF_MODELS
+ *
+ * This setting configures whether to support external RF models (which require modified
+ * event message format) in simulation platform.
+ *
+ */
+#ifndef OPENTHREAD_SIMULATION_EXT_RF_MODELS
+#define OPENTHREAD_SIMULATION_EXT_RF_MODELS 0
+#endif
+
+/**
  * @def OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
  *
  * This setting configures whether to use virtual time for UART.

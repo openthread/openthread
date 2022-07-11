@@ -68,7 +68,7 @@ enum
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
     
-#if CONFIG_SIM
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     OT_SIM_EVENT_RADIO_FRAME_RX     = 16,
     OT_SIM_EVENT_RADIO_FRAME_TX     = 17,
     OT_SIM_EVENT_RADIO_TX_DONE      = 18,
@@ -84,7 +84,7 @@ struct Event
     uint64_t mDelay;
     uint8_t  mEvent;
     uint16_t mDataLength;
-#if CONFIG_SIM
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     uint32_t mNodeId;       // should equal gNodeId for events to/from this node.
     int8_t   mParam1;       // generic parameter 1 used by specific event types (for TxPower, RSSI)
     int8_t   mParam2;       // generic parameter 2 used by specific event types (for CCA ED)
