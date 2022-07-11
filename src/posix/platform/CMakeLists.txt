@@ -87,6 +87,9 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
 endif()
 
+set(OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE "vendor_interface_example.cpp"
+       CACHE STRING "vendor interface implementation")
+
 add_library(openthread-posix
     alarm.cpp
     backbone.cpp
@@ -109,8 +112,8 @@ add_library(openthread-posix
     trel.cpp
     udp.cpp
     utils.cpp
-    vendor_interface_example.cpp
     virtual_time.cpp
+    ${OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE}
 )
 
 target_link_libraries(openthread-posix

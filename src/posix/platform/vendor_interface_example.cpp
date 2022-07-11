@@ -33,8 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#if (OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR) && \
-    OPENTHREAD_POSIX_CONFIG_VENDOR_INTERFACE_EXAMPLE_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
 
 #include "vendor_interface.hpp"
 #include "common/new.hpp"
@@ -57,6 +56,9 @@ public:
         , mReceiveFrameContext(aCallbackContext)
         , mRxFrameBuffer(aFrameBuffer)
     {
+        OT_UNUSED_VARIABLE(mReceiveFrameCallback);
+        OT_UNUSED_VARIABLE(mReceiveFrameContext);
+        OT_UNUSED_VARIABLE(mRxFrameBuffer);
     }
 
     // TODO: Add vendor code (add methods and/or member variables).
@@ -161,5 +163,4 @@ const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void)
 } // namespace Posix
 } // namespace ot
 
-#endif // (OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI) &&
-       // OPENTHREAD_POSIX_CONFIG_VENDOR_INTERFACE_EXAMPLE_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
