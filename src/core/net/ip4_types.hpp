@@ -287,6 +287,7 @@ public:
      * This method sets the version and Ihl of the IPv4 header.
      *
      * @param[in] aVersionIhl The octet for the version and Ihl field.
+     *
      */
     void SetVersionIhl(uint8_t aVersionIhl) { mVersIhl = aVersionIhl; }
 
