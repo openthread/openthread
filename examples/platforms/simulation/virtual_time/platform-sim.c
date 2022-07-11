@@ -48,6 +48,7 @@
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
 
 #include "utils/uart.h"
 
@@ -74,7 +75,9 @@ void otSimSendEvent(const struct Event *aEvent)
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
-
+#if CONFIG_SIM
+    aEvent->mNodeId = gNodeId;
+#endif
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
@@ -109,13 +112,27 @@ static void receiveEvent(otInstance *aInstance)
         break;
 
     case OT_SIM_EVENT_RADIO_RECEIVED:
-        platformRadioReceive(aInstance, event.mData, event.mDataLength);
+        platformRadioReceive(aInstance, event.mData, event.mDataLength, OT_RADIO_RSSI_INVALID);
         break;
 
     case OT_SIM_EVENT_UART_WRITE:
         otPlatUartReceived(event.mData, event.mDataLength);
         break;
 
+#if CONFIG_SIM
+    case OT_SIM_EVENT_RADIO_FRAME_RX:
+        int8_t rssi = event.mParam1;
+        platformRadioReceive(aInstance, event.mData, event.mDataLength, rssi);
+        break;
+
+    case OT_SIM_EVENT_RADIO_TX_DONE:
+            // the external RF simulator determines success/error of Tx, and must report an otError code.
+            assert(event.mDataLength>=1);
+            otError err = (otError) event.mData[0];
+            platformRadioTransmitDone(aInstance, err);
+            break;
+#endif
+    
     default:
         assert(false);
     }
