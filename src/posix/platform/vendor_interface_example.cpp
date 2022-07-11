@@ -59,7 +59,7 @@ public:
     {
     }
 
-    // TODO: Add vendor extension code (add methods and/or member variables).
+    // TODO: Add vendor code (add methods and/or member variables).
 
 private:
     SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
@@ -89,13 +89,14 @@ otError VendorInterface::Init(const Url::Url &aRadioUrl)
 {
     OT_UNUSED_VARIABLE(aRadioUrl);
 
-    // TODO: Implement vendor extension code here.
+    // TODO: Implement vendor code here.
 
     return OT_ERROR_NONE;
 }
 
 void VendorInterface::Deinit(void)
 {
+    // TODO: Implement vendor code here.
 }
 
 uint32_t VendorInterface::GetBusSpeed(void) const
@@ -105,6 +106,7 @@ uint32_t VendorInterface::GetBusSpeed(void) const
 
 void VendorInterface::OnRcpReset(void)
 {
+    // TODO: Implement vendor code here.
 }
 
 void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
@@ -113,16 +115,22 @@ void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &
     OT_UNUSED_VARIABLE(aWriteFdSet);
     OT_UNUSED_VARIABLE(aMaxFd);
     OT_UNUSED_VARIABLE(aTimeout);
+
+    // TODO: Implement vendor code here.
 }
 
 void VendorInterface::Process(const RadioProcessContext &aContext)
 {
     OT_UNUSED_VARIABLE(aContext);
+
+    // TODO: Implement vendor code here.
 }
 
 otError VendorInterface::WaitForFrame(uint64_t aTimeoutUs)
 {
     OT_UNUSED_VARIABLE(aTimeoutUs);
+
+    // TODO: Implement vendor code here.
 
     return OT_ERROR_NONE;
 }
@@ -132,16 +140,22 @@ otError VendorInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aLength);
 
+    // TODO: Implement vendor code here.
+
     return OT_ERROR_NONE;
 }
 
 otError VendorInterface::ResetConnection(void)
 {
+    // TODO: Implement vendor code here.
+
     return OT_ERROR_NONE;
 }
 
 const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void)
 {
+    // TODO: Implement vendor code here.
+
     return nullptr;
 }
 } // namespace Posix
