@@ -67,6 +67,14 @@ enum
     OT_SIM_EVENT_UART_WRITE         = 2,
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
+    
+#if CONFIG_SIM
+    OT_SIM_EVENT_RADIO_FRAME_RX     = 16,
+    OT_SIM_EVENT_RADIO_FRAME_TX     = 17,
+    OT_SIM_EVENT_RADIO_TX_DONE      = 18,
+    OT_SIM_EVENT_RADIO_FRAME_TX_ACK = 19,
+#endif
+    
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
@@ -76,7 +84,12 @@ struct Event
     uint64_t mDelay;
     uint8_t  mEvent;
     uint16_t mDataLength;
-    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
+#if CONFIG_SIM
+    uint32_t mNodeId;       // should equal gNodeId for events to/from this node.
+    int8_t   mParam1;       // generic parameter 1 used by specific event types (for TxPower, RSSI)
+    int8_t   mParam2;       // generic parameter 2 used by specific event types (for CCA ED)
+#endif
+    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];  // mData must be last field of struct
 } OT_TOOL_PACKED_END;
 
 enum
@@ -152,11 +165,21 @@ void platformRadioDeinit(void);
  * This function inputs a received radio frame.
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
- * @param[in]  aBuf        A pointer to the received radio frame.
- * @param[in]  aBufLength  The size of the received radio frame.
+ * @param[in]  aBuf        A pointer to the received radio frame (struct RadioMessage).
+ * @param[in]  aBufLength  The size of the received radio frame (struct RadioMessage).
+ * @param[in]  rssi        The RSSI (dBm) of the received radio frame.
  *
  */
-void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength);
+void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, int8_t rssi);
+
+/**
+ * This function signals that virtual radio is done transmitting a single frame.
+ *
+ * @param[in]  aInstance   A pointer to the OpenThread instance.
+ * @param[in]  err         The status code result of the virtual radio transmission.
+ *
+ */
+void platformRadioTransmitDone(otInstance *aInstance, otError err);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
