@@ -1456,7 +1456,7 @@ protected:
      * @retval kErrorNoRoute   The destination is not reachable and the message should be dropped.
      *
      */
-    Error CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header);
+    Error CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
 
     /**
      * This method returns the next hop towards an RLOC16 destination.

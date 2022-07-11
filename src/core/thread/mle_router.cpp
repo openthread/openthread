@@ -3677,7 +3677,7 @@ exit:
     return;
 }
 
-Error MleRouter::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
+Error MleRouter::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
 {
     Error error = kErrorNone;
 
