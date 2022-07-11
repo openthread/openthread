@@ -75,9 +75,6 @@ void otSimSendEvent(const struct Event *aEvent)
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
-#if CONFIG_SIM
-    aEvent->mNodeId = gNodeId;
-#endif
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
@@ -119,10 +116,9 @@ static void receiveEvent(otInstance *aInstance)
         otPlatUartReceived(event.mData, event.mDataLength);
         break;
 
-#if CONFIG_SIM
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     case OT_SIM_EVENT_RADIO_FRAME_RX:
-        int8_t rssi = event.mParam1;
-        platformRadioReceive(aInstance, event.mData, event.mDataLength, rssi);
+        platformRadioReceive(aInstance, event.mData, event.mDataLength, event.mParam1);
         break;
 
     case OT_SIM_EVENT_RADIO_TX_DONE:
@@ -147,6 +143,9 @@ static void platformSendSleepEvent(void)
     event.mDelay      = platformAlarmGetNext();
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
+    event.mNodeId     = gNodeId;
+#endif
 
     otSimSendEvent(&event);
 }
@@ -174,6 +173,9 @@ otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_UART_WRITE;
     event.mDataLength = aLength;
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
+    event.mNodeId     = gNodeId;
+#endif
 
     memcpy(event.mData, aData, aLength);
 
@@ -343,6 +345,9 @@ void otPlatOtnsStatus(const char *aStatus)
     event.mDataLength = statusLength;
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
+    event.mNodeId     = gNodeId;
+#endif
 
     otSimSendEvent(&event);
 }

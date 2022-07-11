@@ -519,18 +519,17 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance)
 static int8_t GetRssi(uint16_t aChannel)
 {
     int8_t   rssi = OT_RADIO_RSSI_INVALID;
-    uint32_t probabilityThreshold;
 
     otEXPECT((SIM_RADIO_CHANNEL_MIN <= aChannel) && aChannel <= (SIM_RADIO_CHANNEL_MAX));
 
-#if CONFIG_SIM
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     // if external RF simulator calculates RSSI, get it from the Rx info.    
     rssi = sReceiveFrame.mInfo.mRxInfo.mRssi;
 #else
     // To emulate a simple interference model, we return either a high or
     // a low  RSSI value with a fixed probability per each channel. The
     // probability is increased per channel by a constant.
-    probabilityThreshold = (aChannel - SIM_RADIO_CHANNEL_MIN) * SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+    uint32_t probabilityThreshold = (aChannel - SIM_RADIO_CHANNEL_MIN) * SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL;
     rssi = SIM_LOW_RSSI_SAMPLE;
     if (otRandomNonCryptoGetUint16() < (probabilityThreshold * 0xffff / 100))
     {
@@ -574,7 +573,7 @@ static void radioReceive(otInstance *aInstance)
         {
             isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
         }
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME && !CONFIG_SIM
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME && !OPENTHREAD_SIMULATION_EXT_RF_MODELS
         // Simulate tx done when receiving the echo frame.
         else
         {
@@ -932,7 +931,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     struct Event event;
 
     event.mDelay      = 1; // 1us delay to let transmitted frame arrive in simulated radio chip
-#if !CONFIG_SIM
+#if !OPENTHREAD_SIMULATION_EXT_RF_MODELS
     event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;    
 #else
     event.mEvent      = isAck ? OT_SIM_EVENT_RADIO_FRAME_TX_ACK : OT_SIM_EVENT_RADIO_FRAME_TX;
@@ -1056,7 +1055,7 @@ void radioProcessFrame(otInstance *aInstance)
 exit:
 
     if (error != OT_ERROR_ABORT
-#if CONFIG_SIM
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
 	// if Rx frame needs to be ACKed, postpone the receive-done report until ACK is sent, if the frame-rx went ok.
     // TODO consider if this is right. It's done to avoid stack sending further frames after 0 us time while the ACK is still pending.
     // In other words, a successful Rx-frame (err=NONE) that still needs to be ACKed (isAcked) won't yet be reported done.
