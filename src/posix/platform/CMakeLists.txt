@@ -76,6 +76,13 @@ if(OT_POSIX_CONFIG_RCP_BUS)
     )
 endif()
 
+option(OT_POSIX_VENDOR_INTERFACE_EXAMPLE "enable vendor interface example" OFF)
+if (OT_POSIX_VENDOR_INTERFACE_EXAMPLE)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_VENDOR_INTERFACE_EXAMPLE_ENABLE=1"
+    )
+endif()
+
 if(NOT OT_CONFIG)
     set(OT_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
 endif()
@@ -102,6 +109,7 @@ add_library(openthread-posix
     trel.cpp
     udp.cpp
     utils.cpp
+    vendor_interface_example.cpp
     virtual_time.cpp
 )
 

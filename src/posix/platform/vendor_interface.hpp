@@ -152,6 +152,9 @@ public:
     /**
      * This method is called when RCP is reset to recreate the connection with it.
      *
+     * @retval OT_ERROR_NONE    Reset the connection successfully.
+     * @retval OT_ERROR_FAILED  Failed to reset the connection.
+     *
      */
     otError ResetConnection(void);
 
