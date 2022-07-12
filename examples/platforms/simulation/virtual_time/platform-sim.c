@@ -79,10 +79,12 @@ void otSimSendEvent(struct Event *aEvent)
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
     sockaddr.sin_port = htons(9000 + sPortOffset);
-
-    // fill in the default fields (same for all events), and send header + data.
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
+    // fill in V2 message format default fields (same for all events).
     aEvent->mEventV2Indicator = OT_SIM_EVENT_V2_FORMAT;
     aEvent->mNodeId = gNodeId;
+#endif
+    // send header and data.
     rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
                   sizeof(sockaddr));
 
@@ -111,16 +113,13 @@ static void receiveEvent(otInstance *aInstance)
     case OT_SIM_EVENT_ALARM_FIRED:
         break;
 
-    case OT_SIM_EVENT_RADIO_RECEIVED:
-        platformRadioReceive(aInstance, event.mData, event.mDataLength, OT_RADIO_RSSI_INVALID);
-        break;
-
     case OT_SIM_EVENT_UART_WRITE:
         otPlatUartReceived(event.mData, event.mDataLength);
         break;
 
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    case OT_SIM_EVENT_RADIO_FRAME_RX:
+    case OT_SIM_EVENT_RADIO_RX_INTERFERED:
+    case OT_SIM_EVENT_RADIO_RECEIVED:
         platformRadioReceive(aInstance, event.mData, event.mDataLength, event.mParam1);
         break;
 
@@ -129,6 +128,10 @@ static void receiveEvent(otInstance *aInstance)
         assert(event.mDataLength >= 1);
         otError err = (otError)event.mData[0];
         platformRadioTransmitDone(aInstance, err);
+        break;
+#else
+    case OT_SIM_EVENT_RADIO_RECEIVED:
+        platformRadioReceive(aInstance, event.mData, event.mDataLength, OT_RADIO_RSSI_INVALID);
         break;
 #endif
 
