@@ -916,6 +916,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     ssize_t            rval;
     struct sockaddr_in sockaddr;
+    OT_UNUSED_VARIABLE(isAck);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
@@ -1058,13 +1059,15 @@ void radioProcessFrame(otInstance *aInstance)
 
 exit:
 
+#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     // If Rx-frame needs to be ACKed, postpone the receive-done report until the ACK is sent, but only if the frame-rx
     // went ok. This prevents the device sending more frames before the ACK has a chance to be sent.
     if (error != OT_ERROR_ABORT
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-        && ( (!isAcked) || (error != OT_ERROR_NONE && isAcked) )
-#endif    
-    )
+        && ( (!isAcked) || (error != OT_ERROR_NONE && isAcked) ))
+#else
+    OT_UNUSED_VAR(isAcked);
+    if (error != OT_ERROR_ABORT)
+#endif
     {
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())
