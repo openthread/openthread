@@ -940,7 +940,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     event.mEvent = OT_SIM_EVENT_RADIO_RECEIVED;
 #else
     // event.mParam1 contains the TxPower used. event.mParam2 the CCA ED threshold.
-    event.mEvent    = isAck ? OT_SIM_EVENT_RADIO_FRAME_TX_ACK : OT_SIM_EVENT_RADIO_FRAME_TX;
+    event.mEvent    = isAck ? OT_SIM_EVENT_RADIO_TX_ACK : OT_SIM_EVENT_RADIO_TX;
     int8_t maxPower = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
     event.mParam1	= sTxPower < maxPower ? sTxPower : maxPower;
     event.mParam2   = sCcaEdThresh;
