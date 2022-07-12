@@ -751,7 +751,7 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT); // Only process in valid states.
 
     memcpy(&sReceiveMessage, aBuf, aBufLength);
-    sReceiveFrame.mLength                  = (uint8_t)(aBufLength - offsetof(struct RadioMessage, mPsdu) );
+    sReceiveFrame.mLength                  = (uint8_t)(aBufLength - offsetof(struct RadioMessage, mPsdu));
     sReceiveFrame.mInfo.mRxInfo.mRssi      = rssi;
     sReceiveFrame.mInfo.mRxInfo.mLqi       = OT_RADIO_LQI_NONE; // No support of LQI reporting.
     sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet(); // Timestamp the moment of complete frame reception.
@@ -770,7 +770,7 @@ void platformRadioTransmitDone(otInstance *aInstance, otError err)
     {
         if (!otMacFrameIsAckRequested(
                 &sTransmitFrame) || // not waiting for ACK: transition to Rx state; see state diagram.
-            err != OT_ERROR_NONE )
+            err != OT_ERROR_NONE)
         { // also in case of Tx failure: no wait for ACK, abort current Tx.
             sState  = OT_RADIO_STATE_RECEIVE;
             sTxWait = false;
@@ -938,14 +938,15 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #if !OPENTHREAD_SIMULATION_EXT_RF_MODELS
     OT_UNUSED_VARIABLE(isAck);
     event.mEvent = OT_SIM_EVENT_RADIO_RECEIVED;
-#else // OPENTHREAD_SIMULATION_EXT_RF_MODELS
+#else
     // event.mParam1 contains the TxPower used. event.mParam2 the CCA ED threshold.
     event.mEvent    = isAck ? OT_SIM_EVENT_RADIO_FRAME_TX_ACK : OT_SIM_EVENT_RADIO_FRAME_TX;
     int8_t maxPower = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
     event.mParam1	= sTxPower < maxPower ? sTxPower : maxPower;
     event.mParam2   = sCcaEdThresh;
 #endif // OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    event.mDataLength = offsetof(struct RadioMessage, mPsdu) + aFrame->mLength; // RadioMessage includes metadata and the PDSU (frame)
+    // RadioMessage includes metadata and the PDSU (frame)
+    event.mDataLength = offsetof(struct RadioMessage, mPsdu) + aFrame->mLength;
     memcpy(event.mData, aMessage, event.mDataLength);
 
     otSimSendEvent(&event);
@@ -1062,8 +1063,7 @@ exit:
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     // If Rx-frame needs to be ACKed, postpone the receive-done report until the ACK is sent, but only if the frame-rx
     // went ok. This prevents the device sending more frames before the ACK has a chance to be sent.
-    if (error != OT_ERROR_ABORT
-        && ( (!isAcked) || (error != OT_ERROR_NONE && isAcked) ))
+    if (error != OT_ERROR_ABORT && ((!isAcked) || (error != OT_ERROR_NONE && isAcked)))
 #else
     OT_UNUSED_VARIABLE(isAcked);
     if (error != OT_ERROR_ABORT)
