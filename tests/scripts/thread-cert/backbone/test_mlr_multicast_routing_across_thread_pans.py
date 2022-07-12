@@ -102,7 +102,7 @@ class TestMlr(thread_cert.TestCase):
 
         # Bring up PBBR1
         self.nodes[PBBR1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', self.nodes[PBBR1].get_state())
 
         self.nodes[PBBR1].enable_backbone_router()
@@ -121,7 +121,7 @@ class TestMlr(thread_cert.TestCase):
 
         # Bring up PBBR2
         self.nodes[PBBR2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', self.nodes[PBBR2].get_state())
 
         self.nodes[PBBR2].enable_backbone_router()

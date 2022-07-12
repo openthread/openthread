@@ -94,7 +94,7 @@ class TestSrpServerAnycastMode(thread_cert.TestCase):
         # Form the network.
 
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'leader')
 
         client.start()

@@ -61,7 +61,7 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
     def testAddressSolicitRejectedBeforeSvrData(self):
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_router_upgrade_threshold(1)
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[REED].start()
@@ -77,7 +77,7 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
     def testAddressSolicitRejectedAfterSvrData(self):
         self.nodes[LEADER].start()
         self.nodes[LEADER].set_router_upgrade_threshold(1)
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[REED].set_router_selection_jitter(120)

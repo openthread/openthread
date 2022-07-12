@@ -1179,6 +1179,46 @@ exit:
     return (error == kErrorNone) ? static_cast<int>(compressedLength) : -1;
 }
 
+Ip6::Ecn Lowpan::DecompressEcn(const Message &aMessage, uint16_t aOffset) const
+{
+    Ip6::Ecn ecn = Ip6::kEcnNotCapable;
+    uint16_t hcCtl;
+    uint8_t  byte;
+
+    SuccessOrExit(aMessage.Read(aOffset, hcCtl));
+    hcCtl = HostSwap16(hcCtl);
+
+    VerifyOrExit((hcCtl & kHcDispatchMask) == kHcDispatch);
+    aOffset += sizeof(uint16_t);
+
+    if ((hcCtl & kHcTrafficFlowMask) == kHcTrafficFlow)
+    {
+        // ECN is elided and is zero (`kEcnNotCapable`).
+        ExitNow();
+    }
+
+    // When ECN is not elided, it is always included as the
+    // first two bits of the next byte.
+    SuccessOrExit(aMessage.Read(aOffset, byte));
+    ecn = static_cast<Ip6::Ecn>((byte & kEcnMask) >> kEcnOffset);
+
+exit:
+    return ecn;
+}
+
+void Lowpan::MarkCompressedEcn(Message &aMessage, uint16_t aOffset)
+{
+    uint8_t byte;
+
+    aOffset += sizeof(uint16_t);
+    IgnoreError(aMessage.Read(aOffset, byte));
+
+    byte &= ~kEcnMask;
+    byte |= static_cast<uint8_t>(Ip6::kEcnMarked << kEcnOffset);
+
+    aMessage.Write(aOffset, byte);
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // MeshHeader
 

@@ -32,6 +32,7 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -98,7 +99,7 @@ class AnycastLocator(thread_cert.TestCase):
         #
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         for node in nodes[1:]:

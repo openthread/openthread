@@ -113,7 +113,7 @@ class Cert_7_1_6_BorderRouterAsLeader(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in (2, 3):

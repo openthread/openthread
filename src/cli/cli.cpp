@@ -605,7 +605,7 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
      * #otBorderRoutingSetRouteInfoOptionPreference
      *
      */
-    else if ((aArgs[0] == "rioprf"))
+    else if (aArgs[0] == "rioprf")
     {
         if (aArgs[1].IsEmpty())
         {
@@ -617,6 +617,50 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
 
             SuccessOrExit(error = ParsePreference(aArgs[1], preference));
             otBorderRoutingSetRouteInfoOptionPreference(GetInstancePtr(), preference);
+        }
+    }
+    /**
+     * @cli br prefixtable
+     *
+     * @code
+     * > br prefixtable
+     * prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med,
+     * router:ff02:0:0:0:0:0:0:1
+     * prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800,
+     * router:ff02:0:0:0:0:0:0:1
+     * Done
+     * @endcode
+     *
+     * @par api_copy
+     * #otBorderRoutingGetNextPrefixTableEntry
+     *
+     */
+    else if (aArgs[0] == "prefixtable")
+    {
+        otBorderRoutingPrefixTableIterator iterator;
+        otBorderRoutingPrefixTableEntry    entry;
+
+        otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+        while (otBorderRoutingGetNextPrefixTableEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
+        {
+            char string[OT_IP6_PREFIX_STRING_SIZE];
+
+            otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
+            OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%u, lifetime:%u, ", string, entry.mIsOnLink ? "yes" : "no",
+                         entry.mMsecSinceLastUpdate, entry.mValidLifetime);
+
+            if (entry.mIsOnLink)
+            {
+                OutputFormat("preferred:%u, ", entry.mPreferredLifetime);
+            }
+            else
+            {
+                OutputFormat("route-prf:%s, ", PreferenceToString(entry.mRoutePreference));
+            }
+
+            otIp6AddressToString(&entry.mRouterAddress, string, sizeof(string));
+            OutputLine("router:%s", string);
         }
     }
     else

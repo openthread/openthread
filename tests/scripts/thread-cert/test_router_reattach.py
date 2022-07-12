@@ -199,7 +199,7 @@ class test_router_reattach(thread_cert.TestCase):
 
     def test(self):
         self.nodes[1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[1].get_state(), 'leader')
 
         for i in range(2, 33):

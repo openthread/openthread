@@ -125,6 +125,7 @@ SOURCES_COMMON                                  = \
     api/backbone_router_ftd_api.cpp               \
     api/border_agent_api.cpp                      \
     api/border_router_api.cpp                     \
+    api/border_routing_api.cpp                    \
     api/channel_manager_api.cpp                   \
     api/channel_monitor_api.cpp                   \
     api/child_supervision_api.cpp                 \

@@ -79,7 +79,9 @@ class RoutingManager : public InstanceLocator
     friend class ot::Instance;
 
 public:
-    typedef NetworkData::RoutePreference RoutePreference; ///< Route preference (high, medium, low).
+    typedef NetworkData::RoutePreference       RoutePreference;     ///< Route preference (high, medium, low).
+    typedef otBorderRoutingPrefixTableIterator PrefixTableIterator; ///< Prefix Table Iterator.
+    typedef otBorderRoutingPrefixTableEntry    PrefixTableEntry;    ///< Prefix Table Entry.
 
     /**
      * This constructor initializes the routing manager.
@@ -219,6 +221,37 @@ public:
      */
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
 
+    /**
+     * This method initializes a `PrefixTableIterator`.
+     *
+     * An iterator can be initialized again to start from the beginning of the table.
+     *
+     * When iterating over entries in the table, to ensure the entry update times are consistent, they are given
+     * relative to the time the iterator was initialized.
+     *
+     * @param[out] aIterator  The iterator to initialize.
+     *
+     */
+    void InitPrefixTableIterator(PrefixTableIterator &aIterator) const
+    {
+        mDiscoveredPrefixTable.InitIterator(aIterator);
+    }
+
+    /**
+     * This method iterates over entries in the discovered prefix table.
+     *
+     * @param[in,out] aIterator  An iterator.
+     * @param[out]    aEntry     A reference to the entry to populate.
+     *
+     * @retval OT_ERROR_NONE        Got the next entry, @p aEntry is updated and @p aIterator is advanced.
+     * @retval OT_ERROR_NOT_FOUND   No more entries in the table.
+     *
+     */
+    Error GetNextPrefixTableEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
+    {
+        return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
+    }
+
 private:
     static constexpr uint16_t kMaxRouterAdvMessageLength = 256; // The maximum RA message length we can handle.
 
@@ -312,6 +345,9 @@ private:
 
         TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
+        void  InitIterator(PrefixTableIterator &aIterator) const;
+        Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
+
     private:
         static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
         static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
@@ -403,6 +439,17 @@ private:
             LinkedList<Entry> mEntries;
         };
 
+        class Iterator : public PrefixTableIterator
+        {
+        public:
+            const Router *GetRouter(void) const { return static_cast<const Router *>(mPtr1); }
+            void          SetRouter(const Router *aRouter) { mPtr1 = aRouter; }
+            const Entry * GetEntry(void) const { return static_cast<const Entry *>(mPtr2); }
+            void          SetEntry(const Entry *aEntry) { mPtr2 = aEntry; }
+            TimeMilli     GetInitTime(void) const { return TimeMilli(mData32); }
+            void          SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
+        };
+
         void        ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
         void        ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, Router &aRouter);
         void        ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
@@ -451,6 +498,21 @@ private:
 
     typedef Array<OmrPrefix, kMaxOmrPrefixNum> OmrPrefixArray;
 
+    class LocalOmrPrefix : InstanceLocator
+    {
+    public:
+        explicit LocalOmrPrefix(Instance &aInstance);
+        void               GenerateFrom(const Ip6::Prefix &aBrUlaPrefix);
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        Error              AddToNetData(void);
+        void               RemoveFromNetData(void);
+        bool               IsAddedInNetData(void) const { return mIsAddedInNetData; }
+
+    private:
+        Ip6::Prefix mPrefix;
+        bool        mIsAddedInNetData;
+    };
+
     void  EvaluateState(void);
     void  Start(void);
     void  Stop(void);
@@ -458,7 +520,6 @@ private:
     bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
-    void  GenerateOmrPrefix(void);
     void  GenerateOnLinkPrefix(void);
 
     void EvaluateOnLinkPrefix(void);
@@ -472,9 +533,6 @@ private:
     void  StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli);
     void  StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli);
     void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
-    Error PublishLocalOmrPrefix(void);
-    void  UnpublishLocalOmrPrefix(void);
-    bool  IsOmrPrefixAddedToLocalNetworkData(void) const;
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
@@ -521,8 +579,7 @@ private:
     // randomly generated if none is found in persistent storage.
     Ip6::Prefix mBrUlaPrefix;
 
-    // The OMR prefix allocated from the /48 BR ULA prefix.
-    Ip6::Prefix mLocalOmrPrefix;
+    LocalOmrPrefix mLocalOmrPrefix;
 
     // The advertised OMR prefixes. For a stable Thread network without
     // manually configured OMR prefixes, there should be a single OMR

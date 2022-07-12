@@ -83,7 +83,7 @@ class RadioFilter(thread_cert.TestCase):
         nodes = [leader, router, sed]
 
         leader.start()
-        self.simulator.go(WAIT_TIME)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         router.start()

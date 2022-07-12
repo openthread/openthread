@@ -26,44 +26,33 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_LIB_PLATFORM_RESET_UTIL_H_
-#define OT_LIB_PLATFORM_RESET_UTIL_H_
+/**
+ * @file
+ * @brief
+ *   This file includes the definitions of the radio spinel metrics.
+ */
 
-#if defined(OPENTHREAD_ENABLE_COVERAGE) && OPENTHREAD_ENABLE_COVERAGE && defined(__GNUC__)
-#if __GNUC__ >= 11 || (defined(__clang__) && (defined(__APPLE__) && (__clang_major__ >= 13)) || \
-                       (!defined(__APPLE__) && (__clang_major__ >= 12)))
-void __gcov_dump();
-void __gcov_reset();
+#ifndef RADIO_SPINEL_METRICS_H_
+#define RADIO_SPINEL_METRICS_H_
 
-static void flush_gcov(void)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * This structure represents the radio spinel metrics.
+ *
+ */
+typedef struct otRadioSpinelMetrics
 {
-    __gcov_dump();
-    __gcov_reset();
-}
-#else
-void __gcov_flush(void);
-#define flush_gcov __gcov_flush
-#endif /* __GNUC__ >= 11 || (defined(__clang__) && (defined(__APPLE__) && (__clang_major__ >= 13)) || \
-                             (!defined(__APPLE__) && (__clang_major__ >= 12))) */
-#else
-#define flush_gcov()
-#endif // defined(OPENTHREAD_ENABLE_COVERAGE) && OPENTHREAD_ENABLE_COVERAGE && defined(__GNUC__)
+    uint32_t mRcpTimeoutCount;         ///< The number of RCP timeouts.
+    uint32_t mRcpUnexpectedResetCount; ///< The number of RCP unexcepted resets.
+    uint32_t mRcpRestorationCount;     ///< The number of RCP restorations.
+    uint32_t mSpinelParseErrorCount;   ///< The number of spinel frame parse errors.
+} otRadioSpinelMetrics;
 
-#if defined(__linux__) || defined(__APPLE__)
-#include <setjmp.h>
-#include <unistd.h>
-jmp_buf gResetJump;
+#ifdef __cplusplus
+} // end of extern "C"
+#endif
 
-#define OT_SETUP_RESET_JUMP(kArgv) \
-    if (setjmp(gResetJump))        \
-    {                              \
-        alarm(0);                  \
-        flush_gcov();              \
-        execvp(kArgv[0], kArgv);   \
-    }
-
-#else
-#define OT_SETUP_RESET_JUMP(ARGV)
-#endif // defined(__linux__) || defined(__APPLE__)
-
-#endif // OT_LIB_PLATFORM_RESET_UTIL_H_
+#endif // RADIO_SPINEL_METRICS_H_

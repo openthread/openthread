@@ -378,6 +378,193 @@ private:
 };
 
 /**
+ * This class represents parsed IPv6 header along with UDP/TCP/ICMP6 headers from a received message/frame.
+ *
+ */
+class Headers : private Clearable<Headers>
+{
+public:
+    /**
+     * This method parses the IPv6 and UDP/TCP/ICMP6 headers from a given message.
+     *
+     * @param[in] aMessage   The message to parse the headers from.
+     *
+     * @retval kErrorNone    The headers are parsed successfully.
+     * @retval kErrorParse   Failed to parse the headers.
+     *
+     */
+    Error ParseFrom(const Message &aMessage);
+
+    /**
+     * This method decompresses lowpan frame and parses the IPv6 and UDP/TCP/ICMP6 headers.
+     *
+     * @param[in]  aMessage         The message from which to read the lowpan frame.
+     * @param[in]  aOffset          The offset in @p aMessage to start reading the frame.
+     * @param[in]  aMacSource       The MAC source address.
+     * @param[in]  aMacDest         The MAC destination address.
+     *
+     * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
+     * @retval kErrorNotFound       Lowpan frame is a next fragment and does not contain IPv6 headers.
+     * @retval kErrorParse          Failed to parse the headers.
+     *
+     */
+    Error DecompressFrom(const Message &     aMessage,
+                         uint16_t            aOffset,
+                         const Mac::Address &aMacSource,
+                         const Mac::Address &aMacDest);
+
+    /**
+     * This method decompresses lowpan frame and parses the IPv6 and UDP/TCP/ICMP6 headers.
+     *
+     * @param[in]  aFrame           Buffer containig the lowpan frame.
+     * @param[in]  aFrameLength     Number of bytes in @p aFrame.
+     * @param[in]  aMacSource       The MAC source address.
+     * @param[in]  aMacDest         The MAC destination address.
+     * @param[in]  aInstance        The OpenThread instance.
+     *
+     * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
+     * @retval kErrorNotFound       Lowpan frame is a next fragment and does not contain IPv6 headers.
+     * @retval kErrorParse          Failed to parse the headers.
+     *
+     */
+    Error DecompressFrom(const uint8_t *     aFrame,
+                         uint16_t            aFrameLength,
+                         const Mac::Address &aMacSource,
+                         const Mac::Address &aMacDest,
+                         Instance &          aInstance);
+
+    /**
+     * This method returns the IPv6 header.
+     *
+     * @returns The IPv6 header.
+     *
+     */
+    const Header &GetIp6Header(void) const { return mIp6Header; }
+
+    /**
+     * This method returns the IP protocol number from IPv6 Next Header field.
+     *
+     * @returns The IP protocol number.
+     *
+     */
+    uint8_t GetIpProto(void) const { return mIp6Header.GetNextHeader(); }
+
+    /**
+     * This method returns the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field from IPv6 header.
+     *
+     * @returns The ECN value.
+     *
+     */
+    Ecn GetEcn(void) const { return mIp6Header.GetEcn(); }
+
+    /**
+     * This method indicates if the protocol number from IPv6 header is UDP.
+     *
+     * @retval TRUE   If the protocol number in IPv6 header is UDP.
+     * @retval FALSE  If the protocol number in IPv6 header is not UDP.
+     *
+     */
+    bool IsUdp(void) const { return GetIpProto() == kProtoUdp; }
+
+    /**
+     * This method indicates if the protocol number from IPv6 header is TCP.
+     *
+     * @retval TRUE   If the protocol number in IPv6 header is TCP.
+     * @retval FALSE  If the protocol number in IPv6 header is not TCP.
+     *
+     */
+    bool IsTcp(void) const { return GetIpProto() == kProtoTcp; }
+
+    /**
+     * This method indicates if the protocol number from IPv6 header is ICMPv6.
+     *
+     * @retval TRUE   If the protocol number in IPv6 header is ICMPv6.
+     * @retval FALSE  If the protocol number in IPv6 header is not ICMPv6.
+     *
+     */
+    bool IsIcmp6(void) const { return GetIpProto() == kProtoIcmp6; }
+
+    /**
+     * This method returns the source IPv6 address from IPv6 header.
+     *
+     * @returns The source IPv6 address.
+     *
+     */
+    const Address &GetSourceAddress(void) const { return mIp6Header.GetSource(); }
+
+    /**
+     * This method returns the destination IPv6 address from IPv6 header.
+     *
+     * @returns The destination IPv6 address.
+     *
+     */
+    const Address &GetDestinationAddress(void) const { return mIp6Header.GetDestination(); }
+
+    /**
+     * This method returns the UDP header.
+     *
+     * This method MUST be used when `IsUdp() == true`. Otherwise its behavior is undefined
+     *
+     * @returns The UDP header.
+     *
+     */
+    const Udp::Header &GetUdpHeader(void) const { return mHeader.mUdp; }
+
+    /**
+     * This method returns the TCP header.
+     *
+     * This method MUST be used when `IsTcp() == true`. Otherwise its behavior is undefined
+     *
+     * @returns The TCP header.
+     *
+     */
+    const Tcp::Header &GetTcpHeader(void) const { return mHeader.mTcp; }
+
+    /**
+     * This method returns the ICMPv6 header.
+     *
+     * This method MUST be used when `IsIcmp6() == true`. Otherwise its behavior is undefined
+     *
+     * @returns The ICMPv6 header.
+     *
+     */
+    const Icmp::Header &GetIcmpHeader(void) const { return mHeader.mIcmp; }
+
+    /**
+     * This method returns the source port number if header is UDP or TCP, or zero otherwise
+     *
+     * @returns The source port number under UDP / TCP or zero.
+     *
+     */
+    uint16_t GetSourcePort(void) const;
+
+    /**
+     * This method returns the destination port number if header is UDP or TCP, or zero otherwise.
+     *
+     * @returns The destination port number under UDP / TCP or zero.
+     *
+     */
+    uint16_t GetDestinationPort(void) const;
+
+    /**
+     * This method returns the checksum values from corresponding UDP, TCP, or ICMPv6 header.
+     *
+     * @returns The checksum value.
+     *
+     */
+    uint16_t GetChecksum(void) const;
+
+private:
+    Header mIp6Header;
+    union
+    {
+        Udp::Header  mUdp;
+        Tcp::Header  mTcp;
+        Icmp::Header mIcmp;
+    } mHeader;
+};
+
+/**
  * @}
  *
  */

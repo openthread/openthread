@@ -170,6 +170,8 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
     if (aCompress)
     {
         Lowpan::BufferWriter buffer(result, 127);
+        Message *            compressedMsg;
+        Ip6::Ecn             ecn;
 
         VerifyOrQuit((message = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
 
@@ -192,6 +194,25 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
             VerifyOrQuit(compressBytes == aVector.mIphcHeader.mLength, "Lowpan::Compress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "Lowpan::Compress failed");
             VerifyOrQuit(memcmp(iphc, result, iphcLength) == 0, "Lowpan::Compress failed");
+
+            // Validate `DecompressEcn()` and `MarkCompressedEcn()`
+
+            VerifyOrQuit((compressedMsg = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
+            SuccessOrQuit(compressedMsg->AppendBytes(result, compressBytes));
+
+            ecn = sLowpan->DecompressEcn(*compressedMsg, /* aOffset */ 0);
+            VerifyOrQuit(ecn == aVector.GetIpHeader().GetEcn());
+            printf("Decompressed ECN is %d\n", ecn);
+
+            if (ecn != Ip6::kEcnNotCapable)
+            {
+                sLowpan->MarkCompressedEcn(*compressedMsg, /*a aOffset */ 0);
+                ecn = sLowpan->DecompressEcn(*compressedMsg, /* aOffset */ 0);
+                VerifyOrQuit(ecn == Ip6::kEcnMarked);
+                printf("ECN is updated to %d\n", ecn);
+            }
+
+            compressedMsg->Free();
         }
 
         message->Free();

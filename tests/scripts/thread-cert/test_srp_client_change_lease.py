@@ -85,7 +85,7 @@ class SrpClientChangeLeaseTime(thread_cert.TestCase):
         server.srp_server_set_enabled(True)
         server.srp_server_set_lease_range(LEASE_TIME, LEASE_TIME, KEY_LEASE_TIME, KEY_LEASE_TIME)
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'leader')
         self.simulator.go(5)
 

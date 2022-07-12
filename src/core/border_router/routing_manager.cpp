@@ -64,6 +64,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsRunning(false)
     , mIsEnabled(false)
     , mInfraIf(aInstance)
+    , mLocalOmrPrefix(aInstance)
     , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
     , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
@@ -82,8 +83,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
 
     mBrUlaPrefix.Clear();
 
-    mLocalOmrPrefix.Clear();
-
     mLocalOnLinkPrefix.Clear();
 
     mLocalNat64Prefix.Clear();
@@ -96,7 +95,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
     SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
 
     SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
-    GenerateOmrPrefix();
+    mLocalOmrPrefix.GenerateFrom(mBrUlaPrefix);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     GenerateNat64Prefix();
 #endif
@@ -146,7 +145,7 @@ Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix)
     Error error = kErrorNone;
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-    aPrefix = mLocalOmrPrefix;
+    aPrefix = mLocalOmrPrefix.GetPrefix();
 
 exit:
     return error;
@@ -209,15 +208,6 @@ exit:
     return error;
 }
 
-void RoutingManager::GenerateOmrPrefix(void)
-{
-    mLocalOmrPrefix = mBrUlaPrefix;
-    mLocalOmrPrefix.SetSubnetId(kOmrPrefixSubnetId);
-    mLocalOmrPrefix.SetLength(kOmrPrefixLength);
-
-    LogInfo("Generated OMR prefix: %s", mLocalOmrPrefix.ToString().AsCString());
-}
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 void RoutingManager::GenerateNat64Prefix(void)
 {
@@ -272,7 +262,7 @@ void RoutingManager::Stop(void)
 {
     VerifyOrExit(mIsRunning);
 
-    UnpublishLocalOmrPrefix();
+    mLocalOmrPrefix.RemoveFromNetData();
 
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
@@ -470,7 +460,7 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
             }
         }
 
-        if (entry->GetPrefix() == mLocalOmrPrefix)
+        if (entry->GetPrefix() == mLocalOmrPrefix.GetPrefix())
         {
             localOmrEntry = entry;
         }
@@ -480,98 +470,39 @@ void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
 
     if (favoredOmrEntry == nullptr)
     {
-        LogInfo("EvaluateOmrPrefix: No preferred OMR prefixes found in Thread network");
+        LogInfo("EvaluateOmrPrefix: No preferred OMR prefix found in Thread network");
 
         // The `aNewOmrPrefixes` remains empty if we fail to publish
         // the local OMR prefix.
-        SuccessOrExit(PublishLocalOmrPrefix());
+        SuccessOrExit(mLocalOmrPrefix.AddToNetData());
 
-        localOmrEntry = aNewOmrPrefixes.PushBack();
-        VerifyOrExit(localOmrEntry != nullptr);
+        if (localOmrEntry == nullptr)
+        {
+            localOmrEntry = aNewOmrPrefixes.PushBack();
+            VerifyOrExit(localOmrEntry != nullptr);
 
-        localOmrEntry->Init(mLocalOmrPrefix, NetworkData::kRoutePreferenceLow);
+            localOmrEntry->Init(mLocalOmrPrefix.GetPrefix(), NetworkData::kRoutePreferenceLow);
+        }
     }
     else if (favoredOmrEntry == localOmrEntry)
     {
-        IgnoreError(PublishLocalOmrPrefix());
+        IgnoreError(mLocalOmrPrefix.AddToNetData());
     }
-    else if (IsOmrPrefixAddedToLocalNetworkData())
+    else if (mLocalOmrPrefix.IsAddedInNetData())
     {
         LogInfo("EvaluateOmrPrefix: There is already a preferred OMR prefix %s in the Thread network",
                 favoredOmrEntry->ToString().AsCString());
 
-        UnpublishLocalOmrPrefix();
+        mLocalOmrPrefix.RemoveFromNetData();
 
         if (localOmrEntry != nullptr)
         {
-            // Remove the local OMR prefix from the list by overwriting it
-            // with popped last entry in the list.
-            *localOmrEntry = *aNewOmrPrefixes.PopBack();
+            aNewOmrPrefixes.Remove(*localOmrEntry);
         }
     }
 
 exit:
     return;
-}
-
-Error RoutingManager::PublishLocalOmrPrefix(void)
-{
-    Error                           error = kErrorNone;
-    NetworkData::OnMeshPrefixConfig omrPrefixConfig;
-
-    OT_ASSERT(mIsRunning);
-
-    VerifyOrExit(!IsOmrPrefixAddedToLocalNetworkData());
-
-    omrPrefixConfig.Clear();
-    omrPrefixConfig.mPrefix       = mLocalOmrPrefix;
-    omrPrefixConfig.mStable       = true;
-    omrPrefixConfig.mSlaac        = true;
-    omrPrefixConfig.mPreferred    = true;
-    omrPrefixConfig.mOnMesh       = true;
-    omrPrefixConfig.mDefaultRoute = false;
-    omrPrefixConfig.mPreference   = NetworkData::kRoutePreferenceLow;
-
-    error = Get<NetworkData::Local>().AddOnMeshPrefix(omrPrefixConfig);
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to publish local OMR prefix %s in Thread network: %s", mLocalOmrPrefix.ToString().AsCString(),
-                ErrorToString(error));
-    }
-    else
-    {
-        Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        LogInfo("Publishing local OMR prefix %s in Thread network", mLocalOmrPrefix.ToString().AsCString());
-    }
-
-exit:
-    return error;
-}
-
-void RoutingManager::UnpublishLocalOmrPrefix(void)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mIsRunning);
-
-    VerifyOrExit(IsOmrPrefixAddedToLocalNetworkData());
-
-    SuccessOrExit(error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalOmrPrefix));
-
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    LogInfo("Unpublishing local OMR prefix %s from Thread network", mLocalOmrPrefix.ToString().AsCString());
-
-exit:
-    if (error != kErrorNone && error != kErrorNotFound)
-    {
-        LogWarn("Failed to unpublish local OMR prefix %s from Thread network: %s",
-                mLocalOmrPrefix.ToString().AsCString(), ErrorToString(error));
-    }
-}
-
-bool RoutingManager::IsOmrPrefixAddedToLocalNetworkData(void) const
-{
-    return Get<NetworkData::Local>().ContainsOnMeshPrefix(mLocalOmrPrefix);
 }
 
 Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
@@ -1181,7 +1112,7 @@ bool RoutingManager::ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption
         ExitNow();
     }
 
-    VerifyOrExit(mLocalOmrPrefix != aPrefix);
+    VerifyOrExit(mLocalOmrPrefix.GetPrefix() != aPrefix);
 
     // Ignore OMR prefixes advertised by ourselves or in current Thread Network Data.
     // The `mAdvertisedOmrPrefixes` and the OMR prefix set in Network Data should eventually
@@ -1874,6 +1805,53 @@ void RoutingManager::DiscoveredPrefixTable::HandleSignalTask(Tasklet &aTasklet)
     aTasklet.Get<RoutingManager>().HandleDiscoveredPrefixTableChanged();
 }
 
+void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const
+{
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    iterator.SetInitTime();
+    iterator.SetRouter(mRouters.Front());
+    iterator.SetEntry(mRouters.IsEmpty() ? nullptr : mRouters[0].mEntries.GetHead());
+}
+
+Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &aIterator,
+                                                          PrefixTableEntry &   aEntry) const
+{
+    Error     error    = kErrorNone;
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    VerifyOrExit(iterator.GetRouter() != nullptr, error = kErrorNotFound);
+    OT_ASSERT(iterator.GetEntry() != nullptr);
+
+    aEntry.mRouterAddress       = iterator.GetRouter()->mAddress;
+    aEntry.mPrefix              = iterator.GetEntry()->GetPrefix();
+    aEntry.mIsOnLink            = iterator.GetEntry()->IsOnLinkPrefix();
+    aEntry.mMsecSinceLastUpdate = iterator.GetInitTime() - iterator.GetEntry()->GetLastUpdateTime();
+    aEntry.mValidLifetime       = iterator.GetEntry()->GetValidLifetime();
+    aEntry.mPreferredLifetime   = aEntry.mIsOnLink ? iterator.GetEntry()->GetPreferredLifetime() : 0;
+    aEntry.mRoutePreference =
+        static_cast<otRoutePreference>(aEntry.mIsOnLink ? 0 : iterator.GetEntry()->GetRoutePreference());
+
+    // Advance the iterator
+    iterator.SetEntry(iterator.GetEntry()->GetNext());
+
+    if (iterator.GetEntry() == nullptr)
+    {
+        if (iterator.GetRouter() != mRouters.Back())
+        {
+            iterator.SetRouter(iterator.GetRouter() + 1);
+            iterator.SetEntry(iterator.GetRouter()->mEntries.GetHead());
+        }
+        else
+        {
+            iterator.SetRouter(nullptr);
+        }
+    }
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Entry
 
@@ -2036,6 +2014,80 @@ RoutingManager::OmrPrefix::InfoString RoutingManager::OmrPrefix::ToString(void) 
     }
 
     return string;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// LocalOmrPrefix
+
+RoutingManager::LocalOmrPrefix::LocalOmrPrefix(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mIsAddedInNetData(false)
+{
+}
+
+void RoutingManager::LocalOmrPrefix::GenerateFrom(const Ip6::Prefix &aBrUlaPrefix)
+{
+    mPrefix = aBrUlaPrefix;
+    mPrefix.SetSubnetId(kOmrPrefixSubnetId);
+    mPrefix.SetLength(kOmrPrefixLength);
+
+    LogInfo("Generated OMR prefix: %s", mPrefix.ToString().AsCString());
+}
+
+Error RoutingManager::LocalOmrPrefix::AddToNetData(void)
+{
+    Error                           error = kErrorNone;
+    NetworkData::OnMeshPrefixConfig config;
+
+    VerifyOrExit(!mIsAddedInNetData);
+
+    config.Clear();
+    config.mPrefix       = mPrefix;
+    config.mStable       = true;
+    config.mSlaac        = true;
+    config.mPreferred    = true;
+    config.mOnMesh       = true;
+    config.mDefaultRoute = false;
+    config.mPreference   = NetworkData::kRoutePreferenceLow;
+
+    error = Get<NetworkData::Local>().AddOnMeshPrefix(config);
+
+    if (error != kErrorNone)
+    {
+        LogWarn("Failed to add local OMR prefix %s in Thread Network Data: %s", mPrefix.ToString().AsCString(),
+                ErrorToString(error));
+        ExitNow();
+    }
+
+    mIsAddedInNetData = true;
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    LogInfo("Added local OMR prefix %s in Thread Network Data", mPrefix.ToString().AsCString());
+
+exit:
+    return error;
+}
+
+void RoutingManager::LocalOmrPrefix::RemoveFromNetData(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mIsAddedInNetData);
+
+    error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mPrefix);
+
+    if (error != kErrorNone)
+    {
+        LogWarn("Failed to remove local OMR prefix %s from Thread Network Data: %s", mPrefix.ToString().AsCString(),
+                ErrorToString(error));
+        ExitNow();
+    }
+
+    mIsAddedInNetData = false;
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    LogInfo("Removed local OMR prefix %s from Thread Network Data", mPrefix.ToString().AsCString());
+
+exit:
+    return;
 }
 
 } // namespace BorderRouter

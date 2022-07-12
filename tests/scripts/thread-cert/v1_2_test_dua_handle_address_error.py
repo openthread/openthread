@@ -92,7 +92,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         self.nodes[BBR_1].set_backbone_router(seqno=1, reg_delay=REG_DELAY)
         self.nodes[BBR_1].start()
 
-        self.simulator.go(WAIT_ATTACH + config.DEFAULT_ROUTER_SELECTION_JITTER)
+        self.simulator.go(WAIT_ATTACH * 2 + config.DEFAULT_ROUTER_SELECTION_JITTER)
         self.assertEqual(self.nodes[BBR_1].get_state(), 'leader')
         self.nodes[BBR_1].enable_backbone_router()
         self.simulator.go(BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE)

@@ -100,6 +100,14 @@ public:
     void SetMacDestination(uint16_t aAddress) { mMacDestination.SetShort(aAddress); }
 
     /**
+     * This method gets the IPv6 header
+     *
+     * @returns the IPv6 header.
+     *
+     */
+    const Ip6::Header &GetIpHeader(void) const { return mIpHeader; }
+
+    /**
      * This method initializes IPv6 Header.
      *
      * @param aVersionClassFlow Value of the Version, Traffic class and Flow control fields.

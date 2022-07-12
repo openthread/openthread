@@ -211,7 +211,7 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
     def test(self):
         # 1 Ensure topology is formed correctly without ROUTER23.
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 24):

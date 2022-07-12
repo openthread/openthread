@@ -399,6 +399,10 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
             RemoveNeighbor(child);
         }
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().UpdateCsl();
+#endif
 }
 
 void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
@@ -439,6 +443,10 @@ void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
             RemoveNeighbor(child);
         }
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().UpdateCsl();
+#endif
 
     LogNote("Leader partition id 0x%x", mLeaderData.GetPartitionId());
 }
@@ -3669,7 +3677,7 @@ exit:
     return;
 }
 
-Error MleRouter::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
+Error MleRouter::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
 {
     Error error = kErrorNone;
 
