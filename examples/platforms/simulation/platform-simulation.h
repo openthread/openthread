@@ -92,7 +92,7 @@ struct Event
     uint8_t  mEvent;
     uint16_t mDataLength;
 #endif
-    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE]; // mData must be last field of struct
+    uint8_t mData[OT_EVENT_DATA_MAX_SIZE]; // mData must be last field of struct
 } OT_TOOL_PACKED_END;
 
 enum
