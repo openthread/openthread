@@ -1065,7 +1065,7 @@ exit:
     if (error != OT_ERROR_ABORT
         && ( (!isAcked) || (error != OT_ERROR_NONE && isAcked) ))
 #else
-    OT_UNUSED_VAR(isAcked);
+    OT_UNUSED_VARIABLE(isAcked);
     if (error != OT_ERROR_ABORT)
 #endif
     {
