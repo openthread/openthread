@@ -130,10 +130,8 @@ void Checksum::Calculate(const Ip4::Address &aSource,
     {
         AddData(aSource.GetBytes(), sizeof(Ip4::Address));
         AddData(aDestination.GetBytes(), sizeof(Ip4::Address));
-        AddUint16(length);
-        // By converting aIpProto to uint16_t, we are actually appending eight bits of 0 before when calculating the
-        // presudo header.
         AddUint16(static_cast<uint16_t>(aIpProto));
+        AddUint16(length);
     }
 
     // Add message content (from offset to the end) to checksum.
