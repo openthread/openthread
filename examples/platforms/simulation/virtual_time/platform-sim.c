@@ -122,11 +122,11 @@ static void receiveEvent(otInstance *aInstance)
         break;
 
     case OT_SIM_EVENT_RADIO_TX_DONE:
-            // the external RF simulator determines success/error of Tx, and must report an otError code.
-            assert(event.mDataLength>=1);
-            otError err = (otError) event.mData[0];
-            platformRadioTransmitDone(aInstance, err);
-            break;
+        // the external RF simulator determines success/error of Tx, and must report an otError code.
+        assert(event.mDataLength>=1);
+        otError err = (otError) event.mData[0];
+        platformRadioTransmitDone(aInstance, err);
+        break;
 #endif
     
     default:
@@ -144,7 +144,7 @@ static void platformSendSleepEvent(void)
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    event.mNodeId     = gNodeId;
+    event.mNodeId = gNodeId;
 #endif
 
     otSimSendEvent(&event);
@@ -174,7 +174,7 @@ otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
     event.mEvent      = OT_SIM_EVENT_UART_WRITE;
     event.mDataLength = aLength;
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    event.mNodeId     = gNodeId;
+    event.mNodeId = gNodeId;
 #endif
 
     memcpy(event.mData, aData, aLength);
@@ -346,7 +346,7 @@ void otPlatOtnsStatus(const char *aStatus)
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    event.mNodeId     = gNodeId;
+    event.mNodeId = gNodeId;
 #endif
 
     otSimSendEvent(&event);

@@ -67,7 +67,7 @@ enum
     OT_SIM_EVENT_UART_WRITE         = 2,
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
-    
+
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     OT_SIM_EVENT_RADIO_FRAME_RX     = 16,
     OT_SIM_EVENT_RADIO_FRAME_TX     = 17,
@@ -75,7 +75,7 @@ enum
     OT_SIM_EVENT_RADIO_FRAME_TX_ACK = 19,
 #endif
     
-    OT_EVENT_DATA_MAX_SIZE          = 1024,
+    OT_EVENT_DATA_MAX_SIZE = 1024,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -85,11 +85,11 @@ struct Event
     uint8_t  mEvent;
     uint16_t mDataLength;
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    uint32_t mNodeId;       // should equal gNodeId for events to/from this node.
-    int8_t   mParam1;       // generic parameter 1 used by specific event types (for TxPower, RSSI)
-    int8_t   mParam2;       // generic parameter 2 used by specific event types (for CCA ED)
+    uint32_t mNodeId; // should equal gNodeId for events to/from this node.
+    int8_t   mParam1; // generic parameter 1 used by specific event types (for TxPower, RSSI)
+    int8_t   mParam2; // generic parameter 2 used by specific event types (for CCA ED)
 #endif
-    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];  // mData must be last field of struct
+    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE]; // mData must be last field of struct
 } OT_TOOL_PACKED_END;
 
 enum
