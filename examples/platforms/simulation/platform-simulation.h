@@ -67,14 +67,13 @@ enum
     OT_SIM_EVENT_UART_WRITE         = 2,
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
-
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     OT_SIM_EVENT_RADIO_FRAME_RX     = 16,
     OT_SIM_EVENT_RADIO_FRAME_TX     = 17,
     OT_SIM_EVENT_RADIO_TX_DONE      = 18,
     OT_SIM_EVENT_RADIO_FRAME_TX_ACK = 19,
-#endif
-    
+    OT_SIM_EVENT_RADIO_FRAME_RX_INTERFERED = 20,
+    OT_SIM_EVENT_V2_FORMAT          = 130, // unique indicator for V2 event message.
+
     OT_EVENT_DATA_MAX_SIZE = 1024,
 };
 
@@ -82,12 +81,16 @@ OT_TOOL_PACKED_BEGIN
 struct Event
 {
     uint64_t mDelay;
-    uint8_t  mEvent;
-    uint16_t mDataLength;
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    uint32_t mNodeId; // should equal gNodeId for events to/from this node.
+    uint8_t  mEventV2Indicator; // field indicates OT_SIM_EVENT_V2_FORMAT
+    uint16_t mDataLength;
+    uint8_t  mEvent; // event type field for V2 event message format.
+    uint32_t mNodeId; // node ID should equal gNodeId for events to/from this node.
     int8_t   mParam1; // generic parameter 1 used by specific event types (for TxPower, RSSI)
     int8_t   mParam2; // generic parameter 2 used by specific event types (for CCA ED)
+#else
+    uint8_t  mEvent;
+    uint16_t mDataLength;
 #endif
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE]; // mData must be last field of struct
 } OT_TOOL_PACKED_END;
@@ -231,12 +234,13 @@ void platformUartProcess(void);
 void platformUartRestore(void);
 
 /**
- * This function sends a simulation event.
+ * This function sends a simulation event. It also writes those fields into the
+ * event that are the same for all types of events.
  *
- * @param[in]   aEvent  A pointer to the simulation event to send
+ * @param[in,out]   aEvent  A pointer to the simulation event to send
  *
  */
-void otSimSendEvent(const struct Event *aEvent);
+void otSimSendEvent(struct Event *aEvent);
 
 /**
  * This function sends Uart data through simulation.

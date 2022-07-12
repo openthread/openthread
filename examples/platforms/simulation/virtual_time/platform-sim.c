@@ -71,7 +71,7 @@ static void handleSignal(int aSignal)
     gTerminate = true;
 }
 
-void otSimSendEvent(const struct Event *aEvent)
+void otSimSendEvent(struct Event *aEvent)
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
@@ -80,6 +80,9 @@ void otSimSendEvent(const struct Event *aEvent)
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
     sockaddr.sin_port = htons(9000 + sPortOffset);
 
+    // fill in the default fields (same for all events), and send header + data.
+    aEvent->mEventV2Indicator = OT_SIM_EVENT_V2_FORMAT;
+    aEvent->mNodeId = gNodeId;
     rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
                   sizeof(sockaddr));
 
@@ -137,15 +140,11 @@ static void receiveEvent(otInstance *aInstance)
 static void platformSendSleepEvent(void)
 {
     struct Event event;
-
     assert(platformAlarmGetNext() > 0);
 
     event.mDelay      = platformAlarmGetNext();
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    event.mNodeId = gNodeId;
-#endif
 
     otSimSendEvent(&event);
 }
@@ -173,14 +172,9 @@ otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_UART_WRITE;
     event.mDataLength = aLength;
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    event.mNodeId = gNodeId;
-#endif
-
     memcpy(event.mData, aData, aLength);
 
     otSimSendEvent(&event);
-
     otPlatUartSendDone();
 
     return error;
@@ -338,16 +332,12 @@ void otPlatOtnsStatus(const char *aStatus)
 {
     struct Event event;
     uint16_t     statusLength = (uint16_t)strlen(aStatus);
-
     assert(statusLength < sizeof(event.mData));
 
     memcpy(event.mData, aStatus, statusLength);
     event.mDataLength = statusLength;
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    event.mNodeId = gNodeId;
-#endif
 
     otSimSendEvent(&event);
 }
