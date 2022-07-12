@@ -31,7 +31,7 @@
  *   This file provides an example on how to implement an OpenThread vendor interface to RCP.
  */
 
-#include "openthread-core-config.h"
+#include "openthread-posix-config.h"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
 
@@ -80,6 +80,7 @@ VendorInterface::VendorInterface(SpinelInterface::ReceiveFrameCallback aCallback
                                  SpinelInterface::RxFrameBuffer &      aFrameBuffer)
 {
     new (&sVendorInterfaceImplRaw) VendorInterfaceImpl(aCallback, aCallbackContext, aFrameBuffer);
+    OT_UNUSED_VARIABLE(sVendorInterfaceImplRaw);
 }
 
 VendorInterface::~VendorInterface(void)
