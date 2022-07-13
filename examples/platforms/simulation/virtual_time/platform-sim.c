@@ -82,7 +82,7 @@ void otSimSendEvent(struct Event *aEvent)
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     // fill in V2 message format default fields (same for all events).
     aEvent->mEventV2Indicator = OT_SIM_EVENT_V2_FORMAT;
-    aEvent->mNodeId = gNodeId;
+    aEvent->mNodeId           = gNodeId;
 #endif
     // send header and data.
     rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
