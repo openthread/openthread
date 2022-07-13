@@ -83,7 +83,7 @@ struct Event
 #if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     uint8_t  mEventV2Indicator; // field indicates OT_SIM_EVENT_V2_FORMAT
     uint16_t mDataLength;
-    uint8_t  mEvent; // event type field for V2 event message format.
+    uint8_t  mEvent;  // event type field for V2 event message format.
     uint32_t mNodeId; // node ID should equal gNodeId for events to/from this node.
     int8_t   mParam1; // generic parameter 1 used by specific event types (for TxPower, RSSI)
     int8_t   mParam2; // generic parameter 2 used by specific event types (for CCA ED)

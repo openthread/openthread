@@ -754,7 +754,7 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
     sReceiveFrame.mLength                  = (uint8_t)(aBufLength - offsetof(struct RadioMessage, mPsdu));
     sReceiveFrame.mInfo.mRxInfo.mRssi      = rssi;
     sReceiveFrame.mInfo.mRxInfo.mLqi       = OT_RADIO_LQI_NONE; // No support of LQI reporting.
-    sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet(); // Timestamp the moment of complete frame reception.
+    sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();   // Timestamp moment of complete frame reception.
 
     radioReceive(aInstance);
 
@@ -942,7 +942,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     // event.mParam1 contains the TxPower used. event.mParam2 the CCA ED threshold.
     event.mEvent    = isAck ? OT_SIM_EVENT_RADIO_TX_ACK : OT_SIM_EVENT_RADIO_TX;
     int8_t maxPower = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
-    event.mParam1	= sTxPower < maxPower ? sTxPower : maxPower;
+    event.mParam1   = sTxPower < maxPower ? sTxPower : maxPower;
     event.mParam2   = sCcaEdThresh;
 #endif // OPENTHREAD_SIMULATION_EXT_RF_MODELS
     // RadioMessage includes metadata and the PDSU (frame)
