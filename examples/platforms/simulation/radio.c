@@ -1029,8 +1029,7 @@ void radioProcessFrame(otInstance *aInstance)
     otMacAddress macAddress;
     OT_UNUSED_VARIABLE(macAddress);
 
-    sReceiveFrame.mInfo.mRxInfo.mRssi = -20;
-    sReceiveFrame.mInfo.mRxInfo.mLqi  = OT_RADIO_LQI_NONE;
+    // sReceiveFrame RSSI and LQI are set in platformRadioReceive()
 
     sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
     sReceiveFrame.mInfo.mRxInfo.mAckedWithSecEnhAck    = false;
