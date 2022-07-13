@@ -89,26 +89,32 @@ Error Agent::Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInf
 {
     OT_UNUSED_VARIABLE(aMessage);
 
-    return static_cast<Agent *>(aContext)->IsTmfMessage(aMessageInfo) ? kErrorNone : kErrorNotTmf;
+    return static_cast<Agent *>(aContext)->IsTmfMessage(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(),
+                                                        aMessageInfo.GetSockPort())
+               ? kErrorNone
+               : kErrorNotTmf;
 }
 
-bool Agent::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
+bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const
 {
-    bool rval = true;
+    bool isTmf = false;
 
-    // A TMF message must comply with following rules:
-    // 1. The destination is a Mesh Local Address or a Link-Local Multicast Address or a Realm-Local Multicast Address,
-    //    and the source is a Mesh Local Address. Or
-    // 2. Both the destination and the source are Link-Local Addresses.
-    VerifyOrExit(
-        ((Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) ||
-          aMessageInfo.GetSockAddr().IsLinkLocalMulticast() || aMessageInfo.GetSockAddr().IsRealmLocalMulticast()) &&
-         Get<Mle::MleRouter>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr())) ||
-            ((aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()) &&
-             aMessageInfo.GetPeerAddr().IsLinkLocal()),
-        rval = false);
+    VerifyOrExit(aDestPort == kUdpPort);
+
+    if (aSourceAddress.IsLinkLocal())
+    {
+        isTmf = aDestAddress.IsLinkLocal() || aDestAddress.IsLinkLocalMulticast();
+        ExitNow();
+    }
+
+    VerifyOrExit(Get<Mle::Mle>().IsMeshLocalAddress(aSourceAddress));
+    VerifyOrExit(Get<Mle::Mle>().IsMeshLocalAddress(aDestAddress) || aDestAddress.IsLinkLocalMulticast() ||
+                 aDestAddress.IsRealmLocalMulticast());
+
+    isTmf = true;
+
 exit:
-    return rval;
+    return isTmf;
 }
 
 } // namespace Tmf

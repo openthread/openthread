@@ -730,9 +730,9 @@ void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
 {
     TimeMilli now          = TimerMilli::GetNow();
     TimeMilli evaluateTime = now + aDelayMilli;
-    TimeMilli earlestTime  = mLastRouterAdvertisementSendTime + kMinDelayBetweenRtrAdvs;
+    TimeMilli earliestTime = mLastRouterAdvertisementSendTime + kMinDelayBetweenRtrAdvs;
 
-    evaluateTime = OT_MAX(evaluateTime, earlestTime);
+    evaluateTime = OT_MAX(evaluateTime, earliestTime);
 
     LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", evaluateTime - now);
 
@@ -858,7 +858,7 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
     }
 }
 
-bool RoutingManager::IsReceivdRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const
+bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const
 {
     // Determines whether or not a received RA message was prepared by
     // by `RoutingManager` itself.
@@ -1186,7 +1186,7 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
         // We skip and do not update RA header if the received RA message
         // was not prepared and sent by `RoutingManager` itself.
 
-        VerifyOrExit(!IsReceivdRouterAdvertFromManager(*aRouterAdvertMessage));
+        VerifyOrExit(!IsReceivedRouterAdvertFromManager(*aRouterAdvertMessage));
     }
 
     oldHeader                       = mRouterAdvertHeader;

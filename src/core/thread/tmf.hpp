@@ -153,13 +153,23 @@ public:
     Error Start(void);
 
     /**
-     * This method returns whether Thread Management Framework Addressing Rules are met.
+     * This method indicates whether or not a message meets TMF addressing rules.
      *
-     * @retval TRUE   if Thread Management Framework Addressing Rules are met.
-     * @retval FALSE  if Thread Management Framework Addressing Rules are not met.
+     * A TMF message MUST comply with following rules:
+     *
+     * - The destination port is `Tmf::kUdpPort`.
+     * - Both source and destination addresses are Link-Local, or
+     * - Source is Mesh Local and then destination is Mesh Local or Link-Local Multicast or Realm-Local Multicast.
+     *
+     * @param[in] aSourceAddress   Source IPv6 address.
+     * @param[in] aDestAddress     Destination IPv6 address.
+     * @param[in] aDestPort        Destination port number.
+     *
+     * @retval TRUE   if TMF addressing rules are met.
+     * @retval FALSE  if TMF addressing rules are not met.
      *
      */
-    bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
+    bool IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const;
 
 private:
     static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
