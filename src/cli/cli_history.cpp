@@ -696,4 +696,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#endif // OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
