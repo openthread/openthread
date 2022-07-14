@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-border-router
+ * @addtogroup api-border-routing
  *
  * @brief
  *  This module includes definitions related to Border Routing Manager.

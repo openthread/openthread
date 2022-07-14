@@ -102,6 +102,7 @@
  * @defgroup api-backbone-router      Backbone Router
  * @defgroup api-border-agent         Border Agent
  * @defgroup api-border-router        Border Router
+ * @defgroup api-border-routing       Border Routing Manager
  * @defgroup api-commissioner         Commissioner
  * @defgroup api-thread-general       General
  * @brief This module includes functions for all Thread roles.
@@ -177,6 +178,7 @@
  * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
  * @defgroup plat-trel                TREL - Platform
+ * @defgroup plat-infra-if            Infrastructure Interface
  *
  * @}
  *
