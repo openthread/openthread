@@ -152,11 +152,11 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
- * This function sets the preference to use when advertising Route Info Options (e.g., for discovered OMR prefixes) in
- * Router Advertisement messages sent over the infrastructure link.
+ * This function sets the preference to use when advertising Route Info Options in Router Advertisement messages sent
+ * over the infrastructure link, for example for discovered OMR prefixes.
  *
- * By default BR will use 'medium' preference level but this function allows the default value to be changed. As an
- * example, it can be set to 'low' preference in the case where device is a temporary BR (a mobile BR or a
+ * By default BR will use `medium` preference level, but this function allows the default value to be changed. As an
+ * example, it can be set to `low` preference in the case where device is a temporary BR (a mobile BR or a
  * battery-powered BR) to indicate that other BRs (if any) should be preferred over this BR on the infrastructure link.
  *
  * @param[in] aInstance     A pointer to an OpenThread instance.
