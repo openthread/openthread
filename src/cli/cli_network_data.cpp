@@ -277,7 +277,7 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
     /**
      * @cli netdata publish route
      * @code
-     * netdata netdata publish route fd00:1234:5678::/64 s high
+     * netdata publish route fd00:1234:5678::/64 s high
      * Done
      * @endcode
      * @cparam publish route @ca{prefix} [@ca{sn}] [@ca{high}|@ca{med}|@ca{low}]
