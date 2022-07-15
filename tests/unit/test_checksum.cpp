@@ -432,7 +432,7 @@ void TestIcmp4MessageChecksum(void)
     uint8_t           mPayload[sizeof(kExampleIcmpMessage)];
     Ip4::Icmp::Header icmpHeader;
 
-    message->AppendBytes(kExampleIcmpMessage, sizeof(kExampleIcmpMessage));
+    SuccessOrQuit(message->AppendBytes(kExampleIcmpMessage, sizeof(kExampleIcmpMessage)));
 
     // Random IPv4 address, ICMP message checksum does not include a presudo header like TCP and UDP.
     source.mFields.m32 = 0x12345678;
@@ -440,7 +440,7 @@ void TestIcmp4MessageChecksum(void)
 
     Checksum::UpdateMessageChecksum(*message, source, dest, Ip4::kProtoIcmp);
 
-    message->Read(0, icmpHeader);
+    SuccessOrQuit(message->Read(0, icmpHeader));
     VerifyOrQuit(icmpHeader.GetChecksum() == kChecksumForExampleMessage);
 
     SuccessOrQuit(message->Read(message->GetOffset(), mPayload, sizeof(mPayload)));
