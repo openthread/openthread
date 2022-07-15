@@ -663,6 +663,24 @@ public:
     }
 
     /**
+     * This method appends bytes from a given `Data` instance to the end of the message.
+     *
+     * On success, this method grows the message by the size of the appended data.
+     *
+     * @tparam    kDataLengthType   Determines the data length type (`uint8_t` or `uint16_t`).
+     *
+     * @param[in] aData      A reference to `Data` to append to the message.
+     *
+     * @retval kErrorNone    Successfully appended the bytes from @p aData.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    template <DataLengthType kDataLengthType> Error AppendData(const Data<kDataLengthType> &aData)
+    {
+        return AppendBytes(aData.GetBytes(), aData.GetLength());
+    }
+
+    /**
      * This method reads bytes from the message.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
@@ -805,6 +823,23 @@ public:
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
         WriteBytes(aOffset, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * This method writes bytes from a given `Data` instance to the message.
+     *
+     * This method will not resize the message. The given data to write MUST fit within the existing message buffer
+     * (from the given offset @p aOffset up to the message's length).
+     *
+     * @tparam     kDataLengthType   Determines the data length type (`uint8_t` or `uint16_t`).
+     *
+     * @param[in]  aOffset    Byte offset within the message to begin writing.
+     * @param[in]  aData      The `Data` to write to the message.
+     *
+     */
+    template <DataLengthType kDataLengthType> void WriteData(uint16_t aOffset, const Data<kDataLengthType> &aData)
+    {
+        WriteBytes(aOffset, aData.GetBytes(), aData.GetLength());
     }
 
     /**
