@@ -134,6 +134,10 @@ Error MeshForwarder::SendMessage(Message &aMessage)
         break;
     }
 
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    ApplyDirectTxQueueLimit(aMessage);
+#endif
+
     mScheduleTransmissionTask.Post();
 
     return error;

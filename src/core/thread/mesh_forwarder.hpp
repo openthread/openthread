@@ -353,6 +353,9 @@ private:
         kMessageMarkEcn,       // Indicates that ECN is marked on an outbound message by delay-aware queue management.
         kMessageQueueMgmtDrop, // Indicates that an outbound message is dropped by delay-aware queue management.
 #endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+        kMessageFullQueueDrop, // Indicates message drop due to reaching max allowed frames in direct tx queue.
+#endif
     };
 
     enum AnycastType : uint8_t
@@ -460,6 +463,10 @@ private:
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend = true);
     Error RemoveAgedMessages(void);
+#endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    bool IsDirectTxQueueOverMaxFrameThreshold(void) const;
+    void ApplyDirectTxQueueLimit(Message &aMessage);
 #endif
     void  SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers);
