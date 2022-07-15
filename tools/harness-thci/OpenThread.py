@@ -30,7 +30,7 @@
 >> Device : OpenThread THCI
 >> Class : OpenThread
 """
-
+import base64
 import functools
 import ipaddress
 import logging
@@ -39,6 +39,7 @@ import traceback
 import re
 import socket
 import time
+import json
 from abc import abstractmethod
 
 import serial
@@ -405,6 +406,7 @@ class OpenThreadTHCI(object):
 
         self.mac = params.get('EUI')
         self.backboneNetif = params.get('Param8') or 'eth0'
+        self.extraParams = self.__parseExtraParams(params.get('Param9'))
 
         self.UIStatusMsg = ''
         self.AutoDUTEnable = False
@@ -445,6 +447,15 @@ class OpenThreadTHCI(object):
             return '[%s:%d]' % (self.telnetIp, self.telnetPort)
         else:
             return '[%s]' % self.port
+
+    @watched
+    def __parseExtraParams(self, Param9):
+        if not Param9 or not Param9.strip():
+            return {}
+
+        jsonStr = base64.urlsafe_b64decode(Param9)
+        params = json.loads(jsonStr)
+        return params
 
     @API
     def closeConnection(self):
