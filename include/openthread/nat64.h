@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,69 +28,72 @@
 
 /**
  * @file
- *   This file implements IPv4 address related functionality.
+ * @brief
+ *  This file defines the OpenThread API for NAT64 on a border router.
  */
 
-#include "ip4_address.hpp"
+#ifndef OPENTHREAD_NAT64_H_
+#define OPENTHREAD_NAT64_H_
 
-#include "common/code_utils.hpp"
-#include "common/numeric_limits.hpp"
+#include <openthread/message.h>
 
-namespace ot {
-namespace Ip4 {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-Error Address::FromString(const char *aString)
+/**
+ * @addtogroup api-nat64
+ *
+ * @brief This module includes functions and structs for the NAT64 function on the border router. These functions are
+ * only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` is enabled.
+ *
+ * @{
+ *
+ */
+
+#define OT_IP4_ADDRESS_SIZE 4 ///< Size of an IPv4 address (bytes)
+
+/**
+ * @struct otIp4Address
+ *
+ * This structure represents an IPv4 address.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otIp4Address
 {
-    constexpr char kSeperatorChar = '.';
-    constexpr char kNullChar      = '\0';
-
-    Error error = kErrorParse;
-
-    for (uint8_t index = 0;; index++)
+    union OT_TOOL_PACKED_FIELD
     {
-        uint16_t value         = 0;
-        uint8_t  hasFirstDigit = false;
+        uint8_t  m8[OT_IP4_ADDRESS_SIZE]; ///< 8-bit fields
+        uint32_t m32;                     ///< 32-bit representation
+    } mFields;
+} OT_TOOL_PACKED_END;
 
-        for (char digitChar = *aString;; ++aString, digitChar = *aString)
-        {
-            if ((digitChar < '0') || (digitChar > '9'))
-            {
-                break;
-            }
+/**
+ * This structure represents an IPv4 address.
+ *
+ */
+typedef struct otIp4Address otIp4Address;
 
-            value = static_cast<uint16_t>((value * 10) + static_cast<uint8_t>(digitChar - '0'));
-            VerifyOrExit(value <= NumericLimits<uint8_t>::kMax);
-            hasFirstDigit = true;
-        }
-
-        VerifyOrExit(hasFirstDigit);
-
-        mBytes[index] = static_cast<uint8_t>(value);
-
-        if (index == sizeof(Address) - 1)
-        {
-            break;
-        }
-
-        VerifyOrExit(*aString == kSeperatorChar);
-        aString++;
-    }
-
-    VerifyOrExit(*aString == kNullChar);
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
-Address::InfoString Address::ToString(void) const
+/**
+ * @struct otIp4Cidr
+ *
+ * This structure represents an IPv4 CIDR block.
+ *
+ */
+typedef struct otIp4Cidr
 {
-    InfoString string;
+    otIp4Address mAddress;
+    uint8_t      mLength;
+} otIp4Cidr;
 
-    string.Append("%d.%d.%d.%d", mBytes[0], mBytes[1], mBytes[2], mBytes[3]);
+/**
+ * @}
+ *
+ */
 
-    return string;
+#ifdef __cplusplus
 }
+#endif
 
-} // namespace Ip4
-} // namespace ot
+#endif // OPENTHREAD_NAT64_H_

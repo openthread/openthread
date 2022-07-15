@@ -128,6 +128,7 @@ check_PROGRAMS                                                     += \
     ot-test-heap-string                                               \
     ot-test-hkdf-sha256                                               \
     ot-test-hmac-sha256                                               \
+    ot-test-ip4-header                                                \
     ot-test-ip6-header                                                \
     ot-test-ip-address                                                \
     ot-test-link-quality                                              \
@@ -261,6 +262,10 @@ ot_test_hkdf_sha256_SOURCES         = $(COMMON_SOURCES) test_hkdf_sha256.cpp
 ot_test_hmac_sha256_LDADD           = $(COMMON_LDADD)
 ot_test_hmac_sha256_LIBTOOLFLAGS    = $(COMMON_LIBTOOLFLAGS)
 ot_test_hmac_sha256_SOURCES         = $(COMMON_SOURCES) test_hmac_sha256.cpp
+
+ot_test_ip4_header_LDADD            = $(COMMON_LDADD)
+ot_test_ip4_header_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
+ot_test_ip4_header_SOURCES          = $(COMMON_SOURCES) test_ip4_header.cpp
 
 ot_test_ip6_header_LDADD            = $(COMMON_LDADD)
 ot_test_ip6_header_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2019-2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,8 @@
 
 #include <limits.h>
 
-#include "net/ip4_address.hpp"
+#include "common/encoding.hpp"
+#include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
 
 #include "test_util.h"
@@ -444,6 +445,73 @@ void TestIp4Ip6Translation(void)
 
         VerifyOrQuit(address == expectedAddress, "Ip6::SynthesizeFromIp4Address() failed");
     }
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        const ot::Ip4::Address expectedAddress = ip4Address;
+        ot::Ip4::Address       address;
+        ot::Ip6::Address       ip6Address;
+
+        SuccessOrQuit(ip6Address.FromString(testCase.mIp6Address));
+
+        address.ExtractFromIp6Address(testCase.mLength, ip6Address);
+
+        printf("Ipv6Address: %-36s IPv4Addr: %-12s Expected: %s\n", testCase.mIp6Address,
+               address.ToString().AsCString(), expectedAddress.ToString().AsCString());
+
+        VerifyOrQuit(address == expectedAddress, "Ip4::ExtractFromIp6Address() failed");
+    }
+}
+
+void TestIp4Cidr(void)
+{
+    using ot::Encoding::BigEndian::HostSwap32;
+    struct TestCase
+    {
+        const char *   mNetwork;
+        const uint8_t  mLength;
+        const uint32_t mHost;
+        const char *   mOutcome;
+    };
+
+    const TestCase kTestCases[] = {
+        {"172.16.12.34", 32, 0x12345678, "172.16.12.34"},  {"172.16.12.34", 31, 0x12345678, "172.16.12.34"},
+        {"172.16.12.34", 30, 0x12345678, "172.16.12.32"},  {"172.16.12.34", 29, 0x12345678, "172.16.12.32"},
+        {"172.16.12.34", 28, 0x12345678, "172.16.12.40"},  {"172.16.12.34", 27, 0x12345678, "172.16.12.56"},
+        {"172.16.12.34", 26, 0x12345678, "172.16.12.56"},  {"172.16.12.34", 25, 0x12345678, "172.16.12.120"},
+        {"172.16.12.34", 24, 0x12345678, "172.16.12.120"}, {"172.16.12.34", 23, 0x12345678, "172.16.12.120"},
+        {"172.16.12.34", 22, 0x12345678, "172.16.14.120"}, {"172.16.12.34", 21, 0x12345678, "172.16.14.120"},
+        {"172.16.12.34", 20, 0x12345678, "172.16.6.120"},  {"172.16.12.34", 19, 0x12345678, "172.16.22.120"},
+        {"172.16.12.34", 18, 0x12345678, "172.16.22.120"}, {"172.16.12.34", 17, 0x12345678, "172.16.86.120"},
+        {"172.16.12.34", 16, 0x12345678, "172.16.86.120"}, {"172.16.12.34", 15, 0x12345678, "172.16.86.120"},
+        {"172.16.12.34", 14, 0x12345678, "172.16.86.120"}, {"172.16.12.34", 13, 0x12345678, "172.20.86.120"},
+        {"172.16.12.34", 12, 0x12345678, "172.20.86.120"}, {"172.16.12.34", 11, 0x12345678, "172.20.86.120"},
+        {"172.16.12.34", 10, 0x12345678, "172.52.86.120"}, {"172.16.12.34", 9, 0x12345678, "172.52.86.120"},
+        {"172.16.12.34", 8, 0x12345678, "172.52.86.120"},  {"172.16.12.34", 7, 0x12345678, "172.52.86.120"},
+        {"172.16.12.34", 6, 0x12345678, "174.52.86.120"},  {"172.16.12.34", 5, 0x12345678, "170.52.86.120"},
+        {"172.16.12.34", 4, 0x12345678, "162.52.86.120"},  {"172.16.12.34", 3, 0x12345678, "178.52.86.120"},
+        {"172.16.12.34", 2, 0x12345678, "146.52.86.120"},  {"172.16.12.34", 1, 0x12345678, "146.52.86.120"},
+        {"172.16.12.34", 0, 0x12345678, "18.52.86.120"},
+    };
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        ot::Ip4::Address network;
+        ot::Ip4::Cidr    cidr;
+        ot::Ip4::Address generated;
+
+        network.FromString(testCase.mNetwork);
+        cidr.mAddress = network;
+        cidr.mLength  = testCase.mLength;
+
+        generated.SynthesizeFromCidrAndHost(cidr, testCase.mHost);
+
+        printf("CIDR: %-18s HostID: %-8x Host: %-14s Expected: %s\n", cidr.ToString().AsCString(), testCase.mHost,
+               generated.ToString().AsCString(), testCase.mOutcome);
+
+        VerifyOrQuit(strcmp(generated.ToString().AsCString(), testCase.mOutcome) == 0,
+                     "Ip4::Address::SynthesizeFromCidrAndHost() failed");
+    }
 }
 
 int main(void)
@@ -453,6 +521,7 @@ int main(void)
     TestIp6AddressFromString();
     TestIp6Prefix();
     TestIp4Ip6Translation();
+    TestIp4Cidr();
     printf("All tests passed\n");
     return 0;
 }

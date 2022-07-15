@@ -70,6 +70,7 @@ openthread_headers                      = \
     openthread/logging.h                  \
     openthread/message.h                  \
     openthread/multi_radio.h              \
+    openthread/nat64.h                    \
     openthread/ncp.h                      \
     openthread/netdata.h                  \
     openthread/netdata_publisher.h        \

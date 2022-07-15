@@ -164,7 +164,7 @@ set(COMMON_SOURCES
     net/dns_types.cpp
     net/dnssd_server.cpp
     net/icmp6.cpp
-    net/ip4_address.cpp
+    net/ip4_types.cpp
     net/ip6.cpp
     net/ip6_address.cpp
     net/ip6_filter.cpp
