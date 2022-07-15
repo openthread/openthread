@@ -38,6 +38,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/frame_data.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
@@ -425,16 +426,11 @@ private:
     void     SendIcmpErrorIfDstUnreach(const Message &     aMessage,
                                        const Mac::Address &aMacSource,
                                        const Mac::Address &aMacDest);
-    Error    CheckReachability(const uint8_t *     aFrame,
-                               uint16_t            aFrameLength,
+    Error    CheckReachability(const FrameData &   aFrameData,
                                const Mac::Address &aMeshSource,
                                const Mac::Address &aMeshDest);
-    void     UpdateRoutes(const uint8_t *     aFrame,
-                          uint16_t            aFrameLength,
-                          const Mac::Address &aMeshSource,
-                          const Mac::Address &aMeshDest);
-    Error    FrameToMessage(const uint8_t *     aFrame,
-                            uint16_t            aFrameLength,
+    void     UpdateRoutes(const FrameData &aFrameData, const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+    Error    FrameToMessage(const FrameData &   aFrameData,
                             uint16_t            aDatagramSize,
                             const Mac::Address &aMacSource,
                             const Mac::Address &aMacDest,
@@ -442,17 +438,12 @@ private:
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
-    void     HandleMesh(uint8_t *             aFrame,
-                        uint16_t              aFrameLength,
-                        const Mac::Address &  aMacSource,
-                        const ThreadLinkInfo &aLinkInfo);
-    void     HandleFragment(const uint8_t *       aFrame,
-                            uint16_t              aFrameLength,
+    void     HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo);
+    void     HandleFragment(FrameData &           aFrameData,
                             const Mac::Address &  aMacSource,
                             const Mac::Address &  aMacDest,
                             const ThreadLinkInfo &aLinkInfo);
-    void     HandleLowpanHC(const uint8_t *       aFrame,
-                            uint16_t              aFrameLength,
+    void     HandleLowpanHC(const FrameData &     aFrameData,
                             const Mac::Address &  aMacSource,
                             const Mac::Address &  aMacDest,
                             const ThreadLinkInfo &aLinkInfo);
@@ -505,16 +496,14 @@ private:
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
     void        ScheduleTransmissionTask(void);
 
-    Error GetFramePriority(const uint8_t *     aFrame,
-                           uint16_t            aFrameLength,
+    Error GetFramePriority(const FrameData &   aFrameData,
                            const Mac::Address &aMacSource,
                            const Mac::Address &aMacDest,
                            Message::Priority & aPriority);
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
                               Message::Priority &     aPriority);
-    void  GetForwardFramePriority(const uint8_t *     aFrame,
-                                  uint16_t            aFrameLength,
+    void  GetForwardFramePriority(const FrameData &   aFrameData,
                                   const Mac::Address &aMeshSource,
                                   const Mac::Address &aMeshDest,
                                   Message::Priority & aPriority);
