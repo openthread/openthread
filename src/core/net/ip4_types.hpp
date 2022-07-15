@@ -172,6 +172,10 @@ public:
     InfoString ToString(void) const;
 } OT_TOOL_PACKED_END;
 
+/**
+ * This class represents an IPv4 CIDR block.
+ *
+ */
 class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Address>
 {
     friend class Address;
@@ -219,18 +223,12 @@ public:
      * This method sets the CIDR.
      *
      * @param[in] aAddress  A pointer to buffer containing the CIDR bytes. The length of aAddress should be 4 bytes.
-     * @param[in] aLength  The length of CIDR in bits.
+     * @param[in] aLength   The length of CIDR in bits.
      *
      */
     void Set(const uint8_t *aAddress, uint8_t aLength);
 
 private:
-    /**
-     * This method returns the host mask (bitwise not of the subnet mask) of the CIDR.
-     *
-     * @returns A uint32 for the host mask, in network byte order.
-     *
-     */
     uint32_t HostMask(void) const
     {
         // Note: Using LL suffix to make it a uint64 since /32 is a valid CIDR, and right shifting 32 bits is undefined
@@ -238,12 +236,6 @@ private:
         return HostSwap32(0xffffffffLL >> mLength);
     }
 
-    /**
-     * This method returns the subnet mask of the CIDR.
-     *
-     * @returns A uint32 for the subnet mask, in network byte order.
-     *
-     */
     uint32_t SubnetMask(void) const { return ~HostMask(); }
 };
 
@@ -367,7 +359,7 @@ public:
     /**
      * This method sets the IPv4 payload protocol.
      *
-     * @param[in]  aNextHeader  The IPv4 payload protocol.
+     * @param[in]  aProtocol  The IPv4 payload protocol.
      *
      */
     void SetProtocol(uint8_t aProtocol) { mProtocol = aProtocol; }
@@ -399,7 +391,7 @@ public:
     /**
      * This method sets the IPv4 Identification value.
      *
-     * @param[in] The IPv4 Identification value.
+     * @param[in] aIdentification The IPv4 Identification value.
      *
      */
     void SetIdentification(uint16_t aIdentification) { mIdentification = HostSwap16(aIdentification); }
@@ -543,10 +535,18 @@ private:
     Address  mDestination;
 } OT_TOOL_PACKED_END;
 
-// ICMP(in v4) messages will only be generated / handled by NAT64. So only header defination is required.
+/**
+ * This class implements ICMP(v4).
+ * Note: ICMP(v4) messages will only be generated / handled by NAT64. So only header defination is required.
+ *
+ */
 class Icmp
 {
 public:
+    /**
+     * This class represents an IPv4 ICMP header.
+     *
+     */
     OT_TOOL_PACKED_BEGIN
     class Header : public Clearable<Header>
     {

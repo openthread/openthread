@@ -224,7 +224,7 @@ exit:
     return;
 }
 
-void Checksum::UpdateIPv4HeaderChecksum(Ip4::Header &aHeader)
+void Checksum::UpdateIp4HeaderChecksum(Ip4::Header &aHeader)
 {
     Checksum checksum;
 

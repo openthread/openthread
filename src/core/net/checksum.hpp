@@ -70,11 +70,11 @@ public:
     static Error VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
-     * This static method calculates and then updates the checksum in a given message (if TCP/UDP/ICMP6).
+     * This static method calculates and then updates the checksum in a given message (if TCP/UDP/ICMPv6).
      *
      * @param[in,out] aMessage  The message to update the checksum in. The `aMessage.GetOffset()` should point to start
-     *                          of the TCP/UDP/ICMP6 header. On exit the checksum field in TCP/UDP/ICMP(v4) header in
-     *                          the message is updated.
+     *                          of the TCP/UDP/ICMPv6 header. On exit the checksum field in TCP/UDP/ICMPv6 header in the
+     *                          message is updated.
      * @param[in] aSource       The source address.
      * @param[in] aDestination  The destination address.
      * @param[in] aIpProto      The Internet Protocol value.
@@ -107,7 +107,7 @@ public:
      * @param[in,out] aHeader The IPv4 header to update the checksum in.
      *
      */
-    static void UpdateIPv4HeaderChecksum(Ip4::Header &aHeader);
+    static void UpdateIp4HeaderChecksum(Ip4::Header &aHeader);
 
 private:
     Checksum(void)
