@@ -586,21 +586,17 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
     }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     /**
-     * @cli br rioprf [high\med\low]
-     *
+     * @cli br rioprf (high,med,low)
      * @code
      * br rioprf
      * med
      * Done
      * @endcode
-     *
-     * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
-     *
      * @code
      * br rioprf low
      * Done
      * @endcode
-     *
+     * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
      * @par api_copy
      * #otBorderRoutingSetRouteInfoOptionPreference
      *
@@ -621,16 +617,14 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
     }
     /**
      * @cli br prefixtable
-     *
      * @code
-     * > br prefixtable
+     * br prefixtable
      * prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med,
      * router:ff02:0:0:0:0:0:0:1
      * prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800,
      * router:ff02:0:0:0:0:0:0:1
      * Done
      * @endcode
-     *
      * @par api_copy
      * #otBorderRoutingGetNextPrefixTableEntry
      *
