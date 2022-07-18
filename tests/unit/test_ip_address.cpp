@@ -500,7 +500,7 @@ void TestIp4Cidr(void)
         ot::Ip4::Cidr    cidr;
         ot::Ip4::Address generated;
 
-        network.FromString(testCase.mNetwork);
+        SuccessOrQuit(network.FromString(testCase.mNetwork));
         cidr.mAddress = network;
         cidr.mLength  = testCase.mLength;
 
