@@ -113,31 +113,43 @@ jobs:
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 1
+            nat64: 0
             description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 1
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 2
+            nat64: 0
             description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/MATN/*.py
             packet_verification: 1
+            nat64: 0
             description: "MATN"
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/LowPower/*.py
             packet_verification: 1
+            nat64: 0
             description: "LowPower"
+          - otbr_mdns: "mDNSResponder"
+            otbr_trel: 0
+            cert_scripts: ./tests/scripts/thread-cert/border_router/nat64/*.py
+            packet_verification: 1
+            nat64: 1
+            description: "nat64"
           - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 1
+            nat64: 0
             description: ""
           - otbr_mdns: "avahi"
             otbr_trel: 1
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 2
+            nat64: 0
             description: ""
     name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
@@ -152,6 +164,7 @@ jobs:
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
       BORDER_ROUTING: 1
+      NAT64: ${{ matrix.nat64 }}
       MAX_JOBS: 3
     steps:
     - uses: actions/checkout@v2
