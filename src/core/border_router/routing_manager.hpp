@@ -313,6 +313,12 @@ private:
     static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
                   "invalid RA STALE time");
 
+    enum RouterAdvTxMode : uint8_t // Used in `SendRouterAdvertisement()`
+    {
+        kInvalidateAllPrevPrefixes,
+        kAdvPrefixesFromNetData,
+    };
+
     class DiscoveredPrefixTable : public InstanceLocator
     {
         // This class maintains the discovered on-link and route prefixes
@@ -509,10 +515,6 @@ private:
         RoutePreference mPreference;
     };
 
-    typedef Ip6::Prefix OnMeshPrefix;
-
-    typedef Array<OnMeshPrefix, kMaxOnMeshPrefixes> OnMeshPrefixArray;
-
     class LocalOmrPrefix : InstanceLocator
     {
     public:
@@ -527,6 +529,15 @@ private:
     private:
         Ip6::Prefix mPrefix;
         bool        mIsAddedInNetData;
+    };
+
+    typedef Ip6::Prefix OnMeshPrefix;
+
+    class OnMeshPrefixArray : public Array<OnMeshPrefix, kMaxOnMeshPrefixes>
+    {
+    public:
+        void Add(const OnMeshPrefix &aPrefix);
+        void MarkAsDeleted(const OnMeshPrefix &aPrefix);
     };
 
     void  EvaluateState(void);
@@ -548,12 +559,12 @@ private:
     void  EvaluateRoutingPolicy(void);
     void  StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli);
     void  StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli);
-    void  EvaluateOmrPrefix(OnMeshPrefixArray &aNewPrefixes);
+    void  EvaluateOmrPrefix(void);
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);
-    void  SendRouterAdvertisement(const OnMeshPrefixArray &aNewPrefixes);
+    void  SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
     bool  IsRouterSolicitationInProgress(void) const;
 
     static void HandleRouterSolicitTimer(Timer &aTimer);
