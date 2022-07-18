@@ -97,6 +97,7 @@ void SubMac::Init(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslPeriod     = 0;
     mCslChannel    = 0;
+    mCslPeerShort  = 0;
     mIsCslSampling = false;
     mCslSampleTime = TimeMicro{0};
     mCslLastSync   = TimeMicro{0};
@@ -1051,13 +1052,15 @@ bool SubMac::UpdateCsl(uint16_t aPeriod, uint8_t aChannel, otShortAddress aShort
 {
     bool diffPeriod  = aPeriod != mCslPeriod;
     bool diffChannel = aChannel != mCslChannel;
-    bool retval      = diffPeriod || diffChannel;
+    bool diffPeer    = aShortAddr != mCslPeerShort;
+    bool retval      = diffPeriod || diffChannel || diffPeer;
 
     VerifyOrExit(retval);
     mCslChannel = aChannel;
 
-    VerifyOrExit(diffPeriod);
-    mCslPeriod = aPeriod;
+    VerifyOrExit(diffPeriod || diffPeer);
+    mCslPeriod    = aPeriod;
+    mCslPeerShort = aShortAddr;
     IgnoreError(Get<Radio>().EnableCsl(aPeriod, aShortAddr, aExtAddr));
 
     mCslTimer.Stop();

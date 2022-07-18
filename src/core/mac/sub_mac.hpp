@@ -662,6 +662,7 @@ private:
     uint8_t  mCslChannel : 7; // The CSL sample channel.
     bool mIsCslSampling : 1;  // Indicates that the radio is receiving in CSL state for platforms not supporting delayed
                               // reception.
+    uint16_t   mCslPeerShort; // The CSL peer short address.
     TimeMicro  mCslSampleTime;     // The CSL sample time of the current period.
     TimeMicro  mCslLastSync;       // The timestamp of the last successful CSL synchronization.
     uint8_t    mCslParentAccuracy; // Drift of timer used for scheduling CSL tx by the parent, in ± ppm.
