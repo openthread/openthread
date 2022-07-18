@@ -550,6 +550,25 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         OutputIp6PrefixLine(omrPrefix);
     }
     /**
+     * @cli br favoredomrprefix
+     * @code
+     * br favoredomrprefix
+     * fdfc:1ff5:1512:5622::/64 prf:low
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetFavoredOmrPrefix
+     */
+    else if (aArgs[0] == "favoredomrprefix")
+    {
+        otIp6Prefix       prefix;
+        otRoutePreference preference;
+
+        SuccessOrExit(error = otBorderRoutingGetFavoredOmrPrefix(GetInstancePtr(), &prefix, &preference));
+        OutputIp6Prefix(prefix);
+        OutputLine(" prf:%s", PreferenceToString(preference));
+    }
+    /**
      * @cli br onlinkprefix
      * @code
      * br onlinkprefix

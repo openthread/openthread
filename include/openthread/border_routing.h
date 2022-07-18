@@ -166,7 +166,7 @@ otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInsta
 void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRoutePreference aPreference);
 
 /**
- * Gets the Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
+ * Gets the local Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
  *
  * An OMR Prefix is a randomly generated 64-bit prefix that's published in the
  * Thread network if there isn't already an OMR prefix. This prefix can be reached
@@ -180,6 +180,21 @@ void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRouteP
  *
  */
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * Gets the currently favored Off-Mesh-Routable (OMR) Prefix.
+ *
+ * The favored OMR prefix can be discovered from Network Data or can be this device's local OMR prefix.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aPrefix      A pointer to output the favored OMR prefix.
+ * @param[out]  aPreference  A pointer to output the preference associated the favored prefix.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the favored OMR prefix.
+ *
+ */
+otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference);
 
 /**
  * Gets the On-Link Prefix for the adjacent infrastructure link, for example `fd41:2650:a6f5:0::/64`.
