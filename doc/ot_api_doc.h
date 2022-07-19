@@ -57,6 +57,7 @@
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
+ * @defgroup api-nat64                NAT64
  * @defgroup api-srp                  SRP
  * @defgroup api-ping-sender          Ping Sender
  *
