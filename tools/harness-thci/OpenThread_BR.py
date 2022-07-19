@@ -643,10 +643,12 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         output = self.bash(cmd)
         for line in output:
             print(line)
-            alias, link_local_addr, port, thread_status = eval(line)
-            if thread_status == 2 and link_local_addr:
-                if (dst and link_local_addr in dst) or (link_local_addr not in addrs_blacklist):
-                    return '%s%%%s' % (link_local_addr, self.backboneNetif), port
+            alias, addr, port, thread_status = eval(line)
+            if thread_status == 2 and addr:
+                if (dst and addr in dst) or (addr not in addrs_blacklist):
+                    if ipaddress.IPv6Address(addr.decode()).is_link_local:
+                        addr = '%s%%%s' % (addr, self.backboneNetif)
+                    return addr, port
 
         raise Exception('No active Border Agents found')
 
