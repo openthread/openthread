@@ -80,7 +80,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
     , mNat64(aInstance)
 #endif
 {
@@ -655,7 +655,7 @@ void RoutingManager::EvaluateNat64Prefix(void)
         {
             mIsAdvertisingLocalNat64Prefix = true;
         }
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
         mNat64.SetNat64Prefix(mLocalNat64Prefix);
 #endif
     }
@@ -2016,20 +2016,22 @@ bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixCon
     return isFavored;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
 Error RoutingManager::SendPacket(Message &message)
 {
-    bool          freed = false;
-    Nat64::Result res   = mNat64.HandleIncoming(message);
-    Error         ret   = kErrorDrop;
+    bool  freed = false;
+    Error ret   = kErrorDrop;
 
-    VerifyOrExit(res == Nat64::Result::kForward);
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+    VerifyOrExit(mNat64.HandleIncoming(message) == Nat64::Result::kForward);
     // TODO: Implement the logic for sending back ICMP
+#endif
 
     ret   = Get<Ip6::Ip6>().SendRaw(message, !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
     freed = true;
 
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
 exit:
+#endif
     if (!freed)
     {
         message.Free();
@@ -2038,16 +2040,16 @@ exit:
     return ret;
 }
 
-void RoutingManager::HandleReceived(Message &message)
+void RoutingManager::HandleIp6DatagramReceived(Message &message)
 {
-    bool          freed = false;
-    Nat64::Result res;
+    bool freed = false;
 
     VerifyOrExit(mInfraCallbackForTranslatedPacket != nullptr);
 
-    res = mNat64.HandleOutgoing(message);
-    VerifyOrExit(res == Nat64::Result::kForward);
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+    VerifyOrExit(mNat64.HandleOutgoing(message) == Nat64::Result::kForward);
     // TODO: Implement the logic for sending back ICMP
+#endif
 
     mInfraCallbackForTranslatedPacket(&message, mInfraCallbackContext);
     freed = true;
@@ -2058,22 +2060,18 @@ exit:
         message.Free();
     }
 }
-#else  // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
-Error RoutingManager::SendPacket(Message &message)
+
+void RoutingManager::SetInfraReceiveCallback(otIp6ReceiveCallback aCallback, void *aContext)
 {
-    return Get<Ip6::Ip6>().SendRaw(message, !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+    mInfraCallbackForTranslatedPacket = aCallback;
+    mInfraCallbackContext             = aContext;
+    Get<Ip6::Ip6>().SetReceiveDatagramCallback(InfraDatagramReceiveCallbackWrapper, this);
 }
 
-void RoutingManager::HandleReceived(Message &message)
-{
-    mInfraCallbackForTranslatedPacket(&message, mInfraCallbackContext);
-}
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
-
-void RoutingManager::InfraReceiveCallbackWrapper(otMessage *aMessage, void *context)
+void RoutingManager::InfraDatagramReceiveCallbackWrapper(otMessage *aMessage, void *context)
 {
     RoutingManager *this_ = reinterpret_cast<RoutingManager *>(context);
-    this_->HandleReceived(AsCoreType(aMessage));
+    this_->HandleIp6DatagramReceived(AsCoreType(aMessage));
 }
 
 //---------------------------------------------------------------------------------------------------------------------

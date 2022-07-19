@@ -246,7 +246,6 @@ typedef struct otMessageInfo
 enum
 {
     OT_IP6_PROTO_HOP_OPTS = 0,  ///< IPv6 Hop-by-Hop Option
-    OT_IP6_PROTO_ICMP4    = 1,  ///< ICMP (For IPv4, used by NAT64)
     OT_IP6_PROTO_TCP      = 6,  ///< Transmission Control Protocol
     OT_IP6_PROTO_UDP      = 17, ///< User Datagram
     OT_IP6_PROTO_IP6      = 41, ///< IPv6 encapsulation

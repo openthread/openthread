@@ -58,6 +58,7 @@ build_all_features()
         "-DOT_BACKBONE_ROUTER=ON"
         "-DOT_BORDER_ROUTING=ON"
         "-DOT_BORDER_ROUTING_NAT64=ON"
+        "-DOT_NAT64_MANAGER=ON"
         "-DOT_CSL_RECEIVER=ON"
         "-DOT_MLR=ON"
         "-DOT_OTNS=ON"

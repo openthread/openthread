@@ -43,7 +43,6 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
-#include <openthread/nat64.h>
 #include <openthread/platform/misc.h>
 
 #include "lib/spinel/radio_spinel_metrics.h"
@@ -83,7 +82,6 @@ typedef struct otPlatformConfig
     uint32_t    mSpeedUpFactor;                                ///< Speed up factor.
     bool        mDryRun;                                       ///< If 'DryRun' is set, the posix daemon will exit
                                                                ///< directly after initialization.
-    otIp4Cidr mNat64Cidr;                                      ///< CIDR for NAT64
 } otPlatformConfig;
 
 /**

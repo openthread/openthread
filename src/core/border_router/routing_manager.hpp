@@ -218,17 +218,6 @@ public:
     Error SendPacket(Message &aMessage);
 
     /**
-     * This function sends a Message to the infra interface.
-     *
-     * If NAT64 is enabled and the destination address of the message is an NAT64-mapped address, the message will be
-     * translated to IPv4 packet before passing the infra interface. The aMessage will always be released.
-     *
-     * @param[in]  aMessage The message to be sent to the infra interface.
-     *
-     */
-    void HandleReceived(Message &aMessage);
-
-    /**
      * This method processes a received ICMPv6 message from the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.
@@ -295,13 +284,18 @@ public:
         return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
     }
 
-    void SetInfraReceiveCallback(otIp6ReceiveCallback aCallback, void *aContext)
-    {
-        mInfraCallbackForTranslatedPacket = aCallback;
-        mInfraCallbackContext             = aContext;
-    }
-
-    static void InfraReceiveCallbackWrapper(otMessage *aMessage, void *context);
+    /**
+     * This method registers a callback to provide received raw IP datagrams.
+     *
+     * This API sets the IP6 datagram receive callback to InfraReceiveCallbackWrapper so NAT64 manager can translate the
+     * packets before passing it to the upper layer when necessary.
+     *
+     * @param[in]  aCallback         A pointer to a function that is called when an IP datagram is received
+     *                               or `nullptr` to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
+     */
+    void SetInfraReceiveCallback(otIp6ReceiveCallback aCallback, void *aContext);
 
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
@@ -616,6 +610,9 @@ private:
     static bool IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
+    void        HandleIp6DatagramReceived(Message &aMessage);
+    static void InfraDatagramReceiveCallbackWrapper(otMessage *aMessage, void *context);
+
     otIp6ReceiveCallback mInfraCallbackForTranslatedPacket;
     void *               mInfraCallbackContext;
 
@@ -682,7 +679,7 @@ private:
 
     TimerMilli mRoutingPolicyTimer;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
     Nat64 mNat64;
 #endif
 };

@@ -28,29 +28,23 @@
 
 /**
  * @file
- *   This file includes implementation for NAT64.
+ *   This file includes implementation for the NAT64 translator.
  *
  */
 
 #include "nat64.hpp"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
 
 #include <openthread/border_router.h>
 #include <openthread/logging.h>
 
-#include "border_router/routing_manager.hpp"
-#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
+#include "common/uptime.hpp"
 #include "net/checksum.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6.hpp"
-
-#include <string.h>
-
-#include <type_traits>
-#include <utility>
 
 namespace ot {
 namespace BorderRouter {
@@ -69,6 +63,7 @@ Nat64::Nat64(Instance &aInstance)
 
 Nat64::Result Nat64::HandleOutgoing(Message &aMessage)
 {
+    Error           err = kErrorNone;
     Result          res = Result::kDrop;
     Ip6::Header     ip6Header;
     Ip4::Header     ip4Header;
@@ -76,17 +71,11 @@ Nat64::Result Nat64::HandleOutgoing(Message &aMessage)
 
     VerifyOrExit(mEnabled, res = Result::kForward);
 
-    if (aMessage.GetLength() < sizeof(Ip6::Header))
+    // ParseForm will do basic checks for the message, including the packet length and IP protocol version.
+    err = ip6Header.ParseFrom(aMessage);
+    if (err != kErrorNone)
     {
-        LogWarn("outgoing packet is smaller than a IPv6 header, drop");
-        ExitNow(res = Result::kDrop);
-    }
-
-    SuccessOrExit(ip6Header.ParseFrom(aMessage));
-
-    if (!ip6Header.IsVersion6())
-    {
-        LogWarn("outgoing packet is not an IPv6 packet, drop");
+        LogWarn("outgoing packet is not a valid IPv6 packet, drop");
         ExitNow(res = Result::kDrop);
     }
 
@@ -148,14 +137,20 @@ Nat64::Result Nat64::HandleOutgoing(Message &aMessage)
     {
     case Result::kDrop:
         break;
-    case Result::kReplyICMP:
+    case Result::kReplyIcmp:
         break;
     case Result::kForward:
         ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
         Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
                                         ip4Header.GetProtocol());
         Checksum::UpdateIp4HeaderChecksum(ip4Header);
-        aMessage.PrependBytes(&ip4Header, sizeof(ip4Header));
+        err = aMessage.PrependBytes(&ip4Header, sizeof(ip4Header));
+        if (err != kErrorNone)
+        {
+            // This should never happen since the IPv4 header is shorter than the IPv6 header.
+            LogCrit("failed to prepend IPv4 head to translated message");
+            res = Result::kDrop;
+        }
         break;
     }
 
@@ -165,6 +160,7 @@ exit:
 
 Nat64::Result Nat64::HandleIncoming(Message &aMessage)
 {
+    Error           err = kErrorNone;
     Result          res = Result::kDrop;
     Ip6::Header     ip6Header;
     Ip4::Header     ip4Header;
@@ -172,13 +168,12 @@ Nat64::Result Nat64::HandleIncoming(Message &aMessage)
 
     VerifyOrExit(mEnabled, res = Result::kForward);
 
-    if (aMessage.GetLength() >= sizeof(Ip6::Header))
+    // Try to parse the message as an IPv6 packet first.
+    err = ip6Header.ParseFrom(aMessage);
+    // Ip6::Header::ParseForm may return an error value when the incoming message is an IPv4 packet.
+    if (err == kErrorNone)
     {
-        ip6Header.ParseFrom(aMessage);
-        if (ip6Header.IsVersion6())
-        {
-            ExitNow(res = Result::kForward);
-        }
+        ExitNow(res = Result::kForward);
     }
 
     SuccessOrExit(ip4Header.ParseFrom(aMessage));
@@ -217,6 +212,8 @@ Nat64::Result Nat64::HandleIncoming(Message &aMessage)
     ip6Header.SetFlow(0);
     ip6Header.SetHopLimit(ip4Header.GetTtl());
 
+    // Note: TCP and UDP are the same for both IPv4 and IPv6 except for the checksum calculation, we will update the
+    // checksum in the payload later. However, we need to translate ICMPv6 packets to ICMP in IPv4 packets.
     switch (ip4Header.GetProtocol())
     {
     case Ip4::kProtoUdp:
@@ -240,15 +237,18 @@ Nat64::Result Nat64::HandleIncoming(Message &aMessage)
     {
     case Result::kDrop:
         break;
-    case Result::kReplyICMP:
+    case Result::kReplyIcmp:
         break;
     case Result::kForward:
         ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
         Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
                                         ip6Header.GetNextHeader());
-        if (aMessage.Prepend(ip6Header) != kErrorNone)
+        err = aMessage.PrependBytes(&ip6Header, sizeof(ip6Header));
+        if (err != kErrorNone)
         {
-            ExitNow(res = Result::kDrop);
+            // This might happen when the platform failed to reserve enough space before the original IPv4 packet.
+            LogWarn("failed to prepend IPv6 head to translated message");
+            res = Result::kDrop;
         }
         break;
     }
@@ -317,6 +317,7 @@ Nat64::AddressMapping *Nat64::GetMapping(const Ip6::Address &aAddr, bool aTryCre
     VerifyOrExit(aTryCreate);
 
     mapping = CreateMapping(aAddr);
+
 exit:
     return mapping;
 }
@@ -459,4 +460,4 @@ exit:
 } // namespace BorderRouter
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE

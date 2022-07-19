@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for NAT64
+ *   This file includes definitions for the NAT64 translator
  *
  */
 
@@ -37,17 +37,21 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#error "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is required for OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE."
+#endif
+
+#if !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE."
+#endif
 
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/pool.hpp"
-#include "common/time.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6.hpp"
-
-#include <stdio.h>
-#include <stdlib.h>
 
 namespace ot {
 namespace BorderRouter {
@@ -55,8 +59,6 @@ namespace BorderRouter {
 class Nat64 : public InstanceLocator, private NonCopyable
 {
 public:
-    static constexpr size_t   kIPv6HeaderSize      = 40;
-    static constexpr size_t   kIPv4FixedHeaderSize = 20;
     static constexpr uint32_t kAddressMappingIdleTimeoutMsec =
         OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
     static constexpr uint32_t kAddressMappingPoolSize = OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MAX_MAPPINGS;
@@ -65,16 +67,7 @@ public:
     {
         kForward   = 0,
         kDrop      = 1,
-        kReplyICMP = 2,
-    };
-
-    // The protocol numbers matches IP protocol numbers
-    enum class Protocol : uint8_t
-    {
-        kICMP  = 0x1,
-        kTCP   = 0x6,
-        kUDP   = 0x11,
-        kICMP6 = 0x58,
+        kReplyIcmp = 2,
     };
 
     /**
@@ -87,12 +80,12 @@ public:
      * @brief Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted. Note the
      * caller should reserve at least 20 bytes before the packetHead.
      * If the message is an IPv6 packet, Result::kForward will be returned and the message won't be modified.
-     *     *
+     *
      * @param[in,out] aMessage the message to be processed.
      *
      * @returns Result::kForward the caller should contiue forwarding the packet.
      * @returns Result::kDrop the caller should drop the packet silently.
-     * @returns Result::kReplyICMP the caller should reply an ICMP packet, the buffer will be filled with the content of
+     * @returns Result::kReplyIcmp the caller should reply an ICMP packet, the buffer will be filled with the content of
      * the ICMP packet.
      *
      */
@@ -108,7 +101,7 @@ public:
      *
      * @returns Result::kForward the caller should contiue forwarding the packet.
      * @returns Result::kDrop the caller should drop the packet silently.
-     * @returns Result::kReplyICMP the caller should reply an ICMP packet, the buffer will be filled with the content of
+     * @returns Result::kReplyIcmp the caller should reply an ICMP packet, the buffer will be filled with the content of
      * the ICMP packet.
      *
      */
@@ -163,7 +156,9 @@ private:
 
         Ip4::Address mIp4;
         Ip6::Address mIp6;
-        uint64_t     mExpiry;
+
+        // The timestamp when this mapping expires, in milliseconds.
+        uint64_t mExpiry;
 
         void Touch(uint64_t aNow) { mExpiry = aNow + kAddressMappingIdleTimeoutMsec; }
 
@@ -201,6 +196,6 @@ private:
 } // namespace BorderRouter
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
 
 #endif // NAT64_HPP_

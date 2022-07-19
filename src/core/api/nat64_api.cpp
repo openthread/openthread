@@ -33,9 +33,9 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-
 #include <openthread/border_router.h>
+#include <openthread/ip6.h>
+#include <openthread/nat64.h>
 
 #include "border_router/nat64.hpp"
 #include "border_router/routing_manager.hpp"
@@ -48,7 +48,9 @@ using namespace ot;
 
 // The following functions supports NAT64, but actual NAT64 handling is wrapped in RoutingManager::SendPacket,
 // RoutingManager::SetInfraReceiveCallback
-
+// When BORDER_ROUTING is disabled, otBorderRouterSend / otBorderRouterSetReceiveCallback will fallback to corresponding
+// functions in Ip6 namespace so they can be always available.
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SendPacket(AsCoreType(aMessage));
@@ -57,13 +59,20 @@ otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage)
 void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
 {
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetInfraReceiveCallback(aCallback, aCallbackContext);
-    otIp6SetReceiveCallback(aInstance,
-                            aCallback == nullptr ? nullptr : BorderRouter::RoutingManager::InfraReceiveCallbackWrapper,
-                            &AsCoreType(aInstance).Get<BorderRouter::RoutingManager>());
+}
+#else  // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage)
+{
+    return otIp6Send(aInstance, aMessage);
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
+{
+    return otIp6SetReceiveCallback(aInstance, aCallback, aCallbackContext);
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
 otError otBorderRouterSetIp4CidrForNat64(otInstance *aInstance, otIp4Cidr *aCidr)
 {
     return AsCoreType(aInstance).Get<BorderRouter::Nat64>().SetIp4Cidr(static_cast<ot::Ip4::Cidr &>(*aCidr));
@@ -79,7 +88,4 @@ otMessage *otIp6NewMessageForNat64(otInstance *aInstance, const otMessageSetting
     return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header),
                                                             Message::Settings::From(aSettings));
 }
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE

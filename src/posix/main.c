@@ -33,7 +33,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <getopt.h>
-#include <inttypes.h>
 #include <libgen.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -57,7 +56,6 @@
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/logging.h>
-#include <openthread/nat64.h>
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/platform/radio.h>
@@ -150,7 +148,6 @@ enum
 
     OT_POSIX_OPT_RADIO_VERSION,
     OT_POSIX_OPT_REAL_TIME_SIGNAL,
-    OT_POSIX_OPT_NAT64_CIDR,
 };
 
 static const struct option kOptions[] = {
@@ -161,7 +158,6 @@ static const struct option kOptions[] = {
     {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
-    {"nat64-cidr", required_argument, NULL, OT_POSIX_OPT_NAT64_CIDR},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
     {0, 0, 0, 0}};
@@ -186,9 +182,6 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "        --real-time-signal        (Linux only) The real-time signal number for microsecond timer.\n"
             "                                  Use +N for relative value to SIGRTMIN, and use N for absolute value.\n");
 
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
-    fprintf(aStream, "        --nat64-cidr              The CIDR for outgoing NAT64 translated packet.\n");
 #endif
     fprintf(aStream, "%s", otSysGetRadioUrlHelpString());
     exit(aExitCode);

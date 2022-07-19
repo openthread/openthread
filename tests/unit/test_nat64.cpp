@@ -43,7 +43,7 @@
 namespace ot {
 namespace BorderRouter {
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
 
 template <size_t N> bool CheckMessage(const Message *aMessage, const uint8_t (&aExpectedMessage)[N])
 {
@@ -202,18 +202,18 @@ void TestNat64(void)
     }
 }
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
 
 } // namespace BorderRouter
 } // namespace ot
 
 int main(void)
 {
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
     ot::BorderRouter::TestNat64();
     printf("All tests passed\n");
-#else  // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#else  // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
     printf("Nat64 is not enabled\n");
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
     return 0;
 }
