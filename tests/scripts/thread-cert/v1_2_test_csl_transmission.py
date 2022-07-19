@@ -125,6 +125,22 @@ class SSED_CslTransmission(thread_cert.TestCase):
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         self.assertIsNotNone(ssed_messages.next_data_poll())
 
+        # Check if SSED is able to resynchronize with the parent after it is gone longer than the timeout
+        self.nodes[LEADER].start()
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.nodes[SSED_1].set_csl_timeout(8)
+        self.nodes[SSED_1].set_timeout(10)
+        self.simulator.go(2)
+        self.nodes[LEADER].stop()
+        self.simulator.go(25)
+        self.flush_all()
+        self.nodes[LEADER].start()
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
+        self.assertEqual(self.nodes[SSED_1].get_state(), 'child')
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        self.assertIsNotNone(ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST))
+
 
 if __name__ == '__main__':
     unittest.main()
