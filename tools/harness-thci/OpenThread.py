@@ -450,6 +450,26 @@ class OpenThreadTHCI(object):
 
     @watched
     def __parseExtraParams(self, Param9):
+        """
+        Parse `Param9` for extra THCI parameters.
+
+        `Param9` should be a JSON string encoded in URL-safe base64 encoding.
+
+        Defined Extra THCI Parameters:
+        - "cmd-start-otbr-agent"   : The command to start otbr-agent (default: systemctl start otbr-agent)
+        - "cmd-stop-otbr-agent"    : The command to stop otbr-agent (default: systemctl stop otbr-agent)
+        - "cmd-restart-otbr-agent" : The command to restart otbr-agent (default: systemctl restart otbr-agent)
+
+        For example, Param9 can be generated as below:
+        Param9 = base64.urlsafe_b64encode(json.dumps({
+            "cmd-start-otbr-agent": "service otbr-agent start",
+            "cmd-stop-otbr-agent": "service otbr-agent stop",
+            "cmd-restart-otbr-agent": "service otbr-agent restart",
+        }))
+
+        :param Param9: A JSON string encoded in URL-safe base64 encoding.
+        :return: A dict containing extra THCI parameters.
+        """
         if not Param9 or not Param9.strip():
             return {}
 
