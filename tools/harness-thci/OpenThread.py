@@ -30,7 +30,7 @@
 >> Device : OpenThread THCI
 >> Class : OpenThread
 """
-
+import base64
 import functools
 import ipaddress
 import logging
@@ -39,6 +39,7 @@ import traceback
 import re
 import socket
 import time
+import json
 from abc import abstractmethod
 
 import serial
@@ -405,6 +406,7 @@ class OpenThreadTHCI(object):
 
         self.mac = params.get('EUI')
         self.backboneNetif = params.get('Param8') or 'eth0'
+        self.extraParams = self.__parseExtraParams(params.get('Param9'))
 
         self.UIStatusMsg = ''
         self.AutoDUTEnable = False
@@ -445,6 +447,35 @@ class OpenThreadTHCI(object):
             return '[%s:%d]' % (self.telnetIp, self.telnetPort)
         else:
             return '[%s]' % self.port
+
+    @watched
+    def __parseExtraParams(self, Param9):
+        """
+        Parse `Param9` for extra THCI parameters.
+
+        `Param9` should be a JSON string encoded in URL-safe base64 encoding.
+
+        Defined Extra THCI Parameters:
+        - "cmd-start-otbr-agent"   : The command to start otbr-agent (default: systemctl start otbr-agent)
+        - "cmd-stop-otbr-agent"    : The command to stop otbr-agent (default: systemctl stop otbr-agent)
+        - "cmd-restart-otbr-agent" : The command to restart otbr-agent (default: systemctl restart otbr-agent)
+
+        For example, Param9 can be generated as below:
+        Param9 = base64.urlsafe_b64encode(json.dumps({
+            "cmd-start-otbr-agent": "service otbr-agent start",
+            "cmd-stop-otbr-agent": "service otbr-agent stop",
+            "cmd-restart-otbr-agent": "service otbr-agent restart",
+        }))
+
+        :param Param9: A JSON string encoded in URL-safe base64 encoding.
+        :return: A dict containing extra THCI parameters.
+        """
+        if not Param9 or not Param9.strip():
+            return {}
+
+        jsonStr = base64.urlsafe_b64decode(Param9)
+        params = json.loads(jsonStr)
+        return params
 
     @API
     def closeConnection(self):

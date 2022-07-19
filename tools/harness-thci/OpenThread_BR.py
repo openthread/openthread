@@ -620,7 +620,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.__cli_output_lines.append(line)
 
     def __restartAgentService(self):
-        self.bash('systemctl restart otbr-agent')
+        restart_cmd = self.extraParams.get('cmd-restart-otbr-agent', 'systemctl restart otbr-agent')
+        self.bash(restart_cmd)
 
     def __truncateSyslog(self):
         self.bash('truncate -s 0 /var/log/syslog')
@@ -653,14 +654,16 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     @API
     def powerDown(self):
         self.log('Powering down BBR')
-        self.bash('systemctl stop otbr-agent')
         super(OpenThread_BR, self).powerDown()
+        stop_cmd = self.extraParams.get('cmd-stop-otbr-agent', 'systemctl stop otbr-agent')
+        self.bash(stop_cmd)
 
     # Override powerUp
     @API
     def powerUp(self):
         self.log('Powering up BBR')
-        self.bash('systemctl start otbr-agent')
+        start_cmd = self.extraParams.get('cmd-start-otbr-agent', 'systemctl start otbr-agent')
+        self.bash(start_cmd)
         super(OpenThread_BR, self).powerUp()
 
     # Override forceSetSlaac
