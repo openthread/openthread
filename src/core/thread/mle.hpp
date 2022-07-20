@@ -194,8 +194,8 @@ public:
      * @param[in] aCallback A pointer to a function that is called upon finishing detaching.
      * @param[in] aContext  A pointer to callback application-specific context.
      *
-     * @retval OT_ERROR_NONE Successfully started detaching.
-     * @retval OT_ERROR_BUSY Detaching is already in progress.
+     * @retval kErrorNone   Successfully started detaching.
+     * @retval kErrorBusy   Detaching is already in progress.
      *
      */
     Error DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext);
