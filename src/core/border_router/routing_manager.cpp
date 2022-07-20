@@ -1163,7 +1163,7 @@ bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) co
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
     bool                            contain = false;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
     {
         if (IsValidOmrPrefix(onMeshPrefixConfig) && onMeshPrefixConfig.GetPrefix() == aPrefix)
         {

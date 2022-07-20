@@ -243,8 +243,8 @@ public:
      * @param[in,out] aIterator  An iterator.
      * @param[out]    aEntry     A reference to the entry to populate.
      *
-     * @retval OT_ERROR_NONE        Got the next entry, @p aEntry is updated and @p aIterator is advanced.
-     * @retval OT_ERROR_NOT_FOUND   No more entries in the table.
+     * @retval kErrorNone        Got the next entry, @p aEntry is updated and @p aIterator is advanced.
+     * @retval kErrorNotFound    No more entries in the table.
      *
      */
     Error GetNextPrefixTableEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
