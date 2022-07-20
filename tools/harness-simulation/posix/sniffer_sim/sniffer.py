@@ -28,34 +28,44 @@
 #
 
 import argparse
+from concurrent import futures
+import enum
+import grpc
+import ipaddress
 import logging
 import signal
-import time
 import pcap_codec
-import sys
 import threading
 
+from proto import sniffer_pb2
+from proto import sniffer_pb2_grpc
 import sniffer_transport
 
 
-class Sniffer:
-    """ Class representing the Sniffing node, whose main task is listening.
-    """
+class SnifferServicer(sniffer_pb2_grpc.Sniffer):
+    """ Class representing the Sniffing node, whose main task is listening. """
 
-    logger = logging.getLogger('sniffer.Sniffer')
+    logger = logging.getLogger('sniffer.SnifferServicer')
 
     RECV_BUFFER_SIZE = 4096
+    MAX_NODES_NUM = 33
 
-    def __init__(self, filename, channel):
-        self._pcap = pcap_codec.PcapCodec(filename, channel)
+    class State(enum.Enum):
+        STOPPED = 0
+        RUNNING = 1
 
-        # Create transport
-        transport_factory = sniffer_transport.SnifferTransportFactory()
-        self._transport = transport_factory.create_transport()
-
+    def _clear(self):
+        self._state = SnifferServicer.State.STOPPED
+        self._pcap = None
+        self._allowed_nodeids = None
+        self._transport = None
         self._thread = None
-        self._thread_alive = threading.Event()
         self._thread_alive.clear()
+
+    def __init__(self):
+        self._thread_alive = threading.Event()
+        self._mutex = threading.Lock()  # for self._allowed_nodeids
+        self._clear()
 
     def _sniffer_main_loop(self):
         """ Sniffer main loop. """
@@ -63,69 +73,127 @@ class Sniffer:
         self.logger.debug('Sniffer started.')
 
         while self._thread_alive.is_set():
+            # Avoid being blocked endlessly when there is no data
+            if not self._transport.ready(0.1):
+                continue
             data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
-            self._pcap.append(data)
+
+            self._mutex.acquire()
+            allowed_nodeids = self._allowed_nodeids
+            self._mutex.release()
+
+            # Equivalent to RF enclosure
+            if nodeid in allowed_nodeids:
+                self._pcap.append(data)
 
         self.logger.debug('Sniffer stopped.')
 
-    def start(self):
+    def Start(self, request, context):
         """ Start sniffing. """
 
+        self.logger.debug('call Start')
+
+        # Validate and change the state
+        if self._state != SnifferServicer.State.STOPPED:
+            return sniffer_pb2.StatusReply(status=sniffer_pb2.OPERATION_ERROR)
+        self._state = SnifferServicer.State.RUNNING
+
+        self._pcap = pcap_codec.PcapCodec(request.channel)
+
+        # Sniffer all nodes in default, i.e. there is no RF enclosure
+        self._allowed_nodeids = set(range(1, self.MAX_NODES_NUM + 1))
+
+        # Create transport
+        transport_factory = sniffer_transport.SnifferTransportFactory()
+        self._transport = transport_factory.create_transport()
+
+        # Start the sniffer main loop thread
         self._thread = threading.Thread(target=self._sniffer_main_loop)
         self._thread.daemon = True
-
         self._transport.open()
-
         self._thread_alive.set()
         self._thread.start()
 
-    def stop(self):
-        """ Stop sniffing. """
+        return sniffer_pb2.StatusReply(status=sniffer_pb2.OK)
+
+    def FilterNodes(self, request_iterator, context):
+        """ Only sniffer the specified nodes. """
+
+        self.logger.debug('call FilterNodes')
+
+        # Validate the state
+        if self._state != SnifferServicer.State.RUNNING:
+            return sniffer_pb2.StatusReply(status=sniffer_pb2.OPERATION_ERROR)
+
+        allowed_nodeids = set([x.nodeid for x in request_iterator])
+        # Validate the node IDs
+        for nodeid in allowed_nodeids:
+            if not 1 <= nodeid <= self.MAX_NODES_NUM:
+                return sniffer_pb2.StatusReply(status=sniffer_pb2.VALUE_ERROR)
+
+        self._mutex.acquire()
+        self._allowed_nodeids = allowed_nodeids
+        self._mutex.release()
+
+        return sniffer_pb2.StatusReply(status=sniffer_pb2.OK)
+
+    def Stop(self, request, context):
+        """ Stop sniffing, and return the pcap bytes. """
+
+        self.logger.debug('call Stop')
+
+        # Validate and change the state
+        if self._state != SnifferServicer.State.RUNNING:
+            return sniffer_pb2.StopReply(status=sniffer_pb2.OPERATION_ERROR, pcap_content=b'')
+        self._state = SnifferServicer.State.STOPPED
 
         self._thread_alive.clear()
-
+        self._thread.join(timeout=1)
         self._transport.close()
 
-        self._thread.join(timeout=1)
-        self._thread = None
+        pcap_content = self._pcap.pop_all()
+        self._clear()
 
-    def close(self):
-        """ Close the pcap file. """
+        return sniffer_pb2.StopReply(status=sniffer_pb2.OK, pcap_content=pcap_content)
 
-        self._pcap.close()
+
+def serve(address_port):
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=8))
+    sniffer_pb2_grpc.add_SnifferServicer_to_server(SnifferServicer(), server)
+    # add_secure_port requires a web domain
+    server.add_insecure_port(address_port)
+    logging.info('server starts on %s', address_port)
+    server.start()
+
+    def exit_handler(signum, context):
+        server.stop(1)
+
+    signal.signal(signal.SIGINT, exit_handler)
+    signal.signal(signal.SIGTERM, exit_handler)
+
+    server.wait_for_termination()
 
 
 def run_sniffer():
+    logging.basicConfig(level=logging.INFO)
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o',
-                        '--output',
-                        dest='output',
+    parser.add_argument('--address',
+                        dest='address',
                         type=str,
-                        required=True,
-                        help='the path of the output .pcap file')
-    parser.add_argument('-c',
-                        '--channel',
-                        dest='channel',
-                        type=int,
-                        required=True,
-                        help='the channel which is sniffered')
+                        required=False,
+                        default='::',
+                        help='the address of the sniffer server')
+    parser.add_argument('--port', dest='port', type=int, required=True, help='the port of the sniffer server')
     args = parser.parse_args()
 
-    sniffer = Sniffer(args.output, args.channel)
-    sniffer.start()
+    # Let it crash if args.address is not a valid IP address
+    if isinstance(ipaddress.ip_address(args.address), ipaddress.IPv6Address):
+        addr = f'[{args.address}]'
+    else:
+        addr = args.address
 
-    def atexit(signum, frame):
-        sniffer.stop()
-        sniffer.close()
-        sys.exit(0)
-
-    signal.signal(signal.SIGTERM, atexit)
-
-    while sniffer._thread_alive.is_set():
-        time.sleep(0.5)
-
-    sniffer.stop()
-    sniffer.close()
+    serve(f'{addr}:{args.port}')
 
 
 if __name__ == '__main__':

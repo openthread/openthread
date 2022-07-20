@@ -33,13 +33,17 @@ import ctypes.util
 import json
 import logging
 import os
+import signal
 import socket
 import struct
+import subprocess
+import sys
 
 GROUP = 'ff02::114'
 PORT = 12345
 MAX_OT11_NUM = 33
 MAX_SNIFFER_NUM = 4
+SNIFFER_SERVER_PORT_BASE = 50051
 
 
 def if_nametoindex(ifname: str) -> int:
@@ -78,6 +82,11 @@ def init_socket(ifname: str, group: str, port: int) -> socket.socket:
     return s
 
 
+def _advertise(s: socket.socket, dst, info):
+    logging.info('Advertise: %r', info)
+    s.sendto(json.dumps(info).encode('utf-8'), dst)
+
+
 def advertise_ftd(s: socket.socket, dst, ven: str, ver: str, add: str, por: int, number: int):
     # Node ID of ot-cli-ftd is 1-indexed
     for i in range(1, number + 1):
@@ -88,15 +97,22 @@ def advertise_ftd(s: socket.socket, dst, ven: str, ver: str, add: str, por: int,
             'add': f'{i}@{add}',
             'por': por,
         }
-        logging.info('Advertise: %r', info)
-        s.sendto(json.dumps(info).encode('utf-8'), dst)
+        _advertise(s, dst, info)
 
 
 def advertise_sniffer(s: socket.socket, dst, add: str, number: int):
     for i in range(number):
-        info = 'Sniffer_%d@%s' % (i, add)
-        logging.info('Advertise: %r', info)
-        s.sendto(info.encode('utf-8'), dst)
+        info = {
+            'add': add,
+            'por': i + SNIFFER_SERVER_PORT_BASE,
+        }
+        _advertise(s, dst, info)
+
+
+def initiate_sniffer(addr: str, port: int) -> subprocess.Popen:
+    cmd = ['python3', 'sniffer_sim/sniffer.py', '--address', addr, '--port', str(port)]
+    logging.info('Executing command:  %s', ' '.join(cmd))
+    return subprocess.Popen(cmd)
 
 
 def main():
@@ -145,9 +161,26 @@ def main():
     # Get the local IP address on the specified interface
     addr = get_ipaddr(args.ifname)
 
+    # Initiate the sniffer
+    sniffer_procs = []
+    for i in range(args.sniffer_num):
+        sniffer_procs.append(initiate_sniffer(addr, i + SNIFFER_SERVER_PORT_BASE))
+
     s = init_socket(args.ifname, GROUP, PORT)
 
     logging.info('Advertising on interface %s group %s ...', args.ifname, GROUP)
+
+    # Terminate all sniffer simulation server processes and then exit
+    def exit_handler(signum, context):
+        # Return code is non-zero if any return code of the processes is non-zero
+        ret = 0
+        for sniffer_proc in sniffer_procs:
+            sniffer_proc.terminate()
+            ret = max(ret, sniffer_proc.wait())
+        sys.exit(ret)
+
+    signal.signal(signal.SIGINT, exit_handler)
+    signal.signal(signal.SIGTERM, exit_handler)
 
     # Loop, printing any data we receive
     while True:

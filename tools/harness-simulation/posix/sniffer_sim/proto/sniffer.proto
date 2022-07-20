@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package sniffer;
+
+// Sniffer simulation
+service Sniffer {
+    // Start the sniffer
+    rpc Start(StartRequest) returns (StatusReply) {}
+
+    // Let the sniffer sniff these nodes only
+    rpc FilterNodes(stream NodeID) returns (StatusReply) {}
+
+    // Stop the sniffer
+    rpc Stop(StopRequest) returns (StopReply) {}
+}
+
+enum Status {
+    OK               = 0;
+    OPERATION_ERROR  = 1;
+    VALUE_ERROR      = 2;
+}
+
+message StartRequest {
+    // Specify the channel that the sniffer is going to sniff
+    int32 channel = 1;
+}
+
+message StatusReply {
+    Status status = 1;
+}
+
+message NodeID {
+    int32 nodeid = 1;
+}
+
+message StopRequest {
+}
+
+message StopReply {
+    Status status = 1;
+    bytes pcap_content = 2;
+}

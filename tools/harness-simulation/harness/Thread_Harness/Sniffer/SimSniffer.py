@@ -27,10 +27,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+import grpc
 import ipaddress
+import json
 import netifaces
-import os
-import paramiko
 import select
 import socket
 import struct
@@ -40,14 +40,9 @@ import winreg as wr
 
 from ISniffer import ISniffer
 from THCI.OpenThread import watched
-from simulation.config import (
-    REMOTE_PORT,
-    REMOTE_USERNAME,
-    REMOTE_PASSWORD,
-    REMOTE_OT_PATH,
-    REMOTE_SNIFFER_OUTPUT_PREFIX,
-    EDITCAP_PATH,
-)
+from simulation.config import EDITCAP_PATH
+from simulation.Sniffer.proto import sniffer_pb2
+from simulation.Sniffer.proto import sniffer_pb2_grpc
 
 DISCOVERY_ADDR = ('ff02::114', 12345)
 
@@ -68,12 +63,12 @@ class SimSniffer(ISniffer):
     @watched
     def __init__(self, **kwargs):
         self.channel = kwargs.get('channel')
-        self.ipaddr = kwargs.get('addressofDevice')
+        self.addr_port = kwargs.get('addressofDevice')
         self.is_active = False
         self._local_pcapng_location = None
-        self._ssh = None
-        self._remote_pcap_location = None
-        self._remote_pid = None
+        if self.addr_port is not None:
+            self._sniffer = grpc.insecure_channel(self.addr_port)
+            self._stub = sniffer_pb2_grpc.SnifferStub(self._sniffer)
 
     def __repr__(self):
         return '%r' % self.__dict__
@@ -130,13 +125,14 @@ class SimSniffer(ISniffer):
         start = time.time()
         while time.time() - start < SCAN_TIME:
             if select.select([sock], [], [], 1)[0]:
-                addr, _ = sock.recvfrom(1024)
-                devs.add(addr)
+                data, _ = sock.recvfrom(1024)
+                data = json.loads(data)
+                devs.add((data['add'], data['por']))
             else:
                 # Re-send the request, due to unreliability of UDP especially on WLAN
                 sock.sendto(('Sniffer').encode(), DISCOVERY_ADDR)
 
-        devs = [SimSniffer(addressofDevice=addr, channel=None) for addr in devs]
+        devs = [SimSniffer(addressofDevice=self._encode_address_port(addr, port), channel=None) for addr, port in devs]
         self.log('List of SimSniffers: %r', devs)
 
         return devs
@@ -145,22 +141,9 @@ class SimSniffer(ISniffer):
     def startSniffer(self, channelToCapture, captureFileLocation, includeEthernet=False):
         self.channel = channelToCapture
         self._local_pcapng_location = captureFileLocation
-        self._remote_pcap_location = os.path.join(REMOTE_SNIFFER_OUTPUT_PREFIX, self.ipaddr.split('@')[0] + '.pcap')
 
-        self._ssh = paramiko.SSHClient()
-        self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        remote_ip = self.ipaddr.split('@')[1]
-        self._ssh.connect(remote_ip, port=REMOTE_PORT, username=REMOTE_USERNAME, password=REMOTE_PASSWORD)
-
-        _, stdout, _ = self._ssh.exec_command(
-            'echo $$ && exec python3 %s -o %s -c %d' %
-            (os.path.join(REMOTE_OT_PATH, 'tools/harness-simulation/posix/sniffer_sim/sniffer.py'),
-             self._remote_pcap_location, self.channel))
-        self._remote_pid = int(stdout.readline())
-
-        self.log('local pcapng location = %s', self._local_pcapng_location)
-        self.log('remote pcap location = %s', self._remote_pcap_location)
-        self.log('remote pid = %d', self._remote_pid)
+        response = self._stub.Start(sniffer_pb2.StartRequest(channel=self.channel))
+        assert response.status == sniffer_pb2.OK
 
         self.is_active = True
 
@@ -168,30 +151,25 @@ class SimSniffer(ISniffer):
     def stopSniffer(self):
         if not self.is_active:
             return
-        self.is_active = False
 
-        assert self._ssh is not None
-        self._ssh.exec_command('kill -s TERM %d' % self._remote_pid)
-        # Wait to make sure the file is closed
-        time.sleep(3)
+        response = self._stub.Stop(sniffer_pb2.StopRequest())
+        assert response.status == sniffer_pb2.OK
 
-        # Truncate suffix from .pcapng to .pcap
+        # truncate suffix from .pcapng to .pcap
         local_pcap_location = self._local_pcapng_location[:-2]
 
-        with self._ssh.open_sftp() as sftp:
-            sftp.get(self._remote_pcap_location, local_pcap_location)
-
-        self._ssh.close()
+        with open(local_pcap_location, 'wb') as f:
+            f.write(response.pcap_content)
 
         cmd = [EDITCAP_PATH, '-F', 'pcapng', local_pcap_location, self._local_pcapng_location]
         self.log('running editcap: %r', cmd)
         subprocess.Popen(cmd).wait()
         self.log('editcap done')
 
-        self._local_pcapng_location = None
-        self._ssh = None
-        self._remote_pcap_location = None
-        self._remote_pid = None
+        self.is_active = False
+
+    def __del__(self):
+        self._sniffer.close()
 
     @watched
     def setChannel(self, channelToCapture):
@@ -211,7 +189,7 @@ class SimSniffer(ISniffer):
 
     @watched
     def getSnifferAddress(self):
-        return self.ipaddr
+        return self.addr_port
 
     @watched
     def globalReset(self):

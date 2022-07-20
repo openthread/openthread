@@ -11,10 +11,17 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 ## POSIX Environment Setup
 
 1. Build OpenThread to generate standalone OpenThread simulation `ot-cli-ftd`. For example, run the following command in the top directory of OpenThread.
+
    ```bash
    $ script/cmake-build simulation
    ```
+
    Then `ot-cli-ftd` is built in the directory `build/simulation/examples/apps/cli/`.
+
+2. Run the installation script.
+   ```bash
+   $ tools/harness-simulation/posix/install.sh
+   ```
 
 ## Test Harness Environment Setup
 
@@ -22,8 +29,6 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 2. Check the configuration file `C:\GRL\Thread1.2\Thread_Harness\simulation\config.py`
 
-   - Edit the value of `REMOTE_USERNAME` to the username expected to connect to on the remote POSIX environment.
-   - Edit the value of `REMOTE_PASSWORD` to the password corresponding to the username above.
    - Edit the value of `REMOTE_OT_PATH` to the absolute path where the top directory of the OpenThread repository is located.
 
 3. Add the additional simulation device information in `harness\Web\data\deviceInputFields.xml` to `C:\GRL\Thread1.2\Web\data\deviceInputFields.xml`.

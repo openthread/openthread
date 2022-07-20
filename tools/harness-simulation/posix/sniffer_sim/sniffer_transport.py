@@ -28,6 +28,7 @@
 #
 
 import os
+import select
 import socket
 
 
@@ -151,6 +152,9 @@ class SnifferSocketTransport(SnifferTransport):
         nodeid = self._port_to_nodeid(address[1])
 
         return bytearray(data), nodeid
+
+    def ready(self, timeout):
+        return select.select([self._socket], [], [], timeout)[0]
 
 
 class SnifferTransportFactory(object):

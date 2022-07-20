@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/bash
 #
 # Copyright (c) 2022, The OpenThread Authors.
 # All rights reserved.
@@ -27,6 +27,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-REMOTE_OT_PATH = '/home/pi/openthread/'
+set -euxo pipefail
 
-EDITCAP_PATH = r'C:\Program Files (x86)\Wireshark_Thread\editcap.exe'
+BASE_DIR=$(dirname $0)
+SNIFFER_DIR=${BASE_DIR}/sniffer_sim
+
+pip3 install -r ${BASE_DIR}/requirements.txt
+
+python3 -m grpc_tools.protoc -I${SNIFFER_DIR} --python_out=${SNIFFER_DIR} --grpc_python_out=${SNIFFER_DIR} proto/sniffer.proto
