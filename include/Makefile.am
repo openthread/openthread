@@ -47,6 +47,7 @@ openthread_headers                      = \
     openthread/coap_secure.h              \
     openthread/commissioner.h             \
     openthread/config.h                   \
+    openthread/coprocessor_rpc.h          \
     openthread/crypto.h                   \
     openthread/dataset.h                  \
     openthread/dataset_ftd.h              \
@@ -97,6 +98,7 @@ dist_openthread_HEADERS = $(openthread_headers)
 ot_platform_headers                     = \
     openthread/platform/alarm-micro.h     \
     openthread/platform/alarm-milli.h     \
+    openthread/platform/coprocessor_rpc.h \
     openthread/platform/crypto.h          \
     openthread/platform/debug_uart.h      \
     openthread/platform/diag.h            \

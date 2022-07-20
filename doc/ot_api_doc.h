@@ -130,6 +130,7 @@
  * @}
  *
  * @defgroup api-cli                  Command Line Interface
+ * @defgroup api-coprocessor-rpc      Co-processor Remote Procedure Call
  * @defgroup api-crypto               Crypto - Thread Stack
  * @defgroup api-factory-diagnostics  Factory Diagnostics - Thread Stack
  * @defgroup api-heap                 Heap

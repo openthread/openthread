@@ -253,6 +253,8 @@ typedef struct otRadioFrame
 
     uint8_t mRadioType; ///< Radio link type - should be ignored by radio driver.
 
+    uint8_t mIid; ///< Interface Id for the radio packet.
+
     /**
      * The union of transmit and receive information for a radio frame.
      */

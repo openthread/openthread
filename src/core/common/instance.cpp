@@ -230,6 +230,9 @@ Instance::Instance(void)
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))
 #endif
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+    , mCRPC(*this)
+#endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiags(*this)
 #endif

@@ -118,6 +118,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1" ]
     }
 
+    if (openthread_config_coprocessor_rpc_enable) {
+      defines += [ "OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE=1" ]
+    }
+
     if (openthread_config_mac_csl_receiver_enable) {
       defines += [ "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1" ]
     }
@@ -314,6 +318,7 @@ openthread_core_files = [
   "api/coap_api.cpp",
   "api/coap_secure_api.cpp",
   "api/commissioner_api.cpp",
+  "api/coprocessor_rpc_api.cpp",
   "api/crypto_api.cpp",
   "api/dataset_api.cpp",
   "api/dataset_ftd_api.cpp",
@@ -447,6 +452,8 @@ openthread_core_files = [
   "common/type_traits.hpp",
   "common/uptime.cpp",
   "common/uptime.hpp",
+  "coprocessor/rpc.cpp",
+  "coprocessor/rpc.hpp",
   "crypto/aes_ccm.cpp",
   "crypto/aes_ccm.hpp",
   "crypto/aes_ecb.cpp",
@@ -701,6 +708,7 @@ openthread_core_files = [
 ]
 
 openthread_radio_sources = [
+  "api/coprocessor_rpc_api.cpp",
   "api/diags_api.cpp",
   "api/error_api.cpp",
   "api/instance_api.cpp",
@@ -718,6 +726,7 @@ openthread_radio_sources = [
   "common/tasklet.cpp",
   "common/timer.cpp",
   "common/uptime.cpp",
+  "coprocessor/rpc.cpp",
   "crypto/aes_ccm.cpp",
   "crypto/aes_ecb.cpp",
   "crypto/crypto_platform.cpp",
@@ -753,6 +762,7 @@ source_set("libopenthread_core_config") {
     "config/child_supervision.h",
     "config/coap.h",
     "config/commissioner.h",
+    "config/coprocessor_rpc.h",
     "config/crypto.h",
     "config/dataset_updater.h",
     "config/dhcp6_client.h",

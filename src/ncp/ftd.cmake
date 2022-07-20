@@ -31,6 +31,7 @@ add_library(openthread-ncp-ftd)
 target_compile_definitions(openthread-ncp-ftd PRIVATE
     OPENTHREAD_FTD=1
     OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
+    OPENTHREAD_COPROCESSOR=1
 )
 
 target_compile_options(openthread-ncp-ftd PRIVATE

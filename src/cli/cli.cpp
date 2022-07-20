@@ -37,6 +37,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+#include <openthread/coprocessor_rpc.h>
+#endif
 #include <openthread/diag.h>
 #include <openthread/dns.h>
 #include <openthread/icmp6.h>
@@ -293,8 +296,9 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
             char *args[kMaxArgs];
 
             Arg::CopyArgsToStringArray(aArgs, args);
+            mUserCommandsError = OT_ERROR_NONE;
             mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
-            error = OT_ERROR_NONE;
+            error = mUserCommandsError;
             break;
         }
     }
@@ -307,6 +311,11 @@ void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength
     mUserCommands        = aCommands;
     mUserCommandsLength  = aLength;
     mUserCommandsContext = aContext;
+}
+
+void Interpreter::SetUserCommandError(otError aError)
+{
+    mUserCommandsError = aError;
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -4797,6 +4806,27 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+otError Interpreter::ProcessCRPC(Arg aArgs[])
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+
+    char *args[kMaxArgs];
+    char  output[OPENTHREAD_CONFIG_COPROCESSOR_RPC_OUTPUT_BUFFER_SIZE];
+
+    output[0]                  = '\0';
+    output[sizeof(output) - 1] = '\0';
+
+    Arg::CopyArgsToStringArray(aArgs, args);
+
+    error = otCRPCProcessCmd(Arg::GetArgsLength(aArgs), args, output, sizeof(output) - 1);
+
+    OutputFormat("%s", output);
+
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
@@ -5427,9 +5457,13 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
     }
     else
     {
-        error = ProcessUserCommands(aArgs);
+        VerifyOrExit((error = ProcessUserCommands(aArgs)) != OT_ERROR_NONE);
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+        VerifyOrExit((error = ProcessCRPC(aArgs)) != OT_ERROR_NONE);
+#endif
     }
 
+exit:
     return error;
 }
 
@@ -5446,6 +5480,11 @@ extern "C" void otCliInputLine(char *aBuf)
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
     Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
+}
+
+extern "C" void otCliSetUserCommandError(otError aError)
+{
+    Interpreter::GetInterpreter().SetUserCommandError(aError);
 }
 
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)

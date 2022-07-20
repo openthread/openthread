@@ -190,14 +190,14 @@ static bool hasFramePending(const otRadioFrame *aFrame)
     switch (src.mType)
     {
     case OT_MAC_ADDRESS_TYPE_SHORT:
-        rval = utilsSoftSrcMatchShortFindEntry(src.mAddress.mShortAddress) >= 0;
+        rval = utilsSoftSrcMatchShortFindEntry(0, src.mAddress.mShortAddress) >= 0;
         break;
     case OT_MAC_ADDRESS_TYPE_EXTENDED:
     {
         otExtAddress extAddr;
 
         ReverseExtAddress(&extAddr, &src.mAddress.mExtAddress);
-        rval = utilsSoftSrcMatchExtFindEntry(&extAddr) >= 0;
+        rval = utilsSoftSrcMatchExtFindEntry(0, &extAddr) >= 0;
         break;
     }
     default:
@@ -257,7 +257,7 @@ void otPlatRadioSetPanId(otInstance *aInstance, otPanId aPanid)
     assert(aInstance != NULL);
 
     sPanid = aPanid;
-    utilsSoftSrcMatchSetPanId(aPanid);
+    utilsSoftSrcMatchSetPanId(0, aPanid);
 }
 
 void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)

@@ -56,6 +56,7 @@
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "common/uptime.hpp"
+#include "coprocessor/rpc.hpp"
 #include "diags/factory_diags.hpp"
 #include "mac/link_raw.hpp"
 #include "radio/radio.hpp"
@@ -608,6 +609,10 @@ private:
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;
+#endif
+
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+    Coprocessor::RPC mCRPC;
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

@@ -136,3 +136,12 @@ target_include_directories(openthread-posix PRIVATE
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
+
+if(OT_POSIX_CONFIG_RCP_BUS MATCHES "CPC")
+    target_sources(openthread-posix PRIVATE cpc_interface.cpp)
+    target_link_libraries(openthread-posix PRIVATE cpc)
+    target_include_directories(openthread-posix PRIVATE
+        ${PROJECT_SOURCE_DIR}/../../../platform/service/cpc/daemon/lib
+        ${PROJECT_SOURCE_DIR}/../../../platform/service/cpc/daemon/misc
+    )
+endif()

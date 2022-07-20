@@ -175,6 +175,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/coap_api.cpp                                       \
     src/core/api/coap_secure_api.cpp                                \
     src/core/api/commissioner_api.cpp                               \
+    src/core/api/coprocessor_rpc_api.cpp                            \
     src/core/api/crypto_api.cpp                                     \
     src/core/api/dataset_api.cpp                                    \
     src/core/api/dataset_ftd_api.cpp                                \
@@ -246,6 +247,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/tlvs.cpp                                        \
     src/core/common/trickle_timer.cpp                               \
     src/core/common/uptime.cpp                                      \
+    src/core/coprocessor/rpc.cpp                                    \
     src/core/crypto/aes_ccm.cpp                                     \
     src/core/crypto/aes_ecb.cpp                                     \
     src/core/crypto/crypto_platform.cpp                             \

@@ -41,6 +41,7 @@ set(COMMON_SOURCES
     api/coap_api.cpp
     api/coap_secure_api.cpp
     api/commissioner_api.cpp
+    api/coprocessor_rpc_api.cpp
     api/crypto_api.cpp
     api/dataset_api.cpp
     api/dataset_ftd_api.cpp
@@ -112,6 +113,7 @@ set(COMMON_SOURCES
     common/tlvs.cpp
     common/trickle_timer.cpp
     common/uptime.cpp
+    coprocessor/rpc.cpp
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
     crypto/crypto_platform.cpp
@@ -239,6 +241,7 @@ set(COMMON_SOURCES
 )
 
 set(RADIO_COMMON_SOURCES
+    api/coprocessor_rpc_api.cpp
     api/diags_api.cpp
     api/error_api.cpp
     api/instance_api.cpp
@@ -255,6 +258,7 @@ set(RADIO_COMMON_SOURCES
     common/tasklet.cpp
     common/timer.cpp
     common/uptime.cpp
+    coprocessor/rpc.cpp
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
     crypto/crypto_platform.cpp

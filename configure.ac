@@ -615,6 +615,30 @@ AC_MSG_RESULT(${enable_cli})
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
 
 #
+# CPC
+#
+
+AC_MSG_CHECKING([whether use CPC support])
+AC_ARG_ENABLE(cpc,
+    [AS_HELP_STRING([--enable-cpc], [Link CPC @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_cpc=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_cpc} for --enable-cpc])
+            ;;
+        esac
+    ],
+    [enable_cpc=no])
+
+AC_MSG_RESULT(${enable_cpc})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CPC], [test "${enable_cpc}" = "yes"])
+
+#
 # NCP Library
 #
 
@@ -1096,6 +1120,7 @@ AC_MSG_NOTICE([
   OpenThread MTD support                    : ${enable_mtd}
   OpenThread Radio Only support             : ${enable_radio_only}
   OpenThread CLI support                    : ${enable_cli}
+  OpenThread CPC support                    : ${enable_cpc}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread NCP Vendor Hook Source         : ${with_ncp_vendor_hook_source}
   OpenThread NCP Spinel Encrypter           : ${with_ncp_spinel_encrypter_libs}

@@ -60,6 +60,12 @@ LDADD_COMMON                                                           = \
     $(top_builddir)/third_party/tcplp/libtcplp.a                         \
     $(NULL)
 
+if OPENTHREAD_ENABLE_CPC
+LDADD_COMMON                                                          += \
+    -lcpc                                                                \
+    $(NULL)
+endif
+
 if OPENTHREAD_TARGET_LINUX
 LDADD_COMMON                                                          += \
     -lrt                                                                 \

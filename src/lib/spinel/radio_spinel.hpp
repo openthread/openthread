@@ -119,9 +119,10 @@ public:
      *                                         (only used when attempts to upgrade from NCP to RCP mode),
      *                                         FALSE otherwise.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
+     * @param[in]  aIid                        The IID of the Host Application.
      *
      */
-    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
+    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck, spinel_iid_t aIid);
 
     /**
      * Deinitialize this radio transceiver.
@@ -572,6 +573,22 @@ public:
      */
     InterfaceType &GetSpinelInterface(void) { return mSpinelInterface; }
 
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+    /**
+     * This method processes platform diagnostics commands.
+     *
+     * @param[in]   aString         A null-terminated input string.
+     * @param[out]  aOutput         The diagnostics execution result.
+     * @param[in]   aOutputMaxLen   The output buffer size.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError PlatCRPCProcess(const char *aString, char *aOutput, size_t aOutputMaxLen);
+#endif
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     /**
      * This method enables/disables the factory diagnostics mode.
@@ -1011,6 +1028,7 @@ private:
     va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
+    spinel_iid_t      mIid;             ///< The spinel interface id used by this process.
 
     uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
     uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
@@ -1038,8 +1056,16 @@ private:
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
+    enum
+    {
+        kRcpFailureNone,
+        kRcpFailureTimeout,
+        kRcpFailureUnexpectedReset,
+    };
+
     bool    mResetRadioOnStartup : 1; ///< Whether should send reset command when init.
     int16_t mRcpFailureCount;         ///< Count of consecutive RCP failures.
+    uint8_t mRcpFailure : 2;          ///< RCP failure reason, should recover and retry operation.
 
     // Properties set by core.
     uint8_t      mKeyIdMode;
@@ -1063,10 +1089,14 @@ private:
     bool mTransmitPowerSet : 1;            ///< Whether transmit power has been set.
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
-    bool mRcpFailed : 1;                   ///< RCP failure happened, should recover and retry operation.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
 
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+    char * mCRPCOutput;
+    size_t mCRPCOutputMaxLen;
+#endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;

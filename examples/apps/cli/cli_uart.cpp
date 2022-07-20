@@ -78,6 +78,12 @@
 #endif
 #endif
 
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_ENABLE
+#if OPENTHREAD_CONFIG_COPROCESSOR_RPC_CMD_LINE_BUFFER_SIZE > OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
+#error "Co-processor remote procedure call command line should be smaller than CLI UART rx buffer"
+#endif
+#endif
+
 #if OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH > OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE
 #error "command line should be should be smaller than CLI rx buffer"
 #endif

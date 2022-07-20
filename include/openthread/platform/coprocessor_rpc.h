@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,52 +29,60 @@
 /**
  * @file
  * @brief
- *   This file defines the software source match table interfaces used by
- *   soft_source_match_table.c.
+ *   This file defines the platform Co-processor RPC (CRPC) interface.
+ *
  */
 
-#ifndef SOFT_SOURCE_MATCH_TABLE_H
-#define SOFT_SOURCE_MATCH_TABLE_H
+#ifndef OPENTHREAD_PLATFORM_COPROCESSOR_RPC_H_
+#define OPENTHREAD_PLATFORM_COPROCESSOR_RPC_H_
 
-#include "openthread-core-config.h"
-#include <openthread/platform/radio.h>
-
+#include <stddef.h>
 #include <stdint.h>
+
+#include <openthread/error.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
-#define RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
-#endif
+/**
+ * @addtogroup plat-coprocessor-rpc
+ *
+ * @brief
+ *   This module includes the platform abstraction for Co-processor RPC (CRPC) features.
+ *
+ * @{
+ *
+ */
 
-#ifndef RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
-#define RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
-#endif
+/**
+ * This function processes a Co-processor RPC command line.
+ *
+ * @param[in]   aInstance       The OpenThread instance for current request.
+ * @param[in]   aArgsLength     The number of arguments in @p aArgs.
+ * @param[in]   aArgs           The arguments of command line.
+ * @param[out]  aOutput         The execution result.
+ * @param[in]   aOutputMaxLen   The output buffer size.
+ *
+ * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
+ * @retval  OT_ERROR_NONE               The command is successfully process.
+ * @retval  OT_ERROR_INVALID_COMMAND    The command is not valid or not supported.
+ *
+ */
+otError otPlatCRPCProcess(otInstance *aInstance,
+                          uint8_t     aArgsLength,
+                          char *      aArgs[],
+                          char *      aOutput,
+                          size_t      aOutputMaxLen);
 
-#ifndef RADIO_CONFIG_SRC_MATCH_PANID_NUM
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-#define RADIO_CONFIG_SRC_MATCH_PANID_NUM 3
-#else
-#define RADIO_CONFIG_SRC_MATCH_PANID_NUM 1
-#endif
-#endif
-
-#if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
-void utilsSoftSrcMatchSetPanId(uint8_t iid, uint16_t aPanId);
-#endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM || RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
-
-#if RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
-int16_t utilsSoftSrcMatchShortFindEntry(uint8_t iid, uint16_t aShortAddress);
-#endif // RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
-
-#if RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
-int16_t utilsSoftSrcMatchExtFindEntry(uint8_t iid, const otExtAddress *aExtAddress);
-#endif // RADIO_CONFIG_SRC_MATCH_EXT_ENTRY_NUM
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
-} // extern "C"
+} // end of extern "C"
 #endif
 
-#endif // SOFT_SOURCE_MATCH_TABLE_H
+#endif // OPENTHREAD_PLATFORM_COPROCESSOR_RPC_H_

@@ -72,6 +72,7 @@ MESSAGE_USE_HEAP          ?= 0
 MLE_LONG_ROUTES           ?= 0
 MLR                       ?= 0
 MTD_NETDIAG               ?= 0
+MULTIPAN_RCP              ?= 0
 MULTIPLE_INSTANCE         ?= 0
 NEIGHBOR_DISCOVERY_AGENT  ?= 0
 NETDATA_PUBLISHER         ?= 0
@@ -282,6 +283,10 @@ endif
 
 ifeq ($(MTD_NETDIAG),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1
+endif
+
+ifeq ($(MULTIPAN_RCP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1
 endif
 
 ifeq ($(MULTIPLE_INSTANCE),1)

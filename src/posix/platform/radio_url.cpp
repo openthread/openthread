@@ -63,6 +63,12 @@ const char *otSysGetRadioUrlHelpString(void)
     "    spi-small-packet=[n]          Specify the smallest packet we can receive in a single transaction.\n"  \
     "                                  (larger packets will require two transactions). Default value is 32.\n"
 
+#elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_CPC
+
+#define OT_RADIO_URL_HELP_BUS                                        \
+    "    spinel+cpc://cpcd_0?${Parameters} for connecting to cpcd\n" \
+    "Parameters:\n"
+
 #else
 
 #define OT_RADIO_URL_HELP_BUS                                                                        \
@@ -97,7 +103,9 @@ const char *otSysGetRadioUrlHelpString(void)
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
            "    ncp-dataset                   Retrieve dataset from ncp.\n"
            "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
-           "    skip-rcp-compatibility-check  Skip checking RCP API version and capabilities during initialization.\n";
+           "    skip-rcp-compatibility-check  Skip checking RCP API version and capabilities during initialization.\n"
+           "    iid                           Set the Spinel Interface ID for this process. Valid values are 1-3.\n";
+    ;
 }
 
 namespace ot {
