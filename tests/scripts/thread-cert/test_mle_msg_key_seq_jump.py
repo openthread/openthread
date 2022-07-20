@@ -141,15 +141,16 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
             self.assertEqual(node.get_key_sequence_counter(), 5)
 
         #-------------------------------------------------------------------
-        # Manually increase the key seq on leader. Wait for advertisement
-        # interval. This would trigger both reed and router to notice key
-        # seq jump and try to re-establish link (link request/accept exchange).
-        # Validate that they all adopt the new key seq.
+        # Manually increase the key seq on leader. Wait for multiple
+        # advertisement intervals. This would trigger both reed and router
+        # to notice key seq jump and try to re-establish link (link
+        # request/accept exchange). Validate that they all adopt the new
+        # key seq.
 
         leader.set_key_sequence_counter(10)
         self.assertEqual(leader.get_key_sequence_counter(), 10)
 
-        self.simulator.go(40)
+        self.simulator.go(130)
 
         self.assertEqual(router.get_key_sequence_counter(), 10)
         self.assertEqual(reed.get_key_sequence_counter(), 10)
@@ -220,14 +221,14 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
         self.assertEqual(reed.get_key_sequence_counter(), 20)
 
         #-------------------------------------------------------------------
-        # Move forward the key seq counter by one on router. Wait for
-        # advertisement interval. Validate that leader adopts the higher
+        # Move forward the key seq counter by one on router. Wait for multiple
+        # advertisement intervals. Validate that leader adopts the higher
         # counter value.
 
         router.set_key_sequence_counter(21)
         self.assertEqual(router.get_key_sequence_counter(), 21)
 
-        self.simulator.go(40)
+        self.simulator.go(130)
         self.assertEqual(leader.get_key_sequence_counter(), 21)
         self.assertEqual(reed.get_key_sequence_counter(), 21)
 
