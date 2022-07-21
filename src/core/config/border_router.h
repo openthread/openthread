@@ -112,6 +112,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
+ *
+ * Specified maximum number of on-mesh prefixes (discovered from Thread Network Data) that are included as Route Info
+ * Option in emitted Router Advertisement messages.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES 16
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
  *
  * Define to 1 to enable Border Routing NAT64 support.

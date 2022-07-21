@@ -253,10 +253,7 @@ public:
     }
 
 private:
-    static constexpr uint16_t kMaxRouterAdvMessageLength = 256; // The maximum RA message length we can handle.
-
-    // The maximum number of the OMR prefixes to advertise.
-    static constexpr uint8_t kMaxOmrPrefixNum = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
+    static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
 
     static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
     static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; // The length of an On-link prefix. In bits.
@@ -476,27 +473,25 @@ private:
         bool                       mAllowDefaultRouteInNetData;
     };
 
-    class OmrPrefix // An OMR Prefix
+    class OmrPrefix : public Clearable<OmrPrefix>
     {
     public:
-        static constexpr uint16_t       kInfoStringSize = 60;
-        typedef String<kInfoStringSize> InfoString;
+        OmrPrefix(void) { Clear(); }
 
-        void               Init(const Ip6::Prefix &aPrefix, RoutePreference aPreference);
-        void               InitFrom(NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
+        bool               IsEmpty(void) const { return (mPrefix.GetLength() == 0); }
+        void               SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         RoutePreference    GetPreference(void) const { return mPreference; }
-        void               SetPreference(RoutePreference aPreference) { mPreference = aPreference; }
-        bool               Matches(const Ip6::Prefix &aPrefix) const { return mPrefix == aPrefix; }
-        bool               IsFavoredOver(const OmrPrefix &aOther) const;
-        InfoString         ToString(void) const;
+        bool               IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
 
     private:
         Ip6::Prefix     mPrefix;
         RoutePreference mPreference;
     };
 
-    typedef Array<OmrPrefix, kMaxOmrPrefixNum> OmrPrefixArray;
+    typedef Ip6::Prefix OnMeshPrefix;
+
+    typedef Array<OnMeshPrefix, kMaxOnMeshPrefixes> OnMeshPrefixArray;
 
     class LocalOmrPrefix : InstanceLocator
     {
@@ -532,12 +527,12 @@ private:
     void  EvaluateRoutingPolicy(void);
     void  StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli);
     void  StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli);
-    void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
+    void  EvaluateOmrPrefix(OnMeshPrefixArray &aNewPrefixes);
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);
-    void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes);
+    void  SendRouterAdvertisement(const OnMeshPrefixArray &aNewPrefixes);
     bool  IsRouterSolicitationInProgress(void) const;
 
     static void HandleRouterSolicitTimer(Timer &aTimer);
@@ -581,13 +576,9 @@ private:
 
     LocalOmrPrefix mLocalOmrPrefix;
 
-    // The advertised OMR prefixes. For a stable Thread network without
-    // manually configured OMR prefixes, there should be a single OMR
-    // prefix that is being advertised because each BRs will converge to
-    // the smallest OMR prefix sorted by method IsPrefixSmallerThan. If
-    // manually configured OMR prefixes exist, they will also be
-    // advertised on infra link.
-    OmrPrefixArray mAdvertisedOmrPrefixes;
+    // List of on-mesh prefixes (discovered from Network Data) which
+    // were advertised as RIO in the last sent RA message.
+    OnMeshPrefixArray mAdvertisedPrefixes;
 
     RoutePreference mRouteInfoOptionPreference;
 
