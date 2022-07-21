@@ -40,6 +40,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/numeric_limits.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
 
@@ -163,7 +164,11 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
     uint16_t rval;
 
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     rval = static_cast<uint16_t>(Instance::GetHeap().GetFreeSize() / sizeof(Buffer));
+#else
+    rval = NumericLimits<uint16_t>::kMax;
+#endif
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     rval = otPlatMessagePoolNumFreeBuffers(&GetInstance());
 #else
@@ -175,11 +180,19 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
 
 uint16_t MessagePool::GetTotalBufferCount(void) const
 {
+    uint16_t rval;
+
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-    return static_cast<uint16_t>(Instance::GetHeap().GetCapacity() / sizeof(Buffer));
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    rval = static_cast<uint16_t>(Instance::GetHeap().GetCapacity() / sizeof(Buffer));
 #else
-    return OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+    rval = NumericLimits<uint16_t>::kMax;
 #endif
+#else
+    rval = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+#endif
+
+    return rval;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

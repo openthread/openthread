@@ -1682,7 +1682,7 @@ public:
     /**
      * This method returns the number of free buffers.
      *
-     * @returns The number of free buffers.
+     * @returns The number of free buffers, or 0xffff (UINT16_MAX) if number is unknown.
      *
      */
     uint16_t GetFreeBufferCount(void) const;
@@ -1690,7 +1690,7 @@ public:
     /**
      * This method returns the total number of buffers.
      *
-     * @returns The total number of buffers.
+     * @returns The total number of buffers, or 0xffff (UINT16_MAX) if number is unknown.
      *
      */
     uint16_t GetTotalBufferCount(void) const;

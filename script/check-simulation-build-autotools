@@ -129,6 +129,11 @@ build_all_features()
     export CPPFLAGS="${options[*]}"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.1 OTNS=1
+
+    # Build Thread 1.3 with external heap and msg pool using heap
+    export CPPFLAGS="${options[*]} ${options_1_3[*]} -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1"
+    reset_source
+    make -f examples/Makefile-simulation THREAD_VERSION=1.3
 }
 
 build_nest_common()
