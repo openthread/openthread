@@ -123,6 +123,7 @@ check_PROGRAMS                                                     += \
     ot-test-dso                                                       \
     ot-test-ecdsa                                                     \
     ot-test-flash                                                     \
+    ot-test-frame-builder                                             \
     ot-test-heap                                                      \
     ot-test-heap-array                                                \
     ot-test-heap-string                                               \
@@ -239,6 +240,10 @@ ot_test_ecdsa_SOURCES               = $(COMMON_SOURCES) test_ecdsa.cpp
 ot_test_flash_LDADD                 = $(COMMON_LDADD)
 ot_test_flash_LIBTOOLFLAGS          = $(COMMON_LIBTOOLFLAGS)
 ot_test_flash_SOURCES               = $(COMMON_SOURCES) test_flash.cpp
+
+ot_test_frame_builder_LDADD         = $(COMMON_LDADD)
+ot_test_frame_builder_LIBTOOLFLAGS  = $(COMMON_LIBTOOLFLAGS)
+ot_test_frame_builder_SOURCES       = $(COMMON_SOURCES) test_frame_builder.cpp
 
 ot_test_hdlc_LDADD                  = $(COMMON_LDADD)
 ot_test_hdlc_LIBTOOLFLAGS           = $(COMMON_LIBTOOLFLAGS)

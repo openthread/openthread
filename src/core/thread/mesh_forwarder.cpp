@@ -963,10 +963,11 @@ start:
     // Compress IPv6 Header
     if (aMessage.GetOffset() == 0)
     {
-        Lowpan::BufferWriter buffer(payload,
-                                    maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
-        uint8_t              hcLength;
-        Mac::Address         meshSource, meshDest;
+        FrameBuilder frameBuilder;
+        uint8_t      hcLength;
+        Mac::Address meshSource, meshDest;
+
+        frameBuilder.Init(payload, maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
 
         if (aAddMeshHeader)
         {
@@ -979,9 +980,9 @@ start:
             meshDest   = aMacDest;
         }
 
-        SuccessOrAssert(Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer));
+        SuccessOrAssert(Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, frameBuilder));
 
-        hcLength = static_cast<uint8_t>(buffer.GetWritePointer() - payload);
+        hcLength = static_cast<uint8_t>(frameBuilder.GetLength());
         headerLength += hcLength;
         payloadLength  = aMessage.GetLength() - aMessage.GetOffset();
         fragmentLength = maxPayloadLength - headerLength;

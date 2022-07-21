@@ -320,6 +320,27 @@ target_link_libraries(ot-test-flash
 
 add_test(NAME ot-test-flash COMMAND ot-test-flash)
 
+add_executable(ot-test-frame-builder
+    test_frame_builder.cpp
+)
+
+target_include_directories(ot-test-frame-builder
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-frame-builder
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-frame-builder
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-frame_builder COMMAND ot-test-frame-builder)
+
 add_executable(ot-test-heap
     test_heap.cpp
 )
