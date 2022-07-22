@@ -141,10 +141,10 @@ public:
     void SetRouteInfoOptionPreference(RoutePreference aPreference);
 
     /**
-     * This method returns the off-mesh-routable (OMR) prefix.
+     * This method returns the local off-mesh-routable (OMR) prefix.
      *
-     * The randomly generated 64-bit prefix will be published
-     * in the Thread network if there isn't already an OMR prefix.
+     * The randomly generated 64-bit prefix will be added to the Thread Network Data if there isn't already an OMR
+     * prefix.
      *
      * @param[out]  aPrefix  A reference to where the prefix will be output to.
      *
@@ -153,6 +153,23 @@ public:
      *
      */
     Error GetOmrPrefix(Ip6::Prefix &aPrefix);
+
+    /**
+     * This method returns the currently favored off-mesh-routable (OMR) prefix.
+     *
+     * The favored OMR prefix can be discovered from Network Data or can be our local OMR prefix.
+     *
+     * An OMR prefix with higher preference is favored. If the preference is the same, then the smaller prefix (in the
+     * sense defined by `Ip6::Prefix`) is favored.
+     *
+     * @param[out] aPrefix         A reference to output the favored prefix.
+     * @param[out] aPreference     A reference to output the preference associated with the favored OMR prefix.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully retrieved the OMR prefix.
+     *
+     */
+    Error GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference);
 
     /**
      * This method returns the on-link prefix for the adjacent  infrastructure link.
@@ -473,6 +490,8 @@ private:
         bool                       mAllowDefaultRouteInNetData;
     };
 
+    class LocalOmrPrefix;
+
     class OmrPrefix : public Clearable<OmrPrefix>
     {
     public:
@@ -480,6 +499,7 @@ private:
 
         bool               IsEmpty(void) const { return (mPrefix.GetLength() == 0); }
         void               SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
+        void               SetFrom(const LocalOmrPrefix &aLocalOmrPrefix);
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         RoutePreference    GetPreference(void) const { return mPreference; }
         bool               IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
@@ -499,6 +519,7 @@ private:
         explicit LocalOmrPrefix(Instance &aInstance);
         void               GenerateFrom(const Ip6::Prefix &aBrUlaPrefix);
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        RoutePreference    GetPreference(void) const { return NetworkData::kRoutePreferenceLow; }
         Error              AddToNetData(void);
         void               RemoveFromNetData(void);
         bool               IsAddedInNetData(void) const { return mIsAddedInNetData; }
@@ -575,6 +596,7 @@ private:
     Ip6::Prefix mBrUlaPrefix;
 
     LocalOmrPrefix mLocalOmrPrefix;
+    OmrPrefix      mFavoredOmrPrefix;
 
     // List of on-mesh prefixes (discovered from Network Data) which
     // were advertised as RIO in the last sent RA message.

@@ -151,6 +151,18 @@ exit:
     return error;
 }
 
+Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aPrefix     = mFavoredOmrPrefix.GetPrefix();
+    aPreference = mFavoredOmrPrefix.GetPreference();
+
+exit:
+    return error;
+}
+
 Error RoutingManager::GetOnLinkPrefix(Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
@@ -263,6 +275,7 @@ void RoutingManager::Stop(void)
     VerifyOrExit(mIsRunning);
 
     mLocalOmrPrefix.RemoveFromNetData();
+    mFavoredOmrPrefix.Clear();
 
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
@@ -410,9 +423,10 @@ void RoutingManager::EvaluateOmrPrefix(OnMeshPrefixArray &aNewPrefixes)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
-    OmrPrefix                       favoredOmrPrefix;
 
     OT_ASSERT(mIsRunning);
+
+    mFavoredOmrPrefix.Clear();
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
     {
@@ -437,15 +451,15 @@ void RoutingManager::EvaluateOmrPrefix(OnMeshPrefixArray &aNewPrefixes)
             continue;
         }
 
-        if (favoredOmrPrefix.IsEmpty() || !favoredOmrPrefix.IsFavoredOver(onMeshPrefixConfig))
+        if (mFavoredOmrPrefix.IsEmpty() || !mFavoredOmrPrefix.IsFavoredOver(onMeshPrefixConfig))
         {
-            favoredOmrPrefix.SetFrom(onMeshPrefixConfig);
+            mFavoredOmrPrefix.SetFrom(onMeshPrefixConfig);
         }
     }
 
     // Decide if we need to add or remove our local OMR prefix.
 
-    if (favoredOmrPrefix.IsEmpty())
+    if (mFavoredOmrPrefix.IsEmpty())
     {
         LogInfo("EvaluateOmrPrefix: No preferred OMR prefix found in Thread network");
 
@@ -453,12 +467,14 @@ void RoutingManager::EvaluateOmrPrefix(OnMeshPrefixArray &aNewPrefixes)
         // the local OMR prefix.
         SuccessOrExit(mLocalOmrPrefix.AddToNetData());
 
+        mFavoredOmrPrefix.SetFrom(mLocalOmrPrefix);
+
         if (!aNewPrefixes.Contains(mLocalOmrPrefix.GetPrefix()))
         {
             SuccessOrExit(aNewPrefixes.PushBack(mLocalOmrPrefix.GetPrefix()));
         }
     }
-    else if (favoredOmrPrefix.GetPrefix() == mLocalOmrPrefix.GetPrefix())
+    else if (mFavoredOmrPrefix.GetPrefix() == mLocalOmrPrefix.GetPrefix())
     {
         IgnoreError(mLocalOmrPrefix.AddToNetData());
     }
@@ -467,7 +483,7 @@ void RoutingManager::EvaluateOmrPrefix(OnMeshPrefixArray &aNewPrefixes)
         OnMeshPrefix *entry;
 
         LogInfo("EvaluateOmrPrefix: There is already a preferred OMR prefix %s in the Thread network",
-                favoredOmrPrefix.GetPrefix().ToString().AsCString());
+                mFavoredOmrPrefix.GetPrefix().ToString().AsCString());
 
         mLocalOmrPrefix.RemoveFromNetData();
 
@@ -1967,6 +1983,12 @@ void RoutingManager::OmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &a
     mPreference = aOnMeshPrefixConfig.GetPreference();
 }
 
+void RoutingManager::OmrPrefix::SetFrom(const LocalOmrPrefix &aLocalOmrPrefix)
+{
+    mPrefix     = aLocalOmrPrefix.GetPrefix();
+    mPreference = aLocalOmrPrefix.GetPreference();
+}
+
 bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const
 {
     // This method determines whether this OMR prefix is favored
@@ -2018,7 +2040,7 @@ Error RoutingManager::LocalOmrPrefix::AddToNetData(void)
     config.mPreferred    = true;
     config.mOnMesh       = true;
     config.mDefaultRoute = false;
-    config.mPreference   = NetworkData::kRoutePreferenceLow;
+    config.mPreference   = GetPreference();
 
     error = Get<NetworkData::Local>().AddOnMeshPrefix(config);
 
