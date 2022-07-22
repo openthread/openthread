@@ -148,6 +148,7 @@ check_PROGRAMS                                                     += \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
     ot-test-serial-number                                             \
+    ot-test-routing-manager                                           \
     ot-test-smart-ptrs                                                \
     ot-test-string                                                    \
     ot-test-timer                                                     \
@@ -346,6 +347,10 @@ ot_test_smart_ptrs_SOURCES          = $(COMMON_SOURCES) test_smart_ptrs.cpp
 ot_test_meshcop_LDADD               = $(COMMON_LDADD)
 ot_test_meshcop_LIBTOOLFLAGS        = $(COMMON_LIBTOOLFLAGS)
 ot_test_meshcop_SOURCES             = $(COMMON_SOURCES) test_meshcop.cpp
+
+ot_test_routing_manager_LDADD        = $(COMMON_LDADD)
+ot_test_routing_manager_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)
+ot_test_routing_manager_SOURCES      = $(COMMON_SOURCES) test_routing_manager.cpp
 
 ot_test_serial_number_LDADD         = $(COMMON_LDADD)
 ot_test_serial_number_LIBTOOLFLAGS  = $(COMMON_LIBTOOLFLAGS)
