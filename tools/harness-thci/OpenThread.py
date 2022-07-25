@@ -30,7 +30,7 @@
 >> Device : OpenThread THCI
 >> Class : OpenThread
 """
-
+import base64
 import functools
 import ipaddress
 import logging
@@ -39,6 +39,7 @@ import traceback
 import re
 import socket
 import time
+import json
 from abc import abstractmethod
 
 import serial
@@ -197,7 +198,6 @@ class OpenThreadTHCI(object):
     NETWORK_ATTACHMENT_TIMEOUT = 10
 
     IsBorderRouter = False
-    IsBackboneRouter = False
     IsHost = False
 
     externalCommissioner = None
@@ -405,6 +405,8 @@ class OpenThreadTHCI(object):
             self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
 
         self.mac = params.get('EUI')
+        self.backboneNetif = params.get('Param8') or 'eth0'
+        self.extraParams = self.__parseExtraParams(params.get('Param9'))
 
         self.UIStatusMsg = ''
         self.AutoDUTEnable = False
@@ -445,6 +447,35 @@ class OpenThreadTHCI(object):
             return '[%s:%d]' % (self.telnetIp, self.telnetPort)
         else:
             return '[%s]' % self.port
+
+    @watched
+    def __parseExtraParams(self, Param9):
+        """
+        Parse `Param9` for extra THCI parameters.
+
+        `Param9` should be a JSON string encoded in URL-safe base64 encoding.
+
+        Defined Extra THCI Parameters:
+        - "cmd-start-otbr-agent"   : The command to start otbr-agent (default: systemctl start otbr-agent)
+        - "cmd-stop-otbr-agent"    : The command to stop otbr-agent (default: systemctl stop otbr-agent)
+        - "cmd-restart-otbr-agent" : The command to restart otbr-agent (default: systemctl restart otbr-agent)
+
+        For example, Param9 can be generated as below:
+        Param9 = base64.urlsafe_b64encode(json.dumps({
+            "cmd-start-otbr-agent": "service otbr-agent start",
+            "cmd-stop-otbr-agent": "service otbr-agent stop",
+            "cmd-restart-otbr-agent": "service otbr-agent restart",
+        }))
+
+        :param Param9: A JSON string encoded in URL-safe base64 encoding.
+        :return: A dict containing extra THCI parameters.
+        """
+        if not Param9 or not Param9.strip():
+            return {}
+
+        jsonStr = base64.urlsafe_b64decode(Param9)
+        params = json.loads(jsonStr)
+        return params
 
     @API
     def closeConnection(self):
@@ -559,10 +590,9 @@ class OpenThreadTHCI(object):
         ]:
             self.__setRouterSelectionJitter(1)
         elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
-            self.IsBackboneRouter = True
             self.__setRouterSelectionJitter(1)
 
-        if self.IsBackboneRouter:
+        if self.DeviceCapability == OT12BR_CAPBS:
             # Configure default BBR dataset
             self.__configBbrDataset(SeqNum=self.bbrSeqNum,
                                     MlrTimeout=self.bbrMlrTimeout,
@@ -1072,7 +1102,10 @@ class OpenThreadTHCI(object):
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
         elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
-            print('join as BBR')
+            if self.DeviceCapability == OT12BR_CAPBS:
+                print('join as BBR')
+            else:
+                print('join as BR')
             mode = 'rdn'
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
@@ -1390,9 +1423,8 @@ class OpenThreadTHCI(object):
         # to default when joining network
         self.hasSetChannel = False
         # indicate whether the default domain prefix is used.
-        self.__useDefaultDomainPrefix = True
+        self.__useDefaultDomainPrefix = (self.DeviceCapability == OT12BR_CAPBS)
         self.__isUdpOpened = False
-        self.IsBackboneRouter = False
         self.IsHost = False
 
         # remove stale multicast addresses
@@ -1400,9 +1432,10 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
-        self.bbrMlrTimeout = 3600
-        self.bbrReRegDelay = 5
+        if self.DeviceCapability == OT12BR_CAPBS:
+            self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
+            self.bbrMlrTimeout = 3600
+            self.bbrReRegDelay = 5
 
         # initialize device configuration
         self.setMAC(self.mac)

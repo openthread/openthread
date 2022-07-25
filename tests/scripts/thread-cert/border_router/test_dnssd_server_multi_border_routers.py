@@ -111,7 +111,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         self.simulator.go(5)
 
         br1.start()
-        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         br1.srp_server_set_enabled(True)
 

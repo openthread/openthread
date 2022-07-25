@@ -38,7 +38,7 @@ setup_leader
 setup_node 3 "rdn" "router"
 setup_node 2 "rdn" "router"
 
-sleep 2
+sleep 15
 
 ###########################################
 # Verify topology and commissioners

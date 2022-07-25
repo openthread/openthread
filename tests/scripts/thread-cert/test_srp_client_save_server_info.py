@@ -88,7 +88,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         # Start the server & client devices.
 
         client.start()
-        self.simulator.go(WAIT_TIME)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'leader')
 
         for node in [server1, server2, server3]:

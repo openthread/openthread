@@ -172,7 +172,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual(leader.get_preferred_partition_id(), 0xabcddead)
 
         leader.thread_start()
-        leader.wait(5)
+        leader.wait(10)
         self.assertEqual('leader', leader.get_state())
         self.assertEqual(0xabcddead, leader.get_leader_data()['partition_id'])
         logging.info('leader key sequence counter = %d', leader.get_key_sequence_counter())
@@ -519,7 +519,7 @@ class TestOTCI(unittest.TestCase):
 
         node1.ifconfig_up()
         node1.thread_start()
-        node1.wait(5)
+        node1.wait(10)
         assert node1.get_state() == "leader"
 
         node1.commissioner_start()
@@ -571,7 +571,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('rdn', leader.get_mode())
 
         leader.thread_start()
-        leader.wait(5)
+        leader.wait(10)
         self.assertEqual('leader', leader.get_state())
         logging.info('leader key sequence counter = %d', leader.get_key_sequence_counter())
 

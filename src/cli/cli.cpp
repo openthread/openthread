@@ -401,6 +401,55 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
+otError Interpreter::ParsePreference(const Arg &aArg, otRoutePreference &aPreference)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArg == "high")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_HIGH;
+    }
+    else if (aArg == "med")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_MED;
+    }
+    else if (aArg == "low")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_LOW;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
+const char *Interpreter::PreferenceToString(signed int aPreference)
+{
+    const char *str = "";
+
+    switch (aPreference)
+    {
+    case OT_ROUTE_PREFERENCE_LOW:
+        str = "low";
+        break;
+
+    case OT_ROUTE_PREFERENCE_MED:
+        str = "med";
+        break;
+
+    case OT_ROUTE_PREFERENCE_HIGH:
+        str = "high";
+        break;
+
+    default:
+        break;
+    }
+
+    return str;
+}
+
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[])
 {
@@ -413,10 +462,30 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli ba port
+     * @code
+     * ba port
+     * 49153
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderAgentGetUdpPort
+     */
     if (aArgs[0] == "port")
     {
         OutputLine("%hu", otBorderAgentGetUdpPort(GetInstancePtr()));
     }
+    /**
+     * @cli ba state
+     * @code
+     * ba state
+     * Started
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderAgentGetState
+     */
     else if (aArgs[0] == "state")
     {
         static const char *const kStateStrings[] = {
@@ -446,10 +515,33 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
     bool    enable;
 
+    /**
+     * @cli br (enable,disable)
+     * @code
+     * br enable
+     * Done
+     * @endcode
+     * @code
+     * br disable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingSetEnabled
+     */
     if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
         SuccessOrExit(error = otBorderRoutingSetEnabled(GetInstancePtr(), enable));
     }
+    /**
+     * @cli br omrprefix
+     * @code
+     * br omrprefix
+     * fdfc:1ff5:1512:5622::/64
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetOmrPrefix
+     */
     else if (aArgs[0] == "omrprefix")
     {
         otIp6Prefix omrPrefix;
@@ -457,6 +549,35 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         SuccessOrExit(error = otBorderRoutingGetOmrPrefix(GetInstancePtr(), &omrPrefix));
         OutputIp6PrefixLine(omrPrefix);
     }
+    /**
+     * @cli br favoredomrprefix
+     * @code
+     * br favoredomrprefix
+     * fdfc:1ff5:1512:5622::/64 prf:low
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetFavoredOmrPrefix
+     */
+    else if (aArgs[0] == "favoredomrprefix")
+    {
+        otIp6Prefix       prefix;
+        otRoutePreference preference;
+
+        SuccessOrExit(error = otBorderRoutingGetFavoredOmrPrefix(GetInstancePtr(), &prefix, &preference));
+        OutputIp6Prefix(prefix);
+        OutputLine(" prf:%s", PreferenceToString(preference));
+    }
+    /**
+     * @cli br onlinkprefix
+     * @code
+     * br onlinkprefix
+     * fd41:2650:a6f5:0::/64
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetOnLinkPrefix
+     */
     else if (aArgs[0] == "onlinkprefix")
     {
         otIp6Prefix onLinkPrefix;
@@ -465,6 +586,16 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         OutputIp6PrefixLine(onLinkPrefix);
     }
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    /**
+     * @cli br nat64prefix
+     * @code
+     * br nat64prefix
+     * fd14:1078:b3d5:b0b0:0:0::/96
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetNat64Prefix
+     */
     else if (aArgs[0] == "nat64prefix")
     {
         otIp6Prefix nat64Prefix;
@@ -473,6 +604,78 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         OutputIp6PrefixLine(nat64Prefix);
     }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    /**
+     * @cli br rioprf (high,med,low)
+     * @code
+     * br rioprf
+     * med
+     * Done
+     * @endcode
+     * @code
+     * br rioprf low
+     * Done
+     * @endcode
+     * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
+     * @par api_copy
+     * #otBorderRoutingSetRouteInfoOptionPreference
+     *
+     */
+    else if (aArgs[0] == "rioprf")
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            OutputLine("%s", PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
+        }
+        else
+        {
+            otRoutePreference preference;
+
+            SuccessOrExit(error = ParsePreference(aArgs[1], preference));
+            otBorderRoutingSetRouteInfoOptionPreference(GetInstancePtr(), preference);
+        }
+    }
+    /**
+     * @cli br prefixtable
+     * @code
+     * br prefixtable
+     * prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med,
+     * router:ff02:0:0:0:0:0:0:1
+     * prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800,
+     * router:ff02:0:0:0:0:0:0:1
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetNextPrefixTableEntry
+     *
+     */
+    else if (aArgs[0] == "prefixtable")
+    {
+        otBorderRoutingPrefixTableIterator iterator;
+        otBorderRoutingPrefixTableEntry    entry;
+
+        otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
+
+        while (otBorderRoutingGetNextPrefixTableEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
+        {
+            char string[OT_IP6_PREFIX_STRING_SIZE];
+
+            otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
+            OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%u, lifetime:%u, ", string, entry.mIsOnLink ? "yes" : "no",
+                         entry.mMsecSinceLastUpdate, entry.mValidLifetime);
+
+            if (entry.mIsOnLink)
+            {
+                OutputFormat("preferred:%u, ", entry.mPreferredLifetime);
+            }
+            else
+            {
+                OutputFormat("route-prf:%s, ", PreferenceToString(entry.mRoutePreference));
+            }
+
+            otIp6AddressToString(&entry.mRouterAddress, string, sizeof(string));
+            OutputLine("router:%s", string);
+        }
+    }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -1820,6 +2023,16 @@ exit:
 }
 #endif
 
+/**
+ * @cli eui64
+ * @code
+ * eui64
+ * 0615aae900124b00
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otPlatRadioGetIeeeEui64
+ */
 template <> otError Interpreter::Process<Cmd("eui64")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -2691,7 +2904,7 @@ template <> otError Interpreter::Process<Cmd("mlr")>(Arg aArgs[])
 
     if (aArgs[0] == "reg")
     {
-        otIp6Address addresses[kIp6AddressesNumMax];
+        otIp6Address addresses[OT_IP6_MAX_MLR_ADDRESSES];
         uint32_t     timeout;
         bool         hasTimeout   = false;
         uint8_t      numAddresses = 0;
@@ -3478,17 +3691,11 @@ otError Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
 
     for (; !aArgs->IsEmpty(); aArgs++)
     {
-        if (*aArgs == "high")
+        otRoutePreference preference;
+
+        if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
         {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_HIGH;
-        }
-        else if (*aArgs == "med")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_MED;
-        }
-        else if (*aArgs == "low")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_LOW;
+            aConfig.mPreference = preference;
         }
         else
         {
@@ -3548,6 +3755,23 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli prefix
+     * @code
+     * prefix
+     * 2001:dead:beef:cafe::/64 paros med
+     * - fd00:7d03:7d03:7d03::/64 prosD med
+     * Done
+     * @endcode
+     * @par
+     * Get the prefix list in the local Network Data.
+     * @note For the Thread 1.2 border router with backbone capability, the local Domain Prefix
+     * is listed as well and includes the `D` flag. If backbone functionality is disabled, a dash
+     * `-` is printed before the local Domain Prefix.
+     * @par
+     * For more information about #otBorderRouterConfig flags, refer to @overview.
+     * @sa otBorderRouterGetNextOnMeshPrefix
+     */
     if (aArgs[0].IsEmpty())
     {
         otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -3567,6 +3791,22 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
         }
 #endif
     }
+    /**
+     * @cli prefix add
+     * @code
+     * prefix add 2001:dead:beef:cafe::/64 paros med
+     * Done
+     * @endcode
+     * @code
+     * prefix add fd00:7d03:7d03:7d03::/64 prosD low
+     * Done
+     * @endcode
+     * @cparam prefix add @ca{prefix} [@ca{padcrosnD}] [@ca{high}|@ca{med}|@ca{low}]
+     * OT CLI uses mapped arguments to configure #otBorderRouterConfig values. @moreinfo{the @overview}.
+     * @par
+     * Adds a valid prefix to the Network Data.
+     * @sa otBorderRouterAddOnMeshPrefix
+     */
     else if (aArgs[0] == "add")
     {
         otBorderRouterConfig config;
@@ -3574,6 +3814,15 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
         SuccessOrExit(error = ParsePrefix(aArgs + 1, config));
         error = otBorderRouterAddOnMeshPrefix(GetInstancePtr(), &config);
     }
+    /**
+     * @cli prefix remove
+     * @code
+     * prefix remove 2001:dead:beef:cafe::/64
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRouterRemoveOnMeshPrefix
+     */
     else if (aArgs[0] == "remove")
     {
         otIp6Prefix prefix;
@@ -3581,6 +3830,16 @@ template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
         SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(prefix));
         error = otBorderRouterRemoveOnMeshPrefix(GetInstancePtr(), &prefix);
     }
+    /**
+     * @cli prefix meshlocal
+     * @code
+     * prefix meshlocal
+     * fdde:ad00:beef:0::/64
+     * Done
+     * @endcode
+     * @par
+     * Get the mesh local prefix.
+     */
     else if (aArgs[0] == "meshlocal")
     {
         if (aArgs[1].IsEmpty())
@@ -3707,6 +3966,8 @@ otError Interpreter::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
 
     for (; !aArgs->IsEmpty(); aArgs++)
     {
+        otRoutePreference preference;
+
         if (*aArgs == "s")
         {
             aConfig.mStable = true;
@@ -3715,17 +3976,9 @@ otError Interpreter::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
         {
             aConfig.mNat64 = true;
         }
-        else if (*aArgs == "high")
+        else if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
         {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_HIGH;
-        }
-        else if (*aArgs == "med")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_MED;
-        }
-        else if (*aArgs == "low")
-        {
-            aConfig.mPreference = OT_ROUTE_PREFERENCE_LOW;
+            aConfig.mPreference = preference;
         }
         else
         {

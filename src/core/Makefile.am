@@ -125,6 +125,7 @@ SOURCES_COMMON                                  = \
     api/backbone_router_ftd_api.cpp               \
     api/border_agent_api.cpp                      \
     api/border_router_api.cpp                     \
+    api/border_routing_api.cpp                    \
     api/channel_manager_api.cpp                   \
     api/channel_monitor_api.cpp                   \
     api/child_supervision_api.cpp                 \
@@ -186,6 +187,7 @@ SOURCES_COMMON                                  = \
     common/crc16.cpp                              \
     common/data.cpp                               \
     common/error.cpp                              \
+    common/frame_data.cpp                         \
     common/heap.cpp                               \
     common/heap_data.cpp                          \
     common/heap_string.cpp                        \
@@ -252,7 +254,7 @@ SOURCES_COMMON                                  = \
     net/dns_types.cpp                             \
     net/dnssd_server.cpp                          \
     net/icmp6.cpp                                 \
-    net/ip4_address.cpp                           \
+    net/ip4_types.cpp                             \
     net/ip6.cpp                                   \
     net/ip6_address.cpp                           \
     net/ip6_filter.cpp                            \
@@ -436,6 +438,7 @@ HEADERS_COMMON                                  = \
     common/equatable.hpp                          \
     common/error.hpp                              \
     common/extension.hpp                          \
+    common/frame_data.hpp                         \
     common/heap.hpp                               \
     common/heap_allocatable.hpp                   \
     common/heap_array.hpp                         \
@@ -556,7 +559,7 @@ HEADERS_COMMON                                  = \
     net/dns_types.hpp                             \
     net/dnssd_server.hpp                          \
     net/icmp6.hpp                                 \
-    net/ip4_address.hpp                           \
+    net/ip4_types.hpp                             \
     net/ip6.hpp                                   \
     net/ip6_address.hpp                           \
     net/ip6_filter.hpp                            \

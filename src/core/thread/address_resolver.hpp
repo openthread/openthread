@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD
-
 #include "coap/coap.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -87,6 +85,7 @@ public:
      */
     explicit AddressResolver(Instance &aInstance);
 
+#if OPENTHREAD_FTD
     /**
      * This method clears the EID-to-RLOC cache.
      *
@@ -317,9 +316,12 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
+#endif // OPENTHREAD_FTD
+
     static void HandleAddressError(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleAddressError(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+#if OPENTHREAD_FTD
     static void HandleAddressQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleAddressQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -345,7 +347,9 @@ private:
 
     static AddressResolver::CacheEntry *GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList);
 
+#endif // OPENTHREAD_FTD
     Coap::Resource mAddressError;
+#if OPENTHREAD_FTD
     Coap::Resource mAddressQuery;
     Coap::Resource mAddressNotification;
 
@@ -356,6 +360,7 @@ private:
     CacheEntryList mQueryRetryList;
 
     Ip6::Icmp::Handler mIcmpHandler;
+#endif //  OPENTHREAD_FTD
 };
 
 /**
@@ -363,7 +368,5 @@ private:
  */
 
 } // namespace ot
-
-#endif //  OPENTHREAD_FTD
 
 #endif // ADDRESS_RESOLVER_HPP_

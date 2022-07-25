@@ -35,6 +35,7 @@ set(COMMON_SOURCES
     api/backbone_router_ftd_api.cpp
     api/border_agent_api.cpp
     api/border_router_api.cpp
+    api/border_routing_api.cpp
     api/channel_manager_api.cpp
     api/channel_monitor_api.cpp
     api/child_supervision_api.cpp
@@ -96,6 +97,7 @@ set(COMMON_SOURCES
     common/crc16.cpp
     common/data.cpp
     common/error.cpp
+    common/frame_data.cpp
     common/heap.cpp
     common/heap_data.cpp
     common/heap_string.cpp
@@ -162,7 +164,7 @@ set(COMMON_SOURCES
     net/dns_types.cpp
     net/dnssd_server.cpp
     net/icmp6.cpp
-    net/ip4_address.cpp
+    net/ip4_types.cpp
     net/ip6.cpp
     net/ip6_address.cpp
     net/ip6_filter.cpp

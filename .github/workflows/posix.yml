@@ -226,7 +226,7 @@ jobs:
 
   pty-macos:
     name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
-    runs-on: macos-10.15
+    runs-on: macos-12
     strategy:
       fail-fast: false
       matrix:

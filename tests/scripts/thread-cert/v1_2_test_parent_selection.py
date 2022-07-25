@@ -107,7 +107,7 @@ class TestParentSelection(thread_cert.TestCase):
     def test(self):
 
         self.nodes[LEADER_1_2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER_1_2].get_state(), 'leader')
 
         self.nodes[ROUTER_1_1].set_router_selection_jitter(1)
@@ -260,7 +260,7 @@ class TestParentSelection(thread_cert.TestCase):
 
         self.nodes[ROUTER_1_1].set_parent_priority(1)
         self.nodes[MED_1_2].start()
-        self.simulator.go(5)
+        self.simulator.go(15)
         self.assertEqual(self.nodes[MED_1_2].get_state(), 'child')
 
         # Check Parent Response

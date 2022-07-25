@@ -85,7 +85,7 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
@@ -108,7 +108,7 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
         self._setUpLeader()
         self.nodes[ROUTER2].set_preferred_partition_id(0xffffffff)
 
-        self.simulator.go(140)
+        self.simulator.go(150)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')

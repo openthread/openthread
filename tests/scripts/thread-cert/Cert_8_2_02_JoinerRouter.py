@@ -63,7 +63,7 @@ class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
         self.nodes[COMMISSIONER].thread_start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].commissioner_start()

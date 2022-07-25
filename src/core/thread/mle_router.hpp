@@ -388,7 +388,7 @@ public:
      * @retval kErrorNoRoute   The destination is not reachable and the message should be dropped.
      *
      */
-    Error CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header);
+    Error CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
 
     /**
      * This method resolves 2-hop routing loops.
@@ -635,7 +635,7 @@ private:
                            const Message *     aRequestMessage = nullptr);
     Error SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
     void  SetStateRouter(uint16_t aRloc16);
-    void  SetStateLeader(uint16_t aRloc16);
+    void  SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild);

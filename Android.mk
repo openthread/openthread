@@ -169,6 +169,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/backbone_router_ftd_api.cpp                        \
     src/core/api/border_agent_api.cpp                               \
     src/core/api/border_router_api.cpp                              \
+    src/core/api/border_routing_api.cpp                             \
     src/core/api/channel_manager_api.cpp                            \
     src/core/api/channel_monitor_api.cpp                            \
     src/core/api/child_supervision_api.cpp                          \
@@ -230,6 +231,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/crc16.cpp                                       \
     src/core/common/data.cpp                                        \
     src/core/common/error.cpp                                       \
+    src/core/common/frame_data.cpp                                  \
     src/core/common/heap.cpp                                        \
     src/core/common/heap_data.cpp                                   \
     src/core/common/heap_string.cpp                                 \
@@ -296,7 +298,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/net/dns_types.cpp                                      \
     src/core/net/dnssd_server.cpp                                   \
     src/core/net/icmp6.cpp                                          \
-    src/core/net/ip4_address.cpp                                    \
+    src/core/net/ip4_types.cpp                                      \
     src/core/net/ip6.cpp                                            \
     src/core/net/ip6_address.cpp                                    \
     src/core/net/ip6_filter.cpp                                     \

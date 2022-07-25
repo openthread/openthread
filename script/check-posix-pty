@@ -182,7 +182,7 @@ send "ifconfig up\r\n"
 expect "Done"
 send "thread start\r\n"
 expect "Done"
-sleep 5
+sleep 10
 send "state\r\n"
 expect "leader"
 expect "Done"
@@ -207,7 +207,7 @@ EOF
     sleep 5
 
     # wait until the node becomes leader
-    timeout_run 5 wait_for_leader
+    timeout_run 10 wait_for_leader
 
     # wait coap service start
     sleep 5

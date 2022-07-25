@@ -64,6 +64,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsRunning(false)
     , mIsEnabled(false)
     , mInfraIf(aInstance)
+    , mLocalOmrPrefix(aInstance)
+    , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
     , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
     , mIsAdvertisingLocalNat64Prefix(false)
@@ -81,8 +83,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
 
     mBrUlaPrefix.Clear();
 
-    mLocalOmrPrefix.Clear();
-
     mLocalOnLinkPrefix.Clear();
 
     mLocalNat64Prefix.Clear();
@@ -95,7 +95,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
     SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
 
     SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
-    GenerateOmrPrefix();
+    mLocalOmrPrefix.GenerateFrom(mBrUlaPrefix);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     GenerateNat64Prefix();
 #endif
@@ -127,12 +127,37 @@ exit:
     return error;
 }
 
+void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
+{
+    VerifyOrExit(mRouteInfoOptionPreference != aPreference);
+
+    mRouteInfoOptionPreference = aPreference;
+
+    VerifyOrExit(mIsRunning);
+    StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+
+exit:
+    return;
+}
+
 Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-    aPrefix = mLocalOmrPrefix;
+    aPrefix = mLocalOmrPrefix.GetPrefix();
+
+exit:
+    return error;
+}
+
+Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aPrefix     = mFavoredOmrPrefix.GetPrefix();
+    aPreference = mFavoredOmrPrefix.GetPreference();
 
 exit:
     return error;
@@ -195,15 +220,6 @@ exit:
     return error;
 }
 
-void RoutingManager::GenerateOmrPrefix(void)
-{
-    mLocalOmrPrefix = mBrUlaPrefix;
-    mLocalOmrPrefix.SetSubnetId(kOmrPrefixSubnetId);
-    mLocalOmrPrefix.SetLength(kOmrPrefixLength);
-
-    LogInfo("Generated OMR prefix: %s", mLocalOmrPrefix.ToString().AsCString());
-}
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 void RoutingManager::GenerateNat64Prefix(void)
 {
@@ -249,6 +265,7 @@ void RoutingManager::Start(void)
         LogInfo("Border Routing manager started");
 
         mIsRunning = true;
+        UpdateDiscoveredPrefixTableOnNetDataChange();
         StartRouterSolicitationDelay();
     }
 }
@@ -257,7 +274,8 @@ void RoutingManager::Stop(void)
 {
     VerifyOrExit(mIsRunning);
 
-    UnpublishLocalOmrPrefix();
+    mLocalOmrPrefix.RemoveFromNetData();
+    mFavoredOmrPrefix.Clear();
 
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
@@ -278,9 +296,9 @@ void RoutingManager::Stop(void)
     }
 #endif
     // Use empty OMR & on-link prefixes to invalidate possible advertised prefixes.
-    SendRouterAdvertisement(OmrPrefixArray());
+    SendRouterAdvertisement(OnMeshPrefixArray());
 
-    mAdvertisedOmrPrefixes.Clear();
+    mAdvertisedPrefixes.Clear();
     mOnLinkPrefixDeprecateTimer.Stop();
 
     mDiscoveredPrefixTable.RemoveAllEntries();
@@ -336,23 +354,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
-        // Remove all OMR prefixes in Network Data from the
-        // discovered prefix table.
-
-        NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-        NetworkData::OnMeshPrefixConfig prefixConfig;
-
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
-        {
-            if (!IsValidOmrPrefix(prefixConfig))
-            {
-                continue;
-            }
-
-            mDiscoveredPrefixTable.RemoveRoutePrefix(prefixConfig.GetPrefix(),
-                                                     DiscoveredPrefixTable::kUnpublishFromNetData);
-        }
-
+        UpdateDiscoveredPrefixTableOnNetDataChange();
         StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
     }
 
@@ -378,162 +380,123 @@ exit:
     return;
 }
 
-void RoutingManager::EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes)
+void RoutingManager::UpdateDiscoveredPrefixTableOnNetDataChange(void)
 {
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
-    OmrPrefix *                     favoredOmrEntry = nullptr;
-    OmrPrefix *                     localOmrEntry   = nullptr;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+    bool                            foundDefRouteOmrPrefix = false;
 
-    OT_ASSERT(mIsRunning);
+    // Remove all OMR prefixes in Network Data from the
+    // discovered prefix table. Also check if we have
+    // an OMR prefix with default route flag.
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
     {
-        OmrPrefix *entry;
-
-        if (!IsValidOmrPrefix(onMeshPrefixConfig))
+        if (!IsValidOmrPrefix(prefixConfig))
         {
             continue;
         }
 
-        entry = aNewOmrPrefixes.FindMatching(onMeshPrefixConfig.GetPrefix());
+        mDiscoveredPrefixTable.RemoveRoutePrefix(prefixConfig.GetPrefix(),
+                                                 DiscoveredPrefixTable::kUnpublishFromNetData);
 
-        if (entry != nullptr)
+        if (prefixConfig.mDefaultRoute)
         {
-            // Update the entry if we find the same prefix with higher
-            // preference in network data
-
-            if (onMeshPrefixConfig.GetPreference() <= entry->GetPreference())
-            {
-                continue;
-            }
-
-            entry->SetPreference(onMeshPrefixConfig.GetPreference());
+            foundDefRouteOmrPrefix = true;
         }
-        else
-        {
-            entry = aNewOmrPrefixes.PushBack();
+    }
 
-            if (entry == nullptr)
+    // If we find an OMR prefix with default route flag, it indicates
+    // that this prefix can be used with default route (routable beyond
+    // infra link).
+    //
+    // `DiscoveredPrefixTable` will always track which routers provide
+    // default route when processing received RA messages, but only
+    // if we see an OMR prefix with default route flag, we allow it
+    // to publish the discovered default route (as ::/0 external
+    // route) in Network Data.
+
+    mDiscoveredPrefixTable.SetAllowDefaultRouteInNetData(foundDefRouteOmrPrefix);
+}
+
+void RoutingManager::EvaluateOmrPrefix(OnMeshPrefixArray &aNewPrefixes)
+{
+    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
+
+    OT_ASSERT(mIsRunning);
+
+    mFavoredOmrPrefix.Clear();
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
+    {
+        if (!onMeshPrefixConfig.mOnMesh || onMeshPrefixConfig.mDp)
+        {
+            continue;
+        }
+
+        if (!aNewPrefixes.Contains(onMeshPrefixConfig.GetPrefix()))
+        {
+            Error error = aNewPrefixes.PushBack(onMeshPrefixConfig.GetPrefix());
+
+            if (error != kErrorNone)
             {
-                LogWarn("EvaluateOmrPrefix: Too many OMR prefixes, ignoring prefix %s",
+                LogWarn("EvaluateOmrPrefix: Too many on-mesh prefixes, ignoring prefix %s",
                         onMeshPrefixConfig.GetPrefix().ToString().AsCString());
-                continue;
-            }
-
-            entry->InitFrom(onMeshPrefixConfig);
-        }
-
-        if (onMeshPrefixConfig.mPreferred)
-        {
-            if ((favoredOmrEntry == nullptr) || (entry->IsFavoredOver(*favoredOmrEntry)))
-            {
-                favoredOmrEntry = entry;
             }
         }
 
-        if (entry->GetPrefix() == mLocalOmrPrefix)
+        if (!IsValidOmrPrefix(onMeshPrefixConfig) || !onMeshPrefixConfig.mPreferred)
         {
-            localOmrEntry = entry;
+            continue;
+        }
+
+        if (mFavoredOmrPrefix.IsEmpty() || !mFavoredOmrPrefix.IsFavoredOver(onMeshPrefixConfig))
+        {
+            mFavoredOmrPrefix.SetFrom(onMeshPrefixConfig);
         }
     }
 
     // Decide if we need to add or remove our local OMR prefix.
 
-    if (favoredOmrEntry == nullptr)
+    if (mFavoredOmrPrefix.IsEmpty())
     {
-        LogInfo("EvaluateOmrPrefix: No preferred OMR prefixes found in Thread network");
+        LogInfo("EvaluateOmrPrefix: No preferred OMR prefix found in Thread network");
 
-        // The `aNewOmrPrefixes` remains empty if we fail to publish
+        // The `aNewPrefixes` remains empty if we fail to publish
         // the local OMR prefix.
-        SuccessOrExit(PublishLocalOmrPrefix());
+        SuccessOrExit(mLocalOmrPrefix.AddToNetData());
 
-        localOmrEntry = aNewOmrPrefixes.PushBack();
-        VerifyOrExit(localOmrEntry != nullptr);
+        mFavoredOmrPrefix.SetFrom(mLocalOmrPrefix);
 
-        localOmrEntry->Init(mLocalOmrPrefix, NetworkData::kRoutePreferenceLow);
-    }
-    else if (favoredOmrEntry == localOmrEntry)
-    {
-        IgnoreError(PublishLocalOmrPrefix());
-    }
-    else if (IsOmrPrefixAddedToLocalNetworkData())
-    {
-        LogInfo("EvaluateOmrPrefix: There is already a preferred OMR prefix %s in the Thread network",
-                favoredOmrEntry->ToString().AsCString());
-
-        UnpublishLocalOmrPrefix();
-
-        if (localOmrEntry != nullptr)
+        if (!aNewPrefixes.Contains(mLocalOmrPrefix.GetPrefix()))
         {
-            // Remove the local OMR prefix from the list by overwriting it
-            // with popped last entry in the list.
-            *localOmrEntry = *aNewOmrPrefixes.PopBack();
+            SuccessOrExit(aNewPrefixes.PushBack(mLocalOmrPrefix.GetPrefix()));
+        }
+    }
+    else if (mFavoredOmrPrefix.GetPrefix() == mLocalOmrPrefix.GetPrefix())
+    {
+        IgnoreError(mLocalOmrPrefix.AddToNetData());
+    }
+    else if (mLocalOmrPrefix.IsAddedInNetData())
+    {
+        OnMeshPrefix *entry;
+
+        LogInfo("EvaluateOmrPrefix: There is already a preferred OMR prefix %s in the Thread network",
+                mFavoredOmrPrefix.GetPrefix().ToString().AsCString());
+
+        mLocalOmrPrefix.RemoveFromNetData();
+
+        entry = aNewPrefixes.Find(mLocalOmrPrefix.GetPrefix());
+
+        if (entry != nullptr)
+        {
+            aNewPrefixes.Remove(*entry);
         }
     }
 
 exit:
     return;
-}
-
-Error RoutingManager::PublishLocalOmrPrefix(void)
-{
-    Error                           error = kErrorNone;
-    NetworkData::OnMeshPrefixConfig omrPrefixConfig;
-
-    OT_ASSERT(mIsRunning);
-
-    VerifyOrExit(!IsOmrPrefixAddedToLocalNetworkData());
-
-    omrPrefixConfig.Clear();
-    omrPrefixConfig.mPrefix       = mLocalOmrPrefix;
-    omrPrefixConfig.mStable       = true;
-    omrPrefixConfig.mSlaac        = true;
-    omrPrefixConfig.mPreferred    = true;
-    omrPrefixConfig.mOnMesh       = true;
-    omrPrefixConfig.mDefaultRoute = false;
-    omrPrefixConfig.mPreference   = NetworkData::kRoutePreferenceLow;
-
-    error = Get<NetworkData::Local>().AddOnMeshPrefix(omrPrefixConfig);
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to publish local OMR prefix %s in Thread network: %s", mLocalOmrPrefix.ToString().AsCString(),
-                ErrorToString(error));
-    }
-    else
-    {
-        Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        LogInfo("Publishing local OMR prefix %s in Thread network", mLocalOmrPrefix.ToString().AsCString());
-    }
-
-exit:
-    return error;
-}
-
-void RoutingManager::UnpublishLocalOmrPrefix(void)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(mIsRunning);
-
-    VerifyOrExit(IsOmrPrefixAddedToLocalNetworkData());
-
-    SuccessOrExit(error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalOmrPrefix));
-
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    LogInfo("Unpublishing local OMR prefix %s from Thread network", mLocalOmrPrefix.ToString().AsCString());
-
-exit:
-    if (error != kErrorNone && error != kErrorNotFound)
-    {
-        LogWarn("Failed to unpublish local OMR prefix %s from Thread network: %s",
-                mLocalOmrPrefix.ToString().AsCString(), ErrorToString(error));
-    }
-}
-
-bool RoutingManager::IsOmrPrefixAddedToLocalNetworkData(void) const
-{
-    return Get<NetworkData::Local>().ContainsOnMeshPrefix(mLocalOmrPrefix);
 }
 
 Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
@@ -556,21 +519,13 @@ Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePref
         LogWarn("Failed to publish external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
     }
 
-    return (error == kErrorAlready) ? kErrorNone : error;
+    return error;
 }
 
 void RoutingManager::UnpublishExternalRoute(const Ip6::Prefix &aPrefix)
 {
-    Error error = kErrorNone;
-
     VerifyOrExit(mIsRunning);
-
-    error = Get<NetworkData::Publisher>().UnpublishPrefix(aPrefix);
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to unpublish route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
-    }
+    IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(aPrefix));
 
 exit:
     return;
@@ -717,21 +672,21 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 {
     OT_ASSERT(mIsRunning);
 
-    OmrPrefixArray newOmrPrefixes;
+    OnMeshPrefixArray newPrefixes;
 
     LogInfo("Evaluating routing policy");
 
     // 0. Evaluate on-link, OMR and NAT64 prefixes.
     EvaluateOnLinkPrefix();
-    EvaluateOmrPrefix(newOmrPrefixes);
+    EvaluateOmrPrefix(newPrefixes);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     EvaluateNat64Prefix();
 #endif
 
     // 1. Send Router Advertisement message if necessary.
-    SendRouterAdvertisement(newOmrPrefixes);
+    SendRouterAdvertisement(newPrefixes);
 
-    if (newOmrPrefixes.IsEmpty())
+    if (newPrefixes.IsEmpty())
     {
         // This is the very exceptional case and happens only when we failed to publish
         // our local OMR prefix to the Thread network. We schedule the routing policy
@@ -754,8 +709,8 @@ void RoutingManager::EvaluateRoutingPolicy(void)
         StartRoutingPolicyEvaluationDelay(Time::SecToMsec(nextSendDelay));
     }
 
-    // 3. Update OMR prefixes information.
-    mAdvertisedOmrPrefixes = newOmrPrefixes;
+    // 3. Update advertised prefixes.
+    mAdvertisedPrefixes = newPrefixes;
 }
 
 void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli)
@@ -769,9 +724,9 @@ void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
 {
     TimeMilli now          = TimerMilli::GetNow();
     TimeMilli evaluateTime = now + aDelayMilli;
-    TimeMilli earlestTime  = mLastRouterAdvertisementSendTime + kMinDelayBetweenRtrAdvs;
+    TimeMilli earliestTime = mLastRouterAdvertisementSendTime + kMinDelayBetweenRtrAdvs;
 
-    evaluateTime = OT_MAX(evaluateTime, earlestTime);
+    evaluateTime = OT_MAX(evaluateTime, earliestTime);
 
     LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", evaluateTime - now);
 
@@ -818,9 +773,21 @@ Error RoutingManager::SendRouterSolicitation(void)
     return mInfraIf.Send(packet, destAddress);
 }
 
-void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes)
+void RoutingManager::SendRouterAdvertisement(const OnMeshPrefixArray &aNewPrefixes)
 {
-    uint8_t                      buffer[kMaxRouterAdvMessageLength];
+    // RA message max length is derived to accommodate:
+    //
+    // - The RA header,
+    // - At most one PIO (for local on-link prefix),
+    // - At most twice `kMaxOnMeshPrefixes` RIO for on-mesh prefixes.
+    //   Factor two is used for RIO to account for entries invalidating
+    //   previous prefixes while adding new ones.
+
+    static constexpr uint16_t kMaxRaLength =
+        sizeof(Ip6::Nd::RouterAdvertMessage::Header) + sizeof(Ip6::Nd::PrefixInfoOption) +
+        2 * kMaxOnMeshPrefixes * (sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Prefix));
+
+    uint8_t                      buffer[kMaxRaLength];
     Ip6::Nd::RouterAdvertMessage raMsg(mRouterAdvertHeader, buffer);
 
     // Append PIO for local on-link prefix. Ensure it is either being
@@ -848,26 +815,24 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
                 validLifetime, preferredLifetime);
     }
 
-    // Invalidate previously advertised OMR prefixes if they are no
-    // longer in the new OMR prefix array.
+    // Invalidate previously advertised prefixes if they are no
+    // longer in the new prefix array.
 
-    for (const OmrPrefix &omrPrefix : mAdvertisedOmrPrefixes)
+    for (const OnMeshPrefix &prefix : mAdvertisedPrefixes)
     {
-        if (!aNewOmrPrefixes.ContainsMatching(omrPrefix.GetPrefix()))
+        if (!aNewPrefixes.Contains(prefix))
         {
-            SuccessOrAssert(
-                raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), /* aRouteLifetime */ 0, omrPrefix.GetPreference()));
+            SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, /* aRouteLifetime */ 0, mRouteInfoOptionPreference));
 
-            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", omrPrefix.ToString().AsCString());
+            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", prefix.ToString().AsCString());
         }
     }
 
-    for (const OmrPrefix &omrPrefix : aNewOmrPrefixes)
+    for (const OnMeshPrefix &prefix : aNewPrefixes)
     {
-        SuccessOrAssert(
-            raMsg.AppendRouteInfoOption(omrPrefix.GetPrefix(), kDefaultOmrPrefixLifetime, omrPrefix.GetPreference()));
+        SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRouteInfoOptionPreference));
 
-        LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", omrPrefix.ToString().AsCString(),
+        LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", prefix.ToString().AsCString(),
                 kDefaultOmrPrefixLifetime);
     }
 
@@ -895,6 +860,68 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
                     ErrorToString(error));
         }
     }
+}
+
+bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const
+{
+    // Determines whether or not a received RA message was prepared by
+    // by `RoutingManager` itself.
+
+    bool        isFromManager = false;
+    uint16_t    rioCount      = 0;
+    Ip6::Prefix prefix;
+
+    VerifyOrExit(aRaMessage.ContainsAnyOptions());
+
+    for (const Ip6::Nd::Option &option : aRaMessage)
+    {
+        switch (option.GetType())
+        {
+        case Ip6::Nd::Option::kTypePrefixInfo:
+        {
+            // PIO should match `mLocalOnLinkPrefix`.
+
+            const Ip6::Nd::PrefixInfoOption &pio = static_cast<const Ip6::Nd::PrefixInfoOption &>(option);
+
+            VerifyOrExit(pio.IsValid());
+            pio.GetPrefix(prefix);
+
+            VerifyOrExit(prefix == mLocalOnLinkPrefix);
+            break;
+        }
+
+        case Ip6::Nd::Option::kTypeRouteInfo:
+        {
+            // RIO (with non-zero lifetime) should match entries from
+            // `mAdvertisedPrefixes`. We keep track of the number
+            // of matched RIOs and check after the loop ends that all
+            // entries were seen.
+
+            const Ip6::Nd::RouteInfoOption &rio = static_cast<const Ip6::Nd::RouteInfoOption &>(option);
+
+            VerifyOrExit(rio.IsValid());
+            rio.GetPrefix(prefix);
+
+            if (rio.GetRouteLifetime() != 0)
+            {
+                VerifyOrExit(mAdvertisedPrefixes.Contains(prefix));
+                rioCount++;
+            }
+
+            break;
+        }
+
+        default:
+            ExitNow();
+        }
+    }
+
+    VerifyOrExit(rioCount == mAdvertisedPrefixes.GetLength());
+
+    isFromManager = true;
+
+exit:
+    return isFromManager;
 }
 
 bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
@@ -1077,25 +1104,31 @@ bool RoutingManager::ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption
 
     VerifyOrExit(mIsRunning);
 
+    if (aPrefix.GetLength() == 0)
+    {
+        // Always process default route ::/0 prefix.
+        ExitNow(shouldProcess = true);
+    }
+
     if (!IsValidOmrPrefix(aPrefix))
     {
         LogInfo("Ignore RIO prefix %s since not a valid OMR prefix", aPrefix.ToString().AsCString());
         ExitNow();
     }
 
-    VerifyOrExit(mLocalOmrPrefix != aPrefix);
+    VerifyOrExit(mLocalOmrPrefix.GetPrefix() != aPrefix);
 
     // Ignore OMR prefixes advertised by ourselves or in current Thread Network Data.
-    // The `mAdvertisedOmrPrefixes` and the OMR prefix set in Network Data should eventually
+    // The `mAdvertisedPrefixes` and the OMR prefix set in Network Data should eventually
     // be equal, but there is time that they are not synchronized immediately:
-    // 1. Network Data could contain more OMR prefixes than `mAdvertisedOmrPrefixes` because
+    // 1. Network Data could contain more OMR prefixes than `mAdvertisedPrefixes` because
     //    we added random delay before Evaluating routing policy when Network Data is changed.
-    // 2. `mAdvertisedOmrPrefixes` could contain more OMR prefixes than Network Data because
+    // 2. `mAdvertisedPrefixes` could contain more OMR prefixes than Network Data because
     //    it takes time to sync a new OMR prefix into Network Data (multicast loopback RA
     //    messages are usually faster than Thread Network Data propagation).
     // They are the reasons why we need both the checks.
 
-    VerifyOrExit(!mAdvertisedOmrPrefixes.ContainsMatching(aPrefix));
+    VerifyOrExit(!mAdvertisedPrefixes.Contains(aPrefix));
     VerifyOrExit(!Get<RoutingManager>().NetworkDataContainsOmrPrefix(aPrefix));
 
     shouldProcess = true;
@@ -1134,7 +1167,7 @@ bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) co
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
     bool                            contain = false;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
     {
         if (IsValidOmrPrefix(onMeshPrefixConfig) && onMeshPrefixConfig.GetPrefix() == aPrefix)
         {
@@ -1151,6 +1184,14 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
     // Updates the `mRouterAdvertHeader` from the given RA message.
 
     Ip6::Nd::RouterAdvertMessage::Header oldHeader;
+
+    if (aRouterAdvertMessage != nullptr)
+    {
+        // We skip and do not update RA header if the received RA message
+        // was not prepared and sent by `RoutingManager` itself.
+
+        VerifyOrExit(!IsReceivedRouterAdvertFromManager(*aRouterAdvertMessage));
+    }
 
     oldHeader                       = mRouterAdvertHeader;
     mTimeRouterAdvMessageLastUpdate = TimerMilli::GetNow();
@@ -1181,6 +1222,9 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
 
         StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
     }
+
+exit:
+    return;
 }
 
 void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
@@ -1226,6 +1270,7 @@ RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance
     : InstanceLocator(aInstance)
     , mTimer(aInstance, HandleTimer)
     , mSignalTask(aInstance, HandleSignalTask)
+    , mAllowDefaultRouteInNetData(false)
 {
 }
 
@@ -1234,27 +1279,92 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
 {
     // Process a received RA message and update the prefix table.
 
-    OT_UNUSED_VARIABLE(aSrcAddress);
+    Router *router = mRouters.FindMatching(aSrcAddress);
+
+    if (router == nullptr)
+    {
+        router = mRouters.PushBack();
+
+        if (router == nullptr)
+        {
+            LogWarn("Received RA from too many routers, ignore RA from %s", aSrcAddress.ToString().AsCString());
+            ExitNow();
+        }
+
+        router->mAddress = aSrcAddress;
+        router->mEntries.Clear();
+    }
+
+    // RA message can indicate router provides default route in the RA
+    // message header and can also include an RIO for `::/0`. When
+    // processing an RA message, the preference and lifetime values
+    // in a `::/0` RIO override the preference and lifetime values in
+    // the RA header (per RFC 4191 section 3.1).
+
+    ProcessDefaultRoute(aRaMessage.GetHeader(), *router);
 
     for (const Ip6::Nd::Option &option : aRaMessage)
     {
         switch (option.GetType())
         {
         case Ip6::Nd::Option::kTypePrefixInfo:
-            ProcessPrefixInfoOption(static_cast<const Ip6::Nd::PrefixInfoOption &>(option));
+            ProcessPrefixInfoOption(static_cast<const Ip6::Nd::PrefixInfoOption &>(option), *router);
             break;
 
         case Ip6::Nd::Option::kTypeRouteInfo:
-            ProcessRouteInfoOption(static_cast<const Ip6::Nd::RouteInfoOption &>(option));
+            ProcessRouteInfoOption(static_cast<const Ip6::Nd::RouteInfoOption &>(option), *router);
             break;
 
         default:
             break;
         }
     }
+
+    RemoveRoutersWithNoEntries();
+
+exit:
+    return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio)
+void RoutingManager::DiscoveredPrefixTable::ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader,
+                                                                Router &                                    aRouter)
+{
+    Entry *     entry;
+    Ip6::Prefix prefix;
+
+    prefix.Clear();
+    entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
+
+    if (entry == nullptr)
+    {
+        VerifyOrExit(aRaHeader.GetRouterLifetime() != 0);
+
+        entry = AllocateEntry();
+
+        if (entry == nullptr)
+        {
+            LogWarn("Discovered too many prefixes, ignore default route from RA header");
+            ExitNow();
+        }
+
+        entry->InitFrom(aRaHeader);
+        aRouter.mEntries.Push(*entry);
+    }
+    else
+    {
+        entry->InitFrom(aRaHeader);
+    }
+
+    UpdateNetworkDataOnChangeTo(*entry);
+    mTimer.FireAtIfEarlier(entry->GetExpireTime());
+    SignalTableChanged();
+
+exit:
+    return;
+}
+
+void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio,
+                                                                    Router &                         aRouter)
 {
     Ip6::Prefix prefix;
     Entry *     entry;
@@ -1266,21 +1376,22 @@ void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::N
 
     LogInfo("Processing PIO (%s, %u seconds)", prefix.ToString().AsCString(), aPio.GetValidLifetime());
 
-    entry = mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeOnLink));
+    entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeOnLink));
 
     if (entry == nullptr)
     {
         VerifyOrExit(aPio.GetValidLifetime() != 0);
 
-        if (mEntries.IsFull())
+        entry = AllocateEntry();
+
+        if (entry == nullptr)
         {
             LogWarn("Discovered too many prefixes, ignore on-link prefix %s", prefix.ToString().AsCString());
             ExitNow();
         }
 
-        SuccessOrExit(Get<RoutingManager>().PublishExternalRoute(prefix, NetworkData::kRoutePreferenceMedium));
-        entry = mEntries.PushBack();
         entry->InitFrom(aPio);
+        aRouter.mEntries.Push(*entry);
     }
     else
     {
@@ -1290,6 +1401,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::N
         entry->AdoptValidAndPreferredLiftimesFrom(newEntry);
     }
 
+    UpdateNetworkDataOnChangeTo(*entry);
     mTimer.FireAtIfEarlier(entry->GetExpireTime());
     SignalTableChanged();
 
@@ -1297,7 +1409,8 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio)
+void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio,
+                                                                   Router &                        aRouter)
 {
     Ip6::Prefix prefix;
     Entry *     entry;
@@ -1309,34 +1422,59 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd
 
     LogInfo("Processing RIO (%s, %u seconds)", prefix.ToString().AsCString(), aRio.GetRouteLifetime());
 
-    entry = mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
-
-    if (aRio.GetRouteLifetime() == 0)
-    {
-        VerifyOrExit(entry != nullptr);
-
-        Get<RoutingManager>().UnpublishExternalRoute(entry->GetPrefix());
-        mEntries.Remove(*entry);
-
-        ExitNow();
-    }
+    entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
 
     if (entry == nullptr)
     {
-        if (mEntries.IsFull())
+        VerifyOrExit(aRio.GetRouteLifetime() != 0);
+
+        entry = AllocateEntry();
+
+        if (entry == nullptr)
         {
-            LogWarn("Discovered too many prefixes, ignore new prefix %s", prefix.ToString().AsCString());
+            LogWarn("Discovered too many prefixes, ignore route prefix %s", prefix.ToString().AsCString());
             ExitNow();
         }
 
-        SuccessOrExit(Get<RoutingManager>().PublishExternalRoute(prefix, aRio.GetPreference()));
-        entry = mEntries.PushBack();
+        entry->InitFrom(aRio);
+        aRouter.mEntries.Push(*entry);
+    }
+    else
+    {
+        entry->InitFrom(aRio);
     }
 
-    entry->InitFrom(aRio);
-
+    UpdateNetworkDataOnChangeTo(*entry);
     mTimer.FireAtIfEarlier(entry->GetExpireTime());
     SignalTableChanged();
+
+exit:
+    return;
+}
+
+void RoutingManager::DiscoveredPrefixTable::SetAllowDefaultRouteInNetData(bool aAllow)
+{
+    Entry *     favoredEntry;
+    Ip6::Prefix prefix;
+
+    VerifyOrExit(aAllow != mAllowDefaultRouteInNetData);
+
+    LogInfo("Allow default route in netdata: %s -> %s", ToYesNo(mAllowDefaultRouteInNetData), ToYesNo(aAllow));
+
+    mAllowDefaultRouteInNetData = aAllow;
+
+    prefix.Clear();
+    favoredEntry = FindFavoredEntryToPublish(prefix);
+    VerifyOrExit(favoredEntry != nullptr);
+
+    if (mAllowDefaultRouteInNetData)
+    {
+        PublishEntry(*favoredEntry);
+    }
+    else
+    {
+        UnpublishEntry(*favoredEntry);
+    }
 
 exit:
     return;
@@ -1350,59 +1488,83 @@ void RoutingManager::DiscoveredPrefixTable::FindFavoredOnLinkPrefix(Ip6::Prefix 
 
     aPrefix.Clear();
 
-    for (const Entry &entry : mEntries)
+    for (const Router &router : mRouters)
     {
-        if (!entry.IsOnLinkPrefix() || entry.IsDeprecated())
+        for (const Entry &entry : router.mEntries)
         {
-            continue;
-        }
+            if (!entry.IsOnLinkPrefix() || entry.IsDeprecated())
+            {
+                continue;
+            }
 
-        if ((aPrefix.GetLength() == 0) || (entry.GetPrefix() < aPrefix))
-        {
-            aPrefix = entry.GetPrefix();
+            if ((aPrefix.GetLength() == 0) || (entry.GetPrefix() < aPrefix))
+            {
+                aPrefix = entry.GetPrefix();
+            }
         }
     }
 }
 
 bool RoutingManager::DiscoveredPrefixTable::ContainsOnLinkPrefix(const Ip6::Prefix &aPrefix) const
 {
-    return mEntries.ContainsMatching(Entry::Matcher(aPrefix, Entry::kTypeOnLink));
+    return ContainsPrefix(Entry::Matcher(aPrefix, Entry::kTypeOnLink));
 }
 
 bool RoutingManager::DiscoveredPrefixTable::ContainsRoutePrefix(const Ip6::Prefix &aPrefix) const
 {
-    return mEntries.ContainsMatching(Entry::Matcher(aPrefix, Entry::kTypeRoute));
+    return ContainsPrefix(Entry::Matcher(aPrefix, Entry::kTypeRoute));
+}
+
+bool RoutingManager::DiscoveredPrefixTable::ContainsPrefix(const Entry::Matcher &aMatcher) const
+{
+    bool contains = false;
+
+    for (const Router &router : mRouters)
+    {
+        if (router.mEntries.ContainsMatching(aMatcher))
+        {
+            contains = true;
+            break;
+        }
+    }
+
+    return contains;
 }
 
 void RoutingManager::DiscoveredPrefixTable::RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix, NetDataMode aNetDataMode)
 {
-    RemovePrefix(aPrefix, Entry::kTypeOnLink, aNetDataMode);
+    RemovePrefix(Entry::Matcher(aPrefix, Entry::kTypeOnLink), aNetDataMode);
 }
 
 void RoutingManager::DiscoveredPrefixTable::RemoveRoutePrefix(const Ip6::Prefix &aPrefix, NetDataMode aNetDataMode)
 {
-    RemovePrefix(aPrefix, Entry::kTypeRoute, aNetDataMode);
+    RemovePrefix(Entry::Matcher(aPrefix, Entry::kTypeRoute), aNetDataMode);
 }
 
-void RoutingManager::DiscoveredPrefixTable::RemovePrefix(const Ip6::Prefix &aPrefix,
-                                                         Entry::Type        aType,
-                                                         NetDataMode        aNetDataMode)
+void RoutingManager::DiscoveredPrefixTable::RemovePrefix(const Entry::Matcher &aMatcher, NetDataMode aNetDataMode)
 {
-    // Remove a prefix of given type from the table if there is any.
+    // Removes all entries matching a given prefix from the table.
     // `aNetDataMode` specifies behavior when a match is found and
     // removed. It indicates whether or not to unpublish it from
     // Network Data.
 
-    Entry *entry = mEntries.FindMatching(Entry::Matcher(aPrefix, aType));
+    LinkedList<Entry> removedEntries;
 
-    VerifyOrExit(entry != nullptr);
+    for (Router &router : mRouters)
+    {
+        router.mEntries.RemoveAllMatching(aMatcher, removedEntries);
+    }
+
+    VerifyOrExit(!removedEntries.IsEmpty());
 
     if (aNetDataMode == kUnpublishFromNetData)
     {
-        Get<RoutingManager>().UnpublishExternalRoute(aPrefix);
+        UnpublishEntry(*removedEntries.GetHead());
     }
 
-    mEntries.Remove(*entry);
+    FreeEntries(removedEntries);
+    RemoveRoutersWithNoEntries();
+
     SignalTableChanged();
 
 exit:
@@ -1414,14 +1576,19 @@ void RoutingManager::DiscoveredPrefixTable::RemoveAllEntries(void)
     // Remove all entries from the table and unpublish them
     // from Network Data.
 
-    Entry *entry;
-
-    while ((entry = mEntries.PopBack()) != nullptr)
+    for (Router &router : mRouters)
     {
-        Get<RoutingManager>().UnpublishExternalRoute(entry->GetPrefix());
-        SignalTableChanged();
+        Entry *entry;
+
+        while ((entry = router.mEntries.Pop()) != nullptr)
+        {
+            UnpublishEntry(*entry);
+            FreeEntry(*entry);
+            SignalTableChanged();
+        }
     }
 
+    RemoveRoutersWithNoEntries();
     mTimer.Stop();
 }
 
@@ -1430,20 +1597,23 @@ void RoutingManager::DiscoveredPrefixTable::RemoveOrDeprecateOldEntries(TimeMill
     // Remove route prefix entries and deprecate on-link entries in
     // the table that are old (not updated since `aTimeThreshold`).
 
-    for (Entry &entry : mEntries)
+    for (Router &router : mRouters)
     {
-        if (entry.GetLastUpdateTime() <= aTimeThreshold)
+        for (Entry &entry : router.mEntries)
         {
-            if (entry.IsOnLinkPrefix())
+            if (entry.GetLastUpdateTime() <= aTimeThreshold)
             {
-                entry.ClearPreferredLifetime();
-            }
-            else
-            {
-                entry.ClearValidLifetime();
-            }
+                if (entry.IsOnLinkPrefix())
+                {
+                    entry.ClearPreferredLifetime();
+                }
+                else
+                {
+                    entry.ClearValidLifetime();
+                }
 
-            SignalTableChanged();
+                SignalTableChanged();
+            }
         }
     }
 
@@ -1460,23 +1630,110 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::CalculateNextStaleTime(TimeMill
     // prefixes become stale (the latest stale time) but for route
     // prefixes we consider the earliest stale time.
 
-    for (const Entry &entry : mEntries)
+    for (const Router &router : mRouters)
     {
-        TimeMilli entryStaleTime = OT_MAX(aNow, entry.GetStaleTime());
-
-        if (entry.IsOnLinkPrefix() && !entry.IsDeprecated())
+        for (const Entry &entry : router.mEntries)
         {
-            onLinkStaleTime = OT_MAX(onLinkStaleTime, entryStaleTime);
-            foundOnLink     = true;
-        }
+            TimeMilli entryStaleTime = OT_MAX(aNow, entry.GetStaleTime());
 
-        if (!entry.IsOnLinkPrefix())
-        {
-            routeStaleTime = OT_MIN(routeStaleTime, entryStaleTime);
+            if (entry.IsOnLinkPrefix() && !entry.IsDeprecated())
+            {
+                onLinkStaleTime = OT_MAX(onLinkStaleTime, entryStaleTime);
+                foundOnLink     = true;
+            }
+
+            if (!entry.IsOnLinkPrefix())
+            {
+                routeStaleTime = OT_MIN(routeStaleTime, entryStaleTime);
+            }
         }
     }
 
     return foundOnLink ? OT_MIN(onLinkStaleTime, routeStaleTime) : routeStaleTime;
+}
+
+void RoutingManager::DiscoveredPrefixTable::RemoveRoutersWithNoEntries(void)
+{
+    mRouters.RemoveAllMatching(Router::kContainsNoEntries);
+}
+
+void RoutingManager::DiscoveredPrefixTable::FreeEntries(LinkedList<Entry> &aEntries)
+{
+    // Frees all entries in the given list `aEntries` (put them back
+    // in the entry pool).
+
+    Entry *entry;
+
+    while ((entry = aEntries.Pop()) != nullptr)
+    {
+        FreeEntry(*entry);
+    }
+}
+
+RoutingManager::DiscoveredPrefixTable::Entry *RoutingManager::DiscoveredPrefixTable::FindFavoredEntryToPublish(
+    const Ip6::Prefix &aPrefix)
+{
+    // Finds the favored entry matching a given `aPrefix` in the table
+    // to publish in the Network Data. We can have multiple entries
+    // in the table matching the same `aPrefix` from different
+    // routers and potentially with different preference values. We
+    // select the one with the highest preference as the favored
+    // entry to publish.
+
+    Entry *favoredEntry = nullptr;
+
+    for (Router &router : mRouters)
+    {
+        for (Entry &entry : router.mEntries)
+        {
+            if (entry.GetPrefix() != aPrefix)
+            {
+                continue;
+            }
+
+            if ((favoredEntry == nullptr) || (entry.GetPreference() > favoredEntry->GetPreference()))
+            {
+                favoredEntry = &entry;
+            }
+        }
+    }
+
+    return favoredEntry;
+}
+
+void RoutingManager::DiscoveredPrefixTable::UpdateNetworkDataOnChangeTo(Entry &aEntry)
+{
+    // Updates Network Data when there is a change to `aEntry` which
+    // can be a newly added entry or an existing entry that is
+    // modified due to processing of a received RA message.
+
+    Entry *favoredEntry;
+
+    if (aEntry.GetPrefix().GetLength() == 0)
+    {
+        // If the change is to default route ::/0 prefix, make sure we
+        // are allowed to publish default route in Network Data.
+
+        VerifyOrExit(mAllowDefaultRouteInNetData);
+    }
+
+    favoredEntry = FindFavoredEntryToPublish(aEntry.GetPrefix());
+
+    OT_ASSERT(favoredEntry != nullptr);
+    PublishEntry(*favoredEntry);
+
+exit:
+    return;
+}
+
+void RoutingManager::DiscoveredPrefixTable::PublishEntry(const Entry &aEntry)
+{
+    IgnoreError(Get<RoutingManager>().PublishExternalRoute(aEntry.GetPrefix(), aEntry.GetPreference()));
+}
+
+void RoutingManager::DiscoveredPrefixTable::UnpublishEntry(const Entry &aEntry)
+{
+    Get<RoutingManager>().UnpublishExternalRoute(aEntry.GetPrefix());
 }
 
 void RoutingManager::DiscoveredPrefixTable::HandleTimer(Timer &aTimer)
@@ -1491,28 +1748,48 @@ void RoutingManager::DiscoveredPrefixTable::HandleTimer(void)
 
 void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
 {
-    TimeMilli now            = TimerMilli::GetNow();
-    TimeMilli nextExpireTime = now.GetDistantFuture();
+    TimeMilli         now            = TimerMilli::GetNow();
+    TimeMilli         nextExpireTime = now.GetDistantFuture();
+    LinkedList<Entry> expiredEntries;
 
-    for (EntryArray::IndexType index = 0; index < mEntries.GetLength();)
+    for (Router &router : mRouters)
     {
-        Entry &entry = mEntries[index];
+        router.mEntries.RemoveAllMatching(Entry::ExpirationChecker(now), expiredEntries);
+    }
 
-        if (entry.GetExpireTime() <= now)
+    RemoveRoutersWithNoEntries();
+
+    // Determine if we need to publish/unpublish any prefixes in
+    // the Network Data.
+
+    for (const Entry &expiredEntry : expiredEntries)
+    {
+        Entry *favoredEntry = FindFavoredEntryToPublish(expiredEntry.GetPrefix());
+
+        if (favoredEntry == nullptr)
         {
-            Get<RoutingManager>().UnpublishExternalRoute(entry.GetPrefix());
-
-            // Remove the prefix from the array (which replaces it with
-            // last entry in the array). So in this case, we do not
-            // increment the `index`.
-
-            mEntries.Remove(entry);
-            SignalTableChanged();
+            UnpublishEntry(expiredEntry);
         }
         else
         {
+            PublishEntry(*favoredEntry);
+        }
+    }
+
+    if (!expiredEntries.IsEmpty())
+    {
+        SignalTableChanged();
+    }
+
+    FreeEntries(expiredEntries);
+
+    // Determine the next expire time and schedule timer.
+
+    for (const Router &router : mRouters)
+    {
+        for (const Entry &entry : router.mEntries)
+        {
             nextExpireTime = OT_MIN(nextExpireTime, entry.GetExpireTime());
-            index++;
         }
     }
 
@@ -1532,27 +1809,83 @@ void RoutingManager::DiscoveredPrefixTable::HandleSignalTask(Tasklet &aTasklet)
     aTasklet.Get<RoutingManager>().HandleDiscoveredPrefixTableChanged();
 }
 
+void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const
+{
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    iterator.SetInitTime();
+    iterator.SetRouter(mRouters.Front());
+    iterator.SetEntry(mRouters.IsEmpty() ? nullptr : mRouters[0].mEntries.GetHead());
+}
+
+Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &aIterator,
+                                                          PrefixTableEntry &   aEntry) const
+{
+    Error     error    = kErrorNone;
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    VerifyOrExit(iterator.GetRouter() != nullptr, error = kErrorNotFound);
+    OT_ASSERT(iterator.GetEntry() != nullptr);
+
+    aEntry.mRouterAddress       = iterator.GetRouter()->mAddress;
+    aEntry.mPrefix              = iterator.GetEntry()->GetPrefix();
+    aEntry.mIsOnLink            = iterator.GetEntry()->IsOnLinkPrefix();
+    aEntry.mMsecSinceLastUpdate = iterator.GetInitTime() - iterator.GetEntry()->GetLastUpdateTime();
+    aEntry.mValidLifetime       = iterator.GetEntry()->GetValidLifetime();
+    aEntry.mPreferredLifetime   = aEntry.mIsOnLink ? iterator.GetEntry()->GetPreferredLifetime() : 0;
+    aEntry.mRoutePreference =
+        static_cast<otRoutePreference>(aEntry.mIsOnLink ? 0 : iterator.GetEntry()->GetRoutePreference());
+
+    // Advance the iterator
+    iterator.SetEntry(iterator.GetEntry()->GetNext());
+
+    if (iterator.GetEntry() == nullptr)
+    {
+        if (iterator.GetRouter() != mRouters.Back())
+        {
+            iterator.SetRouter(iterator.GetRouter() + 1);
+            iterator.SetEntry(iterator.GetRouter()->mEntries.GetHead());
+        }
+        else
+        {
+            iterator.SetRouter(nullptr);
+        }
+    }
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Entry
+
+void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader)
+{
+    Clear();
+    mType                    = kTypeRoute;
+    mValidLifetime           = aRaHeader.GetRouterLifetime();
+    mShared.mRoutePreference = aRaHeader.GetDefaultRouterPreference();
+    mLastUpdateTime          = TimerMilli::GetNow();
+}
 
 void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::PrefixInfoOption &aPio)
 {
     Clear();
     aPio.GetPrefix(mPrefix);
-    mType              = kTypeOnLink;
-    mValidLifetime     = aPio.GetValidLifetime();
-    mPreferredLifetime = aPio.GetPreferredLifetime();
-    mLastUpdateTime    = TimerMilli::GetNow();
+    mType                      = kTypeOnLink;
+    mValidLifetime             = aPio.GetValidLifetime();
+    mShared.mPreferredLifetime = aPio.GetPreferredLifetime();
+    mLastUpdateTime            = TimerMilli::GetNow();
 }
 
 void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouteInfoOption &aRio)
 {
     Clear();
     aRio.GetPrefix(mPrefix);
-    mType            = kTypeRoute;
-    mValidLifetime   = aRio.GetRouteLifetime();
-    mRoutePreference = aRio.GetPreference();
-    mLastUpdateTime  = TimerMilli::GetNow();
+    mType                    = kTypeRoute;
+    mValidLifetime           = aRio.GetRouteLifetime();
+    mShared.mRoutePreference = aRio.GetPreference();
+    mLastUpdateTime          = TimerMilli::GetNow();
 }
 
 bool RoutingManager::DiscoveredPrefixTable::Entry::operator==(const Entry &aOther) const
@@ -1565,6 +1898,11 @@ bool RoutingManager::DiscoveredPrefixTable::Entry::Matches(const Matcher &aMatch
     return (mType == aMatcher.mType) && (mPrefix == aMatcher.mPrefix);
 }
 
+bool RoutingManager::DiscoveredPrefixTable::Entry::Matches(const ExpirationChecker &aCheker) const
+{
+    return GetExpireTime() <= aCheker.mNow;
+}
+
 TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetExpireTime(void) const
 {
     return mLastUpdateTime + CalculateExpireDelay(mValidLifetime);
@@ -1572,7 +1910,7 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetExpireTime(void) cons
 
 TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTime(void) const
 {
-    uint32_t delay = OT_MIN(kRtrAdvStaleTime, IsOnLinkPrefix() ? mPreferredLifetime : mValidLifetime);
+    uint32_t delay = OT_MIN(kRtrAdvStaleTime, IsOnLinkPrefix() ? GetPreferredLifetime() : mValidLifetime);
 
     return mLastUpdateTime + TimeMilli::SecToMsec(delay);
 }
@@ -1581,7 +1919,15 @@ bool RoutingManager::DiscoveredPrefixTable::Entry::IsDeprecated(void) const
 {
     OT_ASSERT(IsOnLinkPrefix());
 
-    return mLastUpdateTime + TimeMilli::SecToMsec(mPreferredLifetime) <= TimerMilli::GetNow();
+    return mLastUpdateTime + TimeMilli::SecToMsec(GetPreferredLifetime()) <= TimerMilli::GetNow();
+}
+
+RoutingManager::RoutePreference RoutingManager::DiscoveredPrefixTable::Entry::GetPreference(void) const
+{
+    // Returns the preference level to use when we publish
+    // the prefix entry in Network Data.
+
+    return IsOnLinkPrefix() ? NetworkData::kRoutePreferenceMedium : GetRoutePreference();
 }
 
 void RoutingManager::DiscoveredPrefixTable::Entry::AdoptValidAndPreferredLiftimesFrom(const Entry &aEntry)
@@ -1608,8 +1954,8 @@ void RoutingManager::DiscoveredPrefixTable::Entry::AdoptValidAndPreferredLiftime
         mValidLifetime = kTwoHoursInSeconds;
     }
 
-    mPreferredLifetime = aEntry.GetPreferredLifetime();
-    mLastUpdateTime    = aEntry.GetLastUpdateTime();
+    mShared.mPreferredLifetime = aEntry.GetPreferredLifetime();
+    mLastUpdateTime            = aEntry.GetLastUpdateTime();
 }
 
 uint32_t RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpireDelay(uint32_t aValidLifetime)
@@ -1631,47 +1977,109 @@ uint32_t RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpireDelay(uint
 //---------------------------------------------------------------------------------------------------------------------
 // OmrPrefix
 
-void RoutingManager::OmrPrefix::Init(const Ip6::Prefix &aPrefix, RoutePreference aPreference)
+void RoutingManager::OmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
 {
-    mPrefix     = aPrefix;
-    mPreference = aPreference;
+    mPrefix     = aOnMeshPrefixConfig.GetPrefix();
+    mPreference = aOnMeshPrefixConfig.GetPreference();
 }
 
-void RoutingManager::OmrPrefix::InitFrom(NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
+void RoutingManager::OmrPrefix::SetFrom(const LocalOmrPrefix &aLocalOmrPrefix)
 {
-    Init(aOnMeshPrefixConfig.GetPrefix(), aOnMeshPrefixConfig.GetPreference());
+    mPrefix     = aLocalOmrPrefix.GetPrefix();
+    mPreference = aLocalOmrPrefix.GetPreference();
 }
 
-bool RoutingManager::OmrPrefix::IsFavoredOver(const OmrPrefix &aOther) const
+bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const
 {
     // This method determines whether this OMR prefix is favored
-    // over `aOther` prefix. A prefix with higher preference is
+    // over another prefix. A prefix with higher preference is
     // favored. If the preference is the same, then the smaller
     // prefix (in the sense defined by `Ip6::Prefix`) is favored.
 
-    return (mPreference > aOther.mPreference) || ((mPreference == aOther.mPreference) && (mPrefix < aOther.mPrefix));
-}
+    bool isFavored = (mPreference > aOmrPrefixConfig.GetPreference());
 
-RoutingManager::OmrPrefix::InfoString RoutingManager::OmrPrefix::ToString(void) const
-{
-    InfoString string;
+    OT_ASSERT(IsValidOmrPrefix(aOmrPrefixConfig));
 
-    string.Append("%s (prf:", mPrefix.ToString().AsCString());
-
-    switch (mPreference)
+    if (mPreference == aOmrPrefixConfig.GetPreference())
     {
-    case NetworkData::kRoutePreferenceHigh:
-        string.Append("high)");
-        break;
-    case NetworkData::kRoutePreferenceMedium:
-        string.Append("med)");
-        break;
-    case NetworkData::kRoutePreferenceLow:
-        string.Append("low)");
-        break;
+        isFavored = (mPrefix < aOmrPrefixConfig.GetPrefix());
     }
 
-    return string;
+    return isFavored;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// LocalOmrPrefix
+
+RoutingManager::LocalOmrPrefix::LocalOmrPrefix(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mIsAddedInNetData(false)
+{
+}
+
+void RoutingManager::LocalOmrPrefix::GenerateFrom(const Ip6::Prefix &aBrUlaPrefix)
+{
+    mPrefix = aBrUlaPrefix;
+    mPrefix.SetSubnetId(kOmrPrefixSubnetId);
+    mPrefix.SetLength(kOmrPrefixLength);
+
+    LogInfo("Generated OMR prefix: %s", mPrefix.ToString().AsCString());
+}
+
+Error RoutingManager::LocalOmrPrefix::AddToNetData(void)
+{
+    Error                           error = kErrorNone;
+    NetworkData::OnMeshPrefixConfig config;
+
+    VerifyOrExit(!mIsAddedInNetData);
+
+    config.Clear();
+    config.mPrefix       = mPrefix;
+    config.mStable       = true;
+    config.mSlaac        = true;
+    config.mPreferred    = true;
+    config.mOnMesh       = true;
+    config.mDefaultRoute = false;
+    config.mPreference   = GetPreference();
+
+    error = Get<NetworkData::Local>().AddOnMeshPrefix(config);
+
+    if (error != kErrorNone)
+    {
+        LogWarn("Failed to add local OMR prefix %s in Thread Network Data: %s", mPrefix.ToString().AsCString(),
+                ErrorToString(error));
+        ExitNow();
+    }
+
+    mIsAddedInNetData = true;
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    LogInfo("Added local OMR prefix %s in Thread Network Data", mPrefix.ToString().AsCString());
+
+exit:
+    return error;
+}
+
+void RoutingManager::LocalOmrPrefix::RemoveFromNetData(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mIsAddedInNetData);
+
+    error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mPrefix);
+
+    if (error != kErrorNone)
+    {
+        LogWarn("Failed to remove local OMR prefix %s from Thread Network Data: %s", mPrefix.ToString().AsCString(),
+                ErrorToString(error));
+        ExitNow();
+    }
+
+    mIsAddedInNetData = false;
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
+    LogInfo("Removed local OMR prefix %s from Thread Network Data", mPrefix.ToString().AsCString());
+
+exit:
+    return;
 }
 
 } // namespace BorderRouter

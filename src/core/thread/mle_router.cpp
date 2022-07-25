@@ -269,7 +269,7 @@ Error MleRouter::BecomeLeader(void)
     Get<NetworkData::Leader>().Reset();
     Get<MeshCoP::Leader>().SetEmptyCommissionerData();
 
-    SetStateLeader(Rloc16FromRouterId(leaderId));
+    SetStateLeader(Rloc16FromRouterId(leaderId), kStartingAsLeader);
 
 exit:
     return error;
@@ -399,9 +399,13 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
             RemoveNeighbor(child);
         }
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().UpdateCsl();
+#endif
 }
 
-void MleRouter::SetStateLeader(uint16_t aRloc16)
+void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
 {
     IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
     IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
@@ -421,7 +425,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
 
-    Get<NetworkData::Leader>().Start();
+    Get<NetworkData::Leader>().Start(aStartMode);
     Get<MeshCoP::ActiveDatasetManager>().StartLeader();
     Get<MeshCoP::PendingDatasetManager>().StartLeader();
     Get<Tmf::Agent>().AddResource(mAddressSolicit);
@@ -439,6 +443,10 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
             RemoveNeighbor(child);
         }
     }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Get<Mac::Mac>().UpdateCsl();
+#endif
 
     LogNote("Leader partition id 0x%x", mLeaderData.GetPartitionId());
 }
@@ -724,6 +732,8 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     }
 #endif
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
     SuccessOrExit(error = SendLinkAccept(aRxInfo.mMessageInfo, neighbor, requestedTlvs, challenge));
 
 exit:
@@ -936,7 +946,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
 
         if (mLeaderData.GetLeaderRouterId() == RouterIdFromRloc16(GetRloc16()))
         {
-            SetStateLeader(GetRloc16());
+            SetStateLeader(GetRloc16(), kRestoringLeaderRoleAfterReset);
         }
         else
         {
@@ -1017,6 +1027,8 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     router->SetKeySequence(aRxInfo.mKeySequence);
 
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+
+    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
 
     if (aRequest)
     {
@@ -1762,6 +1774,8 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
         child->SetTimeout(Time::MsecToSec(kMaxChildIdRequestTimeout));
     }
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
     SendParentResponse(child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
 
 exit:
@@ -2465,6 +2479,8 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
         child->SetRequestTlv(numTlvs++, Tlv::kPendingDataset);
     }
 
+    aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
+
     switch (mRole)
     {
     case kRoleDisabled:
@@ -2692,6 +2708,8 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
 
     SendChildUpdateResponse(child, aRxInfo.mMessageInfo, tlvs, tlvslength, challenge);
 
+    aRxInfo.mClass = RxInfo::kPeerMessage;
+
 exit:
     LogProcessError(kTypeChildUpdateRequestOfChild, error);
 }
@@ -2725,6 +2743,7 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
         break;
     case kErrorNotFound:
         VerifyOrExit(child->IsStateValid(), error = kErrorSecurity);
+        response.mLength = 0;
         break;
     default:
         ExitNow(error = kErrorNone);
@@ -2824,6 +2843,8 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     child->SetKeySequence(aRxInfo.mKeySequence);
     child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
 
+    aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
+
 exit:
     LogProcessError(kTypeChildUpdateResponseOfChild, error);
 }
@@ -2885,6 +2906,8 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
     default:
         ExitNow(error = kErrorParse);
     }
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     SendDataResponse(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, numTlvs, 0, &aRxInfo.mMessage);
 
@@ -3654,7 +3677,7 @@ exit:
     return;
 }
 
-Error MleRouter::CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
+Error MleRouter::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
 {
     Error error = kErrorNone;
 
@@ -4443,6 +4466,8 @@ void MleRouter::HandleTimeSync(RxInfo &aRxInfo)
     Log(kMessageReceive, kTypeTimeSync, aRxInfo.mMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+
+    aRxInfo.mClass = RxInfo::kPeerMessage;
 
     Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
 

@@ -194,8 +194,8 @@ public:
      * @param[in] aCallback A pointer to a function that is called upon finishing detaching.
      * @param[in] aContext  A pointer to callback application-specific context.
      *
-     * @retval OT_ERROR_NONE Successfully started detaching.
-     * @retval OT_ERROR_BUSY Detaching is already in progress.
+     * @retval kErrorNone   Successfully started detaching.
+     * @retval kErrorBusy   Detaching is already in progress.
      *
      */
     Error DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext);
@@ -812,13 +812,12 @@ protected:
      */
     enum AttachState : uint8_t
     {
-        kAttachStateIdle,                ///< Not currently searching for a parent.
-        kAttachStateProcessAnnounce,     ///< Waiting to process a received Announce (to switch channel/pan-id).
-        kAttachStateStart,               ///< Starting to look for a parent.
-        kAttachStateParentRequestRouter, ///< Searching for a Router to attach to.
-        kAttachStateParentRequestReed,   ///< Searching for Routers or REEDs to attach to.
-        kAttachStateAnnounce,            ///< Send Announce messages
-        kAttachStateChildIdRequest,      ///< Sending a Child ID Request message.
+        kAttachStateIdle,            ///< Not currently searching for a parent.
+        kAttachStateProcessAnnounce, ///< Waiting to process a received Announce (to switch channel/pan-id).
+        kAttachStateStart,           ///< Starting to look for a parent.
+        kAttachStateParentRequest,   ///< Send Parent Request (current number tracked by `mParentRequestCounter`).
+        kAttachStateAnnounce,        ///< Send Announce messages
+        kAttachStateChildIdRequest,  ///< Sending a Child ID Request message.
     };
 
     /**
@@ -1378,7 +1377,18 @@ protected:
     struct RxInfo
     {
         /**
-         * This constructor initializes the `RxInfo`
+         * This enumeration represents a received MLE message class.
+         *
+         */
+        enum Class : uint8_t
+        {
+            kUnknown,              ///< Unknown (default value, also indicates MLE message parse error).
+            kAuthoritativeMessage, ///< Authoritative message (larger received key seq MUST be adopted).
+            kPeerMessage,          ///< Peer message (adopt only if from a known neighbor and is greater by one).
+        };
+
+        /**
+         * This constructor initializes the `RxInfo`.
          *
          * @param[in] aMessage       The received MLE message.
          * @param[in] aMessageInfo   The `Ip6::MessageInfo` associated with message.
@@ -1390,14 +1400,16 @@ protected:
             , mFrameCounter(0)
             , mKeySequence(0)
             , mNeighbor(nullptr)
+            , mClass(kUnknown)
         {
         }
 
         RxMessage &             mMessage;      ///< The MLE message.
         const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
         uint32_t                mFrameCounter; ///< The frame counter from aux security header.
-        uint32_t                mKeySequence;  ///< The key sequence from the aux security header.
+        uint32_t                mKeySequence;  ///< The key sequence from aux security header.
         Neighbor *              mNeighbor;     ///< Neighbor from which message was received (can be `nullptr`).
+        Class                   mClass;        ///< The message class (authoritative, peer, or unknown).
     };
 
     /**
@@ -1444,7 +1456,7 @@ protected:
      * @retval kErrorNoRoute   The destination is not reachable and the message should be dropped.
      *
      */
-    Error CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header);
+    Error CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
 
     /**
      * This method returns the next hop towards an RLOC16 destination.
@@ -1480,11 +1492,13 @@ protected:
     /**
      * This method generates an MLE Child Update Request message.
      *
+     * @param[in] aAppendChallenge   Indicates whether or not to include a Challenge TLV (even when already attached).
+     *
      * @retval kErrorNone    Successfully generated an MLE Child Update Request message.
      * @retval kErrorNoBufs  Insufficient buffers to generate the MLE Child Update Request message.
      *
      */
-    Error SendChildUpdateRequest(void);
+    Error SendChildUpdateRequest(bool aAppendChallenge = false);
 
     /**
      * This method generates an MLE Child Update Response message.
@@ -1683,7 +1697,8 @@ protected:
     Router        mParentCandidate;          ///< Parent candidate information.
     NeighborTable mNeighborTable;            ///< The neighbor table.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
-    AttachState   mAttachState;              ///< The parent request state.
+    AttachState   mAttachState;              ///< The attach state.
+    uint8_t       mParentRequestCounter;     ///< Number of parent requests while in `kAttachStateParentRequest`.
     ReattachState mReattachState;            ///< Reattach state
     uint16_t      mAttachCounter;            ///< Attach attempt counter.
     uint16_t      mAnnounceDelay;            ///< Delay in between sending Announce messages during attach.
@@ -1715,6 +1730,20 @@ private:
     static constexpr uint32_t kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL;
     static constexpr uint32_t kAttachBackoffDelayToResetCounter =
         OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL;
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3
+    // First attach cycle includes two Parent Requests to routers, followed by four to routers and REEDs.
+    static constexpr uint8_t kFirstAttachCycleTotalParentRequests       = 6;
+    static constexpr uint8_t kFirstAttachCycleNumParentRequestToRouters = 2;
+#else
+    // First attach cycle in Thread 1.1/1.2 includes a Parent Requests to routers, followed by one to routers and REEDs.
+    static constexpr uint8_t kFirstAttachCycleTotalParentRequests       = 2;
+    static constexpr uint8_t kFirstAttachCycleNumParentRequestToRouters = 1;
+#endif
+
+    // Next attach cycles includes one Parent Request to routers, followed by one to routers and REEDs.
+    static constexpr uint8_t kNextAttachCycleTotalParentRequests       = 2;
+    static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
 
     enum StartMode : uint8_t // Used in `Start()`.
     {
@@ -1824,9 +1853,10 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        ScheduleMessageTransmissionTimer(void);
+    void        ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
-    Error       SendChildUpdateRequest(uint32_t aTimeout);
+    Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
 
 #if OPENTHREAD_FTD
     static void HandleDetachGracefullyAddressReleaseResponse(void *               aContext,
@@ -1871,6 +1901,7 @@ private:
 #endif
     uint32_t Reattach(void);
     bool     HasAcceptableParentCandidate(void) const;
+    Error    DetermineParentRequestType(ParentRequestType &aType) const;
 
     bool IsBetterParent(uint16_t               aRloc16,
                         LinkQuality            aLinkQuality,

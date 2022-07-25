@@ -69,7 +69,7 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
@@ -83,7 +83,7 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[LEADER2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER2].get_state(), 'leader')
 
         self.collect_rlocs()

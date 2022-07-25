@@ -42,7 +42,7 @@
 #include "common/instance.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/random.hpp"
-#include "net/ip4_address.hpp"
+#include "net/ip4_types.hpp"
 #include "net/netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;
@@ -124,10 +124,10 @@ uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, ui
     return matchedLength;
 }
 
-bool Prefix::IsValidNat64(void) const
+bool Prefix::IsValidNat64PrefixLength(uint8_t aLength)
 {
-    return (mLength == 32) || (mLength == 40) || (mLength == 48) || (mLength == 56) || (mLength == 64) ||
-           (mLength == 96);
+    return (aLength == 32) || (aLength == 40) || (aLength == 48) || (aLength == 56) || (aLength == 64) ||
+           (aLength == 96);
 }
 
 Prefix::InfoString Prefix::ToString(void) const

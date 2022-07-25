@@ -394,6 +394,25 @@ fd14:1078:b3d5:b0b0:0:0::/96
 Done
 ```
 
+### br rioprf
+
+Get the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in emitted Router Advertisement message.
+
+```bash
+> br rioprf
+med
+Done
+```
+
+### br rioprf \<prf\>
+
+Set the preference (which may be 'high', 'med', or 'low') to use when advertising Route Info Options (e.g., for discovered OMR prefixes) in emitted Router Advertisement message.
+
+```bash
+> br rioprf low
+Done
+```
+
 ### bufferinfo
 
 Show the current message buffer information.

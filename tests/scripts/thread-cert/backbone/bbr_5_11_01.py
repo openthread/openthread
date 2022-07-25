@@ -81,7 +81,7 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.nodes[ROUTER1].set_weight(72)
         self.nodes[ROUTER1].start()
 
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', self.nodes[ROUTER1].get_state())
 
         self.nodes[ROUTER2].start()

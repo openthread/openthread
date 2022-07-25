@@ -42,6 +42,7 @@
 #include "common/locator_getters.hpp"
 #include "common/string.hpp"
 #include "common/timer.hpp"
+#include "net/ip6_headers.hpp"
 
 namespace ot {
 namespace Utils {
@@ -78,49 +79,32 @@ exit:
 
 void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddresss, MessageType aType)
 {
-    MessageInfo *     entry = nullptr;
-    Ip6::Header       ip6Header;
-    Ip6::Icmp::Header icmp6Header;
-    uint8_t           ip6Proto;
-    uint16_t          checksum;
-    uint16_t          sourcePort;
-    uint16_t          destPort;
+    MessageInfo *entry = nullptr;
+    Ip6::Headers headers;
 
     VerifyOrExit(aMessage.GetType() == Message::kTypeIp6);
 
-    SuccessOrExit(MeshForwarder::ParseIp6UdpTcpHeader(aMessage, ip6Header, checksum, sourcePort, destPort));
-
-    ip6Proto = ip6Header.GetNextHeader();
+    SuccessOrExit(headers.ParseFrom(aMessage));
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_EXCLUDE_THREAD_CONTROL_MESSAGES
-    if (ip6Proto == Ip6::kProtoUdp)
+    if (headers.IsUdp())
     {
         uint16_t port = 0;
 
         switch (aType)
         {
         case kRxMessage:
-            port = destPort;
+            port = headers.GetDestinationPort();
             break;
 
         case kTxMessage:
-            port = sourcePort;
+            port = headers.GetSourcePort();
             break;
         }
 
         VerifyOrExit((port != Mle::kUdpPort) && (port != Tmf::kUdpPort));
     }
 #endif
-
-    if (ip6Proto == Ip6::kProtoIcmp6)
-    {
-        SuccessOrExit(aMessage.Read(sizeof(Ip6::Header), icmp6Header));
-        checksum = icmp6Header.GetChecksum();
-    }
-    else
-    {
-        icmp6Header.Clear();
-    }
 
     switch (aType)
     {
@@ -135,15 +119,15 @@ void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &
 
     VerifyOrExit(entry != nullptr);
 
-    entry->mPayloadLength        = ip6Header.GetPayloadLength();
+    entry->mPayloadLength        = headers.GetIp6Header().GetPayloadLength();
     entry->mNeighborRloc16       = aMacAddresss.IsShort() ? aMacAddresss.GetShort() : kInvalidRloc16;
-    entry->mSource.mAddress      = ip6Header.GetSource();
-    entry->mSource.mPort         = sourcePort;
-    entry->mDestination.mAddress = ip6Header.GetDestination();
-    entry->mDestination.mPort    = destPort;
-    entry->mChecksum             = checksum;
-    entry->mIpProto              = ip6Proto;
-    entry->mIcmp6Type            = icmp6Header.GetType();
+    entry->mSource.mAddress      = headers.GetSourceAddress();
+    entry->mSource.mPort         = headers.GetSourcePort();
+    entry->mDestination.mAddress = headers.GetDestinationAddress();
+    entry->mDestination.mPort    = headers.GetDestinationPort();
+    entry->mChecksum             = headers.GetChecksum();
+    entry->mIpProto              = headers.GetIpProto();
+    entry->mIcmp6Type            = headers.IsIcmp6() ? headers.GetIcmpHeader().GetType() : 0;
     entry->mAveRxRss             = (aType == kRxMessage) ? aMessage.GetRssAverager().GetAverage() : kInvalidRss;
     entry->mLinkSecurity         = aMessage.IsLinkSecurityEnabled();
     entry->mTxSuccess            = (aType == kTxMessage) ? aMessage.GetTxSuccess() : true;
