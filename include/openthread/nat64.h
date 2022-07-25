@@ -106,7 +106,7 @@ typedef struct otIp4Cidr
  * @sa otBorderRouterSetNat64TranslatorEnabled
  *
  */
-otError otBorderRouterSetIp4CidrForNat64(otInstance *aInstance, otIp4Cidr *aCidr);
+otError otBorderRouterSetIp4CidrForNat64(otInstance *aInstance, const otIp4Cidr *aCidr);
 
 /**
  * This method enables/disables the NAT64 translator.
