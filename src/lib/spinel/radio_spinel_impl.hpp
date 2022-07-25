@@ -136,6 +136,9 @@ static inline otError SpinelStatusToOtError(spinel_status_t aError)
         break;
 
     case SPINEL_STATUS_PROP_NOT_FOUND:
+        ret = OT_ERROR_NOT_IMPLEMENTED;
+        break;
+
     case SPINEL_STATUS_ITEM_NOT_FOUND:
         ret = OT_ERROR_NOT_FOUND;
         break;
@@ -409,8 +412,6 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool 
     {
         SuccessOrExit(error = Get(SPINEL_PROP_RCP_API_VERSION, SPINEL_DATATYPE_UINT_PACKED_S, &rcpApiVersion));
     }
-
-    otLogNotePlat("RCP API Version: %u", rcpApiVersion);
 
     static_assert(SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION <= SPINEL_RCP_API_VERSION,
                   "MIN_HOST_SUPPORTED_RCP_API_VERSION must be smaller than or equal to RCP_API_VERSION");

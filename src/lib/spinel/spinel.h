@@ -321,11 +321,47 @@
  *
  *   - SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION specifies the minimum spinel
  *     RCP API Version which is supported by the host-side implementation.
+ *     To reduce the backward compatibility issues, this number should be kept
+ *     as constant as possible.
  *
  *   - On start, host implementation queries the RCP API version and accepts
  *     any version number from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION up to
  *     and including SPINEL_RCP_API_VERSION.
  *
+ *   Host and RCP compatibility guideline:
+ *
+ *   - New host spinel layer should work with an older RCP firmware, i.e., host
+ *     implementation should remain backward compatible.
+ *
+ *   - Existing fields in the format of an already implemented spinel
+ *     property or command cannot change.
+ *
+ *   - New fields should be appended to the end of the existing spinel format.
+ *     *  New fields for new features:
+ *          Adding a new capability flag to the otRadioCaps to indicate the new
+ *          fields. The host parses the spinel format based on the pre-fetched
+ *          otRadioCaps. The host should be able to enable/disable the feature
+ *          in runtime based on the otRadioCaps. Refer to PR4919 and PR5139.
+ *     *  New fields for changing existing implementations:
+ *          This case should be avoided as much as possible. It will cause the
+ *          compatibility issue.
+ *
+ *   - Deprecated fields should not be removed from the spinel format and they
+ *     should be set to a suitable default value.
+ *
+ *   - Adding new spinel properties.
+ *     * If the old RCP doesn't support the new spinel property and the host
+ *       can hold this case, the API should return OT_ERROR_NOT_IMPLEMENTED or
+ *       default value when spinel layer detects the RCP doesn't support the
+ *       new spinel property.
+ *     * If host can't handle the new properties by processing the returned
+ *       default error code or value. Adding a new capability flag to the
+ *       otRadioCaps to indicate the new properties. The host processes the
+ *       based on the new capability flag.
+ *
+ *   - If none of the above methods make the new functions work, increasing the
+ *     SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION. This case should be avoided
+ *     as much as possible.
  * ---------------------------------------------------------------------------
  */
 
