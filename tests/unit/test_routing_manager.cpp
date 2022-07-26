@@ -547,6 +547,50 @@ void TestRoutingManager(void)
     VerifyOrQuit(counter == 3);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send the same RA again from router A with the on-link (PIO) and route prefix (RIO).
+
+    {
+        Ip6::Nd::RouterAdvertMessage raMsg(Ip6::Nd::RouterAdvertMessage::Header(), buffer);
+
+        SuccessOrQuit(raMsg.AppendPrefixInfoOption(onLinkPrefix, kValidLitime, kPreferredLifetime));
+        SuccessOrQuit(raMsg.AppendRouteInfoOption(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium));
+
+        SendRouterAdvert(routerAddressA, raMsg.GetAsPacket());
+
+        Log("Send RA from router A");
+        LogRouterAdvert(raMsg.GetAsPacket());
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure info from router A
+    // remains unchanged.
+
+    counter = 0;
+
+    rm.InitPrefixTableIterator(iter);
+
+    while (rm.GetNextPrefixTableEntry(iter, entry) == kErrorNone)
+    {
+        counter++;
+        VerifyOrQuit(AsCoreType(&entry.mRouterAddress) == routerAddressA);
+
+        if (entry.mIsOnLink)
+        {
+            VerifyOrQuit(AsCoreType(&entry.mPrefix) == onLinkPrefix);
+            VerifyOrQuit(entry.mValidLifetime = kValidLitime);
+            VerifyOrQuit(entry.mPreferredLifetime = kPreferredLifetime);
+        }
+        else
+        {
+            VerifyOrQuit(AsCoreType(&entry.mPrefix) == routePrefix);
+            VerifyOrQuit(entry.mValidLifetime = kValidLitime);
+            VerifyOrQuit(static_cast<int8_t>(entry.mRoutePreference) == NetworkData::kRoutePreferenceMedium);
+        }
+    }
+
+    VerifyOrQuit(counter == 2);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router B with same route prefix (RIO) but with
     // high route preference.
 
