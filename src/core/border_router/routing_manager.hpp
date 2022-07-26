@@ -50,7 +50,7 @@
 #include <openthread/netdata.h>
 
 #include "border_router/infra_if.hpp"
-#include "border_router/nat64.hpp"
+#include "border_router/nat64_translator.hpp"
 #include "common/array.hpp"
 #include "common/error.hpp"
 #include "common/linked_list.hpp"
@@ -287,8 +287,8 @@ public:
     /**
      * This method registers a callback to provide received raw IP datagrams.
      *
-     * This API sets the IP6 datagram receive callback to InfraReceiveCallbackWrapper so NAT64 manager can translate the
-     * packets before passing it to the upper layer when necessary.
+     * This API sets the IP6 datagram receive callback to InfraReceiveCallbackWrapper so NAT64 translator can translate
+     * the packets before passing it to the upper layer when necessary.
      *
      * @param[in]  aCallback         A pointer to a function that is called when an IP datagram is received
      *                               or `nullptr` to disable the callback.
@@ -679,8 +679,8 @@ private:
 
     TimerMilli mRoutingPolicyTimer;
 
-#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
-    Nat64 mNat64;
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    Nat64Translator mNat64Translator;
 #endif
 };
 

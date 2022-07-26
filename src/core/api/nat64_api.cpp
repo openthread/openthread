@@ -33,11 +33,13 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
 #include <openthread/border_router.h>
 #include <openthread/ip6.h>
 #include <openthread/nat64.h>
 
-#include "border_router/nat64.hpp"
+#include "border_router/nat64_translator.hpp"
 #include "border_router/routing_manager.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -46,46 +48,20 @@
 
 using namespace ot;
 
-// The following functions supports NAT64, but actual NAT64 handling is wrapped in RoutingManager::SendPacket,
-// RoutingManager::SetInfraReceiveCallback
-// When BORDER_ROUTING is disabled, otBorderRouterSend / otBorderRouterSetReceiveCallback will fallback to corresponding
-// functions in Ip6 namespace so they can be always available.
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage)
+otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SendPacket(AsCoreType(aMessage));
+    return AsCoreType(aInstance).Get<BorderRouter::Nat64Translator>().SetIp4Cidr(AsCoreType(aCidr));
 }
 
-void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
+otError otNat64SetTranslatorEnabled(otInstance *aInstance, bool aEnabled)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetInfraReceiveCallback(aCallback, aCallbackContext);
-}
-#else  // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage)
-{
-    return otIp6Send(aInstance, aMessage);
+    return AsCoreType(aInstance).Get<BorderRouter::Nat64Translator>().SetEnabled(aEnabled);
 }
 
-void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
-{
-    return otIp6SetReceiveCallback(aInstance, aCallback, aCallbackContext);
-}
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
-otError otBorderRouterSetIp4CidrForNat64(otInstance *aInstance, const otIp4Cidr *aCidr)
-{
-    return AsCoreType(aInstance).Get<BorderRouter::Nat64>().SetIp4Cidr(AsCoreType(aCidr));
-}
-
-otError otBorderRouterSetNat64TranslatorEnabled(otInstance *aInstance, bool aEnabled)
-{
-    return AsCoreType(aInstance).Get<BorderRouter::Nat64>().SetEnabled(aEnabled);
-}
-
-otMessage *otIp6NewMessageForNat64(otInstance *aInstance, const otMessageSettings *aSettings)
+otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header),
                                                             Message::Settings::From(aSettings));
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE

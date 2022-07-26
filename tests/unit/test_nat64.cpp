@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "border_router/nat64.hpp"
+#include "border_router/nat64_translator.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
@@ -39,7 +39,7 @@
 #include "common/message.hpp"
 #include "net/ip6.hpp"
 
-#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 namespace ot {
 namespace BorderRouter {
@@ -90,9 +90,9 @@ bool CheckMessage(const Message &aMessage, const uint8_t *aExpectedMessage, size
 template <size_t N>
 void TestCase6To4(const char *aTestName,
                   const uint8_t (&aIp6Message)[N],
-                  Nat64::Result  aResult,
-                  const uint8_t *aOutMessage,
-                  size_t         aOutMessageLen)
+                  Nat64Translator::Result aResult,
+                  const uint8_t *         aOutMessage,
+                  size_t                  aOutMessageLen)
 {
     Message *msg = sInstance->Get<Ip6::Ip6>().NewMessage(0);
 
@@ -103,7 +103,7 @@ void TestCase6To4(const char *aTestName,
 
     DumpMessageInHex("I ", aIp6Message, N);
 
-    VerifyOrQuit(sInstance->Get<Nat64>().HandleOutgoing(*msg) == aResult);
+    VerifyOrQuit(sInstance->Get<Nat64Translator>().HandleOutgoing(*msg) == aResult);
 
     if (aOutMessage != nullptr)
     {
@@ -117,9 +117,9 @@ void TestCase6To4(const char *aTestName,
 template <size_t N>
 void TestCase4To6(const char *aTestName,
                   const uint8_t (&aIp4Message)[N],
-                  Nat64::Result  aResult,
-                  const uint8_t *aOutMessage,
-                  size_t         aOutMessageLen)
+                  Nat64Translator::Result aResult,
+                  const uint8_t *         aOutMessage,
+                  size_t                  aOutMessageLen)
 {
     Message *msg = sInstance->Get<Ip6::Ip6>().NewMessage(0);
 
@@ -130,7 +130,7 @@ void TestCase4To6(const char *aTestName,
 
     DumpMessageInHex("I ", aIp4Message, N);
 
-    VerifyOrQuit(sInstance->Get<Nat64>().HandleIncoming(*msg) == aResult);
+    VerifyOrQuit(sInstance->Get<Nat64Translator>().HandleIncoming(*msg) == aResult);
 
     if (aOutMessage != nullptr)
     {
@@ -157,9 +157,9 @@ void TestNat64(void)
 
         nat64cidr.Set(ip4Address, 32);
         nat64prefix.Set(ip6Address, 96);
-        SuccessOrQuit(sInstance->Get<Nat64>().SetIp4Cidr(nat64cidr));
-        SuccessOrQuit(sInstance->Get<Nat64>().SetEnabled(true));
-        sInstance->Get<Nat64>().SetNat64Prefix(nat64prefix);
+        SuccessOrQuit(sInstance->Get<Nat64Translator>().SetIp4Cidr(nat64cidr));
+        SuccessOrQuit(sInstance->Get<Nat64Translator>().SetEnabled(true));
+        sInstance->Get<Nat64Translator>().SetNat64Prefix(nat64prefix);
     }
 
     {
@@ -174,7 +174,8 @@ void TestNat64(void)
                                       0x4d, 192,  168,  123,  1,    172,  16,   243,  197,  0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8d, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase6To4("good v6 udp datagram", kIp6Packet, Nat64::Result::kForward, kIp4Packet, sizeof(kIp4Packet));
+        TestCase6To4("good v6 udp datagram", kIp6Packet, Nat64Translator::Result::kForward, kIp4Packet,
+                     sizeof(kIp4Packet));
     }
 
     {
@@ -189,7 +190,8 @@ void TestNat64(void)
             0x00, 0x00, 0x00, 0x01, 0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase4To6("good v4 udp datagram", kIp4Packet, Nat64::Result::kForward, kIp6Packet, sizeof(kIp6Packet));
+        TestCase4To6("good v4 udp datagram", kIp4Packet, Nat64Translator::Result::kForward, kIp6Packet,
+                     sizeof(kIp6Packet));
     }
 
     {
@@ -206,7 +208,8 @@ void TestNat64(void)
                                       0x12, 0x34, 0x87, 0x65, 0x43, 0x21, 0x12, 0x34, 0x56, 0x78, 0x50,
                                       0x10, 0x00, 0x01, 0x1e, 0x54, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase6To4("good v6 tcp datagram", kIp6Packet, Nat64::Result::kForward, kIp4Packet, sizeof(kIp4Packet));
+        TestCase6To4("good v6 tcp datagram", kIp6Packet, Nat64Translator::Result::kForward, kIp4Packet,
+                     sizeof(kIp4Packet));
     }
 
     {
@@ -223,7 +226,8 @@ void TestNat64(void)
             0x12, 0x34, 0x56, 0x78, 0x50, 0x10, 0x00, 0x01, 0x5f, 0xf8, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase4To6("good v4 tcp datagram", kIp4Packet, Nat64::Result::kForward, kIp6Packet, sizeof(kIp6Packet));
+        TestCase4To6("good v4 tcp datagram", kIp4Packet, Nat64Translator::Result::kForward, kIp6Packet,
+                     sizeof(kIp6Packet));
     }
 
     {
@@ -238,7 +242,7 @@ void TestNat64(void)
                                       0x5d, 192,  168,  123,  1,    172,  16,   243,  197,  0x08, 0x00,
                                       0x88, 0x7c, 0xaa, 0xbb, 0x00, 0x01, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase6To4("good v6 icmp ping request datagram", kIp6Packet, Nat64::Result::kForward, kIp4Packet,
+        TestCase6To4("good v6 icmp ping request datagram", kIp6Packet, Nat64Translator::Result::kForward, kIp4Packet,
                      sizeof(kIp4Packet));
     }
 
@@ -254,7 +258,7 @@ void TestNat64(void)
             0x00, 0x00, 0x00, 0x01, 0x81, 0x00, 0x75, 0x59, 0xaa, 0xbb, 0x00, 0x01, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase4To6("good v4 icmp ping response datagram", kIp4Packet, Nat64::Result::kForward, kIp6Packet,
+        TestCase4To6("good v4 icmp ping response datagram", kIp4Packet, Nat64Translator::Result::kForward, kIp6Packet,
                      sizeof(kIp6Packet));
     }
 
@@ -266,7 +270,7 @@ void TestNat64(void)
             172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x31, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase6To4("v6 hop limit reach", kIp6Packet, Nat64::Result::kDrop, nullptr, 0);
+        TestCase6To4("v6 hop limit reach", kIp6Packet, Nat64Translator::Result::kDrop, nullptr, 0);
     }
 
     {
@@ -275,7 +279,7 @@ void TestNat64(void)
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xfd, 0x01,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 172,  16,   243};
 
-        TestCase6To4("bad v6 datagram", kIp6Packet, Nat64::Result::kDrop, nullptr, 0);
+        TestCase6To4("bad v6 datagram", kIp6Packet, Nat64Translator::Result::kDrop, nullptr, 0);
     }
 
     {
@@ -284,7 +288,7 @@ void TestNat64(void)
                                       0x4d, 172,  16,   243,  197,  192,  168,  123,  1,    0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8d, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase4To6("v4 timeout", kIp4Packet, Nat64::Result::kDrop, nullptr, 0);
+        TestCase4To6("v4 timeout", kIp4Packet, Nat64Translator::Result::kDrop, nullptr, 0);
     }
 
     {
@@ -292,7 +296,7 @@ void TestNat64(void)
         const uint8_t kIp4Packet[] = {0x45, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x11,
                                       0xa0, 0x4c, 172,  16,   243,  197,  192,  168,  123};
 
-        TestCase4To6("bad v4 datagram", kIp4Packet, Nat64::Result::kDrop, nullptr, 0);
+        TestCase4To6("bad v4 datagram", kIp4Packet, Nat64Translator::Result::kDrop, nullptr, 0);
     }
 
     {
@@ -301,7 +305,7 @@ void TestNat64(void)
                                       0x4c, 172,  16,   243,  197,  192,  168,  123,  2,    0xab, 0xcd,
                                       0x12, 0x34, 0x00, 0x0c, 0xa1, 0x8c, 0x61, 0x62, 0x63, 0x64};
 
-        TestCase4To6("no v4 mapping", kIp4Packet, Nat64::Result::kDrop, nullptr, 0);
+        TestCase4To6("no v4 mapping", kIp4Packet, Nat64Translator::Result::kDrop, nullptr, 0);
     }
 
     {
@@ -312,7 +316,7 @@ void TestNat64(void)
             172,  16,   243,  197,  0xab, 0xcd, 0x12, 0x34, 0x00, 0x0c, 0xe3, 0x30, 0x61, 0x62, 0x63, 0x64,
         };
 
-        TestCase6To4("mapping pool exhausted", kIp6Packet, Nat64::Result::kDrop, nullptr, 0);
+        TestCase6To4("mapping pool exhausted", kIp6Packet, Nat64Translator::Result::kDrop, nullptr, 0);
     }
 
     testFreeInstance(sInstance);
@@ -321,15 +325,15 @@ void TestNat64(void)
 } // namespace BorderRouter
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 int main(void)
 {
-#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     ot::BorderRouter::TestNat64();
     printf("All tests passed\n");
-#else  // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#else  // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     printf("NAT64 is not enabled\n");
-#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     return 0;
 }

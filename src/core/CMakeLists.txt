@@ -89,7 +89,7 @@ set(COMMON_SOURCES
     backbone_router/multicast_listeners_table.cpp
     backbone_router/ndproxy_table.cpp
     border_router/infra_if.cpp
-    border_router/nat64.cpp
+    border_router/nat64_translator.cpp
     border_router/routing_manager.cpp
     coap/coap.cpp
     coap/coap_message.cpp

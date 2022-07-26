@@ -668,7 +668,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
 {
     constexpr unsigned int kBufSize = 128;
@@ -714,7 +714,7 @@ static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #endif // __linux__ && (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE ||
        // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
@@ -988,7 +988,7 @@ static void processTransmit(otInstance *aInstance)
     char       packet[kMaxIp6Size];
     otError    error  = OT_ERROR_NONE;
     size_t     offset = 0;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     bool isIp4 = false;
 #endif
 
@@ -1011,9 +1011,9 @@ static void processTransmit(otInstance *aInstance)
 
         settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
         settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
         isIp4   = (packet[rval] & 0xf0) == 0x40;
-        message = isIp4 ? otIp6NewMessageForNat64(aInstance, &settings) : otIp6NewMessage(aInstance, &settings);
+        message = isIp4 ? otIp4NewMessage(aInstance, &settings) : otIp6NewMessage(aInstance, &settings);
 #else
         message = otIp6NewMessage(aInstance, &settings);
 #endif
@@ -1195,18 +1195,18 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         otLogInfoPlat("[netif] Succeeded to sync netif state with host");
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     if (isUp)
     {
         if (gNat64Cidr.mLength > 0)
         {
-            SuccessOrExit(error = otBorderRouterSetIp4CidrForNat64(gInstance, &gNat64Cidr));
-            SuccessOrExit(error = otBorderRouterSetNat64TranslatorEnabled(gInstance, true));
+            SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
+            SuccessOrExit(error = otNat64SetTranslatorEnabled(gInstance, true));
             AddIp4Route(gNat64Cidr, kExternalRoutePriority);
             otLogInfoPlat("[netif] Succeeded to enable NAT64");
         }
     }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 exit:
     if (error != OT_ERROR_NONE)

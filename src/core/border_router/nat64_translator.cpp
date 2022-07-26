@@ -32,9 +32,9 @@
  *
  */
 
-#include "nat64.hpp"
+#include "nat64_translator.hpp"
 
-#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #include <openthread/border_router.h>
 #include <openthread/logging.h>
@@ -51,7 +51,7 @@ namespace BorderRouter {
 
 RegisterLogModule("Nat64");
 
-Nat64::Nat64(Instance &aInstance)
+Nat64Translator::Nat64Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
     mAvailableAddressCount = 0;
@@ -61,7 +61,7 @@ Nat64::Nat64(Instance &aInstance)
     mIp4Cidr.Clear();
 }
 
-Nat64::Result Nat64::HandleOutgoing(Message &aMessage)
+Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
 {
     Error           err = kErrorNone;
     Result          res = Result::kDrop;
@@ -158,7 +158,7 @@ exit:
     return res;
 }
 
-Nat64::Result Nat64::HandleIncoming(Message &aMessage)
+Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
 {
     Error           err = kErrorNone;
     Result          res = Result::kDrop;
@@ -257,7 +257,7 @@ exit:
     return res;
 }
 
-void Nat64::ReleaseMapping(AddressMapping &aMapping)
+void Nat64Translator::ReleaseMapping(AddressMapping &aMapping)
 {
     LogInfo("mapping removed: %s -> %s", aMapping.mIp6.ToString().AsCString(), aMapping.mIp4.ToString().AsCString());
     mIp4AddressPool[mAvailableAddressCount] = aMapping.mIp4;
@@ -265,7 +265,7 @@ void Nat64::ReleaseMapping(AddressMapping &aMapping)
     mAddressMappingPool.Free(aMapping);
 }
 
-Nat64::AddressMapping *Nat64::CreateMapping(const Ip6::Address &aAddr)
+Nat64Translator::AddressMapping *Nat64Translator::CreateMapping(const Ip6::Address &aAddr)
 {
     AddressMapping *mapping = mAddressMappingPool.Allocate();
 
@@ -307,7 +307,7 @@ exit:
     return mapping;
 }
 
-Nat64::AddressMapping *Nat64::GetMapping(const Ip6::Address &aAddr, bool aTryCreate)
+Nat64Translator::AddressMapping *Nat64Translator::GetMapping(const Ip6::Address &aAddr, bool aTryCreate)
 {
     AddressMapping *mapping = mActiveAddressMappings.FindMatching(aAddr);
 
@@ -322,7 +322,7 @@ exit:
     return mapping;
 }
 
-Nat64::AddressMapping *Nat64::GetMapping(const Ip4::Address &aAddr)
+Nat64Translator::AddressMapping *Nat64Translator::GetMapping(const Ip4::Address &aAddr)
 {
     AddressMapping *mapping = mActiveAddressMappings.FindMatching(aAddr);
 
@@ -333,7 +333,7 @@ Nat64::AddressMapping *Nat64::GetMapping(const Ip4::Address &aAddr)
     return mapping;
 }
 
-Error Nat64::TranslateIcmp4(AddressMapping &aMapping, Message &aMessage)
+Error Nat64Translator::TranslateIcmp4(AddressMapping &aMapping, Message &aMessage)
 {
     Error             err = kErrorNone;
     Ip4::Icmp::Header icmp4Header;
@@ -361,7 +361,7 @@ exit:
     return err;
 }
 
-Error Nat64::TranslateIcmp6(AddressMapping &aMapping, Message &aMessage)
+Error Nat64Translator::TranslateIcmp6(AddressMapping &aMapping, Message &aMessage)
 {
     Error             err = kErrorNone;
     Ip4::Icmp::Header icmp4Header;
@@ -389,7 +389,7 @@ exit:
     return err;
 }
 
-Error Nat64::SetIp4Cidr(const Ip4::Cidr &aCidr)
+Error Nat64Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
 {
     Error err = kErrorNone;
 
@@ -436,13 +436,13 @@ exit:
     return err;
 }
 
-void Nat64::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
+void Nat64Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
     LogInfo("Set IPv6 Prefix for NAT64: %s", aNat64Prefix.ToString().AsCString());
     mNat64Prefix = aNat64Prefix;
 }
 
-Error Nat64::SetEnabled(bool aEnabled)
+Error Nat64Translator::SetEnabled(bool aEnabled)
 {
     Error err = kErrorNone;
 
@@ -460,4 +460,4 @@ exit:
 } // namespace BorderRouter
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE

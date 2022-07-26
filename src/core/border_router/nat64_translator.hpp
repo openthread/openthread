@@ -28,23 +28,23 @@
 
 /**
  * @file
- *   This file includes definitions for the NAT64 translator
+ *   This file includes definitions for the NAT64 translator.
  *
  */
 
-#ifndef NAT64_HPP_
-#define NAT64_HPP_
+#ifndef NAT64_TRANSLATOR_HPP_
+#define NAT64_TRANSLATOR_HPP_
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-#error "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is required for OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE."
+#error "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is required for OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE."
 #endif
 
 #if !OPENTHREAD_CONFIG_UPTIME_ENABLE
-#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE."
+#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE."
 #endif
 
 #include "common/linked_list.hpp"
@@ -56,7 +56,7 @@
 namespace ot {
 namespace BorderRouter {
 
-class Nat64 : public InstanceLocator, private NonCopyable
+class Nat64Translator : public InstanceLocator, private NonCopyable
 {
 public:
     static constexpr uint32_t kAddressMappingIdleTimeoutMsec =
@@ -74,7 +74,7 @@ public:
      * This constructor initializes the nat64.
      *
      */
-    explicit Nat64(Instance &aInstance);
+    explicit Nat64Translator(Instance &aInstance);
 
     /**
      * @brief Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted. Note the
@@ -154,13 +154,13 @@ private:
         friend class LinkedListEntry<AddressMapping>;
         friend class LinkedList<AddressMapping>;
 
+        void Touch(uint64_t aNow) { mExpiry = aNow + kAddressMappingIdleTimeoutMsec; }
+
         Ip4::Address mIp4;
         Ip6::Address mIp6;
 
         // The timestamp when this mapping expires, in milliseconds.
         uint64_t mExpiry;
-
-        void Touch(uint64_t aNow) { mExpiry = aNow + kAddressMappingIdleTimeoutMsec; }
 
     private:
         bool Matches(const Ip4::Address &aIp4) const { return mIp4 == aIp4; }
@@ -196,6 +196,6 @@ private:
 } // namespace BorderRouter
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
-#endif // NAT64_HPP_
+#endif // NAT64_TRANSLATOR_HPP_

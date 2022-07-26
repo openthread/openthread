@@ -133,13 +133,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
+ * @def OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
  *
  * Define to 1 to enable the internal NAT64 translator.
  *
  */
-#ifndef OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
-#define OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#define OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE 0
 #endif
 
 /**
@@ -165,7 +165,7 @@
 /**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_IDLE_TIMEOUT_SECONDS
  *
- * Specifies maximum minimum timeout in seconds before removing an inactive address mapping.
+ * Specifies timeout in seconds before removing an inactive address mapping.
  *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_IDLE_TIMEOUT_SECONDS

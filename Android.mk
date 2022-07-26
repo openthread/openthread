@@ -223,7 +223,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/backbone_router/multicast_listeners_table.cpp          \
     src/core/backbone_router/ndproxy_table.cpp                      \
     src/core/border_router/infra_if.cpp                             \
-    src/core/border_router/nat64.cpp                                \
+    src/core/border_router/nat64_translator.cpp                     \
     src/core/border_router/routing_manager.cpp                      \
     src/core/coap/coap.cpp                                          \
     src/core/coap/coap_message.cpp                                  \

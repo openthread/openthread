@@ -88,51 +88,11 @@ typedef struct otIp4Cidr
 } otIp4Cidr;
 
 /**
- * Sets the CIDR block used for the source address of the translated address. A valid CIDR must have a non-zero prefix
- * length. Note: The actual addresses used in the CIDR is limited by the size of mapping pool.
- *
- * The NAT64 translator will expire all existing sessions when the provided CIDR is valid and is not the one configured.
- *
- * This function is available only when OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE is enabled.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- * @param[in] aCidr A pointer to an otIp4Cidr for the IPv4 CIDR block for NAT64.
- *
- * @retval  OT_ERROR_INVALID_ARGS   The given CIDR is not a valid IPv4 CIDR for NAT64.
- * @retval  OT_ERROR_NONE           Successfully set the CIDR for NAT64.
- *
- * @sa otBorderRouterSend
- * @sa otBorderRouterSetReceiveCallback
- * @sa otBorderRouterSetNat64TranslatorEnabled
- *
- */
-otError otBorderRouterSetIp4CidrForNat64(otInstance *aInstance, const otIp4Cidr *aCidr);
-
-/**
- * This method enables/disables the NAT64 translator.
- *
- * @note  The NAT64 translator is disabled by default. If the NAT64 translator is disabled, all packets will be
- * forwarded without any checks. The NAT64 translator must be configured with a valid IPv4 CIDR before being enabled.
- *
- * This function is available only when OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE is enabled.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- * @param[in] aEnabled A boolean to enable/disable the NAT64 translator.
- *
- * @retval  OT_ERROR_INVALID_STATE  The NAT64 module is not configured with a valid IPv4 CIDR.
- * @retval  OT_ERROR_NONE           Successfully enabled/disabled the NAT64 translator.
- *
- * @sa otBorderRouterSetIp4CidrForNat64
- *
- */
-otError otBorderRouterSetNat64TranslatorEnabled(otInstance *aInstance, bool aEnabled);
-
-/**
  * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 packet by NAT64
  * later). Message buffers allocated by this function will have 20 bytes (The differences between the size of IPv6
  * headers and the size of IPv4 headers) reserved.
  *
- * This function is available only when OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE is enabled.
+ * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
  *
  * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
@@ -146,7 +106,47 @@ otError otBorderRouterSetNat64TranslatorEnabled(otInstance *aInstance, bool aEna
  * @sa otBorderRouterSend
  *
  */
-otMessage *otIp6NewMessageForNat64(otInstance *aInstance, const otMessageSettings *aSettings);
+otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
+
+/**
+ * Sets the CIDR block used for the source address of the translated address. A valid CIDR must have a non-zero prefix
+ * length. Note: The actual addresses used in the CIDR is limited by the size of mapping pool.
+ *
+ * The NAT64 translator will expire all existing sessions when the provided CIDR is valid and is not the one configured.
+ *
+ * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aCidr A pointer to an otIp4Cidr for the IPv4 CIDR block for NAT64.
+ *
+ * @retval  OT_ERROR_INVALID_ARGS   The given CIDR is not a valid IPv4 CIDR for NAT64.
+ * @retval  OT_ERROR_NONE           Successfully set the CIDR for NAT64.
+ *
+ * @sa otBorderRouterSend
+ * @sa otBorderRouterSetReceiveCallback
+ * @sa otNat64SetTranslatorEnabled
+ *
+ */
+otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
+
+/**
+ * This method enables/disables the NAT64 translator.
+ *
+ * @note  The NAT64 translator is disabled by default. If the NAT64 translator is disabled, all packets will be
+ * forwarded without any checks. The NAT64 translator must be configured with a valid IPv4 CIDR before being enabled.
+ *
+ * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aEnabled A boolean to enable/disable the NAT64 translator.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The NAT64 module is not configured with a valid IPv4 CIDR.
+ * @retval  OT_ERROR_NONE           Successfully enabled/disabled the NAT64 translator.
+ *
+ * @sa otNat64SetIp4Cidr
+ *
+ */
+otError otNat64SetTranslatorEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * @}

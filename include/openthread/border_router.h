@@ -171,11 +171,11 @@ otError otBorderRouterRegister(otInstance *aInstance);
 /**
  * This function sends an datagram via the Thread interface with the logics for border routers.
  *
- * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
- * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.
+ * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when processing
+ * is complete, including when a value other than `OT_ERROR_NONE` is returned.
  *
  * The content of @p aMessage can be an IPv6 packet or an IPv4 packet. When @p aMessage contains an IPv4 packet, NAT64
- * will work and translate it into an IPv6 packet. @p aMessage should be allocated by otIp6NewMessageForNat64 if the
+ * will work and translate it into an IPv6 packet. @p aMessage should be allocated by otIp4NewMessage if the
  * content is an IPv4 packet.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -189,7 +189,7 @@ otError otBorderRouterRegister(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
  * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
  *
- * @sa otIp6NewMessageForNat64
+ * @sa otIp4NewMessage
  * @sa otBorderRouterSetReceiveCallback
  *
  */
@@ -209,7 +209,7 @@ otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage);
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @sa otBorderRouterSend
- * @sa otBorderRouterSetIp4CidrForNat64
+ * @sa otNat64SetIp4Cidr
  * @sa otIp6IsReceiveFilterEnabled
  * @sa otIp6SetReceiveFilterEnabled
  *

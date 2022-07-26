@@ -126,4 +126,26 @@ otError otBorderRouterRegister(otInstance *aInstance)
     return kErrorNone;
 }
 
+// The following functions supports NAT64, but actual NAT64 handling is wrapped in RoutingManager::SendPacket,
+// RoutingManager::SetInfraReceiveCallback
+// When BORDER_ROUTING is disabled, otBorderRouterSend / otBorderRouterSetReceiveCallback will fallback to corresponding
+// functions in Ip6 namespace so they can be always available.
+otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage)
+{
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SendPacket(AsCoreType(aMessage));
+#else
+    return otIp6Send(aInstance, aMessage);
+#endif
+}
+
+void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext)
+{
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetInfraReceiveCallback(aCallback, aCallbackContext);
+#else
+    return otIp6SetReceiveCallback(aInstance, aCallback, aCallbackContext);
+#endif
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

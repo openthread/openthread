@@ -1174,10 +1174,10 @@ template <> inline BorderRouter::InfraIf &Instance::Get(void)
     return mRoutingManager.mInfraIf;
 }
 
-#if OPENTHREAD_CONFIG_NAT64_MANAGER_ENABLE
-template <> inline BorderRouter::Nat64 &Instance::Get(void)
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+template <> inline BorderRouter::Nat64Translator &Instance::Get(void)
 {
-    return mRoutingManager.mNat64;
+    return mRoutingManager.mNat64Translator;
 }
 #endif
 
