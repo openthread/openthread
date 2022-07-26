@@ -1861,7 +1861,10 @@ exit:
 
 void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader)
 {
+    Entry *next = mNext;
+
     Clear();
+    mNext                    = next;
     mType                    = kTypeRoute;
     mValidLifetime           = aRaHeader.GetRouterLifetime();
     mShared.mRoutePreference = aRaHeader.GetDefaultRouterPreference();
@@ -1870,7 +1873,10 @@ void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::Route
 
 void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::PrefixInfoOption &aPio)
 {
+    Entry *next = mNext;
+
     Clear();
+    mNext = next;
     aPio.GetPrefix(mPrefix);
     mType                      = kTypeOnLink;
     mValidLifetime             = aPio.GetValidLifetime();
@@ -1880,7 +1886,10 @@ void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::Prefi
 
 void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouteInfoOption &aRio)
 {
+    Entry *next = mNext;
+
     Clear();
+    mNext = next;
     aRio.GetPrefix(mPrefix);
     mType                    = kTypeRoute;
     mValidLifetime           = aRio.GetRouteLifetime();
