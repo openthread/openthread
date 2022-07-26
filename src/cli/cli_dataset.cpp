@@ -118,6 +118,21 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     return OT_ERROR_NONE;
 }
 
+/**
+ * @cli dataset init (active,new,pending,tlvs)
+ * @code
+ * dataset init new
+ * Done
+ * @endcode
+ * @cparam dataset init {@ca{active}|@ca{new}|@ca{pending}|@ca{tlvs}} [@ca{hex-encoded-tlvs}]
+ * Use `new` to initialize a new dataset, then enter the command `dataset commit active`.
+ * Use `tlvs` for hex-encoded TLVs.
+ * @par
+ * OT CLI checks for `active`, `pending`, or `tlvs` and returns the corresponding values. Otherwise,
+ * OT CLI creates a new, random network and returns a new dataset. Can be used with OTBR.
+ * @csa{dataset commit active}
+ * @csa{dataset active}
+ */
 template <> otError Dataset::Process<Cmd("init")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -151,6 +166,34 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset active
+ * @code
+ * dataset active
+ * Active Timestamp: 1
+ * Channel: 13
+ * Channel Mask: 0x07fff800
+ * Ext PAN ID: d63e8e3e495ebbc3
+ * Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
+ * Network Key: dfd34f0f05cad978ec4e32b0413038ff
+ * Network Name: OpenThread-8f28
+ * PAN ID: 0x8f28
+ * PSKc: c23a76e98f1a6483639b1ac1271e2e27
+ * Security Policy: 0, onrcb
+ * Done
+ * @endcode
+ * @code
+ * dataset active -x
+ * 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+ * Done
+ * @endcode
+ * @cparam dataset active [-x]
+ * The optional `-x` argument prints the Active Operational %Dataset values as hex-encoded TLVs.
+ * @par api_copy
+ * #otDatasetGetActive
+ * @par
+ * OT CLI uses #otOperationalDataset members to return dataset values to the console.
+ */
 template <> otError Dataset::Process<Cmd("active")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -197,6 +240,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset activetimestamp (get, set)
+ * @code
+ * dataset activetimestamp
+ * 123456789
+ * Done
+ * @endcode
+ * @code
+ * dataset activetimestamp 123456789
+ * Done
+ * @endcode
+ * @cparam dataset activetimestamp [@ca{timestamp}]
+ * Pass the optional `timestamp` argument to set the active timestamp.
+ * @par
+ * Gets or sets #otOperationalDataset::mActiveTimestamp.
+ */
 template <> otError Dataset::Process<Cmd("activetimestamp")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -220,6 +279,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset channel (get,set)
+ * @code
+ * dataset channel
+ * 12
+ * Done
+ * @endcode
+ * @code
+ * dataset channel 12
+ * Done
+ * @endcode
+ * @cparam dataset channel [@ca{channel-num}]
+ * Use the optional `channel-num` argument to set the channel.
+ * @par
+ * Gets or sets #otOperationalDataset::mChannel.
+ */
 template <> otError Dataset::Process<Cmd("channel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -241,6 +316,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset channelmask (get,set)
+ * @code
+ * dataset channelmask
+ * 0x07fff800
+ * Done
+ * @endcode
+ * @code
+ * dataset channelmask 0x07fff800
+ * Done
+ * @endcode
+ * @cparam dataset channelmask [@ca{channel-mask}]
+ * Use the optional `channel-mask` argument to set the channel mask.
+ * @par
+ * Gets or sets #otOperationalDataset::mChannelMask
+ */
 template <> otError Dataset::Process<Cmd("channelmask")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -262,6 +353,15 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset clear
+ * @code
+ * dataset clear
+ * Done
+ * @endcode
+ * @par
+ * Reset the Operational %Dataset buffer.
+ */
 template <> otError Dataset::Process<Cmd("clear")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -274,10 +374,32 @@ template <> otError Dataset::Process<Cmd("commit")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
+    /**
+     * @cli dataset commit active
+     * @code
+     * dataset commit active
+     * Done
+     * @endcode
+     * @par
+     * Commit the Operational %Dataset buffer to Active Operational %Dataset.
+     * @csa{dataset commit pending}
+     * @sa #otDatasetSetPending
+     */
     if (aArgs[0] == "active")
     {
         error = otDatasetSetActive(GetInstancePtr(), &sDataset);
     }
+    /**
+     * @cli dataset commit pending
+     * @code
+     * dataset commit pending
+     * Done
+     * @endcode
+     * @par
+     * Commit the Operational %Dataset buffer to Pending Operational %Dataset.
+     * @csa{dataset commit active}
+     * @sa #otDatasetSetActive
+     */
     else if (aArgs[0] == "pending")
     {
         error = otDatasetSetPending(GetInstancePtr(), &sDataset);
@@ -286,6 +408,23 @@ template <> otError Dataset::Process<Cmd("commit")>(Arg aArgs[])
     return error;
 }
 
+/**
+ * @cli dataset delay (get,set)
+ * @code
+ * dataset delay
+ * 1000
+ * Done
+ * @endcode
+ * @code
+ * dataset delay 1000
+ * Done
+ * @endcode
+ * @cparam dataset delay [@ca{delay}]
+ * Use the optional `delay` argument to set the delay timer value.
+ * @par
+ * Gets or sets #otOperationalDataset::mDelay. Can be used with OTBR.
+ * @sa otDatasetSetDelayTimerMinimal
+ */
 template <> otError Dataset::Process<Cmd("delay")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -307,6 +446,25 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset extpanid (get,set)
+ * @code
+ * dataset extpanid
+ * 000db80123456789
+ * Done
+ * @endcode
+ * @code
+ * dataset extpanid 000db80123456789
+ * Done
+ * @endcode
+ * @cparam dataset extpanid [@ca{extpanid}]
+ * Use the optional `extpanid` argument to set the Extended Personal Area Network ID.
+ * @par
+ * Gets or sets #otOperationalDataset::mExtendedPanId.
+ * @note The commissioning credential in the dataset buffer becomes stale after changing
+ * this value. Use `dataset pskc` to reset.
+ * @csa{dataset pskc (get,set)}
+ */
 template <> otError Dataset::Process<Cmd("extpanid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -328,6 +486,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset meshlocalprefix (get,set)
+ * @code
+ * dataset meshlocalprefix
+ * fd00:db8:0:0::/64
+ * Done
+ * @endcode
+ * @code
+ * dataset meshlocalprefix fd00:db8:0:0::/64
+ * Done
+ * @endcode
+ * @cparam dataset meshlocalprefix [@ca{meshlocalprefix}]
+ * Use the optional `meshlocalprefix` argument to set the Mesh-Local Prefix.
+ * @par
+ * Gets or sets #otOperationalDataset::mMeshLocalPrefix.
+ */
 template <> otError Dataset::Process<Cmd("meshlocalprefix")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -354,6 +528,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset networkkey (get,set)
+ * @code
+ * dataset networkkey
+ * 00112233445566778899aabbccddeeff
+ * Done
+ * @endcode
+ * @code
+ * dataset networkkey 00112233445566778899aabbccddeeff
+ * Done
+ * @endcode
+ * @cparam dataset networkkey [@ca{key}]
+ * Use the optional `key` argument to set the Network Key.
+ * @par
+ * Gets or sets #otOperationalDataset::mNetworkKey.
+ */
 template <> otError Dataset::Process<Cmd("networkkey")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -375,6 +565,25 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset networkname (get,set)
+ * @code
+ * dataset networkname
+ * OpenThread
+ * Done
+ * @endcode
+ * @code
+ * dataset networkname OpenThread
+ * Done
+ * @endcode
+ * @cparam dataset networkname [@ca{name}]
+ * Use the optional `name` argument to set the Network Name.
+ * @par
+ * Gets or sets #otOperationalDataset::mNetworkName.
+ * @note The Commissioning Credential in the dataset buffer becomes stale after changing this value.
+ * Use `dataset pskc` to reset.
+ * @csa{dataset pskc (get,set)}
+ */
 template <> otError Dataset::Process<Cmd("networkname")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -396,6 +605,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset panid (get,set)
+ * @code
+ * dataset panid
+ * 0x1234
+ * Done
+ * @endcode
+ * @code
+ * dataset panid 0x1234
+ * Done
+ * @endcode
+ * @cparam dataset panid [@ca{panid}]
+ * Use the optional `panid` argument to set the PAN ID.
+ * @par
+ * Gets or sets #otOperationalDataset::mPanId.
+ */
 template <> otError Dataset::Process<Cmd("panid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -417,6 +642,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset pendingtimestamp (get,set)
+ * @code
+ * dataset pendingtimestamp
+ * 123456789
+ * Done
+ * @endcode
+ * @code
+ * dataset pendingtimestamp 123456789
+ * Done
+ * @endcode
+ * @cparam dataset pendingtimestamp [@ca{timestamp}]
+ * Use the optional `timestamp` argument to set the pending timestamp seconds.
+ * @par
+ * Gets or sets #otOperationalDataset::mPendingTimestamp.
+ */
 template <> otError Dataset::Process<Cmd("pendingtimestamp")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -540,11 +781,43 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
         }
     }
 
+    /**
+     * @cli dataset mgmtsetcommand active
+     * @code
+     * dataset mgmtsetcommand active activetimestamp 123 securitypolicy 1 onrcb
+     * Done
+     * @endcode
+     * @cparam dataset mgmtsetcommand active [@ca{dataset-components}] [-x @ca{tlv-list}]
+     * To learn more about these parameters and argument mappings, refer to @dataset.
+     * @par
+     * @note This command is primarily used for testing only.
+     * @par api_copy
+     * #otDatasetSendMgmtActiveSet
+     * @csa{dataset mgmtgetcommand active}
+     * @csa{dataset mgmtgetcommand pending}
+     * @csa{dataset mgmtsetcommand pending}
+     */
     if (aArgs[0] == "active")
     {
         error = otDatasetSendMgmtActiveSet(GetInstancePtr(), &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
                                            /* aContext */ nullptr);
     }
+    /**
+     * @cli dataset mgmtsetcommand pending
+     * @code
+     * dataset mgmtsetcommand pending activetimestamp 123 securitypolicy 1 onrcb
+     * Done
+     * @endcode
+     * @cparam dataset mgmtsetcommand pending [@ca{dataset-components}] [-x @ca{tlv-list}]
+     * To learn more about these parameters and argument mappings, refer to @dataset.
+     * @par
+     * @note This command is primarily used for testing only.
+     * @par api_copy
+     * #otDatasetSendMgmtPendingSet
+     * @csa{dataset mgmtgetcommand active}
+     * @csa{dataset mgmtgetcommand pending}
+     * @csa{dataset mgmtsetcommand active}
+     */
     else if (aArgs[0] == "pending")
     {
         error = otDatasetSendMgmtPendingSet(GetInstancePtr(), &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
@@ -633,11 +906,56 @@ template <> otError Dataset::Process<Cmd("mgmtgetcommand")>(Arg aArgs[])
         }
     }
 
+    /**
+     * @cli dataset mgmtgetcommand active
+     * @code
+     * dataset mgmtgetcommand active address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp securitypolicy
+     * Done
+     * @endcode
+     * @code
+     * dataset mgmtgetcommand active networkname
+     * Done
+     * @endcode
+     * @cparam dataset mgmtgetcommand active [address @ca{leader-address}] [@ca{dataset-components}] [-x @ca{tlv-list}]
+     * *    Use `address` to specify the IPv6 destination; otherwise, the Leader ALOC is used as default.
+     * *    For `dataset-components`, you can pass any combination of #otOperationalDatasetComponents, for
+     *      example `activetimestamp`, `pendingtimestamp`, or `networkkey`.
+     * *    The optional `-x` argument specifies raw TLVs to be requested.
+     * @par
+     * OT CLI sends a MGMT_ACTIVE_GET with the relevant arguments.
+     * To learn more about these parameters and argument mappings, refer to @dataset.
+     * @note This command is primarily used for testing only.
+     * @par api_copy
+     * #otDatasetSendMgmtActiveGet
+     * @csa{dataset mgmtgetcommand pending}
+     * @csa{dataset mgmtsetcommand active}
+     * @csa{dataset mgmtsetcommand pending}
+     */
     if (aArgs[0] == "active")
     {
         error = otDatasetSendMgmtActiveGet(GetInstancePtr(), &datasetComponents, tlvs, tlvsLength,
                                            destAddrSpecified ? &address : nullptr);
     }
+    /**
+     * @cli dataset mgmtgetcommand pending
+     * @code
+     * dataset mgmtgetcommand pending address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp securitypolicy
+     * Done
+     * @endcode
+     * @code
+     * dataset mgmtgetcommand pending networkname
+     * Done
+     * @endcode
+     * @cparam dataset mgmtgetcommand pending [address @ca{leader-address}] [@ca{dataset-components}] [-x @ca{tlv-list}]
+     * To learn more about these parameters and argument mappings, refer to @dataset.
+     * @par
+     * @note This command is primarily used for testing only.
+     * @par api_copy
+     * #otDatasetSendMgmtPendingGet
+     * @csa{dataset mgmtgetcommand active}
+     * @csa{dataset mgmtsetcommand active}
+     * @csa{dataset mgmtsetcommand pending}
+     */
     else if (aArgs[0] == "pending")
     {
         error = otDatasetSendMgmtPendingGet(GetInstancePtr(), &datasetComponents, tlvs, tlvsLength,
@@ -652,6 +970,30 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset pskc (get,set)
+ * @code
+ * dataset pskc
+ * 67c0c203aa0b042bfb5381c47aef4d9e
+ * Done
+ * @endcode
+ * @code
+ * dataset pskc -p 123456
+ * Done
+ * @endcode
+ * @code
+ * dataset pskc 67c0c203aa0b042bfb5381c47aef4d9e
+ * Done
+ * @endcode
+ * @cparam dataset pskc [@ca{-p} @ca{passphrase}] | [@ca{key}]
+ * For FTD only, use `-p` with the `passphrase` argument. `-p` generates a pskc from
+ * the UTF-8 encoded `passphrase` that you provide, together with
+ * the network name and extended PAN ID. If set, `-p` uses the dataset buffer;
+ * otherwise, it uses the current stack.
+ * Alternatively, you can set pskc as `key` (hex format).
+ * @par
+ * Gets or sets #otOperationalDataset::mPskc.
+ */
 template <> otError Dataset::Process<Cmd("pskc")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -806,6 +1148,26 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset securitypolicy (get,set)
+ * @code
+ * dataset securitypolicy
+ * 672 onrc
+ * Done
+ * @endcode
+ * @code
+ * dataset securitypolicy 672 onrc
+ * Done
+ * @endcode
+ * @cparam dataset securitypolicy [@ca{rotationtime} [@ca{onrcCepR}]]
+ * *   Use `rotationtime` for `thrKeyRotation`, in units of hours.
+ * *   Security Policy commands use the `onrcCepR` argument mappings to get and set
+ * #otSecurityPolicy members, for example `o` represents
+ * #otSecurityPolicy::mObtainNetworkKeyEnabled.
+ * @moreinfo{@dataset}.
+ * @par
+ * Gets or sets the %Dataset security policy.
+ */
 template <> otError Dataset::Process<Cmd("securitypolicy")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -829,6 +1191,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset set (active,pending)
+ * @code
+ * dataset set active 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+ * Done
+ * @endcode
+ * @code
+ * dataset set pending 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+ * Done
+ * @endcode
+ * @cparam dataset set {active|pending} @ca{tlvs}
+ * @par
+ * The CLI `dataset set` command sets the Active Operational %Dataset using hex-encoded TLVs.
+ * @par api_copy
+ * #otDatasetSetActive
+ */
 template <> otError Dataset::Process<Cmd("set")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
@@ -955,6 +1333,35 @@ otError Dataset::Process(Arg aArgs[])
         ExitNow(error = Print(sDataset));
     }
 
+    /**
+     * @cli dataset help
+     * @code
+     * dataset help
+     * help
+     * active
+     * activetimestamp
+     * channel
+     * channelmask
+     * clear
+     * commit
+     * delay
+     * extpanid
+     * init
+     * meshlocalprefix
+     * mgmtgetcommand
+     * mgmtsetcommand
+     * networkkey
+     * networkname
+     * panid
+     * pending
+     * pendingtimestamp
+     * pskc
+     * securitypolicy
+     * Done
+     * @endcode
+     * @par
+     * Gets a list of `dataset` CLI commands. @moreinfo{@dataset}.
+     */
     if (aArgs[0] == "help")
     {
         OutputCommandTable(kCommands);
