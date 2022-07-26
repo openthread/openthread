@@ -171,20 +171,22 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aCompress)
     {
-        Lowpan::BufferWriter buffer(result, 127);
-        Message *            compressedMsg;
-        Ip6::Ecn             ecn;
+        FrameBuilder frameBuilder;
+        Message *    compressedMsg;
+        Ip6::Ecn     ecn;
+
+        frameBuilder.Init(result, 127);
 
         VerifyOrQuit((message = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
 
         aVector.GetUncompressedStream(*message);
 
-        VerifyOrQuit(sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination, buffer) ==
+        VerifyOrQuit(sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination, frameBuilder) ==
                      aVector.mError);
 
         if (aVector.mError == kErrorNone)
         {
-            uint8_t compressBytes = static_cast<uint8_t>(buffer.GetWritePointer() - result);
+            uint16_t compressBytes = frameBuilder.GetLength();
 
             // Append payload to the LOWPAN_IPHC.
             message->ReadBytes(message->GetOffset(), result + compressBytes,
