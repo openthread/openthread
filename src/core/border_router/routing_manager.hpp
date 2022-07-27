@@ -405,9 +405,9 @@ private:
                 TimeMilli mNow;
             };
 
-            void               InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader);
-            void               InitFrom(const Ip6::Nd::PrefixInfoOption &aPio);
-            void               InitFrom(const Ip6::Nd::RouteInfoOption &aRio);
+            void               SetFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader);
+            void               SetFrom(const Ip6::Nd::PrefixInfoOption &aPio);
+            void               SetFrom(const Ip6::Nd::RouteInfoOption &aRio);
             Type               GetType(void) const { return mType; }
             bool               IsOnLinkPrefix(void) const { return (mType == kTypeOnLink); }
             const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
