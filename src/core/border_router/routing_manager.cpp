@@ -1906,6 +1906,7 @@ exit:
 
 void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader)
 {
+    mPrefix.Clear();
     mType                    = kTypeRoute;
     mValidLifetime           = aRaHeader.GetRouterLifetime();
     mShared.mRoutePreference = aRaHeader.GetDefaultRouterPreference();
