@@ -53,10 +53,9 @@ RegisterLogModule("Nat64");
 
 Nat64Translator::Nat64Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mAvailableAddressCount(0)
+    , mEnabled(false)
 {
-    mAvailableAddressCount = 0;
-    mEnabled               = false;
-
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
 }
@@ -138,6 +137,7 @@ Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
     case Result::kDrop:
         break;
     case Result::kReplyIcmp:
+        // TODO: Implement the logic for replying ICMP packets.
         break;
     case Result::kForward:
         ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
@@ -238,6 +238,7 @@ Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
     case Result::kDrop:
         break;
     case Result::kReplyIcmp:
+        // TODO: Implement the logic for replying ICMP packets.
         break;
     case Result::kForward:
         ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
@@ -438,8 +439,11 @@ exit:
 
 void Nat64Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
-    LogInfo("Set IPv6 Prefix for NAT64: %s", aNat64Prefix.ToString().AsCString());
-    mNat64Prefix = aNat64Prefix;
+    if (mNat64Prefix != aNat64Prefix)
+    {
+        LogInfo("IPv6 Prefix for NAT64 updated to %s", aNat64Prefix.ToString().AsCString());
+        mNat64Prefix = aNat64Prefix;
+    }
 }
 
 Error Nat64Translator::SetEnabled(bool aEnabled)

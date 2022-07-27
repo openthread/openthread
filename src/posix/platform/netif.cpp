@@ -570,7 +570,7 @@ exit:
 #if __linux__ && \
     (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
 
-static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
+template <size_t N> static otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPrefixLen, uint32_t aPriority)
 {
     constexpr unsigned int kBufSize = 128;
     struct
@@ -579,10 +579,10 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
         struct rtmsg    msg;
         char            buf[kBufSize];
     } req{};
-    unsigned char data[sizeof(in6_addr)];
-    char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
-    unsigned int  netifIdx = otSysGetThreadNetifIndex();
-    otError       error    = OT_ERROR_NONE;
+    unsigned int netifIdx = otSysGetThreadNetifIndex();
+    otError      error    = OT_ERROR_NONE;
+
+    static_assert(N == sizeof(in6_addr) || N == sizeof(in_addr), "aAddress should be 4 octets or 16 octets");
 
     VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
@@ -594,9 +594,9 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
     req.header.nlmsg_pid  = 0;
     req.header.nlmsg_seq  = ++sNetlinkSequence;
 
-    req.msg.rtm_family   = AF_INET6;
+    req.msg.rtm_family   = (N == sizeof(in6_addr) ? AF_INET6 : AF_INET);
     req.msg.rtm_src_len  = 0;
-    req.msg.rtm_dst_len  = aPrefix.mLength;
+    req.msg.rtm_dst_len  = aPrefixLen;
     req.msg.rtm_tos      = 0;
     req.msg.rtm_scope    = RT_SCOPE_UNIVERSE;
     req.msg.rtm_type     = RTN_UNICAST;
@@ -604,9 +604,7 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
     req.msg.rtm_protocol = RTPROT_BOOT;
     req.msg.rtm_flags    = 0;
 
-    otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
-    inet_pton(AF_INET6, addrBuf, data);
-    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, data, sizeof(data));
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, aAddress, sizeof(aAddress));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, aPriority);
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
@@ -668,51 +666,15 @@ exit:
     return error;
 }
 
+static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
+{
+    return AddRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength, aPriority);
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
 {
-    constexpr unsigned int kBufSize = 128;
-    struct
-    {
-        struct nlmsghdr header;
-        struct rtmsg    msg;
-        char            buf[kBufSize];
-    } req{};
-    unsigned int netifIdx = otSysGetThreadNetifIndex();
-    otError      error    = OT_ERROR_NONE;
-
-    VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
-
-    req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
-
-    req.header.nlmsg_len  = NLMSG_LENGTH(sizeof(rtmsg));
-    req.header.nlmsg_type = RTM_NEWROUTE;
-    req.header.nlmsg_pid  = 0;
-    req.header.nlmsg_seq  = ++sNetlinkSequence;
-
-    req.msg.rtm_family   = AF_INET;
-    req.msg.rtm_src_len  = 0;
-    req.msg.rtm_dst_len  = aCidr.mLength;
-    req.msg.rtm_tos      = 0;
-    req.msg.rtm_scope    = RT_SCOPE_UNIVERSE;
-    req.msg.rtm_type     = RTN_UNICAST;
-    req.msg.rtm_table    = RT_TABLE_MAIN;
-    req.msg.rtm_protocol = RTPROT_BOOT;
-    req.msg.rtm_flags    = 0;
-
-    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, aCidr.mAddress.mFields.m8,
-              sizeof(aCidr.mAddress));
-    AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, aPriority);
-    AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
-
-    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
-    {
-        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
-exit:
-    return error;
+    return AddRoute(aCidr.mAddress.mFields.m8, aCidr.mLength, aPriority);
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 

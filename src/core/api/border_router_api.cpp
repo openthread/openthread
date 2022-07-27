@@ -127,7 +127,7 @@ otError otBorderRouterRegister(otInstance *aInstance)
 }
 
 // The following functions supports NAT64, but actual NAT64 handling is wrapped in RoutingManager::SendPacket,
-// RoutingManager::SetInfraReceiveCallback
+// RoutingManager::SetInfraReceiveCallback.
 // When BORDER_ROUTING is disabled, otBorderRouterSend / otBorderRouterSetReceiveCallback will fallback to corresponding
 // functions in Ip6 namespace so they can be always available.
 otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage)

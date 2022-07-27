@@ -33,7 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #include <openthread/border_router.h>
 #include <openthread/ip6.h>
@@ -64,4 +64,4 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
                                                             Message::Settings::From(aSettings));
 }
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
