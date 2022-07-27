@@ -206,8 +206,8 @@ public:
     /**
      * This function sends a Message received from the infra interface.
      *
-     * If NAT64 is enabled, the message can be a IPv4 message (with necessary reserved room for translated IPv6 header).
-     * The aMessage will always be released even when this function returns an error.
+     * When NAT64 is enabled, the message can be an IPv4 message (with necessary reserved room for translated IPv6
+     * header). The @p aMessage will always be released even when this function returns an error.
      *
      * @param[in]  aMessage The message to be sent from the infra interface.
      *

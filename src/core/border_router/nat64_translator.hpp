@@ -111,8 +111,8 @@ public:
      * @brief This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
      * A valid CIDR must have a non-zero prefix length.
      *
-     * @note The actual addresses pool is limited by the size of mapping pool and the number of addresses available in
-     * the CIDR block. If the provided is a valid IPv4 CIDR for NAT64, and it is different with the one already
+     * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available
+     * in the CIDR block. If the provided is a valid IPv4 CIDR for NAT64, and it is different from the one already
      * configured, the NAT64 translator will be reset and all existing sessions will be expired.
      *
      * @param[in] aCidr the CIDR for the sources of the translated packets.

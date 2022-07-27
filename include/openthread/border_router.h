@@ -169,7 +169,7 @@ otError otBorderRouterGetNextRoute(otInstance *           aInstance,
 otError otBorderRouterRegister(otInstance *aInstance);
 
 /**
- * This function sends an datagram via the Thread interface with the logics for border routers.
+ * This function sends a datagram via the Thread interface with the logic (like NAT64) for border routers.
  *
  * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when processing
  * is complete, including when a value other than `OT_ERROR_NONE` is returned.
@@ -209,7 +209,7 @@ otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage);
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @sa otBorderRouterSend
- * @sa otNat64SetIp4Cidr
+ * @sa otIp6SetReceiveCallback
  * @sa otIp6IsReceiveFilterEnabled
  * @sa otIp6SetReceiveFilterEnabled
  *

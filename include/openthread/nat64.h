@@ -109,10 +109,12 @@ typedef struct otIp4Cidr
 otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
 /**
- * Sets the CIDR block used for the source address of the translated address. A valid CIDR must have a non-zero prefix
- * length. Note: The actual addresses used in the CIDR is limited by the size of mapping pool.
+ * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets. A valid
+ * CIDR must have a non-zero prefix length.
  *
- * The NAT64 translator will expire all existing sessions when the provided CIDR is valid and is not the one configured.
+ * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available in
+ * the CIDR block. If the provided is a valid IPv4 CIDR for NAT64, and it is different from the one already configured,
+ * the NAT64 translator will be reset and all existing sessions will be expired.
  *
  * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
  *
