@@ -1392,12 +1392,12 @@ void RoutingManager::DiscoveredPrefixTable::ProcessDefaultRoute(const Ip6::Nd::R
             ExitNow();
         }
 
-        entry->InitFrom(aRaHeader);
+        entry->SetFrom(aRaHeader);
         aRouter.mEntries.Push(*entry);
     }
     else
     {
-        entry->InitFrom(aRaHeader);
+        entry->SetFrom(aRaHeader);
     }
 
     UpdateNetworkDataOnChangeTo(*entry);
@@ -1435,14 +1435,14 @@ void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::N
             ExitNow();
         }
 
-        entry->InitFrom(aPio);
+        entry->SetFrom(aPio);
         aRouter.mEntries.Push(*entry);
     }
     else
     {
         Entry newEntry;
 
-        newEntry.InitFrom(aPio);
+        newEntry.SetFrom(aPio);
         entry->AdoptValidAndPreferredLiftimesFrom(newEntry);
     }
 
@@ -1481,12 +1481,12 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd
             ExitNow();
         }
 
-        entry->InitFrom(aRio);
+        entry->SetFrom(aRio);
         aRouter.mEntries.Push(*entry);
     }
     else
     {
-        entry->InitFrom(aRio);
+        entry->SetFrom(aRio);
     }
 
     UpdateNetworkDataOnChangeTo(*entry);
@@ -1904,7 +1904,7 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Entry
 
-void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader)
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader)
 {
     mType                    = kTypeRoute;
     mValidLifetime           = aRaHeader.GetRouterLifetime();
@@ -1912,7 +1912,7 @@ void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::Route
     mLastUpdateTime          = TimerMilli::GetNow();
 }
 
-void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::PrefixInfoOption &aPio)
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::PrefixInfoOption &aPio)
 {
     aPio.GetPrefix(mPrefix);
     mType                      = kTypeOnLink;
@@ -1921,7 +1921,7 @@ void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::Prefi
     mLastUpdateTime            = TimerMilli::GetNow();
 }
 
-void RoutingManager::DiscoveredPrefixTable::Entry::InitFrom(const Ip6::Nd::RouteInfoOption &aRio)
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::RouteInfoOption &aRio)
 {
     aRio.GetPrefix(mPrefix);
     mType                    = kTypeRoute;
