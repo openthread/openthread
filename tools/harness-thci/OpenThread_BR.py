@@ -316,8 +316,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.powerUp()
         if self.IsHost:
             self.__stopRadvdService()
-            self.bash('ip -6 addr del 910b::1 dev eth0 || true')
-            self.bash('ip -6 addr del fd00:7d03:7d03:7d03::1 dev eth0 || true')
+            self.bash('ip -6 addr del 910b::1 dev %s || true' % self.backboneNetif)
+            self.bash('ip -6 addr del fd00:7d03:7d03:7d03::1 dev %s || true' % self.backboneNetif)
 
         self.stopListeningToAddrAll()
 
@@ -330,7 +330,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             time.sleep(2)
 
     def __enableAcceptRa(self):
-        self.bash('sysctl net.ipv6.conf.eth0.accept_ra=2')
+        self.bash('sysctl net.ipv6.conf.%s.accept_ra=2' % self.backboneNetif)
 
     def _beforeRegisterMulticast(self, sAddr='ff04::1234:777a:1', timeout=300):
         """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
@@ -351,10 +351,10 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     def setupHost(self, setDp=False, setDua=False):
         self.IsHost = True
 
-        self.bash('ip -6 addr add 910b::1 dev eth0')
+        self.bash('ip -6 addr add 910b::1 dev %s' % self.backboneNetif)
 
         if setDua:
-            self.bash('ip -6 addr add fd00:7d03:7d03:7d03::1 dev eth0')
+            self.bash('ip -6 addr add fd00:7d03:7d03:7d03::1 dev %s' % self.backboneNetif)
 
         self.__startRadvdService(setDp)
 
@@ -387,46 +387,41 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             return
 
         if interface == 1:
-            ifname = 'eth0'
+            ifname = self.backboneNetif
         else:
             raise AssertionError('Invalid interface set to send UDP: {} '
                                  'Available interface options: 0 - Thread; 1 - Ethernet'.format(interface))
         cmd = '/home/pi/reference-device/send_udp.py %s %s %s %s' % (ifname, dst, port, payload)
-        print(cmd)
         self.bash(cmd)
 
     @API
     def mldv2_query(self):
-        ifname = 'eth0'
+        ifname = self.backboneNetif
         dst = 'ff02::1'
 
         cmd = '/home/pi/reference-device/send_mld_query.py %s %s' % (ifname, dst)
-        print(cmd)
         self.bash(cmd)
 
     @API
     def ip_neighbors_flush(self):
-        print('%s call clear_cache' % self.port)
         # clear neigh cache on linux
-        cmd1 = 'sudo ip -6 neigh flush nud all nud failed nud noarp dev eth0'
-        cmd2 = 'sudo ip -6 neigh list nud all dev eth0 ' \
-               '| cut -d " " -f1 ' \
-               '| sudo xargs -I{} ip -6 neigh delete {} dev eth0'
+        cmd1 = 'sudo ip -6 neigh flush nud all nud failed nud noarp dev %s' % self.backboneNetif
+        cmd2 = ('sudo ip -6 neigh list nud all dev %s '
+                '| cut -d " " -f1 '
+                '| sudo xargs -I{} ip -6 neigh delete {} dev %s') % (self.backboneNetif, self.backboneNetif)
         cmd = '%s ; %s' % (cmd1, cmd2)
         self.bash(cmd, sudo=False)
 
     @API
     def ip_neighbors_add(self, addr, lladdr, nud='noarp'):
-        print('%s ip_neighbors_add' % self.port)
-        cmd1 = 'sudo ip -6 neigh delete %s dev eth0' % addr
-        cmd2 = 'sudo ip -6 neigh add %s dev eth0 lladdr %s nud %s' % (addr, lladdr, nud)
+        cmd1 = 'sudo ip -6 neigh delete %s dev %s' % (addr, self.backboneNetif)
+        cmd2 = 'sudo ip -6 neigh add %s dev %s lladdr %s nud %s' % (addr, self.backboneNetif, lladdr, nud)
         cmd = '%s ; %s' % (cmd1, cmd2)
         self.bash(cmd, sudo=False)
 
     @API
     def get_eth_ll(self):
-        print('%s get_eth_ll' % self.port)
-        cmd = "ip -6 addr list dev eth0 | grep 'inet6 fe80' | awk '{print $2}'"
+        cmd = "ip -6 addr list dev %s | grep 'inet6 fe80' | awk '{print $2}'" % self.backboneNetif
         ret = self.bash(cmd)[0].split('/')[0]
         return ret
 
@@ -444,8 +439,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         if hop_limit is None:
             hop_limit = 5
 
-        if self.IsHost or self.IsBackboneRouter:
-            ifName = 'eth0'
+        if self.IsHost or self.IsBorderRouter:
+            ifName = self.backboneNetif
         else:
             ifName = 'wpan0'
 
@@ -468,12 +463,10 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             destination: the multicast destination address of ICMPv6 echo request
             length: the size of ICMPv6 echo request payload
         """
-        print('%s call multicast_Ping' % self.port)
-        print('destination: %s' % destination)
         hop_limit = 5
 
-        if self.IsHost or self.IsBackboneRouter:
-            ifName = 'eth0'
+        if self.IsHost or self.IsBorderRouter:
+            ifName = self.backboneNetif
         else:
             ifName = 'wpan0'
 
@@ -503,7 +496,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     def __getEthGUA(self, filterByPrefix=None):
         globalAddrs = []
 
-        cmd = 'ip -6 addr list dev eth0 | grep inet6'
+        cmd = 'ip -6 addr list dev %s | grep inet6' % self.backboneNetif
         output = self.bash(cmd, sudo=False)
         for line in output:
             # example: inet6 2401:fa00:41:23:274a:1329:3ab9:d953/64 scope global dynamic noprefixroute
@@ -544,7 +537,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     def _deviceGetEtherMac(self):
         # Harness wants it in string. Because wireshark filter for eth
         # cannot be applies in hex
-        return self.bash('ip addr list dev eth0 | grep ether', sudo=False)[0].strip().split()[1]
+        return self.bash('ip addr list dev %s | grep ether' % self.backboneNetif, sudo=False)[0].strip().split()[1]
 
     @watched
     def _onCommissionStart(self):
@@ -562,7 +555,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         assert self.IsHost, "radvd service runs on Host only"
 
         conf = "EOF"
-        conf += "\ninterface eth0"
+        conf += "\ninterface %s" % self.backboneNetif
         conf += "\n{"
         conf += "\n    AdvSendAdvert on;"
         conf += "\n"
@@ -627,7 +620,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.__cli_output_lines.append(line)
 
     def __restartAgentService(self):
-        self.bash('systemctl restart otbr-agent')
+        restart_cmd = self.extraParams.get('cmd-restart-otbr-agent', 'systemctl restart otbr-agent')
+        self.bash(restart_cmd)
 
     def __truncateSyslog(self):
         self.bash('truncate -s 0 /var/log/syslog')
@@ -639,8 +633,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     @API
     def mdns_query(self, dst='ff02::fb', service='_meshcop._udp.local', addrs_blacklist=[]):
-        print('mdns_query %s %s %s' % (dst, service, addrs_blacklist))
-
         # For BBR-TC-03 or DH test cases (empty arguments) just send a query
         if dst == 'ff02::fb' and not addrs_blacklist:
             self.bash('dig -p 5353 @%s %s ptr' % (dst, service), sudo=False)
@@ -651,10 +643,12 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         output = self.bash(cmd)
         for line in output:
             print(line)
-            alias, link_local_addr, port, thread_status = eval(line)
-            if thread_status == 2 and link_local_addr:
-                if (dst and link_local_addr in dst) or (link_local_addr not in addrs_blacklist):
-                    return '%s%%eth0' % link_local_addr, port
+            alias, addr, port, thread_status = eval(line)
+            if thread_status == 2 and addr:
+                if (dst and addr in dst) or (addr not in addrs_blacklist):
+                    if ipaddress.IPv6Address(addr.decode()).is_link_local:
+                        addr = '%s%%%s' % (addr, self.backboneNetif)
+                    return addr, port
 
         raise Exception('No active Border Agents found')
 
@@ -662,20 +656,21 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
     @API
     def powerDown(self):
         self.log('Powering down BBR')
-        self.bash('systemctl stop otbr-agent')
         super(OpenThread_BR, self).powerDown()
+        stop_cmd = self.extraParams.get('cmd-stop-otbr-agent', 'systemctl stop otbr-agent')
+        self.bash(stop_cmd)
 
     # Override powerUp
     @API
     def powerUp(self):
         self.log('Powering up BBR')
-        self.bash('systemctl start otbr-agent')
+        start_cmd = self.extraParams.get('cmd-start-otbr-agent', 'systemctl start otbr-agent')
+        self.bash(start_cmd)
         super(OpenThread_BR, self).powerUp()
 
     # Override forceSetSlaac
     @API
     def forceSetSlaac(self, slaacAddress):
-        print('forceSetSlaac %s' % slaacAddress)
         self.bash('ip -6 addr add %s/64 dev wpan0' % slaacAddress)
 
     # Override stopListeningToAddr
@@ -705,3 +700,30 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         """
         self.externalCommissioner.MLR([sAddr], 0)
         return True
+
+    @watched
+    def _waitBorderRoutingStabilize(self):
+        """
+        Wait for Network Data to stabilize if BORDER_ROUTING is enabled.
+        """
+        if not self.isBorderRoutingEnabled():
+            return
+
+        MAX_TIMEOUT = 30
+        MIN_TIMEOUT = 15
+        CHECK_INTERVAL = 3
+
+        time.sleep(MIN_TIMEOUT)
+
+        lastNetData = self.getNetworkData()
+        for i in range((MAX_TIMEOUT - MIN_TIMEOUT) // CHECK_INTERVAL):
+            time.sleep(CHECK_INTERVAL)
+            curNetData = self.getNetworkData()
+
+            # Wait until the Network Data is not changing, and there is OMR Prefix and External Routes available
+            if curNetData == lastNetData and len(curNetData['Prefixes']) > 0 and len(curNetData['Routes']) > 0:
+                break
+
+            lastNetData = curNetData
+
+        return lastNetData

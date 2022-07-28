@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 import mle
 import network_layer
@@ -52,11 +53,11 @@ class Router_5_1_01(thread_cert.TestCase):
         self.nodes[ROUTER_1].set_router_selection_jitter(1)
 
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER_1].start()
-        self.simulator.go(7)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER_1].get_state(), 'router')
 
         leader_messages = self.simulator.get_messages_sent_by(LEADER)
@@ -78,7 +79,7 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Challenge)
         msg.assertMleMessageContainsTlv(mle.ScanMask)
         msg.assertMleMessageContainsTlv(mle.Version)
-        assert msg.get_mle_message_tlv(mle.Version).version == 3
+        assert msg.get_mle_message_tlv(mle.Version).version >= config.THREAD_VERSION_1_2
 
         scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
         self.assertEqual(1, scan_mask_tlv.router)
@@ -96,7 +97,7 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMargin)
         msg.assertMleMessageContainsTlv(mle.Connectivity)
         msg.assertMleMessageContainsTlv(mle.Version)
-        assert msg.get_mle_message_tlv(mle.Version).version == 3
+        assert msg.get_mle_message_tlv(mle.Version).version >= config.THREAD_VERSION_1_2
 
         # 4 - Router_1 receives the MLE Parent Response and sends a Child ID Request
         msg = router_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
@@ -109,7 +110,7 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Version)
         msg.assertMleMessageContainsTlv(mle.TlvRequest)
         msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
-        assert msg.get_mle_message_tlv(mle.Version).version == 3
+        assert msg.get_mle_message_tlv(mle.Version).version >= config.THREAD_VERSION_1_2
 
         # 5 - Leader responds with a Child ID Response
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)

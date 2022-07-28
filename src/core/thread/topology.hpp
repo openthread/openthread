@@ -552,20 +552,20 @@ public:
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method indicates whether or not it is a valid Thread 1.1 neighbor.
+     * This method indicates whether or not it is Thread 1.1.
      *
-     * @returns TRUE if it is a valid Thread 1.1 neighbor, FALSE otherwise.
+     * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
      */
     bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
 
     /**
-     * This method indicates whether or not it is a valid Thread 1.2 neighbor.
+     * This method indicates whether or not neighbor is Thread 1.2 or higher..
      *
-     * @returns TRUE if it is a valid Thread 1.2 neighbor, FALSE otherwise.
+     * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_2; }
+    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2; }
 
     /**
      * This method indicates whether Thread version supports CSL.
@@ -573,7 +573,7 @@ public:
      * @returns TRUE if CSL is supported, FALSE otherwise.
      *
      */
-    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2() && !IsRxOnWhenIdle(); }
+    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2OrHigher() && !IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
@@ -1365,7 +1365,7 @@ public:
         Neighbor::Init(aInstance);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         SetCslClockAccuracy(kCslWorstCrystalPpm);
-        SetCslClockUncertainty(kCslWorstUncertainty);
+        SetCslUncertainty(kCslWorstUncertainty);
 #endif
     }
 
@@ -1397,7 +1397,7 @@ public:
      * @returns The link quality out value for this router.
      *
      */
-    uint8_t GetLinkQualityOut(void) const { return mLinkQualityOut; }
+    LinkQuality GetLinkQualityOut(void) const { return static_cast<LinkQuality>(mLinkQualityOut); }
 
     /**
      * This method sets the link quality out value for this router.
@@ -1405,7 +1405,7 @@ public:
      * @param[in]  aLinkQuality  The link quality out value for this router.
      *
      */
-    void SetLinkQualityOut(uint8_t aLinkQuality) { mLinkQualityOut = aLinkQuality; }
+    void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
     /**
      * This method get the route cost to this router.
@@ -1446,15 +1446,15 @@ public:
      * @returns The CSL clock uncertainty of this router.
      *
      */
-    uint8_t GetCslClockUncertainty(void) const { return mCslClockUncertainty; }
+    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
 
     /**
      * This method sets the CSL clock uncertainty of this router.
      *
-     * @param[in]  aCslClockUncertainty  The CSL clock uncertainty of this router.
+     * @param[in]  aCslUncertainty  The CSL clock uncertainty of this router.
      *
      */
-    void SetCslClockUncertainty(uint8_t aCslClockUncertainty) { mCslClockUncertainty = aCslClockUncertainty; }
+    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
 #endif
 
 private:
@@ -1467,8 +1467,8 @@ private:
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint8_t mCslClockAccuracy;    ///< Crystal accuracy, in units of ± ppm.
-    uint8_t mCslClockUncertainty; ///< Scheduling uncertainty, in units of 10 us.
+    uint8_t mCslClockAccuracy; ///< Crystal accuracy, in units of ± ppm.
+    uint8_t mCslUncertainty;   ///< Scheduling uncertainty, in units of 10 us.
 #endif
 };
 

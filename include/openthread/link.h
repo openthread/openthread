@@ -391,6 +391,10 @@ typedef struct otActiveScanResult
     unsigned int    mVersion : 4;   ///< Version
     bool            mIsNative : 1;  ///< Native Commissioner flag
     bool            mDiscover : 1;  ///< Result from MLE Discovery
+
+    // Applicable/Required only when beacon payload parsing feature
+    // (`OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE`) is enabled.
+    bool mIsJoinable : 1; ///< Joining Permitted flag
 } otActiveScanResult;
 
 /**
@@ -486,7 +490,6 @@ bool otLinkIsEnergyScanInProgress(otInstance *aInstance);
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
  * @retval OT_ERROR_NONE           Successfully enqueued an IEEE 802.15.4 Data Request message.
- * @retval OT_ERROR_ALREADY        An IEEE 802.15.4 Data Request message is already enqueued.
  * @retval OT_ERROR_INVALID_STATE  Device is not in rx-off-when-idle mode.
  * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
  *

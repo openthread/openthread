@@ -34,6 +34,7 @@ from mac802154 import MacHeader
 from pktverify import consts
 from pktverify.packet_verifier import PacketVerifier
 
+import config
 import thread_cert
 
 LEADER = 1
@@ -42,6 +43,7 @@ SSED_1 = 3
 
 
 class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
             'version': '1.2',
@@ -66,11 +68,11 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[SSED_1].set_csl_period(consts.CSL_DEFAULT_PERIOD)

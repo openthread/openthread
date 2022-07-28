@@ -551,6 +551,7 @@ public:
 private:
     static constexpr uint32_t kDefaultKeySwitchGuardTime = 624;
     static constexpr uint32_t kOneHourIntervalInMsec     = 3600u * 1000u;
+    static constexpr bool     kExportableMacKeys         = OPENTHREAD_CONFIG_PLATFORM_MAC_KEYS_EXPORTABLE_ENABLE;
 
     OT_TOOL_PACKED_BEGIN
     struct Keys

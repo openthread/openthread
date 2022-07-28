@@ -50,6 +50,16 @@ otError otCommissionerStart(otInstance *                 aInstance,
     return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext);
 }
 
+const char *otCommissionerGetId(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().GetId();
+}
+
+otError otCommissionerSetId(otInstance *aInstance, const char *aId)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SetId(aId);
+}
+
 otError otCommissionerStop(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Stop();

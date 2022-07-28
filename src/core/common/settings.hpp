@@ -47,15 +47,12 @@
 #include "common/settings_driver.hpp"
 #include "crypto/ecdsa.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/dataset.hpp"
 #include "net/ip6_address.hpp"
 #include "utils/flash.hpp"
 #include "utils/slaac_address.hpp"
 
 namespace ot {
-
-namespace MeshCoP {
-class Dataset;
-}
 
 class Settings;
 
@@ -115,15 +112,11 @@ public:
         kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
         kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
         kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
-        kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
         kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
         kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeyLegacyOmrPrefix   = OT_SETTINGS_KEY_LEGACY_OMR_PREFIX,
-        kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
-        kKeyLegacyNat64Prefix = OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX,
         kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
     };
 
@@ -586,37 +579,7 @@ public:
     private:
         BrUlaPrefix(void) = default;
     };
-
-    /**
-     * This class defines constants and types for legacy OMR prefix settings.
-     *
-     */
-    class LegacyOmrPrefix
-    {
-    public:
-        static constexpr Key kKey = kKeyLegacyOmrPrefix; ///< The associated key.
-
-        typedef Ip6::Prefix ValueType; ///< The associated value type.
-
-    private:
-        LegacyOmrPrefix(void) = default;
-    };
-
-    /**
-     * This class defines constants and types for on-link prefix settings.
-     *
-     */
-    class OnLinkPrefix
-    {
-    public:
-        static constexpr Key kKey = kKeyOnLinkPrefix; ///< The associated key.
-
-        typedef Ip6::Prefix ValueType; ///< The associated value type.
-
-    private:
-        OnLinkPrefix(void) = default;
-    };
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     /**
@@ -799,38 +762,38 @@ public:
     /**
      * This method saves the Operational Dataset (active or pending).
      *
-     * @param[in]   aIsActive   Indicates whether Dataset is active or pending.
+     * @param[in]   aType       The Dataset type (active or pending) to save.
      * @param[in]   aDataset    A reference to a `Dataset` object to be saved.
      *
      * @retval kErrorNone             Successfully saved the Dataset.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset);
+    Error SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset);
 
     /**
      * This method reads the Operational Dataset (active or pending).
      *
-     * @param[in]   aIsActive             Indicates whether Dataset is active or pending.
-     * @param[out]  aDataset              A reference to a `Dataset` object to output the read content.
+     * @param[in]   aType            The Dataset type (active or pending) to read.
+     * @param[out]  aDataset         A reference to a `Dataset` object to output the read content.
      *
      * @retval kErrorNone             Successfully read the Dataset.
      * @retval kErrorNotFound         No corresponding value in the setting store.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const;
+    Error ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const;
 
     /**
      * This method deletes the Operational Dataset (active/pending) from settings.
      *
-     * @param[in]   aIsActive            Indicates whether Dataset is active or pending.
+     * @param[in]   aType            The Dataset type (active or pending) to delete.
      *
      * @retval kErrorNone            Successfully deleted the Dataset.
      * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    Error DeleteOperationalDataset(bool aIsActive);
+    Error DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
 
     /**
      * This template method reads a specified settings entry.
@@ -1113,6 +1076,8 @@ private:
         ChildInfoIterator end(void) { return ChildInfoIterator(GetInstance(), ChildInfoIterator::kEndIterator); }
     };
 #endif
+
+    static Key KeyForDatasetType(MeshCoP::Dataset::Type aType);
 
     Error ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const;
     Error SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength);

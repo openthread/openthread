@@ -37,6 +37,7 @@
 #include <openthread/platform/radio.h>
 
 #include "openthread-spinel-config.h"
+#include "radio_spinel_metrics.h"
 #include "spinel.h"
 #include "spinel_interface.hpp"
 #include "core/radio/max_power_table.hpp"
@@ -701,6 +702,28 @@ public:
                                    const otExtAddress & aExtAddress);
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    /**
+     * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
+     *
+     * @note Platforms may optimize this value based on operational conditions (i.e.: temperature).
+     *
+     * @retval   The current CSL rx/tx scheduling drift, in units of ± ppm.
+     *
+     */
+    uint8_t GetCslAccuracy(void);
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    /**
+     * Get the current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
+     *
+     * @retval  The current CSL Clock Uncertainty in units of 10 us.
+     *
+     */
+    uint8_t GetCslUncertainty(void);
+#endif
+
     /**
      * This method checks whether the spinel interface is radio-only.
      *
@@ -855,6 +878,14 @@ public:
      */
     otError SendReset(uint8_t aResetType);
 
+    /**
+     * This method returns the radio Spinel metrics.
+     *
+     * @returns The radio Spinel metrics.
+     *
+     */
+    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return &mRadioSpinelMetrics; }
+
 private:
     enum
     {
@@ -960,6 +991,10 @@ private:
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     void RestoreProperties(void);
 #endif
+    void UpdateParseErrorCount(otError aError)
+    {
+        mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
+    }
 
     otInstance *mInstance;
 
@@ -1044,6 +1079,8 @@ private:
     int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
 
     MaxPowerTable mMaxPowerTable;
+
+    otRadioSpinelMetrics mRadioSpinelMetrics;
 };
 
 } // namespace Spinel

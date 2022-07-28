@@ -183,6 +183,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
+            if 'extended_panid' in params:
+                self.nodes[i].set_extpanid(params['extended_panid'])
             if 'partition_id' in params:
                 self.nodes[i].set_preferred_partition_id(params['partition_id'])
             if 'channel' in params:
@@ -480,14 +482,19 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         params = params or {}
 
         if params.get('is_bbr') or params.get('is_otbr'):
-            # BBRs must use thread version 1.2
-            assert params.get('version', '1.2') == '1.2', params
-            params['version'] = '1.2'
+            # BBRs must not use thread version 1.1
+            version = params.get('version', '1.3')
+            assert version != '1.1', params
+            params['version'] = version
             params.setdefault('bbr_registration_jitter', config.DEFAULT_BBR_REGISTRATION_JITTER)
         elif params.get('is_host'):
             # Hosts must not specify thread version
             assert params.get('version', '') == '', params
             params['version'] = ''
+
+        # use 1.3 node for 1.2 tests
+        if params.get('version') == '1.2':
+            params['version'] = '1.3'
 
         is_ftd = (not params.get('is_mtd') and not params.get('is_host'))
 

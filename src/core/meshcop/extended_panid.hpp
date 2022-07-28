@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,85 +28,90 @@
 
 /**
  * @file
- *   This file includes definitions for IPv4 addresses.
+ *   This file includes definitions for managing the Extended PAN ID.
+ *
  */
 
-#ifndef IP4_ADDRESS_HPP_
-#define IP4_ADDRESS_HPP_
+#ifndef MESHCOP_EXTENDED_PANID_HPP_
+#define MESHCOP_EXTENDED_PANID_HPP_
 
 #include "openthread-core-config.h"
 
+#include <openthread/dataset.h>
+
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
-#include "common/error.hpp"
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
 #include "common/string.hpp"
 
 namespace ot {
-namespace Ip4 {
+namespace MeshCoP {
 
 /**
- * This class represents an IPv4 address.
+ * This class represents an Extended PAN Identifier.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address : public Equatable<Address>, public Clearable<Address>
+class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>, public Clearable<ExtendedPanId>
 {
 public:
-    static constexpr uint16_t kSize              = 4;  ///< Size of an IPv4 Address (in bytes).
-    static constexpr uint16_t kAddressStringSize = 17; ///< String size used by `ToString()`.
+    static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
      *
      */
-    typedef String<kAddressStringSize> InfoString;
+    typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method gets the IPv4 address as a pointer to a byte array.
+     * This method converts an address to a string.
      *
-     * @returns A pointer to a byte array containing the IPv4 address.
-     *
-     */
-    const uint8_t *GetBytes(void) const { return mBytes; }
-
-    /**
-     * This method sets the IPv4 address from a given byte array.
-     *
-     * @param[in] aBuffer    Pointer to an array containing the IPv4 address. `kSize` bytes from the buffer
-     *                       are copied to form the IPv4 address.
-     *
-     */
-    void SetBytes(const uint8_t *aBuffer) { memcpy(mBytes, aBuffer, kSize); }
-
-    /**
-     * This method parses an IPv4 address string.
-     *
-     * The string MUST follow the quad-dotted notation of four decimal values (ranging from 0 to 255 each). For
-     * example, "127.0.0.1"
-     *
-     * @param[in]  aString        A pointer to the null-terminated string.
-     *
-     * @retval kErrorNone         Successfully parsed the IPv4 address string.
-     * @retval kErrorParse        Failed to parse the IPv4 address string.
-     *
-     */
-    Error FromString(const char *aString);
-
-    /**
-     * This method converts the IPv4 address to a string.
-     *
-     * The string format uses quad-dotted notation of four bytes in the address (e.g., "127.0.0.1").
-     *
-     * @returns An `InfoString` representing the IPv4 address.
+     * @returns An `InfoString` containing the string representation of the Extended PAN Identifier.
      *
      */
     InfoString ToString(void) const;
 
-private:
-    uint8_t mBytes[kSize];
 } OT_TOOL_PACKED_END;
 
-} // namespace Ip4
+class ExtendedPanIdManager : public InstanceLocator, private NonCopyable
+{
+public:
+    /**
+     * Constructor.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     *
+     */
+    explicit ExtendedPanIdManager(Instance &aInstance);
+
+    /**
+     * This method returns the Extended PAN Identifier.
+     *
+     * @returns The Extended PAN Identifier.
+     *
+     */
+    const ExtendedPanId &GetExtPanId(void) const { return mExtendedPanId; }
+
+    /**
+     * This method sets the Extended PAN Identifier.
+     *
+     * @param[in]  aExtendedPanId  The Extended PAN Identifier.
+     *
+     */
+    void SetExtPanId(const ExtendedPanId &aExtendedPanId);
+
+private:
+    static const otExtendedPanId sExtendedPanidInit;
+
+    ExtendedPanId mExtendedPanId;
+};
+
+} // namespace MeshCoP
+
+DefineCoreType(otExtendedPanId, MeshCoP::ExtendedPanId);
+
 } // namespace ot
 
-#endif // IP4_ADDRESS_HPP_
+#endif // MESHCOP_EXTENDED_PANID_HPP_

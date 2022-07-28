@@ -164,6 +164,7 @@ public:
      * @param[in]  aCallback        A pointer to a function called on completion of a scanned channel.
      *
      * @retval kErrorNone            Successfully started scanning the channel.
+     * @retval kErrorBusy            The radio is performing energy scanning.
      * @retval kErrorNotImplemented  The radio doesn't support energy scanning.
      * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *

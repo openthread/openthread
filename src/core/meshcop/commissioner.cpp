@@ -86,6 +86,8 @@ Commissioner::Commissioner(Instance &aInstance)
     mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
     mCommissionerAloc.mScopeOverrideValid = true;
 
+    IgnoreError(SetId("OpenThread Commissioner"));
+
     mProvisioningUrl[0] = '\0';
 }
 
@@ -304,7 +306,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().Stop();
+    Get<BorderAgent>().Stop();
 #endif
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
@@ -317,6 +319,8 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
 
     SuccessOrExit(error = SendPetition());
     SetState(kStatePetition);
+
+    LogInfo("start commissioner %s", mCommissionerId);
 
 exit:
     if ((error != kErrorNone) && (error != kErrorAlready))
@@ -359,11 +363,33 @@ Error Commissioner::Stop(ResignMode aResignMode)
     }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().Start();
+    Get<BorderAgent>().Start();
 #endif
 
 exit:
     LogError("stop commissioner", error);
+    return error;
+}
+
+Error Commissioner::SetId(const char *aId)
+{
+    Error   error = kErrorNone;
+    uint8_t len;
+
+    VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(aId != nullptr);
+    VerifyOrExit(IsValidUtf8String(aId), error = kErrorInvalidArgs);
+
+    len = static_cast<uint8_t>(StringLength(aId, sizeof(mCommissionerId)));
+
+    // CommissionerIdTlv::SetCommissionerId trims the string to the maximum array size.
+    // Prevent this from happening returning an error.
+    VerifyOrExit(len < CommissionerIdTlv::kMaxLength, error = kErrorInvalidArgs);
+
+    memcpy(mCommissionerId, aId, len);
+    mCommissionerId[len] = '\0';
+
+exit:
     return error;
 }
 
@@ -686,29 +712,21 @@ Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t
 {
     Error            error = kErrorNone;
     Coap::Message *  message;
-    Ip6::MessageInfo messageInfo;
-    MeshCoP::Tlv     tlv;
+    Tmf::MessageInfo messageInfo(GetInstance());
+    Tlv              tlv;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerGet));
-
-    if (aLength > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kCommissionerGet);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aLength > 0)
     {
-        tlv.SetType(MeshCoP::Tlv::kGet);
+        tlv.SetType(Tlv::kGet);
         tlv.SetLength(aLength);
         SuccessOrExit(error = message->Append(tlv));
         SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
     }
 
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo,
                                                         Commissioner::HandleMgmtCommissionerGetResponse, this));
 
@@ -745,21 +763,19 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const Dataset &aDataset, cons
 {
     Error            error = kErrorNone;
     Coap::Message *  message;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerSet));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kCommissionerSet);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aDataset.IsLocatorSet())
     {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(*message, aDataset.GetLocator()));
+        SuccessOrExit(error = Tlv::Append<BorderAgentLocatorTlv>(*message, aDataset.GetLocator()));
     }
 
     if (aDataset.IsSessionIdSet())
     {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, aDataset.GetSessionId()));
+        SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, aDataset.GetSessionId()));
     }
 
     if (aDataset.IsSteeringDataSet())
@@ -779,9 +795,7 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const Dataset &aDataset, cons
         SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
     }
 
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo,
                                                         Commissioner::HandleMgmtCommissionerSetResponse, this));
 
@@ -818,24 +832,19 @@ Error Commissioner::SendPetition(void)
 {
     Error             error   = kErrorNone;
     Coap::Message *   message = nullptr;
-    Ip6::MessageInfo  messageInfo;
-    CommissionerIdTlv commissionerId;
+    Tmf::MessageInfo  messageInfo(GetInstance());
+    CommissionerIdTlv commissionerIdTlv;
 
     mTransmitAttempts++;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kLeaderPetition);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderPetition));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    commissionerIdTlv.Init();
+    commissionerIdTlv.SetCommissionerId(mCommissionerId);
 
-    commissionerId.Init();
-    commissionerId.SetCommissionerId("OpenThread Commissioner");
-
-    SuccessOrExit(error = commissionerId.AppendTo(*message));
-
-    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    SuccessOrExit(error = commissionerIdTlv.AppendTo(*message));
+    SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(
         error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, Commissioner::HandleLeaderPetitionResponse, this));
 
@@ -916,21 +925,17 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
     Error            error   = kErrorNone;
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderKeepAlive));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kLeaderKeepAlive);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(
         error = Tlv::Append<StateTlv>(*message, (mState == kStateActive) ? StateTlv::kAccept : StateTlv::kReject));
 
     SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, aSessionId));
 
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo,
                                                         Commissioner::HandleLeaderKeepAliveResponse, this));
 
@@ -1104,10 +1109,9 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     Ip6::MessageInfo joinerMessageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = Get<Coap::CoapSecure>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    message = Get<Coap::CoapSecure>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
     message->SetOffset(message->GetLength());
     message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
 
@@ -1154,16 +1158,13 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     ExtendedTlv      tlv;
     Coap::Message *  message;
     uint16_t         offset;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
     Kek              kek;
-
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     Get<KeyManager>().ExtractKek(kek);
 
-    message->InitAsNonConfirmablePost();
-    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kRelayTx));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(UriPath::kRelayTx);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, mJoinerPort));
     SuccessOrExit(error = Tlv::Append<JoinerIidTlv>(*message, mJoinerIid));
@@ -1181,10 +1182,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength()));
     aMessage.CopyTo(0, offset, aMessage.GetLength(), *message);
 
-    messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.GetPeerAddr().GetIid().SetLocator(mJoinerRloc);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetSockAddrToRlocPeerAddrTo(mJoinerRloc);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 

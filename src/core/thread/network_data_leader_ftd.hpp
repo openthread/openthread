@@ -95,8 +95,15 @@ public:
     /**
      * This method starts the Leader services.
      *
+     * The start mode indicates whether device is starting normally as leader or restoring its role as leader after
+     * reset. In the latter case, we do not accept any new registrations (`HandleServerData()`) and wait for
+     * `HandleNetworkDataRestoredAfterReset()` to indicate that the leader has successfully recovered the Network Data
+     * before allowing new Network Data registrations.
+     *
+     * @param[in] aStartMode   The start mode.
+     *
      */
-    void Start(void);
+    void Start(Mle::LeaderStartMode aStartMode);
 
     /**
      * This method stops the Leader services.
@@ -149,7 +156,7 @@ public:
      * Note that this method should be called only by the Leader once after reset.
      *
      */
-    void UpdateContextsAfterReset(void);
+    void HandleNetworkDataRestoredAfterReset(void);
 
     /**
      * This method scans network data for given Service ID and returns pointer to the respective TLV, if present.
@@ -172,6 +179,19 @@ public:
      *
      */
     Error RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    /**
+     * This method indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
+     *
+     * @param[in]  aPrefix   The OMR prefix to check.
+     *
+     * @retval TRUE  If @p aPrefix is a valid OMR prefix and Network Data contains @p aPrefix.
+     * @retval FALSE Otherwise.
+     *
+     */
+    bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix);
+#endif
 
 private:
     class ChangedFlags
@@ -292,7 +312,9 @@ private:
     static constexpr uint8_t  kNumContextIds       = 15;           // Maximum Context ID
     static constexpr uint32_t kContextIdReuseDelay = 48 * 60 * 60; // in seconds
     static constexpr uint32_t kStateUpdatePeriod   = 60 * 1000;    // State update period in milliseconds
+    static constexpr uint32_t kMaxNetDataSyncWait  = 60 * 1000;    // Maximum time to wait for netdata sync.
 
+    bool       mWaitingForNetDataSync;
     uint16_t   mContextUsed;
     TimeMilli  mContextLastUsed[kNumContextIds];
     uint32_t   mContextIdReuseDelay;

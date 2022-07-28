@@ -360,9 +360,9 @@ public:
      * @returns The Link Quality In value for a given Router index.
      *
      */
-    uint8_t GetLinkQualityIn(uint8_t aRouterIndex) const
+    LinkQuality GetLinkQualityIn(uint8_t aRouterIndex) const
     {
-        return (mRouteData[aRouterIndex] & kLinkQualityInMask) >> kLinkQualityInOffset;
+        return static_cast<LinkQuality>((mRouteData[aRouterIndex] & kLinkQualityInMask) >> kLinkQualityInOffset);
     }
 
     /**
@@ -372,7 +372,7 @@ public:
      * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
      *
      */
-    void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    void SetLinkQualityIn(uint8_t aRouterIndex, LinkQuality aLinkQuality)
     {
         mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityInMask) |
                                    ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
@@ -386,9 +386,9 @@ public:
      * @returns The Link Quality Out value for a given Router index.
      *
      */
-    uint8_t GetLinkQualityOut(uint8_t aRouterIndex) const
+    LinkQuality GetLinkQualityOut(uint8_t aRouterIndex) const
     {
-        return (mRouteData[aRouterIndex] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
+        return static_cast<LinkQuality>((mRouteData[aRouterIndex] & kLinkQualityOutMask) >> kLinkQualityOutOffset);
     }
 
     /**
@@ -398,7 +398,7 @@ public:
      * @param[in]  aLinkQuality  The Link Quality Out value for a given Router index.
      *
      */
-    void SetLinkQualityOut(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    void SetLinkQualityOut(uint8_t aRouterIndex, LinkQuality aLinkQuality)
     {
         mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityOutMask) |
                                    ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
@@ -600,11 +600,12 @@ public:
      * @returns The Link Quality Out value for a given Router index.
      *
      */
-    uint8_t GetLinkQualityOut(uint8_t aRouterIndex) const
+    LinkQuality GetLinkQualityOut(uint8_t aRouterIndex) const
     {
         int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        return (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityOutMask >> offset)) >>
-               (kLinkQualityOutOffset - offset);
+        return static_cast<LinkQuality>(
+            (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityOutMask >> offset)) >>
+            (kLinkQualityOutOffset - offset));
     }
 
     /**
@@ -614,7 +615,7 @@ public:
      * @param[in]  aLinkQuality  The Link Quality Out value for a given Router index.
      *
      */
-    void SetLinkQualityOut(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    void SetLinkQualityOut(uint8_t aRouterIndex, LinkQuality aLinkQuality)
     {
         int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
         mRouteData[aRouterIndex + aRouterIndex / 2] =

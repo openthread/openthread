@@ -125,6 +125,7 @@ SOURCES_COMMON                                  = \
     api/backbone_router_ftd_api.cpp               \
     api/border_agent_api.cpp                      \
     api/border_router_api.cpp                     \
+    api/border_routing_api.cpp                    \
     api/channel_manager_api.cpp                   \
     api/channel_monitor_api.cpp                   \
     api/child_supervision_api.cpp                 \
@@ -176,8 +177,7 @@ SOURCES_COMMON                                  = \
     backbone_router/bbr_manager.cpp               \
     backbone_router/multicast_listeners_table.cpp \
     backbone_router/ndproxy_table.cpp             \
-    border_router/infra_if_platform.cpp           \
-    border_router/router_advertisement.cpp        \
+    border_router/infra_if.cpp                    \
     border_router/routing_manager.cpp             \
     coap/coap.cpp                                 \
     coap/coap_message.cpp                         \
@@ -187,6 +187,8 @@ SOURCES_COMMON                                  = \
     common/crc16.cpp                              \
     common/data.cpp                               \
     common/error.cpp                              \
+    common/frame_builder.cpp                      \
+    common/frame_data.cpp                         \
     common/heap.cpp                               \
     common/heap_data.cpp                          \
     common/heap_string.cpp                        \
@@ -194,7 +196,7 @@ SOURCES_COMMON                                  = \
     common/log.cpp                                \
     common/message.cpp                            \
     common/notifier.cpp                           \
-    common/random_manager.cpp                     \
+    common/random.cpp                             \
     common/settings.cpp                           \
     common/string.cpp                             \
     common/tasklet.cpp                            \
@@ -236,11 +238,13 @@ SOURCES_COMMON                                  = \
     meshcop/dataset_updater.cpp                   \
     meshcop/dtls.cpp                              \
     meshcop/energy_scan_client.cpp                \
+    meshcop/extended_panid.cpp                    \
     meshcop/joiner.cpp                            \
     meshcop/joiner_router.cpp                     \
     meshcop/meshcop.cpp                           \
     meshcop/meshcop_leader.cpp                    \
     meshcop/meshcop_tlvs.cpp                      \
+    meshcop/network_name.cpp                      \
     meshcop/panid_query_client.cpp                \
     meshcop/timestamp.cpp                         \
     net/checksum.cpp                              \
@@ -251,12 +255,13 @@ SOURCES_COMMON                                  = \
     net/dns_types.cpp                             \
     net/dnssd_server.cpp                          \
     net/icmp6.cpp                                 \
-    net/ip4_address.cpp                           \
+    net/ip4_types.cpp                             \
     net/ip6.cpp                                   \
     net/ip6_address.cpp                           \
     net/ip6_filter.cpp                            \
     net/ip6_headers.cpp                           \
     net/ip6_mpl.cpp                               \
+    net/nd6.cpp                                   \
     net/nd_agent.cpp                              \
     net/netif.cpp                                 \
     net/sntp_client.cpp                           \
@@ -338,7 +343,7 @@ RADIO_SOURCES_COMMON                       = \
     common/error.cpp                         \
     common/instance.cpp                      \
     common/log.cpp                           \
-    common/random_manager.cpp                \
+    common/random.cpp                        \
     common/string.cpp                        \
     common/tasklet.cpp                       \
     common/timer.cpp                         \
@@ -413,7 +418,7 @@ HEADERS_COMMON                                  = \
     backbone_router/bbr_manager.hpp               \
     backbone_router/multicast_listeners_table.hpp \
     backbone_router/ndproxy_table.hpp             \
-    border_router/router_advertisement.hpp        \
+    border_router/infra_if.hpp                    \
     border_router/routing_manager.hpp             \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
@@ -434,6 +439,8 @@ HEADERS_COMMON                                  = \
     common/equatable.hpp                          \
     common/error.hpp                              \
     common/extension.hpp                          \
+    common/frame_builder.hpp                      \
+    common/frame_data.hpp                         \
     common/heap.hpp                               \
     common/heap_allocatable.hpp                   \
     common/heap_array.hpp                         \
@@ -456,7 +463,6 @@ HEADERS_COMMON                                  = \
     common/pool.hpp                               \
     common/ptr_wrapper.hpp                        \
     common/random.hpp                             \
-    common/random_manager.hpp                     \
     common/retain_ptr.hpp                         \
     common/serial_number.hpp                      \
     common/settings.hpp                           \
@@ -537,11 +543,13 @@ HEADERS_COMMON                                  = \
     meshcop/dataset_updater.hpp                   \
     meshcop/dtls.hpp                              \
     meshcop/energy_scan_client.hpp                \
+    meshcop/extended_panid.hpp                    \
     meshcop/joiner.hpp                            \
     meshcop/joiner_router.hpp                     \
     meshcop/meshcop.hpp                           \
     meshcop/meshcop_leader.hpp                    \
     meshcop/meshcop_tlvs.hpp                      \
+    meshcop/network_name.hpp                      \
     meshcop/panid_query_client.hpp                \
     meshcop/timestamp.hpp                         \
     net/checksum.hpp                              \
@@ -553,13 +561,14 @@ HEADERS_COMMON                                  = \
     net/dns_types.hpp                             \
     net/dnssd_server.hpp                          \
     net/icmp6.hpp                                 \
-    net/ip4_address.hpp                           \
+    net/ip4_types.hpp                             \
     net/ip6.hpp                                   \
     net/ip6_address.hpp                           \
     net/ip6_filter.hpp                            \
     net/ip6_headers.hpp                           \
     net/ip6_mpl.hpp                               \
     net/ip6_types.hpp                             \
+    net/nd6.hpp                                   \
     net/nd_agent.hpp                              \
     net/netif.hpp                                 \
     net/sntp_client.hpp                           \

@@ -169,6 +169,7 @@ class OnMeshPrefixConfig : public otBorderRouterConfig,
                            public Equatable<OnMeshPrefixConfig>
 {
     friend class NetworkData;
+    friend class Leader;
     friend class Local;
     friend class Publisher;
 
@@ -188,6 +189,14 @@ public:
      *
      */
     Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
+
+    /**
+     * This method gets the preference.
+     *
+     * @return The preference.
+     *
+     */
+    RoutePreference GetPreference(void) const { return RoutePreferenceFromValue(RoutePreferenceToValue(mPreference)); }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**

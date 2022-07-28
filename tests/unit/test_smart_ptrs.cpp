@@ -121,7 +121,7 @@ void TestOwnedPtr(void)
 
     {
         OwnedPtr<TestObject> ptr1(&obj1);
-        OwnedPtr<TestObject> ptr2(static_cast<OwnedPtr<TestObject> &&>(ptr1));
+        OwnedPtr<TestObject> ptr2(ptr1.PassOwnership());
 
         VerifyPointer(ptr1, nullptr);
         VerifyPointer(ptr2, &obj1);
@@ -209,26 +209,26 @@ void TestOwnedPtr(void)
         VerifyPointer(ptr3, &obj3);
 
         // Move from non-null (ptr1) to non-null (ptr2)
-        ptr2 = static_cast<OwnedPtr<TestObject> &&>(ptr1);
+        ptr2 = ptr1.PassOwnership();
         VerifyPointer(ptr1, nullptr);
         VerifyPointer(ptr2, &obj1);
         VerifyOrQuit(!obj1.WasFreed());
         VerifyOrQuit(obj2.WasFreed());
 
         // Move from null (ptr1) to non-null (ptr3)
-        ptr3 = static_cast<OwnedPtr<TestObject> &&>(ptr1);
+        ptr3 = ptr1.PassOwnership();
         VerifyPointer(ptr1, nullptr);
         VerifyPointer(ptr3, nullptr);
         VerifyOrQuit(obj3.WasFreed());
 
         // Move from non-null (ptr2) to null (ptr1)
-        ptr1 = static_cast<OwnedPtr<TestObject> &&>(ptr2);
+        ptr1 = ptr2.PassOwnership();
         VerifyPointer(ptr1, &obj1);
         VerifyPointer(ptr2, nullptr);
         VerifyOrQuit(!obj1.WasFreed());
 
         // Move from null (ptr2) to null (ptr3)
-        ptr3 = static_cast<OwnedPtr<TestObject> &&>(ptr2);
+        ptr3 = ptr2.PassOwnership();
         VerifyPointer(ptr2, nullptr);
         VerifyPointer(ptr3, nullptr);
         VerifyOrQuit(!obj1.WasFreed());
@@ -247,11 +247,11 @@ void TestOwnedPtr(void)
         VerifyPointer(ptr2, nullptr);
 
         // Move from non-null (ptr1) to itself
-        ptr1 = static_cast<OwnedPtr<TestObject> &&>(ptr1);
+        ptr1 = ptr1.PassOwnership();
         VerifyPointer(ptr1, &obj1);
 
         // Move from null (ptr2) to itself
-        ptr2 = static_cast<OwnedPtr<TestObject> &&>(ptr2);
+        ptr2 = ptr2.PassOwnership();
         VerifyPointer(ptr2, nullptr);
     }
 

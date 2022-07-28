@@ -31,6 +31,7 @@ import unittest
 
 import mle
 import thread_cert
+import config
 
 LEADER = 1
 SSED_1 = 2
@@ -57,7 +58,7 @@ class SSED_SingleProbe(thread_cert.TestCase):
         self.nodes[SSED_1].set_csl_timeout(CSL_TIMEOUT)
 
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[SSED_1].start()

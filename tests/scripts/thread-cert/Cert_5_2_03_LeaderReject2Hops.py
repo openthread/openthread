@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import mle
 import network_layer
 import thread_cert
@@ -310,21 +311,21 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
 
     def test(self):
         self.nodes[DUT_LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[DUT_LEADER].get_state(), 'leader')
 
         for i in range(2, 32):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
         self.collect_rlocs()
 
         self.nodes[ROUTER_31].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER_31].get_state(), 'router')
 
         self.nodes[ROUTER_32].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
     def verify(self, pv: PacketVerifier):
         pkts = pv.pkts

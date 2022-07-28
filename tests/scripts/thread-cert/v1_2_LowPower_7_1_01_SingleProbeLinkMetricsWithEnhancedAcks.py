@@ -32,6 +32,7 @@ import unittest
 from config import ADDRESS_TYPE
 from pktverify import consts
 
+import config
 import thread_cert
 
 LEADER = 1
@@ -42,6 +43,7 @@ POLL_PERIOD = 3000  # 3s
 
 
 class LowPower_7_1_01(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
             'version': '1.2',
@@ -66,7 +68,7 @@ class LowPower_7_1_01(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[SED_1].set_pollperiod(POLL_PERIOD)

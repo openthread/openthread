@@ -50,19 +50,11 @@ namespace Ip6 {
 
 RegisterLogModule("Ip6Filter");
 
-Filter::Filter(Instance &aInstance)
-    : InstanceLocator(aInstance)
-{
-    memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
-}
-
 bool Filter::Accept(Message &aMessage) const
 {
-    bool        rval = false;
-    Header      ip6;
-    Udp::Header udp;
-    Tcp::Header tcp;
-    uint16_t    dstport;
+    bool     rval = false;
+    Headers  headers;
+    uint16_t dstPort;
 
     // Allow all received IPv6 datagrams with link security enabled
     if (aMessage.IsLinkSecurityEnabled())
@@ -70,11 +62,11 @@ bool Filter::Accept(Message &aMessage) const
         ExitNow(rval = true);
     }
 
-    // Read IPv6 header
-    SuccessOrExit(aMessage.Read(0, ip6));
+    SuccessOrExit(headers.ParseFrom(aMessage));
 
     // Allow only link-local unicast or multicast
-    VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast());
+    VerifyOrExit(headers.GetDestinationAddress().IsLinkLocal() ||
+                 headers.GetDestinationAddress().IsLinkLocalMulticast());
 
     // Allow all link-local IPv6 datagrams when Thread is not enabled
     if (Get<Mle::MleRouter>().GetRole() == Mle::kRoleDisabled)
@@ -82,16 +74,13 @@ bool Filter::Accept(Message &aMessage) const
         ExitNow(rval = true);
     }
 
-    switch (ip6.GetNextHeader())
+    dstPort = headers.GetDestinationPort();
+
+    switch (headers.GetIpProto())
     {
     case kProtoUdp:
-        // Read the UDP header and get the dst port
-        SuccessOrExit(aMessage.Read(sizeof(ip6), udp));
-
-        dstport = udp.GetDestinationPort();
-
         // Allow MLE traffic
-        if (dstport == Mle::kUdpPort)
+        if (dstPort == Mle::kUdpPort)
         {
             ExitNow(rval = true);
         }
@@ -99,7 +88,7 @@ bool Filter::Accept(Message &aMessage) const
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         // Allow native commissioner traffic
         if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled &&
-            dstport == Get<MeshCoP::BorderAgent>().GetUdpPort())
+            dstPort == Get<MeshCoP::BorderAgent>().GetUdpPort())
         {
             ExitNow(rval = true);
         }
@@ -107,11 +96,6 @@ bool Filter::Accept(Message &aMessage) const
         break;
 
     case kProtoTcp:
-        // Read the TCP header and get the dst port
-        SuccessOrExit(aMessage.Read(sizeof(ip6), tcp));
-
-        dstport = tcp.GetDestinationPort();
-
         break;
 
     default:
@@ -120,110 +104,36 @@ bool Filter::Accept(Message &aMessage) const
     }
 
     // Check against allowed unsecure port list
-    for (uint16_t unsecurePort : mUnsecurePorts)
-    {
-        if (unsecurePort != 0 && unsecurePort == dstport)
-        {
-            ExitNow(rval = true);
-        }
-    }
+    rval = mUnsecurePorts.Contains(dstPort);
 
 exit:
     return rval;
 }
 
-Error Filter::AddUnsecurePort(uint16_t aPort)
+Error Filter::UpdateUnsecurePorts(Action aAction, uint16_t aPort)
 {
-    Error error = kErrorNone;
+    Error     error = kErrorNone;
+    uint16_t *entry;
 
     VerifyOrExit(aPort != 0, error = kErrorInvalidArgs);
 
-    for (uint16_t unsecurePort : mUnsecurePorts)
+    entry = mUnsecurePorts.Find(aPort);
+
+    if (aAction == kAdd)
     {
-        if (unsecurePort == aPort)
-        {
-            ExitNow();
-        }
+        VerifyOrExit(entry == nullptr);
+        SuccessOrExit(error = mUnsecurePorts.PushBack(aPort));
+    }
+    else
+    {
+        VerifyOrExit(entry != nullptr, error = kErrorNotFound);
+        mUnsecurePorts.Remove(*entry);
     }
 
-    for (uint16_t &unsecurePort : mUnsecurePorts)
-    {
-        if (unsecurePort == 0)
-        {
-            unsecurePort = aPort;
-            LogInfo("Added unsecure port %d", aPort);
-            ExitNow();
-        }
-    }
-
-    ExitNow(error = kErrorNoBufs);
+    LogInfo("%s unsecure port %d", (aAction == kAdd) ? "Added" : "Removed", aPort);
 
 exit:
     return error;
-}
-
-Error Filter::RemoveUnsecurePort(uint16_t aPort)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aPort != 0, error = kErrorInvalidArgs);
-
-    for (int i = 0; i < kMaxUnsecurePorts; i++)
-    {
-        if (mUnsecurePorts[i] == aPort)
-        {
-            // Shift all of the ports higher than this
-            // port down.
-            for (; i < kMaxUnsecurePorts - 1; i++)
-            {
-                mUnsecurePorts[i] = mUnsecurePorts[i + 1];
-            }
-
-            // Clear the last port entry.
-            mUnsecurePorts[i] = 0;
-            LogInfo("Removed unsecure port %d", aPort);
-            ExitNow();
-        }
-    }
-
-    ExitNow(error = kErrorNotFound);
-
-exit:
-    return error;
-}
-
-bool Filter::IsUnsecurePort(uint16_t aPort)
-{
-    bool found = false;
-
-    for (uint16_t unsecurePort : mUnsecurePorts)
-    {
-        if (unsecurePort == aPort)
-        {
-            found = true;
-            break;
-        }
-    }
-    return found;
-}
-
-void Filter::RemoveAllUnsecurePorts(void)
-{
-    memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
-}
-
-const uint16_t *Filter::GetUnsecurePorts(uint8_t &aNumEntries) const
-{
-    // Count the number of unsecure ports.
-    for (aNumEntries = 0; aNumEntries < kMaxUnsecurePorts; aNumEntries++)
-    {
-        if (mUnsecurePorts[aNumEntries] == 0)
-        {
-            break;
-        }
-    }
-
-    return mUnsecurePorts;
 }
 
 } // namespace Ip6

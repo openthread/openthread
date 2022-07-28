@@ -106,7 +106,7 @@ static void Init(void)
 {
     otMeshLocalPrefix meshLocalPrefix = {{0xfd, 0x00, 0xca, 0xfe, 0xfa, 0xce, 0x12, 0x34}};
 
-    sInstance->Get<Mle::MleRouter>().SetMeshLocalPrefix(static_cast<Mle::MeshLocalPrefix &>(meshLocalPrefix));
+    sInstance->Get<Mle::MleRouter>().SetMeshLocalPrefix(static_cast<Ip6::NetworkPrefix &>(meshLocalPrefix));
 
     // Emulate global prefixes with contextes.
     uint8_t mockNetworkData[] = {
@@ -145,12 +145,14 @@ static void Init(void)
  */
 static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 {
-    Message *message = nullptr;
-    uint8_t  result[512];
-    uint8_t  iphc[512];
-    uint8_t  ip6[512];
-    uint16_t iphcLength;
-    uint16_t ip6Length;
+    Message * message = nullptr;
+    uint8_t   result[512];
+    uint8_t   iphc[512];
+    uint8_t   ip6[512];
+    uint16_t  iphcLength;
+    uint16_t  ip6Length;
+    FrameData frameData;
+    Error     error;
 
     aVector.GetCompressedStream(iphc, iphcLength);
     aVector.GetUncompressedStream(ip6, ip6Length);
@@ -169,18 +171,22 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
     if (aCompress)
     {
-        Lowpan::BufferWriter buffer(result, 127);
+        FrameBuilder frameBuilder;
+        Message *    compressedMsg;
+        Ip6::Ecn     ecn;
+
+        frameBuilder.Init(result, 127);
 
         VerifyOrQuit((message = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
 
         aVector.GetUncompressedStream(*message);
 
-        VerifyOrQuit(sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination, buffer) ==
+        VerifyOrQuit(sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination, frameBuilder) ==
                      aVector.mError);
 
         if (aVector.mError == kErrorNone)
         {
-            uint8_t compressBytes = static_cast<uint8_t>(buffer.GetWritePointer() - result);
+            uint16_t compressBytes = frameBuilder.GetLength();
 
             // Append payload to the LOWPAN_IPHC.
             message->ReadBytes(message->GetOffset(), result + compressBytes,
@@ -192,6 +198,25 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
             VerifyOrQuit(compressBytes == aVector.mIphcHeader.mLength, "Lowpan::Compress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "Lowpan::Compress failed");
             VerifyOrQuit(memcmp(iphc, result, iphcLength) == 0, "Lowpan::Compress failed");
+
+            // Validate `DecompressEcn()` and `MarkCompressedEcn()`
+
+            VerifyOrQuit((compressedMsg = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
+            SuccessOrQuit(compressedMsg->AppendBytes(result, compressBytes));
+
+            ecn = sLowpan->DecompressEcn(*compressedMsg, /* aOffset */ 0);
+            VerifyOrQuit(ecn == aVector.GetIpHeader().GetEcn());
+            printf("Decompressed ECN is %d\n", ecn);
+
+            if (ecn != Ip6::kEcnNotCapable)
+            {
+                sLowpan->MarkCompressedEcn(*compressedMsg, /*a aOffset */ 0);
+                ecn = sLowpan->DecompressEcn(*compressedMsg, /* aOffset */ 0);
+                VerifyOrQuit(ecn == Ip6::kEcnMarked);
+                printf("ECN is updated to %d\n", ecn);
+            }
+
+            compressedMsg->Free();
         }
 
         message->Free();
@@ -202,28 +227,29 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
     {
         VerifyOrQuit((message = sInstance->Get<MessagePool>().Allocate(Message::kTypeIp6)) != nullptr);
 
-        int decompressedBytes =
-            sLowpan->Decompress(*message, aVector.mMacSource, aVector.mMacDestination, iphc, iphcLength, 0);
+        frameData.Init(iphc, iphcLength);
+
+        error = sLowpan->Decompress(*message, aVector.mMacSource, aVector.mMacDestination, frameData, 0);
 
         message->ReadBytes(0, result, message->GetLength());
 
         if (aVector.mError == kErrorNone)
         {
+            SuccessOrQuit(error, "Lowpan::Decompress failed");
+
             // Append payload to the IPv6 Packet.
-            memcpy(result + message->GetLength(), iphc + decompressedBytes,
-                   iphcLength - static_cast<uint16_t>(decompressedBytes));
+            memcpy(result + message->GetLength(), frameData.GetBytes(), frameData.GetLength());
 
-            DumpBuffer("Resulted IPv6 uncompressed packet", result,
-                       message->GetLength() + iphcLength - static_cast<uint16_t>(decompressedBytes));
+            DumpBuffer("Resulted IPv6 uncompressed packet", result, message->GetLength() + frameData.GetLength());
 
-            VerifyOrQuit(decompressedBytes == aVector.mIphcHeader.mLength, "Lowpan::Decompress failed");
+            VerifyOrQuit((frameData.GetBytes() - iphc) == aVector.mIphcHeader.mLength, "Lowpan::Decompress failed");
             VerifyOrQuit(message->GetOffset() == aVector.mPayloadOffset, "Lowpan::Decompress failed");
             VerifyOrQuit(message->GetOffset() == message->GetLength(), "Lowpan::Decompress failed");
             VerifyOrQuit(memcmp(ip6, result, ip6Length) == 0, "Lowpan::Decompress failed");
         }
         else
         {
-            VerifyOrQuit(decompressedBytes < 0, "Lowpan::Decompress failed");
+            VerifyOrQuit(error == kErrorParse, "Lowpan::Decompress failed");
         }
 
         message->Free();
@@ -1843,7 +1869,7 @@ void TestLowpanMeshHeader(void)
 
     uint8_t            frame[kMaxFrameSize];
     uint16_t           length;
-    uint16_t           headerLength;
+    FrameData          frameData;
     Lowpan::MeshHeader meshHeader;
 
     meshHeader.Init(kSourceAddr, kDestAddr, 1);
@@ -1857,14 +1883,17 @@ void TestLowpanMeshHeader(void)
     VerifyOrQuit(memcmp(frame, kMeshHeader1, length) == 0, "MeshHeader::WriteTo() failed");
 
     memset(&meshHeader, 0, sizeof(meshHeader));
-    VerifyOrQuit(Lowpan::MeshHeader::IsMeshHeader(frame, length));
-    SuccessOrQuit(meshHeader.ParseFrom(frame, length, headerLength));
-    VerifyOrQuit(headerLength == length, "MeshHeader::ParseFrom() returned length is incorrect");
+    frameData.Init(frame, length);
+    VerifyOrQuit(Lowpan::MeshHeader::IsMeshHeader(frameData));
+    SuccessOrQuit(meshHeader.ParseFrom(frameData));
+    VerifyOrQuit(frameData.GetLength() == 0, "ParseFrom() did not skip over parsed content");
+    VerifyOrQuit(frameData.GetBytes() - frame == length, "ParseFrom() did not skip over parsed content");
     VerifyOrQuit(meshHeader.GetSource() == kSourceAddr, "failed after ParseFrom()");
     VerifyOrQuit(meshHeader.GetDestination() == kDestAddr, "failed after ParseFrom()");
     VerifyOrQuit(meshHeader.GetHopsLeft() == 1, "failed after ParseFrom()");
 
-    VerifyOrQuit(meshHeader.ParseFrom(frame, length - 1, headerLength) == kErrorParse,
+    frameData.Init(frame, length - 1);
+    VerifyOrQuit(meshHeader.ParseFrom(frameData) == kErrorParse,
                  "MeshHeader::ParseFrom() did not fail with incorrect length");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1880,27 +1909,34 @@ void TestLowpanMeshHeader(void)
     VerifyOrQuit(memcmp(frame, kMeshHeader2, length) == 0, "MeshHeader::WriteTo() failed");
 
     memset(&meshHeader, 0, sizeof(meshHeader));
-    VerifyOrQuit(Lowpan::MeshHeader::IsMeshHeader(frame, length));
-    SuccessOrQuit(meshHeader.ParseFrom(frame, length, headerLength));
-    VerifyOrQuit(headerLength == length, "MeshHeader::ParseFrom() returned length is incorrect");
+    frameData.Init(frame, length);
+    VerifyOrQuit(Lowpan::MeshHeader::IsMeshHeader(frameData));
+    SuccessOrQuit(meshHeader.ParseFrom(frameData));
+    VerifyOrQuit(frameData.GetLength() == 0, "ParseFrom() did not skip over parsed content");
+    VerifyOrQuit(frameData.GetBytes() - frame == length, "ParseFrom() did not skip over parsed content");
     VerifyOrQuit(meshHeader.GetSource() == kSourceAddr, "failed after ParseFrom()");
     VerifyOrQuit(meshHeader.GetDestination() == kDestAddr, "failed after ParseFrom()");
     VerifyOrQuit(meshHeader.GetHopsLeft() == 0x20, "failed after ParseFrom()");
 
-    VerifyOrQuit(meshHeader.ParseFrom(frame, length - 1, headerLength) == kErrorParse,
+    frameData.Init(frame, length - 1);
+    VerifyOrQuit(meshHeader.ParseFrom(frameData) == kErrorParse,
                  "MeshHeader::ParseFrom() did not fail with incorrect length");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    SuccessOrQuit(meshHeader.ParseFrom(kMeshHeader3, sizeof(kMeshHeader3), headerLength));
-    VerifyOrQuit(headerLength == sizeof(kMeshHeader3), "MeshHeader::ParseFrom() returned length is incorrect");
+    length = sizeof(kMeshHeader3);
+    frameData.Init(kMeshHeader3, sizeof(kMeshHeader3));
+    SuccessOrQuit(meshHeader.ParseFrom(frameData));
+    VerifyOrQuit(frameData.GetLength() == 0, "ParseFrom() did not skip over parsed content");
+    VerifyOrQuit(frameData.GetBytes() - kMeshHeader3 == length, "ParseFrom() did not skip over parsed content");
     VerifyOrQuit(meshHeader.GetSource() == kSourceAddr, "failed after ParseFrom()");
     VerifyOrQuit(meshHeader.GetDestination() == kDestAddr, "failed after ParseFrom()");
     VerifyOrQuit(meshHeader.GetHopsLeft() == 1, "failed after ParseFrom()");
 
     VerifyOrQuit(meshHeader.WriteTo(frame) == sizeof(kMeshHeader1));
 
-    VerifyOrQuit(meshHeader.ParseFrom(kMeshHeader3, sizeof(kMeshHeader3) - 1, headerLength) == kErrorParse,
+    frameData.Init(kMeshHeader3, sizeof(kMeshHeader3) - 1);
+    VerifyOrQuit(meshHeader.ParseFrom(frameData) == kErrorParse,
                  "MeshHeader::ParseFrom() did not fail with incorrect length");
 }
 
@@ -1924,7 +1960,7 @@ void TestLowpanFragmentHeader(void)
 
     uint8_t                frame[kMaxFrameSize];
     uint16_t               length;
-    uint16_t               headerLength;
+    FrameData              frameData;
     Lowpan::FragmentHeader fragHeader;
 
     fragHeader.InitFirstFragment(kSize, kTag);
@@ -1939,15 +1975,21 @@ void TestLowpanFragmentHeader(void)
     VerifyOrQuit(memcmp(frame, kFragHeader1, length) == 0, "FragmentHeader::WriteTo() failed");
 
     memset(&fragHeader, 0, sizeof(fragHeader));
-    VerifyOrQuit(Lowpan::FragmentHeader::IsFragmentHeader(frame, length));
-    SuccessOrQuit(fragHeader.ParseFrom(frame, length, headerLength));
-    VerifyOrQuit(headerLength == length, "FragmentHeader::ParseFrom() returned length is incorrect");
+
+    frameData.Init(frame, length);
+    VerifyOrQuit(Lowpan::FragmentHeader::IsFragmentHeader(frameData));
+    SuccessOrQuit(fragHeader.ParseFrom(frameData));
+    VerifyOrQuit(frameData.GetLength() == 0, "ParseFrom() did not skip over parsed content");
+    VerifyOrQuit(frameData.GetBytes() - frame == length, "ParseFrom() did not skip over parsed content");
     VerifyOrQuit(fragHeader.GetDatagramSize() == kSize, "failed after ParseFrom()");
     VerifyOrQuit(fragHeader.GetDatagramTag() == kTag, "failed after ParseFrom()");
     VerifyOrQuit(fragHeader.GetDatagramOffset() == 0, "failed after ParseFrom()");
 
-    VerifyOrQuit(fragHeader.ParseFrom(frame, length - 1, headerLength) == kErrorParse,
+    frameData.Init(frame, length - 1);
+    VerifyOrQuit(fragHeader.ParseFrom(frameData) == kErrorParse,
                  "FragmentHeader::ParseFrom() did not fail with incorrect length");
+    VerifyOrQuit(frameData.GetLength() == length - 1);
+    VerifyOrQuit(frameData.GetBytes() == frame);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1969,51 +2011,70 @@ void TestLowpanFragmentHeader(void)
     VerifyOrQuit(memcmp(frame, kFragHeader2, length) == 0, "FragmentHeader::WriteTo() failed");
 
     memset(&fragHeader, 0, sizeof(fragHeader));
-    VerifyOrQuit(Lowpan::FragmentHeader::IsFragmentHeader(frame, length));
-    SuccessOrQuit(fragHeader.ParseFrom(frame, length, headerLength));
-    VerifyOrQuit(headerLength == length, "FragmentHeader::ParseFrom() returned length is incorrect");
+    frameData.Init(frame, length);
+    VerifyOrQuit(Lowpan::FragmentHeader::IsFragmentHeader(frameData));
+    SuccessOrQuit(fragHeader.ParseFrom(frameData));
+    VerifyOrQuit(frameData.GetLength() == 0, "ParseFrom() did not skip over parsed content");
+    VerifyOrQuit(frameData.GetBytes() - frame == length, "ParseFrom() did not skip over parsed content");
     VerifyOrQuit(fragHeader.GetDatagramSize() == kSize, "failed after ParseFrom()");
     VerifyOrQuit(fragHeader.GetDatagramTag() == kTag, "failed after ParseFrom()");
     VerifyOrQuit(fragHeader.GetDatagramOffset() == kOffset, "failed after ParseFrom()");
 
-    VerifyOrQuit(fragHeader.ParseFrom(frame, length - 1, headerLength) == kErrorParse,
+    frameData.Init(frame, length - 1);
+    VerifyOrQuit(fragHeader.ParseFrom(frameData) == kErrorParse,
                  "FragmentHeader::ParseFrom() did not fail with incorrect length");
+    VerifyOrQuit(frameData.GetLength() == length - 1);
+    VerifyOrQuit(frameData.GetBytes() == frame);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - -
 
     length = sizeof(kFragHeader3);
     memcpy(frame, kFragHeader3, length);
-    SuccessOrQuit(fragHeader.ParseFrom(frame, length, headerLength));
-    VerifyOrQuit(headerLength == length, "FragmentHeader::ParseFrom() returned length is incorrect");
+    frameData.Init(frame, length);
+    SuccessOrQuit(fragHeader.ParseFrom(frameData));
+    VerifyOrQuit(frameData.GetLength() == 0, "ParseFrom() did not skip over parsed content");
+    VerifyOrQuit(frameData.GetBytes() - frame == length, "ParseFrom() did not skip over parsed content");
     VerifyOrQuit(fragHeader.GetDatagramSize() == kSize, "failed after ParseFrom()");
     VerifyOrQuit(fragHeader.GetDatagramTag() == kTag, "failed after ParseFrom()");
     VerifyOrQuit(fragHeader.GetDatagramOffset() == 0, "failed after ParseFrom()");
 
-    VerifyOrQuit(fragHeader.ParseFrom(frame, length - 1, headerLength) == kErrorParse,
+    frameData.Init(frame, length - 1);
+    VerifyOrQuit(fragHeader.ParseFrom(frameData) == kErrorParse,
                  "FragmentHeader::ParseFrom() did not fail with incorrect length");
+    VerifyOrQuit(frameData.GetLength() == length - 1);
+    VerifyOrQuit(frameData.GetBytes() == frame);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - -
 
     length = sizeof(kInvalidFragHeader1);
     memcpy(frame, kInvalidFragHeader1, length);
-    VerifyOrQuit(!Lowpan::FragmentHeader::IsFragmentHeader(frame, length),
+    frameData.Init(frame, length);
+    VerifyOrQuit(!Lowpan::FragmentHeader::IsFragmentHeader(frameData),
                  "IsFragmentHeader() did not detect invalid header");
-    VerifyOrQuit(fragHeader.ParseFrom(frame, length, headerLength) != kErrorNone,
+    VerifyOrQuit(fragHeader.ParseFrom(frameData) != kErrorNone,
                  "FragmentHeader::ParseFrom() did not fail with invalid header");
+    VerifyOrQuit(frameData.GetLength() == length);
+    VerifyOrQuit(frameData.GetBytes() == frame);
 
     length = sizeof(kInvalidFragHeader2);
     memcpy(frame, kInvalidFragHeader2, length);
-    VerifyOrQuit(!Lowpan::FragmentHeader::IsFragmentHeader(frame, length),
+    frameData.Init(frame, length);
+    VerifyOrQuit(!Lowpan::FragmentHeader::IsFragmentHeader(frameData),
                  "IsFragmentHeader() did not detect invalid header");
-    VerifyOrQuit(fragHeader.ParseFrom(frame, length, headerLength) != kErrorNone,
+    VerifyOrQuit(fragHeader.ParseFrom(frameData) != kErrorNone,
                  "FragmentHeader::ParseFrom() did not fail with invalid header");
+    VerifyOrQuit(frameData.GetLength() == length);
+    VerifyOrQuit(frameData.GetBytes() == frame);
 
     length = sizeof(kInvalidFragHeader3);
     memcpy(frame, kInvalidFragHeader3, length);
-    VerifyOrQuit(!Lowpan::FragmentHeader::IsFragmentHeader(frame, length),
+    frameData.Init(frame, length);
+    VerifyOrQuit(!Lowpan::FragmentHeader::IsFragmentHeader(frameData),
                  "IsFragmentHeader() did not detect invalid header");
-    VerifyOrQuit(fragHeader.ParseFrom(frame, length, headerLength) != kErrorNone,
+    VerifyOrQuit(fragHeader.ParseFrom(frameData) != kErrorNone,
                  "FragmentHeader::ParseFrom() did not fail with invalid header");
+    VerifyOrQuit(frameData.GetLength() == length);
+    VerifyOrQuit(frameData.GetBytes() == frame);
 }
 
 } // namespace ot

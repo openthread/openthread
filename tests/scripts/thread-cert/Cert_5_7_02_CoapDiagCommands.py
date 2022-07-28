@@ -159,12 +159,12 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
     def test(self):
         # 1 - Form topology
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 17):
             self.nodes[i].start()
-            self.simulator.go(10)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[REED].start()

@@ -92,7 +92,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
 
         self.nodes[LEADER_1_1].start()
         WAIT_TIME = WAIT_ATTACH
-        self.simulator.go(WAIT_TIME)
+        self.simulator.go(WAIT_TIME * 2)
         self.assertEqual(self.nodes[LEADER_1_1].get_state(), 'leader')
         self.simulator.set_lowpan_context(1, config.DOMAIN_PREFIX)
 

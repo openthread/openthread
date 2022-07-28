@@ -304,6 +304,22 @@ public:
      */
     bool HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) const;
 
+    /**
+     * This method indicates whether the child table contains a given `Neighbor` instance.
+     *
+     * @param[in]  aNeighbor  A reference to a `Neighbor`.
+     *
+     * @retval TRUE  if @p aNeighbor is a `Child` in the child table.
+     * @retval FALSE if @p aNeighbor is not a `Child` in the child table.
+     *
+     */
+    bool Contains(const Neighbor &aNeighbor) const
+    {
+        const Child *child = static_cast<const Child *>(&aNeighbor);
+
+        return (mChildren <= child) && (child < GetArrayEnd(mChildren));
+    }
+
 private:
     static constexpr uint16_t kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN;
 

@@ -30,6 +30,7 @@
 import unittest
 
 import command
+import config
 from mesh_cop import MeshCopState
 import thread_cert
 from pktverify.consts import MLE_DISCOVERY_REQUEST, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, HANDSHAKE_SERVER_HELLO, HANDSHAKE_SERVER_KEY_EXCHANGE, HANDSHAKE_SERVER_HELLO_DONE, HANDSHAKE_CLIENT_KEY_EXCHANGE, HANDSHAKE_HELLO_VERIFY_REQUEST, CONTENT_APPLICATION_DATA, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_REQUEST_TLV, NM_DISCOVERY_RESPONSE_TLV, THREAD_DISCOVERY_TLV, CONTENT_CHANGE_CIPHER_SPEC, CONTENT_HANDSHAKE, CONTENT_ALERT
@@ -76,7 +77,7 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
         self.nodes[COMMISSIONER].thread_start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
         self.nodes[COMMISSIONER].commissioner_set_provisioning_url(URL_1)
         self.nodes[COMMISSIONER].commissioner_start()

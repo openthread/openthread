@@ -38,13 +38,23 @@
 namespace ot {
 namespace MeshCoP {
 
+void Timestamp::ConvertTo(otTimestamp &aTimestamp) const
+{
+    aTimestamp.mSeconds       = GetSeconds();
+    aTimestamp.mTicks         = GetTicks();
+    aTimestamp.mAuthoritative = GetAuthoritative();
+}
+
+void Timestamp::SetFromTimestamp(const otTimestamp &aTimestamp)
+{
+    SetSeconds(aTimestamp.mSeconds);
+    SetTicks(aTimestamp.mTicks);
+    SetAuthoritative(aTimestamp.mAuthoritative);
+}
+
 int Timestamp::Compare(const Timestamp *aFirst, const Timestamp *aSecond)
 {
-    int      rval;
-    uint64_t firstSeconds;
-    uint64_t secondSeconds;
-    uint16_t firstTicks;
-    uint16_t secondTicks;
+    int rval;
 
     if (aFirst == nullptr)
     {
@@ -62,20 +72,44 @@ int Timestamp::Compare(const Timestamp *aFirst, const Timestamp *aSecond)
 
     // Both are non-null.
 
-    firstSeconds  = aFirst->GetSeconds();
-    secondSeconds = aSecond->GetSeconds();
+    rval = Compare(*aFirst, *aSecond);
+
+exit:
+    return rval;
+}
+
+int Timestamp::Compare(const Timestamp &aFirst, const Timestamp &aSecond)
+{
+    int      rval;
+    uint64_t firstSeconds;
+    uint64_t secondSeconds;
+    uint16_t firstTicks;
+    uint16_t secondTicks;
+    bool     firstAuthoritative;
+    bool     secondAuthoritative;
+
+    firstSeconds  = aFirst.GetSeconds();
+    secondSeconds = aSecond.GetSeconds();
 
     if (firstSeconds != secondSeconds)
     {
         ExitNow(rval = (firstSeconds > secondSeconds) ? 1 : -1);
     }
 
-    firstTicks  = aFirst->GetTicks();
-    secondTicks = aSecond->GetTicks();
+    firstTicks  = aFirst.GetTicks();
+    secondTicks = aSecond.GetTicks();
 
     if (firstTicks != secondTicks)
     {
         ExitNow(rval = (firstTicks > secondTicks) ? 1 : -1);
+    }
+
+    firstAuthoritative  = aFirst.GetAuthoritative();
+    secondAuthoritative = aSecond.GetAuthoritative();
+
+    if (firstAuthoritative != secondAuthoritative)
+    {
+        ExitNow(rval = firstAuthoritative ? 1 : -1);
     }
 
     rval = 0;

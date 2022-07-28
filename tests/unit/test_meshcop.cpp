@@ -139,7 +139,7 @@ void TestTimestamp(void)
     VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
 
     t1.SetAuthoritative(true);
-    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
+    VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) > 0);
 
     t1.SetSeconds(1);
     VerifyOrQuit(t1.GetSeconds() == 1);
@@ -147,6 +147,7 @@ void TestTimestamp(void)
     VerifyOrQuit(MeshCoP::Timestamp::Compare(&t2, &t1) < 0);
 
     t2.SetSeconds(1);
+    t2.SetAuthoritative(true);
     VerifyOrQuit(MeshCoP::Timestamp::Compare(&t1, &t2) == 0);
 
     printf("TestTimestamp() passed\n");

@@ -1409,20 +1409,7 @@ exit:
 
 void Dso::Connection::PendingRequests::Remove(MessageId aMessageId)
 {
-    Entry *entry = mRequests.FindMatching(aMessageId);
-    Entry *lastEntry;
-
-    VerifyOrExit(entry != nullptr);
-
-    // Remove last entry from the `mRequests` array, if it is not the
-    // `entry` we want to remove, replace `entry` with `lastEntry.
-
-    lastEntry = mRequests.PopBack();
-    VerifyOrExit(lastEntry != entry);
-    *entry = *lastEntry;
-
-exit:
-    return;
+    mRequests.RemoveMatching(aMessageId);
 }
 
 bool Dso::Connection::PendingRequests::HasAnyTimedOut(TimeMilli aNow) const

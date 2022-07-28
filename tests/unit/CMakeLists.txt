@@ -320,6 +320,27 @@ target_link_libraries(ot-test-flash
 
 add_test(NAME ot-test-flash COMMAND ot-test-flash)
 
+add_executable(ot-test-frame-builder
+    test_frame_builder.cpp
+)
+
+target_include_directories(ot-test-frame-builder
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-frame-builder
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-frame-builder
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-frame_builder COMMAND ot-test-frame-builder)
+
 add_executable(ot-test-heap
     test_heap.cpp
 )
@@ -430,6 +451,27 @@ target_link_libraries(ot-test-hmac-sha256
 )
 
 add_test(NAME ot-test-hmac-sha256 COMMAND ot-test-hmac-sha256)
+
+add_executable(ot-test-ip4-header
+    test_ip4_header.cpp
+)
+
+target_include_directories(ot-test-ip4-header
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-ip4-header
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-ip4-header
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-ip4-header COMMAND ot-test-ip4-header)
 
 add_executable(ot-test-ip6-header
     test_ip6_header.cpp
@@ -645,6 +687,27 @@ add_executable(ot-test-ndproxy-table
     test_ndproxy_table.cpp
 )
 
+add_executable(ot-test-network-name
+    test_network_name.cpp
+)
+
+target_include_directories(ot-test-network-name
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-network-name
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-network-name
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-network-name COMMAND ot-test-network-name)
+
 target_include_directories(ot-test-ndproxy-table
     PRIVATE
         ${COMMON_INCLUDES}
@@ -814,6 +877,27 @@ add_test(NAME ot-test-meshcop COMMAND ot-test-meshcop)
 add_executable(ot-test-serial-number
     test_serial_number.cpp
 )
+
+add_executable(ot-test-routing-manager
+    test_routing_manager.cpp
+)
+
+target_include_directories(ot-test-routing-manager
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-routing-manager
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-routing-manager
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-routing-manager COMMAND ot-test-routing-manager)
 
 target_include_directories(ot-test-serial-number
     PRIVATE
