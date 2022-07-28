@@ -3800,6 +3800,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     uint8_t             routerId;
     Router *            router;
     Router *            leader;
+    bool                isRouterIdAllocated;
 
     mAddressSolicitPending = false;
 
@@ -3830,6 +3831,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
 
     SuccessOrExit(Tlv::Find<ThreadRloc16Tlv>(*aMessage, rloc16));
     routerId = RouterIdFromRloc16(rloc16);
+
+    isRouterIdAllocated = mRouterTable.IsAllocated(routerId);
 
     SuccessOrExit(Tlv::FindTlv(*aMessage, routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid());
@@ -3866,12 +3869,21 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
         leader->SetNextHop(RouterIdFromRloc16(mParent.GetRloc16()));
     }
 
+    if (isRouterIdAllocated)
+    {
+        // send Link Request immediately if Router ID was previously allocated
+        IgnoreError(SendLinkRequest(nullptr));
+    }
+    else
+    {
+        // wait to send Link Request until new Router ID has been disseminated from the Leader
+        mLinkRequestDelay = kMulticastLinkRequestDelay;
+    }
+
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
     {
         IgnoreError(SendChildIdResponse(child));
     }
-
-    mLinkRequestDelay = kMulticastLinkRequestDelay;
 
 exit:
     // Send announce after received address solicit reply if needed
