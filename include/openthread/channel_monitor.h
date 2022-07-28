@@ -64,13 +64,13 @@ extern "C" {
  */
 
 /**
- * This function enables/disables the Channel Monitoring operation.
+ * Enables or disables the Channel Monitoring operation.
  *
  * Once operation starts, any previously collected data is cleared. However, after operation is disabled, the previous
  * collected data is still valid and can be read.
  *
- * @note OpenThread core internally enables/disables the Channel Monitoring operation when the IPv6 interface is
- * brought up/down (i.e., call to `otIp6SetEnabled()`).
+ * @note OpenThread core internally enables or disables the Channel Monitoring operation when the IPv6 interface is
+ * brought up or down, for example in a call to `otIp6SetEnabled()`.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aEnabled        TRUE to enable/start Channel Monitoring operation, FALSE to disable/stop it.
