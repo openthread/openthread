@@ -90,7 +90,7 @@ void        ProcessRadioTxAndTasklets(void);
 void        AdvanceTime(uint32_t aDuration);
 void        LogRouterAdvert(const Icmp6Packet &aPacket);
 void        ValidateRouterAdvert(const Icmp6Packet &aPacket);
-const char *PreferenceToString(uint8_t aPreference);
+const char *PreferenceToString(int8_t aPreference);
 void        SendRouterAdvert(const Ip6::Address &aAddress, const Icmp6Packet &aPacket);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -314,7 +314,7 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
     }
 }
 
-const char *PreferenceToString(uint8_t aPreference)
+const char *PreferenceToString(int8_t aPreference)
 {
     const char *str = "";
 
@@ -921,6 +921,190 @@ void TestOmrSelection(void)
     testFreeInstance(sInstance);
 }
 
+void TestDefaultRoute(void)
+{
+    Ip6::Prefix                     localOnLink;
+    Ip6::Prefix                     localOmr;
+    Ip6::Prefix                     onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
+    Ip6::Prefix                     routePrefix    = PrefixFromString("2000:1234:5678::", 64);
+    Ip6::Prefix                     omrPrefix      = PrefixFromString("2000:0000:1111:4444::", 64);
+    Ip6::Prefix                     defaultRoute   = PrefixFromString("::", 0);
+    Ip6::Address                    routerAddressA = AddressFromString("fd00::aaaa");
+    Ip6::Address                    routerAddressB = AddressFromString("fd00::bbbb");
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDefaultRoute");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    AdvanceTime(500);
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router A and B adding an onlink prefix
+    // and routePrefix from A, and a default route from B.
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, kValidLitime, kPreferredLifetime)},
+                     {Rio(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+
+    SendRouterAdvert(routerAddressB, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceLow));
+
+    sRsEmitted      = false;
+    sRaValidated    = false;
+    sSawExpectedRio = false;
+    sExpectedPio    = kNoPio;
+
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure info from router B
+    // is now included in the table.
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, kValidLitime, kPreferredLifetime, routerAddressA)},
+                      {RoutePrefix(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium, routerAddressA),
+                       RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceLow, routerAddressB)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. We should not see default route in
+    // Network Data yet (since there is no OMR prefix with default
+    // route flag).
+
+    VerifyExternalRoutesInNetData({ExternalRoute(onLinkPrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(routePrefix, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Add an OMR prefix directly into Network Data with default route
+    // flag.
+
+    prefixConfig.Clear();
+    prefixConfig.mPrefix       = omrPrefix;
+    prefixConfig.mStable       = true;
+    prefixConfig.mSlaac        = true;
+    prefixConfig.mPreferred    = true;
+    prefixConfig.mOnMesh       = true;
+    prefixConfig.mDefaultRoute = true;
+    prefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
+
+    SuccessOrQuit(otBorderRouterAddOnMeshPrefix(sInstance, &prefixConfig));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. We should now see default route from
+    // router B.
+
+    VerifyExternalRoutesInNetData({ExternalRoute(onLinkPrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(routePrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(defaultRoute, NetworkData::kRoutePreferenceLow)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router B adding a default route
+    // now also as ::/0 prefix RIO with a high preference.
+
+    SendRouterAdvert(routerAddressB, {Rio(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceHigh)},
+                     DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceLow));
+
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure default route
+    // entry from router B is now correctly updated to use high
+    // preference (RIO overrides the default route info from header).
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, kValidLitime, kPreferredLifetime, routerAddressA)},
+                      {RoutePrefix(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium, routerAddressA),
+                       RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceHigh, routerAddressB)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. We should now see default route from
+    // router B included with high preference.
+
+    VerifyExternalRoutesInNetData({ExternalRoute(onLinkPrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(routePrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(defaultRoute, NetworkData::kRoutePreferenceHigh)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the OMR prefix previously added with default route
+    // flag.
+
+    SuccessOrQuit(otBorderRouterRemoveOnMeshPrefix(sInstance, &omrPrefix));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. The default route ::/0 should be now
+    // removed since the OMR prefix with default route is removed.
+
+    VerifyExternalRoutesInNetData({ExternalRoute(onLinkPrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(routePrefix, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Re-add the OMR prefix with default route flag.
+
+    prefixConfig.Clear();
+    prefixConfig.mPrefix       = omrPrefix;
+    prefixConfig.mStable       = true;
+    prefixConfig.mSlaac        = true;
+    prefixConfig.mPreferred    = true;
+    prefixConfig.mOnMesh       = true;
+    prefixConfig.mDefaultRoute = true;
+    prefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
+
+    SuccessOrQuit(otBorderRouterAddOnMeshPrefix(sInstance, &prefixConfig));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. We should again see the default route from
+    // router B included with high preference.
+
+    VerifyExternalRoutesInNetData({ExternalRoute(onLinkPrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(routePrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(defaultRoute, NetworkData::kRoutePreferenceHigh)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from router B removing default route
+    // in both header and in RIO.
+
+    SendRouterAdvert(routerAddressB, {Rio(defaultRoute, 0, NetworkData::kRoutePreferenceHigh)},
+                     DefaultRoute(0, NetworkData::kRoutePreferenceMedium));
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the discovered prefix table and ensure default route
+    // entry from router B is no longer present.
+
+    VerifyPrefixTable({OnLinkPrefix(onLinkPrefix, kValidLitime, kPreferredLifetime, routerAddressA)},
+                      {RoutePrefix(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium, routerAddressA)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. The default route ::/0 should be now
+    // removed since router B stopped advertising it.
+
+    VerifyExternalRoutesInNetData({ExternalRoute(onLinkPrefix, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(routePrefix, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Log("End of TestDefaultRoute");
+
+    testFreeInstance(sInstance);
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 int main(void)
@@ -928,6 +1112,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     TestSamePrefixesFromMultipleRouters();
     TestOmrSelection();
+    TestDefaultRoute();
     printf("All tests passed\n");
 #else
     printf("BORDER_ROUTING feature is not enabled\n");
