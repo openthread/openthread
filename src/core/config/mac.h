@@ -37,6 +37,10 @@
 
 #include "config/time_sync.h"
 
+#ifndef OPENTHREAD_CONFIG_THREAD_VERSION
+#error "OPENTHREAD_CONFIG_THREAD_VERSION MUST be defined".
+#endif
+
 /**
  * @def OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT
  *

@@ -37,6 +37,10 @@
 #include "config/coap.h"
 #include "config/srp_server.h"
 
+#ifndef OPENTHREAD_CONFIG_THREAD_VERSION
+#error "OPENTHREAD_CONFIG_THREAD_VERSION MUST be defined".
+#endif
+
 /**
  * @def OPENTHREAD_CONFIG_STACK_VENDOR_OUI
  *
