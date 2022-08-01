@@ -478,7 +478,9 @@ HEADERS_COMMON                                  = \
     common/uptime.hpp                             \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
+    config/border_agent.h                         \
     config/border_router.h                        \
+    config/border_routing.h                       \
     config/channel_manager.h                      \
     config/channel_monitor.h                      \
     config/child_supervision.h                    \
