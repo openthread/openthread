@@ -45,7 +45,6 @@
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::ReadUint16;
-using ot::Encoding::BigEndian::WriteUint16;
 
 namespace ot {
 namespace Lowpan {
@@ -1232,49 +1231,42 @@ void MeshHeader::DecrementHopsLeft(void)
     }
 }
 
-uint16_t MeshHeader::WriteTo(uint8_t *aFrame) const
+Error MeshHeader::AppendTo(FrameBuilder &aFrameBuilder) const
 {
-    uint8_t *cur      = aFrame;
-    uint8_t  dispatch = (kDispatch | kSourceShort | kDestShort);
+    Error   error;
+    uint8_t dispatch = (kDispatch | kSourceShort | kDestShort);
 
     if (mHopsLeft < kDeepHopsLeft)
     {
-        *cur++ = (dispatch | mHopsLeft);
+        SuccessOrExit(error = aFrameBuilder.AppendUint8(dispatch | mHopsLeft));
     }
     else
     {
-        *cur++ = (dispatch | kDeepHopsLeft);
-        *cur++ = mHopsLeft;
+        SuccessOrExit(error = aFrameBuilder.AppendUint8(dispatch | kDeepHopsLeft));
+        SuccessOrExit(error = aFrameBuilder.AppendUint8(mHopsLeft));
     }
 
-    WriteUint16(mSource, cur);
-    cur += sizeof(uint16_t);
+    SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(mSource));
+    SuccessOrExit(error = aFrameBuilder.AppendBigEndianUint16(mDestination));
 
-    WriteUint16(mDestination, cur);
-    cur += sizeof(uint16_t);
-
-    return static_cast<uint16_t>(cur - aFrame);
+exit:
+    return error;
 }
 
 Error MeshHeader::AppendTo(Message &aMessage) const
 {
-    uint8_t  frame[kDeepHopsHeaderLength];
-    uint16_t headerLength;
+    uint8_t      frame[kDeepHopsHeaderLength];
+    FrameBuilder frameBuilder;
 
-    headerLength = WriteTo(frame);
+    frameBuilder.Init(frame, sizeof(frame));
 
-    return aMessage.AppendBytes(frame, headerLength);
+    IgnoreError(AppendTo(frameBuilder));
+
+    return aMessage.AppendBytes(frameBuilder.GetBytes(), frameBuilder.GetLength());
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 // FragmentHeader
-
-void FragmentHeader::Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset)
-{
-    mSize   = (aSize & kSizeMask);
-    mTag    = aTag;
-    mOffset = (aOffset & kOffsetMask);
-}
 
 bool FragmentHeader::IsFragmentHeader(const FrameData &aFrameData)
 {
@@ -1283,7 +1275,7 @@ bool FragmentHeader::IsFragmentHeader(const FrameData &aFrameData)
 
 bool FragmentHeader::IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength)
 {
-    return (aFrameLength >= kFirstFragmentHeaderSize) && ((*aFrame & kDispatchMask) == kDispatch);
+    return (aFrameLength >= sizeof(FirstFrag)) && ((*aFrame & kDispatchMask) == kDispatch);
 }
 
 Error FragmentHeader::ParseFrom(FrameData &aFrameData)
@@ -1309,14 +1301,14 @@ Error FragmentHeader::ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, ui
 
     if ((*aFrame & kOffsetFlag) == kOffsetFlag)
     {
-        VerifyOrExit(aFrameLength >= kSubsequentFragmentHeaderSize);
+        VerifyOrExit(aFrameLength >= sizeof(NextFrag));
         mOffset       = aFrame[kOffsetIndex] * 8;
-        aHeaderLength = kSubsequentFragmentHeaderSize;
+        aHeaderLength = sizeof(NextFrag);
     }
     else
     {
         mOffset       = 0;
-        aHeaderLength = kFirstFragmentHeaderSize;
+        aHeaderLength = sizeof(FirstFrag);
     }
 
     error = kErrorNone;
@@ -1327,31 +1319,12 @@ exit:
 
 Error FragmentHeader::ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t &aHeaderLength)
 {
-    uint8_t  frame[kSubsequentFragmentHeaderSize];
+    uint8_t  frame[sizeof(NextFrag)];
     uint16_t frameLength;
 
     frameLength = aMessage.ReadBytes(aOffset, frame, sizeof(frame));
 
     return ParseFrom(frame, frameLength, aHeaderLength);
-}
-
-uint16_t FragmentHeader::WriteTo(uint8_t *aFrame) const
-{
-    uint8_t *cur = aFrame;
-
-    WriteUint16((static_cast<uint16_t>(kDispatch) << 8) + mSize, cur);
-    cur += sizeof(uint16_t);
-
-    WriteUint16(mTag, cur);
-    cur += sizeof(uint16_t);
-
-    if (mOffset != 0)
-    {
-        *aFrame |= kOffsetFlag;
-        *cur++ = static_cast<uint8_t>(mOffset >> 3);
-    }
-
-    return static_cast<uint16_t>(cur - aFrame);
 }
 
 } // namespace Lowpan

@@ -428,16 +428,15 @@ public:
     uint16_t GetDestination(void) const { return mDestination; }
 
     /**
-     * This method writes the Mesh Header into a given frame.
+     * This method appends the Mesh Header into a given frame.
      *
-     * @note This method expects the frame buffer to have enough space for the entire Mesh Header.
+     * @param[out]  aFrameBuilder  The `FrameBuidler` to append to.
      *
-     * @param[out]  aFrame  The pointer to the frame buffer to write to.
-     *
-     * @returns The header length (number of bytes written).
+     * @retval kErrorNone    Successfully appended the MeshHeader to @p aFrameBuildr.
+     * @retval kErrorNoBufs  Insufficient available buffers.
      *
      */
-    uint16_t WriteTo(uint8_t *aFrame) const;
+    Error AppendTo(FrameBuilder &aFrameBuilder) const;
 
     /**
      * This method appends the Mesh Header to a given message.
@@ -475,31 +474,70 @@ private:
 class FragmentHeader
 {
 public:
-    static constexpr uint16_t kFirstFragmentHeaderSize      = 4; ///< First fragment header size in octets.
-    static constexpr uint16_t kSubsequentFragmentHeaderSize = 5; ///< Subsequent fragment header size in octets.
+    OT_TOOL_PACKED_BEGIN
+    class FirstFrag
+    {
+    public:
+        /**
+         * This method initializes the `FirstFrag`.
+         *
+         * @param[in] aSize  The Datagram Size value.
+         * @param[in] aTag   The Datagram Tag value.
+         *
+         */
+        void Init(uint16_t aSize, uint16_t aTag)
+        {
+            mDispatchSize = HostSwap16(kFirstDispatch | (aSize & kSizeMask));
+            mTag          = HostSwap16(aTag);
+        }
 
-    /**
-     * This method initializes the Fragment Header as a first fragment.
-     *
-     * A first fragment header starts at offset zero.
-     *
-     * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTag    The Datagram Tag value.
-     *
-     */
-    void InitFirstFragment(uint16_t aSize, uint16_t aTag) { Init(aSize, aTag, 0); }
+    private:
+        //                       1                   2                   3
+        //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |1 1 0 0 0|    datagram_size    |         datagram_tag          |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    /**
-     * This method initializes the Fragment Header.
-     *
-     * The @p aOffset value will be truncated to become a multiple of 8.
-     *
-     * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTag    The Datagram Tag value.
-     * @param[in] aOffset The Datagram Offset value.
-     *
-     */
-    void Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset);
+        static constexpr uint16_t kFirstDispatch = 0xc000; // 0b11000_0000_0000_0000
+
+        uint16_t mDispatchSize;
+        uint16_t mTag;
+    } OT_TOOL_PACKED_END;
+
+    OT_TOOL_PACKED_BEGIN
+    class NextFrag
+    {
+    public:
+        /**
+         * This method initializes the `NextFrag`.
+         *
+         * @param[in] aSize    The Datagram Size value.
+         * @param[in] aTag     The Datagram Tag value.
+         * @param[in] aOffset  The Datagram Offset value.
+         *
+         */
+        void Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset)
+        {
+            mDispatchSize = HostSwap16(kNextDispatch | (aSize & kSizeMask));
+            mTag          = HostSwap16(aTag);
+            mOffset       = static_cast<uint8_t>(aOffset >> 3);
+        }
+
+    private:
+        //                       1                   2                   3
+        //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |1 1 1 0 0|    datagram_size    |         datagram_tag          |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |datagram_offset|
+        //  +-+-+-+-+-+-+-+-+
+
+        static constexpr uint16_t kNextDispatch = 0xe000; // 0b11100_0000_0000_0000
+
+        uint16_t mDispatchSize;
+        uint16_t mTag;
+        uint8_t  mOffset;
+    } OT_TOOL_PACKED_END;
 
     /**
      * This static method indicates whether or not the header (in a given frame) is a Fragment Header.
@@ -515,19 +553,6 @@ public:
      *
      */
     static bool IsFragmentHeader(const FrameData &aFrameData);
-
-    /**
-     * This method parses the Fragment Header from a frame @p aFrame.
-     *
-     * @param[in]  aFrame          The pointer to the frame.
-     * @param[in]  aFrameLength    The length of the frame.
-     * @param[out] aHeaderLength   A reference to a variable to output the parsed header length (on success).
-     *
-     * @retval kErrorNone     Fragment Header parsed successfully.
-     * @retval kErrorParse    Fragment header could not be parsed from @p aFrame.
-     *
-     */
-    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength); //~~~ REMOVE OR MAKE PRIVATE
 
     /**
      * This method parses the Fragment Header from a given frame data.
@@ -581,18 +606,6 @@ public:
      */
     uint16_t GetDatagramOffset(void) const { return mOffset; }
 
-    /**
-     * This method writes the Fragment Header into a given frame.
-     *
-     * @note This method expects the frame buffer to have enough space for the entire Fragment Header
-     *
-     * @param[out]  aFrame  The pointer to the frame buffer to write to.
-     *
-     * @returns The header length (number of bytes written).
-     *
-     */
-    uint16_t WriteTo(uint8_t *aFrame) const;
-
 private:
     static constexpr uint8_t kDispatch     = 0xc0;   // 0b1100_0000
     static constexpr uint8_t kDispatchMask = 0xd8;   // 0b1101_1000 accepts first (0b1100_0xxx) and next (0b1110_0xxx).
@@ -606,6 +619,8 @@ private:
     static constexpr uint8_t kOffsetIndex = 4; // Start index of Offset field in the Fragment Header byte sequence.
 
     static bool IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength);
+
+    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
 
     uint16_t mSize;
     uint16_t mTag;

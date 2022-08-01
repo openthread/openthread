@@ -1870,6 +1870,7 @@ void TestLowpanMeshHeader(void)
     uint8_t            frame[kMaxFrameSize];
     uint16_t           length;
     FrameData          frameData;
+    FrameBuilder       frameBuilder;
     Lowpan::MeshHeader meshHeader;
 
     meshHeader.Init(kSourceAddr, kDestAddr, 1);
@@ -1877,10 +1878,12 @@ void TestLowpanMeshHeader(void)
     VerifyOrQuit(meshHeader.GetDestination() == kDestAddr, "failed after Init()");
     VerifyOrQuit(meshHeader.GetHopsLeft() == 1, "failed after Init()");
 
-    length = meshHeader.WriteTo(frame);
+    frameBuilder.Init(frame, sizeof(frame));
+    SuccessOrQuit(meshHeader.AppendTo(frameBuilder));
+    length = frameBuilder.GetLength();
     VerifyOrQuit(length == meshHeader.GetHeaderLength());
-    VerifyOrQuit(length == sizeof(kMeshHeader1), "MeshHeader::WriteTo() returned length is incorrect");
-    VerifyOrQuit(memcmp(frame, kMeshHeader1, length) == 0, "MeshHeader::WriteTo() failed");
+    VerifyOrQuit(length == sizeof(kMeshHeader1), "MeshHeader::AppendTo() returned length is incorrect");
+    VerifyOrQuit(memcmp(frame, kMeshHeader1, length) == 0, "MeshHeader::AppendTo() failed");
 
     memset(&meshHeader, 0, sizeof(meshHeader));
     frameData.Init(frame, length);
@@ -1903,10 +1906,12 @@ void TestLowpanMeshHeader(void)
     VerifyOrQuit(meshHeader.GetDestination() == kDestAddr, "failed after Init()");
     VerifyOrQuit(meshHeader.GetHopsLeft() == 0x20, "failed after Init()");
 
-    length = meshHeader.WriteTo(frame);
-    VerifyOrQuit(length == sizeof(kMeshHeader2), "MeshHeader::WriteTo() returned length is incorrect");
+    frameBuilder.Init(frame, sizeof(frame));
+    SuccessOrQuit(meshHeader.AppendTo(frameBuilder));
+    length = frameBuilder.GetLength();
+    VerifyOrQuit(length == sizeof(kMeshHeader2), "MeshHeader::AppendTo() returned length is incorrect");
     VerifyOrQuit(length == meshHeader.GetHeaderLength());
-    VerifyOrQuit(memcmp(frame, kMeshHeader2, length) == 0, "MeshHeader::WriteTo() failed");
+    VerifyOrQuit(memcmp(frame, kMeshHeader2, length) == 0, "MeshHeader::AppendTo() failed");
 
     memset(&meshHeader, 0, sizeof(meshHeader));
     frameData.Init(frame, length);
@@ -1933,7 +1938,9 @@ void TestLowpanMeshHeader(void)
     VerifyOrQuit(meshHeader.GetDestination() == kDestAddr, "failed after ParseFrom()");
     VerifyOrQuit(meshHeader.GetHopsLeft() == 1, "failed after ParseFrom()");
 
-    VerifyOrQuit(meshHeader.WriteTo(frame) == sizeof(kMeshHeader1));
+    frameBuilder.Init(frame, sizeof(frame));
+    SuccessOrQuit(meshHeader.AppendTo(frameBuilder));
+    VerifyOrQuit(frameBuilder.GetLength() == sizeof(kMeshHeader1));
 
     frameData.Init(kMeshHeader3, sizeof(kMeshHeader3) - 1);
     VerifyOrQuit(meshHeader.ParseFrom(frameData) == kErrorParse,
@@ -1942,13 +1949,10 @@ void TestLowpanMeshHeader(void)
 
 void TestLowpanFragmentHeader(void)
 {
-    enum
-    {
-        kMaxFrameSize = 127,
-        kSize         = 0x7ef,
-        kTag          = 0x1234,
-        kOffset       = (100 * 8),
-    };
+    static constexpr uint16_t kMaxFrameSize = 127;
+    static constexpr uint16_t kSize         = 0x7ef;
+    static constexpr uint16_t kTag          = 0x1234;
+    static constexpr uint16_t kOffset       = (100 * 8);
 
     const uint8_t kFragHeader1[] = {0xc7, 0xef, 0x12, 0x34};       // size:0x7ef, tag:0x1234, offset:0 (first frag)
     const uint8_t kFragHeader2[] = {0xe7, 0xef, 0x12, 0x34, 0x64}; // size:0x7ef, tag:0x1234, offset:100 (next frag)
@@ -1958,21 +1962,22 @@ void TestLowpanFragmentHeader(void)
     const uint8_t kInvalidFragHeader2[] = {0xd0, 0xef, 0x12, 0x34, 0x64};
     const uint8_t kInvalidFragHeader3[] = {0x90, 0xef, 0x12, 0x34, 0x64};
 
-    uint8_t                frame[kMaxFrameSize];
-    uint16_t               length;
-    FrameData              frameData;
-    Lowpan::FragmentHeader fragHeader;
+    uint8_t                           frame[kMaxFrameSize];
+    uint16_t                          length;
+    FrameData                         frameData;
+    FrameBuilder                      frameBuilder;
+    Lowpan::FragmentHeader            fragHeader;
+    Lowpan::FragmentHeader::FirstFrag firstFragHeader;
+    Lowpan::FragmentHeader::NextFrag  nextFragHeader;
 
-    fragHeader.InitFirstFragment(kSize, kTag);
-    VerifyOrQuit(fragHeader.GetDatagramSize() == kSize, "failed after Init");
-    VerifyOrQuit(fragHeader.GetDatagramTag() == kTag, "failed after Init()");
-    VerifyOrQuit(fragHeader.GetDatagramOffset() == 0, "failed after Init()");
+    frameBuilder.Init(frame, sizeof(frame));
 
-    length = fragHeader.WriteTo(frame);
-    VerifyOrQuit(length == Lowpan::FragmentHeader::kFirstFragmentHeaderSize,
-                 "FragmentHeader::WriteTo() returned length is incorrect");
-    VerifyOrQuit(length == sizeof(kFragHeader1), "FragmentHeader::WriteTo() returned length is incorrect");
-    VerifyOrQuit(memcmp(frame, kFragHeader1, length) == 0, "FragmentHeader::WriteTo() failed");
+    firstFragHeader.Init(kSize, kTag);
+    SuccessOrQuit(frameBuilder.Append(firstFragHeader));
+
+    length = frameBuilder.GetLength();
+    VerifyOrQuit(length == sizeof(Lowpan::FragmentHeader::FirstFrag));
+    VerifyOrQuit(memcmp(frame, kFragHeader1, length) == 0);
 
     memset(&fragHeader, 0, sizeof(fragHeader));
 
@@ -1993,22 +1998,27 @@ void TestLowpanFragmentHeader(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    fragHeader.Init(kSize, kTag, kOffset);
-    VerifyOrQuit(fragHeader.GetDatagramSize() == kSize, "failed after Init");
-    VerifyOrQuit(fragHeader.GetDatagramTag() == kTag, "failed after Init()");
-    VerifyOrQuit(fragHeader.GetDatagramOffset() == kOffset, "failed after Init()");
+    frameBuilder.Init(frame, sizeof(frame));
+    nextFragHeader.Init(kSize, kTag, kOffset);
+    SuccessOrQuit(frameBuilder.Append(nextFragHeader));
+    length = frameBuilder.GetLength();
+    VerifyOrQuit(length == sizeof(kFragHeader2));
+    VerifyOrQuit(memcmp(frame, kFragHeader2, length) == 0);
 
     // Check the truncation of offset (to be multiple of 8).
-    fragHeader.Init(kSize, kTag, kOffset + 1);
-    VerifyOrQuit(fragHeader.GetDatagramOffset() == kOffset, "FragmentHeader::GetDatagramOffset() did not truncate");
-    fragHeader.Init(kSize, kTag, kOffset + 7);
-    VerifyOrQuit(fragHeader.GetDatagramOffset() == kOffset, "FragmentHeader::GetDatagramOffset() did not truncate");
+    frameBuilder.Init(frame, sizeof(frame));
+    nextFragHeader.Init(kSize, kTag, kOffset + 1);
+    SuccessOrQuit(frameBuilder.Append(nextFragHeader));
+    length = frameBuilder.GetLength();
+    VerifyOrQuit(length == sizeof(kFragHeader2));
+    VerifyOrQuit(memcmp(frame, kFragHeader2, length) == 0);
 
-    length = fragHeader.WriteTo(frame);
-    VerifyOrQuit(length == Lowpan::FragmentHeader::kSubsequentFragmentHeaderSize,
-                 "FragmentHeader::WriteTo() returned length is incorrect");
-    VerifyOrQuit(length == sizeof(kFragHeader2), "FragmentHeader::WriteTo() returned length is incorrect");
-    VerifyOrQuit(memcmp(frame, kFragHeader2, length) == 0, "FragmentHeader::WriteTo() failed");
+    frameBuilder.Init(frame, sizeof(frame));
+    nextFragHeader.Init(kSize, kTag, kOffset + 7);
+    SuccessOrQuit(frameBuilder.Append(nextFragHeader));
+    length = frameBuilder.GetLength();
+    VerifyOrQuit(length == sizeof(kFragHeader2));
+    VerifyOrQuit(memcmp(frame, kFragHeader2, length) == 0);
 
     memset(&fragHeader, 0, sizeof(fragHeader));
     frameData.Init(frame, length);
