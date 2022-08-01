@@ -96,4 +96,26 @@ void FrameBuilder::WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aL
     memcpy(mBuffer + aOffset, aBuffer, aLength);
 }
 
+Error FrameBuilder::InsertBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    OT_ASSERT(aOffset <= mLength);
+
+    VerifyOrExit(CanAppend(aLength), error = kErrorNoBufs);
+
+    memmove(mBuffer + aOffset + aLength, mBuffer + aOffset, mLength - aOffset);
+    memcpy(mBuffer + aOffset, aBuffer, aLength);
+    mLength += aLength;
+
+exit:
+    return error;
+}
+
+void FrameBuilder::RemoveBytes(uint16_t aOffset, uint16_t aLength)
+{
+    memmove(mBuffer + aOffset, mBuffer + aOffset + aLength, mLength - aOffset - aLength);
+    mLength -= aLength;
+}
+
 } // namespace ot
