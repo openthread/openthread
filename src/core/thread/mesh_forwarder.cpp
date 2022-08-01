@@ -852,16 +852,14 @@ uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame &      aFrame,
                                          uint16_t            aMeshDest,
                                          bool                aAddFragHeader)
 {
-    uint16_t fcf;
-    uint8_t *payload;
-    uint8_t  headerLength;
-    uint16_t maxPayloadLength;
-    uint16_t payloadLength;
-    uint16_t fragmentLength;
-    uint16_t dstpan;
-    uint8_t  secCtl;
-    uint16_t nextOffset;
-    bool     iePresent = CalcIePresent(&aMessage);
+    uint16_t     fcf;
+    uint16_t     payloadLength;
+    uint16_t     dstpan;
+    uint8_t      secCtl;
+    uint16_t     origMsgOffset;
+    uint16_t     nextOffset;
+    FrameBuilder frameBuilder;
+    bool         iePresent = CalcIePresent(&aMessage);
 
 start:
 
@@ -974,10 +972,7 @@ start:
     }
 #endif
 
-    payload          = aFrame.GetPayload();
-    maxPayloadLength = aFrame.GetMaxPayloadLength();
-
-    headerLength = 0;
+    frameBuilder.Init(aFrame.GetPayload(), aFrame.GetMaxPayloadLength());
 
 #if OPENTHREAD_FTD
 
@@ -986,8 +981,8 @@ start:
     {
         Mle::MleRouter &   mle = Get<Mle::MleRouter>();
         Lowpan::MeshHeader meshHeader;
-        uint16_t           meshHeaderLength;
         uint8_t            hopsLeft;
+        uint16_t           maxPayloadLength;
 
         // Mesh Header frames are forwarded by routers over multiple
         // hops to reach a final destination. The forwarding path can
@@ -1006,6 +1001,8 @@ start:
 
         maxPayloadLength = kMeshHeaderFrameMtu - aFrame.GetHeaderLength() -
                            (aFrame.GetFooterLength() - aFrame.GetFcsSize() + kMeshHeaderFrameFcsSize);
+
+        frameBuilder.Init(aFrame.GetPayload(), maxPayloadLength);
 
         if (mle.IsChild())
         {
@@ -1036,21 +1033,37 @@ start:
         }
 
         meshHeader.Init(aMeshSource, aMeshDest, hopsLeft + Lowpan::MeshHeader::kAdditionalHopsLeft);
-        meshHeaderLength = meshHeader.WriteTo(payload);
-        payload += meshHeaderLength;
-        headerLength += meshHeaderLength;
+
+        IgnoreError(meshHeader.AppendTo(frameBuilder));
     }
 
-#endif
+#endif // OPENTHREAD_FTD
+
+    // While performing lowpan compression, the message offset may be
+    // changed to skip over the compressed IPv6 headers, we save the
+    // original offset and set it back on `aMessage` at the end
+    // before returning.
+
+    origMsgOffset = aMessage.GetOffset();
 
     // Compress IPv6 Header
     if (aMessage.GetOffset() == 0)
     {
-        FrameBuilder frameBuilder;
-        uint8_t      hcLength;
-        Mac::Address meshSource, meshDest;
+        uint16_t     fragHeaderOffset;
+        uint16_t     maxFrameLength;
+        Mac::Address meshSource;
+        Mac::Address meshDest;
 
-        frameBuilder.Init(payload, maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
+        // Before performing lowpan header compression, we reduce the
+        // max length on `frameBuilder` to reserve bytes for first
+        // fragment header. This ensures that lowpan compression will
+        // leave room for a first fragment header. After the lowpan
+        // header compression is done, we reclaim the reserved bytes
+        // by setting the max length back to its original value.
+
+        fragHeaderOffset = frameBuilder.GetLength();
+        maxFrameLength   = frameBuilder.GetMaxLength();
+        frameBuilder.SetMaxLength(maxFrameLength - sizeof(Lowpan::FragmentHeader::FirstFrag));
 
         if (aAddMeshHeader)
         {
@@ -1065,24 +1078,26 @@ start:
 
         SuccessOrAssert(Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, frameBuilder));
 
-        hcLength = static_cast<uint8_t>(frameBuilder.GetLength());
-        headerLength += hcLength;
-        payloadLength  = aMessage.GetLength() - aMessage.GetOffset();
-        fragmentLength = maxPayloadLength - headerLength;
+        frameBuilder.SetMaxLength(maxFrameLength);
 
-        if ((payloadLength > fragmentLength) || aAddFragHeader)
+        payloadLength = aMessage.GetLength() - aMessage.GetOffset();
+
+        if (aAddFragHeader || (payloadLength > frameBuilder.GetRemainingLength()))
         {
-            Lowpan::FragmentHeader fragmentHeader;
+            Lowpan::FragmentHeader::FirstFrag firstFragHeader;
 
             if ((!aMessage.IsLinkSecurityEnabled()) && aMessage.IsSubTypeMle())
             {
-                // Enable security and try again.
+                // MLE messages that require fragmentation MUST use
+                // link-layer security. We enable security and try
+                // constructing the frame again.
+
                 aMessage.SetOffset(0);
                 aMessage.SetLinkSecurityEnabled(true);
                 goto start;
             }
 
-            // Write Fragment header
+            // Insert Fragment header
             if (aMessage.GetDatagramTag() == 0)
             {
                 // Avoid using datagram tag value 0, which indicates the tag has not been set
@@ -1094,59 +1109,31 @@ start:
                 aMessage.SetDatagramTag(mFragTag++);
             }
 
-            memmove(payload + Lowpan::FragmentHeader::kFirstFragmentHeaderSize, payload, hcLength);
-
-            fragmentHeader.InitFirstFragment(aMessage.GetLength(), static_cast<uint16_t>(aMessage.GetDatagramTag()));
-            fragmentHeader.WriteTo(payload);
-
-            payload += Lowpan::FragmentHeader::kFirstFragmentHeaderSize;
-            headerLength += Lowpan::FragmentHeader::kFirstFragmentHeaderSize;
-
-            fragmentLength = maxPayloadLength - headerLength;
-
-            if (payloadLength > fragmentLength)
-            {
-                payloadLength = fragmentLength & ~0x7;
-            }
+            firstFragHeader.Init(aMessage.GetLength(), static_cast<uint16_t>(aMessage.GetDatagramTag()));
+            SuccessOrAssert(frameBuilder.Insert(fragHeaderOffset, firstFragHeader));
         }
-
-        payload += hcLength;
-
-        // copy IPv6 Payload
-        aMessage.ReadBytes(aMessage.GetOffset(), payload, payloadLength);
-        aFrame.SetPayloadLength(headerLength + payloadLength);
-
-        nextOffset = aMessage.GetOffset() + payloadLength;
-        aMessage.SetOffset(0);
     }
     else
     {
-        Lowpan::FragmentHeader fragmentHeader;
-        uint16_t               fragmentHeaderLength;
+        Lowpan::FragmentHeader::NextFrag nextFragHeader;
+
+        nextFragHeader.Init(aMessage.GetLength(), static_cast<uint16_t>(aMessage.GetDatagramTag()),
+                            aMessage.GetOffset());
+        SuccessOrAssert(frameBuilder.Append(nextFragHeader));
 
         payloadLength = aMessage.GetLength() - aMessage.GetOffset();
-
-        // Write Fragment header
-        fragmentHeader.Init(aMessage.GetLength(), static_cast<uint16_t>(aMessage.GetDatagramTag()),
-                            aMessage.GetOffset());
-        fragmentHeaderLength = fragmentHeader.WriteTo(payload);
-
-        payload += fragmentHeaderLength;
-        headerLength += fragmentHeaderLength;
-
-        fragmentLength = maxPayloadLength - headerLength;
-
-        if (payloadLength > fragmentLength)
-        {
-            payloadLength = (fragmentLength & ~0x7);
-        }
-
-        // Copy IPv6 Payload
-        aMessage.ReadBytes(aMessage.GetOffset(), payload, payloadLength);
-        aFrame.SetPayloadLength(headerLength + payloadLength);
-
-        nextOffset = aMessage.GetOffset() + payloadLength;
     }
+
+    if (payloadLength > frameBuilder.GetRemainingLength())
+    {
+        payloadLength = (frameBuilder.GetRemainingLength() & ~0x7);
+    }
+
+    // Copy IPv6 Payload
+    SuccessOrAssert(frameBuilder.AppendBytesFromMessage(aMessage, aMessage.GetOffset(), payloadLength));
+    aFrame.SetPayloadLength(frameBuilder.GetLength());
+
+    nextOffset = aMessage.GetOffset() + payloadLength;
 
     if (nextOffset < aMessage.GetLength())
     {
@@ -1155,6 +1142,8 @@ start:
         aMessage.SetTimeSync(false);
 #endif
     }
+
+    aMessage.SetOffset(origMsgOffset);
 
     return nextOffset;
 }

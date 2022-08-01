@@ -1532,7 +1532,7 @@ Error Headers::DecompressFrom(const Message &     aMessage,
                               const Mac::Address &aMacSource,
                               const Mac::Address &aMacDest)
 {
-    static constexpr uint16_t kReadLength = Lowpan::FragmentHeader::kSubsequentFragmentHeaderSize + sizeof(Headers);
+    static constexpr uint16_t kReadLength = sizeof(Lowpan::FragmentHeader::NextFrag) + sizeof(Headers);
 
     uint8_t   frameBuffer[kReadLength];
     uint16_t  frameLength;
