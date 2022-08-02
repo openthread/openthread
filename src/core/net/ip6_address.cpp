@@ -254,6 +254,15 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
     return (IsLocator() && (locator >= Mle::kAloc16ServiceStart) && (locator <= Mle::kAloc16ServiceEnd));
 }
 
+void InterfaceIdentifier::ApplyPrefix(const Prefix &aPrefix)
+{
+    if (aPrefix.GetLength() > NetworkPrefix::kLength)
+    {
+        Address::CopyBits(mFields.m8, aPrefix.GetBytes() + NetworkPrefix::kSize,
+                          aPrefix.GetLength() - NetworkPrefix::kLength);
+    }
+}
+
 InterfaceIdentifier::InfoString InterfaceIdentifier::ToString(void) const
 {
     InfoString string;
@@ -377,35 +386,36 @@ void Address::SetPrefix(const NetworkPrefix &aNetworkPrefix)
 
 void Address::SetPrefix(const Prefix &aPrefix)
 {
-    SetPrefix(0, aPrefix.GetBytes(), aPrefix.GetLength());
+    CopyBits(mFields.m8, aPrefix.GetBytes(), aPrefix.GetLength());
 }
 
-void Address::SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength)
+void Address::CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits)
 {
-    uint8_t bytes     = aPrefixLength / CHAR_BIT;
-    uint8_t extraBits = aPrefixLength % CHAR_BIT;
+    // This method copies `aNumBits` from `aSrc` into `aDst` handling
+    // the case where `aNumBits` may not be a multiple of 8. It leaves the
+    // remaining bits beyond `aNumBits` in `aDst` unchanged.
 
-    OT_ASSERT(aPrefixLength <= (sizeof(Address) - aOffset) * CHAR_BIT);
+    uint8_t numBytes  = aNumBits / CHAR_BIT;
+    uint8_t extraBits = aNumBits % CHAR_BIT;
 
-    memcpy(mFields.m8 + aOffset, aPrefix, bytes);
+    memcpy(aDst, aSrc, numBytes);
 
     if (extraBits > 0)
     {
-        uint8_t index = aOffset + bytes;
-        uint8_t mask  = ((0x80 >> (extraBits - 1)) - 1);
+        uint8_t mask = ((0x80 >> (extraBits - 1)) - 1);
 
         // `mask` has its higher (msb) `extraBits` bits as `0` and the remaining as `1`.
         // Example with `extraBits` = 3:
         // ((0x80 >> 2) - 1) = (0b0010_0000 - 1) = 0b0001_1111
 
-        mFields.m8[index] &= mask;
-        mFields.m8[index] |= (aPrefix[index] & ~mask);
+        aDst[numBytes] &= mask;
+        aDst[numBytes] |= (aSrc[numBytes] & ~mask);
     }
 }
 
 void Address::SetMulticastNetworkPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
-    SetPrefix(kMulticastNetworkPrefixOffset, aPrefix, aPrefixLength);
+    CopyBits(&mFields.m8[kMulticastNetworkPrefixOffset], aPrefix, aPrefixLength);
     mFields.m8[kMulticastNetworkPrefixLengthOffset] = aPrefixLength;
 }
 

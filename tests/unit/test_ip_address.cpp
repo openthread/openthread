@@ -215,6 +215,27 @@ bool CheckPrefix(const ot::Ip6::Address &aAddress, const uint8_t *aPrefix, uint8
     return matches;
 }
 
+bool CheckPrefixInIid(const ot::Ip6::InterfaceIdentifier &aIid, const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    // Check the IID to contain the prefix bits (applicable when prefix length is longer than 64).
+
+    bool matches = true;
+
+    for (uint8_t bit = 64; bit < aPrefixLength; bit++)
+    {
+        uint8_t index = bit / CHAR_BIT;
+        uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
+
+        if ((aIid.mFields.m8[index - 8] & mask) != (aPrefix[index] & mask))
+        {
+            matches = false;
+            break;
+        }
+    }
+
+    return matches;
+}
+
 bool CheckInterfaceId(const ot::Ip6::Address &aAddress1, const ot::Ip6::Address &aAddress2, uint8_t aPrefixLength)
 {
     // Check whether all the bits after aPrefixLength of the two given IPv6 Address match or not.
@@ -248,6 +269,7 @@ void TestIp6AddressSetPrefix(void)
     ot::Ip6::Address address;
     ot::Ip6::Address allZeroAddress;
     ot::Ip6::Address allOneAddress;
+    ot::Ip6::Prefix  ip6Prefix;
 
     allZeroAddress.Clear();
     memset(&allOneAddress, 0xff, sizeof(allOneAddress));
@@ -259,18 +281,33 @@ void TestIp6AddressSetPrefix(void)
 
         for (uint8_t prefixLength = 0; prefixLength <= sizeof(ot::Ip6::Address) * CHAR_BIT; prefixLength++)
         {
+            ip6Prefix.Clear();
+            ip6Prefix.Set(prefix, prefixLength);
+
             address = allZeroAddress;
-            address.SetPrefix(prefix, prefixLength);
+            address.SetPrefix(ip6Prefix);
             printf("   prefix-len:%-3d --> %s\n", prefixLength, address.ToString().AsCString());
             VerifyOrQuit(CheckPrefix(address, prefix, prefixLength), "Prefix does not match after SetPrefix()");
             VerifyOrQuit(CheckInterfaceId(address, allZeroAddress, prefixLength),
                          "SetPrefix changed bits beyond the prefix length");
 
             address = allOneAddress;
-            address.SetPrefix(prefix, prefixLength);
+            address.SetPrefix(ip6Prefix);
             VerifyOrQuit(CheckPrefix(address, prefix, prefixLength), "Prefix does not match after SetPrefix()");
             VerifyOrQuit(CheckInterfaceId(address, allOneAddress, prefixLength),
                          "SetPrefix changed bits beyond the prefix length");
+
+            address = allZeroAddress;
+            address.GetIid().ApplyPrefix(ip6Prefix);
+            VerifyOrQuit(CheckPrefixInIid(address.GetIid(), prefix, prefixLength), "IID is not correct");
+            VerifyOrQuit(CheckInterfaceId(address, allZeroAddress, prefixLength),
+                         "Iid:ApplyPrefrix() changed bits beyond the prefix length");
+
+            address = allOneAddress;
+            address.GetIid().ApplyPrefix(ip6Prefix);
+            VerifyOrQuit(CheckPrefixInIid(address.GetIid(), prefix, prefixLength), "IID is not correct");
+            VerifyOrQuit(CheckInterfaceId(address, allOneAddress, prefixLength),
+                         "Iid:ApplyPrefrix() changed bits beyond the prefix length");
         }
     }
 }
