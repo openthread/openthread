@@ -233,6 +233,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/crc16.cpp                                       \
     src/core/common/data.cpp                                        \
     src/core/common/error.cpp                                       \
+    src/core/common/frame_builder.cpp                               \
     src/core/common/frame_data.cpp                                  \
     src/core/common/heap.cpp                                        \
     src/core/common/heap_data.cpp                                   \

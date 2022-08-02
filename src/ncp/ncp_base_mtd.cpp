@@ -3128,7 +3128,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_Q
     otError             error = OT_ERROR_NONE;
     struct otIp6Address address;
     uint8_t             seriesId;
-    otLinkMetrics       linkMetrics = {};
+    otLinkMetrics       linkMetrics = {false, false, false, false, false};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
@@ -3163,7 +3163,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     otError             error = OT_ERROR_NONE;
     struct otIp6Address address;
     uint8_t             controlFlags;
-    otLinkMetrics       linkMetrics = {};
+    otLinkMetrics       linkMetrics = {false, false, false, false, false};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(controlFlags));
@@ -3184,8 +3184,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     struct otIp6Address      address;
     uint8_t                  seriesId;
     uint8_t                  types;
-    otLinkMetrics            linkMetrics = {};
-    otLinkMetricsSeriesFlags seriesFlags = {};
+    otLinkMetrics            linkMetrics = {false, false, false, false, false};
+    otLinkMetricsSeriesFlags seriesFlags = {false, false, false, false};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(seriesId));

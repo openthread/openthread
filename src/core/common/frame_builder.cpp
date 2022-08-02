@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,65 +28,72 @@
 
 /**
  * @file
- *   This file implements the `Appender` class.
+ *   This file implements the `FrameBuilder` class.
  */
 
-#include "appender.hpp"
+#include "frame_builder.hpp"
 
 namespace ot {
 
-Appender::Appender(Message &aMessage)
-    : mType(kMessage)
+void FrameBuilder::Init(void *aBuffer, uint16_t aLength)
 {
-    mShared.mMessage.mMessage     = &aMessage;
-    mShared.mMessage.mStartOffset = aMessage.GetLength();
+    mBuffer    = static_cast<uint8_t *>(aBuffer);
+    mLength    = 0;
+    mMaxLength = aLength;
 }
 
-Appender::Appender(uint8_t *aBuffer, uint16_t aSize)
-    : mType(kBuffer)
+Error FrameBuilder::AppendUint8(uint8_t aUint8)
 {
-    mShared.mFrameBuilder.Init(aBuffer, aSize);
+    return Append<uint8_t>(aUint8);
 }
 
-Error Appender::AppendBytes(const void *aBuffer, uint16_t aLength)
+Error FrameBuilder::AppendBigEndianUint16(uint16_t aUint16)
+{
+    return Append<uint16_t>(Encoding::BigEndian::HostSwap16(aUint16));
+}
+
+Error FrameBuilder::AppendBigEndianUint32(uint32_t aUint32)
+{
+    return Append<uint32_t>(Encoding::BigEndian::HostSwap32(aUint32));
+}
+
+Error FrameBuilder::AppendLittleEndianUint16(uint16_t aUint16)
+{
+    return Append<uint16_t>(Encoding::LittleEndian::HostSwap16(aUint16));
+}
+
+Error FrameBuilder::AppendLittleEndianUint32(uint32_t aUint32)
+{
+    return Append<uint32_t>(Encoding::LittleEndian::HostSwap32(aUint32));
+}
+
+Error FrameBuilder::AppendBytes(const void *aBuffer, uint16_t aLength)
 {
     Error error = kErrorNone;
 
-    switch (mType)
-    {
-    case kMessage:
-        error = mShared.mMessage.mMessage->AppendBytes(aBuffer, aLength);
-        break;
+    VerifyOrExit(CanAppend(aLength), error = kErrorNoBufs);
+    memcpy(mBuffer + mLength, aBuffer, aLength);
+    mLength += aLength;
 
-    case kBuffer:
-        error = mShared.mFrameBuilder.AppendBytes(aBuffer, aLength);
-        break;
-    }
-
+exit:
     return error;
 }
 
-uint16_t Appender::GetAppendedLength(void) const
+Error FrameBuilder::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
-    uint16_t length = 0;
+    Error error = kErrorNone;
 
-    switch (mType)
-    {
-    case kMessage:
-        length = mShared.mMessage.mMessage->GetLength() - mShared.mMessage.mStartOffset;
-        break;
+    VerifyOrExit(CanAppend(aLength), error = kErrorNoBufs);
+    SuccessOrExit(error = aMessage.Read(aOffset, mBuffer + mLength, aLength));
+    mLength += aLength;
 
-    case kBuffer:
-        length = mShared.mFrameBuilder.GetLength();
-        break;
-    }
-
-    return length;
+exit:
+    return error;
 }
 
-void Appender::GetAsData(Data<kWithUint16Length> &aData)
+void FrameBuilder::WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength)
 {
-    aData.Init(mShared.mFrameBuilder.GetBytes(), mShared.mFrameBuilder.GetLength());
+    memcpy(mBuffer + aOffset, aBuffer, aLength);
 }
 
 } // namespace ot

@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/debug.hpp"
+#include "common/frame_builder.hpp"
 #include "common/frame_data.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -77,144 +78,6 @@ struct Context
     Ip6::Prefix mPrefix;       ///< The Prefix
     uint8_t     mContextId;    ///< The Context ID.
     bool        mCompressFlag; ///< The Context compression flag.
-};
-
-/**
- * This class defines a buffer writer used by the 6LoWPAN compressor.
- *
- */
-class BufferWriter
-{
-public:
-    /**
-     * This constructor initializes the buffer writer.
-     *
-     * @param[in]  aBuf     A pointer to the write buffer.
-     * @param[in]  aLength  The size of the write buffer.
-     *
-     */
-    BufferWriter(uint8_t *aBuf, uint16_t aLength)
-        : mWritePointer(aBuf)
-        , mEndPointer(aBuf + aLength)
-    {
-    }
-
-    /**
-     * This method indicates whether there is buffer space available to write @p aLength bytes.
-     *
-     * @param[in]  aLength  Number of bytes to write.
-     *
-     * @retval  TRUE   Enough buffer space is available to write the requested number of bytes.
-     * @retval  FALSE  Insufficient buffer space to write the requested number of bytes.
-     *
-     */
-    bool CanWrite(uint8_t aLength) const { return (mWritePointer + aLength) <= mEndPointer; }
-
-    /**
-     * This method returns the current write pointer value.
-     *
-     * @returns the current write pointer value.
-     *
-     */
-    uint8_t *GetWritePointer(void) { return mWritePointer; }
-
-    /**
-     * This method advances the write pointer.
-     *
-     * @param[in]  aLength  Number of bytes to advance.
-     *
-     * @retval kErrorNone    Enough buffer space is available to advance the requested number of bytes.
-     * @retval kErrorNoBufs  Insufficient buffer space to advance the requested number of bytes.
-     *
-     */
-    Error Advance(uint8_t aLength)
-    {
-        Error error = kErrorNone;
-
-        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
-        mWritePointer += aLength;
-
-    exit:
-        return error;
-    }
-
-    /**
-     * This method writes a byte into the buffer and updates the write pointer, if space is available.
-     *
-     * @param[in]  aByte  Byte to write.
-     *
-     * @retval  kErrorNone     Successfully wrote the byte and updated the pointer.
-     * @retval  kErrorNoBufs  Insufficient buffer space to write the byte.
-     *
-     */
-    Error Write(uint8_t aByte)
-    {
-        Error error = kErrorNone;
-
-        VerifyOrExit(CanWrite(sizeof(aByte)), error = kErrorNoBufs);
-
-        *mWritePointer++ = aByte;
-
-    exit:
-        return error;
-    }
-
-    /**
-     * This method writes a byte sequence into the buffer and updates the write pointer, if space is available.
-     *
-     * @param[in]  aBuf     A pointer to the byte sequence.
-     * @param[in]  aLength  Number of bytes to write.
-     *
-     * @retval kErrorNone    Successfully wrote the byte sequence and updated the pointer.
-     * @retval kErrorNoBufs  Insufficient buffer space to write the byte sequence.
-     *
-     */
-    Error Write(const void *aBuf, uint8_t aLength)
-    {
-        Error error = kErrorNone;
-
-        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
-
-        memcpy(mWritePointer, aBuf, aLength);
-        mWritePointer += aLength;
-
-    exit:
-        return error;
-    }
-
-    /**
-     * This method writes a byte sequence into the buffer and updates the write pointer, if space is available.
-     *
-     * The byte sequence is taken from a message buffer at the current message buffer's offset.
-     *
-     * @param[in]  aMessage  A message buffer.
-     * @param[in]  aLength   Number of bytes to write.
-     *
-     * @retval kErrorNone    Successfully wrote the byte sequence and updated the pointer.
-     * @retval kErrorNoBufs  Insufficient buffer space to write the byte sequence.
-     *
-     */
-    Error Write(const Message &aMessage, uint8_t aLength)
-    {
-        Error error = kErrorNone;
-        int   rval;
-
-        OT_UNUSED_VARIABLE(rval);
-
-        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
-
-        rval = aMessage.ReadBytes(aMessage.GetOffset(), mWritePointer, aLength);
-        OT_ASSERT(rval == aLength);
-
-        mWritePointer += aLength;
-
-    exit:
-        return error;
-    }
-
-private:
-    uint8_t *mWritePointer;
-    uint8_t *mEndPointer;
 };
 
 /**
@@ -261,15 +124,18 @@ public:
     /**
      * This method compresses an IPv6 header.
      *
-     * @param[in]   aMessage     A reference to the IPv6 message.
-     * @param[in]   aMacSource   The MAC source address.
-     * @param[in]   aMacDest     The MAC destination address.
-     * @param[out]  aBuf         A pointer where the compressed IPv6 header will be placed.
+     * @param[in]   aMessage       A reference to the IPv6 message.
+     * @param[in]   aMacSource     The MAC source address.
+     * @param[in]   aMacDest       The MAC destination address.
+     * @param[in]  aFrameBuilder   The `FrameBuilder` to use to append the compressed headers.
      *
      * @returns The size of the compressed header in bytes.
      *
      */
-    Error Compress(Message &aMessage, const Mac::Address &aMacSource, const Mac::Address &aMacDest, BufferWriter &aBuf);
+    Error Compress(Message &           aMessage,
+                   const Mac::Address &aMacSource,
+                   const Mac::Address &aMacDest,
+                   FrameBuilder &      aFrameBuilder);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
@@ -405,22 +271,22 @@ private:
     Error Compress(Message &           aMessage,
                    const Mac::Address &aMacSource,
                    const Mac::Address &aMacDest,
-                   BufferWriter &      aBuf,
+                   FrameBuilder &      aFrameBuilder,
                    uint8_t &           aHeaderDepth);
 
-    Error CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
+    Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
     Error CompressSourceIid(const Mac::Address &aMacAddr,
                             const Ip6::Address &aIpAddr,
                             const Context &     aContext,
                             uint16_t &          aHcCtl,
-                            BufferWriter &      aBuf);
+                            FrameBuilder &      aFrameBuilder);
     Error CompressDestinationIid(const Mac::Address &aMacAddr,
                                  const Ip6::Address &aIpAddr,
                                  const Context &     aContext,
                                  uint16_t &          aHcCtl,
-                                 BufferWriter &      aBuf);
-    Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, BufferWriter &aBuf);
-    Error CompressUdp(Message &aMessage, BufferWriter &aBuf);
+                                 FrameBuilder &      aFrameBuilder);
+    Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, FrameBuilder &aFrameBuilder);
+    Error CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder);
 
     Error DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData);
     Error DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength);

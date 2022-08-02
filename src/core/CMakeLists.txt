@@ -99,6 +99,7 @@ set(COMMON_SOURCES
     common/crc16.cpp
     common/data.cpp
     common/error.cpp
+    common/frame_builder.cpp
     common/frame_data.cpp
     common/heap.cpp
     common/heap_data.cpp

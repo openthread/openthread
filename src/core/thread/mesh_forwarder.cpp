@@ -438,6 +438,89 @@ Error MeshForwarder::RemoveAgedMessages(void)
 
 #endif // OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
 
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+
+bool MeshForwarder::IsDirectTxQueueOverMaxFrameThreshold(void) const
+{
+    uint16_t frameCount = 0;
+
+    for (const Message &message : mSendQueue)
+    {
+        if (!message.IsDirectTransmission() || (&message == mSendMessage))
+        {
+            continue;
+        }
+
+        switch (message.GetType())
+        {
+        case Message::kTypeIp6:
+        {
+            // If it is an IPv6 message, we estimate the number of
+            // fragment frames assuming typical header sizes and lowpan
+            // compression. Since this estimate is only used for queue
+            // management, we lean towards an under estimate in sense
+            // that we may allow few more frames in the tx queue over
+            // threshold in some rare cases.
+            //
+            // The constants below are derived as follows: Typical MAC
+            // header (15 bytes) and MAC footer (6 bytes) leave 106
+            // bytes for MAC payload. Next fragment header is 5 bytes
+            // leaving 96 for next fragment payload. Lowpan compression
+            // on average compresses 40 bytes IPv6 header into about 19
+            // bytes leaving 87 bytes for the IPv6 payload, so the first
+            // fragment can fit 87 + 40 = 127 bytes.
+
+            static constexpr uint16_t kFirstFragmentMaxLength = 127;
+            static constexpr uint16_t kNextFragmentSize       = 96;
+
+            uint16_t length = message.GetLength();
+
+            frameCount++;
+
+            if (length > kFirstFragmentMaxLength)
+            {
+                frameCount += (length - kFirstFragmentMaxLength) / kNextFragmentSize;
+            }
+
+            break;
+        }
+
+        case Message::kType6lowpan:
+        case Message::kTypeMacEmptyData:
+            frameCount++;
+            break;
+
+        case Message::kTypeSupervision:
+        default:
+            break;
+        }
+    }
+
+    return (frameCount > OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE);
+}
+
+void MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
+{
+    VerifyOrExit(aMessage.IsDirectTransmission());
+    VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
+
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    if (RemoveAgedMessages() == kErrorNone)
+    {
+        VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
+    }
+#endif
+
+    LogMessage(kMessageFullQueueDrop, aMessage);
+    aMessage.ClearDirectTransmission();
+    RemoveMessageIfNoPendingTx(aMessage);
+
+exit:
+    return;
+}
+
+#endif // (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
     aTasklet.Get<MeshForwarder>().ScheduleTransmissionTask();
@@ -963,10 +1046,11 @@ start:
     // Compress IPv6 Header
     if (aMessage.GetOffset() == 0)
     {
-        Lowpan::BufferWriter buffer(payload,
-                                    maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
-        uint8_t              hcLength;
-        Mac::Address         meshSource, meshDest;
+        FrameBuilder frameBuilder;
+        uint8_t      hcLength;
+        Mac::Address meshSource, meshDest;
+
+        frameBuilder.Init(payload, maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
 
         if (aAddMeshHeader)
         {
@@ -979,9 +1063,9 @@ start:
             meshDest   = aMacDest;
         }
 
-        SuccessOrAssert(Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer));
+        SuccessOrAssert(Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, frameBuilder));
 
-        hcLength = static_cast<uint8_t>(buffer.GetWritePointer() - payload);
+        hcLength = static_cast<uint8_t>(frameBuilder.GetLength());
         headerLength += hcLength;
         payloadLength  = aMessage.GetLength() - aMessage.GetOffset();
         fragmentLength = maxPayloadLength - headerLength;
@@ -1809,6 +1893,9 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
         "Marked ECN",            // (6) kMessageMarkEcn
         "Dropping (queue mgmt)", // (7) kMessageQueueMgmtDrop
 #endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+        "Dropping (dir queue full)", // (8) kMessageFullQueueDrop
+#endif
     };
 
     const char *string = kMessageActionStrings[aAction];
@@ -1822,6 +1909,13 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     static_assert(kMessageMarkEcn == 6, "kMessageMarkEcn is incorrect");
     static_assert(kMessageQueueMgmtDrop == 7, "kMessageQueueMgmtDrop is incorrect");
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    static_assert(kMessageFullQueueDrop == 8, "kMessageFullQueueDrop is incorrect");
+#endif
+#else
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    static_assert(kMessageFullQueueDrop == 6, "kMessageFullQueueDrop is incorrect");
+#endif
 #endif
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
@@ -1931,6 +2025,9 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
     case kMessageEvict:
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     case kMessageQueueMgmtDrop:
+#endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    case kMessageFullQueueDrop:
 #endif
         logLevel = kLogLevelNote;
         break;

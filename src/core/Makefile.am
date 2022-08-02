@@ -189,6 +189,7 @@ SOURCES_COMMON                                  = \
     common/crc16.cpp                              \
     common/data.cpp                               \
     common/error.cpp                              \
+    common/frame_builder.cpp                      \
     common/frame_data.cpp                         \
     common/heap.cpp                               \
     common/heap_data.cpp                          \
@@ -441,6 +442,7 @@ HEADERS_COMMON                                  = \
     common/equatable.hpp                          \
     common/error.hpp                              \
     common/extension.hpp                          \
+    common/frame_builder.hpp                      \
     common/frame_data.hpp                         \
     common/heap.hpp                               \
     common/heap_allocatable.hpp                   \

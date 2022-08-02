@@ -20,6 +20,7 @@ RUN set -x \
         inetutils-ping \
         ca-certificates \
     && update-ca-certificates \
+    && python3 -m pip install -U pip \
     && python3 -m pip install -U cmake \
     && python3 -m pip install wheel
 

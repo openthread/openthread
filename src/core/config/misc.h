@@ -484,6 +484,22 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE
+ *
+ * Specifies the maximum number of frames in direct tx queue before new direct tx messages are dropped.
+ *
+ * If set to zero then the behavior is disabled, i.e., no check is performed on tx queue length.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3)
+#define OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE 100
+#else
+#define OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE 0
+#endif
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
  *
  * Define to 1 to support proprietary radio configurations defined by platform.

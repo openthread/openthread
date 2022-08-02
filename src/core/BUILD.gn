@@ -400,6 +400,8 @@ openthread_core_files = [
   "common/error.cpp",
   "common/error.hpp",
   "common/extension.hpp",
+  "common/frame_builder.cpp",
+  "common/frame_builder.hpp",
   "common/frame_data.cpp",
   "common/frame_data.hpp",
   "common/heap.cpp",
