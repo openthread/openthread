@@ -72,32 +72,25 @@ void Lowpan::FindContextToCompressAddress(const Ip6::Address &aIp6Address, Conte
     }
 }
 
-Error Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress)
+Error Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::InterfaceIdentifier &aIid)
 {
     Error error = kErrorNone;
 
     switch (aMacAddr.GetType())
     {
     case Mac::Address::kTypeShort:
-        aIpAddress.GetIid().SetToLocator(aMacAddr.GetShort());
+        aIid.SetToLocator(aMacAddr.GetShort());
         break;
 
     case Mac::Address::kTypeExtended:
-        aIpAddress.GetIid().SetFromExtAddress(aMacAddr.GetExtended());
+        aIid.SetFromExtAddress(aMacAddr.GetExtended());
         break;
 
     default:
         ExitNow(error = kErrorParse);
     }
 
-    if (aContext.mPrefix.GetLength() > 64)
-    {
-        for (int i = (aContext.mPrefix.GetLength() & ~7); i < aContext.mPrefix.GetLength(); i++)
-        {
-            aIpAddress.mFields.m8[i / CHAR_BIT] &= ~(0x80 >> (i % CHAR_BIT));
-            aIpAddress.mFields.m8[i / CHAR_BIT] |= aContext.mPrefix.GetBytes()[i / CHAR_BIT] & (0x80 >> (i % CHAR_BIT));
-        }
-    }
+    aIid.ApplyPrefix(aContext.mPrefix);
 
 exit:
     return error;
@@ -109,34 +102,26 @@ Error Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
                                 uint16_t &          aHcCtl,
                                 FrameBuilder &      aFrameBuilder)
 {
-    Error        error = kErrorNone;
-    Ip6::Address ipaddr;
-    Mac::Address tmp;
+    Error                    error = kErrorNone;
+    Ip6::InterfaceIdentifier iid;
 
-    IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
+    IgnoreError(ComputeIid(aMacAddr, aContext, iid));
 
-    if (ipaddr.GetIid() == aIpAddr.GetIid())
+    if (iid == aIpAddr.GetIid())
     {
         aHcCtl |= kHcSrcAddrMode3;
     }
+    else if (aIpAddr.GetIid().IsLocator())
+    {
+        aHcCtl |= kHcSrcAddrMode2;
+        error = aFrameBuilder.AppendBigEndianUint16(aIpAddr.GetIid().GetLocator());
+    }
     else
     {
-        tmp.SetShort(aIpAddr.GetIid().GetLocator());
-        IgnoreError(ComputeIid(tmp, aContext, ipaddr));
-
-        if (ipaddr.GetIid() == aIpAddr.GetIid())
-        {
-            aHcCtl |= kHcSrcAddrMode2;
-            SuccessOrExit(error = aFrameBuilder.AppendBytes(aIpAddr.mFields.m8 + 14, 2));
-        }
-        else
-        {
-            aHcCtl |= kHcSrcAddrMode1;
-            SuccessOrExit(error = aFrameBuilder.Append(aIpAddr.GetIid()));
-        }
+        aHcCtl |= kHcSrcAddrMode1;
+        error = aFrameBuilder.Append(aIpAddr.GetIid());
     }
 
-exit:
     return error;
 }
 
@@ -146,34 +131,26 @@ Error Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
                                      uint16_t &          aHcCtl,
                                      FrameBuilder &      aFrameBuilder)
 {
-    Error        error = kErrorNone;
-    Ip6::Address ipaddr;
-    Mac::Address tmp;
+    Error                    error = kErrorNone;
+    Ip6::InterfaceIdentifier iid;
 
-    IgnoreError(ComputeIid(aMacAddr, aContext, ipaddr));
+    IgnoreError(ComputeIid(aMacAddr, aContext, iid));
 
-    if (ipaddr.GetIid() == aIpAddr.GetIid())
+    if (iid == aIpAddr.GetIid())
     {
         aHcCtl |= kHcDstAddrMode3;
     }
+    else if (aIpAddr.GetIid().IsLocator())
+    {
+        aHcCtl |= kHcDstAddrMode2;
+        error = aFrameBuilder.AppendBigEndianUint16(aIpAddr.GetIid().GetLocator());
+    }
     else
     {
-        tmp.SetShort(aIpAddr.GetIid().GetLocator());
-        IgnoreError(ComputeIid(tmp, aContext, ipaddr));
-
-        if (ipaddr.GetIid() == aIpAddr.GetIid())
-        {
-            aHcCtl |= kHcDstAddrMode2;
-            SuccessOrExit(error = aFrameBuilder.AppendBytes(aIpAddr.mFields.m8 + 14, 2));
-        }
-        else
-        {
-            aHcCtl |= kHcDstAddrMode1;
-            SuccessOrExit(error = aFrameBuilder.Append(aIpAddr.GetIid()));
-        }
+        aHcCtl |= kHcDstAddrMode1;
+        error = aFrameBuilder.Append(aIpAddr.GetIid());
     }
 
-exit:
     return error;
 }
 
@@ -751,7 +728,7 @@ Error Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         break;
 
     case kHcSrcAddrMode3:
-        IgnoreError(ComputeIid(aMacSource, srcContext, aIp6Header.GetSource()));
+        IgnoreError(ComputeIid(aMacSource, srcContext, aIp6Header.GetSource().GetIid()));
         break;
     }
 
@@ -790,7 +767,7 @@ Error Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
             break;
 
         case kHcDstAddrMode3:
-            SuccessOrExit(ComputeIid(aMacDest, dstContext, aIp6Header.GetDestination()));
+            SuccessOrExit(ComputeIid(aMacDest, dstContext, aIp6Header.GetDestination().GetIid()));
             break;
         }
 

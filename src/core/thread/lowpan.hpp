@@ -296,7 +296,7 @@ private:
     Error DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength);
     Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
 
-    static Error ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
+    static Error ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::InterfaceIdentifier &aIid);
 };
 
 /**
