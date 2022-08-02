@@ -53,11 +53,6 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
     return AsCoreType(aInstance).Get<BorderRouter::Nat64Translator>().SetIp4Cidr(AsCoreType(aCidr));
 }
 
-otError otNat64SetTranslatorEnabled(otInstance *aInstance, bool aEnabled)
-{
-    return AsCoreType(aInstance).Get<BorderRouter::Nat64Translator>().SetEnabled(aEnabled);
-}
-
 otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header),

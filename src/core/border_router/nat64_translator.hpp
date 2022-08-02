@@ -132,21 +132,6 @@ public:
      */
     void SetNat64Prefix(const Ip6::Prefix &aNat64Prefix);
 
-    /**
-     * This method enables/disables the NAT64 translator.
-     *
-     * @note  The NAT64 translator is disabled by default. If the NAT64 translator is disabled, packets that are sent to
-     * the NAT64 prefix will be forwarded to the upper layer directly. The NAT64 translator must be configured with a
-     * valid IPv4 CIDR before being enabedl.
-     *
-     * @param[in]  aEnabled   A boolean to enable/disable the NAT64 translator.
-     *
-     * @retval  kErrorInvalidState   The NAT64 translator is not configured with a valid IPv4 CIDR.
-     * @retval  kErrorNone           Successfully enabled/disabled the NAT64 translator.
-     *
-     */
-    Error SetEnabled(bool aEnabled);
-
 private:
     class AddressMapping : public LinkedListEntry<AddressMapping>
     {
@@ -190,7 +175,6 @@ private:
 
     Ip6::Prefix mNat64Prefix;
     Ip4::Cidr   mIp4Cidr;
-    bool        mEnabled;
 };
 
 } // namespace BorderRouter

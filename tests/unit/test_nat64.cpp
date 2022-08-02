@@ -158,7 +158,6 @@ void TestNat64(void)
         nat64cidr.Set(ip4Address, 32);
         nat64prefix.Set(ip6Address, 96);
         SuccessOrQuit(sInstance->Get<Nat64Translator>().SetIp4Cidr(nat64cidr));
-        SuccessOrQuit(sInstance->Get<Nat64Translator>().SetEnabled(true));
         sInstance->Get<Nat64Translator>().SetNat64Prefix(nat64prefix);
     }
 

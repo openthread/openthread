@@ -126,29 +126,9 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
  *
  * @sa otBorderRouterSend
  * @sa otBorderRouterSetReceiveCallback
- * @sa otNat64SetTranslatorEnabled
  *
  */
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
-
-/**
- * This method enables/disables the NAT64 translator.
- *
- * @note  The NAT64 translator is disabled by default. If the NAT64 translator is disabled, all packets will be
- * forwarded without any checks. The NAT64 translator must be configured with a valid IPv4 CIDR before being enabled.
- *
- * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- * @param[in] aEnabled A boolean to enable/disable the NAT64 translator.
- *
- * @retval  OT_ERROR_INVALID_STATE  The NAT64 module is not configured with a valid IPv4 CIDR.
- * @retval  OT_ERROR_NONE           Successfully enabled/disabled the NAT64 translator.
- *
- * @sa otNat64SetIp4Cidr
- *
- */
-otError otNat64SetTranslatorEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * @}

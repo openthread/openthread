@@ -54,7 +54,6 @@ RegisterLogModule("Nat64");
 Nat64Translator::Nat64Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mAvailableAddressCount(0)
-    , mEnabled(false)
 {
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
@@ -67,8 +66,6 @@ Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
     Ip6::Header     ip6Header;
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
-
-    VerifyOrExit(mEnabled, res = Result::kForward);
 
     // ParseForm will do basic checks for the message, including the packet length and IP protocol version.
     err = ip6Header.ParseFrom(aMessage);
@@ -86,7 +83,7 @@ Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
     if (mIp4Cidr.mLength == 0)
     {
         // The NAT64 translation is bypassed (will be handled externally)
-        LogDebg("no IPv4 CIDR for nat64 is set, deliver the packet to externel NAT64 provider");
+        LogWarn("no IPv4 CIDR for NAT64 configured, forward to upper layer");
         ExitNow(res = Result::kForward);
     }
 
@@ -166,8 +163,6 @@ Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
-    VerifyOrExit(mEnabled, res = Result::kForward);
-
     // Try to parse the message as an IPv6 packet first.
     err = ip6Header.ParseFrom(aMessage);
     // Ip6::Header::ParseForm may return an error value when the incoming message is an IPv4 packet.
@@ -183,9 +178,16 @@ Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
         ExitNow(res = Result::kDrop);
     }
 
-    if (mNat64Prefix.mLength == 0)
+    if (mIp4Cidr.mLength == 0)
     {
-        LogWarn("incoming message is an IPv4 packet but NAT64 is not enabled, drop");
+        // The NAT64 translation is bypassed (will be handled externally)
+        LogWarn("incoming message is an IPv4 packet but no IPv4 CIDR for NAT64 configured, drop");
+        ExitNow(res = Result::kForward);
+    }
+
+    if (!mNat64Prefix.IsValidNat64())
+    {
+        LogWarn("incoming message is an IPv4 packet but no NAT64 prefix configured, drop");
         ExitNow(res = Result::kDrop);
     }
 
@@ -444,21 +446,6 @@ void Nat64Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
         LogInfo("IPv6 Prefix for NAT64 updated to %s", aNat64Prefix.ToString().AsCString());
         mNat64Prefix = aNat64Prefix;
     }
-}
-
-Error Nat64Translator::SetEnabled(bool aEnabled)
-{
-    Error err = kErrorNone;
-
-    if (aEnabled)
-    {
-        VerifyOrExit(mIp4Cidr.mLength > 0 && mIp4Cidr.mLength <= 32, err = kErrorInvalidState);
-    }
-
-    mEnabled = aEnabled;
-
-exit:
-    return err;
 }
 
 } // namespace BorderRouter
