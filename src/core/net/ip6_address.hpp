@@ -540,6 +540,17 @@ public:
     void SetLocator(uint16_t aLocator) { mFields.m16[3] = HostSwap16(aLocator); }
 
     /**
+     * This method applies a prefix to IID.
+     *
+     * If the prefix length is longer than 64 bits, the prefix bits after 64 are written into the IID. This method only
+     * changes the bits in IID up the prefix length and keeps the rest of the bits in IID as before.
+     *
+     * @param[in] aPrefix   An IPv6 prefix.
+     *
+     */
+    void ApplyPrefix(const Prefix &aPrefix);
+
+    /**
      * This method converts an Interface Identifier to a string.
      *
      * @returns An `InfoString` containing the string representation of the Interface Identifier.
@@ -561,6 +572,7 @@ OT_TOOL_PACKED_BEGIN
 class Address : public otIp6Address, public Equatable<Address>, public Clearable<Address>
 {
     friend class Prefix;
+    friend class InterfaceIdentifier;
 
 public:
     static constexpr uint8_t kAloc16Mask = InterfaceIdentifier::kAloc16Mask; ///< The mask for ALOC16.
@@ -839,7 +851,7 @@ public:
      * @param[in]  aPrefixLength   The prefix length (in bits).
      *
      */
-    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) { SetPrefix(0, aPrefix, aPrefixLength); }
+    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) { CopyBits(mFields.m8, aPrefix, aPrefixLength); }
 
     /**
      * This method sets the IPv6 address prefix to the given Network Prefix.
@@ -1007,7 +1019,9 @@ public:
     bool operator<(const Address &aOther) const { return memcmp(mFields.m8, aOther.mFields.m8, sizeof(Address)) < 0; }
 
 private:
-    void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
+    static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306)
+    static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306)
+
     void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
     void ToString(StringWriter &aWriter) const;
     void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
@@ -1018,8 +1032,8 @@ private:
     static const Address &GetRealmLocalAllRoutersMulticast(void);
     static const Address &GetRealmLocalAllMplForwarders(void);
 
-    static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306).
-    static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306).
+    static void CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits);
+
 } OT_TOOL_PACKED_END;
 
 /**
