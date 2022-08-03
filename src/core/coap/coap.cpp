@@ -638,6 +638,7 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
 
     aRequest.Init(kTypeConfirmable, static_cast<ot::Coap::Code>(aRequestOld.GetCode()));
+    SuccessOrExit(error = aRequest.SetTokenFromMessage(aRequestOld));
     SuccessOrExit(error = iterator.Init(aRequestOld));
 
     // Copy options from last response to next message
