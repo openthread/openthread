@@ -411,17 +411,17 @@ private:
 
 #else
 
-    static int HandleMbedtlsExportKeys(void *               aContext,
-                                       const unsigned char *aMasterSecret,
-                                       const unsigned char *aKeyBlock,
-                                       size_t               aMacLength,
-                                       size_t               aKeyLength,
-                                       size_t               aIvLength);
-    int        HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
-                                       const unsigned char *aKeyBlock,
-                                       size_t               aMacLength,
-                                       size_t               aKeyLength,
-                                       size_t               aIvLength);
+    static int       HandleMbedtlsExportKeys(void *               aContext,
+                                             const unsigned char *aMasterSecret,
+                                             const unsigned char *aKeyBlock,
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength);
+    int              HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
+                                             const unsigned char *aKeyBlock,
+                                             size_t               aMacLength,
+                                             size_t               aKeyLength,
+                                             size_t               aIvLength);
 
 #endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 #endif // MBEDTLS_SSL_EXPORT_KEYS
@@ -449,7 +449,11 @@ private:
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
+    static const uint16_t sHashes[];
+#else
     static const int sHashes[];
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
