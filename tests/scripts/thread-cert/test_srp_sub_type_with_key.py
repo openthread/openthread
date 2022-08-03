@@ -87,7 +87,7 @@ class SrpSubType(thread_cert.TestCase):
         client.srp_client_serivice_key_enable(True)
         client.srp_client_set_host_name('host1')
         client.srp_client_set_host_address('2001::1')
-        client.srp_client_add_service('ins1', '_srv._udp,test_subtype', 1977)
+        client.srp_client_add_service('service-test-1', '_thread-test._tcp,test_subtype', 1977, weight=4)
         self.simulator.go(2)
         self.check_service_on_client_and_server(server, client)
 
@@ -96,25 +96,25 @@ class SrpSubType(thread_cert.TestCase):
         client_services = client.srp_client_get_services()
         self.assertEqual(len(client_services), 1)
         client_service = client_services[0]
-        self.assertEqual(client_service['instance'], 'ins1')
-        self.assertEqual(client_service['name'], '_srv._udp,test_subtype')
+        self.assertEqual(client_service['instance'], 'service-test-1')
+        self.assertEqual(client_service['name'], '_thread-test._tcp,test_subtype')
         self.assertEqual(int(client_service['port']), 1977)
         self.assertEqual(int(client_service['priority']), 0)
-        self.assertEqual(int(client_service['weight']), 0)
+        self.assertEqual(int(client_service['weight']), 4)
         self.assertEqual(client_service['state'], 'Registered')
 
         # Check the service on server
         server_services = server.srp_server_get_services()
         self.assertEqual(len(server_services), 1)
         server_service = server_services[0]
-        self.assertEqual(server_service['fullname'], 'ins1._srv._udp.default.service.arpa.')
-        self.assertEqual(server_service['instance'], 'ins1')
-        self.assertEqual(server_service['name'], '_srv._udp')
+        self.assertEqual(server_service['fullname'], 'service-test-1._thread-test._tcp.default.service.arpa.')
+        self.assertEqual(server_service['instance'], 'service-test-1')
+        self.assertEqual(server_service['name'], '_thread-test._tcp')
         self.assertEqual(server_service['deleted'], 'false')
         self.assertEqual(set(server_service['subtypes'].split(',')), {'test_subtype'})
         self.assertEqual(int(server_service['port']), 1977)
         self.assertEqual(int(server_service['priority']), 0)
-        self.assertEqual(int(server_service['weight']), 0)
+        self.assertEqual(int(server_service['weight']), 4)
         self.assertEqual(server_service['host'], 'host1')
 
 
