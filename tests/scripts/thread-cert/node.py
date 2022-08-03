@@ -1199,6 +1199,11 @@ class NodeImpl:
         self.send_command(cmd)
         return int(self._expect_result('\d+'))
 
+    def srp_client_serivice_key_enable(self, enable: bool) -> None:
+        cmd = 'srp client service key ' + ('enable' if enable else 'disable')
+        self.send_command(cmd)
+        self._expect_done()
+
     #
     # TREL utilities
     #
