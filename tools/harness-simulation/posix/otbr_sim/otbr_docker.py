@@ -33,14 +33,15 @@ import re
 import subprocess
 import time
 
-from config import (OT_PATH, OTBR_DOCKER_IMAGE)
-
 
 class OtbrDocker:
     device_pattern = re.compile('(?<=PTY is )/dev/.+$')
 
-    def __init__(self, nodeid: int, docker_name: str):
+    def __init__(self, nodeid: int, ot_path: str, ot_rcp_path: str, docker_image: str, docker_name: str):
         self.nodeid = nodeid
+        self.ot_path = ot_path
+        self.ot_rcp_path = ot_rcp_path
+        self.docker_image = docker_image
         self.docker_name = docker_name
 
         self.logger = logging.getLogger('otbr_docker.OtbrDocker')
@@ -96,9 +97,8 @@ class OtbrDocker:
         self._rcp_device = None
 
     def _launch_ot_rcp(self):
-        ot_rcp_path = os.path.join(OT_PATH, 'build/simulation/examples/apps/ncp/ot-rcp')
         self._ot_rcp_proc = subprocess.Popen(
-            f'{ot_rcp_path} {self.nodeid} > {self._rcp_device_pty} < {self._rcp_device_pty}',
+            f'{self.ot_rcp_path} {self.nodeid} > {self._rcp_device_pty} < {self._rcp_device_pty}',
             shell=True,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
@@ -136,8 +136,8 @@ class OtbrDocker:
             '-v',
             f'{self._rcp_device}:/dev/ttyUSB0',
             '-v',
-            f'{OT_PATH.rstrip("/")}:/home/pi/repo/openthread',
-            OTBR_DOCKER_IMAGE,
+            f'{self.ot_path.rstrip("/")}:/home/pi/repo/openthread',
+            self.docker_image,
         ]
         self.logger.info('Launching docker:  %s', ' '.join(cmd))
         launch_proc = subprocess.Popen(cmd,

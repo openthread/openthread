@@ -38,14 +38,12 @@ import socket
 import time
 import win32api
 
+from simulation.config import load_config
 from THCI.IThci import IThci
 from THCI.OpenThread import OpenThreadTHCI, watched
-from simulation.config import (
-    REMOTE_USERNAME,
-    REMOTE_PASSWORD,
-    REMOTE_PORT,
-    REMOTE_OT_PATH,
-)
+
+config = load_config()
+ot_subpath = {item['tag']: item['subpath'] for item in config['ot_build']['ot']}
 
 
 class SSHHandle(object):
@@ -133,21 +131,15 @@ class SSHHandle(object):
 class OpenThread_Sim(OpenThreadTHCI, IThci):
     __handle = None
 
-    # Do not use `os.path.join` as it uses backslash as the separator on Windows
-    device = REMOTE_OT_PATH + '/build/simulation/examples/apps/cli/ot-cli-ftd'
-
     @watched
     def _connect(self):
         self.__lines = []
 
         # Only actually connect once.
         if self.__handle is None:
-            assert self.connectType == 'ip'
-            assert '@' in self.telnetIp
             self.log('SSH connecting ...')
-            node_id, ssh_ip = self.telnetIp.split('@')
-            self.__handle = SSHHandle(ssh_ip, self.telnetPort, self.telnetUsername, self.telnetPassword, self.device,
-                                      node_id)
+            self.__handle = SSHHandle(self.ssh_ip, self.telnetPort, self.telnetUsername, self.telnetPassword,
+                                      self.device, self.node_id)
 
         self.log('connected to %s successfully', self.telnetIp)
 
@@ -161,15 +153,22 @@ class OpenThread_Sim(OpenThreadTHCI, IThci):
         if '@' not in discovery_add:
             raise ValueError('%r in the field `add` is invalid' % discovery_add)
 
-        node_id, ssh_ip = discovery_add.split('@')
+        prefix, self.ssh_ip = discovery_add.split('@')
+        self.tag, self.node_id = prefix.split('_')
         # Let it crash if it is an invalid IP address
-        ipaddress.ip_address(ssh_ip)
+        ipaddress.ip_address(self.ssh_ip)
+
+        # Do not use `os.path.join` as it uses backslash as the separator on Windows
+        self.device = '/'.join([config['ot_path'], ot_subpath[self.tag], 'examples/apps/cli/ot-cli-ftd'])
 
         self.connectType = 'ip'
         self.telnetIp = self.port = discovery_add
-        self.telnetPort = REMOTE_PORT
-        self.telnetUsername = REMOTE_USERNAME
-        self.telnetPassword = REMOTE_PASSWORD
+
+        global config
+        ssh = config['ssh']
+        self.telnetPort = ssh['port']
+        self.telnetUsername = ssh['username']
+        self.telnetPassword = ssh['password']
 
     def _cliReadLine(self):
         if len(self.__lines) > 1:

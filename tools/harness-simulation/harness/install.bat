@@ -25,18 +25,19 @@
 :: POSSIBILITY OF SUCH DAMAGE.
 ::
 
-xcopy /E /Y Thread_Harness %systemdrive%\GRL\Thread1.2\Thread_Harness
-copy /Y ..\..\harness-thci\OpenThread.py %systemdrive%\GRL\Thread1.2\Thread_Harness\THCI
-copy /Y ..\..\harness-thci\OpenThread_BR.py %systemdrive%\GRL\Thread1.2\Thread_Harness\THCI
-copy /Y ..\..\harness-thci\OpenThread.png %systemdrive%\GRL\Thread1.2\Web\images
-copy /Y ..\..\harness-thci\OpenThread_BR.png %systemdrive%\GRL\Thread1.2\Web\images
-xcopy /E /Y ..\posix\sniffer_sim\proto %systemdrive%\GRL\Thread1.2\Thread_Harness\simulation\Sniffer\proto
+set THREADDIR=%systemdrive%\GRL\Thread1.2
+xcopy /E /Y Thread_Harness %THREADDIR%\Thread_Harness
+copy /Y ..\..\harness-thci\OpenThread.py %THREADDIR%\Thread_Harness\THCI
+copy /Y ..\..\harness-thci\OpenThread_BR.py %THREADDIR%\Thread_Harness\THCI
+copy /Y ..\..\harness-thci\OpenThread.png %THREADDIR%\Web\images
+copy /Y ..\..\harness-thci\OpenThread_BR.png %THREADDIR%\Web\images
+copy /Y ..\posix\config.json %THREADDIR%\Thread_Harness\simulation
+xcopy /E /Y ..\posix\sniffer_sim\proto %THREADDIR%\Thread_Harness\simulation\Sniffer\proto
 
-%systemdrive%\GRL\Thread1.2\Python27\python.exe -m pip install --upgrade pip
-%systemdrive%\GRL\Thread1.2\Python27\python.exe -m pip install -r requirements.txt
+%THREADDIR%\Python27\python.exe -m pip install --upgrade pip
+%THREADDIR%\Python27\python.exe -m pip install -r requirements.txt
 
-set BASEDIR=%systemdrive%\GRL\Thread1.2\Thread_Harness
-
+set BASEDIR=%THREADDIR%\Thread_Harness
 %systemdrive%\GRL\Thread1.2\Python27\python.exe -m grpc_tools.protoc -I%BASEDIR% --python_out=%BASEDIR% --grpc_python_out=%BASEDIR% simulation/Sniffer/proto/sniffer.proto
 
 pause
