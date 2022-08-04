@@ -122,7 +122,7 @@ typedef struct otCacheEntryIterator
 } otCacheEntryIterator;
 
 /**
- * Get the maximum number of children currently allowed.
+ * Gets the maximum number of children currently allowed.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -134,7 +134,7 @@ typedef struct otCacheEntryIterator
 uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 
 /**
- * Set the maximum number of children currently allowed.
+ * Sets the maximum number of children currently allowed.
  *
  * This parameter can only be set when Thread protocol operation has been stopped.
  *
@@ -451,7 +451,7 @@ uint8_t otThreadGetRouterSelectionJitter(otInstance *aInstance);
 void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
 /**
- * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
+ * Gets diagnostic information for an attached Child by its Child ID or RLOC16.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
@@ -645,7 +645,7 @@ int8_t otThreadGetParentPriority(otInstance *aInstance);
 otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
 /**
- * This function gets the maximum number of IP addresses that each MTD child may register with this device as parent.
+ * Gets the maximum number of IP addresses that each MTD child may register with this device as parent.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
@@ -657,11 +657,15 @@ otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority)
 uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance);
 
 /**
- * This function sets/restores the maximum number of IP addresses that each MTD child may register with this
+ * Sets or restores the maximum number of IP addresses that each MTD child may register with this
  * device as parent.
  *
- * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
- *       to limit the address registrations of the reference parent in order to test the MTD DUT reaction.
+ * Pass `0` to clear the setting and restore the default.
+ *
+ * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @note Only used by Thread Test Harness to limit the address registrations of the reference
+ * parent in order to test the MTD DUT reaction.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aMaxIpAddresses  The maximum number of IP addresses that each MTD child may register with this
