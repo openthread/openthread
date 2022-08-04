@@ -43,19 +43,24 @@
 #error "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is required for OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE."
 #endif
 
-#if !OPENTHREAD_CONFIG_UPTIME_ENABLE
-#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE."
-#endif
-
+#include "common/array.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/pool.hpp"
+#include "common/timer.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
 namespace BorderRouter {
 
+/**
+ * This class implements the NAT64 translator for thread.
+ *
+ * The Border Routing manager works on both Thread interface and infrastructure interface.
+ * All ICMPv6 messages are sent/received on the infrastructure interface.
+ *
+ */
 class Nat64Translator : public InstanceLocator, private NonCopyable
 {
 public:
@@ -63,30 +68,31 @@ public:
         OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
     static constexpr uint32_t kAddressMappingPoolSize = OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MAX_MAPPINGS;
 
-    enum class Result : uint8_t
+    /**
+     * The possible results of NAT64 translation.
+     *
+     */
+    enum Result : uint8_t
     {
-        kForward   = 0,
-        kDrop      = 1,
-        kReplyIcmp = 2,
+        kForward, // Messang is successfully translated, the caller should continue forwarding the translated packet.
+        kDrop,    // The caller should drop the packet silently.
     };
 
     /**
-     * This constructor initializes the nat64.
+     * This constructor initializes the NAT64 translator.
      *
      */
     explicit Nat64Translator(Instance &aInstance);
 
     /**
-     * @brief Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted. Note the
-     * caller should reserve at least 20 bytes before the packetHead.
+     * @brief Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted.
+     * Note the message can have 20 bytes reserved before the packetHead to avoid potential copy operations.
      * If the message is an IPv6 packet, Result::kForward will be returned and the message won't be modified.
      *
      * @param[in,out] aMessage the message to be processed.
      *
-     * @returns Result::kForward the caller should contiue forwarding the packet.
-     * @returns Result::kDrop the caller should drop the packet silently.
-     * @returns Result::kReplyIcmp the caller should reply an ICMP packet, the buffer will be filled with the content of
-     * the ICMP packet.
+     * @retval kForward   The caller should contiue forwarding the packet.
+     * @retval kDrop      The caller should drop the packet silently.
      *
      */
     Result HandleIncoming(Message &message);
@@ -99,10 +105,8 @@ public:
      *
      * @param[in,out] aMessage the message to be processed.
      *
-     * @returns Result::kForward the caller should contiue forwarding the packet.
-     * @returns Result::kDrop the caller should drop the packet silently.
-     * @returns Result::kReplyIcmp the caller should reply an ICMP packet, the buffer will be filled with the content of
-     * the ICMP packet.
+     * @retval kForward   The caller should contiue forwarding the packet.
+     * @retval kDrop      The caller should drop the packet silently.
      *
      */
     Result HandleOutgoing(Message &aMessage);
@@ -139,37 +143,33 @@ private:
         friend class LinkedListEntry<AddressMapping>;
         friend class LinkedList<AddressMapping>;
 
-        void Touch(uint64_t aNow) { mExpiry = aNow + kAddressMappingIdleTimeoutMsec; }
+        typedef String<Ip6::Address::kInfoStringSize + Ip4::Address::kAddressStringSize + 4> InfoString;
+
+        void       Touch(TimeMilli aNow) { mExpiry = aNow + kAddressMappingIdleTimeoutMsec; }
+        InfoString ToString(void);
 
         Ip4::Address mIp4;
         Ip6::Address mIp6;
-
-        // The timestamp when this mapping expires, in milliseconds.
-        uint64_t mExpiry;
+        TimeMilli    mExpiry; // The timestamp when this mapping expires, in milliseconds.
 
     private:
         bool Matches(const Ip4::Address &aIp4) const { return mIp4 == aIp4; }
         bool Matches(const Ip6::Address &aIp6) const { return mIp6 == aIp6; }
-        bool Matches(const uint64_t aNow) const { return mExpiry < aNow; }
+        bool Matches(const TimeMilli aNow) const { return mExpiry < aNow; }
 
         AddressMapping *mNext;
     };
 
-    Error TranslateIcmp4(AddressMapping &aMapping, Message &aMessage);
+    Error TranslateIcmp4(Message &aMessage);
+    Error TranslateIcmp6(Message &aMessage);
 
-    Error TranslateIcmp6(AddressMapping &aMapping, Message &aMessage);
+    void            ReleaseMapping(AddressMapping &aMapping);
+    uint16_t        ReleaseExpiredMappings();
+    AddressMapping *AllocateMapping(const Ip6::Address &aIp6Addr);
+    AddressMapping *FindOrAllocateMapping(const Ip6::Address &aIp6Addr);
+    AddressMapping *FindMapping(const Ip4::Address &aIp4Addr);
 
-    void ReleaseMapping(AddressMapping &aMapping);
-
-    AddressMapping *CreateMapping(const Ip6::Address &aAddr);
-
-    AddressMapping *GetMapping(const Ip6::Address &aAddr, bool aTryCreate);
-
-    AddressMapping *GetMapping(const Ip4::Address &aAddr);
-
-    uint32_t     mAvailableAddressCount;
-    Ip4::Address mIp4AddressPool[kAddressMappingPoolSize];
-
+    Array<Ip4::Address, kAddressMappingPoolSize>  mIp4AddressPool;
     Pool<AddressMapping, kAddressMappingPoolSize> mAddressMappingPool;
     LinkedList<AddressMapping>                    mActiveAddressMappings;
 

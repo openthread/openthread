@@ -2065,7 +2065,7 @@ Error RoutingManager::SendPacket(Message &message)
     Error ret   = kErrorDrop;
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    VerifyOrExit(mNat64Translator.HandleIncoming(message) == Nat64Translator::Result::kForward);
+    VerifyOrExit(mNat64Translator.HandleIncoming(message) == Nat64Translator::kForward);
     // TODO: Implement the logic for sending back ICMP
 #endif
 
@@ -2090,7 +2090,7 @@ void RoutingManager::HandleIp6DatagramReceived(Message &message)
     VerifyOrExit(mInfraCallbackForTranslatedPacket != nullptr);
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    VerifyOrExit(mNat64Translator.HandleOutgoing(message) == Nat64Translator::Result::kForward);
+    VerifyOrExit(mNat64Translator.HandleOutgoing(message) == Nat64Translator::kForward);
     // TODO: Implement the logic for sending back ICMP
 #endif
 

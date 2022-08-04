@@ -144,7 +144,7 @@ void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallbac
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetInfraReceiveCallback(aCallback, aCallbackContext);
 #else
-    return otIp6SetReceiveCallback(aInstance, aCallback, aCallbackContext);
+    otIp6SetReceiveCallback(aInstance, aCallback, aCallbackContext);
 #endif
 }
 

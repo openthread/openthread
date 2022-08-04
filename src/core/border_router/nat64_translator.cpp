@@ -37,11 +37,10 @@
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #include <openthread/border_router.h>
-#include <openthread/logging.h>
 
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
-#include "common/uptime.hpp"
+#include "common/log.hpp"
 #include "net/checksum.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6.hpp"
@@ -53,7 +52,6 @@ RegisterLogModule("Nat64");
 
 Nat64Translator::Nat64Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mAvailableAddressCount(0)
 {
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
@@ -61,51 +59,49 @@ Nat64Translator::Nat64Translator(Instance &aInstance)
 
 Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
 {
-    Error           err = kErrorNone;
-    Result          res = Result::kDrop;
+    Result          res = kDrop;
     Ip6::Header     ip6Header;
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
     // ParseForm will do basic checks for the message, including the packet length and IP protocol version.
-    err = ip6Header.ParseFrom(aMessage);
-    if (err != kErrorNone)
+    if (ip6Header.ParseFrom(aMessage) != kErrorNone)
     {
         LogWarn("outgoing packet is not a valid IPv6 packet, drop");
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
 
     if (!mNat64Prefix.IsValidNat64() || !ip6Header.GetDestination().MatchesPrefix(mNat64Prefix))
     {
-        ExitNow(res = Result::kForward);
+        ExitNow(res = kForward);
     }
 
     if (mIp4Cidr.mLength == 0)
     {
         // The NAT64 translation is bypassed (will be handled externally)
-        LogWarn("no IPv4 CIDR for NAT64 configured, forward to upper layer");
-        ExitNow(res = Result::kForward);
+        LogDebg("no IPv4 CIDR for NAT64 configured, forward to upper layer");
+        ExitNow(res = kForward);
     }
 
     if (ip6Header.GetHopLimit() <= 1)
     {
         LogDebg("outgoing packet hop limit reached, drop");
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
     ip6Header.SetHopLimit(ip6Header.GetHopLimit() - 1);
 
-    mapping = GetMapping(ip6Header.GetSource(), /* aTryCreate */ true);
+    mapping = FindOrAllocateMapping(ip6Header.GetSource());
     if (mapping == nullptr)
     {
         LogWarn("failed to get a mapping for %s (mapping pool full?)", ip6Header.GetSource().ToString().AsCString());
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
 
     aMessage.RemoveHeader(sizeof(Ip6::Header));
 
     ip4Header.Clear();
     ip4Header.InitVersionIhl();
-    ip4Header.GetSource().SetBytes(mapping->mIp4.GetBytes());
+    ip4Header.SetSource(mapping->mIp4);
     ip4Header.GetDestination().ExtractFromIp6Address(mNat64Prefix.mLength, ip6Header.GetDestination());
     ip4Header.SetTtl(ip6Header.GetHopLimit());
     ip4Header.SetIdentification(0);
@@ -114,41 +110,34 @@ Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
     {
     case Ip6::kProtoUdp:
         ip4Header.SetProtocol(Ip4::kProtoUdp);
-        res = Result::kForward;
+        res = kForward;
         break;
     case Ip6::kProtoTcp:
         ip4Header.SetProtocol(Ip4::kProtoTcp);
-        res = Result::kForward;
+        res = kForward;
         break;
     case Ip6::kProtoIcmp6:
         ip4Header.SetProtocol(Ip4::kProtoIcmp);
-        SuccessOrExit(TranslateIcmp6(*mapping, aMessage));
-        res = Result::kForward;
+        SuccessOrExit(TranslateIcmp6(aMessage));
+        res = kForward;
         break;
     default:
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
 
-    switch (res)
     {
-    case Result::kDrop:
-        break;
-    case Result::kReplyIcmp:
+        // res here must be kForward based on the swich above.
         // TODO: Implement the logic for replying ICMP packets.
-        break;
-    case Result::kForward:
         ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
         Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
                                         ip4Header.GetProtocol());
         Checksum::UpdateIp4HeaderChecksum(ip4Header);
-        err = aMessage.PrependBytes(&ip4Header, sizeof(ip4Header));
-        if (err != kErrorNone)
+        if (aMessage.Prepend(ip4Header) != kErrorNone)
         {
             // This should never happen since the IPv4 header is shorter than the IPv6 header.
             LogCrit("failed to prepend IPv4 head to translated message");
-            res = Result::kDrop;
+            res = kDrop;
         }
-        break;
     }
 
 exit:
@@ -157,52 +146,46 @@ exit:
 
 Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
 {
-    Error           err = kErrorNone;
     Result          res = Result::kDrop;
     Ip6::Header     ip6Header;
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
-    // Try to parse the message as an IPv6 packet first.
-    err = ip6Header.ParseFrom(aMessage);
     // Ip6::Header::ParseForm may return an error value when the incoming message is an IPv4 packet.
-    if (err == kErrorNone)
-    {
-        ExitNow(res = Result::kForward);
-    }
+    // If the message is already an IPv6 packet, forward it directly.
+    VerifyOrExit(ip6Header.ParseFrom(aMessage) != kErrorNone, res = kForward);
 
-    SuccessOrExit(ip4Header.ParseFrom(aMessage));
-    if (!ip4Header.IsVersion4())
+    if (ip4Header.ParseFrom(aMessage) != kErrorNone)
     {
         LogWarn("incoming message is neither IPv4 nor an IPv6 packet, drop");
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
 
     if (mIp4Cidr.mLength == 0)
     {
         // The NAT64 translation is bypassed (will be handled externally)
         LogWarn("incoming message is an IPv4 packet but no IPv4 CIDR for NAT64 configured, drop");
-        ExitNow(res = Result::kForward);
+        ExitNow(res = kForward);
     }
 
     if (!mNat64Prefix.IsValidNat64())
     {
         LogWarn("incoming message is an IPv4 packet but no NAT64 prefix configured, drop");
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
 
     if (ip4Header.GetTtl() <= 1)
     {
         LogDebg("incoming packet TTL reached");
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
     ip4Header.SetTtl(ip4Header.GetTtl() - 1);
 
-    mapping = GetMapping(ip4Header.GetDestination());
+    mapping = FindMapping(ip4Header.GetDestination());
     if (mapping == nullptr)
     {
         LogWarn("no mapping found for the IPv4 address");
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
 
     aMessage.RemoveHeader(sizeof(Ip4::Header));
@@ -220,139 +203,142 @@ Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
     {
     case Ip4::kProtoUdp:
         ip6Header.SetNextHeader(Ip6::kProtoUdp);
-        res = Result::kForward;
+        res = kForward;
         break;
     case Ip4::kProtoTcp:
         ip6Header.SetNextHeader(Ip6::kProtoTcp);
-        res = Result::kForward;
+        res = kForward;
         break;
     case Ip4::kProtoIcmp:
         ip6Header.SetNextHeader(Ip6::kProtoIcmp6);
-        SuccessOrExit(TranslateIcmp4(*mapping, aMessage));
-        res = Result::kForward;
+        SuccessOrExit(TranslateIcmp4(aMessage));
+        res = kForward;
         break;
     default:
-        ExitNow(res = Result::kDrop);
+        ExitNow(res = kDrop);
     }
 
-    switch (res)
     {
-    case Result::kDrop:
-        break;
-    case Result::kReplyIcmp:
+        // res here must be kForward based on the swich above.
         // TODO: Implement the logic for replying ICMP packets.
-        break;
-    case Result::kForward:
         ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
         Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
                                         ip6Header.GetNextHeader());
-        err = aMessage.PrependBytes(&ip6Header, sizeof(ip6Header));
-        if (err != kErrorNone)
+        if (aMessage.Prepend(ip6Header) != kErrorNone)
         {
             // This might happen when the platform failed to reserve enough space before the original IPv4 packet.
             LogWarn("failed to prepend IPv6 head to translated message");
-            res = Result::kDrop;
+            res = kDrop;
         }
-        break;
     }
 
 exit:
     return res;
 }
 
+Nat64Translator::AddressMapping::InfoString Nat64Translator::AddressMapping::ToString(void)
+{
+    InfoString string;
+
+    string.Append("%s -> %s", mIp6.ToString().AsCString(), mIp4.ToString().AsCString());
+
+    return string;
+}
+
 void Nat64Translator::ReleaseMapping(AddressMapping &aMapping)
 {
-    LogInfo("mapping removed: %s -> %s", aMapping.mIp6.ToString().AsCString(), aMapping.mIp4.ToString().AsCString());
-    mIp4AddressPool[mAvailableAddressCount] = aMapping.mIp4;
-    mAvailableAddressCount++;
+    LogInfo("mapping removed: %s", aMapping.ToString().AsCString());
+    IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4));
     mAddressMappingPool.Free(aMapping);
 }
 
-Nat64Translator::AddressMapping *Nat64Translator::CreateMapping(const Ip6::Address &aAddr)
+uint16_t Nat64Translator::ReleaseExpiredMappings()
 {
-    AddressMapping *mapping = mAddressMappingPool.Allocate();
+    uint16_t                   numRemoved = 0;
+    TimeMilli                  now        = TimerMilli::GetNow();
+    LinkedList<AddressMapping> idleMappings;
 
-    if (mapping == nullptr)
+    mActiveAddressMappings.RemoveAllMatching(now, idleMappings);
+
+    for (AddressMapping *idleMapping = idleMappings.Pop(); idleMapping != nullptr; idleMapping = idleMappings.Pop())
     {
-        uint64_t                   now = Get<Uptime>().GetUptime();
-        LinkedList<AddressMapping> idleMappings;
-
-        mActiveAddressMappings.RemoveAllMatching(now, idleMappings);
-
-        for (AddressMapping *idleMapping = idleMappings.Pop(); idleMapping != nullptr; idleMapping = idleMappings.Pop())
-        {
-            ReleaseMapping(*idleMapping);
-        }
-
-        mapping = mAddressMappingPool.Allocate();
+        numRemoved++;
+        ReleaseMapping(*idleMapping);
     }
 
-    if (mAvailableAddressCount == 0)
+    return numRemoved;
+}
+
+Nat64Translator::AddressMapping *Nat64Translator::AllocateMapping(const Ip6::Address &aIp6Addr)
+{
+    AddressMapping *mapping = nullptr;
+
+    // The address pool will be no larger than the mapping pool, so checking the address pool is enough.
+    if (mIp4AddressPool.IsEmpty())
     {
-        if (mapping != nullptr)
-        {
-            mAddressMappingPool.Free(*mapping);
-            mapping = nullptr;
-        }
-        ExitNow();
+        // ReleaseExpiredMappings returns the number of mappings removed.
+        VerifyOrExit(ReleaseExpiredMappings() > 0);
     }
 
+    mapping = mAddressMappingPool.Allocate();
+    // We should get a valid item since address pool is no larger than the mapping pool, and the address pool is not
+    // empty.
     VerifyOrExit(mapping != nullptr);
 
-    mapping->mIp6 = aAddr;
-    mAvailableAddressCount--;
-    mapping->mIp4 = mIp4AddressPool[mAvailableAddressCount];
-    mapping->Touch(Get<Uptime>().GetUptime());
     mActiveAddressMappings.Push(*mapping);
-    LogInfo("mapping created: %s -> %s", mapping->mIp6.ToString().AsCString(), mapping->mIp4.ToString().AsCString());
+    mapping->mIp6 = aIp6Addr;
+    // PopBack must return a valid address since it is not empty.
+    mapping->mIp4 = *mIp4AddressPool.PopBack();
+    mapping->Touch(TimerMilli::GetNow());
+    LogInfo("mapping created: %s", mapping->ToString().AsCString());
 
 exit:
     return mapping;
 }
 
-Nat64Translator::AddressMapping *Nat64Translator::GetMapping(const Ip6::Address &aAddr, bool aTryCreate)
+Nat64Translator::AddressMapping *Nat64Translator::FindOrAllocateMapping(const Ip6::Address &aIp6Addr)
 {
-    AddressMapping *mapping = mActiveAddressMappings.FindMatching(aAddr);
+    AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp6Addr);
 
     // Exit if we found a valid mapping.
     VerifyOrExit(mapping == nullptr);
-    // If we don't have a valid mapping and we don't want to create one.
-    VerifyOrExit(aTryCreate);
 
-    mapping = CreateMapping(aAddr);
+    mapping = AllocateMapping(aIp6Addr);
 
 exit:
     return mapping;
 }
 
-Nat64Translator::AddressMapping *Nat64Translator::GetMapping(const Ip4::Address &aAddr)
+Nat64Translator::AddressMapping *Nat64Translator::FindMapping(const Ip4::Address &aIp4Addr)
 {
-    AddressMapping *mapping = mActiveAddressMappings.FindMatching(aAddr);
+    AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp4Addr);
 
     if (mapping != nullptr)
     {
-        mapping->Touch(Get<Uptime>().GetUptime());
+        mapping->Touch(TimerMilli::GetNow());
     }
     return mapping;
 }
 
-Error Nat64Translator::TranslateIcmp4(AddressMapping &aMapping, Message &aMessage)
+Error Nat64Translator::TranslateIcmp4(Message &aMessage)
 {
     Error             err = kErrorNone;
     Ip4::Icmp::Header icmp4Header;
     Ip6::Icmp::Header icmp6Header;
 
-    OT_UNUSED_VARIABLE(aMapping);
+    // TODO: Implement the translation of other ICMP messages.
 
-    VerifyOrExit(aMessage.ReadBytes(0, &icmp4Header, sizeof(icmp4Header)) == sizeof(icmp4Header), err = kErrorParse);
+    // Note: The caller have consumed the IP header, so the ICMP header is at offset 0.
+    SuccessOrExit(err = aMessage.Read(0, icmp4Header));
     switch (icmp4Header.GetType())
     {
     case Ip4::Icmp::Header::Type::kTypeEchoReply:
     {
-        VerifyOrExit(aMessage.ReadBytes(0, &icmp6Header, sizeof(icmp6Header)) == sizeof(icmp6Header),
-                     err = kErrorParse);
+        // The only difference between ICMPv6 echo and ICMP4 echo is the message type field, so we can reinteprete it as
+        // ICMP6 header and set the message type.
+        SuccessOrExit(err = aMessage.Read(0, icmp6Header));
         icmp6Header.SetType(Ip6::Icmp::Header::Type::kTypeEchoReply);
-        aMessage.WriteBytes(0, &icmp6Header, sizeof(icmp6Header));
+        aMessage.Write(0, icmp6Header);
         break;
     }
     default:
@@ -364,23 +350,25 @@ exit:
     return err;
 }
 
-Error Nat64Translator::TranslateIcmp6(AddressMapping &aMapping, Message &aMessage)
+Error Nat64Translator::TranslateIcmp6(Message &aMessage)
 {
     Error             err = kErrorNone;
     Ip4::Icmp::Header icmp4Header;
     Ip6::Icmp::Header icmp6Header;
 
-    OT_UNUSED_VARIABLE(aMapping);
+    // TODO: Implement the translation of other ICMP messages.
 
-    VerifyOrExit(aMessage.ReadBytes(0, &icmp6Header, sizeof(icmp6Header)) == sizeof(icmp6Header), err = kErrorParse);
+    // Note: The caller have consumed the IP header, so the ICMP header is at offset 0.
+    SuccessOrExit(err = aMessage.Read(0, icmp6Header));
     switch (icmp6Header.GetType())
     {
     case Ip6::Icmp::Header::Type::kTypeEchoRequest:
     {
-        VerifyOrExit(aMessage.ReadBytes(0, &icmp4Header, sizeof(icmp4Header)) == sizeof(icmp4Header),
-                     err = kErrorParse);
+        // The only difference between ICMPv6 echo and ICMP4 echo is the message type field, so we can reinteprete it as
+        // ICMP6 header and set the message type.
+        SuccessOrExit(err = aMessage.Read(0, icmp4Header));
         icmp4Header.SetType(Ip4::Icmp::Header::Type::kTypeEchoRequest);
-        aMessage.WriteBytes(0, &icmp4Header, sizeof(icmp4Header));
+        aMessage.Write(0, icmp4Header);
         break;
     }
     default:
@@ -423,17 +411,21 @@ Error Nat64Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
     numberOfHosts = OT_MIN(numberOfHosts, kAddressMappingPoolSize);
 
     mAddressMappingPool.FreeAll();
+    mActiveAddressMappings.Clear();
+    mIp4AddressPool.Clear();
 
     for (uint32_t i = 0; i < numberOfHosts; i++)
     {
-        mIp4AddressPool[i].SynthesizeFromCidrAndHost(aCidr, i + hostIdBegin);
+        Ip4::Address addr;
+
+        addr.SynthesizeFromCidrAndHost(aCidr, i + hostIdBegin);
+        IgnoreError(mIp4AddressPool.PushBack(addr));
     }
 
     LogInfo("IPv4 CIDR for NAT64: %s (actual address pool: %s - %s, %u addresses)", aCidr.ToString().AsCString(),
-            mIp4AddressPool[0].ToString().AsCString(), mIp4AddressPool[numberOfHosts - 1].ToString().AsCString(),
+            mIp4AddressPool.Front()->ToString().AsCString(), mIp4AddressPool.Back()->ToString().AsCString(),
             numberOfHosts);
-    mAvailableAddressCount = numberOfHosts;
-    mIp4Cidr               = aCidr;
+    mIp4Cidr = aCidr;
 
 exit:
     return err;
