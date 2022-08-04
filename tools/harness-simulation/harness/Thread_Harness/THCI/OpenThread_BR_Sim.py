@@ -123,6 +123,7 @@ class OpenThread_BR_Sim(OpenThread_BR):
 
         self.docker_name, self.ssh_ip = discovery_add.split('@')
         self.tag, self.node_id = self.docker_name.split('_')
+        self.node_id = int(self.node_id)
         # Let it crash if it is an invalid IP address
         ipaddress.ip_address(self.ssh_ip)
 

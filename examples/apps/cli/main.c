@@ -27,6 +27,8 @@
  */
 
 #include <assert.h>
+#include <string.h>
+
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
@@ -67,7 +69,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 }
 
 #if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
+static otError ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aArgsLength);
@@ -75,8 +77,62 @@ static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
     exit(EXIT_SUCCESS);
 }
-static const otCliCommand kCommands[] = {{"exit", ProcessExit}};
+
+#if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+extern otError  NodeIdFilterDeny(uint16_t aNodeId);
+extern void     NodeIdFilterClear(void);
+extern uint16_t NodeIdFilterGetNext(uint16_t aNodeId);
+
+static otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        otCliOutputFormat("Denied Node ID List:\r\n");
+
+        for (uint16_t nodeId = 0; (nodeId = NodeIdFilterGetNext(nodeId));)
+        {
+            otCliOutputFormat("%d\r\n", nodeId);
+        }
+    }
+    else if (!strcmp(aArgs[0], "clear"))
+    {
+        VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+        NodeIdFilterClear();
+    }
+    else if (!strcmp(aArgs[0], "deny"))
+    {
+        uint16_t nodeId;
+        char *   endptr;
+
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        nodeId = (uint16_t)strtol(aArgs[1], &endptr, 0);
+
+        VerifyOrExit(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = NodeIdFilterDeny(nodeId));
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+
+static const otCliCommand kCommands[] = {
+    {"exit", ProcessExit},
+#if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+    {"nodeidfilter", ProcessNodeIdFilter},
 #endif
+};
+#endif // OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
 
 int main(int argc, char *argv[])
 {

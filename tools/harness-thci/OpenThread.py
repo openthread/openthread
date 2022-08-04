@@ -3259,6 +3259,16 @@ class OpenThreadTHCI(object):
     def setVrCheckSkip(self):
         self.__executeCommand("tvcheck disable")
 
+    @API
+    def addBlockedNodeId(self, node_id):
+        cmd = 'nodeidfilter deny %d' % node_id
+        self.__executeCommand(cmd)
+
+    @API
+    def clearBlockedNodeIds(self):
+        cmd = 'nodeidfilter clear'
+        self.__executeCommand(cmd)
+
 
 class OpenThread(OpenThreadTHCI, IThci):
 

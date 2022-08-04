@@ -71,10 +71,12 @@ enum
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 extern int      sSockFd;
+extern uint16_t sPortBase;
 extern uint16_t sPortOffset;
 #else
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
+static uint16_t sPortBase   = 9000;
 static uint16_t sPortOffset = 0;
 static uint16_t sPort       = 0;
 #endif
@@ -165,6 +167,52 @@ static otMacKeyMaterial sNextKey;
 static otRadioKeyType   sKeyType;
 
 static int8_t GetRssi(uint16_t aChannel);
+
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+static uint8_t sDeniedNodeIdsBitVector[(MAX_NETWORK_SIZE + 7) / 8];
+
+static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
+{
+    uint16_t index = aNodeId - 1;
+    return (sDeniedNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) == 0;
+}
+
+otError NodeIdFilterDeny(uint16_t aNodeId)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (1 <= aNodeId && aNodeId <= MAX_NETWORK_SIZE)
+    {
+        uint16_t index = aNodeId - 1;
+        sDeniedNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
+void NodeIdFilterClear(void)
+{
+    memset(sDeniedNodeIdsBitVector, 0, sizeof(sDeniedNodeIdsBitVector));
+}
+
+uint16_t NodeIdFilterGetNext(uint16_t aNodeId)
+{
+    uint16_t nextNodeId = 0;
+    for (uint16_t i = aNodeId + 1; i <= MAX_NETWORK_SIZE; i++)
+    {
+        if (!NodeIdFilterIsConnectable(i))
+        {
+            nextNodeId = i;
+            break;
+        }
+    }
+    return nextNodeId;
+}
+#endif
 
 static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
 {
@@ -298,7 +346,7 @@ static void initFds(void)
 
     otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sTxFd)"));
 
-    sPort                    = (uint16_t)(9000 + sPortOffset + gNodeId);
+    sPort                    = (uint16_t)(sPortBase + sPortOffset + gNodeId);
     sockaddr.sin_family      = AF_INET;
     sockaddr.sin_port        = htons(sPort);
     sockaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -337,7 +385,7 @@ static void initFds(void)
     }
 
     sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset));
+    sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset));
     sockaddr.sin_addr.s_addr = inet_addr(OT_RADIO_GROUP);
 
     otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sRxFd)"));
@@ -356,24 +404,10 @@ exit:
 void platformRadioInit(void)
 {
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-    char *offset;
+    parseFromEnvAsUInt16("PORT_BASE", &sPortBase);
 
-    offset = getenv("PORT_OFFSET");
-
-    if (offset)
-    {
-        char *endptr;
-
-        sPortOffset = (uint16_t)strtol(offset, &endptr, 0);
-
-        if (*endptr != '\0')
-        {
-            fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
-            exit(EXIT_FAILURE);
-        }
-
-        sPortOffset *= (MAX_NETWORK_SIZE + 1);
-    }
+    parseFromEnvAsUInt16("PORT_OFFSET", &sPortOffset);
+    sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
     initFds();
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
@@ -829,7 +863,10 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
         if (rval > 0)
         {
-            if (sockaddr.sin_port != htons(sPort))
+            uint16_t srcPort   = ntohs(sockaddr.sin_port);
+            uint16_t srcNodeId = srcPort - sPortOffset - sPortBase;
+
+            if (NodeIdFilterIsConnectable(srcNodeId) && srcPort != sPort)
             {
                 sReceiveFrame.mLength = (uint16_t)(rval - 1);
 
@@ -847,7 +884,7 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
             exit(EXIT_FAILURE);
         }
     }
-#endif
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     if (platformRadioIsTransmitPending())
     {
         radioSendMessage(aInstance);
@@ -870,7 +907,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, OT_RADIO_GROUP, &sockaddr.sin_addr);
 
-    sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset));
+    sockaddr.sin_port = htons((uint16_t)(sPortBase + sPortOffset));
     rval =
         sendto(sTxFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
@@ -1320,4 +1357,22 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
     *aRegionCode = sRegionCode;
 exit:
     return error;
+}
+
+void parseFromEnvAsUInt16(const char *aEnvName, uint16_t *aValue)
+{
+    char *env = getenv(aEnvName);
+
+    if (env)
+    {
+        char *endptr;
+
+        *aValue = (uint16_t)strtol(env, &endptr, 0);
+
+        if (*endptr != '\0')
+        {
+            fprintf(stderr, "Invalid %s: %s\n", aEnvName, env);
+            exit(EXIT_FAILURE);
+        }
+    }
 }

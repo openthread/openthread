@@ -61,6 +61,7 @@ char **gArguments      = NULL;
 
 uint64_t sNow = 0; // microseconds
 int      sSockFd;
+uint16_t sPortBase = 9000;
 uint16_t sPortOffset;
 
 static void handleSignal(int aSignal)
@@ -78,7 +79,7 @@ void otSimSendEvent(const struct Event *aEvent)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-    sockaddr.sin_port = htons(9000 + sPortOffset);
+    sockaddr.sin_port = htons(sPortBase + sPortOffset);
 
     rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
                   sizeof(sockaddr));
@@ -176,28 +177,15 @@ otError otPlatUartFlush(void)
 static void socket_init(void)
 {
     struct sockaddr_in sockaddr;
-    char *             offset;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
-    offset = getenv("PORT_OFFSET");
+    parseFromEnvAsUInt16("PORT_BASE", &sPortBase);
 
-    if (offset)
-    {
-        char *endptr;
+    parseFromEnvAsUInt16("PORT_OFFSET", &sPortOffset);
+    sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
-        sPortOffset = (uint16_t)strtol(offset, &endptr, 0);
-
-        if (*endptr != '\0')
-        {
-            fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
-            exit(EXIT_FAILURE);
-        }
-
-        sPortOffset *= (MAX_NETWORK_SIZE + 1);
-    }
-
-    sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset + gNodeId));
+    sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset + gNodeId));
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

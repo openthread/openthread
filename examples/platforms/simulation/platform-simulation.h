@@ -232,6 +232,15 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  */
 bool platformRadioIsTransmitPending(void);
 
+/**
+ * This function parses an environment variable as an unsigned 16-bit integer if the environment variable exists.
+ *
+ * @param[in]   aEnvName  The name of the environment variable.
+ * @param[out]  aValue    A pointer to the unsigned 16-bit integer.
+ *
+ */
+void parseFromEnvAsUInt16(const char *aEnvName, uint16_t *aValue);
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 /**

@@ -48,17 +48,37 @@ static const int kMaxNetworkSize = 33;      ///< Well-known ID used by a simulat
 static const int kBasePort       = 18000;   ///< This base port for posix app simulation.
 static const int kUsPerSecond    = 1000000; ///< Number of microseconds per second.
 
-static uint64_t sNow        = 0;  ///< Time of simulation.
-static int      sSockFd     = -1; ///< Socket used to communicating with simulator.
-static uint16_t sPortOffset = 0;  ///< Port offset for simulation.
+static uint64_t sNow        = 0;    ///< Time of simulation.
+static int      sSockFd     = -1;   ///< Socket used to communicating with simulator.
+static uint16_t sPortBase   = 9000; ///< Port base for simulation.
+static uint16_t sPortOffset = 0;    ///< Port offset for simulation.
 
 void virtualTimeInit(uint16_t aNodeId)
 {
     struct sockaddr_in sockaddr;
+    char *             base;
     char *             offset;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
+
+    base = getenv("PORT_BASE");
+
+    if (base)
+    {
+        char *endptr;
+
+        sPortBase = (uint16_t)strtol(base, &endptr, 0);
+
+        if (*endptr != '\0')
+        {
+            const uint8_t kMsgSize = 40;
+            char          msg[kMsgSize];
+
+            snprintf(msg, sizeof(msg), "Invalid PORT_BASE: %s", base);
+            DieNowWithMessage(msg, OT_EXIT_INVALID_ARGUMENTS);
+        }
+    }
 
     offset = getenv("PORT_OFFSET");
 
@@ -113,7 +133,7 @@ static void virtualTimeSendEvent(struct VirtualTimeEvent *aEvent, size_t aLength
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-    sockaddr.sin_port = htons(9000 + sPortOffset);
+    sockaddr.sin_port = htons(sPortBase + sPortOffset);
 
     rval = sendto(sSockFd, aEvent, aLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 

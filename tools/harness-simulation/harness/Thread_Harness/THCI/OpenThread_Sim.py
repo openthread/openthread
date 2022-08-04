@@ -155,16 +155,17 @@ class OpenThread_Sim(OpenThreadTHCI, IThci):
 
         prefix, self.ssh_ip = discovery_add.split('@')
         self.tag, self.node_id = prefix.split('_')
+        self.node_id = int(self.node_id)
         # Let it crash if it is an invalid IP address
         ipaddress.ip_address(self.ssh_ip)
 
         # Do not use `os.path.join` as it uses backslash as the separator on Windows
+        global config
         self.device = '/'.join([config['ot_path'], ot_subpath[self.tag], 'examples/apps/cli/ot-cli-ftd'])
 
         self.connectType = 'ip'
         self.telnetIp = self.port = discovery_add
 
-        global config
         ssh = config['ssh']
         self.telnetPort = ssh['port']
         self.telnetUsername = ssh['username']
