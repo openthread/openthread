@@ -101,12 +101,6 @@ class SnifferSocketTransport(SnifferTransport):
     def __init__(self):
         self._socket = None
 
-    def __del__(self):
-        if not self.is_opened:
-            return
-
-        self.close()
-
     def _nodeid_to_port(self, nodeid: int):
         return self.BASE_PORT + (self.PORT_OFFSET * (self.MAX_NETWORK_SIZE + 1)) + nodeid
 

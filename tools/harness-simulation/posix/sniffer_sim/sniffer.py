@@ -31,7 +31,6 @@ import argparse
 from concurrent import futures
 import enum
 import grpc
-import ipaddress
 import logging
 import signal
 import pcap_codec
@@ -54,7 +53,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         STOPPED = 0
         RUNNING = 1
 
-    def _clear(self):
+    def _reset(self):
         self._state = SnifferServicer.State.STOPPED
         self._pcap = None
         self._allowed_nodeids = None
@@ -65,7 +64,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
     def __init__(self):
         self._thread_alive = threading.Event()
         self._mutex = threading.Lock()  # for self._allowed_nodeids
-        self._clear()
+        self._reset()
 
     def _sniffer_main_loop(self):
         """ Sniffer main loop. """
@@ -78,12 +77,11 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
                 continue
             data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
 
-            self._mutex.acquire()
-            allowed_nodeids = self._allowed_nodeids
-            self._mutex.release()
+            with self._mutex:
+                allowed_nodeids = self._allowed_nodeids
 
             # Equivalent to RF enclosure
-            if nodeid in allowed_nodeids:
+            if allowed_nodeids is None or nodeid in allowed_nodeids:
                 self._pcap.append(data)
 
         self.logger.debug('Sniffer stopped.')
@@ -101,7 +99,8 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self._pcap = pcap_codec.PcapCodec(request.channel)
 
         # Sniffer all nodes in default, i.e. there is no RF enclosure
-        self._allowed_nodeids = set(range(1, self.MAX_NODES_NUM + 1))
+        # In this case, self._allowed_nodeids is set to None
+        self._allowed_nodeids = None
 
         # Create transport
         transport_factory = sniffer_transport.SnifferTransportFactory()
@@ -125,15 +124,14 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         if self._state != SnifferServicer.State.RUNNING:
             return sniffer_pb2.StatusReply(status=sniffer_pb2.OPERATION_ERROR)
 
-        allowed_nodeids = set([x.nodeid for x in request_iterator])
+        allowed_nodeids = set(x.nodeid for x in request_iterator)
         # Validate the node IDs
         for nodeid in allowed_nodeids:
             if not 1 <= nodeid <= self.MAX_NODES_NUM:
                 return sniffer_pb2.StatusReply(status=sniffer_pb2.VALUE_ERROR)
 
-        self._mutex.acquire()
-        self._allowed_nodeids = allowed_nodeids
-        self._mutex.release()
+        with self._mutex:
+            self._allowed_nodeids = allowed_nodeids
 
         return sniffer_pb2.StatusReply(status=sniffer_pb2.OK)
 
@@ -152,13 +150,13 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self._transport.close()
 
         pcap_content = self._pcap.pop_all()
-        self._clear()
+        self._reset()
 
         return sniffer_pb2.StopReply(status=sniffer_pb2.OK, pcap_content=pcap_content)
 
 
 def serve(address_port):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=8))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
     sniffer_pb2_grpc.add_SnifferServicer_to_server(SnifferServicer(), server)
     # add_secure_port requires a web domain
     server.add_insecure_port(address_port)
@@ -178,22 +176,14 @@ def run_sniffer():
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--address',
-                        dest='address',
+    parser.add_argument('--grpc-server',
+                        dest='grpc_server',
                         type=str,
-                        required=False,
-                        default='::',
+                        required=True,
                         help='the address of the sniffer server')
-    parser.add_argument('--port', dest='port', type=int, required=True, help='the port of the sniffer server')
     args = parser.parse_args()
 
-    # Let it crash if args.address is not a valid IP address
-    if isinstance(ipaddress.ip_address(args.address), ipaddress.IPv6Address):
-        addr = f'[{args.address}]'
-    else:
-        addr = args.address
-
-    serve(f'{addr}:{args.port}')
+    serve(args.grpc_server)
 
 
 if __name__ == '__main__':

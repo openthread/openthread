@@ -36,6 +36,7 @@ import socket
 import struct
 import subprocess
 import time
+import win32api
 import winreg as wr
 
 from ISniffer import ISniffer
@@ -69,6 +70,9 @@ class SimSniffer(ISniffer):
         if self.addr_port is not None:
             self._sniffer = grpc.insecure_channel(self.addr_port)
             self._stub = sniffer_pb2_grpc.SnifferStub(self._sniffer)
+
+        # Close the sniffer only when Harness exits
+        win32api.SetConsoleCtrlHandler(self.__disconnect, True)
 
     def __repr__(self):
         return '%r' % self.__dict__
@@ -155,7 +159,7 @@ class SimSniffer(ISniffer):
         response = self._stub.Stop(sniffer_pb2.StopRequest())
         assert response.status == sniffer_pb2.OK
 
-        # truncate suffix from .pcapng to .pcap
+        # Truncate suffix from .pcapng to .pcap
         local_pcap_location = self._local_pcapng_location[:-2]
 
         with open(local_pcap_location, 'wb') as f:
@@ -168,8 +172,9 @@ class SimSniffer(ISniffer):
 
         self.is_active = False
 
-    def __del__(self):
-        self._sniffer.close()
+    def __disconnect(self, dwCtrlType):
+        if self._sniffer is not None:
+            self._sniffer.close()
 
     @watched
     def setChannel(self, channelToCapture):

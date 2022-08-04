@@ -11,7 +11,6 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 ## POSIX Environment Setup
 
 1. Build OpenThread to generate standalone OpenThread simulation `ot-cli-ftd`. For example, run the following command in the top directory of OpenThread.
-
    ```bash
    $ script/cmake-build simulation
    ```

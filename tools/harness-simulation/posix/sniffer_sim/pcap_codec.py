@@ -44,7 +44,7 @@ class PcapCodec(object):
 
     def __init__(self, channel):
         self._dlt = DLT_IEEE802_15_4_WITHFCS
-        self._pcap_content = self._encode_header()
+        self._pcap_contents = [self._encode_header()]
         self._channel = channel
 
     def _encode_header(self):
@@ -88,7 +88,7 @@ class PcapCodec(object):
             return
 
         timestamp = self._get_timestamp()
-        self._pcap_content += self._encode_frame(frame, *timestamp)
+        self._pcap_contents.append(self._encode_frame(frame, *timestamp))
 
     def pop_all(self) -> bytes:
-        return self._pcap_content
+        return b''.join(self._pcap_contents)

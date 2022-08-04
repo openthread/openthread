@@ -30,6 +30,7 @@
 import argparse
 import ctypes
 import ctypes.util
+import ipaddress
 import json
 import logging
 import os
@@ -110,7 +111,12 @@ def advertise_sniffer(s: socket.socket, dst, add: str, number: int):
 
 
 def initiate_sniffer(addr: str, port: int) -> subprocess.Popen:
-    cmd = ['python3', 'sniffer_sim/sniffer.py', '--address', addr, '--port', str(port)]
+    if isinstance(ipaddress.ip_address(addr), ipaddress.IPv6Address):
+        server = f'[{addr}]:{port}'
+    else:
+        server = f'{addr}:{port}'
+
+    cmd = ['python3', 'sniffer_sim/sniffer.py', '--grpc-server', server]
     logging.info('Executing command:  %s', ' '.join(cmd))
     return subprocess.Popen(cmd)
 
