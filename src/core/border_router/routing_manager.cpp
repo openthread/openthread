@@ -134,7 +134,7 @@ void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
     mRouteInfoOptionPreference = aPreference;
 
     VerifyOrExit(mIsRunning);
-    StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+    StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
 
 exit:
     return;
@@ -354,7 +354,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
         UpdateDiscoveredPrefixTableOnNetDataChange();
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
     }
 
     if (aEvents.Contains(kEventThreadExtPanIdChanged))
@@ -371,7 +371,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
         if (mIsRunning)
         {
-            StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+            StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
         }
     }
 
@@ -668,11 +668,11 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     }
 }
 
-void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilli)
+void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilliMin, uint32_t aJitterMilliMax)
 {
     OT_ASSERT(mIsRunning);
 
-    StartRoutingPolicyEvaluationDelay(Random::NonCrypto::GetUint32InRange(0, aJitterMilli));
+    StartRoutingPolicyEvaluationDelay(Random::NonCrypto::GetUint32InRange(aJitterMilliMin, aJitterMilliMax));
 }
 
 void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
@@ -1084,7 +1084,7 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
             mInfraIf.ToString().AsCString());
 
     // Schedule routing policy evaluation with random jitter to respond with Router Advertisement.
-    StartRoutingPolicyEvaluationJitter(kRaReplyJitter);
+    StartRoutingPolicyEvaluationJitter(0, kRaReplyJitter);
 }
 
 void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
@@ -1199,7 +1199,7 @@ void RoutingManager::HandleDiscoveredPrefixTableChanged(void)
 
     if (newFavoredPrefix != mFavoredDiscoveredOnLinkPrefix)
     {
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
     }
 
 exit:
@@ -1265,7 +1265,7 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
         // reevaluate routing policy and send RA message with new
         // header.
 
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
     }
 
 exit:
