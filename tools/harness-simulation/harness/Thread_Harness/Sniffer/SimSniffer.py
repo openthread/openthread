@@ -34,20 +34,17 @@ import netifaces
 import select
 import socket
 import struct
-import subprocess
 import time
 import win32api
 import winreg as wr
 
-from ISniffer import ISniffer
+from Sniffer.ISniffer import ISniffer
 from THCI.OpenThread import watched
-from simulation.config import EDITCAP_PATH
 from simulation.Sniffer.proto import sniffer_pb2
 from simulation.Sniffer.proto import sniffer_pb2_grpc
 
 DISCOVERY_ADDR = ('ff02::114', 12345)
-
-IFNAME = 'WLAN'
+IFNAME = ISniffer.ethernet_interface_name
 
 SCAN_TIME = 3
 
@@ -67,12 +64,13 @@ class SimSniffer(ISniffer):
         self.addr_port = kwargs.get('addressofDevice')
         self.is_active = False
         self._local_pcapng_location = None
+
         if self.addr_port is not None:
             self._sniffer = grpc.insecure_channel(self.addr_port)
             self._stub = sniffer_pb2_grpc.SnifferStub(self._sniffer)
 
-        # Close the sniffer only when Harness exits
-        win32api.SetConsoleCtrlHandler(self.__disconnect, True)
+            # Close the sniffer only when Harness exits
+            win32api.SetConsoleCtrlHandler(self.__disconnect, True)
 
     def __repr__(self):
         return '%r' % self.__dict__
@@ -146,9 +144,9 @@ class SimSniffer(ISniffer):
         self.channel = channelToCapture
         self._local_pcapng_location = captureFileLocation
 
-        response = self._stub.Start(sniffer_pb2.StartRequest(channel=self.channel))
+        response = self._stub.Start(sniffer_pb2.StartRequest(channel=self.channel, includeEthernet=includeEthernet))
         if response.status != sniffer_pb2.OK:
-            raise RuntimeError(f'startSniffer error: {sniffer_pb2.Status.Name(response.status)}')
+            raise RuntimeError('startSniffer error: %s' % sniffer_pb2.Status.Name(response.status))
 
         self.is_active = True
 
@@ -159,18 +157,10 @@ class SimSniffer(ISniffer):
 
         response = self._stub.Stop(sniffer_pb2.StopRequest())
         if response.status != sniffer_pb2.OK:
-            raise RuntimeError(f'stopSniffer error: {sniffer_pb2.Status.Name(response.status)}')
+            raise RuntimeError('stopSniffer error: %s' % sniffer_pb2.Status.Name(response.status))
 
-        # Truncate suffix from .pcapng to .pcap
-        local_pcap_location = self._local_pcapng_location[:-2]
-
-        with open(local_pcap_location, 'wb') as f:
+        with open(self._local_pcapng_location, 'wb') as f:
             f.write(response.pcap_content)
-
-        cmd = [EDITCAP_PATH, '-F', 'pcapng', local_pcap_location, self._local_pcapng_location]
-        self.log('running editcap: %r', cmd)
-        subprocess.Popen(cmd).wait()
-        self.log('editcap done')
 
         self.is_active = False
 

@@ -10,15 +10,32 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 ## POSIX Environment Setup
 
-1. Build OpenThread to generate standalone OpenThread simulation `ot-cli-ftd`. For example, run the following command in the top directory of OpenThread.
+1. Build OpenThread to generate standalone OpenThread simulation `ot-cli-ftd`. Taking running OpenThread 1.2 test cases as an example, run the following command in the top directory of OpenThread.
 
    ```bash
-   $ script/cmake-build simulation
+   $ CFLAGS='-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8' \
+     CXXFLAGS='-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8' \
+     script/cmake-build simulation \
+         -DOT_THREAD_VERSION=1.2 \
+         -DOT_DUA=ON \
+         -DOT_MLR=ON \
+         -DOT_COMMISSIONER=ON \
+         -DOT_CSL_RECEIVER=ON
    ```
 
    Then `ot-cli-ftd` is built in the directory `build/simulation/examples/apps/cli/`.
 
-2. Run the installation script.
+2. Check the configuration file `config.py`
+
+   - Edit the value of `OT_PATH` to the absolute path where the top directory of the OpenThread repository is located.
+
+3. Run the `build_docker_image.sh` with the environment variable `OT_PATH` set properly. For example run the following command.
+
+   ```bash
+   $ OT_PATH=~/repo/openthread ./build_docker_image.sh
+   ```
+
+4. Run the installation script.
 
    ```bash
    $ tools/harness-simulation/posix/install.sh
@@ -30,6 +47,8 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 2. Check the configuration file `C:\GRL\Thread1.2\Thread_Harness\simulation\config.py`
 
+   - Edit the value of `REMOTE_USERNAME` to the username expected to connect to on the remote POSIX environment.
+   - Edit the value of `REMOTE_PASSWORD` to the password corresponding to the username above.
    - Edit the value of `REMOTE_OT_PATH` to the absolute path where the top directory of the OpenThread repository is located.
 
 3. Add the additional simulation device information in `harness\Web\data\deviceInputFields.xml` to `C:\GRL\Thread1.2\Web\data\deviceInputFields.xml`.
@@ -40,16 +59,17 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
    ```bash
    $ cd tools/harness-simulation/posix
-   $ python launch_testbed.py \
-         --interface=eth0     \
-         --ot1.1=24           \
+   $ python3 launch_testbed.py \
+         --interface=eth0      \
+         --ot=6                \
+         --otbr=4              \
          --sniffer=2
    ```
 
-   It starts 24 OT FTD simulations and 2 sniffer simulations and can be discovered on eth0.
+   It starts 6 OT FTD simulations, 4 OTBR simulations and 2 sniffer simulations and can be discovered on eth0.
 
    The arguments can be adjusted according to the requirement of test cases.
 
-2. Run Test Harness. The information field of the device is encoded as `<node_id>@<ip_addr>`. Choose the proper device as the DUT accordingly.
+2. Run Test Harness. The information field of the device is encoded as `<node_id>@<ip_addr>` for FTD and `otbr_<node_id>@<ip_addr>` for BR. Choose the proper device as the DUT accordingly.
 
 3. Select one or more test cases to start the test.

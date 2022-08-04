@@ -39,12 +39,18 @@ import socket
 import struct
 import subprocess
 import sys
+from typing import Iterable
+
+from config import (
+    MAX_NODES_NUM,
+    MAX_SNIFFER_NUM,
+    SNIFFER_SERVER_PORT_BASE,
+    OTBR_DOCKER_NAME_PREFIX,
+)
+from otbr_sim import otbr_docker
 
 GROUP = 'ff02::114'
 PORT = 12345
-MAX_OT11_NUM = 33
-MAX_SNIFFER_NUM = 4
-SNIFFER_SERVER_PORT_BASE = 50051
 
 
 def if_nametoindex(ifname: str) -> int:
@@ -88,20 +94,26 @@ def _advertise(s: socket.socket, dst, info):
     s.sendto(json.dumps(info).encode('utf-8'), dst)
 
 
-def advertise_ftd(s: socket.socket, dst, ven: str, ver: str, add: str, por: int, number: int):
-    # Node ID of ot-cli-ftd is 1-indexed
-    for i in range(1, number + 1):
+def advertise_devices(s: socket.socket,
+                      dst,
+                      ven: str,
+                      ver: str,
+                      add: str,
+                      por: int,
+                      nodeids: Iterable[int],
+                      prefix: str = ''):
+    for nodeid in nodeids:
         info = {
             'ven': ven,
-            'mod': f'{ven}_{i}',
+            'mod': f'{ven}_{nodeid}',
             'ver': ver,
-            'add': f'{i}@{add}',
+            'add': f'{prefix}{nodeid}@{add}',
             'por': por,
         }
         _advertise(s, dst, info)
 
 
-def advertise_sniffer(s: socket.socket, dst, add: str, number: int):
+def advertise_sniffers(s: socket.socket, dst, add: str, number: int):
     for i in range(number):
         info = {
             'add': add,
@@ -135,17 +147,24 @@ def main():
                         required=True,
                         help='the interface used for discovery')
 
-    # Determine the number of OpenThread 1.1 FTD simulations to be "detected" and then started
-    parser.add_argument('--ot1.1',
-                        dest='ot11_num',
+    # Determine the number of OpenThread FTD simulations to be "detected" and then started
+    parser.add_argument('--ot',
+                        dest='ot_num',
                         type=int,
                         required=False,
                         default=0,
-                        help=f'the number of OpenThread FTD simulations, no more than {MAX_OT11_NUM}')
+                        help=f'the number of OpenThread FTD simulations')
+
+    # Determine the number of OpenThread BR simulations to be initiated and then detected
+    parser.add_argument('--otbr',
+                        dest='otbr_num',
+                        type=int,
+                        required=False,
+                        default=0,
+                        help=f'the number of OpenThread BR simulations')
 
     # Determine the number of sniffer simulations to be started and then detected
-    parser.add_argument('-s',
-                        '--sniffer',
+    parser.add_argument('--sniffer',
                         dest='sniffer_num',
                         type=int,
                         required=False,
@@ -155,14 +174,20 @@ def main():
     args = parser.parse_args()
 
     # Check validation of arguments
-    if not 0 <= args.ot11_num <= MAX_OT11_NUM:
-        raise ValueError(f'The number of FTDs should be between 0 and {MAX_OT11_NUM}')
+    if args.ot_num < 0:
+        raise ValueError(f'The number of FTDs should be non-negative')
+
+    if args.otbr_num < 0:
+        raise ValueError(f'The number of OTBRs should be non-negative')
 
     if not 0 <= args.sniffer_num <= MAX_SNIFFER_NUM:
-        raise ValueError(f'The number of FTDs should be between 0 and {MAX_SNIFFER_NUM}')
+        raise ValueError(f'The number of sniffers should be between 0 and {MAX_SNIFFER_NUM}')
 
-    if args.ot11_num == args.sniffer_num == 0:
+    if args.ot_num == args.otbr_num == args.sniffer_num == 0:
         raise ValueError('At least one device is required')
+
+    if args.ot_num + args.otbr_num > MAX_NODES_NUM:
+        raise ValueError(f'The number of all devices should be no more than {MAX_NODES_NUM}')
 
     # Get the local IP address on the specified interface
     addr = get_ipaddr(args.ifname)
@@ -171,6 +196,11 @@ def main():
     sniffer_procs = []
     for i in range(args.sniffer_num):
         sniffer_procs.append(start_sniffer(addr, i + SNIFFER_SERVER_PORT_BASE))
+
+    # Start the BRs
+    otbr_dockers = []
+    for nodeid in range(args.ot_num + 1, args.ot_num + args.otbr_num + 1):
+        otbr_dockers.append(otbr_docker.OtbrDocker(nodeid, OTBR_DOCKER_NAME_PREFIX + str(nodeid)))
 
     s = init_socket(args.ifname, GROUP, PORT)
 
@@ -183,6 +213,10 @@ def main():
         for sniffer_proc in sniffer_procs:
             sniffer_proc.terminate()
             ret = max(ret, sniffer_proc.wait())
+
+        for otbr in otbr_dockers:
+            otbr.close()
+
         sys.exit(ret)
 
     signal.signal(signal.SIGINT, exit_handler)
@@ -194,11 +228,25 @@ def main():
 
         if data == b'BBR':
             logging.info('Received OpenThread simulation query, advertising')
-            advertise_ftd(s, src, ven='OpenThread_Sim', ver='4', add=addr, por=22, number=args.ot11_num)
+            advertise_devices(s,
+                              src,
+                              ven='OpenThread_Sim',
+                              ver='4',
+                              add=addr,
+                              por=22,
+                              nodeids=range(1, args.ot_num + 1))
+            advertise_devices(s,
+                              src,
+                              ven='OpenThread_BR_Sim',
+                              ver='4',
+                              add=addr,
+                              por=22,
+                              nodeids=range(args.ot_num + 1, args.ot_num + args.otbr_num + 1),
+                              prefix=OTBR_DOCKER_NAME_PREFIX)
 
         elif data == b'Sniffer':
             logging.info('Received sniffer simulation query, advertising')
-            advertise_sniffer(s, src, add=addr, number=args.sniffer_num)
+            advertise_sniffers(s, src, add=addr, number=args.sniffer_num)
 
         else:
             logging.warning('Received %r, but ignored', data)

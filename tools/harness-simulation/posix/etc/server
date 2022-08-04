@@ -1,0 +1,73 @@
+#!/bin/bash
+#
+#  Copyright (c) 2022, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#   Description:
+#       This script starts all border router services.
+#
+
+# shellcheck source=/dev/null
+. "$(dirname "$0")"/_initrc
+# shellcheck source=/dev/null
+. script/_nat64
+# shellcheck source=/dev/null
+. script/_dns64
+# shellcheck source=/dev/null
+. script/_firewall
+
+main()
+{
+    # shellcheck source=/dev/null
+    . "$BEFORE_HOOK"
+    sudo sysctl --system
+    nat64_start || die 'Failed to start NAT64!'
+    dns64_start || die 'Failed to start DNS64!'
+    firewall_start || die 'Failed to start firewall'
+    if have systemctl; then
+        systemctl is-active rsyslog || sudo systemctl start rsyslog || die 'Failed to start rsyslog!'
+        systemctl is-active dbus || sudo systemctl start dbus || die 'Failed to start dbus!'
+        systemctl is-active avahi-daemon || sudo systemctl start avahi-daemon || die 'Failed to start avahi!'
+        without WEB_GUI || systemctl is-active otbr-web || sudo systemctl start otbr-web || die 'Failed to start otbr-web!'
+        systemctl is-active otbr-agent || sudo systemctl start otbr-agent || die 'Failed to start otbr-agent!'
+        systemctl is-active commissionerd || sudo systemctl start commissionerd || die 'Failed to start commissionerd!'
+    elif have service; then
+        sudo service rsyslog status || sudo service rsyslog start || die 'Failed to start rsyslog!'
+        sudo service dbus status || sudo service dbus start || die 'Failed to start dbus!'
+        # Tolerate the mdns failure as it is installed for only CI docker.
+        sudo service mdns status || sudo service mdns start || echo "service mdns is not available!"
+        sudo service avahi-daemon status || sudo service avahi-daemon start || die 'Failed to start avahi!'
+        sudo service otbr-agent status || sudo service otbr-agent start || die 'Failed to start otbr-agent!'
+        without WEB_GUI || sudo service otbr-web status || sudo service otbr-web start || die 'Failed to start otbr-web!'
+        sudo service commissionerd status || sudo service commissionerd start || die 'Failed to start commissionerd!'
+    else
+        die 'Unable to find service manager. Try script/console to start in console mode!'
+    fi
+    # shellcheck source=/dev/null
+    . "$AFTER_HOOK"
+}
+
+main

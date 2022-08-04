@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/bash
 #
 # Copyright (c) 2022, The OpenThread Authors.
 # All rights reserved.
@@ -27,8 +27,51 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-REMOTE_USERNAME = 'pi'
-REMOTE_PASSWORD = 'raspberry'
-REMOTE_PORT = 22
+# NOTE: This script has not been fully tested up to now
 
-REMOTE_OT_PATH = '/home/pi/repo/openthread'
+set -euxo pipefail
+
+if [[ $OT_PATH == "" ]]; then
+    OT_PATH="/home/pi/repo/openthread"
+fi
+
+if [[ $OTBR_DOCKER_IMAGE == "" ]]; then
+    OTBR_DOCKER_IMAGE="openthread/otbr:reference-device-12"
+fi
+
+git clone --recursive https://github.com/openthread/ot-br-posix.git
+pushd ot-br-posix
+
+DOCKER_BUILD_OTBR_OPTIONS=(
+    "-DOTBR_DUA_ROUTING=ON"
+    "-DOT_DUA=ON"
+    "-DOT_MLR=ON"
+    "-DOT_THREAD_VERSION=1.2"
+    "-DOT_SIMULATION_MAX_NETWORK_SIZE=64"
+)
+
+# Use system V `service` command instead
+ETC_PATH="${OT_PATH}/tools/harness-simulation/posix/etc"
+mkdir -p root/etc/init.d
+cp "${ETC_PATH}/commissionerd" root/etc/init.d/commissionerd
+sudo chown root:root root/etc/init.d/commissionerd
+sudo chmod +x root/etc/init.d/commissionerd
+
+cp "${ETC_PATH}/Dockerfile" etc/docker/Dockerfile
+cp "${ETC_PATH}/server" script/server
+mkdir -p root/tmp
+cp "${ETC_PATH}/requirements.txt" root/tmp/requirements.txt
+
+docker build . \
+    -t "${OTBR_DOCKER_IMAGE}" \
+    -f etc/docker/Dockerfile \
+    --build-arg REFERENCE_DEVICE=1 \
+    --build-arg BORDER_ROUTING=0 \
+    --build-arg BACKBONE_ROUTER=1 \
+    --build-arg NAT64=0 \
+    --build-arg WEB_GUI=0 \
+    --build-arg REST_API=0 \
+    --build-arg OTBR_OPTIONS="'${DOCKER_BUILD_OTBR_OPTIONS[*]}'"
+
+popd
+rm -rf ot-br-posix

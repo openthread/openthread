@@ -254,13 +254,29 @@ class OpenThreadTHCI(object):
             line str: data send to device
         """
 
-    @abstractmethod
+    # Override the following empty methods in the dervied classes when needed
     def _onCommissionStart(self):
-        """Called when commissioning starts."""
+        """Called when commissioning starts"""
 
-    @abstractmethod
     def _onCommissionStop(self):
-        """Called when commissioning stops."""
+        """Called when commissioning stops"""
+
+    def _deviceBeforeReset(self):
+        """Called before the device resets"""
+
+    def _deviceAfterReset(self):
+        """Called after the device resets"""
+
+    def _restartAgentService(self):
+        """Restart the agent service"""
+
+    def _beforeRegisterMulticast(self, sAddr, timeout):
+        """Called before the ipv6 address being subscribed in interface
+
+        Args:
+            sAddr   : str : Multicast address to be subscribed and notified OTA
+            timeout : int : The allowed maximal time to end normally
+        """
 
     def __sendCommand(self, cmd, expectEcho=True):
         cmd = self._cmdPrefix + cmd
@@ -384,30 +400,12 @@ class OpenThreadTHCI(object):
     @API
     def intialize(self, params):
         """initialize the serial port with baudrate, timeout parameters"""
-        self.port = params.get('SerialPort', '')
-        # params example: {'EUI': 1616240311388864514L, 'SerialBaudRate': None, 'TelnetIP': '192.168.8.181', 'SerialPort': None, 'Param7': None, 'Param6': None, 'Param5': 'ip', 'TelnetPort': '22', 'Param9': None, 'Param8': None}
-
-        try:
-
-            ipaddress.ip_address(self.port)
-            # handle TestHarness Discovery Protocol
-            self.connectType = 'ip'
-            self.telnetIp = self.port
-            self.telnetPort = 22
-            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
-            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
-        except ValueError:
-            self.connectType = (params.get('Param5') or 'usb').lower()
-            self.telnetIp = params.get('TelnetIP')
-            self.telnetPort = int(params.get('TelnetPort')) if params.get('TelnetPort') else 22
-            # username for SSH
-            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
-            # password for SSH
-            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
-
         self.mac = params.get('EUI')
         self.backboneNetif = params.get('Param8') or 'eth0'
         self.extraParams = self.__parseExtraParams(params.get('Param9'))
+
+        # Potentially changes `self.extraParams`
+        self._parseConnectionParams(params)
 
         self.UIStatusMsg = ''
         self.AutoDUTEnable = False
@@ -449,6 +447,32 @@ class OpenThreadTHCI(object):
         else:
             return '[%s]' % self.port
 
+    def _parseConnectionParams(self, params):
+        """Parse parameters related to connection to the device
+
+        Args:
+            params: Arbitrary keyword arguments including 'EUI' and 'SerialPort'
+        """
+        self.port = params.get('SerialPort', '')
+        # params example: {'EUI': 1616240311388864514L, 'SerialBaudRate': None, 'TelnetIP': '192.168.8.181', 'SerialPort': None, 'Param7': None, 'Param6': None, 'Param5': 'ip', 'TelnetPort': '22', 'Param9': None, 'Param8': None}
+
+        try:
+            ipaddress.ip_address(self.port)
+            # handle TestHarness Discovery Protocol
+            self.connectType = 'ip'
+            self.telnetIp = self.port
+            self.telnetPort = 22
+            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
+            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
+        except ValueError:
+            self.connectType = (params.get('Param5') or 'usb').lower()
+            self.telnetIp = params.get('TelnetIP')
+            self.telnetPort = int(params.get('TelnetPort')) if params.get('TelnetPort') else 22
+            # username for SSH
+            self.telnetUsername = 'pi' if params.get('Param6') is None else params.get('Param6')
+            # password for SSH
+            self.telnetPassword = 'raspberry' if params.get('Param7') is None else params.get('Param7')
+
     @watched
     def __parseExtraParams(self, Param9):
         """
@@ -460,12 +484,14 @@ class OpenThreadTHCI(object):
         - "cmd-start-otbr-agent"   : The command to start otbr-agent (default: systemctl start otbr-agent)
         - "cmd-stop-otbr-agent"    : The command to stop otbr-agent (default: systemctl stop otbr-agent)
         - "cmd-restart-otbr-agent" : The command to restart otbr-agent (default: systemctl restart otbr-agent)
+        - "cmd-restart-radvd"      : The command to restart radvd (default: service radvd restart)
 
         For example, Param9 can be generated as below:
         Param9 = base64.urlsafe_b64encode(json.dumps({
             "cmd-start-otbr-agent": "service otbr-agent start",
             "cmd-stop-otbr-agent": "service otbr-agent stop",
             "cmd-restart-otbr-agent": "service otbr-agent restart",
+            "cmd-restart-radvd": "service radvd stop; service radvd start",
         }))
 
         :param Param9: A JSON string encoded in URL-safe base64 encoding.
@@ -1354,7 +1380,7 @@ class OpenThreadTHCI(object):
                 self.__executeCommand('state', timeout=0.1)
                 break
             except Exception:
-                self.__restartAgentService()
+                self._restartAgentService()
                 time.sleep(2)
                 self.__sendCommand('factoryreset', expectEcho=False)
                 time.sleep(0.5)
@@ -3278,18 +3304,6 @@ class OpenThread(OpenThreadTHCI, IThci):
             self.__handle.close()
             self.__handle = None
 
-    def _deviceBeforeReset(self):
-        pass
-
-    def _deviceAfterReset(self):
-        pass
-
-    def __restartAgentService(self):
-        pass
-
-    def _beforeRegisterMulticast(self, sAddr, timeout):
-        pass
-
     def __socRead(self, size=512):
         if self._is_net:
             return self.__handle.recv(size)
@@ -3327,9 +3341,3 @@ class OpenThread(OpenThreadTHCI, IThci):
             self.__socWrite(line + '\r')
         else:
             self.__socWrite(line + '\r\n')
-
-    def _onCommissionStart(self):
-        pass
-
-    def _onCommissionStop(self):
-        pass
