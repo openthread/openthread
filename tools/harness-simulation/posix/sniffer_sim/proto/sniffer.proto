@@ -7,6 +7,9 @@ service Sniffer {
     // Start the sniffer
     rpc Start(StartRequest) returns (StartResponse) {}
 
+    // Transfer the capture file
+    rpc TransferFile(TransferFileRequest) returns (stream TransferFileResponse) {}
+
     // Let the sniffer sniff these nodes only
     rpc FilterNodes(FilterNodesRequest) returns (FilterNodesResponse) {}
 
@@ -41,6 +44,13 @@ message StartResponse {
     Status status = 1;
 }
 
+message TransferFileRequest {
+}
+
+message TransferFileResponse {
+    bytes content = 1;
+}
+
 message FilterNodesRequest {
     repeated int32 nodeids = 1;
 }
@@ -54,5 +64,4 @@ message StopRequest {
 
 message StopResponse {
     Status status = 1;
-    bytes pcap_content = 2;
 }
