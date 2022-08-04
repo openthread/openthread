@@ -36,16 +36,6 @@
 #define CONFIG_BORDER_ROUTER_H_
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
- *
- * Define to 1 to enable Border Agent support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
  *
  * Define to 1 to enable Border Router support.
@@ -79,67 +69,6 @@
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE 1
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
- *
- * Define to 1 to enable Border Routing support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
- *
- * Specifies maximum number of routers (on infra link) to track by routing manager.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS 16
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
- *
- * Specifies maximum number of discovered prefixes (on-link prefixes on the infra link) maintained by routing manager.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES 64
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
- *
- * Specified maximum number of on-mesh prefixes (discovered from Thread Network Data) that are included as Route Info
- * Option in emitted Router Advertisement messages.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES 16
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
- *
- * Define to 1 to enable Border Routing NAT64 support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
- *
- * Specifies the Border Agent UDP port, and use 0 for ephemeral port.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
-#define OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT 0
 #endif
 
 #endif // CONFIG_BORDER_ROUTER_H_
