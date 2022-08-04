@@ -127,17 +127,13 @@ public:
      * This method compresses an IPv6 header.
      *
      * @param[in]   aMessage       A reference to the IPv6 message.
-     * @param[in]   aMacSource     The MAC source address.
-     * @param[in]   aMacDest       The MAC destination address.
-     * @param[in]  aFrameBuilder   The `FrameBuilder` to use to append the compressed headers.
+     * @param[in]   aMacAddrs      The MAC source and destination addresses.
+     * @param[in]   aFrameBuilder  The `FrameBuilder` to use to append the compressed headers.
      *
      * @returns The size of the compressed header in bytes.
      *
      */
-    Error Compress(Message &           aMessage,
-                   const Mac::Address &aMacSource,
-                   const Mac::Address &aMacDest,
-                   FrameBuilder &      aFrameBuilder);
+    Error Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
@@ -145,8 +141,7 @@ public:
      * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
      * @param[out]    aMessage         A reference where the IPv6 header will be placed.
-     * @param[in]     aMacSource       The MAC source address.
-     * @param[in]     aMacDest         The MAC destination address.
+     * @param[in]     aMacAddrs        The MAC source and destination addresses.
      * @param[in,out] aFrameData       A frame data containing the LOWPAN_IPHC header.
      * @param[in]     aDatagramLength  The IPv6 datagram length.
      *
@@ -155,11 +150,10 @@ public:
      * @retval kErrorNoBufs  Could not grow @p aMessage to write the parsed IPv6 header.
      *
      */
-    Error Decompress(Message &           aMessage,
-                     const Mac::Address &aMacSource,
-                     const Mac::Address &aMacDest,
-                     FrameData &         aFrameData,
-                     uint16_t            aDatagramLength);
+    Error Decompress(Message &             aMessage,
+                     const Mac::Addresses &aMacAddrs,
+                     FrameData &           aFrameData,
+                     uint16_t              aDatagramLength);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
@@ -168,19 +162,17 @@ public:
      *
      * @param[out]    aIp6Header             A reference where the IPv6 header will be placed.
      * @param[out]    aCompressedNextHeader  A boolean reference to output whether next header is compressed or not.
-     * @param[in]     aMacSource             The MAC source address.
-     * @param[in]     aMacDest               The MAC destination address.
+     * @param[in]     aMacAddrs              The MAC source and destination addresses
      * @param[in,out] aFrameData             A frame data containing the LOWPAN_IPHC header.
      *
      * @retval kErrorNone    The header was decompressed successfully. @p aIp6Headre and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
      *
      */
-    Error DecompressBaseHeader(Ip6::Header &       aIp6Header,
-                               bool &              aCompressedNextHeader,
-                               const Mac::Address &aMacSource,
-                               const Mac::Address &aMacDest,
-                               FrameData &         aFrameData);
+    Error DecompressBaseHeader(Ip6::Header &         aIp6Header,
+                               bool &                aCompressedNextHeader,
+                               const Mac::Addresses &aMacAddrs,
+                               FrameData &           aFrameData);
 
     /**
      * This method decompresses a LOWPAN_NHC UDP header.
@@ -272,11 +264,10 @@ private:
 
     void  FindContextForId(uint8_t aContextId, Context &aContext) const;
     void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
-    Error Compress(Message &           aMessage,
-                   const Mac::Address &aMacSource,
-                   const Mac::Address &aMacDest,
-                   FrameBuilder &      aFrameBuilder,
-                   uint8_t &           aHeaderDepth);
+    Error Compress(Message &             aMessage,
+                   const Mac::Addresses &aMacAddrs,
+                   FrameBuilder &        aFrameBuilder,
+                   uint8_t &             aHeaderDepth);
 
     Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
     Error CompressSourceIid(const Mac::Address &aMacAddr,

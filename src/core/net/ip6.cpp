@@ -1527,10 +1527,7 @@ exit:
     return error;
 }
 
-Error Headers::DecompressFrom(const Message &     aMessage,
-                              uint16_t            aOffset,
-                              const Mac::Address &aMacSource,
-                              const Mac::Address &aMacDest)
+Error Headers::DecompressFrom(const Message &aMessage, uint16_t aOffset, const Mac::Addresses &aMacAddrs)
 {
     static constexpr uint16_t kReadLength = sizeof(Lowpan::FragmentHeader::NextFrag) + sizeof(Headers);
 
@@ -1541,13 +1538,10 @@ Error Headers::DecompressFrom(const Message &     aMessage,
     frameLength = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(frameBuffer));
     frameData.Init(frameBuffer, frameLength);
 
-    return DecompressFrom(frameData, aMacSource, aMacDest, aMessage.GetInstance());
+    return DecompressFrom(frameData, aMacAddrs, aMessage.GetInstance());
 }
 
-Error Headers::DecompressFrom(const FrameData &   aFrameData,
-                              const Mac::Address &aMacSource,
-                              const Mac::Address &aMacDest,
-                              Instance &          aInstance)
+Error Headers::DecompressFrom(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Instance &aInstance)
 {
     Error                  error     = kErrorNone;
     FrameData              frameData = aFrameData;
@@ -1563,7 +1557,7 @@ Error Headers::DecompressFrom(const FrameData &   aFrameData,
     VerifyOrExit(Lowpan::Lowpan::IsLowpanHc(frameData), error = kErrorNotFound);
 
     SuccessOrExit(error = aInstance.Get<Lowpan::Lowpan>().DecompressBaseHeader(mIp6Header, nextHeaderCompressed,
-                                                                               aMacSource, aMacDest, frameData));
+                                                                               aMacAddrs, frameData));
 
     switch (mIp6Header.GetNextHeader())
     {
