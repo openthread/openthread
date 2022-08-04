@@ -29,9 +29,9 @@
 
 set -euxo pipefail
 
-BASE_DIR=$(dirname $0)
-SNIFFER_DIR=${BASE_DIR}/sniffer_sim
+BASE_DIR=$(dirname "$0")
+SNIFFER_DIR="${BASE_DIR}/sniffer_sim"
 
-pip3 install -r ${BASE_DIR}/requirements.txt
+pip3 install -r "${BASE_DIR}/requirements.txt"
 
-python3 -m grpc_tools.protoc -I${SNIFFER_DIR} --python_out=${SNIFFER_DIR} --grpc_python_out=${SNIFFER_DIR} proto/sniffer.proto
+python3 -m grpc_tools.protoc -I"${SNIFFER_DIR}" --python_out="${SNIFFER_DIR}" --grpc_python_out="${SNIFFER_DIR}" proto/sniffer.proto
