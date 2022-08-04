@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/clearable.hpp"
 #include "common/debug.hpp"
 #include "common/frame_builder.hpp"
 #include "common/frame_data.hpp"
@@ -73,11 +74,12 @@ using ot::Encoding::BigEndian::HostSwap16;
  * This structure represents a LOWPAN_IPHC Context.
  *
  */
-struct Context
+struct Context : public Clearable<Context>
 {
     Ip6::Prefix mPrefix;       ///< The Prefix
     uint8_t     mContextId;    ///< The Context ID.
     bool        mCompressFlag; ///< The Context compression flag.
+    bool        mIsValid;      ///< Indicates whether the context is valid.
 };
 
 /**
@@ -268,6 +270,8 @@ private:
     static constexpr uint8_t kUdpChecksum = 1 << 2;
     static constexpr uint8_t kUdpPortMask = 3 << 0;
 
+    void  FindContextForId(uint8_t aContextId, Context &aContext) const;
+    void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
     Error Compress(Message &           aMessage,
                    const Mac::Address &aMacSource,
                    const Mac::Address &aMacDest,
@@ -292,7 +296,6 @@ private:
     Error DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength);
     Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
 
-    static void  CopyContext(const Context &aContext, Ip6::Address &aAddress);
     static Error ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
 };
 
