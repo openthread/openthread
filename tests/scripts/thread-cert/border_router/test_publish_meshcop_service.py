@@ -157,8 +157,11 @@ class PublishMeshCopService(thread_cert.TestCase):
             self.assertEqual((state_bitmap >> 3 & 3), 2)  # Thread is attached
         self.assertEqual((state_bitmap >> 5 & 3), 1)  # high availability
         self.assertEqual((state_bitmap >> 7 & 1),
+                         br.get_state() not in ['disabled', 'detached'] and
                          br.get_backbone_router_state() != 'Disabled')  # BBR is enabled or not
-        self.assertEqual((state_bitmap >> 8 & 1), br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
+        self.assertEqual((state_bitmap >> 8 & 1),
+                         br.get_state() not in ['disabled', 'detached'] and
+                         br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
         self.assertEqual(service_data['txt']['nn'], br.get_network_name())
         self.assertEqual(service_data['txt']['rv'], '1')
         self.assertIn(service_data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0', '1.3.0'])
