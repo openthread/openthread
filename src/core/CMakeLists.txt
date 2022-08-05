@@ -192,6 +192,7 @@ set(COMMON_SOURCES
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/anycast_locator.cpp
+    thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
     thread/discover_scanner.cpp
@@ -233,7 +234,6 @@ set(COMMON_SOURCES
     thread/uri_paths.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
-    utils/child_supervision.cpp
     utils/flash.cpp
     utils/heap.cpp
     utils/history_tracker.cpp

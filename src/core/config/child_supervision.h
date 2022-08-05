@@ -36,23 +36,11 @@
 #define CONFIG_CHILD_SUPERVISION_H_
 
 /**
- * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
- *
- * Define to 1 to enable Child Supervision support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL
  *
- * The default supervision interval in seconds used by parent. Set to zero to disable the supervision process on the
- * parent.
+ * The default supervision interval in seconds to use when in child state. Zero indicates no supervision needed.
  *
- * Applicable only if child supervision feature is enabled (i.e.,
- * `OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE ` is set).
+ * The current supervision interval can be changed using `otChildSupervisionSetInterval()`.
  *
  * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
  * within the supervision interval. If there is no transmission to the child within the supervision interval, child
@@ -69,7 +57,7 @@
  * The default supervision check timeout interval (in seconds) used by a device in child state. Set to zero to disable
  * the supervision check process on the child.
  *
- * Applicable only if child supervision feature is enabled (i.e., `OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE` is set).
+ * The check timeout interval can be changed using `otChildSupervisionSetCheckTimeout()`.
  *
  * If the sleepy child does not hear from its parent within the specified timeout interval, it initiates the re-attach
  * process (MLE Child Update Request/Response exchange with its parent).
@@ -80,15 +68,22 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_MSG_NO_ACK_REQUEST
+ * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL
  *
- * Define as 1 to clear/disable 15.4 ack request in the MAC header of a supervision message.
+ * Specifies the default supervision interval to use on parent for children that do not explicitly indicate their
+ * desired supervision internal (do not include a "Supervision Interval TLV") and are running older Thread versions
+ * (version <= 1.3.0).
  *
- * Applicable only if child supervision feature is enabled (i.e., `OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE` is set).
+ * This config is added to allow backward compatibility on parent with SED children that used Child Supervision
+ * feature in OT stack before adoption of it by Thread specification and addition of the "Supervision Interval TLV" as
+ * the mechanism for child to inform the parent of its desired supervision interval.
+ *
+ * The config can be set to zero to effectively disable it, i.e., if a child does not provide "Supervision Interval TLV"
+ * it indicates that it does not want to be supervised and then parent will use zero interval for the child.
  *
  */
-#ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_MSG_NO_ACK_REQUEST
-#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_MSG_NO_ACK_REQUEST 0
+#ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL
+#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL 129
 #endif
 
 #endif // CONFIG_CHILD_SUPERVISION_H_

@@ -663,16 +663,12 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     if (aRxOnWhenIdle)
     {
         mDataPollSender.StopPolling();
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-        Get<Utils::SupervisionListener>().Stop();
-#endif
+        Get<SupervisionListener>().Stop();
     }
     else
     {
         mDataPollSender.StartPolling();
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-        Get<Utils::SupervisionListener>().Start();
-#endif
+        Get<SupervisionListener>().Start();
     }
 }
 
@@ -1301,9 +1297,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
 
     frameData.Init(aFrame.GetPayload(), aFrame.GetPayloadLength());
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-    Get<Utils::SupervisionListener>().UpdateOnReceive(macAddrs.mSource, linkInfo.IsLinkSecurityEnabled());
-#endif
+    Get<SupervisionListener>().UpdateOnReceive(macAddrs.mSource, linkInfo.IsLinkSecurityEnabled());
 
     switch (aFrame.GetType())
     {

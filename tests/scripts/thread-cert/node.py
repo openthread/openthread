@@ -1721,6 +1721,30 @@ class NodeImpl:
         self.send_command('pollperiod %d' % pollperiod)
         self._expect_done()
 
+    def get_child_supervision_interval(self):
+        self.send_command('childsupervision interval')
+        return self._expect_result(r'\d+')
+
+    def set_child_supervision_interval(self, interval):
+        self.send_command('childsupervision interval %d' % interval)
+        self._expect_done()
+
+    def get_child_supervision_check_timeout(self):
+        self.send_command('childsupervision checktimeout')
+        return self._expect_result(r'\d+')
+
+    def set_child_supervision_check_timeout(self, timeout):
+        self.send_command('childsupervision checktimeout %d' % timeout)
+        self._expect_done()
+
+    def get_child_supervision_check_failure_counter(self):
+        self.send_command('childsupervision failcounter')
+        return self._expect_result(r'\d+')
+
+    def reset_child_supervision_check_failure_counter(self):
+        self.send_command('childsupervision failcounter reset')
+        self._expect_done()
+
     def get_csl_info(self):
         self.send_command('csl')
         self._expect_done()
@@ -1928,10 +1952,10 @@ class NodeImpl:
 
         #
         # Example output:
-        # | ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt| Extended MAC     |
-        # +-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+
-        # |   1 | 0xc801 |        240 |         24 |     3 |  131 |1|0|0|  3| 0 |     0 | 4ecede68435358ac |
-        # |   2 | 0xc802 |        240 |          2 |     3 |  131 |0|0|0|  3| 1 |     0 | a672a601d2ce37d8 |
+        # | ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt|Suprvsn| Extended MAC     |
+        # +-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+-------+------------------+
+        # |   1 | 0xc801 |        240 |         24 |     3 |  131 |1|0|0|  3| 0 |     0 |   129 | 4ecede68435358ac |
+        # |   2 | 0xc802 |        240 |          2 |     3 |  131 |0|0|0|  3| 1 |     0 |     0 | a672a601d2ce37d8 |
         # Done
         #
 
@@ -1962,6 +1986,7 @@ class NodeImpl:
                 'ver': int(col('Ver')),
                 'csl': bool(int(col('CSL'))),
                 'qmsgcnt': int(col('QMsgCnt')),
+                'suprvsn': int(col('Suprvsn'))
             }
 
         return table

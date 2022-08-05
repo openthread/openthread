@@ -558,6 +558,9 @@ private:
 
     static constexpr uint8_t kMinCriticalChildrenCount = 6;
 
+    static constexpr uint16_t kChildSupervisionDefaultIntervalForOlderVersion =
+        OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL;
+
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
     void  HandleLinkRequest(RxInfo &aRxInfo);

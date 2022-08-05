@@ -126,7 +126,6 @@ size_nrf52840_version()
         "-DOT_BORDER_ROUTER=ON"
         "-DOT_CHANNEL_MANAGER=ON"
         "-DOT_CHANNEL_MONITOR=ON"
-        "-DOT_CHILD_SUPERVISION=ON"
         "-DOT_COAP=ON"
         "-DOT_COAPS=ON"
         "-DOT_COMMISSIONER=ON"

@@ -16,7 +16,6 @@ This page lists the available common switches with description. Unless stated ot
 | BUILTIN_MBEDTLS_MANAGEMENT | OT_BUILTIN_MBEDTLS_MANAGEMENT | Enables the built-in mbedTLS management. Enable this switch if the external mbedTLS is used, but mbedTLS memory allocation and debug config should be managed internally by OpenThread. |
 | CHANNEL_MANAGER | OT_CHANNEL_MANAGER | Enables support for channel manager. Enable this switch on devices that are supposed to request a Thread network channel change. This switch should be used only with an FTD build. |
 | CHANNEL_MONITOR | OT_CHANNEL_MONITOR | Enables support for channel monitor. Enable this switch on devices that are supposed to determine the cleaner channels. |
-| CHILD_SUPERVISION | OT_CHILD_SUPERVISION | Enables support for [child supervision](https://openthread.io/guides/build/features/child-supervision). Enable this switch on a parent or child node with custom OpenThread application that manages the supervision, checks timeout intervals, and verifies connectivity between parent and child. |
 | COAP | OT_COAP | Enables support for the CoAP API. Enable this switch if you want to control Constrained Application Protocol communication. |
 | COAP_OBSERVE | OT_COAP_OBSERVE | Enables support for CoAP Observe (RFC7641) API. |
 | COAPS | OT_COAPS | Enables support for the secure CoAP API. Enable this switch if you want to control Constrained Application Protocol Secure (CoAP over DTLS) communication. |

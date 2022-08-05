@@ -98,10 +98,6 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1" ]
     }
 
-    if (openthread_config_child_supervision_enable) {
-      defines += [ "OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1" ]
-    }
-
     if (openthread_config_coap_api_enable) {
       defines += [ "OPENTHREAD_CONFIG_COAP_API_ENABLE=1" ]
     }
@@ -602,6 +598,8 @@ openthread_core_files = [
   "thread/anycast_locator.cpp",
   "thread/anycast_locator.hpp",
   "thread/child_mask.hpp",
+  "thread/child_supervision.cpp",
+  "thread/child_supervision.hpp",
   "thread/child_table.cpp",
   "thread/child_table.hpp",
   "thread/csl_tx_scheduler.cpp",
@@ -688,8 +686,6 @@ openthread_core_files = [
   "utils/channel_manager.hpp",
   "utils/channel_monitor.cpp",
   "utils/channel_monitor.hpp",
-  "utils/child_supervision.cpp",
-  "utils/child_supervision.hpp",
   "utils/flash.cpp",
   "utils/flash.hpp",
   "utils/heap.cpp",

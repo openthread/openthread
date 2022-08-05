@@ -41,24 +41,14 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
-namespace Utils {
 
 RegisterLogModule("ChildSupervsn");
-
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_FTD
 
 ChildSupervisor::ChildSupervisor(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSupervisionInterval(kDefaultSupervisionInterval)
 {
-}
-
-void ChildSupervisor::SetSupervisionInterval(uint16_t aInterval)
-{
-    mSupervisionInterval = aInterval;
-    CheckState();
 }
 
 Child *ChildSupervisor::GetDestination(const Message &aMessage) const
@@ -108,9 +98,14 @@ void ChildSupervisor::HandleTimeTick(void)
 {
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
+        if (child.IsRxOnWhenIdle() || (child.GetSupervisionInterval() == 0))
+        {
+            continue;
+        }
+
         child.IncrementSecondsSinceLastSupervision();
 
-        if ((child.GetSecondsSinceLastSupervision() >= mSupervisionInterval) && !child.IsRxOnWhenIdle())
+        if (child.GetSecondsSinceLastSupervision() >= child.GetSupervisionInterval())
         {
             SendMessage(child);
         }
@@ -119,14 +114,11 @@ void ChildSupervisor::HandleTimeTick(void)
 
 void ChildSupervisor::CheckState(void)
 {
-    bool shouldRun = false;
+    // Child Supervision should run if Thread MLE operation is
+    // enabled, and there is at least one "valid" child in the
+    // child table.
 
-    // Child Supervision should run if `mSupervisionInterval` is not
-    // zero, Thread MLE operation is enabled, and there is at least one
-    // "valid" child in the child table.
-
-    shouldRun = ((mSupervisionInterval != 0) && !Get<Mle::MleRouter>().IsDisabled() &&
-                 Get<ChildTable>().HasChildren(Child::kInStateValid));
+    bool shouldRun = (!Get<Mle::Mle>().IsDisabled() && Get<ChildTable>().HasChildren(Child::kInStateValid));
 
     if (shouldRun && !Get<TimeTicker>().IsReceiverRegistered(TimeTicker::kChildSupervisor))
     {
@@ -154,6 +146,7 @@ void ChildSupervisor::HandleNotifierEvents(Events aEvents)
 SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
+    , mInterval(kDefaultInterval)
     , mTimer(aInstance)
 {
     SetTimeout(kDefaultTimeout);
@@ -163,10 +156,29 @@ void SupervisionListener::Start(void) { RestartTimer(); }
 
 void SupervisionListener::Stop(void) { mTimer.Stop(); }
 
+void SupervisionListener::SetInterval(uint16_t aInterval)
+{
+    VerifyOrExit(mInterval != aInterval);
+
+    LogInfo("Interval: %u -> %u", mInterval, aInterval);
+
+    mInterval = aInterval;
+
+    if (Get<Mle::Mle>().IsChild())
+    {
+        IgnoreError(Get<Mle::Mle>().SendChildUpdateRequest());
+    }
+
+exit:
+    return;
+}
+
 void SupervisionListener::SetTimeout(uint16_t aTimeout)
 {
     if (mTimeout != aTimeout)
     {
+        LogInfo("Timeout: %u -> %u", mTimeout, aTimeout);
+
         mTimeout = aTimeout;
         RestartTimer();
     }
@@ -201,7 +213,8 @@ void SupervisionListener::HandleTimer(void)
 {
     VerifyOrExit(Get<Mle::MleRouter>().IsChild() && !Get<MeshForwarder>().GetRxOnWhenIdle());
 
-    LogWarn("Supervision timeout. No frame from parent in %d sec", mTimeout);
+    LogWarn("Supervision timeout. No frame from parent in %u sec", mTimeout);
+    mCounter++;
 
     IgnoreError(Get<Mle::MleRouter>().SendChildUpdateRequest());
 
@@ -209,7 +222,4 @@ exit:
     RestartTimer();
 }
 
-#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-
-} // namespace Utils
 } // namespace ot

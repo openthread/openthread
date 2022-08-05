@@ -101,6 +101,7 @@
 #include "thread/announce_begin_server.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/anycast_locator.hpp"
+#include "thread/child_supervision.hpp"
 #include "thread/discover_scanner.hpp"
 #include "thread/dua_manager.hpp"
 #include "thread/energy_scan_server.hpp"
@@ -123,7 +124,6 @@
 #include "thread/tmf.hpp"
 #include "utils/channel_manager.hpp"
 #include "utils/channel_monitor.hpp"
-#include "utils/child_supervision.hpp"
 #include "utils/heap.hpp"
 #include "utils/history_tracker.hpp"
 #include "utils/jam_detector.hpp"
@@ -544,12 +544,10 @@ private:
     Srp::Server mSrpServer;
 #endif
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #if OPENTHREAD_FTD
-    Utils::ChildSupervisor mChildSupervisor;
+    ChildSupervisor mChildSupervisor;
 #endif
-    Utils::SupervisionListener mSupervisionListener;
-#endif
+    SupervisionListener mSupervisionListener;
 
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer    mPanIdQuery;
@@ -849,12 +847,10 @@ template <> inline Utils::JamDetector &Instance::Get(void) { return mJamDetector
 template <> inline Sntp::Client &Instance::Get(void) { return mSntpClient; }
 #endif
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #if OPENTHREAD_FTD
-template <> inline Utils::ChildSupervisor &Instance::Get(void) { return mChildSupervisor; }
+template <> inline ChildSupervisor &Instance::Get(void) { return mChildSupervisor; }
 #endif
-template <> inline Utils::SupervisionListener &Instance::Get(void) { return mSupervisionListener; }
-#endif
+template <> inline SupervisionListener &Instance::Get(void) { return mSupervisionListener; }
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 template <> inline Utils::PingSender &Instance::Get(void) { return mPingSender; }
