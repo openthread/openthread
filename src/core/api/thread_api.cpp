@@ -368,6 +368,11 @@ otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
     aParentInfo->mAge            = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
     aParentInfo->mAllocated      = true;
     aParentInfo->mLinkEstablished = parent->IsStateValid();
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    aParentInfo->mVersion          = parent->GetVersion();
+    aParentInfo->mCslClockAccuracy = parent->GetCslClockAccuracy();
+    aParentInfo->mCslUncertainty   = parent->GetCslUncertainty();
+#endif
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 exit:

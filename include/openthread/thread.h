@@ -138,6 +138,11 @@ typedef struct
     uint8_t      mAge;                 ///< Time last heard
     bool         mAllocated : 1;       ///< Router ID allocated or not
     bool         mLinkEstablished : 1; ///< Link established with Router ID or not
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint8_t mVersion;          ///< Thread version
+    uint8_t mCslClockAccuracy; ///< CSL clock accuracy
+    uint8_t mCslUncertainty;   ///< CSL uncertainty
+#endif
 } otRouterInfo;
 
 /**

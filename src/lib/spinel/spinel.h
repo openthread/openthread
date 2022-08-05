@@ -377,7 +377,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 6
+#define SPINEL_RCP_API_VERSION 7
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -389,7 +389,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION 4
+#define SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION 5
 
 /**
  * @def SPINEL_FRAME_MAX_SIZE
@@ -2295,7 +2295,7 @@ enum
     SPINEL_PROP_THREAD_LEADER_ADDR = SPINEL_PROP_THREAD__BEGIN + 0,
 
     /// Thread Parent Info
-    /** Format: `ESLccCC` - Read only
+    /** Format: `ESLccCC` or `ESLccCCCCC` - Read only
      *
      *  `E`: Extended address
      *  `S`: RLOC16
@@ -2304,6 +2304,9 @@ enum
      *  `c`: Last RSSI (in dBm)
      *  `C`: Link Quality In
      *  `C`: Link Quality Out
+     *  `C`: Version
+     *  `C`: CSL clock accuracy
+     *  `C`: CSL uncertainty
      *
      */
     SPINEL_PROP_THREAD_PARENT = SPINEL_PROP_THREAD__BEGIN + 1,
