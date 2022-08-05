@@ -58,7 +58,9 @@
 
 #include "config/announce_sender.h"
 #include "config/backbone_router.h"
+#include "config/border_agent.h"
 #include "config/border_router.h"
+#include "config/border_routing.h"
 #include "config/channel_manager.h"
 #include "config/channel_monitor.h"
 #include "config/child_supervision.h"

@@ -36,6 +36,7 @@
 #define CONFIG_NETDATA_PUBLISHER_H_
 
 #include "config/border_router.h"
+#include "config/border_routing.h"
 #include "config/srp_server.h"
 
 /**

@@ -1041,19 +1041,87 @@ exit:
 
 #endif
 
+/**
+ * @cli channel (get,set)
+ * @code
+ * channel
+ * 11
+ * Done
+ * @endcode
+ * @code
+ * channel 11
+ * Done
+ * @endcode
+ * @cparam channel [@ca{channel-num}]
+ * Use `channel-num` to set the channel.
+ * @par
+ * Gets or sets the IEEE 802.15.4 Channel value.
+ */
 template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli channel supported
+     * @code
+     * channel supported
+     * 0x7fff800
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioGetSupportedChannelMask
+     */
     if (aArgs[0] == "supported")
     {
         OutputLine("0x%x", otPlatRadioGetSupportedChannelMask(GetInstancePtr()));
     }
+    /**
+     * @cli channel preferred
+     * @code
+     * channel preferred
+     * 0x7fff800
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioGetPreferredChannelMask
+     */
     else if (aArgs[0] == "preferred")
     {
         OutputLine("0x%x", otPlatRadioGetPreferredChannelMask(GetInstancePtr()));
     }
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+    /**
+     * @cli channel monitor
+     * @code
+     * channel monitor
+     * enabled: 1
+     * interval: 41000
+     * threshold: -75
+     * window: 960
+     * count: 10552
+     * occupancies:
+     * ch 11 (0x0cb7)  4.96% busy
+     * ch 12 (0x2e2b) 18.03% busy
+     * ch 13 (0x2f54) 18.48% busy
+     * ch 14 (0x0fef)  6.22% busy
+     * ch 15 (0x1536)  8.28% busy
+     * ch 16 (0x1746)  9.09% busy
+     * ch 17 (0x0b8b)  4.50% busy
+     * ch 18 (0x60a7) 37.75% busy
+     * ch 19 (0x0810)  3.14% busy
+     * ch 20 (0x0c2a)  4.75% busy
+     * ch 21 (0x08dc)  3.46% busy
+     * ch 22 (0x101d)  6.29% busy
+     * ch 23 (0x0092)  0.22% busy
+     * ch 24 (0x0028)  0.06% busy
+     * ch 25 (0x0063)  0.15% busy
+     * ch 26 (0x058c)  2.16% busy
+     * Done
+     * @endcode
+     * @par
+     * Get the current channel monitor state and channel occupancy.
+     * `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+     */
     else if (aArgs[0] == "monitor")
     {
         if (aArgs[1].IsEmpty())
@@ -1088,10 +1156,36 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("");
             }
         }
+        /**
+         * @cli channel monitor start
+         * @code
+         * channel monitor start
+         * channel monitor start
+         * Done
+         * @endcode
+         * @par
+         * Start the channel monitor.
+         * OT CLI sends a boolean value of `true` to #otChannelMonitorSetEnabled.
+         * `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+         * @sa otChannelMonitorSetEnabled
+         */
         else if (aArgs[1] == "start")
         {
             error = otChannelMonitorSetEnabled(GetInstancePtr(), true);
         }
+        /**
+         * @cli channel monitor stop
+         * @code
+         * channel monitor stop
+         * channel monitor stop
+         * Done
+         * @endcode
+         * @par
+         * Stop the channel monitor.
+         * OT CLI sends a boolean value of `false` to #otChannelMonitorSetEnabled.
+         * `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+         * @sa otChannelMonitorSetEnabled
+         */
         else if (aArgs[1] == "stop")
         {
             error = otChannelMonitorSetEnabled(GetInstancePtr(), false);
@@ -1105,6 +1199,23 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     else if (aArgs[0] == "manager")
     {
+        /**
+         * @cli channel manager
+         * @code
+         * channel manager
+         * channel: 11
+         * auto: 1
+         * delay: 120
+         * interval: 10800
+         * supported: { 11-26}
+         * favored: { 11-26}
+         * Done
+         * @endcode
+         * @par
+         * Get the channel manager state.
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+         * @sa otChannelManagerGetRequestedChannel
+         */
         if (aArgs[1].IsEmpty())
         {
             OutputLine("channel: %d", otChannelManagerGetRequestedChannel(GetInstancePtr()));
@@ -1122,11 +1233,38 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("favored: %s", supportedMask.ToString().AsCString());
             }
         }
+        /**
+         * @cli channel manager change
+         * @code
+         * channel manager change 11
+         * channel manager change 11
+         * Done
+         * @endcode
+         * @cparam channel manager change @ca{channel-num}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+         * @par api_copy
+         * #otChannelManagerRequestChannelChange
+         */
         else if (aArgs[1] == "change")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerRequestChannelChange);
         }
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+        /**
+         * @cli channel manager select
+         * @code
+         * channel manager select 1
+         * channel manager select 1
+         * Done
+         * @endcode
+         * @cparam channel manager select @ca{skip-quality-check}
+         * Use a `1` or `0` for the boolean `skip-quality-check`.
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerRequestChannelSelect
+         */
         else if (aArgs[1] == "select")
         {
             bool enable;
@@ -1135,6 +1273,20 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             error = otChannelManagerRequestChannelSelect(GetInstancePtr(), enable);
         }
 #endif
+        /**
+         * @cli channel manager auto
+         * @code
+         * channel manager auto 1
+         * channel manager auto 1
+         * Done
+         * @endcode
+         * @cparam channel manager auto @ca{enable}
+         * `1` is a boolean to `enable`.
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetAutoChannelSelectionEnabled
+         */
         else if (aArgs[1] == "auto")
         {
             bool enable;
@@ -1142,22 +1294,88 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[2].ParseAsBool(enable));
             otChannelManagerSetAutoChannelSelectionEnabled(GetInstancePtr(), enable);
         }
+        /**
+         * @cli channel manager delay
+         * @code
+         * channel manager delay 120
+         * channel manager delay 120
+         * Done
+         * @endcode
+         * @cparam channel manager delay @ca{delay-seconds}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetDelay
+         */
         else if (aArgs[1] == "delay")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetDelay);
         }
+        /**
+         * @cli channel manager interval
+         * @code
+         * channel manager interval 10800
+         * channel manager interval 10800
+         * Done
+         * @endcode
+         * @cparam channel manager interval @ca{interval-seconds}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetAutoChannelSelectionInterval
+         */
         else if (aArgs[1] == "interval")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetAutoChannelSelectionInterval);
         }
+        /**
+         * @cli channel manager supported
+         * @code
+         * channel manager supported 0x7fffc00
+         * channel manager supported 0x7fffc00
+         * Done
+         * @endcode
+         * @cparam channel manager supported @ca{mask}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetSupportedChannels
+         */
         else if (aArgs[1] == "supported")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetSupportedChannels);
         }
+        /**
+         * @cli channel manager favored
+         * @code
+         * channel manager favored 0x7fffc00
+         * channel manager favored 0x7fffc00
+         * Done
+         * @endcode
+         * @cparam channel manager favored @ca{mask}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetFavoredChannels
+         */
         else if (aArgs[1] == "favored")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetFavoredChannels);
         }
+        /**
+         * @cli channel manager threshold
+         * @code
+         * channel manager threshold 0xffff
+         * channel manager threshold 0xffff
+         * Done
+         * @endcode
+         * @cparam channel manager threshold @ca{threshold-percent}
+         * Use a hex value for `threshold-percent`. `0` maps to 0% and `0xffff` maps to 100%.
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetCcaFailureRateThreshold
+         */
         else if (aArgs[1] == "threshold")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetCcaFailureRateThreshold);
@@ -1433,6 +1651,24 @@ exit:
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
 #if OPENTHREAD_FTD
+/**
+ * @cli contextreusedelay (get,set)
+ * @code
+ * contextreusedelay
+ * 11
+ * Done
+ * @endcode
+ * @code
+ * contextreusedelay 11
+ * Done
+ * @endcode
+ * @cparam contextreusedelay @ca{delay}
+ * Use the optional `delay` argument to set the `CONTEXT_ID_REUSE_DELAY`.
+ * @par
+ * Gets or sets the `CONTEXT_ID_REUSE_DELAY` value.
+ * @sa otThreadGetContextIdReuseDelay
+ * @sa otThreadSetContextIdReuseDelay
+ */
 template <> otError Interpreter::Process<Cmd("contextreusedelay")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetContextIdReuseDelay, otThreadSetContextIdReuseDelay);
@@ -1443,12 +1679,65 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli counters
+     * @code
+     * counters
+     * ip
+     * mac
+     * mle
+     * Done
+     * @endcode
+     * @par
+     * Gets the supported counter names.
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("ip");
         OutputLine("mac");
         OutputLine("mle");
     }
+    /**
+     * @cli counters (mac)
+     * @code
+     * counters mac
+     * TxTotal: 10
+     *    TxUnicast: 3
+     *    TxBroadcast: 7
+     *    TxAckRequested: 3
+     *    TxAcked: 3
+     *    TxNoAckRequested: 7
+     *    TxData: 10
+     *    TxDataPoll: 0
+     *    TxBeacon: 0
+     *    TxBeaconRequest: 0
+     *    TxOther: 0
+     *    TxRetry: 0
+     *    TxErrCca: 0
+     *    TxErrBusyChannel: 0
+     * RxTotal: 2
+     *    RxUnicast: 1
+     *    RxBroadcast: 1
+     *    RxData: 2
+     *    RxDataPoll: 0
+     *    RxBeacon: 0
+     *    RxBeaconRequest: 0
+     *    RxOther: 0
+     *    RxAddressFiltered: 0
+     *    RxDestAddrFiltered: 0
+     *    RxDuplicated: 0
+     *    RxErrNoFrame: 0
+     *    RxErrNoUnknownNeighbor: 0
+     *    RxErrInvalidSrcAddr: 0
+     *    RxErrSec: 0
+     *    RxErrFcs: 0
+     *    RxErrOther: 0
+     * Done
+     * @endcode
+     * @cparam counters @ca{mac}
+     * @par api_copy
+     * #otLinkGetCounters
+     */
     else if (aArgs[0] == "mac")
     {
         if (aArgs[1].IsEmpty())
@@ -1510,6 +1799,16 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputLine(kIndentSize, "%s: %u", counter.mName, macCounters->*counter.mValuePtr);
             }
         }
+        /**
+         * @cli counters mac reset
+         * @code
+         * counters mac reset
+         * Done
+         * @endcode
+         * @cparam counters @ca{mac} reset
+         * @par api_copy
+         * #otLinkResetCounters
+         */
         else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otLinkResetCounters(GetInstancePtr());
@@ -1519,6 +1818,25 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             error = OT_ERROR_INVALID_ARGS;
         }
     }
+    /**
+     * @cli counters (mle)
+     * @code
+     * counters mle
+     * Role Disabled: 0
+     * Role Detached: 1
+     * Role Child: 0
+     * Role Router: 0
+     * Role Leader: 1
+     * Attach Attempts: 1
+     * Partition Id Changes: 1
+     * Better Partition Attach Attempts: 0
+     * Parent Changes: 0
+     * Done
+     * @endcode
+     * @cparam counters @ca{mle}
+     * @par api_copy
+     * #otThreadGetMleCounters
+     */
     else if (aArgs[0] == "mle")
     {
         if (aArgs[1].IsEmpty())
@@ -1548,6 +1866,16 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputLine("%s: %d", counter.mName, mleCounters->*counter.mValuePtr);
             }
         }
+        /**
+         * @cli counters mle reset
+         * @code
+         * counters mle reset
+         * Done
+         * @endcode
+         * @cparam counters @ca{mle} reset
+         * @par api_copy
+         * #otThreadResetMleCounters
+         */
         else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otThreadResetMleCounters(GetInstancePtr());
@@ -1557,6 +1885,20 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             error = OT_ERROR_INVALID_ARGS;
         }
     }
+    /**
+     * @cli counters ip
+     * @code
+     * counters ip
+     * TxSuccess: 10
+     * TxFailed: 0
+     * RxSuccess: 5
+     * RxFailed: 0
+     * Done
+     * @endcode
+     * @cparam counters @ca{ip}
+     * @par api_copy
+     * #otThreadGetIp6Counters
+     */
     else if (aArgs[0] == "ip")
     {
         if (aArgs[1].IsEmpty())
@@ -1581,6 +1923,16 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputLine("%s: %d", counter.mName, ipCounters->*counter.mValuePtr);
             }
         }
+        /**
+         * @cli counters ip reset
+         * @code
+         * counters ip reset
+         * Done
+         * @endcode
+         * @cparam counters @ca{ip} reset
+         * @par api_copy
+         * #otThreadResetIp6Counters
+         */
         else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otThreadResetIp6Counters(GetInstancePtr());
@@ -1603,6 +1955,22 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli csl
+     * @code
+     * csl
+     * Channel: 11
+     * Period: 1000 (in units of 10 symbols), 160ms
+     * Timeout: 1000s
+     * Done
+     * @endcode
+     * @par
+     * Gets the CSL configuration.
+     * @sa otLinkCslGetChannel
+     * @sa otLinkCslGetPeriod
+     * @sa otLinkCslGetPeriod
+     * @sa otLinkCslGetTimeout
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("Channel: %u", otLinkCslGetChannel(GetInstancePtr()));
@@ -1610,14 +1978,44 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
                    otLinkCslGetPeriod(GetInstancePtr()) * kUsPerTenSymbols / 1000);
         OutputLine("Timeout: %us", otLinkCslGetTimeout(GetInstancePtr()));
     }
+    /**
+     * @cli csl channel
+     * @code
+     * csl channel 20
+     * Done
+     * @endcode
+     * @cparam csl channel @ca{channel}
+     * @par api_copy
+     * #otLinkCslSetChannel
+     */
     else if (aArgs[0] == "channel")
     {
         error = ProcessSet(aArgs + 1, otLinkCslSetChannel);
     }
+    /**
+     * @cli csl period
+     * @code
+     * csl period 3000
+     * Done
+     * @endcode
+     * @cparam csl period @ca{period}
+     * @par api_copy
+     * #otLinkCslSetPeriod
+     */
     else if (aArgs[0] == "period")
     {
         error = ProcessSet(aArgs + 1, otLinkCslSetPeriod);
     }
+    /**
+     * @cli csl timeout
+     * @code
+     * cls timeout 10
+     * Done
+     * @endcode
+     * @cparam csl timeout @ca{timeout}
+     * @par api_copy
+     * #otLinkCslSetTimeout
+     */
     else if (aArgs[0] == "timeout")
     {
         error = ProcessSet(aArgs + 1, otLinkCslSetTimeout);

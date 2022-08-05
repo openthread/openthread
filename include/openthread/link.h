@@ -965,7 +965,7 @@ void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance);
 const otMacCounters *otLinkGetCounters(otInstance *aInstance);
 
 /**
- * Reset the MAC layer counters.
+ * Resets the MAC layer counters.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -1034,7 +1034,7 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 uint8_t otLinkCslGetChannel(otInstance *aInstance);
 
 /**
- * This function sets the CSL channel.
+ * Sets the CSL channel.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aChannel       The CSL sample channel. Channel value should be `0` (Set CSL Channel unspecified) or
@@ -1057,7 +1057,7 @@ otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel);
 uint16_t otLinkCslGetPeriod(otInstance *aInstance);
 
 /**
- * This function sets the CSL period.
+ * Sets the CSL period in units of 10 symbols. Disable CSL by setting this parameter to `0`.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aPeriod        The CSL period in units of 10 symbols.
@@ -1079,7 +1079,7 @@ otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod);
 uint32_t otLinkCslGetTimeout(otInstance *aInstance);
 
 /**
- * This function sets the CSL timeout.
+ * Sets the CSL timeout in seconds.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aTimeout       The CSL timeout in seconds.

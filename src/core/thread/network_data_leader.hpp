@@ -298,6 +298,7 @@ private:
                               uint16_t *          aRloc16) const;
     Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
+    void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
 
     uint8_t mTlvBuffer[kMaxSize];
 };

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,38 +28,31 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for DTLS.
+ *   This file includes compile-time configurations for Border Agent.
  *
  */
 
-#ifndef CONFIG_DTLS_H_
-#define CONFIG_DTLS_H_
-
-#include "config/border_agent.h"
-#include "config/coap.h"
-#include "config/commissioner.h"
-#include "config/joiner.h"
+#ifndef CONFIG_BORDER_AGENT_H_
+#define CONFIG_BORDER_AGENT_H_
 
 /**
- * @def OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
  *
- * The max length of the OpenThread dtls content buffer.
+ * Define to 1 to enable Border Agent support.
  *
  */
-#ifndef OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
-#define OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN MBEDTLS_SSL_IN_CONTENT_LEN
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DTLS_ENABLE
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
  *
- *  Define to 1 to enable DTLS.
+ * Specifies the Border Agent UDP port, and use 0 for ephemeral port.
  *
  */
-#ifndef OPENTHREAD_CONFIG_DTLS_ENABLE
-#define OPENTHREAD_CONFIG_DTLS_ENABLE                                                     \
-    (OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
-     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE)
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
+#define OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT 0
 #endif
 
-#endif // CONFIG_DTLS_H_
+#endif // CONFIG_BORDER_AGENT_H_

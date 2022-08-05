@@ -845,7 +845,7 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
 
 /**
- * Get the IPv6 counters.
+ * Gets the IPv6 counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -855,7 +855,7 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
 const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance);
 
 /**
- * Reset the IPv6 counters.
+ * Resets the IPv6 counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -863,7 +863,7 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance);
 void otThreadResetIp6Counters(otInstance *aInstance);
 
 /**
- * Get the Thread MLE counters.
+ * Gets the Thread MLE counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -873,7 +873,7 @@ void otThreadResetIp6Counters(otInstance *aInstance);
 const otMleCounters *otThreadGetMleCounters(otInstance *aInstance);
 
 /**
- * Reset the Thread MLE counters.
+ * Resets the Thread MLE counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *

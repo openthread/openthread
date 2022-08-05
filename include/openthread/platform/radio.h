@@ -969,7 +969,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
 uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance);
 
 /**
- * Get the radio preferred channel mask that the device prefers to form on.
+ * Gets the radio preferred channel mask that the device prefers to form on.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  *

@@ -137,9 +137,7 @@ Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aCon
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
-        aContext.mPrefix.Set(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
-        aContext.mCompressFlag = true;
+        GetContextForMeshLocalPrefix(aContext);
     }
 
     while ((prefix = FindNextMatchingPrefix(aAddress, prefix)) != nullptr)
@@ -156,6 +154,7 @@ Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aCon
             aContext.mPrefix.Set(prefix->GetPrefix(), prefix->GetPrefixLength());
             aContext.mContextId    = contextTlv->GetContextId();
             aContext.mCompressFlag = contextTlv->IsCompress();
+            aContext.mIsValid      = true;
         }
     }
 
@@ -170,9 +169,7 @@ Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) cons
 
     if (aContextId == Mle::kMeshLocalPrefixContextId)
     {
-        aContext.mPrefix.Set(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
-        aContext.mCompressFlag = true;
+        GetContextForMeshLocalPrefix(aContext);
         ExitNow(error = kErrorNone);
     }
 
@@ -188,11 +185,20 @@ Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) cons
         aContext.mPrefix.Set(prefix->GetPrefix(), prefix->GetPrefixLength());
         aContext.mContextId    = contextTlv->GetContextId();
         aContext.mCompressFlag = contextTlv->IsCompress();
+        aContext.mIsValid      = true;
         ExitNow(error = kErrorNone);
     }
 
 exit:
     return error;
+}
+
+void LeaderBase::GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const
+{
+    aContext.mPrefix.Set(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
+    aContext.mCompressFlag = true;
+    aContext.mIsValid      = true;
 }
 
 bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress) const
