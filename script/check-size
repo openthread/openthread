@@ -147,6 +147,7 @@ size_nrf52840_version()
         "-DOT_TIME_SYNC=ON"
         "-DOT_UDP_FORWARD=ON"
         "-DOT_UPTIME=ON"
+        "-DOT_EXTRA_DEFS=OPENTHREAD_CONFIG_MLE_MAX_CHILDREN=511"
     )
 
     local thread_version=$1

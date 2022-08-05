@@ -402,6 +402,11 @@ endif()
 
 option(OT_EXCLUDE_TCPLP_LIB "exclude TCPlp library from build")
 
+option(OT_EXTRA_DEFS "extend the list of compile definitions with a list of ; separated definitions")
+if(OT_EXTRA_DEFS)
+    target_compile_definitions(ot-config INTERFACE ${OT_EXTRA_DEFS})
+endif()
+
 # Checks
 if(OT_PLATFORM_UDP AND OT_UDP_FORWARD)
     message(FATAL_ERROR "OT_PLATFORM_UDP and OT_UDP_FORWARD are exclusive")

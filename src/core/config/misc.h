@@ -172,7 +172,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE (sizeof(void *) * 32)
+#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE (sizeof(void *) * 35)
 #endif
 
 /**
