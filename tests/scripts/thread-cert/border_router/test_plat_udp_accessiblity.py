@@ -126,7 +126,7 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         # check if the SRP client can register to the SRP server
         client.srp_client_start(server_addr, server_port)
         client.srp_client_set_host_name('host1')
-        client.srp_client_set_host_address(client.get_rloc())
+        client.srp_client_set_host_address(client.get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
         client.srp_client_add_service('ins1', '_ipp._tcp', 11111)
         self.simulator.go(3)
         self.assertEqual(client.srp_client_get_host_state(), 'Registered')
