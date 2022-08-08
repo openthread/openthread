@@ -90,6 +90,7 @@
 #include "net/dnssd_server.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
+#include "net/nat64_translator.hpp"
 #include "net/nd_agent.hpp"
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
@@ -594,6 +595,10 @@ private:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     BorderRouter::RoutingManager mRoutingManager;
+#endif
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    Nat64::Translator mNat64Translator;
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -1173,15 +1178,14 @@ template <> inline BorderRouter::InfraIf &Instance::Get(void)
 {
     return mRoutingManager.mInfraIf;
 }
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-template <> inline BorderRouter::Nat64Translator &Instance::Get(void)
+template <> inline Nat64::Translator &Instance::Get(void)
 {
-    return mRoutingManager.mNat64Translator;
+    return mNat64Translator;
 }
 #endif
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 template <> inline Srp::Server &Instance::Get(void)

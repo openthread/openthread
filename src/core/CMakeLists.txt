@@ -89,7 +89,6 @@ set(COMMON_SOURCES
     backbone_router/multicast_listeners_table.cpp
     backbone_router/ndproxy_table.cpp
     border_router/infra_if.cpp
-    border_router/nat64_translator.cpp
     border_router/routing_manager.cpp
     coap/coap.cpp
     coap/coap_message.cpp
@@ -173,6 +172,7 @@ set(COMMON_SOURCES
     net/ip6_filter.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
+    net/nat64_translator.cpp
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp

@@ -36,8 +36,6 @@
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
-#include <openthread/border_router.h>
-
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
@@ -46,25 +44,25 @@
 #include "net/ip6.hpp"
 
 namespace ot {
-namespace BorderRouter {
+namespace Nat64 {
 
 RegisterLogModule("Nat64");
 
-Nat64Translator::Nat64Translator(Instance &aInstance)
+Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
 }
 
-Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
+Translator::Result Translator::HandleOutgoing(Message &aMessage)
 {
     Result          res = kDrop;
     Ip6::Header     ip6Header;
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
-    // ParseForm will do basic checks for the message, including the packet length and IP protocol version.
+    // ParseFrom will do basic checks for the message, including the packet length and IP protocol version.
     if (ip6Header.ParseFrom(aMessage) != kErrorNone)
     {
         LogWarn("outgoing packet is not a valid IPv6 packet, drop");
@@ -73,7 +71,7 @@ Nat64Translator::Result Nat64Translator::HandleOutgoing(Message &aMessage)
 
     if (!mNat64Prefix.IsValidNat64() || !ip6Header.GetDestination().MatchesPrefix(mNat64Prefix))
     {
-        ExitNow(res = kForward);
+        ExitNow(res = kNotTranslated);
     }
 
     if (mIp4Cidr.mLength == 0)
@@ -144,7 +142,7 @@ exit:
     return res;
 }
 
-Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
+Translator::Result Translator::HandleIncoming(Message &aMessage)
 {
     Result          res = Result::kDrop;
     Ip6::Header     ip6Header;
@@ -153,7 +151,7 @@ Nat64Translator::Result Nat64Translator::HandleIncoming(Message &aMessage)
 
     // Ip6::Header::ParseForm may return an error value when the incoming message is an IPv4 packet.
     // If the message is already an IPv6 packet, forward it directly.
-    VerifyOrExit(ip6Header.ParseFrom(aMessage) != kErrorNone, res = kForward);
+    VerifyOrExit(ip6Header.ParseFrom(aMessage) != kErrorNone, res = kNotTranslated);
 
     if (ip4Header.ParseFrom(aMessage) != kErrorNone)
     {
@@ -236,7 +234,7 @@ exit:
     return res;
 }
 
-Nat64Translator::AddressMapping::InfoString Nat64Translator::AddressMapping::ToString(void)
+Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void)
 {
     InfoString string;
 
@@ -245,14 +243,14 @@ Nat64Translator::AddressMapping::InfoString Nat64Translator::AddressMapping::ToS
     return string;
 }
 
-void Nat64Translator::ReleaseMapping(AddressMapping &aMapping)
+void Translator::ReleaseMapping(AddressMapping &aMapping)
 {
     LogInfo("mapping removed: %s", aMapping.ToString().AsCString());
     IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4));
     mAddressMappingPool.Free(aMapping);
 }
 
-uint16_t Nat64Translator::ReleaseExpiredMappings()
+uint16_t Translator::ReleaseExpiredMappings()
 {
     uint16_t                   numRemoved = 0;
     TimeMilli                  now        = TimerMilli::GetNow();
@@ -269,7 +267,7 @@ uint16_t Nat64Translator::ReleaseExpiredMappings()
     return numRemoved;
 }
 
-Nat64Translator::AddressMapping *Nat64Translator::AllocateMapping(const Ip6::Address &aIp6Addr)
+Translator::AddressMapping *Translator::AllocateMapping(const Ip6::Address &aIp6Addr)
 {
     AddressMapping *mapping = nullptr;
 
@@ -296,7 +294,7 @@ exit:
     return mapping;
 }
 
-Nat64Translator::AddressMapping *Nat64Translator::FindOrAllocateMapping(const Ip6::Address &aIp6Addr)
+Translator::AddressMapping *Translator::FindOrAllocateMapping(const Ip6::Address &aIp6Addr)
 {
     AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp6Addr);
 
@@ -309,7 +307,7 @@ exit:
     return mapping;
 }
 
-Nat64Translator::AddressMapping *Nat64Translator::FindMapping(const Ip4::Address &aIp4Addr)
+Translator::AddressMapping *Translator::FindMapping(const Ip4::Address &aIp4Addr)
 {
     AddressMapping *mapping = mActiveAddressMappings.FindMatching(aIp4Addr);
 
@@ -320,7 +318,7 @@ Nat64Translator::AddressMapping *Nat64Translator::FindMapping(const Ip4::Address
     return mapping;
 }
 
-Error Nat64Translator::TranslateIcmp4(Message &aMessage)
+Error Translator::TranslateIcmp4(Message &aMessage)
 {
     Error             err = kErrorNone;
     Ip4::Icmp::Header icmp4Header;
@@ -350,7 +348,7 @@ exit:
     return err;
 }
 
-Error Nat64Translator::TranslateIcmp6(Message &aMessage)
+Error Translator::TranslateIcmp6(Message &aMessage)
 {
     Error             err = kErrorNone;
     Ip4::Icmp::Header icmp4Header;
@@ -380,7 +378,7 @@ exit:
     return err;
 }
 
-Error Nat64Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
+Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
 {
     Error err = kErrorNone;
 
@@ -431,7 +429,7 @@ exit:
     return err;
 }
 
-void Nat64Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
+void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
     if (mNat64Prefix != aNat64Prefix)
     {

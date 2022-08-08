@@ -41,7 +41,6 @@
 #include <openthread/border_router.h>
 #include <openthread/platform/infra_if.h>
 
-#include "border_router/nat64_translator.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -51,6 +50,7 @@
 #include "common/settings.hpp"
 #include "meshcop/extended_panid.hpp"
 #include "net/ip6.hpp"
+#include "net/nat64_translator.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
@@ -80,9 +80,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    , mNat64Translator(aInstance)
-#endif
 {
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
@@ -625,7 +622,7 @@ void RoutingManager::EvaluateNat64Prefix(void)
             mIsAdvertisingLocalNat64Prefix = true;
         }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-        mNat64Translator.SetNat64Prefix(mLocalNat64Prefix);
+        Get<Nat64::Translator>().SetNat64Prefix(mLocalNat64Prefix);
 #endif
     }
     else if (mIsAdvertisingLocalNat64Prefix && smallestNat64Prefix < mLocalNat64Prefix)
@@ -2065,7 +2062,7 @@ Error RoutingManager::SendPacket(Message &message)
     Error ret   = kErrorDrop;
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    VerifyOrExit(mNat64Translator.HandleIncoming(message) == Nat64Translator::kForward);
+    VerifyOrExit(Get<Nat64::Translator>().HandleIncoming(message) == Nat64::Translator::kForward);
     // TODO: Implement the logic for sending back ICMP
 #endif
 
@@ -2090,7 +2087,7 @@ void RoutingManager::HandleIp6DatagramReceived(Message &message)
     VerifyOrExit(mInfraCallbackForTranslatedPacket != nullptr);
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    VerifyOrExit(mNat64Translator.HandleOutgoing(message) == Nat64Translator::kForward);
+    VerifyOrExit(Get<Nat64::Translator>().HandleOutgoing(message) == Nat64::Translator::kForward);
     // TODO: Implement the logic for sending back ICMP
 #endif
 

@@ -39,18 +39,18 @@
 #include <openthread/ip6.h>
 #include <openthread/nat64.h>
 
-#include "border_router/nat64_translator.hpp"
 #include "border_router/routing_manager.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_headers.hpp"
+#include "net/nat64_translator.hpp"
 
 using namespace ot;
 
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::Nat64Translator>().SetIp4Cidr(AsCoreType(aCidr));
+    return AsCoreType(aInstance).Get<Nat64::Translator>().SetIp4Cidr(AsCoreType(aCidr));
 }
 
 otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)

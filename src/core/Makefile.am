@@ -179,7 +179,6 @@ SOURCES_COMMON                                  = \
     backbone_router/multicast_listeners_table.cpp \
     backbone_router/ndproxy_table.cpp             \
     border_router/infra_if.cpp                    \
-    border_router/nat64_translator.cpp            \
     border_router/routing_manager.cpp             \
     coap/coap.cpp                                 \
     coap/coap_message.cpp                         \
@@ -263,6 +262,7 @@ SOURCES_COMMON                                  = \
     net/ip6_filter.cpp                            \
     net/ip6_headers.cpp                           \
     net/ip6_mpl.cpp                               \
+    net/nat64_translator.cpp                      \
     net/nd6.cpp                                   \
     net/nd_agent.cpp                              \
     net/netif.cpp                                 \
@@ -421,7 +421,6 @@ HEADERS_COMMON                                  = \
     backbone_router/multicast_listeners_table.hpp \
     backbone_router/ndproxy_table.hpp             \
     border_router/infra_if.hpp                    \
-    border_router/nat64_translator.hpp            \
     border_router/routing_manager.hpp             \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
@@ -573,6 +572,7 @@ HEADERS_COMMON                                  = \
     net/ip6_headers.hpp                           \
     net/ip6_mpl.hpp                               \
     net/ip6_types.hpp                             \
+    net/nat64_translator.hpp                      \
     net/nd6.hpp                                   \
     net/nd_agent.hpp                              \
     net/netif.hpp                                 \

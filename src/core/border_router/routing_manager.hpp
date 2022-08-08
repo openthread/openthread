@@ -50,7 +50,6 @@
 #include <openthread/netdata.h>
 
 #include "border_router/infra_if.hpp"
-#include "border_router/nat64_translator.hpp"
 #include "common/array.hpp"
 #include "common/error.hpp"
 #include "common/linked_list.hpp"
@@ -60,6 +59,7 @@
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
+#include "net/nat64_translator.hpp"
 #include "net/nd6.hpp"
 #include "thread/network_data.hpp"
 
@@ -689,10 +689,6 @@ private:
     uint8_t    mRouterSolicitCount;
 
     TimerMilli mRoutingPolicyTimer;
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Nat64Translator mNat64Translator;
-#endif
 };
 
 } // namespace BorderRouter

@@ -39,10 +39,6 @@
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
-#if !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-#error "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is required for OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE."
-#endif
-
 #include "common/array.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -52,7 +48,7 @@
 #include "net/ip6.hpp"
 
 namespace ot {
-namespace BorderRouter {
+namespace Nat64 {
 
 /**
  * This class implements the NAT64 translator for thread.
@@ -61,12 +57,12 @@ namespace BorderRouter {
  * All ICMPv6 messages are sent/received on the infrastructure interface.
  *
  */
-class Nat64Translator : public InstanceLocator, private NonCopyable
+class Translator : public InstanceLocator, private NonCopyable
 {
 public:
     static constexpr uint32_t kAddressMappingIdleTimeoutMsec =
-        OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
-    static constexpr uint32_t kAddressMappingPoolSize = OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_MAX_MAPPINGS;
+        OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS * Time::kOneSecondInMsec;
+    static constexpr uint32_t kAddressMappingPoolSize = OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS;
 
     /**
      * The possible results of NAT64 translation.
@@ -74,7 +70,8 @@ public:
      */
     enum Result : uint8_t
     {
-        kForward, // Messang is successfully translated, the caller should continue forwarding the translated packet.
+        kNotTranslated, // The message is not translated, it might be sending to an non-nat64 prefix (for outgoing packets), or it is already an IPv6 message (for incoming packets).
+        kForward, // Message is successfully translated, the caller should continue forwarding the translated packet.
         kDrop,    // The caller should drop the packet silently.
     };
 
@@ -82,17 +79,17 @@ public:
      * This constructor initializes the NAT64 translator.
      *
      */
-    explicit Nat64Translator(Instance &aInstance);
+    explicit Translator(Instance &aInstance);
 
     /**
      * @brief Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted.
      * Note the message can have 20 bytes reserved before the packetHead to avoid potential copy operations.
-     * If the message is an IPv6 packet, Result::kForward will be returned and the message won't be modified.
      *
      * @param[in,out] aMessage the message to be processed.
      *
-     * @retval kForward   The caller should contiue forwarding the packet.
-     * @retval kDrop      The caller should drop the packet silently.
+     * @retval kNotTranslated The packet is already an IPv6 message. The message is not touched.
+     * @retval kForward       The caller should contiue forwarding the packet.
+     * @retval kDrop          The caller should drop the packet silently.
      *
      */
     Result HandleIncoming(Message &message);
@@ -105,8 +102,9 @@ public:
      *
      * @param[in,out] aMessage the message to be processed.
      *
-     * @retval kForward   The caller should contiue forwarding the packet.
-     * @retval kDrop      The caller should drop the packet silently.
+     * @retval kNotTranslated The packet is not sending to the configured NAT64 prefix.
+     * @retval kForward       The caller should contiue forwarding the packet.
+     * @retval kDrop          The caller should drop the packet silently.
      *
      */
     Result HandleOutgoing(Message &aMessage);
