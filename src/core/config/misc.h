@@ -88,6 +88,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+ *
+ * Define to 1 to generate ECDSA signatures determinsitically
+ * according to RFC 6979 instead of randomly.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+#define OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_UPTIME_ENABLE
  *
  * Define to 1 to enable tracking the uptime of OpenThread instance.
