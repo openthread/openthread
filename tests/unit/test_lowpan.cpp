@@ -181,8 +181,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
         aVector.GetUncompressedStream(*message);
 
-        VerifyOrQuit(sLowpan->Compress(*message, aVector.mMacSource, aVector.mMacDestination, frameBuilder) ==
-                     aVector.mError);
+        VerifyOrQuit(sLowpan->Compress(*message, aVector.mMacAddrs, frameBuilder) == aVector.mError);
 
         if (aVector.mError == kErrorNone)
         {
@@ -229,7 +228,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
         frameData.Init(iphc, iphcLength);
 
-        error = sLowpan->Decompress(*message, aVector.mMacSource, aVector.mMacDestination, frameData, 0);
+        error = sLowpan->Decompress(*message, aVector.mMacAddrs, frameData, 0);
 
         message->ReadBytes(0, result, message->GetLength());
 

@@ -401,25 +401,20 @@ public:
      *
      * @param[in]  aMessage         The message from which to read the lowpan frame.
      * @param[in]  aOffset          The offset in @p aMessage to start reading the frame.
-     * @param[in]  aMacSource       The MAC source address.
-     * @param[in]  aMacDest         The MAC destination address.
+     * @param[in]  aMacAddrs        The MAC source and destination addresses.
      *
      * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
      * @retval kErrorNotFound       Lowpan frame is a next fragment and does not contain IPv6 headers.
      * @retval kErrorParse          Failed to parse the headers.
      *
      */
-    Error DecompressFrom(const Message &     aMessage,
-                         uint16_t            aOffset,
-                         const Mac::Address &aMacSource,
-                         const Mac::Address &aMacDest);
+    Error DecompressFrom(const Message &aMessage, uint16_t aOffset, const Mac::Addresses &aMacAddrs);
 
     /**
      * This method decompresses lowpan frame and parses the IPv6 and UDP/TCP/ICMP6 headers.
      *
      * @param[in]  aFrameData       The lowpan frame data.
-     * @param[in]  aMacSource       The MAC source address.
-     * @param[in]  aMacDest         The MAC destination address.
+     * @param[in]  aMacAddrs        The MAC source and destination addresses.
      * @param[in]  aInstance        The OpenThread instance.
      *
      * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
@@ -427,10 +422,7 @@ public:
      * @retval kErrorParse          Failed to parse the headers.
      *
      */
-    Error DecompressFrom(const FrameData &   aFrameData,
-                         const Mac::Address &aMacSource,
-                         const Mac::Address &aMacDest,
-                         Instance &          aInstance);
+    Error DecompressFrom(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Instance &aInstance);
 
     /**
      * This method returns the IPv6 header.

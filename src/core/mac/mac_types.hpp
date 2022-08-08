@@ -412,6 +412,16 @@ private:
 };
 
 /**
+ * This structure represents two MAC addresses corresponding to source and destination.
+ *
+ */
+struct Addresses
+{
+    Address mSource;      ///< Source address.
+    Address mDestination; ///< Destination address.
+};
+
+/**
  * This class represents a MAC key.
  *
  */

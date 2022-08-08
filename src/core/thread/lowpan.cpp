@@ -211,10 +211,7 @@ exit:
     return error;
 }
 
-Error Lowpan::Compress(Message &           aMessage,
-                       const Mac::Address &aMacSource,
-                       const Mac::Address &aMacDest,
-                       FrameBuilder &      aFrameBuilder)
+Error Lowpan::Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder)
 {
     Error   error       = kErrorNone;
     uint8_t headerDepth = 0xff;
@@ -223,7 +220,7 @@ Error Lowpan::Compress(Message &           aMessage,
     {
         FrameBuilder frameBuilder = aFrameBuilder;
 
-        error = Compress(aMessage, aMacSource, aMacDest, aFrameBuilder, headerDepth);
+        error = Compress(aMessage, aMacAddrs, aFrameBuilder, headerDepth);
 
         // We exit if `Compress()` is successful. Otherwise we reset
         // the `aFrameBuidler` to its earlier state (remove all
@@ -238,11 +235,10 @@ exit:
     return error;
 }
 
-Error Lowpan::Compress(Message &           aMessage,
-                       const Mac::Address &aMacSource,
-                       const Mac::Address &aMacDest,
-                       FrameBuilder &      aFrameBuilder,
-                       uint8_t &           aHeaderDepth)
+Error Lowpan::Compress(Message &             aMessage,
+                       const Mac::Addresses &aMacAddrs,
+                       FrameBuilder &        aFrameBuilder,
+                       uint8_t &             aHeaderDepth)
 {
     Error       error       = kErrorNone;
     uint16_t    startOffset = aMessage.GetOffset();
@@ -353,12 +349,14 @@ Error Lowpan::Compress(Message &           aMessage,
     }
     else if (ip6Header.GetSource().IsLinkLocal())
     {
-        SuccessOrExit(error = CompressSourceIid(aMacSource, ip6Header.GetSource(), srcContext, hcCtl, aFrameBuilder));
+        SuccessOrExit(
+            error = CompressSourceIid(aMacAddrs.mSource, ip6Header.GetSource(), srcContext, hcCtl, aFrameBuilder));
     }
     else if (srcContext.mIsValid)
     {
         hcCtl |= kHcSrcAddrContext;
-        SuccessOrExit(error = CompressSourceIid(aMacSource, ip6Header.GetSource(), srcContext, hcCtl, aFrameBuilder));
+        SuccessOrExit(
+            error = CompressSourceIid(aMacAddrs.mSource, ip6Header.GetSource(), srcContext, hcCtl, aFrameBuilder));
     }
     else
     {
@@ -372,14 +370,14 @@ Error Lowpan::Compress(Message &           aMessage,
     }
     else if (ip6Header.GetDestination().IsLinkLocal())
     {
-        SuccessOrExit(
-            error = CompressDestinationIid(aMacDest, ip6Header.GetDestination(), dstContext, hcCtl, aFrameBuilder));
+        SuccessOrExit(error = CompressDestinationIid(aMacAddrs.mDestination, ip6Header.GetDestination(), dstContext,
+                                                     hcCtl, aFrameBuilder));
     }
     else if (dstContext.mIsValid)
     {
         hcCtl |= kHcDstAddrContext;
-        SuccessOrExit(
-            error = CompressDestinationIid(aMacDest, ip6Header.GetDestination(), dstContext, hcCtl, aFrameBuilder));
+        SuccessOrExit(error = CompressDestinationIid(aMacAddrs.mDestination, ip6Header.GetDestination(), dstContext,
+                                                     hcCtl, aFrameBuilder));
     }
     else
     {
@@ -408,7 +406,7 @@ Error Lowpan::Compress(Message &           aMessage,
             // For IP-in-IP the NH bit of the LOWPAN_NHC encoding MUST be set to zero.
             SuccessOrExit(error = aFrameBuilder.AppendUint8(kExtHdrDispatch | kExtHdrEidIp6));
 
-            error = Compress(aMessage, aMacSource, aMacDest, aFrameBuilder);
+            error = Compress(aMessage, aMacAddrs, aFrameBuilder);
 
             OT_FALL_THROUGH;
 
@@ -611,11 +609,10 @@ exit:
     return error;
 }
 
-Error Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
-                                   bool &              aCompressedNextHeader,
-                                   const Mac::Address &aMacSource,
-                                   const Mac::Address &aMacDest,
-                                   FrameData &         aFrameData)
+Error Lowpan::DecompressBaseHeader(Ip6::Header &         aIp6Header,
+                                   bool &                aCompressedNextHeader,
+                                   const Mac::Addresses &aMacAddrs,
+                                   FrameData &           aFrameData)
 {
     Error    error = kErrorParse;
     uint16_t hcCtl;
@@ -728,7 +725,7 @@ Error Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
         break;
 
     case kHcSrcAddrMode3:
-        IgnoreError(ComputeIid(aMacSource, srcContext, aIp6Header.GetSource().GetIid()));
+        IgnoreError(ComputeIid(aMacAddrs.mSource, srcContext, aIp6Header.GetSource().GetIid()));
         break;
     }
 
@@ -767,7 +764,7 @@ Error Lowpan::DecompressBaseHeader(Ip6::Header &       aIp6Header,
             break;
 
         case kHcDstAddrMode3:
-            SuccessOrExit(ComputeIid(aMacDest, dstContext, aIp6Header.GetDestination().GetIid()));
+            SuccessOrExit(ComputeIid(aMacAddrs.mDestination, dstContext, aIp6Header.GetDestination().GetIid()));
             break;
         }
 
@@ -998,11 +995,10 @@ exit:
     return error;
 }
 
-Error Lowpan::Decompress(Message &           aMessage,
-                         const Mac::Address &aMacSource,
-                         const Mac::Address &aMacDest,
-                         FrameData &         aFrameData,
-                         uint16_t            aDatagramLength)
+Error Lowpan::Decompress(Message &             aMessage,
+                         const Mac::Addresses &aMacAddrs,
+                         FrameData &           aFrameData,
+                         uint16_t              aDatagramLength)
 {
     Error       error = kErrorParse;
     Ip6::Header ip6Header;
@@ -1010,7 +1006,7 @@ Error Lowpan::Decompress(Message &           aMessage,
     uint16_t    ip6PayloadLength;
     uint16_t    currentOffset = aMessage.GetOffset();
 
-    SuccessOrExit(DecompressBaseHeader(ip6Header, compressed, aMacSource, aMacDest, aFrameData));
+    SuccessOrExit(DecompressBaseHeader(ip6Header, compressed, aMacAddrs, aFrameData));
 
     SuccessOrExit(aMessage.Append(ip6Header));
     aMessage.MoveOffset(sizeof(ip6Header));
@@ -1030,7 +1026,7 @@ Error Lowpan::Decompress(Message &           aMessage,
 
                 aFrameData.SkipOver(sizeof(uint8_t));
 
-                SuccessOrExit(Decompress(aMessage, aMacSource, aMacDest, aFrameData, aDatagramLength));
+                SuccessOrExit(Decompress(aMessage, aMacAddrs, aFrameData, aDatagramLength));
             }
             else
             {
