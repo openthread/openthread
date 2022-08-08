@@ -53,10 +53,53 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
     return AsCoreType(aInstance).Get<Nat64::Translator>().SetIp4Cidr(AsCoreType(aCidr));
 }
 
-otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
+otIp4Message *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
-    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header),
-                                                            Message::Settings::From(aSettings));
+    Message *message = AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header),
+                                                                        Message::Settings::From(aSettings));
+    if (message != nullptr)
+    {
+        message->SetType(Message::kTypeIp4);
+    }
+
+    return message;
+}
+
+void otIp4MessageFree(otIp4Message *aMessage)
+{
+    AsCoreType(aMessage).Free();
+}
+
+otMessage *otCastIp4Message(otIp4Message *aMessage)
+{
+    return AsCoreTypePtr(aMessage);
+}
+
+otError otNat64Send(otInstance *aInstance, otIp4Message *aMessage)
+{
+    bool                      freed = false;
+    Error                     error = kErrorDrop;
+    Nat64::Translator::Result result =
+        AsCoreType(aInstance).Get<Nat64::Translator>().TranslateToIp6(AsCoreType(aMessage));
+
+    VerifyOrExit(result == ot::Nat64::Translator::kForward);
+
+    error = AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(AsCoreType(aMessage),
+                                                          !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+    freed = true;
+
+exit:
+    if (!freed)
+    {
+        AsCoreType(aMessage).Free();
+    }
+
+    return error;
+}
+
+void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext)
+{
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetNat64ReceiveIp4DatagramCallback(aCallback, aContext);
 }
 
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE

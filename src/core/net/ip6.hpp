@@ -39,6 +39,7 @@
 #include <stddef.h>
 
 #include <openthread/ip6.h>
+#include <openthread/nat64.h>
 #include <openthread/udp.h>
 
 #include "common/encoding.hpp"
@@ -231,6 +232,20 @@ public:
      */
     void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext);
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    /**
+     * This method registers a callback to provide received translated IPv4 datagrams.
+     *
+     * @param[in]  aCallback         A pointer to a function that is called when a translated IPv4 datagram is received
+     *                               or `nullptr` to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
+     * @sa SetReceiveDatagramCallback
+     *
+     */
+    void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext);
+#endif
+
     /**
      * This method indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
      * via the callback specified in SetReceiveIp6DatagramCallback().
@@ -361,6 +376,11 @@ private:
     bool                 mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
     void *               mReceiveIp6DatagramCallbackContext;
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    otNat64ReceiveIp4Callback mReceiveIp4DatagramCallback;
+    void *                    mReceiveIp4DatagramCallbackContext;
+#endif
 
     PriorityQueue mSendQueue;
     Tasklet       mSendQueueTask;

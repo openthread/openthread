@@ -169,54 +169,6 @@ otError otBorderRouterGetNextRoute(otInstance *           aInstance,
 otError otBorderRouterRegister(otInstance *aInstance);
 
 /**
- * This function sends a datagram via the Thread interface with the logic (like NAT64) for border routers.
- *
- * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when processing
- * is complete, including when a value other than `OT_ERROR_NONE` is returned.
- *
- * The content of @p aMessage can be an IPv6 packet or an IPv4 packet. When @p aMessage contains an IPv4 packet, NAT64
- * will work and translate it into an IPv6 packet. @p aMessage should be allocated by otIp4NewMessage if the
- * content is an IPv4 packet.
- *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
- *
- * @retval OT_ERROR_NONE                    Successfully processed the message.
- * @retval OT_ERROR_DROP                    Message was well-formed but not fully processed due to packet processing
- * rules.
- * @retval OT_ERROR_NO_BUFS                 Could not allocate necessary message buffers when processing the datagram.
- * @retval OT_ERROR_NO_ROUTE                No route to host.
- * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
- * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
- *
- * @sa otIp4NewMessage
- * @sa otBorderRouterSetReceiveCallback
- *
- */
-otError otBorderRouterSend(otInstance *aInstance, otMessage *aMessage);
-
-/**
- * This function registers a callback to provide received datagrams for border routers.
- *
- * By default, this callback does not pass Thread control traffic.  See otIp6SetReceiveFilterEnabled() to
- * change the Thread control traffic filter setting.
- *
- * The callback registered by this function may receive an IPv4 packet when NAT64 is enabled.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received or
- *                               NULL to disable the callback.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
- *
- * @sa otBorderRouterSend
- * @sa otIp6SetReceiveCallback
- * @sa otIp6IsReceiveFilterEnabled
- * @sa otIp6SetReceiveFilterEnabled
- *
- */
-void otBorderRouterSetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext);
-
-/**
  * @}
  *
  */

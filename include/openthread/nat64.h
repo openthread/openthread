@@ -87,6 +87,8 @@ typedef struct otIp4Cidr
     uint8_t      mLength;
 } otIp4Cidr;
 
+typedef struct otIp4Message otIp4Message;
+
 /**
  * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 packet by NAT64
  * later). Message buffers allocated by this function will have 20 bytes (The differences between the size of IPv6
@@ -102,11 +104,26 @@ typedef struct otIp4Cidr
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
- * @sa otMessageFree
- * @sa otBorderRouterSend
+ * @sa otIp4MessageFree
  *
  */
-otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
+otIp4Message *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
+
+/**
+ * Free an allocated IPv4 message buffer.
+ *
+ * @param[in]  aMessage  A pointer to a message buffer.
+ *
+ */
+void otIp4MessageFree(otIp4Message *aMessage);
+
+/**
+ * Casts an otIp4Message instance to otMessage instance. For using functions like otMessageRead etc.
+ *
+ * @sa otIp4Message
+ *
+ */
+otMessage *otCastIp4Message(otIp4Message *aMessage);
 
 /**
  * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets. A valid
@@ -129,6 +146,48 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
  *
  */
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
+
+/**
+ * This function translates an IPv4 datagram to IPv6 datagram and send via the Thread interface.
+ *
+ * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
+ * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aMessage  A pointer to the message buffer containing the IPv4 datagram.
+ *
+ * @retval OT_ERROR_NONE                    Successfully processed the message.
+ * @retval OT_ERROR_DROP                    Message was well-formed but not fully processed due to packet processing
+ * rules.
+ * @retval OT_ERROR_NO_BUFS                 Could not allocate necessary message buffers when processing the datagram.
+ * @retval OT_ERROR_NO_ROUTE                No route to host.
+ * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
+ * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
+ *
+ */
+otError otNat64Send(otInstance *aInstance, otIp4Message *aMessage);
+
+/**
+ * This function pointer is called when an IPv4 datagram (translated by NAT64 translator) is received.
+ *
+ * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
+ *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
+ *                       freed by the receiver of the callback after it is processed (see otMessageFree()).
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (*otNat64ReceiveIp4Callback)(otIp4Message *aMessage, void *aContext);
+
+/**
+ * This function registers a callback to provide received IPv4 datagrams.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aCallback         A pointer to a function that is called when an IPv4 datagram is received or
+ *                               NULL to disable the callback.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
+ *
+ */
+void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
 
 /**
  * @}

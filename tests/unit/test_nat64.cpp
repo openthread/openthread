@@ -103,7 +103,7 @@ void TestCase6To4(const char *aTestName,
 
     DumpMessageInHex("I ", aIp6Message, N);
 
-    VerifyOrQuit(sInstance->Get<Nat64::Translator>().HandleOutgoing(*msg) == aResult);
+    VerifyOrQuit(sInstance->Get<Nat64::Translator>().TranslateFromIp6(*msg) == aResult);
 
     if (aOutMessage != nullptr)
     {
@@ -130,7 +130,7 @@ void TestCase4To6(const char *aTestName,
 
     DumpMessageInHex("I ", aIp4Message, N);
 
-    VerifyOrQuit(sInstance->Get<Nat64::Translator>().HandleIncoming(*msg) == aResult);
+    VerifyOrQuit(sInstance->Get<Nat64::Translator>().TranslateToIp6(*msg) == aResult);
 
     if (aOutMessage != nullptr)
     {

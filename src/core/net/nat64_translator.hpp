@@ -70,7 +70,8 @@ public:
      */
     enum Result : uint8_t
     {
-        kNotTranslated, // The message is not translated, it might be sending to an non-nat64 prefix (for outgoing packets), or it is already an IPv6 message (for incoming packets).
+        kNotTranslated, // The message is not translated, it might be sending to an non-nat64 prefix (for outgoing
+                        // packets), or it is already an IPv6 message (for incoming packets).
         kForward, // Message is successfully translated, the caller should continue forwarding the translated packet.
         kDrop,    // The caller should drop the packet silently.
     };
@@ -92,7 +93,7 @@ public:
      * @retval kDrop          The caller should drop the packet silently.
      *
      */
-    Result HandleIncoming(Message &message);
+    Result TranslateToIp6(Message &message);
 
     /**
      * @brief Translates an IPv6 packet to IPv4 packet. Note the packet and packetLength might be adjusted. Note the
@@ -107,7 +108,7 @@ public:
      * @retval kDrop          The caller should drop the packet silently.
      *
      */
-    Result HandleOutgoing(Message &aMessage);
+    Result TranslateFromIp6(Message &aMessage);
 
     /**
      * @brief This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
@@ -175,7 +176,7 @@ private:
     Ip4::Cidr   mIp4Cidr;
 };
 
-} // namespace BorderRouter
+} // namespace Nat64
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE

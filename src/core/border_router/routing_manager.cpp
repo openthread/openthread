@@ -2056,64 +2056,6 @@ bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixCon
     return isFavored;
 }
 
-Error RoutingManager::SendPacket(Message &message)
-{
-    bool  freed = false;
-    Error ret   = kErrorDrop;
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    VerifyOrExit(Get<Nat64::Translator>().HandleIncoming(message) == Nat64::Translator::kForward);
-    // TODO: Implement the logic for sending back ICMP
-#endif
-
-    ret   = Get<Ip6::Ip6>().SendRaw(message, !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
-    freed = true;
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-exit:
-#endif
-    if (!freed)
-    {
-        message.Free();
-    }
-
-    return ret;
-}
-
-void RoutingManager::HandleIp6DatagramReceived(Message &message)
-{
-    bool freed = false;
-
-    VerifyOrExit(mInfraCallbackForTranslatedPacket != nullptr);
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    VerifyOrExit(Get<Nat64::Translator>().HandleOutgoing(message) == Nat64::Translator::kForward);
-    // TODO: Implement the logic for sending back ICMP
-#endif
-
-    mInfraCallbackForTranslatedPacket(&message, mInfraCallbackContext);
-    freed = true;
-
-exit:
-    if (!freed)
-    {
-        message.Free();
-    }
-}
-
-void RoutingManager::SetInfraReceiveCallback(otIp6ReceiveCallback aCallback, void *aContext)
-{
-    mInfraCallbackForTranslatedPacket = aCallback;
-    mInfraCallbackContext             = aContext;
-    Get<Ip6::Ip6>().SetReceiveDatagramCallback(InfraDatagramReceiveCallbackWrapper, this);
-}
-
-void RoutingManager::InfraDatagramReceiveCallbackWrapper(otMessage *aMessage, void *context)
-{
-    RoutingManager *this_ = reinterpret_cast<RoutingManager *>(context);
-    this_->HandleIp6DatagramReceived(AsCoreType(aMessage));
-}
-
 //---------------------------------------------------------------------------------------------------------------------
 // LocalOmrPrefix
 

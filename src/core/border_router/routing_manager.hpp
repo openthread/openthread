@@ -204,20 +204,6 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 
     /**
-     * This function sends a Message received from the infra interface.
-     *
-     * When NAT64 is enabled, the message can be an IPv4 message (with necessary reserved room for translated IPv6
-     * header). The @p aMessage will always be released even when this function returns an error.
-     *
-     * @param[in]  aMessage The message to be sent from the infra interface.
-     *
-     * @retval kErrorNone     Successfully enqueued the message into an output interface.
-     * @retval kErrorDrop     The message is dropped.
-     *
-     */
-    Error SendPacket(Message &aMessage);
-
-    /**
      * This method processes a received ICMPv6 message from the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.
@@ -283,19 +269,6 @@ public:
     {
         return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
     }
-
-    /**
-     * This method registers a callback to provide received raw IP datagrams.
-     *
-     * This API sets the IP6 datagram receive callback to InfraReceiveCallbackWrapper so NAT64 translator can translate
-     * the packets before passing it to the upper layer when necessary.
-     *
-     * @param[in]  aCallback         A pointer to a function that is called when an IP datagram is received
-     *                               or `nullptr` to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
-     */
-    void SetInfraReceiveCallback(otIp6ReceiveCallback aCallback, void *aContext);
 
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
@@ -620,12 +593,6 @@ private:
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
     static bool IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
-
-    void        HandleIp6DatagramReceived(Message &aMessage);
-    static void InfraDatagramReceiveCallbackWrapper(otMessage *aMessage, void *context);
-
-    otIp6ReceiveCallback mInfraCallbackForTranslatedPacket;
-    void *               mInfraCallbackContext;
 
     // Indicates whether the Routing Manager is running (started).
     bool mIsRunning;

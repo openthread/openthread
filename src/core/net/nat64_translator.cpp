@@ -55,7 +55,7 @@ Translator::Translator(Instance &aInstance)
     mIp4Cidr.Clear();
 }
 
-Translator::Result Translator::HandleOutgoing(Message &aMessage)
+Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 {
     Result          res = kDrop;
     Ip6::Header     ip6Header;
@@ -134,15 +134,16 @@ Translator::Result Translator::HandleOutgoing(Message &aMessage)
         {
             // This should never happen since the IPv4 header is shorter than the IPv6 header.
             LogCrit("failed to prepend IPv4 head to translated message");
-            res = kDrop;
+            ExitNow(res = kDrop);
         }
+        aMessage.SetType(Message::kTypeIp4);
     }
 
 exit:
     return res;
 }
 
-Translator::Result Translator::HandleIncoming(Message &aMessage)
+Translator::Result Translator::TranslateToIp6(Message &aMessage)
 {
     Result          res = Result::kDrop;
     Ip6::Header     ip6Header;
@@ -226,8 +227,9 @@ Translator::Result Translator::HandleIncoming(Message &aMessage)
         {
             // This might happen when the platform failed to reserve enough space before the original IPv4 packet.
             LogWarn("failed to prepend IPv6 head to translated message");
-            res = kDrop;
+            ExitNow(res = kDrop);
         }
+        aMessage.SetType(Message::kTypeIp6);
     }
 
 exit:
@@ -438,7 +440,7 @@ void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
     }
 }
 
-} // namespace BorderRouter
+} // namespace Nat64
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
