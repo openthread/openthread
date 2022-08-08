@@ -1731,9 +1731,10 @@ void Mle::RequestShorterChildIdRequest(void)
 
 Error Mle::SendChildIdRequest(void)
 {
+    static const uint8_t kTlvs[] = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
+
     Error        error   = kErrorNone;
-    uint8_t      tlvs[]  = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
-    uint8_t      tlvsLen = sizeof(tlvs);
+    uint8_t      tlvsLen = sizeof(kTlvs);
     TxMessage *  message = nullptr;
     Ip6::Address destination;
 
@@ -1771,7 +1772,7 @@ Error Mle::SendChildIdRequest(void)
         tlvsLen -= 1;
     }
 
-    SuccessOrExit(error = message->AppendTlvRequestTlv(tlvs, tlvsLen));
+    SuccessOrExit(error = message->AppendTlvRequestTlv(kTlvs, tlvsLen));
     SuccessOrExit(error = message->AppendActiveTimestampTlv());
     SuccessOrExit(error = message->AppendPendingTimestampTlv());
 
@@ -1921,14 +1922,15 @@ void Mle::HandleMessageTransmissionTimer(void)
     case kChildUpdateRequestNone:
         if (mDataRequestState == kDataRequestActive)
         {
-            static const uint8_t tlvs[] = {Tlv::kNetworkData};
-            Ip6::Address         destination;
+            static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
+            Ip6::Address destination;
 
             VerifyOrExit(mDataRequestAttempts < kMaxChildKeepAliveAttempts, IgnoreError(BecomeDetached()));
 
             destination.SetToLinkLocalAddress(mParent.GetExtAddress());
 
-            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0) == kErrorNone)
+            if (SendDataRequest(destination, kTlvs) == kErrorNone)
             {
                 mDataRequestAttempts++;
             }
@@ -2673,10 +2675,11 @@ exit:
 
 void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 {
+    static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
     LeaderData leaderData;
-    uint8_t    tlvs[] = {Tlv::kNetworkData};
     uint16_t   delay;
 
     // Source Address
@@ -2748,7 +2751,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -2938,8 +2941,9 @@ exit:
 
     if (dataRequest)
     {
-        static const uint8_t tlvs[] = {Tlv::kNetworkData};
-        uint16_t             delay;
+        static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
+        uint16_t delay;
 
         if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
         {
@@ -2953,7 +2957,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
     }
     else if (error == kErrorNone)
     {
@@ -3420,8 +3424,8 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     uint16_t      sourceAddress;
     Challenge     challenge;
     RequestedTlvs requestedTlvs;
-    uint8_t       tlvs[kMaxResponseTlvs] = {};
-    uint8_t       numTlvs                = 0;
+    uint8_t       tlvs[kMaxResponseTlvs];
+    uint8_t       numTlvs = 0;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
