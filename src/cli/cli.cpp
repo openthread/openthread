@@ -3787,8 +3787,8 @@ template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
     OutputLine("Link Quality In: %d", parentInfo.mLinkQualityIn);
     OutputLine("Link Quality Out: %d", parentInfo.mLinkQualityOut);
     OutputLine("Age: %d", parentInfo.mAge);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     OutputLine("Version: %d", parentInfo.mVersion);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     OutputLine("CSL clock accuracy: %d", parentInfo.mCslClockAccuracy);
     OutputLine("CSL uncertainty: %d", parentInfo.mCslUncertainty);
 #endif

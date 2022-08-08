@@ -2004,13 +2004,13 @@ Rloc: 5c00
 Link Quality In: 3
 Link Quality Out: 3
 Age: 20
+Version: 4
 Done
 ```
 
-Note: When `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is enabled, this command will return three extra lines with information relevant for CSL Receiver operation.
+Note: When `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` is enabled, this command will return two extra lines with information relevant for CSL Receiver operation.
 
 ```bash
-Version: 3
 CSL clock accuracy: 20
 CSL uncertainty: 5
 ```

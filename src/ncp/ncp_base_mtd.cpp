@@ -806,8 +806,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PARENT>(void)
             SuccessOrExit(error = mEncoder.WriteInt8(lastRssi));
             SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityIn));
             SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityOut));
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
             SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mVersion));
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
             SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mCslClockAccuracy));
             SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mCslUncertainty));
 #endif
