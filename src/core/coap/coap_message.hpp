@@ -951,7 +951,7 @@ private:
     const HelpData &GetHelpData(void) const
     {
         static_assert(sizeof(HelpData) + kHelpDataAlignment <= kHeadBufferDataSize,
-                      "Insufficient buffer size for CoAP processing!");
+                      "Insufficient buffer size for CoAP processing! Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
 
         return *static_cast<const HelpData *>(OT_ALIGN(GetFirstData(), kHelpDataAlignment));
     }

@@ -181,6 +181,9 @@
  * to that on 32bit system. As a result, the first message always have some
  * bytes left for small packets.
  *
+ * Some configuration options can increase the buffer size requirments, including
+ * OPENTHREAD_CONFIG_MLE_MAX_CHILDREN and OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE (sizeof(void *) * 32)

@@ -252,7 +252,8 @@ private:
     } mBuffer;
 };
 
-static_assert(sizeof(Buffer) >= kBufferSize, "Buffer size if not valid");
+static_assert(sizeof(Buffer) >= kBufferSize,
+              "Buffer size is not valid. Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
 
 /**
  * This class represents a message.
