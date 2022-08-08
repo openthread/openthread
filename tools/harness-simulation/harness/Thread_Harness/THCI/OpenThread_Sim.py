@@ -47,13 +47,12 @@ from simulation.config import REMOTE_OT_PATH
 class SSHHandle(object):
     KEEPALIVE_INTERVAL = 30
 
-    def __init__(self, ip, port, username, password, device, node_id, timeout):
+    def __init__(self, ip, port, username, password, device, node_id):
         ipaddress.ip_address(ip)
         self.ip = ip
         self.port = int(port)
         self.username = username
         self.password = password
-        self.timeout = timeout
         self.__handle = None
         self.__stdin = None
         self.__stdout = None
@@ -83,9 +82,8 @@ class SSHHandle(object):
 
         self.__stdin, self.__stdout, _ = self.__handle.exec_command(device + ' ' + str(node_id))
 
-        # Receive the output in blocking mode with a timeout
-        # Setting the timeout is for robustness in case of being blocked by unknown errors
-        self.__stdout.channel.settimeout(self.timeout)
+        # Receive the output in non-blocking mode
+        self.__stdout.channel.setblocking(0)
 
         # Some commands such as `udp send <ip> -x <hex>` send binary data
         # The UDP packet recevier will output the data in binary to stdout
@@ -111,10 +109,13 @@ class SSHHandle(object):
         self.__stdin.flush()
 
     def recv(self):
-        try:
-            return self.__stdout.readline().rstrip()
-        except socket.timeout:
-            return ''
+        outputs = []
+        while True:
+            try:
+                outputs.append(self.__stdout.read(1))
+            except socket.timeout:
+                break
+        return ''.join(outputs)
 
     def log(self, fmt, *args):
         try:
@@ -125,14 +126,14 @@ class SSHHandle(object):
 
 
 class OpenThread_Sim(OpenThreadTHCI, IThci):
-    DEFAULT_COMMAND_TIMEOUT = 20
-
     __handle = None
 
     device = os.path.join(REMOTE_OT_PATH, 'build/simulation/examples/apps/cli/ot-cli-ftd')
 
     @watched
     def _connect(self):
+        self.__lines = []
+
         # Only actually connect once.
         if self.__handle is None:
             assert self.connectType == 'ip'
@@ -140,7 +141,7 @@ class OpenThread_Sim(OpenThreadTHCI, IThci):
             self.log('SSH connecting ...')
             node_id, ssh_ip = self.telnetIp.split('@')
             self.__handle = SSHHandle(ssh_ip, self.telnetPort, self.telnetUsername, self.telnetPassword, self.device,
-                                      node_id, self.DEFAULT_COMMAND_TIMEOUT)
+                                      node_id)
 
         self.log('connected to %s successfully', self.telnetIp)
 
@@ -149,8 +150,20 @@ class OpenThread_Sim(OpenThreadTHCI, IThci):
         pass
 
     def _cliReadLine(self):
-        line = self.__handle.recv()
-        return line if line else None
+        if len(self.__lines) > 1:
+            return self.__lines.pop(0)
+
+        tail = ''
+        if len(self.__lines) != 0:
+            tail = self.__lines.pop()
+
+        tail += self.__handle.recv()
+
+        self.__lines += self._lineSepX.split(tail)
+        if len(self.__lines) > 1:
+            return self.__lines.pop(0)
+
+        return None
 
     def _cliWriteLine(self, line):
         self.__handle.send(line + '\n')
