@@ -40,7 +40,7 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
    ```bash
    $ cd tools/harness-simulation/posix
-   $ python harness_dev_discovery.py \
+   $ python startup_and_discovery.py \
          --interface=eth0            \
          --ot1.1=24                  \
          --sniffer=2

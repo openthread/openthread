@@ -93,7 +93,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
         # Validate and change the state
         if self._state != SnifferServicer.State.STOPPED:
-            return sniffer_pb2.StatusReply(status=sniffer_pb2.OPERATION_ERROR)
+            return sniffer_pb2.StartResponse(status=sniffer_pb2.OPERATION_ERROR)
         self._state = SnifferServicer.State.RUNNING
 
         self._pcap = pcap_codec.PcapCodec(request.channel)
@@ -113,27 +113,27 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self._thread_alive.set()
         self._thread.start()
 
-        return sniffer_pb2.StatusReply(status=sniffer_pb2.OK)
+        return sniffer_pb2.StartResponse(status=sniffer_pb2.OK)
 
-    def FilterNodes(self, request_iterator, context):
+    def FilterNodes(self, request, context):
         """ Only sniffer the specified nodes. """
 
         self.logger.debug('call FilterNodes')
 
         # Validate the state
         if self._state != SnifferServicer.State.RUNNING:
-            return sniffer_pb2.StatusReply(status=sniffer_pb2.OPERATION_ERROR)
+            return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OPERATION_ERROR)
 
-        allowed_nodeids = set(x.nodeid for x in request_iterator)
+        allowed_nodeids = set(request.nodeids)
         # Validate the node IDs
         for nodeid in allowed_nodeids:
             if not 1 <= nodeid <= self.MAX_NODES_NUM:
-                return sniffer_pb2.StatusReply(status=sniffer_pb2.VALUE_ERROR)
+                return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.VALUE_ERROR)
 
         with self._mutex:
             self._allowed_nodeids = allowed_nodeids
 
-        return sniffer_pb2.StatusReply(status=sniffer_pb2.OK)
+        return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OK)
 
     def Stop(self, request, context):
         """ Stop sniffing, and return the pcap bytes. """
@@ -142,7 +142,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
         # Validate and change the state
         if self._state != SnifferServicer.State.RUNNING:
-            return sniffer_pb2.StopReply(status=sniffer_pb2.OPERATION_ERROR, pcap_content=b'')
+            return sniffer_pb2.StopResponse(status=sniffer_pb2.OPERATION_ERROR, pcap_content=b'')
         self._state = SnifferServicer.State.STOPPED
 
         self._thread_alive.clear()
@@ -152,7 +152,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         pcap_content = self._pcap.pop_all()
         self._reset()
 
-        return sniffer_pb2.StopReply(status=sniffer_pb2.OK, pcap_content=pcap_content)
+        return sniffer_pb2.StopResponse(status=sniffer_pb2.OK, pcap_content=pcap_content)
 
 
 def serve(address_port):

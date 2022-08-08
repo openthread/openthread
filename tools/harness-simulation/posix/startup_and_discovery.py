@@ -110,7 +110,7 @@ def advertise_sniffer(s: socket.socket, dst, add: str, number: int):
         _advertise(s, dst, info)
 
 
-def initiate_sniffer(addr: str, port: int) -> subprocess.Popen:
+def start_sniffer(addr: str, port: int) -> subprocess.Popen:
     if isinstance(ipaddress.ip_address(addr), ipaddress.IPv6Address):
         server = f'[{addr}]:{port}'
     else:
@@ -135,7 +135,7 @@ def main():
                         required=True,
                         help='the interface used for discovery')
 
-    # Determine the number of OpenThread 1.1 FTD simulations to be "detected" and then initiated
+    # Determine the number of OpenThread 1.1 FTD simulations to be "detected" and then started
     parser.add_argument('--ot1.1',
                         dest='ot11_num',
                         type=int,
@@ -143,7 +143,7 @@ def main():
                         default=0,
                         help=f'the number of OpenThread FTD simulations, no more than {MAX_OT11_NUM}')
 
-    # Determine the number of sniffer simulations to be initiated and then detected
+    # Determine the number of sniffer simulations to be started and then detected
     parser.add_argument('-s',
                         '--sniffer',
                         dest='sniffer_num',
@@ -167,10 +167,10 @@ def main():
     # Get the local IP address on the specified interface
     addr = get_ipaddr(args.ifname)
 
-    # Initiate the sniffer
+    # Start the sniffer
     sniffer_procs = []
     for i in range(args.sniffer_num):
-        sniffer_procs.append(initiate_sniffer(addr, i + SNIFFER_SERVER_PORT_BASE))
+        sniffer_procs.append(start_sniffer(addr, i + SNIFFER_SERVER_PORT_BASE))
 
     s = init_socket(args.ifname, GROUP, PORT)
 
