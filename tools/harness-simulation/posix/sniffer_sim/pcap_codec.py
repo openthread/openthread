@@ -42,16 +42,14 @@ PCAP_VERSION_MINOR = 4
 class PcapCodec(object):
     """ Utility class for .pcap formatters. """
 
-    def __init__(self, filename, channel):
+    def __init__(self, channel):
         self._dlt = DLT_IEEE802_15_4_WITHFCS
-        if not filename.endswith('.pcap'):
-            raise ValueError('Filename should end with .pcap')
-        self._pcap_file = open(filename, 'wb')
-        self._pcap_file.write(self.encode_header())
+        self._pcap_contents = [self._encode_header()]
         self._channel = channel
 
-    def encode_header(self):
+    def _encode_header(self):
         """ Return a pcap file header. """
+
         return struct.pack(
             '<LHHLLLL',
             PCAP_MAGIC_NUMBER,
@@ -63,7 +61,7 @@ class PcapCodec(object):
             self._dlt,
         )
 
-    def encode_frame(self, frame, sec, usec):
+    def _encode_frame(self, frame, sec, usec):
         """ Return a pcap encapsulation of the given frame. """
 
         # Ignore the first byte storing channel.
@@ -76,6 +74,7 @@ class PcapCodec(object):
 
     def _get_timestamp(self):
         """ Return the internal timestamp. """
+
         timestamp = time.time()
         timestamp_sec = int(timestamp)
         timestamp_usec = int((timestamp - timestamp_sec) * 1000000)
@@ -89,11 +88,7 @@ class PcapCodec(object):
             return
 
         timestamp = self._get_timestamp()
-        pkt = self.encode_frame(frame, *timestamp)
-        self._pcap_file.write(pkt)
-        self._pcap_file.flush()
+        self._pcap_contents.append(self._encode_frame(frame, *timestamp))
 
-    def close(self):
-        """ Close the pcap file. """
-
-        self._pcap_file.close()
+    def pop_all(self) -> bytes:
+        return b''.join(self._pcap_contents)
