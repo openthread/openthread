@@ -148,7 +148,7 @@ class SimSniffer(ISniffer):
 
         response = self._stub.Start(sniffer_pb2.StartRequest(channel=self.channel))
         if response.status != sniffer_pb2.OK:
-            raise RuntimeError(f'startSniffer error: {response.status}')
+            raise RuntimeError(f'startSniffer error: {sniffer_pb2.Status.Name(response.status)}')
 
         self.is_active = True
 
@@ -159,7 +159,7 @@ class SimSniffer(ISniffer):
 
         response = self._stub.Stop(sniffer_pb2.StopRequest())
         if response.status != sniffer_pb2.OK:
-            raise RuntimeError(f'stopSniffer error: {response.status}')
+            raise RuntimeError(f'stopSniffer error: {sniffer_pb2.Status.Name(response.status)}')
 
         # Truncate suffix from .pcapng to .pcap
         local_pcap_location = self._local_pcapng_location[:-2]
