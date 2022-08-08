@@ -940,18 +940,25 @@ exit:
 
 static void processReceiveIp6(otMessage *aMessage, void *aContext)
 {
+    OT_UNUSED_VARIABLE(aContext);
+
     assert(gInstance == aContext);
     processReceive(aMessage);
     otMessageFree(aMessage);
 }
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static void processReceiveIp4(otIp4Message *aMessage, void *aContext)
 {
+    OT_UNUSED_VARIABLE(aContext);
+
     assert(gInstance == aContext);
     processReceive(otCastIp4Message(aMessage));
     otIp4MessageFree(aMessage);
 }
+#endif
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError sendIp4Message(otInstance *             aInstance,
                               const otMessageSettings &aSettings,
                               char *                   aPacket,
@@ -976,6 +983,7 @@ exit:
 
     return error;
 }
+#endif
 
 static otError sendIp6Message(otInstance *             aInstance,
                               const otMessageSettings &aSettings,
@@ -1040,12 +1048,12 @@ static void processTransmit(otInstance *aInstance)
         isIp4 = (packet[offset] & 0xf0) == 0x40;
         if (isIp4)
         {
-            error = sendIp4Message(aInstance, settings, &packet[offset], rval);
+            error = sendIp4Message(aInstance, settings, &packet[offset], static_cast<uint16_t>(rval));
         }
         else
 #endif
         {
-            error = sendIp6Message(aInstance, settings, &packet[offset], rval);
+            error = sendIp6Message(aInstance, settings, &packet[offset], static_cast<uint16_t>(rval));
         }
     }
 
@@ -1842,7 +1850,9 @@ void platformNetifSetUp(void)
     otIcmp6SetEchoMode(gInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #endif
     otIp6SetReceiveCallback(gInstance, processReceiveIp6, gInstance);
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     otNat64SetReceiveIp4Callback(gInstance, processReceiveIp4, gInstance);
+#endif
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
