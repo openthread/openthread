@@ -2663,12 +2663,10 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
         if (Tlv::FindTlv(aRxInfo.mMessage, cslChannel) == kErrorNone)
         {
             VerifyOrExit(cslChannel.IsValid(), error = kErrorParse);
+
+            // Special value of zero is used to indicate that
+            // CSL channel is not specified.
             child->SetCslChannel(static_cast<uint8_t>(cslChannel.GetChannel()));
-        }
-        else
-        {
-            // Set CSL Channel unspecified.
-            child->SetCslChannel(0);
         }
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
