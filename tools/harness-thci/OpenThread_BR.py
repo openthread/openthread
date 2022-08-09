@@ -60,6 +60,8 @@ logging.getLogger('paramiko').setLevel(logging.WARNING)
 
 
 class SSHHandle(object):
+    # Unit: second
+    KEEPALIVE_INTERVAL = 30
 
     def __init__(self, ip, port, username, password):
         self.ip = ip
@@ -84,6 +86,9 @@ class SSHHandle(object):
                 self.__handle.get_transport().auth_none(self.username)
             else:
                 raise
+
+        # Avoid SSH disconnection after idle for a long time
+        self.__handle.get_transport().set_keepalive(self.KEEPALIVE_INTERVAL)
 
     def close(self):
         if self.__handle is not None:
