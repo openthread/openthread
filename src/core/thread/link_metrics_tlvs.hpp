@@ -49,6 +49,8 @@
 namespace ot {
 namespace LinkMetrics {
 
+using ot::Encoding::BigEndian::HostSwap32;
+
 /**
  * This type represents Link Metric Flags indicating a set of metrics.
  *
@@ -356,7 +358,7 @@ public:
      * @returns The metric value.
      *
      */
-    uint32_t GetMetricsValue32(void) const { return mMetricsValue.m32; }
+    uint32_t GetMetricsValue32(void) const { return HostSwap32(mMetricsValue.m32); }
 
     /**
      * This method sets the metric value (8 bits).
@@ -372,7 +374,7 @@ public:
      * @param[in]  aMetricsValue  Metrics value.
      *
      */
-    void SetMetricsValue32(uint32_t aMetricsValue) { mMetricsValue.m32 = aMetricsValue; }
+    void SetMetricsValue32(uint32_t aMetricsValue) { mMetricsValue.m32 = HostSwap32(aMetricsValue); }
 
 private:
     TypeIdFlags mMetricsTypeId;
