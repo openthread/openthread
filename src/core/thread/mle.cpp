@@ -2056,7 +2056,7 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const Challenge &aChallenge)
+Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aChallenge)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -2067,9 +2067,9 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
 
-    for (int i = 0; i < aNumTlvs; i++)
+    for (uint8_t tlvType : aTlvList)
     {
-        switch (aTlvs[i])
+        switch (tlvType)
         {
         case Tlv::kTimeout:
             SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
@@ -3422,14 +3422,11 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    static const uint8_t kMaxResponseTlvs = 6;
-
-    Error         error = kErrorNone;
-    uint16_t      sourceAddress;
-    Challenge     challenge;
-    RequestedTlvs requestedTlvs;
-    uint8_t       tlvs[kMaxResponseTlvs];
-    uint8_t       numTlvs = 0;
+    Error     error = kErrorNone;
+    uint16_t  sourceAddress;
+    Challenge challenge;
+    TlvList   requestedTlvList;
+    TlvList   tlvList;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -3440,9 +3437,9 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     switch (aRxInfo.mMessage.ReadChallengeTlv(challenge))
     {
     case kErrorNone:
-        tlvs[numTlvs++] = Tlv::kResponse;
-        tlvs[numTlvs++] = Tlv::kMleFrameCounter;
-        tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
+        tlvList.Add(Tlv::kResponse);
+        tlvList.Add(Tlv::kMleFrameCounter);
+        tlvList.Add(Tlv::kLinkFrameCounter);
         break;
     case kErrorNotFound:
         challenge.mLength = 0;
@@ -3480,30 +3477,21 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
         if (Tlv::FindTlv(aRxInfo.mMessage, cslClockAccuracyTlv) == kErrorNone)
         {
             // MUST include CSL timeout TLV when request includes CSL accuracy
-            tlvs[numTlvs++] = Tlv::kCslTimeout;
+            tlvList.Add(Tlv::kCslTimeout);
         }
 #endif
     }
     else
     {
         // this device is not a child of the Child Update Request source
-        tlvs[numTlvs++] = Tlv::kStatus;
+        tlvList.Add(Tlv::kStatus);
     }
 
     // TLV Request
-    switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvs))
+    switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
     {
     case kErrorNone:
-        for (uint8_t i = 0; i < requestedTlvs.mNumTlvs; i++)
-        {
-            if (numTlvs >= sizeof(tlvs))
-            {
-                LogWarn("Failed to respond with TLVs: %d of %d", i, requestedTlvs.mNumTlvs);
-                break;
-            }
-
-            tlvs[numTlvs++] = requestedTlvs.mTlvs[i];
-        }
+        tlvList.AddElementsFrom(requestedTlvList);
         break;
     case kErrorNotFound:
         break;
@@ -3520,7 +3508,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     }
 #endif
 
-    SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
+    SuccessOrExit(error = SendChildUpdateResponse(tlvList, challenge));
 
 exit:
     LogProcessError(kTypeChildUpdateRequestOfParent, error);
@@ -4401,6 +4389,30 @@ void Mle::HandleDetachGracefullyAddressReleaseResponse(void)
 #endif // OPENTHREAD_FTD
 
 //---------------------------------------------------------------------------------------------------------------------
+// TlvList
+
+void Mle::TlvList::Add(uint8_t aTlvType)
+{
+    VerifyOrExit(!Contains(aTlvType));
+
+    if (PushBack(aTlvType) != kErrorNone)
+    {
+        LogWarn("Failed to include TLV %d", aTlvType);
+    }
+
+exit:
+    return;
+}
+
+void Mle::TlvList::AddElementsFrom(const TlvList &aTlvList)
+{
+    for (uint8_t tlvType : aTlvList)
+    {
+        Add(tlvType);
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // Challenge
 
 void Mle::Challenge::GenerateRandom(void)
@@ -5038,7 +5050,7 @@ exit:
     return error;
 }
 
-Error Mle::RxMessage::ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const
+Error Mle::RxMessage::ReadTlvRequestTlv(TlvList &aTlvList) const
 {
     Error    error;
     uint16_t offset;
@@ -5046,13 +5058,13 @@ Error Mle::RxMessage::ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kTlvRequest, offset, length));
 
-    if (length > sizeof(aRequestedTlvs.mTlvs))
+    if (length > aTlvList.GetMaxSize())
     {
-        length = sizeof(aRequestedTlvs.mTlvs);
+        length = aTlvList.GetMaxSize();
     }
 
-    ReadBytes(offset, aRequestedTlvs.mTlvs, length);
-    aRequestedTlvs.mNumTlvs = static_cast<uint8_t>(length);
+    ReadBytes(offset, aTlvList.GetArrayBuffer(), length);
+    aTlvList.SetLength(static_cast<uint8_t>(length));
 
 exit:
     return error;
