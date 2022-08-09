@@ -158,7 +158,7 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
  *
  * @retval OT_ERROR_NONE                    Successfully processed the message.
  * @retval OT_ERROR_DROP                    Message was well-formed but not fully processed due to packet processing
- * rules.
+ *                                          rules.
  * @retval OT_ERROR_NO_BUFS                 Could not allocate necessary message buffers when processing the datagram.
  * @retval OT_ERROR_NO_ROUTE                No route to host.
  * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
@@ -172,7 +172,7 @@ otError otNat64Send(otInstance *aInstance, otIp4Message *aMessage);
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
  *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
- *                       freed by the receiver of the callback after it is processed (see otMessageFree()).
+ *                       freed by the receiver of the callback after it is processed (see otIp4MessageFree()).
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */

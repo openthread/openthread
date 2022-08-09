@@ -1016,9 +1016,6 @@ static void processTransmit(otInstance *aInstance)
     char    packet[kMaxIp6Size];
     otError error  = OT_ERROR_NONE;
     size_t  offset = 0;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    bool isIp4 = false;
-#endif
 
     assert(gInstance == aInstance);
 
@@ -1044,9 +1041,9 @@ static void processTransmit(otInstance *aInstance)
 
         settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
         settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-        isIp4 = (packet[offset] & 0xf0) == 0x40;
-        if (isIp4)
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+        // Check if this is an IPv4 message.
+        if ((packet[offset] & 0xf0) == 0x40)
         {
             error = sendIp4Message(aInstance, settings, &packet[offset], static_cast<uint16_t>(rval));
         }

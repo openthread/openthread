@@ -55,6 +55,38 @@ Translator::Translator(Instance &aInstance)
     mIp4Cidr.Clear();
 }
 
+Message *Translator::NewIp4Message(const Message::Settings &aSettings)
+{
+    Message *message = Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Header) - sizeof(Ip4::Header), aSettings);
+
+    if (message != nullptr)
+    {
+        message->SetType(Message::kTypeIp4);
+    }
+
+    return message;
+}
+
+Error Translator::SendMessage(Message &aMessage)
+{
+    bool   freed  = false;
+    Error  error  = kErrorDrop;
+    Result result = TranslateToIp6(aMessage);
+
+    VerifyOrExit(result == kForward);
+
+    error = Get<Ip6::Ip6>().SendRaw(aMessage, !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+    freed = true;
+
+exit:
+    if (!freed)
+    {
+        aMessage.Free();
+    }
+
+    return error;
+}
+
 Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 {
     Result          res = kDrop;
@@ -123,21 +155,19 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
 
+    // res here must be kForward based on the swich above.
+    // TODO: Implement the logic for replying ICMP packets.
+    ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
+    Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
+                                    ip4Header.GetProtocol());
+    Checksum::UpdateIp4HeaderChecksum(ip4Header);
+    if (aMessage.Prepend(ip4Header) != kErrorNone)
     {
-        // res here must be kForward based on the swich above.
-        // TODO: Implement the logic for replying ICMP packets.
-        ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
-        Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
-                                        ip4Header.GetProtocol());
-        Checksum::UpdateIp4HeaderChecksum(ip4Header);
-        if (aMessage.Prepend(ip4Header) != kErrorNone)
-        {
-            // This should never happen since the IPv4 header is shorter than the IPv6 header.
-            LogCrit("failed to prepend IPv4 head to translated message");
-            ExitNow(res = kDrop);
-        }
-        aMessage.SetType(Message::kTypeIp4);
+        // This should never happen since the IPv4 header is shorter than the IPv6 header.
+        LogCrit("failed to prepend IPv4 head to translated message");
+        ExitNow(res = kDrop);
     }
+    aMessage.SetType(Message::kTypeIp4);
 
 exit:
     return res;
@@ -217,20 +247,18 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
 
+    // res here must be kForward based on the swich above.
+    // TODO: Implement the logic for replying ICMP packets.
+    ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
+    Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
+                                    ip6Header.GetNextHeader());
+    if (aMessage.Prepend(ip6Header) != kErrorNone)
     {
-        // res here must be kForward based on the swich above.
-        // TODO: Implement the logic for replying ICMP packets.
-        ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
-        Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
-                                        ip6Header.GetNextHeader());
-        if (aMessage.Prepend(ip6Header) != kErrorNone)
-        {
-            // This might happen when the platform failed to reserve enough space before the original IPv4 packet.
-            LogWarn("failed to prepend IPv6 head to translated message");
-            ExitNow(res = kDrop);
-        }
-        aMessage.SetType(Message::kTypeIp6);
+        // This might happen when the platform failed to reserve enough space before the original IPv4 packet.
+        LogWarn("failed to prepend IPv6 head to translated message");
+        ExitNow(res = kDrop);
     }
+    aMessage.SetType(Message::kTypeIp6);
 
 exit:
     return res;
@@ -252,7 +280,7 @@ void Translator::ReleaseMapping(AddressMapping &aMapping)
     mAddressMappingPool.Free(aMapping);
 }
 
-uint16_t Translator::ReleaseExpiredMappings()
+uint16_t Translator::ReleaseExpiredMappings(void)
 {
     uint16_t                   numRemoved = 0;
     TimeMilli                  now        = TimerMilli::GetNow();

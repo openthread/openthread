@@ -1017,9 +1017,6 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
 {
     Error    error   = kErrorNone;
     Message *message = &aMessage;
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Nat64::Translator::Result nat64Result = Nat64::Translator::kNotTranslated;
-#endif
 
     VerifyOrExit(!aFromHost, error = kErrorNoRoute);
     VerifyOrExit(mReceiveIp6DatagramCallback != nullptr, error = kErrorNoRoute);
@@ -1088,9 +1085,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
     IgnoreError(RemoveMplOption(*message));
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    nat64Result = Get<Nat64::Translator>().TranslateFromIp6(aMessage);
-
-    switch (nat64Result)
+    switch (Get<Nat64::Translator>().TranslateFromIp6(aMessage))
     {
     case Nat64::Translator::kNotTranslated:
         break;

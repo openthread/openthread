@@ -53,9 +53,6 @@ namespace Nat64 {
 /**
  * This class implements the NAT64 translator for thread.
  *
- * The Border Routing manager works on both Thread interface and infrastructure interface.
- * All ICMPv6 messages are sent/received on the infrastructure interface.
- *
  */
 class Translator : public InstanceLocator, private NonCopyable
 {
@@ -70,10 +67,10 @@ public:
      */
     enum Result : uint8_t
     {
-        kNotTranslated, // The message is not translated, it might be sending to an non-nat64 prefix (for outgoing
-                        // packets), or it is already an IPv6 message (for incoming packets).
-        kForward, // Message is successfully translated, the caller should continue forwarding the translated packet.
-        kDrop,    // The caller should drop the packet silently.
+        kNotTranslated, ///< The message is not translated, it might be sending to an non-nat64 prefix (for outgoing
+                        ///< packets), or it is already an IPv6 message (for incoming packets).
+        kForward, ///< Message is successfully translated, the caller should continue forwarding the translated packet.
+        kDrop,    ///< The caller should drop the packet silently.
     };
 
     /**
@@ -83,7 +80,36 @@ public:
     explicit Translator(Instance &aInstance);
 
     /**
-     * @brief Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted.
+     * This method translates an IPv4 datagram to an IPv6 datagram and send it via thread interface.
+     *
+     * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
+     * processing is complete, including when a value other than `kErrorNone` is returned.
+     *
+     * @param[in]  aMessage          A reference to the message.
+     *
+     * @retval kErrorNone     Successfully processed the message.
+     * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
+     * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
+     * @retval kErrorNoRoute  No route to host.
+     * @retval kErrorParse    Encountered a malformed header when processing the message.
+     *
+     */
+    Error SendMessage(Message &aMessage);
+
+    /**
+     * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 packet by NAT64
+     * later). Message buffers allocated by this function will have 20 bytes (The differences between the size of IPv6
+     * headers and the size of IPv4 headers) reserved.
+     *
+     * @param[in]  aSettings  The message settings.
+     *
+     * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
+     *
+     */
+    Message *NewIp4Message(const Message::Settings &aSettings);
+
+    /**
+     * Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted.
      * Note the message can have 20 bytes reserved before the packetHead to avoid potential copy operations.
      *
      * @param[in,out] aMessage the message to be processed.
@@ -96,7 +122,7 @@ public:
     Result TranslateToIp6(Message &message);
 
     /**
-     * @brief Translates an IPv6 packet to IPv4 packet. Note the packet and packetLength might be adjusted. Note the
+     * Translates an IPv6 packet to IPv4 packet. Note the packet and packetLength might be adjusted. Note the
      * caller should reserve at least 20 bytes before the packetHead.
      * If the message is not targeted to NAT64-mapped address, Result::kForward will be returned and the message won't
      * be modified.
@@ -111,7 +137,7 @@ public:
     Result TranslateFromIp6(Message &aMessage);
 
     /**
-     * @brief This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
+     * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
      * A valid CIDR must have a non-zero prefix length.
      *
      * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available
@@ -127,7 +153,7 @@ public:
     Error SetIp4Cidr(const Ip4::Cidr &aCidr);
 
     /**
-     * @brief This function sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table
+     * This function sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table
      * will not be cleared.
      *
      * @param[in] aNat64Prefix the prefix of the NAT64-mapped addresses.
@@ -163,7 +189,7 @@ private:
     Error TranslateIcmp6(Message &aMessage);
 
     void            ReleaseMapping(AddressMapping &aMapping);
-    uint16_t        ReleaseExpiredMappings();
+    uint16_t        ReleaseExpiredMappings(void);
     AddressMapping *AllocateMapping(const Ip6::Address &aIp6Addr);
     AddressMapping *FindOrAllocateMapping(const Ip6::Address &aIp6Addr);
     AddressMapping *FindMapping(const Ip4::Address &aIp4Addr);
