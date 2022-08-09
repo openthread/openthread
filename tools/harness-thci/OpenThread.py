@@ -1364,6 +1364,9 @@ class OpenThreadTHCI(object):
         self.log('factoryreset finished within 10s timeout.')
         self._deviceAfterReset()
 
+        if self.IsBorderRouter:
+            self.__executeCommand('log level 5')
+
     @API
     def removeRouter(self, xRouterId):
         """kickoff router with a given router id from the Thread Network
