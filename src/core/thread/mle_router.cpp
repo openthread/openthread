@@ -2646,15 +2646,22 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
         CslChannelTlv cslChannel;
         uint32_t      cslTimeout;
 
-        if (Tlv::Find<CslTimeoutTlv>(aRxInfo.mMessage, cslTimeout) == kErrorNone)
+        switch (Tlv::Find<CslTimeoutTlv>(aRxInfo.mMessage, cslTimeout))
         {
+        case kErrorNone:
             child->SetCslTimeout(cslTimeout);
             // MUST include CSL accuracy TLV when request includes CSL timeout
             tlvs[tlvslength++] = Tlv::kCslClockAccuracy;
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorNone);
         }
 
         if (Tlv::FindTlv(aRxInfo.mMessage, cslChannel) == kErrorNone)
         {
+            VerifyOrExit(cslChannel.IsValid(), error = kErrorParse);
             child->SetCslChannel(static_cast<uint8_t>(cslChannel.GetChannel()));
         }
         else
