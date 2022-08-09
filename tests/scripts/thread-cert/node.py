@@ -987,7 +987,7 @@ class NodeImpl:
 
             addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
             map(str.strip, addresses)
-            host['addresses'] = [addr for addr in addresses if addr]
+            host['addresses'] = [addr.strip() for addr in addresses if addr]
 
             host_list.append(host)
 
@@ -3381,6 +3381,8 @@ class LinuxHost():
             fullname = f'{host_name}.local.'
             if fullname not in elements:
                 continue
+            if 'Add' not in elements:
+                continue
             addresses.append(elements[elements.index(fullname) + 1].split('%')[0])
 
         logging.debug(f'addresses of {host_name}: {addresses}')
@@ -3417,7 +3419,7 @@ class LinuxHost():
                 assert (service['host_fullname'] == f'{host_name}.local.')
                 service['host'] = host_name
                 service['addresses'] = addresses
-        return service if 'addresses' in service and service['addresses'] else None
+        return service or None
 
     def start_radvd_service(self, prefix, slaac):
         self.bash("""cat >/etc/radvd.conf <<EOF
