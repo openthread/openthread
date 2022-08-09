@@ -53,7 +53,7 @@ extern "C" {
  * @note This number versions both OpenThread platform and user APIs.
  *
  */
-#define OPENTHREAD_API_VERSION (232)
+#define OPENTHREAD_API_VERSION (233)
 
 /**
  * @addtogroup api-instance
@@ -250,7 +250,7 @@ void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback a
 void otInstanceReset(otInstance *aInstance);
 
 /**
- * This method deletes all the settings stored on non-volatile memory, and then triggers platform reset.
+ * Deletes all the settings stored on non-volatile memory, and then triggers a platform reset.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
