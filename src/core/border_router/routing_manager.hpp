@@ -516,7 +516,7 @@ private:
         RoutePreference mPreference;
     };
 
-    class LocalOmrPrefix : InstanceLocator
+    class LocalOmrPrefix : public InstanceLocator
     {
     public:
         explicit LocalOmrPrefix(Instance &aInstance);
@@ -530,6 +530,37 @@ private:
     private:
         Ip6::Prefix mPrefix;
         bool        mIsAddedInNetData;
+    };
+
+    class LocalOnLinkPrefix : public InstanceLocator
+    {
+    public:
+        explicit LocalOnLinkPrefix(Instance &aInstance);
+
+        void               Generate(void);
+        void               Start(void);
+        void               Stop(void);
+        Error              Advertise(void);
+        void               Deprecate(void);
+        void               AppendAsPioTo(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        bool               IsAdvertising(void) const { return (mState == kAdvertising); }
+        void               HandleExtPanIdChange(void);
+
+    private:
+        enum State : uint8_t
+        {
+            kIdle,
+            kAdvertising,
+            kDeprecating,
+        };
+
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
+
+        Ip6::Prefix mPrefix;
+        State       mState;
+        TimerMilli  mTimer;
     };
 
     typedef Ip6::Prefix OnMeshPrefix;
@@ -548,7 +579,6 @@ private:
     bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
-    void  GenerateOnLinkPrefix(void);
 
     void EvaluateOnLinkPrefix(void);
 
@@ -575,8 +605,6 @@ private:
     static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixStaleTimer(void);
     static void HandleRoutingPolicyTimer(Timer &aTimer);
-    void        HandleOnLinkPrefixDeprecateTimer(void);
-    static void HandleOnLinkPrefixDeprecateTimer(Timer &aTimer);
 
     void DeprecateOnLinkPrefix(void);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
@@ -620,16 +648,7 @@ private:
     // Prefix length of zero indicates there is none.
     Ip6::Prefix mFavoredDiscoveredOnLinkPrefix;
 
-    // The on-link prefix loaded from local persistent storage or
-    // randomly generated if non is found in persistent storage.
-    Ip6::Prefix mLocalOnLinkPrefix;
-
-    bool mIsAdvertisingLocalOnLinkPrefix;
-
-    // The last time when the on-link prefix is advertised with
-    // non-zero preferred lifetime.
-    TimeMilli  mTimeAdvertisedOnLinkPrefix;
-    TimerMilli mOnLinkPrefixDeprecateTimer;
+    LocalOnLinkPrefix mLocalOnLinkPrefix;
 
     // The NAT64 prefix allocated from the /48 BR ULA prefix.
     Ip6::Prefix mLocalNat64Prefix;

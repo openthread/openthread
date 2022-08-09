@@ -88,6 +88,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+ *
+ * Define to 1 to generate ECDSA signatures determinsitically
+ * according to RFC 6979 instead of randomly.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+#define OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_UPTIME_ENABLE
  *
  * Define to 1 to enable tracking the uptime of OpenThread instance.
@@ -169,6 +180,9 @@
  * so that message buffer size will be doubled on 64bit system compared
  * to that on 32bit system. As a result, the first message always have some
  * bytes left for small packets.
+ *
+ * Some configuration options can increase the buffer size requirments, including
+ * OPENTHREAD_CONFIG_MLE_MAX_CHILDREN and OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE

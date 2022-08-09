@@ -37,6 +37,10 @@
 
 #ifdef MBEDTLS_USE_TINYCRYPT
 
+#if OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+#warning "tinycrypt does not support generating deterministic ECDSA signatures"
+#endif
+
 #include <string.h>
 
 #include <mbedtls/pk.h>

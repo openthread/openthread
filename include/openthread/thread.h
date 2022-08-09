@@ -138,6 +138,14 @@ typedef struct
     uint8_t      mAge;                 ///< Time last heard
     bool         mAllocated : 1;       ///< Router ID allocated or not
     bool         mLinkEstablished : 1; ///< Link established with Router ID or not
+    uint8_t      mVersion;             ///< Thread version
+
+    /**
+     * Parent CSL parameters are only relevant when OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is enabled.
+     *
+     */
+    uint8_t mCslClockAccuracy; ///< CSL clock accuracy, in ± ppm
+    uint8_t mCslUncertainty;   ///< CSL uncertainty, in ±10 us
 } otRouterInfo;
 
 /**

@@ -66,12 +66,14 @@ void TestEcdsaVector(void)
 
     const uint8_t kMessage[] = {'s', 'a', 'm', 'p', 'l', 'e'};
 
+#if OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
     const uint8_t kExpectedSignature[] = {
         0xEF, 0xD4, 0x8B, 0x2A, 0xAC, 0xB6, 0xA8, 0xFD, 0x11, 0x40, 0xDD, 0x9C, 0xD4, 0x5E, 0x81, 0xD6,
         0x9D, 0x2C, 0x87, 0x7B, 0x56, 0xAA, 0xF9, 0x91, 0xC3, 0x4D, 0x0E, 0xA8, 0x4E, 0xAF, 0x37, 0x16,
         0xF7, 0xCB, 0x1C, 0x94, 0x2D, 0x65, 0x7C, 0x41, 0xD4, 0x36, 0xC7, 0xA1, 0xB6, 0xE2, 0x9F, 0x65,
         0xF3, 0xE9, 0x00, 0xDB, 0xB9, 0xAF, 0xF4, 0x06, 0x4D, 0xC4, 0xAB, 0x2F, 0x84, 0x3A, 0xCD, 0xA8,
     };
+#endif
 
     Instance *instance = testInitInstance();
 
@@ -110,6 +112,7 @@ void TestEcdsaVector(void)
     SuccessOrQuit(keyPair.Sign(hash, signature));
     DumpBuffer("Signature", signature.GetBytes(), sizeof(signature));
 
+#if OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
     printf("\nCheck signature against expected sequence----------------------------------\n");
     DumpBuffer("Expected signature", kExpectedSignature, sizeof(kExpectedSignature));
 
@@ -117,6 +120,7 @@ void TestEcdsaVector(void)
     VerifyOrQuit(memcmp(signature.GetBytes(), kExpectedSignature, sizeof(kExpectedSignature)) == 0);
 
     printf("Signature matches expected sequence.\n");
+#endif
 
     printf("\nVerify the signature ------------------------------------------------------\n");
     SuccessOrQuit(publicKey.Verify(hash, signature));
@@ -125,7 +129,7 @@ void TestEcdsaVector(void)
     testFreeInstance(instance);
 }
 
-void TestEdsaKeyGenerationSignAndVerify(void)
+void TestEcdsaKeyGenerationSignAndVerify(void)
 {
     Instance *instance = testInitInstance();
 
@@ -183,7 +187,7 @@ int main(void)
 {
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
     ot::Crypto::TestEcdsaVector();
-    ot::Crypto::TestEdsaKeyGenerationSignAndVerify();
+    ot::Crypto::TestEcdsaKeyGenerationSignAndVerify();
     printf("All tests passed\n");
 #else
     printf("ECDSA feature is not enabled\n");

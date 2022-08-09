@@ -142,12 +142,17 @@ Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) cons
     ret = mbedtls_ecdsa_from_keypair(&ecdsa, keypair);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
+#if OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
 #if (MBEDTLS_VERSION_NUMBER >= 0x02130000)
     ret = mbedtls_ecdsa_sign_det_ext(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
                                      Sha256::Hash::kSize, MBEDTLS_MD_SHA256, MbedTls::CryptoSecurePrng, nullptr);
 #else
     ret = mbedtls_ecdsa_sign_det(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
                                  Sha256::Hash::kSize, MBEDTLS_MD_SHA256);
+#endif
+#else
+    ret = mbedtls_ecdsa_sign(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
+                             Sha256::Hash::kSize, MbedTls::CryptoSecurePrng, nullptr);
 #endif
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
@@ -244,9 +249,20 @@ Error Sign(uint8_t *      aOutput,
     VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = kErrorFailed);
 
     // Sign using ECDSA.
+#if OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+#if (MBEDTLS_VERSION_NUMBER >= 0x02130000)
+    VerifyOrExit(mbedtls_ecdsa_sign_det_ext(&ctx.MBEDTLS_PRIVATE(grp), &rMpi, &sMpi, &ctx.MBEDTLS_PRIVATE(d),
+                                            aInputHash, aInputHashLength, MBEDTLS_MD_SHA256, MbedTls::CryptoSecurePrng,
+                                            nullptr));
+#else
+    VerifyOrExit(mbedtls_ecdsa_sign_det(&ctx.MBEDTLS_PRIVATE(grp), &rMpi, &sMpi, &ctx.MBEDTLS_PRIVATE(d), aInputHash,
+                                        aInputHashLength, MBEDTLS_MD_SHA256));
+#endif
+#else
     VerifyOrExit(mbedtls_ecdsa_sign(&ctx.MBEDTLS_PRIVATE(grp), &rMpi, &sMpi, &ctx.MBEDTLS_PRIVATE(d), aInputHash,
                                     aInputHashLength, MbedTls::CryptoSecurePrng, nullptr) == 0,
                  error = kErrorFailed);
+#endif
     VerifyOrExit(mbedtls_mpi_size(&rMpi) + mbedtls_mpi_size(&sMpi) <= aOutputLength, error = kErrorNoBufs);
 
     // Concatenate the two octet sequences in the order R and then S.

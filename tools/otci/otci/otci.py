@@ -101,6 +101,7 @@ class OTCI(object):
             try:
                 return self.__execute_command(cmd, timeout, silent, already_is_ok=already_is_ok)
             except Exception:
+                self.wait(2)
                 if i == self.__exec_command_retry:
                     raise
 
