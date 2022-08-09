@@ -2881,7 +2881,10 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
         OT_FALL_THROUGH;
 
     case kErrorNotFound:
-        tlvs[numTlvs++] = Tlv::kActiveDataset;
+        if (numTlvs < sizeof(tlvs))
+        {
+            tlvs[numTlvs++] = Tlv::kActiveDataset;
+        }
         break;
 
     default:
@@ -2900,7 +2903,10 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
         OT_FALL_THROUGH;
 
     case kErrorNotFound:
-        tlvs[numTlvs++] = Tlv::kPendingDataset;
+        if (numTlvs < sizeof(tlvs))
+        {
+            tlvs[numTlvs++] = Tlv::kPendingDataset;
+        }
         break;
 
     default:
