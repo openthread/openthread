@@ -3127,7 +3127,11 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL Accuracy
-    if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
+    if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) == kErrorNone)
+    {
+        VerifyOrExit(clockAccuracy.IsValid(), error = kErrorParse);
+    }
+    else
     {
         clockAccuracy.SetCslClockAccuracy(kCslWorstCrystalPpm);
         clockAccuracy.SetCslUncertainty(kCslWorstUncertainty);
@@ -3625,8 +3629,9 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         // CSL Accuracy
-        if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
+        if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) == kErrorNone)
         {
+            VerifyOrExit(clockAccuracy.IsValid(), error = kErrorParse);
             Get<Mac::Mac>().SetCslParentClockAccuracy(clockAccuracy.GetCslClockAccuracy());
             Get<Mac::Mac>().SetCslParentUncertainty(clockAccuracy.GetCslUncertainty());
         }
@@ -4808,27 +4813,27 @@ exit:
 
 Error Mle::TxMessage::AppendCslTimeoutTlv(void)
 {
-    OT_ASSERT(Get<Mac::Mac>().IsCslEnabled());
-    return Tlv::Append<CslTimeoutTlv>(*this,
-                                      Get<Mle>().mCslTimeout == 0 ? Get<Mle>().mTimeout : Get<Mle>().mCslTimeout);
+    uint32_t timeout = Get<Mle>().GetCslTimeout();
+
+    if (timeout == 0)
+    {
+        timeout = Get<Mle>().GetTimeout();
+    }
+
+    return Tlv::Append<CslTimeoutTlv>(*this, timeout);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
 {
-    Error               error = kErrorNone;
     CslClockAccuracyTlv cslClockAccuracy;
 
     cslClockAccuracy.Init();
-
     cslClockAccuracy.SetCslClockAccuracy(Get<Radio>().GetCslAccuracy());
     cslClockAccuracy.SetCslUncertainty(Get<Radio>().GetCslUncertainty());
 
-    SuccessOrExit(error = Append(cslClockAccuracy));
-
-exit:
-    return error;
+    return Append(cslClockAccuracy);
 }
 #endif
 
