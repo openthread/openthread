@@ -119,8 +119,9 @@ otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance);
 void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aConfig);
 
 /**
- * Sets the local Backbone Router configuration #otBackboneRouterConfig. A Server Data Request message
- * `SRV_DATA.ntf` is initiated automatically if BBR Dataset changes for Primary
+ * Sets the local Backbone Router configuration #otBackboneRouterConfig.
+ *
+ * A Server Data Request message `SRV_DATA.ntf` is initiated automatically if BBR Dataset changes for Primary
  * Backbone Router.
  *
  * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
