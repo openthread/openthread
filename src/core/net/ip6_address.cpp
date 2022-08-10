@@ -69,9 +69,41 @@ void Prefix::Set(const uint8_t *aPrefix, uint8_t aLength)
     mLength = aLength;
 }
 
+bool Prefix::IsLinkLocal(void) const
+{
+    return (mLength >= 10) && ((mPrefix.mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80));
+}
+
+bool Prefix::IsMulticast(void) const
+{
+    return (mLength >= 8) && (mPrefix.mFields.m8[0] == 0xff);
+}
+
+bool Prefix::IsUniqueLocal(void) const
+{
+    return (mLength >= 7) && ((mPrefix.mFields.m8[0] & 0xfe) == 0xfc);
+}
+
 bool Prefix::IsEqual(const uint8_t *aPrefixBytes, uint8_t aPrefixLength) const
 {
     return (mLength == aPrefixLength) && (MatchLength(GetBytes(), aPrefixBytes, GetBytesSize()) >= mLength);
+}
+
+bool Prefix::ContainsPrefix(const Prefix &aSubPrefix) const
+{
+    return (mLength >= aSubPrefix.mLength) &&
+           (MatchLength(GetBytes(), aSubPrefix.GetBytes(), aSubPrefix.GetBytesSize()) >= aSubPrefix.GetLength());
+}
+
+bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
+{
+    return (mLength >= NetworkPrefix::kLength) &&
+           (MatchLength(GetBytes(), aSubPrefix.m8, NetworkPrefix::kSize) >= NetworkPrefix::kLength);
+}
+
+bool Prefix::operator==(const Prefix &aOther) const
+{
+    return (mLength == aOther.mLength) && (MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize()) >= GetLength());
 }
 
 bool Prefix::operator<(const Prefix &aOther) const
