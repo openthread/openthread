@@ -220,23 +220,26 @@ public:
     void HandleInfraIfStateChanged(void) { EvaluateState(); }
 
     /**
-     * This method checks if the on-mesh prefix configuration is a valid OMR prefix.
+     * This method checks whether the on-mesh prefix configuration is a valid OMR prefix.
      *
      * @param[in] aOnMeshPrefixConfig  The on-mesh prefix configuration to check.
      *
-     * @returns  Whether the on-mesh prefix configuration is a valid OMR prefix.
+     * @retval   TRUE    The prefix is a valid OMR prefix.
+     * @retval   FALE    The prefix is not a valid OMR prefix.
      *
      */
     static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
 
     /**
-     * This method checks if the OMR prefix is valid (i.e. GUA/ULA prefix with length being 64).
+     * This method checks whether a given prefix is a valid OMR prefix.
      *
-     * @param[in]  aOmrPrefix  The OMR prefix to check.
-     * @returns    Whether the OMR prefix is valid.
+     * @param[in]  aPrefix  The prefix to check.
+     *
+     * @retval   TRUE    The prefix is a valid OMR prefix.
+     * @retval   FALE    The prefix is not a valid OMR prefix.
      *
      */
-    static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
+    static bool IsValidOmrPrefix(const Ip6::Prefix &aPrefix);
 
     /**
      * This method initializes a `PrefixTableIterator`.
