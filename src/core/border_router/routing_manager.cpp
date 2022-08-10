@@ -72,11 +72,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     , mInfraIfNat64PrefixStaleTimer(aInstance, HandleInfraIfNat64PrefixStaleTimer)
 #endif
-    , mTimeRouterAdvMessageLastUpdate(TimerMilli::GetNow())
-    , mLearntRouterAdvMessageFromHost(false)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
-    , mRouterAdvertisementCount(0)
-    , mLastRouterAdvertisementSendTime(TimerMilli::GetNow() - kMinDelayBetweenRtrAdvs)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
@@ -332,7 +328,7 @@ void RoutingManager::Stop(void)
     mDiscoveredPrefixTable.RemoveAllEntries();
     mDiscoveredPrefixStaleTimer.Stop();
 
-    mRouterAdvertisementCount = 0;
+    mRaInfo.mTxCount = 0;
 
     mRouterSolicitTimer.Stop();
     mRouterSolicitCount = 0;
@@ -633,7 +629,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
         nextSendDelay = Random::NonCrypto::GetUint32InRange(kMinRtrAdvInterval, kMaxRtrAdvInterval);
 
-        if (mRouterAdvertisementCount <= kMaxInitRtrAdvertisements && nextSendDelay > kMaxInitRtrAdvInterval)
+        if (mRaInfo.mTxCount <= kMaxInitRtrAdvertisements && nextSendDelay > kMaxInitRtrAdvInterval)
         {
             nextSendDelay = kMaxInitRtrAdvInterval;
         }
@@ -653,7 +649,7 @@ void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
 {
     TimeMilli now          = TimerMilli::GetNow();
     TimeMilli evaluateTime = now + aDelayMilli;
-    TimeMilli earliestTime = mLastRouterAdvertisementSendTime + kMinDelayBetweenRtrAdvs;
+    TimeMilli earliestTime = mRaInfo.mLastTxTime + kMinDelayBetweenRtrAdvs;
 
     evaluateTime = Max(evaluateTime, earliestTime);
 
@@ -717,7 +713,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         2 * kMaxOnMeshPrefixes * (sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Prefix));
 
     uint8_t                         buffer[kMaxRaLength];
-    Ip6::Nd::RouterAdvertMessage    raMsg(mRouterAdvertHeader, buffer);
+    Ip6::Nd::RouterAdvertMessage    raMsg(mRaInfo.mHeader, buffer);
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig prefixConfig;
 
@@ -840,7 +836,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         Error        error;
         Ip6::Address destAddress;
 
-        ++mRouterAdvertisementCount;
+        ++mRaInfo.mTxCount;
 
         destAddress.SetToLinkLocalAllNodesMulticast();
 
@@ -848,7 +844,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
         if (error == kErrorNone)
         {
-            mLastRouterAdvertisementSendTime = TimerMilli::GetNow();
+            mRaInfo.mLastTxTime = TimerMilli::GetNow();
             LogInfo("Sent Router Advertisement on %s", mInfraIf.ToString().AsCString());
             DumpDebg("[BR-CERT] direction=send | type=RA |", raMsg.GetAsPacket().GetBytes(),
                      raMsg.GetAsPacket().GetLength());
@@ -1000,7 +996,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         mDiscoveredPrefixTable.RemoveOrDeprecateOldEntries(mTimeRouterSolicitStart);
 
         // Invalidate the learned RA message if it is not refreshed during Router Solicitation.
-        if (mTimeRouterAdvMessageLastUpdate <= mTimeRouterSolicitStart)
+        if (mRaInfo.mHeaderUpdateTime <= mTimeRouterSolicitStart)
         {
             UpdateRouterAdvertHeader(/* aRouterAdvertMessage */ nullptr);
         }
@@ -1194,7 +1190,7 @@ bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) co
 
 void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage)
 {
-    // Updates the `mRouterAdvertHeader` from the given RA message.
+    // Updates the `mRaInfo` from the given RA message.
 
     Ip6::Nd::RouterAdvertMessage::Header oldHeader;
 
@@ -1206,28 +1202,28 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
         VerifyOrExit(!IsReceivedRouterAdvertFromManager(*aRouterAdvertMessage));
     }
 
-    oldHeader                       = mRouterAdvertHeader;
-    mTimeRouterAdvMessageLastUpdate = TimerMilli::GetNow();
+    oldHeader                 = mRaInfo.mHeader;
+    mRaInfo.mHeaderUpdateTime = TimerMilli::GetNow();
 
     if (aRouterAdvertMessage == nullptr || aRouterAdvertMessage->GetHeader().GetRouterLifetime() == 0)
     {
-        mRouterAdvertHeader.SetToDefault();
-        mLearntRouterAdvMessageFromHost = false;
+        mRaInfo.mHeader.SetToDefault();
+        mRaInfo.mIsHeaderFromHost = false;
     }
     else
     {
-        // The checksum is set to zero in `mRouterAdvertHeader`
+        // The checksum is set to zero in `mRaInfo.mHeader`
         // which indicates to platform that it needs to do the
         // calculation and update it.
 
-        mRouterAdvertHeader = aRouterAdvertMessage->GetHeader();
-        mRouterAdvertHeader.SetChecksum(0);
-        mLearntRouterAdvMessageFromHost = true;
+        mRaInfo.mHeader = aRouterAdvertMessage->GetHeader();
+        mRaInfo.mHeader.SetChecksum(0);
+        mRaInfo.mIsHeaderFromHost = true;
     }
 
     ResetDiscoveredPrefixStaleTimer();
 
-    if (mRouterAdvertHeader != oldHeader)
+    if (mRaInfo.mHeader != oldHeader)
     {
         // If there was a change to the header, start timer to
         // reevaluate routing policy and send RA message with new
@@ -1253,9 +1249,9 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     nextStaleTime = mDiscoveredPrefixTable.CalculateNextStaleTime(now);
 
     // Check for stale Router Advertisement Message if learnt from Host.
-    if (mLearntRouterAdvMessageFromHost)
+    if (mRaInfo.mIsHeaderFromHost)
     {
-        TimeMilli raStaleTime = Max(now, mTimeRouterAdvMessageLastUpdate + Time::SecToMsec(kRtrAdvStaleTime));
+        TimeMilli raStaleTime = Max(now, mRaInfo.mHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
 
         nextStaleTime = Min(nextStaleTime, raStaleTime);
     }
