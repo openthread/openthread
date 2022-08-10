@@ -141,8 +141,9 @@ void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aC
 otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig);
 
 /**
- * Explicitly registers local Backbone Router configuration. A Server Data Request message
- * `SRV_DATA.ntf` is triggered for the attached device.
+ * Explicitly registers local Backbone Router configuration.
+ *
+ * A Server Data Request message `SRV_DATA.ntf` is triggered for the attached device.
  *
  * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
  *
@@ -273,8 +274,9 @@ void otBackboneRouterSetMulticastListenerCallback(otInstance *                  
 void otBackboneRouterMulticastListenerClear(otInstance *aInstance);
 
 /**
- * Adds a Multicast Listener with a timeout value, in seconds. Pass `0` to use
- * the default MLR timeout.
+ * Adds a Multicast Listener with a timeout value, in seconds.
+ *
+ * Pass `0` to use the default MLR timeout.
  *
  * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE`,
  * `OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE`, and
