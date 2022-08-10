@@ -4792,23 +4792,16 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 Error Mle::TxMessage::AppendCslChannelTlv(void)
 {
-    Error         error = kErrorNone;
     CslChannelTlv cslChannel;
 
-    // In current implementation, it's allowed to set CSL Channel unspecified. As `0` is not valid for Channel value
-    // in CSL Channel TLV, if CSL channel is not specified, we don't append CSL Channel TLV.
-    // And on transmitter side, it would also set CSL Channel for the child to `0` if it doesn't find a CSL Channel
-    // TLV.
-    VerifyOrExit(Get<Mac::Mac>().GetCslChannel());
+    // CSL channel value of zero indicates that the CSL channel is not
+    // specified. We can use this value in the TLV as well.
 
     cslChannel.Init();
     cslChannel.SetChannelPage(0);
     cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());
 
-    SuccessOrExit(error = Append(cslChannel));
-
-exit:
-    return error;
+    return Append(cslChannel);
 }
 
 Error Mle::TxMessage::AppendCslTimeoutTlv(void)
