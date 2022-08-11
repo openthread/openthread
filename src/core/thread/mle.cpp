@@ -1731,9 +1731,10 @@ void Mle::RequestShorterChildIdRequest(void)
 
 Error Mle::SendChildIdRequest(void)
 {
+    static const uint8_t kTlvs[] = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
+
     Error        error   = kErrorNone;
-    uint8_t      tlvs[]  = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
-    uint8_t      tlvsLen = sizeof(tlvs);
+    uint8_t      tlvsLen = sizeof(kTlvs);
     TxMessage *  message = nullptr;
     Ip6::Address destination;
 
@@ -1771,7 +1772,7 @@ Error Mle::SendChildIdRequest(void)
         tlvsLen -= 1;
     }
 
-    SuccessOrExit(error = message->AppendTlvRequestTlv(tlvs, tlvsLen));
+    SuccessOrExit(error = message->AppendTlvRequestTlv(kTlvs, tlvsLen));
     SuccessOrExit(error = message->AppendActiveTimestampTlv());
     SuccessOrExit(error = message->AppendPendingTimestampTlv());
 
@@ -1921,14 +1922,15 @@ void Mle::HandleMessageTransmissionTimer(void)
     case kChildUpdateRequestNone:
         if (mDataRequestState == kDataRequestActive)
         {
-            static const uint8_t tlvs[] = {Tlv::kNetworkData};
-            Ip6::Address         destination;
+            static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
+            Ip6::Address destination;
 
             VerifyOrExit(mDataRequestAttempts < kMaxChildKeepAliveAttempts, IgnoreError(BecomeDetached()));
 
             destination.SetToLinkLocalAddress(mParent.GetExtAddress());
 
-            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0) == kErrorNone)
+            if (SendDataRequest(destination, kTlvs) == kErrorNone)
             {
                 mDataRequestAttempts++;
             }
@@ -2673,10 +2675,11 @@ exit:
 
 void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 {
+    static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
     LeaderData leaderData;
-    uint8_t    tlvs[] = {Tlv::kNetworkData};
     uint16_t   delay;
 
     // Source Address
@@ -2748,7 +2751,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -2938,8 +2941,9 @@ exit:
 
     if (dataRequest)
     {
-        static const uint8_t tlvs[] = {Tlv::kNetworkData};
-        uint16_t             delay;
+        static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
+        uint16_t delay;
 
         if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
         {
@@ -2953,7 +2957,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
     }
     else if (error == kErrorNone)
     {
@@ -3123,7 +3127,11 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL Accuracy
-    if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
+    if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) == kErrorNone)
+    {
+        VerifyOrExit(clockAccuracy.IsValid(), error = kErrorParse);
+    }
+    else
     {
         clockAccuracy.SetCslClockAccuracy(kCslWorstCrystalPpm);
         clockAccuracy.SetCslUncertainty(kCslWorstUncertainty);
@@ -3420,8 +3428,8 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     uint16_t      sourceAddress;
     Challenge     challenge;
     RequestedTlvs requestedTlvs;
-    uint8_t       tlvs[kMaxResponseTlvs] = {};
-    uint8_t       numTlvs                = 0;
+    uint8_t       tlvs[kMaxResponseTlvs];
+    uint8_t       numTlvs = 0;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -3621,8 +3629,9 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         // CSL Accuracy
-        if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
+        if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) == kErrorNone)
         {
+            VerifyOrExit(clockAccuracy.IsValid(), error = kErrorParse);
             Get<Mac::Mac>().SetCslParentClockAccuracy(clockAccuracy.GetCslClockAccuracy());
             Get<Mac::Mac>().SetCslParentUncertainty(clockAccuracy.GetCslUncertainty());
         }
@@ -4783,48 +4792,41 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 Error Mle::TxMessage::AppendCslChannelTlv(void)
 {
-    Error         error = kErrorNone;
     CslChannelTlv cslChannel;
 
-    // In current implementation, it's allowed to set CSL Channel unspecified. As `0` is not valid for Channel value
-    // in CSL Channel TLV, if CSL channel is not specified, we don't append CSL Channel TLV.
-    // And on transmitter side, it would also set CSL Channel for the child to `0` if it doesn't find a CSL Channel
-    // TLV.
-    VerifyOrExit(Get<Mac::Mac>().GetCslChannel());
+    // CSL channel value of zero indicates that the CSL channel is not
+    // specified. We can use this value in the TLV as well.
 
     cslChannel.Init();
     cslChannel.SetChannelPage(0);
     cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());
 
-    SuccessOrExit(error = Append(cslChannel));
-
-exit:
-    return error;
+    return Append(cslChannel);
 }
 
 Error Mle::TxMessage::AppendCslTimeoutTlv(void)
 {
-    OT_ASSERT(Get<Mac::Mac>().IsCslEnabled());
-    return Tlv::Append<CslTimeoutTlv>(*this,
-                                      Get<Mle>().mCslTimeout == 0 ? Get<Mle>().mTimeout : Get<Mle>().mCslTimeout);
+    uint32_t timeout = Get<Mle>().GetCslTimeout();
+
+    if (timeout == 0)
+    {
+        timeout = Get<Mle>().GetTimeout();
+    }
+
+    return Tlv::Append<CslTimeoutTlv>(*this, timeout);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
 {
-    Error               error = kErrorNone;
     CslClockAccuracyTlv cslClockAccuracy;
 
     cslClockAccuracy.Init();
-
     cslClockAccuracy.SetCslClockAccuracy(Get<Radio>().GetCslAccuracy());
     cslClockAccuracy.SetCslUncertainty(Get<Radio>().GetCslUncertainty());
 
-    SuccessOrExit(error = Append(cslClockAccuracy));
-
-exit:
-    return error;
+    return Append(cslClockAccuracy);
 }
 #endif
 

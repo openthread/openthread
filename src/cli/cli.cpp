@@ -692,6 +692,25 @@ template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
     otError                error = OT_ERROR_INVALID_COMMAND;
     otBackboneRouterConfig config;
 
+    /**
+     * @cli bbr
+     * @code
+     * bbr
+     * BBR Primary:
+     * server16: 0xE400
+     * seqno:    10
+     * delay:    120 secs
+     * timeout:  300 secs
+     * Done
+     * @endcode
+     * @code
+     * bbr
+     * BBR Primary: None
+     * Done
+     * @endcode
+     * @par
+     * Returns the current Primary Backbone Router information for the Thread device.
+     */
     if (aArgs[0].IsEmpty())
     {
         if (otBackboneRouterGetPrimary(GetInstancePtr(), &config) == OT_ERROR_NONE)
@@ -719,6 +738,34 @@ template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
                 ExitNow(error = OT_ERROR_INVALID_COMMAND);
             }
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+            /**
+             * @cli bbr mgmt dua
+             * @code
+             * bbr mgmt dua 1 2f7c235e5025a2fd
+             * Done
+             * @endcode
+             * @code
+             * bbr mgmt dua 160
+             * Done
+             * @endcode
+             * @cparam bbr mgmt dua @ca{status|coap-code} [@ca{meshLocalIid}]
+             * For `status` or `coap-code`, use:
+             * *    0: ST_DUA_SUCCESS
+             * *    1: ST_DUA_REREGISTER
+             * *    2: ST_DUA_INVALID
+             * *    3: ST_DUA_DUPLICATE
+             * *    4: ST_DUA_NO_RESOURCES
+             * *    5: ST_DUA_BBR_NOT_PRIMARY
+             * *    6: ST_DUA_GENERAL_FAILURE
+             * *    160: COAP code 5.00
+             * @par
+             * With the `meshLocalIid` included, this command configures the response status
+             * for the next DUA registration. Without `meshLocalIid`, respond to the next
+             * DUA.req with the specified `status` or `coap-code`.
+             * @par
+             * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+             * @sa otBackboneRouterConfigNextDuaRegistrationResponse
+             */
             else if (aArgs[1] == "dua")
             {
                 uint8_t                   status;
@@ -761,6 +808,22 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
+    /**
+     * @cli bbr mgmt mlr listener
+     * @code
+     * bbr mgmt mlr listener
+     * ff04:0:0:0:0:0:0:abcd 3534000
+     * ff04:0:0:0:0:0:0:eeee 3537610
+     * Done
+     * @endcode
+     * @par
+     * Returns the Multicast Listeners with the #otBackboneRouterMulticastListenerInfo
+     * `mTimeout` in seconds.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` and
+     * `OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE` are enabled.
+     * @sa otBackboneRouterMulticastListenerGetNext
+     */
     if (aArgs[0] == "listener")
     {
         if (aArgs[1].IsEmpty())
@@ -770,11 +833,34 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(Arg aArgs[])
         }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        /**
+         * @cli bbr mgmt mlr listener clear
+         * @code
+         * bbr mgmt mlr listener clear
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBackboneRouterMulticastListenerClear
+         */
         if (aArgs[1] == "clear")
         {
             otBackboneRouterMulticastListenerClear(GetInstancePtr());
             error = OT_ERROR_NONE;
         }
+        /**
+         * @cli bbr mgmt mlr listener add
+         * @code
+         * bbr mgmt mlr listener add ff04::1
+         * Done
+         * @endcode
+         * @code
+         * bbr mgmt mlr listener add ff04::2 300
+         * Done
+         * @endcode
+         * @cparam bbr mgmt mlr listener add @ca{ipaddress} [@ca{timeout-seconds}]
+         * @par api_copy
+         * #otBackboneRouterMulticastListenerAdd
+         */
         else if (aArgs[1] == "add")
         {
             otIp6Address address;
@@ -791,6 +877,23 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(Arg aArgs[])
             error = otBackboneRouterMulticastListenerAdd(GetInstancePtr(), &address, timeout);
         }
     }
+    /**
+     * @cli bbr mgmt mlr response
+     * @code
+     * bbr mgmt mlr response 2
+     * Done
+     * @endcode
+     * @cparam bbr mgmt mlr response @ca{status-code}
+     * For `status-code`, use:
+     * *    0: ST_MLR_SUCCESS
+     * *    2: ST_MLR_INVALID
+     * *    3: ST_MLR_NO_PERSISTENT
+     * *    4: ST_MLR_NO_RESOURCES
+     * *    5: ST_MLR_BBR_NOT_PRIMARY
+     * *    6: ST_MLR_GENERAL_FAILURE
+     * @par api_copy
+     * #otBackboneRouterConfigNextMulticastListenerRegistrationResponse
+     */
     else if (aArgs[0] == "response")
     {
         error = ProcessSet(aArgs + 1, otBackboneRouterConfigNextMulticastListenerRegistrationResponse);
@@ -821,18 +924,81 @@ otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
     otBackboneRouterConfig config;
     bool                   enable;
 
+    /**
+     * @cli bbr (enable,disable)
+     * @code
+     * bbr enable
+     * Done
+     * @endcode
+     * @code
+     * bbr disable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBackboneRouterSetEnabled
+     */
     if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
         otBackboneRouterSetEnabled(GetInstancePtr(), enable);
     }
+    /**
+     * @cli bbr jitter (get,set)
+     * @code
+     * bbr jitter
+     * 20
+     * Done
+     * @endcode
+     * @code
+     * bbr jitter 10
+     * Done
+     * @endcode
+     * @cparam bbr jitter [@ca{jitter}]
+     * @par
+     * Gets or sets jitter (in seconds) for Backbone Router registration.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+     * @sa otBackboneRouterGetRegistrationJitter
+     * @sa otBackboneRouterSetRegistrationJitter
+     */
     else if (aArgs[0] == "jitter")
     {
         error = ProcessGetSet(aArgs + 1, otBackboneRouterGetRegistrationJitter, otBackboneRouterSetRegistrationJitter);
     }
+    /**
+     * @cli bbr register
+     * @code
+     * bbr register
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBackboneRouterRegister
+     */
     else if (aArgs[0] == "register")
     {
         SuccessOrExit(error = otBackboneRouterRegister(GetInstancePtr()));
     }
+    /**
+     * @cli bbr state
+     * @code
+     * bbr state
+     * Disabled
+     * Done
+     * @endcode
+     * @code
+     * bbr state
+     * Primary
+     * Done
+     * @endcode
+     * @code
+     * bbr state
+     * Secondary
+     * Done
+     * @endcode
+     * @par
+     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+     * @par api_copy
+     * #otBackboneRouterGetState
+     */
     else if (aArgs[0] == "state")
     {
         static const char *const kStateStrings[] = {
@@ -847,6 +1013,18 @@ otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
 
         OutputLine("%s", Stringify(otBackboneRouterGetState(GetInstancePtr()), kStateStrings));
     }
+    /**
+     * @cli bbr config
+     * @code
+     * bbr config
+     * seqno:    10
+     * delay:    120 secs
+     * timeout:  300 secs
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBackboneRouterGetConfig
+     */
     else if (aArgs[0] == "config")
     {
         otBackboneRouterGetConfig(GetInstancePtr(), &config);
@@ -860,6 +1038,19 @@ otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
         else
         {
             // Set local Backbone Router configuration.
+            /**
+             * @cli bbr config (set)
+             * @code
+             * bbr config seqno 20 delay 30
+             * Done
+             * @endcode
+             * @cparam bbr config [seqno @ca{seqno}] [delay @ca{delay}] [timeout @ca{timeout}]
+             * @par
+             * `bbr register` should be issued explicitly to register Backbone Router service to Leader
+             * for Secondary Backbone Router.
+             * @par api_copy
+             * #otBackboneRouterSetConfig
+             */
             for (Arg *arg = &aArgs[1]; !arg->IsEmpty(); arg++)
             {
                 if (*arg == "seqno")
@@ -900,10 +1091,31 @@ template <> otError Interpreter::Process<Cmd("domainname")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli domainname
+     * @code
+     * domainname
+     * Thread
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetDomainName
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otThreadGetDomainName(GetInstancePtr()));
     }
+    /**
+     * @cli domainname (set)
+     * @code
+     * domainname Test\ Thread
+     * Done
+     * @endcode
+     * @cparam domainname @ca{name}
+     * Use a `backslash` to escape spaces.
+     * @par api_copy
+     * #otThreadSetDomainName
+     */
     else
     {
         SuccessOrExit(error = otThreadSetDomainName(GetInstancePtr(), aArgs[0].GetCString()));
@@ -918,6 +1130,16 @@ template <> otError Interpreter::Process<Cmd("dua")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli dua iid
+     * @code
+     * dua iid
+     * 0004000300020001
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetFixedDuaInterfaceIdentifier
+     */
     if (aArgs[0] == "iid")
     {
         if (aArgs[1].IsEmpty())
@@ -929,6 +1151,22 @@ template <> otError Interpreter::Process<Cmd("dua")>(Arg aArgs[])
                 OutputBytesLine(iid->mFields.m8);
             }
         }
+        /**
+         * @cli dua iid (set,clear)
+         * @code
+         * dua iid 0004000300020001
+         * Done
+         * @endcode
+         * @code
+         * dua iid clear
+         * Done
+         * @endcode
+         * @cparam dua iid @ca{iid|clear}
+         * `dua iid clear` passes a `nullptr` to #otThreadSetFixedDuaInterfaceIdentifier.
+         * Otherwise, you can pass the `iid`.
+         * @par api_copy
+         * #otThreadSetFixedDuaInterfaceIdentifier
+         */
         else if (aArgs[1] == "clear")
         {
             error = otThreadSetFixedDuaInterfaceIdentifier(GetInstancePtr(), nullptr);
@@ -953,6 +1191,34 @@ exit:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
+/**
+ * @cli bufferinfo
+ * @code
+ * bufferinfo
+ * total: 40
+ * free: 40
+ * 6lo send: 0 0 0
+ * 6lo reas: 0 0 0
+ * ip6: 0 0 0
+ * mpl: 0 0 0
+ * mle: 0 0 0
+ * coap: 0 0 0
+ * coap secure: 0 0 0
+ * application coap: 0 0 0
+ * Done
+ * @endcode
+ * @par
+ * Gets the current message buffer information.
+ * *   `total` displays the total number of message buffers in pool.
+ * *   `free` displays the number of free message buffers.
+ * @par
+ * Next, the CLI displays info about different queues used by the OpenThread stack,
+ * for example `6lo send`. Each line after the queue represents info about a queue:
+ * *   The first number shows number messages in the queue.
+ * *   The second number shows number of buffers used by all messages in the queue.
+ * *   The third number shows total number of bytes of all messages in the queue.
+ * @sa otMessageGetBufferInfo
+ */
 template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -990,6 +1256,25 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+/**
+ * @cli ccathreshold (get,set)
+ * @code
+ * ccathreshold
+ * -75 dBm
+ * Done
+ * @endcode
+ * @code
+ * ccathreshold -62
+ * Done
+ * @endcode
+ * @cparam ccathreshold [@ca{CCA-threshold-dBm}]
+ * Use the optional `CCA-threshold-dBm` argument to set the CCA threshold.
+ * @par
+ * Gets or sets the CCA threshold in dBm measured at the antenna connector per
+ * IEEE 802.15.4 - 2015 section 10.1.4.
+ * @sa otPlatRadioGetCcaEnergyDetectThreshold
+ * @sa otPlatRadioSetCcaEnergyDetectThreshold
+ */
 template <> otError Interpreter::Process<Cmd("ccathreshold")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2034,10 +2319,32 @@ template <> otError Interpreter::Process<Cmd("delaytimermin")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli delaytimermin
+     * @code
+     * delaytimermin
+     * 30
+     * Done
+     * @endcode
+     * @par
+     * Get the minimal delay timer (in seconds).
+     * @sa otDatasetGetDelayTimerMinimal
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%d", (otDatasetGetDelayTimerMinimal(GetInstancePtr()) / 1000));
     }
+    /**
+     * @cli delaytimermin (set)
+     * @code
+     * delaytimermin 60
+     * Done
+     * @endcode
+     * @cparam delaytimermin @ca{delaytimermin}
+     * @par
+     * Sets the minimal delay timer (in seconds).
+     * @sa otDatasetSetDelayTimerMinimal
+     */
     else if (aArgs[1].IsEmpty())
     {
         uint32_t delay;
@@ -2073,6 +2380,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli discover
+ * @code
+ * discover
+ * | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
+ * +---+------------------+------------------+------+------------------+----+-----+-----+
+ * | 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+ * Done
+ * @endcode
+ * @cparam discover [@ca{channel}]
+ * `channel`: The channel to discover on. If no channel is provided, the discovery will cover all
+ * valid channels.
+ * @par
+ * Perform an MLE Discovery operation.
+ * @sa otThreadDiscover
+ */
 template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
@@ -2401,6 +2724,18 @@ void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
     OutputLine("");
 }
 
+/**
+ * @cli eidcache
+ * @code
+ * eidcache
+ * fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d 2000 cache canEvict=1 transTime=0 eid=fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d
+ * fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7f fffe retry canEvict=1 timeout=10 retryDelay=30
+ * Done
+ * @endcode
+ * @par
+ * Returns the EID-to-RLOC cache entries.
+ * @sa otThreadGetNextCacheEntry
+ */
 template <> otError Interpreter::Process<Cmd("eidcache")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -2451,10 +2786,31 @@ template <> otError Interpreter::Process<Cmd("extaddr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli extaddr
+     * @code
+     * extaddr
+     * dead00beef00cafe
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkGetExtendedAddress
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputExtAddressLine(*otLinkGetExtendedAddress(GetInstancePtr()));
     }
+    /**
+     * @cli extaddr (set)
+     * @code
+     * extaddr dead00beef00cafe
+     * dead00beef00cafe
+     * Done
+     * @endcode
+     * @cparam extaddr @ca{extaddr}
+     * @par api_copy
+     * #otLinkSetExtendedAddress
+     */
     else
     {
         otExtAddress extAddress;
@@ -2510,10 +2866,33 @@ template <> otError Interpreter::Process<Cmd("extpanid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli extpanid
+     * @code
+     * extpanid
+     * dead00beef00cafe
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetExtendedPanId
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputBytesLine(otThreadGetExtendedPanId(GetInstancePtr())->m8);
     }
+    /**
+     * @cli extpanid (set)
+     * @code
+     * extpanid dead00beef00cafe
+     * Done
+     * @endcode
+     * @cparam extpanid @ca{extpanid}
+     * @par
+     * @note The current commissioning credential becomes stale after changing this value.
+     * Use `pskc` to reset.
+     * @par api_copy
+     * #otThreadSetExtendedPanId
+     */
     else
     {
         otExtendedPanId extPanId;
@@ -2526,6 +2905,14 @@ exit:
     return error;
 }
 
+/**
+ * @cli factoryreset
+ * @code
+ * factoryreset
+ * @endcode
+ * @par api_copy
+ * #otInstanceFactoryReset
+ */
 template <> otError Interpreter::Process<Cmd("factoryreset")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -2540,6 +2927,19 @@ template <> otError Interpreter::Process<Cmd("fake")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
+    /**
+     * @cli fake (a,an)
+     * @code
+     * fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+     * Done
+     * @endcode
+     * @cparam fake /a/an @ca{dst-ipaddr} @ca{target} @ca{meshLocalIid}
+     * @par
+     * Sends fake Thread messages.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+     * @sa otThreadSendAddressNotification
+     */
     if (aArgs[0] == "/a/an")
     {
         otIp6Address             destination, target;
@@ -2574,6 +2974,17 @@ template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli fem
+     * @code
+     * fem
+     * LNA gain 11 dBm
+     * Done
+     * @endcode
+     * @par
+     * Gets external FEM parameters.
+     * @sa otPlatRadioGetFemLnaGain
+     */
     if (aArgs[0].IsEmpty())
     {
         int8_t lnaGain;
@@ -2581,6 +2992,16 @@ template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
         SuccessOrExit(error = otPlatRadioGetFemLnaGain(GetInstancePtr(), &lnaGain));
         OutputLine("LNA gain %d dBm", lnaGain);
     }
+    /**
+     * @cli fem lnagain (get)
+     * @code
+     * fem lnagain
+     * 11
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioGetFemLnaGain
+     */
     else if (aArgs[0] == "lnagain")
     {
         if (aArgs[1].IsEmpty())
@@ -2590,6 +3011,15 @@ template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
             SuccessOrExit(error = otPlatRadioGetFemLnaGain(GetInstancePtr(), &lnaGain));
             OutputLine("%d", lnaGain);
         }
+        /**
+         * @cli fem lnagain (set)
+         * @code
+         * fem lnagain 8
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otPlatRadioSetFemLnaGain
+         */
         else
         {
             int8_t lnaGain;
@@ -3711,6 +4141,21 @@ template <> otError Interpreter::Process<Cmd("networktime")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli networktime
+     * @code
+     * networktime
+     * Network Time:     21084154us (synchronized)
+     * Time Sync Period: 100s
+     * XTAL Threshold:   300ppm
+     * Done
+     * @endcode
+     * @par
+     * Gets the Thread network time and the time sync parameters.
+     * @sa otNetworkTimeGet
+     * @sa otNetworkTimeGetSyncPeriod
+     * @sa otNetworkTimeGetXtalThreshold
+     */
     if (aArgs[0].IsEmpty())
     {
         uint64_t            time;
@@ -3741,6 +4186,20 @@ template <> otError Interpreter::Process<Cmd("networktime")>(Arg aArgs[])
         OutputLine("Time Sync Period: %ds", otNetworkTimeGetSyncPeriod(GetInstancePtr()));
         OutputLine("XTAL Threshold:   %dppm", otNetworkTimeGetXtalThreshold(GetInstancePtr()));
     }
+    /**
+     * @cli networktime (set)
+     * @code
+     * networktime 100 300
+     * Done
+     * @endcode
+     * @cparam networktime @ca{timesyncperiod} @ca{xtalthreshold}
+     * @par
+     * Sets the time sync parameters.
+     * *   `timesyncperiod`: The time synchronization period, in seconds.
+     * *   `xtalthreshold`: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
+     * @sa otNetworkTimeSetSyncPeriod
+     * @sa otNetworkTimeSetXtalThreshold
+     */
     else
     {
         uint16_t period;

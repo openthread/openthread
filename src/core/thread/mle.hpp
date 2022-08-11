@@ -1079,6 +1079,22 @@ protected:
         Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);
 
         /**
+         * This method appends a TLV Request TLV to the message.
+         *
+         * @tparam kArrayLength     The TLV array length.
+         *
+         * @param[in]  aTlvArray    A reference to an array of TLV types of @p kArrayLength length.
+         *
+         * @retval kErrorNone     Successfully appended the TLV Request TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the TLV Request TLV.
+         *
+         */
+        template <uint8_t kArrayLength> Error AppendTlvRequestTlv(const uint8_t (&aTlvArray)[kArrayLength])
+        {
+            return AppendTlvRequestTlv(aTlvArray, kArrayLength);
+        }
+
+        /**
          * This method appends a Leader Data TLV to the message.
          *
          * @retval kErrorNone     Successfully appended the Leader Data TLV.
@@ -1486,8 +1502,27 @@ protected:
                           const uint8_t *     aTlvs,
                           uint8_t             aTlvsLength,
                           uint16_t            aDelay,
-                          const uint8_t *     aExtraTlvs       = nullptr,
-                          uint8_t             aExtraTlvsLength = 0);
+                          const uint8_t *     aExtraTlvs,
+                          uint8_t             aExtraTlvsLength);
+
+    /**
+     * This method generates an MLE Data Request message.
+     *
+     * @tparam kArrayLength          The TLV array length.
+     *
+     * @param[in]  aDestination      A reference to the IPv6 address of the destination.
+     * @param[in]  aTlvs             An array of requested TLVs.
+     * @param[in]  aDelay            Delay in milliseconds before the Data Request message is sent.
+     *
+     * @retval kErrorNone     Successfully generated an MLE Data Request message.
+     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
+     *
+     */
+    template <uint8_t kArrayLength>
+    Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t (&aTlvs)[kArrayLength], uint16_t aDelay = 0)
+    {
+        return SendDataRequest(aDestination, aTlvs, kArrayLength, aDelay, nullptr, 0);
+    }
 
     /**
      * This method generates an MLE Child Update Request message.
