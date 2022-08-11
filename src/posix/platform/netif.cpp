@@ -275,7 +275,7 @@ enum
 };
 #endif
 
-static constexpr size_t kMaxIp6Size             = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
+static constexpr size_t kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
 static bool sIsSyncingState = false;
 #endif
