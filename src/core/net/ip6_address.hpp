@@ -188,10 +188,7 @@ public:
      * @retval FALSE  The prefix is not a Link-Local prefix.
      *
      */
-    bool IsLinkLocal(void) const
-    {
-        return mLength >= 10 && mPrefix.mFields.m8[0] == 0xfe && (mPrefix.mFields.m8[1] & 0xc0) == 0x80;
-    }
+    bool IsLinkLocal(void) const;
 
     /**
      * This method indicates whether the prefix is a Multicast prefix.
@@ -200,7 +197,7 @@ public:
      * @retval FALSE  The prefix is not a Multicast prefix.
      *
      */
-    bool IsMulticast(void) const { return mLength >= 8 && mPrefix.mFields.m8[0] == 0xff; }
+    bool IsMulticast(void) const;
 
     /**
      * This method indicates whether the prefix is a Unique-Local prefix.
@@ -209,7 +206,7 @@ public:
      * @retval FALSE  The prefix is not a Unique-Local prefix.
      *
      */
-    bool IsUniqueLocal(void) const { return mLength >= 7 && (mPrefix.mFields.m8[0] & 0xfe) == 0xfc; }
+    bool IsUniqueLocal(void) const;
 
     /**
      * This method indicates whether the prefix is equal to a given prefix.
@@ -232,11 +229,7 @@ public:
      * @retval FALSE  The prefix does not contains the @p aSubPrefix.
      *
      */
-    bool ContainsPrefix(const Prefix &aSubPrefix) const
-    {
-        return (mLength >= aSubPrefix.mLength) &&
-               (MatchLength(GetBytes(), aSubPrefix.GetBytes(), aSubPrefix.GetBytesSize()) >= aSubPrefix.GetLength());
-    }
+    bool ContainsPrefix(const Prefix &aSubPrefix) const;
 
     /**
      * This method indicates whether the prefix contains a sub-prefix (given as a `NetworkPrefix`).
@@ -247,11 +240,7 @@ public:
      * @retval FALSE  The prefix does not contains the @p aSubPrefix.
      *
      */
-    bool ContainsPrefix(const NetworkPrefix &aSubPrefix) const
-    {
-        return (mLength >= NetworkPrefix::kLength) &&
-               (MatchLength(GetBytes(), aSubPrefix.m8, NetworkPrefix::kSize) >= NetworkPrefix::kLength);
-    }
+    bool ContainsPrefix(const NetworkPrefix &aSubPrefix) const;
 
     /**
      * This method overloads operator `==` to evaluate whether or not two prefixes are equal.
@@ -262,11 +251,7 @@ public:
      * @retval FALSE  If the two prefixes are not equal.
      *
      */
-    bool operator==(const Prefix &aOther) const
-    {
-        return (mLength == aOther.mLength) &&
-               (MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize()) >= GetLength());
-    }
+    bool operator==(const Prefix &aOther) const;
 
     /**
      * This method overloads operator `<` to compare two prefixes.
