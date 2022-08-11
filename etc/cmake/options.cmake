@@ -155,7 +155,7 @@ endif()
 
 option(OT_EXCLUDE_TCPLP_LIB "exclude TCPlp library from build")
 
-option(OT_NAT64_TRANSLATOR "enable border routing NAT64 translator support")
+option(OT_NAT64_TRANSLATOR "enable NAT64 translator support")
 if(OT_NAT64_TRANSLATOR)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE=1")
 endif()

@@ -276,7 +276,6 @@ enum
 #endif
 
 static constexpr size_t kMaxIp6Size             = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
-static constexpr size_t kIP4IP6HeaderLengthDiff = 20;
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
 static bool sIsSyncingState = false;
 #endif
@@ -898,8 +897,8 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 
 static void processReceive(otMessage *aMessage)
 {
-    char     packetBuffer[kMaxIp6Size + 4 + kIP4IP6HeaderLengthDiff];
-    char *   packet    = &packetBuffer[kIP4IP6HeaderLengthDiff];
+    char     packetBuffer[kMaxIp6Size + 4];
+    char *   packet    = &packetBuffer[4];
     otError  error     = OT_ERROR_NONE;
     uint16_t length    = otMessageGetLength(aMessage);
     uint16_t maxLength = sizeof(packetBuffer) - 4;
