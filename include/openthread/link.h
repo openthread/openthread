@@ -565,7 +565,7 @@ uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance);
 otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
- * Get the IEEE 802.15.4 Extended Address.
+ * Gets the IEEE 802.15.4 Extended Address.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -575,9 +575,9 @@ otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMa
 const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance);
 
 /**
- * This function sets the IEEE 802.15.4 Extended Address.
+ * Sets the IEEE 802.15.4 Extended Address.
  *
- * This function succeeds only when Thread protocols are disabled.
+ * @note Only succeeds when Thread protocols are disabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address.

@@ -328,7 +328,7 @@ uint32_t otThreadGetChildTimeout(otInstance *aInstance);
 void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout);
 
 /**
- * Get the IEEE 802.15.4 Extended PAN ID.
+ * Gets the IEEE 802.15.4 Extended PAN ID.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -340,9 +340,9 @@ void otThreadSetChildTimeout(otInstance *aInstance, uint32_t aTimeout);
 const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance);
 
 /**
- * Set the IEEE 802.15.4 Extended PAN ID.
+ * Sets the IEEE 802.15.4 Extended PAN ID.
  *
- * This function can only be called while Thread protocols are disabled.  A successful
+ * @note Can only be called while Thread protocols are disabled. A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
@@ -593,9 +593,9 @@ const char *otThreadGetNetworkName(otInstance *aInstance);
 otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 
 /**
- * Get the Thread Domain Name.
+ * Gets the Thread Domain Name.
  *
- * This function is only available since Thread 1.2.
+ * @note Available since Thread 1.2.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -607,10 +607,9 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 const char *otThreadGetDomainName(otInstance *aInstance);
 
 /**
- * Set the Thread Domain Name.
+ * Sets the Thread Domain Name. Only succeeds when Thread protocols are disabled.
  *
- * This function is only available since Thread 1.2.
- * This function succeeds only when Thread protocols are disabled.
+ * @note Available since Thread 1.2.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aDomainName   A pointer to the Thread Domain Name.
@@ -624,9 +623,11 @@ const char *otThreadGetDomainName(otInstance *aInstance);
 otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName);
 
 /**
- * Set/Clear the Interface Identifier manually specified for the Thread Domain Unicast Address.
+ * Sets or clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
  *
- * This function is only available since Thread 1.2 when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
+ * Available when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
+ *
+ * @note Only available since Thread 1.2.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aIid        A pointer to the Interface Identifier to set or NULL to clear.
@@ -639,9 +640,11 @@ otError otThreadSetDomainName(otInstance *aInstance, const char *aDomainName);
 otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid);
 
 /**
- * Get the Interface Identifier manually specified for the Thread Domain Unicast Address.
+ * Gets the Interface Identifier manually specified for the Thread Domain Unicast Address.
  *
- * This function is only available since Thread 1.2 when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
+ * Available when `OPENTHREAD_CONFIG_DUA_ENABLE` is enabled.
+ *
+ * @note Only available since Thread 1.2.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
