@@ -43,6 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -1358,7 +1359,7 @@ bool Mle::HasAcceptableParentCandidate(void) const
             // in Parent Request was sent to routers, we will keep the
             // candidate and forward to REED stage to potentially find a
             // better parent.
-            linkQuality = OT_MIN(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
+            linkQuality = Min(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
             VerifyOrExit(linkQuality == kLinkQuality3);
         }
 
@@ -2986,7 +2987,7 @@ bool Mle::IsBetterParent(uint16_t               aRloc16,
     bool rval = false;
 
     LinkQuality candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
-    LinkQuality candidateTwoWayLinkQuality = OT_MIN(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
+    LinkQuality candidateTwoWayLinkQuality = Min(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint64_t candidateCslMetric = 0;
     uint64_t cslMetric          = 0;

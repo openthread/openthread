@@ -45,6 +45,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "meshcop/extended_panid.hpp"
@@ -612,7 +613,7 @@ void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
     TimeMilli evaluateTime = now + aDelayMilli;
     TimeMilli earliestTime = mLastRouterAdvertisementSendTime + kMinDelayBetweenRtrAdvs;
 
-    evaluateTime = OT_MAX(evaluateTime, earliestTime);
+    evaluateTime = Max(evaluateTime, earliestTime);
 
     LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", evaluateTime - now);
 
@@ -1197,9 +1198,9 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     // Check for stale Router Advertisement Message if learnt from Host.
     if (mLearntRouterAdvMessageFromHost)
     {
-        TimeMilli raStaleTime = OT_MAX(now, mTimeRouterAdvMessageLastUpdate + Time::SecToMsec(kRtrAdvStaleTime));
+        TimeMilli raStaleTime = Max(now, mTimeRouterAdvMessageLastUpdate + Time::SecToMsec(kRtrAdvStaleTime));
 
-        nextStaleTime = OT_MIN(nextStaleTime, raStaleTime);
+        nextStaleTime = Min(nextStaleTime, raStaleTime);
     }
 
     if (nextStaleTime == now.GetDistantFuture())
@@ -1589,22 +1590,22 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::CalculateNextStaleTime(TimeMill
     {
         for (const Entry &entry : router.mEntries)
         {
-            TimeMilli entryStaleTime = OT_MAX(aNow, entry.GetStaleTime());
+            TimeMilli entryStaleTime = Max(aNow, entry.GetStaleTime());
 
             if (entry.IsOnLinkPrefix() && !entry.IsDeprecated())
             {
-                onLinkStaleTime = OT_MAX(onLinkStaleTime, entryStaleTime);
+                onLinkStaleTime = Max(onLinkStaleTime, entryStaleTime);
                 foundOnLink     = true;
             }
 
             if (!entry.IsOnLinkPrefix())
             {
-                routeStaleTime = OT_MIN(routeStaleTime, entryStaleTime);
+                routeStaleTime = Min(routeStaleTime, entryStaleTime);
             }
         }
     }
 
-    return foundOnLink ? OT_MIN(onLinkStaleTime, routeStaleTime) : routeStaleTime;
+    return foundOnLink ? Min(onLinkStaleTime, routeStaleTime) : routeStaleTime;
 }
 
 void RoutingManager::DiscoveredPrefixTable::RemoveRoutersWithNoEntries(void)
@@ -1744,7 +1745,7 @@ void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
     {
         for (const Entry &entry : router.mEntries)
         {
-            nextExpireTime = OT_MIN(nextExpireTime, entry.GetExpireTime());
+            nextExpireTime = Min(nextExpireTime, entry.GetExpireTime());
         }
     }
 
@@ -1863,7 +1864,7 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetExpireTime(void) cons
 
 TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTime(void) const
 {
-    uint32_t delay = OT_MIN(kRtrAdvStaleTime, IsOnLinkPrefix() ? GetPreferredLifetime() : mValidLifetime);
+    uint32_t delay = Min(kRtrAdvStaleTime, IsOnLinkPrefix() ? GetPreferredLifetime() : mValidLifetime);
 
     return mLastUpdateTime + TimeMilli::SecToMsec(delay);
 }

@@ -454,6 +454,7 @@ HEADERS_COMMON                                  = \
     common/log.hpp                                \
     common/logging.hpp                            \
     common/message.hpp                            \
+    common/min_max.hpp                            \
     common/new.hpp                                \
     common/non_copyable.hpp                       \
     common/notifier.hpp                           \

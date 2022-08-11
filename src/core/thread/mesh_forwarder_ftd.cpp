@@ -36,6 +36,7 @@
 #if OPENTHREAD_FTD
 
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp6.hpp"
@@ -456,7 +457,7 @@ void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint
         }
 
         // Choose the minimum cost
-        curCost = OT_MIN(curCost, cost);
+        curCost = Min(curCost, cost);
     }
 
     if ((aBestDest == Mac::kShortAddrInvalid) || (curCost < aBestCost))
