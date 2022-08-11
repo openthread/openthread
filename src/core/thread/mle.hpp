@@ -903,6 +903,40 @@ protected:
 #endif
     };
 
+    static constexpr uint8_t kMaxTlvListSize = 16; ///< Maximum number of TLVs in a `TlvList`.
+
+    /**
+     * This type represents a list of TLVs (array of TLV types).
+     *
+     */
+    class TlvList : public Array<uint8_t, kMaxTlvListSize>
+    {
+    public:
+        /**
+         * This constructor initializes the `TlvList` as empty.
+         *
+         */
+        TlvList(void) = default;
+
+        /**
+         * This method checks if a given TLV type is not already present in the list and adds it in the list.
+         *
+         * If the list is full, this method logs it as a warning.
+         *
+         * @param[in] aTlvType   The TLV type to add to the list.
+         *
+         */
+        void Add(uint8_t aTlvType);
+
+        /**
+         * This method adds elements from a given list to this TLV list (if not already present in the list).
+         *
+         * @param[in] aTlvList   The TLV list to add elements from.
+         *
+         */
+        void AddElementsFrom(const TlvList &aTlvList);
+    };
+
     /**
      * This type represents a Challenge (or Response) data.
      *
@@ -940,18 +974,6 @@ protected:
          *
          */
         bool operator==(const Challenge &aOther) const { return Matches(aOther.mBuffer, aOther.mLength); }
-    };
-
-    /**
-     * This type represents list of requested TLVs in a TLV Request TLV.
-     *
-     */
-    struct RequestedTlvs
-    {
-        static constexpr uint8_t kMaxNumTlvs = 16; ///< Maximum number of TLVs in request array.
-
-        uint8_t mTlvs[kMaxNumTlvs]; ///< Array of requested TLVs.
-        uint8_t mNumTlvs;           ///< Number of TLVs in the array.
     };
 
     /**
@@ -1360,14 +1382,14 @@ protected:
         /**
          * This method reads TLV Request TLV from the message.
          *
-         * @param[out] aRequestedTlvs   A reference to output the read list of requested TLVs.
+         * @param[out] aTlvList     A reference to output the read list of requested TLVs.
          *
          * @retval kErrorNone       Successfully read the TLV.
          * @retval kErrorNotFound   TLV was not found in the message.
          * @retval kErrorParse      TLV was found but could not be parsed.
          *
          */
-        Error ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const;
+        Error ReadTlvRequestTlv(TlvList &aTlvList) const;
 
         /**
          * This method reads Leader Data TLV from a message.
@@ -1538,15 +1560,14 @@ protected:
     /**
      * This method generates an MLE Child Update Response message.
      *
-     * @param[in]  aTlvs         A pointer to requested TLV types.
-     * @param[in]  aNumTlvs      The number of TLV types in @p aTlvs.
+     * @param[in]  aTlvList      A list of requested TLV types.
      * @param[in]  aChallenge    The Challenge for the response.
      *
      * @retval kErrorNone     Successfully generated an MLE Child Update Response message.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Child Update Response message.
      *
      */
-    Error SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const Challenge &aChallenge);
+    Error SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aChallenge);
 
     /**
      * This method sets the RLOC16 assigned to the Thread interface.

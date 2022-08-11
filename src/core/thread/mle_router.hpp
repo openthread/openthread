@@ -618,19 +618,17 @@ private:
     void  SendAdvertisement(void);
     Error SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
                          Neighbor *              aNeighbor,
-                         const RequestedTlvs &   aRequestedTlvs,
+                         const TlvList &         aRequestedTlvList,
                          const Challenge &       aChallenge);
     void  SendParentResponse(Child *aChild, const Challenge &aChallenge, bool aRoutersOnlyRequest);
     Error SendChildIdResponse(Child &aChild);
     Error SendChildUpdateRequest(Child &aChild);
     void  SendChildUpdateResponse(Child *                 aChild,
                                   const Ip6::MessageInfo &aMessageInfo,
-                                  const uint8_t *         aTlvs,
-                                  uint8_t                 aTlvsLength,
+                                  const TlvList &         aTlvList,
                                   const Challenge &       aChallenge);
     void  SendDataResponse(const Ip6::Address &aDestination,
-                           const uint8_t *     aTlvs,
-                           uint8_t             aTlvsLength,
+                           const TlvList &     aTlvList,
                            uint16_t            aDelay,
                            const Message *     aRequestMessage = nullptr);
     Error SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
