@@ -27,8 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-CLANG_TIDY_VERSION="LLVM version 9.0"
-CLANG_APPLY_REPLACEMENTS_VERSION="clang-apply-replacements version 9.0"
+CLANG_TIDY_VERSION_NUMBER=11
+CLANG_TIDY_VERSION="LLVM version ${CLANG_TIDY_VERSION_NUMBER}"
+CLANG_APPLY_REPLACEMENTS_VERSION="clang-apply-replacements version ${CLANG_TIDY_VERSION_NUMBER}"
 
 die()
 {
@@ -36,9 +37,9 @@ die()
     exit 1
 }
 
-# Search for clang-tidy-9
-if command -v clang-tidy-9 >/dev/null; then
-    clang_tidy=$(command -v clang-tidy-9)
+# Search for clang-tidy
+if command -v clang-tidy-${CLANG_TIDY_VERSION_NUMBER} >/dev/null; then
+    clang_tidy=$(command -v clang-tidy-${CLANG_TIDY_VERSION_NUMBER})
 elif command -v clang-tidy >/dev/null; then
     clang_tidy=$(command -v clang-tidy)
     case "$($clang_tidy --version)" in
@@ -49,12 +50,12 @@ elif command -v clang-tidy >/dev/null; then
             ;;
     esac
 else
-    die "clang-tidy 9.0 required"
+    die "clang-tidy ${CLANG_TIDY_VERSION_NUMBER} required"
 fi
 
-# Search for clang-apply-replacements-9
-if command -v clang-apply-replacements-9 >/dev/null; then
-    clang_apply_replacements=$(command -v clang-apply-replacements-9)
+# Search for clang-apply-replacements
+if command -v clang-apply-replacements-${CLANG_TIDY_VERSION_NUMBER} >/dev/null; then
+    clang_apply_replacements=$(command -v clang-apply-replacements-${CLANG_TIDY_VERSION_NUMBER})
 elif command -v clang-apply-replacements >/dev/null; then
     clang_apply_replacements=$(command -v clang-apply-replacements)
     case "$($clang_apply_replacements --version)" in
@@ -65,20 +66,20 @@ elif command -v clang-apply-replacements >/dev/null; then
             ;;
     esac
 else
-    die "clang-apply-replacements 9.0 required"
+    die "clang-apply-replacements ${CLANG_TIDY_VERSION_NUMBER} required"
 fi
 
-# Search for run-clang-tidy-9.py
-if command -v run-clang-tidy-9.py >/dev/null; then
-    run_clang_tidy=$(command -v run-clang-tidy-9.py)
-elif command -v run-clang-tidy-9 >/dev/null; then
-    run_clang_tidy=$(command -v run-clang-tidy-9)
+# Search for run-clang-tidy-${CLANG_TIDY_VERSION_NUMBER}.py
+if command -v run-clang-tidy-${CLANG_TIDY_VERSION_NUMBER}.py >/dev/null; then
+    run_clang_tidy=$(command -v run-clang-tidy-${CLANG_TIDY_VERSION_NUMBER}.py)
+elif command -v run-clang-tidy-${CLANG_TIDY_VERSION_NUMBER} >/dev/null; then
+    run_clang_tidy=$(command -v run-clang-tidy-${CLANG_TIDY_VERSION_NUMBER})
 elif command -v run-clang-tidy.py >/dev/null; then
     run_clang_tidy=$(command -v run-clang-tidy.py)
 elif command -v run-clang-tidy >/dev/null; then
     run_clang_tidy=$(command -v run-clang-tidy)
 else
-    die "run-clang-tidy.py 9.0 required"
+    die "run-clang-tidy.py ${CLANG_TIDY_VERSION_NUMBER} required"
 fi
 
 $run_clang_tidy -clang-tidy-binary "$clang_tidy" -clang-apply-replacements-binary "$clang_apply_replacements" "$@" || die

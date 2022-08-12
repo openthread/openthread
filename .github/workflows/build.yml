@@ -49,7 +49,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 shellcheck
+        sudo apt-get --no-install-recommends install -y clang-format-11 clang-tidy-11 shellcheck
         python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
     - name: Check
