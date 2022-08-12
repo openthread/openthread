@@ -856,6 +856,17 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi);
 
 /**
+ * Starts the process for child to search for a better parent while staying attached to its current parent.
+ *
+ * Must be used when device is attached as a child.
+ *
+ * @retval OT_ERROR_NONE           Successfully started the process to search for a better parent.
+ * @retval OT_ERROR_INVALID_STATE  Device role is not child.
+ *
+ */
+otError otThreadSearchForBetterParent(otInstance *aInstance);
+
+/**
  * Gets the IPv6 counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.

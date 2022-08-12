@@ -4253,23 +4253,43 @@ template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 
 template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
-    otError      error = OT_ERROR_NONE;
-    otRouterInfo parentInfo;
+    if (aArgs[0].IsEmpty())
+    {
+        otRouterInfo parentInfo;
 
-    SuccessOrExit(error = otThreadGetParentInfo(GetInstancePtr(), &parentInfo));
-    OutputFormat("Ext Addr: ");
-    OutputExtAddressLine(parentInfo.mExtAddress);
-    OutputLine("Rloc: %x", parentInfo.mRloc16);
-    OutputLine("Link Quality In: %d", parentInfo.mLinkQualityIn);
-    OutputLine("Link Quality Out: %d", parentInfo.mLinkQualityOut);
-    OutputLine("Age: %d", parentInfo.mAge);
-    OutputLine("Version: %d", parentInfo.mVersion);
+        SuccessOrExit(error = otThreadGetParentInfo(GetInstancePtr(), &parentInfo));
+        OutputFormat("Ext Addr: ");
+        OutputExtAddressLine(parentInfo.mExtAddress);
+        OutputLine("Rloc: %x", parentInfo.mRloc16);
+        OutputLine("Link Quality In: %d", parentInfo.mLinkQualityIn);
+        OutputLine("Link Quality Out: %d", parentInfo.mLinkQualityOut);
+        OutputLine("Age: %d", parentInfo.mAge);
+        OutputLine("Version: %d", parentInfo.mVersion);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    OutputLine("CSL clock accuracy: %d", parentInfo.mCslClockAccuracy);
-    OutputLine("CSL uncertainty: %d", parentInfo.mCslUncertainty);
+        OutputLine("CSL clock accuracy: %d", parentInfo.mCslClockAccuracy);
+        OutputLine("CSL uncertainty: %d", parentInfo.mCslUncertainty);
 #endif
+    }
+    /**
+     * @cli parent search
+     * @code
+     * parent search
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSearchForBetterParent
+     */
+    else if (aArgs[0] == "search")
+    {
+        error = otThreadSearchForBetterParent(GetInstancePtr());
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
 exit:
     return error;
 }

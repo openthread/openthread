@@ -377,6 +377,11 @@ exit:
     return error;
 }
 
+otError otThreadSearchForBetterParent(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().SearchForBetterParent();
+}
+
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 {
     Error error = kErrorNone;
