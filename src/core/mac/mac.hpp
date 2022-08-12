@@ -643,42 +643,24 @@ public:
     bool IsCslSupported(void) const;
 
     /**
-     * This method returns CSL parent clock accuracy, in ± ppm.
+     * This method returns parent CSL accuracy (clock accuracy and uncertainty).
      *
-     * @retval CSL parent clock accuracy, in ± ppm.
+     * @returns The parent CSL accuracy.
      *
      */
-    uint8_t GetCslParentClockAccuracy(void) const { return mLinks.GetSubMac().GetCslParentClockAccuracy(); }
+    const CslAccuracy &GetCslParentAccuracy(void) const { return mLinks.GetSubMac().GetCslParentAccuracy(); }
 
     /**
-     * This method sets CSL parent clock accuracy, in ± ppm.
+     * This method sets parent CSL accuracy.
      *
-     * @param[in] aCslParentAccuracy CSL parent clock accuracy, in ± ppm.
+     * @param[in] aCslAccuracy  The parent CSL accuracy.
      *
      */
-    void SetCslParentClockAccuracy(uint8_t aCslParentAccuracy)
+    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy)
     {
-        mLinks.GetSubMac().SetCslParentClockAccuracy(aCslParentAccuracy);
+        mLinks.GetSubMac().SetCslParentAccuracy(aCslAccuracy);
     }
 
-    /**
-     * This method returns CSL parent uncertainty, in ±10 us units.
-     *
-     * @retval CSL parent uncertainty, in ±10 us units.
-     *
-     */
-    uint8_t GetCslParentUncertainty(void) const { return mLinks.GetSubMac().GetCslParentUncertainty(); }
-
-    /**
-     * This method returns CSL parent uncertainty, in ±10 us units.
-     *
-     * @param[in] aCslParentUncert  CSL parent uncertainty, in ±10 us units.
-     *
-     */
-    void SetCslParentUncertainty(uint8_t aCslParentUncert)
-    {
-        mLinks.GetSubMac().SetCslParentUncertainty(aCslParentUncert);
-    }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE

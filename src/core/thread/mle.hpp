@@ -773,12 +773,12 @@ public:
     /**
      * This method calculates CSL metric of parent.
      *
-     * @param[in] aCslClockAccuracy The CSL Clock Accuracy.
-     * @param[in] aCslUncertainty The CSL Uncertainty.
+     * @param[in] aCslAccuracy The CSL accuracy.
      *
      * @returns CSL metric.
+     *
      */
-    uint64_t CalcParentCslMetric(uint8_t aCslClockAccuracy, uint8_t aCslUncertainty);
+    uint64_t CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy);
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -1424,6 +1424,20 @@ protected:
          */
         Error ReadLeaderDataTlv(LeaderData &aLeaderData) const;
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        /**
+         * This method reads CSL Clock Accuracy TLV from a message.
+         *
+         * @param[out]      A reference to output the CSL accuracy.
+         *
+         * @retval kErrorNone       Successfully read the TLV.
+         * @retval kErrorNotFound   TLV was not found in the message.
+         * @retval kErrorParse      TLV was found but could not be parsed.
+         *
+         */
+        Error ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const;
+#endif
+
     private:
         Error ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuffer) const;
     };
@@ -2009,13 +2023,12 @@ private:
     bool     HasAcceptableParentCandidate(void) const;
     Error    DetermineParentRequestType(ParentRequestType &aType) const;
 
-    bool IsBetterParent(uint16_t               aRloc16,
-                        LinkQuality            aLinkQuality,
-                        uint8_t                aLinkMargin,
-                        const ConnectivityTlv &aConnectivityTlv,
-                        uint16_t               aVersion,
-                        uint8_t                aCslClockAccuracy,
-                        uint8_t                aCslUncertainty);
+    bool IsBetterParent(uint16_t                aRloc16,
+                        LinkQuality             aLinkQuality,
+                        uint8_t                 aLinkMargin,
+                        const ConnectivityTlv & aConnectivityTlv,
+                        uint16_t                aVersion,
+                        const Mac::CslAccuracy &aCslAccuracy);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
 
     Error ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,

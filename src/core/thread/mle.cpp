@@ -2984,25 +2984,16 @@ exit:
     return error;
 }
 
-bool Mle::IsBetterParent(uint16_t               aRloc16,
-                         LinkQuality            aLinkQuality,
-                         uint8_t                aLinkMargin,
-                         const ConnectivityTlv &aConnectivityTlv,
-                         uint16_t               aVersion,
-                         uint8_t                aCslClockAccuracy,
-                         uint8_t                aCslUncertainty)
+bool Mle::IsBetterParent(uint16_t                aRloc16,
+                         LinkQuality             aLinkQuality,
+                         uint8_t                 aLinkMargin,
+                         const ConnectivityTlv & aConnectivityTlv,
+                         uint16_t                aVersion,
+                         const Mac::CslAccuracy &aCslAccuracy)
 {
-    bool rval = false;
-
+    bool        rval                       = false;
     LinkQuality candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
     LinkQuality candidateTwoWayLinkQuality = Min(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint64_t candidateCslMetric = 0;
-    uint64_t cslMetric          = 0;
-#else
-    OT_UNUSED_VARIABLE(aCslClockAccuracy);
-    OT_UNUSED_VARIABLE(aCslUncertainty);
-#endif
 
     // Mesh Impacting Criteria
     if (aLinkQuality != candidateTwoWayLinkQuality)
@@ -3057,14 +3048,16 @@ bool Mle::IsBetterParent(uint16_t               aRloc16,
     // CSL metric
     if (!IsRxOnWhenIdle())
     {
-        cslMetric = CalcParentCslMetric(aCslClockAccuracy, aCslUncertainty);
-        candidateCslMetric =
-            CalcParentCslMetric(mParentCandidate.GetCslClockAccuracy(), mParentCandidate.GetCslUncertainty());
+        uint64_t cslMetric          = CalcParentCslMetric(aCslAccuracy);
+        uint64_t candidateCslMetric = CalcParentCslMetric(mParentCandidate.GetCslAccuracy());
+
         if (candidateCslMetric != cslMetric)
         {
             ExitNow(rval = (cslMetric < candidateCslMetric));
         }
     }
+#else
+    OT_UNUSED_VARIABLE(aCslAccuracy);
 #endif
 
     rval = (aLinkMargin > mParentLinkMargin);
@@ -3088,11 +3081,9 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     uint32_t              linkFrameCounter;
     uint32_t              mleFrameCounter;
     Mac::ExtAddress       extAddress;
+    Mac::CslAccuracy      cslAccuracy;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeParameterTlv timeParameter;
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    CslClockAccuracyTlv clockAccuracy;
 #endif
 
     // Source Address
@@ -3136,15 +3127,18 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL Accuracy
-    if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) == kErrorNone)
+    switch (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy))
     {
-        VerifyOrExit(clockAccuracy.IsValid(), error = kErrorParse);
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        cslAccuracy.Init(); // Use worst-case values if TLV is not found
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
-    else
-    {
-        clockAccuracy.SetCslClockAccuracy(kCslWorstCrystalPpm);
-        clockAccuracy.SetCslUncertainty(kCslWorstUncertainty);
-    }
+#else
+    cslAccuracy.Init();
 #endif
 
     // Share data with application, if requested.
@@ -3221,14 +3215,10 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #endif
 
         // only consider better parents if the partitions are the same
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        VerifyOrExit(compare != 0 ||
-                     IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, version,
-                                    clockAccuracy.GetCslClockAccuracy(), clockAccuracy.GetCslUncertainty()));
-#else
-        VerifyOrExit(compare != 0 ||
-                     IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, version, 0, 0));
-#endif
+        if (compare == 0)
+        {
+            VerifyOrExit(IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, version, cslAccuracy));
+        }
     }
 
     // Link/MLE Frame Counters
@@ -3273,8 +3263,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mParentCandidate.SetCslClockAccuracy(clockAccuracy.GetCslClockAccuracy());
-    mParentCandidate.SetCslUncertainty(clockAccuracy.GetCslUncertainty());
+    mParentCandidate.SetCslAccuracy(cslAccuracy);
 #endif
 
     mParentPriority         = connectivity.GetParentPriority();
@@ -3401,8 +3390,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     mParentCandidate.Clear();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().SetCslParentUncertainty(mParent.GetCslUncertainty());
-    Get<Mac::Mac>().SetCslParentClockAccuracy(mParent.GetCslClockAccuracy());
+    Get<Mac::Mac>().SetCslParentAccuracy(mParent.GetCslAccuracy());
 #endif
 
     mParent.SetRloc16(sourceAddress);
@@ -3482,11 +3470,14 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
         SuccessOrExit(error = HandleLeaderData(aRxInfo));
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        CslClockAccuracyTlv cslClockAccuracyTlv;
-        if (Tlv::FindTlv(aRxInfo.mMessage, cslClockAccuracyTlv) == kErrorNone)
         {
-            // MUST include CSL timeout TLV when request includes CSL accuracy
-            tlvList.Add(Tlv::kCslTimeout);
+            Mac::CslAccuracy cslAccuracy;
+
+            if (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy) == kErrorNone)
+            {
+                // MUST include CSL timeout TLV when request includes CSL accuracy
+                tlvList.Add(Tlv::kCslTimeout);
+            }
         }
 #endif
     }
@@ -3533,9 +3524,6 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     uint32_t  mleFrameCounter;
     uint16_t  sourceAddress;
     uint32_t  timeout;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    CslClockAccuracyTlv clockAccuracy;
-#endif
 
     Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3625,12 +3613,20 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        // CSL Accuracy
-        if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) == kErrorNone)
         {
-            VerifyOrExit(clockAccuracy.IsValid(), error = kErrorParse);
-            Get<Mac::Mac>().SetCslParentClockAccuracy(clockAccuracy.GetCslClockAccuracy());
-            Get<Mac::Mac>().SetCslParentUncertainty(clockAccuracy.GetCslUncertainty());
+            Mac::CslAccuracy cslAccuracy;
+
+            // CSL Accuracy
+            switch (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy))
+            {
+            case kErrorNone:
+                Get<Mac::Mac>().SetCslParentAccuracy(cslAccuracy);
+                break;
+            case kErrorNotFound:
+                break;
+            default:
+                ExitNow(error = kErrorParse);
+            }
         }
 #endif
 
@@ -4332,18 +4328,19 @@ void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCa
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-uint64_t Mle::CalcParentCslMetric(uint8_t aCslClockAccuracy, uint8_t aCslUncertainty)
+uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy)
 {
-    /*
-     * This function calculates the overall time that device will operate on battery
-     * by summming sequence of "ON quants" over a period of time.
-     */
-    const uint64_t usInSecond   = 1000000;
-    uint64_t       cslPeriodUs  = kMinCslPeriod * kUsPerTenSymbols;
-    uint64_t       cslTimeoutUs = GetCslTimeout() * usInSecond;
-    uint64_t       k            = cslTimeoutUs / cslPeriodUs;
+    // This function calculates the overall time that device will operate
+    // on battery by summing sequence of "ON quants" over a period of time.
 
-    return k * (k + 1) * cslPeriodUs / usInSecond * aCslClockAccuracy + aCslUncertainty * k * kUsPerUncertUnit;
+    static constexpr uint64_t usInSecond = 1000000;
+
+    uint64_t cslPeriodUs  = kMinCslPeriod * kUsPerTenSymbols;
+    uint64_t cslTimeoutUs = GetCslTimeout() * usInSecond;
+    uint64_t k            = cslTimeoutUs / cslPeriodUs;
+
+    return k * (k + 1) * cslPeriodUs / usInSecond * aCslAccuracy.GetClockAccuracy() +
+           aCslAccuracy.GetUncertaintyInMicrosec() * k;
 }
 #endif
 
@@ -5090,6 +5087,22 @@ Error Mle::RxMessage::ReadTlvRequestTlv(TlvList &aTlvList) const
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+Error Mle::RxMessage::ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const
+{
+    Error               error;
+    CslClockAccuracyTlv clockAccuracyTlv;
+
+    SuccessOrExit(error = Tlv::FindTlv(*this, clockAccuracyTlv));
+    VerifyOrExit(clockAccuracyTlv.IsValid(), error = kErrorParse);
+    aCslAccuracy.SetClockAccuracy(clockAccuracyTlv.GetCslClockAccuracy());
+    aCslAccuracy.SetUncertainty(clockAccuracyTlv.GetCslUncertainty());
+
+exit:
+    return error;
+}
+#endif
 
 } // namespace Mle
 } // namespace ot

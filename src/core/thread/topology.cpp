@@ -527,8 +527,8 @@ void Router::Info::SetFrom(const Router &aRouter)
     mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - aRouter.GetLastHeard()));
     mVersion         = ClampToUint8(aRouter.GetVersion());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslClockAccuracy = aRouter.GetCslClockAccuracy();
-    mCslUncertainty   = aRouter.GetCslUncertainty();
+    mCslClockAccuracy = aRouter.GetCslAccuracy().GetClockAccuracy();
+    mCslUncertainty   = aRouter.GetCslAccuracy().GetUncertainty();
 #endif
 }
 
