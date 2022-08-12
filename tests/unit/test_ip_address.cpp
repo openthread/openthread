@@ -432,6 +432,30 @@ void TestIp6Prefix(void)
             VerifyOrQuit(!(testCase.mPrefixB < testCase.mPrefixA));
         }
     }
+
+    // `IsLinkLocal()` - should contain `fe80::/10`.
+    VerifyOrQuit(PrefixFrom("fe80::", 10).IsLinkLocal());
+    VerifyOrQuit(PrefixFrom("fe80::", 11).IsLinkLocal());
+    VerifyOrQuit(PrefixFrom("fea0::", 16).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("fe80::", 9).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("ff80::", 10).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("fe00::", 10).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("fec0::", 10).IsLinkLocal());
+
+    // `IsMulticast()` - should contain `ff00::/8`.
+    VerifyOrQuit(PrefixFrom("ff00::", 8).IsMulticast());
+    VerifyOrQuit(PrefixFrom("ff80::", 9).IsMulticast());
+    VerifyOrQuit(PrefixFrom("ffff::", 16).IsMulticast());
+    VerifyOrQuit(!PrefixFrom("ff00::", 7).IsMulticast());
+    VerifyOrQuit(!PrefixFrom("fe00::", 8).IsMulticast());
+
+    // `IsUniqueLocal()` - should contain `fc00::/7`.
+    VerifyOrQuit(PrefixFrom("fc00::", 7).IsUniqueLocal());
+    VerifyOrQuit(PrefixFrom("fd00::", 8).IsUniqueLocal());
+    VerifyOrQuit(PrefixFrom("fc10::", 16).IsUniqueLocal());
+    VerifyOrQuit(!PrefixFrom("fc00::", 6).IsUniqueLocal());
+    VerifyOrQuit(!PrefixFrom("f800::", 7).IsUniqueLocal());
+    VerifyOrQuit(!PrefixFrom("fe00::", 7).IsUniqueLocal());
 }
 
 void TestIp4Ip6Translation(void)

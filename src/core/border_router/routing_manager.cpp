@@ -896,11 +896,10 @@ bool RoutingManager::IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOn
            aOnMeshPrefixConfig.mSlaac && aOnMeshPrefixConfig.mStable && !aOnMeshPrefixConfig.mDp;
 }
 
-bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
+bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aPrefix)
 {
-    // Accept ULA prefix with length of 64 bits and GUA prefix.
-    return (aOmrPrefix.mLength == kOmrPrefixLength && aOmrPrefix.mPrefix.mFields.m8[0] == 0xfd) ||
-           (aOmrPrefix.mLength >= 3 && (aOmrPrefix.GetBytes()[0] & 0xE0) == 0x20);
+    // Accept ULA prefix and GUA prefix.
+    return (aPrefix.IsUniqueLocal() || (aPrefix.mLength >= 3 && (aPrefix.GetBytes()[0] & 0xE0) == 0x20));
 }
 
 bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio)
