@@ -418,6 +418,17 @@ public:
     Router &GetParent(void) { return mParent; }
 
     /**
+     * The method retrieves information about the parent.
+     *
+     * @param[out] aParentInfo     Reference to a parent information structure.
+     *
+     * @retval kErrorNone          Successfully retrieved the parent info and updated @p aParentInfo.
+     * @retval kErrorInvalidState  Device role is not child.
+     *
+     */
+    Error GetParentInfo(Router::Info &aParentInfo) const;
+
+    /**
      * This method get the parent candidate.
      *
      * The parent candidate is valid when attempting to attach to a new parent.

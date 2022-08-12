@@ -524,6 +524,11 @@ void Router::Info::SetFrom(const Router &aRouter)
     mLinkQualityIn   = aRouter.GetLinkInfo().GetLinkQuality();
     mLinkQualityOut  = aRouter.GetLinkQualityOut();
     mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - aRouter.GetLastHeard()));
+    mVersion         = aRouter.GetVersion();
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    mCslClockAccuracy = aRouter.GetCslClockAccuracy();
+    mCslUncertainty   = aRouter.GetCslUncertainty();
+#endif
 }
 
 void Router::Clear(void)

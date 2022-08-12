@@ -3819,6 +3819,24 @@ uint16_t Mle::GetNextHop(uint16_t aDestination) const
     return (mParent.IsStateValid()) ? mParent.GetRloc16() : static_cast<uint16_t>(Mac::kShortAddrInvalid);
 }
 
+Error Mle::GetParentInfo(Router::Info &aParentInfo) const
+{
+    Error error = kErrorNone;
+
+    // Skip the check for reference device since it needs to get the
+    // original parent's info even after role change.
+
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(IsChild(), error = kErrorInvalidState);
+#endif
+
+    aParentInfo.SetFrom(mParent);
+    ExitNow();
+
+exit:
+    return error;
+}
+
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
 {
     return IsMeshLocalAddress(aAddress) && aAddress.GetIid().IsRoutingLocator();

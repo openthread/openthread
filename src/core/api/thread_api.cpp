@@ -346,38 +346,7 @@ uint16_t otThreadGetRloc16(otInstance *aInstance)
 
 otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
 {
-    Error   error = kErrorNone;
-    Router *parent;
-
-    OT_ASSERT(aParentInfo != nullptr);
-
-    // Reference device needs get the original parent's info even after the node state changed.
-#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsChild(), error = kErrorInvalidState);
-#endif
-
-    parent = &AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent();
-
-    aParentInfo->mExtAddress     = parent->GetExtAddress();
-    aParentInfo->mRloc16         = parent->GetRloc16();
-    aParentInfo->mRouterId       = Mle::Mle::RouterIdFromRloc16(parent->GetRloc16());
-    aParentInfo->mNextHop        = parent->GetNextHop();
-    aParentInfo->mPathCost       = parent->GetCost();
-    aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();
-    aParentInfo->mLinkQualityOut = parent->GetLinkQualityOut();
-    aParentInfo->mAge            = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
-    aParentInfo->mAllocated      = true;
-    aParentInfo->mLinkEstablished = parent->IsStateValid();
-    aParentInfo->mVersion         = parent->GetVersion();
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    aParentInfo->mCslClockAccuracy = parent->GetCslClockAccuracy();
-    aParentInfo->mCslUncertainty   = parent->GetCslUncertainty();
-#endif
-
-#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-exit:
-#endif
-    return error;
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetParentInfo(AsCoreType(aParentInfo));
 }
 
 otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
