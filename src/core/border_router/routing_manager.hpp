@@ -595,6 +595,30 @@ private:
         void MarkAsDeleted(const OnMeshPrefix &aPrefix);
     };
 
+    struct RaInfo
+    {
+        // Tracks info about emitted RA messages: Number of RAs sent,
+        // last tx time, header to use and whether the header is
+        // discovered from receiving RAs from the host itself. This
+        // ensures that if an entity on host is advertising certain
+        // info in its RA header (e.g., a default route), the RAs we
+        // emit from `RoutingManager` also include the same header.
+
+        RaInfo(void)
+            : mHeaderUpdateTime(TimerMilli::GetNow())
+            , mIsHeaderFromHost(false)
+            , mTxCount(0)
+            , mLastTxTime(TimerMilli::GetNow() - kMinDelayBetweenRtrAdvs)
+        {
+        }
+
+        Ip6::Nd::RouterAdvertMessage::Header mHeader;
+        TimeMilli                            mHeaderUpdateTime;
+        bool                                 mIsHeaderFromHost;
+        uint32_t                             mTxCount;
+        TimeMilli                            mLastTxTime;
+    };
+
     void  EvaluateState(void);
     void  Start(void);
     void  Stop(void);
@@ -694,17 +718,9 @@ private:
     TimerMilli mInfraIfNat64PrefixStaleTimer;
 #endif
 
-    // The RA header and parameters for the infra interface.
-    // This value is initialized with `RouterAdvMessage::SetToDefault`
-    // and updated with RA messages initiated from infra interface.
-    Ip6::Nd::RouterAdvertMessage::Header mRouterAdvertHeader;
-    TimeMilli                            mTimeRouterAdvMessageLastUpdate;
-    bool                                 mLearntRouterAdvMessageFromHost;
+    RaInfo mRaInfo;
 
     TimerMilli mDiscoveredPrefixStaleTimer;
-
-    uint32_t  mRouterAdvertisementCount;
-    TimeMilli mLastRouterAdvertisementSendTime;
 
     TimerMilli mRouterSolicitTimer;
     TimeMilli  mTimeRouterSolicitStart;
