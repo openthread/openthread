@@ -53,22 +53,12 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
     return AsCoreType(aInstance).Get<Nat64::Translator>().SetIp4Cidr(AsCoreType(aCidr));
 }
 
-otIp4Message *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
+otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
 {
     return AsCoreType(aInstance).Get<Nat64::Translator>().NewIp4Message(Message::Settings::From(aSettings));
 }
 
-void otIp4MessageFree(otIp4Message *aMessage)
-{
-    AsCoreType(aMessage).Free();
-}
-
-otMessage *otCastIp4Message(otIp4Message *aMessage)
-{
-    return AsCoreTypePtr(aMessage);
-}
-
-otError otNat64Send(otInstance *aInstance, otIp4Message *aMessage)
+otError otNat64Send(otInstance *aInstance, otMessage *aMessage)
 {
     return AsCoreType(aInstance).Get<Nat64::Translator>().SendMessage(AsCoreType(aMessage));
 }

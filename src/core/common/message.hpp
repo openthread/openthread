@@ -67,14 +67,6 @@ struct otMessage
 {
 };
 
-/**
- * This struct represents an opaque (and empty) type for an OpenThread IP4 message buffer.
- *
- */
-struct otIp4Message
-{
-};
-
 namespace ot {
 
 namespace Crypto {
@@ -268,7 +260,7 @@ static_assert(sizeof(Buffer) >= kBufferSize,
  * This class represents a message.
  *
  */
-class Message : public otMessage, public otIp4Message, public Buffer, public GetProvider<Message>
+class Message : public otMessage, public Buffer, public GetProvider<Message>
 {
     friend class Checksum;
     friend class Crypto::HmacSha256;
@@ -1730,7 +1722,6 @@ inline Instance &Message::GetInstance(void) const
 DefineCoreType(otMessageBuffer, Buffer);
 DefineCoreType(otMessageSettings, Message::Settings);
 DefineCoreType(otMessage, Message);
-DefineCoreType(otIp4Message, Message);
 DefineCoreType(otMessageQueue, MessageQueue);
 
 } // namespace ot

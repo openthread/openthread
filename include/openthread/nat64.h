@@ -87,8 +87,6 @@ typedef struct otIp4Cidr
     uint8_t      mLength;
 } otIp4Cidr;
 
-typedef struct otIp4Message otIp4Message;
-
 /**
  * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 packet by NAT64
  * later). Message buffers allocated by this function will have 20 bytes (The differences between the size of IPv6
@@ -104,26 +102,8 @@ typedef struct otIp4Message otIp4Message;
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
- * @sa otIp4MessageFree
- *
  */
-otIp4Message *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
-
-/**
- * Free an allocated IPv4 message buffer.
- *
- * @param[in]  aMessage  A pointer to a message buffer.
- *
- */
-void otIp4MessageFree(otIp4Message *aMessage);
-
-/**
- * Casts an otIp4Message instance to otMessage instance. For using functions like otMessageRead etc.
- *
- * @sa otIp4Message
- *
- */
-otMessage *otCastIp4Message(otIp4Message *aMessage);
+otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
 /**
  * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets. A valid
@@ -165,18 +145,18 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
  * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
  *
  */
-otError otNat64Send(otInstance *aInstance, otIp4Message *aMessage);
+otError otNat64Send(otInstance *aInstance, otMessage *aMessage);
 
 /**
  * This function pointer is called when an IPv4 datagram (translated by NAT64 translator) is received.
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
  *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
- *                       freed by the receiver of the callback after it is processed (see otIp4MessageFree()).
+ *                       freed by the receiver of the callback after it is processed.
  * @param[in]  aContext  A pointer to application-specific context.
  *
  */
-typedef void (*otNat64ReceiveIp4Callback)(otIp4Message *aMessage, void *aContext);
+typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
 
 /**
  * This function registers a callback to provide received IPv4 datagrams.

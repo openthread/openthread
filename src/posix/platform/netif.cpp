@@ -895,32 +895,33 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     }
 }
 
-static void processReceive(otMessage *aMessage)
+static void processReceive(otMessage *aMessage, void *aContext)
 {
-    char     packetBuffer[kMaxIp6Size + 4];
-    char *   packet    = &packetBuffer[4];
+    OT_UNUSED_VARIABLE(aContext);
+
+    char     packet[kMaxIp6Size + 4];
     otError  error     = OT_ERROR_NONE;
     uint16_t length    = otMessageGetLength(aMessage);
-    uint16_t maxLength = sizeof(packetBuffer) - 4;
-
+    size_t   offset    = 0;
+    uint16_t maxLength = sizeof(packet) - 4;
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // BSD tunnel drivers use (for legacy reasons) a 4-byte header to determine the address family of the packet
-    packet += 4;
+    offset += 4;
 #endif
 
+    assert(gInstance == aContext);
     assert(length <= kMaxIp6Size);
 
     VerifyOrExit(sTunFd > 0);
 
-    VerifyOrExit(otMessageRead(aMessage, 0, packet, maxLength) == length, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(otMessageRead(aMessage, 0, &packet[offset], maxLength) == length, error = OT_ERROR_NO_BUFS);
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     otLogInfoPlat("[netif] Packet from NCP (%u bytes)", static_cast<uint16_t>(length));
-    otDumpInfoPlat("", packet, length);
+    otDumpInfoPlat("", &packet[offset], length);
 #endif
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    packet -= 4;
     packet[0] = 0;
     packet[1] = 0;
     packet[2] = (PF_INET6 << 8) & 0xFF;
@@ -931,90 +932,24 @@ static void processReceive(otMessage *aMessage)
     VerifyOrExit(write(sTunFd, packet, length) == length, perror("write"); error = OT_ERROR_FAILED);
 
 exit:
+    otMessageFree(aMessage);
+
     if (error != OT_ERROR_NONE)
     {
         otLogWarnPlat("[netif] Failed to receive, error:%s", otThreadErrorToString(error));
     }
 }
 
-static void processReceiveIp6(otMessage *aMessage, void *aContext)
-{
-    OT_UNUSED_VARIABLE(aContext);
-
-    assert(gInstance == aContext);
-    processReceive(aMessage);
-    otMessageFree(aMessage);
-}
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static void processReceiveIp4(otIp4Message *aMessage, void *aContext)
-{
-    OT_UNUSED_VARIABLE(aContext);
-
-    assert(gInstance == aContext);
-    processReceive(otCastIp4Message(aMessage));
-    otIp4MessageFree(aMessage);
-}
-#endif
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static otError sendIp4Message(otInstance *             aInstance,
-                              const otMessageSettings &aSettings,
-                              char *                   aPacket,
-                              uint16_t                 aPacketLen)
-{
-    otIp4Message *message = nullptr;
-    otError       error   = OT_ERROR_NONE;
-
-    message = otIp4NewMessage(aInstance, &aSettings);
-    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
-
-    SuccessOrExit(error = otMessageAppend(otCastIp4Message(message), aPacket, aPacketLen));
-
-    error   = otNat64Send(aInstance, message);
-    message = nullptr;
-
-exit:
-    if (message != nullptr)
-    {
-        otIp4MessageFree(message);
-    }
-
-    return error;
-}
-#endif
-
-static otError sendIp6Message(otInstance *             aInstance,
-                              const otMessageSettings &aSettings,
-                              char *                   aPacket,
-                              uint16_t                 aPacketLen)
-{
-    otMessage *message = nullptr;
-    otError    error   = OT_ERROR_NONE;
-
-    message = otIp6NewMessage(aInstance, &aSettings);
-    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
-
-    SuccessOrExit(error = otMessageAppend(message, aPacket, aPacketLen));
-
-    error   = otIp6Send(aInstance, message);
-    message = nullptr;
-
-exit:
-    if (message != nullptr)
-    {
-        otMessageFree(message);
-    }
-
-    return error;
-}
-
 static void processTransmit(otInstance *aInstance)
 {
-    ssize_t rval;
-    char    packet[kMaxIp6Size];
-    otError error  = OT_ERROR_NONE;
-    size_t  offset = 0;
+    otMessage *message = nullptr;
+    ssize_t    rval;
+    char       packet[kMaxIp6Size];
+    otError    error  = OT_ERROR_NONE;
+    size_t     offset = 0;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    bool isIp4 = false;
+#endif
 
     assert(gInstance == aInstance);
 
@@ -1030,30 +965,40 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
-#if OPENTHREAD_POSIX_LOG_TUN_PACKETS
-    otLogInfoPlat("[netif] Packet to NCP (%hu bytes)", static_cast<uint16_t>(rval));
-    otDumpInfoPlat("", &packet[offset], static_cast<size_t>(rval));
-#endif
-
     {
         otMessageSettings settings;
 
         settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
         settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-        // Check if this is an IPv4 message.
-        if ((packet[offset] & 0xf0) == 0x40)
-        {
-            error = sendIp4Message(aInstance, settings, &packet[offset], static_cast<uint16_t>(rval));
-        }
-        else
+        isIp4   = (packet[offset] & 0xf0) == 0x40;
+        message = isIp4 ? otIp4NewMessage(aInstance, &settings) : otIp6NewMessage(aInstance, &settings);
+#else
+        message = otIp6NewMessage(aInstance, &settings);
 #endif
-        {
-            error = sendIp6Message(aInstance, settings, &packet[offset], static_cast<uint16_t>(rval));
-        }
+        VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
     }
 
+#if OPENTHREAD_POSIX_LOG_TUN_PACKETS
+    otLogInfoPlat("[netif] Packet to NCP (%hu bytes)", static_cast<uint16_t>(rval));
+    otDumpInfoPlat("", &packet[offset], static_cast<size_t>(rval));
+#endif
+
+    SuccessOrExit(error = otMessageAppend(message, &packet[offset], static_cast<uint16_t>(rval)));
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    error = isIp4 ? otNat64Send(aInstance, message) : otIp6Send(aInstance, message);
+#else
+    error = otIp6Send(aInstance, message);
+#endif
+    message = nullptr;
+
 exit:
+    if (message != nullptr)
+    {
+        otMessageFree(message);
+    }
+
     if (error != OT_ERROR_NONE)
     {
         if (error == OT_ERROR_DROP)
@@ -1845,9 +1790,10 @@ void platformNetifSetUp(void)
 #else
     otIcmp6SetEchoMode(gInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #endif
-    otIp6SetReceiveCallback(gInstance, processReceiveIp6, gInstance);
+    otIp6SetReceiveCallback(gInstance, processReceive, gInstance);
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    otNat64SetReceiveIp4Callback(gInstance, processReceiveIp4, gInstance);
+    // We can use the same function for IPv6 and translated IPv4 messages.
+    otNat64SetReceiveIp4Callback(gInstance, processReceive, gInstance);
 #endif
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
