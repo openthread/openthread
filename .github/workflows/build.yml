@@ -135,7 +135,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         repository: ARMmbed/mbedtls
-        ref: v3.1.0
+        ref: v3.2.1
         path: third_party/mbedtls/repo
     - name: Build
       run: |
