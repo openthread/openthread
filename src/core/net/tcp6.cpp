@@ -43,6 +43,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
@@ -431,7 +432,7 @@ bool Tcp::Endpoint::FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, Tim
             else
             {
                 aHasFutureTimer       = true;
-                aEarliestFutureExpiry = OT_MIN(aEarliestFutureExpiry, expiry);
+                aEarliestFutureExpiry = Min(aEarliestFutureExpiry, expiry);
             }
         }
     }

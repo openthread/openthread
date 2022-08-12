@@ -38,6 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 
 namespace ot {
 
@@ -123,7 +124,8 @@ void LqiAverager::Add(uint8_t aLqi)
     {
         mCount++;
     }
-    count = OT_MIN((1 << kCoeffBitShift), mCount);
+
+    count = Min(static_cast<uint8_t>(1 << kCoeffBitShift), mCount);
 
     mAverage = static_cast<uint8_t>(((mAverage * (count - 1)) + aLqi) / count);
 }

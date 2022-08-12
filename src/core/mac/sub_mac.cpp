@@ -42,6 +42,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
@@ -612,7 +613,8 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         {
             SetState(kStateDelayBeforeRetx);
             StartTimerForBackoff(mRetxDelayBackOffExponent);
-            mRetxDelayBackOffExponent = OT_MIN(mRetxDelayBackOffExponent + 1, kRetxDelayMaxBackoffExponent);
+            mRetxDelayBackOffExponent =
+                Min(static_cast<uint8_t>(mRetxDelayBackOffExponent + 1), kRetxDelayMaxBackoffExponent);
             ExitNow();
         }
 #endif
