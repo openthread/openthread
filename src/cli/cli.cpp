@@ -603,6 +603,25 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         SuccessOrExit(error = otBorderRoutingGetNat64Prefix(GetInstancePtr(), &nat64Prefix));
         OutputIp6PrefixLine(nat64Prefix);
     }
+    /**
+     * @cli br favorednat64prefix
+     * @code
+     * br favorednat64prefix
+     * fd14:1078:b3d5:b0b0:0:0::/96 prf:low
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetFavoredNat64Prefix
+     */
+    else if (aArgs[0] == "favorednat64prefix")
+    {
+        otIp6Prefix       prefix;
+        otRoutePreference preference;
+
+        SuccessOrExit(error = otBorderRoutingGetFavoredNat64Prefix(GetInstancePtr(), &prefix, &preference));
+        OutputIp6Prefix(prefix);
+        OutputLine(" prf:%s", PreferenceToString(preference));
+    }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     /**
      * @cli br rioprf (high,med,low)

@@ -67,8 +67,10 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mLocalOmrPrefix(aInstance)
     , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
     , mLocalOnLinkPrefix(aInstance)
-    , mIsAdvertisingLocalNat64Prefix(false)
     , mDiscoveredPrefixTable(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    , mInfraIfNat64PrefixStaleTimer(aInstance, HandleInfraIfNat64PrefixStaleTimer)
+#endif
     , mTimeRouterAdvMessageLastUpdate(TimerMilli::GetNow())
     , mLearntRouterAdvMessageFromHost(false)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
@@ -81,7 +83,11 @@ RoutingManager::RoutingManager(Instance &aInstance)
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
     mBrUlaPrefix.Clear();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+    mInfraIfNat64Prefix.Clear();
     mLocalNat64Prefix.Clear();
+    mAdvertisedNat64Prefix.Clear();
+#endif
 }
 
 Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
@@ -181,6 +187,19 @@ Error RoutingManager::GetNat64Prefix(Ip6::Prefix &aPrefix)
 exit:
     return error;
 }
+
+Error RoutingManager::GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreference &aRoutePreference)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aPrefix = mInfraIfNat64Prefix.IsValidNat64() ? mInfraIfNat64Prefix : mLocalNat64Prefix;
+    aRoutePreference =
+        mInfraIfNat64Prefix.IsValidNat64() ? NetworkData::kRoutePreferenceMedium : NetworkData::kRoutePreferenceLow;
+
+exit:
+    return error;
+}
 #endif
 
 Error RoutingManager::LoadOrGenerateRandomBrUlaPrefix(void)
@@ -217,6 +236,35 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+void RoutingManager::DiscoverInfraIfNat64Prefix(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized() && mInfraIf.IsRunning(), error = kErrorInvalidState);
+
+    LogInfo("Discovering infrastructure NAT64 prefix on %s", mInfraIf.ToString().AsCString());
+    error = mInfraIf.DiscoverNat64Prefix();
+
+exit:
+    if (error != kErrorNone)
+    {
+        LogWarn("Failed to request infrastructure NAT64 prefix on %s: %s", mInfraIf.ToString().AsCString(),
+                ErrorToString(error));
+    }
+}
+
+void RoutingManager::UpdateInfraIfNat64Prefix(const Ip6::Prefix &aPrefix)
+{
+    mInfraIfNat64Prefix = aPrefix;
+    LogInfo("Get infrastructure NAT64 prefix: %s",
+            mInfraIfNat64Prefix.IsValidNat64() ? mInfraIfNat64Prefix.ToString().AsCString() : "none");
+
+    if (mIsRunning)
+    {
+        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+    }
+}
+
 void RoutingManager::GenerateNat64Prefix(void)
 {
     mLocalNat64Prefix = mBrUlaPrefix;
@@ -224,7 +272,7 @@ void RoutingManager::GenerateNat64Prefix(void)
     mLocalNat64Prefix.mPrefix.mFields.m32[2] = 0;
     mLocalNat64Prefix.SetLength(kNat64PrefixLength);
 
-    LogInfo("Generated NAT64 prefix: %s", mLocalNat64Prefix.ToString().AsCString());
+    LogInfo("Generated local NAT64 prefix: %s", mLocalNat64Prefix.ToString().AsCString());
 }
 #endif
 
@@ -250,6 +298,9 @@ void RoutingManager::Start(void)
         UpdateDiscoveredPrefixTableOnNetDataChange();
         mLocalOnLinkPrefix.Start();
         StartRouterSolicitationDelay();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+        mInfraIfNat64PrefixStaleTimer.Start(0);
+#endif
     }
 }
 
@@ -265,11 +316,13 @@ void RoutingManager::Stop(void)
     mLocalOnLinkPrefix.Stop();
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
-    if (mIsAdvertisingLocalNat64Prefix)
+    if (mAdvertisedNat64Prefix.IsValidNat64())
     {
-        UnpublishExternalRoute(mLocalNat64Prefix);
-        mIsAdvertisingLocalNat64Prefix = false;
+        UnpublishExternalRoute(mAdvertisedNat64Prefix);
     }
+    mAdvertisedNat64Prefix.Clear();
+    mInfraIfNat64Prefix.Clear();
+    mInfraIfNat64PrefixStaleTimer.Stop();
 #endif
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
 
@@ -517,49 +570,38 @@ exit:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
 void RoutingManager::EvaluateNat64Prefix(void)
 {
-    OT_ASSERT(mIsRunning);
+    Ip6::Prefix                      nat64Prefix;
+    RoutePreference                  routePreference;
+    Error                            error;
+    NetworkData::ExternalRouteConfig preferredNat64PrefixConfig;
+    bool                             shouldAdvertise;
 
-    NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
-    NetworkData::ExternalRouteConfig config;
-    Ip6::Prefix                      smallestNat64Prefix;
+    OT_ASSERT(mIsRunning);
 
     LogInfo("Evaluating NAT64 prefix");
 
-    smallestNat64Prefix.Clear();
-    while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, config) == kErrorNone)
-    {
-        const Ip6::Prefix &prefix = config.GetPrefix();
+    SuccessOrAssert(GetFavoredNat64Prefix(nat64Prefix, routePreference));
+    error = Get<NetworkData::Leader>().GetPreferredNat64Prefix(preferredNat64PrefixConfig);
 
-        if (config.mNat64 && prefix.IsValidNat64())
-        {
-            if (smallestNat64Prefix.GetLength() == 0 || prefix < smallestNat64Prefix)
-            {
-                smallestNat64Prefix = prefix;
-            }
-        }
+    // NAT64 prefix is expected to be advertised from this BR when one of the following is true:
+    // - no NAT64 prefix exits in Network Data yet
+    // - the preferred NAT64 prefix in Network Data has lower preference than this BR's prefix
+    // - the preferred NAT64 prefix in Network Data was advertised by this BR
+    // - the preferred NAT64 prefix in Network Data is same as the infrastructure prefix
+    // TODO: change to check RLOC16 to determine if the NAT64 prefix was advertised by this BR
+    shouldAdvertise = (error == kErrorNotFound || preferredNat64PrefixConfig.mPreference < routePreference ||
+                       preferredNat64PrefixConfig.GetPrefix() == mAdvertisedNat64Prefix ||
+                       preferredNat64PrefixConfig.GetPrefix() == mInfraIfNat64Prefix);
+
+    if (mAdvertisedNat64Prefix.IsValidNat64() && (!shouldAdvertise || nat64Prefix != mAdvertisedNat64Prefix))
+    {
+        UnpublishExternalRoute(mAdvertisedNat64Prefix);
+        mAdvertisedNat64Prefix.Clear();
     }
-
-    if (smallestNat64Prefix.GetLength() == 0 || smallestNat64Prefix == mLocalNat64Prefix)
+    if (shouldAdvertise && nat64Prefix != mAdvertisedNat64Prefix &&
+        PublishExternalRoute(nat64Prefix, routePreference, /* aNat64= */ true) == kErrorNone)
     {
-        LogInfo("No NAT64 prefix in Network Data is smaller than the local NAT64 prefix %s",
-                mLocalNat64Prefix.ToString().AsCString());
-
-        // Advertise local NAT64 prefix.
-        if (!mIsAdvertisingLocalNat64Prefix &&
-            PublishExternalRoute(mLocalNat64Prefix, NetworkData::kRoutePreferenceLow, /* aNat64= */ true) == kErrorNone)
-        {
-            mIsAdvertisingLocalNat64Prefix = true;
-        }
-    }
-    else if (mIsAdvertisingLocalNat64Prefix && smallestNat64Prefix < mLocalNat64Prefix)
-    {
-        // Withdraw local NAT64 prefix if it's not the smallest one in Network Data.
-        // TODO: remove the prefix with lower preference after discovering upstream NAT64 prefix is supported
-        LogNote("Withdrawing local NAT64 prefix since a smaller one %s exists.",
-                smallestNat64Prefix.ToString().AsCString());
-
-        UnpublishExternalRoute(mLocalNat64Prefix);
-        mIsAdvertisingLocalNat64Prefix = false;
+        mAdvertisedNat64Prefix = nat64Prefix;
     }
 }
 #endif
@@ -984,6 +1026,21 @@ void RoutingManager::HandleRoutingPolicyTimer(Timer &aTimer)
 {
     aTimer.Get<RoutingManager>().EvaluateRoutingPolicy();
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+void RoutingManager::HandleInfraIfNat64PrefixStaleTimer(Timer &aTimer)
+{
+    aTimer.Get<RoutingManager>().HandleInfraIfNat64PrefixStaleTimer();
+}
+
+void RoutingManager::HandleInfraIfNat64PrefixStaleTimer(void)
+{
+    DiscoverInfraIfNat64Prefix();
+
+    mInfraIfNat64PrefixStaleTimer.Start(TimeMilli::SecToMsec(kDefaultNat64PrefixLifetime));
+    LogInfo("NAT64 prefix timer scheduled in %u seconds", kDefaultNat64PrefixLifetime);
+}
+#endif
 
 void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {

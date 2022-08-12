@@ -804,6 +804,15 @@ public:
     }
 
     /**
+     * This method gets a prefix of the IPv6 address with a given length.
+     *
+     * @param[in]  aLength  The length of prefix in bits.
+     * @param[out] aPrefix  A reference to a prefix to output the fetched prefix.
+     *
+     */
+    void GetPrefix(uint8_t aLength, Prefix &aPrefix) const { aPrefix.Set(mFields.m8, aLength); }
+
+    /**
      * This method indicates whether the IPv6 address matches a given prefix.
      *
      * @param[in] aPrefix  An IPv6 prefix to match with.

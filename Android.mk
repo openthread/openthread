@@ -197,6 +197,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/logging_api.cpp                                    \
     src/core/api/message_api.cpp                                    \
     src/core/api/multi_radio_api.cpp                                \
+    src/core/api/nat64_api.cpp                                      \
     src/core/api/netdata_api.cpp                                    \
     src/core/api/netdata_publisher_api.cpp                          \
     src/core/api/netdiag_api.cpp                                    \
@@ -583,6 +584,7 @@ LOCAL_CPPFLAGS                                                              := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lanl                                     \
     -lrt                                      \
     -lutil
 

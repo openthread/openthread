@@ -134,6 +134,35 @@ extern void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
 extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
 
 /**
+ * Send a request to discover the NAT64 prefix on the infrastructure interface with @p aInfraIfIndex.
+ *
+ * OpenThread will call this method periodically to monitor the presence or change of NAT64 prefix.
+ *
+ * @param[in]  aInfraIfIndex  The index of the infrastructure interface to discover the NAT64 prefix.
+ *
+ * @retval  OT_ERROR_NONE    Successfully request NAT64 prefix discovery.
+ * @retval  OT_ERROR_FAILED  Failed to request NAT64 prefix discovery.
+ *
+ */
+otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex);
+
+/**
+ * The infra interface driver calls this method to notify OpenThread that
+ * the discovery of NAT64 prefix is done.
+ *
+ * This method is expected to be invoked after calling otPlatInfraIfDiscoverNat64Prefix.
+ * If no NAT64 prefix is discovered, @p aIp6Prefix shall point to an empty prefix with zero length.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aInfraIfIndex  The index of the infrastructure interface on which the NAT64 prefix is discovered.
+ * @param[in]  aIp6Prefix     A pointer to NAT64 prefix.
+ *
+ */
+extern void otPlatInfraIfDiscoverNat64PrefixDone(otInstance *       aInstance,
+                                                 uint32_t           aInfraIfIndex,
+                                                 const otIp6Prefix *aIp6Prefix);
+
+/**
  * @}
  *
  */

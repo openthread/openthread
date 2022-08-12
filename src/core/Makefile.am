@@ -153,6 +153,7 @@ SOURCES_COMMON                                  = \
     api/logging_api.cpp                           \
     api/message_api.cpp                           \
     api/multi_radio_api.cpp                       \
+    api/nat64_api.cpp                             \
     api/netdata_api.cpp                           \
     api/netdata_publisher_api.cpp                 \
     api/netdiag_api.cpp                           \
