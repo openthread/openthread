@@ -524,6 +524,17 @@ exit:
     return error;
 }
 
+Error Mle::SearchForBetterParent(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsChild(), error = kErrorInvalidState);
+    Attach(kBetterParent);
+
+exit:
+    return error;
+}
+
 void Mle::Attach(AttachMode aMode)
 {
     VerifyOrExit(!IsDisabled() && !IsAttaching());

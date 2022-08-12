@@ -437,6 +437,16 @@ public:
     Router &GetParentCandidate(void) { return mParentCandidate; }
 
     /**
+     * This method starts the process for child to search for a better parent while staying attached to its current
+     * parent
+     *
+     * @retval kErrorNone          Successfully started the process to search for a better parent.
+     * @retval kErrorInvalidState  Device role is not child.
+     *
+     */
+    Error SearchForBetterParent(void);
+
+    /**
      * This method indicates whether or not an IPv6 address is an RLOC.
      *
      * @retval TRUE   If @p aAddress is an RLOC.
