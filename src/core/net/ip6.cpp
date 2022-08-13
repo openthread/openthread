@@ -950,7 +950,18 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
     Error    error   = kErrorNone;
     Message *message = (aMessageOwnership == Message::kTakeCustody) ? &aMessage : nullptr;
 
-    VerifyOrExit(aIpProto == kProtoTcp || aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
+    switch (aIpProto)
+    {
+    case kProtoUdp:
+    case kProtoIcmp6:
+        break;
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    case kProtoTcp:
+        break;
+#endif
+    default:
+        ExitNow();
+    }
 
     if (aMessageOwnership == Message::kCopyToUse)
     {
