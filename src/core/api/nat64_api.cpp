@@ -33,8 +33,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-
 #include <openthread/border_router.h>
 #include <openthread/ip6.h>
 #include <openthread/nat64.h>
@@ -48,6 +46,7 @@
 
 using namespace ot;
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
 {
     return AsCoreType(aInstance).Get<Nat64::Translator>().SetIp4Cidr(AsCoreType(aCidr));
@@ -67,5 +66,14 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
 {
     AsCoreType(aInstance).Get<Ip6::Ip6>().SetNat64ReceiveIp4DatagramCallback(aCallback, aContext);
 }
-
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
+bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond)
+{
+    return AsCoreType(aFirst) == AsCoreType(aSecond);
+}
+
+void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6Address, otIp4Address *aIp4Address)
+{
+    AsCoreType(aIp4Address).ExtractFromIp6Address(aPrefixLength, AsCoreType(aIp6Address));
+}

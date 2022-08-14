@@ -492,6 +492,11 @@ OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, co
 {
     return OT_ERROR_FAILED;
 }
+
+OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t)
+{
+    return OT_ERROR_FAILED;
+}
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE

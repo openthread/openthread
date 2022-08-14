@@ -102,7 +102,8 @@ Error LeaderBase::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
             continue;
         }
 
-        if ((error == kErrorNotFound) || (config.mPreference > aConfig.mPreference))
+        if ((error == kErrorNotFound) || (config.mPreference > aConfig.mPreference) ||
+            (config.mPreference == aConfig.mPreference && config.GetPrefix() < aConfig.GetPrefix()))
         {
             aConfig = config;
             error   = kErrorNone;

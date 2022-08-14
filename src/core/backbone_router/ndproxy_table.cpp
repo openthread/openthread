@@ -38,6 +38,7 @@
 #include "common/array.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/min_max.hpp"
 
 namespace ot {
 
@@ -66,10 +67,9 @@ void NdProxyTable::NdProxy::Update(uint16_t aRloc16, uint32_t aTimeSinceLastTran
 {
     OT_ASSERT(mValid);
 
-    mRloc16 = aRloc16;
-    aTimeSinceLastTransaction =
-        OT_MIN(aTimeSinceLastTransaction, static_cast<uint32_t>(Mle::kTimeSinceLastTransactionMax));
-    mLastRegistrationTime = TimerMilli::GetNow() - TimeMilli::SecToMsec(aTimeSinceLastTransaction);
+    mRloc16                   = aRloc16;
+    aTimeSinceLastTransaction = Min(aTimeSinceLastTransaction, Mle::kTimeSinceLastTransactionMax);
+    mLastRegistrationTime     = TimerMilli::GetNow() - TimeMilli::SecToMsec(aTimeSinceLastTransaction);
 }
 
 bool NdProxyTable::MatchesFilter(const NdProxy &aProxy, Filter aFilter)

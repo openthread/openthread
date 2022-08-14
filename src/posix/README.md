@@ -77,19 +77,25 @@ To build and program the device with RCP application, complete the following ste
 
    ```sh
    rm -rf build
-   script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB -DOT_THREAD_VERSION=1.2
+   script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB
    ```
 
    b. For nRF52840 Development Kit
 
    ```sh
    rm -rf build
-   script/build nrf52840 UART_trans -DOT_THREAD_VERSION=1.2
+   script/build nrf52840 UART_trans
    ```
 
    This creates an RCP image at `build/bin/ot-rcp`.
 
-5. Depending on the hardware platform, complete the following steps to program the device:
+5. Generate the HEX image:
+
+   ```sh
+   arm-none-eabi-objcopy -O ihex build/bin/ot-rcp build/bin/ot-rcp.hex
+   ```
+
+6. Depending on the hardware platform, complete the following steps to program the device:
 
    a. nRF52840 Dongle (USB transport)
 

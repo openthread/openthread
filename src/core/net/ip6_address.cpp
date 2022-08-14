@@ -40,6 +40,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/min_max.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "net/ip4_types.hpp"
@@ -112,7 +113,7 @@ bool Prefix::operator<(const Prefix &aOther) const
     uint8_t minLength;
     uint8_t matchedLength;
 
-    minLength     = OT_MIN(GetLength(), aOther.GetLength());
+    minLength     = Min(GetLength(), aOther.GetLength());
     matchedLength = MatchLength(GetBytes(), aOther.GetBytes(), SizeForLength(minLength));
 
     if (matchedLength >= minLength)

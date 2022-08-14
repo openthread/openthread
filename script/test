@@ -325,6 +325,7 @@ do_build_otbr_docker()
             --build-arg REFERENCE_DEVICE=1 \
             --build-arg OT_BACKBONE_CI=1 \
             --build-arg NAT64="${NAT64}" \
+            --build-arg DNS64="${NAT64}" \
             --build-arg REST_API=0 \
             --build-arg WEB_GUI=0 \
             --build-arg MDNS="${OTBR_MDNS:-mDNSResponder}" \

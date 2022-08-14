@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_NAT64_H_
 #define OPENTHREAD_NAT64_H_
 
+#include <openthread/ip6.h>
 #include <openthread/message.h>
 
 #ifdef __cplusplus
@@ -168,6 +169,32 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
  *
  */
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
+
+/*
+ * Test if two IPv4 addresses are the same.
+ *
+ * @param[in]  aFirst   A pointer to the first IPv4 address to compare.
+ * @param[in]  aSecond  A pointer to the second IPv4 address to compare.
+ *
+ * @retval TRUE   The two IPv4 addresses are the same.
+ * @retval FALSE  The two IPv4 addresses are not the same.
+ *
+ */
+bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond);
+
+/**
+ * Set @p aIp4Address by performing NAT64 address translation from @p aIp6Address as specified
+ * in RFC 6052.
+ *
+ * The NAT64 @p aPrefixLength MUST be one of the following values: 32, 40, 48, 56, 64, or 96, otherwise the behavior
+ * of this method is undefined.
+ *
+ * @param[in]  aPrefixLength  The prefix length to use for IPv4/IPv6 translation.
+ * @param[in]  aIp6Address    A pointer to an IPv6 address.
+ * @param[out] aIp4Address    A pointer to output the IPv4 address.
+ *
+ */
+void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6Address, otIp4Address *aIp4Address);
 
 /**
  * @}

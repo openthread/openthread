@@ -92,6 +92,21 @@ otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefi
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNat64Prefix(AsCoreType(aPrefix));
 }
+
+otError otBorderRoutingGetFavoredNat64Prefix(otInstance *       aInstance,
+                                             otIp6Prefix *      aPrefix,
+                                             otRoutePreference *aPreference)
+{
+    otError                                       error;
+    BorderRouter::RoutingManager::RoutePreference preference;
+
+    SuccessOrExit(error = AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetFavoredNat64Prefix(
+                      AsCoreType(aPrefix), preference));
+    *aPreference = static_cast<otRoutePreference>(preference);
+
+exit:
+    return error;
+}
 #endif
 
 void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRoutingPrefixTableIterator *aIterator)

@@ -41,10 +41,12 @@
 
 #include <errno.h>
 #include <ifaddrs.h>
+#include <netdb.h>
 // clang-format off
 #include <netinet/in.h>
 #include <netinet/icmp6.h>
 // clang-format on
+#include <signal.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -59,6 +61,8 @@
 #include "common/debug.hpp"
 #include "lib/platform/exit_code.h"
 #include "posix/platform/infra_if.hpp"
+
+uint32_t ot::Posix::InfraNetif::mInfraIfIndex = 0;
 
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
@@ -94,6 +98,11 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  uint16_t            aBufferLength)
 {
     return ot::Posix::InfraNetif::Get().SendIcmp6Nd(aInfraIfIndex, *aDestAddress, aBuffer, aBufferLength);
+}
+
+otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
+{
+    return ot::Posix::InfraNetif::Get().DiscoverNat64Prefix(aInfraIfIndex);
 }
 
 bool platformInfraIfIsRunning(void)
@@ -513,6 +522,132 @@ exit:
     {
         otLogDebgPlat("Failed to handle ICMPv6 message: %s", otThreadErrorToString(error));
     }
+}
+
+const char         InfraNetif::kWellKnownIpv4OnlyName[]   = "ipv4only.arpa";
+const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress1 = {{{192, 0, 0, 170}}};
+const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress2 = {{{192, 0, 0, 171}}};
+const uint8_t      InfraNetif::kValidNat64PrefixLength[]  = {96, 64, 56, 48, 40, 32};
+
+void InfraNetif::DiscoverNat64PrefixDone(union sigval sv)
+{
+    struct gaicb *   req = (struct gaicb *)sv.sival_ptr;
+    struct addrinfo *res = (struct addrinfo *)req->ar_result;
+
+    otIp6Prefix prefix = {};
+
+    VerifyOrExit((char *)req->ar_name == kWellKnownIpv4OnlyName);
+
+    otLogInfoPlat("Handling host address response for %s", kWellKnownIpv4OnlyName);
+
+    // We extract the first valid NAT64 prefix from the address look-up response.
+    for (struct addrinfo *rp = res; rp != NULL && prefix.mLength == 0; rp = rp->ai_next)
+    {
+        struct sockaddr_in6 *ip6Addr;
+        otIp6Address         ip6Address;
+
+        if (rp->ai_family != AF_INET6)
+        {
+            continue;
+        }
+
+        ip6Addr = reinterpret_cast<sockaddr_in6 *>(rp->ai_addr);
+        memcpy(&ip6Address.mFields.m8, &ip6Addr->sin6_addr.s6_addr, OT_IP6_ADDRESS_SIZE);
+        for (uint8_t length : kValidNat64PrefixLength)
+        {
+            otIp4Address ip4Address;
+
+            otIp4ExtractFromIp6Address(length, &ip6Address, &ip4Address);
+            if (otIp4IsAddressEqual(&ip4Address, &kWellKnownIpv4OnlyAddress1) ||
+                otIp4IsAddressEqual(&ip4Address, &kWellKnownIpv4OnlyAddress2))
+            {
+                // We check that the well-known IPv4 address is present only once in the IPv6 address.
+                // In case another instance of the value is found for another prefix length, we ignore this address
+                // and search for the other well-known IPv4 address (per RFC 7050 section 3).
+                bool foundDuplicate = false;
+
+                for (uint8_t dupLength : kValidNat64PrefixLength)
+                {
+                    otIp4Address dupIp4Address;
+
+                    if (dupLength == length)
+                    {
+                        continue;
+                    }
+
+                    otIp4ExtractFromIp6Address(dupLength, &ip6Address, &dupIp4Address);
+                    if (otIp4IsAddressEqual(&dupIp4Address, &ip4Address))
+                    {
+                        foundDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!foundDuplicate)
+                {
+                    otIp6GetPrefix(&ip6Address, length, &prefix);
+                    break;
+                }
+            }
+
+            if (prefix.mLength != 0)
+            {
+                break;
+            }
+        }
+    }
+
+    otPlatInfraIfDiscoverNat64PrefixDone(gInstance, mInfraIfIndex, &prefix);
+
+exit:
+    freeaddrinfo(res);
+    freeaddrinfo((struct addrinfo *)req->ar_request);
+    free(req);
+}
+
+otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
+{
+    otError          error = OT_ERROR_NONE;
+    struct addrinfo *hints;
+    struct gaicb *   reqs[1];
+    struct sigevent  sig;
+    int              status;
+
+    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_DROP);
+
+    hints = (struct addrinfo *)malloc(sizeof(struct addrinfo));
+    VerifyOrExit(hints != nullptr, error = OT_ERROR_NO_BUFS);
+    memset(hints, 0, sizeof(struct addrinfo));
+    hints->ai_family   = AF_INET6;
+    hints->ai_socktype = SOCK_STREAM;
+
+    reqs[0] = (struct gaicb *)malloc(sizeof(struct gaicb));
+    VerifyOrExit(reqs[0] != nullptr, error = OT_ERROR_NO_BUFS);
+    memset(reqs[0], 0, sizeof(struct gaicb));
+    reqs[0]->ar_name    = kWellKnownIpv4OnlyName;
+    reqs[0]->ar_request = hints;
+
+    memset(&sig, 0, sizeof(struct sigevent));
+    sig.sigev_notify          = SIGEV_THREAD;
+    sig.sigev_value.sival_ptr = reqs[0];
+    sig.sigev_notify_function = &InfraNetif::DiscoverNat64PrefixDone;
+
+    status = getaddrinfo_a(GAI_NOWAIT, reqs, 1, &sig);
+
+    if (status != 0)
+    {
+        otLogNotePlat("getaddrinfo_a failed: %s", gai_strerror(status));
+        ExitNow(error = OT_ERROR_FAILED);
+    }
+    otLogInfoPlat("getaddrinfo_a requested for %s", kWellKnownIpv4OnlyName);
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        freeaddrinfo(hints);
+        free(reqs[0]);
+    }
+    return error;
 }
 
 void InfraNetif::Process(const otSysMainloopContext &aContext)

@@ -210,6 +210,11 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
     return AsCoreType(aFirst).PrefixMatch(AsCoreType(aSecond));
 }
 
+void otIp6GetPrefix(const otIp6Address *aAddress, uint8_t aLength, otIp6Prefix *aPrefix)
+{
+    AsCoreType(aAddress).GetPrefix(aLength, AsCoreType(aPrefix));
+}
+
 bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
 {
     return AsCoreType(aAddress).IsUnspecified();

@@ -585,6 +585,7 @@ LOCAL_CPPFLAGS                                                              := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lanl                                     \
     -lrt                                      \
     -lutil
 
