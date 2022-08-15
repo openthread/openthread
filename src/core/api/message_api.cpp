@@ -89,16 +89,22 @@ int8_t otMessageGetRss(const otMessage *aMessage)
 
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
+    AssertPointerIsNotNull(aBuf);
+
     return AsCoreType(aMessage).AppendBytes(aBuf, aLength);
 }
 
 uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
 {
+    AssertPointerIsNotNull(aBuf);
+
     return AsCoreType(aMessage).ReadBytes(aOffset, aBuf, aLength);
 }
 
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
+    AssertPointerIsNotNull(aBuf);
+
     AsCoreType(aMessage).WriteBytes(aOffset, aBuf, aLength);
 
     return aLength;
@@ -106,6 +112,8 @@ int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint
 
 void otMessageQueueInit(otMessageQueue *aQueue)
 {
+    AssertPointerIsNotNull(aQueue);
+
     aQueue->mData = nullptr;
 }
 

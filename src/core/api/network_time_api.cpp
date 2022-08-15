@@ -44,6 +44,8 @@ using namespace ot;
 
 otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTime)
 {
+    AssertPointerIsNotNull(aNetworkTime);
+
     return AsCoreType(aInstance).Get<TimeSync>().GetTime(*aNetworkTime);
 }
 

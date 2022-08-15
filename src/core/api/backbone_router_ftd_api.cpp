@@ -55,14 +55,14 @@ otBackboneRouterState otBackboneRouterGetState(otInstance *aInstance)
 
 void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aConfig)
 {
-    OT_ASSERT(aConfig != nullptr);
+    AssertPointerIsNotNull(aConfig);
 
     AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig(*aConfig);
 }
 
 otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig)
 {
-    OT_ASSERT(aConfig != nullptr);
+    AssertPointerIsNotNull(aConfig);
 
     return AsCoreType(aInstance).Get<BackboneRouter::Local>().SetConfig(*aConfig);
 }
@@ -84,8 +84,6 @@ void otBackboneRouterSetRegistrationJitter(otInstance *aInstance, uint8_t aJitte
 
 otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterConfig *aConfig)
 {
-    OT_ASSERT(aConfig != nullptr);
-
     return AsCoreType(aInstance).Get<BackboneRouter::Local>().GetDomainPrefix(AsCoreType(aConfig));
 }
 
@@ -108,6 +106,8 @@ otError otBackboneRouterGetNdProxyInfo(otInstance *                 aInstance,
                                        const otIp6Address *         aDua,
                                        otBackboneRouterNdProxyInfo *aNdProxyInfo)
 {
+    AssertPointerIsNotNull(aNdProxyInfo);
+
     return AsCoreType(aInstance).Get<BackboneRouter::NdProxyTable>().GetInfo(
         reinterpret_cast<const Ip6::Address &>(*aDua), *aNdProxyInfo);
 }
@@ -125,8 +125,8 @@ otError otBackboneRouterMulticastListenerGetNext(otInstance *                   
                                                  otChildIp6AddressIterator *            aIterator,
                                                  otBackboneRouterMulticastListenerInfo *aListenerInfo)
 {
-    OT_ASSERT(aIterator != nullptr);
-    OT_ASSERT(aListenerInfo != nullptr);
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aListenerInfo);
 
     return AsCoreType(aInstance).Get<BackboneRouter::MulticastListenersTable>().GetNext(*aIterator, *aListenerInfo);
 }
@@ -159,8 +159,6 @@ void otBackboneRouterMulticastListenerClear(otInstance *aInstance)
 
 otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6Address *aAddress, uint32_t aTimeout)
 {
-    OT_ASSERT(aAddress != nullptr);
-
     if (aTimeout == 0)
     {
         BackboneRouter::BackboneRouterConfig config;

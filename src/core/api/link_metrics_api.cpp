@@ -49,8 +49,6 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
                            otLinkMetricsReportCallback aCallback,
                            void *                      aCallbackContext)
 {
-    OT_ASSERT(aDestination != nullptr);
-
     AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>().SetReportCallback(aCallback, aCallbackContext);
 
     return AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>().Query(AsCoreType(aDestination), aSeriesId,
@@ -65,8 +63,6 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
                                                  otLinkMetricsMgmtResponseCallback aCallback,
                                                  void *                            aCallbackContext)
 {
-    OT_ASSERT(aDestination != nullptr);
-
     LinkMetrics::LinkMetrics &linkMetrics = AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>();
 
     linkMetrics.SetMgmtResponseCallback(aCallback, aCallbackContext);
@@ -85,8 +81,6 @@ otError otLinkMetricsConfigEnhAckProbing(otInstance *                           
                                          otLinkMetricsEnhAckProbingIeReportCallback aEnhAckCallback,
                                          void *                                     aEnhAckCallbackContext)
 {
-    OT_ASSERT(aDestination != nullptr);
-
     LinkMetrics::LinkMetrics &linkMetrics = AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>();
 
     linkMetrics.SetMgmtResponseCallback(aCallback, aCallbackContext);
@@ -101,7 +95,6 @@ otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
                                    uint8_t             aSeriesId,
                                    uint8_t             aLength)
 {
-    OT_ASSERT(aDestination != nullptr);
     LinkMetrics::LinkMetrics &linkMetrics = AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>();
 
     return linkMetrics.SendLinkProbe(AsCoreType(aDestination), aSeriesId, aLength);

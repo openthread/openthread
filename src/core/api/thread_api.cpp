@@ -78,8 +78,6 @@ exit:
 
 otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
-    OT_ASSERT(aLeaderRloc != nullptr);
-
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderAddress(AsCoreType(aLeaderRloc));
 }
 
@@ -113,8 +111,6 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 {
     Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
-
-    OT_ASSERT(aKey != nullptr);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
@@ -297,7 +293,7 @@ otError otThreadBecomeChild(otInstance *aInstance)
 
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
 {
-    OT_ASSERT((aInfo != nullptr) && (aIterator != nullptr));
+    AssertPointerIsNotNull(aIterator);
 
     return AsCoreType(aInstance).Get<NeighborTable>().GetNextNeighborInfo(*aIterator, AsCoreType(aInfo));
 }
@@ -316,7 +312,7 @@ otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aLeaderData != nullptr);
+    AssertPointerIsNotNull(aLeaderData);
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsAttached(), error = kErrorDetached);
     *aLeaderData = AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData();
@@ -354,7 +350,7 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aParentRssi != nullptr);
+    AssertPointerIsNotNull(aParentRssi);
 
     *aParentRssi = AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetAverageRss();
 
@@ -368,7 +364,7 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aLastRssi != nullptr);
+    AssertPointerIsNotNull(aLastRssi);
 
     *aLastRssi = AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetLastRss();
 

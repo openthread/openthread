@@ -101,6 +101,8 @@ uint64_t otInstanceGetUptime(otInstance *aInstance)
 
 void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aInstance).Get<Uptime>().GetUptime(aBuffer, aSize);
 }
 #endif
