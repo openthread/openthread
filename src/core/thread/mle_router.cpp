@@ -51,6 +51,7 @@
 #include "thread/thread_tlvs.hpp"
 #include "thread/time_sync_service.hpp"
 #include "thread/uri_paths.hpp"
+#include "thread/version.hpp"
 #include "utils/otns.hpp"
 
 namespace ot {
@@ -1015,7 +1016,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     router->SetLinkAckFrameCounter(linkFrameCounter);
     router->SetMleFrameCounter(mleFrameCounter);
     router->SetLastHeard(TimerMilli::GetNow());
-    router->SetVersion(static_cast<uint8_t>(version));
+    router->SetVersion(version);
     router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                      DeviceMode::kModeFullNetworkData));
     router->GetLinkInfo().Clear();
@@ -1757,7 +1758,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
         {
             mode.Set(modeBitmask);
             child->SetDeviceMode(mode);
-            child->SetVersion(static_cast<uint8_t>(version));
+            child->SetVersion(version);
         }
     }
     else if (TimerMilli::GetNow() - child->GetLastHeard() < kParentRequestRouterTimeout - kParentRequestDuplicateMargin)
@@ -2464,7 +2465,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     child->SetMleFrameCounter(mleFrameCounter);
     child->SetKeySequence(aRxInfo.mKeySequence);
     child->SetDeviceMode(mode);
-    child->SetVersion(static_cast<uint8_t>(version));
+    child->SetVersion(version);
     child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
     child->SetTimeout(timeout);
 #if OPENTHREAD_CONFIG_MULTI_RADIO

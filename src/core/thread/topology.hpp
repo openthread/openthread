@@ -59,6 +59,7 @@
 #include "thread/mle_types.hpp"
 #include "thread/network_data_types.hpp"
 #include "thread/radio_selector.hpp"
+#include "thread/version.hpp"
 
 namespace ot {
 
@@ -557,7 +558,7 @@ public:
      * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
+    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == kThreadVersion1p1; }
 
     /**
      * This method indicates whether or not neighbor is Thread 1.2 or higher..
@@ -565,7 +566,7 @@ public:
      * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2; }
+    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= kThreadVersion1p2; }
 
     /**
      * This method indicates whether Thread version supports CSL.
@@ -590,7 +591,7 @@ public:
      * This method gets the device MLE version.
      *
      */
-    uint8_t GetVersion(void) const { return mVersion; }
+    uint16_t GetVersion(void) const { return mVersion; }
 
     /**
      * This method sets the device MLE version.
@@ -598,7 +599,7 @@ public:
      * @param[in]  aVersion  The device MLE version.
      *
      */
-    void SetVersion(uint8_t aVersion) { mVersion = aVersion; }
+    void SetVersion(uint16_t aVersion) { mVersion = aVersion; }
 
     /**
      * This method gets the number of consecutive link failures.
@@ -816,7 +817,7 @@ private:
 #else
     uint8_t mLinkFailures; ///< Consecutive link failure count
 #endif
-    uint8_t         mVersion;  ///< The MLE version
+    uint16_t        mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // A list of Link Metrics Forward Tracking Series that is being

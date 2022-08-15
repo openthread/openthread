@@ -38,6 +38,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 
 namespace ot {
 
@@ -252,7 +253,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
     mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
     mQueuedMessageCnt   = aChild.GetIndirectMessageCount();
-    mVersion            = aChild.GetVersion();
+    mVersion            = ClampToUint8(aChild.GetVersion());
     mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
     mFullThreadDevice   = aChild.IsFullThreadDevice();
     mFullNetworkData    = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
@@ -524,7 +525,7 @@ void Router::Info::SetFrom(const Router &aRouter)
     mLinkQualityIn   = aRouter.GetLinkInfo().GetLinkQuality();
     mLinkQualityOut  = aRouter.GetLinkQualityOut();
     mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - aRouter.GetLastHeard()));
-    mVersion         = aRouter.GetVersion();
+    mVersion         = ClampToUint8(aRouter.GetVersion());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslClockAccuracy = aRouter.GetCslClockAccuracy();
     mCslUncertainty   = aRouter.GetCslUncertainty();

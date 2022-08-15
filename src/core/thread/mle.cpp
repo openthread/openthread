@@ -57,6 +57,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
+#include "thread/version.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -394,7 +395,7 @@ void Mle::Restore(void)
 
         mParent.Clear();
         mParent.SetExtAddress(parentInfo.GetExtAddress());
-        mParent.SetVersion(static_cast<uint8_t>(parentInfo.GetVersion()));
+        mParent.SetVersion(parentInfo.GetVersion());
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData));
         mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
@@ -2991,7 +2992,7 @@ bool Mle::IsBetterParent(uint16_t               aRloc16,
                          LinkQuality            aLinkQuality,
                          uint8_t                aLinkMargin,
                          const ConnectivityTlv &aConnectivityTlv,
-                         uint8_t                aVersion,
+                         uint16_t               aVersion,
                          uint8_t                aCslClockAccuracy,
                          uint8_t                aCslUncertainty)
 {
@@ -3226,11 +3227,11 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         // only consider better parents if the partitions are the same
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         VerifyOrExit(compare != 0 ||
-                     IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, static_cast<uint8_t>(version),
+                     IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, version,
                                     clockAccuracy.GetCslClockAccuracy(), clockAccuracy.GetCslUncertainty()));
 #else
-        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity,
-                                                    static_cast<uint8_t>(version), 0, 0));
+        VerifyOrExit(compare != 0 ||
+                     IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, version, 0, 0));
 #endif
     }
 
@@ -3266,7 +3267,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.GetLinkFrameCounters().SetAll(linkFrameCounter);
     mParentCandidate.SetLinkAckFrameCounter(linkFrameCounter);
     mParentCandidate.SetMleFrameCounter(mleFrameCounter);
-    mParentCandidate.SetVersion(static_cast<uint8_t>(version));
+    mParentCandidate.SetVersion(version);
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData));
     mParentCandidate.GetLinkInfo().Clear();

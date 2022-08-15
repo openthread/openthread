@@ -1984,7 +1984,7 @@ private:
                         LinkQuality            aLinkQuality,
                         uint8_t                aLinkMargin,
                         const ConnectivityTlv &aConnectivityTlv,
-                        uint8_t                aVersion,
+                        uint16_t               aVersion,
                         uint8_t                aCslClockAccuracy,
                         uint8_t                aCslUncertainty);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
