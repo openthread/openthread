@@ -27,10 +27,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-MAX_NODES_NUM = 33
-MAX_SNIFFER_NUM = 4
+MAX_NODES_NUM = 64
+MAX_SNIFFER_NUM = 2
 SNIFFER_SERVER_PORT_BASE = 50051
 
-OT_PATH = '/home/pi/repo/openthread'
-OTBR_DOCKER_IMAGE = 'openthread/otbr:reference-device-12'
+OT_PATH = '/home/pi/work/src/openthread-pr'
+OTBR_DOCKER_IMAGE = 'otbr-reference-device-1.2'
 OTBR_DOCKER_NAME_PREFIX = 'otbr_'

@@ -29,6 +29,7 @@
 
 import logging
 import os
+import re
 import subprocess
 import time
 
@@ -36,6 +37,7 @@ from config import (OT_PATH, OTBR_DOCKER_IMAGE)
 
 
 class OtbrDocker:
+    device_pattern = re.compile('(?<=PTY is )/dev/.+$')
 
     def __init__(self, nodeid: int, docker_name: str):
         self.nodeid = nodeid
@@ -76,9 +78,9 @@ class OtbrDocker:
                                             stdout=subprocess.DEVNULL)
 
         line = self._socat_proc.stderr.readline().decode('ascii').strip()
-        self._rcp_device_pty = line[line.index('PTY is /dev') + 7:]
+        self._rcp_device_pty = self.device_pattern.findall(line)[0]
         line = self._socat_proc.stderr.readline().decode('ascii').strip()
-        self._rcp_device = line[line.index('PTY is /dev') + 7:]
+        self._rcp_device = self.device_pattern.findall(line)[0]
         self.logger.info(f"socat running: device PTY: {self._rcp_device_pty}, device: {self._rcp_device}")
 
     def _shutdown_socat(self):
@@ -134,8 +136,6 @@ class OtbrDocker:
             '-v',
             f'{self._rcp_device}:/dev/ttyUSB0',
             '-v',
-            f'{local_cmd_path}:/tmp/otbr_sim',
-            '-v',
             f'{OT_PATH.rstrip("/")}:/home/pi/repo/openthread',
             OTBR_DOCKER_IMAGE,
         ]
@@ -167,4 +167,4 @@ class OtbrDocker:
         launch_proc.wait()
 
     def _shutdown_docker(self):
-        subprocess.Popen(['docker', 'stop', self.docker_name]).wait()
+        subprocess.run(['docker', 'stop', self.docker_name])

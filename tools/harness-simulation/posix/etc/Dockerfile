@@ -31,14 +31,12 @@ FROM ${BASE_IMAGE}
 ARG INFRA_IF_NAME
 ARG BORDER_ROUTING
 ARG BACKBONE_ROUTER
-ARG OT_BACKBONE_CI
 ARG OTBR_OPTIONS
 ARG OT_COMMISSIONER
 ARG DNS64
 ARG NAT64
 ARG NAT64_SERVICE
 ARG REFERENCE_DEVICE
-ARG RELEASE
 ARG REST_API
 ARG WEB_GUI
 ARG MDNS
@@ -46,14 +44,12 @@ ARG MDNS
 ENV INFRA_IF_NAME=${INFRA_IF_NAME:-eth0}
 ENV BORDER_ROUTING=${BORDER_ROUTING:-1}
 ENV BACKBONE_ROUTER=${BACKBONE_ROUTER:-1}
-ENV OT_BACKBONE_CI=${OT_BACKBONE_CI:-0}
 ENV OTBR_MDNS=${MDNS:-mDNSResponder}
 ENV OTBR_OPTIONS=${OTBR_OPTIONS}
 ENV OT_COMMISSIONER=${OT_COMMISSIONER:-1}
 ENV DEBIAN_FRONTEND noninteractive
 ENV PLATFORM ubuntu
 ENV REFERENCE_DEVICE=${REFERENCE_DEVICE:-0}
-ENV RELEASE=${RELEASE:-1}
 ENV NAT64=${NAT64:-1}
 ENV NAT64_SERVICE=${NAT64_SERVICE:-tayga}
 ENV DNS64=${DNS64:-0}
@@ -81,13 +77,6 @@ ENV OTBR_BUILD_DEPS apt-utils build-essential psmisc ninja-build cmake ca-certif
   libavahi-client-dev libboost-dev libboost-filesystem-dev libboost-system-dev \
   libnetfilter-queue-dev
 
-# Required for OpenThread Backbone CI
-ENV OTBR_OT_BACKBONE_CI_DEPS curl lcov wget build-essential
-
-# Required and installed during build (script/bootstrap) when RELEASE=1, could be removed
-ENV OTBR_NORELEASE_DEPS \
-  cpputest-dev
-
 RUN apt-get update \
   && cp -r ./root/. / \
   && rm -rf ./root \
@@ -98,7 +87,7 @@ RUN apt-get update \
   && pip3 install $OTBR_PYTHON_REQS \
   && ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
   && ([ "${OT_COMMISSIONER}" != "1" ] || ( \
-    git clone --recursive https://github.com/openthread/ot-commissioner.git \
+    git clone https://github.com/openthread/ot-commissioner.git --recurse-submodules --shallow-submodules --depth=1 \
     && cd ot-commissioner \
     && ./script/bootstrap.sh \
     && mkdir -p build \
@@ -109,22 +98,18 @@ RUN apt-get update \
     && cd /app \
     && rm -rf ot-commissioner \
   )) \
-  && ([ "${OT_BACKBONE_CI}" != "1" ] || apt-get install --no-install-recommends -y $OTBR_OT_BACKBONE_CI_DEPS) \
   && ./script/bootstrap \
   && ./script/setup \
   && ([ "${DNS64}" = "0" ] || chmod 644 /etc/bind/named.conf.options) \
-  && ([ "${OT_BACKBONE_CI}" = "1" ] || ( \
-    mv ./script /tmp \
-    && mv ./etc /tmp \
-    && find . -delete \
-    && rm -rf /usr/include \
-    && mv /tmp/script . \
-    && mv /tmp/etc . \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $OTBR_DOCKER_DEPS \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $OTBR_BUILD_DEPS  \
-    && ([ "${RELEASE}" = 1 ] ||  apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false "$OTBR_NORELEASE_DEPS";) \
-    && rm -rf /var/lib/apt/lists/* \
-  )) \
+  && mv ./script /tmp \
+  && mv ./etc /tmp \
+  && find . -delete \
+  && rm -rf /usr/include \
+  && mv /tmp/script . \
+  && mv /tmp/etc . \
+  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $OTBR_DOCKER_DEPS \
+  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $OTBR_BUILD_DEPS  \
+  && rm -rf /var/lib/apt/lists/* \
   && rm -rf /tmp/* \
   && sed -i "s/\/root/\/home\/pi/g" /etc/passwd
   # The command above changes root home directory to /home/pi

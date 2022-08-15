@@ -20,7 +20,8 @@ Platform developers should modify the THCI implementation and/or the SI implemen
          -DOT_DUA=ON \
          -DOT_MLR=ON \
          -DOT_COMMISSIONER=ON \
-         -DOT_CSL_RECEIVER=ON
+         -DOT_CSL_RECEIVER=ON \
+         -DOT_SIMULATION_MAX_NETWORK_SIZE=64
    ```
 
    Then `ot-cli-ftd` is built in the directory `build/simulation/examples/apps/cli/`.

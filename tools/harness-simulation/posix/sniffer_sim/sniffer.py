@@ -34,6 +34,7 @@ import grpc
 import logging
 import os
 import signal
+import socket
 import subprocess
 import tempfile
 import threading
@@ -56,7 +57,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
     logger = logging.getLogger('sniffer.SnifferServicer')
 
     RECV_BUFFER_SIZE = 4096
-    MAX_NODES_NUM = 33
+    MAX_NODES_NUM = 64
 
     def _reset(self):
         self._state = CaptureState.NONE
@@ -112,7 +113,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         # Start the sniffer main loop thread
         self._thread = threading.Thread(target=self._sniffer_main_loop)
         self._thread.daemon = True
-        self._transport.open()
+        self._transport.open(timeout=0.1)
         self._thread_alive.set()
         self._thread.start()
 
@@ -122,10 +123,10 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         """ Sniffer main loop. """
 
         while self._thread_alive.is_set():
-            # Avoid being blocked endlessly when there is no data
-            if not self._transport.ready(0.1):
+            try:
+                data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
+            except socket.timeout:
                 continue
-            data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
 
             with self._mutex:
                 allowed_nodeids = self._allowed_nodeids

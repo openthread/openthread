@@ -36,11 +36,8 @@ if [[ $OT_PATH == "" ]]; then
 fi
 
 if [[ $OTBR_DOCKER_IMAGE == "" ]]; then
-    OTBR_DOCKER_IMAGE="openthread/otbr:reference-device-12"
+    OTBR_DOCKER_IMAGE="otbr-reference-device-1.2"
 fi
-
-git clone --recursive https://github.com/openthread/ot-br-posix.git
-pushd ot-br-posix
 
 DOCKER_BUILD_OTBR_OPTIONS=(
     "-DOTBR_DUA_ROUTING=ON"
@@ -50,28 +47,32 @@ DOCKER_BUILD_OTBR_OPTIONS=(
     "-DOT_SIMULATION_MAX_NETWORK_SIZE=64"
 )
 
-# Use system V `service` command instead
+git clone https://github.com/openthread/ot-br-posix.git --recurse-submodules --shallow-submodules --depth=1
 ETC_PATH="${OT_PATH}/tools/harness-simulation/posix/etc"
-mkdir -p root/etc/init.d
-cp "${ETC_PATH}/commissionerd" root/etc/init.d/commissionerd
-sudo chown root:root root/etc/init.d/commissionerd
-sudo chmod +x root/etc/init.d/commissionerd
 
-cp "${ETC_PATH}/Dockerfile" etc/docker/Dockerfile
-cp "${ETC_PATH}/server" script/server
-mkdir -p root/tmp
-cp "${ETC_PATH}/requirements.txt" root/tmp/requirements.txt
+(
+    cd ot-br-posix
+    # Use system V `service` command instead
+    mkdir -p root/etc/init.d
+    cp "${ETC_PATH}/commissionerd" root/etc/init.d/commissionerd
+    sudo chown root:root root/etc/init.d/commissionerd
+    sudo chmod +x root/etc/init.d/commissionerd
 
-docker build . \
-    -t "${OTBR_DOCKER_IMAGE}" \
-    -f etc/docker/Dockerfile \
-    --build-arg REFERENCE_DEVICE=1 \
-    --build-arg BORDER_ROUTING=0 \
-    --build-arg BACKBONE_ROUTER=1 \
-    --build-arg NAT64=0 \
-    --build-arg WEB_GUI=0 \
-    --build-arg REST_API=0 \
-    --build-arg OTBR_OPTIONS="'${DOCKER_BUILD_OTBR_OPTIONS[*]}'"
+    cp "${ETC_PATH}/server.patch" script/server.patch
+    patch script/server script/server.patch
+    mkdir -p root/tmp
+    cp "${ETC_PATH}/requirements.txt" root/tmp/requirements.txt
 
-popd
+    docker build . \
+        -t "${OTBR_DOCKER_IMAGE}" \
+        -f "${ETC_PATH}/Dockerfile" \
+        --build-arg REFERENCE_DEVICE=1 \
+        --build-arg BORDER_ROUTING=0 \
+        --build-arg BACKBONE_ROUTER=1 \
+        --build-arg NAT64=0 \
+        --build-arg WEB_GUI=0 \
+        --build-arg REST_API=0 \
+        --build-arg OTBR_OPTIONS="'${DOCKER_BUILD_OTBR_OPTIONS[*]}'"
+)
+
 rm -rf ot-br-posix

@@ -35,6 +35,7 @@
 import ipaddress
 import logging
 import paramiko
+import pipes
 import sys
 import tempfile
 import time
@@ -82,29 +83,16 @@ class SSHHandle(object):
             self.__handle.close()
             self.__handle = None
 
-    def _bash_file(self, cmd, timeout):
-        # Binary mode is used so that LF behaves consistently on all platforms
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            filename = f.name
-            f.write(cmd + '\n')
-        with self.__handle.open_sftp() as sftp:
-            sftp.put(filename, '/tmp/%s/cmd.sh' % self.docker_name)
-
-        return self.__handle.exec_command('docker exec %s bash /tmp/otbr_sim/cmd.sh' % self.docker_name,
-                                          timeout=timeout)
-
-    def _bash_direct(self, cmd, timeout):
-        return self.__handle.exec_command('docker exec %s %s' % (self.docker_name, cmd), timeout=timeout)
-
     def bash(self, cmd, timeout):
-        # Only use a file to execute the command when it cannot be executed directly
-        use_file = any(x in cmd for x in '<>\'"')
+        # It is necessary to quote the command when there is stdin/stdout redirection
+        cmd = pipes.quote(cmd)
 
         retry = 3
         for i in range(retry):
             try:
-                _bash = self._bash_file if use_file else self._bash_direct
-                stdin, stdout, stderr = _bash(cmd, timeout)
+                stdin, stdout, stderr = self.__handle.exec_command('docker exec %s bash -c %s' %
+                                                                   (self.docker_name, cmd),
+                                                                   timeout=timeout)
                 stdout._set_mode('rb')
 
                 sys.stderr.write(stderr.read())
@@ -119,15 +107,8 @@ class SSHHandle(object):
                 else:
                     raise ConnectionError('SSH connection is lost')
 
-    def log(self, fmt, *args):
-        try:
-            msg = fmt % args
-            print('%s - %s - %s' % (self.docker_name, time.strftime('%b %d %H:%M:%S'), msg))
-        except Exception:
-            pass
 
-
-class OpenThread_BR_Sim(OpenThread_BR, IThci):
+class OpenThread_BR_Sim(OpenThread_BR):
 
     def _getHandle(self):
         assert self.connectType == 'ip'

@@ -94,21 +94,14 @@ def _advertise(s: socket.socket, dst, info):
     s.sendto(json.dumps(info).encode('utf-8'), dst)
 
 
-def advertise_devices(s: socket.socket,
-                      dst,
-                      ven: str,
-                      ver: str,
-                      add: str,
-                      por: int,
-                      nodeids: Iterable[int],
-                      prefix: str = ''):
+def advertise_devices(s: socket.socket, dst, ven: str, add: str, nodeids: Iterable[int], prefix: str = ''):
     for nodeid in nodeids:
         info = {
             'ven': ven,
-            'mod': f'{ven}_{nodeid}',
-            'ver': ver,
+            'mod': 'OpenThread',
+            'ver': '4',
             'add': f'{prefix}{nodeid}@{add}',
-            'por': por,
+            'por': 22,
         }
         _advertise(s, dst, info)
 
@@ -183,8 +176,11 @@ def main():
     if not 0 <= args.sniffer_num <= MAX_SNIFFER_NUM:
         raise ValueError(f'The number of sniffers should be between 0 and {MAX_SNIFFER_NUM}')
 
-    if args.ot_num == args.otbr_num == args.sniffer_num == 0:
+    if args.ot_num == args.otbr_num == 0:
         raise ValueError('At least one device is required')
+
+    if args.sniffer_num == 0:
+        raise ValueError('At least one sniffer is required')
 
     if args.ot_num + args.otbr_num > MAX_NODES_NUM:
         raise ValueError(f'The number of all devices should be no more than {MAX_NODES_NUM}')
@@ -228,19 +224,11 @@ def main():
 
         if data == b'BBR':
             logging.info('Received OpenThread simulation query, advertising')
-            advertise_devices(s,
-                              src,
-                              ven='OpenThread_Sim',
-                              ver='4',
-                              add=addr,
-                              por=22,
-                              nodeids=range(1, args.ot_num + 1))
+            advertise_devices(s, src, ven='OpenThread_Sim', add=addr, nodeids=range(1, args.ot_num + 1))
             advertise_devices(s,
                               src,
                               ven='OpenThread_BR_Sim',
-                              ver='4',
                               add=addr,
-                              por=22,
                               nodeids=range(args.ot_num + 1, args.ot_num + args.otbr_num + 1),
                               prefix=OTBR_DOCKER_NAME_PREFIX)
 

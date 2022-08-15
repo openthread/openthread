@@ -455,6 +455,7 @@ class OpenThreadTHCI(object):
         """
         self.port = params.get('SerialPort', '')
         # params example: {'EUI': 1616240311388864514L, 'SerialBaudRate': None, 'TelnetIP': '192.168.8.181', 'SerialPort': None, 'Param7': None, 'Param6': None, 'Param5': 'ip', 'TelnetPort': '22', 'Param9': None, 'Param8': None}
+        self.log('All parameters: %r', params)
 
         try:
             ipaddress.ip_address(self.port)

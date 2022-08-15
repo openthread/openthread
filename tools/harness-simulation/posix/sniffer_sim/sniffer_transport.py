@@ -35,8 +35,11 @@ import socket
 class SnifferTransport(object):
     """ Interface for transport that allows eavesdrop other nodes. """
 
-    def open(self):
+    def open(self, timeout):
         """ Open transport.
+
+        Args:
+            timeout (float): socket timeout
 
         Raises:
             RuntimeError: when transport is already opened or when transport opening failed.
@@ -83,6 +86,9 @@ class SnifferTransport(object):
 
             For example:
             (bytearray([0x00, 0x01...], 1)
+
+        Raises:
+            socket.timeout: when receiving the packets times out.
         """
         raise NotImplementedError
 
@@ -107,7 +113,7 @@ class SnifferSocketTransport(SnifferTransport):
     def _port_to_nodeid(self, port):
         return (port - self.BASE_PORT - (self.PORT_OFFSET * (self.MAX_NETWORK_SIZE + 1)))
 
-    def open(self):
+    def open(self, timeout):
         if self.is_opened:
             raise RuntimeError('Transport is already opened.')
 
@@ -123,6 +129,8 @@ class SnifferSocketTransport(SnifferTransport):
         self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
                                 socket.inet_aton(self.RADIO_GROUP) + socket.inet_aton('127.0.0.1'))
         self._socket.bind((self.RADIO_GROUP, self._nodeid_to_port(0)))
+
+        self._socket.settimeout(timeout)
 
     def close(self):
         if not self.is_opened:
@@ -146,9 +154,6 @@ class SnifferSocketTransport(SnifferTransport):
         nodeid = self._port_to_nodeid(address[1])
 
         return bytearray(data), nodeid
-
-    def ready(self, timeout):
-        return select.select([self._socket], [], [], timeout)[0]
 
 
 class SnifferTransportFactory(object):
