@@ -526,9 +526,14 @@ void Router::Info::SetFrom(const Router &aRouter)
     mLinkQualityOut  = aRouter.GetLinkQualityOut();
     mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - aRouter.GetLastHeard()));
     mVersion         = ClampToUint8(aRouter.GetVersion());
+}
+
+void Router::Info::SetFrom(const Parent &aParent)
+{
+    SetFrom(static_cast<const Router &>(aParent));
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslClockAccuracy = aRouter.GetCslAccuracy().GetClockAccuracy();
-    mCslUncertainty   = aRouter.GetCslAccuracy().GetUncertainty();
+    mCslClockAccuracy = aParent.GetCslAccuracy().GetClockAccuracy();
+    mCslUncertainty   = aParent.GetCslAccuracy().GetUncertainty();
 #endif
 }
 
@@ -537,6 +542,25 @@ void Router::Clear(void)
     Instance &instance = GetInstance();
 
     memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
+    Init(instance);
+}
+
+void Router::SetFrom(const Parent &aParent)
+{
+    // We use an intermediate pointer to copy `aParent` to silence
+    // code checkers warning about object slicing (assigning a
+    // sub-class to base class instance).
+
+    const Router *parentAsRouter = &aParent;
+
+    *this = *parentAsRouter;
+}
+
+void Parent::Clear(void)
+{
+    Instance &instance = GetInstance();
+
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Parent));
     Init(instance);
 }
 

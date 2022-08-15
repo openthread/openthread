@@ -415,7 +415,7 @@ public:
      * @returns A reference to the parent.
      *
      */
-    Router &GetParent(void) { return mParent; }
+    Parent &GetParent(void) { return mParent; }
 
     /**
      * The method retrieves information about the parent.
@@ -434,7 +434,7 @@ public:
      * The parent candidate is valid when attempting to attach to a new parent.
      *
      */
-    Router &GetParentCandidate(void) { return mParentCandidate; }
+    Parent &GetParentCandidate(void) { return mParentCandidate; }
 
     /**
      * This method starts the process for child to search for a better parent while staying attached to its current
@@ -1784,8 +1784,8 @@ protected:
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     DeviceRole    mRole;                     ///< Current Thread role.
-    Router        mParent;                   ///< Parent information.
-    Router        mParentCandidate;          ///< Parent candidate information.
+    Parent        mParent;                   ///< Parent information.
+    Parent        mParentCandidate;          ///< Parent candidate information.
     NeighborTable mNeighborTable;            ///< The neighbor table.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The attach state.
