@@ -28,18 +28,14 @@
 #
 
 import os
-import select
 import socket
 
 
 class SnifferTransport(object):
     """ Interface for transport that allows eavesdrop other nodes. """
 
-    def open(self, timeout):
+    def open(self):
         """ Open transport.
-
-        Args:
-            timeout (float): socket timeout
 
         Raises:
             RuntimeError: when transport is already opened or when transport opening failed.
@@ -75,11 +71,12 @@ class SnifferTransport(object):
         """
         raise NotImplementedError
 
-    def recv(self, bufsize):
+    def recv(self, bufsize, timeout):
         """ Receive data sent by other node.
 
         Args:
             bufsize (int): size of buffer for incoming data.
+            timeout (float | None): socket timeout.
 
         Returns:
             A tuple contains data and node id.
@@ -113,7 +110,7 @@ class SnifferSocketTransport(SnifferTransport):
     def _port_to_nodeid(self, port):
         return (port - self.BASE_PORT - (self.PORT_OFFSET * (self.MAX_NETWORK_SIZE + 1)))
 
-    def open(self, timeout):
+    def open(self):
         if self.is_opened:
             raise RuntimeError('Transport is already opened.')
 
@@ -129,8 +126,6 @@ class SnifferSocketTransport(SnifferTransport):
         self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
                                 socket.inet_aton(self.RADIO_GROUP) + socket.inet_aton('127.0.0.1'))
         self._socket.bind((self.RADIO_GROUP, self._nodeid_to_port(0)))
-
-        self._socket.settimeout(timeout)
 
     def close(self):
         if not self.is_opened:
@@ -148,7 +143,8 @@ class SnifferSocketTransport(SnifferTransport):
 
         return self._socket.sendto(data, address)
 
-    def recv(self, bufsize):
+    def recv(self, bufsize, timeout):
+        self._socket.settimeout(timeout)
         data, address = self._socket.recvfrom(bufsize)
 
         nodeid = self._port_to_nodeid(address[1])

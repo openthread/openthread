@@ -37,10 +37,8 @@ import logging
 import paramiko
 import pipes
 import sys
-import tempfile
 import time
 
-from THCI.IThci import IThci
 from THCI.OpenThread import watched
 from THCI.OpenThread_BR import OpenThread_BR
 from simulation.config import (REMOTE_USERNAME, REMOTE_PASSWORD, REMOTE_PORT)
