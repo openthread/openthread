@@ -633,6 +633,7 @@ HEADERS_COMMON                                  = \
     thread/tmf.hpp                                \
     thread/topology.hpp                           \
     thread/uri_paths.hpp                          \
+    thread/version.hpp                            \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \
     utils/child_supervision.hpp                   \
