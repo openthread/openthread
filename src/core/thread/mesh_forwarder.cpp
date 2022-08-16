@@ -1708,8 +1708,6 @@ exit:
 
 Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource)
 {
-    ThreadNetif &netif = Get<ThreadNetif>();
-
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
 #endif
@@ -1721,7 +1719,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
         mIpCounters.mRxSuccess++;
     }
 
-    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &netif, &aLinkInfo, false);
+    return Get<Ip6::Ip6>().HandleDatagram(aMessage, Ip6::Ip6::kFromThreadNetif, &aLinkInfo);
 }
 
 Error MeshForwarder::GetFramePriority(const FrameData &     aFrameData,

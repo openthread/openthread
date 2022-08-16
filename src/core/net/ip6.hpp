@@ -112,6 +112,20 @@ class Ip6 : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * This enumeration represents an IPv6 message origin.
+     *
+     * In case the message is originating from host, it also indicates whether or not it is allowed to passed back the
+     * message to the host.
+     *
+     */
+    enum MessageOrigin : uint8_t
+    {
+        kFromThreadNetif,          ///< Message originates from Thread Netif.
+        kFromHostDisallowLoopBack, ///< Message originates from host and should not be passed back to host.
+        kFromHostAllowLoopBack,    ///< Message originates from host and can be passed back to host.
+    };
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance   A reference to the otInstance object.
@@ -186,8 +200,8 @@ public:
      * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
      * processing is complete, including when a value other than `kErrorNone` is returned.
      *
-     * @param[in]  aMessage          A reference to the message.
-     * @param[in]  aFromHost         TRUE if the message is originated from the host, FALSE otherwise.
+     * @param[in]  aMessage               A reference to the message.
+     * @param[in]  aAllowLoopBackToHost   Indicate whether or not the message is allowed to be passed back to host.
      *
      * @retval kErrorNone     Successfully processed the message.
      * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
@@ -196,15 +210,14 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error SendRaw(Message &aMessage, bool aFromHost);
+    Error SendRaw(Message &aMessage, bool aAllowLoopBackToHost);
 
     /**
      * This method processes a received IPv6 datagram.
      *
      * @param[in]  aMessage          A reference to the message.
-     * @param[in]  aNetif            A pointer to the network interface that received the message.
+     * @param[in]  aOrigin           The message oirgin.
      * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
-     * @param[in]  aFromHost         TRUE if the message is originated from the host, FALSE otherwise.
      *
      * @retval kErrorNone     Successfully processed the message.
      * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
@@ -213,7 +226,7 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromHost);
+    Error HandleDatagram(Message &aMessage, MessageOrigin aOrigin, const void *aLinkMessageInfo = nullptr);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -323,20 +336,19 @@ private:
 
     void  EnqueueDatagram(Message &aMessage);
     Error ProcessReceiveCallback(Message &          aMessage,
+                                 MessageOrigin      aOrigin,
                                  const MessageInfo &aMessageInfo,
                                  uint8_t            aIpProto,
-                                 bool               aFromHost,
                                  bool               aAllowReceiveFilter,
                                  Message::Ownership aMessageOwnership);
-    Error HandleExtensionHeaders(Message &    aMessage,
-                                 Netif *      aNetif,
-                                 MessageInfo &aMessageInfo,
-                                 Header &     aHeader,
-                                 uint8_t &    aNextHeader,
-                                 bool         aFromHost,
-                                 bool &       aReceive);
+    Error HandleExtensionHeaders(Message &     aMessage,
+                                 MessageOrigin aOrigin,
+                                 MessageInfo & aMessageInfo,
+                                 Header &      aHeader,
+                                 uint8_t &     aNextHeader,
+                                 bool &        aReceive);
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
-    Error HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromHost);
+    Error HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     void CleanupFragmentationBuffer(void);
     void HandleTimeTick(void);
@@ -353,7 +365,7 @@ private:
                         MessageInfo &      aMessageInfo,
                         uint8_t            aIpProto,
                         Message::Ownership aMessageOwnership);
-    bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromHost) const;
+    bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, MessageOrigin aOrigin) const;
     bool  IsOnLink(const Address &aAddress) const;
 
     bool                 mForwardingEnabled;
