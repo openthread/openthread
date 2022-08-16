@@ -68,9 +68,10 @@ public:
     enum Result : uint8_t
     {
         kNotTranslated, ///< The message is not translated, it might be sending to an non-nat64 prefix (for outgoing
-                        ///< packets), or it is already an IPv6 message (for incoming packets).
-        kForward, ///< Message is successfully translated, the caller should continue forwarding the translated packet.
-        kDrop,    ///< The caller should drop the packet silently.
+                        ///< datagrams), or it is already an IPv6 message (for incoming datagrams).
+        kForward,       ///< Message is successfully translated, the caller should continue forwarding the translated
+                        ///< datagram.
+        kDrop,          ///< The caller should drop the datagram silently.
     };
 
     /**
@@ -88,7 +89,7 @@ public:
      * @param[in]  aMessage          A reference to the message.
      *
      * @retval kErrorNone     Successfully processed the message.
-     * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
+     * @retval kErrorDrop     Message was well-formed but not fully processed due to datagram processing rules.
      * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
      * @retval kErrorNoRoute  No route to host.
      * @retval kErrorParse    Encountered a malformed header when processing the message.
@@ -97,9 +98,9 @@ public:
     Error SendMessage(Message &aMessage);
 
     /**
-     * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 packet by NAT64
-     * later). Message buffers allocated by this function will have 20 bytes (The differences between the size of IPv6
-     * headers and the size of IPv4 headers) reserved.
+     * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 datagram by
+     * NAT64 later). Message buffers allocated by this function will have 20 bytes (The differences between the size of
+     * IPv6 headers and the size of IPv4 headers) reserved.
      *
      * @param[in]  aSettings  The message settings.
      *
@@ -109,42 +110,42 @@ public:
     Message *NewIp4Message(const Message::Settings &aSettings);
 
     /**
-     * Translates an IPv4 packet to IPv6 packet. Note the packet and packetLength might be adjusted.
-     * Note the message can have 20 bytes reserved before the packetHead to avoid potential copy operations.
+     * Translates an IPv4 datagram to IPv6 datagram. Note the datagram and datagramLength might be adjusted.
+     * Note the message can have 20 bytes reserved before the message to avoid potential copy operations. If the message
+     * is already an IPv6 datagram, Result::kNotTranslated will be returned and @p aMessage won't be modified.
      *
      * @param[in,out] aMessage the message to be processed.
      *
-     * @retval kNotTranslated The packet is already an IPv6 message. The message is not touched.
-     * @retval kForward       The caller should contiue forwarding the packet.
-     * @retval kDrop          The caller should drop the packet silently.
+     * @retval kNotTranslated The message is already an IPv6 datagram. @p aMessage is not updated.
+     * @retval kForward       The caller should contiue forwarding the datagram.
+     * @retval kDrop          The caller should drop the datagram silently.
      *
      */
     Result TranslateToIp6(Message &message);
 
     /**
-     * Translates an IPv6 packet to IPv4 packet. Note the packet and packetLength might be adjusted. Note the
-     * caller should reserve at least 20 bytes before the packetHead.
-     * If the message is not targeted to NAT64-mapped address, Result::kForward will be returned and the message won't
-     * be modified.
+     * Translates an IPv6 datagram to IPv4 datagram. Note the datagram and datagramLength might be adjusted.
+     * If the message is not targeted to NAT64-mapped address, Result::kNotTranslated will be returned and @p aMessage
+     * won't be modified.
      *
      * @param[in,out] aMessage the message to be processed.
      *
-     * @retval kNotTranslated The packet is not sending to the configured NAT64 prefix.
-     * @retval kForward       The caller should contiue forwarding the packet.
-     * @retval kDrop          The caller should drop the packet silently.
+     * @retval kNotTranslated The datagram is not sending to the configured NAT64 prefix.
+     * @retval kForward       The caller should contiue forwarding the datagram.
+     * @retval kDrop          The caller should drop the datagram silently.
      *
      */
     Result TranslateFromIp6(Message &aMessage);
 
     /**
-     * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
+     * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 datagrams.
      * A valid CIDR must have a non-zero prefix length.
      *
      * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available
      * in the CIDR block. If the provided is a valid IPv4 CIDR for NAT64, and it is different from the one already
      * configured, the NAT64 translator will be reset and all existing sessions will be expired.
      *
-     * @param[in] aCidr the CIDR for the sources of the translated packets.
+     * @param[in] aCidr the CIDR for the sources of the translated datagrams.
      *
      * @retval  kErrorInvalidArgs    The the given CIDR a valid CIDR for NAT64.
      * @retval  kErrorNone           Successfully enabled/disabled the NAT64 translator.
@@ -154,7 +155,8 @@ public:
 
     /**
      * This function sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table
-     * will not be cleared.
+     * will not be cleared. If an empty NAT64 prefix is set, the translator will return kNotTranslated for all IPv6
+     * datagrams and kDrop for all IPv4 datagrams.
      *
      * @param[in] aNat64Prefix the prefix of the NAT64-mapped addresses.
      *

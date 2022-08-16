@@ -94,10 +94,10 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
-    // ParseFrom will do basic checks for the message, including the packet length and IP protocol version.
+    // ParseFrom will do basic checks for the message, including the message length and IP protocol version.
     if (ip6Header.ParseFrom(aMessage) != kErrorNone)
     {
-        LogWarn("outgoing packet is not a valid IPv6 packet, drop");
+        LogWarn("outgoing datagram is not a valid IPv6 datagram, drop");
         ExitNow(res = kDrop);
     }
 
@@ -115,7 +115,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 
     if (ip6Header.GetHopLimit() <= 1)
     {
-        LogDebg("outgoing packet hop limit reached, drop");
+        LogDebg("outgoing datagram hop limit reached, drop");
         ExitNow(res = kDrop);
     }
     ip6Header.SetHopLimit(ip6Header.GetHopLimit() - 1);
@@ -156,7 +156,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     }
 
     // res here must be kForward based on the swich above.
-    // TODO: Implement the logic for replying ICMP packets.
+    // TODO: Implement the logic for replying ICMP messages.
     ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
     Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
                                     ip4Header.GetProtocol());
@@ -180,32 +180,32 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
-    // Ip6::Header::ParseForm may return an error value when the incoming message is an IPv4 packet.
-    // If the message is already an IPv6 packet, forward it directly.
+    // Ip6::Header::ParseForm may return an error value when the incoming message is an IPv4 datagram.
+    // If the message is already an IPv6 datagram, forward it directly.
     VerifyOrExit(ip6Header.ParseFrom(aMessage) != kErrorNone, res = kNotTranslated);
 
     if (ip4Header.ParseFrom(aMessage) != kErrorNone)
     {
-        LogWarn("incoming message is neither IPv4 nor an IPv6 packet, drop");
+        LogWarn("incoming message is neither IPv4 nor an IPv6 datagram, drop");
         ExitNow(res = kDrop);
     }
 
     if (mIp4Cidr.mLength == 0)
     {
         // The NAT64 translation is bypassed (will be handled externally)
-        LogWarn("incoming message is an IPv4 packet but no IPv4 CIDR for NAT64 configured, drop");
+        LogWarn("incoming message is an IPv4 datagram but no IPv4 CIDR for NAT64 configured, drop");
         ExitNow(res = kForward);
     }
 
     if (!mNat64Prefix.IsValidNat64())
     {
-        LogWarn("incoming message is an IPv4 packet but no NAT64 prefix configured, drop");
+        LogWarn("incoming message is an IPv4 datagram but no NAT64 prefix configured, drop");
         ExitNow(res = kDrop);
     }
 
     if (ip4Header.GetTtl() <= 1)
     {
-        LogDebg("incoming packet TTL reached");
+        LogDebg("incoming datagram TTL reached");
         ExitNow(res = kDrop);
     }
     ip4Header.SetTtl(ip4Header.GetTtl() - 1);
@@ -227,7 +227,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     ip6Header.SetHopLimit(ip4Header.GetTtl());
 
     // Note: TCP and UDP are the same for both IPv4 and IPv6 except for the checksum calculation, we will update the
-    // checksum in the payload later. However, we need to translate ICMPv6 packets to ICMP in IPv4 packets.
+    // checksum in the payload later. However, we need to translate ICMPv6 messages to ICMP messages in IPv4.
     switch (ip4Header.GetProtocol())
     {
     case Ip4::kProtoUdp:
@@ -248,13 +248,13 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     }
 
     // res here must be kForward based on the swich above.
-    // TODO: Implement the logic for replying ICMP packets.
+    // TODO: Implement the logic for replying ICMP datagrams.
     ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
     Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
                                     ip6Header.GetNextHeader());
     if (aMessage.Prepend(ip6Header) != kErrorNone)
     {
-        // This might happen when the platform failed to reserve enough space before the original IPv4 packet.
+        // This might happen when the platform failed to reserve enough space before the original IPv4 datagram.
         LogWarn("failed to prepend IPv6 head to translated message");
         ExitNow(res = kDrop);
     }
