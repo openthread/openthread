@@ -236,7 +236,7 @@ enum LeaderStartMode : uint8_t
  * Backbone Router / DUA / MLR constants
  *
  */
-constexpr uint16_t kRegistrationDelayDefault         = 1200;              ///< In seconds.
+constexpr uint16_t kRegistrationDelayDefault         = 5;                 ///< In seconds.
 constexpr uint32_t kMlrTimeoutDefault                = 3600;              ///< In seconds.
 constexpr uint32_t kMlrTimeoutMin                    = 300;               ///< In seconds.
 constexpr uint32_t kMlrTimeoutMax                    = 0x7fffffff / 1000; ///< In seconds (about 24 days).
