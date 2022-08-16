@@ -1,4 +1,4 @@
 ipaddress
 pexpect
 pycryptodome
-pyshark==0.4.2.11
+pyshark==0.5.3
