@@ -82,6 +82,7 @@ typedef struct otPlatformConfig
     uint32_t    mSpeedUpFactor;                                ///< Speed up factor.
     bool        mDryRun;                                       ///< If 'DryRun' is set, the posix daemon will exit
                                                                ///< directly after initialization.
+    bool        mPersistentInterface;                          ///< Whether persistent the interface
 } otPlatformConfig;
 
 /**

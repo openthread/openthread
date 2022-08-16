@@ -1598,21 +1598,28 @@ exit:
 
 #if defined(__linux__)
 // set up the tun device
-static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceName, size_t deviceNameLen)
+static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *deviceName, size_t deviceNameLen)
 {
     struct ifreq ifr;
+    const char *interfaceName;
+    int err = 0;
 
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifr, 0, sizeof(ifr));
-    ifr.ifr_flags = IFF_TUN | IFF_NO_PI | static_cast<short>(IFF_TUN_EXCL);
-
-    if (aInterfaceName)
+    ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+    if (!aPlatformConfig->mPersistentInterface)
     {
-        VerifyOrDie(strlen(aInterfaceName) < IFNAMSIZ, OT_EXIT_INVALID_ARGUMENTS);
+        ifr.ifr_flags |= static_cast<short>(IFF_TUN_EXCL);
+    }
 
-        strncpy(ifr.ifr_name, aInterfaceName, IFNAMSIZ);
+    interfaceName = aPlatformConfig->mInterfaceName;
+    if (interfaceName)
+    {
+        VerifyOrDie(strlen(interfaceName) < IFNAMSIZ, OT_EXIT_INVALID_ARGUMENTS);
+
+        strncpy(ifr.ifr_name, interfaceName, IFNAMSIZ);
     }
     else
     {
@@ -1620,7 +1627,18 @@ static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceN
     }
 
     VerifyOrDie(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
-    VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
+
+    err = ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID);
+    if (err != 0)
+    {
+        // When reuse an existing tun device, the device may already up, ignore EBUSY in this case
+        VerifyOrDie(aPlatformConfig->mPersistentInterface && errno == EBUSY, OT_EXIT_ERROR_ERRNO);
+    }
+
+    if (aPlatformConfig->mPersistentInterface)
+    {
+        VerifyOrDie(ioctl(sTunFd, TUNSETPERSIST, 1) == 0, OT_EXIT_ERROR_ERRNO);
+    }
 
     strncpy(deviceName, ifr.ifr_name, deviceNameLen);
 
@@ -1630,9 +1648,9 @@ static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceN
 #endif
 
 #if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
-static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceName, size_t deviceNameLen)
+static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *deviceName, size_t deviceNameLen)
 {
-    (void)aInterfaceName;
+    (void)aPlatformConfig;
     int                 err = 0;
     struct sockaddr_ctl addr;
     struct ctl_info     info;
@@ -1682,14 +1700,14 @@ exit:
 #if defined(__NetBSD__) ||                                                                             \
     (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
     defined(__FreeBSD__)
-static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceName, size_t deviceNameLen)
+static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *deviceName, size_t deviceNameLen)
 {
     int         flags = IFF_BROADCAST | IFF_MULTICAST;
     int         err;
     const char *last_slash;
     const char *path;
 
-    (void)aInterfaceName;
+    (void)aPlatformConfig;
 
     path = OPENTHREAD_POSIX_TUN_DEVICE;
 
@@ -1761,13 +1779,13 @@ static void platformConfigureNetLink(void)
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 }
 
-void platformNetifInit(const char *aInterfaceName)
+void platformNetifInit(otPlatformConfig *aPlatformConfig)
 {
     sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     platformConfigureNetLink();
-    platformConfigureTunDevice(aInterfaceName, gNetifName, sizeof(gNetifName));
+    platformConfigureTunDevice(aPlatformConfig, gNetifName, sizeof(gNetifName));
 
     gNetifIndex = if_nametoindex(gNetifName);
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
