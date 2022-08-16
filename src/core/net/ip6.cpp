@@ -1154,8 +1154,6 @@ start:
     // determine destination of packet
     if (header.GetDestination().IsMulticast())
     {
-        Netif *netif;
-
         if (aNetif != nullptr)
         {
 #if OPENTHREAD_FTD
@@ -1165,23 +1163,20 @@ start:
                 forwardThread = true;
             }
 #endif
-
-            netif = aNetif;
         }
         else
         {
             forwardThread = true;
-
-            netif = &Get<ThreadNetif>();
         }
 
         forwardHost = header.GetDestination().IsMulticastLargerThanRealmLocal();
 
-        if ((aNetif != nullptr || aMessage.GetMulticastLoop()) && netif->IsMulticastSubscribed(header.GetDestination()))
+        if ((aNetif != nullptr || aMessage.GetMulticastLoop()) &&
+            Get<ThreadNetif>().IsMulticastSubscribed(header.GetDestination()))
         {
             receive = true;
         }
-        else if (netif->IsMulticastPromiscuousEnabled())
+        else if (Get<ThreadNetif>().IsMulticastPromiscuousEnabled())
         {
             forwardHost = true;
         }
