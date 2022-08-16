@@ -258,7 +258,7 @@ void RoutingManager::UpdateInfraIfNat64Prefix(const Ip6::Prefix &aPrefix)
 
     if (mIsRunning)
     {
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitter);
+        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
     }
 }
 
