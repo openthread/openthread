@@ -890,11 +890,11 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
                                   MessageInfo &aMessageInfo,
                                   Header &     aHeader,
                                   uint8_t &    aNextHeader,
-                                  bool         aIsOutbound,
                                   bool         aFromHost,
                                   bool &       aReceive)
 {
-    Error           error = kErrorNone;
+    Error           error      = kErrorNone;
+    bool            isOutbound = (aNetif == nullptr);
     ExtensionHeader extHeader;
 
     while (aReceive || aNextHeader == kProtoHopOpts)
@@ -904,7 +904,7 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
         switch (aNextHeader)
         {
         case kProtoHopOpts:
-            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aIsOutbound, aReceive));
+            SuccessOrExit(error = HandleOptions(aMessage, aHeader, isOutbound, aReceive));
             break;
 
         case kProtoFragment:
@@ -916,7 +916,7 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
             break;
 
         case kProtoDstOpts:
-            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aIsOutbound, aReceive));
+            SuccessOrExit(error = HandleOptions(aMessage, aHeader, isOutbound, aReceive));
             break;
 
         case kProtoIp6:
@@ -1213,8 +1213,8 @@ start:
 
     // process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
-    SuccessOrExit(error = HandleExtensionHeaders(aMessage, aNetif, messageInfo, header, nextHeader, aNetif == nullptr,
-                                                 aFromHost, receive));
+    SuccessOrExit(error =
+                      HandleExtensionHeaders(aMessage, aNetif, messageInfo, header, nextHeader, aFromHost, receive));
 
     // process IPv6 Payload
     if (receive)
