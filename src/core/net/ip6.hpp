@@ -333,7 +333,6 @@ private:
                                  MessageInfo &aMessageInfo,
                                  Header &     aHeader,
                                  uint8_t &    aNextHeader,
-                                 bool         aIsOutbound,
                                  bool         aFromHost,
                                  bool &       aReceive);
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
