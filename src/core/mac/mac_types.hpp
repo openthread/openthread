@@ -867,6 +867,73 @@ private:
 };
 
 /**
+ * This class represents CSL accuracy.
+ *
+ */
+class CslAccuracy
+{
+public:
+    static constexpr uint8_t kWorstClockAccuracy = 255; ///< Worst possible crystal accuracy, in units of ± ppm.
+    static constexpr uint8_t kWorstUncertainty   = 255; ///< Worst possible uncertainty, in units of 10 microseconds.
+
+    /**
+     * This method initializes the CSL accuracy using `kWorstClockAccuracy` and `kWorstUncertainty` values.
+     *
+     */
+    void Init(void)
+    {
+        mClockAccuracy = kWorstClockAccuracy;
+        mUncertainty   = kWorstUncertainty;
+    }
+
+    /**
+     * This method returns the CSL clock accuracy.
+     *
+     * @returns The CSL clock accuracy in ± ppm.
+     *
+     */
+    uint8_t GetClockAccuracy(void) const { return mClockAccuracy; }
+
+    /**
+     * This method sets the CSL clock accuracy.
+     *
+     * @param[in]  aClockAccuracy  The CSL clock accuracy in ± ppm.
+     *
+     */
+    void SetClockAccuracy(uint8_t aClockAccuracy) { mClockAccuracy = aClockAccuracy; }
+
+    /**
+     * This method returns the CSL uncertainty.
+     *
+     * @returns The uncertainty in units 10 microseconds.
+     *
+     */
+    uint8_t GetUncertainty(void) const { return mUncertainty; }
+
+    /**
+     * This method gets the CLS uncertainty in microseconds.
+     *
+     * @returns the CLS uncertainty in microseconds.
+     *
+     */
+    uint16_t GetUncertaintyInMicrosec(void) const { return static_cast<uint16_t>(mUncertainty) * kUsPerUncertUnit; }
+
+    /**
+     * This method sets the CSL uncertainty.
+     *
+     * @param[in]  aUncertainty  The CSL uncertainty in units 10 microseconds.
+     *
+     */
+    void SetUncertainty(uint8_t aUncertainty) { mUncertainty = aUncertainty; }
+
+private:
+    static constexpr uint8_t kUsPerUncertUnit = 10;
+
+    uint8_t mClockAccuracy;
+    uint8_t mUncertainty;
+};
+
+/**
  * @}
  *
  */

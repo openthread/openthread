@@ -1365,8 +1365,7 @@ public:
     {
         Neighbor::Init(aInstance);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        SetCslClockAccuracy(kCslWorstCrystalPpm);
-        SetCslUncertainty(kCslWorstUncertainty);
+        mCslAccuracy.Init();
 #endif
     }
 
@@ -1426,36 +1425,20 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method get the CSL clock accuracy of this router.
+     * This method gets the CSL accuracy (clock accuracy and uncertainty).
      *
-     * @returns The CSL clock accuracy of this router.
+     * @returns The CSL accuracy.
      *
      */
-    uint8_t GetCslClockAccuracy(void) const { return mCslClockAccuracy; }
+    const Mac::CslAccuracy &GetCslAccuracy(void) const { return mCslAccuracy; }
 
     /**
-     * This method sets the CSL clock accuracy of this router.
+     * This method sets CSL accuracy.
      *
-     * @param[in]  aCslClockAccuracy  The CSL clock accuracy of this router.
-     *
-     */
-    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
-
-    /**
-     * This method get the CSL clock uncertainty of this router.
-     *
-     * @returns The CSL clock uncertainty of this router.
+     * @param[in] aCslAccuracy  The CSL accuracy.
      *
      */
-    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
-
-    /**
-     * This method sets the CSL clock uncertainty of this router.
-     *
-     * @param[in]  aCslUncertainty  The CSL clock uncertainty of this router.
-     *
-     */
-    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
+    void SetCslAccuracy(const Mac::CslAccuracy &aCslAccuracy) { mCslAccuracy = aCslAccuracy; }
 #endif
 
 private:
@@ -1468,8 +1451,7 @@ private:
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint8_t mCslClockAccuracy; ///< Crystal accuracy, in units of ± ppm.
-    uint8_t mCslUncertainty;   ///< Scheduling uncertainty, in units of 10 us.
+    Mac::CslAccuracy mCslAccuracy; // CSL accuracy (clock accuracy in ppm and uncertainty).
 #endif
 };
 
