@@ -40,6 +40,7 @@
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
+#include "thread/version.hpp"
 
 using namespace ot;
 
@@ -400,7 +401,7 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
 uint16_t otThreadGetVersion(void)
 {
-    return OPENTHREAD_CONFIG_THREAD_VERSION;
+    return kThreadVersion;
 }
 
 bool otThreadIsSingleton(otInstance *aInstance)

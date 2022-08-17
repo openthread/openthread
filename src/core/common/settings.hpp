@@ -49,6 +49,7 @@
 #include "mac/mac_types.hpp"
 #include "meshcop/dataset.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/version.hpp"
 #include "utils/flash.hpp"
 #include "utils/slaac_address.hpp"
 
@@ -143,7 +144,7 @@ public:
         void Init(void)
         {
             Clear();
-            SetVersion(OT_THREAD_VERSION_1_1);
+            SetVersion(kThreadVersion1p1);
         }
 
         /**
@@ -349,7 +350,7 @@ public:
         void Init(void)
         {
             Clear();
-            SetVersion(OT_THREAD_VERSION_1_1);
+            SetVersion(kThreadVersion1p1);
         }
 
         /**
@@ -411,7 +412,7 @@ public:
         void Init(void)
         {
             memset(this, 0, sizeof(*this));
-            SetVersion(OT_THREAD_VERSION_1_1);
+            SetVersion(kThreadVersion1p1);
         }
 
         /**

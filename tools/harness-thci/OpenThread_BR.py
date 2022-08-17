@@ -661,21 +661,20 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
                 ip6tables_cmd('ip6tables -I INPUT -p udp --dport 5353 -j DROP')
 
-            return self._mdns_query_impl(service, use_dig=(not addrs_allowlist and not addrs_denylist))
+            return self._mdns_query_impl(service, find_active=(addrs_allowlist or addrs_denylist))
 
         finally:
             for cmd in cleanup:
                 self.bash(cmd)
 
-    def _mdns_query_impl(self, service, use_dig):
+    def _mdns_query_impl(self, service, find_active):
         # For BBR-TC-03 or DH test cases (empty arguments) just send a query
-        if use_dig:
-            self.bash('dig -p 5353 @ff02::fb %s ptr' % service, sudo=False)
+        output = self.bash('python3 ~/repo/openthread/tests/scripts/thread-cert/find_border_agents.py')
+
+        if not find_active:
             return
 
         # For MATN-TC-17 and MATN-TC-18 use Zeroconf to get the BBR address and border agent port
-        cmd = 'python3 ~/repo/openthread/tests/scripts/thread-cert/find_border_agents.py'
-        output = self.bash(cmd)
         for line in output:
             print(line)
             alias, addr, port, thread_status = eval(line)

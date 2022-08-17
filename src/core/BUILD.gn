@@ -683,6 +683,7 @@ openthread_core_files = [
   "thread/topology.hpp",
   "thread/uri_paths.cpp",
   "thread/uri_paths.hpp",
+  "thread/version.hpp",
   "utils/channel_manager.cpp",
   "utils/channel_manager.hpp",
   "utils/channel_monitor.cpp",

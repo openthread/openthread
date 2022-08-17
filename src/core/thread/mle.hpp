@@ -1794,13 +1794,6 @@ private:
     static constexpr uint8_t kMleHopLimit        = 255;
     static constexpr uint8_t kMleSecurityTagSize = 4; // Security tag size in bytes.
 
-    // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
-    // All timer intervals are converted to milliseconds.
-    static constexpr uint32_t kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u);
-    static constexpr uint32_t kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u);
-    static constexpr uint32_t kParentSearchJitterInterval  = (15 * 1000u);
-    static constexpr int8_t   kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
-
     // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
     static constexpr uint32_t kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL;
     static constexpr uint32_t kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL;
@@ -1917,6 +1910,42 @@ private:
     };
 #endif
 
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    class ParentSearch : public InstanceLocator
+    {
+    public:
+        explicit ParentSearch(Instance &aInstance)
+            : InstanceLocator(aInstance)
+            , mIsInBackoff(false)
+            , mBackoffWasCanceled(false)
+            , mRecentlyDetached(false)
+            , mBackoffCancelTime(0)
+            , mTimer(aInstance, HandleTimer)
+        {
+        }
+
+        void StartTimer(void);
+        void UpdateState(void);
+        void SetRecentlyDetached(void) { mRecentlyDetached = true; }
+
+    private:
+        // All timer intervals are converted to milliseconds.
+        static constexpr uint32_t kCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u);
+        static constexpr uint32_t kBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u);
+        static constexpr uint32_t kJitterInterval  = (15 * 1000u);
+        static constexpr int8_t   kRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
+
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
+
+        bool       mIsInBackoff : 1;
+        bool       mBackoffWasCanceled : 1;
+        bool       mRecentlyDetached : 1;
+        TimeMilli  mBackoffCancelTime;
+        TimerMilli mTimer;
+    };
+#endif // OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+
     Error       Start(StartMode aMode);
     void        Stop(StopMode aMode);
     void        HandleNotifierEvents(Events aEvents);
@@ -1984,7 +2013,7 @@ private:
                         LinkQuality            aLinkQuality,
                         uint8_t                aLinkMargin,
                         const ConnectivityTlv &aConnectivityTlv,
-                        uint8_t                aVersion,
+                        uint16_t               aVersion,
                         uint8_t                aCslClockAccuracy,
                         uint8_t                aCslUncertainty);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
@@ -2002,13 +2031,6 @@ private:
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     void InformPreviousParent(void);
-#endif
-
-#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    static void HandleParentSearchTimer(Timer &aTimer);
-    void        HandleParentSearchTimer(void);
-    void        StartParentSearchTimer(void);
-    void        UpdateParentSearchState(void);
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
@@ -2054,11 +2076,7 @@ private:
     uint16_t mPreviousParentRloc;
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    bool       mParentSearchIsInBackoff : 1;
-    bool       mParentSearchBackoffWasCanceled : 1;
-    bool       mParentSearchRecentlyDetached : 1;
-    TimeMilli  mParentSearchBackoffCancelTime;
-    TimerMilli mParentSearchTimer;
+    ParentSearch mParentSearch;
 #endif
 
     uint8_t  mAnnounceChannel;
