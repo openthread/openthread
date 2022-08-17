@@ -1159,16 +1159,13 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (isUp)
+    if (isUp && gNat64Cidr.mLength > 0)
     {
-        if (gNat64Cidr.mLength > 0)
-        {
-            SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
-            AddIp4Route(gNat64Cidr, kExternalRoutePriority);
-            otLogInfoPlat("[netif] Succeeded to enable NAT64");
-        }
+        SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
+        AddIp4Route(gNat64Cidr, kExternalRoutePriority);
+        otLogInfoPlat("[netif] Succeeded to enable NAT64");
     }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#endif
 
 exit:
     if (error != OT_ERROR_NONE)

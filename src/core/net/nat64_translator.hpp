@@ -51,7 +51,7 @@ namespace ot {
 namespace Nat64 {
 
 /**
- * This class implements the NAT64 translator for thread.
+ * This class implements the NAT64 translator.
  *
  */
 class Translator : public InstanceLocator, private NonCopyable
@@ -81,7 +81,7 @@ public:
     explicit Translator(Instance &aInstance);
 
     /**
-     * This method translates an IPv4 datagram to an IPv6 datagram and send it via thread interface.
+     * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
      *
      * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
      * processing is complete, including when a value other than `kErrorNone` is returned.
@@ -112,7 +112,7 @@ public:
     /**
      * Translates an IPv4 datagram to IPv6 datagram. Note the datagram and datagramLength might be adjusted.
      * Note the message can have 20 bytes reserved before the message to avoid potential copy operations. If the message
-     * is already an IPv6 datagram, Result::kNotTranslated will be returned and @p aMessage won't be modified.
+     * is already an IPv6 datagram, `Result::kNotTranslated` will be returned and @p aMessage won't be modified.
      *
      * @param[in,out] aMessage the message to be processed.
      *
@@ -125,7 +125,7 @@ public:
 
     /**
      * Translates an IPv6 datagram to IPv4 datagram. Note the datagram and datagramLength might be adjusted.
-     * If the message is not targeted to NAT64-mapped address, Result::kNotTranslated will be returned and @p aMessage
+     * If the message is not targeted to NAT64-mapped address, `Result::kNotTranslated` will be returned and @p aMessage
      * won't be modified.
      *
      * @param[in,out] aMessage the message to be processed.
@@ -138,8 +138,8 @@ public:
     Result TranslateFromIp6(Message &aMessage);
 
     /**
-     * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 datagrams.
-     * A valid CIDR must have a non-zero prefix length.
+     * Sets the CIDR used when setting the source address of the outgoing translated IPv4 datagrams. A valid CIDR must
+     * have a non-zero prefix length.
      *
      * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available
      * in the CIDR block. If the provided is a valid IPv4 CIDR for NAT64, and it is different from the one already
@@ -154,11 +154,11 @@ public:
     Error SetIp4Cidr(const Ip4::Cidr &aCidr);
 
     /**
-     * This function sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table
-     * will not be cleared. If an empty NAT64 prefix is set, the translator will return kNotTranslated for all IPv6
-     * datagrams and kDrop for all IPv4 datagrams.
+     * Sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
+     * If an empty NAT64 prefix is set, the translator will return kNotTranslated for all IPv6 datagrams and kDrop for
+     * all IPv4 datagrams.
      *
-     * @param[in] aNat64Prefix the prefix of the NAT64-mapped addresses.
+     * @param[in] aNat64Prefix The prefix of the NAT64-mapped addresses.
      *
      */
     void SetNat64Prefix(const Ip6::Prefix &aNat64Prefix);
@@ -196,12 +196,16 @@ private:
     AddressMapping *FindOrAllocateMapping(const Ip6::Address &aIp6Addr);
     AddressMapping *FindMapping(const Ip4::Address &aIp4Addr);
 
+    static void MappingExpirerHandler(Timer &aTimer);
+
     Array<Ip4::Address, kAddressMappingPoolSize>  mIp4AddressPool;
     Pool<AddressMapping, kAddressMappingPoolSize> mAddressMappingPool;
     LinkedList<AddressMapping>                    mActiveAddressMappings;
 
     Ip6::Prefix mNat64Prefix;
     Ip4::Cidr   mIp4Cidr;
+
+    TimerMilli mMappingExpirer;
 };
 
 } // namespace Nat64

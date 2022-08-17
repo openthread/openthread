@@ -90,12 +90,12 @@ typedef struct otIp4Cidr
 
 /**
  * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 packet by NAT64
- * later). Message buffers allocated by this function will have 20 bytes (The differences between the size of IPv6
- * headers and the size of IPv4 headers) reserved.
+ * later). Message buffers allocated by this function will have 20 bytes (difference between the size of IPv6 headers
+ * and IPv4 header sizes) reserved.
  *
- * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
+ * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
- * @note If @p aSettings is 'NULL', the link layer security is enabled and the message priority is set to
+ * @note If @p aSettings is `NULL`, the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -110,14 +110,16 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
  * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets. A valid
  * CIDR must have a non-zero prefix length.
  *
- * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available in
- * the CIDR block. If the provided is a valid IPv4 CIDR for NAT64, and it is different from the one already configured,
- * the NAT64 translator will be reset and all existing sessions will be expired.
- *
  * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
  *
- * @param[in] aInstance A pointer to an OpenThread instance.
- * @param[in] aCidr A pointer to an otIp4Cidr for the IPv4 CIDR block for NAT64.
+ * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available in
+ * the CIDR block.
+ *
+ * @note This function can be called at any time, but the NAT64 translator will be reset and all existing sessions will
+ * be expired when updating the configured CIDR.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCidr      A pointer to an otIp4Cidr for the IPv4 CIDR block for NAT64.
  *
  * @retval  OT_ERROR_INVALID_ARGS   The given CIDR is not a valid IPv4 CIDR for NAT64.
  * @retval  OT_ERROR_NONE           Successfully set the CIDR for NAT64.
@@ -129,7 +131,7 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
 
 /**
- * This function translates an IPv4 datagram to IPv6 datagram and send via the Thread interface.
+ * This function translates an IPv4 datagram to an IPv6 datagram and sends via the Thread interface.
  *
  * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
  * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.

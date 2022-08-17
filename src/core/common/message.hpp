@@ -281,7 +281,7 @@ public:
         kType6lowpan      = 1, ///< A 6lowpan frame
         kTypeSupervision  = 2, ///< A child supervision frame.
         kTypeMacEmptyData = 3, ///< An empty MAC data frame.
-        kTypeIp4          = 4, ///< A full uncompressed IPv4 packet, for NAT64
+        kTypeIp4          = 4, ///< A full uncompressed IPv4 packet, for NAT64.
         kTypeOther        = 5, ///< Other (data) message.
     };
 

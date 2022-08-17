@@ -50,9 +50,11 @@ RegisterLogModule("Nat64");
 
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mMappingExpirer(aInstance, MappingExpirerHandler)
 {
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
+    mMappingExpirer.Start(kAddressMappingIdleTimeoutMsec);
 }
 
 Message *Translator::NewIp4Message(const Message::Settings &aSettings)
@@ -94,6 +96,11 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
+    if (mIp4Cidr.mLength == 0 || !mNat64Prefix.IsValidNat64())
+    {
+        ExitNow(res = kNotTranslated);
+    }
+
     // ParseFrom will do basic checks for the message, including the message length and IP protocol version.
     if (ip6Header.ParseFrom(aMessage) != kErrorNone)
     {
@@ -101,19 +108,12 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
 
-    if (!mNat64Prefix.IsValidNat64() || !ip6Header.GetDestination().MatchesPrefix(mNat64Prefix))
+    if (!ip6Header.GetDestination().MatchesPrefix(mNat64Prefix))
     {
         ExitNow(res = kNotTranslated);
     }
 
-    if (mIp4Cidr.mLength == 0)
-    {
-        // The NAT64 translation is bypassed (will be handled externally)
-        LogDebg("no IPv4 CIDR for NAT64 configured, forward to upper layer");
-        ExitNow(res = kForward);
-    }
-
-    if (ip6Header.GetHopLimit() <= 1)
+    if (ip6Header.GetHopLimit() == 0)
     {
         LogDebg("outgoing datagram hop limit reached, drop");
         ExitNow(res = kDrop);
@@ -155,7 +155,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
 
-    // res here must be kForward based on the swich above.
+    // res here must be kForward based on the switch above.
     // TODO: Implement the logic for replying ICMP messages.
     ip4Header.SetTotalLength(sizeof(Ip4::Header) + aMessage.GetLength() - aMessage.GetOffset());
     Checksum::UpdateMessageChecksum(aMessage, ip4Header.GetSource(), ip4Header.GetDestination(),
@@ -180,15 +180,9 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     Ip4::Header     ip4Header;
     AddressMapping *mapping = nullptr;
 
-    // Ip6::Header::ParseForm may return an error value when the incoming message is an IPv4 datagram.
+    // Ip6::Header::ParseFrom may return an error value when the incoming message is an IPv4 datagram.
     // If the message is already an IPv6 datagram, forward it directly.
     VerifyOrExit(ip6Header.ParseFrom(aMessage) != kErrorNone, res = kNotTranslated);
-
-    if (ip4Header.ParseFrom(aMessage) != kErrorNone)
-    {
-        LogWarn("incoming message is neither IPv4 nor an IPv6 datagram, drop");
-        ExitNow(res = kDrop);
-    }
 
     if (mIp4Cidr.mLength == 0)
     {
@@ -203,7 +197,13 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
 
-    if (ip4Header.GetTtl() <= 1)
+    if (ip4Header.ParseFrom(aMessage) != kErrorNone)
+    {
+        LogWarn("incoming message is neither IPv4 nor an IPv6 datagram, drop");
+        ExitNow(res = kDrop);
+    }
+
+    if (ip4Header.GetTtl() == 0)
     {
         LogDebg("incoming datagram TTL reached");
         ExitNow(res = kDrop);
@@ -247,7 +247,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
 
-    // res here must be kForward based on the swich above.
+    // res here must be kForward based on the switch above.
     // TODO: Implement the logic for replying ICMP datagrams.
     ip6Header.SetPayloadLength(aMessage.GetLength() - aMessage.GetOffset());
     Checksum::UpdateMessageChecksum(aMessage, ip6Header.GetSource(), ip6Header.GetDestination(),
@@ -275,9 +275,9 @@ Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void
 
 void Translator::ReleaseMapping(AddressMapping &aMapping)
 {
-    LogInfo("mapping removed: %s", aMapping.ToString().AsCString());
     IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4));
     mAddressMappingPool.Free(aMapping);
+    LogInfo("mapping removed: %s", aMapping.ToString().AsCString());
 }
 
 uint16_t Translator::ReleaseExpiredMappings(void)
@@ -356,7 +356,7 @@ Error Translator::TranslateIcmp4(Message &aMessage)
 
     // TODO: Implement the translation of other ICMP messages.
 
-    // Note: The caller have consumed the IP header, so the ICMP header is at offset 0.
+    // Note: The caller consumed the IP header, so the ICMP header is at offset 0.
     SuccessOrExit(err = aMessage.Read(0, icmp4Header));
     switch (icmp4Header.GetType())
     {
@@ -466,6 +466,12 @@ void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
         LogInfo("IPv6 Prefix for NAT64 updated to %s", aNat64Prefix.ToString().AsCString());
         mNat64Prefix = aNat64Prefix;
     }
+}
+
+void Translator::MappingExpirerHandler(Timer &aTimer)
+{
+    LogInfo("Released %d expired mappings", aTimer.Get<Translator>().ReleaseExpiredMappings());
+    aTimer.Get<Translator>().mMappingExpirer.Start(kAddressMappingIdleTimeoutMsec);
 }
 
 } // namespace Nat64
