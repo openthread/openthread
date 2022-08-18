@@ -3474,6 +3474,21 @@ template <> otError Interpreter::Process<Cmd("ifconfig")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli ifconfig
+     * @code
+     * ifconfig
+     * down
+     * Done
+     * @endcode
+     * @code
+     * ifconfig
+     * up
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otIp6IsEnabled
+     */
     if (aArgs[0].IsEmpty())
     {
         if (otIp6IsEnabled(GetInstancePtr()))
@@ -3485,6 +3500,20 @@ template <> otError Interpreter::Process<Cmd("ifconfig")>(Arg aArgs[])
             OutputLine("down");
         }
     }
+    /**
+     * @cli ifconfig (up,down)
+     * @code
+     * ifconfig up
+     * Done
+     * @endcode
+     * @code
+     * ifconfig down
+     * Done
+     * @endcode
+     * @cparam ifconfig @ca{up|down}
+     * @par api_copy
+     * #otIp6SetEnabled
+     */
     else if (aArgs[0] == "up")
     {
         SuccessOrExit(error = otIp6SetEnabled(GetInstancePtr(), true));
@@ -3530,6 +3559,27 @@ template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
         verbose = true;
     }
 
+    /**
+     * @cli ipaddr
+     * @code
+     * ipaddr
+     * fdde:ad00:beef:0:0:ff:fe00:0
+     * fdde:ad00:beef:0:558:f56b:d688:799
+     * fe80:0:0:0:f3d9:2a82:c8d8:fe43
+     * Done
+     * @endcode
+     * @code
+     * ipaddr -v
+     * fdde:ad00:beef:0:0:ff:fe00:0 origin:thread
+     * fdde:ad00:beef:0:558:f56b:d688:799 origin:thread
+     * fe80:0:0:0:f3d9:2a82:c8d8:fe43 origin:thread
+     * Done
+     * @endcode
+     * @cparam ipaddr [@ca{-v}]
+     * Use `-v` to get verbose IP Address information.
+     * @par api_copy
+     * #otIp6GetUnicastAddresses
+     */
     if (aArgs[0].IsEmpty())
     {
         const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(GetInstancePtr());
@@ -3546,6 +3596,16 @@ template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
             OutputLine("");
         }
     }
+    /**
+     * @cli ipaddr add
+     * @code
+     * ipaddr add 2001::dead:beef:cafe
+     * Done
+     * @endcode
+     * @cparam ipaddr add @ca{aAddress}
+     * @par api_copy
+     * #otIp6AddUnicastAddress
+     */
     else if (aArgs[0] == "add")
     {
         otNetifAddress address;
@@ -3558,6 +3618,16 @@ template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
 
         error = otIp6AddUnicastAddress(GetInstancePtr(), &address);
     }
+    /**
+     * @cli ipaddr del
+     * @code
+     * ipaddr del 2001::dead:beef:cafe
+     * Done
+     * @endcode
+     * @cparam ipaddr del @ca{aAddress}
+     * @par api_copy
+     * #otIp6RemoveUnicastAddress
+     */
     else if (aArgs[0] == "del")
     {
         otIp6Address address;
@@ -3565,14 +3635,44 @@ template <> otError Interpreter::Process<Cmd("ipaddr")>(Arg aArgs[])
         SuccessOrExit(error = aArgs[1].ParseAsIp6Address(address));
         error = otIp6RemoveUnicastAddress(GetInstancePtr(), &address);
     }
+    /**
+     * @cli ipaddr linklocal
+     * @code
+     * ipaddr linklocal
+     * fe80:0:0:0:f3d9:2a82:c8d8:fe43
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetLinkLocalIp6Address
+     */
     else if (aArgs[0] == "linklocal")
     {
         OutputIp6AddressLine(*otThreadGetLinkLocalIp6Address(GetInstancePtr()));
     }
+    /**
+     * @cli ipaddr rloc
+     * @code
+     * ipaddr rloc
+     * fdde:ad00:beef:0:0:ff:fe00:0
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetRloc
+     */
     else if (aArgs[0] == "rloc")
     {
         OutputIp6AddressLine(*otThreadGetRloc(GetInstancePtr()));
     }
+    /**
+     * @cli ipaddr mleid
+     * @code
+     * ipaddr mleid
+     * fdde:ad00:beef:0:558:f56b:d688:799
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetMeshLocalEid
+     */
     else if (aArgs[0] == "mleid")
     {
         OutputIp6AddressLine(*otThreadGetMeshLocalEid(GetInstancePtr()));
@@ -3590,6 +3690,18 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli ipmaddr
+     * @code
+     * ipmaddr
+     * ff05:0:0:0:0:0:0:1
+     * ff33:40:fdde:ad00:beef:0:0:1
+     * ff32:40:fdde:ad00:beef:0:0:1
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otIp6GetMulticastAddresses
+     */
     if (aArgs[0].IsEmpty())
     {
         for (const otNetifMulticastAddress *addr = otIp6GetMulticastAddresses(GetInstancePtr()); addr;
@@ -3598,6 +3710,16 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
             OutputIp6AddressLine(addr->mAddress);
         }
     }
+    /**
+     * @cli ipmaddr add
+     * @code
+     * ipmaddr add ff05::1
+     * Done
+     * @endcode
+     * @cparam ipmaddr add @ca{aAddress}
+     * @par api_copy
+     * #otIp6SubscribeMulticastAddress
+     */
     else if (aArgs[0] == "add")
     {
         otIp6Address address;
@@ -3615,6 +3737,16 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
         while (false);
 #endif
     }
+    /**
+     * @cli ipmaddr del
+     * @code
+     * ipmaddr del ff05::1
+     * Done
+     * @endcode
+     * @cparam ipmaddr del @ca{aAddress}
+     * @par api_copy
+     * #otIp6UnsubscribeMulticastAddress
+     */
     else if (aArgs[0] == "del")
     {
         otIp6Address address;
@@ -3622,12 +3754,36 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
         SuccessOrExit(error = aArgs[1].ParseAsIp6Address(address));
         error = otIp6UnsubscribeMulticastAddress(GetInstancePtr(), &address);
     }
+    /**
+     * @cli ipmaddr promiscuous
+     * @code
+     * ipmaddr promiscuous
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otIp6IsMulticastPromiscuousEnabled
+     */
     else if (aArgs[0] == "promiscuous")
     {
         if (aArgs[1].IsEmpty())
         {
             OutputEnabledDisabledStatus(otIp6IsMulticastPromiscuousEnabled(GetInstancePtr()));
         }
+        /**
+         * @cli ipmaddr promiscuous (enable,disable)
+         * @code
+         * ipmaddr promiscuous enable
+         * Done
+         * @endcode
+         * @code
+         * ipmaddr promiscuous disable
+         * Done
+         * @endcode
+         * @cparam ipmaddr promiscuous @ca{enable|disable}
+         * @par api_copy
+         * #otIp6SetMulticastPromiscuousEnabled
+         */
         else
         {
             bool enable;
@@ -3636,10 +3792,30 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
             otIp6SetMulticastPromiscuousEnabled(GetInstancePtr(), enable);
         }
     }
+    /**
+     * @cli ipmaddr llatn
+     * @code
+     * ipmaddr llatn
+     * ff32:40:fdde:ad00:beef:0:0:1
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetLinkLocalAllThreadNodesMulticastAddress
+     */
     else if (aArgs[0] == "llatn")
     {
         OutputIp6AddressLine(*otThreadGetLinkLocalAllThreadNodesMulticastAddress(GetInstancePtr()));
     }
+    /**
+     * @cli ipmaddr rlatn
+     * @code
+     * ipmaddr rlatn
+     * ff33:40:fdde:ad00:beef:0:0:1
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetRealmLocalAllThreadNodesMulticastAddress
+     */
     else if (aArgs[0] == "rlatn")
     {
         OutputIp6AddressLine(*otThreadGetRealmLocalAllThreadNodesMulticastAddress(GetInstancePtr()));
@@ -3657,18 +3833,74 @@ template <> otError Interpreter::Process<Cmd("keysequence")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
+    /**
+     * @cli keysequence counter
+     * @code
+     * keysequence counter
+     * 10
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetKeySequenceCounter
+     */
     if (aArgs[0] == "counter")
     {
+        /**
+         * @cli keysequence counter (set)
+         * @code
+         * keysequence counter 10
+         * Done
+         * @endcode
+         * @cparam keysequence counter @ca{counter}
+         * @par api_copy
+         * #otThreadSetKeySequenceCounter
+         */
         error = ProcessGetSet(aArgs + 1, otThreadGetKeySequenceCounter, otThreadSetKeySequenceCounter);
     }
+    /**
+     * @cli keysequence guardtime
+     * @code
+     * keysequence guardtime
+     * 0
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetKeySwitchGuardTime
+     */
     else if (aArgs[0] == "guardtime")
     {
+        /**
+         * @cli keysequence guardtime (set)
+         * @code
+         * keysequence guardtime 0
+         * Done
+         * @endcode
+         * @cparam keysequence guardtime @ca{guardtime-hours}
+         * Use `0` to `Thread Key Switch` immediately if there's a key index match.
+         * @par api_copy
+         * #otThreadSetKeySwitchGuardTime
+         */
         error = ProcessGetSet(aArgs + 1, otThreadGetKeySwitchGuardTime, otThreadSetKeySwitchGuardTime);
     }
 
     return error;
 }
 
+/**
+ * @cli leaderdata
+ * @code
+ * leaderdata
+ * Partition ID: 1077744240
+ * Weighting: 64
+ * Data Version: 109
+ * Stable Data Version: 211
+ * Leader Router ID: 60
+ * Done
+ * @endcode
+ * @par
+ * Gets the Thread Leader Data.
+ * @sa otThreadGetLeaderData
+ */
 template <> otError Interpreter::Process<Cmd("leaderdata")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -3708,8 +3940,28 @@ template <> otError Interpreter::Process<Cmd("partitionid")>(Arg aArgs[])
     return error;
 }
 
+/**
+ * @cli leaderweight
+ * @code
+ * leaderweight
+ * 128
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetLocalLeaderWeight
+ */
 template <> otError Interpreter::Process<Cmd("leaderweight")>(Arg aArgs[])
 {
+    /**
+     * @cli leaderweight (set)
+     * @code
+     * leaderweight 128
+     * Done
+     * @endcode
+     * @cparam leaderweight @ca{weight}
+     * @par api_copy
+     * #otThreadSetLocalLeaderWeight
+     */
     return ProcessGetSet(aArgs, otThreadGetLocalLeaderWeight, otThreadSetLocalLeaderWeight);
 }
 #endif // OPENTHREAD_FTD
@@ -3850,11 +4102,50 @@ template <> otError Interpreter::Process<Cmd("linkmetrics")>(Arg aArgs[])
 
         SuccessOrExit(error = aArgs[1].ParseAsIp6Address(address));
 
+        /**
+         * @cli linkmetrics query single
+         * @code
+         * linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 single qmr
+         * Done
+         * > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+         * - LQI: 76 (Exponential Moving Average)
+         * - Margin: 82 (dB) (Exponential Moving Average)
+         * - RSSI: -18 (dBm) (Exponential Moving Average)
+         * @endcode
+         * @cparam linkmetrics query @ca{peer-ipaddr} single [@ca{pqmr}]
+         * - `peer-ipaddr`: Peer address.
+         * - [`p`, `q`, `m`, and `r`] map to #otLinkMetrics.
+         *   - `p`: Layer 2 Number of PDUs received.
+         *   - `q`: Layer 2 LQI.
+         *   - `m`: Link Margin.
+         *   - `r`: RSSI.
+         * @par
+         * Perform a Link Metrics query (Single Probe).
+         * @sa otLinkMetricsQuery
+         */
         if (aArgs[2] == "single")
         {
             isSingle = true;
             SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[3]));
         }
+        /**
+         * @cli linkmetrics query forward
+         * @code
+         * linkmetrics query fe80:0:0:0:3092:f334:1455:1ad2 forward 1
+         * Done
+         * > Received Link Metrics Report from: fe80:0:0:0:3092:f334:1455:1ad2
+         * - PDU Counter: 2 (Count/Summation)
+         * - LQI: 76 (Exponential Moving Average)
+         * - Margin: 82 (dB) (Exponential Moving Average)
+         * - RSSI: -18 (dBm) (Exponential Moving Average)
+         * @endcode
+         * @cparam linkmetrics query @ca{peer-ipaddr} forward @ca{series-id}
+         * - `peer-ipaddr`: Peer address.
+         * - `series-id`: The Series ID.
+         * @par
+         * Perform a Link Metrics query (Forward Tracking Series).
+         * @sa otLinkMetricsQuery
+         */
         else if (aArgs[2] == "forward")
         {
             isSingle = false;
@@ -3880,6 +4171,19 @@ template <> otError Interpreter::Process<Cmd("linkmetrics")>(Arg aArgs[])
     {
         error = ProcessLinkMetricsMgmt(aArgs + 1);
     }
+    /**
+     * @cli linkmetrics probe
+     * @code
+     * linkmetrics probe fe80:0:0:0:3092:f334:1455:1ad2 1 10
+     * Done
+     * @endcode
+     * @cparam linkmetrics probe @ca{peer-ipaddr} @ca{series-id} @ca{length}
+     * - `peer-ipaddr`: Peer address.
+     * - `series-id`: The Series ID for which this Probe message targets.
+     * - `length`: The length of the Probe message. A valid range is [0, 64].
+     * @par api_copy
+     * #otLinkMetricsSendLinkProbe
+     */
     else if (aArgs[0] == "probe")
     {
         otIp6Address address;
@@ -3945,6 +4249,32 @@ otError Interpreter::ProcessLinkMetricsMgmt(Arg aArgs[])
 
     memset(&seriesFlags, 0, sizeof(otLinkMetricsSeriesFlags));
 
+    /**
+     * @cli linkmetrics mgmt forward
+     * @code
+     * linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 forward 1 dra pqmr
+     * Done
+     * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+     * Status: SUCCESS
+     * @endcode
+     * @cparam linkmetrics mgmt @ca{peer-ipaddr} forward @ca{series-id} [@ca{ldraX}][@ca{pqmr}]
+     * - `peer-ipaddr`: Peer address.
+     * - `series-id`: The Series ID.
+     * - [`l`, `d`, `r`, and `a`] map to #otLinkMetricsSeriesFlags. `X` represents none of the
+     *   `otLinkMetricsSeriesFlags`, and indicates to stop accounting and remove the series.
+     *   - `l`: MLE Link Probe.
+     *   - `d`: MAC Data.
+     *   - `r`: MAC Data Request.
+     *   - `a`: MAC Ack.
+     *   - `X`: Can only be used without any other flags.
+     * - [`p`, `q`, `m`, and `r`] map to #otLinkMetricsValues.
+     *   - `p`: Layer 2 Number of PDUs received.
+     *   - `q`: Layer 2 LQI.
+     *   - `m`: Link Margin.
+     *   - `r`: RSSI.
+     * @par api_copy
+     * #otLinkMetricsConfigForwardTrackingSeries
+     */
     if (aArgs[1] == "forward")
     {
         uint8_t       seriesId;
@@ -4001,11 +4331,54 @@ otError Interpreter::ProcessLinkMetricsMgmt(Arg aArgs[])
         otLinkMetrics            linkMetrics;
         otLinkMetrics *          pLinkMetrics = &linkMetrics;
 
+        /**
+         * @cli linkmetrics mgmt enhanced-ack clear
+         * @code
+         * linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack clear
+         * Done
+         * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+         * Status: Success
+         * @endcode
+         * @cparam linkmetrics mgmt @ca{peer-ipaddr} enhanced-ack clear
+         * `peer-ipaddr` should be the Link Local address of the neighboring device.
+         * @par
+         * Sends a Link Metrics Management Request to clear an Enhanced-ACK Based Probing.
+         * @sa otLinkMetricsConfigEnhAckProbing
+         */
         if (aArgs[2] == "clear")
         {
             enhAckFlags  = OT_LINK_METRICS_ENH_ACK_CLEAR;
             pLinkMetrics = nullptr;
         }
+        /**
+         * @cli linkmetrics mgmt enhanced-ack register
+         * @code
+         * linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm
+         * Done
+         * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+         * Status: Success
+         * @endcode
+         * @code
+         * > linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm r
+         * Done
+         * > Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+         * Status: Cannot support new series
+         * @endcode
+         * @cparam linkmetrics mgmt @ca{peer-ipaddr} enhanced-ack register [@ca{qmr}][@ca{r}]
+         * [`q`, `m`, and `r`] map to #otLinkMetricsValues. At most, two options are allowed to
+         * select (per spec 4.11.3.4.4.6).
+         * - `q`: Layer 2 LQI.
+         * - `m`: Link Margin.
+         * - `r`: RSSI.
+         * .
+         * The additional `r` is optional and only used for reference devices. When this option
+         * is specified, Type/Average Enum of each Type Id Flags is set to reserved. This is
+         * used to verify that the Probing Subject correctly handles invalid Type Id Flags, and
+         * only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+         * @par
+         * Sends a Link Metrics Management Request to register an Enhanced-ACK Based Probing.
+         * @sa otLinkMetricsConfigEnhAckProbing
+         */
         else if (aArgs[2] == "register")
         {
             enhAckFlags = OT_LINK_METRICS_ENH_ACK_REGISTER;
@@ -5884,8 +6257,28 @@ template <> otError Interpreter::Process<Cmd("joiner")>(Arg aArgs[])
 #endif
 
 #if OPENTHREAD_FTD
+/**
+ * @cli joinerport
+ * @code
+ * joinerport
+ * 1000
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetJoinerUdpPort
+ */
 template <> otError Interpreter::Process<Cmd("joinerport")>(Arg aArgs[])
 {
+    /**
+     * @cli joinerport (set)
+     * @code
+     * joinerport 1000
+     * Done
+     * @endcode
+     * @cparam joinerport @ca{udp-port}
+     * @par api_copy
+     * #otThreadSetJoinerUdpPort
+     */
     return ProcessGetSet(aArgs, otThreadGetJoinerUdpPort, otThreadSetJoinerUdpPort);
 }
 #endif
