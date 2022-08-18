@@ -201,19 +201,21 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
     Error         error = kErrorNone;
     Tlv           tlv;
     uint8_t       queryId;
-    bool          hasQueryId  = false;
-    uint8_t       length      = 0;
-    uint16_t      startOffset = aMessage.GetLength();
+    bool          hasQueryId = false;
+    uint16_t      length;
     uint16_t      offset;
     uint16_t      endOffset;
     MetricsValues values;
 
     values.Clear();
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRequestMessage, Mle::Tlv::Type::kLinkMetricsQuery, offset,
-                                                  endOffset)); // `endOffset` is used to store tlv length here
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Parse MLE Link Metrics Query TLV and its sub-TLVs from
+    // `aRequestMessage`.
 
-    endOffset = offset + endOffset;
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRequestMessage, Mle::Tlv::Type::kLinkMetricsQuery, offset, length));
+
+    endOffset = offset + length;
 
     while (offset < endOffset)
     {
@@ -241,7 +243,11 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
 
     VerifyOrExit(hasQueryId, error = kErrorParse);
 
-    // Link Metrics Report TLV
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Append MLE Link Metrics Report TLV and its sub-TLVs to
+    // `aMessage`.
+
+    offset = aMessage.GetLength();
     tlv.SetType(Mle::Tlv::kLinkMetricsReport);
     SuccessOrExit(error = aMessage.Append(tlv));
 
@@ -256,7 +262,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
         // Linearly scale rss from [-130, 0] to [0, 255]
         values.mRssiValue = (aRequestMessage.GetAverageRss() + 130) * 255 / 130;
 
-        SuccessOrExit(error = AppendReportSubTlvToMessage(aMessage, length, values));
+        SuccessOrExit(error = AppendReportSubTlvToMessage(aMessage, values));
     }
     else
     {
@@ -264,11 +270,11 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
 
         if (seriesInfo == nullptr)
         {
-            SuccessOrExit(error = AppendStatusSubTlvToMessage(aMessage, length, kStatusSeriesIdNotRecognized));
+            SuccessOrExit(error = AppendStatusSubTlvToMessage(aMessage, kStatusSeriesIdNotRecognized));
         }
         else if (seriesInfo->GetPduCount() == 0)
         {
-            SuccessOrExit(error = AppendStatusSubTlvToMessage(aMessage, length, kStatusNoMatchingFramesReceived));
+            SuccessOrExit(error = AppendStatusSubTlvToMessage(aMessage, kStatusNoMatchingFramesReceived));
         }
         else
         {
@@ -281,12 +287,14 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
                 255 / 130;
             // Linearly scale RSSI from [-130, 0] to [0, 255]
             values.mRssiValue = (seriesInfo->GetAverageRss() + 130) * 255 / 130;
-            SuccessOrExit(error = AppendReportSubTlvToMessage(aMessage, length, values));
+            SuccessOrExit(error = AppendReportSubTlvToMessage(aMessage, values));
         }
     }
 
-    tlv.SetLength(length);
-    aMessage.Write(startOffset, tlv);
+    // Update the TLV length in message.
+    length = aMessage.GetLength() - offset - sizeof(Tlv);
+    tlv.SetLength(static_cast<uint8_t>(length));
+    aMessage.Write(offset, tlv);
 
 exit:
     LogDebg("AppendReport, error:%s", ErrorToString(error));
@@ -766,55 +774,46 @@ exit:
     return error;
 }
 
-Error LinkMetrics::AppendReportSubTlvToMessage(Message &aMessage, uint8_t &aLength, const MetricsValues &aValues)
+Error LinkMetrics::AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues)
 {
     Error        error = kErrorNone;
-    ReportSubTlv metric;
+    ReportSubTlv reportTlv;
 
-    aLength = 0;
+    reportTlv.Init();
 
-    // Link Metrics Report sub-TLVs
     if (aValues.mMetrics.mPduCount)
     {
-        metric.Init();
-        metric.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kPdu));
-        metric.SetMetricsValue32(aValues.mPduCountValue);
-        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
-        aLength += metric.GetSize();
+        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kPdu));
+        reportTlv.SetMetricsValue32(aValues.mPduCountValue);
+        SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
     if (aValues.mMetrics.mLqi)
     {
-        metric.Init();
-        metric.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kLqi));
-        metric.SetMetricsValue8(aValues.mLqiValue);
-        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
-        aLength += metric.GetSize();
+        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kLqi));
+        reportTlv.SetMetricsValue8(aValues.mLqiValue);
+        SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
     if (aValues.mMetrics.mLinkMargin)
     {
-        metric.Init();
-        metric.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kLinkMargin));
-        metric.SetMetricsValue8(aValues.mLinkMarginValue);
-        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
-        aLength += metric.GetSize();
+        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kLinkMargin));
+        reportTlv.SetMetricsValue8(aValues.mLinkMarginValue);
+        SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
     if (aValues.mMetrics.mRssi)
     {
-        metric.Init();
-        metric.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kRssi));
-        metric.SetMetricsValue8(aValues.mRssiValue);
-        SuccessOrExit(error = aMessage.AppendBytes(&metric, metric.GetSize()));
-        aLength += metric.GetSize();
+        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kRssi));
+        reportTlv.SetMetricsValue8(aValues.mRssiValue);
+        SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
 exit:
     return error;
 }
 
-Error LinkMetrics::AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLength, Status aStatus)
+Error LinkMetrics::AppendStatusSubTlvToMessage(Message &aMessage, Status aStatus)
 {
     Error error = kErrorNone;
     Tlv   statusTlv;
@@ -823,7 +822,6 @@ Error LinkMetrics::AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLeng
     statusTlv.SetLength(sizeof(uint8_t));
     SuccessOrExit(error = aMessage.AppendBytes(&statusTlv, sizeof(statusTlv)));
     SuccessOrExit(error = aMessage.AppendBytes(&aStatus, sizeof(aStatus)));
-    aLength += statusTlv.GetSize();
 
 exit:
     return error;
