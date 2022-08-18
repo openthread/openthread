@@ -1471,6 +1471,22 @@ public:
      */
     void Clear(void);
 
+    /**
+     * This method gets route cost from parent to leader.
+     *
+     * @returns The route cost from parent to leader
+     *
+     */
+    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
+
+    /**
+     * This method sets route cost from parent to leader.
+     *
+     * @param[in] aLaderConst  The route cost.
+     *
+     */
+    void SetLeaderCost(uint8_t aLeaderCost) { mLeaderCost = aLeaderCost; }
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method gets the CSL accuracy (clock accuracy and uncertainty).
@@ -1490,6 +1506,7 @@ public:
 #endif
 
 private:
+    uint8_t mLeaderCost;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Mac::CslAccuracy mCslAccuracy; // CSL accuracy (clock accuracy in ppm and uncertainty).
 #endif

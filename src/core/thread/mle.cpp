@@ -83,7 +83,6 @@ Mle::Mle(Instance &aInstance)
     , mAttachTimer(aInstance, Mle::HandleAttachTimer)
     , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer)
     , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer)
-    , mParentLeaderCost(0)
     , mAttachMode(kAnyPartition)
     , mParentPriority(0)
     , mParentLinkQuality3(0)
@@ -3262,6 +3261,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
+    mParentCandidate.SetLeaderCost(connectivity.GetLeaderCost());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mParentCandidate.SetCslAccuracy(cslAccuracy);
 #endif
@@ -3270,7 +3270,6 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentLinkQuality3     = connectivity.GetLinkQuality3();
     mParentLinkQuality2     = connectivity.GetLinkQuality2();
     mParentLinkQuality1     = connectivity.GetLinkQuality1();
-    mParentLeaderCost       = connectivity.GetLeaderCost();
     mParentSedBufferSize    = connectivity.GetSedBufferSize();
     mParentSedDatagramCount = connectivity.GetSedDatagramCount();
     mParentLeaderData       = leaderData;

@@ -3876,7 +3876,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     if (leader != router)
     {
         // Keep route path to the Leader reported by the parent before it is updated.
-        leader->SetCost(mParentLeaderCost);
+        leader->SetCost(mParent.GetLeaderCost());
         leader->SetNextHop(RouterIdFromRloc16(mParent.GetRloc16()));
     }
 
