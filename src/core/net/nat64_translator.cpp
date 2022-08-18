@@ -113,13 +113,6 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ExitNow(res = kNotTranslated);
     }
 
-    if (ip6Header.GetHopLimit() == 0)
-    {
-        LogDebg("outgoing datagram hop limit reached, drop");
-        ExitNow(res = kDrop);
-    }
-    ip6Header.SetHopLimit(ip6Header.GetHopLimit() - 1);
-
     mapping = FindOrAllocateMapping(ip6Header.GetSource());
     if (mapping == nullptr)
     {
@@ -202,13 +195,6 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         LogWarn("incoming message is neither IPv4 nor an IPv6 datagram, drop");
         ExitNow(res = kDrop);
     }
-
-    if (ip4Header.GetTtl() == 0)
-    {
-        LogDebg("incoming datagram TTL reached");
-        ExitNow(res = kDrop);
-    }
-    ip4Header.SetTtl(ip4Header.GetTtl() - 1);
 
     mapping = FindMapping(ip4Header.GetDestination());
     if (mapping == nullptr)

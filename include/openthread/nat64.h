@@ -89,8 +89,9 @@ typedef struct otIp4Cidr
 } otIp4Cidr;
 
 /**
- * Allocate a new message buffer for sending an IPv4 message (which will be translated into an IPv6 packet by NAT64
- * later). Message buffers allocated by this function will have 20 bytes (difference between the size of IPv6 headers
+ * Allocate a new message buffer for sending an IPv4 message to the NAT64 translator.
+ *
+ * Message buffers allocated by this function will have 20 bytes (difference between the size of IPv6 headers
  * and IPv4 header sizes) reserved.
  *
  * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
@@ -103,17 +104,18 @@ typedef struct otIp4Cidr
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available or parameters are invalid.
  *
+ * @sa otNat64Send
+ *
  */
 otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSettings);
 
 /**
- * This function sets the CIDR used when setting the source address of the outgoing translated IPv4 packets. A valid
- * CIDR must have a non-zero prefix length.
+ * Sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
  *
  * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
  *
- * @note The actual addresses pool is limited by the size of the mapping pool and the number of addresses available in
- * the CIDR block.
+ * @note A valid CIDR must have a non-zero prefix length. The actual addresses pool is limited by the size of the
+ * mapping pool and the number of addresses available in the CIDR block.
  *
  * @note This function can be called at any time, but the NAT64 translator will be reset and all existing sessions will
  * be expired when updating the configured CIDR.
@@ -131,7 +133,7 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
 
 /**
- * This function translates an IPv4 datagram to an IPv6 datagram and sends via the Thread interface.
+ * Translates an IPv4 datagram to an IPv6 datagram and sends via the Thread interface.
  *
  * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
  * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.
@@ -162,7 +164,7 @@ otError otNat64Send(otInstance *aInstance, otMessage *aMessage);
 typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
 
 /**
- * This function registers a callback to provide received IPv4 datagrams.
+ * Registers a callback to provide received IPv4 datagrams.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aCallback         A pointer to a function that is called when an IPv4 datagram is received or
@@ -172,7 +174,7 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
  */
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
 
-/*
+/**
  * Test if two IPv4 addresses are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv4 address to compare.

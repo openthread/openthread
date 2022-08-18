@@ -675,7 +675,7 @@ static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
 {
     return AddRoute(aCidr.mAddress.mFields.m8, aCidr.mLength, aPriority);
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#endif
 
 #endif // __linux__ && (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE ||
        // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
