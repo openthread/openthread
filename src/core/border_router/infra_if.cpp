@@ -127,7 +127,7 @@ void InfraIf::DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPre
     VerifyOrExit(mInitialized && mIsRunning, error = kErrorInvalidState);
     VerifyOrExit(aIfIndex == mIfIndex, error = kErrorInvalidArgs);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     Get<RoutingManager>().UpdateInfraIfNat64Prefix(aPrefix);
 #endif
 

@@ -71,7 +71,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
     , mLocalOnLinkPrefix(aInstance)
     , mDiscoveredPrefixTable(aInstance)
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     , mInfraIfNat64PrefixStaleTimer(aInstance, HandleInfraIfNat64PrefixStaleTimer)
 #endif
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
@@ -82,7 +82,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
     mBrUlaPrefix.Clear();
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mInfraIfNat64Prefix.Clear();
     mLocalNat64Prefix.Clear();
     mAdvertisedNat64Prefix.Clear();
@@ -97,7 +97,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 
     SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
     mLocalOmrPrefix.GenerateFrom(mBrUlaPrefix);
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     GenerateNat64Prefix();
 #endif
     mLocalOnLinkPrefix.Generate();
@@ -175,7 +175,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 Error RoutingManager::GetNat64Prefix(Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
@@ -234,7 +234,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 void RoutingManager::DiscoverInfraIfNat64Prefix(void)
 {
     Error error = kErrorNone;
@@ -297,7 +297,7 @@ void RoutingManager::Start(void)
         UpdateDiscoveredPrefixTableOnNetDataChange();
         mLocalOnLinkPrefix.Start();
         StartRouterSolicitationDelay();
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mInfraIfNat64PrefixStaleTimer.Start(0);
 #endif
     }
@@ -314,7 +314,7 @@ void RoutingManager::Stop(void)
 
     mLocalOnLinkPrefix.Stop();
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     if (mAdvertisedNat64Prefix.IsValidNat64())
     {
         UnpublishExternalRoute(mAdvertisedNat64Prefix);
@@ -566,7 +566,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 void RoutingManager::EvaluateNat64Prefix(void)
 {
     Ip6::Prefix                      nat64Prefix;
@@ -621,7 +621,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     // 0. Evaluate on-link, OMR and NAT64 prefixes.
     EvaluateOnLinkPrefix();
     EvaluateOmrPrefix();
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     EvaluateNat64Prefix();
 #endif
 
@@ -1034,7 +1034,7 @@ void RoutingManager::HandleRoutingPolicyTimer(Timer &aTimer)
     aTimer.Get<RoutingManager>().EvaluateRoutingPolicy();
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 void RoutingManager::HandleInfraIfNat64PrefixStaleTimer(Timer &aTimer)
 {
     aTimer.Get<RoutingManager>().HandleInfraIfNat64PrefixStaleTimer();

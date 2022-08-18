@@ -57,7 +57,7 @@ build_all_features()
     local options=(
         "-DOT_BACKBONE_ROUTER=ON"
         "-DOT_BORDER_ROUTING=ON"
-        "-DOT_BORDER_ROUTING_NAT64=ON"
+        "-DOT_NAT64_BORDER_ROUTING=ON"
         "-DOT_NAT64_TRANSLATOR=ON"
         "-DOT_CSL_RECEIVER=ON"
         "-DOT_MLR=ON"

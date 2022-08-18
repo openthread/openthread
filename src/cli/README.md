@@ -386,7 +386,7 @@ Done
 
 Get the local NAT64 prefix of the Border Router.
 
-`OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` is required.
+`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required.
 
 ```bash
 > br nat64prefix

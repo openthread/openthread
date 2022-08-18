@@ -46,7 +46,7 @@ extern "C" {
  * @addtogroup api-nat64
  *
  * @brief This module includes functions and structs for the NAT64 function on the border router. These functions are
- * only available when `OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE` is enabled.
+ * only available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
  *
  * @{
  *
