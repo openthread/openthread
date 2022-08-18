@@ -1332,6 +1332,8 @@ private:
 
 #endif // OPENTHREAD_FTD
 
+class Parent;
+
 /**
  * This class represents a Thread Router
  *
@@ -1353,6 +1355,14 @@ public:
          *
          */
         void SetFrom(const Router &aRouter);
+
+        /**
+         * This method sets the `Info` instance from a given `Parent`.
+         *
+         * @param[in] aParent   A parent.
+         *
+         */
+        void SetFrom(const Parent &aParent);
     };
 
     /**
@@ -1361,19 +1371,19 @@ public:
      * @param[in] aInstance  A reference to OpenThread instance.
      *
      */
-    void Init(Instance &aInstance)
-    {
-        Neighbor::Init(aInstance);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        mCslAccuracy.Init();
-#endif
-    }
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
      * This method clears the router entry.
      *
      */
     void Clear(void);
+
+    /**
+     * This method sets the `Router` entry from a `Parent`
+     *
+     */
+    void SetFrom(const Parent &aParent);
 
     /**
      * This method gets the router ID of the next hop to this router.
@@ -1423,6 +1433,44 @@ public:
      */
     void SetCost(uint8_t aCost) { mCost = aCost; }
 
+private:
+    uint8_t mNextHop;            ///< The next hop towards this router
+    uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
+
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    uint8_t mCost; ///< The cost to this router via neighbor router
+#else
+    uint8_t mCost : 4;     ///< The cost to this router via neighbor router
+#endif
+};
+
+/**
+ * This class represent parent of a child node.
+ *
+ */
+class Parent : public Router
+{
+public:
+    /**
+     * This method initializes the `Parent`.
+     *
+     * @param[in] aInstance  A reference to OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance)
+    {
+        Neighbor::Init(aInstance);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        mCslAccuracy.Init();
+#endif
+    }
+
+    /**
+     * This method clears the parent entry.
+     *
+     */
+    void Clear(void);
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method gets the CSL accuracy (clock accuracy and uncertainty).
@@ -1442,14 +1490,6 @@ public:
 #endif
 
 private:
-    uint8_t mNextHop;            ///< The next hop towards this router
-    uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
-
-#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-    uint8_t mCost; ///< The cost to this router via neighbor router
-#else
-    uint8_t mCost : 4;     ///< The cost to this router via neighbor router
-#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Mac::CslAccuracy mCslAccuracy; // CSL accuracy (clock accuracy in ppm and uncertainty).
 #endif
