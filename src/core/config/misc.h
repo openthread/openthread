@@ -347,6 +347,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL
+ *
+ * Define as 1 to enable assert check of pointer-type API input parameters against null.
+ *
+ * Enabling this feature can increase code-size significantly due to many assert checks added for all API pointer
+ * parameters. It is recommended to enable and use this feature during debugging only.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL
+#define OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
  *
  * Enable the "Debug Uart" platform feature.

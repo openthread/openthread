@@ -74,6 +74,8 @@ otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *a
     otError                                       error;
     BorderRouter::RoutingManager::RoutePreference preference;
 
+    AssertPointerIsNotNull(aPreference);
+
     SuccessOrExit(error = AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetFavoredOmrPrefix(
                       AsCoreType(aPrefix), preference));
     *aPreference = static_cast<otRoutePreference>(preference);
@@ -100,6 +102,8 @@ otError otBorderRoutingGetFavoredNat64Prefix(otInstance *       aInstance,
     otError                                       error;
     BorderRouter::RoutingManager::RoutePreference preference;
 
+    AssertPointerIsNotNull(aPreference);
+
     SuccessOrExit(error = AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetFavoredNat64Prefix(
                       AsCoreType(aPrefix), preference));
     *aPreference = static_cast<otRoutePreference>(preference);
@@ -111,6 +115,8 @@ exit:
 
 void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRoutingPrefixTableIterator *aIterator)
 {
+    AssertPointerIsNotNull(aIterator);
+
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().InitPrefixTableIterator(*aIterator);
 }
 
@@ -118,6 +124,9 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance *                     
                                                otBorderRoutingPrefixTableIterator *aIterator,
                                                otBorderRoutingPrefixTableEntry *   aEntry)
 {
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
+
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(*aIterator, *aEntry);
 }
 

@@ -168,6 +168,8 @@ void otIp6RemoveAllUnsecurePorts(otInstance *aInstance)
 
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries)
 {
+    AssertPointerIsNotNull(aNumEntries);
+
     return AsCoreType(aInstance).Get<Ip6::Filter>().GetUnsecurePorts(*aNumEntries);
 }
 
@@ -188,23 +190,27 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 
 void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aAddress).ToString(aBuffer, aSize);
 }
 
 void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aSockAddr).ToString(aBuffer, aSize);
 }
 
 void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aPrefix).ToString(aBuffer, aSize);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    OT_ASSERT(aFirst != nullptr && aSecond != nullptr);
-
     return AsCoreType(aFirst).PrefixMatch(AsCoreType(aSecond));
 }
 
