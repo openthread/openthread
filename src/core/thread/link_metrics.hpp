@@ -433,8 +433,8 @@ private:
     Neighbor *GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination);
 
     static Error ReadTypeIdFlagsFromMessage(const Message &aMessage,
-                                            uint8_t        aStartPos,
-                                            uint8_t        aEndPos,
+                                            uint16_t       aStartPos,
+                                            uint16_t       aEndPos,
                                             Metrics &      aMetrics);
     static Error AppendReportSubTlvToMessage(Message &aMessage, uint8_t &aLength, const MetricsValues &aValues);
     static Error AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLength, Status aStatus);
