@@ -638,6 +638,14 @@ public:
     const LinkQualityInfo &GetLinkInfo(void) const { return mLinkInfo; }
 
     /**
+     * This method gets the link quality in value.
+     *
+     * @returns The link quality in value.
+     *
+     */
+    LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQuality(); }
+
+    /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
      *
      */
@@ -1416,6 +1424,14 @@ public:
      *
      */
     void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
+
+    /**
+     * This method gets the two-way link quality value (minimum of link quality in and out).
+     *
+     * @returns The two-way link quality value.
+     *
+     */
+    LinkQuality GetTwoWayLinkQuality(void) const;
 
     /**
      * This method get the route cost to this router.

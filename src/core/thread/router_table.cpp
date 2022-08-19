@@ -313,7 +313,7 @@ exit:
 
 void RouterTable::RemoveRouterLink(Router &aRouter)
 {
-    if (aRouter.GetLinkQualityOut() != 0)
+    if (aRouter.GetLinkQualityOut() != kLinkQuality0)
     {
         aRouter.SetLinkQualityOut(kLinkQuality0);
         aRouter.SetLastHeard(TimerMilli::GetNow());
@@ -470,14 +470,7 @@ uint8_t RouterTable::GetLinkCost(Router &aRouter)
 
     VerifyOrExit(aRouter.GetRloc16() != Get<Mle::MleRouter>().GetRloc16() && aRouter.IsStateValid());
 
-    rval = aRouter.GetLinkInfo().GetLinkQuality();
-
-    if (rval > aRouter.GetLinkQualityOut())
-    {
-        rval = aRouter.GetLinkQualityOut();
-    }
-
-    rval = Mle::MleRouter::LinkQualityToCost(rval);
+    rval = Mle::MleRouter::LinkQualityToCost(aRouter.GetTwoWayLinkQuality());
 
 exit:
     return rval;
