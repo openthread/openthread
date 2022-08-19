@@ -141,6 +141,7 @@ check_PROGRAMS                                                     += \
     ot-test-message                                                   \
     ot-test-message-queue                                             \
     ot-test-multicast-listeners-table                                 \
+    ot-test-nat64                                                     \
     ot-test-ndproxy-table                                             \
     ot-test-netif                                                     \
     ot-test-network-data                                              \
@@ -312,6 +313,10 @@ ot_test_message_queue_SOURCES       = $(COMMON_SOURCES) test_message_queue.cpp
 ot_test_multicast_listeners_table_LDADD = $(COMMON_LDADD)
 ot_test_multicast_listeners_table_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)
 ot_test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listeners_table.cpp
+
+ot_test_nat64_LDADD          = $(COMMON_LDADD)
+ot_test_nat64_LIBTOOLFLAGS   = $(COMMON_LIBTOOLFLAGS)
+ot_test_nat64_SOURCES        = $(COMMON_SOURCES) test_nat64.cpp
 
 ot_test_network_name_LDADD          = $(COMMON_LDADD)
 ot_test_network_name_LIBTOOLFLAGS   = $(COMMON_LIBTOOLFLAGS)

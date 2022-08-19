@@ -223,6 +223,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mRoutingManager(*this)
 #endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    , mNat64Translator(*this)
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mLinkRaw(*this)

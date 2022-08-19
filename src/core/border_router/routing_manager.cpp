@@ -38,6 +38,7 @@
 
 #include <string.h>
 
+#include <openthread/border_router.h>
 #include <openthread/platform/infra_if.h>
 
 #include "common/code_utils.hpp"
@@ -50,6 +51,7 @@
 #include "common/settings.hpp"
 #include "meshcop/extended_panid.hpp"
 #include "net/ip6.hpp"
+#include "net/nat64_translator.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
@@ -600,6 +602,9 @@ void RoutingManager::EvaluateNat64Prefix(void)
     {
         mAdvertisedNat64Prefix = nat64Prefix;
     }
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    Get<Nat64::Translator>().SetNat64Prefix(mAdvertisedNat64Prefix);
+#endif
 }
 #endif
 

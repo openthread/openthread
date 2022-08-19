@@ -71,4 +71,34 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+ *
+ * Define to 1 to enable the internal NAT64 translator.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#define OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS
+ *
+ * Specifies maximum number of active mappings for NAT64.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS
+#define OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS 254
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS
+ *
+ * Specifies timeout in seconds before removing an inactive address mapping.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS
+#define OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS 7200
+#endif
+
 #endif // CONFIG_BORDER_ROUTER_H_

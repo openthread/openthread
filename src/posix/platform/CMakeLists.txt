@@ -76,6 +76,13 @@ if(OT_POSIX_CONFIG_RCP_BUS)
     )
 endif()
 
+set(OT_POSIX_NAT64_CIDR "192.168.64.0/24" CACHE STRING "NAT64 CIDR for OpenThread NAT64")
+if(OT_POSIX_NAT64_CIDR)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_NAT64_CIDR=\"${OT_POSIX_NAT64_CIDR}\""
+    )
+endif()
+
 if(NOT OT_CONFIG)
     set(OT_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
 endif()

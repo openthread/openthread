@@ -13,6 +13,7 @@ This page lists the available common switches with description. Unless stated ot
 | BORDER_ROUTER | OT_BORDER_ROUTER | Enables support for Border Router. This switch is usually combined with the BORDER_AGENT and UDP_FORWARD (or PLATFORM_UDP in case of RCP design) switches to build Border Router device. |
 | BORDER_ROUTING | OT_BORDER_ROUTING | Enables bi-directional border routing between Thread and Infrastructure networks for Border Router. |
 | BORDER_ROUTING_NAT64 | OT_BORDER_ROUTING_NAT64 | Enables NAT64 border routing support for Border Router. |
+| NAT64_TRANSLATOR | OT_NAT64_TRANSLATOR | Enables NAT64 translator for Border Router. |
 | BUILTIN_MBEDTLS_MANAGEMENT | OT_BUILTIN_MBEDTLS_MANAGEMENT | Enables the built-in mbedTLS management. Enable this switch if the external mbedTLS is used, but mbedTLS memory allocation and debug config should be managed internally by OpenThread. |
 | CHANNEL_MANAGER | OT_CHANNEL_MANAGER | Enables support for channel manager. Enable this switch on devices that are supposed to request a Thread network channel change. This switch should be used only with an FTD build. |
 | CHANNEL_MONITOR | OT_CHANNEL_MONITOR | Enables support for channel monitor. Enable this switch on devices that are supposed to determine the cleaner channels. |

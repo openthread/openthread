@@ -47,6 +47,7 @@
 #include "net/icmp6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_filter.hpp"
+#include "net/nat64_translator.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
 #include "openthread/ip6.h"
@@ -70,6 +71,10 @@ Ip6::Ip6(Instance &aInstance)
     , mIsReceiveIp6FilterEnabled(false)
     , mReceiveIp6DatagramCallback(nullptr)
     , mReceiveIp6DatagramCallbackContext(nullptr)
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    , mReceiveIp4DatagramCallback(nullptr)
+    , mReceiveIp4DatagramCallbackContext(nullptr)
+#endif
     , mSendQueueTask(aInstance, Ip6::HandleSendQueue)
     , mIcmp(aInstance)
     , mUdp(aInstance)
@@ -191,6 +196,14 @@ void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCall
     mReceiveIp6DatagramCallback        = aCallback;
     mReceiveIp6DatagramCallbackContext = aCallbackContext;
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void Ip6::SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext)
+{
+    mReceiveIp4DatagramCallback        = aCallback;
+    mReceiveIp4DatagramCallbackContext = aCallbackContext;
+}
+#endif
 
 Error Ip6::AddMplOption(Message &aMessage, Header &aHeader)
 {
@@ -1081,6 +1094,21 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
     }
 
     IgnoreError(RemoveMplOption(*message));
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    switch (Get<Nat64::Translator>().TranslateFromIp6(aMessage))
+    {
+    case Nat64::Translator::kNotTranslated:
+        break;
+    case Nat64::Translator::kDrop:
+        ExitNow(error = kErrorDrop);
+    case Nat64::Translator::kForward:
+        VerifyOrExit(mReceiveIp4DatagramCallback != nullptr, error = kErrorNoRoute);
+        mReceiveIp4DatagramCallback(message, mReceiveIp4DatagramCallbackContext);
+        ExitNow();
+    }
+#endif
+
     mReceiveIp6DatagramCallback(message, mReceiveIp6DatagramCallbackContext);
 
 exit:

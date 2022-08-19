@@ -565,6 +565,8 @@ openthread_core_files = [
   "net/ip6_mpl.cpp",
   "net/ip6_mpl.hpp",
   "net/ip6_types.hpp",
+  "net/nat64_translator.cpp",
+  "net/nat64_translator.hpp",
   "net/nd6.cpp",
   "net/nd6.hpp",
   "net/nd_agent.cpp",

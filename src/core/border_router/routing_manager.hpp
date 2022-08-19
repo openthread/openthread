@@ -60,6 +60,7 @@
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
+#include "net/nat64_translator.hpp"
 #include "net/nd6.hpp"
 #include "thread/network_data.hpp"
 

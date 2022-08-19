@@ -306,6 +306,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/net/ip6_filter.cpp                                     \
     src/core/net/ip6_headers.cpp                                    \
     src/core/net/ip6_mpl.cpp                                        \
+    src/core/net/nat64_translator.cpp                               \
     src/core/net/nd6.cpp                                            \
     src/core/net/nd_agent.cpp                                       \
     src/core/net/netif.cpp                                          \

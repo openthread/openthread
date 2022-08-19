@@ -262,6 +262,7 @@ SOURCES_COMMON                                  = \
     net/ip6_filter.cpp                            \
     net/ip6_headers.cpp                           \
     net/ip6_mpl.cpp                               \
+    net/nat64_translator.cpp                      \
     net/nd6.cpp                                   \
     net/nd_agent.cpp                              \
     net/netif.cpp                                 \
@@ -572,6 +573,7 @@ HEADERS_COMMON                                  = \
     net/ip6_headers.hpp                           \
     net/ip6_mpl.hpp                               \
     net/ip6_types.hpp                             \
+    net/nat64_translator.hpp                      \
     net/nd6.hpp                                   \
     net/nd_agent.hpp                              \
     net/netif.hpp                                 \
