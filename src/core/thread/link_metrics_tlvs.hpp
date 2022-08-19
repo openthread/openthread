@@ -81,6 +81,12 @@ public:
 typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
 
 /**
+ * This type defines a Link Metrics Status Sub-Tlv.
+ *
+ */
+typedef UintTlvInfo<SubTlv::kStatus, uint8_t> StatusSubTlv;
+
+/**
  * This class implements Link Metrics Report Sub-TLV generation and parsing.
  *
  */

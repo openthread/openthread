@@ -291,7 +291,6 @@ private:
                                             uint16_t       aEndPos,
                                             Metrics &      aMetrics);
     static Error AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues);
-    static Error AppendStatusSubTlvToMessage(Message &aMessage, Status aStatus);
 
     ReportCallback                mReportCallback;
     void *                        mReportCallbackContext;

@@ -270,11 +270,11 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
 
         if (seriesInfo == nullptr)
         {
-            SuccessOrExit(error = AppendStatusSubTlvToMessage(aMessage, kStatusSeriesIdNotRecognized));
+            SuccessOrExit(error = Tlv::Append<StatusSubTlv>(aMessage, kStatusSeriesIdNotRecognized));
         }
         else if (seriesInfo->GetPduCount() == 0)
         {
-            SuccessOrExit(error = AppendStatusSubTlvToMessage(aMessage, kStatusNoMatchingFramesReceived));
+            SuccessOrExit(error = Tlv::Append<StatusSubTlv>(aMessage, kStatusNoMatchingFramesReceived));
         }
         else
         {
@@ -373,27 +373,28 @@ exit:
 Error LinkMetrics::HandleManagementResponse(const Message &aMessage, const Ip6::Address &aAddress)
 {
     Error    error = kErrorNone;
-    Tlv      tlv;
     uint16_t offset;
+    uint16_t endOffset;
     uint16_t length;
-    uint16_t index = 0;
-    Status   status;
+    uint8_t  status;
     bool     hasStatus = false;
 
     VerifyOrExit(mMgmtResponseCallback != nullptr);
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, length));
+    endOffset = offset + length;
 
-    while (index < length)
+    while (offset < endOffset)
     {
-        SuccessOrExit(aMessage.Read(offset + index, tlv));
+        Tlv tlv;
+
+        SuccessOrExit(error = aMessage.Read(offset, tlv));
 
         switch (tlv.GetType())
         {
-        case SubTlv::kStatus:
+        case StatusSubTlv::kType:
             VerifyOrExit(!hasStatus, error = kErrorParse);
-            VerifyOrExit(tlv.GetLength() == sizeof(status), error = kErrorParse);
-            SuccessOrExit(aMessage.Read(offset + index + sizeof(tlv), status));
+            SuccessOrExit(error = Tlv::Read<StatusSubTlv>(aMessage, offset, status));
             hasStatus = true;
             break;
 
@@ -401,7 +402,7 @@ Error LinkMetrics::HandleManagementResponse(const Message &aMessage, const Ip6::
             break;
         }
 
-        index += static_cast<uint16_t>(tlv.GetSize());
+        offset += sizeof(Tlv) + tlv.GetLength();
     }
 
     VerifyOrExit(hasStatus, error = kErrorParse);
@@ -808,20 +809,6 @@ Error LinkMetrics::AppendReportSubTlvToMessage(Message &aMessage, const MetricsV
         reportTlv.SetMetricsValue8(aValues.mRssiValue);
         SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
-
-exit:
-    return error;
-}
-
-Error LinkMetrics::AppendStatusSubTlvToMessage(Message &aMessage, Status aStatus)
-{
-    Error error = kErrorNone;
-    Tlv   statusTlv;
-
-    statusTlv.SetType(SubTlv::kStatus);
-    statusTlv.SetLength(sizeof(uint8_t));
-    SuccessOrExit(error = aMessage.AppendBytes(&statusTlv, sizeof(statusTlv)));
-    SuccessOrExit(error = aMessage.AppendBytes(&aStatus, sizeof(aStatus)));
 
 exit:
     return error;
