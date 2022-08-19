@@ -4,13 +4,13 @@ THCI (Thread Host Controller Interface) is an implementation of the Python abstr
 
 SI (Sniffer Interface) is an implementation of the sniffer abstract class template `ISniffer`, which is used by the Thread Test Harness Software to sniff all packets sent by devices.
 
-Both OpenThread simulation and sniffer simulation are required to run on a POSIX environment. However, Harness has to be run on Windows, which is a non-POSIX environment. So both two systems are needed, and their setup procedures in detail are listed in the following sections. Either two machines or one machine running two (sub)systems (for example, VM, WSL) is feasible.
+Both OpenThread simulation and sniffer simulation are required to run on a POSIX environment. However, Harness has to be run on Windows, which is a non-POSIX environment. So two systems are needed, and their setup procedures in detail are listed in the following sections. Either two machines or one machine running two (sub)systems (for example, VM, WSL) is feasible.
 
 Platform developers should modify the THCI implementation and/or the SI implementation directly to match their platform (for example, the path of the OpenThread repository).
 
 ## POSIX Environment Setup
 
-1. Build OpenThread to generate standalone OpenThread simulation `ot-cli-ftd`. Taking running OpenThread 1.2 test cases as an example, run the following command in the top directory of OpenThread.
+1. Build OpenThread to generate standalone OpenThread simulation `ot-cli-ftd`. For example, to run OpenThread 1.2 test cases, run the following command in the top directory of OpenThread:
 
    ```bash
    $ CFLAGS='-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8' \
@@ -26,11 +26,11 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
    Then `ot-cli-ftd` is built in the directory `build/simulation/examples/apps/cli/`.
 
-2. Check the configuration file `config.py`
+2. Open the configuration file `config.py`:
 
-   - Edit the value of `OT_PATH` to the absolute path where the top directory of the OpenThread repository is located.
+   - Edit the value of `OT_PATH` to the absolute path where the top directory of the OpenThread repository is located. For example, change the value of `OT_PATH` to `/home/<username>/repo/openthread`.
 
-3. Run the `build_docker_image.sh` with the environment variable `OT_PATH` set properly. For example run the following command.
+3. Run the `build_docker_image.sh` with the environment variable `OT_PATH` set properly. `OT_PATH` should be the same as that in the previous step. For example run the following command:
 
    ```bash
    $ OT_PATH=~/repo/openthread ./build_docker_image.sh
@@ -67,10 +67,10 @@ Platform developers should modify the THCI implementation and/or the SI implemen
          --sniffer=2
    ```
 
-   It starts 6 OT FTD simulations, 4 OTBR simulations and 2 sniffer simulations and can be discovered on eth0.
+   This example starts 6 OT FTD simulations, 4 OTBR simulations, and 2 sniffer simulations and can be discovered on `eth0`.
 
    The arguments can be adjusted according to the requirement of test cases.
 
-2. Run Test Harness. The information field of the device is encoded as `<node_id>@<ip_addr>` for FTD and `otbr_<node_id>@<ip_addr>` for BR. Choose the proper device as the DUT accordingly.
+2. Run Test Harness. The information field of the device is encoded as `<node_id>@<ip_addr>` for FTDs and `otbr_<node_id>@<ip_addr>` for BRs. Choose the proper device as the DUT accordingly.
 
 3. Select one or more test cases to start the test.
