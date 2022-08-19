@@ -38,6 +38,7 @@
 #include "common/as_core_type.hpp"
 #include "common/encoding.hpp"
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 
 namespace ot {
@@ -208,17 +209,16 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), timestamp));
     timestamp = HostSwap32(timestamp);
 
-    reply.mSenderAddress = aMessageInfo.GetPeerAddr();
-    reply.mRoundTripTime =
-        static_cast<uint16_t>(OT_MIN(TimerMilli::GetNow() - TimeMilli(timestamp), NumericLimits<uint16_t>::kMax));
+    reply.mSenderAddress  = aMessageInfo.GetPeerAddr();
+    reply.mRoundTripTime  = ClampToUint16(TimerMilli::GetNow() - TimeMilli(timestamp));
     reply.mSize           = aMessage.GetLength() - aMessage.GetOffset();
     reply.mSequenceNumber = aIcmpHeader.GetSequence();
     reply.mHopLimit       = aMessageInfo.GetHopLimit();
 
     mStatistics.mReceivedCount++;
     mStatistics.mTotalRoundTripTime += reply.mRoundTripTime;
-    mStatistics.mMaxRoundTripTime = OT_MAX(mStatistics.mMaxRoundTripTime, reply.mRoundTripTime);
-    mStatistics.mMinRoundTripTime = OT_MIN(mStatistics.mMinRoundTripTime, reply.mRoundTripTime);
+    mStatistics.mMaxRoundTripTime = Max(mStatistics.mMaxRoundTripTime, reply.mRoundTripTime);
+    mStatistics.mMinRoundTripTime = Min(mStatistics.mMinRoundTripTime, reply.mRoundTripTime);
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitPingReply(aMessageInfo.GetPeerAddr(), reply.mSize, timestamp, reply.mHopLimit);

@@ -152,6 +152,26 @@ public:
     void HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket);
 
     /**
+     * This method sends a request to discover the NAT64 prefix on the infrastructure interface.
+     *
+     * @note  This method MUST be used when interface is initialized.
+     *
+     * @retval  kErrorNone    Successfully request NAT64 prefix discovery.
+     * @retval  kErrorFailed  Failed to request NAT64 prefix discovery.
+     *
+     */
+    Error DiscoverNat64Prefix(void);
+
+    /**
+     * This method processes the discovered NAT64 prefix.
+     *
+     * @param[in]  aIfIndex    The infrastructure interface index on which the host address is received.
+     * @param[in]  aPrefix     The NAT64 prefix on the infrastructure link.
+     *
+     */
+    void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
+
+    /**
      * This method handles infrastructure interface state changes.
      *
      * @param[in]  aIfIndex         The infrastructure interface index.

@@ -42,6 +42,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
@@ -60,11 +61,13 @@ SubMac::SubMac(Instance &aInstance)
     , mPcapCallbackContext(nullptr)
     , mTimer(aInstance, SubMac::HandleTimer)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslParentAccuracy(kCslWorstCrystalPpm)
-    , mCslParentUncert(kCslWorstUncertainty)
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
 #endif
 {
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    mCslParentAccuracy.Init();
+#endif
+
     Init();
 }
 
@@ -612,7 +615,8 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         {
             SetState(kStateDelayBeforeRetx);
             StartTimerForBackoff(mRetxDelayBackOffExponent);
-            mRetxDelayBackOffExponent = OT_MIN(mRetxDelayBackOffExponent + 1, kRetxDelayMaxBackoffExponent);
+            mRetxDelayBackOffExponent =
+                Min(static_cast<uint8_t>(mRetxDelayBackOffExponent + 1), kRetxDelayMaxBackoffExponent);
             ExitNow();
         }
 #endif
@@ -1147,9 +1151,10 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 
     elapsed = curTime - mCslLastSync.GetValue();
 
-    semiWindow = static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
-                                       (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy) / 1000000);
-    semiWindow += mCslParentUncert * kUsPerUncertUnit;
+    semiWindow =
+        static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
+                              (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) / 1000000);
+    semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec();
 
     aAhead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;
     aAfter = (semiWindow + kMinCslWindow > semiPeriod) ? semiPeriod : semiWindow + kMinCslWindow;

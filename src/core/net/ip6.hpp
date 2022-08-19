@@ -39,6 +39,7 @@
 #include <stddef.h>
 
 #include <openthread/ip6.h>
+#include <openthread/nat64.h>
 #include <openthread/udp.h>
 
 #include "common/encoding.hpp"
@@ -231,6 +232,20 @@ public:
      */
     void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext);
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    /**
+     * This method registers a callback to provide received translated IPv4 datagrams.
+     *
+     * @param[in]  aCallback         A pointer to a function that is called when a translated IPv4 datagram is received
+     *                               or `nullptr` to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
+     *
+     * @sa SetReceiveDatagramCallback
+     *
+     */
+    void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext);
+#endif
+
     /**
      * This method indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
      * via the callback specified in SetReceiveIp6DatagramCallback().
@@ -333,7 +348,6 @@ private:
                                  MessageInfo &aMessageInfo,
                                  Header &     aHeader,
                                  uint8_t &    aNextHeader,
-                                 bool         aIsOutbound,
                                  bool         aFromHost,
                                  bool &       aReceive);
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
@@ -361,6 +375,11 @@ private:
     bool                 mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
     void *               mReceiveIp6DatagramCallbackContext;
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    otNat64ReceiveIp4Callback mReceiveIp4DatagramCallback;
+    void *                    mReceiveIp4DatagramCallbackContext;
+#endif
 
     PriorityQueue mSendQueue;
     Tasklet       mSendQueueTask;
@@ -401,25 +420,20 @@ public:
      *
      * @param[in]  aMessage         The message from which to read the lowpan frame.
      * @param[in]  aOffset          The offset in @p aMessage to start reading the frame.
-     * @param[in]  aMacSource       The MAC source address.
-     * @param[in]  aMacDest         The MAC destination address.
+     * @param[in]  aMacAddrs        The MAC source and destination addresses.
      *
      * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
      * @retval kErrorNotFound       Lowpan frame is a next fragment and does not contain IPv6 headers.
      * @retval kErrorParse          Failed to parse the headers.
      *
      */
-    Error DecompressFrom(const Message &     aMessage,
-                         uint16_t            aOffset,
-                         const Mac::Address &aMacSource,
-                         const Mac::Address &aMacDest);
+    Error DecompressFrom(const Message &aMessage, uint16_t aOffset, const Mac::Addresses &aMacAddrs);
 
     /**
      * This method decompresses lowpan frame and parses the IPv6 and UDP/TCP/ICMP6 headers.
      *
      * @param[in]  aFrameData       The lowpan frame data.
-     * @param[in]  aMacSource       The MAC source address.
-     * @param[in]  aMacDest         The MAC destination address.
+     * @param[in]  aMacAddrs        The MAC source and destination addresses.
      * @param[in]  aInstance        The OpenThread instance.
      *
      * @retval kErrorNone           Successfully decompressed and parsed IPv6 and UDP/TCP/ICMP6 headers.
@@ -427,10 +441,7 @@ public:
      * @retval kErrorParse          Failed to parse the headers.
      *
      */
-    Error DecompressFrom(const FrameData &   aFrameData,
-                         const Mac::Address &aMacSource,
-                         const Mac::Address &aMacDest,
-                         Instance &          aInstance);
+    Error DecompressFrom(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Instance &aInstance);
 
     /**
      * This method returns the IPv6 header.

@@ -35,6 +35,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "common/string.hpp"
@@ -1725,7 +1726,7 @@ uint32_t Client::GetBoundedLeaseInterval(uint32_t aInterval, uint32_t aDefaultIn
 
     if (aInterval != 0)
     {
-        boundedInterval = OT_MIN(aInterval, static_cast<uint32_t>(kMaxLease));
+        boundedInterval = Min(aInterval, kMaxLease);
     }
 
     return boundedInterval;

@@ -88,6 +88,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+ *
+ * Define to 1 to generate ECDSA signatures determinsitically
+ * according to RFC 6979 instead of randomly.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+#define OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_UPTIME_ENABLE
  *
  * Define to 1 to enable tracking the uptime of OpenThread instance.
@@ -169,6 +180,9 @@
  * so that message buffer size will be doubled on 64bit system compared
  * to that on 32bit system. As a result, the first message always have some
  * bytes left for small packets.
+ *
+ * Some configuration options can increase the buffer size requirments, including
+ * OPENTHREAD_CONFIG_MLE_MAX_CHILDREN and OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE
@@ -333,6 +347,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL
+ *
+ * Define as 1 to enable assert check of pointer-type API input parameters against null.
+ *
+ * Enabling this feature can increase code-size significantly due to many assert checks added for all API pointer
+ * parameters. It is recommended to enable and use this feature during debugging only.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL
+#define OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
  *
  * Enable the "Debug Uart" platform feature.
@@ -481,6 +508,22 @@
  */
 #ifndef OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_ENTRY_LIST_SIZE
 #define OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_ENTRY_LIST_SIZE 16
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE
+ *
+ * Specifies the maximum number of frames in direct tx queue before new direct tx messages are dropped.
+ *
+ * If set to zero then the behavior is disabled, i.e., no check is performed on tx queue length.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3)
+#define OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE 100
+#else
+#define OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE 0
+#endif
 #endif
 
 /**

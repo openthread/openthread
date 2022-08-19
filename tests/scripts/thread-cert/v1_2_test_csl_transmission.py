@@ -72,7 +72,6 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        msg.assertMleMessageDoesNotContainTlv(mle.CslChannel)
 
         self.nodes[SSED_1].set_csl_channel(consts.CSL_DEFAULT_CHANNEL)
         self.simulator.go(1)
@@ -89,7 +88,6 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
-        msg.assertMleMessageDoesNotContainTlv(mle.CslChannel)
 
         self.nodes[SSED_1].set_csl_period(0)
         self.assertFalse(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))

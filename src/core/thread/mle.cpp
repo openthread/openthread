@@ -43,6 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -56,6 +57,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/time_sync_service.hpp"
+#include "thread/version.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
@@ -108,11 +110,7 @@ Mle::Mle(Instance &aInstance)
 #endif
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    , mParentSearchIsInBackoff(false)
-    , mParentSearchBackoffWasCanceled(false)
-    , mParentSearchRecentlyDetached(false)
-    , mParentSearchBackoffCancelTime(0)
-    , mParentSearchTimer(aInstance, Mle::HandleParentSearchTimer)
+    , mParentSearch(aInstance)
 #endif
     , mAnnounceChannel(0)
     , mAlternateChannel(0)
@@ -168,7 +166,7 @@ Error Mle::Enable(void)
     SuccessOrExit(error = mSocket.Bind(kUdpPort));
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    StartParentSearchTimer();
+    mParentSearch.StartTimer();
 #endif
 exit:
     return error;
@@ -393,7 +391,7 @@ void Mle::Restore(void)
 
         mParent.Clear();
         mParent.SetExtAddress(parentInfo.GetExtAddress());
-        mParent.SetVersion(static_cast<uint8_t>(parentInfo.GetVersion()));
+        mParent.SetVersion(parentInfo.GetVersion());
         mParent.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                          DeviceMode::kModeFullNetworkData));
         mParent.SetRloc16(Rloc16FromRouterId(RouterIdFromRloc16(networkInfo.GetRloc16())));
@@ -498,7 +496,7 @@ Error Mle::BecomeDetached(void)
     }
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    mParentSearchRecentlyDetached = true;
+    mParentSearch.SetRecentlyDetached();
 #endif
 
     SetStateDetached();
@@ -518,6 +516,17 @@ Error Mle::BecomeChild(void)
     VerifyOrExit(!IsAttaching(), error = kErrorBusy);
 
     Attach(kAnyPartition);
+
+exit:
+    return error;
+}
+
+Error Mle::SearchForBetterParent(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsChild(), error = kErrorInvalidState);
+    Attach(kBetterParent);
 
 exit:
     return error;
@@ -708,7 +717,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     InformPreviousChannel();
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    UpdateParentSearchState();
+    mParentSearch.UpdateState();
 #endif
 
     if ((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()))
@@ -1358,7 +1367,7 @@ bool Mle::HasAcceptableParentCandidate(void) const
             // in Parent Request was sent to routers, we will keep the
             // candidate and forward to REED stage to potentially find a
             // better parent.
-            linkQuality = OT_MIN(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
+            linkQuality = Min(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
             VerifyOrExit(linkQuality == kLinkQuality3);
         }
 
@@ -1731,9 +1740,10 @@ void Mle::RequestShorterChildIdRequest(void)
 
 Error Mle::SendChildIdRequest(void)
 {
+    static const uint8_t kTlvs[] = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
+
     Error        error   = kErrorNone;
-    uint8_t      tlvs[]  = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
-    uint8_t      tlvsLen = sizeof(tlvs);
+    uint8_t      tlvsLen = sizeof(kTlvs);
     TxMessage *  message = nullptr;
     Ip6::Address destination;
 
@@ -1771,7 +1781,7 @@ Error Mle::SendChildIdRequest(void)
         tlvsLen -= 1;
     }
 
-    SuccessOrExit(error = message->AppendTlvRequestTlv(tlvs, tlvsLen));
+    SuccessOrExit(error = message->AppendTlvRequestTlv(kTlvs, tlvsLen));
     SuccessOrExit(error = message->AppendActiveTimestampTlv());
     SuccessOrExit(error = message->AppendPendingTimestampTlv());
 
@@ -1921,14 +1931,15 @@ void Mle::HandleMessageTransmissionTimer(void)
     case kChildUpdateRequestNone:
         if (mDataRequestState == kDataRequestActive)
         {
-            static const uint8_t tlvs[] = {Tlv::kNetworkData};
-            Ip6::Address         destination;
+            static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
+            Ip6::Address destination;
 
             VerifyOrExit(mDataRequestAttempts < kMaxChildKeepAliveAttempts, IgnoreError(BecomeDetached()));
 
             destination.SetToLinkLocalAddress(mParent.GetExtAddress());
 
-            if (SendDataRequest(destination, tlvs, sizeof(tlvs), 0) == kErrorNone)
+            if (SendDataRequest(destination, kTlvs) == kErrorNone)
             {
                 mDataRequestAttempts++;
             }
@@ -2054,7 +2065,7 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const Challenge &aChallenge)
+Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aChallenge)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -2065,9 +2076,9 @@ Error Mle::SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
 
-    for (int i = 0; i < aNumTlvs; i++)
+    for (uint8_t tlvType : aTlvList)
     {
-        switch (aTlvs[i])
+        switch (tlvType)
         {
         case Tlv::kTimeout:
             SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
@@ -2673,10 +2684,11 @@ exit:
 
 void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 {
+    static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
     LeaderData leaderData;
-    uint8_t    tlvs[] = {Tlv::kNetworkData};
     uint16_t   delay;
 
     // Source Address
@@ -2748,7 +2760,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -2938,8 +2950,9 @@ exit:
 
     if (dataRequest)
     {
-        static const uint8_t tlvs[] = {Tlv::kNetworkData};
-        uint16_t             delay;
+        static const uint8_t kTlvs[] = {Tlv::kNetworkData};
+
+        uint16_t delay;
 
         if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
         {
@@ -2953,7 +2966,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs), delay));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
     }
     else if (error == kErrorNone)
     {
@@ -2971,25 +2984,16 @@ exit:
     return error;
 }
 
-bool Mle::IsBetterParent(uint16_t               aRloc16,
-                         LinkQuality            aLinkQuality,
-                         uint8_t                aLinkMargin,
-                         const ConnectivityTlv &aConnectivityTlv,
-                         uint8_t                aVersion,
-                         uint8_t                aCslClockAccuracy,
-                         uint8_t                aCslUncertainty)
+bool Mle::IsBetterParent(uint16_t                aRloc16,
+                         LinkQuality             aLinkQuality,
+                         uint8_t                 aLinkMargin,
+                         const ConnectivityTlv & aConnectivityTlv,
+                         uint16_t                aVersion,
+                         const Mac::CslAccuracy &aCslAccuracy)
 {
-    bool rval = false;
-
+    bool        rval                       = false;
     LinkQuality candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
-    LinkQuality candidateTwoWayLinkQuality = OT_MIN(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint64_t candidateCslMetric = 0;
-    uint64_t cslMetric          = 0;
-#else
-    OT_UNUSED_VARIABLE(aCslClockAccuracy);
-    OT_UNUSED_VARIABLE(aCslUncertainty);
-#endif
+    LinkQuality candidateTwoWayLinkQuality = Min(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
 
     // Mesh Impacting Criteria
     if (aLinkQuality != candidateTwoWayLinkQuality)
@@ -3044,14 +3048,16 @@ bool Mle::IsBetterParent(uint16_t               aRloc16,
     // CSL metric
     if (!IsRxOnWhenIdle())
     {
-        cslMetric = CalcParentCslMetric(aCslClockAccuracy, aCslUncertainty);
-        candidateCslMetric =
-            CalcParentCslMetric(mParentCandidate.GetCslClockAccuracy(), mParentCandidate.GetCslUncertainty());
+        uint64_t cslMetric          = CalcParentCslMetric(aCslAccuracy);
+        uint64_t candidateCslMetric = CalcParentCslMetric(mParentCandidate.GetCslAccuracy());
+
         if (candidateCslMetric != cslMetric)
         {
             ExitNow(rval = (cslMetric < candidateCslMetric));
         }
     }
+#else
+    OT_UNUSED_VARIABLE(aCslAccuracy);
 #endif
 
     rval = (aLinkMargin > mParentLinkMargin);
@@ -3075,11 +3081,9 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     uint32_t              linkFrameCounter;
     uint32_t              mleFrameCounter;
     Mac::ExtAddress       extAddress;
+    Mac::CslAccuracy      cslAccuracy;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeParameterTlv timeParameter;
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    CslClockAccuracyTlv clockAccuracy;
 #endif
 
     // Source Address
@@ -3123,11 +3127,18 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL Accuracy
-    if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
+    switch (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy))
     {
-        clockAccuracy.SetCslClockAccuracy(kCslWorstCrystalPpm);
-        clockAccuracy.SetCslUncertainty(kCslWorstUncertainty);
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        cslAccuracy.Init(); // Use worst-case values if TLV is not found
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
+#else
+    cslAccuracy.Init();
 #endif
 
     // Share data with application, if requested.
@@ -3204,14 +3215,10 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #endif
 
         // only consider better parents if the partitions are the same
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        VerifyOrExit(compare != 0 ||
-                     IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, static_cast<uint8_t>(version),
-                                    clockAccuracy.GetCslClockAccuracy(), clockAccuracy.GetCslUncertainty()));
-#else
-        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity,
-                                                    static_cast<uint8_t>(version), 0, 0));
-#endif
+        if (compare == 0)
+        {
+            VerifyOrExit(IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, version, cslAccuracy));
+        }
     }
 
     // Link/MLE Frame Counters
@@ -3246,7 +3253,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.GetLinkFrameCounters().SetAll(linkFrameCounter);
     mParentCandidate.SetLinkAckFrameCounter(linkFrameCounter);
     mParentCandidate.SetMleFrameCounter(mleFrameCounter);
-    mParentCandidate.SetVersion(static_cast<uint8_t>(version));
+    mParentCandidate.SetVersion(version);
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData));
     mParentCandidate.GetLinkInfo().Clear();
@@ -3256,8 +3263,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mParentCandidate.SetCslClockAccuracy(clockAccuracy.GetCslClockAccuracy());
-    mParentCandidate.SetCslUncertainty(clockAccuracy.GetCslUncertainty());
+    mParentCandidate.SetCslAccuracy(cslAccuracy);
 #endif
 
     mParentPriority         = connectivity.GetParentPriority();
@@ -3384,8 +3390,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     mParentCandidate.Clear();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().SetCslParentUncertainty(mParent.GetCslUncertainty());
-    Get<Mac::Mac>().SetCslParentClockAccuracy(mParent.GetCslClockAccuracy());
+    Get<Mac::Mac>().SetCslParentAccuracy(mParent.GetCslAccuracy());
 #endif
 
     mParent.SetRloc16(sourceAddress);
@@ -3414,14 +3419,11 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    static const uint8_t kMaxResponseTlvs = 6;
-
-    Error         error = kErrorNone;
-    uint16_t      sourceAddress;
-    Challenge     challenge;
-    RequestedTlvs requestedTlvs;
-    uint8_t       tlvs[kMaxResponseTlvs] = {};
-    uint8_t       numTlvs                = 0;
+    Error     error = kErrorNone;
+    uint16_t  sourceAddress;
+    Challenge challenge;
+    TlvList   requestedTlvList;
+    TlvList   tlvList;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -3432,9 +3434,9 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     switch (aRxInfo.mMessage.ReadChallengeTlv(challenge))
     {
     case kErrorNone:
-        tlvs[numTlvs++] = Tlv::kResponse;
-        tlvs[numTlvs++] = Tlv::kMleFrameCounter;
-        tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
+        tlvList.Add(Tlv::kResponse);
+        tlvList.Add(Tlv::kMleFrameCounter);
+        tlvList.Add(Tlv::kLinkFrameCounter);
         break;
     case kErrorNotFound:
         challenge.mLength = 0;
@@ -3468,34 +3470,28 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
         SuccessOrExit(error = HandleLeaderData(aRxInfo));
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        CslClockAccuracyTlv cslClockAccuracyTlv;
-        if (Tlv::FindTlv(aRxInfo.mMessage, cslClockAccuracyTlv) == kErrorNone)
         {
-            // MUST include CSL timeout TLV when request includes CSL accuracy
-            tlvs[numTlvs++] = Tlv::kCslTimeout;
+            Mac::CslAccuracy cslAccuracy;
+
+            if (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy) == kErrorNone)
+            {
+                // MUST include CSL timeout TLV when request includes CSL accuracy
+                tlvList.Add(Tlv::kCslTimeout);
+            }
         }
 #endif
     }
     else
     {
         // this device is not a child of the Child Update Request source
-        tlvs[numTlvs++] = Tlv::kStatus;
+        tlvList.Add(Tlv::kStatus);
     }
 
     // TLV Request
-    switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvs))
+    switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
     {
     case kErrorNone:
-        for (uint8_t i = 0; i < requestedTlvs.mNumTlvs; i++)
-        {
-            if (numTlvs >= sizeof(tlvs))
-            {
-                LogWarn("Failed to respond with TLVs: %d of %d", i, requestedTlvs.mNumTlvs);
-                break;
-            }
-
-            tlvs[numTlvs++] = requestedTlvs.mTlvs[i];
-        }
+        tlvList.AddElementsFrom(requestedTlvList);
         break;
     case kErrorNotFound:
         break;
@@ -3512,7 +3508,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     }
 #endif
 
-    SuccessOrExit(error = SendChildUpdateResponse(tlvs, numTlvs, challenge));
+    SuccessOrExit(error = SendChildUpdateResponse(tlvList, challenge));
 
 exit:
     LogProcessError(kTypeChildUpdateRequestOfParent, error);
@@ -3528,9 +3524,6 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     uint32_t  mleFrameCounter;
     uint16_t  sourceAddress;
     uint32_t  timeout;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    CslClockAccuracyTlv clockAccuracy;
-#endif
 
     Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3620,11 +3613,20 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        // CSL Accuracy
-        if (Tlv::FindTlv(aRxInfo.mMessage, clockAccuracy) != kErrorNone)
         {
-            Get<Mac::Mac>().SetCslParentClockAccuracy(clockAccuracy.GetCslClockAccuracy());
-            Get<Mac::Mac>().SetCslParentUncertainty(clockAccuracy.GetCslUncertainty());
+            Mac::CslAccuracy cslAccuracy;
+
+            // CSL Accuracy
+            switch (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy))
+            {
+            case kErrorNone:
+                Get<Mac::Mac>().SetCslParentAccuracy(cslAccuracy);
+                break;
+            case kErrorNotFound:
+                break;
+            default:
+                ExitNow(error = kErrorParse);
+            }
         }
 #endif
 
@@ -3821,6 +3823,24 @@ uint16_t Mle::GetNextHop(uint16_t aDestination) const
     return (mParent.IsStateValid()) ? mParent.GetRloc16() : static_cast<uint16_t>(Mac::kShortAddrInvalid);
 }
 
+Error Mle::GetParentInfo(Router::Info &aParentInfo) const
+{
+    Error error = kErrorNone;
+
+    // Skip the check for reference device since it needs to get the
+    // original parent's info even after role change.
+
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(IsChild(), error = kErrorInvalidState);
+#endif
+
+    aParentInfo.SetFrom(mParent);
+    ExitNow();
+
+exit:
+    return error;
+}
+
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
 {
     return IsMeshLocalAddress(aAddress) && aAddress.GetIid().IsRoutingLocator();
@@ -3882,70 +3902,70 @@ exit:
 #endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-void Mle::HandleParentSearchTimer(Timer &aTimer)
+void Mle::ParentSearch::HandleTimer(Timer &aTimer)
 {
-    aTimer.Get<Mle>().HandleParentSearchTimer();
+    aTimer.Get<Mle>().mParentSearch.HandleTimer();
 }
 
-void Mle::HandleParentSearchTimer(void)
+void Mle::ParentSearch::HandleTimer(void)
 {
     int8_t parentRss;
 
-    LogInfo("PeriodicParentSearch: %s interval passed", mParentSearchIsInBackoff ? "Backoff" : "Check");
+    LogInfo("PeriodicParentSearch: %s interval passed", mIsInBackoff ? "Backoff" : "Check");
 
-    if (mParentSearchBackoffWasCanceled)
+    if (mBackoffWasCanceled)
     {
         // Backoff can be canceled if the device switches to a new parent.
         // from `UpdateParentSearchState()`. We want to limit this to happen
         // only once within a backoff interval.
 
-        if (TimerMilli::GetNow() - mParentSearchBackoffCancelTime >= kParentSearchBackoffInterval)
+        if (TimerMilli::GetNow() - mBackoffCancelTime >= kBackoffInterval)
         {
-            mParentSearchBackoffWasCanceled = false;
+            mBackoffWasCanceled = false;
             LogInfo("PeriodicParentSearch: Backoff cancellation is allowed on parent switch");
         }
     }
 
-    mParentSearchIsInBackoff = false;
+    mIsInBackoff = false;
 
-    VerifyOrExit(IsChild());
+    VerifyOrExit(Get<Mle>().IsChild());
 
-    parentRss = GetParent().GetLinkInfo().GetAverageRss();
+    parentRss = Get<Mle>().GetParent().GetLinkInfo().GetAverageRss();
     LogInfo("PeriodicParentSearch: Parent RSS %d", parentRss);
     VerifyOrExit(parentRss != OT_RADIO_RSSI_INVALID);
 
-    if (parentRss < kParentSearchRssThreadhold)
+    if (parentRss < kRssThreadhold)
     {
-        LogInfo("PeriodicParentSearch: Parent RSS less than %d, searching for new parents", kParentSearchRssThreadhold);
-        mParentSearchIsInBackoff = true;
-        Attach(kBetterParent);
+        LogInfo("PeriodicParentSearch: Parent RSS less than %d, searching for new parents", kRssThreadhold);
+        mIsInBackoff = true;
+        Get<Mle>().Attach(kBetterParent);
     }
 
 exit:
-    StartParentSearchTimer();
+    StartTimer();
 }
 
-void Mle::StartParentSearchTimer(void)
+void Mle::ParentSearch::StartTimer(void)
 {
     uint32_t interval;
 
-    interval = Random::NonCrypto::GetUint32InRange(0, kParentSearchJitterInterval);
+    interval = Random::NonCrypto::GetUint32InRange(0, kJitterInterval);
 
-    if (mParentSearchIsInBackoff)
+    if (mIsInBackoff)
     {
-        interval += kParentSearchBackoffInterval;
+        interval += kBackoffInterval;
     }
     else
     {
-        interval += kParentSearchCheckInterval;
+        interval += kCheckInterval;
     }
 
-    mParentSearchTimer.Start(interval);
+    mTimer.Start(interval);
 
-    LogInfo("PeriodicParentSearch: (Re)starting timer for %s interval", mParentSearchIsInBackoff ? "backoff" : "check");
+    LogInfo("PeriodicParentSearch: (Re)starting timer for %s interval", mIsInBackoff ? "backoff" : "check");
 }
 
-void Mle::UpdateParentSearchState(void)
+void Mle::ParentSearch::UpdateState(void)
 {
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
@@ -3964,24 +3984,25 @@ void Mle::UpdateParentSearchState(void)
     // the chance to switch back to the original (and possibly
     // preferred) parent more quickly.
 
-    if (mParentSearchIsInBackoff && !mParentSearchBackoffWasCanceled && mParentSearchRecentlyDetached)
+    if (mIsInBackoff && !mBackoffWasCanceled && mRecentlyDetached)
     {
-        if ((mPreviousParentRloc != Mac::kShortAddrInvalid) && (mPreviousParentRloc != mParent.GetRloc16()))
+        if ((Get<Mle>().mPreviousParentRloc != Mac::kShortAddrInvalid) &&
+            (Get<Mle>().mPreviousParentRloc != Get<Mle>().mParent.GetRloc16()))
         {
-            mParentSearchIsInBackoff        = false;
-            mParentSearchBackoffWasCanceled = true;
-            mParentSearchBackoffCancelTime  = TimerMilli::GetNow();
+            mIsInBackoff        = false;
+            mBackoffWasCanceled = true;
+            mBackoffCancelTime  = TimerMilli::GetNow();
             LogInfo("PeriodicParentSearch: Canceling backoff on switching to a new parent");
         }
     }
 
 #endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
-    mParentSearchRecentlyDetached = false;
+    mRecentlyDetached = false;
 
-    if (!mParentSearchIsInBackoff)
+    if (!mIsInBackoff)
     {
-        StartParentSearchTimer();
+        StartTimer();
     }
 }
 #endif // OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -4307,18 +4328,19 @@ void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCa
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-uint64_t Mle::CalcParentCslMetric(uint8_t aCslClockAccuracy, uint8_t aCslUncertainty)
+uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy)
 {
-    /*
-     * This function calculates the overall time that device will operate on battery
-     * by summming sequence of "ON quants" over a period of time.
-     */
-    const uint64_t usInSecond   = 1000000;
-    uint64_t       cslPeriodUs  = kMinCslPeriod * kUsPerTenSymbols;
-    uint64_t       cslTimeoutUs = GetCslTimeout() * usInSecond;
-    uint64_t       k            = cslTimeoutUs / cslPeriodUs;
+    // This function calculates the overall time that device will operate
+    // on battery by summing sequence of "ON quants" over a period of time.
 
-    return k * (k + 1) * cslPeriodUs / usInSecond * aCslClockAccuracy + aCslUncertainty * k * kUsPerUncertUnit;
+    static constexpr uint64_t usInSecond = 1000000;
+
+    uint64_t cslPeriodUs  = kMinCslPeriod * kUsPerTenSymbols;
+    uint64_t cslTimeoutUs = GetCslTimeout() * usInSecond;
+    uint64_t k            = cslTimeoutUs / cslPeriodUs;
+
+    return k * (k + 1) * cslPeriodUs / usInSecond * aCslAccuracy.GetClockAccuracy() +
+           aCslAccuracy.GetUncertaintyInMicrosec() * k;
 }
 #endif
 
@@ -4390,6 +4412,30 @@ void Mle::HandleDetachGracefullyAddressReleaseResponse(void)
     }
 }
 #endif // OPENTHREAD_FTD
+
+//---------------------------------------------------------------------------------------------------------------------
+// TlvList
+
+void Mle::TlvList::Add(uint8_t aTlvType)
+{
+    VerifyOrExit(!Contains(aTlvType));
+
+    if (PushBack(aTlvType) != kErrorNone)
+    {
+        LogWarn("Failed to include TLV %d", aTlvType);
+    }
+
+exit:
+    return;
+}
+
+void Mle::TlvList::AddElementsFrom(const TlvList &aTlvList)
+{
+    for (uint8_t tlvType : aTlvList)
+    {
+        Add(tlvType);
+    }
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 // Challenge
@@ -4783,48 +4829,41 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 Error Mle::TxMessage::AppendCslChannelTlv(void)
 {
-    Error         error = kErrorNone;
     CslChannelTlv cslChannel;
 
-    // In current implementation, it's allowed to set CSL Channel unspecified. As `0` is not valid for Channel value
-    // in CSL Channel TLV, if CSL channel is not specified, we don't append CSL Channel TLV.
-    // And on transmitter side, it would also set CSL Channel for the child to `0` if it doesn't find a CSL Channel
-    // TLV.
-    VerifyOrExit(Get<Mac::Mac>().GetCslChannel());
+    // CSL channel value of zero indicates that the CSL channel is not
+    // specified. We can use this value in the TLV as well.
 
     cslChannel.Init();
     cslChannel.SetChannelPage(0);
     cslChannel.SetChannel(Get<Mac::Mac>().GetCslChannel());
 
-    SuccessOrExit(error = Append(cslChannel));
-
-exit:
-    return error;
+    return Append(cslChannel);
 }
 
 Error Mle::TxMessage::AppendCslTimeoutTlv(void)
 {
-    OT_ASSERT(Get<Mac::Mac>().IsCslEnabled());
-    return Tlv::Append<CslTimeoutTlv>(*this,
-                                      Get<Mle>().mCslTimeout == 0 ? Get<Mle>().mTimeout : Get<Mle>().mCslTimeout);
+    uint32_t timeout = Get<Mle>().GetCslTimeout();
+
+    if (timeout == 0)
+    {
+        timeout = Get<Mle>().GetTimeout();
+    }
+
+    return Tlv::Append<CslTimeoutTlv>(*this, timeout);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
 {
-    Error               error = kErrorNone;
     CslClockAccuracyTlv cslClockAccuracy;
 
     cslClockAccuracy.Init();
-
     cslClockAccuracy.SetCslClockAccuracy(Get<Radio>().GetCslAccuracy());
     cslClockAccuracy.SetCslUncertainty(Get<Radio>().GetCslUncertainty());
 
-    SuccessOrExit(error = Append(cslClockAccuracy));
-
-exit:
-    return error;
+    return Append(cslClockAccuracy);
 }
 #endif
 
@@ -5029,7 +5068,7 @@ exit:
     return error;
 }
 
-Error Mle::RxMessage::ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const
+Error Mle::RxMessage::ReadTlvRequestTlv(TlvList &aTlvList) const
 {
     Error    error;
     uint16_t offset;
@@ -5037,17 +5076,33 @@ Error Mle::RxMessage::ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, Tlv::kTlvRequest, offset, length));
 
-    if (length > sizeof(aRequestedTlvs.mTlvs))
+    if (length > aTlvList.GetMaxSize())
     {
-        length = sizeof(aRequestedTlvs.mTlvs);
+        length = aTlvList.GetMaxSize();
     }
 
-    ReadBytes(offset, aRequestedTlvs.mTlvs, length);
-    aRequestedTlvs.mNumTlvs = static_cast<uint8_t>(length);
+    ReadBytes(offset, aTlvList.GetArrayBuffer(), length);
+    aTlvList.SetLength(static_cast<uint8_t>(length));
 
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+Error Mle::RxMessage::ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const
+{
+    Error               error;
+    CslClockAccuracyTlv clockAccuracyTlv;
+
+    SuccessOrExit(error = Tlv::FindTlv(*this, clockAccuracyTlv));
+    VerifyOrExit(clockAccuracyTlv.IsValid(), error = kErrorParse);
+    aCslAccuracy.SetClockAccuracy(clockAccuracyTlv.GetCslClockAccuracy());
+    aCslAccuracy.SetUncertainty(clockAccuracyTlv.GetCslUncertainty());
+
+exit:
+    return error;
+}
+#endif
 
 } // namespace Mle
 } // namespace ot

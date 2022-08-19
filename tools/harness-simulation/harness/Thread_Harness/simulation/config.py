@@ -27,12 +27,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-REMOTE_PORT = 22
-REMOTE_USERNAME = 'pi'
-REMOTE_PASSWORD = 'raspberry'
-
-REMOTE_SNIFFER_OUTPUT_PREFIX = '/tmp/'
-
-REMOTE_OT_PATH = '/home/pi/work/src/openthread-pr/'
+REMOTE_OT_PATH = '/home/pi/openthread/'
 
 EDITCAP_PATH = r'C:\Program Files (x86)\Wireshark_Thread\editcap.exe'

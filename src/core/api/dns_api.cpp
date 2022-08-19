@@ -87,6 +87,8 @@ otError otDnsClientResolveAddress(otInstance *            aInstance,
                                   void *                  aContext,
                                   const otDnsQueryConfig *aConfig)
 {
+    AssertPointerIsNotNull(aHostName);
+
     return AsCoreType(aInstance).Get<Dns::Client>().ResolveAddress(aHostName, aCallback, aContext,
                                                                    AsCoreTypePtr(aConfig));
 }
@@ -98,6 +100,8 @@ otError otDnsClientResolveIp4Address(otInstance *            aInstance,
                                      void *                  aContext,
                                      const otDnsQueryConfig *aConfig)
 {
+    AssertPointerIsNotNull(aHostName);
+
     return AsCoreType(aInstance).Get<Dns::Client>().ResolveIp4Address(aHostName, aCallback, aContext,
                                                                       AsCoreTypePtr(aConfig));
 }
@@ -107,6 +111,8 @@ otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
                                         char *                      aNameBuffer,
                                         uint16_t                    aNameBufferSize)
 {
+    AssertPointerIsNotNull(aNameBuffer);
+
     return AsCoreType(aResponse).GetHostName(aNameBuffer, aNameBufferSize);
 }
 
@@ -128,6 +134,8 @@ otError otDnsClientBrowse(otInstance *            aInstance,
                           void *                  aContext,
                           const otDnsQueryConfig *aConfig)
 {
+    AssertPointerIsNotNull(aServiceName);
+
     return AsCoreType(aInstance).Get<Dns::Client>().Browse(aServiceName, aCallback, aContext, AsCoreTypePtr(aConfig));
 }
 
@@ -135,6 +143,8 @@ otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
                                           char *                     aNameBuffer,
                                           uint16_t                   aNameBufferSize)
 {
+    AssertPointerIsNotNull(aNameBuffer);
+
     return AsCoreType(aResponse).GetServiceName(aNameBuffer, aNameBufferSize);
 }
 
@@ -143,6 +153,8 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
                                               char *                     aLabelBuffer,
                                               uint8_t                    aLabelBufferSize)
 {
+    AssertPointerIsNotNull(aLabelBuffer);
+
     return AsCoreType(aResponse).GetServiceInstance(aIndex, aLabelBuffer, aLabelBufferSize);
 }
 
@@ -150,6 +162,8 @@ otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
                                           const char *               aInstanceLabel,
                                           otDnsServiceInfo *         aServiceInfo)
 {
+    AssertPointerIsNotNull(aInstanceLabel);
+
     return AsCoreType(aResponse).GetServiceInfo(aInstanceLabel, AsCoreType(aServiceInfo));
 }
 
@@ -161,6 +175,8 @@ otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
 {
     uint32_t ttl;
 
+    AssertPointerIsNotNull(aHostName);
+
     return AsCoreType(aResponse).GetHostAddress(aHostName, aIndex, AsCoreType(aAddress), aTtl != nullptr ? *aTtl : ttl);
 }
 
@@ -171,6 +187,9 @@ otError otDnsClientResolveService(otInstance *            aInstance,
                                   void *                  aContext,
                                   const otDnsQueryConfig *aConfig)
 {
+    AssertPointerIsNotNull(aInstanceLabel);
+    AssertPointerIsNotNull(aServiceName);
+
     return AsCoreType(aInstance).Get<Dns::Client>().ResolveService(aInstanceLabel, aServiceName, aCallback, aContext,
                                                                    AsCoreTypePtr(aConfig));
 }
@@ -181,6 +200,9 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
                                            char *                      aNameBuffer,
                                            uint16_t                    aNameBufferSize)
 {
+    AssertPointerIsNotNull(aLabelBuffer);
+    AssertPointerIsNotNull(aNameBuffer);
+
     return AsCoreType(aResponse).GetServiceName(aLabelBuffer, aLabelBufferSize, aNameBuffer, aNameBufferSize);
 }
 
@@ -196,6 +218,8 @@ otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse
                                            uint32_t *                  aTtl)
 {
     uint32_t ttl;
+
+    AssertPointerIsNotNull(aHostName);
 
     return AsCoreType(aResponse).GetHostAddress(aHostName, aIndex, AsCoreType(aAddress),
                                                 (aTtl != nullptr) ? *aTtl : ttl);

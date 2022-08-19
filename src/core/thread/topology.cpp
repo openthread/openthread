@@ -38,6 +38,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/min_max.hpp"
 
 namespace ot {
 
@@ -252,7 +253,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
     mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
     mQueuedMessageCnt   = aChild.GetIndirectMessageCount();
-    mVersion            = aChild.GetVersion();
+    mVersion            = ClampToUint8(aChild.GetVersion());
     mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
     mFullThreadDevice   = aChild.IsFullThreadDevice();
     mFullNetworkData    = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
@@ -524,6 +525,16 @@ void Router::Info::SetFrom(const Router &aRouter)
     mLinkQualityIn   = aRouter.GetLinkInfo().GetLinkQuality();
     mLinkQualityOut  = aRouter.GetLinkQualityOut();
     mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - aRouter.GetLastHeard()));
+    mVersion         = ClampToUint8(aRouter.GetVersion());
+}
+
+void Router::Info::SetFrom(const Parent &aParent)
+{
+    SetFrom(static_cast<const Router &>(aParent));
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    mCslClockAccuracy = aParent.GetCslAccuracy().GetClockAccuracy();
+    mCslUncertainty   = aParent.GetCslAccuracy().GetUncertainty();
+#endif
 }
 
 void Router::Clear(void)
@@ -531,6 +542,25 @@ void Router::Clear(void)
     Instance &instance = GetInstance();
 
     memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
+    Init(instance);
+}
+
+void Router::SetFrom(const Parent &aParent)
+{
+    // We use an intermediate pointer to copy `aParent` to silence
+    // code checkers warning about object slicing (assigning a
+    // sub-class to base class instance).
+
+    const Router *parentAsRouter = &aParent;
+
+    *this = *parentAsRouter;
+}
+
+void Parent::Clear(void)
+{
+    Instance &instance = GetInstance();
+
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Parent));
     Init(instance);
 }
 

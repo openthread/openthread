@@ -52,6 +52,8 @@ const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInsta
                                                                          otHistoryTrackerIterator *aIterator,
                                                                          uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNetInfoHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
@@ -60,6 +62,8 @@ const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressH
     otHistoryTrackerIterator *aIterator,
     uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateUnicastAddressHistory(AsCoreType(aIterator),
                                                                                            *aEntryAge);
 }
@@ -69,6 +73,8 @@ const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddr
     otHistoryTrackerIterator *aIterator,
     uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateMulticastAddressHistory(AsCoreType(aIterator),
                                                                                              *aEntryAge);
 }
@@ -77,6 +83,8 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance *
                                                                     otHistoryTrackerIterator *aIterator,
                                                                     uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateRxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
@@ -84,6 +92,8 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *
                                                                     otHistoryTrackerIterator *aIterator,
                                                                     uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateTxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
@@ -91,6 +101,8 @@ const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otIns
                                                                            otHistoryTrackerIterator *aIterator,
                                                                            uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNeighborHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
@@ -98,6 +110,8 @@ const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHisto
                                                                                    otHistoryTrackerIterator *aIterator,
                                                                                    uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateOnMeshPrefixHistory(AsCoreType(aIterator),
                                                                                          *aEntryAge);
 }
@@ -107,6 +121,8 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
     otHistoryTrackerIterator *aIterator,
     uint32_t *                aEntryAge)
 {
+    AssertPointerIsNotNull(aEntryAge);
+
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateExternalRouteHistory(AsCoreType(aIterator),
                                                                                           *aEntryAge);
 }

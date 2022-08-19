@@ -37,6 +37,7 @@ import os
 import paramiko
 import socket
 import time
+import win32api
 
 from IThci import IThci
 from OpenThread import OpenThreadTHCI, watched
@@ -44,6 +45,7 @@ from simulation.config import REMOTE_OT_PATH
 
 
 class SSHHandle(object):
+    KEEPALIVE_INTERVAL = 30
 
     def __init__(self, ip, port, username, password, device, node_id):
         ipaddress.ip_address(ip)
@@ -56,9 +58,13 @@ class SSHHandle(object):
         self.__stdout = None
         self.__connect(device, node_id)
 
+        # Close the SSH connection only when Harness exits
+        win32api.SetConsoleCtrlHandler(self.__disconnect, True)
+
     @watched
     def __connect(self, device, node_id):
-        self.close()
+        if self.__handle is not None:
+            return
 
         self.__handle = paramiko.SSHClient()
         self.__handle.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -71,32 +77,45 @@ class SSHHandle(object):
             else:
                 raise Exception('Password error')
 
-        self.__stdin, self.__stdout, _ = self.__handle.exec_command(device + ' ' + str(node_id), get_pty=True)
+        # Avoid SSH connection lost after inactivity for a while
+        self.__handle.get_transport().set_keepalive(self.KEEPALIVE_INTERVAL)
+
+        self.__stdin, self.__stdout, _ = self.__handle.exec_command(device + ' ' + str(node_id))
+
+        # Receive the output in non-blocking mode
         self.__stdout.channel.setblocking(0)
 
-        # Wait some time for initiation
-        time.sleep(0.1)
+        # Some commands such as `udp send <ip> -x <hex>` send binary data
+        # The UDP packet recevier will output the data in binary to stdout
+        self.__stdout._set_mode('rb')
 
-    @watched
-    def close(self):
+    def __disconnect(self, dwCtrlType):
         if self.__handle is None:
             return
-        self.__stdin.write('exit\n')
-        # Wait some time for termination
-        time.sleep(0.1)
+
+        # Exit ot-cli-ftd and close the SSH connection
+        self.send('exit\n')
+        self.__stdin.close()
+        self.__stdout.close()
         self.__handle.close()
-        self.__stdin = None
-        self.__stdout = None
-        self.__handle = None
+
+    def close(self):
+        # Do nothing, because disconnecting and then connecting will automatically factory reset all states
+        # compared to real devices, which is not the intended behavior
+        pass
 
     def send(self, cmd):
         self.__stdin.write(cmd)
+        self.__stdin.flush()
 
     def recv(self):
-        try:
-            return self.__stdout.readline().rstrip()
-        except socket.timeout:
-            return ''
+        outputs = []
+        while True:
+            try:
+                outputs.append(self.__stdout.read(1))
+            except socket.timeout:
+                break
+        return ''.join(outputs)
 
     def log(self, fmt, *args):
         try:
@@ -107,14 +126,14 @@ class SSHHandle(object):
 
 
 class OpenThread_Sim(OpenThreadTHCI, IThci):
-    DEFAULT_COMMAND_TIMEOUT = 20
-
     __handle = None
 
     device = os.path.join(REMOTE_OT_PATH, 'build/simulation/examples/apps/cli/ot-cli-ftd')
 
     @watched
     def _connect(self):
+        self.__lines = []
+
         # Only actually connect once.
         if self.__handle is None:
             assert self.connectType == 'ip'
@@ -131,8 +150,20 @@ class OpenThread_Sim(OpenThreadTHCI, IThci):
         pass
 
     def _cliReadLine(self):
-        tail = self.__handle.recv()
-        return tail if tail else None
+        if len(self.__lines) > 1:
+            return self.__lines.pop(0)
+
+        tail = ''
+        if len(self.__lines) != 0:
+            tail = self.__lines.pop()
+
+        tail += self.__handle.recv()
+
+        self.__lines += self._lineSepX.split(tail)
+        if len(self.__lines) > 1:
+            return self.__lines.pop(0)
+
+        return None
 
     def _cliWriteLine(self, line):
         self.__handle.send(line + '\n')

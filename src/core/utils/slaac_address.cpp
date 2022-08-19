@@ -204,7 +204,8 @@ void Slaac::Update(UpdateMode aMode)
         {
             Ip6::Prefix &prefix = config.GetPrefix();
 
-            if (config.mDp || !config.mSlaac || ShouldFilter(prefix))
+            if (config.mDp || !config.mSlaac || (prefix.GetLength() != Ip6::NetworkPrefix::kLength) ||
+                ShouldFilter(prefix))
             {
                 continue;
             }

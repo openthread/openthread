@@ -603,6 +603,25 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         SuccessOrExit(error = otBorderRoutingGetNat64Prefix(GetInstancePtr(), &nat64Prefix));
         OutputIp6PrefixLine(nat64Prefix);
     }
+    /**
+     * @cli br favorednat64prefix
+     * @code
+     * br favorednat64prefix
+     * fd14:1078:b3d5:b0b0:0:0::/96 prf:low
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetFavoredNat64Prefix
+     */
+    else if (aArgs[0] == "favorednat64prefix")
+    {
+        otIp6Prefix       prefix;
+        otRoutePreference preference;
+
+        SuccessOrExit(error = otBorderRoutingGetFavoredNat64Prefix(GetInstancePtr(), &prefix, &preference));
+        OutputIp6Prefix(prefix);
+        OutputLine(" prf:%s", PreferenceToString(preference));
+    }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
     /**
      * @cli br rioprf (high,med,low)
@@ -692,6 +711,25 @@ template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
     otError                error = OT_ERROR_INVALID_COMMAND;
     otBackboneRouterConfig config;
 
+    /**
+     * @cli bbr
+     * @code
+     * bbr
+     * BBR Primary:
+     * server16: 0xE400
+     * seqno:    10
+     * delay:    120 secs
+     * timeout:  300 secs
+     * Done
+     * @endcode
+     * @code
+     * bbr
+     * BBR Primary: None
+     * Done
+     * @endcode
+     * @par
+     * Returns the current Primary Backbone Router information for the Thread device.
+     */
     if (aArgs[0].IsEmpty())
     {
         if (otBackboneRouterGetPrimary(GetInstancePtr(), &config) == OT_ERROR_NONE)
@@ -719,6 +757,34 @@ template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
                 ExitNow(error = OT_ERROR_INVALID_COMMAND);
             }
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+            /**
+             * @cli bbr mgmt dua
+             * @code
+             * bbr mgmt dua 1 2f7c235e5025a2fd
+             * Done
+             * @endcode
+             * @code
+             * bbr mgmt dua 160
+             * Done
+             * @endcode
+             * @cparam bbr mgmt dua @ca{status|coap-code} [@ca{meshLocalIid}]
+             * For `status` or `coap-code`, use:
+             * *    0: ST_DUA_SUCCESS
+             * *    1: ST_DUA_REREGISTER
+             * *    2: ST_DUA_INVALID
+             * *    3: ST_DUA_DUPLICATE
+             * *    4: ST_DUA_NO_RESOURCES
+             * *    5: ST_DUA_BBR_NOT_PRIMARY
+             * *    6: ST_DUA_GENERAL_FAILURE
+             * *    160: COAP code 5.00
+             * @par
+             * With the `meshLocalIid` included, this command configures the response status
+             * for the next DUA registration. Without `meshLocalIid`, respond to the next
+             * DUA.req with the specified `status` or `coap-code`.
+             * @par
+             * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+             * @sa otBackboneRouterConfigNextDuaRegistrationResponse
+             */
             else if (aArgs[1] == "dua")
             {
                 uint8_t                   status;
@@ -761,6 +827,22 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
+    /**
+     * @cli bbr mgmt mlr listener
+     * @code
+     * bbr mgmt mlr listener
+     * ff04:0:0:0:0:0:0:abcd 3534000
+     * ff04:0:0:0:0:0:0:eeee 3537610
+     * Done
+     * @endcode
+     * @par
+     * Returns the Multicast Listeners with the #otBackboneRouterMulticastListenerInfo
+     * `mTimeout` in seconds.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` and
+     * `OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE` are enabled.
+     * @sa otBackboneRouterMulticastListenerGetNext
+     */
     if (aArgs[0] == "listener")
     {
         if (aArgs[1].IsEmpty())
@@ -770,11 +852,34 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(Arg aArgs[])
         }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        /**
+         * @cli bbr mgmt mlr listener clear
+         * @code
+         * bbr mgmt mlr listener clear
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBackboneRouterMulticastListenerClear
+         */
         if (aArgs[1] == "clear")
         {
             otBackboneRouterMulticastListenerClear(GetInstancePtr());
             error = OT_ERROR_NONE;
         }
+        /**
+         * @cli bbr mgmt mlr listener add
+         * @code
+         * bbr mgmt mlr listener add ff04::1
+         * Done
+         * @endcode
+         * @code
+         * bbr mgmt mlr listener add ff04::2 300
+         * Done
+         * @endcode
+         * @cparam bbr mgmt mlr listener add @ca{ipaddress} [@ca{timeout-seconds}]
+         * @par api_copy
+         * #otBackboneRouterMulticastListenerAdd
+         */
         else if (aArgs[1] == "add")
         {
             otIp6Address address;
@@ -791,6 +896,23 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(Arg aArgs[])
             error = otBackboneRouterMulticastListenerAdd(GetInstancePtr(), &address, timeout);
         }
     }
+    /**
+     * @cli bbr mgmt mlr response
+     * @code
+     * bbr mgmt mlr response 2
+     * Done
+     * @endcode
+     * @cparam bbr mgmt mlr response @ca{status-code}
+     * For `status-code`, use:
+     * *    0: ST_MLR_SUCCESS
+     * *    2: ST_MLR_INVALID
+     * *    3: ST_MLR_NO_PERSISTENT
+     * *    4: ST_MLR_NO_RESOURCES
+     * *    5: ST_MLR_BBR_NOT_PRIMARY
+     * *    6: ST_MLR_GENERAL_FAILURE
+     * @par api_copy
+     * #otBackboneRouterConfigNextMulticastListenerRegistrationResponse
+     */
     else if (aArgs[0] == "response")
     {
         error = ProcessSet(aArgs + 1, otBackboneRouterConfigNextMulticastListenerRegistrationResponse);
@@ -821,18 +943,81 @@ otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
     otBackboneRouterConfig config;
     bool                   enable;
 
+    /**
+     * @cli bbr (enable,disable)
+     * @code
+     * bbr enable
+     * Done
+     * @endcode
+     * @code
+     * bbr disable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBackboneRouterSetEnabled
+     */
     if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
         otBackboneRouterSetEnabled(GetInstancePtr(), enable);
     }
+    /**
+     * @cli bbr jitter (get,set)
+     * @code
+     * bbr jitter
+     * 20
+     * Done
+     * @endcode
+     * @code
+     * bbr jitter 10
+     * Done
+     * @endcode
+     * @cparam bbr jitter [@ca{jitter}]
+     * @par
+     * Gets or sets jitter (in seconds) for Backbone Router registration.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+     * @sa otBackboneRouterGetRegistrationJitter
+     * @sa otBackboneRouterSetRegistrationJitter
+     */
     else if (aArgs[0] == "jitter")
     {
         error = ProcessGetSet(aArgs + 1, otBackboneRouterGetRegistrationJitter, otBackboneRouterSetRegistrationJitter);
     }
+    /**
+     * @cli bbr register
+     * @code
+     * bbr register
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBackboneRouterRegister
+     */
     else if (aArgs[0] == "register")
     {
         SuccessOrExit(error = otBackboneRouterRegister(GetInstancePtr()));
     }
+    /**
+     * @cli bbr state
+     * @code
+     * bbr state
+     * Disabled
+     * Done
+     * @endcode
+     * @code
+     * bbr state
+     * Primary
+     * Done
+     * @endcode
+     * @code
+     * bbr state
+     * Secondary
+     * Done
+     * @endcode
+     * @par
+     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
+     * @par api_copy
+     * #otBackboneRouterGetState
+     */
     else if (aArgs[0] == "state")
     {
         static const char *const kStateStrings[] = {
@@ -847,6 +1032,18 @@ otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
 
         OutputLine("%s", Stringify(otBackboneRouterGetState(GetInstancePtr()), kStateStrings));
     }
+    /**
+     * @cli bbr config
+     * @code
+     * bbr config
+     * seqno:    10
+     * delay:    120 secs
+     * timeout:  300 secs
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBackboneRouterGetConfig
+     */
     else if (aArgs[0] == "config")
     {
         otBackboneRouterGetConfig(GetInstancePtr(), &config);
@@ -860,6 +1057,19 @@ otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
         else
         {
             // Set local Backbone Router configuration.
+            /**
+             * @cli bbr config (set)
+             * @code
+             * bbr config seqno 20 delay 30
+             * Done
+             * @endcode
+             * @cparam bbr config [seqno @ca{seqno}] [delay @ca{delay}] [timeout @ca{timeout}]
+             * @par
+             * `bbr register` should be issued explicitly to register Backbone Router service to Leader
+             * for Secondary Backbone Router.
+             * @par api_copy
+             * #otBackboneRouterSetConfig
+             */
             for (Arg *arg = &aArgs[1]; !arg->IsEmpty(); arg++)
             {
                 if (*arg == "seqno")
@@ -900,10 +1110,31 @@ template <> otError Interpreter::Process<Cmd("domainname")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli domainname
+     * @code
+     * domainname
+     * Thread
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetDomainName
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otThreadGetDomainName(GetInstancePtr()));
     }
+    /**
+     * @cli domainname (set)
+     * @code
+     * domainname Test\ Thread
+     * Done
+     * @endcode
+     * @cparam domainname @ca{name}
+     * Use a `backslash` to escape spaces.
+     * @par api_copy
+     * #otThreadSetDomainName
+     */
     else
     {
         SuccessOrExit(error = otThreadSetDomainName(GetInstancePtr(), aArgs[0].GetCString()));
@@ -918,6 +1149,16 @@ template <> otError Interpreter::Process<Cmd("dua")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli dua iid
+     * @code
+     * dua iid
+     * 0004000300020001
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetFixedDuaInterfaceIdentifier
+     */
     if (aArgs[0] == "iid")
     {
         if (aArgs[1].IsEmpty())
@@ -929,6 +1170,22 @@ template <> otError Interpreter::Process<Cmd("dua")>(Arg aArgs[])
                 OutputBytesLine(iid->mFields.m8);
             }
         }
+        /**
+         * @cli dua iid (set,clear)
+         * @code
+         * dua iid 0004000300020001
+         * Done
+         * @endcode
+         * @code
+         * dua iid clear
+         * Done
+         * @endcode
+         * @cparam dua iid @ca{iid|clear}
+         * `dua iid clear` passes a `nullptr` to #otThreadSetFixedDuaInterfaceIdentifier.
+         * Otherwise, you can pass the `iid`.
+         * @par api_copy
+         * #otThreadSetFixedDuaInterfaceIdentifier
+         */
         else if (aArgs[1] == "clear")
         {
             error = otThreadSetFixedDuaInterfaceIdentifier(GetInstancePtr(), nullptr);
@@ -953,6 +1210,34 @@ exit:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
+/**
+ * @cli bufferinfo
+ * @code
+ * bufferinfo
+ * total: 40
+ * free: 40
+ * 6lo send: 0 0 0
+ * 6lo reas: 0 0 0
+ * ip6: 0 0 0
+ * mpl: 0 0 0
+ * mle: 0 0 0
+ * coap: 0 0 0
+ * coap secure: 0 0 0
+ * application coap: 0 0 0
+ * Done
+ * @endcode
+ * @par
+ * Gets the current message buffer information.
+ * *   `total` displays the total number of message buffers in pool.
+ * *   `free` displays the number of free message buffers.
+ * @par
+ * Next, the CLI displays info about different queues used by the OpenThread stack,
+ * for example `6lo send`. Each line after the queue represents info about a queue:
+ * *   The first number shows number messages in the queue.
+ * *   The second number shows number of buffers used by all messages in the queue.
+ * *   The third number shows total number of bytes of all messages in the queue.
+ * @sa otMessageGetBufferInfo
+ */
 template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -990,6 +1275,25 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+/**
+ * @cli ccathreshold (get,set)
+ * @code
+ * ccathreshold
+ * -75 dBm
+ * Done
+ * @endcode
+ * @code
+ * ccathreshold -62
+ * Done
+ * @endcode
+ * @cparam ccathreshold [@ca{CCA-threshold-dBm}]
+ * Use the optional `CCA-threshold-dBm` argument to set the CCA threshold.
+ * @par
+ * Gets or sets the CCA threshold in dBm measured at the antenna connector per
+ * IEEE 802.15.4 - 2015 section 10.1.4.
+ * @sa otPlatRadioGetCcaEnergyDetectThreshold
+ * @sa otPlatRadioSetCcaEnergyDetectThreshold
+ */
 template <> otError Interpreter::Process<Cmd("ccathreshold")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -1041,19 +1345,87 @@ exit:
 
 #endif
 
+/**
+ * @cli channel (get,set)
+ * @code
+ * channel
+ * 11
+ * Done
+ * @endcode
+ * @code
+ * channel 11
+ * Done
+ * @endcode
+ * @cparam channel [@ca{channel-num}]
+ * Use `channel-num` to set the channel.
+ * @par
+ * Gets or sets the IEEE 802.15.4 Channel value.
+ */
 template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli channel supported
+     * @code
+     * channel supported
+     * 0x7fff800
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioGetSupportedChannelMask
+     */
     if (aArgs[0] == "supported")
     {
         OutputLine("0x%x", otPlatRadioGetSupportedChannelMask(GetInstancePtr()));
     }
+    /**
+     * @cli channel preferred
+     * @code
+     * channel preferred
+     * 0x7fff800
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioGetPreferredChannelMask
+     */
     else if (aArgs[0] == "preferred")
     {
         OutputLine("0x%x", otPlatRadioGetPreferredChannelMask(GetInstancePtr()));
     }
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+    /**
+     * @cli channel monitor
+     * @code
+     * channel monitor
+     * enabled: 1
+     * interval: 41000
+     * threshold: -75
+     * window: 960
+     * count: 10552
+     * occupancies:
+     * ch 11 (0x0cb7)  4.96% busy
+     * ch 12 (0x2e2b) 18.03% busy
+     * ch 13 (0x2f54) 18.48% busy
+     * ch 14 (0x0fef)  6.22% busy
+     * ch 15 (0x1536)  8.28% busy
+     * ch 16 (0x1746)  9.09% busy
+     * ch 17 (0x0b8b)  4.50% busy
+     * ch 18 (0x60a7) 37.75% busy
+     * ch 19 (0x0810)  3.14% busy
+     * ch 20 (0x0c2a)  4.75% busy
+     * ch 21 (0x08dc)  3.46% busy
+     * ch 22 (0x101d)  6.29% busy
+     * ch 23 (0x0092)  0.22% busy
+     * ch 24 (0x0028)  0.06% busy
+     * ch 25 (0x0063)  0.15% busy
+     * ch 26 (0x058c)  2.16% busy
+     * Done
+     * @endcode
+     * @par
+     * Get the current channel monitor state and channel occupancy.
+     * `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+     */
     else if (aArgs[0] == "monitor")
     {
         if (aArgs[1].IsEmpty())
@@ -1088,10 +1460,36 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("");
             }
         }
+        /**
+         * @cli channel monitor start
+         * @code
+         * channel monitor start
+         * channel monitor start
+         * Done
+         * @endcode
+         * @par
+         * Start the channel monitor.
+         * OT CLI sends a boolean value of `true` to #otChannelMonitorSetEnabled.
+         * `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+         * @sa otChannelMonitorSetEnabled
+         */
         else if (aArgs[1] == "start")
         {
             error = otChannelMonitorSetEnabled(GetInstancePtr(), true);
         }
+        /**
+         * @cli channel monitor stop
+         * @code
+         * channel monitor stop
+         * channel monitor stop
+         * Done
+         * @endcode
+         * @par
+         * Stop the channel monitor.
+         * OT CLI sends a boolean value of `false` to #otChannelMonitorSetEnabled.
+         * `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+         * @sa otChannelMonitorSetEnabled
+         */
         else if (aArgs[1] == "stop")
         {
             error = otChannelMonitorSetEnabled(GetInstancePtr(), false);
@@ -1105,6 +1503,23 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     else if (aArgs[0] == "manager")
     {
+        /**
+         * @cli channel manager
+         * @code
+         * channel manager
+         * channel: 11
+         * auto: 1
+         * delay: 120
+         * interval: 10800
+         * supported: { 11-26}
+         * favored: { 11-26}
+         * Done
+         * @endcode
+         * @par
+         * Get the channel manager state.
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+         * @sa otChannelManagerGetRequestedChannel
+         */
         if (aArgs[1].IsEmpty())
         {
             OutputLine("channel: %d", otChannelManagerGetRequestedChannel(GetInstancePtr()));
@@ -1122,11 +1537,38 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("favored: %s", supportedMask.ToString().AsCString());
             }
         }
+        /**
+         * @cli channel manager change
+         * @code
+         * channel manager change 11
+         * channel manager change 11
+         * Done
+         * @endcode
+         * @cparam channel manager change @ca{channel-num}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+         * @par api_copy
+         * #otChannelManagerRequestChannelChange
+         */
         else if (aArgs[1] == "change")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerRequestChannelChange);
         }
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+        /**
+         * @cli channel manager select
+         * @code
+         * channel manager select 1
+         * channel manager select 1
+         * Done
+         * @endcode
+         * @cparam channel manager select @ca{skip-quality-check}
+         * Use a `1` or `0` for the boolean `skip-quality-check`.
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerRequestChannelSelect
+         */
         else if (aArgs[1] == "select")
         {
             bool enable;
@@ -1135,6 +1577,20 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             error = otChannelManagerRequestChannelSelect(GetInstancePtr(), enable);
         }
 #endif
+        /**
+         * @cli channel manager auto
+         * @code
+         * channel manager auto 1
+         * channel manager auto 1
+         * Done
+         * @endcode
+         * @cparam channel manager auto @ca{enable}
+         * `1` is a boolean to `enable`.
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetAutoChannelSelectionEnabled
+         */
         else if (aArgs[1] == "auto")
         {
             bool enable;
@@ -1142,22 +1598,88 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[2].ParseAsBool(enable));
             otChannelManagerSetAutoChannelSelectionEnabled(GetInstancePtr(), enable);
         }
+        /**
+         * @cli channel manager delay
+         * @code
+         * channel manager delay 120
+         * channel manager delay 120
+         * Done
+         * @endcode
+         * @cparam channel manager delay @ca{delay-seconds}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetDelay
+         */
         else if (aArgs[1] == "delay")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetDelay);
         }
+        /**
+         * @cli channel manager interval
+         * @code
+         * channel manager interval 10800
+         * channel manager interval 10800
+         * Done
+         * @endcode
+         * @cparam channel manager interval @ca{interval-seconds}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetAutoChannelSelectionInterval
+         */
         else if (aArgs[1] == "interval")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetAutoChannelSelectionInterval);
         }
+        /**
+         * @cli channel manager supported
+         * @code
+         * channel manager supported 0x7fffc00
+         * channel manager supported 0x7fffc00
+         * Done
+         * @endcode
+         * @cparam channel manager supported @ca{mask}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetSupportedChannels
+         */
         else if (aArgs[1] == "supported")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetSupportedChannels);
         }
+        /**
+         * @cli channel manager favored
+         * @code
+         * channel manager favored 0x7fffc00
+         * channel manager favored 0x7fffc00
+         * Done
+         * @endcode
+         * @cparam channel manager favored @ca{mask}
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetFavoredChannels
+         */
         else if (aArgs[1] == "favored")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetFavoredChannels);
         }
+        /**
+         * @cli channel manager threshold
+         * @code
+         * channel manager threshold 0xffff
+         * channel manager threshold 0xffff
+         * Done
+         * @endcode
+         * @cparam channel manager threshold @ca{threshold-percent}
+         * Use a hex value for `threshold-percent`. `0` maps to 0% and `0xffff` maps to 100%.
+         * @par
+         * `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+         * @par api_copy
+         * #otChannelManagerSetCcaFailureRateThreshold
+         */
         else if (aArgs[1] == "threshold")
         {
             error = ProcessSet(aArgs + 2, otChannelManagerSetCcaFailureRateThreshold);
@@ -1433,6 +1955,24 @@ exit:
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
 #if OPENTHREAD_FTD
+/**
+ * @cli contextreusedelay (get,set)
+ * @code
+ * contextreusedelay
+ * 11
+ * Done
+ * @endcode
+ * @code
+ * contextreusedelay 11
+ * Done
+ * @endcode
+ * @cparam contextreusedelay @ca{delay}
+ * Use the optional `delay` argument to set the `CONTEXT_ID_REUSE_DELAY`.
+ * @par
+ * Gets or sets the `CONTEXT_ID_REUSE_DELAY` value.
+ * @sa otThreadGetContextIdReuseDelay
+ * @sa otThreadSetContextIdReuseDelay
+ */
 template <> otError Interpreter::Process<Cmd("contextreusedelay")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetContextIdReuseDelay, otThreadSetContextIdReuseDelay);
@@ -1443,12 +1983,65 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli counters
+     * @code
+     * counters
+     * ip
+     * mac
+     * mle
+     * Done
+     * @endcode
+     * @par
+     * Gets the supported counter names.
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("ip");
         OutputLine("mac");
         OutputLine("mle");
     }
+    /**
+     * @cli counters (mac)
+     * @code
+     * counters mac
+     * TxTotal: 10
+     *    TxUnicast: 3
+     *    TxBroadcast: 7
+     *    TxAckRequested: 3
+     *    TxAcked: 3
+     *    TxNoAckRequested: 7
+     *    TxData: 10
+     *    TxDataPoll: 0
+     *    TxBeacon: 0
+     *    TxBeaconRequest: 0
+     *    TxOther: 0
+     *    TxRetry: 0
+     *    TxErrCca: 0
+     *    TxErrBusyChannel: 0
+     * RxTotal: 2
+     *    RxUnicast: 1
+     *    RxBroadcast: 1
+     *    RxData: 2
+     *    RxDataPoll: 0
+     *    RxBeacon: 0
+     *    RxBeaconRequest: 0
+     *    RxOther: 0
+     *    RxAddressFiltered: 0
+     *    RxDestAddrFiltered: 0
+     *    RxDuplicated: 0
+     *    RxErrNoFrame: 0
+     *    RxErrNoUnknownNeighbor: 0
+     *    RxErrInvalidSrcAddr: 0
+     *    RxErrSec: 0
+     *    RxErrFcs: 0
+     *    RxErrOther: 0
+     * Done
+     * @endcode
+     * @cparam counters @ca{mac}
+     * @par api_copy
+     * #otLinkGetCounters
+     */
     else if (aArgs[0] == "mac")
     {
         if (aArgs[1].IsEmpty())
@@ -1510,6 +2103,16 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputLine(kIndentSize, "%s: %u", counter.mName, macCounters->*counter.mValuePtr);
             }
         }
+        /**
+         * @cli counters mac reset
+         * @code
+         * counters mac reset
+         * Done
+         * @endcode
+         * @cparam counters @ca{mac} reset
+         * @par api_copy
+         * #otLinkResetCounters
+         */
         else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otLinkResetCounters(GetInstancePtr());
@@ -1519,6 +2122,25 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             error = OT_ERROR_INVALID_ARGS;
         }
     }
+    /**
+     * @cli counters (mle)
+     * @code
+     * counters mle
+     * Role Disabled: 0
+     * Role Detached: 1
+     * Role Child: 0
+     * Role Router: 0
+     * Role Leader: 1
+     * Attach Attempts: 1
+     * Partition Id Changes: 1
+     * Better Partition Attach Attempts: 0
+     * Parent Changes: 0
+     * Done
+     * @endcode
+     * @cparam counters @ca{mle}
+     * @par api_copy
+     * #otThreadGetMleCounters
+     */
     else if (aArgs[0] == "mle")
     {
         if (aArgs[1].IsEmpty())
@@ -1548,6 +2170,16 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputLine("%s: %d", counter.mName, mleCounters->*counter.mValuePtr);
             }
         }
+        /**
+         * @cli counters mle reset
+         * @code
+         * counters mle reset
+         * Done
+         * @endcode
+         * @cparam counters @ca{mle} reset
+         * @par api_copy
+         * #otThreadResetMleCounters
+         */
         else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otThreadResetMleCounters(GetInstancePtr());
@@ -1557,6 +2189,20 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             error = OT_ERROR_INVALID_ARGS;
         }
     }
+    /**
+     * @cli counters ip
+     * @code
+     * counters ip
+     * TxSuccess: 10
+     * TxFailed: 0
+     * RxSuccess: 5
+     * RxFailed: 0
+     * Done
+     * @endcode
+     * @cparam counters @ca{ip}
+     * @par api_copy
+     * #otThreadGetIp6Counters
+     */
     else if (aArgs[0] == "ip")
     {
         if (aArgs[1].IsEmpty())
@@ -1581,6 +2227,16 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputLine("%s: %d", counter.mName, ipCounters->*counter.mValuePtr);
             }
         }
+        /**
+         * @cli counters ip reset
+         * @code
+         * counters ip reset
+         * Done
+         * @endcode
+         * @cparam counters @ca{ip} reset
+         * @par api_copy
+         * #otThreadResetIp6Counters
+         */
         else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otThreadResetIp6Counters(GetInstancePtr());
@@ -1603,6 +2259,22 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli csl
+     * @code
+     * csl
+     * Channel: 11
+     * Period: 1000 (in units of 10 symbols), 160ms
+     * Timeout: 1000s
+     * Done
+     * @endcode
+     * @par
+     * Gets the CSL configuration.
+     * @sa otLinkCslGetChannel
+     * @sa otLinkCslGetPeriod
+     * @sa otLinkCslGetPeriod
+     * @sa otLinkCslGetTimeout
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("Channel: %u", otLinkCslGetChannel(GetInstancePtr()));
@@ -1610,14 +2282,44 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
                    otLinkCslGetPeriod(GetInstancePtr()) * kUsPerTenSymbols / 1000);
         OutputLine("Timeout: %us", otLinkCslGetTimeout(GetInstancePtr()));
     }
+    /**
+     * @cli csl channel
+     * @code
+     * csl channel 20
+     * Done
+     * @endcode
+     * @cparam csl channel @ca{channel}
+     * @par api_copy
+     * #otLinkCslSetChannel
+     */
     else if (aArgs[0] == "channel")
     {
         error = ProcessSet(aArgs + 1, otLinkCslSetChannel);
     }
+    /**
+     * @cli csl period
+     * @code
+     * csl period 3000
+     * Done
+     * @endcode
+     * @cparam csl period @ca{period}
+     * @par api_copy
+     * #otLinkCslSetPeriod
+     */
     else if (aArgs[0] == "period")
     {
         error = ProcessSet(aArgs + 1, otLinkCslSetPeriod);
     }
+    /**
+     * @cli csl timeout
+     * @code
+     * cls timeout 10
+     * Done
+     * @endcode
+     * @cparam csl timeout @ca{timeout}
+     * @par api_copy
+     * #otLinkCslSetTimeout
+     */
     else if (aArgs[0] == "timeout")
     {
         error = ProcessSet(aArgs + 1, otLinkCslSetTimeout);
@@ -1636,10 +2338,32 @@ template <> otError Interpreter::Process<Cmd("delaytimermin")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli delaytimermin
+     * @code
+     * delaytimermin
+     * 30
+     * Done
+     * @endcode
+     * @par
+     * Get the minimal delay timer (in seconds).
+     * @sa otDatasetGetDelayTimerMinimal
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%d", (otDatasetGetDelayTimerMinimal(GetInstancePtr()) / 1000));
     }
+    /**
+     * @cli delaytimermin (set)
+     * @code
+     * delaytimermin 60
+     * Done
+     * @endcode
+     * @cparam delaytimermin @ca{delaytimermin}
+     * @par
+     * Sets the minimal delay timer (in seconds).
+     * @sa otDatasetSetDelayTimerMinimal
+     */
     else if (aArgs[1].IsEmpty())
     {
         uint32_t delay;
@@ -1675,6 +2399,22 @@ exit:
     return error;
 }
 
+/**
+ * @cli discover
+ * @code
+ * discover
+ * | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
+ * +---+------------------+------------------+------+------------------+----+-----+-----+
+ * | 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+ * Done
+ * @endcode
+ * @cparam discover [@ca{channel}]
+ * `channel`: The channel to discover on. If no channel is provided, the discovery will cover all
+ * valid channels.
+ * @par
+ * Perform an MLE Discovery operation.
+ * @sa otThreadDiscover
+ */
 template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
@@ -2003,6 +2743,18 @@ void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
     OutputLine("");
 }
 
+/**
+ * @cli eidcache
+ * @code
+ * eidcache
+ * fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d 2000 cache canEvict=1 transTime=0 eid=fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d
+ * fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7f fffe retry canEvict=1 timeout=10 retryDelay=30
+ * Done
+ * @endcode
+ * @par
+ * Returns the EID-to-RLOC cache entries.
+ * @sa otThreadGetNextCacheEntry
+ */
 template <> otError Interpreter::Process<Cmd("eidcache")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -2053,10 +2805,31 @@ template <> otError Interpreter::Process<Cmd("extaddr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli extaddr
+     * @code
+     * extaddr
+     * dead00beef00cafe
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkGetExtendedAddress
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputExtAddressLine(*otLinkGetExtendedAddress(GetInstancePtr()));
     }
+    /**
+     * @cli extaddr (set)
+     * @code
+     * extaddr dead00beef00cafe
+     * dead00beef00cafe
+     * Done
+     * @endcode
+     * @cparam extaddr @ca{extaddr}
+     * @par api_copy
+     * #otLinkSetExtendedAddress
+     */
     else
     {
         otExtAddress extAddress;
@@ -2112,10 +2885,33 @@ template <> otError Interpreter::Process<Cmd("extpanid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli extpanid
+     * @code
+     * extpanid
+     * dead00beef00cafe
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetExtendedPanId
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputBytesLine(otThreadGetExtendedPanId(GetInstancePtr())->m8);
     }
+    /**
+     * @cli extpanid (set)
+     * @code
+     * extpanid dead00beef00cafe
+     * Done
+     * @endcode
+     * @cparam extpanid @ca{extpanid}
+     * @par
+     * @note The current commissioning credential becomes stale after changing this value.
+     * Use `pskc` to reset.
+     * @par api_copy
+     * #otThreadSetExtendedPanId
+     */
     else
     {
         otExtendedPanId extPanId;
@@ -2128,6 +2924,14 @@ exit:
     return error;
 }
 
+/**
+ * @cli factoryreset
+ * @code
+ * factoryreset
+ * @endcode
+ * @par api_copy
+ * #otInstanceFactoryReset
+ */
 template <> otError Interpreter::Process<Cmd("factoryreset")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -2142,6 +2946,19 @@ template <> otError Interpreter::Process<Cmd("fake")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
+    /**
+     * @cli fake (a,an)
+     * @code
+     * fake /a/an fdde:ad00:beef:0:0:ff:fe00:a800 fd00:7d03:7d03:7d03:55f2:bb6a:7a43:a03b 1111222233334444
+     * Done
+     * @endcode
+     * @cparam fake /a/an @ca{dst-ipaddr} @ca{target} @ca{meshLocalIid}
+     * @par
+     * Sends fake Thread messages.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+     * @sa otThreadSendAddressNotification
+     */
     if (aArgs[0] == "/a/an")
     {
         otIp6Address             destination, target;
@@ -2176,6 +2993,17 @@ template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli fem
+     * @code
+     * fem
+     * LNA gain 11 dBm
+     * Done
+     * @endcode
+     * @par
+     * Gets external FEM parameters.
+     * @sa otPlatRadioGetFemLnaGain
+     */
     if (aArgs[0].IsEmpty())
     {
         int8_t lnaGain;
@@ -2183,6 +3011,16 @@ template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
         SuccessOrExit(error = otPlatRadioGetFemLnaGain(GetInstancePtr(), &lnaGain));
         OutputLine("LNA gain %d dBm", lnaGain);
     }
+    /**
+     * @cli fem lnagain (get)
+     * @code
+     * fem lnagain
+     * 11
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioGetFemLnaGain
+     */
     else if (aArgs[0] == "lnagain")
     {
         if (aArgs[1].IsEmpty())
@@ -2192,6 +3030,15 @@ template <> otError Interpreter::Process<Cmd("fem")>(Arg aArgs[])
             SuccessOrExit(error = otPlatRadioGetFemLnaGain(GetInstancePtr(), &lnaGain));
             OutputLine("%d", lnaGain);
         }
+        /**
+         * @cli fem lnagain (set)
+         * @code
+         * fem lnagain 8
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otPlatRadioSetFemLnaGain
+         */
         else
         {
             int8_t lnaGain;
@@ -3313,6 +4160,21 @@ template <> otError Interpreter::Process<Cmd("networktime")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli networktime
+     * @code
+     * networktime
+     * Network Time:     21084154us (synchronized)
+     * Time Sync Period: 100s
+     * XTAL Threshold:   300ppm
+     * Done
+     * @endcode
+     * @par
+     * Gets the Thread network time and the time sync parameters.
+     * @sa otNetworkTimeGet
+     * @sa otNetworkTimeGetSyncPeriod
+     * @sa otNetworkTimeGetXtalThreshold
+     */
     if (aArgs[0].IsEmpty())
     {
         uint64_t            time;
@@ -3343,6 +4205,20 @@ template <> otError Interpreter::Process<Cmd("networktime")>(Arg aArgs[])
         OutputLine("Time Sync Period: %ds", otNetworkTimeGetSyncPeriod(GetInstancePtr()));
         OutputLine("XTAL Threshold:   %dppm", otNetworkTimeGetXtalThreshold(GetInstancePtr()));
     }
+    /**
+     * @cli networktime (set)
+     * @code
+     * networktime 100 300
+     * Done
+     * @endcode
+     * @cparam networktime @ca{timesyncperiod} @ca{xtalthreshold}
+     * @par
+     * Sets the time sync parameters.
+     * *   `timesyncperiod`: The time synchronization period, in seconds.
+     * *   `xtalthreshold`: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
+     * @sa otNetworkTimeSetSyncPeriod
+     * @sa otNetworkTimeSetXtalThreshold
+     */
     else
     {
         uint16_t period;
@@ -3377,18 +4253,42 @@ template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 
 template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
-    otError      error = OT_ERROR_NONE;
-    otRouterInfo parentInfo;
+    if (aArgs[0].IsEmpty())
+    {
+        otRouterInfo parentInfo;
 
-    SuccessOrExit(error = otThreadGetParentInfo(GetInstancePtr(), &parentInfo));
-    OutputFormat("Ext Addr: ");
-    OutputExtAddressLine(parentInfo.mExtAddress);
-    OutputLine("Rloc: %x", parentInfo.mRloc16);
-    OutputLine("Link Quality In: %d", parentInfo.mLinkQualityIn);
-    OutputLine("Link Quality Out: %d", parentInfo.mLinkQualityOut);
-    OutputLine("Age: %d", parentInfo.mAge);
+        SuccessOrExit(error = otThreadGetParentInfo(GetInstancePtr(), &parentInfo));
+        OutputFormat("Ext Addr: ");
+        OutputExtAddressLine(parentInfo.mExtAddress);
+        OutputLine("Rloc: %x", parentInfo.mRloc16);
+        OutputLine("Link Quality In: %d", parentInfo.mLinkQualityIn);
+        OutputLine("Link Quality Out: %d", parentInfo.mLinkQualityOut);
+        OutputLine("Age: %d", parentInfo.mAge);
+        OutputLine("Version: %d", parentInfo.mVersion);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        OutputLine("CSL clock accuracy: %d", parentInfo.mCslClockAccuracy);
+        OutputLine("CSL uncertainty: %d", parentInfo.mCslUncertainty);
+#endif
+    }
+    /**
+     * @cli parent search
+     * @code
+     * parent search
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSearchForBetterParent
+     */
+    else if (aArgs[0] == "search")
+    {
+        error = otThreadSearchForBetterParent(GetInstancePtr());
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
 
 exit:
     return error;

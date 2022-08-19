@@ -77,8 +77,7 @@ constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_A
 constexpr uint8_t  kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
 #endif
 
-constexpr uint8_t  kThreadVersion = OPENTHREAD_CONFIG_THREAD_VERSION; ///< Thread Version
-constexpr uint16_t kUdpPort       = 19788;                            ///< MLE UDP Port
+constexpr uint16_t kUdpPort = 19788; ///< MLE UDP Port
 
 /*
  * MLE Protocol delays and timeouts.
@@ -236,7 +235,7 @@ enum LeaderStartMode : uint8_t
  * Backbone Router / DUA / MLR constants
  *
  */
-constexpr uint16_t kRegistrationDelayDefault         = 1200;              ///< In seconds.
+constexpr uint16_t kRegistrationDelayDefault         = 5;                 ///< In seconds.
 constexpr uint32_t kMlrTimeoutDefault                = 3600;              ///< In seconds.
 constexpr uint32_t kMlrTimeoutMin                    = 300;               ///< In seconds.
 constexpr uint32_t kMlrTimeoutMax                    = 0x7fffffff / 1000; ///< In seconds (about 24 days).

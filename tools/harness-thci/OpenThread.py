@@ -61,7 +61,7 @@ from GRLLibs.UtilityModules.enums import (
     PlatformDiagnosticPacket_Direction,
     PlatformDiagnosticPacket_Type,
 )
-from GRLLibs.UtilityModules.enums import DevCapb
+from GRLLibs.UtilityModules.enums import DevCapb, TestMode
 
 from IThci import IThci
 import commissioner
@@ -199,6 +199,7 @@ class OpenThreadTHCI(object):
 
     IsBorderRouter = False
     IsHost = False
+    IsBeingTestedAsCommercialBBR = False
 
     externalCommissioner = None
     _update_router_status = False
@@ -590,9 +591,12 @@ class OpenThreadTHCI(object):
         ]:
             self.__setRouterSelectionJitter(1)
         elif self.deviceRole in [Thread_Device_Role.BR_1, Thread_Device_Role.BR_2]:
+            if ModuleHelper.CurrentRunningTestMode == TestMode.Commercial:
+                # Allow BBR configurations for 1.2 BR_1/BR_2 roles
+                self.IsBeingTestedAsCommercialBBR = True
             self.__setRouterSelectionJitter(1)
 
-        if self.DeviceCapability == OT12BR_CAPBS:
+        if self.IsBeingTestedAsCommercialBBR:
             # Configure default BBR dataset
             self.__configBbrDataset(SeqNum=self.bbrSeqNum,
                                     MlrTimeout=self.bbrMlrTimeout,
@@ -1102,10 +1106,7 @@ class OpenThreadTHCI(object):
                 # set ROUTER_DOWNGRADE_THRESHOLD
                 self.__setRouterDowngradeThreshold(33)
         elif eRoleId in (Thread_Device_Role.BR_1, Thread_Device_Role.BR_2):
-            if self.DeviceCapability == OT12BR_CAPBS:
-                print('join as BBR')
-            else:
-                print('join as BR')
+            print('join as BBR')
             mode = 'rdn'
             if self.AutoDUTEnable is False:
                 # set ROUTER_DOWNGRADE_THRESHOLD
@@ -1364,6 +1365,9 @@ class OpenThreadTHCI(object):
         self.log('factoryreset finished within 10s timeout.')
         self._deviceAfterReset()
 
+        if self.IsBorderRouter:
+            self.__executeCommand('log level 5')
+
     @API
     def removeRouter(self, xRouterId):
         """kickoff router with a given router id from the Thread Network
@@ -1422,8 +1426,9 @@ class OpenThreadTHCI(object):
         # indicate that the channel has been set, in case the channel was set
         # to default when joining network
         self.hasSetChannel = False
+        self.IsBeingTestedAsCommercialBBR = False
         # indicate whether the default domain prefix is used.
-        self.__useDefaultDomainPrefix = (self.DeviceCapability == OT12BR_CAPBS)
+        self.__useDefaultDomainPrefix = True
         self.__isUdpOpened = False
         self.IsHost = False
 
@@ -1432,10 +1437,9 @@ class OpenThreadTHCI(object):
             self.stopListeningToAddrAll()
 
         # BBR dataset
-        if self.DeviceCapability == OT12BR_CAPBS:
-            self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
-            self.bbrMlrTimeout = 3600
-            self.bbrReRegDelay = 5
+        self.bbrSeqNum = random.randint(0, 126)  # 5.21.4.2
+        self.bbrMlrTimeout = 3600
+        self.bbrReRegDelay = 5
 
         # initialize device configuration
         self.setMAC(self.mac)

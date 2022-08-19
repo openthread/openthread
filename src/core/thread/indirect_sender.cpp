@@ -360,24 +360,24 @@ exit:
 
 uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage)
 {
-    Ip6::Header  ip6Header;
-    Mac::Address macSource, macDest;
-    uint16_t     directTxOffset;
-    uint16_t     nextOffset;
+    Ip6::Header    ip6Header;
+    Mac::Addresses macAddrs;
+    uint16_t       directTxOffset;
+    uint16_t       nextOffset;
 
     // Determine the MAC source and destination addresses.
 
     IgnoreError(aMessage.Read(0, ip6Header));
 
-    Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macSource);
+    Get<MeshForwarder>().GetMacSourceAddress(ip6Header.GetSource(), macAddrs.mSource);
 
     if (ip6Header.GetDestination().IsLinkLocal())
     {
-        Get<MeshForwarder>().GetMacDestinationAddress(ip6Header.GetDestination(), macDest);
+        Get<MeshForwarder>().GetMacDestinationAddress(ip6Header.GetDestination(), macAddrs.mDestination);
     }
     else
     {
-        aChild.GetMacAddress(macDest);
+        aChild.GetMacAddress(macAddrs.mDestination);
     }
 
     // Prepare the data frame from previous child's indirect offset.
@@ -385,7 +385,7 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
     directTxOffset = aMessage.GetOffset();
     aMessage.SetOffset(aChild.GetIndirectFragmentOffset());
 
-    nextOffset = Get<MeshForwarder>().PrepareDataFrame(aFrame, aMessage, macSource, macDest);
+    nextOffset = Get<MeshForwarder>().PrepareDataFrame(aFrame, aMessage, macAddrs);
 
     aMessage.SetOffset(directTxOffset);
 

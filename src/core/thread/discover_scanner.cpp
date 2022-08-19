@@ -40,6 +40,7 @@
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_router.hpp"
+#include "thread/version.hpp"
 
 namespace ot {
 namespace Mle {

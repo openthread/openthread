@@ -42,6 +42,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
+#include "common/min_max.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/dns_types.hpp"
@@ -773,7 +774,7 @@ public:
                 // If it is not infinite, limit the interval to `kMaxInterval`.
                 // The max limit ensures that even twice the interval is less
                 // than max OpenThread timer duration.
-                return (aInterval == kInfinite) ? aInterval : OT_MIN(aInterval, kMaxInterval);
+                return (aInterval == kInfinite) ? aInterval : Min(aInterval, kMaxInterval);
             }
 
             uint32_t  mInterval;

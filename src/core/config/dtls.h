@@ -35,7 +35,7 @@
 #ifndef CONFIG_DTLS_H_
 #define CONFIG_DTLS_H_
 
-#include "config/border_router.h"
+#include "config/border_agent.h"
 #include "config/coap.h"
 #include "config/commissioner.h"
 #include "config/joiner.h"
@@ -50,11 +50,16 @@
 #define OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN MBEDTLS_SSL_IN_CONTENT_LEN
 #endif
 
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
-    OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
-#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
-#else
-#define OPENTHREAD_CONFIG_DTLS_ENABLE 0
+/**
+ * @def OPENTHREAD_CONFIG_DTLS_ENABLE
+ *
+ *  Define to 1 to enable DTLS.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DTLS_ENABLE
+#define OPENTHREAD_CONFIG_DTLS_ENABLE                                                     \
+    (OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
+     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE)
 #endif
 
 #endif // CONFIG_DTLS_H_

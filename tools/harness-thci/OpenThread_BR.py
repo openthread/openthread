@@ -60,6 +60,8 @@ logging.getLogger('paramiko').setLevel(logging.WARNING)
 
 
 class SSHHandle(object):
+    # Unit: second
+    KEEPALIVE_INTERVAL = 30
 
     def __init__(self, ip, port, username, password):
         self.ip = ip
@@ -84,6 +86,9 @@ class SSHHandle(object):
                 self.__handle.get_transport().auth_none(self.username)
             else:
                 raise
+
+        # Avoid SSH disconnection after idle for a long time
+        self.__handle.get_transport().set_keepalive(self.KEEPALIVE_INTERVAL)
 
     def close(self):
         if self.__handle is not None:
@@ -632,23 +637,51 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.log('%s', line)
 
     @API
-    def mdns_query(self, dst='ff02::fb', service='_meshcop._udp.local', addrs_blacklist=[]):
+    def get_eth_addrs(self):
+        cmd = "ip -6 addr list dev %s | grep 'inet6 ' | awk '{print $2}'" % self.backboneNetif
+        addrs = self.bash(cmd)
+        return [addr.split('/')[0] for addr in addrs]
+
+    @API
+    def mdns_query(self, service='_meshcop._udp.local', addrs_allowlist=(), addrs_denylist=()):
+        cleanup = []
+
+        def ip6tables_cmd(cmd):
+            assert '-I INPUT' in cmd
+            self.bash(cmd)
+            cleanup.append(cmd.replace('-I INPUT', '-D INPUT'))
+
+        try:
+            for deny_addr in addrs_denylist:
+                ip6tables_cmd('ip6tables -I INPUT -p udp --dport 5353 -s %s -j DROP' % deny_addr)
+
+            if addrs_allowlist:
+                for allow_addr in addrs_allowlist:
+                    ip6tables_cmd('ip6tables -I INPUT -p udp --dport 5353 -s %s -j ACCEPT' % allow_addr)
+
+                ip6tables_cmd('ip6tables -I INPUT -p udp --dport 5353 -j DROP')
+
+            return self._mdns_query_impl(service, find_active=(addrs_allowlist or addrs_denylist))
+
+        finally:
+            for cmd in cleanup:
+                self.bash(cmd)
+
+    def _mdns_query_impl(self, service, find_active):
         # For BBR-TC-03 or DH test cases (empty arguments) just send a query
-        if dst == 'ff02::fb' and not addrs_blacklist:
-            self.bash('dig -p 5353 @%s %s ptr' % (dst, service), sudo=False)
+        output = self.bash('python3 ~/repo/openthread/tests/scripts/thread-cert/find_border_agents.py')
+
+        if not find_active:
             return
 
         # For MATN-TC-17 and MATN-TC-18 use Zeroconf to get the BBR address and border agent port
-        cmd = 'python3 ~/repo/openthread/tests/scripts/thread-cert/find_border_agents.py'
-        output = self.bash(cmd)
         for line in output:
             print(line)
             alias, addr, port, thread_status = eval(line)
             if thread_status == 2 and addr:
-                if (dst and addr in dst) or (addr not in addrs_blacklist):
-                    if ipaddress.IPv6Address(addr.decode()).is_link_local:
-                        addr = '%s%%%s' % (addr, self.backboneNetif)
-                    return addr, port
+                if ipaddress.IPv6Address(addr.decode()).is_link_local:
+                    addr = '%s%%%s' % (addr, self.backboneNetif)
+                return addr, port
 
         raise Exception('No active Border Agents found')
 

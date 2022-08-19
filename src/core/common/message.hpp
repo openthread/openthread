@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include <openthread/message.h>
+#include <openthread/nat64.h>
 #include <openthread/platform/messagepool.h>
 
 #include "common/as_core_type.hpp"
@@ -252,7 +253,8 @@ private:
     } mBuffer;
 };
 
-static_assert(sizeof(Buffer) >= kBufferSize, "Buffer size if not valid");
+static_assert(sizeof(Buffer) >= kBufferSize,
+              "Buffer size is not valid. Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
 
 /**
  * This class represents a message.
@@ -279,7 +281,8 @@ public:
         kType6lowpan      = 1, ///< A 6lowpan frame
         kTypeSupervision  = 2, ///< A child supervision frame.
         kTypeMacEmptyData = 3, ///< An empty MAC data frame.
-        kTypeOther        = 4, ///< Other (data) message.
+        kTypeIp4          = 4, ///< A full uncompressed IPv4 packet, for NAT64.
+        kTypeOther        = 5, ///< Other (data) message.
     };
 
     /**

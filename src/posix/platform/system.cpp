@@ -36,6 +36,7 @@
 #include "platform-posix.h"
 
 #include <assert.h>
+#include <inttypes.h>
 
 #include <openthread-core-config.h>
 #include <openthread/border_router.h>
@@ -142,6 +143,15 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 #endif
 
     gNetifName[0] = '\0';
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    if ((sscanf(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, "%" SCNu8 ".%" SCNu8 ".%" SCNu8 ".%" SCNu8 "/%" SCNu8,
+                &gNat64Cidr.mAddress.mFields.m8[0], &gNat64Cidr.mAddress.mFields.m8[1],
+                &gNat64Cidr.mAddress.mFields.m8[2], &gNat64Cidr.mAddress.mFields.m8[3], &gNat64Cidr.mLength)) != 5)
+    {
+        gNat64Cidr.mLength = 0;
+    }
+#endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifInit(aPlatformConfig->mInterfaceName);

@@ -39,6 +39,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/min_max.hpp"
 #include "common/string.hpp"
 
 /*
@@ -244,7 +245,7 @@ void Logger::DumpInModule(const char *aModuleName,
     for (uint16_t i = 0; i < aDataLength; i += kDumpBytesPerLine)
     {
         DumpLine(aModuleName, aLogLevel, static_cast<const uint8_t *>(aData) + i,
-                 OT_MIN((aDataLength - i), kDumpBytesPerLine));
+                 Min(static_cast<uint8_t>(aDataLength - i), kDumpBytesPerLine));
     }
 
     string.Clear();

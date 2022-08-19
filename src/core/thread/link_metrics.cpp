@@ -292,7 +292,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
 
     if (queryId == kQueryIdSingleProbe)
     {
-        values.mPduCountValue = HostSwap32(aRequestMessage.GetPsduCount());
+        values.mPduCountValue = aRequestMessage.GetPsduCount();
         values.mLqiValue      = aRequestMessage.GetAverageLqi();
         // Linearly scale Link Margin from [0, 130] to [0, 255]
         values.mLinkMarginValue =
@@ -318,7 +318,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
         else
         {
             values.SetMetrics(seriesInfo->GetLinkMetrics());
-            values.mPduCountValue = HostSwap32(seriesInfo->GetPduCount());
+            values.mPduCountValue = seriesInfo->GetPduCount();
             values.mLqiValue      = seriesInfo->GetAverageLqi();
             // Linearly scale Link Margin from [0, 130] to [0, 255]
             values.mLinkMarginValue =

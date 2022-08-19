@@ -205,9 +205,11 @@ void RouterTable::UpdateAllocation(void)
 
 Router *RouterTable::Allocate(void)
 {
-    Router *rval         = nullptr;
-    uint8_t numAvailable = 0;
-    uint8_t freeBit;
+    Router *router           = nullptr;
+    uint8_t numAvailable     = 0;
+    uint8_t selectedRouterId = Mle::kInvalidRouterId;
+
+    VerifyOrExit(mActiveRouterCount < Mle::kMaxRouters);
 
     // count available router ids
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -219,38 +221,26 @@ Router *RouterTable::Allocate(void)
         if (!IsAllocated(routerId) && mRouterIdReuseDelay[routerId] == 0)
         {
             numAvailable++;
+
+            // Randomly select a router ID as we iterate through the
+            // list using Reservoir algorithm: We replace the
+            // selected ID with current entry in the list with
+            // probably `1/numAvailable`.
+
+            if (Random::NonCrypto::GetUint8InRange(0, numAvailable) == 0)
+            {
+                selectedRouterId = routerId;
+            }
         }
     }
 
-    VerifyOrExit(mActiveRouterCount < Mle::kMaxRouters && numAvailable > 0);
+    VerifyOrExit(selectedRouterId != Mle::kInvalidRouterId);
 
-    // choose available router id at random
-    freeBit = Random::NonCrypto::GetUint8InRange(0, numAvailable);
-
-    // allocate router
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    for (uint8_t routerId = mMinRouterId; routerId <= mMaxRouterId; routerId++)
-#else
-    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
-#endif
-    {
-        if (IsAllocated(routerId) || mRouterIdReuseDelay[routerId] > 0)
-        {
-            continue;
-        }
-
-        if (freeBit == 0)
-        {
-            rval = Allocate(routerId);
-            OT_ASSERT(rval != nullptr);
-            ExitNow();
-        }
-
-        freeBit--;
-    }
+    router = Allocate(selectedRouterId);
+    OT_ASSERT(router != nullptr);
 
 exit:
-    return rval;
+    return router;
 }
 
 Router *RouterTable::Allocate(uint8_t aRouterId)

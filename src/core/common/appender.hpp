@@ -36,7 +36,9 @@
 
 #include "openthread-core-config.h"
 
+#include "common/const_cast.hpp"
 #include "common/data.hpp"
+#include "common/frame_builder.hpp"
 #include "common/message.hpp"
 #include "common/type_traits.hpp"
 
@@ -150,7 +152,7 @@ public:
      * @returns A pointer to the start of the data buffer associated with `Appender`.
      *
      */
-    uint8_t *GetBufferStart(void) { return mShared.mBuffer.mStart; }
+    uint8_t *GetBufferStart(void) { return AsNonConst(mShared.mFrameBuilder.GetBytes()); }
 
     /**
      * This method gets the data buffer associated with `Appender` as a `Data`.
@@ -172,12 +174,7 @@ private:
             uint16_t mStartOffset;
         } mMessage;
 
-        struct
-        {
-            uint8_t *mStart;
-            uint8_t *mCur;
-            uint8_t *mEnd;
-        } mBuffer;
+        FrameBuilder mFrameBuilder;
     } mShared;
 };
 

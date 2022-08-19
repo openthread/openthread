@@ -57,8 +57,6 @@ void otCoapSecureSetCertificate(otInstance *   aInstance,
                                 const uint8_t *aPrivateKey,
                                 uint32_t       aPrivateKeyLength)
 {
-    OT_ASSERT(aX509Cert != nullptr && aX509Length != 0 && aPrivateKey != nullptr && aPrivateKeyLength != 0);
-
     AsCoreType(aInstance).GetApplicationCoapSecure().SetCertificate(aX509Cert, aX509Length, aPrivateKey,
                                                                     aPrivateKeyLength);
 }
@@ -67,8 +65,6 @@ void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
                                        const uint8_t *aX509CaCertificateChain,
                                        uint32_t       aX509CaCertChainLength)
 {
-    OT_ASSERT(aX509CaCertificateChain != nullptr && aX509CaCertChainLength != 0);
-
     AsCoreType(aInstance).GetApplicationCoapSecure().SetCaCertificateChain(aX509CaCertificateChain,
                                                                            aX509CaCertChainLength);
 }
@@ -81,7 +77,8 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
                         const uint8_t *aPskIdentity,
                         uint16_t       aPskIdLength)
 {
-    OT_ASSERT(aPsk != nullptr && aPskLength != 0 && aPskIdentity != nullptr && aPskIdLength != 0);
+    AssertPointerIsNotNull(aPsk);
+    AssertPointerIsNotNull(aPskIdentity);
 
     AsCoreType(aInstance).GetApplicationCoapSecure().SetPreSharedKey(aPsk, aPskLength, aPskIdentity, aPskIdLength);
 }
@@ -93,6 +90,8 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              size_t *       aCertLength,
                                              size_t         aCertBufferSize)
 {
+    AssertPointerIsNotNull(aPeerCert);
+
     return AsCoreType(aInstance).GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, aCertLength,
                                                                                      aCertBufferSize);
 }

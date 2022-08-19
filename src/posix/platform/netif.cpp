@@ -143,6 +143,7 @@ extern int
 #include <openthread/ip6.h>
 #include <openthread/logging.h>
 #include <openthread/message.h>
+#include <openthread/nat64.h>
 #include <openthread/netdata.h>
 #include <openthread/platform/misc.h>
 
@@ -152,6 +153,7 @@ extern int
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
+otIp4Cidr    gNat64Cidr;
 
 const char *otSysGetThreadNetifName(void)
 {
@@ -567,7 +569,7 @@ exit:
 #if __linux__ && \
     (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
 
-static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
+template <size_t N> static otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPrefixLen, uint32_t aPriority)
 {
     constexpr unsigned int kBufSize = 128;
     struct
@@ -576,10 +578,10 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
         struct rtmsg    msg;
         char            buf[kBufSize];
     } req{};
-    unsigned char data[sizeof(in6_addr)];
-    char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
-    unsigned int  netifIdx = otSysGetThreadNetifIndex();
-    otError       error    = OT_ERROR_NONE;
+    unsigned int netifIdx = otSysGetThreadNetifIndex();
+    otError      error    = OT_ERROR_NONE;
+
+    static_assert(N == sizeof(in6_addr) || N == sizeof(in_addr), "aAddress should be 4 octets or 16 octets");
 
     VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
@@ -591,9 +593,9 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
     req.header.nlmsg_pid  = 0;
     req.header.nlmsg_seq  = ++sNetlinkSequence;
 
-    req.msg.rtm_family   = AF_INET6;
+    req.msg.rtm_family   = (N == sizeof(in6_addr) ? AF_INET6 : AF_INET);
     req.msg.rtm_src_len  = 0;
-    req.msg.rtm_dst_len  = aPrefix.mLength;
+    req.msg.rtm_dst_len  = aPrefixLen;
     req.msg.rtm_tos      = 0;
     req.msg.rtm_scope    = RT_SCOPE_UNIVERSE;
     req.msg.rtm_type     = RTN_UNICAST;
@@ -601,9 +603,7 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
     req.msg.rtm_protocol = RTPROT_BOOT;
     req.msg.rtm_flags    = 0;
 
-    otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
-    inet_pton(AF_INET6, addrBuf, data);
-    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, data, sizeof(data));
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, aAddress, sizeof(aAddress));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, aPriority);
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
@@ -664,6 +664,18 @@ static otError DeleteRoute(const otIp6Prefix &aPrefix)
 exit:
     return error;
 }
+
+static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
+{
+    return AddRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength, aPriority);
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
+{
+    return AddRoute(aCidr.mAddress.mFields.m8, aCidr.mLength, aPriority);
+}
+#endif
 
 #endif // __linux__ && (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE ||
        // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
@@ -935,20 +947,14 @@ static void processTransmit(otInstance *aInstance)
     char       packet[kMaxIp6Size];
     otError    error  = OT_ERROR_NONE;
     size_t     offset = 0;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    bool isIp4 = false;
+#endif
 
     assert(gInstance == aInstance);
 
     rval = read(sTunFd, packet, sizeof(packet));
     VerifyOrExit(rval > 0, error = OT_ERROR_FAILED);
-
-    {
-        otMessageSettings settings;
-
-        settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
-        settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
-        message                       = otIp6NewMessage(aInstance, &settings);
-        VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
-    }
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // BSD tunnel drivers have (for legacy reasons), may have a 4-byte header on them
@@ -959,6 +965,20 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
+    {
+        otMessageSettings settings;
+
+        settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
+        settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+        isIp4   = (packet[offset] & 0xf0) == 0x40;
+        message = isIp4 ? otIp4NewMessage(aInstance, &settings) : otIp6NewMessage(aInstance, &settings);
+#else
+        message = otIp6NewMessage(aInstance, &settings);
+#endif
+        VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    }
+
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     otLogInfoPlat("[netif] Packet to NCP (%hu bytes)", static_cast<uint16_t>(rval));
     otDumpInfoPlat("", &packet[offset], static_cast<size_t>(rval));
@@ -966,7 +986,11 @@ static void processTransmit(otInstance *aInstance)
 
     SuccessOrExit(error = otMessageAppend(message, &packet[offset], static_cast<uint16_t>(rval)));
 
-    error   = otIp6Send(aInstance, message);
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    error = isIp4 ? otNat64Send(aInstance, message) : otIp6Send(aInstance, message);
+#else
+    error = otIp6Send(aInstance, message);
+#endif
     message = nullptr;
 
 exit:
@@ -1133,6 +1157,15 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         SuccessOrExit(error = otIp6SetEnabled(aInstance, isUp));
         otLogInfoPlat("[netif] Succeeded to sync netif state with host");
     }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    if (isUp && gNat64Cidr.mLength > 0)
+    {
+        SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
+        AddIp4Route(gNat64Cidr, kExternalRoutePriority);
+        otLogInfoPlat("[netif] Succeeded to enable NAT64");
+    }
+#endif
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -1755,6 +1788,10 @@ void platformNetifSetUp(void)
     otIcmp6SetEchoMode(gInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
 #endif
     otIp6SetReceiveCallback(gInstance, processReceive, gInstance);
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    // We can use the same function for IPv6 and translated IPv4 messages.
+    otNat64SetReceiveIp4Callback(gInstance, processReceive, gInstance);
+#endif
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);

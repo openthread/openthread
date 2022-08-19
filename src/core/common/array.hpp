@@ -187,6 +187,30 @@ public:
     IndexType GetLength(void) const { return mLength; }
 
     /**
+     * This methods sets the current length (number of elements) of the array.
+     *
+     * @param[in] aLength   The array length.
+     *
+     */
+    void SetLength(IndexType aLength) { mLength = aLength; }
+
+    /**
+     * This method returns the pointer to the start of underlying C array buffer serving as `Array` storage.
+     *
+     * @return The pointer to start of underlying C array buffer.
+     *
+     */
+    Type *GetArrayBuffer(void) { return mElements; }
+
+    /**
+     * This method returns the pointer to the start of underlying C array buffer serving as `Array` storage.
+     *
+     * @return The pointer to start of underlying C array buffer.
+     *
+     */
+    const Type *GetArrayBuffer(void) const { return mElements; }
+
+    /**
      * This method overloads the `[]` operator to get the element at a given index.
      *
      * This method does not perform index bounds checking. Behavior is undefined if @p aIndex is not valid.

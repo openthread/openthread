@@ -63,6 +63,7 @@ set(COMMON_SOURCES
     api/logging_api.cpp
     api/message_api.cpp
     api/multi_radio_api.cpp
+    api/nat64_api.cpp
     api/netdata_api.cpp
     api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
@@ -97,6 +98,7 @@ set(COMMON_SOURCES
     common/crc16.cpp
     common/data.cpp
     common/error.cpp
+    common/frame_builder.cpp
     common/frame_data.cpp
     common/heap.cpp
     common/heap_data.cpp
@@ -170,6 +172,7 @@ set(COMMON_SOURCES
     net/ip6_filter.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
+    net/nat64_translator.cpp
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp
