@@ -334,6 +334,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/thread/indirect_sender.cpp                             \
     src/core/thread/key_manager.cpp                                 \
     src/core/thread/link_metrics.cpp                                \
+    src/core/thread/link_metrics_types.cpp                          \
     src/core/thread/link_quality.cpp                                \
     src/core/thread/lowpan.cpp                                      \
     src/core/thread/mesh_forwarder.cpp                              \
