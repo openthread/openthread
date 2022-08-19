@@ -170,7 +170,8 @@ Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &    
 
     seriesFlags->SetFrom(aSeriesFlags);
 
-    error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, subTlvs, fwdProbingSubTlv->GetSize());
+    error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, subTlvs,
+                                                                   static_cast<uint8_t>(fwdProbingSubTlv->GetSize()));
 
 exit:
     LogDebg("SendMgmtRequestForwardTrackingSeries, error:%s, Series ID:%u", ErrorToString(error), aSeriesId);
@@ -202,7 +203,8 @@ Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination
     }
 
     error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(
-        aDestination, reinterpret_cast<const uint8_t *>(&enhAckConfigSubTlv), enhAckConfigSubTlv.GetSize());
+        aDestination, reinterpret_cast<const uint8_t *>(&enhAckConfigSubTlv),
+        static_cast<uint8_t>(enhAckConfigSubTlv.GetSize()));
 
     if (aMetrics != nullptr)
     {
@@ -281,7 +283,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
             break;
         }
 
-        offset += tlv.GetSize();
+        offset += static_cast<uint16_t>(tlv.GetSize());
     }
 
     VerifyOrExit(hasQueryId, error = kErrorParse);
@@ -390,7 +392,7 @@ Error LinkMetrics::HandleManagementRequest(const Message &aMessage, Neighbor &aN
             break;
         }
 
-        index += tlv.GetSize();
+        index += static_cast<uint16_t>(tlv.GetSize());
     }
 
     if (hasForwardProbingRegistrationTlv)
@@ -438,7 +440,7 @@ Error LinkMetrics::HandleManagementResponse(const Message &aMessage, const Ip6::
             break;
         }
 
-        index += tlv.GetSize();
+        index += static_cast<uint16_t>(tlv.GetSize());
     }
 
     VerifyOrExit(hasStatus, error = kErrorParse);
@@ -758,8 +760,8 @@ exit:
 }
 
 Error LinkMetrics::ReadTypeIdFlagsFromMessage(const Message &aMessage,
-                                              uint8_t        aStartPos,
-                                              uint8_t        aEndPos,
+                                              uint16_t       aStartPos,
+                                              uint16_t       aEndPos,
                                               Metrics &      aMetrics)
 {
     Error error = kErrorNone;
