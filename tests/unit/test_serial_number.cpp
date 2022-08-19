@@ -32,7 +32,7 @@
 
 #include "test_util.h"
 #include "common/code_utils.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/serial_number.hpp"
 
@@ -66,7 +66,7 @@ template <typename UintType> void TestSerialNumber(const char *aName)
     printf("TestSerialNumber<%s>() passed\n", aName);
 }
 
-void TestMinMaxClamp(void)
+void TestNumUtils(void)
 {
     uint16_t u16;
     uint32_t u32;
@@ -109,7 +109,16 @@ void TestMinMaxClamp(void)
     u32 = 0xfff0000;
     VerifyOrQuit(ClampToUint16(u32) == 0xffff);
 
-    printf("TestMinMaxClamp() passed\n");
+    VerifyOrQuit(ThreeWayCompare<uint8_t>(2, 2) == 0);
+    VerifyOrQuit(ThreeWayCompare<uint8_t>(2, 1) > 0);
+    VerifyOrQuit(ThreeWayCompare<uint8_t>(1, 2) < 0);
+
+    VerifyOrQuit(ThreeWayCompare<bool>(false, false) == 0);
+    VerifyOrQuit(ThreeWayCompare<bool>(true, true) == 0);
+    VerifyOrQuit(ThreeWayCompare<bool>(true, false) > 0);
+    VerifyOrQuit(ThreeWayCompare<bool>(false, true) < 0);
+
+    printf("TestNumUtils() passed\n");
 }
 
 } // namespace ot
@@ -120,7 +129,7 @@ int main(void)
     ot::TestSerialNumber<uint16_t>("uint16_t");
     ot::TestSerialNumber<uint32_t>("uint32_t");
     ot::TestSerialNumber<uint64_t>("uint64_t");
-    ot::TestMinMaxClamp();
+    ot::TestNumUtils();
     printf("\nAll tests passed.\n");
     return 0;
 }

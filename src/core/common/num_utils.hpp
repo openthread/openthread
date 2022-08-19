@@ -28,11 +28,11 @@
 
 /**
  * @file
- *   This file includes definitions for generic min, max and clamp functions.
+ *   This file includes definitions for generic number utility functions (min, max, clamp).
  */
 
-#ifndef MIN_MAX_HPP_
-#define MIN_MAX_HPP_
+#ifndef NUM_UTILS_HPP_
+#define NUM_UTILS_HPP_
 
 #include "common/numeric_limits.hpp"
 #include "common/type_traits.hpp"
@@ -40,7 +40,7 @@
 namespace ot {
 
 /**
- * This template method returns the minimum of two given values.
+ * This template function returns the minimum of two given values.
  *
  * Uses `operator<` to compare the values.
  *
@@ -58,7 +58,7 @@ template <typename Type> Type Min(Type aFirst, Type aSecond)
 }
 
 /**
- * This template method returns the maximum of two given values.
+ * This template function returns the maximum of two given values.
  *
  * Uses `operator<` to compare the values.
  *
@@ -76,7 +76,7 @@ template <typename Type> Type Max(Type aFirst, Type aSecond)
 }
 
 /**
- * This template method returns clamped version of a given value to a given closed range [min, max].
+ * This template function returns clamped version of a given value to a given closed range [min, max].
  *
  * Uses `operator<` to compare the values. The behavior is undefined if the value of @p aMin is greater than @p aMax.
  *
@@ -97,7 +97,7 @@ template <typename Type> Type Clamp(Type aValue, Type aMin, Type aMax)
 }
 
 /**
- * This template method returns a clamped version of given integer to a `uint8_t`.
+ * This template function returns a clamped version of given integer to a `uint8_t`.
  *
  * If @p aValue is greater than max value of a `uint8_t`, the max value is returned.
  *
@@ -118,7 +118,7 @@ template <typename UintType> uint8_t ClampToUint8(UintType aValue)
 }
 
 /**
- * This template method returns a clamped version of given integer to a `uint16_t`.
+ * This template function returns a clamped version of given integer to a `uint16_t`.
  *
  * If @p aValue is greater than max value of a `uint16_t`, the max value is returned.
  *
@@ -137,6 +137,40 @@ template <typename UintType> uint16_t ClampToUint16(UintType aValue)
     return static_cast<uint16_t>(Min(aValue, static_cast<UintType>(NumericLimits<uint16_t>::kMax)));
 }
 
+/**
+ * This template function performs a three-way comparison between two values.
+ *
+ * @tparam Type   The value type.
+ *
+ * @param[in] aFirst  The first value.
+ * @param[in] aSecond The second value.
+ *
+ * @retval 1    If @p aFirst >  @p aSecond.
+ * @retval 0    If @p aFirst == @p aSecond.
+ * @retval -1   If @p aFirst <  @p aSecond.
+ *
+ */
+template <typename Type> int ThreeWayCompare(Type aFirst, Type aSecond)
+{
+    return (aFirst == aSecond) ? 0 : ((aFirst > aSecond) ? 1 : -1);
+}
+
+/**
+ * This is template specialization of three-way comparison between two boolean values.
+ *
+ * @param[in] aFirst  The first boolean value.
+ * @param[in] aSecond The second boolean value.
+ *
+ * @retval 1    If @p aFirst is true and @p aSecond is false (true > false).
+ * @retval 0    If both @p aFirst and @p aSecond are true, or both are false (they are equal).
+ * @retval -1   If @p aFirst is false and @p aSecond is true (false < true).
+ *
+ */
+template <> inline int ThreeWayCompare(bool aFirst, bool aSecond)
+{
+    return (aFirst == aSecond) ? 0 : (aFirst ? 1 : -1);
+}
+
 } // namespace ot
 
-#endif // MIN_MAX_HPP_
+#endif // NUM_UTILS_HPP_
