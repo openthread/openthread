@@ -1770,15 +1770,6 @@ protected:
 
 #endif
 
-    /**
-     * This method indicates whether the device is detaching gracefully.
-     *
-     * @retval TRUE  Detaching is in progress.
-     * @retval FALSE Not detaching.
-     *
-     */
-    bool IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
-
     Ip6::Netif::UnicastAddress mLeaderAloc; ///< Leader anycast locator
 
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
@@ -1796,13 +1787,7 @@ protected:
     TimerMilli    mAttachTimer;              ///< The timer for driving the attach process.
     TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
-    TimerMilli    mDetachGracefullyTimer;
     uint8_t       mParentLeaderCost;
-
-    otDetachGracefullyCallback mDetachGracefullyCallback;
-    void *                     mDetachGracefullyContext;
-
-    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
 private:
     static constexpr uint8_t kMleHopLimit        = 255;
@@ -1828,6 +1813,8 @@ private:
     // Next attach cycles includes one Parent Request to routers, followed by one to routers and REEDs.
     static constexpr uint8_t kNextAttachCycleTotalParentRequests       = 2;
     static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
+
+    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
     enum StartMode : uint8_t // Used in `Start()`.
     {
@@ -1976,6 +1963,7 @@ private:
     void        ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
+    bool        IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
     Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
 
 #if OPENTHREAD_FTD
@@ -2110,6 +2098,10 @@ private:
     Ip6::Netif::UnicastAddress   mMeshLocal16;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+
+    TimerMilli                 mDetachGracefullyTimer;
+    otDetachGracefullyCallback mDetachGracefullyCallback;
+    void *                     mDetachGracefullyContext;
 
     otThreadParentResponseCallback mParentResponseCb;
     void *                         mParentResponseCbContext;
