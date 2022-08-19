@@ -539,10 +539,12 @@ private:
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         RoutePreference    GetPreference(void) const { return mPreference; }
         bool               IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
+        bool               IsDomainPrefix(void) const { return mIsDomainPrefix; }
 
     private:
         Ip6::Prefix     mPrefix;
         RoutePreference mPreference;
+        bool            mIsDomainPrefix;
     };
 
     class LocalOmrPrefix : public InstanceLocator
