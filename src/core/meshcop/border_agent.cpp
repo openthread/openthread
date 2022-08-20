@@ -357,8 +357,13 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
     Error          error;
     Coap::Message *message = nullptr;
 
-    VerifyOrExit(aMessageInfo.GetSockAddr() == mCommissionerAloc.GetAddress(),
-                 error = kErrorDestinationAddressFiltered);
+    if (aMessageInfo.GetSockAddr() != mCommissionerAloc.GetAddress())
+    {
+        LogDebg("Filtered out message for commissioner: dest %s != %s (ALOC)",
+                aMessageInfo.GetSockAddr().ToString().AsCString(),
+                mCommissionerAloc.GetAddress().ToString().AsCString());
+        ExitNow(error = kErrorDestinationAddressFiltered);
+    }
 
     VerifyOrExit(aMessage.GetLength() > 0, error = kErrorNone);
 
@@ -389,7 +394,10 @@ bool BorderAgent::HandleUdpReceive(const Message &aMessage, const Ip6::MessageIn
 
 exit:
     FreeMessageOnError(message, error);
-    LogError("notify commissioner on ProxyRx (c/ur)", error);
+    if (error != kErrorDestinationAddressFiltered)
+    {
+        LogError("Notify commissioner on ProxyRx (c/ur)", error);
+    }
 
     return error != kErrorDestinationAddressFiltered;
 }
