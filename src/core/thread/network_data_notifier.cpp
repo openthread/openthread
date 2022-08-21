@@ -50,7 +50,7 @@ RegisterLogModule("NetworkData");
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, HandleTimer)
-    , mSynchronizeDataTask(aInstance, HandleSynchronizeDataTask)
+    , mSynchronizeDataTask(aInstance)
     , mNextDelay(0)
     , mWaitingForResponse(false)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
@@ -69,11 +69,6 @@ void Notifier::HandleServerDataUpdated(void)
 
     mNextDelay = 0;
     mSynchronizeDataTask.Post();
-}
-
-void Notifier::HandleSynchronizeDataTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<Notifier>().SynchronizeServerData();
 }
 
 void Notifier::SynchronizeServerData(void)

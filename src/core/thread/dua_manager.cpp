@@ -54,7 +54,7 @@ RegisterLogModule("DuaManager");
 
 DuaManager::DuaManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask)
+    , mRegistrationTask(aInstance)
     , mDuaNotification(UriPath::kDuaRegistrationNotify, &DuaManager::HandleDuaNotification, this)
     , mIsDuaPending(false)
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -400,11 +400,6 @@ void DuaManager::HandleTimeTick(void)
     }
 
     UpdateTimeTickerRegistration();
-}
-
-void DuaManager::HandleRegistrationTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<DuaManager>().PerformNextRegistration();
 }
 
 void DuaManager::UpdateTimeTickerRegistration(void)

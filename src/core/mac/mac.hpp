@@ -753,7 +753,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleOperationTask(Tasklet &aTasklet);
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
@@ -778,6 +777,8 @@ private:
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
     static const char *OperationToString(Operation aOperation);
+
+    using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
 
     static const otExtAddress sMode2ExtAddress;
 
@@ -825,7 +826,7 @@ private:
     void *mScanHandlerContext;
 
     Links              mLinks;
-    Tasklet            mOperationTask;
+    OperationTask      mOperationTask;
     TimerMilli         mTimer;
     otMacCounters      mCounters;
     uint32_t           mKeyIdMode2FrameCounter;

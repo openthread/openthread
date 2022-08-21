@@ -174,19 +174,20 @@ private:
     void HandleTimer(Neighbor &aNeighbor);
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleTxTasklet(Tasklet &aTasklet);
-    void        HandleTxTasklet(void);
+    void HandleTxTasklet(void);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
     static const char *StateToString(State aState);
 
+    using TxTasklet = TaskletIn<Link, &Link::HandleTxTasklet>;
+
     State        mState;
     uint8_t      mRxChannel;
     Mac::PanId   mPanId;
     uint32_t     mTxPacketNumber;
-    Tasklet      mTxTasklet;
+    TxTasklet    mTxTasklet;
     TimerMilli   mTimer;
     Interface    mInterface;
     Mac::RxFrame mRxFrame;

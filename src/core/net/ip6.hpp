@@ -343,8 +343,7 @@ private:
 
     static constexpr uint16_t kMinimalMtu = 1280;
 
-    static void HandleSendQueue(Tasklet &aTasklet);
-    void        HandleSendQueue(void);
+    void HandleSendQueue(void);
 
     static uint8_t PriorityToDscp(Message::Priority aPriority);
     static Error   GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
@@ -383,6 +382,8 @@ private:
     bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, MessageOrigin aOrigin) const;
     bool  IsOnLink(const Address &aAddress) const;
 
+    using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
+
     bool                 mForwardingEnabled;
     bool                 mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
@@ -394,7 +395,7 @@ private:
 #endif
 
     PriorityQueue mSendQueue;
-    Tasklet       mSendQueueTask;
+    SendQueueTask mSendQueueTask;
 
     Icmp mIcmp;
     Udp  mUdp;

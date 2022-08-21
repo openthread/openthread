@@ -46,7 +46,7 @@ RegisterLogModule("Notifier");
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTask(aInstance, Notifier::EmitEvents)
+    , mTask(aInstance)
 {
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -116,11 +116,6 @@ void Notifier::SignalIfFirst(Event aEvent)
     {
         Signal(aEvent);
     }
-}
-
-void Notifier::EmitEvents(Tasklet &aTasklet)
-{
-    aTasklet.Get<Notifier>().EmitEvents();
 }
 
 void Notifier::EmitEvents(void)
