@@ -75,7 +75,7 @@ Ip6::Ip6(Instance &aInstance)
     , mReceiveIp4DatagramCallback(nullptr)
     , mReceiveIp4DatagramCallbackContext(nullptr)
 #endif
-    , mSendQueueTask(aInstance, Ip6::HandleSendQueue)
+    , mSendQueueTask(aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
@@ -541,11 +541,6 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 exit:
 
     return error;
-}
-
-void Ip6::HandleSendQueue(Tasklet &aTasklet)
-{
-    aTasklet.Get<Ip6>().HandleSendQueue();
 }
 
 void Ip6::HandleSendQueue(void)

@@ -100,7 +100,7 @@ Mac::Mac(Instance &aInstance)
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
-    , mOperationTask(aInstance, Mac::HandleOperationTask)
+    , mOperationTask(aInstance)
     , mTimer(aInstance, Mac::HandleTimer)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
@@ -606,11 +606,6 @@ void Mac::StartOperation(Operation aOperation)
     {
         mOperationTask.Post();
     }
-}
-
-void Mac::HandleOperationTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<Mac>().PerformNextOperation();
 }
 
 void Mac::PerformNextOperation(void)
