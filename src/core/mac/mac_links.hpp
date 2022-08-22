@@ -620,7 +620,7 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void)
+    int8_t GetNoiseFloor(void) const
     {
         return
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE

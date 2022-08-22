@@ -684,7 +684,7 @@ int8_t SubMac::GetRssi(void) const
     return rssi;
 }
 
-int8_t SubMac::GetNoiseFloor(void)
+int8_t SubMac::GetNoiseFloor(void) const
 {
     return Get<Radio>().GetReceiveSensitivity();
 }
