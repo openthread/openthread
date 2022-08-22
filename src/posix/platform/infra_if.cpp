@@ -102,7 +102,13 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
 
 otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+#if OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
     return ot::Posix::InfraNetif::Get().DiscoverNat64Prefix(aInfraIfIndex);
+#else
+    return OT_ERROR_DROP;
+#endif
 }
 
 bool platformInfraIfIsRunning(void)
@@ -524,6 +530,7 @@ exit:
     }
 }
 
+#if OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
 const char         InfraNetif::kWellKnownIpv4OnlyName[]   = "ipv4only.arpa";
 const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress1 = {{{192, 0, 0, 170}}};
 const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress2 = {{{192, 0, 0, 171}}};
@@ -614,7 +621,6 @@ otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
     int              status;
 
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_DROP);
-
     hints = (struct addrinfo *)malloc(sizeof(struct addrinfo));
     VerifyOrExit(hints != nullptr, error = OT_ERROR_NO_BUFS);
     memset(hints, 0, sizeof(struct addrinfo));
@@ -640,7 +646,6 @@ otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
         ExitNow(error = OT_ERROR_FAILED);
     }
     otLogInfoPlat("getaddrinfo_a requested for %s", kWellKnownIpv4OnlyName);
-
 exit:
     if (error != OT_ERROR_NONE)
     {
@@ -649,6 +654,7 @@ exit:
     }
     return error;
 }
+#endif // OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
 
 void InfraNetif::Process(const otSysMainloopContext &aContext)
 {
