@@ -1347,7 +1347,6 @@ exit:
 bool Mle::HasAcceptableParentCandidate(void) const
 {
     bool              hasAcceptableParent = false;
-    LinkQuality       linkQuality;
     ParentRequestType parentReqType;
 
     VerifyOrExit(mParentCandidate.IsStateParentResponse());
@@ -1367,8 +1366,7 @@ bool Mle::HasAcceptableParentCandidate(void) const
             // in Parent Request was sent to routers, we will keep the
             // candidate and forward to REED stage to potentially find a
             // better parent.
-            linkQuality = Min(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
-            VerifyOrExit(linkQuality == kLinkQuality3);
+            VerifyOrExit(mParentCandidate.GetTwoWayLinkQuality() == kLinkQuality3);
         }
 
         break;
@@ -2992,8 +2990,7 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
                          const Mac::CslAccuracy &aCslAccuracy)
 {
     bool        rval                       = false;
-    LinkQuality candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
-    LinkQuality candidateTwoWayLinkQuality = Min(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
+    LinkQuality candidateTwoWayLinkQuality = mParentCandidate.GetTwoWayLinkQuality();
 
     // Mesh Impacting Criteria
     if (aLinkQuality != candidateTwoWayLinkQuality)
