@@ -57,6 +57,11 @@ void bmp_clrrange(uint8_t* buf, size_t start, size_t len);
    which case it returns exactly the number of set bits it found. */
 size_t bmp_countset(uint8_t* buf, size_t buflen, size_t start, size_t limit);
 
+/* Swaps two non-overlapping regions of the bitmap. START_1 is the index of
+   the first region, START_2 is the index of the secoind region, and LEN is
+   the length of each region, in bits. */
+void bmp_swap(uint8_t* buf, size_t start_1, size_t start_2, size_t len);
+
 /* Returns 1 if the bitmap is all zeros, and 0 otherwise. */
 int bmp_isempty(uint8_t* buf, size_t buflen);
 

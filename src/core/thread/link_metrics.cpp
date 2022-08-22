@@ -51,53 +51,6 @@ RegisterLogModule("LinkMetrics");
 
 using ot::Encoding::BigEndian::HostSwap32;
 
-void SeriesInfo::Init(uint8_t aSeriesId, const SeriesFlags &aSeriesFlags, const Metrics &aMetrics)
-{
-    mSeriesId    = aSeriesId;
-    mSeriesFlags = aSeriesFlags;
-    mMetrics     = aMetrics;
-    mRssAverager.Clear();
-    mLqiAverager.Clear();
-    mPduCount = 0;
-}
-
-void SeriesInfo::AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
-{
-    if (IsFrameTypeMatch(aFrameType))
-    {
-        mPduCount++;
-        mLqiAverager.Add(aLqi);
-        IgnoreError(mRssAverager.Add(aRss));
-    }
-}
-
-bool SeriesInfo::IsFrameTypeMatch(uint8_t aFrameType) const
-{
-    bool match = false;
-
-    switch (aFrameType)
-    {
-    case kSeriesTypeLinkProbe:
-        VerifyOrExit(!mSeriesFlags.IsMacDataFlagSet()); // Ignore this when Mac Data is accounted
-        match = mSeriesFlags.IsLinkProbeFlagSet();
-        break;
-    case Mac::Frame::kFcfFrameData:
-        match = mSeriesFlags.IsMacDataFlagSet();
-        break;
-    case Mac::Frame::kFcfFrameMacCmd:
-        match = mSeriesFlags.IsMacDataRequestFlagSet();
-        break;
-    case Mac::Frame::kFcfFrameAck:
-        match = mSeriesFlags.IsMacAckFlagSet();
-        break;
-    default:
-        break;
-    }
-
-exit:
-    return match;
-}
-
 LinkMetrics::LinkMetrics(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mReportCallback(nullptr)

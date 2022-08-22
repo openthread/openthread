@@ -623,6 +623,8 @@ openthread_core_files = [
   "thread/link_metrics.cpp",
   "thread/link_metrics.hpp",
   "thread/link_metrics_tlvs.hpp",
+  "thread/link_metrics_types.cpp",
+  "thread/link_metrics_types.hpp",
   "thread/link_quality.cpp",
   "thread/link_quality.hpp",
   "thread/lowpan.cpp",

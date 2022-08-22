@@ -290,6 +290,7 @@ SOURCES_COMMON                                  = \
     thread/indirect_sender.cpp                    \
     thread/key_manager.cpp                        \
     thread/link_metrics.cpp                       \
+    thread/link_metrics_types.cpp                 \
     thread/link_quality.cpp                       \
     thread/lowpan.cpp                             \
     thread/mesh_forwarder.cpp                     \
@@ -604,6 +605,7 @@ HEADERS_COMMON                                  = \
     thread/key_manager.hpp                        \
     thread/link_metrics.hpp                       \
     thread/link_metrics_tlvs.hpp                  \
+    thread/link_metrics_types.hpp                 \
     thread/link_quality.hpp                       \
     thread/lowpan.hpp                             \
     thread/mesh_forwarder.hpp                     \
