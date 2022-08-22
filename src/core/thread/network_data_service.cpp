@@ -152,7 +152,7 @@ bool Manager::IsBackboneRouterPreferredTo(const ServerTlv &                 aSer
                                           const BackboneRouter::ServerData &aOtherServerData) const
 {
     bool     isPreferred;
-    uint16_t leaderRloc16 = Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId());
+    uint16_t leaderRloc16 = Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId());
 
     VerifyOrExit(aServerTlv.GetServer16() != leaderRloc16, isPreferred = true);
     VerifyOrExit(aOtherServerTlv.GetServer16() != leaderRloc16, isPreferred = false);
@@ -183,7 +183,7 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info
 
     tlv->GetServiceData(serviceData);
     aInfo.mAnycastAddress.SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                              Mle::Mle::ServiceAlocFromId(tlv->GetServiceId()));
+                                              Mle::ServiceAlocFromId(tlv->GetServiceId()));
     aInfo.mSequenceNumber =
         reinterpret_cast<const DnsSrpAnycast::ServiceData *>(serviceData.GetBytes())->GetSequenceNumber();
 

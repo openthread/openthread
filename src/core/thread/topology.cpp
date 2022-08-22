@@ -244,7 +244,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mExtAddress         = aChild.GetExtAddress();
     mTimeout            = aChild.GetTimeout();
     mRloc16             = aChild.GetRloc16();
-    mChildId            = Mle::Mle::ChildIdFromRloc16(aChild.GetRloc16());
+    mChildId            = Mle::ChildIdFromRloc16(aChild.GetRloc16());
     mNetworkDataVersion = aChild.GetNetworkDataVersion();
     mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
     mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
@@ -516,7 +516,7 @@ void Router::Info::SetFrom(const Router &aRouter)
 {
     Clear();
     mRloc16          = aRouter.GetRloc16();
-    mRouterId        = Mle::Mle::RouterIdFromRloc16(mRloc16);
+    mRouterId        = Mle::RouterIdFromRloc16(mRloc16);
     mExtAddress      = aRouter.GetExtAddress();
     mAllocated       = true;
     mNextHop         = aRouter.GetNextHop();
