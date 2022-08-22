@@ -530,7 +530,7 @@ const uint16_t *Client::kQuestionRecordTypes[] = {
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mTimer(aInstance, Client::HandleTimer)
+    , mTimer(aInstance)
     , mDefaultConfig(QueryConfig::kInitFromDefaults)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     , mUserDidSetDefaultAddress(false)
@@ -1060,11 +1060,6 @@ exit:
     }
 
     return error;
-}
-
-void Client::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Client>().HandleTimer();
 }
 
 void Client::HandleTimer(void)

@@ -72,12 +72,13 @@ private:
     static void HandleScanResult(Mac::EnergyScanResult *aResult, void *aContext);
     void        HandleScanResult(Mac::EnergyScanResult *aResult);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void HandleNotifierEvents(Events aEvents);
 
     void SendReport(void);
+
+    using ScanTimer = TimerMilliIn<EnergyScanServer, &EnergyScanServer::HandleTimer>;
 
     Ip6::Address mCommissioner;
     uint32_t     mChannelMask;
@@ -90,7 +91,7 @@ private:
     int8_t  mScanResults[OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS];
     uint8_t mScanResultsLength;
 
-    TimerMilli mTimer;
+    ScanTimer mTimer;
 
     Coap::Resource mEnergyScan;
 };

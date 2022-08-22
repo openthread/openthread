@@ -63,7 +63,7 @@ Publisher::Publisher(Instance &aInstance)
     , mPrefixCallback(nullptr)
     , mPrefixCallbackContext(nullptr)
 #endif
-    , mTimer(aInstance, Publisher::HandleTimer)
+    , mTimer(aInstance)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     // Since the `PrefixEntry` type is used in an array,
@@ -219,11 +219,6 @@ void Publisher::HandleNotifierEvents(Events aEvents)
         entry.HandleNotifierEvents(aEvents);
     }
 #endif
-}
-
-void Publisher::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Publisher>().HandleTimer();
 }
 
 void Publisher::HandleTimer(void)

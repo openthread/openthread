@@ -61,7 +61,7 @@ RegisterLogModule("NetworkData");
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
     , mWaitingForNetDataSync(false)
-    , mTimer(aInstance, Leader::HandleTimer)
+    , mTimer(aInstance)
     , mServerData(UriPath::kServerData, &Leader::HandleServerData, this)
     , mCommissioningDataGet(UriPath::kCommissionerGet, &Leader::HandleCommissioningGet, this)
     , mCommissioningDataSet(UriPath::kCommissionerSet, &Leader::HandleCommissioningSet, this)
@@ -1336,11 +1336,6 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
             StartContextReuseTimer(context->GetContextId());
         }
     }
-}
-
-void Leader::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)

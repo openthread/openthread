@@ -111,8 +111,7 @@ public:
 private:
     static constexpr uint32_t kTimeoutLeaderPetition = 50; // TIMEOUT_LEAD_PET (seconds)
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     static void HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -130,9 +129,11 @@ private:
 
     void ResignCommissioner(void);
 
+    using LeaderTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
+
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
-    TimerMilli     mTimer;
+    LeaderTimer    mTimer;
 
     uint32_t mDelayTimerMinimal;
 

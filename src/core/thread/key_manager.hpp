@@ -575,9 +575,8 @@ private:
     void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey);
 #endif
 
-    void        StartKeyRotationTimer(void);
-    static void HandleKeyRotationTimer(Timer &aTimer);
-    void        HandleKeyRotationTimer(void);
+    void StartKeyRotationTimer(void);
+    void HandleKeyRotationTimer(void);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     void StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteExisting);
@@ -585,6 +584,8 @@ private:
 #endif
 
     void ResetFrameCounters(void);
+
+    using RotationTimer = TimerMilliIn<KeyManager, &KeyManager::HandleKeyRotationTimer>;
 
     static const uint8_t kThreadString[];
 
@@ -613,10 +614,10 @@ private:
     uint32_t               mStoredMacFrameCounter;
     uint32_t               mStoredMleFrameCounter;
 
-    uint32_t   mHoursSinceKeyRotation;
-    uint32_t   mKeySwitchGuardTime;
-    bool       mKeySwitchGuardEnabled;
-    TimerMilli mKeyRotationTimer;
+    uint32_t      mHoursSinceKeyRotation;
+    uint32_t      mKeySwitchGuardTime;
+    bool          mKeySwitchGuardEnabled;
+    RotationTimer mKeyRotationTimer;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     PskcRef mPskcRef;

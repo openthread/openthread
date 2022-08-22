@@ -53,7 +53,7 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMask(0)
     , mPanId(Mac::kPanIdBroadcast)
-    , mTimer(aInstance, PanIdQueryServer::HandleTimer)
+    , mTimer(aInstance)
     , mPanIdQuery(UriPath::kPanIdQuery, &PanIdQueryServer::HandleQuery, this)
 {
     Get<Tmf::Agent>().AddResource(mPanIdQuery);
@@ -135,11 +135,6 @@ void PanIdQueryServer::SendConflict(void)
 exit:
     FreeMessageOnError(message, error);
     MeshCoP::LogError("send panid conflict", error);
-}
-
-void PanIdQueryServer::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<PanIdQueryServer>().HandleTimer();
 }
 
 void PanIdQueryServer::HandleTimer(void)

@@ -59,7 +59,7 @@ Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mPetition(UriPath::kLeaderPetition, Leader::HandlePetition, this)
     , mKeepAlive(UriPath::kLeaderKeepAlive, Leader::HandleKeepAlive, this)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
@@ -256,11 +256,6 @@ exit:
 uint32_t Leader::GetDelayTimerMinimal(void) const
 {
     return mDelayTimerMinimal;
-}
-
-void Leader::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)

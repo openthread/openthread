@@ -460,8 +460,9 @@ private:
 
     TimerMilli &GetTimer(void) { return mTimer; }
     void        HandleNotifierEvents(Events aEvents);
-    static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
+
+    using PublisherTimer = TimerMilliIn<Publisher, &Publisher::HandleTimer>;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     DnsSrpServiceEntry mDnsSrpServiceEntry;
@@ -473,7 +474,7 @@ private:
     void *         mPrefixCallbackContext;
 #endif
 
-    TimerMilli mTimer;
+    PublisherTimer mTimer;
 };
 
 } // namespace NetworkData

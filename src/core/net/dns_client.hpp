@@ -743,7 +743,6 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMsgInfo);
     void        ProcessResponse(const Message &aMessage);
     Error       ParseResponse(Response &aResponse, QueryType &aType, Error &aResponseError);
-    static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     Error CheckAddressResponse(Response &aResponse, Error aResponseError) const;
@@ -764,9 +763,11 @@ private:
     static const uint16_t kServiceQueryRecordTypes[];
 #endif
 
+    using RetryTimer = TimerMilliIn<Client, &Client::HandleTimer>;
+
     Ip6::Udp::Socket mSocket;
     QueryList        mQueries;
-    TimerMilli       mTimer;
+    RetryTimer       mTimer;
     QueryConfig      mDefaultConfig;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     bool mUserDidSetDefaultAddress;

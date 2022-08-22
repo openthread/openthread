@@ -986,7 +986,6 @@ private:
     void         GrowRetryWaitInterval(void);
     uint32_t     GetBoundedLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const;
     bool         ShouldRenewEarly(const Service &aService) const;
-    static void  HandleTimer(Timer &aTimer);
     void         HandleTimer(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void  ProcessAutoStart(void);
@@ -1006,6 +1005,8 @@ private:
     static const char kDefaultDomainName[];
 
     static_assert(kMaxTxFailureRetries < 16, "kMaxTxFailureRetries exceed the range of mTxFailureRetryCount (4-bit)");
+
+    using DelayTimer = TimerMilliIn<Client, &Client::HandleTimer>;
 
     State   mState;
     uint8_t mTxFailureRetryCount : 4;
@@ -1032,7 +1033,7 @@ private:
     HostInfo            mHostInfo;
     LinkedList<Service> mServices;
     SingleServiceMode   mSingleServiceMode;
-    TimerMilli          mTimer;
+    DelayTimer          mTimer;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     AutoStart mAutoStart;
 #endif

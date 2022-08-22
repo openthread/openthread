@@ -58,7 +58,7 @@ JoinerRouter::JoinerRouter(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
     , mRelayTransmit(UriPath::kRelayTx, &JoinerRouter::HandleRelayTransmit, this)
-    , mTimer(aInstance, JoinerRouter::HandleTimer)
+    , mTimer(aInstance)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
 {
@@ -240,11 +240,6 @@ void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInf
 exit:
     FreeMessageOnError(message, error);
     LogError("schedule joiner entrust", error);
-}
-
-void JoinerRouter::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<JoinerRouter>().HandleTimer();
 }
 
 void JoinerRouter::HandleTimer(void)

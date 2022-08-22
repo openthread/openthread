@@ -613,8 +613,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
-    static void HandleDelayTimer(Timer &aTimer);
-    void        HandleDelayTimer(void);
+    void HandleDelayTimer(void);
 
     static void HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
@@ -624,7 +623,9 @@ private:
     void        HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
-    TimerMilli mDelayTimer;
+    using DelayTimer = TimerMilliIn<PendingDatasetManager, &PendingDatasetManager::HandleDelayTimer>;
+
+    DelayTimer mDelayTimer;
 
     Coap::Resource mResourceGet;
 

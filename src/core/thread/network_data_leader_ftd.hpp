@@ -226,8 +226,7 @@ private:
     static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
 
@@ -308,17 +307,19 @@ private:
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
+    using UpdateTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
+
     static constexpr uint8_t  kMinContextId        = 1;            // Minimum Context ID (0 is used for Mesh Local)
     static constexpr uint8_t  kNumContextIds       = 15;           // Maximum Context ID
     static constexpr uint32_t kContextIdReuseDelay = 48 * 60 * 60; // in seconds
     static constexpr uint32_t kStateUpdatePeriod   = 60 * 1000;    // State update period in milliseconds
     static constexpr uint32_t kMaxNetDataSyncWait  = 60 * 1000;    // Maximum time to wait for netdata sync.
 
-    bool       mWaitingForNetDataSync;
-    uint16_t   mContextUsed;
-    TimeMilli  mContextLastUsed[kNumContextIds];
-    uint32_t   mContextIdReuseDelay;
-    TimerMilli mTimer;
+    bool        mWaitingForNetDataSync;
+    uint16_t    mContextUsed;
+    TimeMilli   mContextLastUsed[kNumContextIds];
+    uint32_t    mContextIdReuseDelay;
+    UpdateTimer mTimer;
 
     Coap::Resource mServerData;
 

@@ -49,8 +49,8 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mHandler(nullptr)
     , mHandlerContext(nullptr)
-    , mTimer(aInstance, DiscoverScanner::HandleTimer)
     , mScanDoneTask(aInstance)
+    , mTimer(aInstance)
     , mFilterIndexes()
     , mState(kStateIdle)
     , mScanChannel(0)
@@ -264,11 +264,6 @@ void DiscoverScanner::HandleScanDoneTask(void)
     {
         mHandler(nullptr, mHandlerContext);
     }
-}
-
-void DiscoverScanner::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<DiscoverScanner>().HandleTimer();
 }
 
 void DiscoverScanner::HandleTimer(void)

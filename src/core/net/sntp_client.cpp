@@ -95,7 +95,7 @@ QueryMetadata::QueryMetadata(otSntpResponseHandler aHandler, void *aContext)
 
 Client::Client(Instance &aInstance)
     : mSocket(aInstance)
-    , mRetransmissionTimer(aInstance, Client::HandleRetransmissionTimer)
+    , mRetransmissionTimer(aInstance)
     , mUnixEra(0)
 {
 }
@@ -267,11 +267,6 @@ void Client::FinalizeSntpTransaction(Message &            aQuery,
     {
         aQueryMetadata.mResponseHandler(aQueryMetadata.mResponseContext, aTime, aResult);
     }
-}
-
-void Client::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.Get<Client>().HandleRetransmissionTimer();
 }
 
 void Client::HandleRetransmissionTimer(void)

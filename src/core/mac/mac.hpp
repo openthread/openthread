@@ -759,9 +759,7 @@ private:
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
     bool     HandleMacCommand(RxFrame &aFrame);
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void     HandleTimer(void);
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
@@ -788,6 +786,7 @@ private:
     static const char *OperationToString(Operation aOperation);
 
     using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
+    using MacTimer      = TimerMilliIn<Mac, &Mac::HandleTimer>;
 
     static const otExtAddress sMode2ExtAddress;
 
@@ -836,7 +835,7 @@ private:
 
     Links              mLinks;
     OperationTask      mOperationTask;
-    TimerMilli         mTimer;
+    MacTimer           mTimer;
     otMacCounters      mCounters;
     uint32_t           mKeyIdMode2FrameCounter;
     SuccessRateTracker mCcaSuccessRateTracker;

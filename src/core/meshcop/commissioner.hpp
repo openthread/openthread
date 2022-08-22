@@ -542,11 +542,8 @@ private:
     void AddCoapResources(void);
     void RemoveCoapResources(void);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-
-    static void HandleJoinerExpirationTimer(Timer &aTimer);
-    void        HandleJoinerExpirationTimer(void);
+    void HandleTimer(void);
+    void HandleJoinerExpirationTimer(void);
 
     void UpdateJoinerExpirationTimer(void);
 
@@ -604,6 +601,9 @@ private:
 
     static const char *StateToString(State aState);
 
+    using JoinerExpirationTimer = TimerMilliIn<Commissioner, &Commissioner::HandleJoinerExpirationTimer>;
+    using CommissionerTimer     = TimerMilliIn<Commissioner, &Commissioner::HandleTimer>;
+
     Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
 
     Joiner *                 mActiveJoiner;
@@ -612,8 +612,8 @@ private:
     uint16_t                 mJoinerRloc;
     uint16_t                 mSessionId;
     uint8_t                  mTransmitAttempts;
-    TimerMilli               mJoinerExpirationTimer;
-    TimerMilli               mTimer;
+    JoinerExpirationTimer    mJoinerExpirationTimer;
+    CommissionerTimer        mTimer;
 
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
