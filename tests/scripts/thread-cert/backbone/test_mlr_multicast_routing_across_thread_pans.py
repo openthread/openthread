@@ -230,6 +230,17 @@ class TestMlr(thread_cert.TestCase):
         # PBBR1 shouldn't forward the multicast ping request to the Backbone link
         pkts.filter_eth_src(PBBR1_ETH).filter_ping_request(ping_ma2_2.icmpv6.echo.identifier).must_not_next()
 
+        #
+        # Verify pinging MA2 from R1's Link-Local address will not be forwarded to the Backbone link
+        #
+
+        # ROUTER1 should send the multicast ping request
+        ping_ma2_3 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC16).filter_ping_request(
+            identifier=ping_ma2.icmpv6.echo.identifier + 1).must_next()
+
+        # PBBR1 shouldn't forward the multicast ping request to the Backbone link
+        pkts.filter_eth_src(PBBR1_ETH).filter_ping_request(ping_ma2_3.icmpv6.echo.identifier).must_not_next()
+
 
 if __name__ == '__main__':
     unittest.main()
