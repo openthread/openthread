@@ -263,8 +263,6 @@ public:
     void ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, const Neighbor &aNeighbor);
 
 private:
-    static constexpr uint8_t kMaxTypeIdFlags = 4;
-
     // Max number of SeriesInfo that could be allocated by the pool.
     static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED;
 

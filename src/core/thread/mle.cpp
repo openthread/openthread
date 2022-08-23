@@ -4257,22 +4257,21 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 // LCOV_EXCL_STOP
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength)
+Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const ot::Tlv &aSubTlv)
 {
-    Error      error = kErrorNone;
-    TxMessage *message;
+    Error      error   = kErrorNone;
+    TxMessage *message = NewMleMessage(kCommandLinkMetricsManagementRequest);
     Tlv        tlv;
 
-    VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementRequest)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    // Link Metrics Management TLV
     tlv.SetType(Tlv::kLinkMetricsManagement);
-    tlv.SetLength(aLength);
+    tlv.SetLength(static_cast<uint8_t>(aSubTlv.GetSize()));
 
-    SuccessOrExit(error = message->AppendBytes(&tlv, sizeof(tlv)));
-    SuccessOrExit(error = message->AppendBytes(aSubTlvs, aLength));
+    SuccessOrExit(error = message->Append(tlv));
+    SuccessOrExit(error = aSubTlv.AppendTo(*message));
 
-    SuccessOrExit(error = message->SendTo(aDestination));
+    error = message->SendTo(aDestination);
 
 exit:
     FreeMessageOnError(message, error);
