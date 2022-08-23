@@ -40,6 +40,8 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "mac/mac.hpp"
 #include "thread/link_metrics_tlvs.hpp"
 #include "thread/neighbor_table.hpp"
@@ -251,13 +253,10 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
 
     if (queryId == kQueryIdSingleProbe)
     {
-        values.mPduCountValue = aRequestMessage.GetPsduCount();
-        values.mLqiValue      = aRequestMessage.GetAverageLqi();
-        // Linearly scale Link Margin from [0, 130] to [0, 255]
-        values.mLinkMarginValue = Get<Mac::Mac>().ComputeLinkMargin(aRequestMessage.GetAverageRss()) * 255 / 130;
-        // Linearly scale rss from [-130, 0] to [0, 255]
-        values.mRssiValue = (aRequestMessage.GetAverageRss() + 130) * 255 / 130;
-
+        values.mPduCountValue   = aRequestMessage.GetPsduCount();
+        values.mLqiValue        = aRequestMessage.GetAverageLqi();
+        values.mLinkMarginValue = Get<Mac::Mac>().ComputeLinkMargin(aRequestMessage.GetAverageRss());
+        values.mRssiValue       = aRequestMessage.GetAverageRss();
         SuccessOrExit(error = AppendReportSubTlvToMessage(aMessage, values));
     }
     else
@@ -275,12 +274,10 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
         else
         {
             values.SetMetrics(seriesInfo->GetLinkMetrics());
-            values.mPduCountValue = seriesInfo->GetPduCount();
-            values.mLqiValue      = seriesInfo->GetAverageLqi();
-            // Linearly scale Link Margin from [0, 130] to [0, 255]
-            values.mLinkMarginValue = Get<Mac::Mac>().ComputeLinkMargin(seriesInfo->GetAverageRss()) * 255 / 130;
-            // Linearly scale RSSI from [-130, 0] to [0, 255]
-            values.mRssiValue = (seriesInfo->GetAverageRss() + 130) * 255 / 130;
+            values.mPduCountValue   = seriesInfo->GetPduCount();
+            values.mLqiValue        = seriesInfo->GetAverageLqi();
+            values.mLinkMarginValue = Get<Mac::Mac>().ComputeLinkMargin(seriesInfo->GetAverageRss());
+            values.mRssiValue       = seriesInfo->GetAverageRss();
             SuccessOrExit(error = AppendReportSubTlvToMessage(aMessage, values));
         }
     }
@@ -483,15 +480,13 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
 
             case TypeIdFlags::kLinkMargin:
                 values.mMetrics.mLinkMargin = true;
-                // Reverse operation for linear scale, map from [0, 255] to [0, 130]
-                values.mLinkMarginValue = reportTlv.GetMetricsValue8() * 130 / 255;
+                values.mLinkMarginValue     = ScaleRawValueToLinkMargin(reportTlv.GetMetricsValue8());
                 LogDebg(" - Margin: %d (dB) (Exponential Moving Average)", values.mLinkMarginValue);
                 break;
 
             case TypeIdFlags::kRssi:
                 values.mMetrics.mRssi = true;
-                // Reverse operation for linear scale, map from [0, 255] to [-130, 0]
-                values.mRssiValue = reportTlv.GetMetricsValue8() * 130 / 255 - 130;
+                values.mRssiValue     = ScaleRawValueToRssi(reportTlv.GetMetricsValue8());
                 LogDebg(" - RSSI: %d (dBm) (Exponential Moving Average)", values.mRssiValue);
                 break;
             }
@@ -559,13 +554,11 @@ void LinkMetrics::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, con
     }
     if (values.GetMetrics().mLinkMargin && idx < aLength)
     {
-        // Reverse operation for linear scale, map from [0, 255] to [0, 130]
-        values.mLinkMarginValue = aData[idx++] * 130 / 255;
+        values.mLinkMarginValue = ScaleRawValueToLinkMargin(aData[idx++]);
     }
     if (values.GetMetrics().mRssi && idx < aLength)
     {
-        // Reverse operation for linear scale, map from [0, 255] to [-130, 0]
-        values.mRssiValue = aData[idx++] * 130 / 255 - 130;
+        values.mRssiValue = ScaleRawValueToRssi(aData[idx++]);
     }
 
     mEnhAckProbingIeReportCallback(aNeighbor.GetRloc16(), &aNeighbor.GetExtAddress(), &values,
@@ -786,19 +779,69 @@ Error LinkMetrics::AppendReportSubTlvToMessage(Message &aMessage, const MetricsV
     if (aValues.mMetrics.mLinkMargin)
     {
         reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kLinkMargin));
-        reportTlv.SetMetricsValue8(aValues.mLinkMarginValue);
+        reportTlv.SetMetricsValue8(ScaleLinkMarginToRawValue(aValues.mLinkMarginValue));
         SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
     if (aValues.mMetrics.mRssi)
     {
         reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kRssi));
-        reportTlv.SetMetricsValue8(aValues.mRssiValue);
+        reportTlv.SetMetricsValue8(ScaleRssiToRawValue(aValues.mRssiValue));
         SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
 exit:
     return error;
+}
+
+uint8_t LinkMetrics::ScaleLinkMarginToRawValue(uint8_t aLinkMargin)
+{
+    // Linearly scale Link Margin from [0, 130] to [0, 255].
+    // `kMaxLinkMargin = 130`.
+
+    uint16_t value;
+
+    value = Min(aLinkMargin, kMaxLinkMargin);
+    value = value * NumericLimits<uint8_t>::kMax;
+    value = DivideAndRoundToClosest<uint16_t>(value, kMaxLinkMargin);
+
+    return static_cast<uint8_t>(value);
+}
+
+uint8_t LinkMetrics::ScaleRawValueToLinkMargin(uint8_t aRawValue)
+{
+    // Scale back raw value of [0, 255] to Link Margin from [0, 130].
+
+    uint16_t value = aRawValue;
+
+    value = value * kMaxLinkMargin;
+    value = DivideAndRoundToClosest<uint16_t>(value, NumericLimits<uint8_t>::kMax);
+    return static_cast<uint8_t>(value);
+}
+
+uint8_t LinkMetrics::ScaleRssiToRawValue(int8_t aRssi)
+{
+    // Linearly scale RSSI from [-130, 0] to [0, 255].
+    // `kMinRssi = -130`, `kMaxRssi = 0`.
+
+    int32_t value = aRssi;
+
+    value = Clamp(value, kMinRssi, kMaxRssi) - kMinRssi;
+    value = value * NumericLimits<uint8_t>::kMax;
+    value = DivideAndRoundToClosest<int32_t>(value, kMaxRssi - kMinRssi);
+
+    return static_cast<uint8_t>(value);
+}
+
+int8_t LinkMetrics::ScaleRawValueToRssi(uint8_t aRawValue)
+{
+    int32_t value = aRawValue;
+
+    value = value * (kMaxRssi - kMinRssi);
+    value = DivideAndRoundToClosest<int32_t>(value, NumericLimits<uint8_t>::kMax);
+    value += kMinRssi;
+
+    return static_cast<int8_t>(value);
 }
 
 } // namespace LinkMetrics
