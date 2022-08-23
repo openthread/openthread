@@ -118,10 +118,19 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertEqual(nat64_prefix, br2_infra_nat64_prefix)
         self.assertNotEqual(nat64_prefix, br1_local_nat64_prefix)
 
+        #
+        # Case 2. Disable border routing on BR2.
+        #         BR1 will add its local nat64 prefix.
+        #
         br2.disable_br()
+        self.simulator.go(10)
+
+        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
+        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(nat64_prefix, br1_local_nat64_prefix)
 
         #
-        # Case 2. Re-enables BR2 with a local prefix and it will not add
+        # Case 3. Re-enables BR2 with a local prefix and it will not add
         #         its local nat64 prefix to Network Data.
         #
         br2.bash("service bind9 stop")
@@ -138,8 +147,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertNotEqual(nat64_prefix, br2_local_nat64_prefix)
 
         #
-        # Case 3. Disable border routing on BR1.
-        #         BR1 withdraws its prefix and BR2 advertises its prefix.
+        # Case 4. Disable border routing on BR1.
+        #         BR1 withdraws its local prefix and BR2 advertises its local prefix.
         #
         br1.disable_br()
 
@@ -150,8 +159,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertNotEqual(br1_local_nat64_prefix, nat64_prefix)
 
         #
-        # Case 4. Re-enable border routing on BR1.
-        #         NAT64 prefix in Network Data is still advertised by BR2.
+        # Case 5. Re-enable border routing on BR1.
+        #         NAT64 prefix in Network Data is still BR2's local prefix.
         #
         br1.enable_br()
 

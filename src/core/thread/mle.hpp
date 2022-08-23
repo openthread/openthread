@@ -1687,7 +1687,6 @@ protected:
     TimerMilli    mAttachTimer;              ///< The timer for driving the attach process.
     TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
-    uint8_t       mParentLeaderCost;
 
 private:
     static constexpr uint8_t kMleHopLimit        = 255;

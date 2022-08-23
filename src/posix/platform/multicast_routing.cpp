@@ -309,6 +309,7 @@ otError MulticastRoutingManager::AddMulticastForwardingCache(const Ip6::Address 
     }
     else
     {
+        VerifyOrExit(!aSrcAddr.IsLinkLocal(), error = OT_ERROR_NONE);
         VerifyOrExit(aSrcAddr.GetPrefix() != AsCoreType(otThreadGetMeshLocalPrefix(gInstance)), error = OT_ERROR_NONE);
         // Forward multicast traffic from Thread to Backbone if multicast scope > kRealmLocalScope
         // TODO: (MLR) allow scope configuration of outbound multicast routing

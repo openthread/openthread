@@ -32,6 +32,9 @@ enum Status {
 message StartRequest {
     // Specify the channel that the sniffer is going to sniff
     int32 channel = 1;
+
+    // Specify whether to include Ethernet packets between OTBR and infra
+    bool includeEthernet = 2;
 }
 
 message StartResponse {

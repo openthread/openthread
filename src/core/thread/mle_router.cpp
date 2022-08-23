@@ -40,6 +40,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -1184,20 +1185,14 @@ int MleRouter::ComparePartitions(bool              aSingletonA,
 {
     int rval = 0;
 
-    if (aLeaderDataA.GetWeighting() != aLeaderDataB.GetWeighting())
-    {
-        ExitNow(rval = aLeaderDataA.GetWeighting() > aLeaderDataB.GetWeighting() ? 1 : -1);
-    }
+    rval = ThreeWayCompare(aLeaderDataA.GetWeighting(), aLeaderDataB.GetWeighting());
+    VerifyOrExit(rval == 0);
 
-    if (aSingletonA != aSingletonB)
-    {
-        ExitNow(rval = aSingletonB ? 1 : -1);
-    }
+    // Not being a singleton is better.
+    rval = ThreeWayCompare(!aSingletonA, !aSingletonB);
+    VerifyOrExit(rval == 0);
 
-    if (aLeaderDataA.GetPartitionId() != aLeaderDataB.GetPartitionId())
-    {
-        ExitNow(rval = aLeaderDataA.GetPartitionId() > aLeaderDataB.GetPartitionId() ? 1 : -1);
-    }
+    rval = ThreeWayCompare(aLeaderDataA.GetPartitionId(), aLeaderDataB.GetPartitionId());
 
 exit:
     return rval;
@@ -1617,7 +1612,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     {
         LogInfo("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
                 (router.GetNextHop() == kInvalidRouterId) ? 0xffff : Rloc16FromRouterId(router.GetNextHop()),
-                router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkInfo().GetLinkQuality(),
+                router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkQualityIn(),
                 router.GetLinkQualityOut(),
                 router.GetRloc16() == GetRloc16() ? "device" : ToYesNo(router.IsStateValid()));
     }
@@ -3876,7 +3871,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     if (leader != router)
     {
         // Keep route path to the Leader reported by the parent before it is updated.
-        leader->SetCost(mParentLeaderCost);
+        leader->SetCost(mParent.GetLeaderCost());
         leader->SetNextHop(RouterIdFromRloc16(mParent.GetRloc16()));
     }
 
@@ -4122,7 +4117,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
         break;
 
     case kRoleChild:
-        switch (mParent.GetLinkInfo().GetLinkQuality())
+        switch (mParent.GetLinkQualityIn())
         {
         case kLinkQuality0:
             break;
@@ -4140,7 +4135,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             break;
         }
 
-        cost += LinkQualityToCost(mParent.GetLinkInfo().GetLinkQuality());
+        cost += LinkQualityToCost(mParent.GetLinkQualityIn());
         break;
 
     case kRoleRouter:
@@ -4165,8 +4160,6 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     for (Router &router : Get<RouterTable>().Iterate())
     {
-        LinkQuality linkQuality;
-
         if (router.GetRloc16() == GetRloc16())
         {
             // skip self
@@ -4179,14 +4172,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             continue;
         }
 
-        linkQuality = router.GetLinkInfo().GetLinkQuality();
-
-        if (linkQuality > router.GetLinkQualityOut())
-        {
-            linkQuality = router.GetLinkQualityOut();
-        }
-
-        switch (linkQuality)
+        switch (router.GetTwoWayLinkQuality())
         {
         case kLinkQuality0:
             break;
@@ -4303,7 +4289,7 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 
             aTlv.SetRouteCost(routerCount, routeCost);
             aTlv.SetLinkQualityOut(routerCount, router.GetLinkQualityOut());
-            aTlv.SetLinkQualityIn(routerCount, router.GetLinkInfo().GetLinkQuality());
+            aTlv.SetLinkQualityIn(routerCount, router.GetLinkQualityIn());
         }
 
         routerCount++;
@@ -4314,7 +4300,6 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
 
 bool MleRouter::HasMinDowngradeNeighborRouters(void)
 {
-    uint8_t linkQuality;
     uint8_t routerCount = 0;
 
     for (Router &router : Get<RouterTable>().Iterate())
@@ -4324,14 +4309,7 @@ bool MleRouter::HasMinDowngradeNeighborRouters(void)
             continue;
         }
 
-        linkQuality = router.GetLinkInfo().GetLinkQuality();
-
-        if (linkQuality > router.GetLinkQualityOut())
-        {
-            linkQuality = router.GetLinkQualityOut();
-        }
-
-        if (linkQuality >= 2)
+        if (router.GetTwoWayLinkQuality() >= kLinkQuality2)
         {
             routerCount++;
         }
@@ -4348,8 +4326,8 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
     // process local neighbor routers
     for (Router &router : Get<RouterTable>().Iterate())
     {
-        uint8_t localLinkQuality;
-        uint8_t peerLinkQuality;
+        LinkQuality localLinkQuality;
+        LinkQuality peerLinkQuality;
 
         if (!router.IsStateValid() || router.GetRouterId() == mRouterId || router.GetRouterId() == aRouterId)
         {
@@ -4357,14 +4335,9 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
             continue;
         }
 
-        localLinkQuality = router.GetLinkInfo().GetLinkQuality();
+        localLinkQuality = router.GetTwoWayLinkQuality();
 
-        if (localLinkQuality > router.GetLinkQualityOut())
-        {
-            localLinkQuality = router.GetLinkQualityOut();
-        }
-
-        if (localLinkQuality < 2)
+        if (localLinkQuality < kLinkQuality2)
         {
             routerCount++;
             continue;
@@ -4377,12 +4350,7 @@ bool MleRouter::HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute,
         }
 
         // get the peer's two-way link quality to this router
-        peerLinkQuality = aRoute.GetLinkQualityIn(routerCount);
-
-        if (peerLinkQuality > aRoute.GetLinkQualityOut(routerCount))
-        {
-            peerLinkQuality = aRoute.GetLinkQualityOut(routerCount);
-        }
+        peerLinkQuality = Min(aRoute.GetLinkQualityIn(routerCount), aRoute.GetLinkQualityOut(routerCount));
 
         // compare local link quality to this router with peer's
         if (peerLinkQuality >= localLinkQuality)

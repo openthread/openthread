@@ -38,7 +38,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 
@@ -73,7 +73,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mRloc16           = aNeighbor.GetRloc16();
     mLinkFrameCounter = aNeighbor.GetLinkFrameCounters().GetMaximum();
     mMleFrameCounter  = aNeighbor.GetMleFrameCounter();
-    mLinkQualityIn    = aNeighbor.GetLinkInfo().GetLinkQuality();
+    mLinkQualityIn    = aNeighbor.GetLinkQualityIn();
     mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
     mLastRssi         = aNeighbor.GetLinkInfo().GetLastRss();
     mFrameErrorRate   = aNeighbor.GetLinkInfo().GetFrameErrorRate();
@@ -247,7 +247,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mChildId            = Mle::ChildIdFromRloc16(aChild.GetRloc16());
     mNetworkDataVersion = aChild.GetNetworkDataVersion();
     mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
-    mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
+    mLinkQualityIn      = aChild.GetLinkQualityIn();
     mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
     mLastRssi           = aChild.GetLinkInfo().GetLastRss();
     mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
@@ -522,7 +522,7 @@ void Router::Info::SetFrom(const Router &aRouter)
     mNextHop         = aRouter.GetNextHop();
     mLinkEstablished = aRouter.IsStateValid();
     mPathCost        = aRouter.GetCost();
-    mLinkQualityIn   = aRouter.GetLinkInfo().GetLinkQuality();
+    mLinkQualityIn   = aRouter.GetLinkQualityIn();
     mLinkQualityOut  = aRouter.GetLinkQualityOut();
     mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - aRouter.GetLastHeard()));
     mVersion         = ClampToUint8(aRouter.GetVersion());
@@ -543,6 +543,11 @@ void Router::Clear(void)
 
     memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
     Init(instance);
+}
+
+LinkQuality Router::GetTwoWayLinkQuality(void) const
+{
+    return Min(GetLinkQualityIn(), GetLinkQualityOut());
 }
 
 void Router::SetFrom(const Parent &aParent)
