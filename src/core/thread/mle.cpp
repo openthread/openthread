@@ -43,7 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -2988,57 +2988,40 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
                          uint16_t                aVersion,
                          const Mac::CslAccuracy &aCslAccuracy)
 {
-    bool        rval                       = false;
+    int         rval;
     LinkQuality candidateTwoWayLinkQuality = mParentCandidate.GetTwoWayLinkQuality();
 
     // Mesh Impacting Criteria
-    if (aLinkQuality != candidateTwoWayLinkQuality)
-    {
-        ExitNow(rval = (aLinkQuality > candidateTwoWayLinkQuality));
-    }
+    rval = ThreeWayCompare(aLinkQuality, candidateTwoWayLinkQuality);
+    VerifyOrExit(rval == 0);
 
-    if (IsActiveRouter(aRloc16) != IsActiveRouter(mParentCandidate.GetRloc16()))
-    {
-        ExitNow(rval = IsActiveRouter(aRloc16));
-    }
+    rval = ThreeWayCompare(IsActiveRouter(aRloc16), IsActiveRouter(mParentCandidate.GetRloc16()));
+    VerifyOrExit(rval == 0);
 
-    if (aConnectivityTlv.GetParentPriority() != mParentPriority)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetParentPriority() > mParentPriority));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetParentPriority(), mParentPriority);
+    VerifyOrExit(rval == 0);
 
     // Prefer the parent with highest quality links (Link Quality 3 field in Connectivity TLV) to neighbors
-    if (aConnectivityTlv.GetLinkQuality3() != mParentLinkQuality3)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality3() > mParentLinkQuality3));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetLinkQuality3(), mParentLinkQuality3);
+    VerifyOrExit(rval == 0);
 
     // Thread 1.2 Specification 4.5.2.1.2 Child Impacting Criteria
-    if (aVersion != mParentCandidate.GetVersion())
-    {
-        ExitNow(rval = (aVersion > mParentCandidate.GetVersion()));
-    }
 
-    if (aConnectivityTlv.GetSedBufferSize() != mParentSedBufferSize)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetSedBufferSize() > mParentSedBufferSize));
-    }
+    rval = ThreeWayCompare(aVersion, mParentCandidate.GetVersion());
+    VerifyOrExit(rval == 0);
 
-    if (aConnectivityTlv.GetSedDatagramCount() != mParentSedDatagramCount)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetSedDatagramCount() > mParentSedDatagramCount));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetSedBufferSize(), mParentSedBufferSize);
+    VerifyOrExit(rval == 0);
+
+    rval = ThreeWayCompare(aConnectivityTlv.GetSedDatagramCount(), mParentSedDatagramCount);
+    VerifyOrExit(rval == 0);
 
     // Extra rules
-    if (aConnectivityTlv.GetLinkQuality2() != mParentLinkQuality2)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality2() > mParentLinkQuality2));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetLinkQuality2(), mParentLinkQuality2);
+    VerifyOrExit(rval == 0);
 
-    if (aConnectivityTlv.GetLinkQuality1() != mParentLinkQuality1)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality1() > mParentLinkQuality1));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetLinkQuality1(), mParentLinkQuality1);
+    VerifyOrExit(rval == 0);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL metric
@@ -3047,19 +3030,18 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
         uint64_t cslMetric          = CalcParentCslMetric(aCslAccuracy);
         uint64_t candidateCslMetric = CalcParentCslMetric(mParentCandidate.GetCslAccuracy());
 
-        if (candidateCslMetric != cslMetric)
-        {
-            ExitNow(rval = (cslMetric < candidateCslMetric));
-        }
+        // Smaller metric is better.
+        rval = ThreeWayCompare(candidateCslMetric, cslMetric);
+        VerifyOrExit(rval == 0);
     }
 #else
     OT_UNUSED_VARIABLE(aCslAccuracy);
 #endif
 
-    rval = (aLinkMargin > mParentLinkMargin);
+    rval = ThreeWayCompare(aLinkMargin, mParentLinkMargin);
 
 exit:
-    return rval;
+    return (rval > 0);
 }
 
 void Mle::HandleParentResponse(RxInfo &aRxInfo)

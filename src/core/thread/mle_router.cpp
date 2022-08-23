@@ -40,6 +40,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -1184,20 +1185,14 @@ int MleRouter::ComparePartitions(bool              aSingletonA,
 {
     int rval = 0;
 
-    if (aLeaderDataA.GetWeighting() != aLeaderDataB.GetWeighting())
-    {
-        ExitNow(rval = aLeaderDataA.GetWeighting() > aLeaderDataB.GetWeighting() ? 1 : -1);
-    }
+    rval = ThreeWayCompare(aLeaderDataA.GetWeighting(), aLeaderDataB.GetWeighting());
+    VerifyOrExit(rval == 0);
 
-    if (aSingletonA != aSingletonB)
-    {
-        ExitNow(rval = aSingletonB ? 1 : -1);
-    }
+    // Not being a singleton is better.
+    rval = ThreeWayCompare(!aSingletonA, !aSingletonB);
+    VerifyOrExit(rval == 0);
 
-    if (aLeaderDataA.GetPartitionId() != aLeaderDataB.GetPartitionId())
-    {
-        ExitNow(rval = aLeaderDataA.GetPartitionId() > aLeaderDataB.GetPartitionId() ? 1 : -1);
-    }
+    rval = ThreeWayCompare(aLeaderDataA.GetPartitionId(), aLeaderDataB.GetPartitionId());
 
 exit:
     return rval;

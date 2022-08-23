@@ -38,7 +38,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 
