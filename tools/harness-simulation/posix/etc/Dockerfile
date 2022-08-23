@@ -32,7 +32,7 @@ ARG INFRA_IF_NAME
 ARG BORDER_ROUTING
 ARG BACKBONE_ROUTER
 ARG OTBR_OPTIONS
-ARG OT_COMMISSIONER
+ARG EXTERNAL_COMMISSIONER
 ARG DNS64
 ARG NAT64
 ARG NAT64_SERVICE
@@ -46,7 +46,7 @@ ENV BORDER_ROUTING=${BORDER_ROUTING:-1}
 ENV BACKBONE_ROUTER=${BACKBONE_ROUTER:-1}
 ENV OTBR_MDNS=${MDNS:-mDNSResponder}
 ENV OTBR_OPTIONS=${OTBR_OPTIONS}
-ENV OT_COMMISSIONER=${OT_COMMISSIONER:-1}
+ENV EXTERNAL_COMMISSIONER=${EXTERNAL_COMMISSIONER:-1}
 ENV DEBIAN_FRONTEND noninteractive
 ENV PLATFORM ubuntu
 ENV REFERENCE_DEVICE=${REFERENCE_DEVICE:-0}
@@ -86,7 +86,7 @@ RUN apt-get update \
   && pip2 install -r /tmp/requirements.txt \
   && pip3 install $OTBR_PYTHON_REQS \
   && ln -fs /usr/share/zoneinfo/UTC /etc/localtime \
-  && ([ "${OT_COMMISSIONER}" != "1" ] || ( \
+  && ([ "${EXTERNAL_COMMISSIONER}" != "1" ] || ( \
     git clone https://github.com/openthread/ot-commissioner.git --recurse-submodules --shallow-submodules --depth=1 \
     && cd ot-commissioner \
     && ./script/bootstrap.sh \

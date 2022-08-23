@@ -72,6 +72,7 @@ ETC_PATH="${OT_PATH}/tools/harness-simulation/posix/etc"
         --build-arg NAT64=0 \
         --build-arg WEB_GUI=0 \
         --build-arg REST_API=0 \
+        --build-arg EXTERNAL_COMMISSIONER=1 \
         --build-arg OTBR_OPTIONS="'${DOCKER_BUILD_OTBR_OPTIONS[*]}'"
 )
 
