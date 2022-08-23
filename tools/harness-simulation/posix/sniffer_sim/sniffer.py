@@ -32,13 +32,23 @@ from concurrent import futures
 import enum
 import grpc
 import logging
+import os
 import signal
-import pcap_codec
+import socket
+import subprocess
+import tempfile
 import threading
 
+import pcap_codec
 from proto import sniffer_pb2
 from proto import sniffer_pb2_grpc
 import sniffer_transport
+
+
+class CaptureState(enum.Flag):
+    NONE = 0
+    THREAD = enum.auto()
+    ETHERNET = enum.auto()
 
 
 class SnifferServicer(sniffer_pb2_grpc.Sniffer):
@@ -47,44 +57,23 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
     logger = logging.getLogger('sniffer.SnifferServicer')
 
     RECV_BUFFER_SIZE = 4096
-    MAX_NODES_NUM = 33
-
-    class State(enum.Enum):
-        STOPPED = 0
-        RUNNING = 1
+    TIMEOUT = 0.1
+    MAX_NODES_NUM = 64
 
     def _reset(self):
-        self._state = SnifferServicer.State.STOPPED
+        self._state = CaptureState.NONE
         self._pcap = None
         self._allowed_nodeids = None
         self._transport = None
         self._thread = None
         self._thread_alive.clear()
+        self._pcapng_filename = None
+        self._tshark_proc = None
 
     def __init__(self):
         self._thread_alive = threading.Event()
         self._mutex = threading.Lock()  # for self._allowed_nodeids
         self._reset()
-
-    def _sniffer_main_loop(self):
-        """ Sniffer main loop. """
-
-        self.logger.debug('Sniffer started.')
-
-        while self._thread_alive.is_set():
-            # Avoid being blocked endlessly when there is no data
-            if not self._transport.ready(0.1):
-                continue
-            data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE)
-
-            with self._mutex:
-                allowed_nodeids = self._allowed_nodeids
-
-            # Equivalent to RF enclosure
-            if allowed_nodeids is None or nodeid in allowed_nodeids:
-                self._pcap.append(data)
-
-        self.logger.debug('Sniffer stopped.')
 
     def Start(self, request, context):
         """ Start sniffing. """
@@ -92,11 +81,27 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self.logger.debug('call Start')
 
         # Validate and change the state
-        if self._state != SnifferServicer.State.STOPPED:
+        if self._state != CaptureState.NONE:
             return sniffer_pb2.StartResponse(status=sniffer_pb2.OPERATION_ERROR)
-        self._state = SnifferServicer.State.RUNNING
+        self._state = CaptureState.THREAD
 
-        self._pcap = pcap_codec.PcapCodec(request.channel)
+        # Create a temporary named pipe
+        tempdir = tempfile.mkdtemp()
+        fifo_name = os.path.join(tempdir, 'pcap.fifo')
+        os.mkfifo(fifo_name)
+
+        cmd = ['tshark', '-i', fifo_name]
+        if request.includeEthernet:
+            self._state |= CaptureState.ETHERNET
+            cmd += ['-i', 'docker0']
+        self._pcapng_filename = os.path.join(tempdir, 'sim.pcapng')
+        cmd += ['-w', self._pcapng_filename, '-q', 'not ip and not tcp and not arp and not ether proto 0x8899']
+
+        self.logger.debug('Running command:  %s', ' '.join(cmd))
+        self._tshark_proc = subprocess.Popen(cmd)
+
+        # Construct pcap codec after initiating tshark to avoid blocking
+        self._pcap = pcap_codec.PcapCodec(request.channel, fifo_name)
 
         # Sniffer all nodes in default, i.e. there is no RF enclosure
         # In this case, self._allowed_nodeids is set to None
@@ -115,13 +120,29 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
         return sniffer_pb2.StartResponse(status=sniffer_pb2.OK)
 
+    def _sniffer_main_loop(self):
+        """ Sniffer main loop. """
+
+        while self._thread_alive.is_set():
+            try:
+                data, nodeid = self._transport.recv(self.RECV_BUFFER_SIZE, self.TIMEOUT)
+            except socket.timeout:
+                continue
+
+            with self._mutex:
+                allowed_nodeids = self._allowed_nodeids
+
+            # Equivalent to RF enclosure
+            if allowed_nodeids is None or nodeid in allowed_nodeids:
+                self._pcap.append(data)
+
     def FilterNodes(self, request, context):
         """ Only sniffer the specified nodes. """
 
         self.logger.debug('call FilterNodes')
 
         # Validate the state
-        if self._state != SnifferServicer.State.RUNNING:
+        if not (self._state & CaptureState.THREAD):
             return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OPERATION_ERROR)
 
         allowed_nodeids = set(request.nodeids)
@@ -141,15 +162,21 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self.logger.debug('call Stop')
 
         # Validate and change the state
-        if self._state != SnifferServicer.State.RUNNING:
+        if self._state == CaptureState.NONE:
             return sniffer_pb2.StopResponse(status=sniffer_pb2.OPERATION_ERROR, pcap_content=b'')
-        self._state = SnifferServicer.State.STOPPED
+        self._state = CaptureState.NONE
 
         self._thread_alive.clear()
         self._thread.join(timeout=1)
         self._transport.close()
+        self._pcap.close()
 
-        pcap_content = self._pcap.pop_all()
+        self._tshark_proc.terminate()
+        self._tshark_proc.wait()
+
+        with open(self._pcapng_filename, 'rb') as f:
+            pcap_content = f.read()
+
         self._reset()
 
         return sniffer_pb2.StopResponse(status=sniffer_pb2.OK, pcap_content=pcap_content)

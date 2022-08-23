@@ -33,36 +33,41 @@
 """
 
 import ipaddress
-import os
 import paramiko
 import socket
 import time
 import win32api
 
-from IThci import IThci
-from OpenThread import OpenThreadTHCI, watched
-from simulation.config import REMOTE_OT_PATH
+from THCI.IThci import IThci
+from THCI.OpenThread import OpenThreadTHCI, watched
+from simulation.config import (
+    REMOTE_USERNAME,
+    REMOTE_PASSWORD,
+    REMOTE_PORT,
+    REMOTE_OT_PATH,
+)
 
 
 class SSHHandle(object):
     KEEPALIVE_INTERVAL = 30
 
     def __init__(self, ip, port, username, password, device, node_id):
-        ipaddress.ip_address(ip)
         self.ip = ip
         self.port = int(port)
         self.username = username
         self.password = password
+        self.node_id = node_id
         self.__handle = None
         self.__stdin = None
         self.__stdout = None
-        self.__connect(device, node_id)
+
+        self.__connect(device)
 
         # Close the SSH connection only when Harness exits
         win32api.SetConsoleCtrlHandler(self.__disconnect, True)
 
     @watched
-    def __connect(self, device, node_id):
+    def __connect(self, device):
         if self.__handle is not None:
             return
 
@@ -80,7 +85,7 @@ class SSHHandle(object):
         # Avoid SSH connection lost after inactivity for a while
         self.__handle.get_transport().set_keepalive(self.KEEPALIVE_INTERVAL)
 
-        self.__stdin, self.__stdout, _ = self.__handle.exec_command(device + ' ' + str(node_id))
+        self.__stdin, self.__stdout, _ = self.__handle.exec_command(device + ' ' + str(self.node_id))
 
         # Receive the output in non-blocking mode
         self.__stdout.channel.setblocking(0)
@@ -120,7 +125,7 @@ class SSHHandle(object):
     def log(self, fmt, *args):
         try:
             msg = fmt % args
-            print('%s - %s - %s' % (self.port, time.strftime('%b %d %H:%M:%S'), msg))
+            print('%d@%s - %s - %s' % (self.node_id, self.ip, time.strftime('%b %d %H:%M:%S'), msg))
         except Exception:
             pass
 
@@ -128,7 +133,8 @@ class SSHHandle(object):
 class OpenThread_Sim(OpenThreadTHCI, IThci):
     __handle = None
 
-    device = os.path.join(REMOTE_OT_PATH, 'build/simulation/examples/apps/cli/ot-cli-ftd')
+    # Do not use `os.path.join` as it uses backslash as the separator on Windows
+    device = REMOTE_OT_PATH + '/build/simulation/examples/apps/cli/ot-cli-ftd'
 
     @watched
     def _connect(self):
@@ -148,6 +154,22 @@ class OpenThread_Sim(OpenThreadTHCI, IThci):
     @watched
     def _disconnect(self):
         pass
+
+    @watched
+    def _parseConnectionParams(self, params):
+        discovery_add = params.get('SerialPort')
+        if '@' not in discovery_add:
+            raise ValueError('%r in the field `add` is invalid' % discovery_add)
+
+        node_id, ssh_ip = discovery_add.split('@')
+        # Let it crash if it is an invalid IP address
+        ipaddress.ip_address(ssh_ip)
+
+        self.connectType = 'ip'
+        self.telnetIp = self.port = discovery_add
+        self.telnetPort = REMOTE_PORT
+        self.telnetUsername = REMOTE_USERNAME
+        self.telnetPassword = REMOTE_PASSWORD
 
     def _cliReadLine(self):
         if len(self.__lines) > 1:
