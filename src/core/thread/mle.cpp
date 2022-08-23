@@ -2769,21 +2769,21 @@ exit:
 void Mle::HandleDataResponse(RxInfo &aRxInfo)
 {
     Error error;
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    uint16_t metricsReportValueOffset;
-    uint16_t length;
-#endif
 
     Log(kMessageReceive, kTypeDataResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorDrop);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) ==
-        kErrorNone)
     {
-        Get<LinkMetrics::LinkMetrics>().HandleReport(aRxInfo.mMessage, metricsReportValueOffset, length,
-                                                     aRxInfo.mMessageInfo.GetPeerAddr());
+        uint16_t offset;
+        uint16_t length;
+
+        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kLinkMetricsReport, offset, length) == kErrorNone)
+        {
+            Get<LinkMetrics::LinkMetrics>().HandleReport(aRxInfo.mMessage, offset, length,
+                                                         aRxInfo.mMessageInfo.GetPeerAddr());
+        }
     }
 #endif
 

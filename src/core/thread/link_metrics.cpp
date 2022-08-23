@@ -49,8 +49,6 @@ namespace LinkMetrics {
 
 RegisterLogModule("LinkMetrics");
 
-using ot::Encoding::BigEndian::HostSwap32;
-
 LinkMetrics::LinkMetrics(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mReportCallback(nullptr)
@@ -418,16 +416,15 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
                                uint16_t            aLength,
                                const Ip6::Address &aAddress)
 {
-    Error         error = kErrorNone;
-    MetricsValues values;
-    uint8_t       rawValue;
-    uint16_t      pos    = aOffset;
-    uint16_t      endPos = aOffset + aLength;
-    Tlv           tlv;
-    TypeIdFlags   typeIdFlags;
+    Error         error     = kErrorNone;
+    uint16_t      offset    = aOffset;
+    uint16_t      endOffset = aOffset + aLength;
     bool          hasStatus = false;
     bool          hasReport = false;
-    Status        status;
+    Tlv           tlv;
+    ReportSubTlv  reportTlv;
+    MetricsValues values;
+    uint8_t       status;
 
     OT_UNUSED_VARIABLE(error);
 
@@ -435,90 +432,84 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
 
     values.Clear();
 
-    while (pos < endPos)
+    while (offset < endOffset)
     {
-        SuccessOrExit(aMessage.Read(pos, tlv));
-        VerifyOrExit(tlv.GetType() == SubTlv::kReport);
-        pos += sizeof(Tlv);
+        SuccessOrExit(error = aMessage.Read(offset, tlv));
 
-        VerifyOrExit(pos + tlv.GetLength() <= endPos, error = kErrorParse);
+        VerifyOrExit(offset + sizeof(Tlv) + tlv.GetLength() <= endOffset, error = kErrorParse);
+
+        // The report must contain either:
+        // - One or more Report Sub-TLVs (in case of success), or
+        // - A single Status Sub-TLV (in case of failure).
 
         switch (tlv.GetType())
         {
-        case SubTlv::kStatus:
-            // There should be either: one Status TLV or some Report-Sub TLVs
+        case StatusSubTlv::kType:
             VerifyOrExit(!hasStatus && !hasReport, error = kErrorDrop);
-            VerifyOrExit(tlv.GetLength() == sizeof(status), error = kErrorParse);
-            SuccessOrExit(aMessage.Read(pos, status));
+            SuccessOrExit(error = Tlv::Read<StatusSubTlv>(aMessage, offset, status));
             hasStatus = true;
-            pos += sizeof(status);
             break;
 
-        case SubTlv::kReport:
-            // There shouldn't be any Report-Sub TLV when there's a Status TLV
+        case ReportSubTlv::kType:
             VerifyOrExit(!hasStatus, error = kErrorDrop);
-            VerifyOrExit(tlv.GetLength() > sizeof(typeIdFlags), error = kErrorParse);
-            SuccessOrExit(aMessage.Read(pos, typeIdFlags));
 
-            if (typeIdFlags.IsExtendedFlagSet())
+            // Read the report sub-TLV assuming minimum length
+            SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, &reportTlv, ReportSubTlv::kMinLength));
+            VerifyOrExit(reportTlv.IsValid(), error = kErrorParse);
+            hasReport = true;
+
+            if (reportTlv.GetMetricsTypeId().IsExtendedFlagSet())
             {
-                pos += tlv.GetLength(); // Skip the whole sub-TLV if `E` flag is set
-                continue;
+                // Skip the sub-TLV if `E` flag is set.
+                break;
             }
 
-            hasReport = true;
-            pos += sizeof(TypeIdFlags);
+            if (reportTlv.GetMetricsTypeId().IsLengthFlagSet())
+            {
+                // If Type ID indicates metric value has 4 bytes length, we
+                // read the full `reportTlv`.
+                SuccessOrExit(error = aMessage.Read(offset, reportTlv));
+            }
 
-            switch (typeIdFlags.GetRawValue())
+            switch (reportTlv.GetMetricsTypeId().GetRawValue())
             {
             case TypeIdFlags::kPdu:
-                values.GetMetrics().mPduCount = true;
-                SuccessOrExit(aMessage.Read(pos, values.mPduCountValue));
-                values.mPduCountValue = HostSwap32(values.mPduCountValue);
-                pos += sizeof(uint32_t);
+                values.mMetrics.mPduCount = true;
+                values.mPduCountValue     = reportTlv.GetMetricsValue32();
                 LogDebg(" - PDU Counter: %d (Count/Summation)", values.mPduCountValue);
                 break;
 
             case TypeIdFlags::kLqi:
-                values.GetMetrics().mLqi = true;
-                SuccessOrExit(aMessage.Read(pos, values.mLqiValue));
-                pos += sizeof(uint8_t);
+                values.mMetrics.mLqi = true;
+                values.mLqiValue     = reportTlv.GetMetricsValue8();
                 LogDebg(" - LQI: %d (Exponential Moving Average)", values.mLqiValue);
                 break;
 
             case TypeIdFlags::kLinkMargin:
-                values.GetMetrics().mLinkMargin = true;
-                SuccessOrExit(aMessage.Read(pos, rawValue));
+                values.mMetrics.mLinkMargin = true;
                 // Reverse operation for linear scale, map from [0, 255] to [0, 130]
-                values.mLinkMarginValue = rawValue * 130 / 255;
-                pos += sizeof(uint8_t);
+                values.mLinkMarginValue = reportTlv.GetMetricsValue8() * 130 / 255;
                 LogDebg(" - Margin: %d (dB) (Exponential Moving Average)", values.mLinkMarginValue);
                 break;
 
             case TypeIdFlags::kRssi:
-                values.GetMetrics().mRssi = true;
-                SuccessOrExit(aMessage.Read(pos, rawValue));
+                values.mMetrics.mRssi = true;
                 // Reverse operation for linear scale, map from [0, 255] to [-130, 0]
-                values.mRssiValue = rawValue * 130 / 255 - 130;
-                pos += sizeof(uint8_t);
+                values.mRssiValue = reportTlv.GetMetricsValue8() * 130 / 255 - 130;
                 LogDebg(" - RSSI: %d (dBm) (Exponential Moving Average)", values.mRssiValue);
                 break;
-
-            default:
-                break;
             }
+
             break;
         }
+
+        offset += sizeof(Tlv) + tlv.GetLength();
     }
 
-    if (hasStatus)
-    {
-        mReportCallback(&aAddress, nullptr, status, mReportCallbackContext);
-    }
-    else if (hasReport)
-    {
-        mReportCallback(&aAddress, &values, OT_LINK_METRICS_STATUS_SUCCESS, mReportCallbackContext);
-    }
+    VerifyOrExit(hasStatus || hasReport);
+
+    mReportCallback(&aAddress, hasStatus ? nullptr : &values, hasStatus ? static_cast<Status>(status) : kStatusSuccess,
+                    mReportCallbackContext);
 
 exit:
     LogDebg("HandleReport, error:%s", ErrorToString(error));
