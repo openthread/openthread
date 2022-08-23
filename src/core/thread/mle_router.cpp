@@ -763,8 +763,7 @@ Error MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     SuccessOrExit(error = message->AppendMleFrameCounterTlv());
 
     // always append a link margin, regardless of whether or not it was requested
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(),
-                                                         aMessageInfo.GetThreadLinkInfo()->GetRss());
+    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aMessageInfo.GetThreadLinkInfo()->GetRss());
 
     SuccessOrExit(error = message->AppendLinkMarginTlv(linkMargin));
 
@@ -1224,17 +1223,17 @@ exit:
 
 Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
 {
-    Error                 error    = kErrorNone;
-    const ThreadLinkInfo *linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
-    uint8_t linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->GetRss());
-    Mac::ExtAddress extAddr;
-    uint16_t        sourceAddress = Mac::kShortAddrInvalid;
-    LeaderData      leaderData;
-    RouteTlv        route;
-    uint32_t        partitionId;
-    Router *        router;
-    uint8_t         routerId;
-    uint8_t         routerCount;
+    Error                 error      = kErrorNone;
+    const ThreadLinkInfo *linkInfo   = aRxInfo.mMessageInfo.GetThreadLinkInfo();
+    uint8_t               linkMargin = Get<Mac::Mac>().ComputeLinkMargin(linkInfo->GetRss());
+    Mac::ExtAddress       extAddr;
+    uint16_t              sourceAddress = Mac::kShortAddrInvalid;
+    LeaderData            leaderData;
+    RouteTlv              route;
+    uint32_t              partitionId;
+    Router *              router;
+    uint8_t               routerId;
+    uint8_t               routerCount;
 
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
@@ -1780,8 +1779,7 @@ bool MleRouter::HasNeighborWithGoodLinkQuality(void) const
     bool    haveNeighbor = true;
     uint8_t linkMargin;
 
-    linkMargin =
-        LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), mParent.GetLinkInfo().GetLastRss());
+    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(mParent.GetLinkInfo().GetLastRss());
 
     if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
     {
@@ -1795,8 +1793,7 @@ bool MleRouter::HasNeighborWithGoodLinkQuality(void) const
             continue;
         }
 
-        linkMargin =
-            LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), router.GetLinkInfo().GetLastRss());
+        linkMargin = Get<Mac::Mac>().ComputeLinkMargin(router.GetLinkInfo().GetLastRss());
 
         if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
         {

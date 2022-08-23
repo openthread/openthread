@@ -3090,7 +3090,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     // Link Margin
     SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginFromTlv));
 
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->GetRss());
+    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(linkInfo->GetRss());
 
     if (linkMargin > linkMarginFromTlv)
     {

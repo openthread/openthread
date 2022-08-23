@@ -546,7 +546,17 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) { return mLinks.GetNoiseFloor(); }
+    int8_t GetNoiseFloor(void) const { return mLinks.GetNoiseFloor(); }
+
+    /**
+     * This method computes the link margin for a given a received signal strength value using noise floor.
+     *
+     * @param[in] aRss The received signal strength in dBm.
+     *
+     * @returns The link margin for @p aRss in dB based on noise floor.
+     *
+     */
+    uint8_t ComputeLinkMargin(int8_t aRss) const;
 
     /**
      * This method returns the current CCA (Clear Channel Assessment) failure rate.

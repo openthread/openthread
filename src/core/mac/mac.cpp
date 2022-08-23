@@ -2134,6 +2134,11 @@ void Mac::ResetRetrySuccessHistogram()
 }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
+uint8_t Mac::ComputeLinkMargin(int8_t aRss) const
+{
+    return LinkQualityInfo::ConvertRssToLinkMargin(GetNoiseFloor(), aRss);
+}
+
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

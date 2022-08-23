@@ -254,9 +254,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
         values.mPduCountValue = aRequestMessage.GetPsduCount();
         values.mLqiValue      = aRequestMessage.GetAverageLqi();
         // Linearly scale Link Margin from [0, 130] to [0, 255]
-        values.mLinkMarginValue =
-            LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), aRequestMessage.GetAverageRss()) *
-            255 / 130;
+        values.mLinkMarginValue = Get<Mac::Mac>().ComputeLinkMargin(aRequestMessage.GetAverageRss()) * 255 / 130;
         // Linearly scale rss from [-130, 0] to [0, 255]
         values.mRssiValue = (aRequestMessage.GetAverageRss() + 130) * 255 / 130;
 
@@ -280,9 +278,7 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
             values.mPduCountValue = seriesInfo->GetPduCount();
             values.mLqiValue      = seriesInfo->GetAverageLqi();
             // Linearly scale Link Margin from [0, 130] to [0, 255]
-            values.mLinkMarginValue =
-                LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), seriesInfo->GetAverageRss()) *
-                255 / 130;
+            values.mLinkMarginValue = Get<Mac::Mac>().ComputeLinkMargin(seriesInfo->GetAverageRss()) * 255 / 130;
             // Linearly scale RSSI from [-130, 0] to [0, 255]
             values.mRssiValue = (seriesInfo->GetAverageRss() + 130) * 255 / 130;
             SuccessOrExit(error = AppendReportSubTlvToMessage(aMessage, values));
