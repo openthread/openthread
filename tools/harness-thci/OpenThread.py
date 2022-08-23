@@ -2741,16 +2741,6 @@ class OpenThreadTHCI(object):
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
-    def setActiveDataset(self, listActiveDataset=()):
-        # Unused by the scripts
-        pass
-
-    @API
-    def setCommisionerMode(self):
-        # Unused by the scripts
-        pass
-
-    @API
     def setPSKc(self, strPSKc):
         cmd = 'dataset pskc %s' % strPSKc
         self.hasActiveDatasetToCommit = True
