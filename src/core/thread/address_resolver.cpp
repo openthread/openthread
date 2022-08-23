@@ -172,7 +172,7 @@ exit:
 
 void AddressResolver::Remove(uint8_t aRouterId)
 {
-    Remove(Mle::Mle::Rloc16FromRouterId(aRouterId), /* aMatchRouterId */ true);
+    Remove(Mle::Rloc16FromRouterId(aRouterId), /* aMatchRouterId */ true);
 }
 
 void AddressResolver::Remove(uint16_t aRloc16)
@@ -196,7 +196,7 @@ void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
 
         while ((entry = GetEntryAfter(prev, *list)) != nullptr)
         {
-            if ((aMatchRouterId && Mle::Mle::RouterIdMatch(entry->GetRloc16(), aRloc16)) ||
+            if ((aMatchRouterId && Mle::RouterIdMatch(entry->GetRloc16(), aRloc16)) ||
                 (!aMatchRouterId && (entry->GetRloc16() == aRloc16)))
             {
                 RemoveCacheEntry(*entry, *list, prev, aMatchRouterId ? kReasonRemovingRouterId : kReasonRemovingRloc16);

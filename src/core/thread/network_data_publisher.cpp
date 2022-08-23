@@ -262,7 +262,7 @@ bool Publisher::Entry::IsPreferred(uint16_t aRloc16) const
     // router over an entry from an end-device (e.g., a REED). If both
     // are the same type, then the one with smaller RLOC16 is preferred.
 
-    bool isOtherRouter = Mle::Mle::IsActiveRouter(aRloc16);
+    bool isOtherRouter = Mle::IsActiveRouter(aRloc16);
 
     return (Get<Mle::Mle>().IsRouterOrLeader() == isOtherRouter) ? (aRloc16 < Get<Mle::Mle>().GetRloc16())
                                                                  : isOtherRouter;

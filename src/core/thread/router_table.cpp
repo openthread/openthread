@@ -188,7 +188,7 @@ void RouterTable::UpdateAllocation(void)
             if (router.GetRouterId() != routerId)
             {
                 router.Clear();
-                router.SetRloc16(Mle::Mle::Rloc16FromRouterId(routerId));
+                router.SetRloc16(Mle::Rloc16FromRouterId(routerId));
                 router.SetNextHop(Mle::kInvalidRouterId);
             }
         }
@@ -269,7 +269,7 @@ exit:
 Error RouterTable::Release(uint8_t aRouterId)
 {
     Error    error  = kErrorNone;
-    uint16_t rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
+    uint16_t rloc16 = Mle::Rloc16FromRouterId(aRouterId);
     Router * router;
 
     OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
@@ -401,7 +401,7 @@ const Router *RouterTable::GetRouter(uint8_t aRouterId) const
     // Skip if invalid router id is passed.
     VerifyOrExit(aRouterId < Mle::kInvalidRouterId);
 
-    rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
+    rloc16 = Mle::Rloc16FromRouterId(aRouterId);
     router = FindRouter(Router::AddressMatcher(rloc16, Router::kInStateAny));
 
 exit:
@@ -425,8 +425,8 @@ Error RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)
     }
     else
     {
-        VerifyOrExit(Mle::Mle::IsActiveRouter(aRouterId), error = kErrorInvalidArgs);
-        routerId = Mle::Mle::RouterIdFromRloc16(aRouterId);
+        VerifyOrExit(Mle::IsActiveRouter(aRouterId), error = kErrorInvalidArgs);
+        routerId = Mle::RouterIdFromRloc16(aRouterId);
         VerifyOrExit(routerId <= Mle::kMaxRouterId, error = kErrorInvalidArgs);
     }
 

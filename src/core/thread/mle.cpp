@@ -4189,25 +4189,6 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
 
 #endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_WARN)
 
-const char *Mle::RoleToString(DeviceRole aRole)
-{
-    static const char *const kRoleStrings[] = {
-        "disabled", // (0) kRoleDisabled
-        "detached", // (1) kRoleDetached
-        "child",    // (2) kRoleChild
-        "router",   // (3) kRoleRouter
-        "leader",   // (4) kRoleLeader
-    };
-
-    static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
-    static_assert(kRoleDetached == 1, "kRoleDetached value is incorrect");
-    static_assert(kRoleChild == 2, "kRoleChild value is incorrect");
-    static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
-    static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
-
-    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
-}
-
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)

@@ -432,7 +432,7 @@ void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint
     // Path cost
     curCost = Get<Mle::MleRouter>().GetCost(aDest);
 
-    if (!Mle::MleRouter::IsActiveRouter(aDest))
+    if (!Mle::IsActiveRouter(aDest))
     {
         // Assume best link between remote child server and its parent.
         curCost += 1;
@@ -445,7 +445,7 @@ void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint
     {
         uint8_t cost;
 
-        if (!Mle::MleRouter::IsActiveRouter(aDest))
+        if (!Mle::IsActiveRouter(aDest))
         {
             // Cost calculated only from Link Quality In as the parent only maintains
             // one-direction link info.
@@ -453,7 +453,7 @@ void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint
         }
         else
         {
-            cost = Get<Mle::MleRouter>().GetLinkCost(Mle::Mle::RouterIdFromRloc16(aDest));
+            cost = Get<Mle::MleRouter>().GetLinkCost(Mle::RouterIdFromRloc16(aDest));
         }
 
         // Choose the minimum cost
@@ -533,14 +533,13 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
     }
     }
 
-    routerId = Mle::Mle::RouterIdFromRloc16(bestDest);
+    routerId = Mle::RouterIdFromRloc16(bestDest);
 
-    if (!(Mle::Mle::IsActiveRouter(bestDest) ||
-          Mle::Mle::Rloc16FromRouterId(routerId) == Get<Mle::MleRouter>().GetRloc16()))
+    if (!(Mle::IsActiveRouter(bestDest) || Mle::Rloc16FromRouterId(routerId) == Get<Mle::MleRouter>().GetRloc16()))
     {
         // if agent is neither active router nor child of this device
         // use the parent of the ED Agent as Dest
-        bestDest = Mle::Mle::Rloc16FromRouterId(routerId);
+        bestDest = Mle::Rloc16FromRouterId(routerId);
     }
 
     aMeshDest = bestDest;
@@ -562,7 +561,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
     else if (mle.IsRoutingLocator(ip6Header.GetDestination()))
     {
         uint16_t rloc16 = ip6Header.GetDestination().GetIid().GetLocator();
-        VerifyOrExit(mle.IsRouterIdValid(Mle::Mle::RouterIdFromRloc16(rloc16)), error = kErrorDrop);
+        VerifyOrExit(mle.IsRouterIdValid(Mle::RouterIdFromRloc16(rloc16)), error = kErrorDrop);
         mMeshDest = rloc16;
     }
     else if (mle.IsAnycastLocator(ip6Header.GetDestination()))
@@ -571,7 +570,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
 
         if (aloc16 == Mle::kAloc16Leader)
         {
-            mMeshDest = Mle::Mle::Rloc16FromRouterId(mle.GetLeaderId());
+            mMeshDest = Mle::Rloc16FromRouterId(mle.GetLeaderId());
         }
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {
@@ -809,7 +808,7 @@ void MeshForwarder::UpdateRoutes(const FrameData &aFrameData, const Mac::Address
     neighbor = Get<NeighborTable>().FindNeighbor(ip6Headers.GetSourceAddress());
     VerifyOrExit(neighbor != nullptr && !neighbor->IsFullThreadDevice());
 
-    if (!Mle::Mle::RouterIdMatch(aMeshAddrs.mSource.GetShort(), Get<Mac::Mac>().GetShortAddress()))
+    if (!Mle::RouterIdMatch(aMeshAddrs.mSource.GetShort(), Get<Mac::Mac>().GetShortAddress()))
     {
         Get<Mle::MleRouter>().RemoveNeighbor(*neighbor);
     }
