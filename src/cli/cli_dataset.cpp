@@ -129,7 +129,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
  * Use `tlvs` for hex-encoded TLVs.
  * @par
  * OT CLI checks for `active`, `pending`, or `tlvs` and returns the corresponding values. Otherwise,
- * OT CLI creates a new, random network and returns a new dataset. Can be used with OTBR.
+ * OT CLI creates a new, random network and returns a new dataset.
  * @csa{dataset commit active}
  * @csa{dataset active}
  */
@@ -184,7 +184,7 @@ exit:
  * @endcode
  * @code
  * dataset active -x
- * 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+ * 0e08000000000001000000030000103506000...3023d82c841eff0e68db86f35740c030000ff
  * Done
  * @endcode
  * @cparam dataset active [-x]
@@ -422,7 +422,7 @@ template <> otError Dataset::Process<Cmd("commit")>(Arg aArgs[])
  * @cparam dataset delay [@ca{delay}]
  * Use the optional `delay` argument to set the delay timer value.
  * @par
- * Gets or sets #otOperationalDataset::mDelay. Can be used with OTBR.
+ * Gets or sets #otOperationalDataset::mDelay.
  * @sa otDatasetSetDelayTimerMinimal
  */
 template <> otError Dataset::Process<Cmd("delay")>(Arg aArgs[])
@@ -1194,11 +1194,11 @@ exit:
 /**
  * @cli dataset set (active,pending)
  * @code
- * dataset set active 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+ * dataset set active 0e08000000000001000000030000103506000...3023d82c841eff0e68db86f35740c030000ff
  * Done
  * @endcode
  * @code
- * dataset set pending 0e080000000000010000000300001035060004001fffe002084eb74ab03c56e6d00708fdc7fe165c83a67805108e2104f183e698da87e96efc1e45aa51030f4f70656e5468726561642d383631310102861104108d6273023d82c841eff0e68db86f35740c030000ff
+ * dataset set pending 0e08000000000001000000030000103506000...3023d82c841eff0e68db86f35740c030000ff
  * Done
  * @endcode
  * @cparam dataset set {active|pending} @ca{tlvs}
