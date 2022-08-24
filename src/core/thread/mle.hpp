@@ -1420,6 +1420,12 @@ protected:
     void SetAttachState(AttachState aState);
 
     /**
+     * This method clears the parent candidate.
+     *
+     */
+    void ClearParentCandidate(void) { mParentCandidate.Clear(); }
+
+    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshDest   The RLOC16 of the destination.
@@ -1676,7 +1682,6 @@ protected:
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     DeviceRole    mRole;                     ///< Current Thread role.
     Parent        mParent;                   ///< Parent information.
-    Parent        mParentCandidate;          ///< Parent candidate information.
     NeighborTable mNeighborTable;            ///< The neighbor table.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The attach state.
@@ -1793,6 +1798,25 @@ private:
         uint32_t mKeySource;
         uint8_t  mKeyIndex;
     } OT_TOOL_PACKED_END;
+
+    class ParentCandidate : public Parent
+    {
+    public:
+        void Init(Instance &aInstance) { Parent::Init(aInstance); }
+        void Clear(void);
+        void CopyTo(Parent &aParent) const;
+
+        Challenge  mChallenge;
+        int8_t     mPriority;
+        uint8_t    mLinkQuality3;
+        uint8_t    mLinkQuality2;
+        uint8_t    mLinkQuality1;
+        uint16_t   mSedBufferSize;
+        uint8_t    mSedDatagramCount;
+        uint8_t    mLinkMargin;
+        LeaderData mLeaderData;
+        bool       mIsSingleton;
+    };
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     class ServiceAloc : public Ip6::Netif::UnicastAddress
@@ -1944,13 +1968,8 @@ private:
 
     Challenge mParentRequestChallenge;
 
-    AttachMode mAttachMode;
-    int8_t     mParentPriority;
-    uint8_t    mParentLinkQuality3;
-    uint8_t    mParentLinkQuality2;
-    uint8_t    mParentLinkQuality1;
-    uint16_t   mParentSedBufferSize;
-    uint8_t    mParentSedDatagramCount;
+    AttachMode      mAttachMode;
+    ParentCandidate mParentCandidate;
 
     uint8_t                 mChildUpdateAttempts;
     ChildUpdateRequestState mChildUpdateRequestState;
@@ -1959,13 +1978,8 @@ private:
 
     AddressRegistrationMode mAddressRegistrationMode;
 
-    bool       mHasRestored;
-    uint8_t    mParentLinkMargin;
-    bool       mParentIsSingleton;
-    bool       mReceivedResponseFromParent;
-    LeaderData mParentLeaderData;
-
-    Challenge mParentCandidateChallenge;
+    bool mHasRestored;
+    bool mReceivedResponseFromParent;
 
     Ip6::Udp::Socket mSocket;
     uint32_t         mTimeout;

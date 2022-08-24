@@ -3523,9 +3523,9 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             IgnoreError(BecomeDetached());
         }
     }
-    else if (&aNeighbor == &mParentCandidate)
+    else if (&aNeighbor == &GetParentCandidate())
     {
-        mParentCandidate.Clear();
+        ClearParentCandidate();
     }
     else if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
