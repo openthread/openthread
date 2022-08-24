@@ -193,6 +193,9 @@ def main():
     for i in range(args.sniffer_num):
         sniffer_procs.append(start_sniffer(addr, i + SNIFFER_SERVER_PORT_BASE))
 
+    # OTBR firewall scripts create rules inside the Docker container
+    # Run modprobe to load the kernel modules for iptables
+    subprocess.run(['sudo', 'modprobe', 'ip6table_filter'])
     # Start the BRs
     otbr_dockers = []
     for nodeid in range(args.ot_num + 1, args.ot_num + args.otbr_num + 1):

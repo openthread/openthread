@@ -31,13 +31,8 @@
 
 set -euxo pipefail
 
-if [[ $OT_PATH == "" ]]; then
-    OT_PATH="/home/pi/repo/openthread"
-fi
-
-if [[ $OTBR_DOCKER_IMAGE == "" ]]; then
-    OTBR_DOCKER_IMAGE="otbr-reference-device-1.2"
-fi
+OT_PATH=${OT_PATH:-"/home/pi/repo/openthread"}
+OTBR_DOCKER_IMAGE=${OTBR_DOCKER_IMAGE:-"otbr-reference-device-1.2"}
 
 DOCKER_BUILD_OTBR_OPTIONS=(
     "-DOTBR_DUA_ROUTING=ON"
@@ -73,7 +68,7 @@ ETC_PATH="${OT_PATH}/tools/harness-simulation/posix/etc"
         --build-arg WEB_GUI=0 \
         --build-arg REST_API=0 \
         --build-arg EXTERNAL_COMMISSIONER=1 \
-        --build-arg OTBR_OPTIONS="'${DOCKER_BUILD_OTBR_OPTIONS[*]}'"
+        --build-arg OTBR_OPTIONS="${DOCKER_BUILD_OTBR_OPTIONS[*]}"
 )
 
 rm -rf ot-br-posix
