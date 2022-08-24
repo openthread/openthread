@@ -3088,7 +3088,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         linkMargin = linkMarginFromTlv;
     }
 
-    linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
+    linkQuality = LinkQualityForLinkMargin(linkMargin);
 
     // Connectivity
     SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, connectivity));
@@ -3228,7 +3228,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.GetLinkInfo().Clear();
     mParentCandidate.GetLinkInfo().AddRss(linkInfo->GetRss());
     mParentCandidate.ResetLinkFailures();
-    mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginFromTlv));
+    mParentCandidate.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
     mParentCandidate.SetLeaderCost(connectivity.GetLeaderCost());

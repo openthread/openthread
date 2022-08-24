@@ -2131,7 +2131,7 @@ void Mac::ResetRetrySuccessHistogram()
 
 uint8_t Mac::ComputeLinkMargin(int8_t aRss) const
 {
-    return LinkQualityInfo::ConvertRssToLinkMargin(GetNoiseFloor(), aRss);
+    return ot::ComputeLinkMargin(GetNoiseFloor(), aRss);
 }
 
 // LCOV_EXCL_START

@@ -275,14 +275,13 @@ bool otLinkIsRadioFilterEnabled(otInstance *aInstance)
 
 uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)
 {
-    return LinkQualityInfo::ConvertLinkMarginToLinkQuality(
-        AsCoreType(aInstance).Get<Mac::Mac>().ComputeLinkMargin(aRss));
+    return LinkQualityForLinkMargin(AsCoreType(aInstance).Get<Mac::Mac>().ComputeLinkMargin(aRss));
 }
 
 int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality)
 {
-    return LinkQualityInfo::ConvertLinkQualityToRss(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
-                                                    static_cast<LinkQuality>(aLinkQuality));
+    return GetTypicalRssForLinkQuality(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
+                                       static_cast<LinkQuality>(aLinkQuality));
 }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
