@@ -421,7 +421,8 @@ private:
     };
 
     void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
-    void HandleDiscoveredPrefixTableTimer(void) { mDiscoveredPrefixTable.HandleTimer(); }
+    void HandleDiscoveredPrefixTableEntryTimer(void) { mDiscoveredPrefixTable.HandleEntryTimer(); }
+    void HandleDiscoveredPrefixTableRouterTimer(void) { mDiscoveredPrefixTable.HandleRouterTimer(); }
 
     class DiscoveredPrefixTable : public InstanceLocator
     {
@@ -448,6 +449,8 @@ private:
 
         void ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
                                         const Ip6::Address &                aSrcAddress);
+        void ProcessNeighborAdvertMessage(const Ip6::Nd::NeighborAdvertMessage &aNaMessage,
+                                          const Ip6::Address &                  aSrcAddress);
 
         void SetAllowDefaultRouteInNetData(bool aAllow);
 
@@ -468,7 +471,8 @@ private:
         void  InitIterator(PrefixTableIterator &aIterator) const;
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
 
-        void HandleTimer(void);
+        void HandleEntryTimer(void);
+        void HandleRouterTimer(void);
 
     private:
         static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
@@ -550,6 +554,17 @@ private:
 
         struct Router
         {
+            // The timeout (in msec) for router staying in active state
+            // before starting the Neighbor Solicitation (NS) probes.
+            static constexpr uint32_t kActiveTimout = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
+
+            static constexpr uint8_t  kMaxNsProbes          = 5;    // Max number of NS probe attempts.
+            static constexpr uint32_t kNsProbeRetryInterval = 1000; // In msec. Time between NS probe attempts.
+            static constexpr uint32_t kNsProbeTimout        = 2000; // In msec. Max Wait time after last NS probe.
+            static constexpr uint32_t kJitter               = 2000; // In msec. Jitter to randomize probe starts.
+
+            static_assert(kMaxNsProbes < 255, "kMaxNsProbes MUST not be 255");
+
             enum EmptyChecker : uint8_t
             {
                 kContainsNoEntries
@@ -560,6 +575,8 @@ private:
 
             Ip6::Address      mAddress;
             LinkedList<Entry> mEntries;
+            TimeMilli         mTimeout;
+            uint8_t           mNsProbeCount;
         };
 
         class Iterator : public PrefixTableIterator
@@ -578,6 +595,7 @@ private:
         void         ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
         bool         ContainsPrefix(const Entry::Matcher &aMatcher) const;
         void         RemovePrefix(const Entry::Matcher &aMatcher);
+        void         RemoveOrDeprecateEntriesFromInactiveRouters(void);
         void         RemoveRoutersWithNoEntries(void);
         Entry *      AllocateEntry(void) { return mEntryPool.Allocate(); }
         void         FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
@@ -586,13 +604,17 @@ private:
         const Entry *FindFavoredEntryToPublish(const Ip6::Prefix &aPrefix) const;
         void         RemoveExpiredEntries(void);
         void         SignalTableChanged(void);
+        void         UpdateRouterOnRx(Router &aRouter);
+        void         SendNeighborSolicitToRouter(const Router &aRouter);
 
-        using SignalTask = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
-        using TableTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableTimer>;
+        using SignalTask  = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
+        using EntryTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableEntryTimer>;
+        using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableRouterTimer>;
 
         Array<Router, kMaxRouters> mRouters;
         Pool<Entry, kMaxEntries>   mEntryPool;
-        TableTimer                 mTimer;
+        EntryTimer                 mEntryTimer;
+        RouterTimer                mRouterTimer;
         SignalTask                 mSignalTask;
         bool                       mAllowDefaultRouteInNetData;
     };
@@ -827,8 +849,9 @@ private:
 
     void HandleDiscoveredPrefixStaleTimer(void);
 
-    void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
+    void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
+    void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
     bool ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
     void UpdateDiscoveredPrefixTableOnNetDataChange(void);

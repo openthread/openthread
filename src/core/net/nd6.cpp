@@ -269,12 +269,36 @@ exit:
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// RouterAdvMessage
+// RouterSolicitMessage
 
 RouterSolicitMessage::RouterSolicitMessage(void)
 {
     mHeader.Clear();
     mHeader.SetType(Icmp::Header::kTypeRouterSolicit);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// NeighborSolicitMessage
+
+NeighborSolicitMessage::NeighborSolicitMessage(void)
+{
+    OT_UNUSED_VARIABLE(mChecksum);
+    OT_UNUSED_VARIABLE(mReserved);
+
+    Clear();
+    mType = Icmp::Header::kTypeNeighborSolicit;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// NeighborAdvertMessage
+
+NeighborAdvertMessage::NeighborAdvertMessage(void)
+{
+    OT_UNUSED_VARIABLE(mChecksum);
+    OT_UNUSED_VARIABLE(mReserved);
+
+    Clear();
+    mType = Icmp::Header::kTypeNeighborAdvert;
 }
 
 } // namespace Nd

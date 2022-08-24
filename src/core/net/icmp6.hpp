@@ -92,6 +92,8 @@ public:
             kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
             kTypeRouterSolicit    = OT_ICMP6_TYPE_ROUTER_SOLICIT,    ///< Router Solicitation
             kTypeRouterAdvert     = OT_ICMP6_TYPE_ROUTER_ADVERT,     ///< Router Advertisement
+            kTypeNeighborSolicit  = OT_ICMP6_TYPE_NEIGHBOR_SOLICIT,  ///< Neighbor Solicitation
+            kTypeNeighborAdvert   = OT_ICMP6_TYPE_NEIGHBOR_ADVERT,   ///< Neighbor Advertisement
         };
 
         /**
