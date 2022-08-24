@@ -1288,7 +1288,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, HandleTimer)
-    , mSignalTask(aInstance, HandleSignalTask)
+    , mSignalTask(aInstance)
     , mAllowDefaultRouteInNetData(false)
 {
 }
@@ -1821,11 +1821,6 @@ void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
 void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void)
 {
     mSignalTask.Post();
-}
-
-void RoutingManager::DiscoveredPrefixTable::HandleSignalTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<RoutingManager>().HandleDiscoveredPrefixTableChanged();
 }
 
 void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const

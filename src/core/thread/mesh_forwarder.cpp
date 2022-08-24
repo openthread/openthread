@@ -105,7 +105,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mDelayNextTx(false)
     , mTxDelayTimer(aInstance, HandleTxDelayTimer)
 #endif
-    , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask)
+    , mScheduleTransmissionTask(aInstance)
 #if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
 #endif
@@ -520,11 +520,6 @@ exit:
 }
 
 #endif // (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-
-void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<MeshForwarder>().ScheduleTransmissionTask();
-}
 
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
