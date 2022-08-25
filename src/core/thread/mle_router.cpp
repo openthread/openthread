@@ -2724,7 +2724,8 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     Child *    child;
     uint16_t   addressRegistrationOffset = 0;
 
-    if ((aRxInfo.mNeighbor == nullptr) || IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()))
+    if ((aRxInfo.mNeighbor == nullptr) || IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()) ||
+        !Get<ChildTable>().Contains(*aRxInfo.mNeighbor))
     {
         Log(kMessageReceive, kTypeChildUpdateResponseOfUnknownChild, aRxInfo.mMessageInfo.GetPeerAddr());
         ExitNow(error = kErrorNotFound);
@@ -3529,7 +3530,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
-        OT_ASSERT(mChildTable.GetChildIndex(static_cast<Child &>(aNeighbor)) < kMaxChildren);
+        OT_ASSERT(mChildTable.Contains(aNeighbor));
 
         if (aNeighbor.IsStateValidOrRestoring())
         {

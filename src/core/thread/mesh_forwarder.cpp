@@ -1834,8 +1834,8 @@ uint16_t MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePres
         version = Mac::Frame::kFcfFrameVersion2015;
     }
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (aNeighbor != nullptr && !Mle::IsActiveRouter(aNeighbor->GetRloc16()) &&
-             Get<Mle::MleRouter>().IsRouterOrLeader() && static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
+    else if ((aNeighbor != nullptr) && Get<ChildTable>().Contains(*aNeighbor) &&
+             static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
     {
         version = Mac::Frame::kFcfFrameVersion2015;
     }

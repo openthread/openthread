@@ -50,7 +50,6 @@ Error MeshForwarder::SendMessage(Message &aMessage)
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
     Error           error = kErrorNone;
-    Neighbor *      neighbor;
 
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
@@ -104,17 +103,20 @@ Error MeshForwarder::SendMessage(Message &aMessage)
                 }
             }
         }
-        else if ((neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination())) != nullptr &&
-                 !neighbor->IsRxOnWhenIdle() && !aMessage.IsDirectTransmission())
+        else // Destination is unicast
         {
-            // destined for a sleepy child
-            Child &child = *static_cast<Child *>(neighbor);
-            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
-        }
-        else
-        {
-            // schedule direct transmission
-            aMessage.SetDirectTransmission();
+            Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination());
+
+            if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !aMessage.IsDirectTransmission() &&
+                Get<ChildTable>().Contains(*neighbor))
+            {
+                // Destined for a sleepy child
+                mIndirectSender.AddMessageForSleepyChild(aMessage, *static_cast<Child *>(neighbor));
+            }
+            else
+            {
+                aMessage.SetDirectTransmission();
+            }
         }
 
         break;
@@ -283,7 +285,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
 
                 IgnoreError(message.Read(0, ip6header));
 
-                if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(ip6header.GetDestination())))
+                if (&aChild == Get<NeighborTable>().FindNeighbor(ip6header.GetDestination()))
                 {
                     message.ClearDirectTransmission();
                 }
@@ -297,7 +299,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
 
                 IgnoreError(meshHeader.ParseFrom(message));
 
-                if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination())))
+                if (&aChild == Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination()))
                 {
                     message.ClearDirectTransmission();
                 }
