@@ -94,37 +94,28 @@ Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &    
                                                         const SeriesFlags::Info &aSeriesFlags,
                                                         const Metrics *          aMetrics)
 {
-    Error        error = kErrorNone;
-    uint8_t      subTlvs[sizeof(Tlv) + sizeof(uint8_t) * 2 + sizeof(TypeIdFlags) * kMaxTypeIdFlags];
-    Tlv *        fwdProbingSubTlv  = reinterpret_cast<Tlv *>(subTlvs);
-    SeriesFlags *seriesFlags       = reinterpret_cast<SeriesFlags *>(subTlvs + sizeof(Tlv) + sizeof(aSeriesId));
-    uint8_t      typeIdFlagsOffset = sizeof(Tlv) + sizeof(uint8_t) * 2;
-    uint8_t      typeIdFlagsCount  = 0;
-    Neighbor *   neighbor          = GetNeighborFromLinkLocalAddr(aDestination);
+    Error               error       = kErrorNone;
+    Neighbor *          neighbor    = GetNeighborFromLinkLocalAddr(aDestination);
+    uint8_t             typeIdCount = 0;
+    FwdProbingRegSubTlv fwdProbingSubTlv;
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
     VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
 
-    // Directly transform `aMetrics` into TypeIdFlags and put them into `subTlvs`
-    if (aMetrics != nullptr)
-    {
-        typeIdFlagsCount =
-            TypeIdFlagsFromMetrics(reinterpret_cast<TypeIdFlags *>(subTlvs + typeIdFlagsOffset), *aMetrics);
-    }
-
     VerifyOrExit(aSeriesId > kQueryIdSingleProbe, error = kErrorInvalidArgs);
 
-    fwdProbingSubTlv->SetType(SubTlv::kFwdProbingReg);
+    fwdProbingSubTlv.Init();
+    fwdProbingSubTlv.SetSeriesId(aSeriesId);
+    fwdProbingSubTlv.GetSeriesFlags().SetFrom(aSeriesFlags);
 
-    // SeriesId + SeriesFlags + typeIdFlagsCount * TypeIdFlags
-    fwdProbingSubTlv->SetLength(sizeof(uint8_t) * 2 + sizeof(TypeIdFlags) * typeIdFlagsCount);
+    if (aMetrics != nullptr)
+    {
+        typeIdCount = TypeIdFlagsFromMetrics(fwdProbingSubTlv.GetTypeIds(), *aMetrics);
+    }
 
-    memcpy(subTlvs + sizeof(Tlv), &aSeriesId, sizeof(aSeriesId));
+    fwdProbingSubTlv.SetLength(sizeof(aSeriesId) + sizeof(SeriesFlags) + typeIdCount * sizeof(TypeIdFlags));
 
-    seriesFlags->SetFrom(aSeriesFlags);
-
-    error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, subTlvs,
-                                                                   static_cast<uint8_t>(fwdProbingSubTlv->GetSize()));
+    error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, fwdProbingSubTlv);
 
 exit:
     LogDebg("SendMgmtRequestForwardTrackingSeries, error:%s, Series ID:%u", ErrorToString(error), aSeriesId);
@@ -135,10 +126,10 @@ Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination
                                                 const EnhAckFlags   aEnhAckFlags,
                                                 const Metrics *     aMetrics)
 {
-    Error              error = kErrorNone;
+    Error              error       = kErrorNone;
+    Neighbor *         neighbor    = GetNeighborFromLinkLocalAddr(aDestination);
+    uint8_t            typeIdCount = 0;
     EnhAckConfigSubTlv enhAckConfigSubTlv;
-    Mac::Address       macAddress;
-    Neighbor *         neighbor = GetNeighborFromLinkLocalAddr(aDestination);
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
     VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
@@ -148,16 +139,17 @@ Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination
         VerifyOrExit(aMetrics == nullptr, error = kErrorInvalidArgs);
     }
 
+    enhAckConfigSubTlv.Init();
     enhAckConfigSubTlv.SetEnhAckFlags(aEnhAckFlags);
 
     if (aMetrics != nullptr)
     {
-        enhAckConfigSubTlv.SetTypeIdFlags(*aMetrics);
+        typeIdCount = TypeIdFlagsFromMetrics(enhAckConfigSubTlv.GetTypeIds(), *aMetrics);
     }
 
-    error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(
-        aDestination, reinterpret_cast<const uint8_t *>(&enhAckConfigSubTlv),
-        static_cast<uint8_t>(enhAckConfigSubTlv.GetSize()));
+    enhAckConfigSubTlv.SetLength(EnhAckConfigSubTlv::kMinLength + typeIdCount * sizeof(TypeIdFlags));
+
+    error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, enhAckConfigSubTlv);
 
     if (aMetrics != nullptr)
     {
