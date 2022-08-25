@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for Border Router services.
+ *   This file includes compile-time configurations for NAT64.
  *
  */
 
