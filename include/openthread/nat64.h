@@ -144,7 +144,9 @@ typedef struct otNat64ErrorCounters
 } otNat64ErrorCounters;
 
 /**
- * This function gets the counters of the NAT64 translator, the counter is counted since the instance initialized.
+ * Gets the counters of the NAT64 translator, the counter is counted since the instance initialized.
+ *
+ * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]      aInstance      A pointer to an OpenThread instance.
  * @param[out]     aCounters      A pointer to an `otNat64Counters` where the counters of NAT64 translator will be
@@ -154,8 +156,10 @@ typedef struct otNat64ErrorCounters
 void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounters);
 
 /**
- * This function gets the counters of errors during processing packets by the NAT64 translator, the counter is counted
+ * Gets the counters of errors during processing packets by the NAT64 translator, the counter is counted
  * since the instance initialized.
+ *
+ * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]      aInstance      A pointer to an OpenThread instance.
  * @param[out]     aCounters      A pointer to an `otNat64Counters` where the counters of NAT64 translator will be
@@ -185,7 +189,9 @@ typedef struct otNat64AddressMapping
 typedef uint16_t otNat64AddressMappingIterator;  ///< Used to iterate through address mapping in NAT64 information.
 
 /**
- * This function gets the next AddressMapping info (using an iterator).
+ * Gets the next AddressMapping info (using an iterator).
+ *
+ * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]      aInstance      A pointer to an OpenThread instance.
  * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
@@ -290,7 +296,9 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
 
 /**
- * Gets the configured CIDR in the NAT64 translator.
+ * Gets the configured IPv4 CIDR in the NAT64 translator.
+ *
+ * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[out] aCidr             A pointer to an otIp4Cidr. Where the configured CIDR will be filled.
@@ -299,7 +307,9 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
 otError otNat64GetConfiguredCidr(otInstance *aInstance, otIp4Cidr *aCidr);
 
 /**
- * Gets the configured CIDR in the NAT64 translator.
+ * Gets the configured IPv6 prefix in the NAT64 translator.
+*
+ * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[out] aPrefix           A pointer to an otIp6Prefix. Where the configured NAT64 prefix will be filled.
