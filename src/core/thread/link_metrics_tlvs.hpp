@@ -81,6 +81,12 @@ public:
 typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
 
 /**
+ * This type defines a Link Metrics Status Sub-Tlv.
+ *
+ */
+typedef UintTlvInfo<SubTlv::kStatus, uint8_t> StatusSubTlv;
+
+/**
  * This class implements Link Metrics Report Sub-TLV generation and parsing.
  *
  */
@@ -88,6 +94,8 @@ OT_TOOL_PACKED_BEGIN
 class ReportSubTlv : public Tlv, public TlvInfo<SubTlv::kReport>
 {
 public:
+    static constexpr uint8_t kMinLength = sizeof(TypeIdFlags) + sizeof(uint8_t); ///< Minimum expected TLV length.
+
     /**
      * This method initializes the TLV.
      *
@@ -105,7 +113,7 @@ public:
      * @retval false  The TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(TypeIdFlags) + sizeof(uint8_t); }
+    bool IsValid(void) const { return GetLength() >= kMinLength; }
 
     /**
      * This method returns the Link Metrics Type ID.

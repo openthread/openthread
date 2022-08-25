@@ -42,7 +42,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
@@ -684,7 +684,7 @@ int8_t SubMac::GetRssi(void) const
     return rssi;
 }
 
-int8_t SubMac::GetNoiseFloor(void)
+int8_t SubMac::GetNoiseFloor(void) const
 {
     return Get<Radio>().GetReceiveSensitivity();
 }

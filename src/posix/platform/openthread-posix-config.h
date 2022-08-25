@@ -215,6 +215,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+ *
+ * Define as 1 to enable discovering NAT64 posix on adjacent infrastructure link.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
  *
  * Define as 1 to enable firewall.

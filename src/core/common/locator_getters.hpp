@@ -39,6 +39,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator.hpp"
+#include "common/tasklet.hpp"
 
 namespace ot {
 
@@ -47,6 +48,12 @@ template <typename Type>
 inline Type &GetProvider<InstanceGetProvider>::Get(void) const
 {
     return static_cast<const InstanceGetProvider *>(this)->GetInstance().template Get<Type>();
+}
+
+template <typename Owner, void (Owner::*HandleTaskletPtr)(void)>
+void TaskletIn<Owner, HandleTaskletPtr>::HandleTasklet(Tasklet &aTasklet)
+{
+    (aTasklet.Get<Owner>().*HandleTaskletPtr)();
 }
 
 } // namespace ot

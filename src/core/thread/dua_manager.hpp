@@ -195,8 +195,6 @@ private:
 
     void HandleTimeTick(void);
 
-    static void HandleRegistrationTask(Tasklet &aTasklet);
-
     void UpdateTimeTickerRegistration(void);
 
     static void HandleDuaResponse(void *               aContext,
@@ -214,10 +212,12 @@ private:
     void UpdateReregistrationDelay(void);
     void UpdateCheckDelay(uint8_t aDelay);
 
-    Tasklet        mRegistrationTask;
-    Coap::Resource mDuaNotification;
-    Ip6::Address   mRegisteringDua;
-    bool           mIsDuaPending : 1;
+    using RegistrationTask = TaskletIn<DuaManager, &DuaManager::PerformNextRegistration>;
+
+    RegistrationTask mRegistrationTask;
+    Coap::Resource   mDuaNotification;
+    Ip6::Address     mRegisteringDua;
+    bool             mIsDuaPending : 1;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     enum DuaState : uint8_t

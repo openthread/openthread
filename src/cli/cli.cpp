@@ -1715,6 +1715,20 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
     {
         uint16_t maxChildren;
 
+        /**
+         * @cli child table
+         * @code
+         * child table
+         * | ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt| Extended MAC     |
+         * +-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+
+         * |   1 | 0xc801 |        240 |         24 |     3 |  131 |1|0|0|  3| 0 |     0 | 4ecede68435358ac |
+         * |   2 | 0xc802 |        240 |          2 |     3 |  131 |0|0|0|  3| 1 |     0 | a672a601d2ce37d8 |
+         * Done
+         * @endcode
+         * @par
+         * Prints a table of the attached children.
+         * @sa otThreadGetChildInfoByIndex
+         */
         if (isTable)
         {
             static const char *const kChildTableTitles[] = {
@@ -1757,6 +1771,17 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
                 OutputExtAddress(childInfo.mExtAddress);
                 OutputLine(" |");
             }
+            /**
+             * @cli child list
+             * @code
+             * child list
+             * 1 2 3 6 7 8
+             * Done
+             * @endcode
+             * @par
+             * Returns a list of attached Child IDs.
+             * @sa otThreadGetChildInfoByIndex
+             */
             else
             {
                 OutputFormat("%d ", childInfo.mChildId);
@@ -1770,6 +1795,25 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
     SuccessOrExit(error = aArgs[0].ParseAsUint16(childId));
     SuccessOrExit(error = otThreadGetChildInfoById(GetInstancePtr(), childId, &childInfo));
 
+    /**
+     * @cli child (id)
+     * @code
+     * child 1
+     * Child ID: 1
+     * Rloc: 9c01
+     * Ext Addr: e2b3540590b0fd87
+     * Mode: rn
+     * Net Data: 184
+     * Timeout: 100
+     * Age: 0
+     * Link Quality In: 3
+     * RSSI: -20
+     * Done
+     * @endcode
+     * @cparam child @ca{child-id}
+     * @par api_copy
+     * #otThreadGetChildInfoById
+     */
     OutputLine("Child ID: %d", childInfo.mChildId);
     OutputLine("Rloc: %04x", childInfo.mRloc16);
     OutputFormat("Ext Addr: ");
@@ -1792,6 +1836,17 @@ template <> otError Interpreter::Process<Cmd("childip")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli childip
+     * @code
+     * childip
+     * 3401: fdde:ad00:beef:0:3037:3e03:8c5f:bc0c
+     * Done
+     * @endcode
+     * @par
+     * Gets a list of IP addresses stored for MTD children.
+     * @sa otThreadGetChildNextIp6Address
+     */
     if (aArgs[0].IsEmpty())
     {
         uint16_t maxChildren = otThreadGetMaxAllowedChildren(GetInstancePtr());
@@ -1818,11 +1873,31 @@ template <> otError Interpreter::Process<Cmd("childip")>(Arg aArgs[])
             }
         }
     }
+    /**
+     * @cli childip max
+     * @code
+     * childip max
+     * 4
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetMaxChildIpAddresses
+     */
     else if (aArgs[0] == "max")
     {
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         error = ProcessGet(aArgs + 1, otThreadGetMaxChildIpAddresses);
 #else
+        /**
+         * @cli childip max (set)
+         * @code
+         * childip max 2
+         * Done
+         * @endcode
+         * @cparam childip max @ca{count}
+         * @par api_copy
+         * #otThreadSetMaxChildIpAddresses
+         */
         error = ProcessGetSet(aArgs + 1, otThreadGetMaxChildIpAddresses, otThreadSetMaxChildIpAddresses);
 #endif
     }
@@ -1834,8 +1909,28 @@ template <> otError Interpreter::Process<Cmd("childip")>(Arg aArgs[])
     return error;
 }
 
+/**
+ * @cli childmax
+ * @code
+ * childmax
+ * 5
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetMaxAllowedChildren
+ */
 template <> otError Interpreter::Process<Cmd("childmax")>(Arg aArgs[])
 {
+    /**
+     * @cli childmax (set)
+     * @code
+     * childmax 2
+     * Done
+     * @endcode
+     * @cparam childmax @ca{count}
+     * @par api_copy
+     * #otThreadSetMaxAllowedChildren
+     */
     return ProcessGetSet(aArgs, otThreadGetMaxAllowedChildren, otThreadSetMaxAllowedChildren);
 }
 #endif // OPENTHREAD_FTD
@@ -1845,13 +1940,56 @@ template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
+    /**
+     * @cli childsupervision checktimeout
+     * @code
+     * childsupervision checktimeout
+     * 30
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otChildSupervisionGetCheckTimeout
+     */
     if (aArgs[0] == "checktimeout")
     {
+        /** @cli childsupervision checktimeout (set)
+         * @code
+         * childsupervision checktimeout 30
+         * Done
+         * @endcode
+         * @cparam childsupervision checktimeout @ca{timeout-seconds}
+         * @par api_copy
+         * #otChildSupervisionSetCheckTimeout
+         */
         error = ProcessGetSet(aArgs + 1, otChildSupervisionGetCheckTimeout, otChildSupervisionSetCheckTimeout);
     }
 #if OPENTHREAD_FTD
+    /**
+     * @cli childsupervision interval
+     * @code
+     * childsupervision interval
+     * 30
+     * Done
+     * @endcode
+     * @par
+     * This command can only be used with FTD devices.
+     * @par api_copy
+     * #otChildSupervisionGetInterval
+     */
     else if (aArgs[0] == "interval")
     {
+        /**
+         * @cli childsupervision interval (set)
+         * @code
+         * childsupervision interval 30
+         * Done
+         * @endcode
+         * @cparam childsupervision interval @ca{interval-seconds}
+         * @par
+         * This command can only be used with FTD devices.
+         * @par api_copy
+         * #otChildSupervisionSetInterval
+         */
         error = ProcessGetSet(aArgs + 1, otChildSupervisionGetInterval, otChildSupervisionSetInterval);
     }
 #endif
@@ -1860,8 +1998,26 @@ template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
 }
 #endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
+/** @cli childtimeout
+ * @code
+ * childtimeout
+ * 300
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetChildTimeout
+ */
 template <> otError Interpreter::Process<Cmd("childtimeout")>(Arg aArgs[])
 {
+    /** @cli childtimeout (set)
+     * @code
+     * childtimeout 300
+     * Done
+     * @endcode
+     * @cparam childtimeout @ca{timeout-seconds}
+     * @par api_copy
+     * #otThreadSetChildTimeout
+     */
     return ProcessGetSet(aArgs, otThreadGetChildTimeout, otThreadSetChildTimeout);
 }
 

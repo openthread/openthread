@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "coap/coap.hpp"
+#include "common/as_core_type.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -66,18 +67,42 @@ class AddressResolver : public InstanceLocator, private NonCopyable
 {
     friend class TimeTicker;
 
+    class CacheEntry;
+    class CacheEntryList;
+
 public:
     /**
      * This type represents an iterator used for iterating through the EID cache table entries.
      *
      */
-    typedef otCacheEntryIterator Iterator;
+    class Iterator : public otCacheEntryIterator, public Clearable<Iterator>
+    {
+        friend class AddressResolver;
+
+        static constexpr uint8_t kListIndex  = 0;
+        static constexpr uint8_t kEntryIndex = 1;
+
+        const CacheEntry *    GetEntry(void) const { return static_cast<const CacheEntry *>(mData[kEntryIndex]); }
+        void                  SetEntry(const CacheEntry *aEntry) { mData[kEntryIndex] = aEntry; }
+        const CacheEntryList *GetList(void) const { return static_cast<const CacheEntryList *>(mData[kListIndex]); }
+        void                  SetList(const CacheEntryList *aList) { mData[kListIndex] = aList; }
+    };
 
     /**
      * This type represents an EID cache entry.
      *
      */
-    typedef otCacheEntryInfo EntryInfo;
+    class EntryInfo : public otCacheEntryInfo, public Clearable<EntryInfo>
+    {
+    public:
+        enum State : uint8_t ///< Entry state.
+        {
+            kStateCached     = OT_CACHE_ENTRY_STATE_CACHED,      ///< Cached and in-use.
+            kStateSnooped    = OT_CACHE_ENTRY_STATE_SNOOPED,     ///< Created by snoop optimization.
+            kStateQuery      = OT_CACHE_ENTRY_STATE_QUERY,       ///< Ongoing query for the EID.
+            kStateRetryQuery = OT_CACHE_ENTRY_STATE_RETRY_QUERY, ///< In retry wait mode.
+        };
+    };
 
     /**
      * This constructor initializes the object.
@@ -215,9 +240,6 @@ private:
     static constexpr uint16_t kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY;
     static constexpr uint16_t kSnoopBlockEvictionTimeout     = OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT;
 
-    static constexpr uint8_t kIteratorListIndex  = 0;
-    static constexpr uint8_t kIteratorEntryIndex = 1;
-
     class CacheEntry : public InstanceLocatorInit
     {
     public:
@@ -281,7 +303,10 @@ private:
     };
 
     typedef Pool<CacheEntry, kCacheEntries> CacheEntryPool;
-    typedef LinkedList<CacheEntry>          CacheEntryList;
+
+    class CacheEntryList : public LinkedList<CacheEntry>
+    {
+    };
 
     enum EntryChange : uint8_t
     {
@@ -366,6 +391,10 @@ private:
 /**
  * @}
  */
+
+DefineCoreType(otCacheEntryIterator, AddressResolver::Iterator);
+DefineCoreType(otCacheEntryInfo, AddressResolver::EntryInfo);
+DefineMapEnum(otCacheEntryState, AddressResolver::EntryInfo::State);
 
 } // namespace ot
 

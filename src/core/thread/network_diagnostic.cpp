@@ -247,7 +247,7 @@ Error NetworkDiagnostic::AppendChildTable(Message &aMessage)
         entry.SetReserved(0);
         entry.SetTimeout(timeout + 4);
 
-        entry.SetChildId(Mle::Mle::ChildIdFromRloc16(child.GetRloc16()));
+        entry.SetChildId(Mle::ChildIdFromRloc16(child.GetRloc16()));
         entry.SetMode(child.GetDeviceMode());
 
         SuccessOrExit(error = aMessage.Append(entry));

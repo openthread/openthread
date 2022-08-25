@@ -150,6 +150,33 @@ private:
 };
 
 /**
+ * This template class defines a tasklet owned by specific type and using a method on owner type as the callback.
+ *
+ * @tparam Owner              The type of owner of this tasklet.
+ * @tparam HandleTaskletPtr   A pointer to a non-static member method of `Owner` to use as tasklet handler.
+ *
+ * The `Owner` MUST be a type that is accessible using `InstanceLocator::Get<Owner>()`.
+ *
+ */
+template <typename Owner, void (Owner::*HandleTaskletPtr)(void)> class TaskletIn : public Tasklet
+{
+public:
+    /**
+     * This constructor initializes the tasklet.
+     *
+     * @param[in]  aInstance   The OpenThread instance.
+     *
+     */
+    explicit TaskletIn(Instance &aInstance)
+        : Tasklet(aInstance, HandleTasklet)
+    {
+    }
+
+private:
+    static void HandleTasklet(Tasklet &aTasklet); // Implemented in `locator_getters.hpp`
+};
+
+/**
  * This class defines a tasklet that also maintains a user context pointer.
  *
  * In typical `Tasklet` use, in the handler callback, the owner of the tasklet is determined using `GetOwner<Type>`

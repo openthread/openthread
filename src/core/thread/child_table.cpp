@@ -189,7 +189,7 @@ Error ChildTable::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
 
     if ((aChildId & ~Mle::kMaxChildId) != 0)
     {
-        aChildId = Mle::Mle::ChildIdFromRloc16(aChildId);
+        aChildId = Mle::ChildIdFromRloc16(aChildId);
     }
 
     rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;

@@ -457,10 +457,10 @@ HEADERS_COMMON                                  = \
     common/log.hpp                                \
     common/logging.hpp                            \
     common/message.hpp                            \
-    common/min_max.hpp                            \
     common/new.hpp                                \
     common/non_copyable.hpp                       \
     common/notifier.hpp                           \
+    common/num_utils.hpp                          \
     common/numeric_limits.hpp                     \
     common/owned_ptr.hpp                          \
     common/owning_list.hpp                        \

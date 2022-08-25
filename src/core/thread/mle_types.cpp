@@ -33,6 +33,7 @@
 
 #include "mle_types.hpp"
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 
 namespace ot {
@@ -61,6 +62,25 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
                   ToYesNo(GetNetworkDataType() == NetworkData::kFullSet));
 
     return string;
+}
+
+const char *RoleToString(DeviceRole aRole)
+{
+    static const char *const kRoleStrings[] = {
+        "disabled", // (0) kRoleDisabled
+        "detached", // (1) kRoleDetached
+        "child",    // (2) kRoleChild
+        "router",   // (3) kRoleRouter
+        "leader",   // (4) kRoleLeader
+    };
+
+    static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
+    static_assert(kRoleDetached == 1, "kRoleDetached value is incorrect");
+    static_assert(kRoleChild == 2, "kRoleChild value is incorrect");
+    static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
+    static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
+
+    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
 }
 
 } // namespace Mle

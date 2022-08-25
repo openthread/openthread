@@ -46,7 +46,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "meshcop/extended_panid.hpp"
@@ -1288,7 +1288,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, HandleTimer)
-    , mSignalTask(aInstance, HandleSignalTask)
+    , mSignalTask(aInstance)
     , mAllowDefaultRouteInNetData(false)
 {
 }
@@ -1821,11 +1821,6 @@ void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
 void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void)
 {
     mSignalTask.Post();
-}
-
-void RoutingManager::DiscoveredPrefixTable::HandleSignalTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<RoutingManager>().HandleDiscoveredPrefixTableChanged();
 }
 
 void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const

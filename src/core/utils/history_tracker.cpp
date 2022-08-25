@@ -40,7 +40,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"

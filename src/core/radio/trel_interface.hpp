@@ -242,21 +242,22 @@ private:
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength);
     void HandleDiscoveredPeerInfo(const Peer::Info &aInfo);
 
-    static void HandleRegisterServiceTask(Tasklet &aTasklet);
-    void        RegisterService(void);
-    Error       ParsePeerInfoTxtData(const Peer::Info &      aInfo,
-                                     Mac::ExtAddress &       aExtAddress,
-                                     MeshCoP::ExtendedPanId &aExtPanId) const;
-    Peer *      GetNewPeerEntry(void);
-    void        RemovePeerEntry(Peer &aEntry);
+    void  RegisterService(void);
+    Error ParsePeerInfoTxtData(const Peer::Info &      aInfo,
+                               Mac::ExtAddress &       aExtAddress,
+                               MeshCoP::ExtendedPanId &aExtPanId) const;
+    Peer *GetNewPeerEntry(void);
+    void  RemovePeerEntry(Peer &aEntry);
 
-    bool      mInitialized : 1;
-    bool      mEnabled : 1;
-    bool      mFiltered : 1;
-    Tasklet   mRegisterServiceTask;
-    uint16_t  mUdpPort;
-    Packet    mRxPacket;
-    PeerTable mPeerTable;
+    using RegsiterServiceTask = TaskletIn<Interface, &Interface::RegisterService>;
+
+    bool                mInitialized : 1;
+    bool                mEnabled : 1;
+    bool                mFiltered : 1;
+    RegsiterServiceTask mRegisterServiceTask;
+    uint16_t            mUdpPort;
+    Packet              mRxPacket;
+    PeerTable           mPeerTable;
 };
 
 } // namespace Trel
