@@ -96,7 +96,6 @@ configure_OPTIONS                   = \
 ifeq ($(DAEMON),1)
 configure_OPTIONS              += \
     --enable-posix-daemon         \
-    LIBS=-lstdc++                 \
     $(NULL)
 endif
 
