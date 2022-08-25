@@ -234,7 +234,7 @@ private:
     public:
         enum Reason : uint8_t
         {
-            kAny              = OT_NAT64_DROP_REASON_ANY,
+            kUnknown          = OT_NAT64_DROP_REASON_UNKNOWN,
             kIllegalPacket    = OT_NAT64_DROP_REASON_ILLEGAL_PACKET,
             kUnsupportedProto = OT_NAT64_DROP_REASON_UNSUPPORTED_PROTO,
             kNoMapping        = OT_NAT64_DROP_REASON_NO_MAPPING,

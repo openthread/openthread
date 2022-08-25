@@ -724,8 +724,13 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * 192.168.64.0/24
      * Done
      * @endcode
+     * @par
+     * Gets the NAT64 IPv4 CIDR used by NAT64 translator.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @par api_copy
-     * otNat64GetConfiguredCidr
+     * #otNat64GetConfiguredCidr
+     *
      */
     else if (aArgs[0] == "configuredcidr")
     {
@@ -743,8 +748,13 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * fd56:eda7:17ca:2:0:0::/96
      * Done
      * @endcode
+     * @par
+     * Gets the NAT64 IPv6 prefix used by NAT64 translator.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @par api_copy
-     * otNat64GetConfiguredPrefix
+     * #otNat64GetConfiguredPrefix
+     *
      */
     else if (aArgs[0] == "configuredprefix")
     {
@@ -766,8 +776,13 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * |          |                                UDP |    1 |   136 |   16 |  1608 |
      * |          |                               ICMP |    5 |   320 |    5 |   320 |
      * @endcode
+     * @par
+     * Gets the current address mappings of NAT64 translator.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @par api_copy
-     * otNat64GetNextAddressMapping
+     * #otNat64GetNextAddressMapping
+     *
      */
     else if (aArgs[0] == "mappings")
     {
@@ -856,9 +871,13 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * |    No Mapping |                       2 |                       0 |
      * Done
      * @endcode
-     * @par api_copy
-     * otNat64GetCounters
-     * otNat64GetErrorCounters
+     * @par
+     * Gets the packet counters and error counters of the NAT64 translator.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+     * @sa otNat64GetCounters
+     * @sa otNat64GetErrorCounters
+     *
      */
     else if (aArgs[0] == "counters")
     {

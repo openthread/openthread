@@ -93,10 +93,11 @@ exit:
 
 Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 {
-    Result          res = kDrop;
-    Ip6::Header     ip6Header;
-    Ip4::Header     ip4Header;
-    AddressMapping *mapping = nullptr;
+    Result                res        = kDrop;
+    ErrorCounters::Reason dropReason = ErrorCounters::kUnknown;
+    Ip6::Header           ip6Header;
+    Ip4::Header           ip4Header;
+    AddressMapping *      mapping = nullptr;
 
     if (mIp4Cidr.mLength == 0 || !mNat64Prefix.IsValidNat64())
     {
@@ -107,7 +108,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     if (ip6Header.ParseFrom(aMessage) != kErrorNone)
     {
         LogWarn("outgoing datagram is not a valid IPv6 datagram, drop");
-        mErrorCounters.Count6To4(ErrorCounters::Reason::kIllegalPacket);
+        dropReason = ErrorCounters::Reason::kIllegalPacket;
         ExitNow(res = kDrop);
     }
 
@@ -120,7 +121,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     if (mapping == nullptr)
     {
         LogWarn("failed to get a mapping for %s (mapping pool full?)", ip6Header.GetSource().ToString().AsCString());
-        mErrorCounters.Count6To4(ErrorCounters::Reason::kNoMapping);
+        dropReason = ErrorCounters::Reason::kNoMapping;
         ExitNow(res = kDrop);
     }
 
@@ -149,6 +150,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         res = kForward;
         break;
     default:
+        dropReason = ErrorCounters::Reason::kUnsupportedProto;
         ExitNow(res = kDrop);
     }
 
@@ -171,17 +173,18 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 exit:
     if (res == Result::kDrop)
     {
-        mErrorCounters.Count6To4(ErrorCounters::Reason::kAny);
+        mErrorCounters.Count6To4(dropReason);
     }
     return res;
 }
 
 Translator::Result Translator::TranslateToIp6(Message &aMessage)
 {
-    Result          res = Result::kDrop;
-    Ip6::Header     ip6Header;
-    Ip4::Header     ip4Header;
-    AddressMapping *mapping = nullptr;
+    Result                res        = Result::kDrop;
+    ErrorCounters::Reason dropReason = ErrorCounters::kUnknown;
+    Ip6::Header           ip6Header;
+    Ip4::Header           ip4Header;
+    AddressMapping *      mapping = nullptr;
 
     // Ip6::Header::ParseFrom may return an error value when the incoming message is an IPv4 datagram.
     // If the message is already an IPv6 datagram, forward it directly.
@@ -203,7 +206,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     if (ip4Header.ParseFrom(aMessage) != kErrorNone)
     {
         LogWarn("incoming message is neither IPv4 nor an IPv6 datagram, drop");
-        mErrorCounters.Count4To6(ErrorCounters::Reason::kIllegalPacket);
+        dropReason = ErrorCounters::Reason::kIllegalPacket;
         ExitNow(res = kDrop);
     }
 
@@ -211,7 +214,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     if (mapping == nullptr)
     {
         LogWarn("no mapping found for the IPv4 address");
-        mErrorCounters.Count4To6(ErrorCounters::Reason::kNoMapping);
+        dropReason = ErrorCounters::Reason::kNoMapping;
         ExitNow(res = kDrop);
     }
 
@@ -242,6 +245,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         res = kForward;
         break;
     default:
+        dropReason = ErrorCounters::Reason::kUnsupportedProto;
         ExitNow(res = kDrop);
     }
 
@@ -263,7 +267,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
 exit:
     if (res == Result::kDrop)
     {
-        mErrorCounters.Count4To6(ErrorCounters::Reason::kAny);
+        mErrorCounters.Count4To6(dropReason);
     }
 
     return res;

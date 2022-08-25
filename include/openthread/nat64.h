@@ -122,7 +122,7 @@ typedef struct otNat64ProtocolCounters
  */
 typedef enum otNat64DropReason
 {
-    OT_NAT64_DROP_REASON_ANY = 0,           ///< Packet drop for all reasons.
+    OT_NAT64_DROP_REASON_UNKNOWN = 0,       ///< Packet drop for unknown reasons.
     OT_NAT64_DROP_REASON_ILLEGAL_PACKET,    ///< Packet drop due to failed to parse the datagram.
     OT_NAT64_DROP_REASON_UNSUPPORTED_PROTO, ///< Packet drop due to unsupported IP protocol.
     OT_NAT64_DROP_REASON_NO_MAPPING, ///< Packet drop due to no corresponding mappings found, or address mapping pool
@@ -167,7 +167,7 @@ void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCount
 /**
  * @struct otNat64AddressMapping
  *
- * This structure represents an address mapping record for NAT64
+ * This structure represents an address mapping record for NAT64.
  *
  */
 typedef struct otNat64AddressMapping
@@ -290,6 +290,24 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
 
 /**
+ * Gets the configured CIDR in the NAT64 translator.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[out] aCidr             A pointer to an otIp4Cidr. Where the configured CIDR will be filled.
+ *
+ */
+otError otNat64GetConfiguredCidr(otInstance *aInstance, otIp4Cidr *aCidr);
+
+/**
+ * Gets the configured CIDR in the NAT64 translator.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[out] aPrefix           A pointer to an otIp6Prefix. Where the configured NAT64 prefix will be filled.
+ *
+ */
+otError otNat64GetConfiguredPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
  * Test if two IPv4 addresses are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv4 address to compare.
@@ -314,24 +332,6 @@ bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond
  *
  */
 void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6Address, otIp4Address *aIp4Address);
-
-/**
- * Gets the configured CIDR in the NAT64 translator.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[out] aCidr             A pointer to an otIp4Cidr. Where the configured CIDR will be filled.
- *
- */
-otError otNat64GetConfiguredCidr(otInstance *aInstance, otIp4Cidr *aCidr);
-
-/**
- * Gets the configured CIDR in the NAT64 translator.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[out] aPrefix           A pointer to an otIp6Prefix. Where the configured NAT64 prefix will be filled.
- *
- */
-otError otNat64GetConfiguredPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 #define OT_IP4_ADDRESS_STRING_SIZE 17 ///< Length of 000.000.000.000 plus a suffix NUL
 
