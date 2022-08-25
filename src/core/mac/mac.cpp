@@ -100,7 +100,7 @@ Mac::Mac(Instance &aInstance)
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
-    , mOperationTask(aInstance, Mac::HandleOperationTask)
+    , mOperationTask(aInstance)
     , mTimer(aInstance, Mac::HandleTimer)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
@@ -606,11 +606,6 @@ void Mac::StartOperation(Operation aOperation)
     {
         mOperationTask.Post();
     }
-}
-
-void Mac::HandleOperationTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<Mac>().PerformNextOperation();
 }
 
 void Mac::PerformNextOperation(void)
@@ -2133,6 +2128,11 @@ void Mac::ResetRetrySuccessHistogram()
     memset(&mRetryHistogram, 0, sizeof(mRetryHistogram));
 }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
+
+uint8_t Mac::ComputeLinkMargin(int8_t aRss) const
+{
+    return LinkQualityInfo::ConvertRssToLinkMargin(GetNoiseFloor(), aRss);
+}
 
 // LCOV_EXCL_START
 

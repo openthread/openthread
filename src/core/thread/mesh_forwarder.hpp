@@ -487,9 +487,8 @@ private:
     void          UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
     void          RemoveMessageIfNoPendingTx(Message &aMessage);
 
-    void        HandleTimeTick(void);
-    static void ScheduleTransmissionTask(Tasklet &aTasklet);
-    void        ScheduleTransmissionTask(void);
+    void HandleTimeTick(void);
+    void ScheduleTransmissionTask(void);
 
     Error GetFramePriority(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Message::Priority &aPriority);
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
@@ -555,6 +554,8 @@ private:
                        LogLevel            aLogLevel);
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
+    using TxTask = TaskletIn<MeshForwarder, &MeshForwarder::ScheduleTransmissionTask>;
+
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
     uint16_t      mFragTag;
@@ -574,7 +575,7 @@ private:
     TimerMilli mTxDelayTimer;
 #endif
 
-    Tasklet mScheduleTransmissionTask;
+    TxTask mScheduleTransmissionTask;
 
     otIpCounters mIpCounters;
 

@@ -44,7 +44,7 @@
 #include "common/const_cast.hpp"
 #include "common/equatable.hpp"
 #include "common/error.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/type_traits.hpp"
 
 namespace ot {

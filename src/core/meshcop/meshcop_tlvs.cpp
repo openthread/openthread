@@ -35,7 +35,7 @@
 
 #include "common/const_cast.hpp"
 #include "common/debug.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "meshcop/meshcop.hpp"
 

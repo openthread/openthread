@@ -43,7 +43,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
@@ -73,7 +73,7 @@ static_assert(offsetof(Tcp::Listener, mTcbListen) == 0, "mTcbListen field in otT
 Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, Tcp::HandleTimer)
-    , mTasklet(aInstance, Tcp::HandleTasklet)
+    , mTasklet(aInstance)
     , mEphemeralPort(kDynamicPortMin)
 {
     OT_UNUSED_VARIABLE(mEphemeralPort);
@@ -916,13 +916,6 @@ restart:
     {
         LogDebg("Did not reset main TCP timer");
     }
-}
-
-void Tcp::HandleTasklet(Tasklet &aTasklet)
-{
-    OT_ASSERT(&aTasklet == &aTasklet.Get<Tcp>().mTasklet);
-    LogDebg("TCP tasklet invoked");
-    aTasklet.Get<Tcp>().ProcessCallbacks();
 }
 
 void Tcp::ProcessCallbacks(void)

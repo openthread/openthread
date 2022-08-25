@@ -27,6 +27,9 @@
 
 xcopy /E /Y Thread_Harness %systemdrive%\GRL\Thread1.2\Thread_Harness
 copy /Y ..\..\harness-thci\OpenThread.py %systemdrive%\GRL\Thread1.2\Thread_Harness\THCI
+copy /Y ..\..\harness-thci\OpenThread_BR.py %systemdrive%\GRL\Thread1.2\Thread_Harness\THCI
+copy /Y ..\..\harness-thci\OpenThread.png %systemdrive%\GRL\Thread1.2\Web\images
+copy /Y ..\..\harness-thci\OpenThread_BR.png %systemdrive%\GRL\Thread1.2\Web\images
 xcopy /E /Y ..\posix\sniffer_sim\proto %systemdrive%\GRL\Thread1.2\Thread_Harness\simulation\Sniffer\proto
 
 %systemdrive%\GRL\Thread1.2\Python27\python.exe -m pip install --upgrade pip

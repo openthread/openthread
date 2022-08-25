@@ -349,6 +349,8 @@ private:
         kAdvPrefixesFromNetData,
     };
 
+    void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
+
     class DiscoveredPrefixTable : public InstanceLocator
     {
         // This class maintains the discovered on-link and route prefixes
@@ -517,12 +519,13 @@ private:
         void        HandleTimer(void);
         void        RemoveExpiredEntries(void);
         void        SignalTableChanged(void);
-        static void HandleSignalTask(Tasklet &aTasklet);
+
+        using SignalTask = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
 
         Array<Router, kMaxRouters> mRouters;
         Pool<Entry, kMaxEntries>   mEntryPool;
         TimerMilli                 mTimer;
-        Tasklet                    mSignalTask;
+        SignalTask                 mSignalTask;
         bool                       mAllowDefaultRouteInNetData;
     };
 
@@ -672,7 +675,6 @@ private:
     bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
     bool ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
     void UpdateDiscoveredPrefixTableOnNetDataChange(void);
-    void HandleDiscoveredPrefixTableChanged(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     void UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
     bool IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
