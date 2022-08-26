@@ -1021,7 +1021,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
                                      DeviceMode::kModeFullNetworkData));
     router->GetLinkInfo().Clear();
     router->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
-    router->SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin));
+    router->SetLinkQualityOut(LinkQualityForLinkMargin(linkMargin));
     router->ResetLinkFailures();
     router->SetState(Neighbor::kStateValid);
     router->SetKeySequence(aRxInfo.mKeySequence);

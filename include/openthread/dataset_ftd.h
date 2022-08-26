@@ -50,7 +50,7 @@ extern "C" {
  */
 
 /**
- * This method creates a new Operational Dataset to use when forming a new network.
+ * For FTD only, creates a new Operational Dataset to use when forming a new network.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[out] aDataset   The Operational Dataset.
@@ -62,7 +62,7 @@ extern "C" {
 otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
- * Get minimal delay timer.
+ * For FTD only, gets a minimal delay timer.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -72,7 +72,7 @@ otError otDatasetCreateNewNetwork(otInstance *aInstance, otOperationalDataset *a
 uint32_t otDatasetGetDelayTimerMinimal(otInstance *aInstance);
 
 /**
- * Set minimal delay timer.
+ * For FTD only, sets a minimal delay timer.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with
  * this API will render a production application non-compliant with the Thread Specification.

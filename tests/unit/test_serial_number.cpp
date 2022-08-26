@@ -118,6 +118,19 @@ void TestNumUtils(void)
     VerifyOrQuit(ThreeWayCompare<bool>(true, false) > 0);
     VerifyOrQuit(ThreeWayCompare<bool>(false, true) < 0);
 
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(2, 1) == 2);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(1, 3) == 0);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(1, 2) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(2, 3) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(3, 2) == 2);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(4, 2) == 2);
+
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(0, 10) == 0);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(4, 10) == 0);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(5, 10) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(9, 10) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(10, 10) == 1);
+
     printf("TestNumUtils() passed\n");
 }
 

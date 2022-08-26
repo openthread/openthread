@@ -134,7 +134,7 @@ public:
     otLinkMetrics GetLinkMetrics(void) const { return mLinkMetrics; }
 
 private:
-    uint8_t GetLinkMargin(int8_t aRssi) const { return LinkQualityInfo::ConvertRssToLinkMargin(sNoiseFloor, aRssi); }
+    uint8_t GetLinkMargin(int8_t aRssi) const { return ComputeLinkMargin(sNoiseFloor, aRssi); }
 
     bool Matches(const otShortAddress &aShortAddress) const { return mShortAddress == aShortAddress; };
 

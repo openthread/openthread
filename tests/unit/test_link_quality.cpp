@@ -31,6 +31,7 @@
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
+#include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 
 namespace ot {
@@ -481,6 +482,53 @@ void TestSuccessRateTracker(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+
+class UnitTester
+{
+public:
+    static void TestLinkMetricsScaling(void)
+    {
+        printf("\nTestLinkMetricsScaling\n");
+
+        // Test Link Margin scaling from [0,130] -> [0, 255]
+
+        for (uint8_t linkMargin = 0; linkMargin <= 130; linkMargin++)
+        {
+            double  scaled     = 255.0 / 130.0 * linkMargin;
+            uint8_t scaledAsU8 = static_cast<uint8_t>(scaled + 0.5);
+
+            printf("\nLinkMargin : %-3u -> Scaled : %.1f (rounded:%u)", linkMargin, scaled, scaledAsU8);
+
+            VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleLinkMarginToRawValue(linkMargin) == scaledAsU8);
+            VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleRawValueToLinkMargin(scaledAsU8) == linkMargin);
+        }
+
+        VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleLinkMarginToRawValue(131) == 255);
+        VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleLinkMarginToRawValue(150) == 255);
+        VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleLinkMarginToRawValue(255) == 255);
+
+        // Test RSSI scaling from [-130, 0] -> [0, 255]
+
+        for (int8_t rssi = -128; rssi <= 0; rssi++)
+        {
+            double  scaled     = 255.0 / 130.0 * (rssi + 130.0);
+            uint8_t scaledAsU8 = static_cast<uint8_t>(scaled + 0.5);
+
+            printf("\nRSSI : %-3d -> Scaled :%.1f (rounded:%u)", rssi, scaled, scaledAsU8);
+
+            VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleRssiToRawValue(rssi) == scaledAsU8);
+            VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleRawValueToRssi(scaledAsU8) == rssi);
+        }
+
+        VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleRssiToRawValue(1) == 255);
+        VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleRssiToRawValue(10) == 255);
+        VerifyOrQuit(LinkMetrics::LinkMetrics::ScaleRssiToRawValue(127) == 255);
+    }
+};
+
+#endif
+
 } // namespace ot
 
 int main(void)
@@ -488,6 +536,10 @@ int main(void)
     ot::TestRssAveraging();
     ot::TestLinkQualityCalculations();
     ot::TestSuccessRateTracker();
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    ot::UnitTester::TestLinkMetricsScaling();
+#endif
+
     printf("\nAll tests passed\n");
     return 0;
 }
