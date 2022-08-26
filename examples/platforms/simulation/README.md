@@ -32,18 +32,19 @@ After a successful build, the `elf` files are found in:
 
 ### Build using cmake build script for use in OT-NS
 
-Below shows an example build for OT-NS that has support for OT-external RF/timing models.
-The build option OT_FULL_LOGS can also be set to 'ON' in this case, for extra debug info.
+Below shows an example build for OT-NS.
+The build option OT_FULL_LOGS is set to 'ON', for extra 
+debug info that can then be optionally displayed in OT-NS.
 
 ```bash
 $ cd <path-to-openthread>
-$ ./script/cmake-build simulation -DOT_PLATFORM=simulation -DOT_OTNS=ON -DOT_SIMULATION_EXT_RF_MODELS=ON\
+$ ./script/cmake-build simulation -DOT_PLATFORM=simulation -DOT_OTNS=ON \
  -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_SIMULATION_VIRTUAL_TIME_UART=ON -DOT_SIMULATION_MAX_NETWORK_SIZE=999 \
- -DOT_COMMISSIONER=ON -DOT_JOINER=ON -DOT_BORDER_ROUTER=ON -DOT_SERVICE=ON -DOT_COAP=ON -DOT_FULL_LOGS=OFF
+ -DOT_COMMISSIONER=ON -DOT_JOINER=ON -DOT_BORDER_ROUTER=ON -DOT_SERVICE=ON -DOT_COAP=ON -DOT_FULL_LOGS=ON
 ```
 
-Below shows an example build for OT-NS with default (ideal) OT RF/timing model.
-The build option OT_FULL_LOGS must be set to 'OFF' in this case.
+Below shows an example build for OT-NS with build option OT_FULL_LOGS set to 'OFF',
+if the extra log information is not going to be used.
 
 ```bash
 $ cd <path-to-openthread>

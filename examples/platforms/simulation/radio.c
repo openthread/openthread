@@ -97,7 +97,7 @@ struct RadioMessage
     uint8_t mPsdu[OT_RADIO_FRAME_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
-static void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame, bool isAck);
+static void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame);
 static void radioSendMessage(otInstance *aInstance);
 static void radioSendAck(void);
 static void radioProcessFrame(otInstance *aInstance);
@@ -521,20 +521,9 @@ static int8_t GetRssi(uint16_t aChannel)
 
     otEXPECT((SIM_RADIO_CHANNEL_MIN <= aChannel) && aChannel <= (SIM_RADIO_CHANNEL_MAX));
 
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    // if external RF simulator calculates RSSI, get it from the Rx info.
+    // get RSSI from last frame's Rx info. Should be OT_RADIO_RSSI_INVALID if nothing was ever
+    // received yet.
     rssi = sReceiveFrame.mInfo.mRxInfo.mRssi;
-#else
-    // To emulate a simple interference model, we return either a high or
-    // a low  RSSI value with a fixed probability per each channel. The
-    // probability is increased per channel by a constant.
-    uint32_t probabilityThreshold = (aChannel - SIM_RADIO_CHANNEL_MIN) * SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL;
-    rssi                          = SIM_LOW_RSSI_SAMPLE;
-    if (otRandomNonCryptoGetUint16() < (probabilityThreshold * 0xffff / 100))
-    {
-        rssi = SIM_HIGH_RSSI_SAMPLE;
-    }
-#endif
 
 exit:
     return rssi;
@@ -566,20 +555,9 @@ static void radioReceive(otInstance *aInstance)
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
 
-    if (sTxWait)
+    if (sTxWait && otMacFrameIsAckRequested(&sTransmitFrame))
     {
-        if (otMacFrameIsAckRequested(&sTransmitFrame))
-        {
-            isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
-        }
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME && !OPENTHREAD_SIMULATION_EXT_RF_MODELS
-        // Simulate tx done when receiving the echo frame.
-        else
-        {
-            isTxDone = !isAck && sTransmitFrame.mLength == sReceiveFrame.mLength &&
-                       memcmp(sTransmitFrame.mPsdu, sReceiveFrame.mPsdu, sTransmitFrame.mLength) == 0;
-        }
-#endif
+        isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
     }
 
     if (isTxDone)
@@ -709,7 +687,7 @@ void radioSendMessage(otInstance *aInstance)
     otEXPECT(radioProcessTransmitSecurity(&sTransmitFrame) == OT_ERROR_NONE);
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);
     radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
-    radioTransmit(&sTransmitMessage, &sTransmitFrame, false);
+    radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     sTxWait = otMacFrameIsAckRequested(&sTransmitFrame);
@@ -731,7 +709,7 @@ void radioSendMessage(otInstance *aInstance)
         }
     }
 #else
-    // Wait for echo radio in virtual time mode.
+    // Wait for signal from simulator that Tx completed, in virtual time mode.
     sTxWait = true;
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 exit:
@@ -911,7 +889,7 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
     }
 }
 
-void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame, bool isAck)
+void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     ssize_t            rval;
@@ -934,18 +912,13 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #else // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     struct Event event;
 
-    event.mDelay = 1; // 1us delay to let transmitted frame arrive in simulated radio chip
-#if !OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    OT_UNUSED_VARIABLE(isAck);
-    event.mEvent = OT_SIM_EVENT_RADIO_RECEIVED;
-#else
     // event.mParam1 contains the TxPower used. event.mParam2 the CCA ED threshold.
-    event.mEvent    = isAck ? OT_SIM_EVENT_RADIO_TX_ACK : OT_SIM_EVENT_RADIO_TX;
-    int8_t maxPower = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
-    event.mParam1   = sTxPower < maxPower ? sTxPower : maxPower;
-    event.mParam2   = sCcaEdThresh;
-#endif // OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    // RadioMessage includes metadata and the PDSU (frame)
+    // RadioMessage includes metadata and the PSDU (frame)
+    int8_t maxPower   = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
+    event.mDelay      = 1; // 1us delay to let transmitted frame arrive in simulated radio chip
+    event.mEvent      = OT_SIM_EVENT_RADIO_TX;
+    event.mParam1     = sTxPower < maxPower ? sTxPower : maxPower;
+    event.mParam2     = sCcaEdThresh;
     event.mDataLength = offsetof(struct RadioMessage, mPsdu) + aFrame->mLength;
     memcpy(event.mData, aMessage, event.mDataLength);
 
@@ -1014,7 +987,7 @@ void radioSendAck(void)
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
     radioComputeCrc(&sAckMessage, sAckFrame.mLength);
-    radioTransmit(&sAckMessage, &sAckFrame, true);
+    radioTransmit(&sAckMessage, &sAckFrame);
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 exit:
@@ -1024,7 +997,7 @@ exit:
 
 void radioProcessFrame(otInstance *aInstance)
 {
-    bool         isAcked = false;
+    bool         requireAck = false;
     otError      error   = OT_ERROR_NONE;
     otMacAddress macAddress;
     OT_UNUSED_VARIABLE(macAddress);
@@ -1046,7 +1019,7 @@ void radioProcessFrame(otInstance *aInstance)
     // generate acknowledgment
     if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
-        isAcked = true;
+        requireAck = true;
         radioSendAck();
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (otMacFrameIsSecurityEnabled(&sAckFrame))
@@ -1059,14 +1032,10 @@ void radioProcessFrame(otInstance *aInstance)
 
 exit:
 
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    // If Rx-frame needs to be ACKed, postpone the receive-done report until the ACK is sent, but only if the frame-rx
-    // went ok. This prevents the device sending more frames before the ACK has a chance to be sent.
-    if (error != OT_ERROR_ABORT && ((!isAcked) || (error != OT_ERROR_NONE && isAcked)))
-#else
-    OT_UNUSED_VARIABLE(isAcked);
-    if (error != OT_ERROR_ABORT)
-#endif
+    // If Rx-frame was received error-free and it requires an ACK, then postpone the receive-done callback
+    // until after the ACK is sent. This prevents stack attempting to send more frames before the ACK has
+    // had a chance to be sent.
+    if (error != OT_ERROR_ABORT && ((!requireAck) || (error != OT_ERROR_NONE)))
     {
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())

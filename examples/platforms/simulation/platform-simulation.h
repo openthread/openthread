@@ -79,19 +79,14 @@ enum
 OT_TOOL_PACKED_BEGIN
 struct Event
 {
-    uint64_t mDelay;
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    uint8_t  mEventV2Indicator; // field indicates OT_SIM_EVENT_V2_FORMAT
-    uint16_t mDataLength;
-    uint8_t  mEvent;  // event type field for V2 event message format.
+    uint64_t mMsgId;  // message id (for debug purposes only - TODO remove when not needed anymore)
     uint32_t mNodeId; // node ID should equal gNodeId for events to/from this node.
+    uint64_t mDelay;  // time delay in us that is applied prior to event execution
+    uint8_t  mEvent;  // event type
     int8_t   mParam1; // generic parameter 1 used by specific event types (for TxPower, RSSI)
     int8_t   mParam2; // generic parameter 2 used by specific event types (for CCA ED)
-#else
-    uint8_t  mEvent;
-    uint16_t mDataLength;
-#endif
-    uint8_t mData[OT_EVENT_DATA_MAX_SIZE]; // mData must be last field of struct
+    uint16_t mDataLength; // number of bytes following in mData
+    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE]; // mData must be last field of struct
 } OT_TOOL_PACKED_END;
 
 enum
@@ -178,10 +173,10 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
  * This function signals that virtual radio is done transmitting a single frame.
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
- * @param[in]  err         The status code result of the virtual radio transmission.
+ * @param[in]  aError      The status code result of the virtual radio transmission.
  *
  */
-void platformRadioTransmitDone(otInstance *aInstance, otError err);
+void platformRadioTransmitDone(otInstance *aInstance, otError aError);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.

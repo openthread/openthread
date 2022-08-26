@@ -53,6 +53,7 @@
 #include "utils/uart.h"
 
 uint32_t gNodeId = 1;
+uint64_t gLastMsgId = 0;
 
 extern bool          gPlatformPseudoResetWasRequested;
 static volatile bool gTerminate = false;
@@ -79,11 +80,9 @@ void otSimSendEvent(struct Event *aEvent)
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
     sockaddr.sin_port = htons(9000 + sPortOffset);
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
-    // fill in V2 message format default fields (same for all events).
-    aEvent->mEventV2Indicator = OT_SIM_EVENT_V2_FORMAT;
-    aEvent->mNodeId           = gNodeId;
-#endif
+    aEvent->mNodeId   = gNodeId;
+    aEvent->mMsgId    = gLastMsgId;
+
     // send header and data.
     rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
                   sizeof(sockaddr));
@@ -107,6 +106,8 @@ static void receiveEvent(otInstance *aInstance)
     }
 
     platformAlarmAdvanceNow(event.mDelay);
+    if (event.mMsgId > gLastMsgId)
+        gLastMsgId = event.mMsgId;
 
     switch (event.mEvent)
     {
