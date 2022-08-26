@@ -67,6 +67,11 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
     AsCoreType(aInstance).Get<Ip6::Ip6>().SetNat64ReceiveIp4DatagramCallback(aCallback, aContext);
 }
 
+void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator)
+{
+    AsCoreType(aInstance).Get<Nat64::Translator>().InitAddressMappingIterator(*aIterator);
+}
+
 otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
                                      otNat64AddressMappingIterator *aIterator,
                                      otNat64AddressMapping *        aMapping)
@@ -76,12 +81,12 @@ otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
 
 void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounters)
 {
-    AsCoreType(aInstance).Get<Nat64::Translator>().GetCounters(*aCounters);
+    AsCoreType(aInstance).Get<Nat64::Translator>().GetCounters(AsCoreType(aCounters));
 }
 
 void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCounters)
 {
-    AsCoreType(aInstance).Get<Nat64::Translator>().GetErrorCounters(*aCounters);
+    AsCoreType(aInstance).Get<Nat64::Translator>().GetErrorCounters(AsCoreType(aCounters));
 }
 
 otError otNat64GetConfiguredCidr(otInstance *aInstance, otIp4Cidr *aCidr)

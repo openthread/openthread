@@ -282,13 +282,23 @@ Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void
     return string;
 }
 
-void Translator::AddressMapping::CopyTo(otNat64AddressMapping &aMapping) const
+void Translator::AddressMapping::CopyTo(otNat64AddressMapping &aMapping, TimeMilli aNow) const
 {
     aMapping.mId       = mId;
     aMapping.mIp4      = mIp4;
     aMapping.mIp6      = mIp6;
-    aMapping.mExpiry   = mExpiry.GetValue();
     aMapping.mCounters = mCounters;
+
+    // We are removing expired mappings lazily, and an expired mapping might become active again before actually
+    // removed. Report the mapping to be "just expired" to avoid confusion.
+    if (mExpiry < aNow)
+    {
+        aMapping.mExpiry = aNow.GetValue();
+    }
+    else
+    {
+        aMapping.mExpiry = mExpiry.GetValue();
+    }
 }
 
 void Translator::ReleaseMapping(AddressMapping &aMapping)
@@ -493,20 +503,22 @@ void Translator::MappingExpirerHandler(Timer &aTimer)
     aTimer.Get<Translator>().mMappingExpirer.Start(kAddressMappingIdleTimeoutMsec);
 }
 
-Error Translator::GetNextAddressMapping(otNat64AddressMappingIterator &aIterator, otNat64AddressMapping &aMapping)
+void Translator::InitAddressMappingIterator(AddressMappingIterator &aIterator)
 {
-    Error     err = kErrorNotFound;
-    TimeMilli now = TimerMilli::GetNow();
+    aIterator.mPtr = mActiveAddressMappings.GetHead();
+}
 
-    for (; aIterator < kAddressMappingPoolSize; aIterator++)
-    {
-        if (mAddressMappingPool.GetEntryAt(aIterator).mExpiry > now)
-        {
-            mAddressMappingPool.GetEntryAt(aIterator).CopyTo(aMapping);
-            aIterator++;
-            ExitNow(err = kErrorNone);
-        }
-    }
+Error Translator::GetNextAddressMapping(AddressMappingIterator &aIterator, otNat64AddressMapping &aMapping)
+{
+    Error           err  = kErrorNotFound;
+    TimeMilli       now  = TimerMilli::GetNow();
+    AddressMapping *item = static_cast<AddressMapping *>(aIterator.mPtr);
+
+    VerifyOrExit(item != nullptr);
+
+    item->CopyTo(aMapping, now);
+    aIterator.mPtr = item->GetNext();
+    err            = kErrorNone;
 
 exit:
     return err;
@@ -539,21 +551,21 @@ void Translator::ProtocolCounters::Count6To4Packet(uint8_t aProtocol, uint64_t a
     switch (aProtocol)
     {
     case Ip6::kProtoUdp:
-        mUdp.m6To4SumPackets++;
-        mUdp.m6To4SumBytes += aPacketSize;
+        mUdp.m6To4Packets++;
+        mUdp.m6To4Bytes += aPacketSize;
         break;
     case Ip6::kProtoTcp:
-        mTcp.m6To4SumPackets++;
-        mTcp.m6To4SumBytes += aPacketSize;
+        mTcp.m6To4Packets++;
+        mTcp.m6To4Bytes += aPacketSize;
         break;
     case Ip6::kProtoIcmp6:
-        mIcmp.m6To4SumPackets++;
-        mIcmp.m6To4SumBytes += aPacketSize;
+        mIcmp.m6To4Packets++;
+        mIcmp.m6To4Bytes += aPacketSize;
         break;
     }
 
-    mTotal.m6To4SumPackets++;
-    mTotal.m6To4SumBytes += aPacketSize;
+    mTotal.m6To4Packets++;
+    mTotal.m6To4Bytes += aPacketSize;
 }
 
 void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t aPacketSize)
@@ -561,21 +573,21 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
     switch (aProtocol)
     {
     case Ip4::kProtoUdp:
-        mUdp.m4To6SumPackets++;
-        mUdp.m4To6SumBytes += aPacketSize;
+        mUdp.m4To6Packets++;
+        mUdp.m4To6Bytes += aPacketSize;
         break;
     case Ip4::kProtoTcp:
-        mTcp.m4To6SumPackets++;
-        mTcp.m4To6SumBytes += aPacketSize;
+        mTcp.m4To6Packets++;
+        mTcp.m4To6Bytes += aPacketSize;
         break;
     case Ip4::kProtoIcmp:
-        mIcmp.m4To6SumPackets++;
-        mIcmp.m4To6SumBytes += aPacketSize;
+        mIcmp.m4To6Packets++;
+        mIcmp.m4To6Bytes += aPacketSize;
         break;
     }
 
-    mTotal.m4To6SumPackets++;
-    mTotal.m4To6SumBytes += aPacketSize;
+    mTotal.m4To6Packets++;
+    mTotal.m4To6Bytes += aPacketSize;
 }
 
 } // namespace Nat64

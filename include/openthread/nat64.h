@@ -89,31 +89,27 @@ typedef struct otIp4Cidr
 } otIp4Cidr;
 
 /**
- * @struct otNat64Counters
- *
- * This structure represents the counters for NAT64.
+ * Represents the counters for NAT64.
  *
  */
 typedef struct otNat64Counters
 {
-    uint64_t m4To6SumPackets;
-    uint64_t m4To6SumBytes;
-    uint64_t m6To4SumPackets;
-    uint64_t m6To4SumBytes;
+    uint64_t m4To6Packets; ///< Number of packets translated from IPv4 to IPv6
+    uint64_t m4To6Bytes;   ///< Sum of size of packets translated from IPv4 to IPv6
+    uint64_t m6To4Packets; ///< Number of packets translated from IPv6 to IPv4
+    uint64_t m6To4Bytes;   ///< Sum of size of packets translated from IPv6 to IPv4
 } otNat64Counters;
 
 /**
- * @struct otNat64ProtocolCounters
- *
- * This structure represents the counters for the protocols supported by NAT64.
+ * Represents the counters for the protocols supported by NAT64.
  *
  */
 typedef struct otNat64ProtocolCounters
 {
-    otNat64Counters mTotal;
-    otNat64Counters mIcmp;
-    otNat64Counters mUdp;
-    otNat64Counters mTcp;
+    otNat64Counters mTotal; ///< Counters for sum of all protocols.
+    otNat64Counters mIcmp;  ///< Counters for ICMP and ICMPv6.
+    otNat64Counters mUdp;   ///< Counters for UDP.
+    otNat64Counters mTcp;   ///< Counters for TCP.
 } otNat64ProtocolCounters;
 
 /**
@@ -125,16 +121,13 @@ typedef enum otNat64DropReason
     OT_NAT64_DROP_REASON_UNKNOWN = 0,       ///< Packet drop for unknown reasons.
     OT_NAT64_DROP_REASON_ILLEGAL_PACKET,    ///< Packet drop due to failed to parse the datagram.
     OT_NAT64_DROP_REASON_UNSUPPORTED_PROTO, ///< Packet drop due to unsupported IP protocol.
-    OT_NAT64_DROP_REASON_NO_MAPPING, ///< Packet drop due to no corresponding mappings found, or address mapping pool
-                                     ///< exhausted.
+    OT_NAT64_DROP_REASON_NO_MAPPING,        ///< Packet drop due to no mappings found or mapping pool exhausted.
     //---
     OT_NAT64_DROP_REASON_COUNT,
 } otNat64DropReason;
 
 /**
- * @struct otNat64ErrorCounters
- *
- * This structure represents the counters of dropped packets due to errors when handling NAT64 packets.
+ * Represents the counters of dropped packets due to errors when handling NAT64 packets.
  *
  */
 typedef struct otNat64ErrorCounters
@@ -146,11 +139,10 @@ typedef struct otNat64ErrorCounters
 /**
  * Gets the counters of the NAT64 translator, the counter is counted since the instance initialized.
  *
- * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
- * @param[in]      aInstance      A pointer to an OpenThread instance.
- * @param[out]     aCounters      A pointer to an `otNat64Counters` where the counters of NAT64 translator will be
- * placed.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[out] aCounters A pointer to an `otNat64Counters` where the counters of NAT64 translator will be placed.
  *
  */
 void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounters);
@@ -159,39 +151,63 @@ void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounter
  * Gets the counters of errors during processing packets by the NAT64 translator, the counter is counted
  * since the instance initialized.
  *
- * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
- * @param[in]      aInstance      A pointer to an OpenThread instance.
- * @param[out]     aCounters      A pointer to an `otNat64Counters` where the counters of NAT64 translator will be
- * placed.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[out] aCounters A pointer to an `otNat64Counters` where the counters of NAT64 translator will be placed.
  *
  */
 void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCounters);
 
 /**
- * @struct otNat64AddressMapping
+ * Represents an address mapping record for NAT64.
  *
- * This structure represents an address mapping record for NAT64.
+ * @note The counters will be reset for each mapping session even for the same address pair. Applications can use mId to
+ * identify different sessions to calculate the packets correctly.
  *
  */
 typedef struct otNat64AddressMapping
 {
-    uint64_t mId; // The unique id for a mapping session.
+    uint64_t mId; ///< The unique id for a mapping session.
 
     otIp4Address mIp4;
     otIp6Address mIp6;
-    uint32_t     mExpiry;
+    uint32_t     mExpiry; ///< Expiry time in milliseconds, always in the future.
 
     otNat64ProtocolCounters mCounters;
 } otNat64AddressMapping;
 
-#define OT_NAT64_ADDRESS_MAPPING_ITERATOR_INIT 0 ///< Value to initialize `otNat64AddressMappingIterator`.
-typedef uint16_t otNat64AddressMappingIterator;  ///< Used to iterate through address mapping in NAT64 information.
+/**
+ * Used to iterate through address mapping in NAT64 information.
+ *
+ * The fields in this type are opaque (intended for use by OpenThread core only) and therefore should not be
+ * accessed or used by caller.
+ *
+ * Before using an iterator, it MUST be initialized using `otNat64AddressMappingIteratorInit()`.
+ *
+ */
+typedef struct otNat64AddressMappingIterator
+{
+    void *mPtr;
+} otNat64AddressMappingIterator;
+
+/**
+ * Initializes an `otNat64AddressMappingIterator`.
+ *
+ * An iterator MUST be initialized before it is used.
+ *
+ * An iterator can be initialized again to restart from the beginning of the mapping info.
+ *
+ * @param[in]  aInstance  The OpenThread instance.
+ * @param[out] aIterator  A pointer to the iterator to initialize.
+ *
+ */
+void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator);
 
 /**
  * Gets the next AddressMapping info (using an iterator).
  *
- * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ * Available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]      aInstance      A pointer to an OpenThread instance.
  * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
@@ -201,7 +217,7 @@ typedef uint16_t otNat64AddressMappingIterator;  ///< Used to iterate through ad
  *                                mapping record is placed (on success).
  *
  * @retval OT_ERROR_NONE       Successfully found the next NAT64 address mapping info (@p aMapping was successfully
- *                              updated).
+ *                             updated).
  * @retval OT_ERROR_NOT_FOUND  No subsequent NAT64 address mapping info was found.
  *
  */
@@ -308,8 +324,8 @@ otError otNat64GetConfiguredCidr(otInstance *aInstance, otIp4Cidr *aCidr);
 
 /**
  * Gets the configured IPv6 prefix in the NAT64 translator.
-*
- * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ *
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[out] aPrefix           A pointer to an otIp6Prefix. Where the configured NAT64 prefix will be filled.

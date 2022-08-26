@@ -724,10 +724,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * 192.168.64.0/24
      * Done
      * @endcode
-     * @par
-     * Gets the NAT64 IPv4 CIDR used by NAT64 translator.
-     * @par
-     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @par api_copy
      * #otNat64GetConfiguredCidr
      *
@@ -748,10 +744,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * fd56:eda7:17ca:2:0:0::/96
      * Done
      * @endcode
-     * @par
-     * Gets the NAT64 IPv6 prefix used by NAT64 translator.
-     * @par
-     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @par api_copy
      * #otNat64GetConfiguredPrefix
      *
@@ -786,7 +778,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      */
     else if (aArgs[0] == "mappings")
     {
-        otNat64AddressMappingIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        otNat64AddressMappingIterator iterator;
         otNat64AddressMapping         mapping;
         uint32_t                      currentTime = otPlatAlarmMilliGetNow();
 
@@ -807,6 +799,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         OutputTableHeader(kNat64StatusLevel1Title, kNat64StatusLevel1ColumnWidths);
         OutputTableHeader(kNat64StatusTableHeader, kNat64StatusTableColumnWidths);
 
+        otNat64InitAddressMappingIterator(GetInstancePtr(), &iterator);
         while (otNat64GetNextAddressMapping(GetInstancePtr(), &iterator, &mapping) == OT_ERROR_NONE)
         {
             char ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
@@ -819,35 +812,35 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
             OutputFormat("| %40s ", ip6AddressString);
             OutputFormat("| %16s ", ip4AddressString);
             OutputFormat("| %5llus ", static_cast<uint32_t>(mapping.mExpiry - currentTime) / 1000);
-            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m4To6SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m4To6SumBytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m6To4SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m6To4SumBytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m6To4Bytes);
 
             OutputLine("|");
 
             OutputFormat("| %016s ", "");
             OutputFormat("| %68s ", "TCP");
-            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m4To6SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m4To6SumBytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m6To4SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m6To4SumBytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m6To4Bytes);
             OutputLine("|");
 
             OutputFormat("| %016s ", "");
             OutputFormat("| %68s ", "UDP");
-            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m4To6SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m4To6SumBytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m6To4SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m6To4SumBytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m6To4Bytes);
             OutputLine("|");
 
             OutputFormat("| %016s ", "");
             OutputFormat("| %68s ", "ICMP");
-            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m4To6SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m4To6SumBytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m6To4SumPackets);
-            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m6To4SumBytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m6To4Bytes);
             OutputLine("|");
         }
     }
@@ -900,11 +893,11 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         };
         static const uint8_t kNat64CounterTableErrorSubHeaderColumns[] = {
             15,
-            10,
-            10,
+            25,
+            25,
         };
         static const char *const kNat64CounterErrorType[] = {
-            "Total",
+            "Unknown",
             "Illegal Pkt",
             "Unsup Proto",
             "No Mapping",
@@ -919,14 +912,14 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         otNat64GetCounters(GetInstancePtr(), &counters);
         otNat64GetErrorCounters(GetInstancePtr(), &errorCounters);
 
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "Total", counters.mTotal.m4To6SumPackets,
-                   counters.mTotal.m4To6SumBytes, counters.mTotal.m6To4SumPackets, counters.mTotal.m6To4SumBytes);
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "TCP", counters.mTcp.m4To6SumPackets,
-                   counters.mTcp.m4To6SumBytes, counters.mTcp.m6To4SumPackets, counters.mTcp.m6To4SumBytes);
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "UDP", counters.mUdp.m4To6SumPackets,
-                   counters.mUdp.m4To6SumBytes, counters.mUdp.m6To4SumPackets, counters.mUdp.m6To4SumBytes);
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "ICMP", counters.mIcmp.m4To6SumPackets,
-                   counters.mIcmp.m4To6SumBytes, counters.mIcmp.m6To4SumPackets, counters.mIcmp.m6To4SumBytes);
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "Total", counters.mTotal.m4To6Packets,
+                   counters.mTotal.m4To6Bytes, counters.mTotal.m6To4Packets, counters.mTotal.m6To4Bytes);
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "TCP", counters.mTcp.m4To6Packets,
+                   counters.mTcp.m4To6Bytes, counters.mTcp.m6To4Packets, counters.mTcp.m6To4Bytes);
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "UDP", counters.mUdp.m4To6Packets,
+                   counters.mUdp.m4To6Bytes, counters.mUdp.m6To4Packets, counters.mUdp.m6To4Bytes);
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "ICMP", counters.mIcmp.m4To6Packets,
+                   counters.mIcmp.m4To6Bytes, counters.mIcmp.m6To4Packets, counters.mIcmp.m6To4Bytes);
 
         OutputTableHeader(kNat64CounterTableErrorSubHeader, kNat64CounterTableErrorSubHeaderColumns);
         for (uint8_t i = 0; i < OT_NAT64_DROP_REASON_COUNT; i++)
