@@ -768,10 +768,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * |          |                                UDP |    1 |   136 |   16 |  1608 |
      * |          |                               ICMP |    5 |   320 |    5 |   320 |
      * @endcode
-     * @par
-     * Gets the current address mappings of NAT64 translator.
-     * @par
-     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @par api_copy
      * #otNat64GetNextAddressMapping
      *
@@ -780,7 +776,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
     {
         otNat64AddressMappingIterator iterator;
         otNat64AddressMapping         mapping;
-        uint32_t                      currentTime = otPlatAlarmMilliGetNow();
 
         static const char *const kNat64StatusLevel1Title[] = {"", "Address", "", "4 to 6", "6 to 4"};
 
@@ -811,7 +806,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
             OutputFormat("| %016llx ", mapping.mId);
             OutputFormat("| %40s ", ip6AddressString);
             OutputFormat("| %16s ", ip4AddressString);
-            OutputFormat("| %5llus ", static_cast<uint32_t>(mapping.mExpiry - currentTime) / 1000);
+            OutputFormat("| %5llus ", mapping.mRemainingTimeMs / 1000);
             OutputFormat("| %8llu ", mapping.mCounters.mTotal.m4To6Packets);
             OutputFormat("| %12llu ", mapping.mCounters.mTotal.m4To6Bytes);
             OutputFormat("| %8llu ", mapping.mCounters.mTotal.m6To4Packets);

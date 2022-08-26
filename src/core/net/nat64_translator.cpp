@@ -293,11 +293,11 @@ void Translator::AddressMapping::CopyTo(otNat64AddressMapping &aMapping, TimeMil
     // removed. Report the mapping to be "just expired" to avoid confusion.
     if (mExpiry < aNow)
     {
-        aMapping.mExpiry = aNow.GetValue();
+        aMapping.mRemainingTimeMs = 0;
     }
     else
     {
-        aMapping.mExpiry = mExpiry.GetValue();
+        aMapping.mRemainingTimeMs = mExpiry - aNow;
     }
 }
 

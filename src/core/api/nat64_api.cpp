@@ -69,6 +69,8 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
 
 void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMappingIterator *aIterator)
 {
+    AssertPointerIsNotNull(aIterator);
+
     AsCoreType(aInstance).Get<Nat64::Translator>().InitAddressMappingIterator(*aIterator);
 }
 
@@ -76,6 +78,9 @@ otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
                                      otNat64AddressMappingIterator *aIterator,
                                      otNat64AddressMapping *        aMapping)
 {
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aMapping);
+
     return AsCoreType(aInstance).Get<Nat64::Translator>().GetNextAddressMapping(*aIterator, *aMapping);
 }
 

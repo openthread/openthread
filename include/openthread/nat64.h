@@ -132,8 +132,8 @@ typedef enum otNat64DropReason
  */
 typedef struct otNat64ErrorCounters
 {
-    uint64_t mCount4To6[OT_NAT64_DROP_REASON_COUNT];
-    uint64_t mCount6To4[OT_NAT64_DROP_REASON_COUNT];
+    uint64_t mCount4To6[OT_NAT64_DROP_REASON_COUNT]; ///< Errors catched during translating IPv4 packets.
+    uint64_t mCount6To4[OT_NAT64_DROP_REASON_COUNT]; ///< Errors catched during translating IPv6 packets.
 } otNat64ErrorCounters;
 
 /**
@@ -170,9 +170,9 @@ typedef struct otNat64AddressMapping
 {
     uint64_t mId; ///< The unique id for a mapping session.
 
-    otIp4Address mIp4;
-    otIp6Address mIp6;
-    uint32_t     mExpiry; ///< Expiry time in milliseconds, always in the future.
+    otIp4Address mIp4;             ///< The IPv4 address of the mapping.
+    otIp6Address mIp6;             ///< The IPv6 address of the mapping.
+    uint32_t     mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
 
     otNat64ProtocolCounters mCounters;
 } otNat64AddressMapping;
