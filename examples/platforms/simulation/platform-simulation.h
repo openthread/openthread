@@ -69,9 +69,7 @@ enum
     OT_SIM_EVENT_OTNS_STATUS_PUSH    = 5,
     OT_SIM_EVENT_RADIO_TX            = 17,
     OT_SIM_EVENT_RADIO_TX_DONE       = 18,
-    OT_SIM_EVENT_RADIO_TX_ACK        = 19,
     OT_SIM_EVENT_RADIO_RX_INTERFERED = 20,
-    OT_SIM_EVENT_V2_FORMAT           = 130, // unique indicator for V2 event message.
 
     OT_EVENT_DATA_MAX_SIZE = 1024,
 };

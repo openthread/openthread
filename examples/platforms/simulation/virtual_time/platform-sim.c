@@ -118,7 +118,6 @@ static void receiveEvent(otInstance *aInstance)
         otPlatUartReceived(event.mData, event.mDataLength);
         break;
 
-#if OPENTHREAD_SIMULATION_EXT_RF_MODELS
     case OT_SIM_EVENT_RADIO_RX_INTERFERED:
     case OT_SIM_EVENT_RADIO_RECEIVED:
         platformRadioReceive(aInstance, event.mData, event.mDataLength, event.mParam1);
@@ -130,11 +129,6 @@ static void receiveEvent(otInstance *aInstance)
         otError err = (otError)event.mData[0];
         platformRadioTransmitDone(aInstance, err);
         break;
-#else
-    case OT_SIM_EVENT_RADIO_RECEIVED:
-        platformRadioReceive(aInstance, event.mData, event.mDataLength, OT_RADIO_RSSI_INVALID);
-        break;
-#endif
 
     default:
         assert(false);
