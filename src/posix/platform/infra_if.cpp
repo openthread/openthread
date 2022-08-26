@@ -615,7 +615,7 @@ exit:
 otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
     otError          error = OT_ERROR_NONE;
-    struct addrinfo *hints;
+    struct addrinfo *hints = nullptr;
     struct gaicb *   reqs[1];
     struct sigevent  sig;
     int              status;
@@ -649,7 +649,10 @@ otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        freeaddrinfo(hints);
+        if (hints)
+        {
+            freeaddrinfo(hints);
+        }
         free(reqs[0]);
     }
     return error;
