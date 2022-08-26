@@ -445,6 +445,8 @@ enum EnhAckFlags : uint8_t
     kEnhAckRegister = OT_LINK_METRICS_ENH_ACK_REGISTER, ///< Register.
 };
 
+constexpr uint8_t kMaxTypeIdFlags = 4; ///< Maximum number of TypeIdFlags in a `Metrics`
+
 uint8_t TypeIdFlagsFromMetrics(TypeIdFlags aTypeIdFlags[], const Metrics &aMetrics);
 
 /**

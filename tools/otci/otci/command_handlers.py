@@ -282,3 +282,46 @@ class OtbrSshCommandRunner(OTCommandHandler):
 
     def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
         self.__line_read_callback = callback
+
+
+class OtbrAdbCommandRunner(OTCommandHandler):
+
+    def __init__(self, host, port):
+        from adb_shell.adb_device import AdbDeviceTcp
+
+        self.__host = host
+        self.__port = port
+        self.__adb = AdbDeviceTcp(host, port, default_transport_timeout_s=9.0)
+
+        self.__line_read_callback = None
+        self.__adb.connect(rsa_keys=None, auth_timeout_s=0.1)
+
+    def __repr__(self):
+        return f'{self.__host}:{self.__port}'
+
+    def execute_command(self, cmd: str, timeout: float) -> List[str]:
+        sh_cmd = f'ot-ctl {cmd}'
+
+        output = self.shell(sh_cmd, timeout=timeout)
+
+        if self.__line_read_callback is not None:
+            for line in output:
+                self.__line_read_callback(line)
+
+        if cmd in ('reset', 'factoryreset'):
+            self.wait(3)
+
+        return output
+
+    def shell(self, cmd: str, timeout: float) -> List[str]:
+        return self.__adb.shell(cmd, timeout_s=timeout).splitlines()
+
+    def close(self):
+        self.__adb.close()
+
+    def wait(self, duration: float) -> List[str]:
+        time.sleep(duration)
+        return []
+
+    def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
+        self.__line_read_callback = callback

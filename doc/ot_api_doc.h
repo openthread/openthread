@@ -109,6 +109,7 @@
  * @brief This module includes functions for all Thread roles.
  * @defgroup api-joiner               Joiner
  * @defgroup api-operational-dataset  Operational Dataset
+ * @brief Includes functions for the Operational Dataset API.
  * @defgroup api-thread-router        Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
  * @defgroup api-server               Server

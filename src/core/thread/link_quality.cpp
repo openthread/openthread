@@ -163,7 +163,7 @@ exit:
 
 uint8_t LinkQualityInfo::GetLinkMargin(void) const
 {
-    return ConvertRssToLinkMargin(Get<Mac::SubMac>().GetNoiseFloor(), GetAverageRss());
+    return ComputeLinkMargin(Get<Mac::SubMac>().GetNoiseFloor(), GetAverageRss());
 }
 
 LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const
@@ -176,7 +176,7 @@ LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const
     return string;
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
+uint8_t ComputeLinkMargin(int8_t aNoiseFloor, int8_t aRss)
 {
     int8_t linkMargin = aRss - aNoiseFloor;
 
@@ -188,40 +188,35 @@ uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)
     return static_cast<uint8_t>(linkMargin);
 }
 
-LinkQuality LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
+LinkQuality LinkQualityForLinkMargin(uint8_t aLinkMargin)
 {
-    return CalculateLinkQuality(aLinkMargin, kNoLinkQuality);
+    return LinkQualityInfo::CalculateLinkQuality(aLinkMargin, LinkQualityInfo::kNoLinkQuality);
 }
 
-LinkQuality LinkQualityInfo::ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss)
+int8_t GetTypicalRssForLinkQuality(int8_t aNoiseFloor, LinkQuality aLinkQuality)
 {
-    return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, aRss));
-}
-
-int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, LinkQuality aLinkQuality)
-{
-    int8_t linkmargin = 0;
+    int8_t linkMargin = 0;
 
     switch (aLinkQuality)
     {
     case kLinkQuality3:
-        linkmargin = kLinkQuality3LinkMargin;
+        linkMargin = LinkQualityInfo::kLinkQuality3LinkMargin;
         break;
 
     case kLinkQuality2:
-        linkmargin = kLinkQuality2LinkMargin;
+        linkMargin = LinkQualityInfo::kLinkQuality2LinkMargin;
         break;
 
     case kLinkQuality1:
-        linkmargin = kLinkQuality1LinkMargin;
+        linkMargin = LinkQualityInfo::kLinkQuality1LinkMargin;
         break;
 
     default:
-        linkmargin = kLinkQuality0LinkMargin;
+        linkMargin = LinkQualityInfo::kLinkQuality0LinkMargin;
         break;
     }
 
-    return linkmargin + aNoiseFloor;
+    return linkMargin + aNoiseFloor;
 }
 
 LinkQuality LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)

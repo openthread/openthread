@@ -931,10 +931,8 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
         }
 
         // Verify that instance name and service name are related.
-
-        VerifyOrExit(
-            StringEndsWith(instanceName, isSubType ? subServiceName : serviceName, kStringCaseInsensitiveMatch),
-            error = kErrorFailed);
+        VerifyOrExit(Dns::Name::IsSubDomainOf(instanceName, isSubType ? subServiceName : serviceName),
+                     error = kErrorFailed);
 
         // Ensure the same service does not exist already.
         VerifyOrExit(aHost.FindService(serviceName, instanceName) == nullptr, error = kErrorFailed);

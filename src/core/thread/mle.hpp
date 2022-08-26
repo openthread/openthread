@@ -1650,14 +1650,13 @@ protected:
      * This method sends a Link Metrics Management Request message.
      *
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     * @param[in]  aSubTlvs      A pointer to the buffer of the sub-TLVs in the message.
-     * @param[in]  aLength       The overall length of @p aSubTlvs.
+     * @param[in]  aSubTlv       A reference to the sub-TLV to include.
      *
      * @retval kErrorNone     Successfully sent a Link Metrics Management Request.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Link Metrics Management Request message.
      *
      */
-    Error SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength);
+    Error SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const ot::Tlv &aSubTlv);
 
     /**
      * This method sends an MLE Link Probe message.
