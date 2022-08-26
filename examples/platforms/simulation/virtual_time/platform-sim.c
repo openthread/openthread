@@ -124,6 +124,7 @@ static void receiveEvent(otInstance *aInstance)
         break;
 
     case OT_SIM_EVENT_RADIO_TX_DONE:
+        ;
         // the external RF simulator determines success/error of Tx, and must report an otError code.
         otError err = (otError)event.mParam1;
         platformRadioTransmitDone(aInstance, err);
