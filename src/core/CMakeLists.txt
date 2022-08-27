@@ -200,6 +200,7 @@ set(COMMON_SOURCES
     thread/indirect_sender.cpp
     thread/key_manager.cpp
     thread/link_metrics.cpp
+    thread/link_metrics_types.cpp
     thread/link_quality.cpp
     thread/lowpan.cpp
     thread/mesh_forwarder.cpp

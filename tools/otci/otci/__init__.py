@@ -35,7 +35,9 @@ from .otci import \
     connect_cli_serial, \
     connect_ncp_sim, \
     connect_cmd_handler, \
-    connect_otbr_ssh
+    connect_otbr_ssh, \
+    connect_otbr_adb
+
 from .types import Rloc16, ChildId, NetifIdentifier
 
 _connectors = [
@@ -43,6 +45,7 @@ _connectors = [
     'connect_cli_serial',
     'connect_ncp_sim',
     'connect_otbr_ssh',
+    'connect_otbr_adb',
     'connect_cmd_handler',
 ]
 

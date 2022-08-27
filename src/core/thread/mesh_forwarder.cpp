@@ -105,7 +105,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mDelayNextTx(false)
     , mTxDelayTimer(aInstance, HandleTxDelayTimer)
 #endif
-    , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask)
+    , mScheduleTransmissionTask(aInstance)
 #if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
 #endif
@@ -520,11 +520,6 @@ exit:
 }
 
 #endif // (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-
-void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<MeshForwarder>().ScheduleTransmissionTask();
-}
 
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
@@ -1015,18 +1010,18 @@ start:
 
             if (hopsLeft != Mle::kMaxRouteCost)
             {
-                hopsLeft += mle.GetLinkCost(Mle::Mle::RouterIdFromRloc16(mle.GetNextHop(aMeshDest)));
+                hopsLeft += mle.GetLinkCost(Mle::RouterIdFromRloc16(mle.GetNextHop(aMeshDest)));
             }
             else
             {
                 // In case there is no route to the destination router (only link).
-                hopsLeft = mle.GetLinkCost(Mle::Mle::RouterIdFromRloc16(aMeshDest));
+                hopsLeft = mle.GetLinkCost(Mle::RouterIdFromRloc16(aMeshDest));
             }
         }
 
         // The hopsLft field MUST be incremented by one if the
         // destination RLOC16 is not that of an active Router.
-        if (!Mle::Mle::IsActiveRouter(aMeshDest))
+        if (!Mle::IsActiveRouter(aMeshDest))
         {
             hopsLeft += 1;
         }
@@ -1204,7 +1199,7 @@ void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor,
     {
         aNeighbor.IncrementLinkFailures();
 
-        if (aAllowNeighborRemove && (Mle::Mle::IsActiveRouter(aNeighbor.GetRloc16())) &&
+        if (aAllowNeighborRemove && (Mle::IsActiveRouter(aNeighbor.GetRloc16())) &&
             (aNeighbor.GetLinkFailures() >= aFailLimit))
         {
             Get<Mle::MleRouter>().RemoveRouterLink(static_cast<Router &>(aNeighbor));
@@ -1708,8 +1703,6 @@ exit:
 
 Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource)
 {
-    ThreadNetif &netif = Get<ThreadNetif>();
-
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
 #endif
@@ -1721,7 +1714,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
         mIpCounters.mRxSuccess++;
     }
 
-    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &netif, &aLinkInfo, false);
+    return Get<Ip6::Ip6>().HandleDatagram(aMessage, Ip6::Ip6::kFromThreadNetif, &aLinkInfo);
 }
 
 Error MeshForwarder::GetFramePriority(const FrameData &     aFrameData,
@@ -1841,7 +1834,7 @@ uint16_t MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePres
         version = Mac::Frame::kFcfFrameVersion2015;
     }
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    else if (aNeighbor != nullptr && !Mle::MleRouter::IsActiveRouter(aNeighbor->GetRloc16()) &&
+    else if ((aNeighbor != nullptr) && Get<ChildTable>().Contains(*aNeighbor) &&
              static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
     {
         version = Mac::Frame::kFcfFrameVersion2015;

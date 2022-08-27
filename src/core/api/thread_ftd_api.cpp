@@ -260,10 +260,8 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
 
 otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator)
 {
-    AssertPointerIsNotNull(aIterator);
-    AssertPointerIsNotNull(aEntryInfo);
-
-    return AsCoreType(aInstance).Get<AddressResolver>().GetNextCacheEntry(*aEntryInfo, *aIterator);
+    return AsCoreType(aInstance).Get<AddressResolver>().GetNextCacheEntry(AsCoreType(aEntryInfo),
+                                                                          AsCoreType(aIterator));
 }
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE

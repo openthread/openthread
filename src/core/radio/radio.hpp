@@ -236,7 +236,7 @@ public:
      * @returns The radio receive sensitivity value in dBm.
      *
      */
-    int8_t GetReceiveSensitivity(void);
+    int8_t GetReceiveSensitivity(void) const;
 
 #if OPENTHREAD_RADIO
     /**
@@ -656,7 +656,7 @@ public:
     }
 
 private:
-    otInstance *GetInstancePtr(void) { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
+    otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
 
     Callbacks mCallbacks;
 };
@@ -695,7 +695,7 @@ inline otRadioCaps Radio::GetCaps(void)
     return otPlatRadioGetCaps(GetInstancePtr());
 }
 
-inline int8_t Radio::GetReceiveSensitivity(void)
+inline int8_t Radio::GetReceiveSensitivity(void) const
 {
     return otPlatRadioGetReceiveSensitivity(GetInstancePtr());
 }
@@ -870,7 +870,7 @@ inline otRadioCaps Radio::GetCaps(void)
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
-inline int8_t Radio::GetReceiveSensitivity(void)
+inline int8_t Radio::GetReceiveSensitivity(void) const
 {
     return -110;
 }

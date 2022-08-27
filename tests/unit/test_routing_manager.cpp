@@ -35,6 +35,7 @@
 
 #include "border_router/routing_manager.hpp"
 #include "common/arg_macros.hpp"
+#include "common/array.hpp"
 #include "common/instance.hpp"
 #include "net/icmp6.hpp"
 #include "net/nd6.hpp"
@@ -77,12 +78,52 @@ enum ExpectedPio
 
 static Ip6::Address sInfraIfAddress;
 
-bool        sRsEmitted;         // Indicates if an RS message was emitted by BR.
-bool        sRaValidated;       // Indicates if an RA was emitted by BR and successfully validated.
-bool        sSawExpectedRio;    // Indicates if the emitted RA by BR contained an RIO with `sExpectedRioPrefix`
-ExpectedPio sExpectedPio;       // Expected PIO in the emitted RA by BR (MUST be seen in RA to set `sRaValidated`).
-uint32_t    sOnLinkLifetime;    // Valid lifetime for local on-link prefix from the last processed RA.
-Ip6::Prefix sExpectedRioPrefix; // Expected RIO prefix to see in RA (MUST be seen to set `sSawExpectedRio`).
+bool        sRsEmitted;      // Indicates if an RS message was emitted by BR.
+bool        sRaValidated;    // Indicates if an RA was emitted by BR and successfully validated.
+ExpectedPio sExpectedPio;    // Expected PIO in the emitted RA by BR (MUST be seen in RA to set `sRaValidated`).
+uint32_t    sOnLinkLifetime; // Valid lifetime for local on-link prefix from the last processed RA.
+
+static constexpr uint16_t kMaxRioPrefixes = 10;
+
+struct RioPrefix
+{
+    RioPrefix(void) = default;
+
+    explicit RioPrefix(const Ip6::Prefix &aPrefix)
+        : mSawInRa(false)
+        , mPrefix(aPrefix)
+        , mLifetime(0)
+    {
+    }
+
+    bool        mSawInRa;  // Indicate whether or not this prefix was seen in the emitted RA (as RIO).
+    Ip6::Prefix mPrefix;   // The RIO prefix.
+    uint32_t    mLifetime; // The RIO prefix lifetime - only valid when `mSawInRa`
+};
+
+class ExpectedRios : public Array<RioPrefix, kMaxRioPrefixes>
+{
+public:
+    void Add(const Ip6::Prefix &aPrefix) { SuccessOrQuit(PushBack(RioPrefix(aPrefix))); }
+
+    bool SawAll(void) const
+    {
+        bool sawAll = true;
+
+        for (const RioPrefix &rioPrefix : *this)
+        {
+            if (!rioPrefix.mSawInRa)
+            {
+                sawAll = false;
+                break;
+            }
+        }
+
+        return sawAll;
+    }
+};
+
+ExpectedRios sExpectedRios; // Expected RIO prefixes in emitted RAs.
 
 //----------------------------------------------------------------------------------------------------------------------
 // Function prototypes
@@ -259,9 +300,13 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
             VerifyOrQuit(rio.IsValid());
             rio.GetPrefix(prefix);
 
-            if (prefix == sExpectedRioPrefix)
+            for (RioPrefix &rioPrefix : sExpectedRios)
             {
-                sSawExpectedRio = true;
+                if (prefix == rioPrefix.mPrefix)
+                {
+                    rioPrefix.mSawInRa  = true;
+                    rioPrefix.mLifetime = rio.GetRouteLifetime();
+                }
             }
 
             break;
@@ -678,10 +723,10 @@ void TestSamePrefixesFromMultipleRouters(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager. Check emitted RS and RA messages.
 
-    sRsEmitted      = false;
-    sRaValidated    = false;
-    sSawExpectedRio = false;
-    sExpectedPio    = kPioAdvertisingLocalOnLink;
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
@@ -691,13 +736,13 @@ void TestSamePrefixesFromMultipleRouters(void)
     Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
     Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
 
-    sExpectedRioPrefix = localOmr;
+    sExpectedRios.Add(localOmr);
 
     AdvanceTime(30000);
 
     VerifyOrQuit(sRsEmitted);
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
+    VerifyOrQuit(sExpectedRios.SawAll());
     Log("Received RA was validated");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -715,13 +760,11 @@ void TestSamePrefixesFromMultipleRouters(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check that the local on-link prefix is now deprecating in the new RA.
 
-    sRaValidated    = false;
-    sSawExpectedRio = false;
-    sExpectedPio    = kPioDeprecatingLocalOnLink;
+    sRaValidated = false;
+    sExpectedPio = kPioDeprecatingLocalOnLink;
 
     AdvanceTime(10000);
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check the discovered prefix table and ensure info from router A
@@ -823,10 +866,10 @@ void TestOmrSelection(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager. Check emitted RS and RA messages.
 
-    sRsEmitted      = false;
-    sRaValidated    = false;
-    sSawExpectedRio = false;
-    sExpectedPio    = kPioAdvertisingLocalOnLink;
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
@@ -836,13 +879,13 @@ void TestOmrSelection(void)
     Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
     Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
 
-    sExpectedRioPrefix = localOmr;
+    sExpectedRios.Add(localOmr);
 
     AdvanceTime(30000);
 
     VerifyOrQuit(sRsEmitted);
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
+    VerifyOrQuit(sExpectedRios.SawAll());
     Log("Received RA was validated");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -872,15 +915,15 @@ void TestOmrSelection(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Make sure BR emits RA with new OMR prefix now.
 
-    sRaValidated       = false;
-    sSawExpectedRio    = false;
-    sExpectedPio       = kPioAdvertisingLocalOnLink;
-    sExpectedRioPrefix = omrPrefix;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(omrPrefix);
 
     AdvanceTime(20000);
 
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
+    VerifyOrQuit(sExpectedRios.SawAll());
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. We should now see that the local OMR prefix
@@ -901,14 +944,14 @@ void TestOmrSelection(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Make sure BR emits RA with local OMR prefix again.
 
-    sRaValidated       = false;
-    sSawExpectedRio    = false;
-    sExpectedRioPrefix = localOmr;
+    sRaValidated = false;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
 
     AdvanceTime(20000);
 
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
+    VerifyOrQuit(sExpectedRios.SawAll());
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. We should see that the local OMR prefix is
@@ -963,10 +1006,10 @@ void TestDefaultRoute(void)
 
     SendRouterAdvert(routerAddressB, DefaultRoute(kValidLitime, NetworkData::kRoutePreferenceLow));
 
-    sRsEmitted      = false;
-    sRaValidated    = false;
-    sSawExpectedRio = false;
-    sExpectedPio    = kNoPio;
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kNoPio;
+    sExpectedRios.Clear();
 
     AdvanceTime(10000);
 
@@ -1134,17 +1177,17 @@ void TestLocalOnLinkPrefixDeprecation(void)
     Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
     Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
 
-    sRsEmitted         = false;
-    sRaValidated       = false;
-    sSawExpectedRio    = false;
-    sExpectedPio       = kPioAdvertisingLocalOnLink;
-    sExpectedRioPrefix = localOmr;
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
 
     AdvanceTime(30000);
 
     VerifyOrQuit(sRsEmitted);
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
+    VerifyOrQuit(sExpectedRios.SawAll());
     Log("Local on-link prefix is being advertised, lifetime: %d", sOnLinkLifetime);
     localOnLinkLifetime = sOnLinkLifetime;
 
@@ -1163,13 +1206,14 @@ void TestLocalOnLinkPrefixDeprecation(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check that the local on-link prefix is now deprecating in the new RA.
 
-    sRaValidated    = false;
-    sSawExpectedRio = false;
-    sExpectedPio    = kPioDeprecatingLocalOnLink;
+    sRaValidated = false;
+    sExpectedPio = kPioDeprecatingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
 
     AdvanceTime(10000);
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
+    VerifyOrQuit(sExpectedRios.SawAll());
     Log("On-link prefix is deprecating, remaining lifetime:%d", sOnLinkLifetime);
     VerifyOrQuit(sOnLinkLifetime < localOnLinkLifetime);
     localOnLinkLifetime = sOnLinkLifetime;
@@ -1201,14 +1245,15 @@ void TestLocalOnLinkPrefixDeprecation(void)
         // Keep checking the emitted RAs and make sure on-link prefix
         // is included with smaller lifetime every time.
 
-        sRaValidated    = false;
-        sSawExpectedRio = false;
-        sExpectedPio    = kPioDeprecatingLocalOnLink;
+        sRaValidated = false;
+        sExpectedPio = kPioDeprecatingLocalOnLink;
+        sExpectedRios.Clear();
+        sExpectedRios.Add(localOmr);
 
         AdvanceTime(kMaxRaTxInterval * 1000);
 
         VerifyOrQuit(sRaValidated);
-        VerifyOrQuit(sSawExpectedRio);
+        VerifyOrQuit(sExpectedRios.SawAll());
         Log("On-link prefix is deprecating, remaining lifetime:%d", sOnLinkLifetime);
         VerifyOrQuit(sOnLinkLifetime < localOnLinkLifetime);
         localOnLinkLifetime = sOnLinkLifetime;
@@ -1218,14 +1263,15 @@ void TestLocalOnLinkPrefixDeprecation(void)
     // The local on-link prefix must be expired and should no
     // longer be seen in the emitted RA message.
 
-    sRaValidated    = false;
-    sSawExpectedRio = false;
-    sExpectedPio    = kNoPio;
+    sRaValidated = false;
+    sExpectedPio = kNoPio;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
 
     AdvanceTime(kMaxRaTxInterval * 1000);
 
     VerifyOrQuit(sRaValidated);
-    VerifyOrQuit(sSawExpectedRio);
+    VerifyOrQuit(sExpectedRios.SawAll());
     Log("On-link prefix is now expired");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1242,6 +1288,153 @@ void TestLocalOnLinkPrefixDeprecation(void)
     testFreeInstance(sInstance);
 }
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+void TestDomainPrefixAsOmr(void)
+{
+    Ip6::Prefix                     localOnLink;
+    Ip6::Prefix                     localOmr;
+    Ip6::Prefix                     domainPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDomainPrefixAsOmr");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data to include the local OMR and on-link prefix.
+
+    VerifyOmrPrefixInNetData(localOmr);
+    VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Add a domain prefix directly into net data. The new prefix should
+    // be favored over the local OMR prefix.
+
+    otBackboneRouterSetEnabled(sInstance, true);
+
+    prefixConfig.Clear();
+    prefixConfig.mPrefix       = domainPrefix;
+    prefixConfig.mStable       = true;
+    prefixConfig.mSlaac        = true;
+    prefixConfig.mPreferred    = true;
+    prefixConfig.mOnMesh       = true;
+    prefixConfig.mDefaultRoute = false;
+    prefixConfig.mDp           = true;
+    prefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
+
+    SuccessOrQuit(otBorderRouterAddOnMeshPrefix(sInstance, &prefixConfig));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    AdvanceTime(100);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Make sure BR emits RA without domain prfix or previous local OMR.
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(domainPrefix);
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(20000);
+
+    VerifyOrQuit(sRaValidated);
+
+    // We should see RIO removing the local OMR prefix with lifetiem zero
+    // and should not see the domain prefix as RIO.
+
+    VerifyOrQuit(sExpectedRios[0].mPrefix == domainPrefix);
+    VerifyOrQuit(!sExpectedRios[0].mSawInRa);
+
+    VerifyOrQuit(sExpectedRios[1].mPrefix == localOmr);
+    VerifyOrQuit(sExpectedRios[1].mSawInRa);
+    VerifyOrQuit(sExpectedRios[1].mLifetime == 0);
+
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(domainPrefix);
+    sExpectedRios.Add(localOmr);
+
+    // Wait for next RA (650 seconds).
+
+    AdvanceTime(650000);
+
+    VerifyOrQuit(sRaValidated);
+
+    // We should not see either domain prefix or local OMR
+    // as RIO.
+
+    VerifyOrQuit(!sExpectedRios[0].mSawInRa);
+    VerifyOrQuit(!sExpectedRios[1].mSawInRa);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. We should now see that the local OMR prefix
+    // is removed.
+
+    VerifyOmrPrefixInNetData(domainPrefix);
+    VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the domain prefix from net data.
+
+    SuccessOrQuit(otBorderRouterRemoveOnMeshPrefix(sInstance, &domainPrefix));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    AdvanceTime(100);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Make sure BR emits RA with local OMR prefix again.
+
+    sRaValidated = false;
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(20000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data. We should see that the local OMR prefix is
+    // added again.
+
+    VerifyOmrPrefixInNetData(localOmr);
+    VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Log("End of TestDomainPrefixAsOmr");
+    testFreeInstance(sInstance);
+}
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 int main(void)
@@ -1251,6 +1444,9 @@ int main(void)
     TestOmrSelection();
     TestDefaultRoute();
     TestLocalOnLinkPrefixDeprecation();
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    TestDomainPrefixAsOmr();
+#endif
     printf("All tests passed\n");
 #else
     printf("BORDER_ROUTING feature is not enabled\n");

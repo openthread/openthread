@@ -305,7 +305,7 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 
 const char *otThreadDeviceRoleToString(otDeviceRole aRole)
 {
-    return Mle::Mle::RoleToString(MapEnum(aRole));
+    return Mle::RoleToString(MapEnum(aRole));
 }
 
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)

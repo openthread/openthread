@@ -680,11 +680,12 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        ProcessTimers(void);
 
-    static void HandleTasklet(Tasklet &aTasklet);
-    void        ProcessCallbacks(void);
+    void ProcessCallbacks(void);
+
+    using TcpTasklet = TaskletIn<Tcp, &Tcp::ProcessCallbacks>;
 
     TimerMilli mTimer;
-    Tasklet    mTasklet;
+    TcpTasklet mTasklet;
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;

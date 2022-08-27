@@ -38,7 +38,7 @@
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"

@@ -579,100 +579,6 @@ public:
     const LeaderData &GetLeaderData(void);
 
     /**
-     * This method derives the Child ID from a given RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @returns The Child ID portion of an RLOC16.
-     *
-     */
-    static uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
-
-    /**
-     * This method derives the Router ID portion from a given RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @returns The Router ID portion of an RLOC16.
-     *
-     */
-    static uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
-
-    /**
-     * This method returns whether the two RLOC16 have the same Router ID.
-     *
-     * @param[in]  aRloc16A  The first RLOC16 value.
-     * @param[in]  aRloc16B  The second RLOC16 value.
-     *
-     * @returns true if the two RLOC16 have the same Router ID, false otherwise.
-     *
-     */
-    static bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
-    {
-        return RouterIdFromRloc16(aRloc16A) == RouterIdFromRloc16(aRloc16B);
-    }
-
-    /**
-     * This method returns the Service ID corresponding to a Service ALOC16.
-     *
-     * @param[in]  aAloc16  The Service ALOC16 value.
-     *
-     * @returns The Service ID corresponding to given ALOC16.
-     *
-     */
-    static uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
-
-    /**
-     * This method returns the Service ALOC16 corresponding to a Service ID.
-     *
-     * @param[in]  aServiceId  The Service ID value.
-     *
-     * @returns The Service ALOC16 corresponding to given ID.
-     *
-     */
-    static uint16_t ServiceAlocFromId(uint8_t aServiceId)
-    {
-        return static_cast<uint16_t>(aServiceId + kAloc16ServiceStart);
-    }
-
-    /**
-     * This method returns the Commissioner Aloc corresponding to a Commissioner Session ID.
-     *
-     * @param[in]  aSessionId   The Commissioner Session ID value.
-     *
-     * @returns The Commissioner ALOC16 corresponding to given ID.
-     *
-     */
-    static uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
-    {
-        return static_cast<uint16_t>((aSessionId & kAloc16CommissionerMask) + kAloc16CommissionerStart);
-    }
-
-    /**
-     * This method derives RLOC16 from a given Router ID.
-     *
-     * @param[in]  aRouterId  The Router ID value.
-     *
-     * @returns The RLOC16 corresponding to the given Router ID.
-     *
-     */
-    static uint16_t Rloc16FromRouterId(uint8_t aRouterId)
-    {
-        return static_cast<uint16_t>(aRouterId << kRouterIdOffset);
-    }
-
-    /**
-     * This method indicates whether or not @p aRloc16 refers to an active router.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @retval TRUE   If @p aRloc16 refers to an active router.
-     * @retval FALSE  If @p aRloc16 does not refer to an active router.
-     *
-     */
-    static bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
-
-    /**
      * This method returns a reference to the send queue.
      *
      * @returns A reference to the send queue.
@@ -685,12 +591,6 @@ public:
      *
      */
     void RemoveDelayedDataResponseMessage(void);
-
-    /**
-     * This method converts a device role into a human-readable string.
-     *
-     */
-    static const char *RoleToString(DeviceRole aRole);
 
     /**
      * This method gets the MLE counters.
@@ -1520,6 +1420,12 @@ protected:
     void SetAttachState(AttachState aState);
 
     /**
+     * This method clears the parent candidate.
+     *
+     */
+    void ClearParentCandidate(void) { mParentCandidate.Clear(); }
+
+    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshDest   The RLOC16 of the destination.
@@ -1744,14 +1650,13 @@ protected:
      * This method sends a Link Metrics Management Request message.
      *
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     * @param[in]  aSubTlvs      A pointer to the buffer of the sub-TLVs in the message.
-     * @param[in]  aLength       The overall length of @p aSubTlvs.
+     * @param[in]  aSubTlv       A reference to the sub-TLV to include.
      *
      * @retval kErrorNone     Successfully sent a Link Metrics Management Request.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Link Metrics Management Request message.
      *
      */
-    Error SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength);
+    Error SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const ot::Tlv &aSubTlv);
 
     /**
      * This method sends an MLE Link Probe message.
@@ -1770,22 +1675,12 @@ protected:
 
 #endif
 
-    /**
-     * This method indicates whether the device is detaching gracefully.
-     *
-     * @retval TRUE  Detaching is in progress.
-     * @retval FALSE Not detaching.
-     *
-     */
-    bool IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
-
     Ip6::Netif::UnicastAddress mLeaderAloc; ///< Leader anycast locator
 
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     DeviceRole    mRole;                     ///< Current Thread role.
     Parent        mParent;                   ///< Parent information.
-    Parent        mParentCandidate;          ///< Parent candidate information.
     NeighborTable mNeighborTable;            ///< The neighbor table.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The attach state.
@@ -1796,13 +1691,6 @@ protected:
     TimerMilli    mAttachTimer;              ///< The timer for driving the attach process.
     TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
-    TimerMilli    mDetachGracefullyTimer;
-    uint8_t       mParentLeaderCost;
-
-    otDetachGracefullyCallback mDetachGracefullyCallback;
-    void *                     mDetachGracefullyContext;
-
-    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
 private:
     static constexpr uint8_t kMleHopLimit        = 255;
@@ -1828,6 +1716,8 @@ private:
     // Next attach cycles includes one Parent Request to routers, followed by one to routers and REEDs.
     static constexpr uint8_t kNextAttachCycleTotalParentRequests       = 2;
     static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
+
+    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
     enum StartMode : uint8_t // Used in `Start()`.
     {
@@ -1908,6 +1798,25 @@ private:
         uint8_t  mKeyIndex;
     } OT_TOOL_PACKED_END;
 
+    class ParentCandidate : public Parent
+    {
+    public:
+        void Init(Instance &aInstance) { Parent::Init(aInstance); }
+        void Clear(void);
+        void CopyTo(Parent &aParent) const;
+
+        Challenge  mChallenge;
+        int8_t     mPriority;
+        uint8_t    mLinkQuality3;
+        uint8_t    mLinkQuality2;
+        uint8_t    mLinkQuality1;
+        uint16_t   mSedBufferSize;
+        uint8_t    mSedDatagramCount;
+        uint8_t    mLinkMargin;
+        LeaderData mLeaderData;
+        bool       mIsSingleton;
+    };
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     class ServiceAloc : public Ip6::Netif::UnicastAddress
     {
@@ -1976,6 +1885,7 @@ private:
     void        ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
+    bool        IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
     Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
 
 #if OPENTHREAD_FTD
@@ -2057,13 +1967,8 @@ private:
 
     Challenge mParentRequestChallenge;
 
-    AttachMode mAttachMode;
-    int8_t     mParentPriority;
-    uint8_t    mParentLinkQuality3;
-    uint8_t    mParentLinkQuality2;
-    uint8_t    mParentLinkQuality1;
-    uint16_t   mParentSedBufferSize;
-    uint8_t    mParentSedDatagramCount;
+    AttachMode      mAttachMode;
+    ParentCandidate mParentCandidate;
 
     uint8_t                 mChildUpdateAttempts;
     ChildUpdateRequestState mChildUpdateRequestState;
@@ -2072,13 +1977,8 @@ private:
 
     AddressRegistrationMode mAddressRegistrationMode;
 
-    bool       mHasRestored;
-    uint8_t    mParentLinkMargin;
-    bool       mParentIsSingleton;
-    bool       mReceivedResponseFromParent;
-    LeaderData mParentLeaderData;
-
-    Challenge mParentCandidateChallenge;
+    bool mHasRestored;
+    bool mReceivedResponseFromParent;
 
     Ip6::Udp::Socket mSocket;
     uint32_t         mTimeout;
@@ -2110,6 +2010,10 @@ private:
     Ip6::Netif::UnicastAddress   mMeshLocal16;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+
+    TimerMilli                 mDetachGracefullyTimer;
+    otDetachGracefullyCallback mDetachGracefullyCallback;
+    void *                     mDetachGracefullyContext;
 
     otThreadParentResponseCallback mParentResponseCb;
     void *                         mParentResponseCbContext;

@@ -43,7 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -83,25 +83,13 @@ Mle::Mle(Instance &aInstance)
     , mAttachTimer(aInstance, Mle::HandleAttachTimer)
     , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer)
     , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer)
-    , mDetachGracefullyTimer(aInstance, Mle::HandleDetachGracefullyTimer)
-    , mParentLeaderCost(0)
-    , mDetachGracefullyCallback(nullptr)
-    , mDetachGracefullyContext(nullptr)
     , mAttachMode(kAnyPartition)
-    , mParentPriority(0)
-    , mParentLinkQuality3(0)
-    , mParentLinkQuality2(0)
-    , mParentLinkQuality1(0)
-    , mParentSedBufferSize(0)
-    , mParentSedDatagramCount(0)
     , mChildUpdateAttempts(0)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
     , mDataRequestAttempts(0)
     , mDataRequestState(kDataRequestNone)
     , mAddressRegistrationMode(kAppendAllAddresses)
     , mHasRestored(false)
-    , mParentLinkMargin(0)
-    , mParentIsSingleton(false)
     , mReceivedResponseFromParent(false)
     , mSocket(aInstance)
     , mTimeout(kMleEndDeviceTimeout)
@@ -116,6 +104,9 @@ Mle::Mle(Instance &aInstance)
     , mAlternateChannel(0)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
+    , mDetachGracefullyTimer(aInstance, Mle::HandleDetachGracefullyTimer)
+    , mDetachGracefullyCallback(nullptr)
+    , mDetachGracefullyContext(nullptr)
     , mParentResponseCb(nullptr)
     , mParentResponseCbContext(nullptr)
 {
@@ -123,7 +114,6 @@ Mle::Mle(Instance &aInstance)
     mParentCandidate.Init(aInstance);
 
     mLeaderData.Clear();
-    mParentLeaderData.Clear();
     mParent.Clear();
     mParentCandidate.Clear();
     ResetCounters();
@@ -1347,7 +1337,6 @@ exit:
 bool Mle::HasAcceptableParentCandidate(void) const
 {
     bool              hasAcceptableParent = false;
-    LinkQuality       linkQuality;
     ParentRequestType parentReqType;
 
     VerifyOrExit(mParentCandidate.IsStateParentResponse());
@@ -1367,8 +1356,7 @@ bool Mle::HasAcceptableParentCandidate(void) const
             // in Parent Request was sent to routers, we will keep the
             // candidate and forward to REED stage to potentially find a
             // better parent.
-            linkQuality = Min(mParentCandidate.GetLinkInfo().GetLinkQuality(), mParentCandidate.GetLinkQualityOut());
-            VerifyOrExit(linkQuality == kLinkQuality3);
+            VerifyOrExit(mParentCandidate.GetTwoWayLinkQuality() == kLinkQuality3);
         }
 
         break;
@@ -1766,7 +1754,7 @@ Error Mle::SendChildIdRequest(void)
     }
 
     VerifyOrExit((message = NewMleMessage(kCommandChildIdRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->AppendResponseTlv(mParentCandidateChallenge));
+    SuccessOrExit(error = message->AppendResponseTlv(mParentCandidate.mChallenge));
     SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
     SuccessOrExit(error = message->AppendMleFrameCounterTlv());
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
@@ -2772,21 +2760,21 @@ exit:
 void Mle::HandleDataResponse(RxInfo &aRxInfo)
 {
     Error error;
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    uint16_t metricsReportValueOffset;
-    uint16_t length;
-#endif
 
     Log(kMessageReceive, kTypeDataResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorDrop);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) ==
-        kErrorNone)
     {
-        Get<LinkMetrics::LinkMetrics>().HandleReport(aRxInfo.mMessage, metricsReportValueOffset, length,
-                                                     aRxInfo.mMessageInfo.GetPeerAddr());
+        uint16_t offset;
+        uint16_t length;
+
+        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kLinkMetricsReport, offset, length) == kErrorNone)
+        {
+            Get<LinkMetrics::LinkMetrics>().HandleReport(aRxInfo.mMessage, offset, length,
+                                                         aRxInfo.mMessageInfo.GetPeerAddr());
+        }
     }
 #endif
 
@@ -2991,58 +2979,40 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
                          uint16_t                aVersion,
                          const Mac::CslAccuracy &aCslAccuracy)
 {
-    bool        rval                       = false;
-    LinkQuality candidateLinkQualityIn     = mParentCandidate.GetLinkInfo().GetLinkQuality();
-    LinkQuality candidateTwoWayLinkQuality = Min(candidateLinkQualityIn, mParentCandidate.GetLinkQualityOut());
+    int         rval;
+    LinkQuality candidateTwoWayLinkQuality = mParentCandidate.GetTwoWayLinkQuality();
 
     // Mesh Impacting Criteria
-    if (aLinkQuality != candidateTwoWayLinkQuality)
-    {
-        ExitNow(rval = (aLinkQuality > candidateTwoWayLinkQuality));
-    }
+    rval = ThreeWayCompare(aLinkQuality, candidateTwoWayLinkQuality);
+    VerifyOrExit(rval == 0);
 
-    if (IsActiveRouter(aRloc16) != IsActiveRouter(mParentCandidate.GetRloc16()))
-    {
-        ExitNow(rval = IsActiveRouter(aRloc16));
-    }
+    rval = ThreeWayCompare(IsActiveRouter(aRloc16), IsActiveRouter(mParentCandidate.GetRloc16()));
+    VerifyOrExit(rval == 0);
 
-    if (aConnectivityTlv.GetParentPriority() != mParentPriority)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetParentPriority() > mParentPriority));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetParentPriority(), mParentCandidate.mPriority);
+    VerifyOrExit(rval == 0);
 
     // Prefer the parent with highest quality links (Link Quality 3 field in Connectivity TLV) to neighbors
-    if (aConnectivityTlv.GetLinkQuality3() != mParentLinkQuality3)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality3() > mParentLinkQuality3));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetLinkQuality3(), mParentCandidate.mLinkQuality3);
+    VerifyOrExit(rval == 0);
 
     // Thread 1.2 Specification 4.5.2.1.2 Child Impacting Criteria
-    if (aVersion != mParentCandidate.GetVersion())
-    {
-        ExitNow(rval = (aVersion > mParentCandidate.GetVersion()));
-    }
 
-    if (aConnectivityTlv.GetSedBufferSize() != mParentSedBufferSize)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetSedBufferSize() > mParentSedBufferSize));
-    }
+    rval = ThreeWayCompare(aVersion, mParentCandidate.GetVersion());
+    VerifyOrExit(rval == 0);
 
-    if (aConnectivityTlv.GetSedDatagramCount() != mParentSedDatagramCount)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetSedDatagramCount() > mParentSedDatagramCount));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetSedBufferSize(), mParentCandidate.mSedBufferSize);
+    VerifyOrExit(rval == 0);
+
+    rval = ThreeWayCompare(aConnectivityTlv.GetSedDatagramCount(), mParentCandidate.mSedDatagramCount);
+    VerifyOrExit(rval == 0);
 
     // Extra rules
-    if (aConnectivityTlv.GetLinkQuality2() != mParentLinkQuality2)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality2() > mParentLinkQuality2));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetLinkQuality2(), mParentCandidate.mLinkQuality2);
+    VerifyOrExit(rval == 0);
 
-    if (aConnectivityTlv.GetLinkQuality1() != mParentLinkQuality1)
-    {
-        ExitNow(rval = (aConnectivityTlv.GetLinkQuality1() > mParentLinkQuality1));
-    }
+    rval = ThreeWayCompare(aConnectivityTlv.GetLinkQuality1(), mParentCandidate.mLinkQuality1);
+    VerifyOrExit(rval == 0);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL metric
@@ -3051,19 +3021,18 @@ bool Mle::IsBetterParent(uint16_t                aRloc16,
         uint64_t cslMetric          = CalcParentCslMetric(aCslAccuracy);
         uint64_t candidateCslMetric = CalcParentCslMetric(mParentCandidate.GetCslAccuracy());
 
-        if (candidateCslMetric != cslMetric)
-        {
-            ExitNow(rval = (cslMetric < candidateCslMetric));
-        }
+        // Smaller metric is better.
+        rval = ThreeWayCompare(candidateCslMetric, cslMetric);
+        VerifyOrExit(rval == 0);
     }
 #else
     OT_UNUSED_VARIABLE(aCslAccuracy);
 #endif
 
-    rval = (aLinkMargin > mParentLinkMargin);
+    rval = ThreeWayCompare(aLinkMargin, mParentCandidate.mLinkMargin);
 
 exit:
-    return rval;
+    return (rval > 0);
 }
 
 void Mle::HandleParentResponse(RxInfo &aRxInfo)
@@ -3112,14 +3081,14 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     // Link Margin
     SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginFromTlv));
 
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(Get<Mac::Mac>().GetNoiseFloor(), linkInfo->GetRss());
+    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(linkInfo->GetRss());
 
     if (linkMargin > linkMarginFromTlv)
     {
         linkMargin = linkMarginFromTlv;
     }
 
-    linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
+    linkQuality = LinkQualityForLinkMargin(linkMargin);
 
     // Connectivity
     SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, connectivity));
@@ -3206,8 +3175,8 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
-            compare = MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData, mParentIsSingleton,
-                                                   mParentLeaderData);
+            compare = MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+                                                   mParentCandidate.mIsSingleton, mParentCandidate.mLeaderData);
         }
 
         // only consider partitions that are the same or better
@@ -3246,7 +3215,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Challenge
-    SuccessOrExit(error = aRxInfo.mMessage.ReadChallengeTlv(mParentCandidateChallenge));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadChallengeTlv(mParentCandidate.mChallenge));
 
     mParentCandidate.SetExtAddress(extAddress);
     mParentCandidate.SetRloc16(sourceAddress);
@@ -3259,23 +3228,23 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.GetLinkInfo().Clear();
     mParentCandidate.GetLinkInfo().AddRss(linkInfo->GetRss());
     mParentCandidate.ResetLinkFailures();
-    mParentCandidate.SetLinkQualityOut(LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMarginFromTlv));
+    mParentCandidate.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
+    mParentCandidate.SetLeaderCost(connectivity.GetLeaderCost());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mParentCandidate.SetCslAccuracy(cslAccuracy);
 #endif
 
-    mParentPriority         = connectivity.GetParentPriority();
-    mParentLinkQuality3     = connectivity.GetLinkQuality3();
-    mParentLinkQuality2     = connectivity.GetLinkQuality2();
-    mParentLinkQuality1     = connectivity.GetLinkQuality1();
-    mParentLeaderCost       = connectivity.GetLeaderCost();
-    mParentSedBufferSize    = connectivity.GetSedBufferSize();
-    mParentSedDatagramCount = connectivity.GetSedDatagramCount();
-    mParentLeaderData       = leaderData;
-    mParentIsSingleton      = connectivity.GetActiveRouters() <= 1;
-    mParentLinkMargin       = linkMargin;
+    mParentCandidate.mPriority         = connectivity.GetParentPriority();
+    mParentCandidate.mLinkQuality3     = connectivity.GetLinkQuality3();
+    mParentCandidate.mLinkQuality2     = connectivity.GetLinkQuality2();
+    mParentCandidate.mLinkQuality1     = connectivity.GetLinkQuality1();
+    mParentCandidate.mSedBufferSize    = connectivity.GetSedBufferSize();
+    mParentCandidate.mSedDatagramCount = connectivity.GetSedDatagramCount();
+    mParentCandidate.mLeaderData       = leaderData;
+    mParentCandidate.mIsSingleton      = connectivity.GetActiveRouters() <= 1;
+    mParentCandidate.mLinkMargin       = linkMargin;
 
 exit:
     LogProcessError(kTypeParentResponse, error);
@@ -3386,7 +3355,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     }
 #endif
 
-    mParent = mParentCandidate;
+    mParentCandidate.CopyTo(mParent);
     mParentCandidate.Clear();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -4211,25 +4180,6 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
 
 #endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_WARN)
 
-const char *Mle::RoleToString(DeviceRole aRole)
-{
-    static const char *const kRoleStrings[] = {
-        "disabled", // (0) kRoleDisabled
-        "detached", // (1) kRoleDetached
-        "child",    // (2) kRoleChild
-        "router",   // (3) kRoleRouter
-        "leader",   // (4) kRoleLeader
-    };
-
-    static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
-    static_assert(kRoleDetached == 1, "kRoleDetached value is incorrect");
-    static_assert(kRoleChild == 2, "kRoleChild value is incorrect");
-    static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
-    static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
-
-    return (aRole < GetArrayLength(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
-}
-
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
@@ -4298,22 +4248,21 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 // LCOV_EXCL_STOP
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength)
+Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const ot::Tlv &aSubTlv)
 {
-    Error      error = kErrorNone;
-    TxMessage *message;
+    Error      error   = kErrorNone;
+    TxMessage *message = NewMleMessage(kCommandLinkMetricsManagementRequest);
     Tlv        tlv;
 
-    VerifyOrExit((message = NewMleMessage(kCommandLinkMetricsManagementRequest)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    // Link Metrics Management TLV
     tlv.SetType(Tlv::kLinkMetricsManagement);
-    tlv.SetLength(aLength);
+    tlv.SetLength(static_cast<uint8_t>(aSubTlv.GetSize()));
 
-    SuccessOrExit(error = message->AppendBytes(&tlv, sizeof(tlv)));
-    SuccessOrExit(error = message->AppendBytes(aSubTlvs, aLength));
+    SuccessOrExit(error = message->Append(tlv));
+    SuccessOrExit(error = aSubTlv.AppendTo(*message));
 
-    SuccessOrExit(error = message->SendTo(aDestination));
+    error = message->SendTo(aDestination);
 
 exit:
     FreeMessageOnError(message, error);
@@ -5103,6 +5052,28 @@ exit:
     return error;
 }
 #endif
+
+//---------------------------------------------------------------------------------------------------------------------
+// ParentCandidate
+
+void Mle::ParentCandidate::Clear(void)
+{
+    Instance &instance = GetInstance();
+
+    memset(reinterpret_cast<void *>(this), 0, sizeof(ParentCandidate));
+    Init(instance);
+}
+
+void Mle::ParentCandidate::CopyTo(Parent &aParent) const
+{
+    // We use an intermediate pointer to copy `ParentCandidate`
+    // to silence code checker's warning about object slicing
+    // (assigning a sub-class to base class instance).
+
+    const Parent *candidateAsParent = this;
+
+    aParent = *candidateAsParent;
+}
 
 } // namespace Mle
 } // namespace ot

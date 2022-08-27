@@ -546,7 +546,17 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) { return mLinks.GetNoiseFloor(); }
+    int8_t GetNoiseFloor(void) const { return mLinks.GetNoiseFloor(); }
+
+    /**
+     * This method computes the link margin for a given a received signal strength value using noise floor.
+     *
+     * @param[in] aRss The received signal strength in dBm.
+     *
+     * @returns The link margin for @p aRss in dB based on noise floor.
+     *
+     */
+    uint8_t ComputeLinkMargin(int8_t aRss) const;
 
     /**
      * This method returns the current CCA (Clear Channel Assessment) failure rate.
@@ -753,7 +763,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleOperationTask(Tasklet &aTasklet);
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
@@ -778,6 +787,8 @@ private:
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
     static const char *OperationToString(Operation aOperation);
+
+    using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
 
     static const otExtAddress sMode2ExtAddress;
 
@@ -825,7 +836,7 @@ private:
     void *mScanHandlerContext;
 
     Links              mLinks;
-    Tasklet            mOperationTask;
+    OperationTask      mOperationTask;
     TimerMilli         mTimer;
     otMacCounters      mCounters;
     uint32_t           mKeyIdMode2FrameCounter;

@@ -27,6 +27,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-REMOTE_OT_PATH = '/home/pi/openthread/'
+REMOTE_USERNAME = 'pi'
+REMOTE_PASSWORD = 'raspberry'
+REMOTE_PORT = 22
 
-EDITCAP_PATH = r'C:\Program Files (x86)\Wireshark_Thread\editcap.exe'
+REMOTE_OT_PATH = '/home/pi/repo/openthread'

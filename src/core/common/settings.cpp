@@ -55,7 +55,7 @@ void SettingsBase::NetworkInfo::Log(Action aAction) const
 {
     LogInfo("%s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%hu, keyseq:0x%x, ...",
             ActionToString(aAction), GetRloc16(), GetExtAddress().ToString().AsCString(),
-            Mle::Mle::RoleToString(static_cast<Mle::DeviceRole>(GetRole())), GetDeviceMode(), GetVersion(),
+            Mle::RoleToString(static_cast<Mle::DeviceRole>(GetRole())), GetDeviceMode(), GetVersion(),
             GetKeySequence());
 
     LogInfo("... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%s}", GetPreviousPartitionId(), GetMleFrameCounter(),

@@ -290,6 +290,7 @@ SOURCES_COMMON                                  = \
     thread/indirect_sender.cpp                    \
     thread/key_manager.cpp                        \
     thread/link_metrics.cpp                       \
+    thread/link_metrics_types.cpp                 \
     thread/link_quality.cpp                       \
     thread/lowpan.cpp                             \
     thread/mesh_forwarder.cpp                     \
@@ -456,10 +457,10 @@ HEADERS_COMMON                                  = \
     common/log.hpp                                \
     common/logging.hpp                            \
     common/message.hpp                            \
-    common/min_max.hpp                            \
     common/new.hpp                                \
     common/non_copyable.hpp                       \
     common/notifier.hpp                           \
+    common/num_utils.hpp                          \
     common/numeric_limits.hpp                     \
     common/owned_ptr.hpp                          \
     common/owning_list.hpp                        \
@@ -604,6 +605,7 @@ HEADERS_COMMON                                  = \
     thread/key_manager.hpp                        \
     thread/link_metrics.hpp                       \
     thread/link_metrics_tlvs.hpp                  \
+    thread/link_metrics_types.hpp                 \
     thread/link_quality.hpp                       \
     thread/lowpan.hpp                             \
     thread/mesh_forwarder.hpp                     \

@@ -46,7 +46,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "meshcop/extended_panid.hpp"
@@ -525,10 +525,16 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
 
     mDiscoveredPrefixTable.FindFavoredOnLinkPrefix(mFavoredDiscoveredOnLinkPrefix);
 
-    if (mFavoredDiscoveredOnLinkPrefix.GetLength() == 0)
+    if ((mFavoredDiscoveredOnLinkPrefix.GetLength() == 0) ||
+        (mFavoredDiscoveredOnLinkPrefix == mLocalOnLinkPrefix.GetPrefix()))
     {
-        // We need to advertise our local on-link prefix since there is
-        // no discovered on-link prefix.
+        // We need to advertise our local on-link prefix when there is
+        // no discovered on-link prefix. If the favored discovered
+        // prefix is the same as our local on-link prefix we also
+        // start advertising the local prefix to add redundancy. Note
+        // that local on-link prefix is derived from extended PAN ID
+        // and therefore is the same for all BRs on the same Thread
+        // mesh.
 
         SuccessOrExit(mLocalOnLinkPrefix.Advertise());
 
@@ -544,6 +550,8 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
 
         mDiscoveredPrefixTable.RemoveOnLinkPrefix(mLocalOnLinkPrefix.GetPrefix(),
                                                   DiscoveredPrefixTable::kKeepInNetData);
+
+        mFavoredDiscoveredOnLinkPrefix.Clear();
     }
     else if (mLocalOnLinkPrefix.IsAdvertising())
     {
@@ -788,7 +796,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
         // (2) Favored OMR prefix.
 
-        if (!mFavoredOmrPrefix.IsEmpty())
+        if (!mFavoredOmrPrefix.IsEmpty() && !mFavoredOmrPrefix.IsDomainPrefix())
         {
             mAdvertisedPrefixes.Add(mFavoredOmrPrefix.GetPrefix());
         }
@@ -809,6 +817,11 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
             // Network Data the change needs to be registered with
             // leader and can take some time to be updated in Network
             // Data.
+
+            if (prefixConfig.mDp)
+            {
+                continue;
+            }
 
             if (IsValidOmrPrefix(prefixConfig) && (prefixConfig.GetPrefix() != mLocalOmrPrefix.GetPrefix()))
             {
@@ -932,7 +945,7 @@ bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
 bool RoutingManager::IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
 {
     return IsValidOmrPrefix(aOnMeshPrefixConfig.GetPrefix()) && aOnMeshPrefixConfig.mOnMesh &&
-           aOnMeshPrefixConfig.mSlaac && aOnMeshPrefixConfig.mStable && !aOnMeshPrefixConfig.mDp;
+           aOnMeshPrefixConfig.mSlaac && aOnMeshPrefixConfig.mStable;
 }
 
 bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aPrefix)
@@ -1283,7 +1296,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, HandleTimer)
-    , mSignalTask(aInstance, HandleSignalTask)
+    , mSignalTask(aInstance)
     , mAllowDefaultRouteInNetData(false)
 {
 }
@@ -1818,11 +1831,6 @@ void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void)
     mSignalTask.Post();
 }
 
-void RoutingManager::DiscoveredPrefixTable::HandleSignalTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<RoutingManager>().HandleDiscoveredPrefixTableChanged();
-}
-
 void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const
 {
     Iterator &iterator = static_cast<Iterator &>(aIterator);
@@ -1991,14 +1999,16 @@ uint32_t RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpireDelay(uint
 
 void RoutingManager::OmrPrefix::SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
 {
-    mPrefix     = aOnMeshPrefixConfig.GetPrefix();
-    mPreference = aOnMeshPrefixConfig.GetPreference();
+    mPrefix         = aOnMeshPrefixConfig.GetPrefix();
+    mPreference     = aOnMeshPrefixConfig.GetPreference();
+    mIsDomainPrefix = aOnMeshPrefixConfig.mDp;
 }
 
 void RoutingManager::OmrPrefix::SetFrom(const LocalOmrPrefix &aLocalOmrPrefix)
 {
-    mPrefix     = aLocalOmrPrefix.GetPrefix();
-    mPreference = aLocalOmrPrefix.GetPreference();
+    mPrefix         = aLocalOmrPrefix.GetPrefix();
+    mPreference     = aLocalOmrPrefix.GetPreference();
+    mIsDomainPrefix = false;
 }
 
 bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const

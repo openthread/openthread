@@ -638,6 +638,14 @@ public:
     const LinkQualityInfo &GetLinkInfo(void) const { return mLinkInfo; }
 
     /**
+     * This method gets the link quality in value.
+     *
+     * @returns The link quality in value.
+     *
+     */
+    LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQuality(); }
+
+    /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
      *
      */
@@ -1418,6 +1426,14 @@ public:
     void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
     /**
+     * This method gets the two-way link quality value (minimum of link quality in and out).
+     *
+     * @returns The two-way link quality value.
+     *
+     */
+    LinkQuality GetTwoWayLinkQuality(void) const;
+
+    /**
      * This method get the route cost to this router.
      *
      * @returns The route cost to this router.
@@ -1471,6 +1487,22 @@ public:
      */
     void Clear(void);
 
+    /**
+     * This method gets route cost from parent to leader.
+     *
+     * @returns The route cost from parent to leader
+     *
+     */
+    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
+
+    /**
+     * This method sets route cost from parent to leader.
+     *
+     * @param[in] aLaderConst  The route cost.
+     *
+     */
+    void SetLeaderCost(uint8_t aLeaderCost) { mLeaderCost = aLeaderCost; }
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method gets the CSL accuracy (clock accuracy and uncertainty).
@@ -1490,6 +1522,7 @@ public:
 #endif
 
 private:
+    uint8_t mLeaderCost;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Mac::CslAccuracy mCslAccuracy; // CSL accuracy (clock accuracy in ppm and uncertainty).
 #endif

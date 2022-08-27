@@ -38,7 +38,7 @@
 #include "common/as_core_type.hpp"
 #include "common/encoding.hpp"
 #include "common/locator_getters.hpp"
-#include "common/min_max.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 
 namespace ot {

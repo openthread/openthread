@@ -28,7 +28,6 @@
 #
 
 import os
-import select
 import socket
 
 
@@ -72,17 +71,21 @@ class SnifferTransport(object):
         """
         raise NotImplementedError
 
-    def recv(self, bufsize):
+    def recv(self, bufsize, timeout):
         """ Receive data sent by other node.
 
         Args:
             bufsize (int): size of buffer for incoming data.
+            timeout (float | None): socket timeout.
 
         Returns:
             A tuple contains data and node id.
 
             For example:
             (bytearray([0x00, 0x01...], 1)
+
+        Raises:
+            socket.timeout: when receiving the packets times out.
         """
         raise NotImplementedError
 
@@ -140,15 +143,13 @@ class SnifferSocketTransport(SnifferTransport):
 
         return self._socket.sendto(data, address)
 
-    def recv(self, bufsize):
+    def recv(self, bufsize, timeout):
+        self._socket.settimeout(timeout)
         data, address = self._socket.recvfrom(bufsize)
 
         nodeid = self._port_to_nodeid(address[1])
 
         return bytearray(data), nodeid
-
-    def ready(self, timeout):
-        return select.select([self._socket], [], [], timeout)[0]
 
 
 class SnifferTransportFactory(object):
