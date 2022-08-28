@@ -466,7 +466,8 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
     otError error = OT_ERROR_INVALID_STATE;
 
-    if (sState != OT_RADIO_STATE_DISABLED)
+    // TODO: interface contract doesn't allow forced Transmit -> Receive transition. But OT sub_mac does this.
+    if (sState != OT_RADIO_STATE_DISABLED /* && sState != OT_RADIO_STATE_TRANSMIT */ )
     {
         error                  = OT_ERROR_NONE;
         sState                 = OT_RADIO_STATE_RECEIVE;
@@ -742,8 +743,6 @@ exit:
 
 void platformRadioTransmitDone(otInstance *aInstance, otError err)
 {
-    otEXPECT(sState == OT_RADIO_STATE_TRANSMIT || sState == OT_RADIO_STATE_RECEIVE);
-
     if (sState == OT_RADIO_STATE_TRANSMIT)
     {
         if (!otMacFrameIsAckRequested(
@@ -764,22 +763,6 @@ void platformRadioTransmitDone(otInstance *aInstance, otError err)
             }
         }
     }
-    else if (sState == OT_RADIO_STATE_RECEIVE)
-    { // Ack transmit was done for a received packet.
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-        if (otPlatDiagModeGet())
-        {
-            otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, OT_ERROR_NONE);
-        }
-        else
-#endif
-        {
-            // ignore any error in ACK transmit. Frame reception was ok anyway, in case this node sent an ACK.
-            otPlatRadioReceiveDone(aInstance, &sReceiveFrame, OT_ERROR_NONE);
-        }
-    }
-exit:
-    return;
 }
 
 #else
@@ -997,7 +980,6 @@ exit:
 
 void radioProcessFrame(otInstance *aInstance)
 {
-    bool         requireAck = false;
     otError      error   = OT_ERROR_NONE;
     otMacAddress macAddress;
     OT_UNUSED_VARIABLE(macAddress);
@@ -1019,7 +1001,6 @@ void radioProcessFrame(otInstance *aInstance)
     // generate acknowledgment
     if (otMacFrameIsAckRequested(&sReceiveFrame))
     {
-        requireAck = true;
         radioSendAck();
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         if (otMacFrameIsSecurityEnabled(&sAckFrame))
@@ -1032,10 +1013,8 @@ void radioProcessFrame(otInstance *aInstance)
 
 exit:
 
-    // If Rx-frame was received error-free and it requires an ACK, then postpone the receive-done callback
-    // until after the ACK is sent. This prevents stack attempting to send more frames before the ACK has
-    // had a chance to be sent.
-    if (error != OT_ERROR_ABORT && ((!requireAck) || (error != OT_ERROR_NONE)))
+    // If Rx-frame was received and addressed to me, call receive-done handler.
+    if (error != OT_ERROR_ABORT)
     {
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         if (otPlatDiagModeGet())
