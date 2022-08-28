@@ -77,12 +77,12 @@ enum
 OT_TOOL_PACKED_BEGIN
 struct Event
 {
-    uint64_t mMsgId;  // message id (for debug purposes only - TODO remove when not needed anymore)
-    uint32_t mNodeId; // node ID should equal gNodeId for events to/from this node.
-    uint64_t mDelay;  // time delay in us that is applied prior to event execution
-    uint8_t  mEvent;  // event type
-    int8_t   mParam1; // generic parameter 1 used by specific event types (for TxPower, RSSI, otError)
-    int8_t   mParam2; // generic parameter 2 used by specific event types (for CCA ED)
+    uint64_t mMsgId;      // message id (for debug purposes only - TODO remove when not needed anymore)
+    uint32_t mNodeId;     // node ID should equal gNodeId for events to/from this node.
+    uint64_t mDelay;      // time delay in us that is applied prior to event execution
+    uint8_t  mEvent;      // event type
+    int8_t   mParam1;     // generic parameter 1 used by specific event types (for TxPower, RSSI, otError)
+    int8_t   mParam2;     // generic parameter 2 used by specific event types (for CCA ED)
     uint16_t mDataLength; // number of bytes following in mData
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE]; // frame data, must be last field of struct
 } OT_TOOL_PACKED_END;

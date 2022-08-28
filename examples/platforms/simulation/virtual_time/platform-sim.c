@@ -52,7 +52,7 @@
 
 #include "utils/uart.h"
 
-uint32_t gNodeId = 1;
+uint32_t gNodeId    = 1;
 uint64_t gLastMsgId = 0;
 
 extern bool          gPlatformPseudoResetWasRequested;
@@ -123,8 +123,7 @@ static void receiveEvent(otInstance *aInstance)
         platformRadioReceive(aInstance, event.mData, event.mDataLength, event.mParam1);
         break;
 
-    case OT_SIM_EVENT_RADIO_TX_DONE:
-        ;
+    case OT_SIM_EVENT_RADIO_TX_DONE:;
         // the external RF simulator determines success/error of Tx, and must report an otError code.
         otError err = (otError)event.mParam1;
         platformRadioTransmitDone(aInstance, err);

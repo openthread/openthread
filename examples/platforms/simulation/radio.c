@@ -467,7 +467,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     otError error = OT_ERROR_INVALID_STATE;
 
     // TODO: interface contract doesn't allow forced Transmit -> Receive transition. But OT sub_mac does this.
-    if (sState != OT_RADIO_STATE_DISABLED /* && sState != OT_RADIO_STATE_TRANSMIT */ )
+    if (sState != OT_RADIO_STATE_DISABLED /* && sState != OT_RADIO_STATE_TRANSMIT */)
     {
         error                  = OT_ERROR_NONE;
         sState                 = OT_RADIO_STATE_RECEIVE;
@@ -892,7 +892,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
         perror("sendto(sTxFd)");
         exit(EXIT_FAILURE);
     }
-#else // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     struct Event event;
 
     // event.mParam1 contains the TxPower used. event.mParam2 the CCA ED threshold.
@@ -980,7 +980,7 @@ exit:
 
 void radioProcessFrame(otInstance *aInstance)
 {
-    otError      error   = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
     otMacAddress macAddress;
     OT_UNUSED_VARIABLE(macAddress);
 
