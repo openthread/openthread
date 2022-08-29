@@ -37,6 +37,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
+#include "thread/network_data_leader.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_headers.hpp"
 #include "utils/slaac_address.hpp"
@@ -292,4 +293,19 @@ otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifi
 const char *otIp6ProtoToString(uint8_t aIpProto)
 {
     return Ip6::Ip6::IpProtoToString(aIpProto);
+}
+
+otError otIp6AddressSynthesizeFromIp4Address(otInstance *        aInstance,
+                                             const otIp4Address *aIp4Address,
+                                             otIp6Address *      aIp6Address)
+{
+    otError                          err = OT_ERROR_NONE;
+    NetworkData::ExternalRouteConfig nat64Prefix;
+
+    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == OT_ERROR_NONE,
+                 err = OT_ERROR_INVALID_STATE);
+    AsCoreType(aIp6Address).SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), AsCoreType(aIp4Address));
+
+exit:
+    return err;
 }

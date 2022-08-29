@@ -4590,7 +4590,20 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
         aArgs += 2;
     }
 
-    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(config.mDestination));
+    error = aArgs[0].ParseAsIp6Address(config.mDestination);
+    if (error != OT_ERROR_NONE && !aArgs[0].IsEmpty())
+    {
+        // It might be an IPv4 address, let's have a try.
+        otIp4Address ip4Address;
+
+        SuccessOrExit(otIp4AddressFromString(aArgs[0].GetCString(), &ip4Address));
+        SuccessOrExit(error =
+                          otIp6AddressSynthesizeFromIp4Address(GetInstancePtr(), &ip4Address, &config.mDestination));
+
+        OutputFormat("Pinging NAT64 mapped address: ");
+        OutputIp6AddressLine(config.mDestination);
+    }
+    SuccessOrExit(error);
 
     if (!aArgs[1].IsEmpty())
     {

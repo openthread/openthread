@@ -201,6 +201,18 @@ bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond
 void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6Address, otIp4Address *aIp4Address);
 
 /**
+ * This function converts a human-readable IPv4 address string into a binary representation.
+ *
+ * @param[in]   aString   A pointer to a NULL-terminated string.
+ * @param[out]  aAddress  A pointer to an IPv4 address.
+ *
+ * @retval OT_ERROR_NONE          Successfully parsed the string.
+ * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
+ *
+ */
+otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
+
+/**
  * @}
  *
  */

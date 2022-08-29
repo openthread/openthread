@@ -77,3 +77,9 @@ void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6A
 {
     AsCoreType(aIp4Address).ExtractFromIp6Address(aPrefixLength, AsCoreType(aIp6Address));
 }
+
+otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress)
+{
+    AssertPointerIsNotNull(aString);
+    return AsCoreType(aAddress).FromString(aString);
+}
