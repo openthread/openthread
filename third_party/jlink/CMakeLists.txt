@@ -34,3 +34,7 @@ add_library(jlinkrtt
 target_include_directories(jlinkrtt PRIVATE
     ${PROJECT_SOURCE_DIR}/include
 )
+
+target_include_directories(openthread-platform-utils PRIVATE
+    ${PROJECT_SOURCE_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
+)
