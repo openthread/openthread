@@ -348,7 +348,7 @@ void Mac::ReportEnergyScanResult(int8_t aRssi)
 {
     EnergyScanResult result;
 
-    VerifyOrExit((mEnergyScanHandler != nullptr) && (aRssi != kInvalidRssiValue));
+    VerifyOrExit((mEnergyScanHandler != nullptr) && (aRssi != Radio::kInvalidRssi));
 
     result.mChannel = mScanChannel;
     result.mMaxRssi = aRssi;

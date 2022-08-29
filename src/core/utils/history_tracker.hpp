@@ -273,7 +273,6 @@ private:
     static constexpr AddressEvent kAddressAdded   = OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED;
     static constexpr AddressEvent kAddressRemoved = OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED;
 
-    static constexpr int8_t   kInvalidRss    = OT_RADIO_RSSI_INVALID;
     static constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid;
 
     typedef otHistoryTrackerNeighborEvent NeighborEvent;

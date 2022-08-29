@@ -697,7 +697,6 @@ public:
 #endif
 
 private:
-    static constexpr int8_t   kInvalidRssiValue  = SubMac::kInvalidRssiValue;
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
     enum Operation : uint8_t

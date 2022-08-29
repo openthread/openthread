@@ -3901,7 +3901,7 @@ void Mle::ParentSearch::HandleTimer(void)
 
     parentRss = Get<Mle>().GetParent().GetLinkInfo().GetAverageRss();
     LogInfo("PeriodicParentSearch: Parent RSS %d", parentRss);
-    VerifyOrExit(parentRss != OT_RADIO_RSSI_INVALID);
+    VerifyOrExit(parentRss != Radio::kInvalidRssi);
 
     if (parentRss < kRssThreadhold)
     {
