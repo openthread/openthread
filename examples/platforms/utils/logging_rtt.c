@@ -39,7 +39,11 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/logging.h>
 
+#ifdef SEGGER_RTT_CONFIG_FILE
+#include SEGGER_RTT_CONFIG_FILE
+#else
 #include "SEGGER_RTT.h"
+#endif
 #include "logging_rtt.h"
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
