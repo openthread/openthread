@@ -233,7 +233,7 @@ jobs:
         path: tmp/coverage.info
 
   expects:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15

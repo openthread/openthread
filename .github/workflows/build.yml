@@ -66,14 +66,15 @@ jobs:
         max-depth: 3
 
   cmake-version:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo pip3 install --system -U cmake==3.10.3
+        sudo pip3 install -U scikit-build
+        sudo pip3 install -U cmake==3.10.3
         cmake --version | grep 3.10.3
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
     - name: Build
@@ -123,7 +124,7 @@ jobs:
         script/check-scan-build
 
   mbedtls3-build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -143,7 +144,7 @@ jobs:
 
   arm-gcc:
     name: arm-gcc-${{ matrix.gcc_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -175,7 +176,8 @@ jobs:
         wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
         # use the minimal required cmake version
-        sudo pip3 install --system -U cmake==3.10.3
+        sudo pip3 install -U scikit-build
+        sudo pip3 install -U cmake==3.10.3
         cmake --version | grep 3.10.3
     - name: Build
       run: |
@@ -184,11 +186,11 @@ jobs:
 
   gcc:
     name: gcc-${{ matrix.gcc_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        gcc_ver: [5, 6, 7, 8, 9, 10, 11]
+        gcc_ver: [7, 8, 9, 10, 11]
     env:
       CC: gcc-${{ matrix.gcc_ver }}
       CXX: g++-${{ matrix.gcc_ver }}

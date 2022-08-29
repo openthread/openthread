@@ -41,7 +41,7 @@ jobs:
       if: "github.ref != 'refs/heads/main'"
 
   expects-linux:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
@@ -77,12 +77,11 @@ jobs:
     - name: Run TUN Mode
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
-        sudo systemctl start dnsmasq ntp
-        host ipv6.google.com 127.0.0.1
-        echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
         echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
-        sudo systemctl restart dnsmasq
+        sudo apt-get install --no-install-recommends -y bind9-host ntp socat
+        sudo systemctl restart ntp
+        sudo socat 'UDP6-LISTEN:53,fork,reuseaddr,bind=[::1]' UDP:127.0.0.53:53 &
+        host ipv6.google.com 127.0.0.53
         host ipv6.google.com ::1
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
