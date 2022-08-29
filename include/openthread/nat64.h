@@ -207,7 +207,7 @@ void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMapp
 /**
  * Gets the next AddressMapping info (using an iterator).
  *
- * Available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]      aInstance      A pointer to an OpenThread instance.
  * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
@@ -231,7 +231,7 @@ otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
  * Message buffers allocated by this function will have 20 bytes (difference between the size of IPv6 headers
  * and IPv4 header sizes) reserved.
  *
- * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @note If @p aSettings is `NULL`, the link layer security is enabled and the message priority is set to
  * OT_MESSAGE_PRIORITY_NORMAL by default.
