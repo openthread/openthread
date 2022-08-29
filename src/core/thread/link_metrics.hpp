@@ -123,10 +123,10 @@ public:
      * @retval kErrorUnknownNeighbor  @p aDestination is not link-local or the neighbor is not found.
      *
      */
-    Error SendMgmtRequestForwardTrackingSeries(const Ip6::Address &     aDestination,
-                                               uint8_t                  aSeriesId,
-                                               const SeriesFlags::Info &aSeriesFlags,
-                                               const Metrics *          aMetrics);
+    Error SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDestination,
+                                               uint8_t             aSeriesId,
+                                               const SeriesFlags & aSeriesFlags,
+                                               const Metrics *     aMetrics);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     /**
@@ -282,10 +282,10 @@ private:
                                const TypeIdFlags * aTypeIdFlags,
                                uint8_t             aTypeIdFlagsCount);
 
-    Status ConfigureForwardTrackingSeries(uint8_t            aSeriesId,
-                                          const SeriesFlags &aSeriesFlags,
-                                          const Metrics &    aMetrics,
-                                          Neighbor &         aNeighbor);
+    Status ConfigureForwardTrackingSeries(uint8_t        aSeriesId,
+                                          uint8_t        aSeriesFlags,
+                                          const Metrics &aMetrics,
+                                          Neighbor &     aNeighbor);
 
     Status ConfigureEnhAckProbing(EnhAckFlags aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor);
 

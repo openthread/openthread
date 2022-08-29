@@ -81,39 +81,34 @@ uint8_t TypeIdFlagsFromMetrics(TypeIdFlags aTypeIdFlags[], const Metrics &aMetri
 //----------------------------------------------------------------------------------------------------------------------
 // SeriesFlags
 
-void SeriesFlags::SetFrom(const Info &aSeriesFlags)
+uint8_t SeriesFlags::ConvertToMask(void) const
 {
-    Clear();
+    uint8_t mask = 0;
 
-    if (aSeriesFlags.mLinkProbe)
-    {
-        SetLinkProbeFlag();
-    }
+    mask |= (mLinkProbe ? kLinkProbeFlag : 0);
+    mask |= (mMacData ? kMacDataFlag : 0);
+    mask |= (mMacDataRequest ? kMacDataRequestFlag : 0);
+    mask |= (mMacAck ? kMacAckFlag : 0);
 
-    if (aSeriesFlags.mMacData)
-    {
-        SetMacDataFlag();
-    }
+    return mask;
+}
 
-    if (aSeriesFlags.mMacDataRequest)
-    {
-        SetMacDataRequestFlag();
-    }
-
-    if (aSeriesFlags.mMacAck)
-    {
-        SetMacAckFlag();
-    }
+void SeriesFlags::SetFrom(uint8_t aFlagsMask)
+{
+    mLinkProbe      = (aFlagsMask & kLinkProbeFlag);
+    mMacData        = (aFlagsMask & kMacDataFlag);
+    mMacDataRequest = (aFlagsMask & kMacDataRequestFlag);
+    mMacAck         = (aFlagsMask & kMacAckFlag);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 // SeriesInfo
 
-void SeriesInfo::Init(uint8_t aSeriesId, const SeriesFlags &aSeriesFlags, const Metrics &aMetrics)
+void SeriesInfo::Init(uint8_t aSeriesId, uint8_t aSeriesFlagsMask, const Metrics &aMetrics)
 {
-    mSeriesId    = aSeriesId;
-    mSeriesFlags = aSeriesFlags;
-    mMetrics     = aMetrics;
+    mSeriesId = aSeriesId;
+    mSeriesFlags.SetFrom(aSeriesFlagsMask);
+    mMetrics = aMetrics;
     mRssAverager.Clear();
     mLqiAverager.Clear();
     mPduCount = 0;
