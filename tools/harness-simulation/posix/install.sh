@@ -34,7 +34,7 @@ OT_DIR="${POSIX_DIR}/../../.."
 ETC_DIR="${POSIX_DIR}/etc"
 SNIFFER_DIR="${POSIX_DIR}/sniffer_sim"
 
-CONFIG=${1:-"${POSIX_DIR}/config.json"}
+CONFIG=${1:-"${POSIX_DIR}/simulation.conf"}
 # Use absolute path in case of changing current working directory
 if [[ ${CONFIG:0:1} != '/' ]]; then
     CONFIG="${POSIX_DIR}/${CONFIG}"

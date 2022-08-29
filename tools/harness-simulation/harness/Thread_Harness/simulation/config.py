@@ -30,7 +30,7 @@
 import json
 import os
 
-CONFIG_PATH = r'%s\GRL\Thread1.2\Thread_Harness\simulation\config.json' % os.environ['systemdrive']
+CONFIG_PATH = r'%s\GRL\Thread1.2\Thread_Harness\simulation\simulation.conf' % os.environ['systemdrive']
 
 
 def load_config():
