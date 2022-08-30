@@ -2861,15 +2861,38 @@ class NodeImpl:
 
         return router_table
 
-    def link_metrics_query_single_probe(self, dst_addr: str, linkmetrics_flags: str):
-        cmd = 'linkmetrics query %s single %s' % (dst_addr, linkmetrics_flags)
+    def link_metrics_query_single_probe(self, dst_addr: str, linkmetrics_flags: str, block: str = ""):
+        cmd = 'linkmetrics query %s single %s %s' % (dst_addr, linkmetrics_flags, block)
         self.send_command(cmd)
-        self._expect_done()
+        self.simulator.go(5)
+        return self._parse_linkmetrics_query_result(self._expect_command_output())
 
-    def link_metrics_query_forward_tracking_series(self, dst_addr: str, series_id: int):
-        cmd = 'linkmetrics query %s forward %d' % (dst_addr, series_id)
+    def link_metrics_query_forward_tracking_series(self, dst_addr: str, series_id: int, block: str = ""):
+        cmd = 'linkmetrics query %s forward %d %s' % (dst_addr, series_id, block)
         self.send_command(cmd)
-        self._expect_done()
+        self.simulator.go(5)
+        return self._parse_linkmetrics_query_result(self._expect_command_output())
+
+    def _parse_linkmetrics_query_result(self, lines):
+        """Parse link metrics query result"""
+
+        # Exmaple of command output:
+        # ['Received Link Metrics Report from: fe80:0:0:0:146e:a00:0:1',
+        #  '- PDU Counter: 1 (Count/Summation)',
+        #  '- LQI: 0 (Exponential Moving Average)',
+        #  '- Margin: 80 (dB) (Exponential Moving Average)',
+        #  '- RSSI: -20 (dBm) (Exponential Moving Average)']
+        #
+        # Or 'Link Metrics Report, status: {status}'
+
+        result = {}
+        for line in lines:
+            if line.startswith('- '):
+                k, v = line[2:].split(': ')
+                result[k] = v.split(' ')[0]
+            elif line.startswith('Link Metrics Report, status: '):
+                result['Status'] = line[29:]
+        return result
 
     def link_metrics_mgmt_req_enhanced_ack_based_probing(self,
                                                          dst_addr: str,
