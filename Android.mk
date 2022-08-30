@@ -197,6 +197,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/logging_api.cpp                                    \
     src/core/api/message_api.cpp                                    \
     src/core/api/multi_radio_api.cpp                                \
+    src/core/api/nat64_api.cpp                                      \
     src/core/api/netdata_api.cpp                                    \
     src/core/api/netdata_publisher_api.cpp                          \
     src/core/api/netdiag_api.cpp                                    \
@@ -231,6 +232,8 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/crc16.cpp                                       \
     src/core/common/data.cpp                                        \
     src/core/common/error.cpp                                       \
+    src/core/common/frame_builder.cpp                               \
+    src/core/common/frame_data.cpp                                  \
     src/core/common/heap.cpp                                        \
     src/core/common/heap_data.cpp                                   \
     src/core/common/heap_string.cpp                                 \
@@ -297,12 +300,13 @@ LOCAL_SRC_FILES                                                  := \
     src/core/net/dns_types.cpp                                      \
     src/core/net/dnssd_server.cpp                                   \
     src/core/net/icmp6.cpp                                          \
-    src/core/net/ip4_address.cpp                                    \
+    src/core/net/ip4_types.cpp                                      \
     src/core/net/ip6.cpp                                            \
     src/core/net/ip6_address.cpp                                    \
     src/core/net/ip6_filter.cpp                                     \
     src/core/net/ip6_headers.cpp                                    \
     src/core/net/ip6_mpl.cpp                                        \
+    src/core/net/nat64_translator.cpp                               \
     src/core/net/nd6.cpp                                            \
     src/core/net/nd_agent.cpp                                       \
     src/core/net/netif.cpp                                          \
@@ -330,6 +334,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/thread/indirect_sender.cpp                             \
     src/core/thread/key_manager.cpp                                 \
     src/core/thread/link_metrics.cpp                                \
+    src/core/thread/link_metrics_types.cpp                          \
     src/core/thread/link_quality.cpp                                \
     src/core/thread/lowpan.cpp                                      \
     src/core/thread/mesh_forwarder.cpp                              \
@@ -581,6 +586,7 @@ LOCAL_CPPFLAGS                                                              := \
     $(NULL)
 
 LOCAL_LDLIBS                               := \
+    -lanl                                     \
     -lrt                                      \
     -lutil
 

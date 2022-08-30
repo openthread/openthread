@@ -57,6 +57,7 @@
 
 namespace ot {
 class Neighbor;
+class UnitTester;
 
 namespace LinkMetrics {
 
@@ -70,158 +71,13 @@ namespace LinkMetrics {
  */
 
 /**
- * This type represents the results (values) for a set of metrics.
- *
- * @sa otLinkMetricsValues.
- *
- */
-class MetricsValues : public otLinkMetricsValues, public Clearable<MetricsValues>
-{
-public:
-    /**
-     * This method gets the metrics flags.
-     *
-     * @returns The metrics flags.
-     *
-     */
-    Metrics &GetMetrics(void) { return static_cast<Metrics &>(mMetrics); }
-
-    /**
-     * This method gets the metrics flags.
-     *
-     * @returns The metrics flags.
-     *
-     */
-    const Metrics &GetMetrics(void) const { return static_cast<const Metrics &>(mMetrics); }
-
-    /**
-     * This method set the metrics flags.
-     *
-     * @param[in] aMetrics  The metrics flags to set from.
-     *
-     */
-    void SetMetrics(const Metrics &aMetrics) { mMetrics = aMetrics; }
-};
-
-/**
- * This class represents one Series that is being tracked by the Subject.
- *
- * When an Initiator successfully configured a Forward Tracking Series, the Subject would use an instance of this class
- * to track the information of the Series. The Subject has a `Pool` of `SeriesInfo`. It would allocate one when a new
- * Series comes, and free it when a Series finishes.
- *
- * This class inherits `LinkedListEntry` and each `Neighbor` has a list of `SeriesInfo` so that the Subject could track
- * per Series initiated by neighbors as long as it has available resources.
- *
- */
-class SeriesInfo : public LinkedListEntry<SeriesInfo>
-{
-    friend class LinkedList<SeriesInfo>;
-    friend class LinkedListEntry<SeriesInfo>;
-
-public:
-    /**
-     * This constant represents Link Probe when filtering frames to be accounted using Series Flag. There's
-     * already `kFcfFrameData`, `kFcfFrameAck` and `kFcfFrameMacCmd`. This item is added so that we can
-     * filter a Link Probe for series in the same way as other frames.
-     *
-     */
-    static constexpr uint8_t kSeriesTypeLinkProbe = 0;
-
-    /**
-     * This method initializes the SeriesInfo object.
-     *
-     * @param[in]  aSeriesId      The Series ID.
-     * @param[in]  aSeriesFlags   The Series Flags which specify what types of frames are to be accounted.
-     * @param[in]  aMetrics       Metrics to query.
-     *
-     */
-    void Init(uint8_t aSeriesId, const SeriesFlags &aSeriesFlags, const Metrics &aMetrics);
-
-    /**
-     * This method gets the Series ID.
-     *
-     * @returns  The Series ID.
-     *
-     */
-    uint8_t GetSeriesId(void) const { return mSeriesId; }
-
-    /**
-     * This method gets the PDU count.
-     *
-     * @returns  The PDU count.
-     *
-     */
-    uint32_t GetPduCount(void) const { return mPduCount; }
-
-    /**
-     * This method gets the average LQI.
-     *
-     * @returns  The average LQI.
-     *
-     */
-    uint8_t GetAverageLqi(void) const { return mLqiAverager.GetAverage(); }
-
-    /**
-     * This method gets the average RSS.
-     *
-     * @returns  The average RSS.
-     *
-     */
-    int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }
-
-    /**
-     * This method aggregates the Link Metrics data of a frame into this series.
-     *
-     * @param[in]  aFrameType    The type of the frame.
-     * @param[in]  aLqi          The LQI value.
-     * @param[in]  aRss          The RSS value.
-     *
-     */
-    void AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
-
-    /**
-     * This methods gets the metrics.
-     *
-     * @returns  The metrics associated with `SeriesInfo`.
-     *
-     */
-    const Metrics &GetLinkMetrics(void) const { return mMetrics; }
-
-private:
-    bool Matches(const uint8_t &aSeriesId) const { return mSeriesId == aSeriesId; }
-    bool IsFrameTypeMatch(uint8_t aFrameType) const;
-
-    SeriesInfo *mNext;
-    uint8_t     mSeriesId;
-    SeriesFlags mSeriesFlags;
-    Metrics     mMetrics;
-    RssAverager mRssAverager;
-    LqiAverager mLqiAverager;
-    uint32_t    mPduCount;
-};
-
-/**
- * This enumeration type represent Link Metrics Status.
- *
- */
-enum Status : uint8_t
-{
-    kStatusSuccess                   = OT_LINK_METRICS_STATUS_SUCCESS,
-    kStatusCannotSupportNewSeries    = OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES,
-    kStatusSeriesIdAlreadyRegistered = OT_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED,
-    kStatusSeriesIdNotRecognized     = OT_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED,
-    kStatusNoMatchingFramesReceived  = OT_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED,
-    kStatusOtherError                = OT_LINK_METRICS_STATUS_OTHER_ERROR,
-};
-
-/**
  * This class implements Thread Link Metrics query and management.
  *
  */
 class LinkMetrics : public InstanceLocator, private NonCopyable
 {
     friend class ot::Neighbor;
+    friend class ot::UnitTester;
 
 public:
     typedef otLinkMetricsReportCallback                ReportCallback;
@@ -409,14 +265,17 @@ public:
     void ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, const Neighbor &aNeighbor);
 
 private:
-    static constexpr uint8_t kMaxTypeIdFlags = 4;
-
     // Max number of SeriesInfo that could be allocated by the pool.
     static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED;
 
     static constexpr uint8_t kQueryIdSingleProbe = 0;   // This query ID represents Single Probe.
     static constexpr uint8_t kSeriesIdAllSeries  = 255; // This series ID represents all series.
     static constexpr uint8_t kLinkProbeMaxLen    = 64;  // Max length of data payload in Link Probe TLV.
+
+    // Constants for scaling Link Margin and RSSI to raw value
+    static constexpr uint8_t kMaxLinkMargin = 130;
+    static constexpr int32_t kMinRssi       = -130;
+    static constexpr int32_t kMaxRssi       = 0;
 
     Error SendLinkMetricsQuery(const Ip6::Address &aDestination,
                                uint8_t             aSeriesId,
@@ -433,11 +292,15 @@ private:
     Neighbor *GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination);
 
     static Error ReadTypeIdFlagsFromMessage(const Message &aMessage,
-                                            uint8_t        aStartPos,
-                                            uint8_t        aEndPos,
+                                            uint16_t       aStartPos,
+                                            uint16_t       aEndPos,
                                             Metrics &      aMetrics);
-    static Error AppendReportSubTlvToMessage(Message &aMessage, uint8_t &aLength, const MetricsValues &aValues);
-    static Error AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLength, Status aStatus);
+    static Error AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues);
+
+    static uint8_t ScaleLinkMarginToRawValue(uint8_t aLinkMargin);
+    static uint8_t ScaleRawValueToLinkMargin(uint8_t aRawValue);
+    static uint8_t ScaleRssiToRawValue(int8_t aRssi);
+    static int8_t  ScaleRawValueToRssi(uint8_t aRawValue);
 
     ReportCallback                mReportCallback;
     void *                        mReportCallbackContext;
@@ -454,11 +317,6 @@ private:
  */
 
 } // namespace LinkMetrics
-
-DefineCoreType(otLinkMetrics, LinkMetrics::Metrics);
-DefineCoreType(otLinkMetricsValues, LinkMetrics::MetricsValues);
-DefineMapEnum(otLinkMetricsEnhAckFlags, LinkMetrics::EnhAckFlags);
-
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

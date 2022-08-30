@@ -38,6 +38,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 
@@ -72,7 +73,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mRloc16           = aNeighbor.GetRloc16();
     mLinkFrameCounter = aNeighbor.GetLinkFrameCounters().GetMaximum();
     mMleFrameCounter  = aNeighbor.GetMleFrameCounter();
-    mLinkQualityIn    = aNeighbor.GetLinkInfo().GetLinkQuality();
+    mLinkQualityIn    = aNeighbor.GetLinkQualityIn();
     mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
     mLastRssi         = aNeighbor.GetLinkInfo().GetLastRss();
     mFrameErrorRate   = aNeighbor.GetLinkInfo().GetFrameErrorRate();
@@ -243,16 +244,16 @@ void Child::Info::SetFrom(const Child &aChild)
     mExtAddress         = aChild.GetExtAddress();
     mTimeout            = aChild.GetTimeout();
     mRloc16             = aChild.GetRloc16();
-    mChildId            = Mle::Mle::ChildIdFromRloc16(aChild.GetRloc16());
+    mChildId            = Mle::ChildIdFromRloc16(aChild.GetRloc16());
     mNetworkDataVersion = aChild.GetNetworkDataVersion();
     mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
-    mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
+    mLinkQualityIn      = aChild.GetLinkQualityIn();
     mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
     mLastRssi           = aChild.GetLinkInfo().GetLastRss();
     mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
     mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
     mQueuedMessageCnt   = aChild.GetIndirectMessageCount();
-    mVersion            = aChild.GetVersion();
+    mVersion            = ClampToUint8(aChild.GetVersion());
     mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
     mFullThreadDevice   = aChild.IsFullThreadDevice();
     mFullNetworkData    = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
@@ -515,15 +516,25 @@ void Router::Info::SetFrom(const Router &aRouter)
 {
     Clear();
     mRloc16          = aRouter.GetRloc16();
-    mRouterId        = Mle::Mle::RouterIdFromRloc16(mRloc16);
+    mRouterId        = Mle::RouterIdFromRloc16(mRloc16);
     mExtAddress      = aRouter.GetExtAddress();
     mAllocated       = true;
     mNextHop         = aRouter.GetNextHop();
     mLinkEstablished = aRouter.IsStateValid();
     mPathCost        = aRouter.GetCost();
-    mLinkQualityIn   = aRouter.GetLinkInfo().GetLinkQuality();
+    mLinkQualityIn   = aRouter.GetLinkQualityIn();
     mLinkQualityOut  = aRouter.GetLinkQualityOut();
     mAge             = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - aRouter.GetLastHeard()));
+    mVersion         = ClampToUint8(aRouter.GetVersion());
+}
+
+void Router::Info::SetFrom(const Parent &aParent)
+{
+    SetFrom(static_cast<const Router &>(aParent));
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    mCslClockAccuracy = aParent.GetCslAccuracy().GetClockAccuracy();
+    mCslUncertainty   = aParent.GetCslAccuracy().GetUncertainty();
+#endif
 }
 
 void Router::Clear(void)
@@ -531,6 +542,30 @@ void Router::Clear(void)
     Instance &instance = GetInstance();
 
     memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
+    Init(instance);
+}
+
+LinkQuality Router::GetTwoWayLinkQuality(void) const
+{
+    return Min(GetLinkQualityIn(), GetLinkQualityOut());
+}
+
+void Router::SetFrom(const Parent &aParent)
+{
+    // We use an intermediate pointer to copy `aParent` to silence
+    // code checkers warning about object slicing (assigning a
+    // sub-class to base class instance).
+
+    const Router *parentAsRouter = &aParent;
+
+    *this = *parentAsRouter;
+}
+
+void Parent::Clear(void)
+{
+    Instance &instance = GetInstance();
+
+    memset(reinterpret_cast<void *>(this), 0, sizeof(Parent));
     Init(instance);
 }
 

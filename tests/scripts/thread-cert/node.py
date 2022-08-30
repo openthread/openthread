@@ -51,6 +51,8 @@ import thread_cert
 
 PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
+INFRA_DNS64 = int(os.getenv('NAT64', 0))
+
 
 class OtbrDocker:
     RESET_DELAY = 3
@@ -107,13 +109,17 @@ class OtbrDocker:
         logging.info(f'Docker image: {config.OTBR_DOCKER_IMAGE}')
         subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
         CI_ENV = os.getenv('CI_ENV', '').split()
+        dns = ['--dns=127.0.0.1'] if INFRA_DNS64 == 1 else []
+        nat64_prefix = ['--nat64-prefix', '2001:db8:1:ffff::/96'] if INFRA_DNS64 == 1 else []
         os.makedirs('/tmp/coverage/', exist_ok=True)
-        self._docker_proc = subprocess.Popen(['docker', 'run'] + CI_ENV + [
+
+        cmd = ['docker', 'run'] + CI_ENV + [
             '--rm',
             '--name',
             self._docker_name,
             '--network',
             config.BACKBONE_DOCKER_NETWORK_NAME,
+        ] + dns + [
             '-i',
             '--sysctl',
             'net.ipv6.conf.all.disable_ipv6=0 net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1',
@@ -128,10 +134,9 @@ class OtbrDocker:
             config.BACKBONE_IFNAME,
             '--trel-url',
             f'trel://{config.BACKBONE_IFNAME}',
-        ],
-                                             stdin=subprocess.DEVNULL,
-                                             stdout=sys.stdout,
-                                             stderr=sys.stderr)
+        ] + nat64_prefix
+        logging.info(' '.join(cmd))
+        self._docker_proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=sys.stdout, stderr=sys.stderr)
 
         launch_docker_deadline = time.time() + 300
         launch_ok = False
@@ -987,7 +992,7 @@ class NodeImpl:
 
             addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
             map(str.strip, addresses)
-            host['addresses'] = [addr for addr in addresses if addr]
+            host['addresses'] = [addr.strip() for addr in addresses if addr]
 
             host_list.append(host)
 
@@ -1988,6 +1993,11 @@ class NodeImpl:
         cmd = 'br nat64prefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
+
+    def get_br_favored_nat64_prefix(self):
+        cmd = 'br favorednat64prefix'
+        self.send_command(cmd)
+        return self._expect_command_output()[0].split(' ')[0]
 
     def get_netdata_nat64_prefix(self):
         prefixes = []
@@ -3381,6 +3391,8 @@ class LinuxHost():
             fullname = f'{host_name}.local.'
             if fullname not in elements:
                 continue
+            if 'Add' not in elements:
+                continue
             addresses.append(elements[elements.index(fullname) + 1].split('%')[0])
 
         logging.debug(f'addresses of {host_name}: {addresses}')
@@ -3417,7 +3429,7 @@ class LinuxHost():
                 assert (service['host_fullname'] == f'{host_name}.local.')
                 service['host'] = host_name
                 service['addresses'] = addresses
-        return service if 'addresses' in service and service['addresses'] else None
+        return service or None
 
     def start_radvd_service(self, prefix, slaac):
         self.bash("""cat >/etc/radvd.conf <<EOF

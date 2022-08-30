@@ -59,6 +59,7 @@
 #include "thread/mle_types.hpp"
 #include "thread/network_data_types.hpp"
 #include "thread/radio_selector.hpp"
+#include "thread/version.hpp"
 
 namespace ot {
 
@@ -557,7 +558,7 @@ public:
      * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
+    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == kThreadVersion1p1; }
 
     /**
      * This method indicates whether or not neighbor is Thread 1.2 or higher..
@@ -565,7 +566,7 @@ public:
      * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2; }
+    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= kThreadVersion1p2; }
 
     /**
      * This method indicates whether Thread version supports CSL.
@@ -590,7 +591,7 @@ public:
      * This method gets the device MLE version.
      *
      */
-    uint8_t GetVersion(void) const { return mVersion; }
+    uint16_t GetVersion(void) const { return mVersion; }
 
     /**
      * This method sets the device MLE version.
@@ -598,7 +599,7 @@ public:
      * @param[in]  aVersion  The device MLE version.
      *
      */
-    void SetVersion(uint8_t aVersion) { mVersion = aVersion; }
+    void SetVersion(uint16_t aVersion) { mVersion = aVersion; }
 
     /**
      * This method gets the number of consecutive link failures.
@@ -635,6 +636,14 @@ public:
      *
      */
     const LinkQualityInfo &GetLinkInfo(void) const { return mLinkInfo; }
+
+    /**
+     * This method gets the link quality in value.
+     *
+     * @returns The link quality in value.
+     *
+     */
+    LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQuality(); }
 
     /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
@@ -816,7 +825,7 @@ private:
 #else
     uint8_t mLinkFailures; ///< Consecutive link failure count
 #endif
-    uint8_t         mVersion;  ///< The MLE version
+    uint16_t        mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // A list of Link Metrics Forward Tracking Series that is being
@@ -1331,6 +1340,8 @@ private:
 
 #endif // OPENTHREAD_FTD
 
+class Parent;
+
 /**
  * This class represents a Thread Router
  *
@@ -1352,6 +1363,14 @@ public:
          *
          */
         void SetFrom(const Router &aRouter);
+
+        /**
+         * This method sets the `Info` instance from a given `Parent`.
+         *
+         * @param[in] aParent   A parent.
+         *
+         */
+        void SetFrom(const Parent &aParent);
     };
 
     /**
@@ -1360,20 +1379,19 @@ public:
      * @param[in] aInstance  A reference to OpenThread instance.
      *
      */
-    void Init(Instance &aInstance)
-    {
-        Neighbor::Init(aInstance);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        SetCslClockAccuracy(kCslWorstCrystalPpm);
-        SetCslUncertainty(kCslWorstUncertainty);
-#endif
-    }
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
      * This method clears the router entry.
      *
      */
     void Clear(void);
+
+    /**
+     * This method sets the `Router` entry from a `Parent`
+     *
+     */
+    void SetFrom(const Parent &aParent);
 
     /**
      * This method gets the router ID of the next hop to this router.
@@ -1408,6 +1426,14 @@ public:
     void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
     /**
+     * This method gets the two-way link quality value (minimum of link quality in and out).
+     *
+     * @returns The two-way link quality value.
+     *
+     */
+    LinkQuality GetTwoWayLinkQuality(void) const;
+
+    /**
      * This method get the route cost to this router.
      *
      * @returns The route cost to this router.
@@ -1423,40 +1449,6 @@ public:
      */
     void SetCost(uint8_t aCost) { mCost = aCost; }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * This method get the CSL clock accuracy of this router.
-     *
-     * @returns The CSL clock accuracy of this router.
-     *
-     */
-    uint8_t GetCslClockAccuracy(void) const { return mCslClockAccuracy; }
-
-    /**
-     * This method sets the CSL clock accuracy of this router.
-     *
-     * @param[in]  aCslClockAccuracy  The CSL clock accuracy of this router.
-     *
-     */
-    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
-
-    /**
-     * This method get the CSL clock uncertainty of this router.
-     *
-     * @returns The CSL clock uncertainty of this router.
-     *
-     */
-    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
-
-    /**
-     * This method sets the CSL clock uncertainty of this router.
-     *
-     * @param[in]  aCslUncertainty  The CSL clock uncertainty of this router.
-     *
-     */
-    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
-#endif
-
 private:
     uint8_t mNextHop;            ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
@@ -1466,9 +1458,73 @@ private:
 #else
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router
 #endif
+};
+
+/**
+ * This class represent parent of a child node.
+ *
+ */
+class Parent : public Router
+{
+public:
+    /**
+     * This method initializes the `Parent`.
+     *
+     * @param[in] aInstance  A reference to OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance)
+    {
+        Neighbor::Init(aInstance);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint8_t mCslClockAccuracy; ///< Crystal accuracy, in units of ± ppm.
-    uint8_t mCslUncertainty;   ///< Scheduling uncertainty, in units of 10 us.
+        mCslAccuracy.Init();
+#endif
+    }
+
+    /**
+     * This method clears the parent entry.
+     *
+     */
+    void Clear(void);
+
+    /**
+     * This method gets route cost from parent to leader.
+     *
+     * @returns The route cost from parent to leader
+     *
+     */
+    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
+
+    /**
+     * This method sets route cost from parent to leader.
+     *
+     * @param[in] aLaderConst  The route cost.
+     *
+     */
+    void SetLeaderCost(uint8_t aLeaderCost) { mLeaderCost = aLeaderCost; }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method gets the CSL accuracy (clock accuracy and uncertainty).
+     *
+     * @returns The CSL accuracy.
+     *
+     */
+    const Mac::CslAccuracy &GetCslAccuracy(void) const { return mCslAccuracy; }
+
+    /**
+     * This method sets CSL accuracy.
+     *
+     * @param[in] aCslAccuracy  The CSL accuracy.
+     *
+     */
+    void SetCslAccuracy(const Mac::CslAccuracy &aCslAccuracy) { mCslAccuracy = aCslAccuracy; }
+#endif
+
+private:
+    uint8_t mLeaderCost;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Mac::CslAccuracy mCslAccuracy; // CSL accuracy (clock accuracy in ppm and uncertainty).
 #endif
 };
 

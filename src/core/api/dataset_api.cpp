@@ -49,56 +49,48 @@ bool otDatasetIsCommissioned(otInstance *aInstance)
 
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
-
     return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Read(AsCoreType(aDataset));
 }
 
 otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
+    AssertPointerIsNotNull(aDataset);
 
     return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Read(*aDataset);
 }
 
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
-
     return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Save(AsCoreType(aDataset));
 }
 
 otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
+    AssertPointerIsNotNull(aDataset);
 
     return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Save(*aDataset);
 }
 
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
-
     return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Read(AsCoreType(aDataset));
 }
 
 otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
+    AssertPointerIsNotNull(aDataset);
 
     return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Read(*aDataset);
 }
 
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
-
     return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Save(AsCoreType(aDataset));
 }
 
 otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
-    OT_ASSERT(aDataset != nullptr);
+    AssertPointerIsNotNull(aDataset);
 
     return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Save(*aDataset);
 }
@@ -153,7 +145,7 @@ otError otDatasetGeneratePskc(const char *           aPassPhrase,
 {
     return MeshCoP::GeneratePskc(aPassPhrase, AsCoreType(aNetworkName), AsCoreType(aExtPanId), AsCoreType(aPskc));
 }
-#endif // OPENTHREAD_FTD
+#endif
 
 otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString)
 {
@@ -166,6 +158,8 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
 {
     Error            error = kErrorNone;
     MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aDatasetTlvs);
 
     dataset.SetFrom(*aDatasetTlvs);
     VerifyOrExit(dataset.IsValid(), error = kErrorInvalidArgs);

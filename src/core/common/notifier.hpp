@@ -313,15 +313,16 @@ private:
         void *                 mContext;
     };
 
-    static void EmitEvents(Tasklet &aTasklet);
-    void        EmitEvents(void);
+    void EmitEvents(void);
 
     void        LogEvents(Events aEvents) const;
     const char *EventToString(Event aEvent) const;
 
+    using EmitEventsTask = TaskletIn<Notifier, &Notifier::EmitEvents>;
+
     Events           mEventsToSignal;
     Events           mSignaledEvents;
-    Tasklet          mTask;
+    EmitEventsTask   mTask;
     ExternalCallback mExternalCallbacks[kMaxExternalHandlers];
 };
 

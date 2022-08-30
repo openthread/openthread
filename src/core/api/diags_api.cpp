@@ -44,6 +44,8 @@ using namespace ot;
 
 void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
+    AssertPointerIsNotNull(aString);
+
     AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
 }
 

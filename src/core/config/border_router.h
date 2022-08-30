@@ -36,16 +36,6 @@
 #define CONFIG_BORDER_ROUTER_H_
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
- *
- * Define to 1 to enable Border Agent support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
  *
  * Define to 1 to enable Border Router support.
@@ -82,53 +72,33 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+ * @def OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
  *
- * Define to 1 to enable Border Routing support.
+ * Define to 1 to enable the internal NAT64 translator.
  *
  */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#define OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE 0
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
+ * @def OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS
  *
- * Specifies maximum number of routers (on infra link) to track by routing manager.
+ * Specifies maximum number of active mappings for NAT64.
  *
  */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS 16
+#ifndef OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS
+#define OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS 254
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
+ * @def OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS
  *
- * Specifies maximum number of discovered prefixes (on-link prefixes on the infra link) maintained by routing manager.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES 64
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
- *
- * Define to 1 to enable Border Routing NAT64 support.
+ * Specifies timeout in seconds before removing an inactive address mapping.
  *
  */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
- *
- * Specifies the Border Agent UDP port, and use 0 for ephemeral port.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
-#define OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT 0
+#ifndef OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS
+#define OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS 7200
 #endif
 
 #endif // CONFIG_BORDER_ROUTER_H_

@@ -100,7 +100,7 @@ Mac::Mac(Instance &aInstance)
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
-    , mOperationTask(aInstance, Mac::HandleOperationTask)
+    , mOperationTask(aInstance)
     , mTimer(aInstance, Mac::HandleTimer)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
@@ -606,11 +606,6 @@ void Mac::StartOperation(Operation aOperation)
     {
         mOperationTask.Post();
     }
-}
-
-void Mac::HandleOperationTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<Mac>().PerformNextOperation();
 }
 
 void Mac::PerformNextOperation(void)
@@ -2134,6 +2129,11 @@ void Mac::ResetRetrySuccessHistogram()
 }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
+uint8_t Mac::ComputeLinkMargin(int8_t aRss) const
+{
+    return ot::ComputeLinkMargin(GetNoiseFloor(), aRss);
+}
+
 // LCOV_EXCL_START
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -2267,27 +2267,24 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void Mac::UpdateCsl(void)
 {
-    uint16_t period;
-    uint8_t  channel;
-
-    VerifyOrExit(IsCslSupported());
-
-    period  = Get<Mle::Mle>().IsRxOnWhenIdle() ? 0 : GetCslPeriod();
-    channel = GetCslChannel() ? GetCslChannel() : mRadioChannel;
+    uint16_t period  = IsCslEnabled() ? GetCslPeriod() : 0;
+    uint8_t  channel = GetCslChannel() ? GetCslChannel() : mRadioChannel;
 
     if (mLinks.UpdateCsl(period, channel, Get<Mle::Mle>().GetParent().GetRloc16(),
                          &Get<Mle::Mle>().GetParent().GetExtAddress()))
     {
-        Get<DataPollSender>().RecalculatePollPeriod();
-        if (period)
+        if (Get<Mle::Mle>().IsChild())
         {
-            Get<Mle::Mle>().ScheduleChildUpdateRequest();
+            Get<DataPollSender>().RecalculatePollPeriod();
+
+            if (period != 0)
+            {
+                Get<Mle::Mle>().ScheduleChildUpdateRequest();
+            }
         }
+
         UpdateIdleMode();
     }
-
-exit:
-    return;
 }
 
 void Mac::SetCslChannel(uint8_t aChannel)

@@ -51,11 +51,11 @@ void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t a
 {
     HmacSha256 hmac;
 
-    OT_ASSERT((aKey != nullptr) && (aBuf != nullptr) && (aHash != nullptr));
+    AssertPointerIsNotNull(aBuf);
 
     hmac.Start(AsCoreType(aKey));
     hmac.Update(aBuf, aBufLength);
-    hmac.Finish(ot::AsCoreType(aHash));
+    hmac.Finish(AsCoreType(aHash));
 }
 
 void otCryptoAesCcm(const otCryptoKey *aKey,
@@ -71,7 +71,11 @@ void otCryptoAesCcm(const otCryptoKey *aKey,
                     void *             aTag)
 {
     AesCcm aesCcm;
-    OT_ASSERT((aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) && (aTag != nullptr));
+
+    AssertPointerIsNotNull(aNonce);
+    AssertPointerIsNotNull(aPlainText);
+    AssertPointerIsNotNull(aCipherText);
+    AssertPointerIsNotNull(aTag);
 
     aesCcm.SetKey(AsCoreType(aKey));
     aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
@@ -95,6 +99,11 @@ otError otCryptoEcdsaSign(uint8_t *      aOutput,
                           const uint8_t *aPrivateKey,
                           uint16_t       aPrivateKeyLength)
 {
+    AssertPointerIsNotNull(aOutput);
+    AssertPointerIsNotNull(aOutputLength);
+    AssertPointerIsNotNull(aInputHash);
+    AssertPointerIsNotNull(aPrivateKey);
+
     return Ecdsa::Sign(aOutput, *aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
 }
 

@@ -38,6 +38,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/frame_data.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
@@ -352,6 +353,9 @@ private:
         kMessageMarkEcn,       // Indicates that ECN is marked on an outbound message by delay-aware queue management.
         kMessageQueueMgmtDrop, // Indicates that an outbound message is dropped by delay-aware queue management.
 #endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+        kMessageFullQueueDrop, // Indicates message drop due to reaching max allowed frames in direct tx queue.
+#endif
     };
 
     enum AnycastType : uint8_t
@@ -422,53 +426,35 @@ private:
     };
 #endif // OPENTHREAD_FTD
 
-    void     SendIcmpErrorIfDstUnreach(const Message &     aMessage,
-                                       const Mac::Address &aMacSource,
-                                       const Mac::Address &aMacDest);
-    Error    CheckReachability(const uint8_t *     aFrame,
-                               uint16_t            aFrameLength,
-                               const Mac::Address &aMeshSource,
-                               const Mac::Address &aMeshDest);
-    void     UpdateRoutes(const uint8_t *     aFrame,
-                          uint16_t            aFrameLength,
-                          const Mac::Address &aMeshSource,
-                          const Mac::Address &aMeshDest);
-    Error    FrameToMessage(const uint8_t *     aFrame,
-                            uint16_t            aFrameLength,
-                            uint16_t            aDatagramSize,
-                            const Mac::Address &aMacSource,
-                            const Mac::Address &aMacDest,
-                            Message *&          aMessage);
+    void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
+    Error    CheckReachability(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
+    void     UpdateRoutes(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
+    Error    FrameToMessage(const FrameData &     aFrameData,
+                            uint16_t              aDatagramSize,
+                            const Mac::Addresses &aMacAddrs,
+                            Message *&            aMessage);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
-    void     HandleMesh(uint8_t *             aFrame,
-                        uint16_t              aFrameLength,
-                        const Mac::Address &  aMacSource,
-                        const ThreadLinkInfo &aLinkInfo);
-    void     HandleFragment(const uint8_t *       aFrame,
-                            uint16_t              aFrameLength,
-                            const Mac::Address &  aMacSource,
-                            const Mac::Address &  aMacDest,
-                            const ThreadLinkInfo &aLinkInfo);
-    void     HandleLowpanHC(const uint8_t *       aFrame,
-                            uint16_t              aFrameLength,
-                            const Mac::Address &  aMacSource,
-                            const Mac::Address &  aMacDest,
-                            const ThreadLinkInfo &aLinkInfo);
-    uint16_t PrepareDataFrame(Mac::TxFrame &      aFrame,
-                              Message &           aMessage,
-                              const Mac::Address &aMacSource,
-                              const Mac::Address &aMacDest,
-                              bool                aAddMeshHeader = false,
-                              uint16_t            aMeshSource    = 0xffff,
-                              uint16_t            aMeshDest      = 0xffff,
-                              bool                aAddFragHeader = false);
+    void     HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo);
+    void     HandleFragment(FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
+    void HandleLowpanHC(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
+    uint16_t PrepareDataFrame(Mac::TxFrame &        aFrame,
+                              Message &             aMessage,
+                              const Mac::Addresses &aMacAddrs,
+                              bool                  aAddMeshHeader = false,
+                              uint16_t              aMeshSource    = 0xffff,
+                              uint16_t              aMeshDest      = 0xffff,
+                              bool                  aAddFragHeader = false);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend = true);
     Error RemoveAgedMessages(void);
+#endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    bool IsDirectTxQueueOverMaxFrameThreshold(void) const;
+    void ApplyDirectTxQueueLimit(Message &aMessage);
 #endif
     void  SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers);
@@ -501,23 +487,16 @@ private:
     void          UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
     void          RemoveMessageIfNoPendingTx(Message &aMessage);
 
-    void        HandleTimeTick(void);
-    static void ScheduleTransmissionTask(Tasklet &aTasklet);
-    void        ScheduleTransmissionTask(void);
+    void HandleTimeTick(void);
+    void ScheduleTransmissionTask(void);
 
-    Error GetFramePriority(const uint8_t *     aFrame,
-                           uint16_t            aFrameLength,
-                           const Mac::Address &aMacSource,
-                           const Mac::Address &aMacDest,
-                           Message::Priority & aPriority);
+    Error GetFramePriority(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Message::Priority &aPriority);
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
                               Message::Priority &     aPriority);
-    void  GetForwardFramePriority(const uint8_t *     aFrame,
-                                  uint16_t            aFrameLength,
-                                  const Mac::Address &aMeshSource,
-                                  const Mac::Address &aMeshDest,
-                                  Message::Priority & aPriority);
+    void  GetForwardFramePriority(const FrameData &     aFrameData,
+                                  const Mac::Addresses &aMeshAddrs,
+                                  Message::Priority &   aPriority);
 
     bool     CalcIePresent(const Message *aMessage);
     uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
@@ -540,15 +519,10 @@ private:
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,
-                              const Mac::Address &          aMacSource,
-                              const Mac::Address &          aMacDest,
+                              const Mac::Addresses &        aMacAddrs,
                               const Lowpan::FragmentHeader &aFragmentHeader,
                               bool                          aIsSecure);
-    void LogLowpanHcFrameDrop(Error               aError,
-                              uint16_t            aFrameLength,
-                              const Mac::Address &aMacSource,
-                              const Mac::Address &aMacDest,
-                              bool                aIsSecure);
+    void LogLowpanHcFrameDrop(Error aError, uint16_t aFrameLength, const Mac::Addresses &aMacAddrs, bool aIsSecure);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
@@ -560,14 +534,12 @@ private:
                                 const Mac::Address *aMacAddress,
                                 Error               aError,
                                 uint16_t &          aOffset,
-                                Mac::Address &      aMeshSource,
-                                Mac::Address &      aMeshDest,
+                                Mac::Addresses &    aMeshAddrs,
                                 LogLevel            aLogLevel);
-    void  LogMeshIpHeader(const Message &     aMessage,
-                          uint16_t            aOffset,
-                          const Mac::Address &aMeshSource,
-                          const Mac::Address &aMeshDest,
-                          LogLevel            aLogLevel);
+    void  LogMeshIpHeader(const Message &       aMessage,
+                          uint16_t              aOffset,
+                          const Mac::Addresses &aMeshAddrs,
+                          LogLevel              aLogLevel);
     void  LogMeshMessage(MessageAction       aAction,
                          const Message &     aMessage,
                          const Mac::Address *aAddress,
@@ -582,6 +554,8 @@ private:
                        LogLevel            aLogLevel);
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
+    using TxTask = TaskletIn<MeshForwarder, &MeshForwarder::ScheduleTransmissionTask>;
+
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
     uint16_t      mFragTag;
@@ -589,20 +563,19 @@ private:
 
     Message *mSendMessage;
 
-    Mac::Address mMacSource;
-    Mac::Address mMacDest;
-    uint16_t     mMeshSource;
-    uint16_t     mMeshDest;
-    bool         mAddMeshHeader : 1;
-    bool         mEnabled : 1;
-    bool         mTxPaused : 1;
-    bool         mSendBusy : 1;
+    Mac::Addresses mMacAddrs;
+    uint16_t       mMeshSource;
+    uint16_t       mMeshDest;
+    bool           mAddMeshHeader : 1;
+    bool           mEnabled : 1;
+    bool           mTxPaused : 1;
+    bool           mSendBusy : 1;
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
     bool       mDelayNextTx : 1;
     TimerMilli mTxDelayTimer;
 #endif
 
-    Tasklet mScheduleTransmissionTask;
+    TxTask mScheduleTransmissionTask;
 
     otIpCounters mIpCounters;
 

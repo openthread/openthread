@@ -43,6 +43,7 @@
 #include "common/binary_search.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 
@@ -405,7 +406,7 @@ public:
         const char *mString; ///< The associated string.
 
     private:
-        int Compare(uint16_t aKey) const { return (aKey == mKey) ? 0 : ((aKey > mKey) ? 1 : -1); }
+        int Compare(uint16_t aKey) const { return ThreeWayCompare(aKey, mKey); }
 
         constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
         {

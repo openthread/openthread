@@ -59,7 +59,7 @@ Interface::Interface(Instance &aInstance)
     , mInitialized(false)
     , mEnabled(false)
     , mFiltered(false)
-    , mRegisterServiceTask(aInstance, HandleRegisterServiceTask)
+    , mRegisterServiceTask(aInstance)
 {
 }
 
@@ -125,11 +125,6 @@ void Interface::HandleExtPanIdChange(void)
 
 exit:
     return;
-}
-
-void Interface::HandleRegisterServiceTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<Interface>().RegisterService();
 }
 
 void Interface::RegisterService(void)

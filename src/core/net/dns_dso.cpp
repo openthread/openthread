@@ -37,6 +37,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 
 /**
@@ -1125,7 +1126,7 @@ void Dso::Connection::AdjustInactivityTimeout(uint32_t aNewTimeout)
             // five seconds or one quarter of the new inactivity
             // timeout, whichever is greater [RFC 8490 - 7.1.1].
 
-            newExpiration = now + OT_MAX(kMinServerInactivityWaitTime, aNewTimeout / 4);
+            newExpiration = now + Max(kMinServerInactivityWaitTime, aNewTimeout / 4);
         }
     }
 
@@ -1143,7 +1144,7 @@ uint32_t Dso::Connection::CalculateServerInactivityWaitTime(void) const
 
     OT_ASSERT(mInactivity.IsUsed());
 
-    return OT_MAX(mInactivity.GetInterval() * 2, kMinServerInactivityWaitTime);
+    return Max(mInactivity.GetInterval() * 2, kMinServerInactivityWaitTime);
 }
 
 void Dso::Connection::ResetTimeouts(bool aIsKeepAliveMessage)
@@ -1219,12 +1220,12 @@ TimeMilli Dso::Connection::GetNextFireTime(TimeMilli aNow) const
     case kStateConnectedButSessionless:
     case kStateEstablishingSession:
     case kStateSessionEstablished:
-        nextTime = OT_MIN(nextTime, mPendingRequests.GetNextFireTime(aNow));
+        nextTime = Min(nextTime, mPendingRequests.GetNextFireTime(aNow));
 
         if (mKeepAlive.IsUsed())
         {
             VerifyOrExit(mKeepAlive.GetExpirationTime() > aNow, nextTime = aNow);
-            nextTime = OT_MIN(nextTime, mKeepAlive.GetExpirationTime());
+            nextTime = Min(nextTime, mKeepAlive.GetExpirationTime());
         }
 
         if (mInactivity.IsUsed() && mPendingRequests.IsEmpty() && !mLongLivedOperation)
@@ -1234,7 +1235,7 @@ TimeMilli Dso::Connection::GetNextFireTime(TimeMilli aNow) const
             // active long-lived operation.
 
             VerifyOrExit(mInactivity.GetExpirationTime() > aNow, nextTime = aNow);
-            nextTime = OT_MIN(nextTime, mInactivity.GetExpirationTime());
+            nextTime = Min(nextTime, mInactivity.GetExpirationTime());
         }
 
         break;
@@ -1311,7 +1312,7 @@ void Dso::Connection::HandleTimer(TimeMilli aNow, TimeMilli &aNextTime)
     }
 
 exit:
-    aNextTime = OT_MIN(aNextTime, GetNextFireTime(aNow));
+    aNextTime = Min(aNextTime, GetNextFireTime(aNow));
     SignalAnyStateChange();
 }
 
@@ -1435,7 +1436,7 @@ TimeMilli Dso::Connection::PendingRequests::GetNextFireTime(TimeMilli aNow) cons
     for (const Entry &entry : mRequests)
     {
         VerifyOrExit(entry.mTimeout > aNow, nextTime = aNow);
-        nextTime = OT_MIN(entry.mTimeout, nextTime);
+        nextTime = Min(entry.mTimeout, nextTime);
     }
 
 exit:

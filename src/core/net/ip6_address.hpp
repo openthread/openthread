@@ -46,11 +46,16 @@
 #include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
-#include "net/ip4_address.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
+
+namespace Ip4 {
+// Forward declaration for SynthesizeFromIp4Address
+class Address;
+} // namespace Ip4
+
 namespace Ip6 {
 
 /**
@@ -183,10 +188,7 @@ public:
      * @retval FALSE  The prefix is not a Link-Local prefix.
      *
      */
-    bool IsLinkLocal(void) const
-    {
-        return mLength >= 10 && mPrefix.mFields.m8[0] == 0xfe && (mPrefix.mFields.m8[1] & 0xc0) == 0x80;
-    }
+    bool IsLinkLocal(void) const;
 
     /**
      * This method indicates whether the prefix is a Multicast prefix.
@@ -195,7 +197,7 @@ public:
      * @retval FALSE  The prefix is not a Multicast prefix.
      *
      */
-    bool IsMulticast(void) const { return mLength >= 8 && mPrefix.mFields.m8[0] == 0xff; }
+    bool IsMulticast(void) const;
 
     /**
      * This method indicates whether the prefix is a Unique-Local prefix.
@@ -204,7 +206,7 @@ public:
      * @retval FALSE  The prefix is not a Unique-Local prefix.
      *
      */
-    bool IsUniqueLocal(void) const { return mLength >= 7 && (mPrefix.mFields.m8[0] & 0xfe) == 0xfc; }
+    bool IsUniqueLocal(void) const;
 
     /**
      * This method indicates whether the prefix is equal to a given prefix.
@@ -227,11 +229,7 @@ public:
      * @retval FALSE  The prefix does not contains the @p aSubPrefix.
      *
      */
-    bool ContainsPrefix(const Prefix &aSubPrefix) const
-    {
-        return (mLength >= aSubPrefix.mLength) &&
-               (MatchLength(GetBytes(), aSubPrefix.GetBytes(), aSubPrefix.GetBytesSize()) >= aSubPrefix.GetLength());
-    }
+    bool ContainsPrefix(const Prefix &aSubPrefix) const;
 
     /**
      * This method indicates whether the prefix contains a sub-prefix (given as a `NetworkPrefix`).
@@ -242,11 +240,7 @@ public:
      * @retval FALSE  The prefix does not contains the @p aSubPrefix.
      *
      */
-    bool ContainsPrefix(const NetworkPrefix &aSubPrefix) const
-    {
-        return (mLength >= NetworkPrefix::kLength) &&
-               (MatchLength(GetBytes(), aSubPrefix.m8, NetworkPrefix::kSize) >= NetworkPrefix::kLength);
-    }
+    bool ContainsPrefix(const NetworkPrefix &aSubPrefix) const;
 
     /**
      * This method overloads operator `==` to evaluate whether or not two prefixes are equal.
@@ -257,11 +251,7 @@ public:
      * @retval FALSE  If the two prefixes are not equal.
      *
      */
-    bool operator==(const Prefix &aOther) const
-    {
-        return (mLength == aOther.mLength) &&
-               (MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize()) >= GetLength());
-    }
+    bool operator==(const Prefix &aOther) const;
 
     /**
      * This method overloads operator `<` to compare two prefixes.
@@ -302,6 +292,19 @@ public:
     static uint8_t MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxSize);
 
     /**
+     * This method indicates whether or not a given prefix length is valid for use as a NAT64 prefix.
+     *
+     * A NAT64 prefix must have one of the following lengths: 32, 40, 48, 56, 64, or 96 (per RFC 6502).
+     *
+     * @param[in] aLength The length of the prefix.
+     *
+     * @retval TRUE   If the prefix has a valid length for use as a NAT64 prefix.
+     * @retval FALSE  If the prefix does not have a valid length for use as a NAT64 prefix.
+     *
+     */
+    static bool IsValidNat64PrefixLength(uint8_t aLength);
+
+    /**
      * This method indicates whether or not the prefix has a valid length for use as a NAT64 prefix.
      *
      * A NAT64 prefix must have one of the following lengths: 32, 40, 48, 56, 64, or 96 (per RFC 6502).
@@ -310,7 +313,7 @@ public:
      * @retval FALSE  If the prefix does not have a valid length for use as a NAT64 prefix.
      *
      */
-    bool IsValidNat64(void) const;
+    bool IsValidNat64(void) const { return IsValidNat64PrefixLength(mLength); }
 
     /**
      * This method converts the prefix to a string.
@@ -522,6 +525,17 @@ public:
     void SetLocator(uint16_t aLocator) { mFields.m16[3] = HostSwap16(aLocator); }
 
     /**
+     * This method applies a prefix to IID.
+     *
+     * If the prefix length is longer than 64 bits, the prefix bits after 64 are written into the IID. This method only
+     * changes the bits in IID up the prefix length and keeps the rest of the bits in IID as before.
+     *
+     * @param[in] aPrefix   An IPv6 prefix.
+     *
+     */
+    void ApplyPrefix(const Prefix &aPrefix);
+
+    /**
      * This method converts an Interface Identifier to a string.
      *
      * @returns An `InfoString` containing the string representation of the Interface Identifier.
@@ -543,6 +557,7 @@ OT_TOOL_PACKED_BEGIN
 class Address : public otIp6Address, public Equatable<Address>, public Clearable<Address>
 {
     friend class Prefix;
+    friend class InterfaceIdentifier;
 
 public:
     static constexpr uint8_t kAloc16Mask = InterfaceIdentifier::kAloc16Mask; ///< The mask for ALOC16.
@@ -789,6 +804,15 @@ public:
     }
 
     /**
+     * This method gets a prefix of the IPv6 address with a given length.
+     *
+     * @param[in]  aLength  The length of prefix in bits.
+     * @param[out] aPrefix  A reference to a prefix to output the fetched prefix.
+     *
+     */
+    void GetPrefix(uint8_t aLength, Prefix &aPrefix) const { aPrefix.Set(mFields.m8, aLength); }
+
+    /**
      * This method indicates whether the IPv6 address matches a given prefix.
      *
      * @param[in] aPrefix  An IPv6 prefix to match with.
@@ -821,7 +845,7 @@ public:
      * @param[in]  aPrefixLength   The prefix length (in bits).
      *
      */
-    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) { SetPrefix(0, aPrefix, aPrefixLength); }
+    void SetPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) { CopyBits(mFields.m8, aPrefix, aPrefixLength); }
 
     /**
      * This method sets the IPv6 address prefix to the given Network Prefix.
@@ -989,7 +1013,9 @@ public:
     bool operator<(const Address &aOther) const { return memcmp(mFields.m8, aOther.mFields.m8, sizeof(Address)) < 0; }
 
 private:
-    void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
+    static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306)
+    static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306)
+
     void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
     void ToString(StringWriter &aWriter) const;
     void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
@@ -1000,8 +1026,8 @@ private:
     static const Address &GetRealmLocalAllRoutersMulticast(void);
     static const Address &GetRealmLocalAllMplForwarders(void);
 
-    static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306).
-    static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306).
+    static void CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits);
+
 } OT_TOOL_PACKED_END;
 
 /**

@@ -74,6 +74,7 @@ source_set("openthread") {
     "logging.h",
     "message.h",
     "multi_radio.h",
+    "nat64.h",
     "ncp.h",
     "netdata.h",
     "netdata_publisher.h",

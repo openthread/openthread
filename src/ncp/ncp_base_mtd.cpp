@@ -806,6 +806,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PARENT>(void)
             SuccessOrExit(error = mEncoder.WriteInt8(lastRssi));
             SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityIn));
             SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mLinkQualityOut));
+            SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mVersion));
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+            SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mCslClockAccuracy));
+            SuccessOrExit(error = mEncoder.WriteUint8(parentInfo.mCslUncertainty));
+#endif
         }
         else
         {
@@ -3128,7 +3133,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_Q
     otError             error = OT_ERROR_NONE;
     struct otIp6Address address;
     uint8_t             seriesId;
-    otLinkMetrics       linkMetrics = {};
+    otLinkMetrics       linkMetrics = {false, false, false, false, false};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
@@ -3163,7 +3168,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     otError             error = OT_ERROR_NONE;
     struct otIp6Address address;
     uint8_t             controlFlags;
-    otLinkMetrics       linkMetrics = {};
+    otLinkMetrics       linkMetrics = {false, false, false, false, false};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(controlFlags));
@@ -3184,8 +3189,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     struct otIp6Address      address;
     uint8_t                  seriesId;
     uint8_t                  types;
-    otLinkMetrics            linkMetrics = {};
-    otLinkMetricsSeriesFlags seriesFlags = {};
+    otLinkMetrics            linkMetrics = {false, false, false, false, false};
+    otLinkMetricsSeriesFlags seriesFlags = {false, false, false, false};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(seriesId));

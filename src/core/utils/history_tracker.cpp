@@ -40,6 +40,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
@@ -436,7 +437,7 @@ void HistoryTracker::Timestamp::SetToNow(void)
 
 uint32_t HistoryTracker::Timestamp::GetDurationTill(TimeMilli aTime) const
 {
-    return IsDistantPast() ? kMaxAge : OT_MIN(aTime - mTime, kMaxAge);
+    return IsDistantPast() ? kMaxAge : Min(aTime - mTime, kMaxAge);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

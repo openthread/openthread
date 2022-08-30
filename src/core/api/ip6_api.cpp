@@ -37,6 +37,8 @@
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
+#include "net/ip4_types.hpp"
+#include "net/ip6_headers.hpp"
 #include "utils/slaac_address.hpp"
 
 using namespace ot;
@@ -133,7 +135,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
     return AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(AsCoreType(aMessage),
-                                                         !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+                                                         OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
 }
 
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
@@ -168,6 +170,8 @@ void otIp6RemoveAllUnsecurePorts(otInstance *aInstance)
 
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries)
 {
+    AssertPointerIsNotNull(aNumEntries);
+
     return AsCoreType(aInstance).Get<Ip6::Filter>().GetUnsecurePorts(*aNumEntries);
 }
 
@@ -188,24 +192,33 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 
 void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aAddress).ToString(aBuffer, aSize);
 }
 
 void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aSockAddr).ToString(aBuffer, aSize);
 }
 
 void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aPrefix).ToString(aBuffer, aSize);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    OT_ASSERT(aFirst != nullptr && aSecond != nullptr);
-
     return AsCoreType(aFirst).PrefixMatch(AsCoreType(aSecond));
+}
+
+void otIp6GetPrefix(const otIp6Address *aAddress, uint8_t aLength, otIp6Prefix *aPrefix)
+{
+    AsCoreType(aAddress).GetPrefix(aLength, AsCoreType(aPrefix));
 }
 
 bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)

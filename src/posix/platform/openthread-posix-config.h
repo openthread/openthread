@@ -86,6 +86,12 @@
 #define OT_POSIX_RCP_BUS_SPI 2
 
 /**
+ * RCP bus defined by vendors.
+ *
+ */
+#define OT_POSIX_RCP_BUS_VENDOR 3
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_RCP_BUS
  *
  * This setting configures what type of RCP bus to use.
@@ -206,6 +212,16 @@
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM
 #define OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM 8
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+ *
+ * Define as 1 to enable discovering NAT64 posix on adjacent infrastructure link.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE 0
 #endif
 
 /**

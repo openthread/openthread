@@ -65,6 +65,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/retain_ptr.hpp"
 #include "common/timer.hpp"
@@ -472,7 +473,8 @@ public:
          */
         const Ip6::Address *GetAddresses(uint8_t &aAddressesNum) const
         {
-            aAddressesNum = static_cast<uint8_t>(OT_MIN(mAddresses.GetLength(), NumericLimits<uint8_t>::kMax));
+            aAddressesNum = ClampToUint8(mAddresses.GetLength());
+
             return mAddresses.AsCArray();
         }
 

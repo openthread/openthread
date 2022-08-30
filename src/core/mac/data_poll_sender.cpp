@@ -38,6 +38,7 @@
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
+#include "common/num_utils.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -197,7 +198,7 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
 
     if (mExternalPollPeriod != 0)
     {
-        period = OT_MIN(period, mExternalPollPeriod);
+        period = Min(period, mExternalPollPeriod);
     }
 
     return period;
@@ -506,22 +507,22 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
 
     if (mAttachMode)
     {
-        period = OT_MIN(period, kAttachDataPollPeriod);
+        period = Min(period, kAttachDataPollPeriod);
     }
 
     if (mRetxMode)
     {
-        period = OT_MIN(period, kRetxPollPeriod);
+        period = Min(period, kRetxPollPeriod);
     }
 
     if (mRemainingFastPolls != 0)
     {
-        period = OT_MIN(period, kFastPollPeriod);
+        period = Min(period, kFastPollPeriod);
     }
 
     if (mExternalPollPeriod != 0)
     {
-        period = OT_MIN(period, mExternalPollPeriod);
+        period = Min(period, mExternalPollPeriod);
     }
 
     if (period == 0)
@@ -545,7 +546,7 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
-        period    = OT_MIN(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
+        period    = Min(period, Time::SecToMsec(Get<Mle::MleRouter>().GetCslTimeout()));
         pollAhead = static_cast<uint32_t>(kRetxPollPeriod);
     }
 #endif

@@ -96,11 +96,8 @@ void AddressResolver::Clear(void)
 Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) const
 {
     Error                 error = kErrorNone;
-    const CacheEntryList *list;
-    const CacheEntry *    entry;
-
-    list  = reinterpret_cast<const CacheEntryList *>(aIterator.mData[kIteratorListIndex]);
-    entry = reinterpret_cast<const CacheEntry *>(aIterator.mData[kIteratorEntryIndex]);
+    const CacheEntryList *list  = aIterator.GetList();
+    const CacheEntry *    entry = aIterator.GetEntry();
 
     while (entry == nullptr)
     {
@@ -130,16 +127,16 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
 
     // Update the iterator then populate the `aInfo`.
 
-    aIterator.mData[kIteratorEntryIndex] = entry->GetNext();
-    aIterator.mData[kIteratorListIndex]  = list;
+    aIterator.SetEntry(entry->GetNext());
+    aIterator.SetList(list);
 
-    memset(&aInfo, 0, sizeof(aInfo));
+    aInfo.Clear();
     aInfo.mTarget = entry->GetTarget();
     aInfo.mRloc16 = entry->GetRloc16();
 
     if (list == &mCachedList)
     {
-        aInfo.mState          = OT_CACHE_ENTRY_STATE_CACHED;
+        aInfo.mState          = MapEnum(EntryInfo::kStateCached);
         aInfo.mCanEvict       = true;
         aInfo.mValidLastTrans = entry->IsLastTransactionTimeValid();
 
@@ -154,15 +151,15 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
 
     if (list == &mSnoopedList)
     {
-        aInfo.mState = OT_CACHE_ENTRY_STATE_SNOOPED;
+        aInfo.mState = MapEnum(EntryInfo::kStateSnooped);
     }
     else if (list == &mQueryList)
     {
-        aInfo.mState = OT_CACHE_ENTRY_STATE_QUERY;
+        aInfo.mState = MapEnum(EntryInfo::kStateQuery);
     }
     else
     {
-        aInfo.mState = OT_CACHE_ENTRY_STATE_RETRY_QUERY;
+        aInfo.mState = MapEnum(EntryInfo::kStateRetryQuery);
     }
 
     aInfo.mCanEvict   = entry->CanEvict();
@@ -175,7 +172,7 @@ exit:
 
 void AddressResolver::Remove(uint8_t aRouterId)
 {
-    Remove(Mle::Mle::Rloc16FromRouterId(aRouterId), /* aMatchRouterId */ true);
+    Remove(Mle::Rloc16FromRouterId(aRouterId), /* aMatchRouterId */ true);
 }
 
 void AddressResolver::Remove(uint16_t aRloc16)
@@ -199,7 +196,7 @@ void AddressResolver::Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId)
 
         while ((entry = GetEntryAfter(prev, *list)) != nullptr)
         {
-            if ((aMatchRouterId && Mle::Mle::RouterIdMatch(entry->GetRloc16(), aRloc16)) ||
+            if ((aMatchRouterId && Mle::RouterIdMatch(entry->GetRloc16(), aRloc16)) ||
                 (!aMatchRouterId && (entry->GetRloc16() == aRloc16)))
             {
                 RemoveCacheEntry(*entry, *list, prev, aMatchRouterId ? kReasonRemovingRouterId : kReasonRemovingRloc16);

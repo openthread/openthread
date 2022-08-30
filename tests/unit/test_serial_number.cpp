@@ -32,6 +32,7 @@
 
 #include "test_util.h"
 #include "common/code_utils.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/serial_number.hpp"
 
@@ -65,6 +66,74 @@ template <typename UintType> void TestSerialNumber(const char *aName)
     printf("TestSerialNumber<%s>() passed\n", aName);
 }
 
+void TestNumUtils(void)
+{
+    uint16_t u16;
+    uint32_t u32;
+
+    VerifyOrQuit(Min<uint8_t>(1, 2) == 1);
+    VerifyOrQuit(Min<uint8_t>(2, 1) == 1);
+    VerifyOrQuit(Min<uint8_t>(1, 1) == 1);
+
+    VerifyOrQuit(Max<uint8_t>(1, 2) == 2);
+    VerifyOrQuit(Max<uint8_t>(2, 1) == 2);
+    VerifyOrQuit(Max<uint8_t>(1, 1) == 1);
+
+    VerifyOrQuit(Clamp<uint8_t>(1, 5, 10) == 5);
+    VerifyOrQuit(Clamp<uint8_t>(5, 5, 10) == 5);
+    VerifyOrQuit(Clamp<uint8_t>(7, 5, 10) == 7);
+    VerifyOrQuit(Clamp<uint8_t>(10, 5, 10) == 10);
+    VerifyOrQuit(Clamp<uint8_t>(12, 5, 10) == 10);
+
+    VerifyOrQuit(Clamp<uint8_t>(10, 10, 10) == 10);
+    VerifyOrQuit(Clamp<uint8_t>(9, 10, 10) == 10);
+    VerifyOrQuit(Clamp<uint8_t>(11, 10, 10) == 10);
+
+    u16 = 100;
+    VerifyOrQuit(ClampToUint8(u16) == 100);
+    u16 = 255;
+    VerifyOrQuit(ClampToUint8(u16) == 255);
+    u16 = 256;
+    VerifyOrQuit(ClampToUint8(u16) == 255);
+    u16 = 400;
+    VerifyOrQuit(ClampToUint8(u16) == 255);
+
+    u32 = 100;
+    VerifyOrQuit(ClampToUint16(u32) == 100);
+    u32 = 256;
+    VerifyOrQuit(ClampToUint16(u32) == 256);
+    u32 = 0xffff;
+    VerifyOrQuit(ClampToUint16(u32) == 0xffff);
+    u32 = 0x10000;
+    VerifyOrQuit(ClampToUint16(u32) == 0xffff);
+    u32 = 0xfff0000;
+    VerifyOrQuit(ClampToUint16(u32) == 0xffff);
+
+    VerifyOrQuit(ThreeWayCompare<uint8_t>(2, 2) == 0);
+    VerifyOrQuit(ThreeWayCompare<uint8_t>(2, 1) > 0);
+    VerifyOrQuit(ThreeWayCompare<uint8_t>(1, 2) < 0);
+
+    VerifyOrQuit(ThreeWayCompare<bool>(false, false) == 0);
+    VerifyOrQuit(ThreeWayCompare<bool>(true, true) == 0);
+    VerifyOrQuit(ThreeWayCompare<bool>(true, false) > 0);
+    VerifyOrQuit(ThreeWayCompare<bool>(false, true) < 0);
+
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(2, 1) == 2);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(1, 3) == 0);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(1, 2) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(2, 3) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(3, 2) == 2);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(4, 2) == 2);
+
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(0, 10) == 0);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(4, 10) == 0);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(5, 10) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(9, 10) == 1);
+    VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(10, 10) == 1);
+
+    printf("TestNumUtils() passed\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -73,6 +142,7 @@ int main(void)
     ot::TestSerialNumber<uint16_t>("uint16_t");
     ot::TestSerialNumber<uint32_t>("uint32_t");
     ot::TestSerialNumber<uint64_t>("uint64_t");
+    ot::TestNumUtils();
     printf("\nAll tests passed.\n");
     return 0;
 }

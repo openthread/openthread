@@ -34,6 +34,7 @@
 #include "openthread-posix-config.h"
 
 #include <net/if.h>
+#include <openthread/nat64.h>
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
@@ -130,6 +131,18 @@ public:
                         uint16_t            aBufferLength);
 
     /**
+     * This method sends an asynchronous address lookup for the well-known host name "ipv4only.arpa"
+     * to discover the NAT64 prefix.
+     *
+     * @param[in]  aInfraIfIndex  The index of the infrastructure interface the address look-up is sent to.
+     *
+     * @retval  OT_ERROR_NONE    Successfully request address look-up.
+     * @retval  OT_ERROR_FAILED  Failed to request address look-up.
+     *
+     */
+    otError DiscoverNat64Prefix(uint32_t aInfraIfIndex);
+
+    /**
      * This method gets the infrastructure network interface name.
      *
      * @returns The infrastructure network interface name, or `nullptr` if not specified.
@@ -146,14 +159,20 @@ public:
     static InfraNetif &Get(void);
 
 private:
-    char     mInfraIfName[IFNAMSIZ];
-    uint32_t mInfraIfIndex       = 0;
-    int      mInfraIfIcmp6Socket = -1;
-    int      mNetLinkSocket      = -1;
+    static const char         kWellKnownIpv4OnlyName[];   // "ipv4only.arpa"
+    static const otIp4Address kWellKnownIpv4OnlyAddress1; // 192.0.0.170
+    static const otIp4Address kWellKnownIpv4OnlyAddress2; // 192.0.0.171
+    static const uint8_t      kValidNat64PrefixLength[];
 
-    void ReceiveNetLinkMessage(void);
-    void ReceiveIcmp6Message(void);
-    bool HasLinkLocalAddress(void) const;
+    char            mInfraIfName[IFNAMSIZ];
+    static uint32_t mInfraIfIndex;
+    int             mInfraIfIcmp6Socket = -1;
+    int             mNetLinkSocket      = -1;
+
+    void        ReceiveNetLinkMessage(void);
+    void        ReceiveIcmp6Message(void);
+    bool        HasLinkLocalAddress(void) const;
+    static void DiscoverNat64PrefixDone(union sigval sv);
 };
 
 } // namespace Posix

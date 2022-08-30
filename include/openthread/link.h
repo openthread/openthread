@@ -565,7 +565,7 @@ uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance);
 otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
- * Get the IEEE 802.15.4 Extended Address.
+ * Gets the IEEE 802.15.4 Extended Address.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -575,9 +575,9 @@ otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMa
 const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance);
 
 /**
- * This function sets the IEEE 802.15.4 Extended Address.
+ * Sets the IEEE 802.15.4 Extended Address.
  *
- * This function succeeds only when Thread protocols are disabled.
+ * @note Only succeeds when Thread protocols are disabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address.
@@ -965,7 +965,7 @@ void otLinkResetTxRetrySuccessHistogram(otInstance *aInstance);
 const otMacCounters *otLinkGetCounters(otInstance *aInstance);
 
 /**
- * Reset the MAC layer counters.
+ * Resets the MAC layer counters.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -1034,7 +1034,7 @@ otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 uint8_t otLinkCslGetChannel(otInstance *aInstance);
 
 /**
- * This function sets the CSL channel.
+ * Sets the CSL channel.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aChannel       The CSL sample channel. Channel value should be `0` (Set CSL Channel unspecified) or
@@ -1057,7 +1057,7 @@ otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel);
 uint16_t otLinkCslGetPeriod(otInstance *aInstance);
 
 /**
- * This function sets the CSL period.
+ * Sets the CSL period in units of 10 symbols. Disable CSL by setting this parameter to `0`.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aPeriod        The CSL period in units of 10 symbols.
@@ -1079,7 +1079,7 @@ otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod);
 uint32_t otLinkCslGetTimeout(otInstance *aInstance);
 
 /**
- * This function sets the CSL timeout.
+ * Sets the CSL timeout in seconds.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aTimeout       The CSL timeout in seconds.

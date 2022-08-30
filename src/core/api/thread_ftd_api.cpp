@@ -205,15 +205,11 @@ void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitt
 
 otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
 {
-    OT_ASSERT(aChildInfo != nullptr);
-
     return AsCoreType(aInstance).Get<ChildTable>().GetChildInfoById(aChildId, AsCoreType(aChildInfo));
 }
 
 otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex, otChildInfo *aChildInfo)
 {
-    OT_ASSERT(aChildInfo != nullptr);
-
     return AsCoreType(aInstance).Get<ChildTable>().GetChildInfoByIndex(aChildIndex, AsCoreType(aChildInfo));
 }
 
@@ -225,7 +221,8 @@ otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
     Error        error = kErrorNone;
     const Child *child;
 
-    OT_ASSERT(aIterator != nullptr && aAddress != nullptr);
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aAddress);
 
     child = AsCoreType(aInstance).Get<ChildTable>().GetChildAtIndex(aChildIndex);
     VerifyOrExit(child != nullptr, error = kErrorInvalidArgs);
@@ -258,16 +255,13 @@ uint8_t otThreadGetMaxRouterId(otInstance *aInstance)
 
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo)
 {
-    OT_ASSERT(aRouterInfo != nullptr);
-
     return AsCoreType(aInstance).Get<RouterTable>().GetRouterInfo(aRouterId, AsCoreType(aRouterInfo));
 }
 
 otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntryInfo, otCacheEntryIterator *aIterator)
 {
-    OT_ASSERT((aIterator != nullptr) && (aEntryInfo != nullptr));
-
-    return AsCoreType(aInstance).Get<AddressResolver>().GetNextCacheEntry(*aEntryInfo, *aIterator);
+    return AsCoreType(aInstance).Get<AddressResolver>().GetNextCacheEntry(AsCoreType(aEntryInfo),
+                                                                          AsCoreType(aIterator));
 }
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE

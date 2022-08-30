@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * Get the child supervision interval (in seconds).
+ * Gets the child supervision interval (in seconds).
  *
  * Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
  * within the supervision interval. If there is no transmission to the child within the supervision interval,
@@ -69,7 +69,7 @@ extern "C" {
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance);
 
 /**
- * Set the child supervision interval (in seconds).
+ * Sets the child supervision interval (in seconds).
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aInterval       The supervision interval (in seconds). Zero to disable supervision on parent.
@@ -78,7 +78,7 @@ uint16_t otChildSupervisionGetInterval(otInstance *aInstance);
 void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval);
 
 /**
- * Get the supervision check timeout interval (in seconds).
+ * Gets the supervision check timeout interval (in seconds).
  *
  * If the device is a sleepy child and it does not hear from its parent within the specified check timeout, it initiates
  * the re-attach process (MLE Child Update Request/Response exchange with its parent).
@@ -91,7 +91,7 @@ void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval);
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance);
 
 /**
- * Set the supervision check timeout interval (in seconds).
+ * Sets the supervision check timeout interval (in seconds).
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aTimeout        The check timeout (in seconds). Zero to disable supervision check on the child.

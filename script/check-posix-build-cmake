@@ -63,6 +63,9 @@ main()
         reset_source
         build -DOT_POSIX_CONFIG_RCP_BUS=SPI "$@"
     fi
+
+    reset_source
+    build -DOT_POSIX_CONFIG_RCP_BUS=VENDOR "$@"
 }
 
 main "$@"

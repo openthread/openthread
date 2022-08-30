@@ -546,7 +546,17 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) { return mLinks.GetNoiseFloor(); }
+    int8_t GetNoiseFloor(void) const { return mLinks.GetNoiseFloor(); }
+
+    /**
+     * This method computes the link margin for a given a received signal strength value using noise floor.
+     *
+     * @param[in] aRss The received signal strength in dBm.
+     *
+     * @returns The link margin for @p aRss in dB based on noise floor.
+     *
+     */
+    uint8_t ComputeLinkMargin(int8_t aRss) const;
 
     /**
      * This method returns the current CCA (Clear Channel Assessment) failure rate.
@@ -643,42 +653,24 @@ public:
     bool IsCslSupported(void) const;
 
     /**
-     * This method returns CSL parent clock accuracy, in ± ppm.
+     * This method returns parent CSL accuracy (clock accuracy and uncertainty).
      *
-     * @retval CSL parent clock accuracy, in ± ppm.
+     * @returns The parent CSL accuracy.
      *
      */
-    uint8_t GetCslParentClockAccuracy(void) const { return mLinks.GetSubMac().GetCslParentClockAccuracy(); }
+    const CslAccuracy &GetCslParentAccuracy(void) const { return mLinks.GetSubMac().GetCslParentAccuracy(); }
 
     /**
-     * This method sets CSL parent clock accuracy, in ± ppm.
+     * This method sets parent CSL accuracy.
      *
-     * @param[in] aCslParentAccuracy CSL parent clock accuracy, in ± ppm.
+     * @param[in] aCslAccuracy  The parent CSL accuracy.
      *
      */
-    void SetCslParentClockAccuracy(uint8_t aCslParentAccuracy)
+    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy)
     {
-        mLinks.GetSubMac().SetCslParentClockAccuracy(aCslParentAccuracy);
+        mLinks.GetSubMac().SetCslParentAccuracy(aCslAccuracy);
     }
 
-    /**
-     * This method returns CSL parent uncertainty, in ±10 us units.
-     *
-     * @retval CSL parent uncertainty, in ±10 us units.
-     *
-     */
-    uint8_t GetCslParentUncertainty(void) const { return mLinks.GetSubMac().GetCslParentUncertainty(); }
-
-    /**
-     * This method returns CSL parent uncertainty, in ±10 us units.
-     *
-     * @param[in] aCslParentUncert  CSL parent uncertainty, in ±10 us units.
-     *
-     */
-    void SetCslParentUncertainty(uint8_t aCslParentUncert)
-    {
-        mLinks.GetSubMac().SetCslParentUncertainty(aCslParentUncert);
-    }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -771,7 +763,6 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
-    static void HandleOperationTask(Tasklet &aTasklet);
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
@@ -796,6 +787,8 @@ private:
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
     static const char *OperationToString(Operation aOperation);
+
+    using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
 
     static const otExtAddress sMode2ExtAddress;
 
@@ -843,7 +836,7 @@ private:
     void *mScanHandlerContext;
 
     Links              mLinks;
-    Tasklet            mOperationTask;
+    OperationTask      mOperationTask;
     TimerMilli         mTimer;
     otMacCounters      mCounters;
     uint32_t           mKeyIdMode2FrameCounter;

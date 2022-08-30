@@ -36,7 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#include "common/clearable.hpp"
 #include "common/debug.hpp"
+#include "common/frame_builder.hpp"
+#include "common/frame_data.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -71,149 +74,12 @@ using ot::Encoding::BigEndian::HostSwap16;
  * This structure represents a LOWPAN_IPHC Context.
  *
  */
-struct Context
+struct Context : public Clearable<Context>
 {
     Ip6::Prefix mPrefix;       ///< The Prefix
     uint8_t     mContextId;    ///< The Context ID.
     bool        mCompressFlag; ///< The Context compression flag.
-};
-
-/**
- * This class defines a buffer writer used by the 6LoWPAN compressor.
- *
- */
-class BufferWriter
-{
-public:
-    /**
-     * This constructor initializes the buffer writer.
-     *
-     * @param[in]  aBuf     A pointer to the write buffer.
-     * @param[in]  aLength  The size of the write buffer.
-     *
-     */
-    BufferWriter(uint8_t *aBuf, uint16_t aLength)
-        : mWritePointer(aBuf)
-        , mEndPointer(aBuf + aLength)
-    {
-    }
-
-    /**
-     * This method indicates whether there is buffer space available to write @p aLength bytes.
-     *
-     * @param[in]  aLength  Number of bytes to write.
-     *
-     * @retval  TRUE   Enough buffer space is available to write the requested number of bytes.
-     * @retval  FALSE  Insufficient buffer space to write the requested number of bytes.
-     *
-     */
-    bool CanWrite(uint8_t aLength) const { return (mWritePointer + aLength) <= mEndPointer; }
-
-    /**
-     * This method returns the current write pointer value.
-     *
-     * @returns the current write pointer value.
-     *
-     */
-    uint8_t *GetWritePointer(void) { return mWritePointer; }
-
-    /**
-     * This method advances the write pointer.
-     *
-     * @param[in]  aLength  Number of bytes to advance.
-     *
-     * @retval kErrorNone    Enough buffer space is available to advance the requested number of bytes.
-     * @retval kErrorNoBufs  Insufficient buffer space to advance the requested number of bytes.
-     *
-     */
-    Error Advance(uint8_t aLength)
-    {
-        Error error = kErrorNone;
-
-        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
-        mWritePointer += aLength;
-
-    exit:
-        return error;
-    }
-
-    /**
-     * This method writes a byte into the buffer and updates the write pointer, if space is available.
-     *
-     * @param[in]  aByte  Byte to write.
-     *
-     * @retval  kErrorNone     Successfully wrote the byte and updated the pointer.
-     * @retval  kErrorNoBufs  Insufficient buffer space to write the byte.
-     *
-     */
-    Error Write(uint8_t aByte)
-    {
-        Error error = kErrorNone;
-
-        VerifyOrExit(CanWrite(sizeof(aByte)), error = kErrorNoBufs);
-
-        *mWritePointer++ = aByte;
-
-    exit:
-        return error;
-    }
-
-    /**
-     * This method writes a byte sequence into the buffer and updates the write pointer, if space is available.
-     *
-     * @param[in]  aBuf     A pointer to the byte sequence.
-     * @param[in]  aLength  Number of bytes to write.
-     *
-     * @retval kErrorNone    Successfully wrote the byte sequence and updated the pointer.
-     * @retval kErrorNoBufs  Insufficient buffer space to write the byte sequence.
-     *
-     */
-    Error Write(const void *aBuf, uint8_t aLength)
-    {
-        Error error = kErrorNone;
-
-        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
-
-        memcpy(mWritePointer, aBuf, aLength);
-        mWritePointer += aLength;
-
-    exit:
-        return error;
-    }
-
-    /**
-     * This method writes a byte sequence into the buffer and updates the write pointer, if space is available.
-     *
-     * The byte sequence is taken from a message buffer at the current message buffer's offset.
-     *
-     * @param[in]  aMessage  A message buffer.
-     * @param[in]  aLength   Number of bytes to write.
-     *
-     * @retval kErrorNone    Successfully wrote the byte sequence and updated the pointer.
-     * @retval kErrorNoBufs  Insufficient buffer space to write the byte sequence.
-     *
-     */
-    Error Write(const Message &aMessage, uint8_t aLength)
-    {
-        Error error = kErrorNone;
-        int   rval;
-
-        OT_UNUSED_VARIABLE(rval);
-
-        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
-
-        rval = aMessage.ReadBytes(aMessage.GetOffset(), mWritePointer, aLength);
-        OT_ASSERT(rval == aLength);
-
-        mWritePointer += aLength;
-
-    exit:
-        return error;
-    }
-
-private:
-    uint8_t *mWritePointer;
-    uint8_t *mEndPointer;
+    bool        mIsValid;      ///< Indicates whether the context is valid.
 };
 
 /**
@@ -245,69 +111,82 @@ public:
     }
 
     /**
+     * This method indicates whether or not header in a given frame is a LOWPAN_IPHC header.
+     *
+     * @param[in] aFrameData    The frame data.
+     *
+     * @retval TRUE   If the header matches the LOWPAN_IPHC dispatch value.
+     * @retval FALSE  If the header does not match the LOWPAN_IPHC dispatch value.
+     */
+    static bool IsLowpanHc(const FrameData &aFrameData)
+    {
+        return (aFrameData.GetLength() > 0) && IsLowpanHc(aFrameData.GetBytes());
+    }
+
+    /**
      * This method compresses an IPv6 header.
      *
-     * @param[in]   aMessage     A reference to the IPv6 message.
-     * @param[in]   aMacSource   The MAC source address.
-     * @param[in]   aMacDest     The MAC destination address.
-     * @param[out]  aBuf         A pointer where the compressed IPv6 header will be placed.
+     * @param[in]   aMessage       A reference to the IPv6 message.
+     * @param[in]   aMacAddrs      The MAC source and destination addresses.
+     * @param[in]   aFrameBuilder  The `FrameBuilder` to use to append the compressed headers.
      *
      * @returns The size of the compressed header in bytes.
      *
      */
-    Error Compress(Message &aMessage, const Mac::Address &aMacSource, const Mac::Address &aMacDest, BufferWriter &aBuf);
+    Error Compress(Message &aMessage, const Mac::Addresses &aMacAddrs, FrameBuilder &aFrameBuilder);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aMessage         A reference where the IPv6 header will be placed.
-     * @param[in]   aMacSource       The MAC source address.
-     * @param[in]   aMacDest         The MAC destination address.
-     * @param[in]   aBuf             A pointer to the LOWPAN_IPHC header.
-     * @param[in]   aBufLength       The number of bytes in @p aBuf.
-     * @param[in]   aDatagramLength  The IPv6 datagram length.
+     * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
-     * @returns The size of the compressed header in bytes.
+     * @param[out]    aMessage         A reference where the IPv6 header will be placed.
+     * @param[in]     aMacAddrs        The MAC source and destination addresses.
+     * @param[in,out] aFrameData       A frame data containing the LOWPAN_IPHC header.
+     * @param[in]     aDatagramLength  The IPv6 datagram length.
+     *
+     * @retval kErrorNone    The header was decompressed successfully. @p aMessage and @p aFrameData are updated.
+     * @retval kErrorParse   Failed to parse the lowpan header.
+     * @retval kErrorNoBufs  Could not grow @p aMessage to write the parsed IPv6 header.
      *
      */
-    int Decompress(Message &           aMessage,
-                   const Mac::Address &aMacSource,
-                   const Mac::Address &aMacDest,
-                   const uint8_t *     aBuf,
-                   uint16_t            aBufLength,
-                   uint16_t            aDatagramLength);
+    Error Decompress(Message &             aMessage,
+                     const Mac::Addresses &aMacAddrs,
+                     FrameData &           aFrameData,
+                     uint16_t              aDatagramLength);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
      *
-     * @param[out]  aIp6Header             A reference where the IPv6 header will be placed.
-     * @param[out]  aCompressedNextHeader  A boolean reference to output whether next header is compressed or not.
-     * @param[in]   aMacSource             The MAC source address.
-     * @param[in]   aMacDest               The MAC destination address.
-     * @param[in]   aBuf                   A pointer to the LOWPAN_IPHC header.
-     * @param[in]   aBufLength             The number of bytes in @p aBuf.
+     * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
-     * @returns The size of the compressed header in bytes or -1 if decompression fails.
+     * @param[out]    aIp6Header             A reference where the IPv6 header will be placed.
+     * @param[out]    aCompressedNextHeader  A boolean reference to output whether next header is compressed or not.
+     * @param[in]     aMacAddrs              The MAC source and destination addresses
+     * @param[in,out] aFrameData             A frame data containing the LOWPAN_IPHC header.
+     *
+     * @retval kErrorNone    The header was decompressed successfully. @p aIp6Headre and @p aFrameData are updated.
+     * @retval kErrorParse   Failed to parse the lowpan header.
      *
      */
-    int DecompressBaseHeader(Ip6::Header &       aIp6Header,
-                             bool &              aCompressedNextHeader,
-                             const Mac::Address &aMacSource,
-                             const Mac::Address &aMacDest,
-                             const uint8_t *     aBuf,
-                             uint16_t            aBufLength);
+    Error DecompressBaseHeader(Ip6::Header &         aIp6Header,
+                               bool &                aCompressedNextHeader,
+                               const Mac::Addresses &aMacAddrs,
+                               FrameData &           aFrameData);
 
     /**
      * This method decompresses a LOWPAN_NHC UDP header.
      *
-     * @param[out]  aUdpHeader    A reference where the UDP header will be placed.
-     * @param[in]   aBuf          A pointer to the LOWPAN_NHC header.
-     * @param[in]   aBufLength    The number of bytes in @p aBuf.
+     * If the header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
-     * @returns The size of the compressed header in bytes or -1 if decompression fails.
+     * @param[out]    aUdpHeader    A reference where the UDP header will be placed.
+     * @param[in,out] aFrameData    A frame data containing the LOWPAN_NHC header.
+     *
+     * @retval kErrorNone    The header was decompressed successfully. @p aUdpHeader and @p aFrameData are updated.
+     * @retval kErrorParse   Failed to parse the lowpan header.
      *
      */
-    int DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength);
+    Error DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, FrameData &aFrameData);
 
     /**
      * This method decompresses the IPv6 ECN field in a LOWPAN_IPHC header.
@@ -383,32 +262,32 @@ private:
     static constexpr uint8_t kUdpChecksum = 1 << 2;
     static constexpr uint8_t kUdpPortMask = 3 << 0;
 
-    Error Compress(Message &           aMessage,
-                   const Mac::Address &aMacSource,
-                   const Mac::Address &aMacDest,
-                   BufferWriter &      aBuf,
-                   uint8_t &           aHeaderDepth);
+    void  FindContextForId(uint8_t aContextId, Context &aContext) const;
+    void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
+    Error Compress(Message &             aMessage,
+                   const Mac::Addresses &aMacAddrs,
+                   FrameBuilder &        aFrameBuilder,
+                   uint8_t &             aHeaderDepth);
 
-    Error CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
+    Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
     Error CompressSourceIid(const Mac::Address &aMacAddr,
                             const Ip6::Address &aIpAddr,
                             const Context &     aContext,
                             uint16_t &          aHcCtl,
-                            BufferWriter &      aBuf);
+                            FrameBuilder &      aFrameBuilder);
     Error CompressDestinationIid(const Mac::Address &aMacAddr,
                                  const Ip6::Address &aIpAddr,
                                  const Context &     aContext,
                                  uint16_t &          aHcCtl,
-                                 BufferWriter &      aBuf);
-    Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, BufferWriter &aBuf);
-    Error CompressUdp(Message &aMessage, BufferWriter &aBuf);
+                                 FrameBuilder &      aFrameBuilder);
+    Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, FrameBuilder &aFrameBuilder);
+    Error CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder);
 
-    int   DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
-    int   DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
+    Error DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData);
+    Error DecompressUdpHeader(Message &aMessage, FrameData &aFrameData, uint16_t aDatagramLength);
     Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
 
-    static void  CopyContext(const Context &aContext, Ip6::Address &aAddress);
-    static Error ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
+    static Error ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::InterfaceIdentifier &aIid);
 };
 
 /**
@@ -445,7 +324,7 @@ public:
      * @retval FALSE  If the header does not match the Mesh Header dispatch value.
      *
      */
-    static bool IsMeshHeader(const uint8_t *aFrame, uint16_t aFrameLength);
+    static bool IsMeshHeader(const FrameData &aFrameData);
 
     /**
      * This method parses the Mesh Header from a frame @p aFrame.
@@ -459,6 +338,19 @@ public:
      *
      */
     Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
+
+    /**
+     * This method parses the Mesh Header from a given frame data.
+     *
+     * If the Mesh Header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
+     *
+     * @param[in,out]  aFrameData    The frame data to parse from.
+     *
+     * @retval kErrorNone     Mesh Header parsed successfully. @p aFrameData is updated to skip over parsed header.
+     * @retval kErrorParse    Mesh Header could not be parsed.
+     *
+     */
+    Error ParseFrom(FrameData &aFrameData);
 
     /**
      * This method parses the Mesh Header from a given message.
@@ -530,30 +422,27 @@ public:
     uint16_t GetDestination(void) const { return mDestination; }
 
     /**
-     * This method writes the Mesh Header into a given frame.
+     * This method appends the Mesh Header into a given frame.
      *
-     * @note This method expects the frame buffer to have enough space for the entire Mesh Header.
+     * @param[out]  aFrameBuilder  The `FrameBuidler` to append to.
      *
-     * @param[out]  aFrame  The pointer to the frame buffer to write to.
-     *
-     * @returns The header length (number of bytes written).
+     * @retval kErrorNone    Successfully appended the MeshHeader to @p aFrameBuildr.
+     * @retval kErrorNoBufs  Insufficient available buffers.
      *
      */
-    uint16_t WriteTo(uint8_t *aFrame) const;
+    Error AppendTo(FrameBuilder &aFrameBuilder) const;
 
     /**
-     * This method writes the Mesh Header to a message at a given offset.
+     * This method appends the Mesh Header to a given message.
      *
-     * @note This method expects the @p aMessage length to be already set such that there is enough space for the
-     * entire Mesh Header to be written.
      *
-     * @param[out] aMessage  A message to write the Mesh Header into.
-     * @param[in]  aOffset   The offset at which to write the header.
+     * @param[out] aMessage  A message to append the Mesh Header to.
      *
-     * @returns The header length (number of bytes written).
+     * @retval kErrorNone    Successfully appended the Mesh Header to @p aMessage.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow @p aMessage.
      *
      */
-    uint16_t WriteTo(Message &aMessage, uint16_t aOffset) const;
+    Error AppendTo(Message &aMessage) const;
 
 private:
     static constexpr uint8_t kDispatch     = 2 << 6;
@@ -579,31 +468,70 @@ private:
 class FragmentHeader
 {
 public:
-    static constexpr uint16_t kFirstFragmentHeaderSize      = 4; ///< First fragment header size in octets.
-    static constexpr uint16_t kSubsequentFragmentHeaderSize = 5; ///< Subsequent fragment header size in octets.
+    OT_TOOL_PACKED_BEGIN
+    class FirstFrag
+    {
+    public:
+        /**
+         * This method initializes the `FirstFrag`.
+         *
+         * @param[in] aSize  The Datagram Size value.
+         * @param[in] aTag   The Datagram Tag value.
+         *
+         */
+        void Init(uint16_t aSize, uint16_t aTag)
+        {
+            mDispatchSize = HostSwap16(kFirstDispatch | (aSize & kSizeMask));
+            mTag          = HostSwap16(aTag);
+        }
 
-    /**
-     * This method initializes the Fragment Header as a first fragment.
-     *
-     * A first fragment header starts at offset zero.
-     *
-     * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTag    The Datagram Tag value.
-     *
-     */
-    void InitFirstFragment(uint16_t aSize, uint16_t aTag) { Init(aSize, aTag, 0); }
+    private:
+        //                       1                   2                   3
+        //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |1 1 0 0 0|    datagram_size    |         datagram_tag          |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    /**
-     * This method initializes the Fragment Header.
-     *
-     * The @p aOffset value will be truncated to become a multiple of 8.
-     *
-     * @param[in] aSize   The Datagram Size value.
-     * @param[in] aTag    The Datagram Tag value.
-     * @param[in] aOffset The Datagram Offset value.
-     *
-     */
-    void Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset);
+        static constexpr uint16_t kFirstDispatch = 0xc000; // 0b11000_0000_0000_0000
+
+        uint16_t mDispatchSize;
+        uint16_t mTag;
+    } OT_TOOL_PACKED_END;
+
+    OT_TOOL_PACKED_BEGIN
+    class NextFrag
+    {
+    public:
+        /**
+         * This method initializes the `NextFrag`.
+         *
+         * @param[in] aSize    The Datagram Size value.
+         * @param[in] aTag     The Datagram Tag value.
+         * @param[in] aOffset  The Datagram Offset value.
+         *
+         */
+        void Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset)
+        {
+            mDispatchSize = HostSwap16(kNextDispatch | (aSize & kSizeMask));
+            mTag          = HostSwap16(aTag);
+            mOffset       = static_cast<uint8_t>(aOffset >> 3);
+        }
+
+    private:
+        //                       1                   2                   3
+        //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |1 1 1 0 0|    datagram_size    |         datagram_tag          |
+        //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //  |datagram_offset|
+        //  +-+-+-+-+-+-+-+-+
+
+        static constexpr uint16_t kNextDispatch = 0xe000; // 0b11100_0000_0000_0000
+
+        uint16_t mDispatchSize;
+        uint16_t mTag;
+        uint8_t  mOffset;
+    } OT_TOOL_PACKED_END;
 
     /**
      * This static method indicates whether or not the header (in a given frame) is a Fragment Header.
@@ -612,24 +540,26 @@ public:
      * header (dispatch byte) matches the Fragment Header dispatch value. It does not fully parse and validate the
      * Fragment Header. `ParseFrom()` method can be used to fully parse and validate the header.
      *
+     * @param[in] aFrameData   The frame data.
+     *
      * @retval TRUE   If the header matches the Fragment Header dispatch value.
      * @retval FALSE  If the header does not match the Fragment Header dispatch value.
      *
      */
-    static bool IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength);
+    static bool IsFragmentHeader(const FrameData &aFrameData);
 
     /**
-     * This method parses the Fragment Header from a frame @p aFrame.
+     * This method parses the Fragment Header from a given frame data.
      *
-     * @param[in]  aFrame          The pointer to the frame.
-     * @param[in]  aFrameLength    The length of the frame.
-     * @param[out] aHeaderLength   A reference to a variable to output the parsed header length (on success).
+     * If the Fragment Header is parsed successfully the @p aFrameData is updated to skip over the parsed header bytes.
      *
-     * @retval kErrorNone     Fragment Header parsed successfully.
-     * @retval kErrorParse    Fragment header could not be parsed from @p aFrame.
+     * @param[in,out]  aFrameData    The frame data to parse from.
+     *
+     * @retval kErrorNone     Fragment Header parsed successfully. @p aFrameData is updated to skip over parsed header.
+     * @retval kErrorParse    Fragment header could not be parsed.
      *
      */
-    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
+    Error ParseFrom(FrameData &aFrameData);
 
     /**
      * This method parses the Fragment Header from a message.
@@ -670,18 +600,6 @@ public:
      */
     uint16_t GetDatagramOffset(void) const { return mOffset; }
 
-    /**
-     * This method writes the Fragment Header into a given frame.
-     *
-     * @note This method expects the frame buffer to have enough space for the entire Fragment Header
-     *
-     * @param[out]  aFrame  The pointer to the frame buffer to write to.
-     *
-     * @returns The header length (number of bytes written).
-     *
-     */
-    uint16_t WriteTo(uint8_t *aFrame) const;
-
 private:
     static constexpr uint8_t kDispatch     = 0xc0;   // 0b1100_0000
     static constexpr uint8_t kDispatchMask = 0xd8;   // 0b1101_1000 accepts first (0b1100_0xxx) and next (0b1110_0xxx).
@@ -693,6 +611,10 @@ private:
     static constexpr uint8_t kSizeIndex   = 0; // Start index of Size field in the Fragment Header byte sequence.
     static constexpr uint8_t kTagIndex    = 2; // Start index of Tag field in the Fragment Header byte sequence.
     static constexpr uint8_t kOffsetIndex = 4; // Start index of Offset field in the Fragment Header byte sequence.
+
+    static bool IsFragmentHeader(const uint8_t *aFrame, uint16_t aFrameLength);
+
+    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
 
     uint16_t mSize;
     uint16_t mTag;

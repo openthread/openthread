@@ -123,11 +123,13 @@ check_PROGRAMS                                                     += \
     ot-test-dso                                                       \
     ot-test-ecdsa                                                     \
     ot-test-flash                                                     \
+    ot-test-frame-builder                                             \
     ot-test-heap                                                      \
     ot-test-heap-array                                                \
     ot-test-heap-string                                               \
     ot-test-hkdf-sha256                                               \
     ot-test-hmac-sha256                                               \
+    ot-test-ip4-header                                                \
     ot-test-ip6-header                                                \
     ot-test-ip-address                                                \
     ot-test-link-quality                                              \
@@ -139,6 +141,7 @@ check_PROGRAMS                                                     += \
     ot-test-message                                                   \
     ot-test-message-queue                                             \
     ot-test-multicast-listeners-table                                 \
+    ot-test-nat64                                                     \
     ot-test-ndproxy-table                                             \
     ot-test-netif                                                     \
     ot-test-network-data                                              \
@@ -147,6 +150,7 @@ check_PROGRAMS                                                     += \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
     ot-test-serial-number                                             \
+    ot-test-routing-manager                                           \
     ot-test-smart-ptrs                                                \
     ot-test-string                                                    \
     ot-test-timer                                                     \
@@ -238,6 +242,10 @@ ot_test_flash_LDADD                 = $(COMMON_LDADD)
 ot_test_flash_LIBTOOLFLAGS          = $(COMMON_LIBTOOLFLAGS)
 ot_test_flash_SOURCES               = $(COMMON_SOURCES) test_flash.cpp
 
+ot_test_frame_builder_LDADD         = $(COMMON_LDADD)
+ot_test_frame_builder_LIBTOOLFLAGS  = $(COMMON_LIBTOOLFLAGS)
+ot_test_frame_builder_SOURCES       = $(COMMON_SOURCES) test_frame_builder.cpp
+
 ot_test_hdlc_LDADD                  = $(COMMON_LDADD)
 ot_test_hdlc_LIBTOOLFLAGS           = $(COMMON_LIBTOOLFLAGS)
 ot_test_hdlc_SOURCES                = $(COMMON_SOURCES) test_hdlc.cpp
@@ -261,6 +269,10 @@ ot_test_hkdf_sha256_SOURCES         = $(COMMON_SOURCES) test_hkdf_sha256.cpp
 ot_test_hmac_sha256_LDADD           = $(COMMON_LDADD)
 ot_test_hmac_sha256_LIBTOOLFLAGS    = $(COMMON_LIBTOOLFLAGS)
 ot_test_hmac_sha256_SOURCES         = $(COMMON_SOURCES) test_hmac_sha256.cpp
+
+ot_test_ip4_header_LDADD            = $(COMMON_LDADD)
+ot_test_ip4_header_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
+ot_test_ip4_header_SOURCES          = $(COMMON_SOURCES) test_ip4_header.cpp
 
 ot_test_ip6_header_LDADD            = $(COMMON_LDADD)
 ot_test_ip6_header_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
@@ -302,6 +314,10 @@ ot_test_multicast_listeners_table_LDADD = $(COMMON_LDADD)
 ot_test_multicast_listeners_table_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)
 ot_test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listeners_table.cpp
 
+ot_test_nat64_LDADD          = $(COMMON_LDADD)
+ot_test_nat64_LIBTOOLFLAGS   = $(COMMON_LIBTOOLFLAGS)
+ot_test_nat64_SOURCES        = $(COMMON_SOURCES) test_nat64.cpp
+
 ot_test_network_name_LDADD          = $(COMMON_LDADD)
 ot_test_network_name_LIBTOOLFLAGS   = $(COMMON_LIBTOOLFLAGS)
 ot_test_network_name_SOURCES        = $(COMMON_SOURCES) test_network_name.cpp
@@ -341,6 +357,10 @@ ot_test_smart_ptrs_SOURCES          = $(COMMON_SOURCES) test_smart_ptrs.cpp
 ot_test_meshcop_LDADD               = $(COMMON_LDADD)
 ot_test_meshcop_LIBTOOLFLAGS        = $(COMMON_LIBTOOLFLAGS)
 ot_test_meshcop_SOURCES             = $(COMMON_SOURCES) test_meshcop.cpp
+
+ot_test_routing_manager_LDADD        = $(COMMON_LDADD)
+ot_test_routing_manager_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)
+ot_test_routing_manager_SOURCES      = $(COMMON_SOURCES) test_routing_manager.cpp
 
 ot_test_serial_number_LDADD         = $(COMMON_LDADD)
 ot_test_serial_number_LIBTOOLFLAGS  = $(COMMON_LIBTOOLFLAGS)

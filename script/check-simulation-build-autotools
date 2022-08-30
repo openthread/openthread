@@ -95,6 +95,8 @@ build_all_features()
 
     local options_1_3=(
         "-DOPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE=1"
         "-DOPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1"
         "-DOPENTHREAD_CONFIG_DUA_ENABLE=1"
         "-DOPENTHREAD_CONFIG_MLR_ENABLE=1"
@@ -129,6 +131,11 @@ build_all_features()
     export CPPFLAGS="${options[*]}"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.1 OTNS=1
+
+    # Build Thread 1.3 with external heap and msg pool using heap
+    export CPPFLAGS="${options[*]} ${options_1_3[*]} -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1"
+    reset_source
+    make -f examples/Makefile-simulation THREAD_VERSION=1.3
 }
 
 build_nest_common()

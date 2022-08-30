@@ -393,7 +393,7 @@ bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode 
         break;
 
     case kMatchModeRouterId:
-        matched = Mle::Mle::RouterIdMatch(aFirstRloc16, aSecondRloc16);
+        matched = Mle::RouterIdMatch(aFirstRloc16, aSecondRloc16);
         break;
     }
 
@@ -707,7 +707,7 @@ void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkDa
     Error        error = kErrorNone;
     ChangedFlags flags;
 
-    VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNoRoute);
+    VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNoRoute);
 
     // Validate that the `aNetworkData` contains well-formed TLVs, sub-TLVs,
     // and entries all matching `aRloc16` (no other RLOCs).
@@ -1390,7 +1390,7 @@ Error Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aCon
 
     while (GetNextServer(iterator, rloc16) == kErrorNone)
     {
-        if (!Mle::Mle::IsActiveRouter(rloc16) && Mle::Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
+        if (!Mle::IsActiveRouter(rloc16) && Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
             Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == nullptr)
         {
             // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.

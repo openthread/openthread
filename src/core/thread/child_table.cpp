@@ -189,7 +189,7 @@ Error ChildTable::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
 
     if ((aChildId & ~Mle::kMaxChildId) != 0)
     {
-        aChildId = Mle::Mle::ChildIdFromRloc16(aChildId);
+        aChildId = Mle::ChildIdFromRloc16(aChildId);
     }
 
     rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;
@@ -246,7 +246,7 @@ void ChildTable::Restore(void)
         child->SetDeviceMode(Mle::DeviceMode(childInfo.GetMode()));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
-        child->SetVersion(static_cast<uint8_t>(childInfo.GetVersion()));
+        child->SetVersion(childInfo.GetVersion());
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
         Get<NeighborTable>().Signal(NeighborTable::kChildAdded, *child);
         numChildren++;

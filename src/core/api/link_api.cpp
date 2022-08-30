@@ -112,7 +112,6 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    OT_ASSERT(aExtAddress != nullptr);
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<Mac::Mac>().SetExtAddress(AsCoreType(aExtAddress));
@@ -206,15 +205,11 @@ void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aM
 
 otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     return AsCoreType(aInstance).Get<Mac::Filter>().AddAddress(AsCoreType(aExtAddress));
 }
 
 void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     AsCoreType(aInstance).Get<Mac::Filter>().RemoveAddress(AsCoreType(aExtAddress));
 }
 
@@ -225,22 +220,19 @@ void otLinkFilterClearAddresses(otInstance *aInstance)
 
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    OT_ASSERT(aIterator != nullptr && aEntry != nullptr);
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
 
     return AsCoreType(aInstance).Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
 }
 
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     return AsCoreType(aInstance).Get<Mac::Filter>().AddRssIn(AsCoreType(aExtAddress), aRss);
 }
 
 void otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     AsCoreType(aInstance).Get<Mac::Filter>().RemoveRssIn(AsCoreType(aExtAddress));
 }
 
@@ -261,7 +253,8 @@ void otLinkFilterClearAllRssIn(otInstance *aInstance)
 
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    OT_ASSERT(aIterator != nullptr && aEntry != nullptr);
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
 
     return AsCoreType(aInstance).Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
 }
@@ -282,24 +275,28 @@ bool otLinkIsRadioFilterEnabled(otInstance *aInstance)
 
 uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)
 {
-    return LinkQualityInfo::ConvertRssToLinkQuality(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(), aRss);
+    return LinkQualityForLinkMargin(AsCoreType(aInstance).Get<Mac::Mac>().ComputeLinkMargin(aRss));
 }
 
 int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality)
 {
-    return LinkQualityInfo::ConvertLinkQualityToRss(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
-                                                    static_cast<LinkQuality>(aLinkQuality));
+    return GetTypicalRssForLinkQuality(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
+                                       static_cast<LinkQuality>(aLinkQuality));
 }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
 {
+    AssertPointerIsNotNull(aNumberOfEntries);
+
     return AsCoreType(aInstance).Get<Mac::Mac>().GetDirectRetrySuccessHistogram(*aNumberOfEntries);
 }
 
 const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
 {
     const uint32_t *histogram = nullptr;
+
+    AssertPointerIsNotNull(aNumberOfEntries);
 
 #if OPENTHREAD_FTD
     histogram = AsCoreType(aInstance).Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);

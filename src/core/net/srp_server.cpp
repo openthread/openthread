@@ -41,6 +41,7 @@
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/new.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "net/dns_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -189,7 +190,7 @@ uint32_t Server::TtlConfig::GrantTtl(uint32_t aLease, uint32_t aTtl) const
 {
     OT_ASSERT(mMinTtl <= mMaxTtl);
 
-    return OT_MAX(mMinTtl, OT_MIN(OT_MIN(mMaxTtl, aLease), aTtl));
+    return Clamp(Min(aTtl, aLease), mMinTtl, mMaxTtl);
 }
 
 Server::LeaseConfig::LeaseConfig(void)
@@ -222,14 +223,14 @@ uint32_t Server::LeaseConfig::GrantLease(uint32_t aLease) const
 {
     OT_ASSERT(mMinLease <= mMaxLease);
 
-    return (aLease == 0) ? 0 : OT_MAX(mMinLease, OT_MIN(mMaxLease, aLease));
+    return (aLease == 0) ? 0 : Clamp(aLease, mMinLease, mMaxLease);
 }
 
 uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
 {
     OT_ASSERT(mMinKeyLease <= mMaxKeyLease);
 
-    return (aKeyLease == 0) ? 0 : OT_MAX(mMinKeyLease, OT_MIN(mMaxKeyLease, aKeyLease));
+    return (aKeyLease == 0) ? 0 : Clamp(aKeyLease, mMinKeyLease, mMaxKeyLease);
 }
 
 Error Server::SetLeaseConfig(const LeaseConfig &aLeaseConfig)
@@ -930,10 +931,8 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
         }
 
         // Verify that instance name and service name are related.
-
-        VerifyOrExit(
-            StringEndsWith(instanceName, isSubType ? subServiceName : serviceName, kStringCaseInsensitiveMatch),
-            error = kErrorFailed);
+        VerifyOrExit(Dns::Name::IsSubDomainOf(instanceName, isSubType ? subServiceName : serviceName),
+                     error = kErrorFailed);
 
         // Ensure the same service does not exist already.
         VerifyOrExit(aHost.FindService(serviceName, instanceName) == nullptr, error = kErrorFailed);
@@ -1482,7 +1481,7 @@ void Server::HandleLeaseTimer(void)
 
             Service *next;
 
-            earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
+            earliestExpireTime = Min(earliestExpireTime, host->GetKeyExpireTime());
 
             // Check if any service instance name expired.
             for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
@@ -1498,7 +1497,7 @@ void Server::HandleLeaseTimer(void)
                 }
                 else
                 {
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
                 }
             }
         }
@@ -1515,7 +1514,7 @@ void Server::HandleLeaseTimer(void)
 
             RemoveHost(host, kRetainName, kNotifyServiceHandler);
 
-            earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
+            earliestExpireTime = Min(earliestExpireTime, host->GetKeyExpireTime());
         }
         else
         {
@@ -1525,7 +1524,7 @@ void Server::HandleLeaseTimer(void)
 
             OT_ASSERT(!host->IsDeleted());
 
-            earliestExpireTime = OT_MIN(earliestExpireTime, host->GetExpireTime());
+            earliestExpireTime = Min(earliestExpireTime, host->GetExpireTime());
 
             for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
             {
@@ -1539,7 +1538,7 @@ void Server::HandleLeaseTimer(void)
                 else if (service->mIsDeleted)
                 {
                     // The service has been deleted but the name retains.
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
                 }
                 else if (service->GetExpireTime() <= now)
                 {
@@ -1547,11 +1546,11 @@ void Server::HandleLeaseTimer(void)
 
                     // The service is expired, delete it.
                     host->RemoveService(service, kRetainName, kNotifyServiceHandler);
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
                 }
                 else
                 {
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetExpireTime());
                 }
             }
         }

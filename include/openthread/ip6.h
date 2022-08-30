@@ -680,6 +680,16 @@ void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSi
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
+ * This method gets a prefix with @p aLength from @p aAddress.
+ *
+ * @param[in]  aAddress   A pointer to an IPv6 address.
+ * @param[in]  aLength    The length of prefix in bits.
+ * @param[out] aPrefix    A pointer to output the IPv6 prefix.
+ *
+ */
+void otIp6GetPrefix(const otIp6Address *aAddress, uint8_t aLength, otIp6Prefix *aPrefix);
+
+/**
  * This function indicates whether or not a given IPv6 address is the Unspecified Address.
  *
  * @param[in]  aAddress   A pointer to an IPv6 address.

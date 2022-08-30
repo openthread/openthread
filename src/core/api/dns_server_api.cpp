@@ -53,8 +53,8 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aIn
                                                  const char *                aServiceFullName,
                                                  otDnssdServiceInstanceInfo *aInstanceInfo)
 {
-    OT_ASSERT(aServiceFullName != nullptr);
-    OT_ASSERT(aInstanceInfo != nullptr);
+    AssertPointerIsNotNull(aServiceFullName);
+    AssertPointerIsNotNull(aInstanceInfo);
 
     AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredServiceInstance(aServiceFullName,
                                                                                                *aInstanceInfo);
@@ -62,8 +62,8 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aIn
 
 void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFullName, otDnssdHostInfo *aHostInfo)
 {
-    OT_ASSERT(aHostFullName != nullptr);
-    OT_ASSERT(aHostInfo != nullptr);
+    AssertPointerIsNotNull(aHostFullName);
+    AssertPointerIsNotNull(aHostInfo);
 
     AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredHost(aHostFullName, *aHostInfo);
 }
@@ -75,8 +75,8 @@ const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuer
 
 otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE])
 {
-    OT_ASSERT(aQuery != nullptr);
-    OT_ASSERT(aNameOutput != nullptr);
+    AssertPointerIsNotNull(aQuery);
+    AssertPointerIsNotNull(aNameOutput);
 
     return MapEnum(Dns::ServiceDiscovery::Server::GetQueryTypeAndName(aQuery, *aNameOutput));
 }

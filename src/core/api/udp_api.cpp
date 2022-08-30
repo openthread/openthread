@@ -95,8 +95,6 @@ void otUdpForwardReceive(otInstance *        aInstance,
 {
     Ip6::MessageInfo messageInfo;
 
-    OT_ASSERT(aMessage != nullptr && aPeerAddr != nullptr);
-
     messageInfo.SetSockAddr(AsCoreType(aInstance).Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetSockPort(aSockPort);
     messageInfo.SetPeerAddr(AsCoreType(aPeerAddr));

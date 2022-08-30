@@ -42,6 +42,9 @@ using namespace ot;
 
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
+    AssertPointerIsNotNull(aData);
+    AssertPointerIsNotNull(aDataLength);
+
     return AsCoreType(aInstance).Get<NetworkData::Leader>().CopyNetworkData(
         aStable ? NetworkData::kStableSubset : NetworkData::kFullSet, aData, *aDataLength);
 }
@@ -50,14 +53,9 @@ otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
                                      otNetworkDataIterator *aIterator,
                                      otBorderRouterConfig * aConfig)
 {
-    Error error = kErrorNone;
+    AssertPointerIsNotNull(aIterator);
 
-    VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
-
-    error = AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextOnMeshPrefix(*aIterator, AsCoreType(aConfig));
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextOnMeshPrefix(*aIterator, AsCoreType(aConfig));
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -69,26 +67,16 @@ bool otNetDataContainsOmrPrefix(otInstance *aInstance, const otIp6Prefix *aPrefi
 
 otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig)
 {
-    Error error = kErrorNone;
+    AssertPointerIsNotNull(aIterator);
 
-    VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
-
-    error = AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextExternalRoute(*aIterator, AsCoreType(aConfig));
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextExternalRoute(*aIterator, AsCoreType(aConfig));
 }
 
 otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
 {
-    Error error = kErrorNone;
+    AssertPointerIsNotNull(aIterator);
 
-    VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
-
-    error = AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextService(*aIterator, AsCoreType(aConfig));
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextService(*aIterator, AsCoreType(aConfig));
 }
 
 uint8_t otNetDataGetVersion(otInstance *aInstance)

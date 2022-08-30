@@ -46,7 +46,7 @@
 #include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "crypto/ecdsa.hpp"
-#include "net/ip4_address.hpp"
+#include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {

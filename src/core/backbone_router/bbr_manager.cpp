@@ -40,6 +40,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -224,7 +225,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
         {
             uint32_t origTimeout = timeout;
 
-            timeout = OT_MIN(timeout, static_cast<uint32_t>(Mle::kMlrTimeoutMax));
+            timeout = Min(timeout, Mle::kMlrTimeoutMax);
 
             if (timeout != origTimeout)
             {

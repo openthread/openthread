@@ -194,8 +194,8 @@ public:
      * @param[in] aCallback A pointer to a function that is called upon finishing detaching.
      * @param[in] aContext  A pointer to callback application-specific context.
      *
-     * @retval OT_ERROR_NONE Successfully started detaching.
-     * @retval OT_ERROR_BUSY Detaching is already in progress.
+     * @retval kErrorNone   Successfully started detaching.
+     * @retval kErrorBusy   Detaching is already in progress.
      *
      */
     Error DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext);
@@ -415,7 +415,18 @@ public:
      * @returns A reference to the parent.
      *
      */
-    Router &GetParent(void) { return mParent; }
+    Parent &GetParent(void) { return mParent; }
+
+    /**
+     * The method retrieves information about the parent.
+     *
+     * @param[out] aParentInfo     Reference to a parent information structure.
+     *
+     * @retval kErrorNone          Successfully retrieved the parent info and updated @p aParentInfo.
+     * @retval kErrorInvalidState  Device role is not child.
+     *
+     */
+    Error GetParentInfo(Router::Info &aParentInfo) const;
 
     /**
      * This method get the parent candidate.
@@ -423,7 +434,17 @@ public:
      * The parent candidate is valid when attempting to attach to a new parent.
      *
      */
-    Router &GetParentCandidate(void) { return mParentCandidate; }
+    Parent &GetParentCandidate(void) { return mParentCandidate; }
+
+    /**
+     * This method starts the process for child to search for a better parent while staying attached to its current
+     * parent
+     *
+     * @retval kErrorNone          Successfully started the process to search for a better parent.
+     * @retval kErrorInvalidState  Device role is not child.
+     *
+     */
+    Error SearchForBetterParent(void);
 
     /**
      * This method indicates whether or not an IPv6 address is an RLOC.
@@ -558,100 +579,6 @@ public:
     const LeaderData &GetLeaderData(void);
 
     /**
-     * This method derives the Child ID from a given RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @returns The Child ID portion of an RLOC16.
-     *
-     */
-    static uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
-
-    /**
-     * This method derives the Router ID portion from a given RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @returns The Router ID portion of an RLOC16.
-     *
-     */
-    static uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
-
-    /**
-     * This method returns whether the two RLOC16 have the same Router ID.
-     *
-     * @param[in]  aRloc16A  The first RLOC16 value.
-     * @param[in]  aRloc16B  The second RLOC16 value.
-     *
-     * @returns true if the two RLOC16 have the same Router ID, false otherwise.
-     *
-     */
-    static bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
-    {
-        return RouterIdFromRloc16(aRloc16A) == RouterIdFromRloc16(aRloc16B);
-    }
-
-    /**
-     * This method returns the Service ID corresponding to a Service ALOC16.
-     *
-     * @param[in]  aAloc16  The Service ALOC16 value.
-     *
-     * @returns The Service ID corresponding to given ALOC16.
-     *
-     */
-    static uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
-
-    /**
-     * This method returns the Service ALOC16 corresponding to a Service ID.
-     *
-     * @param[in]  aServiceId  The Service ID value.
-     *
-     * @returns The Service ALOC16 corresponding to given ID.
-     *
-     */
-    static uint16_t ServiceAlocFromId(uint8_t aServiceId)
-    {
-        return static_cast<uint16_t>(aServiceId + kAloc16ServiceStart);
-    }
-
-    /**
-     * This method returns the Commissioner Aloc corresponding to a Commissioner Session ID.
-     *
-     * @param[in]  aSessionId   The Commissioner Session ID value.
-     *
-     * @returns The Commissioner ALOC16 corresponding to given ID.
-     *
-     */
-    static uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
-    {
-        return static_cast<uint16_t>((aSessionId & kAloc16CommissionerMask) + kAloc16CommissionerStart);
-    }
-
-    /**
-     * This method derives RLOC16 from a given Router ID.
-     *
-     * @param[in]  aRouterId  The Router ID value.
-     *
-     * @returns The RLOC16 corresponding to the given Router ID.
-     *
-     */
-    static uint16_t Rloc16FromRouterId(uint8_t aRouterId)
-    {
-        return static_cast<uint16_t>(aRouterId << kRouterIdOffset);
-    }
-
-    /**
-     * This method indicates whether or not @p aRloc16 refers to an active router.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @retval TRUE   If @p aRloc16 refers to an active router.
-     * @retval FALSE  If @p aRloc16 does not refer to an active router.
-     *
-     */
-    static bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
-
-    /**
      * This method returns a reference to the send queue.
      *
      * @returns A reference to the send queue.
@@ -664,12 +591,6 @@ public:
      *
      */
     void RemoveDelayedDataResponseMessage(void);
-
-    /**
-     * This method converts a device role into a human-readable string.
-     *
-     */
-    static const char *RoleToString(DeviceRole aRole);
 
     /**
      * This method gets the MLE counters.
@@ -752,12 +673,12 @@ public:
     /**
      * This method calculates CSL metric of parent.
      *
-     * @param[in] aCslClockAccuracy The CSL Clock Accuracy.
-     * @param[in] aCslUncertainty The CSL Uncertainty.
+     * @param[in] aCslAccuracy The CSL accuracy.
      *
      * @returns CSL metric.
+     *
      */
-    uint64_t CalcParentCslMetric(uint8_t aCslClockAccuracy, uint8_t aCslUncertainty);
+    uint64_t CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy);
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -903,6 +824,40 @@ protected:
 #endif
     };
 
+    static constexpr uint8_t kMaxTlvListSize = 16; ///< Maximum number of TLVs in a `TlvList`.
+
+    /**
+     * This type represents a list of TLVs (array of TLV types).
+     *
+     */
+    class TlvList : public Array<uint8_t, kMaxTlvListSize>
+    {
+    public:
+        /**
+         * This constructor initializes the `TlvList` as empty.
+         *
+         */
+        TlvList(void) = default;
+
+        /**
+         * This method checks if a given TLV type is not already present in the list and adds it in the list.
+         *
+         * If the list is full, this method logs it as a warning.
+         *
+         * @param[in] aTlvType   The TLV type to add to the list.
+         *
+         */
+        void Add(uint8_t aTlvType);
+
+        /**
+         * This method adds elements from a given list to this TLV list (if not already present in the list).
+         *
+         * @param[in] aTlvList   The TLV list to add elements from.
+         *
+         */
+        void AddElementsFrom(const TlvList &aTlvList);
+    };
+
     /**
      * This type represents a Challenge (or Response) data.
      *
@@ -940,18 +895,6 @@ protected:
          *
          */
         bool operator==(const Challenge &aOther) const { return Matches(aOther.mBuffer, aOther.mLength); }
-    };
-
-    /**
-     * This type represents list of requested TLVs in a TLV Request TLV.
-     *
-     */
-    struct RequestedTlvs
-    {
-        static constexpr uint8_t kMaxNumTlvs = 16; ///< Maximum number of TLVs in request array.
-
-        uint8_t mTlvs[kMaxNumTlvs]; ///< Array of requested TLVs.
-        uint8_t mNumTlvs;           ///< Number of TLVs in the array.
     };
 
     /**
@@ -1077,6 +1020,22 @@ protected:
          *
          */
         Error AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLength);
+
+        /**
+         * This method appends a TLV Request TLV to the message.
+         *
+         * @tparam kArrayLength     The TLV array length.
+         *
+         * @param[in]  aTlvArray    A reference to an array of TLV types of @p kArrayLength length.
+         *
+         * @retval kErrorNone     Successfully appended the TLV Request TLV.
+         * @retval kErrorNoBufs   Insufficient buffers available to append the TLV Request TLV.
+         *
+         */
+        template <uint8_t kArrayLength> Error AppendTlvRequestTlv(const uint8_t (&aTlvArray)[kArrayLength])
+        {
+            return AppendTlvRequestTlv(aTlvArray, kArrayLength);
+        }
 
         /**
          * This method appends a Leader Data TLV to the message.
@@ -1344,14 +1303,14 @@ protected:
         /**
          * This method reads TLV Request TLV from the message.
          *
-         * @param[out] aRequestedTlvs   A reference to output the read list of requested TLVs.
+         * @param[out] aTlvList     A reference to output the read list of requested TLVs.
          *
          * @retval kErrorNone       Successfully read the TLV.
          * @retval kErrorNotFound   TLV was not found in the message.
          * @retval kErrorParse      TLV was found but could not be parsed.
          *
          */
-        Error ReadTlvRequestTlv(RequestedTlvs &aRequestedTlvs) const;
+        Error ReadTlvRequestTlv(TlvList &aTlvList) const;
 
         /**
          * This method reads Leader Data TLV from a message.
@@ -1364,6 +1323,20 @@ protected:
          *
          */
         Error ReadLeaderDataTlv(LeaderData &aLeaderData) const;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        /**
+         * This method reads CSL Clock Accuracy TLV from a message.
+         *
+         * @param[out]      A reference to output the CSL accuracy.
+         *
+         * @retval kErrorNone       Successfully read the TLV.
+         * @retval kErrorNotFound   TLV was not found in the message.
+         * @retval kErrorParse      TLV was found but could not be parsed.
+         *
+         */
+        Error ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const;
+#endif
 
     private:
         Error ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuffer) const;
@@ -1447,6 +1420,12 @@ protected:
     void SetAttachState(AttachState aState);
 
     /**
+     * This method clears the parent candidate.
+     *
+     */
+    void ClearParentCandidate(void) { mParentCandidate.Clear(); }
+
+    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshDest   The RLOC16 of the destination.
@@ -1486,8 +1465,27 @@ protected:
                           const uint8_t *     aTlvs,
                           uint8_t             aTlvsLength,
                           uint16_t            aDelay,
-                          const uint8_t *     aExtraTlvs       = nullptr,
-                          uint8_t             aExtraTlvsLength = 0);
+                          const uint8_t *     aExtraTlvs,
+                          uint8_t             aExtraTlvsLength);
+
+    /**
+     * This method generates an MLE Data Request message.
+     *
+     * @tparam kArrayLength          The TLV array length.
+     *
+     * @param[in]  aDestination      A reference to the IPv6 address of the destination.
+     * @param[in]  aTlvs             An array of requested TLVs.
+     * @param[in]  aDelay            Delay in milliseconds before the Data Request message is sent.
+     *
+     * @retval kErrorNone     Successfully generated an MLE Data Request message.
+     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
+     *
+     */
+    template <uint8_t kArrayLength>
+    Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t (&aTlvs)[kArrayLength], uint16_t aDelay = 0)
+    {
+        return SendDataRequest(aDestination, aTlvs, kArrayLength, aDelay, nullptr, 0);
+    }
 
     /**
      * This method generates an MLE Child Update Request message.
@@ -1503,15 +1501,14 @@ protected:
     /**
      * This method generates an MLE Child Update Response message.
      *
-     * @param[in]  aTlvs         A pointer to requested TLV types.
-     * @param[in]  aNumTlvs      The number of TLV types in @p aTlvs.
+     * @param[in]  aTlvList      A list of requested TLV types.
      * @param[in]  aChallenge    The Challenge for the response.
      *
      * @retval kErrorNone     Successfully generated an MLE Child Update Response message.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Child Update Response message.
      *
      */
-    Error SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const Challenge &aChallenge);
+    Error SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aChallenge);
 
     /**
      * This method sets the RLOC16 assigned to the Thread interface.
@@ -1653,14 +1650,13 @@ protected:
      * This method sends a Link Metrics Management Request message.
      *
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     * @param[in]  aSubTlvs      A pointer to the buffer of the sub-TLVs in the message.
-     * @param[in]  aLength       The overall length of @p aSubTlvs.
+     * @param[in]  aSubTlv       A reference to the sub-TLV to include.
      *
      * @retval kErrorNone     Successfully sent a Link Metrics Management Request.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Link Metrics Management Request message.
      *
      */
-    Error SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength);
+    Error SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const ot::Tlv &aSubTlv);
 
     /**
      * This method sends an MLE Link Probe message.
@@ -1679,22 +1675,12 @@ protected:
 
 #endif
 
-    /**
-     * This method indicates whether the device is detaching gracefully.
-     *
-     * @retval TRUE  Detaching is in progress.
-     * @retval FALSE Not detaching.
-     *
-     */
-    bool IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
-
     Ip6::Netif::UnicastAddress mLeaderAloc; ///< Leader anycast locator
 
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
     DeviceRole    mRole;                     ///< Current Thread role.
-    Router        mParent;                   ///< Parent information.
-    Router        mParentCandidate;          ///< Parent candidate information.
+    Parent        mParent;                   ///< Parent information.
     NeighborTable mNeighborTable;            ///< The neighbor table.
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The attach state.
@@ -1705,24 +1691,10 @@ protected:
     TimerMilli    mAttachTimer;              ///< The timer for driving the attach process.
     TimerMilli    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     TimerMilli    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
-    TimerMilli    mDetachGracefullyTimer;
-    uint8_t       mParentLeaderCost;
-
-    otDetachGracefullyCallback mDetachGracefullyCallback;
-    void *                     mDetachGracefullyContext;
-
-    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
 private:
     static constexpr uint8_t kMleHopLimit        = 255;
     static constexpr uint8_t kMleSecurityTagSize = 4; // Security tag size in bytes.
-
-    // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
-    // All timer intervals are converted to milliseconds.
-    static constexpr uint32_t kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u);
-    static constexpr uint32_t kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u);
-    static constexpr uint32_t kParentSearchJitterInterval  = (15 * 1000u);
-    static constexpr int8_t   kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
 
     // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
     static constexpr uint32_t kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL;
@@ -1744,6 +1716,8 @@ private:
     // Next attach cycles includes one Parent Request to routers, followed by one to routers and REEDs.
     static constexpr uint8_t kNextAttachCycleTotalParentRequests       = 2;
     static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
+
+    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
     enum StartMode : uint8_t // Used in `Start()`.
     {
@@ -1824,6 +1798,25 @@ private:
         uint8_t  mKeyIndex;
     } OT_TOOL_PACKED_END;
 
+    class ParentCandidate : public Parent
+    {
+    public:
+        void Init(Instance &aInstance) { Parent::Init(aInstance); }
+        void Clear(void);
+        void CopyTo(Parent &aParent) const;
+
+        Challenge  mChallenge;
+        int8_t     mPriority;
+        uint8_t    mLinkQuality3;
+        uint8_t    mLinkQuality2;
+        uint8_t    mLinkQuality1;
+        uint16_t   mSedBufferSize;
+        uint8_t    mSedDatagramCount;
+        uint8_t    mLinkMargin;
+        LeaderData mLeaderData;
+        bool       mIsSingleton;
+    };
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     class ServiceAloc : public Ip6::Netif::UnicastAddress
     {
@@ -1839,6 +1832,42 @@ private:
         void     ApplyMeshLocalPrefix(const Ip6::NetworkPrefix &aPrefix) { GetAddress().SetPrefix(aPrefix); }
     };
 #endif
+
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    class ParentSearch : public InstanceLocator
+    {
+    public:
+        explicit ParentSearch(Instance &aInstance)
+            : InstanceLocator(aInstance)
+            , mIsInBackoff(false)
+            , mBackoffWasCanceled(false)
+            , mRecentlyDetached(false)
+            , mBackoffCancelTime(0)
+            , mTimer(aInstance, HandleTimer)
+        {
+        }
+
+        void StartTimer(void);
+        void UpdateState(void);
+        void SetRecentlyDetached(void) { mRecentlyDetached = true; }
+
+    private:
+        // All timer intervals are converted to milliseconds.
+        static constexpr uint32_t kCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u);
+        static constexpr uint32_t kBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u);
+        static constexpr uint32_t kJitterInterval  = (15 * 1000u);
+        static constexpr int8_t   kRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
+
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
+
+        bool       mIsInBackoff : 1;
+        bool       mBackoffWasCanceled : 1;
+        bool       mRecentlyDetached : 1;
+        TimeMilli  mBackoffCancelTime;
+        TimerMilli mTimer;
+    };
+#endif // OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 
     Error       Start(StartMode aMode);
     void        Stop(StopMode aMode);
@@ -1856,6 +1885,7 @@ private:
     void        ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
+    bool        IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
     Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
 
 #if OPENTHREAD_FTD
@@ -1903,13 +1933,12 @@ private:
     bool     HasAcceptableParentCandidate(void) const;
     Error    DetermineParentRequestType(ParentRequestType &aType) const;
 
-    bool IsBetterParent(uint16_t               aRloc16,
-                        LinkQuality            aLinkQuality,
-                        uint8_t                aLinkMargin,
-                        const ConnectivityTlv &aConnectivityTlv,
-                        uint8_t                aVersion,
-                        uint8_t                aCslClockAccuracy,
-                        uint8_t                aCslUncertainty);
+    bool IsBetterParent(uint16_t                aRloc16,
+                        LinkQuality             aLinkQuality,
+                        uint8_t                 aLinkMargin,
+                        const ConnectivityTlv & aConnectivityTlv,
+                        uint16_t                aVersion,
+                        const Mac::CslAccuracy &aCslAccuracy);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
 
     Error ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
@@ -1927,13 +1956,6 @@ private:
     void InformPreviousParent(void);
 #endif
 
-#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    static void HandleParentSearchTimer(Timer &aTimer);
-    void        HandleParentSearchTimer(void);
-    void        StartParentSearchTimer(void);
-    void        UpdateParentSearchState(void);
-#endif
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     static void        LogError(MessageAction aAction, MessageType aType, Error aError);
     static const char *MessageActionToString(MessageAction aAction);
@@ -1945,13 +1967,8 @@ private:
 
     Challenge mParentRequestChallenge;
 
-    AttachMode mAttachMode;
-    int8_t     mParentPriority;
-    uint8_t    mParentLinkQuality3;
-    uint8_t    mParentLinkQuality2;
-    uint8_t    mParentLinkQuality1;
-    uint16_t   mParentSedBufferSize;
-    uint8_t    mParentSedDatagramCount;
+    AttachMode      mAttachMode;
+    ParentCandidate mParentCandidate;
 
     uint8_t                 mChildUpdateAttempts;
     ChildUpdateRequestState mChildUpdateRequestState;
@@ -1960,13 +1977,8 @@ private:
 
     AddressRegistrationMode mAddressRegistrationMode;
 
-    bool       mHasRestored;
-    uint8_t    mParentLinkMargin;
-    bool       mParentIsSingleton;
-    bool       mReceivedResponseFromParent;
-    LeaderData mParentLeaderData;
-
-    Challenge mParentCandidateChallenge;
+    bool mHasRestored;
+    bool mReceivedResponseFromParent;
 
     Ip6::Udp::Socket mSocket;
     uint32_t         mTimeout;
@@ -1977,11 +1989,7 @@ private:
     uint16_t mPreviousParentRloc;
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    bool       mParentSearchIsInBackoff : 1;
-    bool       mParentSearchBackoffWasCanceled : 1;
-    bool       mParentSearchRecentlyDetached : 1;
-    TimeMilli  mParentSearchBackoffCancelTime;
-    TimerMilli mParentSearchTimer;
+    ParentSearch mParentSearch;
 #endif
 
     uint8_t  mAnnounceChannel;
@@ -2002,6 +2010,10 @@ private:
     Ip6::Netif::UnicastAddress   mMeshLocal16;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+
+    TimerMilli                 mDetachGracefullyTimer;
+    otDetachGracefullyCallback mDetachGracefullyCallback;
+    void *                     mDetachGracefullyContext;
 
     otThreadParentResponseCallback mParentResponseCb;
     void *                         mParentResponseCbContext;

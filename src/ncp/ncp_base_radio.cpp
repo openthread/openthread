@@ -518,7 +518,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_ENH_ACK_PROBING>(
     otError             error = OT_ERROR_NONE;
     uint16_t            shortAddress;
     const otExtAddress *extAddress;
-    otLinkMetrics       linkMetrics = {};
+    otLinkMetrics       linkMetrics = {false, false, false, false, false};
 
     SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
     SuccessOrExit(error = mDecoder.ReadEui64(extAddress));

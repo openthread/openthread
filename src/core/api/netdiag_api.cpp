@@ -46,6 +46,9 @@ otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
                                      otNetworkDiagIterator *aIterator,
                                      otNetworkDiagTlv *     aNetworkDiagTlv)
 {
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aNetworkDiagTlv);
+
     return NetworkDiagnostic::NetworkDiagnostic::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
 }
 

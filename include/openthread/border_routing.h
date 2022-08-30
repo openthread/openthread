@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-border-router
+ * @addtogroup api-border-routing
  *
  * @brief
  *  This module includes definitions related to Border Routing Manager.
@@ -152,11 +152,11 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
- * This function sets the preference to use when advertising Route Info Options (e.g., for discovered OMR prefixes) in
- * Router Advertisement messages sent over the infrastructure link.
+ * This function sets the preference to use when advertising Route Info Options in Router Advertisement messages sent
+ * over the infrastructure link, for example for discovered OMR prefixes.
  *
- * By default BR will use 'medium' preference level but this function allows the default value to be changed. As an
- * example, it can be set to 'low' preference in the case where device is a temporary BR (a mobile BR or a
+ * By default BR will use `medium` preference level, but this function allows the default value to be changed. As an
+ * example, it can be set to `low` preference in the case where device is a temporary BR (a mobile BR or a
  * battery-powered BR) to indicate that other BRs (if any) should be preferred over this BR on the infrastructure link.
  *
  * @param[in] aInstance     A pointer to an OpenThread instance.
@@ -166,7 +166,7 @@ otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInsta
 void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRoutePreference aPreference);
 
 /**
- * Gets the Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
+ * Gets the local Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
  *
  * An OMR Prefix is a randomly generated 64-bit prefix that's published in the
  * Thread network if there isn't already an OMR prefix. This prefix can be reached
@@ -180,6 +180,21 @@ void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRouteP
  *
  */
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * Gets the currently favored Off-Mesh-Routable (OMR) Prefix.
+ *
+ * The favored OMR prefix can be discovered from Network Data or can be this device's local OMR prefix.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aPrefix      A pointer to output the favored OMR prefix.
+ * @param[out]  aPreference  A pointer to output the preference associated the favored prefix.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the favored OMR prefix.
+ *
+ */
+otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference);
 
 /**
  * Gets the On-Link Prefix for the adjacent infrastructure link, for example `fd41:2650:a6f5:0::/64`.
@@ -211,6 +226,23 @@ otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPref
  *
  */
 otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * Gets the currently favored NAT64 prefix.
+ *
+ * The favored NAT64 prefix can be discovered from infrastructure link or can be this device's local NAT64 prefix.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aPrefix      A pointer to output the favored NAT64 prefix.
+ * @param[out]  aPreference  A pointer to output the preference associated the favored prefix.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the favored NAT64 prefix.
+ *
+ */
+otError otBorderRoutingGetFavoredNat64Prefix(otInstance *       aInstance,
+                                             otIp6Prefix *      aPrefix,
+                                             otRoutePreference *aPreference);
 
 /**
  * This function initializes an `otBorderRoutingPrefixTableIterator`.

@@ -56,12 +56,6 @@ static constexpr uint64_t kMinCslPeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD 
 static constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT;
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static constexpr uint8_t kCslWorstCrystalPpm  = 255; ///< Worst possible crystal accuracy, in units of ± ppm.
-static constexpr uint8_t kCslWorstUncertainty = 255; ///< Worst possible scheduling uncertainty, in units of 10 us.
-static constexpr uint8_t kUsPerUncertUnit     = 10;  ///< Number of microseconds by uncertainty unit.
-#endif
-
 /**
  * @addtogroup core-radio
  *
@@ -242,7 +236,7 @@ public:
      * @returns The radio receive sensitivity value in dBm.
      *
      */
-    int8_t GetReceiveSensitivity(void);
+    int8_t GetReceiveSensitivity(void) const;
 
 #if OPENTHREAD_RADIO
     /**
@@ -662,7 +656,7 @@ public:
     }
 
 private:
-    otInstance *GetInstancePtr(void) { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
+    otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
 
     Callbacks mCallbacks;
 };
@@ -701,7 +695,7 @@ inline otRadioCaps Radio::GetCaps(void)
     return otPlatRadioGetCaps(GetInstancePtr());
 }
 
-inline int8_t Radio::GetReceiveSensitivity(void)
+inline int8_t Radio::GetReceiveSensitivity(void) const
 {
     return otPlatRadioGetReceiveSensitivity(GetInstancePtr());
 }
@@ -876,7 +870,7 @@ inline otRadioCaps Radio::GetCaps(void)
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
-inline int8_t Radio::GetReceiveSensitivity(void)
+inline int8_t Radio::GetReceiveSensitivity(void) const
 {
     return -110;
 }

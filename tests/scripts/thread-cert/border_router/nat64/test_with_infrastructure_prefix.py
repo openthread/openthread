@@ -32,26 +32,25 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies the advertisement of NAT64 prefix in Thread network.
+#   This test verifies the advertisement of infrastructure NAT64 prefix in Thread network.
 #
-#   TODO: add checks for outbound connectivity from Thread device to IPv4 host
-#         after OTBR change is ready.
 #
 # Topology:
-#    ----------------(eth)--------------------
-#           |                 |
-#          BR (Leader)      HOST
+#
+#   ----------------(eth)--------------------
+#           |
+#          BR (with DNS64 on infrastructure interface)
 #           |
 #        ROUTER
 #
 
 BR = 1
 ROUTER = 2
-HOST = 3
 
-# The prefix is set small enough that a random-generated NAT64 prefix is very
-# likely greater than it. So that the BR will remove the random-generated one.
-SMALL_NAT64_PREFIX = "fd00:00:00:01:00:00::/96"
+# The prefix is set smaller than the default infrastructure NAT64 prefix.
+SMALL_NAT64_PREFIX = "2000:0:0:1:0:0::/96"
+
+NAT64_PREFIX_REFRESH_DELAY = 305
 
 
 class Nat64SingleBorderRouter(thread_cert.TestCase):
@@ -69,19 +68,11 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
             'allowlist': [BR],
             'version': '1.2',
         },
-        HOST: {
-            'name': 'Host',
-            'is_host': True
-        },
     }
 
     def test(self):
         br = self.nodes[BR]
         router = self.nodes[ROUTER]
-        host = self.nodes[HOST]
-
-        host.start(start_radvd=False)
-        self.simulator.go(5)
 
         br.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
@@ -91,66 +82,67 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
-        #
-        # Case 1. Border router advertises its local NAT64 prefix.
-        #
-        self.simulator.go(5)
-        local_nat64_prefix = br.get_br_nat64_prefix()
+        # Case 1 BR advertise the infrastructure prefix
+        infra_nat64_prefix = br.get_br_favored_nat64_prefix()
 
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         nat64_prefix = br.get_netdata_nat64_prefix()[0]
-        self.assertEqual(nat64_prefix, local_nat64_prefix)
+        self.assertEqual(nat64_prefix, infra_nat64_prefix)
 
-        #
-        # Case 2.
-        # User adds a smaller NAT64 prefix and the local prefix is withdrawn.
-        # User removes the smaller NAT64 prefix and the local prefix is re-added.
-        #
-        br.add_route(SMALL_NAT64_PREFIX, stable=False, nat64=True)
+        # Case 2 Withdraw infrastructure prefix when a smaller prefix in medium
+        # preference is present
+        br.add_route(SMALL_NAT64_PREFIX, stable=False, nat64=True, prf='med')
         br.register_netdata()
         self.simulator.go(5)
 
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertNotEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertNotEqual(infra_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+
+        br.remove_route(SMALL_NAT64_PREFIX)
+        br.register_netdata()
+        self.simulator.go(10)
+
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
+        self.assertEqual(nat64_prefix, infra_nat64_prefix)
+
+        # Case 3 No change when a smaller prefix in low preference is present
+        br.add_route(SMALL_NAT64_PREFIX, stable=False, nat64=True, prf='low')
+        br.register_netdata()
+        self.simulator.go(5)
+
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 2)
+        self.assertEqual(br.get_netdata_nat64_prefix(), [infra_nat64_prefix, SMALL_NAT64_PREFIX])
 
         br.remove_route(SMALL_NAT64_PREFIX)
         br.register_netdata()
         self.simulator.go(5)
 
+        # Case 4 Infrastructure nat64 prefix no longer presents
+        br.bash("service bind9 stop")
+        self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
+
+        local_nat64_prefix = br.get_br_nat64_prefix()
+        self.assertNotEqual(local_nat64_prefix, infra_nat64_prefix)
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(br.get_netdata_nat64_prefix()[0], local_nat64_prefix)
 
-        #
-        # Case 3. Disable and re-enable border routing on the border router.
-        #
-        br.disable_br()
-        self.simulator.go(5)
+        # Case 5 Infrastructure nat64 prefix is recovered
+        br.bash("service bind9 start")
+        self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
-        # NAT64 prefix is withdrawn from Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 0)
-
-        br.enable_br()
-        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
-
-        # Same NAT64 prefix is advertised to Network Data.
+        self.assertEqual(br.get_br_favored_nat64_prefix(), infra_nat64_prefix)
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(br.get_netdata_nat64_prefix()[0], infra_nat64_prefix)
 
-        #
-        # Case 4. Disable and re-enable ethernet on the border router.
-        #
-        br.disable_ether()
-        self.simulator.go(5)
+        # Case 6 Change infrastructure nat64 prefix
+        br.bash("sed -i 's/dns64 /\/\/dns64 /' /etc/bind/named.conf.options")
+        br.bash("sed -i '/\/\/dns64 /a dns64 " + SMALL_NAT64_PREFIX + " {};' /etc/bind/named.conf.options")
+        br.bash("service bind9 restart")
+        self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
-        # NAT64 prefix is withdrawn from Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 0)
-
-        br.enable_ether()
-        self.simulator.go(80)
-
-        # Same NAT64 prefix is advertised to Network Data.
+        self.assertEqual(br.get_br_favored_nat64_prefix(), SMALL_NAT64_PREFIX)
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(br.get_netdata_nat64_prefix()[0], SMALL_NAT64_PREFIX)
 
 
 if __name__ == '__main__':

@@ -45,19 +45,12 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
+#include "thread/link_metrics_types.hpp"
 
 namespace ot {
 namespace LinkMetrics {
 
-/**
- * This type represents Link Metric Flags indicating a set of metrics.
- *
- * @sa otLinkMetrics
- *
- */
-class Metrics : public otLinkMetrics, public Clearable<Metrics>
-{
-};
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * This class defines constants related to Link Metrics Sub-TLVs.
@@ -88,208 +81,10 @@ public:
 typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
 
 /**
- * This class implements Link Metrics Type ID Flags generation and parsing.
+ * This type defines a Link Metrics Status Sub-Tlv.
  *
  */
-OT_TOOL_PACKED_BEGIN class TypeIdFlags
-{
-    static constexpr uint8_t kExtendedFlag     = 1 << 7;
-    static constexpr uint8_t kLengthOffset     = 6;
-    static constexpr uint8_t kLengthFlag       = 1 << kLengthOffset;
-    static constexpr uint8_t kTypeEnumOffset   = 3;
-    static constexpr uint8_t kTypeEnumMask     = 7 << kTypeEnumOffset;
-    static constexpr uint8_t kMetricEnumOffset = 0;
-    static constexpr uint8_t kMetricEnumMask   = 7 << kMetricEnumOffset;
-
-public:
-    /**
-     * This enumeration specifies the Length field in Type ID Flags.
-     *
-     */
-    enum Length
-    {
-        kShortLength    = 0, ///< Short value length (1 byte value)
-        kExtendedLength = 1, ///< Extended value length (4 bytes value)
-    };
-
-    /**
-     * This enumeration specifies the Type values in Type ID Flags.
-     *
-     */
-    enum TypeEnum : uint8_t
-    {
-        kTypeCountSummation   = 0, ///< Count or summation
-        kTypeExpMovingAverage = 1, ///< Exponential moving average.
-        kTypeReserved         = 2, ///< Reserved for future use.
-    };
-
-    /**
-     * This enumeration specifies the Metric values in Type ID Flag.
-     *
-     */
-    enum MetricEnum : uint8_t
-    {
-        kMetricPdusReceived = 0, ///< Number of PDUs received.
-        kMetricLqi          = 1, ///< Link Quality Indicator.
-        kMetricLinkMargin   = 2, ///< Link Margin.
-        kMetricRssi         = 3, ///< RSSI in dbm.
-    };
-
-    /**
-     * This constant defines the raw value for Type ID Flag for PDU.
-     *
-     */
-    static constexpr uint8_t kPdu = (kExtendedLength << kLengthOffset) | (kTypeCountSummation << kTypeEnumOffset) |
-                                    (kMetricPdusReceived << kMetricEnumOffset);
-
-    /**
-     * This constant defines the raw value for Type ID Flag for LQI.
-     *
-     */
-    static constexpr uint8_t kLqi = (kShortLength << kLengthOffset) | (kTypeExpMovingAverage << kTypeEnumOffset) |
-                                    (kMetricLqi << kMetricEnumOffset);
-
-    /**
-     * This constant defines the raw value for Type ID Flag for Link Margin.
-     *
-     */
-    static constexpr uint8_t kLinkMargin = (kShortLength << kLengthOffset) |
-                                           (kTypeExpMovingAverage << kTypeEnumOffset) |
-                                           (kMetricLinkMargin << kMetricEnumOffset);
-
-    /**
-     * This constant defines the raw value for Type ID Flag for RSSI
-     *
-     */
-    static constexpr uint8_t kRssi = (kShortLength << kLengthOffset) | (kTypeExpMovingAverage << kTypeEnumOffset) |
-                                     (kMetricRssi << kMetricEnumOffset);
-
-    /**
-     * Default constructor.
-     *
-     */
-    TypeIdFlags(void) = default;
-
-    /**
-     * Constructor to initialize from raw value.
-     *
-     * @param[in] aFlags  The raw flags value.
-     *
-     */
-    explicit TypeIdFlags(uint8_t aFlags)
-        : mFlags(aFlags)
-    {
-    }
-
-    /**
-     * This method initializes the Type ID value
-     *
-     */
-    void Init(void) { mFlags = 0; }
-
-    /**
-     * This method clears the Extended flag.
-     *
-     */
-    void ClearExtendedFlag(void) { mFlags &= ~kExtendedFlag; }
-
-    /**
-     * This method sets the Extended flag, indicating an additional second flags byte after the current 1-byte flags.
-     * MUST NOT set in Thread 1.2.1.
-     *
-     */
-    void SetExtendedFlag(void) { mFlags |= kExtendedFlag; }
-
-    /**
-     * This method indicates whether or not the Extended flag is set.
-     *
-     * @retval true   The Extended flag is set.
-     * @retval false  The Extended flag is not set.
-     *
-     */
-    bool IsExtendedFlagSet(void) const { return (mFlags & kExtendedFlag) != 0; }
-
-    /**
-     * This method clears value length flag.
-     *
-     */
-    void ClearLengthFlag(void) { mFlags &= ~kLengthFlag; }
-
-    /**
-     * This method sets the value length flag.
-     *
-     */
-    void SetLengthFlag(void) { mFlags |= kLengthFlag; }
-
-    /**
-     * This method indicates whether or not the value length flag is set.
-     *
-     * @retval true   The value length flag is set, extended value length (4 bytes)
-     * @retval false  The value length flag is not set, short value length (1 byte)
-     *
-     */
-    bool IsLengthFlagSet(void) const { return (mFlags & kLengthFlag) != 0; }
-
-    /**
-     * This method sets the Type/Average Enum.
-     *
-     * @param[in]  aTypeEnum  Type/Average Enum.
-     *
-     */
-    void SetTypeEnum(TypeEnum aTypeEnum)
-    {
-        mFlags = (mFlags & ~kTypeEnumMask) | ((aTypeEnum << kTypeEnumOffset) & kTypeEnumMask);
-    }
-
-    /**
-     * This method returns the Type/Average Enum.
-     *
-     * @returns The Type/Average Enum.
-     *
-     */
-    TypeEnum GetTypeEnum(void) const { return static_cast<TypeEnum>((mFlags & kTypeEnumMask) >> kTypeEnumOffset); }
-
-    /**
-     * This method sets the Metric Enum.
-     *
-     * @param[in]  aMetricEnum  Metric Enum.
-     *
-     */
-    void SetMetricEnum(MetricEnum aMetricEnum)
-    {
-        mFlags = (mFlags & ~kMetricEnumMask) | ((aMetricEnum << kMetricEnumOffset) & kMetricEnumMask);
-    }
-
-    /**
-     * This method returns the Metric Enum.
-     *
-     * @returns The Metric Enum.
-     *
-     */
-    MetricEnum GetMetricEnum(void) const
-    {
-        return static_cast<MetricEnum>((mFlags & kMetricEnumMask) >> kMetricEnumOffset);
-    }
-
-    /**
-     * This method returns the raw value of the entire TypeIdFlags.
-     *
-     * @returns The raw value of TypeIdFlags.
-     *
-     */
-    uint8_t GetRawValue(void) const { return mFlags; }
-
-    /**
-     * This method sets the raw value of the entire TypeIdFlags.
-     *
-     * @param[in]  aFlags  The raw flags value.
-     *
-     */
-    void SetRawValue(uint8_t aFlags) { mFlags = aFlags; }
-
-private:
-    uint8_t mFlags;
-} OT_TOOL_PACKED_END;
+typedef UintTlvInfo<SubTlv::kStatus, uint8_t> StatusSubTlv;
 
 /**
  * This class implements Link Metrics Report Sub-TLV generation and parsing.
@@ -299,6 +94,8 @@ OT_TOOL_PACKED_BEGIN
 class ReportSubTlv : public Tlv, public TlvInfo<SubTlv::kReport>
 {
 public:
+    static constexpr uint8_t kMinLength = sizeof(TypeIdFlags) + sizeof(uint8_t); ///< Minimum expected TLV length.
+
     /**
      * This method initializes the TLV.
      *
@@ -316,7 +113,7 @@ public:
      * @retval false  The TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(TypeIdFlags) + sizeof(uint8_t); }
+    bool IsValid(void) const { return GetLength() >= kMinLength; }
 
     /**
      * This method returns the Link Metrics Type ID.
@@ -356,7 +153,7 @@ public:
      * @returns The metric value.
      *
      */
-    uint32_t GetMetricsValue32(void) const { return mMetricsValue.m32; }
+    uint32_t GetMetricsValue32(void) const { return HostSwap32(mMetricsValue.m32); }
 
     /**
      * This method sets the metric value (8 bits).
@@ -372,7 +169,7 @@ public:
      * @param[in]  aMetricsValue  Metrics value.
      *
      */
-    void SetMetricsValue32(uint32_t aMetricsValue) { mMetricsValue.m32 = aMetricsValue; }
+    void SetMetricsValue32(uint32_t aMetricsValue) { mMetricsValue.m32 = HostSwap32(aMetricsValue); }
 
 private:
     TypeIdFlags mMetricsTypeId;
@@ -413,222 +210,85 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Series Flags for Forward Tracking Series.
+ * This class defines Link Metrics Forward Probing Registration Sub-TLV.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class SeriesFlags
+class FwdProbingRegSubTlv : public Tlv, public TlvInfo<SubTlv::kFwdProbingReg>
 {
 public:
-    /**
-     * This type represents which frames to be accounted in a Forward Tracking Series.
-     *
-     * @sa otLinkMetricsSeriesFlags
-     *
-     */
-    typedef otLinkMetricsSeriesFlags Info;
+    static constexpr uint8_t kMinLength = sizeof(uint8_t) + sizeof(SeriesFlags); ///< Minimum expected TLV length
 
     /**
-     * Default constructor.
+     * This method initializes the TLV.
      *
      */
-    SeriesFlags(void)
-        : mFlags(0)
+    void Init(void)
     {
+        SetType(SubTlv::kFwdProbingReg);
+        SetLength(kMinLength);
     }
 
     /**
-     * This method sets the values from an `Info` object.
+     * This method indicates whether or not the TLV appears to be well-formed.
      *
-     * @param[in]  aSeriesFlags  The `Info` object.
+     * @retval true   The TLV appears to be well-formed.
+     * @retval false  The TLV does not appear to be well-formed.
      *
      */
-    void SetFrom(const Info &aSeriesFlags)
-    {
-        Clear();
-
-        if (aSeriesFlags.mLinkProbe)
-        {
-            SetLinkProbeFlag();
-        }
-
-        if (aSeriesFlags.mMacData)
-        {
-            SetMacDataFlag();
-        }
-
-        if (aSeriesFlags.mMacDataRequest)
-        {
-            SetMacDataRequestFlag();
-        }
-
-        if (aSeriesFlags.mMacAck)
-        {
-            SetMacAckFlag();
-        }
-    }
+    bool IsValid(void) const { return GetLength() >= kMinLength; }
 
     /**
-     * This method clears the Link Probe flag.
+     * This method gets the Forward Series ID value.
+     *
+     * @returns The Forward Series ID.
      *
      */
-    void ClearLinkProbeFlag(void) { mFlags &= ~kLinkProbeFlag; }
+    uint8_t GetSeriesId(void) const { return mSeriesId; }
 
     /**
-     * This method sets the Link Probe flag.
+     * This method sets the Forward Series ID value.
+     *
+     * @param[in] aSeriesId  The Forward Series ID.
      *
      */
-    void SetLinkProbeFlag(void) { mFlags |= kLinkProbeFlag; }
+    void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
 
     /**
-     * This method indicates whether or not the Link Probe flag is set.
+     * This method gets the Forward Series Flags.
      *
-     * @retval true   The Link Probe flag is set.
-     * @retval false  The Link Probe flag is not set.
+     * @returns The Forward Series Flags.
      *
      */
-    bool IsLinkProbeFlagSet(void) const { return (mFlags & kLinkProbeFlag) != 0; }
+    SeriesFlags &GetSeriesFlags(void) { return mSeriesFlags; }
 
     /**
-     * This method clears the MAC Data flag.
+     * This method sets the Forward Series Flags.
+     *
+     * @param[in] aSeriesFlags  The Forward Series Flags.
      *
      */
-    void ClearMacDataFlag(void) { mFlags &= ~kMacDataFlag; }
+    void SetSeriesFlags(const SeriesFlags &aSeriesFlags) { mSeriesFlags = aSeriesFlags; }
 
     /**
-     * This method sets the MAC Data flag.
+     * This method gets the start of Type ID Flags array.
+     *
+     * @returns The start of Type ID Flags array. Array has `kMaxTypeIdFlags` max length.
      *
      */
-    void SetMacDataFlag(void) { mFlags |= kMacDataFlag; }
-
-    /**
-     * This method indicates whether or not the MAC Data flag is set.
-     *
-     * @retval true   The MAC Data flag is set.
-     * @retval false  The MAC Data flag is not set.
-     *
-     */
-    bool IsMacDataFlagSet(void) const { return (mFlags & kMacDataFlag) != 0; }
-
-    /**
-     * This method clears the MAC Data Request flag.
-     *
-     */
-    void ClearMacDataRequestFlag(void) { mFlags &= ~kMacDataRequestFlag; }
-
-    /**
-     * This method sets the MAC Data Request flag.
-     *
-     */
-    void SetMacDataRequestFlag(void) { mFlags |= kMacDataRequestFlag; }
-
-    /**
-     * This method indicates whether or not the MAC Data Request flag is set.
-     *
-     * @retval true   The MAC Data Request flag is set.
-     * @retval false  The MAC Data Request flag is not set.
-     *
-     */
-    bool IsMacDataRequestFlagSet(void) const { return (mFlags & kMacDataRequestFlag) != 0; }
-
-    /**
-     * This method clears the Mac Ack flag.
-     *
-     */
-    void ClearMacAckFlag(void) { mFlags &= ~kMacAckFlag; }
-
-    /**
-     * This method sets the Mac Ack flag.
-     *
-     */
-    void SetMacAckFlag(void) { mFlags |= kMacAckFlag; }
-
-    /**
-     * This method indicates whether or not the Mac Ack flag is set.
-     *
-     * @retval true   The Mac Ack flag is set.
-     * @retval false  The Mac Ack flag is not set.
-     *
-     */
-    bool IsMacAckFlagSet(void) const { return (mFlags & kMacAckFlag) != 0; }
-
-    /**
-     * This method returns the raw value of flags.
-     *
-     */
-    uint8_t GetRawValue(void) const { return mFlags; }
-
-    /**
-     * This method clears the all the flags.
-     *
-     */
-    void Clear(void) { mFlags = 0; }
+    TypeIdFlags *GetTypeIds(void) { return mTypeIds; }
 
 private:
-    static constexpr uint8_t kLinkProbeFlag      = 1 << 0;
-    static constexpr uint8_t kMacDataFlag        = 1 << 1;
-    static constexpr uint8_t kMacDataRequestFlag = 1 << 2;
-    static constexpr uint8_t kMacAckFlag         = 1 << 3;
-
-    uint8_t mFlags;
+    uint8_t     mSeriesId;
+    SeriesFlags mSeriesFlags;
+    TypeIdFlags mTypeIds[kMaxTypeIdFlags];
 } OT_TOOL_PACKED_END;
-
-/**
- * This enumeration type represent Enhanced-ACK Flags.
- *
- */
-enum EnhAckFlags : uint8_t
-{
-    kEnhAckClear    = OT_LINK_METRICS_ENH_ACK_CLEAR,    ///< Clear.
-    kEnhAckRegister = OT_LINK_METRICS_ENH_ACK_REGISTER, ///< Register.
-};
-
-static uint8_t TypeIdFlagsFromMetrics(TypeIdFlags aTypeIdFlags[], const Metrics &aMetrics)
-{
-    uint8_t count = 0;
-
-    if (aMetrics.mPduCount)
-    {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kPdu);
-    }
-
-    if (aMetrics.mLqi)
-    {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kLqi);
-    }
-
-    if (aMetrics.mLinkMargin)
-    {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kLinkMargin);
-    }
-
-    if (aMetrics.mRssi)
-    {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kRssi);
-    }
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (aMetrics.mReserved)
-    {
-        for (uint8_t i = 0; i < count; i++)
-        {
-            aTypeIdFlags[i].SetTypeEnum(TypeIdFlags::kTypeReserved);
-        }
-    }
-#endif
-
-    return count;
-}
 
 OT_TOOL_PACKED_BEGIN
 class EnhAckConfigSubTlv : public Tlv, public TlvInfo<SubTlv::kEnhAckConfig>
 {
 public:
-    /**
-     * Default constructor
-     *
-     */
-    EnhAckConfigSubTlv(void) { Init(); }
+    static constexpr uint8_t kMinLength = sizeof(uint8_t); ///< Minimum TLV length (only `EnhAckFlags`).
 
     /**
      * This method initializes the TLV.
@@ -637,8 +297,25 @@ public:
     void Init(void)
     {
         SetType(SubTlv::kEnhAckConfig);
-        SetLength(sizeof(EnhAckFlags));
+        SetLength(kMinLength);
     }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval true   The TLV appears to be well-formed.
+     * @retval false  The TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= kMinLength; }
+
+    /**
+     * This method gets the Enhanced ACK Flags.
+     *
+     * @returns The Enhanced ACK Flags.
+     *
+     */
+    uint8_t GetEnhAckFlags(void) const { return mEnhAckFlags; }
 
     /**
      * This method sets Enhanced ACK Flags.
@@ -646,34 +323,19 @@ public:
      * @param[in] aEnhAckFlags  The value of Enhanced ACK Flags.
      *
      */
-    void SetEnhAckFlags(EnhAckFlags aEnhAckFlags)
-    {
-        memcpy(mSubTlvs + kEnhAckFlagsOffset, &aEnhAckFlags, sizeof(aEnhAckFlags));
-    }
+    void SetEnhAckFlags(EnhAckFlags aEnhAckFlags) { mEnhAckFlags = aEnhAckFlags; }
 
     /**
-     * This method sets Type ID Flags.
+     * This method gets the start of Type ID Flags array.
      *
-     * @param[in] aMetrics  A metrics flags to indicate the Type ID Flags.
+     * @returns The start of Type ID Flags array. Array has `kMaxTypeIdFlags` max length.
      *
      */
-    void SetTypeIdFlags(const Metrics &aMetrics)
-    {
-        uint8_t count;
-
-        count = TypeIdFlagsFromMetrics(reinterpret_cast<TypeIdFlags *>(mSubTlvs + kTypeIdFlagsOffset), aMetrics);
-
-        OT_ASSERT(count <= kMaxTypeIdFlagsEnhAck);
-
-        SetLength(sizeof(EnhAckFlags) + sizeof(TypeIdFlags) * count);
-    }
+    TypeIdFlags *GetTypeIds(void) { return mTypeIds; }
 
 private:
-    static constexpr uint8_t  kMaxTypeIdFlagsEnhAck = 3;
-    static constexpr uint8_t  kEnhAckFlagsOffset    = 0;
-    static constexpr uint16_t kTypeIdFlagsOffset    = sizeof(TypeIdFlags);
-
-    uint8_t mSubTlvs[sizeof(EnhAckFlags) + sizeof(TypeIdFlags) * kMaxTypeIdFlagsEnhAck];
+    uint8_t     mEnhAckFlags;
+    TypeIdFlags mTypeIds[kMaxTypeIdFlags];
 } OT_TOOL_PACKED_END;
 
 } // namespace LinkMetrics

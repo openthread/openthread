@@ -287,8 +287,8 @@ typedef struct otMessageQueueInfo
  */
 typedef struct otBufferInfo
 {
-    uint16_t           mTotalBuffers;         ///< The total number of buffers in the messages pool.
-    uint16_t           mFreeBuffers;          ///< The number of free buffers.
+    uint16_t           mTotalBuffers;         ///< The total number of buffers in the messages pool (0xffff if unknown).
+    uint16_t           mFreeBuffers;          ///< The number of free buffers (0xffff if unknown).
     otMessageQueueInfo m6loSendQueue;         ///< Info about 6LoWPAN send queue.
     otMessageQueueInfo m6loReassemblyQueue;   ///< Info about 6LoWPAN reassembly queue.
     otMessageQueueInfo mIp6Queue;             ///< Info about IPv6 send queue.
