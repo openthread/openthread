@@ -297,9 +297,9 @@ do_build_otbr_docker()
     fi
 
     if [[ ${NAT64} == 1 ]]; then
-        otbr_options+=("-DOTBR_NAT64_BORDER_ROUTING=ON")
+        otbr_options+=("-DOT_NAT64_BORDER_ROUTING=ON")
     else
-        otbr_options+=("-DOTBR_NAT64_BORDER_ROUTING=OFF")
+        otbr_options+=("-DOT_NAT64_BORDER_ROUTING=OFF")
     fi
 
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
