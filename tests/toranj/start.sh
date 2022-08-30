@@ -107,7 +107,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     log_file_name="ot-logs"
 else
     app_name="ncp"
-    python_app="python"
+    python_app="python2"
     log_file_name="wpantund-logs"
 fi
 

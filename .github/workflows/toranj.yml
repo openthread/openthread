@@ -42,7 +42,7 @@ jobs:
 
   toranj-ncp:
     name: toranj-ncp-${{ matrix.TORANJ_RADIO }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -61,11 +61,14 @@ jobs:
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y dbus libdbus-1-dev
         sudo apt-get --no-install-recommends install -y autoconf-archive
-        sudo apt-get --no-install-recommends install -y bsdtar
+        sudo apt-get --no-install-recommends install -y libarchive-tools
         sudo apt-get --no-install-recommends install -y libtool
         sudo apt-get --no-install-recommends install -y libglib2.0-dev
-        sudo apt-get --no-install-recommends install -y libboost-dev libboost-signals-dev
         sudo apt-get --no-install-recommends install -y lcov
+
+        sudo add-apt-repository universe
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y libboost-all-dev python2
 
         script/git-tool clone --depth=1 --branch=master https://github.com/openthread/wpantund.git
         cd wpantund
@@ -88,7 +91,7 @@ jobs:
 
   toranj-cli:
     name: toranj-cli-${{ matrix.TORANJ_RADIO }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         TORANJ_RADIO: ['15.4']
@@ -124,7 +127,7 @@ jobs:
     needs:
     - toranj-ncp
     - toranj-cli
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
       with:
