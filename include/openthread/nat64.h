@@ -314,7 +314,7 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
 /**
  * Gets the configured IPv4 CIDR in the NAT64 translator.
  *
- * This function is available only when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[out] aCidr             A pointer to an otIp4Cidr. Where the configured CIDR will be filled.
@@ -362,7 +362,7 @@ void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6A
 #define OT_IP4_ADDRESS_STRING_SIZE 17 ///< Length of 000.000.000.000 plus a suffix NUL
 
 /**
- * This method converts the address to a string.
+ * Converts the address to a string.
  *
  * The string format uses quad-dotted notation of four bytes in the address (e.g., "127.0.0.1").
  *
@@ -379,7 +379,7 @@ void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t 
 #define OT_IP4_CIDR_STRING_SIZE 20 ///< Length of 000.000.000.000/00 plus a suffix NUL
 
 /**
- * This method converts the IPv4 CIDR to a string.
+ * Converts the IPv4 CIDR to a string.
  *
  * The string format uses quad-dotted notation of four bytes in the address with the length of prefix (e.g.,
  * "127.0.0.1/32").
