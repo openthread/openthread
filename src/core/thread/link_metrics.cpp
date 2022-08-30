@@ -439,7 +439,7 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
             VerifyOrExit(!hasStatus, error = kErrorDrop);
 
             // Read the report sub-TLV assuming minimum length
-            SuccessOrExit(error = Tlv::ReadTlv(aMessage, offset, &reportTlv, ReportSubTlv::kMinLength));
+            SuccessOrExit(error = aMessage.Read(offset, &reportTlv, sizeof(Tlv) + ReportSubTlv::kMinLength));
             VerifyOrExit(reportTlv.IsValid(), error = kErrorParse);
             hasReport = true;
 
