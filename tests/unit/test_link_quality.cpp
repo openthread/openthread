@@ -70,7 +70,7 @@ int8_t sNoiseFloor = -100; // dBm
 // Check and verify the raw average RSS value to match the value from GetAverage().
 void VerifyRawRssValue(int8_t aAverage, uint16_t aRawValue)
 {
-    if (aAverage != OT_RADIO_RSSI_INVALID)
+    if (aAverage != Radio::kInvalidRssi)
     {
         VerifyOrQuit(aAverage == -static_cast<int16_t>((aRawValue + (kRawAverageMultiple / 2)) >> kRawAverageBitShift),
                      "Raw value does not match the average.");
@@ -126,7 +126,7 @@ void VerifyRawRssValue(RssAverager &aRssAverager)
     int8_t   average  = aRssAverager.GetAverage();
     uint16_t rawValue = aRssAverager.GetRaw();
 
-    if (average != OT_RADIO_RSSI_INVALID)
+    if (average != Radio::kInvalidRssi)
     {
         VerifyOrQuit(average == -static_cast<int16_t>((rawValue + (kRawAverageMultiple / 2)) >> kRawAverageBitShift),
                      "Raw value does not match the average.");
@@ -166,7 +166,7 @@ void TestRssAveraging(void)
     rssAverager.Clear();
 
     printf("\nAfter Clear: ");
-    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID, "Initial value from GetAverage() is incorrect.");
+    VerifyOrQuit(rssAverager.GetAverage() == Radio::kInvalidRssi, "Initial value from GetAverage() is incorrect.");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -184,7 +184,7 @@ void TestRssAveraging(void)
 
     printf("Clear(): ");
     rssAverager.Clear();
-    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID, "GetAverage() after Clear() is incorrect.");
+    VerifyOrQuit(rssAverager.GetAverage() == Radio::kInvalidRssi, "GetAverage() after Clear() is incorrect.");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 

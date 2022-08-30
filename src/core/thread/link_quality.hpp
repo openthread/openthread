@@ -125,13 +125,13 @@ public:
     /**
      * This method adds a received signal strength (RSS) value to the average.
      *
-     * If @p aRss is OT_RADIO_RSSI_INVALID, it is ignored and error status kErrorInvalidArgs is returned.
+     * If @p aRss is `Radio::kInvalidRssi`, it is ignored and error status kErrorInvalidArgs is returned.
      * The value of RSS is capped at 0dBm (i.e., for any given RSS value higher than 0dBm, 0dBm is used instead).
      *
      * @param[in] aRss                Received signal strength value (in dBm) to be added to the average.
      *
      * @retval kErrorNone         New RSS value added to average successfully.
-     * @retval kErrorInvalidArgs  Value of @p aRss is OT_RADIO_RSSI_INVALID.
+     * @retval kErrorInvalidArgs  Value of @p aRss is `Radio::kInvalidRssi`.
      *
      */
     Error Add(int8_t aRss);
@@ -139,7 +139,7 @@ public:
     /**
      * This method returns the current average signal strength value maintained by the averager.
      *
-     * @returns The current average value (in dBm) or OT_RADIO_RSSI_INVALID if no average is available.
+     * @returns The current average value (in dBm) or `Radio::kInvalidRssi` if no average is available.
      *
      */
     int8_t GetAverage(void) const;
@@ -317,7 +317,7 @@ public:
     /**
      * This method returns the current average received signal strength value.
      *
-     * @returns The current average value or @c OT_RADIO_RSSI_INVALID if no average is available.
+     * @returns The current average value or `Radio::kInvalidRssi` if no average is available.
      *
      */
     int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }

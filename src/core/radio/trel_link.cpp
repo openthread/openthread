@@ -240,7 +240,7 @@ void Link::BeginTransmit(void)
         mRxFrame.mRadioType = Mac::kRadioTypeTrel;
 #endif
         mRxFrame.mInfo.mRxInfo.mTimestamp             = 0;
-        mRxFrame.mInfo.mRxInfo.mRssi                  = OT_RADIO_RSSI_INVALID;
+        mRxFrame.mInfo.mRxInfo.mRssi                  = Radio::kInvalidRssi;
         mRxFrame.mInfo.mRxInfo.mLqi                   = OT_RADIO_LQI_NONE;
         mRxFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
 

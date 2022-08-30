@@ -129,7 +129,7 @@ void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &
     entry->mChecksum             = headers.GetChecksum();
     entry->mIpProto              = headers.GetIpProto();
     entry->mIcmp6Type            = headers.IsIcmp6() ? headers.GetIcmpHeader().GetType() : 0;
-    entry->mAveRxRss             = (aType == kRxMessage) ? aMessage.GetRssAverager().GetAverage() : kInvalidRss;
+    entry->mAveRxRss             = (aType == kRxMessage) ? aMessage.GetRssAverager().GetAverage() : Radio::kInvalidRssi;
     entry->mLinkSecurity         = aMessage.IsLinkSecurityEnabled();
     entry->mTxSuccess            = (aType == kTxMessage) ? aMessage.GetTxSuccess() : true;
     entry->mPriority             = aMessage.GetPriority();

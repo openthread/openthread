@@ -1126,7 +1126,7 @@ public:
     /**
      * This method returns the average RSS (Received Signal Strength) associated with the message.
      *
-     * @returns The current average RSS value (in dBm) or OT_RADIO_RSSI_INVALID if no average is available.
+     * @returns The current average RSS value (in dBm) or `Radio::kInvalidRssi` if no average is available.
      *
      */
     int8_t GetAverageRss(void) const { return GetMetadata().mRssAverager.GetAverage(); }

@@ -64,7 +64,7 @@ Error RssAverager::Add(int8_t aRss)
     Error    error = kErrorNone;
     uint16_t newValue;
 
-    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID, error = kErrorInvalidArgs);
+    VerifyOrExit(aRss != Radio::kInvalidRssi, error = kErrorInvalidArgs);
 
     // Restrict the RSS value to the closed range [0, -128] so the RSS times precision multiple can fit in 11 bits.
     if (aRss > 0)
@@ -90,7 +90,7 @@ int8_t RssAverager::GetAverage(void) const
 {
     int8_t average;
 
-    VerifyOrExit(mCount != 0, average = OT_RADIO_RSSI_INVALID);
+    VerifyOrExit(mCount != 0, average = Radio::kInvalidRssi);
 
     average = -static_cast<int8_t>(mAverage >> kPrecisionBitShift);
 
@@ -134,7 +134,7 @@ void LinkQualityInfo::Clear(void)
 {
     mRssAverager.Clear();
     SetLinkQuality(kLinkQuality0);
-    mLastRss = OT_RADIO_RSSI_INVALID;
+    mLastRss = Radio::kInvalidRssi;
 
     mFrameErrorRate.Clear();
     mMessageErrorRate.Clear();
@@ -144,7 +144,7 @@ void LinkQualityInfo::AddRss(int8_t aRss)
 {
     uint8_t oldLinkQuality = kNoLinkQuality;
 
-    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID);
+    VerifyOrExit(aRss != Radio::kInvalidRssi);
 
     mLastRss = aRss;
 
@@ -180,7 +180,7 @@ uint8_t ComputeLinkMargin(int8_t aNoiseFloor, int8_t aRss)
 {
     int8_t linkMargin = aRss - aNoiseFloor;
 
-    if (linkMargin < 0 || aRss == OT_RADIO_RSSI_INVALID)
+    if (linkMargin < 0 || aRss == Radio::kInvalidRssi)
     {
         linkMargin = 0;
     }
