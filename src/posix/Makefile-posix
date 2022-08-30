@@ -94,9 +94,7 @@ configure_OPTIONS                   = \
 # Platform specific switches
 
 ifeq ($(DAEMON),1)
-configure_OPTIONS              += \
-    --enable-posix-daemon         \
-    $(NULL)
+configure_OPTIONS              += --enable-posix-daemon
 endif
 
 ifneq ($(DEBUG),1)
