@@ -57,6 +57,7 @@
 
 namespace ot {
 class Neighbor;
+class UnitTester;
 
 namespace LinkMetrics {
 
@@ -76,6 +77,7 @@ namespace LinkMetrics {
 class LinkMetrics : public InstanceLocator, private NonCopyable
 {
     friend class ot::Neighbor;
+    friend class ot::UnitTester;
 
 public:
     typedef otLinkMetricsReportCallback                ReportCallback;
@@ -263,14 +265,17 @@ public:
     void ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, const Neighbor &aNeighbor);
 
 private:
-    static constexpr uint8_t kMaxTypeIdFlags = 4;
-
     // Max number of SeriesInfo that could be allocated by the pool.
     static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED;
 
     static constexpr uint8_t kQueryIdSingleProbe = 0;   // This query ID represents Single Probe.
     static constexpr uint8_t kSeriesIdAllSeries  = 255; // This series ID represents all series.
     static constexpr uint8_t kLinkProbeMaxLen    = 64;  // Max length of data payload in Link Probe TLV.
+
+    // Constants for scaling Link Margin and RSSI to raw value
+    static constexpr uint8_t kMaxLinkMargin = 130;
+    static constexpr int32_t kMinRssi       = -130;
+    static constexpr int32_t kMaxRssi       = 0;
 
     Error SendLinkMetricsQuery(const Ip6::Address &aDestination,
                                uint8_t             aSeriesId,
@@ -291,6 +296,11 @@ private:
                                             uint16_t       aEndPos,
                                             Metrics &      aMetrics);
     static Error AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues);
+
+    static uint8_t ScaleLinkMarginToRawValue(uint8_t aLinkMargin);
+    static uint8_t ScaleRawValueToLinkMargin(uint8_t aRawValue);
+    static uint8_t ScaleRssiToRawValue(int8_t aRssi);
+    static int8_t  ScaleRawValueToRssi(uint8_t aRawValue);
 
     ReportCallback                mReportCallback;
     void *                        mReportCallbackContext;

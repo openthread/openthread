@@ -171,6 +171,22 @@ template <> inline int ThreeWayCompare(bool aFirst, bool aSecond)
     return (aFirst == aSecond) ? 0 : (aFirst ? 1 : -1);
 }
 
+/**
+ * This template function divides two numbers and rounds the result to the closest integer.
+ *
+ * @tparam IntType   The integer type.
+ *
+ * @param[in] aDividend   The dividend value.
+ * @param[in] aDivisor    The divisor value.
+ *
+ * @return The result of division and rounding to the closest integer.
+ *
+ */
+template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDividend, IntType aDivisor)
+{
+    return (aDividend + (aDivisor / 2)) / aDivisor;
+}
+
 } // namespace ot
 
 #endif // NUM_UTILS_HPP_

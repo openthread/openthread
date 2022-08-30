@@ -209,15 +209,86 @@ public:
 
 } OT_TOOL_PACKED_END;
 
+/**
+ * This class defines Link Metrics Forward Probing Registration Sub-TLV.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class FwdProbingRegSubTlv : public Tlv, public TlvInfo<SubTlv::kFwdProbingReg>
+{
+public:
+    static constexpr uint8_t kMinLength = sizeof(uint8_t) + sizeof(SeriesFlags); ///< Minimum expected TLV length
+
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(SubTlv::kFwdProbingReg);
+        SetLength(kMinLength);
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval true   The TLV appears to be well-formed.
+     * @retval false  The TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= kMinLength; }
+
+    /**
+     * This method gets the Forward Series ID value.
+     *
+     * @returns The Forward Series ID.
+     *
+     */
+    uint8_t GetSeriesId(void) const { return mSeriesId; }
+
+    /**
+     * This method sets the Forward Series ID value.
+     *
+     * @param[in] aSeriesId  The Forward Series ID.
+     *
+     */
+    void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
+
+    /**
+     * This method gets the Forward Series Flags.
+     *
+     * @returns The Forward Series Flags.
+     *
+     */
+    SeriesFlags &GetSeriesFlags(void) { return mSeriesFlags; }
+
+    /**
+     * This method sets the Forward Series Flags.
+     *
+     * @param[in] aSeriesFlags  The Forward Series Flags.
+     *
+     */
+    void SetSeriesFlags(const SeriesFlags &aSeriesFlags) { mSeriesFlags = aSeriesFlags; }
+
+    /**
+     * This method gets the start of Type ID Flags array.
+     *
+     * @returns The start of Type ID Flags array. Array has `kMaxTypeIdFlags` max length.
+     *
+     */
+    TypeIdFlags *GetTypeIds(void) { return mTypeIds; }
+
+private:
+    uint8_t     mSeriesId;
+    SeriesFlags mSeriesFlags;
+    TypeIdFlags mTypeIds[kMaxTypeIdFlags];
+} OT_TOOL_PACKED_END;
+
 OT_TOOL_PACKED_BEGIN
 class EnhAckConfigSubTlv : public Tlv, public TlvInfo<SubTlv::kEnhAckConfig>
 {
 public:
-    /**
-     * Default constructor
-     *
-     */
-    EnhAckConfigSubTlv(void) { Init(); }
+    static constexpr uint8_t kMinLength = sizeof(uint8_t); ///< Minimum TLV length (only `EnhAckFlags`).
 
     /**
      * This method initializes the TLV.
@@ -226,8 +297,25 @@ public:
     void Init(void)
     {
         SetType(SubTlv::kEnhAckConfig);
-        SetLength(sizeof(EnhAckFlags));
+        SetLength(kMinLength);
     }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval true   The TLV appears to be well-formed.
+     * @retval false  The TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= kMinLength; }
+
+    /**
+     * This method gets the Enhanced ACK Flags.
+     *
+     * @returns The Enhanced ACK Flags.
+     *
+     */
+    uint8_t GetEnhAckFlags(void) const { return mEnhAckFlags; }
 
     /**
      * This method sets Enhanced ACK Flags.
@@ -235,34 +323,19 @@ public:
      * @param[in] aEnhAckFlags  The value of Enhanced ACK Flags.
      *
      */
-    void SetEnhAckFlags(EnhAckFlags aEnhAckFlags)
-    {
-        memcpy(mSubTlvs + kEnhAckFlagsOffset, &aEnhAckFlags, sizeof(aEnhAckFlags));
-    }
+    void SetEnhAckFlags(EnhAckFlags aEnhAckFlags) { mEnhAckFlags = aEnhAckFlags; }
 
     /**
-     * This method sets Type ID Flags.
+     * This method gets the start of Type ID Flags array.
      *
-     * @param[in] aMetrics  A metrics flags to indicate the Type ID Flags.
+     * @returns The start of Type ID Flags array. Array has `kMaxTypeIdFlags` max length.
      *
      */
-    void SetTypeIdFlags(const Metrics &aMetrics)
-    {
-        uint8_t count;
-
-        count = TypeIdFlagsFromMetrics(reinterpret_cast<TypeIdFlags *>(mSubTlvs + kTypeIdFlagsOffset), aMetrics);
-
-        OT_ASSERT(count <= kMaxTypeIdFlagsEnhAck);
-
-        SetLength(sizeof(EnhAckFlags) + sizeof(TypeIdFlags) * count);
-    }
+    TypeIdFlags *GetTypeIds(void) { return mTypeIds; }
 
 private:
-    static constexpr uint8_t  kMaxTypeIdFlagsEnhAck = 3;
-    static constexpr uint8_t  kEnhAckFlagsOffset    = 0;
-    static constexpr uint16_t kTypeIdFlagsOffset    = sizeof(TypeIdFlags);
-
-    uint8_t mSubTlvs[sizeof(EnhAckFlags) + sizeof(TypeIdFlags) * kMaxTypeIdFlagsEnhAck];
+    uint8_t     mEnhAckFlags;
+    TypeIdFlags mTypeIds[kMaxTypeIdFlags];
 } OT_TOOL_PACKED_END;
 
 } // namespace LinkMetrics

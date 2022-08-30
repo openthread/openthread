@@ -525,10 +525,16 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
 
     mDiscoveredPrefixTable.FindFavoredOnLinkPrefix(mFavoredDiscoveredOnLinkPrefix);
 
-    if (mFavoredDiscoveredOnLinkPrefix.GetLength() == 0)
+    if ((mFavoredDiscoveredOnLinkPrefix.GetLength() == 0) ||
+        (mFavoredDiscoveredOnLinkPrefix == mLocalOnLinkPrefix.GetPrefix()))
     {
-        // We need to advertise our local on-link prefix since there is
-        // no discovered on-link prefix.
+        // We need to advertise our local on-link prefix when there is
+        // no discovered on-link prefix. If the favored discovered
+        // prefix is the same as our local on-link prefix we also
+        // start advertising the local prefix to add redundancy. Note
+        // that local on-link prefix is derived from extended PAN ID
+        // and therefore is the same for all BRs on the same Thread
+        // mesh.
 
         SuccessOrExit(mLocalOnLinkPrefix.Advertise());
 
@@ -544,6 +550,8 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
 
         mDiscoveredPrefixTable.RemoveOnLinkPrefix(mLocalOnLinkPrefix.GetPrefix(),
                                                   DiscoveredPrefixTable::kKeepInNetData);
+
+        mFavoredDiscoveredOnLinkPrefix.Clear();
     }
     else if (mLocalOnLinkPrefix.IsAdvertising())
     {
