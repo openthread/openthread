@@ -358,7 +358,7 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 
                 steeringData.Init(dataLength);
 
-                SuccessOrExit(error = Tlv::ReadTlv(aRxInfo.mMessage, offset, steeringData.GetData(), dataLength));
+                SuccessOrExit(error = Tlv::ReadTlvValue(aRxInfo.mMessage, offset, steeringData.GetData(), dataLength));
 
                 if (mEnableFiltering)
                 {
