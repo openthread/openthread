@@ -65,9 +65,6 @@ enum
     SIM_RECEIVE_SENSITIVITY            = -100, // dBm
     SIM_CCA_ENERGY_DETECT_THRESHOLD    = SIM_RECEIVE_SENSITIVITY + 9,  // dBm, mandatory < 10 dB above
     SIM_TX_POWER                       = 0,    // dBm
-    SIM_HIGH_RSSI_SAMPLE               = -30,  // dBm
-    SIM_LOW_RSSI_SAMPLE                = -98,  // dBm
-    SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL = 5,    // percent
 };
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
