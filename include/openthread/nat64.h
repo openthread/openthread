@@ -94,10 +94,10 @@ typedef struct otIp4Cidr
  */
 typedef struct otNat64Counters
 {
-    uint64_t m4To6Packets; ///< Number of packets translated from IPv4 to IPv6
-    uint64_t m4To6Bytes;   ///< Sum of size of packets translated from IPv4 to IPv6
-    uint64_t m6To4Packets; ///< Number of packets translated from IPv6 to IPv4
-    uint64_t m6To4Bytes;   ///< Sum of size of packets translated from IPv6 to IPv4
+    uint64_t m4To6Packets; ///< Number of packets translated from IPv4 to IPv6.
+    uint64_t m4To6Bytes;   ///< Sum of size of packets translated from IPv4 to IPv6.
+    uint64_t m6To4Packets; ///< Number of packets translated from IPv6 to IPv4.
+    uint64_t m6To4Bytes;   ///< Sum of size of packets translated from IPv6 to IPv4.
 } otNat64Counters;
 
 /**
@@ -132,12 +132,14 @@ typedef enum otNat64DropReason
  */
 typedef struct otNat64ErrorCounters
 {
-    uint64_t mCount4To6[OT_NAT64_DROP_REASON_COUNT]; ///< Errors catched during translating IPv4 packets.
-    uint64_t mCount6To4[OT_NAT64_DROP_REASON_COUNT]; ///< Errors catched during translating IPv6 packets.
+    uint64_t mCount4To6[OT_NAT64_DROP_REASON_COUNT]; ///< Errors translating IPv4 packets.
+    uint64_t mCount6To4[OT_NAT64_DROP_REASON_COUNT]; ///< Errors translating IPv6 packets.
 } otNat64ErrorCounters;
 
 /**
- * Gets the counters of the NAT64 translator, the counter is counted since the instance initialized.
+ * Gets NAT64 translator counters.
+ *
+ * The counter is counted since the instance initialized.
  *
  * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
@@ -148,10 +150,9 @@ typedef struct otNat64ErrorCounters
 void otNat64GetCounters(otInstance *aInstance, otNat64ProtocolCounters *aCounters);
 
 /**
- * Gets the counters of errors during processing packets by the NAT64 translator, the counter is counted
- * since the instance initialized.
+ * Gets the NAT64 translator error counters.
  *
- * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ * The counters are initialized to zero when the OpenThread instance is initialized.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[out] aCounters A pointer to an `otNat64Counters` where the counters of NAT64 translator will be placed.
@@ -162,8 +163,8 @@ void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCount
 /**
  * Represents an address mapping record for NAT64.
  *
- * @note The counters will be reset for each mapping session even for the same address pair. Applications can use mId to
- * identify different sessions to calculate the packets correctly.
+ * @note The counters will be reset for each mapping session even for the same address pair. Applications can use `mId`
+ * to identify different sessions to calculate the packets correctly.
  *
  */
 typedef struct otNat64AddressMapping
@@ -178,7 +179,7 @@ typedef struct otNat64AddressMapping
 } otNat64AddressMapping;
 
 /**
- * Used to iterate through address mapping in NAT64 information.
+ * Used to iterate through NAT64 address mappings.
  *
  * The fields in this type are opaque (intended for use by OpenThread core only) and therefore should not be
  * accessed or used by caller.

@@ -252,19 +252,21 @@ public:
     Error GetNextAddressMapping(AddressMappingIterator &aIterator, otNat64AddressMapping &aMapping);
 
     /**
-     * Gets the counters of the NAT64 translator, the counter is counted since the instance
-     * initialized.
+     * Gets the NAT64 translator counters.
      *
-     * @param[out] aCounters An `otNat64Counters` where the counters of NAT64 translator will be placed.
+     * The counters are initialized to zero when the OpenThread instance is initialized.
+     *
+     * @param[out] aCounters A `ProtocolCounters` where the counters of NAT64 translator will be placed.
      *
      */
     void GetCounters(ProtocolCounters &aCounters) const { aCounters = mCounters; }
 
     /**
-     * Gets the counters of the NAT64 translator, the counter is counted since the instance
-     * initialized.
+     * Gets the NAT64 translator error counters.
      *
-     * @param[out] aCounters An `otNat64Counters` where the counters of NAT64 translator will be placed.
+     * The counters are initialized to zero when the OpenThread instance is initialized.
+     *
+     * @param[out] aCounters  An `ErrorCounters` where the counters of NAT64 translator will be placed.
      *
      */
     void GetErrorCounters(ErrorCounters &aCounters) const { aCounters = mErrorCounters; }
@@ -272,7 +274,6 @@ public:
     /**
      * Gets the configured CIDR in the NAT64 translator.
      *
-     * @param[in]  aInstance    A pointer to an OpenThread instance.
      * @param[out] aCidr        The `Ip4::Cidr` Where the configured CIDR will be placed.
      *
      * @retval kErrorNone       @p aCidr is set to the configured CIDR.
@@ -284,8 +285,7 @@ public:
     /**
      * Gets the configured CIDR in the NAT64 translator.
      *
-     * @param[in]  aInstance         A pointer to an OpenThread instance.
-     * @param[out] aPrefix           The `Ip6::Prefix` where the configured NAT64 prefix will be placed.
+     * @param[out] aPrefix      The `Ip6::Prefix` where the configured NAT64 prefix will be placed.
      *
      * @retval kErrorNone       @p aPrefix is set to the configured prefix.
      * @retval kErrorNotFound   The translator is not configured with an IPv6 prefix.

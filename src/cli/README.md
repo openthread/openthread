@@ -1838,7 +1838,7 @@ Done
 
 ### nat64 configuredcidr
 
-Get the configured CIDR for NAT64 translator.
+Get the configured NAT64 CIDR.
 
 This command is only available when device enables NAT64 translator.
 
@@ -1851,7 +1851,7 @@ Done
 
 ### nat64 configuredprefix
 
-Get the prefix in use for NAT64.
+Get the NAT64 prefix.
 
 This command is only available when device enables NAT64 translator.
 
@@ -1863,7 +1863,7 @@ Done
 
 ### nat64 mappings
 
-Get the mappings of NAT64 translator.
+Get the NAT64 translator mappings.
 
 This command is only available when device enables NAT64 translator.
 
@@ -1881,7 +1881,7 @@ This command is only available when device enables NAT64 translator.
 
 ### nat64 counters
 
-Get the packet counters and error counters of NAT64 translator.
+Get the NAT64 translator packet and error counters.
 
 This command is only available when device enables NAT64 translator.
 
