@@ -50,6 +50,7 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     , mHandler(nullptr)
     , mHandlerContext(nullptr)
     , mTimer(aInstance, DiscoverScanner::HandleTimer)
+    , mScanDoneTask(aInstance)
     , mFilterIndexes()
     , mState(kStateIdle)
     , mScanChannel(0)
@@ -247,14 +248,21 @@ void DiscoverScanner::HandleDiscoverComplete(void)
             mShouldRestorePanId = false;
         }
 
-        mState = kStateIdle;
-
-        if (mHandler)
-        {
-            mHandler(nullptr, mHandlerContext);
-        }
-
+        // Post the tasklet to change `mState` and invoke handler
+        // callback. This allows users to safely call OT APIs from
+        // the callback.
+        mScanDoneTask.Post();
         break;
+    }
+}
+
+void DiscoverScanner::HandleScanDoneTask(void)
+{
+    mState = kStateIdle;
+
+    if (mHandler != nullptr)
+    {
+        mHandler(nullptr, mHandlerContext);
     }
 }
 
