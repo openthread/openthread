@@ -34,7 +34,6 @@ BIG_ENDIAN                ?= 0
 BORDER_AGENT              ?= 0
 BORDER_ROUTER             ?= 0
 BORDER_ROUTING            ?= 0
-BORDER_ROUTING_NAT64	  ?= 0
 COAP                      ?= 0
 COAP_BLOCK                ?= 0
 COAP_OBSERVE              ?= 0
@@ -73,6 +72,7 @@ MLE_LONG_ROUTES           ?= 0
 MLR                       ?= 0
 MTD_NETDIAG               ?= 0
 MULTIPLE_INSTANCE         ?= 0
+NAT64_BORDER_ROUTING      ?= 0
 NAT64_TRANSLATOR          ?= 0
 NEIGHBOR_DISCOVERY_AGENT  ?= 0
 NETDATA_PUBLISHER         ?= 0
@@ -118,8 +118,8 @@ ifeq ($(BORDER_ROUTING),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1
 endif
 
-ifeq ($(BORDER_ROUTING_NAT64),1)
-COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1
+ifeq ($(NAT64_BORDER_ROUTING),1)
+COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE=1
 endif
 
 ifeq ($(NAT64_TRANSLATOR),1)
