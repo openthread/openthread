@@ -354,7 +354,7 @@ otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 
     *aParentRssi = AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetAverageRss();
 
-    VerifyOrExit(*aParentRssi != OT_RADIO_RSSI_INVALID, error = kErrorFailed);
+    VerifyOrExit(*aParentRssi != Radio::kInvalidRssi, error = kErrorFailed);
 
 exit:
     return error;
@@ -368,7 +368,7 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
 
     *aLastRssi = AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetLastRss();
 
-    VerifyOrExit(*aLastRssi != OT_RADIO_RSSI_INVALID, error = kErrorFailed);
+    VerifyOrExit(*aLastRssi != Radio::kInvalidRssi, error = kErrorFailed);
 
 exit:
     return error;

@@ -588,7 +588,7 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         SuccessOrExit(error = otBorderRoutingGetOnLinkPrefix(GetInstancePtr(), &onLinkPrefix));
         OutputIp6PrefixLine(onLinkPrefix);
     }
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
      * @cli br nat64prefix
      * @code
@@ -625,7 +625,7 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         OutputIp6Prefix(prefix);
         OutputLine(" prf:%s", PreferenceToString(preference));
     }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
      * @cli br rioprf (high,med,low)
      * @code

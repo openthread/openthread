@@ -180,7 +180,7 @@ template <typename UintType> Error Tlv::ReadUintTlv(const Message &aMessage, uin
 {
     Error error;
 
-    SuccessOrExit(error = ReadTlv(aMessage, aOffset, &aValue, sizeof(aValue)));
+    SuccessOrExit(error = ReadTlvValue(aMessage, aOffset, &aValue, sizeof(aValue)));
     aValue = Encoding::BigEndian::HostSwap<UintType>(aValue);
 
 exit:
@@ -192,7 +192,7 @@ template Error Tlv::ReadUintTlv<uint8_t>(const Message &aMessage, uint16_t aOffs
 template Error Tlv::ReadUintTlv<uint16_t>(const Message &aMessage, uint16_t aOffset, uint16_t &aValue);
 template Error Tlv::ReadUintTlv<uint32_t>(const Message &aMessage, uint16_t aOffset, uint32_t &aValue);
 
-Error Tlv::ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
+Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
 {
     Error error = kErrorNone;
     Tlv   tlv;

@@ -158,7 +158,7 @@ void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult)
 
         LogDebg("channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
 
-        if (aResult->mMaxRssi != OT_RADIO_RSSI_INVALID)
+        if (aResult->mMaxRssi != Radio::kInvalidRssi)
         {
             newValue = (aResult->mMaxRssi >= kRssiThreshold) ? kMaxOccupancy : 0;
         }

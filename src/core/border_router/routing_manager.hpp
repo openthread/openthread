@@ -188,7 +188,7 @@ public:
      */
     Error GetOnLinkPrefix(Ip6::Prefix &aPrefix);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
      * This method returns the local NAT64 prefix.
      *
@@ -221,7 +221,7 @@ public:
      *
      */
     void UpdateInfraIfNat64Prefix(const Ip6::Prefix &aPrefix);
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
     /**
      * This method processes a received ICMPv6 message from the infrastructure interface.
@@ -640,7 +640,7 @@ private:
 
     void EvaluateOnLinkPrefix(void);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     void DiscoverInfraIfNat64Prefix(void);
     void GenerateNat64Prefix(void);
     void EvaluateNat64Prefix(void);
@@ -664,7 +664,7 @@ private:
     static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixStaleTimer(void);
     static void HandleRoutingPolicyTimer(Timer &aTimer);
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     static void HandleInfraIfNat64PrefixStaleTimer(Timer &aTimer);
     void        HandleInfraIfNat64PrefixStaleTimer(void);
 #endif
@@ -714,7 +714,7 @@ private:
 
     DiscoveredPrefixTable mDiscoveredPrefixTable;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     // The latest NAT64 prefix discovered on the infrastructure interface.
     Ip6::Prefix mInfraIfNat64Prefix;
     // The NAT64 prefix allocated from the /48 BR ULA prefix.

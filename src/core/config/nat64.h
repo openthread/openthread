@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021-22, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,52 +28,51 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for Border Routing Manager.
+ *   This file includes compile-time configurations for NAT64.
  *
  */
 
-#ifndef CONFIG_BORDER_ROUTING_H_
-#define CONFIG_BORDER_ROUTING_H_
+#ifndef CONFIG_NAT64_H_
+#define CONFIG_NAT64_H_
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+ * @def OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
  *
- * Define to 1 to enable Border Routing Manager feature.
+ * Define to 1 to enable the internal NAT64 translator.
  *
  */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#define OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE 0
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
+ * @def OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS
  *
- * Specifies maximum number of routers (on infra link) to track by routing manager.
+ * Specifies maximum number of active mappings for NAT64.
  *
  */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS 16
+#ifndef OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS
+#define OPENTHREAD_CONFIG_NAT64_MAX_MAPPINGS 254
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
+ * @def OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS
  *
- * Specifies maximum number of discovered prefixes (on-link prefixes on the infra link) maintained by routing manager.
+ * Specifies timeout in seconds before removing an inactive address mapping.
  *
  */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES 64
+#ifndef OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS
+#define OPENTHREAD_CONFIG_NAT64_IDLE_TIMEOUT_SECONDS 7200
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
+ * @def OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
  *
- * Specified maximum number of on-mesh prefixes (discovered from Thread Network Data) that are included as Route Info
- * Option in emitted Router Advertisement messages.
+ * Define to 1 to enable NAT64 support in Border Routing Manager.
  *
  */
-#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
-#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES 16
+#ifndef OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+#define OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE 0
 #endif
 
-#endif // CONFIG_BORDER_ROUTING_H_
+#endif
