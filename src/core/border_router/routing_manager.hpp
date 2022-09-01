@@ -719,11 +719,11 @@ private:
     Ip6::Prefix mInfraIfNat64Prefix;
     // The NAT64 prefix allocated from the /48 BR ULA prefix.
     Ip6::Prefix mLocalNat64Prefix;
-    // The NAT64 prefix advertised in Network Data. It can have the following value:
-    // - empty: no NAT64 prefix is advertised from this BR
+    // The NAT64 prefix published in Network Data. It can have the following value:
+    // - empty: no NAT64 prefix is published from this BR
     // - the local NAT64 prefix
-    // - the latest advertised infrastructure NAT64 prefix, which might differs from mInfraIfNat64Prefix
-    Ip6::Prefix mAdvertisedNat64Prefix;
+    // - the latest published infrastructure NAT64 prefix, which might differs from mInfraIfNat64Prefix
+    Ip6::Prefix mPublishedNat64Prefix;
 
     TimerMilli mInfraIfNat64PrefixStaleTimer;
 #endif
