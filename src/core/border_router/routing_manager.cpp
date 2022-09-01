@@ -85,7 +85,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mInfraIfNat64Prefix.Clear();
     mLocalNat64Prefix.Clear();
-    mAdvertisedNat64Prefix.Clear();
+    mPublishedNat64Prefix.Clear();
 #endif
 }
 
@@ -315,11 +315,11 @@ void RoutingManager::Stop(void)
     mLocalOnLinkPrefix.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    if (mAdvertisedNat64Prefix.IsValidNat64())
+    if (mPublishedNat64Prefix.IsValidNat64())
     {
-        UnpublishExternalRoute(mAdvertisedNat64Prefix);
+        UnpublishExternalRoute(mPublishedNat64Prefix);
     }
-    mAdvertisedNat64Prefix.Clear();
+    mPublishedNat64Prefix.Clear();
     mInfraIfNat64Prefix.Clear();
     mInfraIfNat64PrefixStaleTimer.Stop();
 #endif
@@ -581,7 +581,7 @@ void RoutingManager::EvaluateNat64Prefix(void)
     RoutePreference                  routePreference;
     Error                            error;
     NetworkData::ExternalRouteConfig preferredNat64PrefixConfig;
-    bool                             shouldAdvertise;
+    bool                             shouldPublish;
 
     OT_ASSERT(mIsRunning);
 
@@ -590,28 +590,28 @@ void RoutingManager::EvaluateNat64Prefix(void)
     SuccessOrAssert(GetFavoredNat64Prefix(nat64Prefix, routePreference));
     error = Get<NetworkData::Leader>().GetPreferredNat64Prefix(preferredNat64PrefixConfig);
 
-    // NAT64 prefix is expected to be advertised from this BR when one of the following is true:
+    // NAT64 prefix is expected to be published from this BR when one of the following is true:
     // - no NAT64 prefix exits in Network Data yet
     // - the preferred NAT64 prefix in Network Data has lower preference than this BR's prefix
-    // - the preferred NAT64 prefix in Network Data was advertised by this BR
+    // - the preferred NAT64 prefix in Network Data was published by this BR
     // - the preferred NAT64 prefix in Network Data is same as the infrastructure prefix
-    // TODO: change to check RLOC16 to determine if the NAT64 prefix was advertised by this BR
-    shouldAdvertise = (error == kErrorNotFound || preferredNat64PrefixConfig.mPreference < routePreference ||
-                       preferredNat64PrefixConfig.GetPrefix() == mAdvertisedNat64Prefix ||
-                       preferredNat64PrefixConfig.GetPrefix() == mInfraIfNat64Prefix);
+    // TODO: change to check RLOC16 to determine if the NAT64 prefix was published by this BR
+    shouldPublish = (error == kErrorNotFound || preferredNat64PrefixConfig.mPreference < routePreference ||
+                     preferredNat64PrefixConfig.GetPrefix() == mPublishedNat64Prefix ||
+                     preferredNat64PrefixConfig.GetPrefix() == mInfraIfNat64Prefix);
 
-    if (mAdvertisedNat64Prefix.IsValidNat64() && (!shouldAdvertise || nat64Prefix != mAdvertisedNat64Prefix))
+    if (mPublishedNat64Prefix.IsValidNat64() && (!shouldPublish || nat64Prefix != mPublishedNat64Prefix))
     {
-        UnpublishExternalRoute(mAdvertisedNat64Prefix);
-        mAdvertisedNat64Prefix.Clear();
+        UnpublishExternalRoute(mPublishedNat64Prefix);
+        mPublishedNat64Prefix.Clear();
     }
-    if (shouldAdvertise && nat64Prefix != mAdvertisedNat64Prefix &&
+    if (shouldPublish && nat64Prefix != mPublishedNat64Prefix &&
         PublishExternalRoute(nat64Prefix, routePreference, /* aNat64= */ true) == kErrorNone)
     {
-        mAdvertisedNat64Prefix = nat64Prefix;
+        mPublishedNat64Prefix = nat64Prefix;
     }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Get<Nat64::Translator>().SetNat64Prefix(mAdvertisedNat64Prefix);
+    Get<Nat64::Translator>().SetNat64Prefix(mPublishedNat64Prefix);
 #endif
 }
 #endif
