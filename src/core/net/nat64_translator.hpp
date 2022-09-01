@@ -283,7 +283,7 @@ public:
     Error GetIp4Cidr(Ip4::Cidr &aCidr);
 
     /**
-     * Gets the configured CIDR in the NAT64 translator.
+     * Gets the configured IPv6 prefix in the NAT64 translator.
      *
      * @param[out] aPrefix      The `Ip6::Prefix` where the configured NAT64 prefix will be placed.
      *
