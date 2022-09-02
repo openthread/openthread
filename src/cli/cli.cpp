@@ -860,7 +860,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Gets the packet counters and error counters of the NAT64 translator.
+     * Gets the NAT64 translator packet and error counters.
      * @par
      * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @sa otNat64GetCounters

@@ -1838,7 +1838,7 @@ Done
 
 ### nat64 configuredcidr
 
-Get the configured NAT64 CIDR.
+Gets the configured IPv4 CIDR in the NAT64 translator.
 
 This command is only available when device enables NAT64 translator.
 
@@ -1851,7 +1851,7 @@ Done
 
 ### nat64 configuredprefix
 
-Get the NAT64 prefix.
+Gets the configured IPv6 prefix in the NAT64 translator.
 
 This command is only available when device enables NAT64 translator.
 
