@@ -69,7 +69,6 @@ enum
     OT_SIM_EVENT_OTNS_STATUS_PUSH    = 5,
     OT_SIM_EVENT_RADIO_TX            = 17,
     OT_SIM_EVENT_RADIO_TX_DONE       = 18,
-    OT_SIM_EVENT_RADIO_RX_INTERFERED = 20,
 
     OT_EVENT_DATA_MAX_SIZE = 1024,
 };
@@ -81,8 +80,10 @@ struct Event
     uint32_t mNodeId;     // node ID should equal gNodeId for events to/from this node.
     uint64_t mDelay;      // time delay in us that is applied prior to event execution
     uint8_t  mEvent;      // event type
-    int8_t   mParam1;     // generic parameter 1 used by specific event types (for TxPower, RSSI, otError)
-    int8_t   mParam2;     // generic parameter 2 used by specific event types (for CCA ED)
+    uint8_t  mError;      // status code result of radio operation
+    int8_t   mRssi;       // RSSI value (dBm) for a received radio frame
+    int8_t   mTxPower;    // Tx-power (dBm) for a radio frame
+    int8_t   mCcaEdTresh; // CCA Energy Detect threshold (dBm) used by transmitter or receiver
     uint16_t mDataLength; // number of bytes following in mData
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE]; // frame data, must be last field of struct
 } OT_TOOL_PACKED_END;
@@ -162,16 +163,17 @@ void platformRadioDeinit(void);
  * @param[in]  aInstance   A pointer to the OpenThread instance.
  * @param[in]  aBuf        A pointer to the received radio frame (struct RadioMessage).
  * @param[in]  aBufLength  The size of the received radio frame (struct RadioMessage).
- * @param[in]  rssi        The RSSI (dBm) of the received radio frame.
+ * @param[in]  aRssi       The RSSI (dBm) of the received radio frame.
+ * @param[in]  aError      The status code result of decoding the virtual radio frame.
  *
  */
-void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, int8_t rssi);
+void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, int8_t aRssi, otError aError);
 
 /**
  * This function signals that virtual radio is done transmitting a single frame.
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
- * @param[in]  aError      The status code result of the virtual radio transmission.
+ * @param[in]  aError      The status code result of the attempt to transmit the virtual radio frame.
  *
  */
 void platformRadioTransmitDone(otInstance *aInstance, otError aError);

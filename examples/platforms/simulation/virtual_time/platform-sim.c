@@ -38,7 +38,6 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <inttypes.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -104,6 +103,11 @@ static void receiveEvent(otInstance *aInstance)
         perror("recvfrom");
         exit(EXIT_FAILURE);
     }
+    if (event.mNodeId != gNodeId)
+    {
+        perror("mNodeId != gNodeId");
+        exit(EXIT_FAILURE);
+    }
 
     platformAlarmAdvanceNow(event.mDelay);
     if (event.mMsgId > gLastMsgId)
@@ -118,15 +122,13 @@ static void receiveEvent(otInstance *aInstance)
         otPlatUartReceived(event.mData, event.mDataLength);
         break;
 
-    case OT_SIM_EVENT_RADIO_RX_INTERFERED:
     case OT_SIM_EVENT_RADIO_RECEIVED:
-        platformRadioReceive(aInstance, event.mData, event.mDataLength, event.mParam1);
+        platformRadioReceive(aInstance, event.mData, event.mDataLength, event.mRssi, event.mError);
         break;
 
-    case OT_SIM_EVENT_RADIO_TX_DONE:;
+    case OT_SIM_EVENT_RADIO_TX_DONE:
         // the external RF simulator determines success/error of Tx, and must report an otError code.
-        otError err = (otError)event.mParam1;
-        platformRadioTransmitDone(aInstance, err);
+        platformRadioTransmitDone(aInstance, event.mError);
         break;
 
     default:
@@ -142,6 +144,9 @@ static void platformSendSleepEvent(void)
     event.mDelay      = platformAlarmGetNext();
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
+    event.mRssi = 0;
+    event.mTxPower = 0;
+    event.mCcaEdTresh = 0;
 
     otSimSendEvent(&event);
 }
@@ -168,6 +173,10 @@ otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
 
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_UART_WRITE;
+    event.mError      = OT_ERROR_NONE;
+    event.mRssi = 0;
+    event.mTxPower = 0;
+    event.mCcaEdTresh = 0;
     event.mDataLength = aLength;
     memcpy(event.mData, aData, aLength);
 
@@ -335,6 +344,9 @@ void otPlatOtnsStatus(const char *aStatus)
     event.mDataLength = statusLength;
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+    event.mRssi = 0;
+    event.mTxPower = 0;
+    event.mCcaEdTresh = 0;
 
     otSimSendEvent(&event);
 }
