@@ -138,6 +138,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     , mLocateInProgress(false)
 #endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+    , mLinkMetricsQueryInProgress(false)
+#endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 {
 #if OPENTHREAD_FTD
@@ -3695,12 +3698,11 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
 
 void Interpreter::PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues)
 {
-    const char kLinkMetricsTypeCount[]   = "(Count/Summation)";
-    const char kLinkMetricsTypeAverage[] = "(Exponential Moving Average)";
+    static const char kLinkMetricsTypeAverage[] = "(Exponential Moving Average)";
 
     if (aMetricsValues->mMetrics.mPduCount)
     {
-        OutputLine(" - PDU Counter: %d %s", aMetricsValues->mPduCountValue, kLinkMetricsTypeCount);
+        OutputLine(" - PDU Counter: %d (Count/Summation)", aMetricsValues->mPduCountValue);
     }
 
     if (aMetricsValues->mMetrics.mLqi)
@@ -3733,6 +3735,12 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
     else
     {
         OutputLine("Link Metrics Report, status: %s", LinkMetricsStatusToStr(aStatus));
+    }
+
+    if (mLinkMetricsQueryInProgress)
+    {
+        mLinkMetricsQueryInProgress = false;
+        OutputResult(OT_ERROR_NONE);
     }
 }
 
@@ -3808,28 +3816,37 @@ template <> otError Interpreter::Process<Cmd("linkmetrics")>(Arg aArgs[])
     if (aArgs[0] == "query")
     {
         otIp6Address  address;
+        bool          isSingle;
+        bool          blocking;
+        uint8_t       seriesId;
         otLinkMetrics linkMetrics;
 
         SuccessOrExit(error = aArgs[1].ParseAsIp6Address(address));
 
         if (aArgs[2] == "single")
         {
-            VerifyOrExit(!aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+            isSingle = true;
             SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[3]));
-            error = otLinkMetricsQuery(GetInstancePtr(), &address, /* aSeriesId */ 0, &linkMetrics,
-                                       &Interpreter::HandleLinkMetricsReport, this);
         }
         else if (aArgs[2] == "forward")
         {
-            uint8_t seriesId;
-
+            isSingle = false;
             SuccessOrExit(error = aArgs[3].ParseAsUint8(seriesId));
-            error = otLinkMetricsQuery(GetInstancePtr(), &address, seriesId, nullptr,
-                                       &Interpreter::HandleLinkMetricsReport, this);
         }
         else
         {
-            error = OT_ERROR_INVALID_ARGS;
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
+        blocking = (aArgs[4] == "block");
+
+        SuccessOrExit(error = otLinkMetricsQuery(GetInstancePtr(), &address, isSingle ? 0 : seriesId,
+                                                 isSingle ? &linkMetrics : nullptr, HandleLinkMetricsReport, this));
+
+        if (blocking)
+        {
+            mLinkMetricsQueryInProgress = true;
+            error                       = OT_ERROR_PENDING;
         }
     }
     else if (aArgs[0] == "mgmt")
@@ -3856,6 +3873,8 @@ exit:
 otError Interpreter::ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, const Arg &aFlags)
 {
     otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!aFlags.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     memset(&aLinkMetrics, 0, sizeof(aLinkMetrics));
 
@@ -3941,8 +3960,8 @@ otError Interpreter::ProcessLinkMetricsMgmt(Arg aArgs[])
 
         if (!clear)
         {
-            VerifyOrExit(!aArgs[4].IsEmpty() && aArgs[5].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[4]));
+            VerifyOrExit(aArgs[5].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
         }
 
         error = otLinkMetricsConfigForwardTrackingSeries(GetInstancePtr(), &address, seriesId, seriesFlags,
@@ -3963,7 +3982,6 @@ otError Interpreter::ProcessLinkMetricsMgmt(Arg aArgs[])
         else if (aArgs[2] == "register")
         {
             enhAckFlags = OT_LINK_METRICS_ENH_ACK_REGISTER;
-            VerifyOrExit(!aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = ParseLinkMetricsFlags(linkMetrics, aArgs[3]));
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
             if (aArgs[4] == "r")

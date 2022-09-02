@@ -547,6 +547,10 @@ private:
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     bool mLocateInProgress : 1;
 #endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+    bool mLinkMetricsQueryInProgress : 1;
+#endif
 };
 
 // Specializations of `FormatStringFor<ValueType>()`

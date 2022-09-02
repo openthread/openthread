@@ -120,6 +120,21 @@ public:
     Error SetEnabled(bool aEnabled);
 
     /**
+     * This method requests the Border Routing Manager to stop.
+     *
+     * If Border Routing Manager is running, calling this method immediately stops it and triggers the preparation
+     * and sending of a final Router Advertisement (RA) message on infrastructure interface which deprecates and/or
+     * removes any previously advertised PIO/RIO prefixes. If Routing Manager is not running (or not enabled), no
+     * action is taken.
+     *
+     * Note that this method does not change whether the Routing Manager is enabled or disabled (see `SetEnabled()`).
+     * It stops the Routing Manager temporarily. After calling this method if the device role gets changes (device
+     * gets attached) and/or the infra interface state gets changed, the Routing Manager may be started again.
+     *
+     */
+    void RequestStop(void) { Stop(); }
+
+    /**
      * This method gets the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in
      * Router Advertisement messages sent over the infrastructure link.
      *
@@ -719,11 +734,11 @@ private:
     Ip6::Prefix mInfraIfNat64Prefix;
     // The NAT64 prefix allocated from the /48 BR ULA prefix.
     Ip6::Prefix mLocalNat64Prefix;
-    // The NAT64 prefix advertised in Network Data. It can have the following value:
-    // - empty: no NAT64 prefix is advertised from this BR
+    // The NAT64 prefix published in Network Data. It can have the following value:
+    // - empty: no NAT64 prefix is published from this BR
     // - the local NAT64 prefix
-    // - the latest advertised infrastructure NAT64 prefix, which might differs from mInfraIfNat64Prefix
-    Ip6::Prefix mAdvertisedNat64Prefix;
+    // - the latest published infrastructure NAT64 prefix, which might differs from mInfraIfNat64Prefix
+    Ip6::Prefix mPublishedNat64Prefix;
 
     TimerMilli mInfraIfNat64PrefixStaleTimer;
 #endif
