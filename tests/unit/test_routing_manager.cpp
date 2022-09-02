@@ -300,7 +300,7 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
                     break;
                 }
             }
-            else
+            else if (sExpectOldOnLinkPio)
             {
                 VerifyOrQuit(pio.GetPreferredLifetime() == 0, "Old on link prefix is not deprecated");
                 sOldOnLinkPrefix   = prefix;
@@ -347,16 +347,23 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
             break;
         case kPioAdvertisingLocalOnLink:
         case kPioDeprecatingLocalOnLink:
-            VerifyOrQuit(sawExpectedPio, "Did not see on-link prefix PIO in the RA");
+            // First emitted RAs may not yet have the expected PIO
+            // so we exit and not set `sRaValidated` to allow it
+            // to be checked for next received RA.
+            VerifyOrExit(sawExpectedPio);
+            break;
         }
 
         if (sExpectOldOnLinkPio)
         {
-            VerifyOrQuit(sawExpecteOldPio, "Did not see old on-link prefix PIO in the RA");
+            VerifyOrExit(sawExpecteOldPio);
         }
 
         sRaValidated = true;
     }
+
+exit:
+    return;
 }
 
 void LogRouterAdvert(const Icmp6Packet &aPacket)
