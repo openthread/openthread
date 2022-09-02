@@ -186,11 +186,11 @@ jobs:
 
   gcc:
     name: gcc-${{ matrix.gcc_ver }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        gcc_ver: [7, 8, 9, 10, 11]
+        gcc_ver: [9, 10, 11, 12]
     env:
       CC: gcc-${{ matrix.gcc_ver }}
       CXX: g++-${{ matrix.gcc_ver }}
