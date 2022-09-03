@@ -322,9 +322,6 @@ private:
     // The maximum number of initial Router Advertisements.
     static constexpr uint32_t kMaxInitRtrAdvertisements = 3;
 
-    // The maximum number of Router Solicitations before sending Router Advertisements.
-    static constexpr uint32_t kMaxRtrSolicitations = 3;
-
     static constexpr uint32_t kDefaultOmrPrefixLifetime    = 1800; // The default OMR prefix valid lifetime. In sec.
     static constexpr uint32_t kDefaultOnLinkPrefixLifetime = 1800; // The default on-link prefix valid lifetime. In sec.
     static constexpr uint32_t kDefaultNat64PrefixLifetime  = 300;  // The default NAT64 prefix valid lifetime. In sec.
@@ -332,13 +329,9 @@ private:
     static constexpr uint32_t kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3; // Min RA Interval. In sec.
     static constexpr uint32_t kMaxInitRtrAdvInterval       = 16;                     // Max Initial RA Interval. In sec.
     static constexpr uint32_t kRaReplyJitter               = 500;  // Jitter for sending RA after rx RS. In msec.
-    static constexpr uint32_t kRtrSolicitationInterval     = 4;    // Interval between RSs. In sec.
-    static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;    // Max delay for initial solicitation. In sec.
     static constexpr uint32_t kPolicyEvaluationMinDelay    = 2000; // Min delay for policy evaluation. In msec.
     static constexpr uint32_t kPolicyEvaluationMaxDelay    = 4000; // Max delay for policy evaluation. In msec.
-    static constexpr uint32_t kRtrSolicitationRetryDelay =
-        kRtrSolicitationInterval;                             // The delay before retrying failed RS tx. In Sec.
-    static constexpr uint32_t kMinDelayBetweenRtrAdvs = 3000; // Min delay (msec) between consecutive RAs.
+    static constexpr uint32_t kMinDelayBetweenRtrAdvs      = 3000; // Min delay (msec) between consecutive RAs.
 
     // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
     // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
@@ -651,6 +644,39 @@ private:
         TimeMilli                            mLastTxTime;
     };
 
+    class RsSender : public InstanceLocator
+    {
+    public:
+        // This class implements tx of Router Solicitation (RS)
+        // messages to discover other routers. `Start()` schedules
+        // a cycle of RS transmissions of `kMaxTxCount` separated
+        // by `kTxInterval`. At the end of cycle the callback
+        // `HandleRsSenderFinished()` is invoked to inform end of
+        // the cycle to `RoutingManager`.
+
+        explicit RsSender(Instance &aInstance);
+
+        bool IsInProgress(void) const { return mTimer.IsRunning(); }
+        void Start(void);
+        void Stop(void);
+
+    private:
+        // All time intervals are in msec.
+        static constexpr uint32_t kMaxStartDelay     = 1000;        // Max random delay to send the first RS.
+        static constexpr uint32_t kTxInterval        = 4000;        // Interval between RS tx.
+        static constexpr uint32_t kRetryDelay        = kTxInterval; // Interval to wait to retry a failed RS tx.
+        static constexpr uint32_t kWaitOnLastAttempt = 1000;        // Wait interval after last RS tx.
+        static constexpr uint8_t  kMaxTxCount        = 3;           // Number of RS tx in one cycle.
+
+        Error       SendRs(void);
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
+
+        uint8_t    mTxCount;
+        TimerMilli mTimer;
+        TimeMilli  mStartTime;
+    };
+
     void  EvaluateState(void);
     void  Start(void);
     void  Stop(void);
@@ -672,13 +698,9 @@ private:
     void  EvaluateOmrPrefix(void);
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
-    void  StartRouterSolicitationDelay(void);
-    Error SendRouterSolicitation(void);
+    void  HandleRsSenderFinished(TimeMilli aStartTime);
     void  SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
-    bool  IsRouterSolicitationInProgress(void) const;
 
-    static void HandleRouterSolicitTimer(Timer &aTimer);
-    void        HandleRouterSolicitTimer(void);
     static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixInvalidTimer(void);
     static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
@@ -748,14 +770,10 @@ private:
     TimerMilli mInfraIfNat64PrefixStaleTimer;
 #endif
 
-    RaInfo mRaInfo;
+    RaInfo   mRaInfo;
+    RsSender mRsSender;
 
     TimerMilli mDiscoveredPrefixStaleTimer;
-
-    TimerMilli mRouterSolicitTimer;
-    TimeMilli  mTimeRouterSolicitStart;
-    uint8_t    mRouterSolicitCount;
-
     TimerMilli mRoutingPolicyTimer;
 };
 
