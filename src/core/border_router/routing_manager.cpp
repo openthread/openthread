@@ -286,9 +286,35 @@ void RoutingManager::Stop(void)
 
     mIsRunning = false;
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    if (Get<Srp::Server>().IsAutoEnableMode())
+    {
+        Get<Srp::Server>().Disable();
+    }
+#endif
+
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+void RoutingManager::HandleSrpServerAutoEnableMode(void)
+{
+    VerifyOrExit(Get<Srp::Server>().IsAutoEnableMode());
+
+    if (IsInitalPolicyEvaluationDone())
+    {
+        Get<Srp::Server>().Enable();
+    }
+    else
+    {
+        Get<Srp::Server>().Disable();
+    }
+
+exit:
+    return;
+}
+#endif
 
 void RoutingManager::HandleReceived(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
@@ -410,7 +436,7 @@ void RoutingManager::EvaluateOmrPrefix(void)
     {
         LogInfo("EvaluateOmrPrefix: No preferred OMR prefix found in Thread network");
 
-        // The `aNewPrefixes` remains empty if we fail to publish
+        // The `mFavoredOmrPrefix` remains empty if we fail to publish
         // the local OMR prefix.
         SuccessOrExit(mLocalOmrPrefix.AddToNetData());
 
@@ -537,7 +563,31 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
     SendRouterAdvertisement(kAdvPrefixesFromNetData);
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    if (Get<Srp::Server>().IsAutoEnableMode() && IsInitalPolicyEvaluationDone())
+    {
+        // If SRP server uses the auto-enable mode, we enable the SRP
+        // server on the first RA transmission after we are done with
+        // initial prefix/route configurations. Note that if SRP server
+        // is already enabled, calling `Enable()` again does nothing.
+
+        Get<Srp::Server>().Enable();
+    }
+#endif
+
     ScheduleRoutingPolicyEvaluation(kForNextRa);
+}
+
+bool RoutingManager::IsInitalPolicyEvaluationDone(void) const
+{
+    // This method indicates whether or not we are done with the
+    // initial policy evaluation and prefix and route setup, i.e.,
+    // the OMR and on-link prefixes are determined, advertised in
+    // the emitted Router Advert message on infrastructure side
+    // and published in the Thread Network Data.
+
+    return mIsRunning && !mFavoredOmrPrefix.IsEmpty() &&
+           (mFavoredDiscoveredOnLinkPrefix.GetLength() != 0 || mLocalOnLinkPrefix.IsAdvertising());
 }
 
 void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)

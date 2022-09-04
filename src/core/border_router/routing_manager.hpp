@@ -310,6 +310,16 @@ public:
         return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
     }
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    /**
+     * This method determines whether to enable/disable SRP server when the auto-enable mode is changed on SRP server.
+     *
+     * This should be called from `Srp::Server` when auto-enable mode is changed.
+     *
+     */
+    void HandleSrpServerAutoEnableMode(void);
+#endif
+
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
 
@@ -728,6 +738,7 @@ private:
 
     void  EvaluateOnLinkPrefix(void);
     void  EvaluateRoutingPolicy(void);
+    bool  IsInitalPolicyEvaluationDone(void) const;
     void  ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
     void  EvaluateOmrPrefix(void);
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
@@ -741,7 +752,6 @@ private:
     void        HandleDiscoveredPrefixStaleTimer(void);
     static void HandleRoutingPolicyTimer(Timer &aTimer);
 
-    void DeprecateOnLinkPrefix(void);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);

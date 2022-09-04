@@ -1721,6 +1721,213 @@ void TestExtPanIdChange(void)
     testFreeInstance(sInstance);
 }
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+void TestAutoEnableOfSrpServer(void)
+{
+    Ip6::Prefix  localOnLink;
+    Ip6::Prefix  localOmr;
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    Ip6::Prefix  onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestAutoEnableOfSrpServer");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check SRP Server state and enable auto-enable mode
+
+    otSrpServerSetAutoEnableMode(sInstance, true);
+    VerifyOrQuit(otSrpServerIsAutoEnableMode(sInstance));
+    VerifyOrQuit(otSrpServerGetState(sInstance) == OT_SRP_SERVER_STATE_DISABLED);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate that SRP server was auto-enabled
+
+    VerifyOrQuit(otSrpServerGetState(sInstance) != OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is enabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Signal that infra if state changed and is no longer running.
+    // This should stop Routing Manager and in turn the SRP server.
+
+    sRaValidated = false;
+    sExpectedPio = kPioDeprecatingLocalOnLink;
+
+    Log("Signal infra if is not running");
+    SuccessOrQuit(otPlatInfraIfStateChanged(sInstance, kInfraIfIndex, false));
+    AdvanceTime(1);
+
+    VerifyOrQuit(sRaValidated);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check that SRP server is disabled.
+
+    VerifyOrQuit(otSrpServerGetState(sInstance) == OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is disabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Signal that infra if state changed and is running again.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Add(localOmr);
+
+    Log("Signal infra if is running");
+    SuccessOrQuit(otPlatInfraIfStateChanged(sInstance, kInfraIfIndex, true));
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check that SRP server is enabled again.
+
+    VerifyOrQuit(otSrpServerGetState(sInstance) != OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is enabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable `RoutingManager` explicitly.
+
+    sRaValidated = false;
+    sExpectedPio = kPioDeprecatingLocalOnLink;
+
+    Log("Disabling RoutingManager");
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(1);
+
+    VerifyOrQuit(sRaValidated);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check that SRP server is also disabled.
+
+    VerifyOrQuit(otSrpServerGetState(sInstance) == OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is disabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable auto-enable mode on SRP server.
+
+    otSrpServerSetAutoEnableMode(sInstance, false);
+    VerifyOrQuit(!otSrpServerIsAutoEnableMode(sInstance));
+    VerifyOrQuit(otSrpServerGetState(sInstance) == OT_SRP_SERVER_STATE_DISABLED);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Re-start Routing Manager. Check emitted RS and RA messages.
+    // This cycle, router A will send a RA including a PIO.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kNoPio;
+    sExpectedRios.Clear();
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(2000);
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, kValidLitime, kPreferredLifetime)});
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check that SRP server is still disabled.
+
+    VerifyOrQuit(otSrpServerGetState(sInstance) == OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is disabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Enable auto-enable mode on SRP server. Since `RoutingManager`
+    // is already done with initial policy evaluation, the SRP server
+    // must be started immediately.
+
+    otSrpServerSetAutoEnableMode(sInstance, true);
+    VerifyOrQuit(otSrpServerIsAutoEnableMode(sInstance));
+
+    VerifyOrQuit(otSrpServerGetState(sInstance) != OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is enabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable auto-enable mode on SRP server. It must not impact
+    // its current state and it should remain enabled.
+
+    otSrpServerSetAutoEnableMode(sInstance, false);
+    VerifyOrQuit(!otSrpServerIsAutoEnableMode(sInstance));
+
+    AdvanceTime(2000);
+    VerifyOrQuit(otSrpServerGetState(sInstance) != OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is enabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Signal that infra if state changed and is no longer running.
+    // This should stop Routing Manager.
+
+    sRaValidated = false;
+
+    Log("Signal infra if is not running");
+    SuccessOrQuit(otPlatInfraIfStateChanged(sInstance, kInfraIfIndex, false));
+    AdvanceTime(1);
+
+    VerifyOrQuit(sRaValidated);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Re-enable auto-enable mode on SRP server. Since `RoutingManager`
+    // is stopped (infra if is down), the SRP serer must be stopped
+    // immediately.
+
+    otSrpServerSetAutoEnableMode(sInstance, true);
+    VerifyOrQuit(otSrpServerIsAutoEnableMode(sInstance));
+
+    VerifyOrQuit(otSrpServerGetState(sInstance) == OT_SRP_SERVER_STATE_DISABLED);
+    Log("Srp::Server is disabled");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    Log("End of TestAutoEnableOfSrpServer");
+    testFreeInstance(sInstance);
+}
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 int main(void)
@@ -1734,6 +1941,9 @@ int main(void)
     TestDomainPrefixAsOmr();
 #endif
     TestExtPanIdChange();
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    TestAutoEnableOfSrpServer();
+#endif
     printf("All tests passed\n");
 #else
     printf("BORDER_ROUTING feature is not enabled\n");
