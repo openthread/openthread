@@ -270,12 +270,26 @@ void otSrpClientSetCallback(otInstance *aInstance, otSrpClientCallback aCallback
  * Config option `OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE` specifies the default auto-start mode (whether
  * it is enabled or disabled at the start of OT stack).
  *
- * When auto-start is enabled, the SRP client will monitor the Thread Network Data for SRP Server Service entries
- * and automatically start and stop the client when an SRP server is detected.
+ * When auto-start is enabled, the SRP client will monitor the Thread Network Data to discover SRP servers and select
+ * the preferred server and automatically start and stop the client when an SRP server is detected.
  *
- * If multiple SRP servers are found, a random one will be selected. If the selected SRP server is no longer
- * detected (not longer present in the Thread Network Data), the SRP client will be stopped and then it may switch
- * to another SRP server (if available).
+ * There are three categories of Network Data entries indicating presence of SRP sever. They are preferred in the
+ * following order:
+ *
+ *   1) Preferred unicast entries where server address is included in the service data. If there are multiple options,
+ *      the one with numerically lowest IPv6 address is preferred.
+ *
+ *   2) Anycast entries each having a seq number. A larger sequence number in the sense specified by Serial Number
+ *      Arithmetic logic in RFC-1982 is considered more recent and therefore preferred. The largest seq number using
+ *      serial number arithmetic is preferred if it is well-defined (i.e., the seq number is larger than all other
+ *      seq numbers). If it is not well-defined, then the numerically largest seq number is preferred.
+ *
+ *   3) Unicast entries where the server address info is included in server data. If there are multiple options, the
+ *      one with numerically lowest IPv6 address is preferred.
+ *
+ * When there is a change in the Network Data entries, client will check that the currently selected server is still
+ * present in the Network Data and is still the preferred one. Otherwise the client will switch to the new preferred
+ * server or stop if there is none.
  *
  * When the SRP client is explicitly started through a successful call to `otSrpClientStart()`, the given SRP server
  * address in `otSrpClientStart()` will continue to be used regardless of the state of auto-start mode and whether the
