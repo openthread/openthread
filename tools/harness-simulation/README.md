@@ -20,6 +20,7 @@ Platform developers should modify the THCI implementation and/or the SI implemen
    - The numbers above can be adjusted according to the requirement of test cases.
    - Edit the value of `ssh.username` to the username expected to connect to on the remote POSIX environment.
    - Edit the value of `ssh.password` to the password corresponding to the username above.
+   - Edit the value of `discovery_ifname` to the network interface used to be connected by Harness.
 
    Note that it may be time-consuming to build all versions of `ot-cli-ftd`s and OTBR Docker images especially on devices such as Raspberry Pis.
 
