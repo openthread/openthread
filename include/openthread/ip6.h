@@ -858,12 +858,11 @@ typedef struct otIp4Address otIp4Address;
  * address as specified in RFC 6052.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[in]   aIp6Prefix   A pointer to an IPv6 prefix, or NULL.
  * @param[in]   aIp4Address  A pointer to the IPv4 address to translate to IPv6.
  * @param[out]  aIp6Address  A pointer to the synthesized IPv6 address.
  *
  * @returns  OT_ERROR_NONE           Successfully synthesize the IPv6 address from NAT64 prefix and IPv4 address.
- * @returns  OT_ERROR_INVALID_ARGS   The provided IPv6 prefix is not valid for NAT64.
+ * @returns  OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
  *
  */
 otError otIp6AddressSynthesizeFromIp4Address(otInstance *        aInstance,
