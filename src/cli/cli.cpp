@@ -4600,7 +4600,7 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
         SuccessOrExit(error =
                           otIp6AddressSynthesizeFromIp4Address(GetInstancePtr(), &ip4Address, &config.mDestination));
 
-        OutputFormat("Pinging NAT64 mapped address: ");
+        OutputFormat("Pinging IPv4-converted IPv6 addresses: ");
         OutputIp6AddressLine(config.mDestination);
     }
     SuccessOrExit(error);

@@ -118,13 +118,15 @@ Done
 TCP: Connection established
 ```
 
-> Note: You may use an IPv4 address, which will be mapped to IPv6 address using the preferred NAT64 prefix from the network data.
->
-> ```bash
-> > tcp connect 172.17.0.1 1234
-> Connecting to NAT64 mapped address: fdde:ad00:beef:2:0:0:ac11:1
-> Done
-> ```
+The address can be an IPv4 address, which will be converted to IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> tcp connect 172.17.0.1 1234
+Connecting to IPv4-converted IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+Done
+```
 
 ### deinit
 

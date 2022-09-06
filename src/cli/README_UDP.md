@@ -104,13 +104,15 @@ Specifies the peer with which the socket is to be associated.
 Done
 ```
 
-> Note: You may use an IPv4 address, which will be mapped to IPv6 address using the preferred NAT64 prefix from the network data.
->
-> ```bash
-> > udp connect 172.17.0.1 1234
-> Connecting to NAT64 mapped address: fdde:ad00:beef:2:0:0:ac11:1
-> Done
-> ```
+The address can be an IPv4 address, which will be converted to IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> udp connect 172.17.0.1 1234
+Connecting to IPv4-converted IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+Done
+```
 
 ### linksecurity
 
@@ -153,7 +155,7 @@ Done
 
 Send a UDP message.
 
-- ip: the IPv6 destination address.
+- ip: the destination address.
 - port: the UDP destination port.
 - message: the message to send.
 
@@ -162,13 +164,15 @@ Send a UDP message.
 Done
 ```
 
-> Note: You may use an IPv4 address, which will be mapped to IPv6 address using the preferred NAT64 prefix from the network data.
->
-> ```bash
-> > udp send 172.17.0.1 1234
-> Sending to NAT64 mapped address: fdde:ad00:beef:2:0:0:ac11:1
-> Done
-> ```
+The address can be an IPv4 address, which will be converted to IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> udp send 172.17.0.1 1234
+Sending to IPv4-converted IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+Done
+```
 
 ### send \<ip\> \<port\> \<type\> \<value\>
 

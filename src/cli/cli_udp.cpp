@@ -105,7 +105,7 @@ otError UdpExample::ProcessConnect(Arg aArgs[])
         SuccessOrExit(otIp4AddressFromString(aArgs[0].GetCString(), &ip4Address));
         SuccessOrExit(error = otIp6AddressSynthesizeFromIp4Address(GetInstancePtr(), &ip4Address, &sockaddr.mAddress));
 
-        OutputFormat("Connecting to NAT64 mapped address: ");
+        OutputFormat("Connecting to IPv4-converted IPv6 addresses: ");
         OutputIp6AddressLine(sockaddr.mAddress);
     }
     SuccessOrExit(error);
@@ -167,7 +167,7 @@ otError UdpExample::ProcessSend(Arg aArgs[])
             SuccessOrExit(
                 error = otIp6AddressSynthesizeFromIp4Address(GetInstancePtr(), &ip4Address, &messageInfo.mPeerAddr));
 
-            OutputFormat("Sending to NAT64 mapped address: ");
+            OutputFormat("Sending to IPv4-converted IPv6 addresses: ");
             OutputIp6AddressLine(messageInfo.mPeerAddr);
         }
         SuccessOrExit(error);

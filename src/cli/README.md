@@ -2090,15 +2090,17 @@ Done
 Done
 ```
 
-> Note: You may use an IPv4 address, which will be mapped to IPv6 address using the preferred NAT64 prefix from the network data.
->
-> ```bash
-> > ping 172.17.0.1
-> Pinging NAT64 mapped address: fdde:ad00:beef:2:0:0:ac11:1
-> > 16 bytes from fdde:ad00:beef:2:0:0:ac11:1: icmp_seq=5 hlim=64 time=0ms
-> 1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
-> Done
-> ```
+The address can be an IPv4 address, which will be converted to IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> ping 172.17.0.1
+Pinging IPv4-converted IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+> 16 bytes from fdde:ad00:beef:2:0:0:ac11:1: icmp_seq=5 hlim=64 time=0ms
+1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
+Done
+```
 
 ### ping stop
 
