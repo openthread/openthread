@@ -135,7 +135,7 @@ void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
     mRouteInfoOptionPreference = aPreference;
 
     VerifyOrExit(mIsRunning);
-    StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
+    ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 
 exit:
     return;
@@ -260,7 +260,7 @@ void RoutingManager::UpdateInfraIfNat64Prefix(const Ip6::Prefix &aPrefix)
 
     if (mIsRunning)
     {
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
+        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 }
 
@@ -381,7 +381,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
         UpdateDiscoveredPrefixTableOnNetDataChange();
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
+        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 
     if (aEvents.Contains(kEventThreadExtPanIdChanged))
@@ -390,7 +390,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
         if (mIsRunning)
         {
-            StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
+            ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
         }
     }
 
@@ -626,45 +626,49 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
     LogInfo("Evaluating routing policy");
 
-    // 0. Evaluate on-link, OMR and NAT64 prefixes.
     EvaluateOnLinkPrefix();
     EvaluateOmrPrefix();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     EvaluateNat64Prefix();
 #endif
 
-    // 1. Send Router Advertisement message if necessary.
     SendRouterAdvertisement(kAdvPrefixesFromNetData);
 
-    // 2. Schedule routing policy timer with random interval for the next Router Advertisement.
+    ScheduleRoutingPolicyEvaluation(kForNextRa);
+}
+
+void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
+{
+    TimeMilli now   = TimerMilli::GetNow();
+    uint32_t  delay = 0;
+    TimeMilli evaluateTime;
+
+    switch (aMode)
     {
-        uint32_t nextSendDelay;
+    case kImmediately:
+        break;
 
-        nextSendDelay = Random::NonCrypto::GetUint32InRange(kMinRtrAdvInterval, kMaxRtrAdvInterval);
+    case kForNextRa:
+        delay = Random::NonCrypto::GetUint32InRange(Time::SecToMsec(kMinRtrAdvInterval),
+                                                    Time::SecToMsec(kMaxRtrAdvInterval));
 
-        if (mRaInfo.mTxCount <= kMaxInitRtrAdvertisements && nextSendDelay > kMaxInitRtrAdvInterval)
+        if (mRaInfo.mTxCount <= kMaxInitRtrAdvertisements && delay > Time::SecToMsec(kMaxInitRtrAdvInterval))
         {
-            nextSendDelay = kMaxInitRtrAdvInterval;
+            delay = Time::SecToMsec(kMaxInitRtrAdvInterval);
         }
+        break;
 
-        StartRoutingPolicyEvaluationDelay(Time::SecToMsec(nextSendDelay));
+    case kAfterRandomDelay:
+        delay = Random::NonCrypto::GetUint32InRange(kPolicyEvaluationMinDelay, kPolicyEvaluationMaxDelay);
+        break;
+
+    case kToReplyToRs:
+        delay = Random::NonCrypto::GetUint32InRange(0, kRaReplyJitter);
+        break;
     }
-}
 
-void RoutingManager::StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilliMin, uint32_t aJitterMilliMax)
-{
-    OT_ASSERT(mIsRunning);
-
-    StartRoutingPolicyEvaluationDelay(Random::NonCrypto::GetUint32InRange(aJitterMilliMin, aJitterMilliMax));
-}
-
-void RoutingManager::StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli)
-{
-    TimeMilli now          = TimerMilli::GetNow();
-    TimeMilli evaluateTime = now + aDelayMilli;
-    TimeMilli earliestTime = mRaInfo.mLastTxTime + kMinDelayBetweenRtrAdvs;
-
-    evaluateTime = Max(evaluateTime, earliestTime);
+    // Ensure we wait a min delay after last RA tx
+    evaluateTime = Max(now + delay, mRaInfo.mLastTxTime + kMinDelayBetweenRtrAdvs);
 
     LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", evaluateTime - now);
 
@@ -1022,7 +1026,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         mRouterSolicitCount = 0;
 
         // Re-evaluate our routing policy and send Router Advertisement if necessary.
-        StartRoutingPolicyEvaluationDelay(/* aDelayJitter */ 0);
+        ScheduleRoutingPolicyEvaluation(kImmediately);
     }
 }
 
@@ -1065,8 +1069,7 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     LogInfo("Received Router Solicitation from %s on %s", aSrcAddress.ToString().AsCString(),
             mInfraIf.ToString().AsCString());
 
-    // Schedule routing policy evaluation with random jitter to respond with Router Advertisement.
-    StartRoutingPolicyEvaluationJitter(0, kRaReplyJitter);
+    ScheduleRoutingPolicyEvaluation(kToReplyToRs);
 }
 
 void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
@@ -1181,7 +1184,7 @@ void RoutingManager::HandleDiscoveredPrefixTableChanged(void)
 
     if (newFavoredPrefix != mFavoredDiscoveredOnLinkPrefix)
     {
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
+        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 
 exit:
@@ -1247,7 +1250,7 @@ void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage
         // reevaluate routing policy and send RA message with new
         // header.
 
-        StartRoutingPolicyEvaluationJitter(kRoutingPolicyEvaluationJitterMin, kRoutingPolicyEvaluationJitterMax);
+        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 
 exit:
