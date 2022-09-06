@@ -298,49 +298,27 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Series Flags for Forward Tracking Series.
+ * This class represents the Series Flags for Forward Tracking Series.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class SeriesFlags
+class SeriesFlags : public otLinkMetricsSeriesFlags
 {
 public:
     /**
-     * This type represents which frames to be accounted in a Forward Tracking Series.
+     * This method converts the `SeriesFlags` to `uint8_t` bit-mask (for inclusion in TLVs).
      *
-     * @sa otLinkMetricsSeriesFlags
+     * @returns The bit-mask representation.
      *
      */
-    typedef otLinkMetricsSeriesFlags Info;
+    uint8_t ConvertToMask(void) const;
 
     /**
-     * Default constructor.
+     * This method sets the `SeriesFlags` from a given bit-mask value.
+     *
+     * @param[in] aFlagsMask  The bit-mask flags.
      *
      */
-    SeriesFlags(void)
-        : mFlags(0)
-    {
-    }
-
-    /**
-     * This method sets the values from an `Info` object.
-     *
-     * @param[in]  aSeriesFlags  The `Info` object.
-     *
-     */
-    void SetFrom(const Info &aSeriesFlags);
-
-    /**
-     * This method clears the Link Probe flag.
-     *
-     */
-    void ClearLinkProbeFlag(void) { mFlags &= ~kLinkProbeFlag; }
-
-    /**
-     * This method sets the Link Probe flag.
-     *
-     */
-    void SetLinkProbeFlag(void) { mFlags |= kLinkProbeFlag; }
+    void SetFrom(uint8_t aFlagsMask);
 
     /**
      * This method indicates whether or not the Link Probe flag is set.
@@ -349,19 +327,7 @@ public:
      * @retval false  The Link Probe flag is not set.
      *
      */
-    bool IsLinkProbeFlagSet(void) const { return (mFlags & kLinkProbeFlag) != 0; }
-
-    /**
-     * This method clears the MAC Data flag.
-     *
-     */
-    void ClearMacDataFlag(void) { mFlags &= ~kMacDataFlag; }
-
-    /**
-     * This method sets the MAC Data flag.
-     *
-     */
-    void SetMacDataFlag(void) { mFlags |= kMacDataFlag; }
+    bool IsLinkProbeFlagSet(void) const { return mLinkProbe; }
 
     /**
      * This method indicates whether or not the MAC Data flag is set.
@@ -370,19 +336,7 @@ public:
      * @retval false  The MAC Data flag is not set.
      *
      */
-    bool IsMacDataFlagSet(void) const { return (mFlags & kMacDataFlag) != 0; }
-
-    /**
-     * This method clears the MAC Data Request flag.
-     *
-     */
-    void ClearMacDataRequestFlag(void) { mFlags &= ~kMacDataRequestFlag; }
-
-    /**
-     * This method sets the MAC Data Request flag.
-     *
-     */
-    void SetMacDataRequestFlag(void) { mFlags |= kMacDataRequestFlag; }
+    bool IsMacDataFlagSet(void) const { return mMacData; }
 
     /**
      * This method indicates whether or not the MAC Data Request flag is set.
@@ -391,19 +345,7 @@ public:
      * @retval false  The MAC Data Request flag is not set.
      *
      */
-    bool IsMacDataRequestFlagSet(void) const { return (mFlags & kMacDataRequestFlag) != 0; }
-
-    /**
-     * This method clears the Mac Ack flag.
-     *
-     */
-    void ClearMacAckFlag(void) { mFlags &= ~kMacAckFlag; }
-
-    /**
-     * This method sets the Mac Ack flag.
-     *
-     */
-    void SetMacAckFlag(void) { mFlags |= kMacAckFlag; }
+    bool IsMacDataRequestFlagSet(void) const { return mMacDataRequest; }
 
     /**
      * This method indicates whether or not the Mac Ack flag is set.
@@ -412,28 +354,14 @@ public:
      * @retval false  The Mac Ack flag is not set.
      *
      */
-    bool IsMacAckFlagSet(void) const { return (mFlags & kMacAckFlag) != 0; }
-
-    /**
-     * This method returns the raw value of flags.
-     *
-     */
-    uint8_t GetRawValue(void) const { return mFlags; }
-
-    /**
-     * This method clears the all the flags.
-     *
-     */
-    void Clear(void) { mFlags = 0; }
+    bool IsMacAckFlagSet(void) const { return mMacAck; }
 
 private:
     static constexpr uint8_t kLinkProbeFlag      = 1 << 0;
     static constexpr uint8_t kMacDataFlag        = 1 << 1;
     static constexpr uint8_t kMacDataRequestFlag = 1 << 2;
     static constexpr uint8_t kMacAckFlag         = 1 << 3;
-
-    uint8_t mFlags;
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This enumeration type represent Enhanced-ACK Flags.
@@ -477,12 +405,12 @@ public:
     /**
      * This method initializes the SeriesInfo object.
      *
-     * @param[in]  aSeriesId      The Series ID.
-     * @param[in]  aSeriesFlags   The Series Flags which specify what types of frames are to be accounted.
-     * @param[in]  aMetrics       Metrics to query.
+     * @param[in]  aSeriesId          The Series ID.
+     * @param[in]  aSeriesFlagsMask   The Series Flags bitmask which specify what types of frames are to be accounted.
+     * @param[in]  aMetrics           Metrics to query.
      *
      */
-    void Init(uint8_t aSeriesId, const SeriesFlags &aSeriesFlags, const Metrics &aMetrics);
+    void Init(uint8_t aSeriesId, uint8_t aSeriesFlagsMask, const Metrics &aMetrics);
 
     /**
      * This method gets the Series ID.
@@ -565,6 +493,7 @@ enum Status : uint8_t
 
 DefineCoreType(otLinkMetrics, LinkMetrics::Metrics);
 DefineCoreType(otLinkMetricsValues, LinkMetrics::MetricsValues);
+DefineCoreType(otLinkMetricsSeriesFlags, LinkMetrics::SeriesFlags);
 DefineMapEnum(otLinkMetricsEnhAckFlags, LinkMetrics::EnhAckFlags);
 DefineMapEnum(otLinkMetricsStatus, LinkMetrics::Status);
 

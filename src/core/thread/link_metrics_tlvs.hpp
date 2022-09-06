@@ -217,7 +217,7 @@ OT_TOOL_PACKED_BEGIN
 class FwdProbingRegSubTlv : public Tlv, public TlvInfo<SubTlv::kFwdProbingReg>
 {
 public:
-    static constexpr uint8_t kMinLength = sizeof(uint8_t) + sizeof(SeriesFlags); ///< Minimum expected TLV length
+    static constexpr uint8_t kMinLength = sizeof(uint8_t) + sizeof(uint8_t); ///< Minimum expected TLV length
 
     /**
      * This method initializes the TLV.
@@ -255,20 +255,20 @@ public:
     void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
 
     /**
-     * This method gets the Forward Series Flags.
+     * This method gets the Forward Series Flags bit-mask.
      *
-     * @returns The Forward Series Flags.
+     * @returns The Forward Series Flags mask.
      *
      */
-    SeriesFlags &GetSeriesFlags(void) { return mSeriesFlags; }
+    uint8_t GetSeriesFlagsMask(void) { return mSeriesFlagsMask; }
 
     /**
-     * This method sets the Forward Series Flags.
+     * This method sets the Forward Series Flags bit-mask
      *
-     * @param[in] aSeriesFlags  The Forward Series Flags.
+     * @param[in] aSeriesFlagsMask  The Forward Series Flags.
      *
      */
-    void SetSeriesFlags(const SeriesFlags &aSeriesFlags) { mSeriesFlags = aSeriesFlags; }
+    void SetSeriesFlagsMask(uint8_t aSeriesFlagsMask) { mSeriesFlagsMask = aSeriesFlagsMask; }
 
     /**
      * This method gets the start of Type ID Flags array.
@@ -280,7 +280,7 @@ public:
 
 private:
     uint8_t     mSeriesId;
-    SeriesFlags mSeriesFlags;
+    uint8_t     mSeriesFlagsMask;
     TypeIdFlags mTypeIds[kMaxTypeIdFlags];
 } OT_TOOL_PACKED_END;
 

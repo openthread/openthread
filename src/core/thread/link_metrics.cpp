@@ -89,10 +89,10 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &     aDestination,
-                                                        uint8_t                  aSeriesId,
-                                                        const SeriesFlags::Info &aSeriesFlags,
-                                                        const Metrics *          aMetrics)
+Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDestination,
+                                                        uint8_t             aSeriesId,
+                                                        const SeriesFlags & aSeriesFlags,
+                                                        const Metrics *     aMetrics)
 {
     Error               error       = kErrorNone;
     Neighbor *          neighbor    = GetNeighborFromLinkLocalAddr(aDestination);
@@ -106,14 +106,14 @@ Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &    
 
     fwdProbingSubTlv.Init();
     fwdProbingSubTlv.SetSeriesId(aSeriesId);
-    fwdProbingSubTlv.GetSeriesFlags().SetFrom(aSeriesFlags);
+    fwdProbingSubTlv.SetSeriesFlagsMask(aSeriesFlags.ConvertToMask());
 
     if (aMetrics != nullptr)
     {
         typeIdCount = TypeIdFlagsFromMetrics(fwdProbingSubTlv.GetTypeIds(), *aMetrics);
     }
 
-    fwdProbingSubTlv.SetLength(sizeof(aSeriesId) + sizeof(SeriesFlags) + typeIdCount * sizeof(TypeIdFlags));
+    fwdProbingSubTlv.SetLength(sizeof(aSeriesId) + sizeof(uint8_t) + typeIdCount * sizeof(TypeIdFlags));
 
     error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, fwdProbingSubTlv);
 
@@ -289,7 +289,7 @@ Error LinkMetrics::HandleManagementRequest(const Message &aMessage, Neighbor &aN
     Error       error = kErrorNone;
     Tlv         tlv;
     uint8_t     seriesId;
-    SeriesFlags seriesFlags;
+    uint8_t     seriesFlagsMask;
     EnhAckFlags enhAckFlags;
     Metrics     metrics;
     bool        hasForwardProbingRegistrationTlv = false;
@@ -312,11 +312,11 @@ Error LinkMetrics::HandleManagementRequest(const Message &aMessage, Neighbor &aN
         {
         case SubTlv::kFwdProbingReg:
             VerifyOrExit(!hasForwardProbingRegistrationTlv && !hasEnhAckProbingTlv, error = kErrorParse);
-            VerifyOrExit(tlv.GetLength() >= sizeof(seriesId) + sizeof(seriesFlags), error = kErrorParse);
+            VerifyOrExit(tlv.GetLength() >= sizeof(seriesId) + sizeof(seriesFlagsMask), error = kErrorParse);
             SuccessOrExit(aMessage.Read(pos, seriesId));
             pos += sizeof(seriesId);
-            SuccessOrExit(aMessage.Read(pos, seriesFlags));
-            pos += sizeof(seriesFlags);
+            SuccessOrExit(aMessage.Read(pos, seriesFlagsMask));
+            pos += sizeof(seriesFlagsMask);
             SuccessOrExit(error = ReadTypeIdFlagsFromMessage(
                               aMessage, pos, static_cast<uint16_t>(offset + index + tlv.GetSize()), metrics));
             hasForwardProbingRegistrationTlv = true;
@@ -341,7 +341,7 @@ Error LinkMetrics::HandleManagementRequest(const Message &aMessage, Neighbor &aN
 
     if (hasForwardProbingRegistrationTlv)
     {
-        aStatus = ConfigureForwardTrackingSeries(seriesId, seriesFlags, metrics, aNeighbor);
+        aStatus = ConfigureForwardTrackingSeries(seriesId, seriesFlagsMask, metrics, aNeighbor);
     }
     else if (hasEnhAckProbingTlv)
     {
@@ -610,15 +610,16 @@ exit:
     return error;
 }
 
-Status LinkMetrics::ConfigureForwardTrackingSeries(uint8_t            aSeriesId,
-                                                   const SeriesFlags &aSeriesFlags,
-                                                   const Metrics &    aMetrics,
-                                                   Neighbor &         aNeighbor)
+Status LinkMetrics::ConfigureForwardTrackingSeries(uint8_t        aSeriesId,
+                                                   uint8_t        aSeriesFlagsMask,
+                                                   const Metrics &aMetrics,
+                                                   Neighbor &     aNeighbor)
 {
     Status status = kStatusSuccess;
 
     VerifyOrExit(0 < aSeriesId, status = kStatusOtherError);
-    if (aSeriesFlags.GetRawValue() == 0) // Remove the series
+
+    if (aSeriesFlagsMask == 0) // Remove the series
     {
         if (aSeriesId == kSeriesIdAllSeries) // Remove all
         {
@@ -638,7 +639,7 @@ Status LinkMetrics::ConfigureForwardTrackingSeries(uint8_t            aSeriesId,
         seriesInfo = mSeriesInfoPool.Allocate();
         VerifyOrExit(seriesInfo != nullptr, status = kStatusCannotSupportNewSeries);
 
-        seriesInfo->Init(aSeriesId, aSeriesFlags, aMetrics);
+        seriesInfo->Init(aSeriesId, aSeriesFlagsMask, aMetrics);
 
         aNeighbor.AddForwardTrackingSeriesInfo(*seriesInfo);
     }
