@@ -94,14 +94,9 @@ void otNat64GetErrorCounters(otInstance *aInstance, otNat64ErrorCounters *aCount
     AsCoreType(aInstance).Get<Nat64::Translator>().GetErrorCounters(AsCoreType(aCounters));
 }
 
-otError otNat64GetConfiguredCidr(otInstance *aInstance, otIp4Cidr *aCidr)
+otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr)
 {
     return AsCoreType(aInstance).Get<Nat64::Translator>().GetIp4Cidr(AsCoreType(aCidr));
-}
-
-otError otNat64GetConfiguredPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
-{
-    return AsCoreType(aInstance).Get<Nat64::Translator>().GetIp6Prefix(AsCoreType(aPrefix));
 }
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 

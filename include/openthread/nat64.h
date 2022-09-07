@@ -313,26 +313,15 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
 
 /**
- * Gets the configured IPv4 CIDR in the NAT64 translator.
+ * Gets the IPv4 CIDR configured in the NAT64 translator.
  *
  * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[out] aCidr             A pointer to an otIp4Cidr. Where the configured CIDR will be filled.
+ * @param[out] aCidr             A pointer to an otIp4Cidr. Where the CIDR will be filled.
  *
  */
-otError otNat64GetConfiguredCidr(otInstance *aInstance, otIp4Cidr *aCidr);
-
-/**
- * Gets the configured IPv6 prefix in the NAT64 translator.
- *
- * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[out] aPrefix           A pointer to an otIp6Prefix. Where the configured NAT64 prefix will be filled.
- *
- */
-otError otNat64GetConfiguredPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
 
 /**
  * Test if two IPv4 addresses are the same.

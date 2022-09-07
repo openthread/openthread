@@ -70,7 +70,7 @@ Done
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [multiradio](#multiradio)
-- [nat64](#nat64-configuredcidr)
+- [nat64](#nat64-cidr)
 - [neighbor](#neighbor-list)
 - [netdata](README_NETDATA.md)
 - [netstat](#netstat)
@@ -1836,28 +1836,15 @@ This command is only available when device supports more than one radio link.
 Done
 ```
 
-### nat64 configuredcidr
+### nat64 cidr
 
-Gets the configured IPv4 CIDR in the NAT64 translator.
-
-This command is only available when device enables NAT64 translator.
-
-```
-bash
-> nat64 configuredcidr
-192.168.64.0/24
-Done
-```
-
-### nat64 configuredprefix
-
-Gets the configured IPv6 prefix in the NAT64 translator.
+Gets the IPv4 configured CIDR in the NAT64 translator.
 
 This command is only available when device enables NAT64 translator.
 
 ```bash
-> nat64 configuredprefix
-fd56:eda7:17ca:2:0:0::/96
+> nat64 cidr
+192.168.64.0/24
 Done
 ```
 

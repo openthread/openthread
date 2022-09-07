@@ -721,42 +721,24 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
     /**
-     * @cli nat64 configuredcidr
+     * @cli nat64 cidr
      * @code
-     * nat64 configuredcidr
+     * nat64 cidr
      * 192.168.64.0/24
      * Done
      * @endcode
      * @par api_copy
-     * #otNat64GetConfiguredCidr
+     * #otNat64GetCidr
      *
      */
-    else if (aArgs[0] == "configuredcidr")
+    else if (aArgs[0] == "cidr")
     {
         otIp4Cidr cidr;
         char      cidrString[OT_IP4_CIDR_STRING_SIZE];
 
-        SuccessOrExit(error = otNat64GetConfiguredCidr(GetInstancePtr(), &cidr));
+        SuccessOrExit(error = otNat64GetCidr(GetInstancePtr(), &cidr));
         otIp4CidrToString(&cidr, cidrString, sizeof(cidrString));
         OutputLine("%s", cidrString);
-    }
-    /**
-     * @cli nat64 configuredprefix
-     * @code
-     * nat64 configuredprefix
-     * fd56:eda7:17ca:2:0:0::/96
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otNat64GetConfiguredPrefix
-     *
-     */
-    else if (aArgs[0] == "configuredprefix")
-    {
-        otIp6Prefix prefix;
-
-        SuccessOrExit(error = otNat64GetConfiguredPrefix(GetInstancePtr(), &prefix));
-        OutputIp6PrefixLine(prefix);
     }
     /**
      * @cli nat64 mappings
