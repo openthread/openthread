@@ -103,6 +103,8 @@ public:
     static constexpr uint32_t kSupportedChannelPages = (1 << OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE);
 #endif
 
+    static constexpr int8_t kInvalidRssi = OT_RADIO_RSSI_INVALID; ///< Invalid RSSI value.
+
     static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
                    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),
                   "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT "
@@ -994,7 +996,7 @@ inline Error Radio::Transmit(Mac::TxFrame &)
 
 inline int8_t Radio::GetRssi(void)
 {
-    return OT_RADIO_RSSI_INVALID;
+    return kInvalidRssi;
 }
 
 inline Error Radio::EnergyScan(uint8_t, uint16_t)

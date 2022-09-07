@@ -67,8 +67,8 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
 
     linkMetrics.SetMgmtResponseCallback(aCallback, aCallbackContext);
 
-    return linkMetrics.SendMgmtRequestForwardTrackingSeries(AsCoreType(aDestination), aSeriesId, aSeriesFlags,
-                                                            AsCoreTypePtr(aLinkMetricsFlags));
+    return linkMetrics.SendMgmtRequestForwardTrackingSeries(
+        AsCoreType(aDestination), aSeriesId, AsCoreType(&aSeriesFlags), AsCoreTypePtr(aLinkMetricsFlags));
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE

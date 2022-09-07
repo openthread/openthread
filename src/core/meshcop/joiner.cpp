@@ -244,7 +244,7 @@ uint8_t Joiner::CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny)
 {
     int16_t priority;
 
-    if (aRssi == OT_RADIO_RSSI_INVALID)
+    if (aRssi == Radio::kInvalidRssi)
     {
         aRssi = -127;
     }

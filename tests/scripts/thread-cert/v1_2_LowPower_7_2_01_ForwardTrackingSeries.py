@@ -111,9 +111,10 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         self.simulator.go(30)
 
         # Step 7 - SED_1 sends an MLE Data Request to retrieve aggregated Forward Series Results
-        self.nodes[SED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID)
+        result = self.nodes[SED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID, 'block')
+        self.assertIn("PDU Counter", result)
 
-        self.simulator.go(5)
+        #self.simulator.go(5)
 
         # Step 9 - SED_1 clears the Forward Tracking Series
         # Forward Series Flags = 0x00:
@@ -144,9 +145,8 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
             self.simulator.go(1)
 
         # Step 19 - SSED_1 sends an MLE Data Request to retrieve aggregated Forward Series Results
-        self.nodes[SSED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2)
-
-        self.simulator.go(5)
+        result = self.nodes[SSED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2, 'block')
+        self.assertIn("Margin", result)
 
         # Step 21 - SSED_1 clears the Forward Series Link Metrics
         # Forward Series Flags = 0x00:
@@ -157,9 +157,9 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         self.simulator.go(5)
 
         # Step 23 - SSED_1 sends an MLE Data Request to retrieve aggregated Forward Series Results
-        self.nodes[SSED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2)
-
-        self.simulator.go(5)
+        result = self.nodes[SSED_1].link_metrics_query_forward_tracking_series(leader_addr, SERIES_ID_2, 'block')
+        self.assertIn('Status', result)
+        self.assertEqual(result['Status'], 'Series ID not recognized')
 
     def verify(self, pv):
         pkts = pv.pkts

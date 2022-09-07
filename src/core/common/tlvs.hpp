@@ -175,7 +175,7 @@ public:
     Error AppendTo(Message &aMessage) const;
 
     /**
-     * This static method reads a TLV in a message at a given offset expecting a minimum length for the value.
+     * This static method reads a TLV's value in a message at a given offset expecting a minimum length for the value.
      *
      * @param[in]   aMessage    The message to read from.
      * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
@@ -186,7 +186,7 @@ public:
      * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
      *
      */
-    static Error ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
+    static Error ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
 
     /**
      * This static method reads a simple TLV with a single non-integral value in a message at a given offset.
@@ -204,7 +204,7 @@ public:
     template <typename SimpleTlvType>
     static Error Read(const Message &aMessage, uint16_t aOffset, typename SimpleTlvType::ValueType &aValue)
     {
-        return ReadTlv(aMessage, aOffset, &aValue, sizeof(aValue));
+        return ReadTlvValue(aMessage, aOffset, &aValue, sizeof(aValue));
     }
 
     /**

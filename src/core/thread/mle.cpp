@@ -1640,7 +1640,11 @@ void Mle::SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata
     }
 
 exit:
-    FreeMessageOnError(&aMessage, error);
+    if (error != kErrorNone)
+    {
+        // do not use `FreeMessageOnError()` to avoid null check on nonnull pointer
+        aMessage.Free();
+    }
 }
 
 void Mle::RemoveDelayedDataResponseMessage(void)
@@ -3901,7 +3905,7 @@ void Mle::ParentSearch::HandleTimer(void)
 
     parentRss = Get<Mle>().GetParent().GetLinkInfo().GetAverageRss();
     LogInfo("PeriodicParentSearch: Parent RSS %d", parentRss);
-    VerifyOrExit(parentRss != OT_RADIO_RSSI_INVALID);
+    VerifyOrExit(parentRss != Radio::kInvalidRssi);
 
     if (parentRss < kRssThreadhold)
     {
@@ -4295,7 +4299,8 @@ uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy)
 
 Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext)
 {
-    Error error = kErrorNone;
+    Error    error   = kErrorNone;
+    uint32_t timeout = kDetachGracefullyTimeout;
 
     VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
 
@@ -4304,27 +4309,36 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
     mDetachGracefullyCallback = aCallback;
     mDetachGracefullyContext  = aContext;
 
-    if (IsChild() || IsRouter())
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    Get<BorderRouter::RoutingManager>().RequestStop();
+#endif
+
+    switch (mRole)
     {
-        mDetachGracefullyTimer.Start(kDetachGracefullyTimeout);
-    }
-    else
-    {
-        // If the device is a leader, or it's already detached or disabled, we start the timer with zero duration to
-        // stop and invoke the callback when the timer fires, so the operation finishes immediately and asynchronously.
-        mDetachGracefullyTimer.Start(0);
+    case kRoleLeader:
+        break;
+
+    case kRoleRouter:
+#if OPENTHREAD_FTD
+        Get<MleRouter>().SendAddressRelease();
+#endif
+        break;
+
+    case kRoleChild:
+        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ false, /* aTimeout */ 0));
+        break;
+
+    case kRoleDisabled:
+    case kRoleDetached:
+        // If device is already detached or disabled, we start the timer
+        // with zero duration to stop and invoke the callback when the
+        // timer fires, so the operation finishes immediately and
+        // asynchronously.
+        timeout = 0;
+        break;
     }
 
-    if (IsChild())
-    {
-        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ false, /* aTimeout */ 0));
-    }
-#if OPENTHREAD_FTD
-    else if (IsRouter())
-    {
-        Get<MleRouter>().SendAddressRelease(&Mle::HandleDetachGracefullyAddressReleaseResponse, this);
-    }
-#endif
+    mDetachGracefullyTimer.Start(timeout);
 
 exit:
     return error;
@@ -4339,28 +4353,6 @@ void Mle::HandleDetachGracefullyTimer(void)
 {
     Stop();
 }
-
-#if OPENTHREAD_FTD
-void Mle::HandleDetachGracefullyAddressReleaseResponse(void *               aContext,
-                                                       otMessage *          aMessage,
-                                                       const otMessageInfo *aMessageInfo,
-                                                       Error                aResult)
-{
-    OT_UNUSED_VARIABLE(aMessage);
-    OT_UNUSED_VARIABLE(aMessageInfo);
-    OT_UNUSED_VARIABLE(aResult);
-
-    static_cast<MleRouter *>(aContext)->HandleDetachGracefullyAddressReleaseResponse();
-}
-
-void Mle::HandleDetachGracefullyAddressReleaseResponse(void)
-{
-    if (IsDetachingGracefully())
-    {
-        Stop();
-    }
-}
-#endif // OPENTHREAD_FTD
 
 //---------------------------------------------------------------------------------------------------------------------
 // TlvList

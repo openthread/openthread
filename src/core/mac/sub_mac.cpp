@@ -79,7 +79,7 @@ void SubMac::Init(void)
     mShortAddress    = kShortAddrInvalid;
     mExtAddress.Clear();
     mRxOnWhenBackoff   = true;
-    mEnergyScanMaxRssi = kInvalidRssiValue;
+    mEnergyScanMaxRssi = Radio::kInvalidRssi;
     mEnergyScanEndTime = Time{0};
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     mRetxDelayBackOffExponent = kRetxDelayMinBackoffExponent;
@@ -673,7 +673,7 @@ int8_t SubMac::GetRssi(void) const
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     if (mRadioFilterEnabled)
     {
-        rssi = kInvalidRssiValue;
+        rssi = Radio::kInvalidRssi;
     }
     else
 #endif
@@ -716,7 +716,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     }
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    VerifyOrExit(!mRadioFilterEnabled, HandleEnergyScanDone(kInvalidRssiValue));
+    VerifyOrExit(!mRadioFilterEnabled, HandleEnergyScanDone(Radio::kInvalidRssi));
 #endif
 
     if (RadioSupportsEnergyScan())
@@ -729,7 +729,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
         SuccessOrAssert(Get<Radio>().Receive(aScanChannel));
 
         SetState(kStateEnergyScan);
-        mEnergyScanMaxRssi = kInvalidRssiValue;
+        mEnergyScanMaxRssi = Radio::kInvalidRssi;
         mEnergyScanEndTime = TimerMilli::GetNow() + static_cast<uint32_t>(aScanDuration);
         mTimer.Start(0);
     }
@@ -748,9 +748,9 @@ void SubMac::SampleRssi(void)
 
     int8_t rssi = GetRssi();
 
-    if (rssi != kInvalidRssiValue)
+    if (rssi != Radio::kInvalidRssi)
     {
-        if ((mEnergyScanMaxRssi == kInvalidRssiValue) || (rssi > mEnergyScanMaxRssi))
+        if ((mEnergyScanMaxRssi == Radio::kInvalidRssi) || (rssi > mEnergyScanMaxRssi))
         {
             mEnergyScanMaxRssi = rssi;
         }

@@ -120,6 +120,21 @@ public:
     Error SetEnabled(bool aEnabled);
 
     /**
+     * This method requests the Border Routing Manager to stop.
+     *
+     * If Border Routing Manager is running, calling this method immediately stops it and triggers the preparation
+     * and sending of a final Router Advertisement (RA) message on infrastructure interface which deprecates and/or
+     * removes any previously advertised PIO/RIO prefixes. If Routing Manager is not running (or not enabled), no
+     * action is taken.
+     *
+     * Note that this method does not change whether the Routing Manager is enabled or disabled (see `SetEnabled()`).
+     * It stops the Routing Manager temporarily. After calling this method if the device role gets changes (device
+     * gets attached) and/or the infra interface state gets changed, the Routing Manager may be started again.
+     *
+     */
+    void RequestStop(void) { Stop(); }
+
+    /**
      * This method gets the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in
      * Router Advertisement messages sent over the infrastructure link.
      *
@@ -188,7 +203,7 @@ public:
      */
     Error GetOnLinkPrefix(Ip6::Prefix &aPrefix);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
      * This method returns the local NAT64 prefix.
      *
@@ -221,7 +236,7 @@ public:
      *
      */
     void UpdateInfraIfNat64Prefix(const Ip6::Prefix &aPrefix);
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
     /**
      * This method processes a received ICMPv6 message from the infrastructure interface.
@@ -316,13 +331,11 @@ private:
     static constexpr uint32_t kMaxRtrAdvInterval           = 600;  // Max Router Advertisement Interval. In sec.
     static constexpr uint32_t kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3; // Min RA Interval. In sec.
     static constexpr uint32_t kMaxInitRtrAdvInterval       = 16;                     // Max Initial RA Interval. In sec.
-    static constexpr uint32_t kRaReplyJitter               = 500; // Jitter for sending RA after rx RS. In msec.
-    static constexpr uint32_t kRtrSolicitationInterval     = 4;   // Interval between RSs. In sec.
-    static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;   // Max delay for initial solicitation. In sec.
-    static constexpr uint32_t kRoutingPolicyEvaluationJitterMin =
-        2000; // Min jitter for routing policy evaluation. In msec.
-    static constexpr uint32_t kRoutingPolicyEvaluationJitterMax =
-        4000; // Max jitter for routing policy evaluation. In msec.
+    static constexpr uint32_t kRaReplyJitter               = 500;  // Jitter for sending RA after rx RS. In msec.
+    static constexpr uint32_t kRtrSolicitationInterval     = 4;    // Interval between RSs. In sec.
+    static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;    // Max delay for initial solicitation. In sec.
+    static constexpr uint32_t kPolicyEvaluationMinDelay    = 2000; // Min delay for policy evaluation. In msec.
+    static constexpr uint32_t kPolicyEvaluationMaxDelay    = 4000; // Max delay for policy evaluation. In msec.
     static constexpr uint32_t kRtrSolicitationRetryDelay =
         kRtrSolicitationInterval;                             // The delay before retrying failed RS tx. In Sec.
     static constexpr uint32_t kMinDelayBetweenRtrAdvs = 3000; // Min delay (msec) between consecutive RAs.
@@ -340,13 +353,21 @@ private:
     static_assert(kDefaultOnLinkPrefixLifetime >= kMaxRtrAdvInterval, "invalid default on-link prefix lifetime");
     static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
                   "invalid RA STALE time");
-    static_assert(kRoutingPolicyEvaluationJitterMax > kRoutingPolicyEvaluationJitterMin,
-                  "kRoutingPolicyEvaluationJitterMax must be larger than kRoutingPolicyEvaluationJitterMin");
+    static_assert(kPolicyEvaluationMaxDelay > kPolicyEvaluationMinDelay,
+                  "kPolicyEvaluationMaxDelay must be larger than kPolicyEvaluationMinDelay");
 
     enum RouterAdvTxMode : uint8_t // Used in `SendRouterAdvertisement()`
     {
         kInvalidateAllPrevPrefixes,
         kAdvPrefixesFromNetData,
+    };
+
+    enum ScheduleMode : uint8_t // Used in `ScheduleRoutingPolicyEvaluation()`
+    {
+        kImmediately,
+        kForNextRa,
+        kAfterRandomDelay,
+        kToReplyToRs,
     };
 
     void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
@@ -640,15 +661,14 @@ private:
 
     void EvaluateOnLinkPrefix(void);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     void DiscoverInfraIfNat64Prefix(void);
     void GenerateNat64Prefix(void);
     void EvaluateNat64Prefix(void);
 #endif
 
     void  EvaluateRoutingPolicy(void);
-    void  StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilliMin, uint32_t aJitterMilliMax);
-    void  StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli);
+    void  ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
     void  EvaluateOmrPrefix(void);
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
@@ -664,7 +684,7 @@ private:
     static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixStaleTimer(void);
     static void HandleRoutingPolicyTimer(Timer &aTimer);
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     static void HandleInfraIfNat64PrefixStaleTimer(Timer &aTimer);
     void        HandleInfraIfNat64PrefixStaleTimer(void);
 #endif
@@ -714,16 +734,16 @@ private:
 
     DiscoveredPrefixTable mDiscoveredPrefixTable;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     // The latest NAT64 prefix discovered on the infrastructure interface.
     Ip6::Prefix mInfraIfNat64Prefix;
     // The NAT64 prefix allocated from the /48 BR ULA prefix.
     Ip6::Prefix mLocalNat64Prefix;
-    // The NAT64 prefix advertised in Network Data. It can have the following value:
-    // - empty: no NAT64 prefix is advertised from this BR
+    // The NAT64 prefix published in Network Data. It can have the following value:
+    // - empty: no NAT64 prefix is published from this BR
     // - the local NAT64 prefix
-    // - the latest advertised infrastructure NAT64 prefix, which might differs from mInfraIfNat64Prefix
-    Ip6::Prefix mAdvertisedNat64Prefix;
+    // - the latest published infrastructure NAT64 prefix, which might differs from mInfraIfNat64Prefix
+    Ip6::Prefix mPublishedNat64Prefix;
 
     TimerMilli mInfraIfNat64PrefixStaleTimer;
 #endif
