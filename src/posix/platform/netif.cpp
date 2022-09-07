@@ -529,12 +529,11 @@ exit:
     SuccessOrDie(error);
 }
 
-static void UpdateLink(otInstance *aInstance)
+static void SetLinkState(otInstance *aInstance, bool otState)
 {
     otError      error = OT_ERROR_NONE;
     struct ifreq ifr;
     bool         ifState = false;
-    bool         otState = false;
 
     assert(gInstance == aInstance);
 
@@ -544,7 +543,6 @@ static void UpdateLink(otInstance *aInstance)
     VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
 
     ifState = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
-    otState = otIp6IsEnabled(aInstance);
 
     otLogNotePlat("[netif] Changing interface state to %s%s.", otState ? "up" : "down",
                   (ifState == otState) ? " (already done, ignoring)" : "");
@@ -564,6 +562,12 @@ exit:
     {
         otLogWarnPlat("[netif] Failed to update state %s", otThreadErrorToString(error));
     }
+}
+
+static void UpdateLink(otInstance *aInstance)
+{
+    assert(gInstance == aInstance);
+    SetLinkState(aInstance, otIp6IsEnabled(aInstance));
 }
 
 #if __linux__ && \
@@ -1598,11 +1602,10 @@ exit:
 
 #if defined(__linux__)
 // set up the tun device
-static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *deviceName, size_t deviceNameLen)
+static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
     struct ifreq ifr;
     const char *interfaceName;
-    int err = 0;
 
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -1628,19 +1631,23 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *
 
     VerifyOrDie(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
 
-    err = ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID);
-    if (err != 0)
-    {
-        // When reuse an existing tun device, the device may already up, ignore EBUSY in this case
-        VerifyOrDie(aPlatformConfig->mPersistentInterface && errno == EBUSY, OT_EXIT_ERROR_ERRNO);
-    }
+    strncpy(gNetifName, ifr.ifr_name, sizeof(gNetifName));
 
     if (aPlatformConfig->mPersistentInterface)
     {
         VerifyOrDie(ioctl(sTunFd, TUNSETPERSIST, 1) == 0, OT_EXIT_ERROR_ERRNO);
+        SetLinkState(gInstance, false); // Set link down to reset the tun configuration.
     }
 
-    strncpy(deviceName, ifr.ifr_name, deviceNameLen);
+    VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
+
+    if (aPlatformConfig->mPersistentInterface)
+    {
+        if (gInstance != nullptr && otIp6IsEnabled(gInstance))
+        {
+            SetLinkState(gInstance, true);
+        }
+    }
 
     ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
     VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
@@ -1648,7 +1655,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *
 #endif
 
 #if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
-static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *deviceName, size_t deviceNameLen)
+static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
     (void)aPlatformConfig;
     int                 err = 0;
@@ -1673,11 +1680,11 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
     socklen_t devNameLen;
-    devNameLen = (socklen_t)deviceNameLen;
-    err        = getsockopt(sTunFd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, deviceName, &devNameLen);
+    devNameLen = (socklen_t)sizeof(gNetifName);
+    err        = getsockopt(sTunFd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, gNetifName, &devNameLen);
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
-    otLogInfoPlat("[netif] Tunnel device name = '%s'", deviceName);
+    otLogInfoPlat("[netif] Tunnel device name = '%s'", gNetifName);
 }
 #endif
 
@@ -1700,7 +1707,7 @@ exit:
 #if defined(__NetBSD__) ||                                                                             \
     (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
     defined(__FreeBSD__)
-static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *deviceName, size_t deviceNameLen)
+static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
     int         flags = IFF_BROADCAST | IFF_MULTICAST;
     int         err;
@@ -1727,7 +1734,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig, char *
     VerifyOrDie(last_slash != nullptr, OT_EXIT_ERROR_ERRNO);
     last_slash++;
 
-    strncpy(deviceName, last_slash, deviceNameLen);
+    strncpy(gNetifName, last_slash, sizeof(gNetifName));
 }
 #endif
 
@@ -1785,7 +1792,7 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     platformConfigureNetLink();
-    platformConfigureTunDevice(aPlatformConfig, gNetifName, sizeof(gNetifName));
+    platformConfigureTunDevice(aPlatformConfig);
 
     gNetifIndex = if_nametoindex(gNetifName);
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
