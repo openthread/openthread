@@ -75,6 +75,7 @@
 #include "config/dns_dso.h"
 #include "config/dnssd_server.h"
 #include "config/dtls.h"
+#include "config/feature_experiment_flag.h"
 #include "config/history_tracker.h"
 #include "config/ip6.h"
 #include "config/joiner.h"
