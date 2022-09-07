@@ -219,10 +219,10 @@ void Server::SendResponse(Header                  aHeader,
 
     error = aSocket.SendTo(aMessage, aMessageInfo);
 
-    FreeMessageOnError(&aMessage, error);
-
     if (error != kErrorNone)
     {
+        // do not use `FreeMessageOnError()` to avoid null check on nonnull pointer
+        aMessage.Free();
         LogWarn("failed to send DNS-SD reply: %s", ErrorToString(error));
     }
     else

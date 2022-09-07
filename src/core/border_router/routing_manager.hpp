@@ -331,13 +331,11 @@ private:
     static constexpr uint32_t kMaxRtrAdvInterval           = 600;  // Max Router Advertisement Interval. In sec.
     static constexpr uint32_t kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3; // Min RA Interval. In sec.
     static constexpr uint32_t kMaxInitRtrAdvInterval       = 16;                     // Max Initial RA Interval. In sec.
-    static constexpr uint32_t kRaReplyJitter               = 500; // Jitter for sending RA after rx RS. In msec.
-    static constexpr uint32_t kRtrSolicitationInterval     = 4;   // Interval between RSs. In sec.
-    static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;   // Max delay for initial solicitation. In sec.
-    static constexpr uint32_t kRoutingPolicyEvaluationJitterMin =
-        2000; // Min jitter for routing policy evaluation. In msec.
-    static constexpr uint32_t kRoutingPolicyEvaluationJitterMax =
-        4000; // Max jitter for routing policy evaluation. In msec.
+    static constexpr uint32_t kRaReplyJitter               = 500;  // Jitter for sending RA after rx RS. In msec.
+    static constexpr uint32_t kRtrSolicitationInterval     = 4;    // Interval between RSs. In sec.
+    static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;    // Max delay for initial solicitation. In sec.
+    static constexpr uint32_t kPolicyEvaluationMinDelay    = 2000; // Min delay for policy evaluation. In msec.
+    static constexpr uint32_t kPolicyEvaluationMaxDelay    = 4000; // Max delay for policy evaluation. In msec.
     static constexpr uint32_t kRtrSolicitationRetryDelay =
         kRtrSolicitationInterval;                             // The delay before retrying failed RS tx. In Sec.
     static constexpr uint32_t kMinDelayBetweenRtrAdvs = 3000; // Min delay (msec) between consecutive RAs.
@@ -355,13 +353,21 @@ private:
     static_assert(kDefaultOnLinkPrefixLifetime >= kMaxRtrAdvInterval, "invalid default on-link prefix lifetime");
     static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
                   "invalid RA STALE time");
-    static_assert(kRoutingPolicyEvaluationJitterMax > kRoutingPolicyEvaluationJitterMin,
-                  "kRoutingPolicyEvaluationJitterMax must be larger than kRoutingPolicyEvaluationJitterMin");
+    static_assert(kPolicyEvaluationMaxDelay > kPolicyEvaluationMinDelay,
+                  "kPolicyEvaluationMaxDelay must be larger than kPolicyEvaluationMinDelay");
 
     enum RouterAdvTxMode : uint8_t // Used in `SendRouterAdvertisement()`
     {
         kInvalidateAllPrevPrefixes,
         kAdvPrefixesFromNetData,
+    };
+
+    enum ScheduleMode : uint8_t // Used in `ScheduleRoutingPolicyEvaluation()`
+    {
+        kImmediately,
+        kForNextRa,
+        kAfterRandomDelay,
+        kToReplyToRs,
     };
 
     void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
@@ -662,8 +668,7 @@ private:
 #endif
 
     void  EvaluateRoutingPolicy(void);
-    void  StartRoutingPolicyEvaluationJitter(uint32_t aJitterMilliMin, uint32_t aJitterMilliMax);
-    void  StartRoutingPolicyEvaluationDelay(uint32_t aDelayMilli);
+    void  ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
     void  EvaluateOmrPrefix(void);
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
     void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);

@@ -1640,7 +1640,11 @@ void Mle::SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata
     }
 
 exit:
-    FreeMessageOnError(&aMessage, error);
+    if (error != kErrorNone)
+    {
+        // do not use `FreeMessageOnError()` to avoid null check on nonnull pointer
+        aMessage.Free();
+    }
 }
 
 void Mle::RemoveDelayedDataResponseMessage(void)

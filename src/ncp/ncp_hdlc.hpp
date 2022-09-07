@@ -128,9 +128,9 @@ private:
                                                       Spinel::Buffer *         aBuffer);
     otNcpHdlcSendCallback mSendCallback;
 
+    Hdlc::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
     Hdlc::Encoder                        mFrameEncoder;
     Hdlc::Decoder                        mFrameDecoder;
-    Hdlc::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
     HdlcTxState                          mState;
     uint8_t                              mByte;
     Hdlc::FrameBuffer<kRxBufferSize>     mRxBuffer;
