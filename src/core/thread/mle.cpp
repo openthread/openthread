@@ -1797,12 +1797,15 @@ exit:
     return error;
 }
 
-Error Mle::SendDataRequest(const Ip6::Address &aDestination,
-                           const uint8_t *     aTlvs,
-                           uint8_t             aTlvsLength,
-                           uint16_t            aDelay,
-                           const uint8_t *     aExtraTlvs,
-                           uint8_t             aExtraTlvsLength)
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+Error Mle::SendDataRequest(const Ip6::Address &                       aDestination,
+                           const uint8_t *                            aTlvs,
+                           uint8_t                                    aTlvsLength,
+                           uint16_t                                   aDelay,
+                           const LinkMetrics::LinkMetrics::QueryInfo *aQueryInfo)
+#else
+Error Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aDelay)
+#endif
 {
     Error      error = kErrorNone;
     TxMessage *message;
@@ -1812,10 +1815,12 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
     VerifyOrExit((message = NewMleMessage(kCommandDataRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendTlvRequestTlv(aTlvs, aTlvsLength));
 
-    if (aExtraTlvs != nullptr && aExtraTlvsLength > 0)
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    if (aQueryInfo != nullptr)
     {
-        SuccessOrExit(error = message->AppendBytes(aExtraTlvs, aExtraTlvsLength));
+        SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().AppendLinkMetricsQueryTlv(*message, *aQueryInfo));
     }
+#endif
 
     if (aDelay)
     {
