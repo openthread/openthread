@@ -850,25 +850,6 @@ otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifi
  */
 const char *otIp6ProtoToString(uint8_t aIpProto);
 
-// Forward declaration for otIp4Address.
-typedef struct otIp4Address otIp4Address;
-
-/**
- * Sets the IPv6 address by performing NAT64 address translation from the preferred NAT64 prefix and the given IPv4
- * address as specified in RFC 6052.
- *
- * @param[in]   aInstance    A pointer to an OpenThread instance.
- * @param[in]   aIp4Address  A pointer to the IPv4 address to translate to IPv6.
- * @param[out]  aIp6Address  A pointer to the synthesized IPv6 address.
- *
- * @returns  OT_ERROR_NONE           Successfully synthesize the IPv6 address from NAT64 prefix and IPv4 address.
- * @returns  OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
- *
- */
-otError otIp6AddressSynthesizeFromIp4Address(otInstance *        aInstance,
-                                             const otIp4Address *aIp4Address,
-                                             otIp6Address *      aIp6Address);
-
 /**
  * @}
  *

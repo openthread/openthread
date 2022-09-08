@@ -4551,6 +4551,7 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
     otError            error = OT_ERROR_NONE;
     otPingSenderConfig config;
     bool               async = false;
+    bool               nat64ConvertedAddress;
 
     if (aArgs[0] == "stop")
     {
@@ -4590,20 +4591,13 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
         aArgs += 2;
     }
 
-    error = aArgs[0].ParseAsIp6Address(config.mDestination);
-    if (error != OT_ERROR_NONE && !aArgs[0].IsEmpty())
+    SuccessOrExit(
+        error = aArgs[0].ParseAndConvertToIp6Address(GetInstancePtr(), config.mDestination, nat64ConvertedAddress));
+    if (nat64ConvertedAddress)
     {
-        // It might be an IPv4 address, let's have a try.
-        otIp4Address ip4Address;
-
-        SuccessOrExit(otIp4AddressFromString(aArgs[0].GetCString(), &ip4Address));
-        SuccessOrExit(error =
-                          otIp6AddressSynthesizeFromIp4Address(GetInstancePtr(), &ip4Address, &config.mDestination));
-
-        OutputFormat("Pinging IPv4-converted IPv6 addresses: ");
+        OutputFormat("Pinging IPv4-converted IPv6 address: ");
         OutputIp6AddressLine(config.mDestination);
     }
-    SuccessOrExit(error);
 
     if (!aArgs[1].IsEmpty())
     {

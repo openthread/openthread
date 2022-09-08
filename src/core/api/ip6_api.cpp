@@ -294,18 +294,3 @@ const char *otIp6ProtoToString(uint8_t aIpProto)
 {
     return Ip6::Ip6::IpProtoToString(aIpProto);
 }
-
-otError otIp6AddressSynthesizeFromIp4Address(otInstance *        aInstance,
-                                             const otIp4Address *aIp4Address,
-                                             otIp6Address *      aIp6Address)
-{
-    otError                          err = OT_ERROR_NONE;
-    NetworkData::ExternalRouteConfig nat64Prefix;
-
-    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == OT_ERROR_NONE,
-                 err = OT_ERROR_INVALID_STATE);
-    AsCoreType(aIp6Address).SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), AsCoreType(aIp4Address));
-
-exit:
-    return err;
-}

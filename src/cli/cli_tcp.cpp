@@ -176,22 +176,17 @@ otError TcpExample::ProcessConnect(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
+    bool       nat64ConvertedAddress;
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
-    error = aArgs[0].ParseAsIp6Address(sockaddr.mAddress);
-    if (error != OT_ERROR_NONE && !aArgs[0].IsEmpty())
+    SuccessOrExit(error =
+                      aArgs[0].ParseAndConvertToIp6Address(GetInstancePtr(), sockaddr.mAddress, nat64ConvertedAddress));
+    if (nat64ConvertedAddress)
     {
-        // It might be an IPv4 address, let's have a try.
-        otIp4Address ip4Address;
-
-        SuccessOrExit(otIp4AddressFromString(aArgs[0].GetCString(), &ip4Address));
-        SuccessOrExit(error = otIp6AddressSynthesizeFromIp4Address(GetInstancePtr(), &ip4Address, &sockaddr.mAddress));
-
-        OutputFormat("Connecting to IPv4-converted IPv6 addresses: ");
+        OutputFormat("Connecting to IPv4-converted IPv6 address: ");
         OutputIp6AddressLine(sockaddr.mAddress);
     }
-    SuccessOrExit(error);
 
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
