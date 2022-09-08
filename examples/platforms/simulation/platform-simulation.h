@@ -40,6 +40,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -65,8 +66,10 @@ enum
     OT_SIM_EVENT_ALARM_FIRED         = 0,
     OT_SIM_EVENT_RADIO_RECEIVED      = 1,
     OT_SIM_EVENT_UART_WRITE          = 2,
-    OT_SIM_EVENT_RADIO_SPINEL_WRITE  = 3,
+    //OT_SIM_EVENT_RADIO_SPINEL_WRITE  = 3,
+    //OT_SIM_EVENT_POSTCMD             = 4,
     OT_SIM_EVENT_OTNS_STATUS_PUSH    = 5,
+    OT_SIM_EVENT_RADIO_RX            = 16,
     OT_SIM_EVENT_RADIO_TX            = 17,
     OT_SIM_EVENT_RADIO_TX_DONE       = 18,
 
@@ -76,22 +79,34 @@ enum
 OT_TOOL_PACKED_BEGIN
 struct Event
 {
-    uint64_t mMsgId;      // message id (for debug purposes only - TODO remove when not needed anymore)
-    uint32_t mNodeId;     // node ID should equal gNodeId for events to/from this node.
-    uint64_t mDelay;      // time delay in us that is applied prior to event execution
-    uint8_t  mEvent;      // event type
-    uint8_t  mError;      // status code result of radio operation
-    int8_t   mRssi;       // RSSI value (dBm) for a received radio frame
-    int8_t   mTxPower;    // Tx-power (dBm) for a radio frame
-    int8_t   mCcaEdTresh; // CCA Energy Detect threshold (dBm) used by transmitter or receiver
-    uint16_t mDataLength; // number of bytes following in mData
-    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE]; // frame data, must be last field of struct
+    uint64_t mDelay;
+    uint8_t  mEvent;
+    uint16_t mDataLength;
+    uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
-enum
+OT_TOOL_PACKED_BEGIN
+struct TxEventData
 {
-    MAX_NETWORK_SIZE = OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE,
-};
+    uint8_t  mChannel;
+    int8_t   mTxPower;    // Tx-power (dBm) for a radio frame
+    int8_t   mCcaEdTresh; // CCA Energy Detect threshold (dBm) used by transmitter
+} OT_TOOL_PACKED_END;
+
+OT_TOOL_PACKED_BEGIN
+struct RxEventData
+{
+    uint8_t  mChannel;
+    uint8_t  mError;      // status code result of radio operation
+    int8_t   mRssi;       // RSSI value (dBm) for a received radio frame
+} OT_TOOL_PACKED_END;
+
+OT_TOOL_PACKED_BEGIN
+struct TxDoneEventData
+{
+    uint8_t  mChannel;
+    uint8_t  mError;      // status code result of radio operation
+} OT_TOOL_PACKED_END;
 
 /**
  * Unique node ID.
@@ -163,20 +178,19 @@ void platformRadioDeinit(void);
  * @param[in]  aInstance   A pointer to the OpenThread instance.
  * @param[in]  aBuf        A pointer to the received radio frame (struct RadioMessage).
  * @param[in]  aBufLength  The size of the received radio frame (struct RadioMessage).
- * @param[in]  aRssi       The RSSI (dBm) of the received radio frame.
- * @param[in]  aError      The status code result of decoding the virtual radio frame.
+ * @param[in]  aRxParams   Optional pointer to parameters related to the reception event, or NULL if none were given.
  *
  */
-void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, int8_t aRssi, otError aError);
+void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, struct RxEventData *aRxParams);
 
 /**
  * This function signals that virtual radio is done transmitting a single frame.
  *
- * @param[in]  aInstance   A pointer to the OpenThread instance.
- * @param[in]  aError      The status code result of the attempt to transmit the virtual radio frame.
+ * @param[in]  aInstance     A pointer to the OpenThread instance.
+ * @param[in]  aTxDoneParams A pointer to status parameters for the attempt to transmit the virtual radio frame.
  *
  */
-void platformRadioTransmitDone(otInstance *aInstance, otError aError);
+void platformRadioTransmitDone(otInstance *aInstance, struct TxDoneEventData *aTxDoneParams);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
@@ -228,13 +242,30 @@ void platformUartProcess(void);
 void platformUartRestore(void);
 
 /**
- * This function sends a simulation event. It also writes those fields into the
- * event that are the same for all types of events.
+ * This function sends a generic simulation event to the simulator. Event fields are
+ * updated to the values as were used for sending it.
  *
- * @param[in,out]   aEvent  A pointer to the simulation event to send
+ * @param[in,out]   aEvent  A pointer to the simulation event to send.
  *
  */
 void otSimSendEvent(struct Event *aEvent);
+
+/**
+ * This function sends a sleep event to the simulator. The amount of time to sleep
+ * for this node is determined by the alarm timer, by calling platformAlarmGetNext().
+ */
+void otSimSendSleepEvent(void);
+
+/**
+ * This function sends a Radio Tx simulation event to the simulator. aEvent fields are
+* updated to the values as were used for sending it.
+ *
+ * @param[in,out]   aEvent       A pointer to the simulation event to send.
+ * @param[in]       aTxEventData A pointer to specific data for Radio Tx event.
+ * @param[in]       aPayload     A pointer to the data payload (radio frame) to send.
+ * @param[in]       aLenPayload  Length of aPayload data.
+ */
+void otSimSendRadioTxEvent(struct Event *aEvent, struct TxEventData *aTxEventData, uint8_t *aPayload, size_t aLenPayload);
 
 /**
  * This function sends Uart data through simulation.

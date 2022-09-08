@@ -71,28 +71,7 @@ static void handleSignal(int aSignal)
     gTerminate = true;
 }
 
-void otSimSendEvent(struct Event *aEvent)
-{
-    ssize_t            rval;
-    struct sockaddr_in sockaddr;
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-    sockaddr.sin_port = htons(9000 + sPortOffset);
-    aEvent->mNodeId   = gNodeId;
-    aEvent->mMsgId    = gLastMsgId;
-
-    // send header and data.
-    rval = sendto(sSockFd, aEvent, offsetof(struct Event, mData) + aEvent->mDataLength, 0, (struct sockaddr *)&sockaddr,
-                  sizeof(sockaddr));
-
-    if (rval < 0)
-    {
-        perror("sendto");
-        exit(EXIT_FAILURE);
-    }
-}
-
+#define VERIFY_EVENT_SIZE(X) if ((uint16_t)rval < sizeof(struct X)) assert(false && "event payload too small");
 static void receiveEvent(otInstance *aInstance)
 {
     struct Event event;
@@ -103,15 +82,8 @@ static void receiveEvent(otInstance *aInstance)
         perror("recvfrom");
         exit(EXIT_FAILURE);
     }
-    if (event.mNodeId != gNodeId)
-    {
-        perror("mNodeId != gNodeId");
-        exit(EXIT_FAILURE);
-    }
 
     platformAlarmAdvanceNow(event.mDelay);
-    if (event.mMsgId > gLastMsgId)
-        gLastMsgId = event.mMsgId;
 
     switch (event.mEvent)
     {
@@ -123,32 +95,23 @@ static void receiveEvent(otInstance *aInstance)
         break;
 
     case OT_SIM_EVENT_RADIO_RECEIVED:
-        platformRadioReceive(aInstance, event.mData, event.mDataLength, event.mRssi, event.mError);
+        platformRadioReceive(aInstance, event.mData, event.mDataLength, NULL);
+        break;
+
+    case OT_SIM_EVENT_RADIO_RX:
+        VERIFY_EVENT_SIZE(RxEventData);
+        platformRadioReceive(aInstance, event.mData + sizeof(struct RxEventData),
+                             event.mDataLength - sizeof(struct RxEventData), (struct RxEventData *) event.mData);
         break;
 
     case OT_SIM_EVENT_RADIO_TX_DONE:
         // the external RF simulator determines success/error of Tx, and must report an otError code.
-        platformRadioTransmitDone(aInstance, event.mError);
+        platformRadioTransmitDone(aInstance, (struct TxDoneEventData *) event.mData);
         break;
 
     default:
         assert(false);
     }
-}
-
-static void platformSendSleepEvent(void)
-{
-    struct Event event;
-    assert(platformAlarmGetNext() > 0);
-
-    event.mDelay      = platformAlarmGetNext();
-    event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
-    event.mDataLength = 0;
-    event.mRssi = 0;
-    event.mTxPower = 0;
-    event.mCcaEdTresh = 0;
-
-    otSimSendEvent(&event);
 }
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
@@ -173,10 +136,6 @@ otError otPlatUartSend(const uint8_t *aData, uint16_t aLength)
 
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_UART_WRITE;
-    event.mError      = OT_ERROR_NONE;
-    event.mRssi = 0;
-    event.mTxPower = 0;
-    event.mCcaEdTresh = 0;
     event.mDataLength = aLength;
     memcpy(event.mData, aData, aLength);
 
@@ -213,7 +172,7 @@ static void socket_init(void)
             exit(EXIT_FAILURE);
         }
 
-        sPortOffset *= (MAX_NETWORK_SIZE + 1);
+        sPortOffset *= (OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE + 1);
     }
 
     sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset + gNodeId));
@@ -257,7 +216,7 @@ void otSysInit(int argc, char *argv[])
 
     gNodeId = (uint32_t)strtol(argv[1], &endptr, 0);
 
-    if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
+    if (*endptr != '\0' || gNodeId < 1 || gNodeId > OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE)
     {
         fprintf(stderr, "Invalid NodeId: %s\n", argv[1]);
         exit(EXIT_FAILURE);
@@ -309,7 +268,7 @@ void otSysProcessDrivers(otInstance *aInstance)
 
     if (!otTaskletsArePending(aInstance) && platformAlarmGetNext() > 0 && !platformRadioIsTransmitPending())
     {
-        platformSendSleepEvent();
+        otSimSendSleepEvent();
 
         rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, NULL);
 
@@ -338,15 +297,15 @@ void otPlatOtnsStatus(const char *aStatus)
 {
     struct Event event;
     uint16_t     statusLength = (uint16_t)strlen(aStatus);
-    assert(statusLength < sizeof(event.mData));
+    if (statusLength > sizeof(event.mData)){
+        statusLength = sizeof(event.mData);
+        assert(statusLength <= sizeof (event.mData));
+    }
 
     memcpy(event.mData, aStatus, statusLength);
     event.mDataLength = statusLength;
     event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_OTNS_STATUS_PUSH;
-    event.mRssi = 0;
-    event.mTxPower = 0;
-    event.mCcaEdTresh = 0;
 
     otSimSendEvent(&event);
 }

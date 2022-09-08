@@ -53,18 +53,11 @@
 
 enum
 {
-    IEEE802154_ACK_LENGTH = 5,
-
-    IEEE802154_FRAME_TYPE_ACK = 2 << 0,
-
-    IEEE802154_FRAME_PENDING = 1 << 4,
-};
-
-enum
-{
     SIM_RECEIVE_SENSITIVITY            = -100, // dBm
     SIM_CCA_ENERGY_DETECT_THRESHOLD    = SIM_RECEIVE_SENSITIVITY + 9,  // dBm, mandatory < 10 dB above
     SIM_TX_POWER                       = 0,    // dBm
+    kMinChannel                        = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
+    kMaxChannel                        = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
 };
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
@@ -80,12 +73,6 @@ static uint16_t sPort       = 0;
 static int8_t   sEnergyScanResult  = OT_RADIO_RSSI_INVALID;
 static bool     sEnergyScanning    = false;
 static uint32_t sEnergyScanEndTime = 0;
-
-enum
-{
-    SIM_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
-    SIM_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
-};
 
 OT_TOOL_PACKED_BEGIN
 struct RadioMessage
@@ -124,11 +111,6 @@ static int8_t         sCcaEdThresh = SIM_CCA_ENERGY_DETECT_THRESHOLD;
 static int8_t         sLnaGain     = 0;
 static uint16_t       sRegionCode  = 0;
 
-enum
-{
-    kMinChannel = 11,
-    kMaxChannel = 26,
-};
 static int8_t  sChannelMaxTransmitPower[kMaxChannel - kMinChannel + 1];
 static uint8_t sCurrentChannel = kMinChannel;
 
@@ -517,10 +499,11 @@ static int8_t GetRssi(uint16_t aChannel)
 {
     int8_t rssi = OT_RADIO_RSSI_INVALID;
 
-    otEXPECT((SIM_RADIO_CHANNEL_MIN <= aChannel) && aChannel <= (SIM_RADIO_CHANNEL_MAX));
+    otEXPECT((kMinChannel <= aChannel) && aChannel <= (kMaxChannel));
 
     // get RSSI from last frame's Rx info. Should be OT_RADIO_RSSI_INVALID if nothing was ever
     // received yet.
+    // TODO: for energy scan (not yet supported), need to ask simulator for RSSI.
     rssi = sReceiveFrame.mInfo.mRxInfo.mRssi;
 
 exit:
@@ -720,43 +703,51 @@ bool platformRadioIsTransmitPending(void)
 }
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
-void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, int8_t aRssi, otError aError)
+void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, struct RxEventData *aRxParams)
 {
+    struct RxEventData defaultRxEventData;
     assert(sizeof(sReceiveMessage) >= aBufLength);
-    otEXPECT(sReceiveFrame.mChannel == aBuf[0]); // Only process RadioMessages on my current listening channel.
+    if (aRxParams == NULL)
+    {
+        defaultRxEventData.mChannel = aBuf[0];
+        defaultRxEventData.mError   = OT_ERROR_NONE;
+        defaultRxEventData.mRssi    = -60;
+        aRxParams                   = &defaultRxEventData;
+    }
+    otEXPECT(sReceiveFrame.mChannel == aRxParams->mChannel); // if frame not on my listening channel, ignore.
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT); // Only process in valid states.
 
     memcpy(&sReceiveMessage, aBuf, aBufLength);
     sReceiveFrame.mLength                  = (uint8_t)(aBufLength - offsetof(struct RadioMessage, mPsdu));
-    sReceiveFrame.mInfo.mRxInfo.mRssi      = aRssi;
+    sReceiveFrame.mInfo.mRxInfo.mRssi      = aRxParams->mRssi;
     sReceiveFrame.mInfo.mRxInfo.mLqi       = OT_RADIO_LQI_NONE; // No support of LQI reporting.
     sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();   // Timestamp moment of complete frame reception.
 
-    radioReceive(aInstance, aError);
+    radioReceive(aInstance, aRxParams->mError);
 
 exit:
     return;
 }
 
-void platformRadioTransmitDone(otInstance *aInstance, otError aError)
+void platformRadioTransmitDone(otInstance *aInstance, struct TxDoneEventData *aTxDoneParams)
 {
     if (sState == OT_RADIO_STATE_TRANSMIT)
     {
         if (!otMacFrameIsAckRequested(
                 &sTransmitFrame) || // not waiting for ACK: transition to Rx state; see state diagram.
-            aError != OT_ERROR_NONE)
+            aTxDoneParams->mError != OT_ERROR_NONE)
         { // also in case of Tx failure: no wait for ACK, abort current Tx.
             sState  = OT_RADIO_STATE_RECEIVE;
             sTxWait = false;
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, aError);
+                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, aTxDoneParams->mError);
             }
             else
 #endif
             {
-                otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, aError);
+                otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, aTxDoneParams->mError);
             }
         }
     }
@@ -891,19 +882,15 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     }
 #else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     struct Event event;
+    struct TxEventData txEvent;
 
-    // FIXME: code does not follow the separation of concerns ('event' should be in platform-sim.c only)
-    int8_t maxPower   = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
-    event.mDelay      = 1; // 1us delay to let transmitted frame arrive in simulated radio chip
-    event.mEvent      = OT_SIM_EVENT_RADIO_TX;
-    event.mTxPower    = sTxPower < maxPower ? sTxPower : maxPower;
-    event.mCcaEdTresh = sCcaEdThresh;
-    event.mError      = OT_ERROR_NONE;
-    event.mRssi       = OT_RADIO_RSSI_INVALID;
-    event.mDataLength = offsetof(struct RadioMessage, mPsdu) + aFrame->mLength;
-    memcpy(event.mData, aMessage, event.mDataLength);
+    int8_t maxPower     = sChannelMaxTransmitPower[sCurrentChannel - kMinChannel];
+    event.mDelay        = 1; // 1us delay to let transmitted frame arrive in simulated radio chip
+    txEvent.mChannel    = aFrame->mChannel;
+    txEvent.mTxPower    = sTxPower < maxPower ? sTxPower : maxPower;
+    txEvent.mCcaEdTresh = sCcaEdThresh;
 
-    otSimSendEvent(&event);
+    otSimSendRadioTxEvent(&event, &txEvent, aMessage->mPsdu, aFrame->mLength);
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
@@ -1044,7 +1031,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     otError error = OT_ERROR_NONE;
 
     assert(aInstance != NULL);
-    assert(aScanChannel >= SIM_RADIO_CHANNEL_MIN && aScanChannel <= SIM_RADIO_CHANNEL_MAX);
+    assert(aScanChannel >= kMinChannel && aScanChannel <= kMaxChannel);
     assert(aScanDuration > 0);
 
     otEXPECT_ACTION((gRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN), error = OT_ERROR_NOT_IMPLEMENTED);
