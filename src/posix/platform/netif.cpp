@@ -1641,14 +1641,6 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 
     VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
 
-    if (aPlatformConfig->mPersistentInterface)
-    {
-        if (gInstance != nullptr && otIp6IsEnabled(gInstance))
-        {
-            SetLinkState(gInstance, true);
-        }
-    }
-
     ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
     VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
 }
