@@ -13,10 +13,10 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 1. Open the JSON format configuration file `tools/harness-simulation/posix/simulation.conf`:
 
    - Edit the value of `ot_path` to the absolute path where the top directory of the OpenThread repository is located. For example, change the value of `ot_path` to `/home/<username>/repo/openthread`.
-   - For each entry in `ot_build.ot`, update the value of number to be the number of OT FTD simulations needed with the corresponding version.
-   - For each entry in `ot_build.otbr`, update the value of number to be the number of OTBR simulations needed with the corresponding version.
+   - For each entry in `ot_build.ot`, update the value of `number` to be the number of OT FTD simulations needed with the corresponding version.
+   - For each entry in `ot_build.otbr`, update the value of `number` to be the number of OTBR simulations needed with the corresponding version.
    - The numbers above can be adjusted according to the requirement of test cases.
-   - Edit the value of `ssh.username` to the username to be used for connecting to on the remote POSIX environment.
+   - Edit the value of `ssh.username` to the username to be used for connecting to the remote POSIX environment.
    - Edit the value of `ssh.password` to the password corresponding to the username above.
    - Edit the value of `discovery_ifname` to the network interface that the Harness will connect to.
 
