@@ -152,6 +152,7 @@ check_PROGRAMS                                                     += \
     ot-test-serial-number                                             \
     ot-test-routing-manager                                           \
     ot-test-smart-ptrs                                                \
+    ot-test-srp-server                                                \
     ot-test-string                                                    \
     ot-test-timer                                                     \
     $(NULL)
@@ -365,6 +366,10 @@ ot_test_routing_manager_SOURCES      = $(COMMON_SOURCES) test_routing_manager.cp
 ot_test_serial_number_LDADD         = $(COMMON_LDADD)
 ot_test_serial_number_LIBTOOLFLAGS  = $(COMMON_LIBTOOLFLAGS)
 ot_test_serial_number_SOURCES       = $(COMMON_SOURCES) test_serial_number.cpp
+
+ot_test_srp_server_LDADD            = $(COMMON_LDADD)
+ot_test_srp_server_LIBTOOLFLAGS     = $(COMMON_LIBTOOLFLAGS)
+ot_test_srp_server_SOURCES          = $(COMMON_SOURCES) test_srp_server.cpp
 
 ot_test_string_LDADD                = $(COMMON_LDADD)
 ot_test_string_LIBTOOLFLAGS         = $(COMMON_LIBTOOLFLAGS)
