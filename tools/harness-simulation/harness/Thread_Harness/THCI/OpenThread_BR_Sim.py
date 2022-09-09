@@ -39,11 +39,14 @@ import pipes
 import sys
 import time
 
+from THCI.IThci import IThci
 from THCI.OpenThread import watched
 from THCI.OpenThread_BR import OpenThread_BR
-from simulation.config import (REMOTE_USERNAME, REMOTE_PASSWORD, REMOTE_PORT)
+from simulation.config import load_config
 
 logging.getLogger('paramiko').setLevel(logging.WARNING)
+
+config = load_config()
 
 
 class SSHHandle(object):
@@ -109,11 +112,8 @@ class SSHHandle(object):
 class OpenThread_BR_Sim(OpenThread_BR):
 
     def _getHandle(self):
-        assert self.connectType == 'ip'
-        assert '@' in self.telnetIp
         self.log('SSH connecting ...')
-        docker_name, ssh_ip = self.telnetIp.split('@')
-        return SSHHandle(ssh_ip, self.telnetPort, self.telnetUsername, self.telnetPassword, docker_name)
+        return SSHHandle(self.ssh_ip, self.telnetPort, self.telnetUsername, self.telnetPassword, self.docker_name)
 
     @watched
     def _parseConnectionParams(self, params):
@@ -121,15 +121,19 @@ class OpenThread_BR_Sim(OpenThread_BR):
         if '@' not in discovery_add:
             raise ValueError('%r in the field `add` is invalid' % discovery_add)
 
-        docker_name, ssh_ip = discovery_add.split('@')
+        self.docker_name, self.ssh_ip = discovery_add.split('@')
+        self.tag, self.node_id = self.docker_name.split('_')
         # Let it crash if it is an invalid IP address
-        ipaddress.ip_address(ssh_ip)
+        ipaddress.ip_address(self.ssh_ip)
 
         self.connectType = 'ip'
         self.telnetIp = self.port = discovery_add
-        self.telnetPort = REMOTE_PORT
-        self.telnetUsername = REMOTE_USERNAME
-        self.telnetPassword = REMOTE_PASSWORD
+
+        global config
+        ssh = config['ssh']
+        self.telnetPort = ssh['port']
+        self.telnetUsername = ssh['username']
+        self.telnetPassword = ssh['password']
 
         self.extraParams = {
             'cmd-start-otbr-agent': 'service otbr-agent start',
@@ -137,3 +141,6 @@ class OpenThread_BR_Sim(OpenThread_BR):
             'cmd-restart-otbr-agent': 'service otbr-agent restart',
             'cmd-restart-radvd': 'service radvd stop; service radvd start',
         }
+
+
+assert issubclass(OpenThread_BR_Sim, IThci)

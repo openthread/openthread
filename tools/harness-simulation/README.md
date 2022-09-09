@@ -10,33 +10,19 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 ## POSIX Environment Setup
 
-1. Build OpenThread to generate standalone OpenThread simulation `ot-cli-ftd`. For example, to run OpenThread 1.2 test cases, run the following command in the top directory of OpenThread:
+1. Open the JSON format configuration file `tools/harness-simulation/posix/simulation.conf`:
 
-   ```bash
-   $ CFLAGS='-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8' \
-     CXXFLAGS='-DOPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS=8' \
-     script/cmake-build simulation \
-         -DOT_THREAD_VERSION=1.2 \
-         -DOT_DUA=ON \
-         -DOT_MLR=ON \
-         -DOT_COMMISSIONER=ON \
-         -DOT_CSL_RECEIVER=ON \
-         -DOT_SIMULATION_MAX_NETWORK_SIZE=64
-   ```
+   - Edit the value of `ot_path` to the absolute path where the top directory of the OpenThread repository is located. For example, change the value of `ot_path` to `/home/<username>/repo/openthread`.
+   - For each entry in `ot_build.ot`, update the value of `number` to be the number of OT FTD simulations needed with the corresponding version.
+   - For each entry in `ot_build.otbr`, update the value of `number` to be the number of OTBR simulations needed with the corresponding version.
+   - The numbers above can be adjusted according to the requirement of test cases.
+   - Edit the value of `ssh.username` to the username to be used for connecting to the remote POSIX environment.
+   - Edit the value of `ssh.password` to the password corresponding to the username above.
+   - Edit the value of `discovery_ifname` to the network interface that the Harness will connect to.
 
-   Then `ot-cli-ftd` is built in the directory `build/simulation/examples/apps/cli/`.
+   Note that it may be time-consuming to build all versions of `ot-cli-ftd`s and OTBR Docker images especially on devices such as Raspberry Pis.
 
-2. Open the configuration file `config.py`:
-
-   - Edit the value of `OT_PATH` to the absolute path where the top directory of the OpenThread repository is located. For example, change the value of `OT_PATH` to `/home/<username>/repo/openthread`.
-
-3. Run the `build_docker_image.sh` with the environment variable `OT_PATH` set properly. `OT_PATH` should be the same as that in the previous step. For example run the following command:
-
-   ```bash
-   $ OT_PATH=~/repo/openthread ./build_docker_image.sh
-   ```
-
-4. Run the installation script.
+2. Run the installation script.
 
    ```bash
    $ tools/harness-simulation/posix/install.sh
@@ -44,33 +30,23 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 ## Test Harness Environment Setup
 
-1. Double click the file `harness\install.bat` on the machine which installed Harness.
+1. Copy the directory `tools/harness-simulation` from the POSIX machine to the Windows machine, and then switch to that directory.
 
-2. Check the configuration file `C:\GRL\Thread1.2\Thread_Harness\simulation\config.py`
-
-   - Edit the value of `REMOTE_USERNAME` to the username expected to connect to on the remote POSIX environment.
-   - Edit the value of `REMOTE_PASSWORD` to the password corresponding to the username above.
-   - Edit the value of `REMOTE_OT_PATH` to the absolute path where the top directory of the OpenThread repository is located.
+2. Double click the file `harness\install.bat` on Windows.
 
 3. Add the additional simulation device information in `harness\Web\data\deviceInputFields.xml` to `C:\GRL\Thread1.2\Web\data\deviceInputFields.xml`.
 
 ## Run Test Harness on Simulation
 
-1. On POSIX machine, change directory to the top of OpenThread repository, and run the following commands.
+1. On the POSIX machine, change directory to the top of the OpenThread repository, and run the following commands.
 
    ```bash
    $ cd tools/harness-simulation/posix
-   $ python3 launch_testbed.py \
-         --interface=eth0      \
-         --ot=6                \
-         --otbr=4              \
-         --sniffer=2
+   $ ./launch_testbed.py -c simulation.conf
    ```
 
-   This example starts 6 OT FTD simulations, 4 OTBR simulations, and 2 sniffer simulations and can be discovered on `eth0`.
+   This example starts several OT FTD simulations, OTBR simulations, and sniffer simulations and can be discovered on `eth0`. The number of each type of simulation is specified in the configuration file `simulation.conf`.
 
-   The arguments can be adjusted according to the requirement of test cases.
-
-2. Run Test Harness. The information field of the device is encoded as `<node_id>@<ip_addr>` for FTDs and `otbr_<node_id>@<ip_addr>` for BRs. Choose the proper device as the DUT accordingly.
+2. Run the Test Harness. The information field of the device is encoded as `<tag>_<node_id>@<ip_addr>`. Choose the desired device as the DUT.
 
 3. Select one or more test cases to start the test.
