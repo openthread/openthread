@@ -34,6 +34,7 @@
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/message.h>
+#include <openthread/srp_server.h>
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
@@ -58,6 +59,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     IgnoreError(otLinkSetPanId(instance, panId));
     IgnoreError(otIp6SetEnabled(instance, true));
     IgnoreError(otThreadSetEnabled(instance, true));
+    otSrpServerSetEnabled(instance, true);
     IgnoreError(otThreadBecomeLeader(instance));
 
     settings.mLinkSecurityEnabled = (data[0] & 0x1) != 0;
