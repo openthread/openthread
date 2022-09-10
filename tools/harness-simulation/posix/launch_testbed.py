@@ -41,12 +41,6 @@ import subprocess
 import sys
 from typing import Iterable
 
-from config import (
-    MAX_NODES_NUM,
-    MAX_SNIFFER_NUM,
-    SNIFFER_SERVER_PORT_BASE,
-    OTBR_DOCKER_NAME_PREFIX,
-)
 from otbr_sim import otbr_docker
 
 GROUP = 'ff02::114'
@@ -94,34 +88,37 @@ def _advertise(s: socket.socket, dst, info):
     s.sendto(json.dumps(info).encode('utf-8'), dst)
 
 
-def advertise_devices(s: socket.socket, dst, ven: str, add: str, nodeids: Iterable[int], prefix: str = ''):
+def advertise_devices(s: socket.socket, dst, ven: str, add: str, nodeids: Iterable[int], tag: str):
     for nodeid in nodeids:
         info = {
             'ven': ven,
             'mod': 'OpenThread',
             'ver': '4',
-            'add': f'{prefix}{nodeid}@{add}',
+            'add': f'{tag}_{nodeid}@{add}',
             'por': 22,
         }
         _advertise(s, dst, info)
 
 
-def advertise_sniffers(s: socket.socket, dst, add: str, number: int):
-    for i in range(number):
+def advertise_sniffers(s: socket.socket, dst, add: str, ports: Iterable[int]):
+    for port in ports:
         info = {
             'add': add,
-            'por': i + SNIFFER_SERVER_PORT_BASE,
+            'por': port,
         }
         _advertise(s, dst, info)
 
 
-def start_sniffer(addr: str, port: int) -> subprocess.Popen:
+def start_sniffer(addr: str, port: int, ot_path: str) -> subprocess.Popen:
     if isinstance(ipaddress.ip_address(addr), ipaddress.IPv6Address):
         server = f'[{addr}]:{port}'
     else:
         server = f'{addr}:{port}'
 
-    cmd = ['python3', 'sniffer_sim/sniffer.py', '--grpc-server', server]
+    cmd = [
+        'python3',
+        os.path.join(ot_path, 'tools/harness-simulation/posix/sniffer_sim/sniffer.py'), '--grpc-server', server
+    ]
     logging.info('Executing command:  %s', ' '.join(cmd))
     return subprocess.Popen(cmd)
 
@@ -131,79 +128,74 @@ def main():
 
     # Parse arguments
     parser = argparse.ArgumentParser()
-
-    # Determine the interface
-    parser.add_argument('-i',
-                        '--interface',
-                        dest='ifname',
+    parser.add_argument('-c',
+                        '--config',
+                        dest='config',
                         type=str,
                         required=True,
-                        help='the interface used for discovery')
-
-    # Determine the number of OpenThread FTD simulations to be "detected" and then started
-    parser.add_argument('--ot',
-                        dest='ot_num',
-                        type=int,
-                        required=False,
-                        default=0,
-                        help=f'the number of OpenThread FTD simulations')
-
-    # Determine the number of OpenThread BR simulations to be initiated and then detected
-    parser.add_argument('--otbr',
-                        dest='otbr_num',
-                        type=int,
-                        required=False,
-                        default=0,
-                        help=f'the number of OpenThread BR simulations')
-
-    # Determine the number of sniffer simulations to be started and then detected
-    parser.add_argument('--sniffer',
-                        dest='sniffer_num',
-                        type=int,
-                        required=False,
-                        default=0,
-                        help=f'the number of sniffer simulations, no more than {MAX_SNIFFER_NUM}')
-
+                        help='the path of the configuration JSON file')
     args = parser.parse_args()
+    with open(args.config, 'rt') as f:
+        config = json.load(f)
 
-    # Check validation of arguments
-    if args.ot_num < 0:
-        raise ValueError(f'The number of FTDs should be non-negative')
+    ot_path = config['ot_path']
+    ot_build = config['ot_build']
+    max_nodes_num = ot_build['max_number']
+    # No test case requires more than 2 sniffers
+    MAX_SNIFFER_NUM = 2
 
-    if args.otbr_num < 0:
-        raise ValueError(f'The number of OTBRs should be non-negative')
+    ot_devices = [(item['tag'], item['number']) for item in ot_build['ot']]
+    otbr_devices = [(item['tag'], item['number']) for item in ot_build['otbr']]
+    ot_nodes_num = sum(x[1] for x in ot_devices)
+    otbr_nodes_num = sum(x[1] for x in otbr_devices)
+    nodes_num = ot_nodes_num + otbr_nodes_num
+    sniffer_num = config['sniffer']['number']
 
-    if not 0 <= args.sniffer_num <= MAX_SNIFFER_NUM:
-        raise ValueError(f'The number of sniffers should be between 0 and {MAX_SNIFFER_NUM}')
+    # Check validation of numbers
+    if not all(0 <= x[1] <= max_nodes_num for x in ot_devices):
+        raise ValueError(f'The number of devices of each OT version should be between 0 and {max_nodes_num}')
 
-    if args.ot_num == args.otbr_num == 0:
-        raise ValueError('At least one device is required')
+    if not all(0 <= x[1] <= max_nodes_num for x in otbr_devices):
+        raise ValueError(f'The number of devices of each OTBR version should be between 0 and {max_nodes_num}')
 
-    if args.sniffer_num == 0:
-        raise ValueError('At least one sniffer is required')
+    if not 1 <= nodes_num <= max_nodes_num:
+        raise ValueError(f'The number of devices should be between 1 and {max_nodes_num}')
 
-    if args.ot_num + args.otbr_num > MAX_NODES_NUM:
-        raise ValueError(f'The number of all devices should be no more than {MAX_NODES_NUM}')
+    if not 1 <= sniffer_num <= MAX_SNIFFER_NUM:
+        raise ValueError(f'The number of sniffers should be between 1 and {MAX_SNIFFER_NUM}')
 
     # Get the local IP address on the specified interface
-    addr = get_ipaddr(args.ifname)
+    ifname = config['discovery_ifname']
+    addr = get_ipaddr(ifname)
 
     # Start the sniffer
+    sniffer_server_port_base = config['sniffer']['server_port_base']
     sniffer_procs = []
-    for i in range(args.sniffer_num):
-        sniffer_procs.append(start_sniffer(addr, i + SNIFFER_SERVER_PORT_BASE))
+    for i in range(sniffer_num):
+        sniffer_procs.append(start_sniffer(addr, i + sniffer_server_port_base, ot_path))
 
     # OTBR firewall scripts create rules inside the Docker container
     # Run modprobe to load the kernel modules for iptables
     subprocess.run(['sudo', 'modprobe', 'ip6table_filter'])
     # Start the BRs
     otbr_dockers = []
-    for nodeid in range(args.ot_num + 1, args.ot_num + args.otbr_num + 1):
-        otbr_dockers.append(otbr_docker.OtbrDocker(nodeid, OTBR_DOCKER_NAME_PREFIX + str(nodeid)))
+    nodeid = ot_nodes_num
+    for item in ot_build['otbr']:
+        tag = item['tag']
+        ot_rcp_path = os.path.join(ot_path, item['rcp_subpath'], 'examples/apps/ncp/ot-rcp')
+        docker_image = item['docker_image']
+        for _ in range(item['number']):
+            nodeid += 1
+            otbr_dockers.append(
+                otbr_docker.OtbrDocker(nodeid=nodeid,
+                                       ot_path=ot_path,
+                                       ot_rcp_path=ot_rcp_path,
+                                       docker_image=docker_image,
+                                       docker_name=f'{tag}_{nodeid}'))
 
-    s = init_socket(args.ifname, GROUP, PORT)
+    s = init_socket(ifname, GROUP, PORT)
 
-    logging.info('Advertising on interface %s group %s ...', args.ifname, GROUP)
+    logging.info('Advertising on interface %s group %s ...', ifname, GROUP)
 
     # Terminate all sniffer simulation server processes and then exit
     def exit_handler(signum, context):
@@ -227,17 +219,19 @@ def main():
 
         if data == b'BBR':
             logging.info('Received OpenThread simulation query, advertising')
-            advertise_devices(s, src, ven='OpenThread_Sim', add=addr, nodeids=range(1, args.ot_num + 1))
-            advertise_devices(s,
-                              src,
-                              ven='OpenThread_BR_Sim',
-                              add=addr,
-                              nodeids=range(args.ot_num + 1, args.ot_num + args.otbr_num + 1),
-                              prefix=OTBR_DOCKER_NAME_PREFIX)
+
+            nodeid = 1
+            for ven, devices in [('OpenThread_Sim', ot_devices), ('OpenThread_BR_Sim', otbr_devices)]:
+                for tag, number in devices:
+                    advertise_devices(s, src, ven=ven, add=addr, nodeids=range(nodeid, nodeid + number), tag=tag)
+                    nodeid += number
 
         elif data == b'Sniffer':
             logging.info('Received sniffer simulation query, advertising')
-            advertise_sniffers(s, src, add=addr, number=args.sniffer_num)
+            advertise_sniffers(s,
+                               src,
+                               add=addr,
+                               ports=range(sniffer_server_port_base, sniffer_server_port_base + sniffer_num))
 
         else:
             logging.warning('Received %r, but ignored', data)
