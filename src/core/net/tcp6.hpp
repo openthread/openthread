@@ -55,7 +55,16 @@ extern "C" {
 struct tcpcb;
 struct tcpcb_listen;
 struct tcplp_signals;
+
+/*
+ * The next two declarations intentionally change argument names from the
+ * original declarations in TCPlp, in order to comply with OpenThread's format.
+ */
+
+// NOLINTNEXTLINE(readability-inconsistent-declaration-parameter-name)
 void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
+
+// NOLINTNEXTLINE(readability-inconsistent-declaration-parameter-name)
 void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
 }
 
