@@ -50,9 +50,10 @@
 #include <openthread/platform/radio.h>
 
 #include "utils/uart.h"
+#include "core/common/debug.hpp"
 
-uint32_t gNodeId    = 1;
-uint64_t gLastMsgId = 0;
+uint32_t gNodeId        = 1;
+uint64_t gLastAlarmEventId = 0;
 
 extern bool          gPlatformPseudoResetWasRequested;
 static volatile bool gTerminate = false;
@@ -71,7 +72,7 @@ static void handleSignal(int aSignal)
     gTerminate = true;
 }
 
-#define VERIFY_EVENT_SIZE(X) if ((uint16_t)rval < sizeof(struct X)) assert(false && "event payload too small");
+#define VERIFY_EVENT_SIZE(X) OT_ASSERT((uint16_t)rval >= (sizeof(X) + offsetof(struct Event, mData)) && "event payload smaller than: " && sizeof(X) );
 static void receiveEvent(otInstance *aInstance)
 {
     struct Event event;
@@ -88,6 +89,11 @@ static void receiveEvent(otInstance *aInstance)
     switch (event.mEvent)
     {
     case OT_SIM_EVENT_ALARM_FIRED:
+        // store the optional msg id from payload
+        if ((uint16_t)rval >= sizeof(sizeof(gLastAlarmEventId)))
+        {
+            memcpy(&gLastAlarmEventId, event.mData, sizeof(gLastAlarmEventId));
+        }
         break;
 
     case OT_SIM_EVENT_UART_WRITE:
@@ -99,18 +105,18 @@ static void receiveEvent(otInstance *aInstance)
         break;
 
     case OT_SIM_EVENT_RADIO_RX:
-        VERIFY_EVENT_SIZE(RxEventData);
+        VERIFY_EVENT_SIZE(struct RxEventData)
         platformRadioReceive(aInstance, event.mData + sizeof(struct RxEventData),
                              event.mDataLength - sizeof(struct RxEventData), (struct RxEventData *) event.mData);
         break;
 
     case OT_SIM_EVENT_RADIO_TX_DONE:
-        // the external RF simulator determines success/error of Tx, and must report an otError code.
+        VERIFY_EVENT_SIZE(struct TxDoneEventData)
         platformRadioTransmitDone(aInstance, (struct TxDoneEventData *) event.mData);
         break;
 
     default:
-        assert(false);
+        OT_ASSERT(false && "Unrecognized event type received");
     }
 }
 
@@ -205,6 +211,7 @@ void otSysInit(int argc, char *argv[])
 
     if (argc != 2)
     {
+        fprintf(stderr, "Usage: %s <nodeNumber>\n", basename(argv[0]));
         exit(EXIT_FAILURE);
     }
 
@@ -218,7 +225,7 @@ void otSysInit(int argc, char *argv[])
 
     if (*endptr != '\0' || gNodeId < 1 || gNodeId > OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE)
     {
-        fprintf(stderr, "Invalid NodeId: %s\n", argv[1]);
+        fprintf(stderr, "Invalid NodeId: %s (must be 1-%i)\n", argv[1], OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE);
         exit(EXIT_FAILURE);
     }
 

@@ -63,12 +63,15 @@
 
 enum
 {
+    // Events for V1 method of simulation (0-15)
     OT_SIM_EVENT_ALARM_FIRED         = 0,
     OT_SIM_EVENT_RADIO_RECEIVED      = 1,
     OT_SIM_EVENT_UART_WRITE          = 2,
     //OT_SIM_EVENT_RADIO_SPINEL_WRITE  = 3,
     //OT_SIM_EVENT_POSTCMD             = 4,
     OT_SIM_EVENT_OTNS_STATUS_PUSH    = 5,
+
+    // Additional events for V2 method of simulation (16-47)
     OT_SIM_EVENT_RADIO_RX            = 16,
     OT_SIM_EVENT_RADIO_TX            = 17,
     OT_SIM_EVENT_RADIO_TX_DONE       = 18,
@@ -113,6 +116,11 @@ struct TxDoneEventData
  *
  */
 extern uint32_t gNodeId;
+
+/**
+ * ID of last received Alarm from simulator, or 0 if none received.
+ */
+extern uint64_t gLastAlarmEventId;
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -265,7 +273,7 @@ void otSimSendSleepEvent(void);
  * @param[in]       aPayload     A pointer to the data payload (radio frame) to send.
  * @param[in]       aLenPayload  Length of aPayload data.
  */
-void otSimSendRadioTxEvent(struct Event *aEvent, struct TxEventData *aTxEventData, uint8_t *aPayload, size_t aLenPayload);
+void otSimSendRadioTxEvent(struct Event *aEvent, struct TxEventData *aTxEventData,  const uint8_t *aPayload, size_t aLenPayload);
 
 /**
  * This function sends Uart data through simulation.

@@ -47,12 +47,12 @@ void otSimSendSleepEvent(void)
     event.mDelay      = platformAlarmGetNext();
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 8;
-    memcpy(&event.mData, &event, 8);
+    memcpy(&event.mData, &gLastAlarmEventId, 8);
 
     otSimSendEvent(&event);
 }
 
-void otSimSendRadioTxEvent(struct Event *aEvent, struct TxEventData *aTxEventData, uint8_t *aPayload, size_t aLenPayload) {
+void otSimSendRadioTxEvent(struct Event *aEvent, struct TxEventData *aTxEventData, const uint8_t *aPayload, size_t aLenPayload) {
 
     aEvent->mEvent = OT_SIM_EVENT_RADIO_TX;
     memcpy(aEvent->mData, aTxEventData, sizeof(struct TxEventData));

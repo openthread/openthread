@@ -890,7 +890,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     txEvent.mTxPower    = sTxPower < maxPower ? sTxPower : maxPower;
     txEvent.mCcaEdTresh = sCcaEdThresh;
 
-    otSimSendRadioTxEvent(&event, &txEvent, aMessage->mPsdu, aFrame->mLength);
+    otSimSendRadioTxEvent(&event, &txEvent, (const uint8_t*) aMessage, aFrame->mLength);
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 }
 
