@@ -74,9 +74,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     , mInfraIfNat64PrefixStaleTimer(aInstance, HandleInfraIfNat64PrefixStaleTimer)
 #endif
+    , mRsSender(aInstance)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
-    , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
-    , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
 {
     mFavoredDiscoveredOnLinkPrefix.Clear();
@@ -296,7 +295,7 @@ void RoutingManager::Start(void)
         mIsRunning = true;
         UpdateDiscoveredPrefixTableOnNetDataChange();
         mLocalOnLinkPrefix.Start();
-        StartRouterSolicitationDelay();
+        mRsSender.Start();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mInfraIfNat64PrefixStaleTimer.Start(0);
 #endif
@@ -332,8 +331,7 @@ void RoutingManager::Stop(void)
 
     mRaInfo.mTxCount = 0;
 
-    mRouterSolicitTimer.Stop();
-    mRouterSolicitCount = 0;
+    mRsSender.Stop();
 
     mRoutingPolicyTimer.Stop();
 
@@ -521,7 +519,7 @@ exit:
 
 void RoutingManager::EvaluateOnLinkPrefix(void)
 {
-    VerifyOrExit(!IsRouterSolicitationInProgress());
+    VerifyOrExit(!mRsSender.IsInProgress());
 
     mDiscoveredPrefixTable.FindFavoredOnLinkPrefix(mFavoredDiscoveredOnLinkPrefix);
 
@@ -673,46 +671,6 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
     LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", evaluateTime - now);
 
     mRoutingPolicyTimer.FireAtIfEarlier(evaluateTime);
-}
-
-// starts sending Router Solicitations in random delay
-// between 0 and kMaxRtrSolicitationDelay.
-void RoutingManager::StartRouterSolicitationDelay(void)
-{
-    uint32_t randomDelay;
-
-    VerifyOrExit(!IsRouterSolicitationInProgress());
-
-    OT_ASSERT(mRouterSolicitCount == 0);
-
-    static_assert(kMaxRtrSolicitationDelay > 0, "invalid maximum Router Solicitation delay");
-    randomDelay = Random::NonCrypto::GetUint32InRange(0, Time::SecToMsec(kMaxRtrSolicitationDelay));
-
-    LogInfo("Start Router Solicitation, scheduled in %u milliseconds", randomDelay);
-    mTimeRouterSolicitStart = TimerMilli::GetNow();
-    mRouterSolicitTimer.Start(randomDelay);
-
-exit:
-    return;
-}
-
-bool RoutingManager::IsRouterSolicitationInProgress(void) const
-{
-    return mRouterSolicitTimer.IsRunning() || mRouterSolicitCount > 0;
-}
-
-Error RoutingManager::SendRouterSolicitation(void)
-{
-    Ip6::Address                  destAddress;
-    Ip6::Nd::RouterSolicitMessage routerSolicit;
-    InfraIf::Icmp6Packet          packet;
-
-    OT_ASSERT(IsInitialized());
-
-    packet.InitFrom(routerSolicit);
-    destAddress.SetToLinkLocalAllRoutersMulticast();
-
-    return mInfraIf.Send(packet, destAddress);
 }
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
@@ -973,61 +931,25 @@ bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
            !aOnLinkPrefix.IsMulticast();
 }
 
-void RoutingManager::HandleRouterSolicitTimer(Timer &aTimer)
+void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
 {
-    aTimer.Get<RoutingManager>().HandleRouterSolicitTimer();
-}
+    // This is a callback from `RsSender` and is invoked when it
+    // finishes a cycle of sending Router Solicitations. `aStartTime`
+    // specifies the start time of the RS transmission cycle.
+    //
+    // We remove or deprecate old entries in discovered table that are
+    // not refreshed during Router Solicitation. We also invalidate
+    // the learned RA header if it is not refreshed during Router
+    // Solicitation.
 
-void RoutingManager::HandleRouterSolicitTimer(void)
-{
-    LogInfo("Router solicitation times out");
+    mDiscoveredPrefixTable.RemoveOrDeprecateOldEntries(aStartTime);
 
-    if (mRouterSolicitCount < kMaxRtrSolicitations)
+    if (mRaInfo.mHeaderUpdateTime <= aStartTime)
     {
-        uint32_t nextSolicitationDelay;
-        Error    error;
-
-        error = SendRouterSolicitation();
-
-        if (error == kErrorNone)
-        {
-            LogDebg("Successfully sent %uth Router Solicitation", mRouterSolicitCount);
-            ++mRouterSolicitCount;
-            nextSolicitationDelay =
-                (mRouterSolicitCount == kMaxRtrSolicitations) ? kMaxRtrSolicitationDelay : kRtrSolicitationInterval;
-        }
-        else
-        {
-            LogCrit("Failed to send %uth Router Solicitation: %s", mRouterSolicitCount, ErrorToString(error));
-
-            // It's unexpected that RS will fail and we will retry sending RS messages in 60 seconds.
-            // Notice that `mRouterSolicitCount` is not incremented for failed RS and thus we will
-            // not start configuring on-link prefixes before `kMaxRtrSolicitations` successful RS
-            // messages have been sent.
-            nextSolicitationDelay = kRtrSolicitationRetryDelay;
-            mRouterSolicitCount   = 0;
-        }
-
-        LogDebg("Router solicitation timer scheduled in %u seconds", nextSolicitationDelay);
-        mRouterSolicitTimer.Start(Time::SecToMsec(nextSolicitationDelay));
+        UpdateRouterAdvertHeader(/* aRouterAdvertMessage */ nullptr);
     }
-    else
-    {
-        // Remove route prefixes and deprecate on-link prefixes that
-        // are not refreshed during Router Solicitation.
-        mDiscoveredPrefixTable.RemoveOrDeprecateOldEntries(mTimeRouterSolicitStart);
 
-        // Invalidate the learned RA message if it is not refreshed during Router Solicitation.
-        if (mRaInfo.mHeaderUpdateTime <= mTimeRouterSolicitStart)
-        {
-            UpdateRouterAdvertHeader(/* aRouterAdvertMessage */ nullptr);
-        }
-
-        mRouterSolicitCount = 0;
-
-        // Re-evaluate our routing policy and send Router Advertisement if necessary.
-        ScheduleRoutingPolicyEvaluation(kImmediately);
-    }
+    ScheduleRoutingPolicyEvaluation(kImmediately);
 }
 
 void RoutingManager::HandleDiscoveredPrefixStaleTimer(Timer &aTimer)
@@ -1038,7 +960,7 @@ void RoutingManager::HandleDiscoveredPrefixStaleTimer(Timer &aTimer)
 void RoutingManager::HandleDiscoveredPrefixStaleTimer(void)
 {
     LogInfo("Stale On-Link or OMR Prefixes or RA messages are detected");
-    StartRouterSolicitationDelay();
+    mRsSender.Start();
 }
 
 void RoutingManager::HandleRoutingPolicyTimer(Timer &aTimer)
@@ -2310,6 +2232,89 @@ void RoutingManager::OnMeshPrefixArray::MarkAsDeleted(const OnMeshPrefix &aPrefi
     {
         entry->SetLength(0);
     }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// RsSender
+
+RoutingManager::RsSender::RsSender(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTxCount(0)
+    , mTimer(aInstance, HandleTimer)
+{
+}
+
+void RoutingManager::RsSender::Start(void)
+{
+    uint32_t delay;
+
+    VerifyOrExit(!IsInProgress());
+
+    delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
+    LogInfo("Scheduled Router Solicitation in %u milliseconds", delay);
+
+    mTxCount   = 0;
+    mStartTime = TimerMilli::GetNow();
+    mTimer.Start(delay);
+
+exit:
+    return;
+}
+
+void RoutingManager::RsSender::Stop(void)
+{
+    mTimer.Stop();
+}
+
+Error RoutingManager::RsSender::SendRs(void)
+{
+    Ip6::Address                  destAddress;
+    Ip6::Nd::RouterSolicitMessage routerSolicit;
+    InfraIf::Icmp6Packet          packet;
+
+    packet.InitFrom(routerSolicit);
+    destAddress.SetToLinkLocalAllRoutersMulticast();
+
+    return Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
+}
+
+void RoutingManager::RsSender::HandleTimer(Timer &aTimer)
+{
+    aTimer.Get<RoutingManager>().mRsSender.HandleTimer();
+}
+
+void RoutingManager::RsSender::HandleTimer(void)
+{
+    Error    error;
+    uint32_t delay;
+
+    if (mTxCount >= kMaxTxCount)
+    {
+        Get<RoutingManager>().HandleRsSenderFinished(mStartTime);
+        ExitNow();
+    }
+
+    error = SendRs();
+
+    if (error == kErrorNone)
+    {
+        mTxCount++;
+        LogInfo("Successfully sent RS %d/%d", mTxCount, kMaxTxCount);
+        delay = (mTxCount == kMaxTxCount) ? kWaitOnLastAttempt : kTxInterval;
+    }
+    else
+    {
+        LogCrit("Failed to send RS %d, error:%s", mTxCount + 1, ErrorToString(error));
+
+        // Note that `mTxCount` is intentionally not incremented
+        // if the tx fails.
+        delay = kRetryDelay;
+    }
+
+    mTimer.Start(delay);
+
+exit:
+    return;
 }
 
 } // namespace BorderRouter
