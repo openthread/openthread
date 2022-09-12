@@ -86,6 +86,20 @@ public:
     typedef otBorderRoutingPrefixTableEntry    PrefixTableEntry;    ///< Prefix Table Entry.
 
     /**
+     * This constant specifies the maximum number of route prefixes that may be published by `RoutingManager`
+     * in Thread Network Data.
+     *
+     * This is used by `NetworkData::Publisher` to reserve entries for use by `RoutingManager`.
+     *
+     * The number of published entries accounts for:
+     * - Max number of discovered prefix entries,
+     * - Two entries for local on-link prefixes (current prefix and old one deprecating on extended PAN ID change),
+     * - One entry for NAT64 published prefix.
+     *
+     */
+    static constexpr uint16_t kMaxPublishedPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES + 3;
+
+    /**
      * This constructor initializes the routing manager.
      *
      * @param[in]  aInstance  A OpenThread instance.
@@ -605,7 +619,7 @@ private:
         void               Generate(void);
         void               Start(void);
         void               Stop(void);
-        Error              Advertise(void);
+        void               Advertise(void);
         void               Deprecate(void);
         void               AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
@@ -747,15 +761,15 @@ private:
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
 
-    void  EvaluateOnLinkPrefix(void);
-    void  EvaluateRoutingPolicy(void);
-    bool  IsInitalPolicyEvaluationDone(void) const;
-    void  ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
-    void  EvaluateOmrPrefix(void);
-    Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
-    void  UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
-    void  HandleRsSenderFinished(TimeMilli aStartTime);
-    void  SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
+    void EvaluateOnLinkPrefix(void);
+    void EvaluateRoutingPolicy(void);
+    bool IsInitalPolicyEvaluationDone(void) const;
+    void ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
+    void EvaluateOmrPrefix(void);
+    void PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
+    void UnpublishExternalRoute(const Ip6::Prefix &aPrefix);
+    void HandleRsSenderFinished(TimeMilli aStartTime);
+    void SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
 
     void HandleDiscoveredPrefixStaleTimer(void);
 
