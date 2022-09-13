@@ -2200,6 +2200,11 @@ void RoutingManager::LocalOnLinkPrefix::HandleExtPanIdChange(void)
 
     case kAdvertising:
     case kDeprecating:
+        if (mOldPrefix.GetLength() != 0)
+        {
+            Unpublish(mOldPrefix);
+        }
+
         mOldPrefix     = mPrefix;
         mOldExpireTime = mExpireTime;
         mTimer.FireAtIfEarlier(mOldExpireTime);
