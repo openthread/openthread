@@ -76,13 +76,13 @@ static otError ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
     exit(EXIT_SUCCESS);
 }
 
-#if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#if OPENTHREAD_EXAMPLES_SIMULATION
 extern otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 #endif
 
 static const otCliCommand kCommands[] = {
     {"exit", ProcessExit},
-#if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#if OPENTHREAD_EXAMPLES_SIMULATION
     {"nodeidfilter", ProcessNodeIdFilter},
 #endif
 };

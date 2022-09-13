@@ -234,6 +234,15 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
 exit:
     return error;
 }
+#else
+otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    return OT_ERROR_INVALID_COMMAND;
+}
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
 static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
