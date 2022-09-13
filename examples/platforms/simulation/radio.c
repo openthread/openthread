@@ -177,42 +177,64 @@ static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
     return (sDeniedNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) == 0;
 }
 
-otError NodeIdFilterDeny(uint16_t aNodeId)
+static void NodeIdFilterDeny(uint16_t aNodeId)
 {
-    otError error = OT_ERROR_NONE;
-
-    if (1 <= aNodeId && aNodeId <= MAX_NETWORK_SIZE)
-    {
-        uint16_t index = aNodeId - 1;
-        sDeniedNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
-
-    return error;
+    uint16_t index = aNodeId - 1;
+    sDeniedNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
 }
 
-void NodeIdFilterClear(void)
+static void NodeIdFilterClear(void)
 {
     memset(sDeniedNodeIdsBitVector, 0, sizeof(sDeniedNodeIdsBitVector));
 }
 
-uint16_t NodeIdFilterGetNext(uint16_t aNodeId)
+otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
-    uint16_t nextNodeId = 0;
-    for (uint16_t i = aNodeId + 1; i <= MAX_NETWORK_SIZE; i++)
+    OT_UNUSED_VARIABLE(aContext);
+
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
     {
-        if (!NodeIdFilterIsConnectable(i))
+        printf("\r\nDenied Node ID List:\r\n");
+
+        for (uint16_t nodeId = 1; nodeId <= MAX_NETWORK_SIZE; nodeId++)
         {
-            nextNodeId = i;
-            break;
+            if (!NodeIdFilterIsConnectable(nodeId))
+            {
+                printf("%d\r\n", nodeId);
+            }
         }
     }
-    return nextNodeId;
+    else if (!strcmp(aArgs[0], "clear"))
+    {
+        otEXPECT_ACTION(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+        NodeIdFilterClear();
+    }
+    else if (!strcmp(aArgs[0], "deny"))
+    {
+        uint16_t nodeId;
+        char *   endptr;
+
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        nodeId = (uint16_t)strtol(aArgs[1], &endptr, 0);
+
+        otEXPECT_ACTION(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
+        otEXPECT_ACTION(1 <= nodeId && nodeId <= MAX_NETWORK_SIZE, error = OT_ERROR_INVALID_ARGS);
+
+        NodeIdFilterDeny(nodeId);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
 }
-#endif
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
 static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
 {
