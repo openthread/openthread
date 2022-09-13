@@ -52,6 +52,8 @@ Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMappingExpirer(aInstance, MappingExpirerHandler)
 {
+    Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
+
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
     mMappingExpirer.Start(kAddressMappingIdleTimeoutMsec);
@@ -91,10 +93,11 @@ exit:
 
 Translator::Result Translator::TranslateFromIp6(Message &aMessage)
 {
-    Result          res = kDrop;
-    Ip6::Header     ip6Header;
-    Ip4::Header     ip4Header;
-    AddressMapping *mapping = nullptr;
+    Result                res        = kDrop;
+    ErrorCounters::Reason dropReason = ErrorCounters::kUnknown;
+    Ip6::Header           ip6Header;
+    Ip4::Header           ip4Header;
+    AddressMapping *      mapping = nullptr;
 
     if (mIp4Cidr.mLength == 0 || !mNat64Prefix.IsValidNat64())
     {
@@ -105,6 +108,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     if (ip6Header.ParseFrom(aMessage) != kErrorNone)
     {
         LogWarn("outgoing datagram is not a valid IPv6 datagram, drop");
+        dropReason = ErrorCounters::Reason::kIllegalPacket;
         ExitNow(res = kDrop);
     }
 
@@ -117,6 +121,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     if (mapping == nullptr)
     {
         LogWarn("failed to get a mapping for %s (mapping pool full?)", ip6Header.GetSource().ToString().AsCString());
+        dropReason = ErrorCounters::Reason::kNoMapping;
         ExitNow(res = kDrop);
     }
 
@@ -145,6 +150,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         res = kForward;
         break;
     default:
+        dropReason = ErrorCounters::Reason::kUnsupportedProto;
         ExitNow(res = kDrop);
     }
 
@@ -161,17 +167,24 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
     aMessage.SetType(Message::kTypeIp4);
+    mCounters.Count6To4Packet(ip6Header.GetNextHeader(), ip6Header.GetPayloadLength());
+    mapping->mCounters.Count6To4Packet(ip6Header.GetNextHeader(), ip6Header.GetPayloadLength());
 
 exit:
+    if (res == Result::kDrop)
+    {
+        mErrorCounters.Count6To4(dropReason);
+    }
     return res;
 }
 
 Translator::Result Translator::TranslateToIp6(Message &aMessage)
 {
-    Result          res = Result::kDrop;
-    Ip6::Header     ip6Header;
-    Ip4::Header     ip4Header;
-    AddressMapping *mapping = nullptr;
+    Result                res        = Result::kDrop;
+    ErrorCounters::Reason dropReason = ErrorCounters::kUnknown;
+    Ip6::Header           ip6Header;
+    Ip4::Header           ip4Header;
+    AddressMapping *      mapping = nullptr;
 
     // Ip6::Header::ParseFrom may return an error value when the incoming message is an IPv4 datagram.
     // If the message is already an IPv6 datagram, forward it directly.
@@ -193,6 +206,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     if (ip4Header.ParseFrom(aMessage) != kErrorNone)
     {
         LogWarn("incoming message is neither IPv4 nor an IPv6 datagram, drop");
+        dropReason = ErrorCounters::Reason::kIllegalPacket;
         ExitNow(res = kDrop);
     }
 
@@ -200,6 +214,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     if (mapping == nullptr)
     {
         LogWarn("no mapping found for the IPv4 address");
+        dropReason = ErrorCounters::Reason::kNoMapping;
         ExitNow(res = kDrop);
     }
 
@@ -230,6 +245,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         res = kForward;
         break;
     default:
+        dropReason = ErrorCounters::Reason::kUnsupportedProto;
         ExitNow(res = kDrop);
     }
 
@@ -245,8 +261,15 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
         ExitNow(res = kDrop);
     }
     aMessage.SetType(Message::kTypeIp6);
+    mCounters.Count4To6Packet(ip4Header.GetProtocol(), ip4Header.GetTotalLength() - sizeof(ip4Header));
+    mapping->mCounters.Count4To6Packet(ip4Header.GetProtocol(), ip4Header.GetTotalLength() - sizeof(ip4Header));
 
 exit:
+    if (res == Result::kDrop)
+    {
+        mErrorCounters.Count4To6(dropReason);
+    }
+
     return res;
 }
 
@@ -257,6 +280,25 @@ Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void
     string.Append("%s -> %s", mIp6.ToString().AsCString(), mIp4.ToString().AsCString());
 
     return string;
+}
+
+void Translator::AddressMapping::CopyTo(otNat64AddressMapping &aMapping, TimeMilli aNow) const
+{
+    aMapping.mId       = mId;
+    aMapping.mIp4      = mIp4;
+    aMapping.mIp6      = mIp6;
+    aMapping.mCounters = mCounters;
+
+    // We are removing expired mappings lazily, and an expired mapping might become active again before actually
+    // removed. Report the mapping to be "just expired" to avoid confusion.
+    if (mExpiry < aNow)
+    {
+        aMapping.mRemainingTimeMs = 0;
+    }
+    else
+    {
+        aMapping.mRemainingTimeMs = mExpiry - aNow;
+    }
 }
 
 void Translator::ReleaseMapping(AddressMapping &aMapping)
@@ -300,6 +342,7 @@ Translator::AddressMapping *Translator::AllocateMapping(const Ip6::Address &aIp6
     VerifyOrExit(mapping != nullptr);
 
     mActiveAddressMappings.Push(*mapping);
+    mapping->mId  = ++mNextMappingId;
     mapping->mIp6 = aIp6Addr;
     // PopBack must return a valid address since it is not empty.
     mapping->mIp4 = *mIp4AddressPool.PopBack();
@@ -458,6 +501,93 @@ void Translator::MappingExpirerHandler(Timer &aTimer)
 {
     LogInfo("Released %d expired mappings", aTimer.Get<Translator>().ReleaseExpiredMappings());
     aTimer.Get<Translator>().mMappingExpirer.Start(kAddressMappingIdleTimeoutMsec);
+}
+
+void Translator::InitAddressMappingIterator(AddressMappingIterator &aIterator)
+{
+    aIterator.mPtr = mActiveAddressMappings.GetHead();
+}
+
+Error Translator::GetNextAddressMapping(AddressMappingIterator &aIterator, otNat64AddressMapping &aMapping)
+{
+    Error           err  = kErrorNotFound;
+    TimeMilli       now  = TimerMilli::GetNow();
+    AddressMapping *item = static_cast<AddressMapping *>(aIterator.mPtr);
+
+    VerifyOrExit(item != nullptr);
+
+    item->CopyTo(aMapping, now);
+    aIterator.mPtr = item->GetNext();
+    err            = kErrorNone;
+
+exit:
+    return err;
+}
+
+Error Translator::GetIp4Cidr(Ip4::Cidr &aCidr)
+{
+    Error err = kErrorNone;
+
+    VerifyOrExit(mIp4Cidr.mLength > 0, err = kErrorNotFound);
+    aCidr = mIp4Cidr;
+
+exit:
+    return err;
+}
+
+Error Translator::GetIp6Prefix(Ip6::Prefix &aPrefix)
+{
+    Error err = kErrorNone;
+
+    VerifyOrExit(mNat64Prefix.mLength > 0, err = kErrorNotFound);
+    aPrefix = mNat64Prefix;
+
+exit:
+    return err;
+}
+
+void Translator::ProtocolCounters::Count6To4Packet(uint8_t aProtocol, uint64_t aPacketSize)
+{
+    switch (aProtocol)
+    {
+    case Ip6::kProtoUdp:
+        mUdp.m6To4Packets++;
+        mUdp.m6To4Bytes += aPacketSize;
+        break;
+    case Ip6::kProtoTcp:
+        mTcp.m6To4Packets++;
+        mTcp.m6To4Bytes += aPacketSize;
+        break;
+    case Ip6::kProtoIcmp6:
+        mIcmp.m6To4Packets++;
+        mIcmp.m6To4Bytes += aPacketSize;
+        break;
+    }
+
+    mTotal.m6To4Packets++;
+    mTotal.m6To4Bytes += aPacketSize;
+}
+
+void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t aPacketSize)
+{
+    switch (aProtocol)
+    {
+    case Ip4::kProtoUdp:
+        mUdp.m4To6Packets++;
+        mUdp.m4To6Bytes += aPacketSize;
+        break;
+    case Ip4::kProtoTcp:
+        mTcp.m4To6Packets++;
+        mTcp.m4To6Bytes += aPacketSize;
+        break;
+    case Ip4::kProtoIcmp:
+        mIcmp.m4To6Packets++;
+        mIcmp.m4To6Bytes += aPacketSize;
+        break;
+    }
+
+    mTotal.m4To6Packets++;
+    mTotal.m4To6Bytes += aPacketSize;
 }
 
 } // namespace Nat64
