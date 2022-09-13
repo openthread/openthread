@@ -35,6 +35,8 @@
 #ifndef CONFIG_SRP_CLIENT_H_
 #define CONFIG_SRP_CLIENT_H_
 
+#include "config/misc.h"
+
 /**
  * @def OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
  *
