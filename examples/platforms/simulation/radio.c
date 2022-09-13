@@ -75,7 +75,7 @@ extern int          sSockFd;
 extern uint16_t     sPortOffset;
 static otRadioState sLastReportedState   = OT_RADIO_STATE_DISABLED;
 static uint8_t      sLastReportedChannel = 0;
-#else // OPENTHREAD_SIMULATION_VIRTUAL_TIME
+#else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
 static uint16_t sPortOffset = 0;
@@ -168,9 +168,9 @@ static otMacKeyMaterial sNextKey;
 static otRadioKeyType   sKeyType;
 
 static int8_t GetRssi(uint16_t aChannel);
-static void radioReceive(otInstance *aInstance);
-void radioSendMessage(otInstance *aInstance);
-void setRadioState(otRadioState aState);
+static void   radioReceive(otInstance *aInstance);
+void          radioSendMessage(otInstance *aInstance);
+void          setRadioState(otRadioState aState);
 
 static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
 {
@@ -954,8 +954,6 @@ exit:
     return error;
 }
 
-
-
 // Definition of virtual and non-virtual functions
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 const char *radioStateToString(otRadioState aState)
@@ -1010,7 +1008,6 @@ void setRadioState(otRadioState aState)
     reportRadioStatusToOtns(aState);
     sState = aState;
 }
-
 
 void platformRadioInit(void)
 {
@@ -1161,8 +1158,8 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     reportRadioStatusToOtns(OT_RADIO_STATE_TRANSMIT);
 
     event.mDelay      = 1; // 1us for now. This will change soon in the next PR
-    event.mEvent       = OT_SIM_EVENT_RADIO_RECEIVED;
-    event.mDataLength  = 1 + aFrame->mLength; // include channel in first byte
+    event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
+    event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
     memcpy(event.mData, aMessage, event.mDataLength);
 
     otSimSendEvent(&event);
@@ -1256,9 +1253,9 @@ void platformRadioInit(void)
 
     initFds();
 
-    sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
-    sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
-    sAckFrame.mPsdu      = sAckMessage.mPsdu;
+    sReceiveFrame.mPsdu                  = sReceiveMessage.mPsdu;
+    sTransmitFrame.mPsdu                 = sTransmitMessage.mPsdu;
+    sAckFrame.mPsdu                      = sAckMessage.mPsdu;
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
