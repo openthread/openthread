@@ -180,8 +180,8 @@ otError TcpExample::ProcessConnect(Arg aArgs[])
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error =
-                      aArgs[0].ParseAndConvertToIp6Address(GetInstancePtr(), sockaddr.mAddress, nat64ConvertedAddress));
+    SuccessOrExit(error = Interpreter::ParseAndConvertToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress,
+                                                                   nat64ConvertedAddress));
     if (nat64ConvertedAddress)
     {
         OutputFormat("Connecting to IPv4-converted IPv6 address: ");

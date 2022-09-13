@@ -269,26 +269,6 @@ Error ParseAsIp4Address(const char *aString, otIp4Address &aAddress)
     return (aString != nullptr) ? otIp4AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
 }
 
-Error ParseAndConvertToIp6Address(otInstance *aInstance, const char *aString, otIp6Address &aAddress, bool &aConverted)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
-    error      = ParseAsIp6Address(aString, aAddress);
-    aConverted = false;
-    if (error != kErrorNone)
-    {
-        // It might be an IPv4 address, let's have a try.
-        otIp4Address ip4Address;
-
-        SuccessOrExit(otIp4AddressFromString(aString, &ip4Address));
-        SuccessOrExit(error = otNat64SynthersizeIp6Address(aInstance, &ip4Address, &aAddress));
-        aConverted = true;
-    }
-exit:
-    return error;
-}
-
 Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
 {
     enum : uint8_t

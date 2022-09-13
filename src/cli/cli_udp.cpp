@@ -97,8 +97,8 @@ otError UdpExample::ProcessConnect(Arg aArgs[])
     otSockAddr sockaddr;
     bool       nat64ConvertedAddress;
 
-    SuccessOrExit(error =
-                      aArgs[0].ParseAndConvertToIp6Address(GetInstancePtr(), sockaddr.mAddress, nat64ConvertedAddress));
+    SuccessOrExit(error = Interpreter::ParseAndConvertToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress,
+                                                                   nat64ConvertedAddress));
     if (nat64ConvertedAddress)
     {
         OutputFormat("Connecting to IPv4-converted IPv6 address: ");
@@ -154,8 +154,8 @@ otError UdpExample::ProcessSend(Arg aArgs[])
     {
         bool nat64ConvertedAddress;
 
-        SuccessOrExit(error = aArgs[0].ParseAndConvertToIp6Address(GetInstancePtr(), messageInfo.mPeerAddr,
-                                                                   nat64ConvertedAddress));
+        SuccessOrExit(error = Interpreter::ParseAndConvertToIp6Address(GetInstancePtr(), aArgs[0],
+                                                                       messageInfo.mPeerAddr, nat64ConvertedAddress));
         if (nat64ConvertedAddress)
         {
             OutputFormat("Sending to IPv4-converted IPv6 address: ");

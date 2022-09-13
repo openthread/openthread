@@ -198,25 +198,6 @@ otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
 otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
 
 /**
- * This method parses the string as an IP address. If the string is an IPv4 address, this function will try to convert
- * it to an IPv6 address using preferred NAT64 prefix in the network data.
- *
- * @param[in]  aInstance             A pointer to openthread instance.
- * @param[in]  aString               The string to parse.
- * @param[out] aAddress              A reference to an `otIp6Address` to output the parsed IPv6 address.
- * @param[out] aConverted            Whether @p aAddress is converted from IPv4 address.
- *
- * @retval kErrorNone          The string was parsed successfully.
- * @retval kErrorInvalidArgs   The string is empty or does not contain valid IP address.
- * @retval kErrorInvalidState  No valid NAT64 prefix in the network data.
- *
- */
-otError ParseAndConvertToIp6Address(otInstance *  aInstance,
-                                    const char *  aString,
-                                    otIp6Address &aAddress,
-                                    bool &        aConverted);
-
-/**
  * This function parses a string as an IPv6 prefix.
  *
  * The string is parsed as `{IPv6Address}/{PrefixLength}`.
@@ -531,24 +512,6 @@ public:
     otError ParseAsIp4Address(otIp4Address &aAddress) const
     {
         return CmdLineParser::ParseAsIp4Address(mString, aAddress);
-    }
-
-    /**
-     * This method parses the argument as an IP address. If the argument is an IPv4 address, this function will try to
-     * synthersize an IPv6 address using preferred NAT64 prefix in the network data.
-     *
-     * @param[in]  aInstance       A pointer to openthread instance.
-     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed IPv6 address.
-     * @param[out] aConverted      Whether @p aAddress is converted from IPv4 address.
-     *
-     * @retval kErrorNone          The argument was parsed successfully.
-     * @retval kErrorInvalidArgs   The argument is empty or does not contain valid IP address.
-     * @retval kErrorInvalidState  No valid NAT64 prefix in the network data.
-     *
-     */
-    otError ParseAndConvertToIp6Address(otInstance *aInstance, otIp6Address &aAddress, bool &aSynthersizedAddress) const
-    {
-        return CmdLineParser::ParseAndConvertToIp6Address(aInstance, mString, aAddress, aSynthersizedAddress);
     }
 
     /**

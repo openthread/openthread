@@ -453,6 +453,31 @@ const char *Interpreter::PreferenceToString(signed int aPreference)
     return str;
 }
 
+otError Interpreter::ParseAndConvertToIp6Address(otInstance *  aInstance,
+                                                 const Arg &   aArg,
+                                                 otIp6Address &aAddress,
+                                                 bool &        aConverted)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    error      = aArg.ParseAsIp6Address(aAddress);
+    aConverted = false;
+    if (error != kErrorNone)
+    {
+        // It might be an IPv4 address, let's have a try.
+        otIp4Address ip4Address;
+
+        // Do not touch the error value if we failed to parse it as an IPv4 address.
+        SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
+        SuccessOrExit(error = otNat64SynthersizeIp6Address(aInstance, &ip4Address, &aAddress));
+        aConverted = true;
+    }
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[])
 {
@@ -4592,7 +4617,7 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
     }
 
     SuccessOrExit(
-        error = aArgs[0].ParseAndConvertToIp6Address(GetInstancePtr(), config.mDestination, nat64ConvertedAddress));
+        error = ParseAndConvertToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64ConvertedAddress));
     if (nat64ConvertedAddress)
     {
         OutputFormat("Pinging IPv4-converted IPv6 address: ");
