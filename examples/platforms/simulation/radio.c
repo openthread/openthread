@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2019, The OpenThread Authors.
+ *  Copyright (c) 2016-2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -71,8 +71,10 @@ enum
 
 // Declaration of virtual and non-virtual time variables
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
-extern int      sSockFd;
-extern uint16_t sPortOffset;
+extern int          sSockFd;
+extern uint16_t     sPortOffset;
+static otRadioState sLastReportedState   = OT_RADIO_STATE_DISABLED;
+static uint8_t      sLastReportedChannel = 0;
 #else // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
@@ -168,7 +170,7 @@ static otRadioKeyType   sKeyType;
 static int8_t GetRssi(uint16_t aChannel);
 static void radioReceive(otInstance *aInstance);
 void radioSendMessage(otInstance *aInstance);
-void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame);
+void setRadioState(otRadioState aState);
 
 static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
 {
@@ -313,7 +315,7 @@ otError otPlatRadioEnable(otInstance *aInstance)
 {
     if (!otPlatRadioIsEnabled(aInstance))
     {
-        sState = OT_RADIO_STATE_SLEEP;
+        setRadioState(OT_RADIO_STATE_SLEEP);
     }
 
     return OT_ERROR_NONE;
@@ -326,7 +328,7 @@ otError otPlatRadioDisable(otInstance *aInstance)
     otEXPECT(otPlatRadioIsEnabled(aInstance));
     otEXPECT_ACTION(sState == OT_RADIO_STATE_SLEEP, error = OT_ERROR_INVALID_STATE);
 
-    sState = OT_RADIO_STATE_DISABLED;
+    setRadioState(OT_RADIO_STATE_DISABLED);
 
 exit:
     return error;
@@ -342,8 +344,8 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     if (sState == OT_RADIO_STATE_SLEEP || sState == OT_RADIO_STATE_RECEIVE)
     {
-        error  = OT_ERROR_NONE;
-        sState = OT_RADIO_STATE_SLEEP;
+        error = OT_ERROR_NONE;
+        setRadioState(OT_RADIO_STATE_SLEEP);
     }
 
     return error;
@@ -360,10 +362,10 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     if (sState != OT_RADIO_STATE_DISABLED)
     {
         error                  = OT_ERROR_NONE;
-        sState                 = OT_RADIO_STATE_RECEIVE;
         sTxWait                = false;
         sReceiveFrame.mChannel = aChannel;
         sCurrentChannel        = aChannel;
+        setRadioState(OT_RADIO_STATE_RECEIVE); // Keep this call after sCurrentChannel is set.
     }
 
     return error;
@@ -382,8 +384,8 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     if (sState == OT_RADIO_STATE_RECEIVE)
     {
         error           = OT_ERROR_NONE;
-        sState          = OT_RADIO_STATE_TRANSMIT;
         sCurrentChannel = aFrame->mChannel;
+        setRadioState(OT_RADIO_STATE_TRANSMIT); // Keep this call after sCurrentChannel is set.
     }
 
     return error;
@@ -582,7 +584,6 @@ void radioSendAck(void)
 
     sAckMessage.mChannel = sReceiveFrame.mChannel;
 
-    radioComputeCrc(&sAckMessage, sAckFrame.mLength);
     radioTransmit(&sAckMessage, &sAckFrame);
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -953,8 +954,64 @@ exit:
     return error;
 }
 
+
+
 // Definition of virtual and non-virtual functions
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
+const char *radioStateToString(otRadioState aState)
+{
+    char const *ans;
+
+    switch (aState)
+    {
+    case OT_RADIO_STATE_RECEIVE:
+        ans = "rx";
+        break;
+    case OT_RADIO_STATE_TRANSMIT:
+        ans = "tx";
+        break;
+    case OT_RADIO_STATE_DISABLED:
+        ans = "off";
+        break;
+    case OT_RADIO_STATE_SLEEP:
+        ans = "sleep";
+        break;
+    default:
+        assert(false);
+    }
+    return ans;
+}
+
+void reportRadioStatusToOtns(otRadioState aState)
+{
+    int          n;
+    struct Event event;
+
+    if (sLastReportedState != aState || sLastReportedChannel != sCurrentChannel)
+    {
+        sLastReportedState   = aState;
+        sLastReportedChannel = sCurrentChannel;
+        event.mDelay         = 0;
+        event.mEvent         = OT_SIM_EVENT_OTNS_STATUS_PUSH;
+
+        n = snprintf((char *)event.mData, sizeof(event.mData), "radio_state=%s,%d", radioStateToString(aState),
+                     sCurrentChannel);
+
+        assert(n > 0);
+
+        event.mDataLength = (uint16_t)n;
+        otSimSendEvent(&event);
+    }
+}
+
+void setRadioState(otRadioState aState)
+{
+    // Transmit state can only be reported by the radio driver, not by higher layers request.
+    reportRadioStatusToOtns(aState);
+    sState = aState;
+}
+
+
 void platformRadioInit(void)
 {
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
@@ -1004,7 +1061,7 @@ static void radioReceive(otInstance *aInstance)
 
     if (isTxDone)
     {
-        sState  = OT_RADIO_STATE_RECEIVE;
+        setRadioState(OT_RADIO_STATE_RECEIVE);
         sTxWait = false;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -1058,7 +1115,6 @@ void radioSendMessage(otInstance *aInstance)
 
     otEXPECT(radioProcessTransmitSecurity(&sTransmitFrame) == OT_ERROR_NONE);
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);
-    radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
     // Wait for echo radio in virtual time mode.
@@ -1098,9 +1154,15 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 {
     struct Event event;
 
-    event.mDelay      = 1; // 1us for now
-    event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
-    event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
+    radioComputeCrc(aMessage, aFrame->mLength);
+
+    // Radio sState keeps in OT_RADIO_STATE_RECEIVE even when sending an ack.
+    // For energy accuracy, we make a report without changing the sState.
+    reportRadioStatusToOtns(OT_RADIO_STATE_TRANSMIT);
+
+    event.mDelay      = 1; // 1us for now. This will change soon in the next PR
+    event.mEvent       = OT_SIM_EVENT_RADIO_RECEIVED;
+    event.mDataLength  = 1 + aFrame->mLength; // include channel in first byte
     memcpy(event.mData, aMessage, event.mDataLength);
 
     otSimSendEvent(&event);
@@ -1214,6 +1276,15 @@ void platformRadioInit(void)
 #endif
 }
 
+void setRadioState(otRadioState aState)
+{
+    // if (aState != OT_RADIO_STATE_TRANSMIT)
+    // {
+    //     // Nothing to do yet
+    // }
+    sState = aState;
+}
+
 static void radioReceive(otInstance *aInstance)
 {
     bool isTxDone = false;
@@ -1235,7 +1306,7 @@ static void radioReceive(otInstance *aInstance)
 
     if (isTxDone)
     {
-        sState  = OT_RADIO_STATE_RECEIVE;
+        setRadioState(OT_RADIO_STATE_RECEIVE);
         sTxWait = false;
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -1289,14 +1360,13 @@ void radioSendMessage(otInstance *aInstance)
 
     otEXPECT(radioProcessTransmitSecurity(&sTransmitFrame) == OT_ERROR_NONE);
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);
-    radioComputeCrc(&sTransmitMessage, sTransmitFrame.mLength);
     radioTransmit(&sTransmitMessage, &sTransmitFrame);
 
     sTxWait = otMacFrameIsAckRequested(&sTransmitFrame);
 
     if (!sTxWait)
     {
-        sState = OT_RADIO_STATE_RECEIVE;
+        setRadioState(OT_RADIO_STATE_RECEIVE);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
@@ -1422,6 +1492,8 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
+
+    radioComputeCrc(aMessage, aFrame->mLength);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
