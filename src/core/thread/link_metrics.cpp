@@ -64,25 +64,29 @@ LinkMetrics::LinkMetrics(Instance &aInstance)
 
 Error LinkMetrics::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, const Metrics *aMetrics)
 {
-    Error       error;
-    TypeIdFlags typeIdFlags[kMaxTypeIdFlags];
-    uint8_t     typeIdFlagsCount = 0;
-    Neighbor *  neighbor         = GetNeighborFromLinkLocalAddr(aDestination);
+    static const uint8_t kTlvs[] = {Mle::Tlv::kLinkMetricsReport};
+
+    Error     error;
+    Neighbor *neighbor = GetNeighborFromLinkLocalAddr(aDestination);
+    QueryInfo info;
 
     VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
     VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
 
+    info.Clear();
+    info.mSeriesId = aSeriesId;
+
     if (aMetrics != nullptr)
     {
-        typeIdFlagsCount = TypeIdFlagsFromMetrics(typeIdFlags, *aMetrics);
+        info.mTypeIdCount = TypeIdFlagsFromMetrics(info.mTypeIds, *aMetrics);
     }
 
     if (aSeriesId != 0)
     {
-        VerifyOrExit(typeIdFlagsCount == 0, error = kErrorInvalidArgs);
+        VerifyOrExit(info.mTypeIdCount == 0, error = kErrorInvalidArgs);
     }
 
-    error = SendLinkMetricsQuery(aDestination, aSeriesId, typeIdFlags, typeIdFlagsCount);
+    error = Get<Mle::MleRouter>().SendDataRequest(aDestination, kTlvs, sizeof(kTlvs), /* aDelay */ 0, info);
 
 exit:
     return error;
@@ -560,51 +564,31 @@ exit:
     return;
 }
 
-Error LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &aDestination,
-                                        uint8_t             aSeriesId,
-                                        const TypeIdFlags * aTypeIdFlags,
-                                        uint8_t             aTypeIdFlagsCount)
+Error LinkMetrics::AppendLinkMetricsQueryTlv(Message &aMessage, const QueryInfo &aInfo)
 {
-    // LinkMetricsQuery Tlv + LinkMetricsQueryId sub-TLV (value-length: 1 byte) +
-    // LinkMetricsQueryOptions sub-TLV (value-length: `kMaxTypeIdFlags` bytes)
-    constexpr uint16_t kBufferSize = sizeof(Tlv) * 3 + sizeof(uint8_t) + sizeof(TypeIdFlags) * kMaxTypeIdFlags;
+    Error error = kErrorNone;
+    Tlv   tlv;
 
-    Error                error = kErrorNone;
-    QueryOptionsSubTlv   queryOptionsTlv;
-    uint8_t              length = 0;
-    static const uint8_t tlvs[] = {Mle::Tlv::kLinkMetricsReport};
-    uint8_t              buf[kBufferSize];
-    Tlv *                tlv = reinterpret_cast<Tlv *>(buf);
-    Tlv                  subTlv;
+    // The MLE Link Metrics Query TLV has two sub-TLVs:
+    // - Query ID sub-TLV with series ID as value.
+    // - Query Options sub-TLV with Type IDs as value.
 
-    // Link Metrics Query TLV
-    tlv->SetType(Mle::Tlv::kLinkMetricsQuery);
-    length += sizeof(Tlv);
+    tlv.SetType(Mle::Tlv::kLinkMetricsQuery);
+    tlv.SetLength(sizeof(Tlv) + sizeof(uint8_t) + ((aInfo.mTypeIdCount == 0) ? 0 : (sizeof(Tlv) + aInfo.mTypeIdCount)));
 
-    // Link Metrics Query ID sub-TLV
-    subTlv.SetType(SubTlv::kQueryId);
-    subTlv.SetLength(sizeof(uint8_t));
-    memcpy(buf + length, &subTlv, sizeof(subTlv));
-    length += sizeof(subTlv);
-    memcpy(buf + length, &aSeriesId, sizeof(aSeriesId));
-    length += sizeof(aSeriesId);
+    SuccessOrExit(error = aMessage.Append(tlv));
 
-    // Link Metrics Query Options sub-TLV
-    if (aTypeIdFlagsCount > 0)
+    SuccessOrExit(error = Tlv::Append<QueryIdSubTlv>(aMessage, aInfo.mSeriesId));
+
+    if (aInfo.mTypeIdCount != 0)
     {
+        QueryOptionsSubTlv queryOptionsTlv;
+
         queryOptionsTlv.Init();
-        queryOptionsTlv.SetLength(aTypeIdFlagsCount * sizeof(TypeIdFlags));
-
-        memcpy(buf + length, &queryOptionsTlv, sizeof(queryOptionsTlv));
-        length += sizeof(queryOptionsTlv);
-        memcpy(buf + length, aTypeIdFlags, queryOptionsTlv.GetLength());
-        length += queryOptionsTlv.GetLength();
+        queryOptionsTlv.SetLength(aInfo.mTypeIdCount);
+        SuccessOrExit(error = aMessage.Append(queryOptionsTlv));
+        SuccessOrExit(error = aMessage.AppendBytes(aInfo.mTypeIds, aInfo.mTypeIdCount));
     }
-
-    // Set Length for Link Metrics Report TLV
-    tlv->SetLength(length - sizeof(Tlv));
-
-    SuccessOrExit(error = Get<Mle::MleRouter>().SendDataRequest(aDestination, tlvs, sizeof(tlvs), 0, buf, length));
 
 exit:
     return error;
