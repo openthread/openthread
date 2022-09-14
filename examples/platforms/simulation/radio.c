@@ -536,6 +536,9 @@ static void radioReceive(otInstance *aInstance, otError aError)
     otEXPECT(sReceiveFrame.mChannel == sReceiveMessage.mChannel);
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT);
 
+    // TODO replace by SFD timestamp.
+    sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();
+
     if (sTxWait && otMacFrameIsAckRequested(&sTransmitFrame))
     {
         isTxDone = isAck && otMacFrameGetSequence(&sReceiveFrame) == otMacFrameGetSequence(&sTransmitFrame);
@@ -707,7 +710,7 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 {
     struct RxEventData defaultRxEventData;
     assert(sizeof(sReceiveMessage) >= aBufLength);
-    if (aRxParams == NULL)
+    if (aRxParams == NULL) // in case of legacy event type - no extra metadata.
     {
         defaultRxEventData.mChannel = aBuf[0];
         defaultRxEventData.mError   = OT_ERROR_NONE;
@@ -718,12 +721,13 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
     otEXPECT(sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_TRANSMIT); // Only process in valid states.
 
     memcpy(&sReceiveMessage, aBuf, aBufLength);
-    sReceiveFrame.mLength                  = (uint8_t)(aBufLength - offsetof(struct RadioMessage, mPsdu));
+
+    // TODO verify why the below is 0 and not 1.
+    sReceiveFrame.mLength                  = (uint8_t)(aBufLength - 0 /*offsetof(struct RadioMessage, mPsdu)*/ );
     sReceiveFrame.mInfo.mRxInfo.mRssi      = aRxParams->mRssi;
     sReceiveFrame.mInfo.mRxInfo.mLqi       = OT_RADIO_LQI_NONE; // No support of LQI reporting.
-    sReceiveFrame.mInfo.mRxInfo.mTimestamp = otPlatTimeGet();   // Timestamp moment of complete frame reception.
 
-    radioReceive(aInstance, aRxParams->mError);
+    radioReceive(aInstance, aRxParams->mError );
 
 exit:
     return;

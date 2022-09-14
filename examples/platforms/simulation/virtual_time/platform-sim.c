@@ -106,8 +106,8 @@ static void receiveEvent(otInstance *aInstance)
 
     case OT_SIM_EVENT_RADIO_RX:
         VERIFY_EVENT_SIZE(struct RxEventData)
-        platformRadioReceive(aInstance, event.mData + sizeof(struct RxEventData),
-                             event.mDataLength - sizeof(struct RxEventData), (struct RxEventData *) event.mData);
+        platformRadioReceive(aInstance, (&event.mData[0]) + sizeof(struct RxEventData),
+                       event.mDataLength - sizeof(struct RxEventData), (struct RxEventData *) &event.mData[0]);
         break;
 
     case OT_SIM_EVENT_RADIO_TX_DONE:
