@@ -299,8 +299,7 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
             char *args[kMaxArgs];
 
             Arg::CopyArgsToStringArray(aArgs, args);
-            mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
-            error = OT_ERROR_NONE;
+            error = mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
             break;
         }
     }

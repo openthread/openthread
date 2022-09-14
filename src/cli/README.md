@@ -83,7 +83,7 @@ Done
 - [parent](#parent)
 - [parentpriority](#parentpriority)
 - [partitionid](#partitionid)
-- [ping](#ping--i-source-ipaddr-size-count-interval-hoplimit-timeout)
+- [ping](#ping-async--i-source-ipaddr-size-count-interval-hoplimit-timeout)
 - [pollperiod](#pollperiod-pollperiod)
 - [preferrouterid](#preferrouterid-routerid)
 - [prefix](#prefix)
@@ -2123,10 +2123,11 @@ Set the preferred Thread Leader Partition ID.
 Done
 ```
 
-### ping \[-I source\] \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
+### ping \[async\] \[-I source\] \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
 
 Send an ICMPv6 Echo Request.
 
+- async: Use the non-blocking mode. New commands are allowed before the ping process terminates.
 - source: The source IPv6 address of the echo request.
 - size: The number of data bytes to be sent.
 - count: The number of ICMPv6 Echo Requests to be sent.

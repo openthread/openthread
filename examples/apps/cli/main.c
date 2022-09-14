@@ -67,7 +67,7 @@ void otTaskletsSignalPending(otInstance *aInstance)
 }
 
 #if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
+static otError ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aArgsLength);
@@ -75,8 +75,18 @@ static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
     exit(EXIT_SUCCESS);
 }
-static const otCliCommand kCommands[] = {{"exit", ProcessExit}};
+
+#if OPENTHREAD_EXAMPLES_SIMULATION
+extern otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[]);
 #endif
+
+static const otCliCommand kCommands[] = {
+    {"exit", ProcessExit},
+#if OPENTHREAD_EXAMPLES_SIMULATION
+    {"nodeidfilter", ProcessNodeIdFilter},
+#endif
+};
+#endif // OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
 
 int main(int argc, char *argv[])
 {
