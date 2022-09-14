@@ -123,6 +123,27 @@ jobs:
         name: cov-toranj-cli-${{ matrix.TORANJ_RADIO }}
         path: tmp/coverage.info
 
+  toranj-unittest:
+    name: toranj-unittest
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 ninja-build python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build & Run
+      run: |
+        ./tests/toranj/build.sh cmake
+        ninja test
+
   upload-coverage:
     needs:
     - toranj-ncp
