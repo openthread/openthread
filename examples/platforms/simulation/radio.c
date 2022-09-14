@@ -174,12 +174,14 @@ static uint8_t sDeniedNodeIdsBitVector[(MAX_NETWORK_SIZE + 7) / 8];
 static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
 {
     uint16_t index = aNodeId - 1;
+
     return (sDeniedNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) == 0;
 }
 
 static void NodeIdFilterDeny(uint16_t aNodeId)
 {
     uint16_t index = aNodeId - 1;
+
     sDeniedNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
 }
 
@@ -194,19 +196,9 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
 
     otError error = OT_ERROR_NONE;
 
-    if (aArgsLength == 0)
-    {
-        printf("\r\nDenied Node ID List:\r\n");
+    otEXPECT_ACTION(aArgsLength > 0, error = OT_ERROR_INVALID_COMMAND);
 
-        for (uint16_t nodeId = 1; nodeId <= MAX_NETWORK_SIZE; nodeId++)
-        {
-            if (!NodeIdFilterIsConnectable(nodeId))
-            {
-                printf("%d\r\n", nodeId);
-            }
-        }
-    }
-    else if (!strcmp(aArgs[0], "clear"))
+    if (!strcmp(aArgs[0], "clear"))
     {
         otEXPECT_ACTION(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
 
@@ -241,7 +233,7 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    return OT_ERROR_INVALID_COMMAND;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
@@ -435,9 +427,9 @@ exit:
 void platformRadioInit(void)
 {
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-    parseFromEnvAsUInt16("PORT_BASE", &sPortBase);
+    parseFromEnvAsUint16("PORT_BASE", &sPortBase);
 
-    parseFromEnvAsUInt16("PORT_OFFSET", &sPortOffset);
+    parseFromEnvAsUint16("PORT_OFFSET", &sPortOffset);
     sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
     initFds();
@@ -1390,7 +1382,7 @@ exit:
     return error;
 }
 
-void parseFromEnvAsUInt16(const char *aEnvName, uint16_t *aValue)
+void parseFromEnvAsUint16(const char *aEnvName, uint16_t *aValue)
 {
     char *env = getenv(aEnvName);
 

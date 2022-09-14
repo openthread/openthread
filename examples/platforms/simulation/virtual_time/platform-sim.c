@@ -180,9 +180,9 @@ static void socket_init(void)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
-    parseFromEnvAsUInt16("PORT_BASE", &sPortBase);
+    parseFromEnvAsUint16("PORT_BASE", &sPortBase);
 
-    parseFromEnvAsUInt16("PORT_OFFSET", &sPortOffset);
+    parseFromEnvAsUint16("PORT_OFFSET", &sPortOffset);
     sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
     sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset + gNodeId));
