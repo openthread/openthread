@@ -590,7 +590,7 @@ private:
         void               Stop(void);
         Error              Advertise(void);
         void               Deprecate(void);
-        void               AppendAsPioTo(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        void               AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         bool               IsAdvertising(void) const { return (mState == kAdvertising); }
         void               HandleExtPanIdChange(void);
@@ -603,11 +603,18 @@ private:
             kDeprecating,
         };
 
+        void AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        void AppendOldPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        void Unpublish(const Ip6::Prefix &aPrefix);
+
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
 
         Ip6::Prefix mPrefix;
         State       mState;
+        TimeMilli   mExpireTime;
+        Ip6::Prefix mOldPrefix;
+        TimeMilli   mOldExpireTime;
         TimerMilli  mTimer;
     };
 

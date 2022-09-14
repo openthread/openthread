@@ -84,6 +84,9 @@
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #include <openthread/trel.h>
 #endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#include <openthread/nat64.h>
+#endif
 
 #include "common/new.hpp"
 #include "common/string.hpp"
@@ -732,6 +735,213 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+    /**
+     * @cli nat64 cidr
+     * @code
+     * nat64 cidr
+     * 192.168.64.0/24
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otNat64GetCidr
+     *
+     */
+    else if (aArgs[0] == "cidr")
+    {
+        otIp4Cidr cidr;
+        char      cidrString[OT_IP4_CIDR_STRING_SIZE];
+
+        SuccessOrExit(error = otNat64GetCidr(GetInstancePtr(), &cidr));
+        otIp4CidrToString(&cidr, cidrString, sizeof(cidrString));
+        OutputLine("%s", cidrString);
+    }
+    /**
+     * @cli nat64 mappings
+     * @code
+     * nat64 mappings
+     * |          | Address                   |        | 4 to 6       | 6 to 4       |
+     * +----------+---------------------------+--------+--------------+--------------+
+     * | ID       | IPv6       | IPv4         | Expiry | Pkts | Bytes | Pkts | Bytes |
+     * +----------+------------+--------------+--------+------+-------+------+-------+
+     * | 00021cb9 | fdc7::df79 | 192.168.64.2 |  7196s |    6 |   456 |   11 |  1928 |
+     * |          |                                TCP |    0 |     0 |    0 |     0 |
+     * |          |                                UDP |    1 |   136 |   16 |  1608 |
+     * |          |                               ICMP |    5 |   320 |    5 |   320 |
+     * @endcode
+     * @par api_copy
+     * #otNat64GetNextAddressMapping
+     *
+     */
+    else if (aArgs[0] == "mappings")
+    {
+        otNat64AddressMappingIterator iterator;
+        otNat64AddressMapping         mapping;
+
+        static const char *const kNat64StatusLevel1Title[] = {"", "Address", "", "4 to 6", "6 to 4"};
+
+        static const uint8_t kNat64StatusLevel1ColumnWidths[] = {
+            18, 61, 8, 25, 25,
+        };
+
+        static const char *const kNat64StatusTableHeader[] = {
+            "ID", "IPv6", "IPv4", "Expiry", "Pkts", "Bytes", "Pkts", "Bytes",
+        };
+
+        static const uint8_t kNat64StatusTableColumnWidths[] = {
+            18, 42, 18, 8, 10, 14, 10, 14,
+        };
+
+        OutputTableHeader(kNat64StatusLevel1Title, kNat64StatusLevel1ColumnWidths);
+        OutputTableHeader(kNat64StatusTableHeader, kNat64StatusTableColumnWidths);
+
+        otNat64InitAddressMappingIterator(GetInstancePtr(), &iterator);
+        while (otNat64GetNextAddressMapping(GetInstancePtr(), &iterator, &mapping) == OT_ERROR_NONE)
+        {
+            char ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
+            char ip6AddressString[OT_IP6_PREFIX_STRING_SIZE];
+
+            otIp6AddressToString(&mapping.mIp6, ip6AddressString, sizeof(ip6AddressString));
+            otIp4AddressToString(&mapping.mIp4, ip4AddressString, sizeof(ip4AddressString));
+
+            OutputFormat("| %016llx ", mapping.mId);
+            OutputFormat("| %40s ", ip6AddressString);
+            OutputFormat("| %16s ", ip4AddressString);
+            OutputFormat("| %5llus ", mapping.mRemainingTimeMs / 1000);
+            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m6To4Bytes);
+
+            OutputLine("|");
+
+            OutputFormat("| %016s ", "");
+            OutputFormat("| %68s ", "TCP");
+            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m6To4Bytes);
+            OutputLine("|");
+
+            OutputFormat("| %016s ", "");
+            OutputFormat("| %68s ", "UDP");
+            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m6To4Bytes);
+            OutputLine("|");
+
+            OutputFormat("| %016s ", "");
+            OutputFormat("| %68s ", "ICMP");
+            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m4To6Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m4To6Bytes);
+            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m6To4Packets);
+            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m6To4Bytes);
+            OutputLine("|");
+        }
+    }
+    /**
+     * @cli nat64 counters
+     * @code
+     * nat64 counters
+     * |               | 4 to 6                  | 6 to 4                  |
+     * +---------------+-------------------------+-------------------------+
+     * | Protocol      | Pkts     | Bytes        | Pkts     | Bytes        |
+     * +---------------+----------+--------------+----------+--------------+
+     * |         Total |       11 |          704 |       11 |          704 |
+     * |           TCP |        0 |            0 |        0 |            0 |
+     * |           UDP |        0 |            0 |        0 |            0 |
+     * |          ICMP |       11 |          704 |       11 |          704 |
+     * | Errors        | Pkts                    | Pkts                    |
+     * +---------------+-------------------------+-------------------------+
+     * |         Total |                       8 |                       4 |
+     * |   Illegal Pkt |                       0 |                       0 |
+     * |   Unsup Proto |                       0 |                       0 |
+     * |    No Mapping |                       2 |                       0 |
+     * Done
+     * @endcode
+     * @par
+     * Gets the NAT64 translator packet and error counters.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+     * @sa otNat64GetCounters
+     * @sa otNat64GetErrorCounters
+     *
+     */
+    else if (aArgs[0] == "counters")
+    {
+        static const char *const kNat64CounterTableHeader[] = {
+            "",
+            "4 to 6",
+            "6 to 4",
+        };
+        static const uint8_t     kNat64CounterTableHeaderColumns[] = {15, 25, 25};
+        static const char *const kNat64CounterTableSubHeader[]     = {
+            "Protocol", "Pkts", "Bytes", "Pkts", "Bytes",
+        };
+        static const uint8_t kNat64CounterTableSubHeaderColumns[] = {
+            15, 10, 14, 10, 14,
+        };
+        static const char *const kNat64CounterTableErrorSubHeader[] = {
+            "Errors",
+            "Pkts",
+            "Pkts",
+        };
+        static const uint8_t kNat64CounterTableErrorSubHeaderColumns[] = {
+            15,
+            25,
+            25,
+        };
+        static const char *const kNat64CounterErrorType[] = {
+            "Unknown",
+            "Illegal Pkt",
+            "Unsup Proto",
+            "No Mapping",
+        };
+
+        otNat64ProtocolCounters counters;
+        otNat64ErrorCounters    errorCounters;
+
+        OutputTableHeader(kNat64CounterTableHeader, kNat64CounterTableHeaderColumns);
+        OutputTableHeader(kNat64CounterTableSubHeader, kNat64CounterTableSubHeaderColumns);
+
+        otNat64GetCounters(GetInstancePtr(), &counters);
+        otNat64GetErrorCounters(GetInstancePtr(), &errorCounters);
+
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "Total", counters.mTotal.m4To6Packets,
+                   counters.mTotal.m4To6Bytes, counters.mTotal.m6To4Packets, counters.mTotal.m6To4Bytes);
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "TCP", counters.mTcp.m4To6Packets,
+                   counters.mTcp.m4To6Bytes, counters.mTcp.m6To4Packets, counters.mTcp.m6To4Bytes);
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "UDP", counters.mUdp.m4To6Packets,
+                   counters.mUdp.m4To6Bytes, counters.mUdp.m6To4Packets, counters.mUdp.m6To4Bytes);
+        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "ICMP", counters.mIcmp.m4To6Packets,
+                   counters.mIcmp.m4To6Bytes, counters.mIcmp.m6To4Packets, counters.mIcmp.m6To4Bytes);
+
+        OutputTableHeader(kNat64CounterTableErrorSubHeader, kNat64CounterTableErrorSubHeaderColumns);
+        for (uint8_t i = 0; i < OT_NAT64_DROP_REASON_COUNT; i++)
+        {
+            OutputLine("| %13s | %23llu | %23llu |", kNat64CounterErrorType[i], errorCounters.mCount4To6[i],
+                       errorCounters.mCount6To4[i]);
+        }
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
@@ -6469,6 +6679,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("mode"),
         CmdEntry("multiradio"),
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+        CmdEntry("nat64"),
+#endif
 #if OPENTHREAD_FTD
         CmdEntry("neighbor"),
 #endif

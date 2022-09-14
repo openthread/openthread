@@ -1447,26 +1447,29 @@ protected:
      */
     Mac::ShortAddress GetNextHop(uint16_t aDestination) const;
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
-     * This method generates an MLE Data Request message.
+     * This method generates an MLE Data Request message which includes a Link Metrics Query TLV.
      *
      * @param[in]  aDestination      A reference to the IPv6 address of the destination.
      * @param[in]  aTlvs             A pointer to requested TLV types.
      * @param[in]  aTlvsLength       The number of TLV types in @p aTlvs.
      * @param[in]  aDelay            Delay in milliseconds before the Data Request message is sent.
-     * @param[in]  aExtraTlvs        A pointer to extra TLVs.
-     * @param[in]  aExtraTlvsLength  Length of extra TLVs.
+     * @param[in]  aQueryInfo        A Link Metrics query info.
      *
      * @retval kErrorNone     Successfully generated an MLE Data Request message.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
      *
      */
-    Error SendDataRequest(const Ip6::Address &aDestination,
-                          const uint8_t *     aTlvs,
-                          uint8_t             aTlvsLength,
-                          uint16_t            aDelay,
-                          const uint8_t *     aExtraTlvs,
-                          uint8_t             aExtraTlvsLength);
+    Error SendDataRequest(const Ip6::Address &                       aDestination,
+                          const uint8_t *                            aTlvs,
+                          uint8_t                                    aTlvsLength,
+                          uint16_t                                   aDelay,
+                          const LinkMetrics::LinkMetrics::QueryInfo &aQueryInfo)
+    {
+        return SendDataRequest(aDestination, aTlvs, aTlvsLength, aDelay, &aQueryInfo);
+    }
+#endif
 
     /**
      * This method generates an MLE Data Request message.
@@ -1484,7 +1487,7 @@ protected:
     template <uint8_t kArrayLength>
     Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t (&aTlvs)[kArrayLength], uint16_t aDelay = 0)
     {
-        return SendDataRequest(aDestination, aTlvs, kArrayLength, aDelay, nullptr, 0);
+        return SendDataRequest(aDestination, aTlvs, kArrayLength, aDelay);
     }
 
     /**
@@ -1887,6 +1890,16 @@ private:
     void        HandleDetachGracefullyTimer(void);
     bool        IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
     Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    Error SendDataRequest(const Ip6::Address &                       aDestination,
+                          const uint8_t *                            aTlvs,
+                          uint8_t                                    aTlvsLength,
+                          uint16_t                                   aDelay,
+                          const LinkMetrics::LinkMetrics::QueryInfo *aQueryInfo = nullptr);
+#else
+    Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aDelay);
+#endif
 
 #if OPENTHREAD_FTD
     static void HandleDetachGracefullyAddressReleaseResponse(void *               aContext,

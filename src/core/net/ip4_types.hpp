@@ -162,6 +162,20 @@ public:
     Error FromString(const char *aString);
 
     /**
+     * This method converts the address to a string.
+     *
+     * The string format uses quad-dotted notation of four bytes in the address (e.g., "127.0.0.1").
+     *
+     * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
+     * truncated but the outputted string is always null-terminated.
+     *
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
+     * @param[in]  aSize     The size of @p aBuffer (in bytes).
+     *
+     */
+    void ToString(char *aBuffer, uint16_t aSize) const;
+
+    /**
      * This method converts the IPv4 address to a string.
      *
      * The string format uses quad-dotted notation of four bytes in the address (e.g., "127.0.0.1").
@@ -170,6 +184,9 @@ public:
      *
      */
     InfoString ToString(void) const;
+
+private:
+    void ToString(StringWriter &aWriter) const;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -188,6 +205,21 @@ public:
      *
      */
     typedef String<Address::kAddressStringSize + kCidrSuffixSize> InfoString;
+
+    /**
+     * This method converts the IPv4 CIDR to a string.
+     *
+     * The string format uses quad-dotted notation of four bytes in the address with the length of prefix (e.g.,
+     * "127.0.0.1/32").
+     *
+     * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
+     * truncated but the outputted string is always null-terminated.
+     *
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be `nullptr`).
+     * @param[in]  aSize     The size of @p aBuffer (in bytes).
+     *
+     */
+    void ToString(char *aBuffer, uint16_t aSize) const;
 
     /**
      * This method converts the IPv4 CIDR to a string.
@@ -237,6 +269,8 @@ private:
     }
 
     uint32_t SubnetMask(void) const { return ~HostMask(); }
+
+    void ToString(StringWriter &aWriter) const;
 };
 
 /**
