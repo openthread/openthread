@@ -236,8 +236,10 @@ public:
     static const char *PreferenceToString(signed int aPreference);
 
     /**
-     * This method parses the argument as an IP address. If the argument string is an IPv4 address, this method will try
-     * to synthersize an IPv6 address using preferred NAT64 prefix in the network data.
+     * This method parses the argument as an IP address.
+     *
+     * If the argument string is an IPv4 address, this method will try to synthersize an IPv6 address using preferred
+     * NAT64 prefix in the network data.
      *
      * @param[in]  aInstance       A pointer to openthread instance.
      * @param[in]  aArg            The argument string to parse.

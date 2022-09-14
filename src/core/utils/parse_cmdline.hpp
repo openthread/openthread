@@ -187,7 +187,6 @@ otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
 /**
  * This function parses a string as an IPv4 address.
  *
- *
  * @param[in]  aString   The string to parse.
  * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
  *

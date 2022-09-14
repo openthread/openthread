@@ -404,7 +404,7 @@ otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
  * @param[in]   aIp4Address  A pointer to the IPv4 address to translate to IPv6.
  * @param[out]  aIp6Address  A pointer to the synthesized IPv6 address.
  *
- * @returns  OT_ERROR_NONE           Successfully synthesize the IPv6 address from NAT64 prefix and IPv4 address.
+ * @returns  OT_ERROR_NONE           Successfully synthesized the IPv6 address from NAT64 prefix and IPv4 address.
  * @returns  OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
  *
  */
