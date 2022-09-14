@@ -529,7 +529,7 @@ exit:
     SuccessOrDie(error);
 }
 
-static void SetLinkState(otInstance *aInstance, bool otState)
+static void SetLinkState(otInstance *aInstance, bool aState)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -546,12 +546,12 @@ static void SetLinkState(otInstance *aInstance, bool otState)
 
     ifState = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
 
-    otLogNotePlat("[netif] Changing interface state to %s%s.", otState ? "up" : "down",
-                  (ifState == otState) ? " (already done, ignoring)" : "");
+    otLogNotePlat("[netif] Changing interface state to %s%s.", aState ? "up" : "down",
+                  (ifState == aState) ? " (already done, ignoring)" : "");
 
-    if (ifState != otState)
+    if (ifState != aState)
     {
-        ifr.ifr_flags = otState ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
+        ifr.ifr_flags = aState ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
         VerifyOrExit(ioctl(sIpFd, SIOCSIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
         // wait for RTM_NEWLINK event before processing notification from kernel to avoid infinite loop
