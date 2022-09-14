@@ -648,28 +648,21 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     @API
     def mdns_query(self, service='_meshcop._udp.local', addrs_allowlist=(), addrs_denylist=()):
-        cleanup = []
-
-        def ip6tables_cmd(cmd):
-            assert '-I INPUT' in cmd
-            self.bash(cmd)
-            cleanup.append(cmd.replace('-I INPUT', '-D INPUT'))
-
         try:
             for deny_addr in addrs_denylist:
-                ip6tables_cmd('ip6tables -I INPUT -p udp --dport 5353 -s %s -j DROP' % deny_addr)
+                self.bash('ip6tables -A INPUT -p udp --dport 5353 -s %s -j DROP' % deny_addr)
 
             if addrs_allowlist:
                 for allow_addr in addrs_allowlist:
-                    ip6tables_cmd('ip6tables -I INPUT -p udp --dport 5353 -s %s -j ACCEPT' % allow_addr)
+                    self.bash('ip6tables -A INPUT -p udp --dport 5353 -s %s -j ACCEPT' % allow_addr)
 
-                ip6tables_cmd('ip6tables -I INPUT -p udp --dport 5353 -j DROP')
+                self.bash('ip6tables -A INPUT -p udp --dport 5353 -j DROP')
 
             return self._mdns_query_impl(service, find_active=(addrs_allowlist or addrs_denylist))
 
         finally:
-            for cmd in cleanup:
-                self.bash(cmd)
+            self.bash('ip6tables -L INPUT -v')
+            self.bash('ip6tables -F INPUT')
 
     def _mdns_query_impl(self, service, find_active):
         # For BBR-TC-03 or DH test cases (empty arguments) just send a query
