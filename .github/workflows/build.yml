@@ -180,6 +180,8 @@ jobs:
         sudo pip3 install -U cmake==3.10.3
         cmake --version | grep 3.10.3
     - name: Build
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
         script/check-arm-build
