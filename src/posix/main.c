@@ -195,8 +195,8 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     memset(aConfig, 0, sizeof(*aConfig));
 
     aConfig->mPlatformConfig.mPersistentInterface = false;
-    aConfig->mPlatformConfig.mSpeedUpFactor = 1;
-    aConfig->mLogLevel                      = OT_LOG_LEVEL_CRIT;
+    aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
+    aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
 #ifdef __linux__
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif

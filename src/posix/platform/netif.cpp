@@ -531,6 +531,8 @@ exit:
 
 static void SetLinkState(otInstance *aInstance, bool otState)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     otError      error = OT_ERROR_NONE;
     struct ifreq ifr;
     bool         ifState = false;
@@ -1605,7 +1607,7 @@ exit:
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
     struct ifreq ifr;
-    const char *interfaceName;
+    const char * interfaceName;
 
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
