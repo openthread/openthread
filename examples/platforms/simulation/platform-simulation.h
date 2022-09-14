@@ -67,6 +67,8 @@ enum
     OT_SIM_EVENT_UART_WRITE         = 2,
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
+    OT_SIM_EVENT_RADIO_COMM         = 6,
+    OT_SIM_EVENT_RADIO_TX_DONE      = 7,
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
@@ -159,6 +161,15 @@ void platformRadioDeinit(void);
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength);
 
 /**
+ * This function signals Tx Done to the radio (instead of echo frames).
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  pktSeq     Packet sequence number to be confirmed as sent.
+ *
+ */
+void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq);
+
+/**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
  *
  * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
@@ -231,6 +242,14 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
  *
  */
 bool platformRadioIsTransmitPending(void);
+
+/**
+ * This function checks if radio is waiting for a Tx Done signal from the simulator.
+ *
+ * @returns Whether radio TxDone signal is pending.
+ *
+ */
+bool platformRadioTaskPending(void);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
