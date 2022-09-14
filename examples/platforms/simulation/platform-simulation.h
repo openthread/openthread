@@ -234,6 +234,7 @@ bool platformRadioIsTransmitPending(void);
 
 /**
  * This function parses an environment variable as an unsigned 16-bit integer.
+ *
  * If the environment variable does not exist, this function does nothing.
  * If it is not a valid integer, this function will terminate the process with an error message.
  *
