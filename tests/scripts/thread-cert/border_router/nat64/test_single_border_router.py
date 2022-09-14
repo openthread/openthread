@@ -31,6 +31,12 @@ import unittest
 import config
 import thread_cert
 
+import ipaddress
+
+# For NAT64 connectivity tests
+import socket
+import select
+
 # Test description:
 #   This test verifies the advertisement of local NAT64 prefix in Thread network
 #   when no NAT64 prefix found on infrastructure interface.
@@ -160,6 +166,58 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         # Same NAT64 prefix is advertised to Network Data.
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
+
+        # UDP Connectivity -- Get local host IP
+        # Note: The incoming UDP connection from BR is already NAT-ed IPv4 since it lives in docker.
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setblocking(False)
+        # Note: The address is not important, we use this function to get the host ip address.
+        sock.connect(('8.8.8.8', 54321))
+        host_ip, host_port = sock.getsockname()
+        sock.close()
+
+        self.assertTrue(router.ping(ipaddr=host_ip))
+
+        mappings = br.get_nat64_mappings()
+        self.assertEqual(mappings[0]['counters']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['ICMP']['6to4']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['total']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['total']['6to4']['packets'], 1)
+
+        counters = br.get_nat64_counters()
+        self.assertEqual(counters['protocol']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(counters['protocol']['ICMP']['6to4']['packets'], 1)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setblocking(False)
+        sock.bind(('0.0.0.0', 54321))
+        router.udp_start('::', 54321)
+        # We can use IPv4 addresses for commands like UDP send.
+        # The address will be converted to an IPv6 address by CLI.
+        router.udp_send(10, host_ip, host_port)
+        ready = select.select([sock], [], [], 1)
+        if ready[0]:
+            data = sock.recv(1024)
+            self.assertEqual(len(data), 10)
+        sock.close()
+
+        counters = br.get_nat64_counters()
+        self.assertEqual(counters['protocol']['UDP']['6to4']['packets'], 1)
+
+        # We should be able to get a IPv4 mapped IPv6 address.
+        # 203.0.113.1, RFC5737 TEST-NET-3, should be unreachable.
+        mapped_ip6_address = ipaddress.IPv6Network(nat64_prefix).network_address.exploded[0:30] + 'cb00:7101'
+        self.assertFalse(router.ping(ipaddr=mapped_ip6_address))
+
+        mappings = br.get_nat64_mappings()
+        self.assertEqual(mappings[0]['counters']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['ICMP']['6to4']['packets'], 2)
+        self.assertEqual(mappings[0]['counters']['total']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['total']['6to4']['packets'], 3)
+
+        counters = br.get_nat64_counters()
+        self.assertEqual(counters['protocol']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(counters['protocol']['ICMP']['6to4']['packets'], 2)
 
         #
         # Case 5. Disable and re-enable ethernet on the border router.

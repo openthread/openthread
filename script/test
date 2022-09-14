@@ -47,6 +47,7 @@ readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
 readonly NAT64="${NAT64:-0}"
+readonly NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
 readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
 
 readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
@@ -289,6 +290,18 @@ do_build_otbr_docker()
         "-DOTBR_DUA_ROUTING=ON"
         "-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'"
     )
+    local args=(
+        "BORDER_ROUTING=${BORDER_ROUTING}"
+        "INFRA_IF_NAME=eth0"
+        "BACKBONE_ROUTER=1"
+        "REFERENCE_DEVICE=1"
+        "OT_BACKBONE_CI=1"
+        "NAT64=${NAT64}"
+        "DNS64=${NAT64}"
+        "REST_API=0"
+        "WEB_GUI=0"
+        "MDNS=${OTBR_MDNS:-mDNSResponder}"
+    )
 
     if [[ ${TREL} == 1 ]]; then
         otbr_options+=("-DOTBR_TREL=ON")
@@ -298,11 +311,22 @@ do_build_otbr_docker()
 
     if [[ ${NAT64} == 1 ]]; then
         otbr_options+=("-DOT_NAT64_BORDER_ROUTING=ON")
+        if [[ ${NAT64_SERVICE} == "openthread" ]]; then
+            otbr_options+=("-DOT_NAT64_TRANSLATOR=ON")
+        fi
+        args+=("NAT64_SERVICE=${NAT64_SERVICE}")
     else
         otbr_options+=("-DOT_NAT64_BORDER_ROUTING=OFF")
     fi
 
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
+    local docker_build_args=()
+
+    for arg in "${args[@]}"
+    do
+        docker_build_args+=("--build-arg")
+        docker_build_args+=("$arg")
+    done
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
     otdir=$(pwd)
@@ -319,16 +343,7 @@ do_build_otbr_docker()
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git
         docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
-            --build-arg BORDER_ROUTING="${BORDER_ROUTING}" \
-            --build-arg INFRA_IF_NAME=eth0 \
-            --build-arg BACKBONE_ROUTER=1 \
-            --build-arg REFERENCE_DEVICE=1 \
-            --build-arg OT_BACKBONE_CI=1 \
-            --build-arg NAT64="${NAT64}" \
-            --build-arg DNS64="${NAT64}" \
-            --build-arg REST_API=0 \
-            --build-arg WEB_GUI=0 \
-            --build-arg MDNS="${OTBR_MDNS:-mDNSResponder}" \
+            "${docker_build_args[@]}" \
             --build-arg OTBR_OPTIONS="${otbr_options[*]}"
     )
 
