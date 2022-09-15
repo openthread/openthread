@@ -110,7 +110,7 @@ The address can be an IPv4 address, which will be synthesized to an IPv6 address
 
 ```bash
 > udp connect 172.17.0.1 1234
-Connecting to synthesized IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+Connecting to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```
 
@@ -170,7 +170,7 @@ The address can be an IPv4 address, which will be synthesized to an IPv6 address
 
 ```bash
 > udp send 172.17.0.1 1234
-Sending to synthesized IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+Sending to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```
 
