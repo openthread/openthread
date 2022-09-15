@@ -1131,11 +1131,7 @@ void setupTransmission(otInstance *aInstance)
 
     otEXPECT_ACTION(!sRadioTransmitting, error = OT_ERROR_ALREADY);
 
-#if OPENTHREAD_SIMULATION_CCA
-    simulateCca(aInstance, sTransmitFrame.mChannel);
-#else
     radioSendMessage(aInstance);
-#endif
 
 exit:
     if (error == OT_ERROR_ALREADY)
