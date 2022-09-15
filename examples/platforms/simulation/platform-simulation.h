@@ -236,7 +236,7 @@ void otSimSendEvent(const struct Event *aEvent);
 void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 /**
- * This function checks if radio transmitting is pending.
+ * This function checks if radio is still transmitting a message to be confirmed by a TxDone signal.
  *
  * @returns Whether radio transmitting is pending.
  *
@@ -244,7 +244,7 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
 bool platformRadioIsTransmitPending(void);
 
 /**
- * This function checks if radio is waiting for a Tx Done signal from the simulator.
+ * This function checks if the radio is performing part of a task, such as returning an ACK or doing a CCA.
  *
  * @returns Whether radio TxDone signal is pending.
  *
