@@ -455,16 +455,16 @@ const char *Interpreter::PreferenceToString(signed int aPreference)
     return str;
 }
 
-otError Interpreter::ParseAndConvertToIp6Address(otInstance *  aInstance,
-                                                 const Arg &   aArg,
-                                                 otIp6Address &aAddress,
-                                                 bool &        aConverted)
+otError Interpreter::ParseToIp6Address(otInstance *  aInstance,
+                                       const Arg &   aArg,
+                                       otIp6Address &aAddress,
+                                       bool &        aSynthesized)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    error      = aArg.ParseAsIp6Address(aAddress);
-    aConverted = false;
+    error        = aArg.ParseAsIp6Address(aAddress);
+    aSynthesized = false;
     if (error != kErrorNone)
     {
         // It might be an IPv4 address, let's have a try.
@@ -473,7 +473,7 @@ otError Interpreter::ParseAndConvertToIp6Address(otInstance *  aInstance,
         // Do not touch the error value if we failed to parse it as an IPv4 address.
         SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
         SuccessOrExit(error = otNat64SynthersizeIp6Address(aInstance, &ip4Address, &aAddress));
-        aConverted = true;
+        aSynthesized = true;
     }
 
 exit:
@@ -4785,7 +4785,7 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
     otError            error = OT_ERROR_NONE;
     otPingSenderConfig config;
     bool               async = false;
-    bool               nat64ConvertedAddress;
+    bool               nat64SynthesizedAddress;
 
     if (aArgs[0] == "stop")
     {
@@ -4825,11 +4825,10 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
         aArgs += 2;
     }
 
-    SuccessOrExit(
-        error = ParseAndConvertToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64ConvertedAddress));
-    if (nat64ConvertedAddress)
+    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
     {
-        OutputFormat("Pinging IPv4-converted IPv6 address: ");
+        OutputFormat("Pinging synthesized IPv6 address: ");
         OutputIp6AddressLine(config.mDestination);
     }
 

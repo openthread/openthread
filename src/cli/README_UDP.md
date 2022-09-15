@@ -104,13 +104,13 @@ Specifies the peer with which the socket is to be associated.
 Done
 ```
 
-The address can be an IPv4 address, which will be converted to IPv6 address using the preferred NAT64 prefix from the network data.
+The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
 
 > Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
 
 ```bash
 > udp connect 172.17.0.1 1234
-Connecting to IPv4-converted IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+Connecting to synthesized IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```
 
@@ -164,13 +164,13 @@ Send a UDP message.
 Done
 ```
 
-The address can be an IPv4 address, which will be converted to IPv6 address using the preferred NAT64 prefix from the network data.
+The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
 
 > Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
 
 ```bash
 > udp send 172.17.0.1 1234
-Sending to IPv4-converted IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
+Sending to synthesized IPv6 addresses: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```
 

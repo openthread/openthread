@@ -176,15 +176,15 @@ otError TcpExample::ProcessConnect(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
-    bool       nat64ConvertedAddress;
+    bool       nat64SynthesizedAddress;
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = Interpreter::ParseAndConvertToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress,
-                                                                   nat64ConvertedAddress));
-    if (nat64ConvertedAddress)
+    SuccessOrExit(
+        error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
     {
-        OutputFormat("Connecting to IPv4-converted IPv6 address: ");
+        OutputFormat("Connecting to synthesized IPv6 address: ");
         OutputIp6AddressLine(sockaddr.mAddress);
     }
 

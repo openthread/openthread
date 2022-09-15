@@ -244,17 +244,17 @@ public:
      * @param[in]  aInstance       A pointer to openthread instance.
      * @param[in]  aArg            The argument string to parse.
      * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed IPv6 address.
-     * @param[out] aConverted      Whether @p aAddress is converted from an IPv4 address.
+     * @param[out] aSynthesized    Whether @p aAddress is synthesized from an IPv4 address.
      *
      * @retval OT_ERROR_NONE          The argument was parsed successfully.
      * @retval OT_ERROR_INVALID_ARGS  The argument is empty or does not contain valid IP address.
      * @retval OT_ERROR_INVALID_STATE No valid NAT64 prefix in the network data.
      *
      */
-    static otError ParseAndConvertToIp6Address(otInstance *  aInstance,
-                                               const Arg &   aArg,
-                                               otIp6Address &aAddress,
-                                               bool &        aConverted);
+    static otError ParseToIp6Address(otInstance *  aInstance,
+                                     const Arg &   aArg,
+                                     otIp6Address &aAddress,
+                                     bool &        aSynthesized);
 
 protected:
     static Interpreter *sInterpreter;
