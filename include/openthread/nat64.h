@@ -385,6 +385,32 @@ void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t 
 void otIp4CidrToString(const otIp4Cidr *aCidr, char *aBuffer, uint16_t aSize);
 
 /**
+ * Converts a human-readable IPv4 address string into a binary representation.
+ *
+ * @param[in]   aString   A pointer to a NULL-terminated string.
+ * @param[out]  aAddress  A pointer to an IPv4 address.
+ *
+ * @retval OT_ERROR_NONE          Successfully parsed the string.
+ * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
+ *
+ */
+otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
+
+/**
+ * Sets the IPv6 address by performing NAT64 address translation from the preferred NAT64 prefix and the given IPv4
+ * address as specified in RFC 6052.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aIp4Address  A pointer to the IPv4 address to translate to IPv6.
+ * @param[out]  aIp6Address  A pointer to the synthesized IPv6 address.
+ *
+ * @returns  OT_ERROR_NONE           Successfully synthesized the IPv6 address from NAT64 prefix and IPv4 address.
+ * @returns  OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
+ *
+ */
+otError otNat64SynthersizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
+
+/**
  * @}
  *
  */

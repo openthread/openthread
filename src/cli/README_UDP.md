@@ -96,11 +96,21 @@ Done
 
 Specifies the peer with which the socket is to be associated.
 
-- ip: the peer's IPv6 address.
+- ip: the peer's IP address.
 - port: the peer's UDP port.
 
 ```bash
 > udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234
+Done
+```
+
+The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> udp connect 172.17.0.1 1234
+Connecting to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```
 
@@ -145,12 +155,22 @@ Done
 
 Send a UDP message.
 
-- ip: the IPv6 destination address.
+- ip: the destination address.
 - port: the UDP destination port.
 - message: the message to send.
 
 ```bash
 > udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 hello
+Done
+```
+
+The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> udp send 172.17.0.1 1234
+Sending to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```
 

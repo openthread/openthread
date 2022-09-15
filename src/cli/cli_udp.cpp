@@ -34,6 +34,7 @@
 #include "cli_udp.hpp"
 
 #include <openthread/message.h>
+#include <openthread/nat64.h>
 #include <openthread/udp.h>
 
 #include "cli/cli.hpp"
@@ -94,8 +95,16 @@ otError UdpExample::ProcessConnect(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
+    bool       nat64SynthesizedAddress;
 
-    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(sockaddr.mAddress));
+    SuccessOrExit(
+        error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
+    {
+        OutputFormat("Connecting to synthesized IPv6 address: ");
+        OutputIp6AddressLine(sockaddr.mAddress);
+    }
+
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
@@ -143,7 +152,16 @@ otError UdpExample::ProcessSend(Arg aArgs[])
 
     if (!aArgs[2].IsEmpty())
     {
-        SuccessOrExit(error = aArgs[0].ParseAsIp6Address(messageInfo.mPeerAddr));
+        bool nat64SynthesizedAddress;
+
+        SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], messageInfo.mPeerAddr,
+                                                             nat64SynthesizedAddress));
+        if (nat64SynthesizedAddress)
+        {
+            OutputFormat("Sending to synthesized IPv6 address: ");
+            OutputIp6AddressLine(messageInfo.mPeerAddr);
+        }
+
         SuccessOrExit(error = aArgs[1].ParseAsUint16(messageInfo.mPeerPort));
         aArgs += 2;
     }

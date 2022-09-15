@@ -39,6 +39,7 @@
 
 #include "cli_tcp.hpp"
 
+#include <openthread/nat64.h>
 #include <openthread/tcp.h>
 
 #include "cli/cli.hpp"
@@ -175,10 +176,18 @@ otError TcpExample::ProcessConnect(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
+    bool       nat64SynthesizedAddress;
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(sockaddr.mAddress));
+    SuccessOrExit(
+        error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
+    {
+        OutputFormat("Connecting to synthesized IPv6 address: ");
+        OutputIp6AddressLine(sockaddr.mAddress);
+    }
+
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 

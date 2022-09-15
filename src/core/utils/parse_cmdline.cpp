@@ -264,6 +264,11 @@ Error ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
     return (aString != nullptr) ? otIp6AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
 }
 
+Error ParseAsIp4Address(const char *aString, otIp4Address &aAddress)
+{
+    return (aString != nullptr) ? otIp4AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
+}
+
 Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
 {
     enum : uint8_t
