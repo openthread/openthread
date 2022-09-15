@@ -636,7 +636,8 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         self.bash('truncate -s 0 /var/log/syslog')
 
     def __dumpSyslog(self):
-        output = self.bash_unwatched('grep "otbr-agent" /var/log/syslog')
+        cmd = self.extraParams.get('cmd-dump-otbr-log', 'grep "otbr-agent" /var/log/syslog')
+        output = self.bash_unwatched(cmd)
         for line in output:
             self.log('%s', line)
 
