@@ -120,6 +120,13 @@ static void receiveEvent(otInstance *aInstance)
         platformRadioTxDone(aInstance, event.mData[0]);
         break;
 
+    case OT_SIM_EVENT_CHANNEL_ACTIVITY:
+#if OPENTHREAD_SIMULATION_CCA
+        // Data[0] is the channel, Data[1] is the CCA value (0-255)
+        platformChannelActivity(aInstance, event.mData[0], (int8_t)event.mData[1]);
+#endif
+        break;
+
     default:
         assert(false);
     }

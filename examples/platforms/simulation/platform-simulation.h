@@ -69,6 +69,7 @@ enum
     OT_SIM_EVENT_OTNS_STATUS_PUSH   = 5,
     OT_SIM_EVENT_RADIO_COMM         = 6,
     OT_SIM_EVENT_RADIO_TX_DONE      = 7,
+    OT_SIM_EVENT_CHANNEL_ACTIVITY   = 8,
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
@@ -168,6 +169,16 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
  *
  */
 void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq);
+
+/**
+ * This function inputs the parameter used to simulate a CCA procedure.
+ *
+ * @param[in]  aInstance  A pointer to the OpenThread instance.
+ * @param[in]  channel    Channel number in use.
+ * @param[in]  value      CCA result (-128 for no activity, 127 busy or invalid).
+ *
+ */
+void platformChannelActivity(otInstance *aInstance, uint8_t channel, int8_t value);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.

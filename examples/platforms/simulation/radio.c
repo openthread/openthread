@@ -78,6 +78,16 @@ static uint8_t      sLastReportedChannel = 0;
 static bool         sRadioTransmitting   = false;
 static bool         sAckTxDonePending    = false;
 static uint64_t     sTransmittingUntil   = 0;
+
+#if OPENTHREAD_SIMULATION_CCA
+static bool sCcaPending;
+#endif
+
+enum
+{
+    CCA_DURATION_US                 = 8 * (OT_US_PER_TEN_SYMBOLS / 10),
+    RADIO_STATE_TRANSITION_DELAY_US = 400,
+};
 #else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
@@ -93,11 +103,6 @@ enum
 {
     SIM_RADIO_CHANNEL_MIN = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
     SIM_RADIO_CHANNEL_MAX = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
-};
-
-enum
-{
-    RADIO_STATE_TRANSITION_DELAY_US = 400,
 };
 
 OT_TOOL_PACKED_BEGIN
@@ -1086,6 +1091,48 @@ exit:
     return;
 }
 
+#if OPENTHREAD_SIMULATION_CCA
+void platformChannelActivity(otInstance *aInstance, uint8_t channel, int8_t value)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(channel); // For future use of scanning
+
+    if (sCcaPending)
+    {
+        sCcaPending = false;
+        if (value <= sCcaEdThresh)
+        {
+            radioSendMessage(aInstance);
+        }
+        else
+        {
+            platformTransmitReturn(aInstance, &sTransmitFrame, NULL, OT_ERROR_CHANNEL_ACCESS_FAILURE);
+        }
+    }
+}
+
+void requestCcaToOtns(uint8_t channel)
+{
+    struct Event event;
+
+    event.mDelay   = CCA_DURATION_US;
+    event.mEvent   = OT_SIM_EVENT_CHANNEL_ACTIVITY;
+    event.mData[0] = channel;
+
+    event.mDataLength = 1;
+    otSimSendEvent(&event);
+}
+
+void simulateCca(otInstance *aInstance, uint8_t channel)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sCcaPending = true;
+    requestCcaToOtns(channel);
+    otPlatAlarmMicroStartAt(aInstance, otPlatAlarmMicroGetNow(), CCA_DURATION_US);
+}
+#endif
+
 void radioSendMessage(otInstance *aInstance)
 {
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1158,7 +1205,11 @@ exit:
 
 bool platformRadioTaskPending(void)
 {
+#if OPENTHREAD_SIMULATION_CCA
+    return sAckTxDonePending || sCcaPending;
+#else
     return sAckTxDonePending;
+#endif
 }
 
 void platformRadioTxDone(otInstance *aInstance, uint8_t pktSeq)
@@ -1208,7 +1259,12 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
     OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
+    // Do not send if radio is transmitting an ack nor waiting for CCA.
+#if OPENTHREAD_SIMULATION_CCA
+    if (platformRadioIsTransmitPending() && !sAckTxDonePending && !sCcaPending)
+#else
     if (platformRadioIsTransmitPending() && !sAckTxDonePending)
+#endif
     {
         setupTransmission(aInstance);
     }

@@ -53,6 +53,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_SIMULATION_CCA
+ *
+ * This setting configures whether to use virtual CAA (provided by the simulator) in simulation platform.
+ *
+ */
+#ifndef OPENTHREAD_SIMULATION_CCA
+#define OPENTHREAD_SIMULATION_CCA 1
+#endif
+
+/**
  * @def OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART
  *
  * This setting configures whether to use virtual time for UART.
