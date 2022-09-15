@@ -47,5 +47,5 @@ target_link_libraries(openthread-ftd
 )
 
 if(NOT OT_EXCLUDE_TCPLP_LIB)
-    target_link_libraries(openthread-ftd PRIVATE tcplp)
+    target_link_libraries(openthread-ftd PRIVATE tcplp-ftd)
 endif()
