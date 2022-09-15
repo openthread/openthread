@@ -77,6 +77,7 @@ static void receiveEvent(otInstance *aInstance)
 {
     struct Event event;
     ssize_t      rval = recvfrom(sSockFd, (char *)&event, sizeof(event), 0, NULL, NULL);
+    const uint8_t *evData = &event.mData[0];
 
     if (rval < 0 || (uint16_t)rval < offsetof(struct Event, mData))
     {
@@ -90,7 +91,7 @@ static void receiveEvent(otInstance *aInstance)
     {
     case OT_SIM_EVENT_ALARM_FIRED:
         // store the optional msg id from payload
-        if ((uint16_t)rval >= sizeof(sizeof(gLastAlarmEventId)))
+        if ((uint16_t)rval >= sizeof(gLastAlarmEventId) + offsetof(struct Event, mData))
         {
             memcpy(&gLastAlarmEventId, event.mData, sizeof(gLastAlarmEventId));
         }
@@ -106,13 +107,14 @@ static void receiveEvent(otInstance *aInstance)
 
     case OT_SIM_EVENT_RADIO_RX:
         VERIFY_EVENT_SIZE(struct RxEventData)
-        platformRadioReceive(aInstance, (&event.mData[0]) + sizeof(struct RxEventData),
-                       event.mDataLength - sizeof(struct RxEventData), (struct RxEventData *) &event.mData[0]);
+        const size_t sz = sizeof(struct RxEventData);
+        platformRadioReceive(aInstance, evData + sz,
+                       event.mDataLength - sz, (struct RxEventData *)evData);
         break;
 
     case OT_SIM_EVENT_RADIO_TX_DONE:
         VERIFY_EVENT_SIZE(struct TxDoneEventData)
-        platformRadioTransmitDone(aInstance, (struct TxDoneEventData *) event.mData);
+        platformRadioTransmitDone(aInstance, (struct TxDoneEventData *)evData);
         break;
 
     default:

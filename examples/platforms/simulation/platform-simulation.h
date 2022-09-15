@@ -189,7 +189,7 @@ void platformRadioDeinit(void);
  * @param[in]  aRxParams   Optional pointer to parameters related to the reception event, or NULL if none were given.
  *
  */
-void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, struct RxEventData *aRxParams);
+void platformRadioReceive(otInstance *aInstance, const uint8_t *aBuf, uint16_t aBufLength, struct RxEventData *aRxParams);
 
 /**
  * This function signals that virtual radio is done transmitting a single frame.

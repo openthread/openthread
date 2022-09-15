@@ -706,7 +706,7 @@ bool platformRadioIsTransmitPending(void)
 }
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
-void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength, struct RxEventData *aRxParams)
+void platformRadioReceive(otInstance *aInstance, const uint8_t *aBuf, uint16_t aBufLength, struct RxEventData *aRxParams)
 {
     struct RxEventData defaultRxEventData;
     assert(sizeof(sReceiveMessage) >= aBufLength);
