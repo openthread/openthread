@@ -663,6 +663,7 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
         finally:
             self.bash('ip6tables -L INPUT -v')
             self.bash('ip6tables -F INPUT')
+            time.sleep(1)
 
     def _mdns_query_impl(self, service, find_active):
         # For BBR-TC-03 or DH test cases (empty arguments) just send a query
