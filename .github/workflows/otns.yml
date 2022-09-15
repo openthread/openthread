@@ -30,6 +30,10 @@ name: OTNS
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
+  cancel-in-progress: true
+
 env:
   COVERAGE: 1
   REFERENCE_DEVICE: 1
@@ -39,14 +43,6 @@ env:
   GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
 jobs:
-
-  cancel-previous-runs:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/main'"
 
   unittests:
     name: Unittests

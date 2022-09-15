@@ -27,7 +27,13 @@
 #
 
 name: CIFuzz
+
 on: [pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
+  cancel-in-progress: true
+
 jobs:
  Fuzzing:
    runs-on: ubuntu-20.04
