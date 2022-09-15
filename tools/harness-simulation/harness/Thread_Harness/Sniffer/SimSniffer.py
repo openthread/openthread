@@ -261,14 +261,15 @@ class SimSniffer(ISniffer):
             raise RuntimeError('startSniffer error: %s' % sniffer_pb2.Status.Name(response.status))
 
         self._thread = threading.Thread(target=self._file_sync_main_loop)
+        self._thread.setDaemon(True)
         self._thread.start()
 
         self.is_active = True
 
     @watched
     def _file_sync_main_loop(self):
-        with open(self._local_pcapng_location, 'w+b') as f:
-            for response in self._stub.TransferFile(sniffer_pb2.TransferFileRequest()):
+        with open(self._local_pcapng_location, 'wb') as f:
+            for response in self._stub.TransferPcapng(sniffer_pb2.TransferPcapngRequest()):
                 f.write(response.content)
                 f.flush()
 

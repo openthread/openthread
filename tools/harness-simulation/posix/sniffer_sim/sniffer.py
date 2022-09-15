@@ -51,7 +51,6 @@ class CaptureState(enum.Flag):
     NONE = 0
     THREAD = enum.auto()
     ETHERNET = enum.auto()
-    SYNC = enum.auto()
 
 
 class SnifferServicer(sniffer_pb2_grpc.Sniffer):
@@ -76,14 +75,11 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self._max_nodes_num = max_nodes_num
         self._thread_alive = threading.Event()
         self._file_sync_done = threading.Event()
-        self._state_mutex = threading.Lock()  # for `self._state`
         self._nodeids_mutex = threading.Lock()  # for `self._denied_nodeids`
-        self._tshark_proc_mutex = threading.Lock()  # for `self._tshark_proc`
         self._reset()
 
     def Start(self, request, context):
         """ Start sniffing. """
-        # No need to use mutex in this method as only `Start` is running
 
         self.logger.debug('call Start')
 
@@ -105,6 +101,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
         self.logger.debug('Running command:  %s', ' '.join(cmd))
         self._tshark_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        self._set_nonblocking(self._tshark_proc.stdout.fileno())
 
         # Construct pcap codec after initiating tshark to avoid blocking
         self._pcap = pcap_codec.PcapCodec(request.channel, fifo_name)
@@ -118,7 +115,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
         # Start the sniffer main loop thread
         self._thread = threading.Thread(target=self._sniffer_main_loop)
-        self._thread.daemon = True
+        self._thread.setDaemon(True)
         self._transport.open()
         self._thread_alive.set()
         self._thread.start()
@@ -141,22 +138,16 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
             if nodeid not in denied_nodeids:
                 self._pcap.append(data)
 
-    def TransferFile(self, request, context):
+    def TransferPcapng(self, request, context):
         """ Transfer the capture file. """
 
-        # Validate and change the state
-        with self._state_mutex:
-            if self._state == CaptureState.NONE or (self._state & CaptureState.SYNC):
-                return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OPERATION_ERROR)
-            self._state |= CaptureState.SYNC
-
-        with self._tshark_proc_mutex:
-            self._set_nonblocking(self._tshark_proc.stdout.fileno())
+        # Validate the state
+        if self._state == CaptureState.NONE:
+            return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OPERATION_ERROR)
 
         # Synchronize the capture file
         while True:
-            with self._tshark_proc_mutex:
-                content = self._tshark_proc.stdout.read()
+            content = self._tshark_proc.stdout.read()
             if content is None:
                 # Currently no captured packets
                 time.sleep(self.TIMEOUT)
@@ -165,7 +156,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
                 break
             else:
                 # Forward the captured packets
-                yield sniffer_pb2.TransferFileResponse(content=content)
+                yield sniffer_pb2.TransferPcapngResponse(content=content)
 
         self._file_sync_done.set()
 
@@ -184,9 +175,8 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self.logger.debug('call FilterNodes')
 
         # Validate the state
-        with self._state_mutex:
-            if not (self._state & CaptureState.THREAD) or not (self._state & CaptureState.SYNC):
-                return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OPERATION_ERROR)
+        if not (self._state & CaptureState.THREAD):
+            return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OPERATION_ERROR)
 
         denied_nodeids = set(request.nodeids)
         # Validate the node IDs
@@ -205,21 +195,18 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self.logger.debug('call Stop')
 
         # Validate and change the state
-        with self._state_mutex:
-            if not (self._state & CaptureState.THREAD) or not (self._state & CaptureState.SYNC):
-                return sniffer_pb2.StopResponse(status=sniffer_pb2.OPERATION_ERROR)
-            self._state = CaptureState.NONE
+        if not (self._state & CaptureState.THREAD):
+            return sniffer_pb2.StopResponse(status=sniffer_pb2.OPERATION_ERROR)
+        self._state = CaptureState.NONE
 
         self._thread_alive.clear()
         self._thread.join()
         self._transport.close()
         self._pcap.close()
 
-        with self._tshark_proc_mutex:
-            self._tshark_proc.terminate()
+        self._tshark_proc.terminate()
         self._file_sync_done.wait()
         # `self._tshark_proc` becomes None after the next statement
-        # No need to use mutex here as only `Stop` is running
         self._tshark_proc.wait()
 
         self._reset()
@@ -228,6 +215,8 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
 
 def serve(address_port, max_nodes_num):
+    # One worker is used for `Start`, `FilterNodes` and `Stop`
+    # The other worker is used for `TransferPcapng`, which will be kept running by the client in a background thread
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
     sniffer_pb2_grpc.add_SnifferServicer_to_server(SnifferServicer(max_nodes_num), server)
     # add_secure_port requires a web domain

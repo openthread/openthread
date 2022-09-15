@@ -8,7 +8,7 @@ service Sniffer {
     rpc Start(StartRequest) returns (StartResponse) {}
 
     // Transfer the capture file
-    rpc TransferFile(TransferFileRequest) returns (stream TransferFileResponse) {}
+    rpc TransferPcapng(TransferPcapngRequest) returns (stream TransferPcapngResponse) {}
 
     // Let the sniffer sniff these nodes only
     rpc FilterNodes(FilterNodesRequest) returns (FilterNodesResponse) {}
@@ -44,10 +44,10 @@ message StartResponse {
     Status status = 1;
 }
 
-message TransferFileRequest {
+message TransferPcapngRequest {
 }
 
-message TransferFileResponse {
+message TransferPcapngResponse {
     bytes content = 1;
 }
 
