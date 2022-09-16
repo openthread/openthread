@@ -34,14 +34,6 @@ OT_DIR="${POSIX_DIR}/../../.."
 ETC_DIR="${POSIX_DIR}/etc"
 SNIFFER_DIR="${POSIX_DIR}/sniffer_sim"
 
-CONFIG=${1:-"${POSIX_DIR}/simulation.conf"}
-# Use absolute path in case of changing current working directory
-if [[ ${CONFIG:0:1} != '/' ]]; then
-    CONFIG="${POSIX_DIR}/${CONFIG}"
-fi
-
-MAX_NETWORK_SIZE=$(jq -r '.ot_build.max_number' "$CONFIG")
-
 PACKAGES=(
     "docker.io"
     "git"
@@ -54,6 +46,12 @@ sudo apt install -y "${PACKAGES[@]}"
 
 pip3 install -r "${POSIX_DIR}/requirements.txt"
 python3 -m grpc_tools.protoc -I"${SNIFFER_DIR}" --python_out="${SNIFFER_DIR}" --grpc_python_out="${SNIFFER_DIR}" proto/sniffer.proto
+
+CONFIG_NAME=${1:-"${POSIX_DIR}/config.yml"}
+# convert YAML to JSON
+CONFIG=$(python3 -c 'import json, sys, yaml; print(json.dumps(yaml.safe_load(open(sys.argv[1]))))' "$CONFIG_NAME")
+
+MAX_NETWORK_SIZE=$(jq -r '.ot_build.max_number' <<<"$CONFIG")
 
 build_ot()
 {
@@ -126,7 +124,7 @@ build_otbr()
         --build-arg OTBR_OPTIONS="${otbr_options[*]}"
 }
 
-for item in $(jq -c '.ot_build.ot | .[]' "$CONFIG"); do
+for item in $(jq -c '.ot_build.ot | .[]' <<<"$CONFIG"); do
     build_ot "$item"
 done
 
@@ -144,7 +142,7 @@ git clone https://github.com/openthread/ot-br-posix.git --recurse-submodules --s
     mkdir -p root/tmp
     cp "${ETC_DIR}/requirements.txt" root/tmp/requirements.txt
 
-    for item in $(jq -c '.ot_build.otbr | .[]' "$CONFIG"); do
+    for item in $(jq -c '.ot_build.otbr | .[]' <<<"$CONFIG"); do
         build_otbr "$item"
     done
 )
