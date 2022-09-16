@@ -156,6 +156,7 @@ const char *SettingsBase::KeyToString(Key aKey)
         "SrpServerInfo",     // (13) kKeySrpServerInfo
         "",                  // (14) Removed (previously NAT64 prefix)
         "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
+        "BrOnLinkPrefixes"   // (16) kKeyBrOnLinkPrefixes
     };
 
     static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
@@ -169,8 +170,9 @@ const char *SettingsBase::KeyToString(Key aKey)
     static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
     static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
     static_assert(15 == kKeyBrUlaPrefix, "kKeyBrUlaPrefix value is incorrect");
+    static_assert(16 == kKeyBrOnLinkPrefixes, "kKeyBrOnLinkPrefixes is incorrect");
 
-    static_assert(kLastKey == kKeyBrUlaPrefix, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyBrOnLinkPrefixes, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
@@ -307,6 +309,83 @@ exit:
     mIsDone = (error != kErrorNone);
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+Error Settings::AddOrUpdateBrOnLinkPrefix(const BrOnLinkPrefix &aBrOnLinkPrefix)
+{
+    Error          error = kErrorNone;
+    int            index = 0;
+    BrOnLinkPrefix brPrefix;
+    bool           didUpdate = false;
+
+    while (ReadBrOnLinkPrefix(index, brPrefix) == kErrorNone)
+    {
+        if (brPrefix.GetPrefix() == aBrOnLinkPrefix.GetPrefix())
+        {
+            if (brPrefix.GetLifetime() == aBrOnLinkPrefix.GetLifetime())
+            {
+                // Existing entry fully matches `aBrOnLinkPrefix`.
+                // No need to make any changes.
+                ExitNow();
+            }
+
+            SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
+            didUpdate = true;
+            break;
+        }
+
+        index++;
+    }
+
+    SuccessOrExit(error = Get<SettingsDriver>().Add(kKeyBrOnLinkPrefixes, &aBrOnLinkPrefix, sizeof(BrOnLinkPrefix)));
+    brPrefix.Log(didUpdate ? "Updated" : "Added");
+
+exit:
+    return error;
+}
+
+Error Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
+{
+    Error          error = kErrorNotFound;
+    BrOnLinkPrefix brPrefix;
+
+    for (int index = 0; ReadBrOnLinkPrefix(index, brPrefix) == kErrorNone; index++)
+    {
+        if (brPrefix.GetPrefix() == aPrefix)
+        {
+            SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
+            brPrefix.Log("Removed");
+            break;
+        }
+    }
+
+exit:
+    return error;
+}
+
+Error Settings::DeleteAllBrOnLinkPrefixes(void)
+{
+    return Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes);
+}
+
+Error Settings::ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix)
+{
+    uint16_t length = sizeof(BrOnLinkPrefix);
+
+    aBrOnLinkPrefix.Init();
+
+    return Get<SettingsDriver>().Get(kKeyBrOnLinkPrefixes, aIndex, &aBrOnLinkPrefix, &length);
+}
+
+void Settings::BrOnLinkPrefix::Log(const char *aActionText) const
+{
+    OT_UNUSED_VARIABLE(aActionText);
+
+    LogInfo("%s %s entry {prefix:%s,lifetime:%u}", aActionText, KeyToString(kKeyBrOnLinkPrefixes),
+            GetPrefix().ToString().AsCString(), GetLifetime());
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 Error Settings::ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const
 {

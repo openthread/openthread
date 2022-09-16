@@ -72,6 +72,7 @@ enum
     OT_SETTINGS_KEY_SRP_CLIENT_INFO      = 0x000c, ///< The SRP client info (selected SRP server address).
     OT_SETTINGS_KEY_SRP_SERVER_INFO      = 0x000d, ///< The SRP server info (UDP port).
     OT_SETTINGS_KEY_BR_ULA_PREFIX        = 0x000f, ///< BR ULA prefix.
+    OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES  = 0x0010, ///< BR local on-link prefixes.
 
     // Deprecated and reserved key values:
     //

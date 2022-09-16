@@ -666,7 +666,7 @@ private:
         // Max number of old on-link prefixes to retain to deprecate.
         static constexpr uint16_t kMaxOldPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES;
 
-        void               GenerateLocalPrefix(void);
+        void               Init(void);
         void               Start(void);
         void               Stop(void);
         void               Evaluate(void);
@@ -697,6 +697,7 @@ private:
             TimeMilli   mExpireTime;
         };
 
+        void GenerateLocalPrefix(void);
         void PublishAndAdvertise(void);
         void Deprecate(void);
         void ResetExpireTime(TimeMilli aNow);
@@ -704,6 +705,7 @@ private:
         void AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         void AppendOldPrefixes(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         void DeprecateOldPrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime);
+        void SavePrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime);
 
         using ExpireTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleOnLinkPrefixManagerTimer>;
 
