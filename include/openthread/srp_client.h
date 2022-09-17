@@ -88,28 +88,34 @@ typedef struct otSrpClientHostInfo
  * and stay constant after an instance of this structure is passed to OpenThread from `otSrpClientAddService()` or
  * `otSrpClientRemoveService()`.
  *
+ * The `mState`, `mData`, `mNext` fields are used/managed by OT core only. Their value is ignored when an instance of
+ * `otSrpClientService` is passed in `otSrpClientAddService()` or `otSrpClientRemoveService()` or other functions. The
+ * caller does not need to set these fields.
+ *
+ * The `mLease` and `mKeyLease` fields specify the desired lease and key lease intervals for this service. Zero value
+ * indicates that the interval is unspecified and then the default lease or key lease intervals from
+ * `otSrpClientGetLeaseInterval()` and `otSrpClientGetKeyLeaseInterval()` are used for this service. If the key lease
+ * interval (whether set explicitly or determined from the default) is shorter than the lease interval for a service,
+ * SRP client will re-use the lease interval value for key lease interval as well. For example, if in service `mLease`
+ * is explicitly set to 2 days and `mKeyLease` is set to zero and default key lease is set to 1 day, then when
+ * registering this service, the requested key lease for this service is also set to 2 days.
+ *
  */
 typedef struct otSrpClientService
 {
-    const char *         mName;          ///< The service name labels (e.g., "_chip._udp", not the full domain name).
-    const char *         mInstanceName;  ///< The service instance name label (not the full name).
-    const char *const *  mSubTypeLabels; ///< Array of service sub-type labels (must end with `NULL` or can be `NULL`).
-    const otDnsTxtEntry *mTxtEntries;    ///< Array of TXT entries (number of entries is given by `mNumTxtEntries`).
-    uint16_t             mPort;          ///< The service port number.
-    uint16_t             mPriority;      ///< The service priority.
-    uint16_t             mWeight;        ///< The service weight.
-    uint8_t              mNumTxtEntries; ///< Number of entries in the `mTxtEntries` array.
-
-    /**
-     * @note The following fields are used/managed by OT core only. Their values do not matter and are ignored when an
-     * instance of `otSrpClientService` is passed in `otSrpClientAddService()` or `otSrpClientRemoveService()`. The
-     * user should not modify these fields.
-     *
-     */
-
-    otSrpClientItemState       mState; ///< Service state (managed by OT core).
-    uint32_t                   mData;  ///< Internal data (used by OT core).
-    struct otSrpClientService *mNext;  ///< Pointer to next entry in a linked-list (managed by OT core).
+    const char *               mName;          ///< The service labels (e.g., "_mt._udp", not the full domain name).
+    const char *               mInstanceName;  ///< The service instance name label (not the full name).
+    const char *const *        mSubTypeLabels; ///< Array of sub-type labels (must end with `NULL` or can be `NULL`).
+    const otDnsTxtEntry *      mTxtEntries;    ///< Array of TXT entries (`mNumTxtEntries` gives num of entries).
+    uint16_t                   mPort;          ///< The service port number.
+    uint16_t                   mPriority;      ///< The service priority.
+    uint16_t                   mWeight;        ///< The service weight.
+    uint8_t                    mNumTxtEntries; ///< Number of entries in the `mTxtEntries` array.
+    otSrpClientItemState       mState;         ///< Service state (managed by OT core).
+    uint32_t                   mData;          ///< Internal data (used by OT core).
+    struct otSrpClientService *mNext;          ///< Pointer to next entry in a linked-list (managed by OT core).
+    uint32_t                   mLease;         ///< Desired lease interval in sec - zero to use default.
+    uint32_t                   mKeyLease;      ///< Desired key lease interval in sec - zero to use default.
 } otSrpClientService;
 
 /**
@@ -359,7 +365,9 @@ uint32_t otSrpClientGetTtl(otInstance *aInstance);
 void otSrpClientSetTtl(otInstance *aInstance, uint32_t aTtl);
 
 /**
- * This function gets the lease interval used in SRP update requests.
+ * This function gets the default lease interval used in SRP update requests.
+ *
+ * The default interval is used only for `otSrpClientService` instances with `mLease` set to zero.
  *
  * Note that this is the lease duration requested by the SRP client. The server may choose to accept a different lease
  * interval.
@@ -372,7 +380,9 @@ void otSrpClientSetTtl(otInstance *aInstance, uint32_t aTtl);
 uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance);
 
 /**
- * This function sets the lease interval used in SRP update requests.
+ * This function sets the default lease interval used in SRP update requests.
+ *
+ * The default interval is used only for `otSrpClientService` instances with `mLease` set to zero.
  *
  * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
  * It only affects any future SRP update messages (i.e., adding new services and/or refreshes of the existing services).
@@ -385,7 +395,9 @@ uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance);
 void otSrpClientSetLeaseInterval(otInstance *aInstance, uint32_t aInterval);
 
 /**
- * This function gets the key lease interval used in SRP update requests.
+ * This function gets the default key lease interval used in SRP update requests.
+ *
+ * The default interval is used only for `otSrpClientService` instances with `mKeyLease` set to zero.
  *
  * Note that this is the lease duration requested by the SRP client. The server may choose to accept a different lease
  * interval.
@@ -398,7 +410,9 @@ void otSrpClientSetLeaseInterval(otInstance *aInstance, uint32_t aInterval);
 uint32_t otSrpClientGetKeyLeaseInterval(otInstance *aInstance);
 
 /**
- * This function sets the key lease interval used in SRP update requests.
+ * This function sets the default key lease interval used in SRP update requests.
+ *
+ * The default interval is used only for `otSrpClientService` instances with `mKeyLease` set to zero.
  *
  * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
  * It only affects any future SRP update messages (i.e., adding new services and/or refreshes of existing services).

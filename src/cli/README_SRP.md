@@ -131,7 +131,10 @@ my-service._ipps._tcp.default.service.arpa.
     port: 12345
     priority: 0
     weight: 0
-    TXT: 00
+    ttl: 7200
+    lease: 7200
+    key-lease: 1209600
+    TXT: []
     host: my-host.default.service.arpa.
     addresses: [fded:5114:8263:1fe1:44f9:cc06:4a2d:534]
 Done
