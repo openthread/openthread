@@ -50,12 +50,12 @@
 extern void otAppCliInit(otInstance *aInstance);
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-void *otPlatCAlloc(size_t aNum, size_t aSize)
+OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     return calloc(aNum, aSize);
 }
 
-void otPlatFree(void *aPtr)
+OT_TOOL_WEAK void otPlatFree(void *aPtr)
 {
     free(aPtr);
 }
