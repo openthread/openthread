@@ -27,13 +27,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-import json
 import os
+import yaml
 
-CONFIG_PATH = r'%s\GRL\Thread1.2\Thread_Harness\simulation\simulation.conf' % os.environ['systemdrive']
+CONFIG_PATH = r'%s\GRL\Thread1.2\Thread_Harness\simulation\config.yml' % os.environ['systemdrive']
 
 
 def load_config():
     with open(CONFIG_PATH, 'rt') as f:
-        config = json.load(f)
+        config = yaml.safe_load(f)
     return config

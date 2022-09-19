@@ -40,6 +40,7 @@ import struct
 import subprocess
 import sys
 from typing import Iterable
+import yaml
 
 from otbr_sim import otbr_docker
 
@@ -140,7 +141,7 @@ def main():
                         help='the path of the configuration JSON file')
     args = parser.parse_args()
     with open(args.config, 'rt') as f:
-        config = json.load(f)
+        config = yaml.safe_load(f)
 
     ot_path = config['ot_path']
     ot_build = config['ot_build']
