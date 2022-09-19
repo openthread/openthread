@@ -1844,7 +1844,7 @@ This command is only available when device enables NAT64 translator.
 
 ```bash
 > nat64 cidr
-192.168.64.0/24
+192.168.255.0/24
 Done
 ```
 
