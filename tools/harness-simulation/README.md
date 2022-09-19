@@ -34,8 +34,6 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 2. Double click the file `harness\install.bat` on Windows.
 
-3. Add the additional simulation device information in `harness\Web\data\deviceInputFields.xml` to `C:\GRL\Thread1.2\Web\data\deviceInputFields.xml`.
-
 ## Run Test Harness on Simulation
 
 1. On the POSIX machine, change directory to the top of the OpenThread repository, and run the following commands.
