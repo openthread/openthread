@@ -1602,23 +1602,10 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
         ResetAdvertiseInterval();
     }
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-
-    VerifyOrExit(changed);
-    LogInfo("Route table updated");
-
-    for (Router &router : Get<RouterTable>().Iterate())
+    if (changed)
     {
-        LogInfo("    %04x -> %04x, cost:%d %d, lqin:%d, lqout:%d, link:%s", router.GetRloc16(),
-                (router.GetNextHop() == kInvalidRouterId) ? 0xffff : Rloc16FromRouterId(router.GetNextHop()),
-                router.GetCost(), mRouterTable.GetLinkCost(router), router.GetLinkQualityIn(),
-                router.GetLinkQualityOut(),
-                router.GetRloc16() == GetRloc16() ? "device" : ToYesNo(router.IsStateValid()));
+        Get<RouterTable>().LogRouteTable();
     }
-
-#else
-    OT_UNUSED_VARIABLE(changed);
-#endif
 
 exit:
     return;
