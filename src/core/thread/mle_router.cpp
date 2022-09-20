@@ -85,7 +85,6 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionIdTimeout(0)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
-    , mLinkRequestDelay(0)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mBackboneRouterRegistrationDelay(0)
@@ -197,7 +196,6 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     mRouterSelectionJitterTimeout = 0;
-    mLinkRequestDelay             = 0;
 
     switch (mRole)
     {
@@ -290,7 +288,6 @@ void MleRouter::HandleDetachStart(void)
 
 void MleRouter::HandleChildStart(AttachMode aMode)
 {
-    mLinkRequestDelay       = 0;
     mAddressSolicitRejected = false;
 
     mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
@@ -498,11 +495,6 @@ void MleRouter::SendAdvertisement(void)
     // children to detach.
     VerifyOrExit(!mAddressSolicitPending);
 
-    // Suppress MLE Advertisements before sending multicast Link Request.
-    //
-    // Before sending the multicast Link Request message, no links have been established to neighboring routers.
-    VerifyOrExit(mLinkRequestDelay == 0);
-
     VerifyOrExit((message = NewMleMessage(kCommandAdvertisement)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
@@ -543,7 +535,7 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     TxMessage *  message = nullptr;
     Ip6::Address destination;
 
-    VerifyOrExit(mLinkRequestDelay == 0 && mChallengeTimeout == 0);
+    VerifyOrExit(mChallengeTimeout == 0);
 
     destination.Clear();
 
@@ -1425,12 +1417,6 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         ExitNow();
 
     case kRoleRouter:
-        if (mLinkRequestDelay > 0 && route.IsRouterIdSet(mRouterId))
-        {
-            mLinkRequestDelay = 0;
-            IgnoreError(SendLinkRequest(nullptr));
-        }
-
         router = mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != nullptr);
 
@@ -1789,11 +1775,6 @@ void MleRouter::HandleTimeTick(void)
     bool routerStateUpdate = false;
 
     VerifyOrExit(IsFullThreadDevice(), Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMleRouter));
-
-    if (mLinkRequestDelay > 0 && --mLinkRequestDelay == 0)
-    {
-        IgnoreError(SendLinkRequest(nullptr));
-    }
 
     if (mChallengeTimeout > 0)
     {
@@ -3856,8 +3837,15 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     }
     else
     {
-        // wait to send Link Request until new Router ID has been disseminated from the Leader
-        mLinkRequestDelay = kMulticastLinkRequestDelay;
+        IgnoreError(SendLinkRequest(nullptr));
+
+        // We send an Advertisement to inform our former parent of our
+        // newly allocated Router ID. This will cause the parent to
+        // reset its advertisement trickle timer which can help speed
+        // up the dissemination of the new Router ID to other routers.
+        // This can also help with quicker link establishment with our
+        // former parent and other routers.
+        SendAdvertisement();
     }
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateChildIdRequest))
