@@ -65,6 +65,7 @@ set(COMMON_LIBS
     ot-test-platform
     ${OT_MBEDTLS}
     ot-config
+    openthread-ftd
 )
 
 add_executable(ot-test-aes
