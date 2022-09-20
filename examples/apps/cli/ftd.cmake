@@ -44,6 +44,7 @@ target_link_libraries(ot-cli-ftd PRIVATE
     ${OT_PLATFORM_LIB_FTD}
     openthread-cli-ftd
     ${OT_MBEDTLS}
+    ot-config-ftd
     ot-config
 )
 
