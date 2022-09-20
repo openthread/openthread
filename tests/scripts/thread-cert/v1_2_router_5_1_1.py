@@ -148,19 +148,7 @@ class Router_5_1_01(thread_cert.TestCase):
         tlv_request = msg.get_mle_message_tlv(mle.TlvRequest)
         self.assertIn(mle.TlvType.LINK_MARGIN, tlv_request.tlvs)
 
-        # 9 - Leader sends a Unicast Link Accept
-        msg = leader_messages.next_mle_message(mle.CommandType.LINK_ACCEPT_AND_REQUEST)
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.Response)
-        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
-        msg.assertMleMessageContainsTlv(mle.Version)
-        msg.assertMleMessageContainsTlv(mle.LinkMargin)
-        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
-        msg.assertMleMessageContainsOptionalTlv(mle.Challenge)
-        assert msg.get_mle_message_tlv(mle.Version).version >= 3
-
-        # 10 - Router_1 Transmit MLE advertisements
+        # 9 - Router_1 Transmit MLE advertisements
         msg = router_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
         msg.assertSentWithHopLimit(255)
         msg.assertSentToDestinationAddress('ff02::1')
@@ -168,7 +156,7 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LeaderData)
         msg.assertMleMessageContainsTlv(mle.Route64)
 
-        # 11 - Verify connectivity by sending an ICMPv6 Echo Request to the DUT link local address
+        # 10 - Verify connectivity by sending an ICMPv6 Echo Request to the DUT link local address
         self.assertTrue(self.nodes[LEADER].ping(self.nodes[ROUTER_1].get_linklocal()))
         self.assertTrue(self.nodes[ROUTER_1].ping(self.nodes[LEADER].get_linklocal()))
 

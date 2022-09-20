@@ -508,11 +508,6 @@ void MleRouter::SendAdvertisement(void)
     // children to detach.
     VerifyOrExit(!mAddressSolicitPending);
 
-    // Suppress MLE Advertisements before sending multicast Link Request.
-    //
-    // Before sending the multicast Link Request message, no links have been established to neighboring routers.
-    VerifyOrExit(mLinkRequestDelay == 0);
-
     VerifyOrExit((message = NewMleMessage(kCommandAdvertisement)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressTlv());
     SuccessOrExit(error = message->AppendLeaderDataTlv());
@@ -3866,7 +3861,16 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     }
     else
     {
-        // wait to send Link Request until new Router ID has been disseminated from the Leader
+        // We send an Advertisement to inform our former parent of our
+        // newly allocated Router ID. This will cause the parent to
+        // reset its advertisement trickle timer which can help speed
+        // up the dissemination of the new Router ID to other routers.
+        // This can also help with quicker link establishment with our
+        // former parent and other routers.
+        SendAdvertisement();
+
+        // Wait to send Link Request until new Router ID has been
+        // disseminated.
         mLinkRequestDelay = kMulticastLinkRequestDelay;
     }
 
