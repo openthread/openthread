@@ -668,8 +668,6 @@ private:
 
     uint8_t mChildRouterLinks;
 
-    uint8_t mLinkRequestDelay;
-
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     uint8_t mBackboneRouterRegistrationDelay; ///< Delay before registering Backbone Router service.
