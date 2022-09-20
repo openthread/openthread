@@ -1472,6 +1472,20 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         router = mRouterTable.GetRouter(routerId);
         VerifyOrExit(router != nullptr);
 
+        if (!router->IsStateValid() && (aRxInfo.mNeighbor != nullptr) && aRxInfo.mNeighbor->IsStateValid() &&
+            Get<ChildTable>().Contains(*aRxInfo.mNeighbor))
+        {
+            // The Adv is from a former child that is now acting as a router,
+            // we copy the info from child entry and update the RLOC16.
+
+            *static_cast<Neighbor *>(router) = *aRxInfo.mNeighbor;
+            router->SetRloc16(Rloc16FromRouterId(routerId));
+            router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
+                                     DeviceMode::kModeFullNetworkData));
+
+            mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+        }
+
         // Send unicast link request if no link to router and no unicast/multicast link request in progress
         if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
             (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN))
