@@ -170,6 +170,24 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+Error RoutingManager::SetNat64PrefixManagerEnabled(bool aEnabled)
+{
+    Error error = kErrorNone;
+
+    if (aEnabled)
+    {
+        VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+        mNat64PrefixManager.Start();
+    }
+    else
+    {
+        mNat64PrefixManager.Stop();
+    }
+
+exit:
+    return error;
+}
+
 Error RoutingManager::GetNat64Prefix(Ip6::Prefix &aPrefix)
 {
     Error error = kErrorNone;
@@ -2246,7 +2264,10 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
 
 void RoutingManager::Nat64PrefixManager::Start(void)
 {
-    mTimer.Start(0);
+    if (!mTimer.IsRunning())
+    {
+        mTimer.Start(0);
+    }
 }
 
 void RoutingManager::Nat64PrefixManager::Stop(void)
@@ -2374,6 +2395,19 @@ void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &a
     {
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
+}
+
+RoutingManager::Nat64PrefixManagerState RoutingManager::Nat64PrefixManager::GetState()
+{
+    Nat64PrefixManagerState state = kNat64StateDisabled;
+
+    VerifyOrExit(mTimer.IsRunning());
+    VerifyOrExit(mPublishedPrefix.IsValidNat64(), state = kNat64StateIdle);
+
+    state = kNat64StateActive;
+
+exit:
+    return state;
 }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE

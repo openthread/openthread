@@ -745,6 +745,53 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
     /**
+     * @cli nat64 enable
+     * @code
+     * nat64 enable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otNat64SetEnabled
+     *
+     */
+    else if (aArgs[0] == "enable")
+    {
+        error = otNat64SetEnabled(GetInstancePtr(), true);
+    }
+    /**
+     * @cli nat64 disable
+     * @code
+     * nat64 disable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otNat64SetEnabled
+     *
+     */
+    else if (aArgs[0] == "disable")
+    {
+        error = otNat64SetEnabled(GetInstancePtr(), false);
+    }
+    /**
+     * @cli nat64 state
+     * @code
+     * nat64 state
+     * Active
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otNat64GetState
+     *
+     */
+    else if (aArgs[0] == "state")
+    {
+        otNat64State state = otNat64GetState(GetInstancePtr());
+
+        static const char *const kNat64State[] = {"Disabled", "Idle", "Active"};
+
+        OutputLine("%s", kNat64State[state]);
+    }
+    /**
      * @cli nat64 cidr
      * @code
      * nat64 cidr

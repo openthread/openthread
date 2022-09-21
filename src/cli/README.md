@@ -1848,6 +1848,50 @@ This command is only available when device enables NAT64 translator.
 Done
 ```
 
+### nat64 disable
+
+Disable NAT64 functions, including the translator and the prefix publishing.
+
+This command will reset the mapping table in the translator (if NAT64 translator is enabled in the build).
+
+This command is only available when device enables NAT64 translator.
+
+```bash
+> nat64 disable
+Done
+```
+
+### nat64 enable
+
+Enable NAT64 functions, including the translator and the prefix publishing.
+
+The border routing manager should be enabled (if it is enabled in the build), and the NAT64 translator should be configured with a CIDR (if it is enabled in the build).
+
+This command is only available when device enables NAT64 translator.
+
+```bash
+> nat64 enable
+Done
+```
+
+### nat64 state
+
+Gets the state of NAT64 functions.
+
+Possible results are:
+
+- `Disabled`: NAT64 functions are disabled.
+- `Idle`: (Only when routing manager is enabled in the build) NAT64 is enabled, but is not publishing a NAT64 prefix. Usually when there is another border router publishing a NAT64 prefix with higher priority.
+- `Active`: NAT64 functions are enabled, and this border router is publishing a NAT64 prefix (when routing manager is enabled in the build) and translating packages (when NAT64 translator is enabled in the build).
+
+This command is only available when device enables NAT64 translator.
+
+```bash
+> nat64 state
+Active
+Done
+```
+
 ### nat64 mappings
 
 Get the NAT64 translator mappings.

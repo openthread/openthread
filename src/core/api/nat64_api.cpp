@@ -100,6 +100,40 @@ otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr)
 }
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+otNat64State otNat64GetState(otInstance *aInstance)
+{
+    return static_cast<otNat64State>(
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNat64PrefixManagerState()
+#else
+        // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled in this case.
+        AsCoreType(aInstance).Get<Nat64::Translator>().GetState()
+#endif
+    );
+}
+
+otError otNat64SetEnabled(otInstance *aInstance, bool aEnabled)
+{
+    otError ret = OT_ERROR_NONE;
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    // Ensure the NAT64 translator can be enabled when we trying to enable it.
+    VerifyOrExit(!aEnabled || AsCoreType(aInstance).Get<Nat64::Translator>().IsReady(), ret = OT_ERROR_INVALID_STATE);
+#endif
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    SuccessOrExit(ret =
+                      AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(aEnabled));
+#endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    VerifyOrExit(ret = AsCoreType(aInstance).Get<Nat64::Translator>().SetEnabled(aEnabled));
+#endif
+
+exit:
+    return ret;
+}
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
 bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond)
 {
     return AsCoreType(aFirst) == AsCoreType(aSecond);

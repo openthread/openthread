@@ -76,6 +76,12 @@ public:
         kDrop,          ///< The caller should drop the datagram silently.
     };
 
+    enum State : uint8_t
+    {
+        kStateDisabled = OT_NAT64_STATE_DISABLED, ///< NAT64 translator is disabled.
+        kStateActive   = OT_NAT64_STATE_ACTIVE,   ///< NAT64 translator is enabled.
+    };
+
     /**
      * Represents the counters for the protocols supported by NAT64.
      *
@@ -293,6 +299,35 @@ public:
      */
     Error GetIp6Prefix(Ip6::Prefix &aPrefix);
 
+    /**
+     * Gets the state of NAT64 translator.
+     *
+     * @retval  kNat64StateDisabled  NAT64 is disabled.
+     * @retval  kNat64StateActive    NAT64 is enabled, and is translating packets.
+     *
+     */
+    State GetState();
+
+    /**
+     * Set the state of NAT64 translator.
+     *
+     * @param[in]  aEnabled   A boolean to enable/disable NAT64 translator.
+     *
+     * @retval kErrorNone            Successfully enabled / disabled NAT64 translator.
+     * @retval kErrorInvalidState    No nat64 cidr is configured.
+     *.
+     */
+    Error SetEnabled(bool aEnabled);
+
+    /**
+     * Gets wheather the NAT64 translator can be enabled.
+     *
+     * @retval TRUE  The NAT64 translator can be enabled.
+     * @retval FALSE The NAT64 translator cannot be enabled, calling SetEnabled(true) will get kErrorInvalidState.
+     *.
+     */
+    bool IsReady() { return mIp4Cidr.mLength > 0; }
+
 private:
     class AddressMapping : public LinkedListEntry<AddressMapping>
     {
@@ -325,6 +360,7 @@ private:
     Error TranslateIcmp4(Message &aMessage);
     Error TranslateIcmp6(Message &aMessage);
 
+    void            ResetMappings();
     void            ReleaseMapping(AddressMapping &aMapping);
     uint16_t        ReleaseExpiredMappings(void);
     AddressMapping *AllocateMapping(const Ip6::Address &aIp6Addr);
@@ -332,6 +368,8 @@ private:
     AddressMapping *FindMapping(const Ip4::Address &aIp4Addr);
 
     static void MappingExpirerHandler(Timer &aTimer);
+
+    bool mEnabled;
 
     uint64_t mNextMappingId;
 

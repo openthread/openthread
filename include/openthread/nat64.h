@@ -89,6 +89,17 @@ typedef struct otIp4Cidr
 } otIp4Cidr;
 
 /**
+ * State of NAT64.
+ *
+ */
+typedef enum
+{
+    OT_NAT64_STATE_DISABLED = 0, ///< NAT64 is disabled.
+    OT_NAT64_STATE_IDLE,         ///< NAT64 is enabled, but is not publishing a NAT64 prefix.
+    OT_NAT64_STATE_ACTIVE,       ///< NAT64 is enabled, and is publishing a NAT64 prefix and/or translating packets.
+} otNat64State;
+
+/**
  * Represents the counters for NAT64.
  *
  */
@@ -322,6 +333,44 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
  *
  */
 otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
+
+/**
+ * Gets the state of NAT64 functions.
+ *
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is
+ * enabled.
+ *
+ * Note: When `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is not set, this function will only return one of
+ * `OT_NAT64_DISABLED` and `OT_NAT64_ACTIVE`.
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ *
+ * @retval     OT_NAT64_STATE_DISABLED  NAT64 is disabled.
+ * @retval     OT_NAT64_STATE_IDLE      NAT64 is enabled, but is not publishing a NAT64 prefix. Usually when there is
+ *                                      another border router publishing a NAT64 prefix with higher priority.
+ * @retval     OT_NAT64_STATE_ACTIVE    NAT64 is enabled, and is translating packets.
+ *
+ */
+otNat64State otNat64GetState(otInstance *aInstance);
+
+/**
+ * Set the state of NAT64 functions.
+ *
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is
+ *enabled.
+ *
+ * Note: Possible reasons for `OT_ERROR_INVALID_STATE` could be: border routing manager is not enabled when
+ *`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled or no CIDR for NAT64 is provided when
+ *`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   A boolean to enable/disable the NAT64 functions
+ *
+ * @retval OT_ERROR_NONE            Successfully enabled / disabled NAT64 functions.
+ * @retval OT_ERROR_INVALID_STATE   NAT64 cannot be enabled.
+ *.
+ */
+otError otNat64SetEnabled(otInstance *aInstance, bool aEnable);
 
 /**
  * Test if two IPv4 addresses are the same.
