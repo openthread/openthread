@@ -533,7 +533,7 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
         // converge to the same smallest/favored on-link prefix and the
         // application-specific prefix is not used.
 
-        if (!(mLocalOmrPrefix.GetPrefix() < mFavoredDiscoveredOnLinkPrefix))
+        if (!(mLocalOnLinkPrefix.GetPrefix() < mFavoredDiscoveredOnLinkPrefix))
         {
             LogInfo("EvaluateOnLinkPrefix: There is already favored on-link prefix %s on %s",
                     mFavoredDiscoveredOnLinkPrefix.ToString().AsCString(), mInfraIf.ToString().AsCString());
