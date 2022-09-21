@@ -92,6 +92,12 @@ class Server;
 }
 } // namespace Dns
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+namespace BorderRouter {
+class RoutingManager;
+}
+#endif
+
 namespace Srp {
 
 /**
@@ -105,6 +111,9 @@ class Server : public InstanceLocator, private NonCopyable
     friend class Service;
     friend class Host;
     friend class Dns::ServiceDiscovery::Server;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    friend class BorderRouter::RoutingManager;
+#endif
 
     enum RetainName : bool
     {
@@ -151,11 +160,15 @@ public:
 
     class Host;
 
+    /**
+     * This enumeration represents the state of SRP server.
+     *
+     */
     enum State : uint8_t
     {
-        kStateDisabled = OT_SRP_SERVER_STATE_DISABLED,
-        kStateRunning  = OT_SRP_SERVER_STATE_RUNNING,
-        kStateStopped  = OT_SRP_SERVER_STATE_STOPPED,
+        kStateDisabled = OT_SRP_SERVER_STATE_DISABLED, ///< Server is disabled.
+        kStateRunning  = OT_SRP_SERVER_STATE_RUNNING,  ///< Server is enabled and running.
+        kStateStopped  = OT_SRP_SERVER_STATE_STOPPED,  ///< Server is enabled but stopped.
     };
 
     /**
@@ -775,17 +788,9 @@ public:
     Error SetAnycastModeSequenceNumber(uint8_t aSequenceNumber);
 
     /**
-     * This method tells whether the SRP server is currently running.
+     * This method returns the state of the SRP server.
      *
-     * @returns  A boolean that indicates whether the server is running.
-     *
-     */
-    bool IsRunning(void) const { return (mState == kStateRunning); }
-
-    /**
-     * This method tells the state of the SRP server.
-     *
-     * @returns  An enum that represents the state of the server.
+     * @returns  The state of the server.
      *
      */
     State GetState(void) const { return mState; }
@@ -793,10 +798,10 @@ public:
     /**
      * This method tells the port the SRP server is listening to.
      *
-     * @returns  An integer that represents the port of the server. It returns 0 if the SRP server is not running.
+     * @returns  The port of the server or 0 if the SRP server is not running.
      *
      */
-    uint16_t GetPort(void) const { return IsRunning() ? mPort : 0; }
+    uint16_t GetPort(void) const { return (mState == kStateRunning) ? mPort : 0; }
 
     /**
      * This method enables/disables the SRP server.
@@ -805,6 +810,35 @@ public:
      *
      */
     void SetEnabled(bool aEnabled);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    /**
+     * This method enables/disables the auto-enable mode on SRP server.
+     *
+     * When this mode is enabled, the Border Routing Manager controls if/when to enable or disable the SRP server.
+     * SRP sever is auto-enabled if/when Border Routing is started it is done with the initial prefix and route
+     * configurations (when the OMR and on-link prefixes are determined, advertised in emitted Router Advert message on
+     * infrastructure side and published in the Thread Network Data). The SRP server is auto-disabled when BR is
+     * stopped (e.g., if the infrastructure network interface is brought down or if BR gets detached).
+     *
+     * This mode can be disabled by a `SetAutoEnableMode(false)` call or if the SRP server is explicitly enabled or
+     * disabled by a call to `SetEnabled()` method. Disabling auto-enable mode using `SetAutoEnableMode(false` call
+     * will not change the current state of SRP sever (e.g., if it is enabled it stays enabled).
+     *
+     * @param[in] aEnbaled    A boolean to enable/disable the auto-enable mode.
+     *
+     */
+    void SetAutoEnableMode(bool aEnabled);
+
+    /**
+     * This method indicates whether the auto-enable mode is enabled or disabled.
+     *
+     * @retval TRUE   The auto-enable mode is enabled.
+     * @retval FALSE  The auto-enable mode is disabled.
+     *
+     */
+    bool IsAutoEnableMode(void) const { return mAutoEnable; }
+#endif
 
     /**
      * This method returns the TTL configuration.
@@ -942,6 +976,8 @@ private:
         bool              mIsDirectRxFromClient;
     };
 
+    void              Enable(void);
+    void              Disable(void);
     void              Start(void);
     void              Stop(void);
     void              SelectPort(void);
@@ -1039,6 +1075,9 @@ private:
     AddressMode     mAddressMode;
     uint8_t         mAnycastSequenceNumber;
     bool            mHasRegisteredAnyService : 1;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    bool mAutoEnable : 1;
+#endif
 
     otSrpServerResponseCounters mResponseCounters;
 };

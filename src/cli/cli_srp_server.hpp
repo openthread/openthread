@@ -82,6 +82,9 @@ private:
     using Command = CommandEntry<SrpServer>;
 
     otError ProcessAddrMode(Arg aArgs[]);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    otError ProcessAuto(Arg aArgs[]);
+#endif
     otError ProcessDomain(Arg aArgs[]);
     otError ProcessState(Arg aArgs[]);
     otError ProcessEnable(Arg aArgs[]);
@@ -96,11 +99,19 @@ private:
     void OutputHostAddresses(const otSrpServerHost *aHost);
 
     static constexpr Command sCommands[] = {
-        {"addrmode", &SrpServer::ProcessAddrMode}, {"disable", &SrpServer::ProcessDisable},
-        {"domain", &SrpServer::ProcessDomain},     {"enable", &SrpServer::ProcessEnable},
-        {"help", &SrpServer::ProcessHelp},         {"host", &SrpServer::ProcessHost},
-        {"lease", &SrpServer::ProcessLease},       {"seqnum", &SrpServer::ProcessSeqNum},
-        {"service", &SrpServer::ProcessService},   {"state", &SrpServer::ProcessState},
+        {"addrmode", &SrpServer::ProcessAddrMode},
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        {"auto", &SrpServer::ProcessAuto},
+#endif
+        {"disable", &SrpServer::ProcessDisable},
+        {"domain", &SrpServer::ProcessDomain},
+        {"enable", &SrpServer::ProcessEnable},
+        {"help", &SrpServer::ProcessHelp},
+        {"host", &SrpServer::ProcessHost},
+        {"lease", &SrpServer::ProcessLease},
+        {"seqnum", &SrpServer::ProcessSeqNum},
+        {"service", &SrpServer::ProcessService},
+        {"state", &SrpServer::ProcessState},
         {"ttl", &SrpServer::ProcessTtl},
     };
 
