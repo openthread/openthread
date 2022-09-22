@@ -299,8 +299,7 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
             char *args[kMaxArgs];
 
             Arg::CopyArgsToStringArray(aArgs, args);
-            mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
-            error = OT_ERROR_NONE;
+            error = mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
             break;
         }
     }
@@ -454,6 +453,31 @@ const char *Interpreter::PreferenceToString(signed int aPreference)
     }
 
     return str;
+}
+
+otError Interpreter::ParseToIp6Address(otInstance *  aInstance,
+                                       const Arg &   aArg,
+                                       otIp6Address &aAddress,
+                                       bool &        aSynthesized)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    error        = aArg.ParseAsIp6Address(aAddress);
+    aSynthesized = false;
+    if (error != kErrorNone)
+    {
+        // It might be an IPv4 address, let's have a try.
+        otIp4Address ip4Address;
+
+        // Do not touch the error value if we failed to parse it as an IPv4 address.
+        SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
+        SuccessOrExit(error = otNat64SynthersizeIp6Address(aInstance, &ip4Address, &aAddress));
+        aSynthesized = true;
+    }
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
@@ -4761,6 +4785,7 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
     otError            error = OT_ERROR_NONE;
     otPingSenderConfig config;
     bool               async = false;
+    bool               nat64SynthesizedAddress;
 
     if (aArgs[0] == "stop")
     {
@@ -4800,7 +4825,12 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
         aArgs += 2;
     }
 
-    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(config.mDestination));
+    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
+    {
+        OutputFormat("Pinging synthesized IPv6 address: ");
+        OutputIp6AddressLine(config.mDestination);
+    }
 
     if (!aArgs[1].IsEmpty())
     {

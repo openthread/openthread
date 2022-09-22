@@ -804,14 +804,14 @@ AC_MSG_CHECKING([whether to build examples])
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Build example applications for one of: simulation, cc2538 @<:@default=no@:>@.
+        [Build example applications for one of: simulation @<:@default=no@:>@.
          Note that building example applications also builds the associated OpenThread platform libraries
          and any third_party libraries needed to support the examples.])],
     [
         case "${with_examples}" in
         no)
             ;;
-        simulation|cc2538)
+        simulation)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -824,7 +824,6 @@ AC_ARG_WITH(examples,
 AM_CONDITIONAL([OPENTHREAD_ENABLE_EXAMPLES], [test ${with_examples} != "no"])
 
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_SIMULATION],[test "${with_examples}" = "simulation"])
-AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538],    [test "${with_examples}" = "cc2538"])
 
 AM_COND_IF([OPENTHREAD_EXAMPLES_SIMULATION], CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=1", CPPFLAGS="${CPPFLAGS} -DOPENTHREAD_EXAMPLES_SIMULATION=0")
 
@@ -845,11 +844,11 @@ AC_MSG_CHECKING([whether to build platform libraries])
 
 AC_ARG_WITH(platform,
     [AS_HELP_STRING([--with-platform=TARGET],
-        [Build OpenThread platform libraries for one of: cc2538, posix, simulation @<:@default=simulation@:>@.])],
+        [Build OpenThread platform libraries for one of: posix, simulation @<:@default=simulation@:>@.])],
     [
         # Make sure the given target is valid.
         case "${with_platform}" in
-        no|cc2538|posix|simulation)
+        no|posix|simulation)
             ;;
         *)
             AC_MSG_RESULT(ERROR)
@@ -880,7 +879,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_PLATFORM], [test ${with_platform} != "no"])
 
 OPENTHREAD_ENABLE_PLATFORM=${with_platform}
 
-AM_CONDITIONAL([OPENTHREAD_PLATFORM_CC2538],    [test "${with_platform}" = "cc2538"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_POSIX],     [test "${with_platform}" = "posix"])
 AM_CONDITIONAL([OPENTHREAD_PLATFORM_SIMULATION],[test "${with_platform}" = "simulation"])
 
@@ -1023,7 +1021,6 @@ examples/apps/Makefile
 examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
-examples/platforms/cc2538/Makefile
 examples/platforms/simulation/Makefile
 examples/platforms/utils/Makefile
 tools/Makefile

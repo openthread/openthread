@@ -30,15 +30,11 @@ name: Build
 
 on: [push, pull_request]
 
-jobs:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
+  cancel-in-progress: true
 
-  cancel-previous-runs:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/main'"
+jobs:
 
   pretty:
     runs-on: ubuntu-20.04
@@ -180,6 +176,8 @@ jobs:
         sudo pip3 install -U cmake==3.10.3
         cmake --version | grep 3.10.3
     - name: Build
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
         script/check-arm-build

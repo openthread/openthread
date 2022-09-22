@@ -40,6 +40,7 @@ import struct
 import subprocess
 import sys
 from typing import Iterable
+import yaml
 
 from otbr_sim import otbr_docker
 
@@ -109,7 +110,7 @@ def advertise_sniffers(s: socket.socket, dst, add: str, ports: Iterable[int]):
         _advertise(s, dst, info)
 
 
-def start_sniffer(addr: str, port: int, ot_path: str) -> subprocess.Popen:
+def start_sniffer(addr: str, port: int, ot_path: str, max_nodes_num: int) -> subprocess.Popen:
     if isinstance(ipaddress.ip_address(addr), ipaddress.IPv6Address):
         server = f'[{addr}]:{port}'
     else:
@@ -117,7 +118,11 @@ def start_sniffer(addr: str, port: int, ot_path: str) -> subprocess.Popen:
 
     cmd = [
         'python3',
-        os.path.join(ot_path, 'tools/harness-simulation/posix/sniffer_sim/sniffer.py'), '--grpc-server', server
+        os.path.join(ot_path, 'tools/harness-simulation/posix/sniffer_sim/sniffer.py'),
+        '--grpc-server',
+        server,
+        '--max-nodes-num',
+        str(max_nodes_num),
     ]
     logging.info('Executing command:  %s', ' '.join(cmd))
     return subprocess.Popen(cmd)
@@ -136,7 +141,7 @@ def main():
                         help='the path of the configuration JSON file')
     args = parser.parse_args()
     with open(args.config, 'rt') as f:
-        config = json.load(f)
+        config = yaml.safe_load(f)
 
     ot_path = config['ot_path']
     ot_build = config['ot_build']
@@ -172,7 +177,7 @@ def main():
     sniffer_server_port_base = config['sniffer']['server_port_base']
     sniffer_procs = []
     for i in range(sniffer_num):
-        sniffer_procs.append(start_sniffer(addr, i + sniffer_server_port_base, ot_path))
+        sniffer_procs.append(start_sniffer(addr, i + sniffer_server_port_base, ot_path, max_nodes_num))
 
     # OTBR firewall scripts create rules inside the Docker container
     # Run modprobe to load the kernel modules for iptables

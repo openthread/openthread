@@ -58,21 +58,21 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
 
     RECV_BUFFER_SIZE = 4096
     TIMEOUT = 0.1
-    MAX_NODES_NUM = 64
 
     def _reset(self):
         self._state = CaptureState.NONE
         self._pcap = None
-        self._allowed_nodeids = None
+        self._denied_nodeids = None
         self._transport = None
         self._thread = None
         self._thread_alive.clear()
         self._pcapng_filename = None
         self._tshark_proc = None
 
-    def __init__(self):
+    def __init__(self, max_nodes_num):
+        self._max_nodes_num = max_nodes_num
         self._thread_alive = threading.Event()
-        self._mutex = threading.Lock()  # for self._allowed_nodeids
+        self._mutex = threading.Lock()  # for self._denied_nodeids
         self._reset()
 
     def Start(self, request, context):
@@ -104,8 +104,7 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         self._pcap = pcap_codec.PcapCodec(request.channel, fifo_name)
 
         # Sniffer all nodes in default, i.e. there is no RF enclosure
-        # In this case, self._allowed_nodeids is set to None
-        self._allowed_nodeids = None
+        self._denied_nodeids = set()
 
         # Create transport
         transport_factory = sniffer_transport.SnifferTransportFactory()
@@ -130,10 +129,10 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
                 continue
 
             with self._mutex:
-                allowed_nodeids = self._allowed_nodeids
+                denied_nodeids = self._denied_nodeids
 
             # Equivalent to RF enclosure
-            if allowed_nodeids is None or nodeid in allowed_nodeids:
+            if nodeid not in denied_nodeids:
                 self._pcap.append(data)
 
     def FilterNodes(self, request, context):
@@ -145,14 +144,14 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         if not (self._state & CaptureState.THREAD):
             return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OPERATION_ERROR)
 
-        allowed_nodeids = set(request.nodeids)
+        denied_nodeids = set(request.nodeids)
         # Validate the node IDs
-        for nodeid in allowed_nodeids:
-            if not 1 <= nodeid <= self.MAX_NODES_NUM:
+        for nodeid in denied_nodeids:
+            if not 1 <= nodeid <= self._max_nodes_num:
                 return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.VALUE_ERROR)
 
         with self._mutex:
-            self._allowed_nodeids = allowed_nodeids
+            self._denied_nodeids = denied_nodeids
 
         return sniffer_pb2.FilterNodesResponse(status=sniffer_pb2.OK)
 
@@ -182,9 +181,9 @@ class SnifferServicer(sniffer_pb2_grpc.Sniffer):
         return sniffer_pb2.StopResponse(status=sniffer_pb2.OK, pcap_content=pcap_content)
 
 
-def serve(address_port):
+def serve(address_port, max_nodes_num):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
-    sniffer_pb2_grpc.add_SnifferServicer_to_server(SnifferServicer(), server)
+    sniffer_pb2_grpc.add_SnifferServicer_to_server(SnifferServicer(max_nodes_num), server)
     # add_secure_port requires a web domain
     server.add_insecure_port(address_port)
     logging.info('server starts on %s', address_port)
@@ -208,9 +207,14 @@ def run_sniffer():
                         type=str,
                         required=True,
                         help='the address of the sniffer server')
+    parser.add_argument('--max-nodes-num',
+                        dest='max_nodes_num',
+                        type=int,
+                        required=True,
+                        help='the maximum number of nodes')
     args = parser.parse_args()
 
-    serve(args.grpc_server)
+    serve(args.grpc_server, args.max_nodes_num)
 
 
 if __name__ == '__main__':

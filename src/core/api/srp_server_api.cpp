@@ -87,6 +87,18 @@ void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
     AsCoreType(aInstance).Get<Srp::Server>().SetEnabled(aEnabled);
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+void otSrpServerSetAutoEnableMode(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<Srp::Server>().SetAutoEnableMode(aEnabled);
+}
+
+bool otSrpServerIsAutoEnableMode(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().IsAutoEnableMode();
+}
+#endif
+
 void otSrpServerGetTtlConfig(otInstance *aInstance, otSrpServerTtlConfig *aTtlConfig)
 {
     AsCoreType(aInstance).Get<Srp::Server>().GetTtlConfig(AsCoreType(aTtlConfig));

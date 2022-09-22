@@ -10,7 +10,7 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 ## POSIX Environment Setup
 
-1. Open the JSON format configuration file `tools/harness-simulation/posix/simulation.conf`:
+1. Open the JSON format configuration file `tools/harness-simulation/posix/config.yml`:
 
    - Edit the value of `ot_path` to the absolute path where the top directory of the OpenThread repository is located. For example, change the value of `ot_path` to `/home/<username>/repo/openthread`.
    - For each entry in `ot_build.ot`, update the value of `number` to be the number of OT FTD simulations needed with the corresponding version.
@@ -34,18 +34,16 @@ Platform developers should modify the THCI implementation and/or the SI implemen
 
 2. Double click the file `harness\install.bat` on Windows.
 
-3. Add the additional simulation device information in `harness\Web\data\deviceInputFields.xml` to `C:\GRL\Thread1.2\Web\data\deviceInputFields.xml`.
-
 ## Run Test Harness on Simulation
 
 1. On the POSIX machine, change directory to the top of the OpenThread repository, and run the following commands.
 
    ```bash
    $ cd tools/harness-simulation/posix
-   $ ./launch_testbed.py -c simulation.conf
+   $ ./launch_testbed.py -c config.yml
    ```
 
-   This example starts several OT FTD simulations, OTBR simulations, and sniffer simulations and can be discovered on `eth0`. The number of each type of simulation is specified in the configuration file `simulation.conf`.
+   This example starts several OT FTD simulations, OTBR simulations, and sniffer simulations and can be discovered on `eth0`. The number of each type of simulation is specified in the configuration file `config.yml`.
 
 2. Run the Test Harness. The information field of the device is encoded as `<tag>_<node_id>@<ip_addr>`. Choose the desired device as the DUT.
 

@@ -31,11 +31,13 @@ copy /Y ..\..\harness-thci\OpenThread.py %THREADDIR%\Thread_Harness\THCI
 copy /Y ..\..\harness-thci\OpenThread_BR.py %THREADDIR%\Thread_Harness\THCI
 copy /Y ..\..\harness-thci\OpenThread.png %THREADDIR%\Web\images
 copy /Y ..\..\harness-thci\OpenThread_BR.png %THREADDIR%\Web\images
-copy /Y ..\posix\simulation.conf %THREADDIR%\Thread_Harness\simulation
+copy /Y ..\posix\config.yml %THREADDIR%\Thread_Harness\simulation
 xcopy /E /Y ..\posix\sniffer_sim\proto %THREADDIR%\Thread_Harness\simulation\Sniffer\proto
 
 %THREADDIR%\Python27\python.exe -m pip install --upgrade pip
 %THREADDIR%\Python27\python.exe -m pip install -r requirements.txt
+
+%THREADDIR%\Python27\python.exe Web\data\updateDeviceFields.py Web\data\deviceInputFields.xml
 
 set BASEDIR=%THREADDIR%\Thread_Harness
 %systemdrive%\GRL\Thread1.2\Python27\python.exe -m grpc_tools.protoc -I%BASEDIR% --python_out=%BASEDIR% --grpc_python_out=%BASEDIR% simulation/Sniffer/proto/sniffer.proto

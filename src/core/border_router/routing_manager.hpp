@@ -230,12 +230,14 @@ public:
     Error GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreference &aRoutePreference);
 
     /**
-     * This method updates mInfraIfNat64Prefix to @p aPrefix.
+     * This method informs `RoutingManager` of the result of the discovery request of NAT64 prefix on infrastructure
+     * interface (`InfraIf::DiscoverNat64Prefix()`).
      *
-     * @param[in]  aPrefix  A NAT64 prefix on infrastructure link.
+     * @param[in]  aPrefix  The discovered NAT64 prefix on `InfraIf`.
      *
      */
-    void UpdateInfraIfNat64Prefix(const Ip6::Prefix &aPrefix);
+    void HandleDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix) { mNat64PrefixManager.HandleDiscoverDone(aPrefix); }
+
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
     /**
@@ -307,6 +309,16 @@ public:
     {
         return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
     }
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    /**
+     * This method determines whether to enable/disable SRP server when the auto-enable mode is changed on SRP server.
+     *
+     * This should be called from `Srp::Server` when auto-enable mode is changed.
+     *
+     */
+    void HandleSrpServerAutoEnableMode(void);
+#endif
 
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
@@ -627,6 +639,38 @@ private:
         void MarkAsDeleted(const OnMeshPrefix &aPrefix);
     };
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    class Nat64PrefixManager : public InstanceLocator
+    {
+    public:
+        // This class manages the NAT64 related functions including
+        // generation of local NAT64 prefix, discovery of infra
+        // interface prefix, maintaining the discovered prefix
+        // lifetime, and selection of the NAT64 prefix to publish in
+        // Network Data.
+
+        explicit Nat64PrefixManager(Instance &aInstance);
+
+        void               Start(void);
+        void               Stop(void);
+        void               GenerateLocalPrefix(const Ip6::Prefix &aBrUlaPrefix);
+        const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
+        const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
+        void               Evaluate(void);
+        void               HandleDiscoverDone(const Ip6::Prefix &aPrefix);
+
+    private:
+        void        Discover(void);
+        static void HandleTimer(Timer &aTimer);
+        void        HandleTimer(void);
+
+        Ip6::Prefix mInfraIfPrefix;   // The latest NAT64 prefix discovered on the infrastructure interface.
+        Ip6::Prefix mLocalPrefix;     // The local prefix (from BR ULA prefix).
+        Ip6::Prefix mPublishedPrefix; // The prefix published in Network Data (may be empty or local or from infra-if).
+        TimerMilli  mTimer;
+    };
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
     struct RaInfo
     {
         // Tracks info about emitted RA messages: Number of RAs sent,
@@ -692,15 +736,9 @@ private:
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
 
-    void EvaluateOnLinkPrefix(void);
-
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    void DiscoverInfraIfNat64Prefix(void);
-    void GenerateNat64Prefix(void);
-    void EvaluateNat64Prefix(void);
-#endif
-
+    void  EvaluateOnLinkPrefix(void);
     void  EvaluateRoutingPolicy(void);
+    bool  IsInitalPolicyEvaluationDone(void) const;
     void  ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
     void  EvaluateOmrPrefix(void);
     Error PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64 = false);
@@ -713,12 +751,7 @@ private:
     static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixStaleTimer(void);
     static void HandleRoutingPolicyTimer(Timer &aTimer);
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    static void HandleInfraIfNat64PrefixStaleTimer(Timer &aTimer);
-    void        HandleInfraIfNat64PrefixStaleTimer(void);
-#endif
 
-    void DeprecateOnLinkPrefix(void);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
@@ -764,17 +797,7 @@ private:
     DiscoveredPrefixTable mDiscoveredPrefixTable;
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    // The latest NAT64 prefix discovered on the infrastructure interface.
-    Ip6::Prefix mInfraIfNat64Prefix;
-    // The NAT64 prefix allocated from the /48 BR ULA prefix.
-    Ip6::Prefix mLocalNat64Prefix;
-    // The NAT64 prefix published in Network Data. It can have the following value:
-    // - empty: no NAT64 prefix is published from this BR
-    // - the local NAT64 prefix
-    // - the latest published infrastructure NAT64 prefix, which might differs from mInfraIfNat64Prefix
-    Ip6::Prefix mPublishedNat64Prefix;
-
-    TimerMilli mInfraIfNat64PrefixStaleTimer;
+    Nat64PrefixManager mNat64PrefixManager;
 #endif
 
     RaInfo   mRaInfo;

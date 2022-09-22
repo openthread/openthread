@@ -39,6 +39,7 @@
 
 #include "cli_tcp.hpp"
 
+#include <openthread/nat64.h>
 #include <openthread/tcp.h>
 
 #include "cli/cli.hpp"
@@ -55,8 +56,9 @@ TcpExample::TcpExample(Output &aOutput)
     , mInitialized(false)
     , mEndpointConnected(false)
     , mSendBusy(false)
+    , mUseCircularSendBuffer(true)
     , mBenchmarkBytesTotal(0)
-    , mBenchmarkLinksLeft(0)
+    , mBenchmarkBytesUnsent(0)
 {
 }
 
@@ -81,30 +83,59 @@ otError TcpExample::ProcessInit(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        receiveBufferSize = sizeof(mReceiveBuffer);
+        mUseCircularSendBuffer = true;
+        receiveBufferSize      = sizeof(mReceiveBufferBytes);
     }
     else
     {
-        uint32_t windowSize;
+        if (aArgs[0] == "circular")
+        {
+            mUseCircularSendBuffer = true;
+        }
+        else if (aArgs[0] == "linked")
+        {
+            mUseCircularSendBuffer = false;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
 
-        SuccessOrExit(error = aArgs[0].ParseAsUint32(windowSize));
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        if (aArgs[1].IsEmpty())
+        {
+            receiveBufferSize = sizeof(mReceiveBufferBytes);
+        }
+        else
+        {
+            uint32_t windowSize;
 
-        receiveBufferSize = windowSize + ((windowSize + 7) >> 3);
-        VerifyOrExit(receiveBufferSize <= sizeof(mReceiveBuffer) && receiveBufferSize != 0,
-                     error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[1].ParseAsUint32(windowSize));
+
+            receiveBufferSize = windowSize + ((windowSize + 7) >> 3);
+            VerifyOrExit(receiveBufferSize <= sizeof(mReceiveBufferBytes) && receiveBufferSize != 0,
+                         error = OT_ERROR_INVALID_ARGS);
+        }
     }
+
+    otTcpCircularSendBufferInitialize(&mSendBuffer, mSendBufferBytes, sizeof(mSendBufferBytes));
 
     {
         otTcpEndpointInitializeArgs endpointArgs;
 
         memset(&endpointArgs, 0x00, sizeof(endpointArgs));
-        endpointArgs.mEstablishedCallback      = HandleTcpEstablishedCallback;
-        endpointArgs.mSendDoneCallback         = HandleTcpSendDoneCallback;
+        endpointArgs.mEstablishedCallback = HandleTcpEstablishedCallback;
+        if (mUseCircularSendBuffer)
+        {
+            endpointArgs.mForwardProgressCallback = HandleTcpForwardProgressCallback;
+        }
+        else
+        {
+            endpointArgs.mSendDoneCallback = HandleTcpSendDoneCallback;
+        }
         endpointArgs.mReceiveAvailableCallback = HandleTcpReceiveAvailableCallback;
         endpointArgs.mDisconnectedCallback     = HandleTcpDisconnectedCallback;
         endpointArgs.mContext                  = this;
-        endpointArgs.mReceiveBuffer            = mReceiveBuffer;
+        endpointArgs.mReceiveBuffer            = mReceiveBufferBytes;
         endpointArgs.mReceiveBufferSize        = receiveBufferSize;
 
         SuccessOrExit(error = otTcpEndpointInitialize(GetInstancePtr(), &mEndpoint, &endpointArgs));
@@ -136,6 +167,7 @@ otError TcpExample::ProcessDeinit(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
     otError endpointError;
+    otError bufferError;
     otError listenerError;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -144,10 +176,14 @@ otError TcpExample::ProcessDeinit(Arg aArgs[])
     endpointError = otTcpEndpointDeinitialize(&mEndpoint);
     mSendBusy     = false;
 
+    otTcpCircularSendBufferForceDiscardAll(&mSendBuffer);
+    bufferError = otTcpCircularSendBufferDeinitialize(&mSendBuffer);
+
     listenerError = otTcpListenerDeinitialize(&mListener);
     mInitialized  = false;
 
     SuccessOrExit(error = endpointError);
+    SuccessOrExit(error = bufferError);
     SuccessOrExit(error = listenerError);
 
 exit:
@@ -175,10 +211,18 @@ otError TcpExample::ProcessConnect(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
+    bool       nat64SynthesizedAddress;
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(sockaddr.mAddress));
+    SuccessOrExit(
+        error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
+    {
+        OutputFormat("Connecting to synthesized IPv6 address: ");
+        OutputIp6AddressLine(sockaddr.mAddress);
+    }
+
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
@@ -194,18 +238,28 @@ otError TcpExample::ProcessSend(Arg aArgs[])
     otError error;
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);
     VerifyOrExit(mBenchmarkBytesTotal == 0, error = OT_ERROR_BUSY);
-
-    mSendLink.mNext = nullptr;
-    mSendLink.mData = mSendBuffer;
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    mSendLink.mLength = OT_MIN(aArgs[0].GetLength(), sizeof(mSendBuffer));
-    memcpy(mSendBuffer, aArgs[0].GetCString(), mSendLink.mLength);
     VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = otTcpSendByReference(&mEndpoint, &mSendLink, 0));
-    mSendBusy = true;
+    if (mUseCircularSendBuffer)
+    {
+        size_t written;
+        SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, aArgs[0].GetCString(),
+                                                           aArgs[0].GetLength(), &written, 0));
+    }
+    else
+    {
+        VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);
+
+        mSendLink.mNext   = nullptr;
+        mSendLink.mData   = mSendBufferBytes;
+        mSendLink.mLength = OT_MIN(aArgs[0].GetLength(), sizeof(mSendBufferBytes));
+        memcpy(mSendBufferBytes, aArgs[0].GetCString(), mSendLink.mLength);
+
+        SuccessOrExit(error = otTcpSendByReference(&mEndpoint, &mSendLink, 0));
+        mSendBusy = true;
+    }
 
 exit:
     return error;
@@ -213,8 +267,7 @@ exit:
 
 otError TcpExample::ProcessBenchmark(Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t toSendOut;
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);
     VerifyOrExit(mBenchmarkBytesTotal == 0, error = OT_ERROR_BUSY);
@@ -230,30 +283,37 @@ otError TcpExample::ProcessBenchmark(Arg aArgs[])
     }
     VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    memset(mSendBuffer, 'a', sizeof(mSendBuffer));
+    mBenchmarkStart       = TimerMilli::GetNow();
+    mBenchmarkBytesUnsent = mBenchmarkBytesTotal;
 
-    mBenchmarkLinksLeft = (mBenchmarkBytesTotal + sizeof(mSendBuffer) - 1) / sizeof(mSendBuffer);
-    toSendOut           = OT_MIN(OT_ARRAY_LENGTH(mBenchmarkLinks), mBenchmarkLinksLeft);
-    mBenchmarkStart     = TimerMilli::GetNow();
-    for (uint32_t i = 0; i != toSendOut; i++)
+    if (mUseCircularSendBuffer)
     {
-        mBenchmarkLinks[i].mNext   = nullptr;
-        mBenchmarkLinks[i].mData   = mSendBuffer;
-        mBenchmarkLinks[i].mLength = sizeof(mSendBuffer);
-        if (i == 0 && mBenchmarkBytesTotal % sizeof(mSendBuffer) != 0)
+        SuccessOrExit(error = ContinueBenchmarkCircularSend());
+    }
+    else
+    {
+        uint32_t benchmarkLinksLeft = (mBenchmarkBytesTotal + sizeof(mSendBufferBytes) - 1) / sizeof(mSendBufferBytes);
+        uint32_t toSendOut          = OT_MIN(OT_ARRAY_LENGTH(mBenchmarkLinks), benchmarkLinksLeft);
+
+        /* We could also point the linked buffers directly to sBenchmarkData. */
+        memset(mSendBufferBytes, 'a', sizeof(mSendBufferBytes));
+
+        for (uint32_t i = 0; i != toSendOut; i++)
         {
-            mBenchmarkLinks[i].mLength = mBenchmarkBytesTotal % sizeof(mSendBuffer);
+            mBenchmarkLinks[i].mNext   = nullptr;
+            mBenchmarkLinks[i].mData   = mSendBufferBytes;
+            mBenchmarkLinks[i].mLength = sizeof(mSendBufferBytes);
+            if (i == 0 && mBenchmarkBytesTotal % sizeof(mSendBufferBytes) != 0)
+            {
+                mBenchmarkLinks[i].mLength = mBenchmarkBytesTotal % sizeof(mSendBufferBytes);
+            }
+            error = otTcpSendByReference(&mEndpoint, &mBenchmarkLinks[i],
+                                         i == toSendOut - 1 ? 0 : OT_TCP_SEND_MORE_TO_COME);
+            VerifyOrExit(error == OT_ERROR_NONE, mBenchmarkBytesTotal = 0);
         }
-        SuccessOrExit(error = otTcpSendByReference(&mEndpoint, &mBenchmarkLinks[i],
-                                                   i == toSendOut - 1 ? 0 : OT_TCP_SEND_MORE_TO_COME));
     }
 
 exit:
-    if (error != OT_ERROR_NONE)
-    {
-        mBenchmarkBytesTotal = 0;
-        mBenchmarkLinksLeft  = 0;
-    }
     return error;
 }
 
@@ -341,6 +401,12 @@ void TcpExample::HandleTcpSendDoneCallback(otTcpEndpoint *aEndpoint, otLinkedBuf
     static_cast<TcpExample *>(otTcpEndpointGetContext(aEndpoint))->HandleTcpSendDone(aEndpoint, aData);
 }
 
+void TcpExample::HandleTcpForwardProgressCallback(otTcpEndpoint *aEndpoint, size_t aInSendBuffer, size_t aBacklog)
+{
+    static_cast<TcpExample *>(otTcpEndpointGetContext(aEndpoint))
+        ->HandleTcpForwardProgress(aEndpoint, aInSendBuffer, aBacklog);
+}
+
 void TcpExample::HandleTcpReceiveAvailableCallback(otTcpEndpoint *aEndpoint,
                                                    size_t         aBytesAvailable,
                                                    bool           aEndOfStream,
@@ -379,6 +445,7 @@ void TcpExample::HandleTcpEstablished(otTcpEndpoint *aEndpoint)
 void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData)
 {
     OT_UNUSED_VARIABLE(aEndpoint);
+    OT_ASSERT(!mUseCircularSendBuffer); // this callback is not used when using the circular send buffer
 
     if (mBenchmarkBytesTotal == 0)
     {
@@ -393,25 +460,44 @@ void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aDa
     else
     {
         OT_ASSERT(aData != &mSendLink);
-        mBenchmarkLinksLeft--;
-        if (mBenchmarkLinksLeft >= OT_ARRAY_LENGTH(mBenchmarkLinks))
+        OT_ASSERT(mBenchmarkBytesUnsent >= aData->mLength);
+        mBenchmarkBytesUnsent -= aData->mLength; // could be less than sizeof(mSendBufferBytes) for the first link
+        if (mBenchmarkBytesUnsent >= OT_ARRAY_LENGTH(mBenchmarkLinks) * sizeof(mSendBufferBytes))
         {
-            aData->mLength = sizeof(mSendBuffer);
+            aData->mLength = sizeof(mSendBufferBytes);
             if (otTcpSendByReference(&mEndpoint, aData, 0) != OT_ERROR_NONE)
             {
                 OutputLine("TCP Benchmark Failed");
                 mBenchmarkBytesTotal = 0;
             }
         }
-        else if (mBenchmarkLinksLeft == 0)
+        else if (mBenchmarkBytesUnsent == 0)
         {
-            uint32_t milliseconds         = TimerMilli::GetNow() - mBenchmarkStart;
-            uint32_t thousandTimesGoodput = (1000 * (mBenchmarkBytesTotal << 3) + (milliseconds >> 1)) / milliseconds;
+            CompleteBenchmark();
+        }
+    }
+}
 
-            OutputLine("TCP Benchmark Complete: Transferred %u bytes in %u milliseconds",
-                       static_cast<unsigned int>(mBenchmarkBytesTotal), static_cast<unsigned int>(milliseconds));
-            OutputLine("TCP Goodput: %u.%03u kb/s", thousandTimesGoodput / 1000, thousandTimesGoodput % 1000);
-            mBenchmarkBytesTotal = 0;
+void TcpExample::HandleTcpForwardProgress(otTcpEndpoint *aEndpoint, size_t aInSendBuffer, size_t aBacklog)
+{
+    OT_UNUSED_VARIABLE(aEndpoint);
+    OT_UNUSED_VARIABLE(aBacklog);
+    OT_ASSERT(mUseCircularSendBuffer); // this callback is only used when using the circular send buffer
+
+    otTcpCircularSendBufferHandleForwardProgress(&mSendBuffer, aInSendBuffer);
+
+    /* Handle case where we're in a benchmark. */
+    if (mBenchmarkBytesTotal != 0)
+    {
+        if (mBenchmarkBytesUnsent != 0)
+        {
+            /* Continue sending out data if there's data we haven't sent. */
+            IgnoreError(ContinueBenchmarkCircularSend());
+        }
+        else if (aInSendBuffer == 0)
+        {
+            /* Handle case where all data is sent out and the send buffer has drained. */
+            CompleteBenchmark();
         }
     }
 }
@@ -432,7 +518,7 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
         IgnoreError(otTcpReceiveByReference(aEndpoint, &data));
         for (; data != nullptr; data = data->mNext)
         {
-            OutputLine("TCP: Received %u bytes: %.*s", static_cast<unsigned int>(data->mLength), data->mLength,
+            OutputLine("TCP: Received %u bytes: %.*s", data->mLength, data->mLength,
                        reinterpret_cast<const char *>(data->mData));
             totalReceived += data->mLength;
         }
@@ -473,17 +559,18 @@ void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnect
     mSendBusy          = false;
 
     // Mark the benchmark as inactive if the connection was disconnected.
-    if (mBenchmarkBytesTotal != 0)
-    {
-        mBenchmarkBytesTotal = 0;
-        mBenchmarkLinksLeft  = 0;
-    }
+    mBenchmarkBytesTotal  = 0;
+    mBenchmarkBytesUnsent = 0;
+
+    otTcpCircularSendBufferForceDiscardAll(&mSendBuffer);
 }
 
 otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener *   aListener,
                                                                const otSockAddr *aPeer,
                                                                otTcpEndpoint **  aAcceptInto)
 {
+    otTcpIncomingConnectionAction action;
+
     OT_UNUSED_VARIABLE(aListener);
 
     if (mEndpointConnected)
@@ -492,11 +579,14 @@ otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener *  
         OutputSockAddr(*aPeer);
         OutputLine(" (active socket is busy)");
 
-        return OT_TCP_INCOMING_CONNECTION_ACTION_DEFER;
+        ExitNow(action = OT_TCP_INCOMING_CONNECTION_ACTION_DEFER);
     }
 
     *aAcceptInto = &mEndpoint;
-    return OT_TCP_INCOMING_CONNECTION_ACTION_ACCEPT;
+    action       = OT_TCP_INCOMING_CONNECTION_ACTION_ACCEPT;
+
+exit:
+    return action;
 }
 
 void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer)
@@ -506,6 +596,45 @@ void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aE
 
     OutputFormat("Accepted connection from ");
     OutputSockAddrLine(*aPeer);
+}
+
+otError TcpExample::ContinueBenchmarkCircularSend(void)
+{
+    otError error = OT_ERROR_NONE;
+    size_t  freeSpace;
+
+    while (mBenchmarkBytesUnsent != 0 && (freeSpace = otTcpCircularSendBufferGetFreeSpace(&mSendBuffer)) != 0)
+    {
+        size_t   toSendThisIteration = OT_MIN(mBenchmarkBytesUnsent, sBenchmarkDataLength);
+        uint32_t flag                = (toSendThisIteration < freeSpace && toSendThisIteration < mBenchmarkBytesUnsent)
+                            ? OT_TCP_CIRCULAR_SEND_BUFFER_WRITE_MORE_TO_COME
+                            : 0;
+        size_t written;
+
+        SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, sBenchmarkData,
+                                                           toSendThisIteration, &written, flag));
+        mBenchmarkBytesUnsent -= written;
+    }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        OutputLine("TCP Benchmark Failed");
+        mBenchmarkBytesTotal  = 0;
+        mBenchmarkBytesUnsent = 0;
+    }
+
+    return error;
+}
+
+void TcpExample::CompleteBenchmark(void)
+{
+    uint32_t milliseconds         = TimerMilli::GetNow() - mBenchmarkStart;
+    uint32_t thousandTimesGoodput = (1000 * (mBenchmarkBytesTotal << 3) + (milliseconds >> 1)) / milliseconds;
+
+    OutputLine("TCP Benchmark Complete: Transferred %u bytes in %u milliseconds", mBenchmarkBytesTotal, milliseconds);
+    OutputLine("TCP Goodput: %u.%03u kb/s", thousandTimesGoodput / 1000, thousandTimesGoodput % 1000);
+    mBenchmarkBytesTotal = 0;
 }
 
 } // namespace Cli

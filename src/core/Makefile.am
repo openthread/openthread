@@ -168,6 +168,7 @@ SOURCES_COMMON                                  = \
     api/srp_server_api.cpp                        \
     api/tasklet_api.cpp                           \
     api/tcp_api.cpp                               \
+    api/tcp_ext_api.cpp                           \
     api/thread_api.cpp                            \
     api/thread_ftd_api.cpp                        \
     api/trel_api.cpp                              \
@@ -271,6 +272,7 @@ SOURCES_COMMON                                  = \
     net/srp_client.cpp                            \
     net/srp_server.cpp                            \
     net/tcp6.cpp                                  \
+    net/tcp6_ext.cpp                              \
     net/udp6.cpp                                  \
     radio/radio.cpp                               \
     radio/radio_callbacks.cpp                     \
@@ -584,6 +586,7 @@ HEADERS_COMMON                                  = \
     net/srp_client.hpp                            \
     net/srp_server.hpp                            \
     net/tcp6.hpp                                  \
+    net/tcp6_ext.hpp                              \
     net/udp6.hpp                                  \
     openthread-core-config.h                      \
     radio/max_power_table.hpp                     \

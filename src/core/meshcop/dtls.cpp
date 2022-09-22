@@ -184,17 +184,11 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
         ExitNow();
 
     case Dtls::kStateOpen:
-        IgnoreError(mSocket.Connect(Ip6::SockAddr(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort())));
-
         mMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mMessageInfo.SetPeerPort(aMessageInfo.GetPeerPort());
         mMessageInfo.SetIsHostInterface(aMessageInfo.IsHostInterface());
 
-        if (Get<ThreadNetif>().HasUnicastAddress(aMessageInfo.GetSockAddr()))
-        {
-            mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
-        }
-
+        mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
         mMessageInfo.SetSockPort(aMessageInfo.GetSockPort());
 
         SuccessOrExit(Setup(false));

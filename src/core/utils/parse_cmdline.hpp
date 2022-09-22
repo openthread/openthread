@@ -38,7 +38,9 @@
 #include <string.h>
 
 #include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/nat64.h>
 
 namespace ot {
 namespace Utils {
@@ -181,6 +183,18 @@ otError ParseAsBool(const char *aString, bool &aBool);
  *
  */
 otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
+
+/**
+ * This function parses a string as an IPv4 address.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
+ *
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid IPv4 address.
+ *
+ */
+otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
 
 /**
  * This function parses a string as an IPv6 prefix.
@@ -483,6 +497,20 @@ public:
     otError ParseAsIp6Address(otIp6Address &aAddress) const
     {
         return CmdLineParser::ParseAsIp6Address(mString, aAddress);
+    }
+
+    /**
+     * This method parses the argument as an IPv4 address.
+     *
+     * @param[out] aAddress  A reference to an `otIp4Address` to output the parsed IPv4 address.
+     *
+     * @retval kErrorNone         The argument was parsed successfully.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid IPv4 address.
+     *
+     */
+    otError ParseAsIp4Address(otIp4Address &aAddress) const
+    {
+        return CmdLineParser::ParseAsIp4Address(mString, aAddress);
     }
 
     /**

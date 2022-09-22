@@ -96,6 +96,9 @@ Server::Server(Instance &aInstance)
     , mAddressMode(kDefaultAddressMode)
     , mAnycastSequenceNumber(0)
     , mHasRegisteredAnyService(false)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    , mAutoEnable(false)
+#endif
 {
     IgnoreError(SetDomain(kDefaultDomain));
 }
@@ -134,40 +137,70 @@ exit:
 
 void Server::SetEnabled(bool aEnabled)
 {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    mAutoEnable = false;
+#endif
+
     if (aEnabled)
     {
-        VerifyOrExit(mState == kStateDisabled);
-        mState = kStateStopped;
-
-        // Request publishing of "DNS/SRP Address Service" entry in the
-        // Thread Network Data based of `mAddressMode`. Then wait for
-        // callback `HandleNetDataPublisherEntryChange()` from the
-        // `Publisher` to start the SRP server.
-
-        switch (mAddressMode)
-        {
-        case kAddressModeUnicast:
-            SelectPort();
-            Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
-            break;
-
-        case kAddressModeAnycast:
-            mPort = kAnycastAddressModePort;
-            Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
-            break;
-        }
+        Enable();
     }
     else
     {
-        VerifyOrExit(mState != kStateDisabled);
-        Get<NetworkData::Publisher>().UnpublishDnsSrpService();
-        Stop();
-        mState = kStateDisabled;
+        Disable();
+    }
+}
+
+void Server::Enable(void)
+{
+    VerifyOrExit(mState == kStateDisabled);
+    mState = kStateStopped;
+
+    // Request publishing of "DNS/SRP Address Service" entry in the
+    // Thread Network Data based of `mAddressMode`. Then wait for
+    // callback `HandleNetDataPublisherEntryChange()` from the
+    // `Publisher` to start the SRP server.
+
+    switch (mAddressMode)
+    {
+    case kAddressModeUnicast:
+        SelectPort();
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
+        break;
+
+    case kAddressModeAnycast:
+        mPort = kAnycastAddressModePort;
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
+        break;
     }
 
 exit:
     return;
 }
+
+void Server::Disable(void)
+{
+    VerifyOrExit(mState != kStateDisabled);
+    Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+    Stop();
+    mState = kStateDisabled;
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+void Server::SetAutoEnableMode(bool aEnabled)
+{
+    VerifyOrExit(mAutoEnable != aEnabled);
+    mAutoEnable = aEnabled;
+
+    Get<BorderRouter::RoutingManager>().HandleSrpServerAutoEnableMode();
+
+exit:
+    return;
+}
+#endif
 
 Server::TtlConfig::TtlConfig(void)
 {

@@ -1,6 +1,5 @@
-#!/bin/bash
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,51 +26,5 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set -euxo pipefail
-
-readonly OT_BUILDDIR="$(pwd)/build"
-
-readonly OT_COMMON_OPTIONS=(
-    "-DOT_COMPILE_WARNING_AS_ERROR=ON"
-)
-
-readonly OT_BASIC_CHECK_OPTIONS=(
-    "-DOT_COMMISSIONER=ON"
-    "-DOT_DHCP6_CLIENT=ON"
-    "-DOT_DHCP6_SERVER=ON"
-    "-DOT_DNS_CLIENT=ON"
-    "-DOT_JOINER=ON"
-)
-
-reset_source()
-{
-    rm -rf "$OT_BUILDDIR"
-}
-
-build_cc2538()
-{
-    local options=(
-        # cc2538 does not have enough resources to support Thread 1.3
-        "-DOT_THREAD_VERSION=1.1"
-    )
-
-    reset_source
-    "$(dirname "$0")"/cmake-build cc2538 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}" "${options[@]}"
-}
-
-main()
-{
-    export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
-
-    if [[ $# == 0 ]]; then
-        build_cc2538
-        return 0
-    fi
-
-    while [[ $# != 0 ]]; do
-        "build_$1"
-        shift
-    done
-}
-
-main "$@"
+# Intentionally empty, the file is only needed to enable "zephyr" target
+# as OT platform for CMake

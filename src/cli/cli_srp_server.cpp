@@ -96,6 +96,47 @@ otError SrpServer::ProcessAddrMode(Arg aArgs[])
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError SrpServer::ProcessAuto(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli srp server auto
+     * @code
+     * srp server auto
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpServerIsAutoEnableMode
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otSrpServerIsAutoEnableMode(GetInstancePtr()));
+    }
+    /**
+     * @cli srp server auto enable
+     * @code
+     * srp server auto enable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpServerSetAutoEnableMode
+     */
+    else
+    {
+        bool enable;
+
+        SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[0], enable));
+        otSrpServerSetAutoEnableMode(GetInstancePtr(), enable);
+    }
+
+exit:
+    return error;
+}
+#endif
+
 otError SrpServer::ProcessDomain(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;

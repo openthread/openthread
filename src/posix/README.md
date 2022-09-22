@@ -139,28 +139,6 @@ To build and program the device with RCP application, complete the following ste
 ./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 ```
 
-### CC2538
-
-#### Build
-
-```
-./script/cmake-build cc2538 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
-```
-
-#### Flash
-
-```sh
-arm-none-eabi-objcopy -O ihex build/cc2538/examples/apps/ncp/ot-rcp ot-rcp.bin
-# see https://github.com/JelmerT/cc2538-bsl
-python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
-```
-
-#### Run
-
-```sh
-./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
-```
-
 ## Daemon Mode
 
 OpenThread Posix Daemon mode uses a unix socket as input and output, so that OpenThread core can run as a service. And a client can communicate with it by connecting to the socket. The protocol is OpenThread CLI.

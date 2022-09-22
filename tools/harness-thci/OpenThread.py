@@ -1248,13 +1248,7 @@ class OpenThreadTHCI(object):
     @API
     def powerDown(self):
         """power down the Thread device"""
-        self.__sendCommand('reset', expectEcho=False)
-
-        if not self.IsBorderRouter:
-            self._disconnect()
-            self._connect()
-
-        self.isPowerDown = True
+        self._reset()
 
     @API
     def powerUp(self):
@@ -1266,7 +1260,8 @@ class OpenThreadTHCI(object):
                 self.__setPollPeriod(self.__sedPollPeriod)
             self.__startOpenThread()
 
-    def reset_and_wait_for_connection(self, timeout=3):
+    @watched
+    def _reset(self, timeout=3):
         print("Waiting after reset timeout: {} s".format(timeout))
         start_time = time.time()
         self.__sendCommand('reset', expectEcho=False)
@@ -1285,6 +1280,8 @@ class OpenThreadTHCI(object):
         else:
             raise AssertionError("Could not connect with OT device {} after reset.".format(self))
 
+    def reset_and_wait_for_connection(self, timeout=3):
+        self._reset(timeout=timeout)
         if self.deviceRole == Thread_Device_Role.SED:
             self.__setPollPeriod(self.__sedPollPeriod)
 
@@ -3258,6 +3255,16 @@ class OpenThreadTHCI(object):
     @API
     def setVrCheckSkip(self):
         self.__executeCommand("tvcheck disable")
+
+    @API
+    def addBlockedNodeId(self, node_id):
+        cmd = 'nodeidfilter deny %d' % node_id
+        self.__executeCommand(cmd)
+
+    @API
+    def clearBlockedNodeIds(self):
+        cmd = 'nodeidfilter clear'
+        self.__executeCommand(cmd)
 
 
 class OpenThread(OpenThreadTHCI, IThci):

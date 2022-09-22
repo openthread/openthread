@@ -110,6 +110,25 @@ void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6A
     AsCoreType(aIp4Address).ExtractFromIp6Address(aPrefixLength, AsCoreType(aIp6Address));
 }
 
+otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress)
+{
+    AssertPointerIsNotNull(aString);
+    return AsCoreType(aAddress).FromString(aString);
+}
+
+otError otNat64SynthersizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address)
+{
+    otError                          err = OT_ERROR_NONE;
+    NetworkData::ExternalRouteConfig nat64Prefix;
+
+    VerifyOrExit(AsCoreType(aInstance).Get<NetworkData::Leader>().GetPreferredNat64Prefix(nat64Prefix) == OT_ERROR_NONE,
+                 err = OT_ERROR_INVALID_STATE);
+    AsCoreType(aIp6Address).SynthesizeFromIp4Address(nat64Prefix.GetPrefix(), AsCoreType(aIp4Address));
+
+exit:
+    return err;
+}
+
 void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t aSize)
 {
     AssertPointerIsNotNull(aBuffer);

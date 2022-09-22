@@ -65,6 +65,7 @@ set(COMMON_LIBS
     ot-test-platform
     ${OT_MBEDTLS}
     ot-config
+    openthread-ftd
 )
 
 add_executable(ot-test-aes
@@ -936,6 +937,28 @@ target_link_libraries(ot-test-serial-number
 )
 
 add_test(NAME ot-test-serial-number COMMAND ot-test-serial-number)
+
+add_executable(ot-test-srp-server
+    test_srp_server.cpp
+)
+
+target_include_directories(ot-test-srp-server
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-srp-server
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-srp-server
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-srp-server COMMAND ot-test-srp-server)
+
 
 add_executable(ot-test-string
     test_string.cpp

@@ -27,13 +27,32 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+# This script merges the device fields in the argument file to `deviceInputFields.xml` in Harness
+# If a device field appears in both files, it will only keep that in the argument file
+
 import os
-import yaml
+import sys
+import xml.etree.ElementTree as ET
 
-CONFIG_PATH = r'%s\GRL\Thread1.2\Thread_Harness\simulation\config.yml' % os.environ['systemdrive']
+HARNESS_XML_PATH = r'%s\GRL\Thread1.2\Web\data\deviceInputFields.xml' % os.environ['systemdrive']
 
 
-def load_config():
-    with open(CONFIG_PATH, 'rt') as f:
-        config = yaml.safe_load(f)
-    return config
+def main():
+    tree = ET.parse(HARNESS_XML_PATH)
+    root = tree.getroot()
+    added = ET.parse(sys.argv[1]).getroot()
+
+    added_names = set(device.attrib['name'] for device in added.iter('DEVICE'))
+    # If some devices already exist, remove them first, and then add them back in case of update
+    removed_devices = filter(lambda x: x.attrib['name'] in added_names, root.iter('DEVICE'))
+
+    for device in removed_devices:
+        root.remove(device)
+    for device in added.iter('DEVICE'):
+        root.append(device)
+
+    tree.write(HARNESS_XML_PATH)
+
+
+if __name__ == '__main__':
+    main()

@@ -109,13 +109,23 @@ Establishes a connection with the specified peer.
 
 If the connection establishment is successful, the resulting TCP connection is associated with the example TCP endpoint.
 
-- ip: the peer's IPv6 address.
+- ip: the peer's IP address.
 - port: the peer's TCP port.
 
 ```bash
 > tcp connect fe80:0:0:0:a8df:580a:860:ffa4 30000
 Done
 TCP: Connection established
+```
+
+The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> tcp connect 172.17.0.1 1234
+Connecting to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
+Done
 ```
 
 ### deinit
