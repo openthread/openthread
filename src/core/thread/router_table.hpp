@@ -344,6 +344,16 @@ public:
     Error SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId);
 #endif
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    /**
+     * This method logs the route table.
+     *
+     */
+    void LogRouteTable(void);
+#else
+    void LogRouteTable(void) {}
+#endif
+
 private:
     class IteratorBuilder : public InstanceLocator
     {
