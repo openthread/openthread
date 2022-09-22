@@ -133,6 +133,7 @@ public:
     class NetworkInfo : private Clearable<NetworkInfo>
     {
         friend class Settings;
+        friend class Clearable<NetworkInfo>;
 
     public:
         static constexpr Key kKey = kKeyNetworkInfo; ///< The associated key.
@@ -339,6 +340,7 @@ public:
     class ParentInfo : private Clearable<ParentInfo>
     {
         friend class Settings;
+        friend class Clearable<ParentInfo>;
 
     public:
         static constexpr Key kKey = kKeyParentInfo; ///< The associated key.
@@ -532,6 +534,7 @@ public:
     class DadInfo : private Clearable<DadInfo>
     {
         friend class Settings;
+        friend class Clearable<DadInfo>;
 
     public:
         static constexpr Key kKey = kKeyDadInfo; ///< The associated key.
@@ -607,6 +610,7 @@ public:
     class SrpClientInfo : private Clearable<SrpClientInfo>
     {
         friend class Settings;
+        friend class Clearable<SrpClientInfo>;
 
     public:
         static constexpr Key kKey = kKeySrpClientInfo; ///< The associated key.
@@ -667,6 +671,7 @@ public:
     class SrpServerInfo : private Clearable<SrpServerInfo>
     {
         friend class Settings;
+        friend class Clearable<SrpServerInfo>;
 
     public:
         static constexpr Key kKey = kKeySrpServerInfo; ///< The associated key.

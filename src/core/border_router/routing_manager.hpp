@@ -433,6 +433,7 @@ private:
         class Entry : public LinkedListEntry<Entry>, public Unequatable<Entry>, private Clearable<Entry>
         {
             friend class LinkedListEntry<Entry>;
+            friend class Clearable<Entry>;
 
         public:
             enum Type : uint8_t
