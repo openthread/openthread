@@ -606,11 +606,11 @@ class OpenThreadTHCI(object):
         # reset
         if self.isPowerDown:
             if self._addressfilterMode == 'allowlist':
-                if self.__setAddressfilterMode(self.__commands['allowlist']):
+                if self.__setAddressfilterMode(self.__replaceCommands['allowlist']):
                     for addr in self._addressfilterSet:
                         self.addAllowMAC(addr)
             elif self._addressfilterMode == 'denylist':
-                if self.__setAddressfilterMode(self.__commands['denylist']):
+                if self.__setAddressfilterMode(self.__replaceCommands['denylist']):
                     for addr in self._addressfilterSet:
                         self.addBlockedMAC(addr)
 
@@ -979,7 +979,7 @@ class OpenThreadTHCI(object):
             True: successful to set the Thread network key
             False: fail to set the Thread network key
         """
-        cmdName = self.__commands['networkkey']
+        cmdName = self.__replaceCommands['networkkey']
 
         if not isinstance(key, str):
             networkKey = self.__convertLongToHex(key, 32)
@@ -1016,7 +1016,7 @@ class OpenThreadTHCI(object):
             return True
 
         if self._addressfilterMode != 'denylist':
-            if self.__setAddressfilterMode(self.__commands['denylist']):
+            if self.__setAddressfilterMode(self.__replaceCommands['denylist']):
                 self._addressfilterMode = 'denylist'
 
         cmd = 'macfilter addr add %s' % macAddr
@@ -1046,7 +1046,7 @@ class OpenThreadTHCI(object):
             macAddr = self.__convertLongToHex(xEUI)
 
         if self._addressfilterMode != 'allowlist':
-            if self.__setAddressfilterMode(self.__commands['allowlist']):
+            if self.__setAddressfilterMode(self.__replaceCommands['allowlist']):
                 self._addressfilterMode = 'allowlist'
 
         cmd = 'macfilter addr add %s' % macAddr
@@ -1175,10 +1175,7 @@ class OpenThreadTHCI(object):
             pass
 
         if self.IsReference20200818:
-            if mode == '-':
-                mode = 's'
-            else:
-                mode += 's'
+            mode = 's' if mode == '-' else mode + 's'
 
         # set Thread device mode with a given role
         self.__setDeviceMode(mode)
@@ -1606,7 +1603,7 @@ class OpenThreadTHCI(object):
         cmd = 'prefix remove %s/64' % prefixEntry
         if self.__executeCommand(cmd)[-1] == 'Done':
             # send server data ntf to leader
-            cmd = self.__commands['netdata register']
+            cmd = self.__replaceCommands['netdata register']
             return self.__executeCommand(cmd)[-1] == 'Done'
         else:
             return False
@@ -1689,7 +1686,7 @@ class OpenThreadTHCI(object):
                 return True
             else:
                 # send server data ntf to leader
-                cmd = self.__commands['netdata register']
+                cmd = self.__replaceCommands['netdata register']
                 return self.__executeCommand(cmd)[-1] == 'Done'
         else:
             return False
@@ -1842,7 +1839,7 @@ class OpenThreadTHCI(object):
 
         if self.__executeCommand(cmd)[-1] == 'Done':
             # send server data ntf to leader
-            cmd = self.__commands['netdata register']
+            cmd = self.__replaceCommands['netdata register']
             return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
@@ -1990,7 +1987,7 @@ class OpenThreadTHCI(object):
             True: successful to set the Partition ID
             False: fail to set the Partition ID
         """
-        cmd = self.__commands['partitionid preferred'] + ' '
+        cmd = self.__replaceCommands['partitionid preferred'] + ' '
         cmd += str(hex(partationId)).rstrip('L')
         return self.__executeCommand(cmd)[-1] == 'Done'
 
@@ -2441,7 +2438,7 @@ class OpenThreadTHCI(object):
 
         if len(TLVs) != 0:
             tlvs = ''.join('%02x' % tlv for tlv in TLVs)
-            cmd += ' ' + self.__commands['-x'] + ' '
+            cmd += ' ' + self.__replaceCommands['-x'] + ' '
             cmd += tlvs
 
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -2498,7 +2495,7 @@ class OpenThreadTHCI(object):
             cmd += str(sMeshLocalPrefix)
 
         if xMasterKey is not None:
-            cmd += ' ' + self.__commands['networkkey'] + ' '
+            cmd += ' ' + self.__replaceCommands['networkkey'] + ' '
             key = self.__convertLongToHex(xMasterKey, 32)
 
             cmd += key
@@ -2514,7 +2511,7 @@ class OpenThreadTHCI(object):
         if (sPSKc is not None or listSecurityPolicy is not None or xCommissioningSessionId is not None or
                 xTmfPort is not None or xSteeringData is not None or xBorderRouterLocator is not None or
                 BogusTLV is not None):
-            cmd += ' ' + self.__commands['-x'] + ' '
+            cmd += ' ' + self.__replaceCommands['-x'] + ' '
 
         if sPSKc is not None:
             cmd += '0410'
@@ -2624,7 +2621,7 @@ class OpenThreadTHCI(object):
 
         if len(TLVs) != 0:
             tlvs = ''.join('%02x' % tlv for tlv in TLVs)
-            cmd += ' ' + self.__commands['-x'] + ' '
+            cmd += ' ' + self.__replaceCommands['-x'] + ' '
             cmd += tlvs
 
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -2673,7 +2670,7 @@ class OpenThreadTHCI(object):
             cmd += str(xPanId)
 
         if xMasterKey is not None:
-            cmd += ' ' + self.__commands['networkkey'] + ' '
+            cmd += ' ' + self.__replaceCommands['networkkey'] + ' '
             key = self.__convertLongToHex(xMasterKey, 32)
 
             cmd += key
@@ -2687,7 +2684,7 @@ class OpenThreadTHCI(object):
             cmd += self._deviceEscapeEscapable(str(sNetworkName))
 
         if xCommissionerSessionId is not None:
-            cmd += ' ' + self.__commands['-x'] + ' '
+            cmd += ' ' + self.__replaceCommands['-x'] + ' '
             cmd += '0b02'
             sessionid = str(hex(xCommissionerSessionId))[2:]
 
@@ -2710,7 +2707,7 @@ class OpenThreadTHCI(object):
 
         if len(TLVs) != 0:
             tlvs = ''.join('%02x' % tlv for tlv in TLVs)
-            cmd += ' ' + self.__commands['-x'] + ' '
+            cmd += ' ' + self.__replaceCommands['-x'] + ' '
             cmd += tlvs
 
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -2754,7 +2751,7 @@ class OpenThreadTHCI(object):
             cmd += str(hex(xBorderRouterLocator))
 
         if xChannelTlv is not None:
-            cmd += ' ' + self.__commands['-x'] + ' '
+            cmd += ' ' + self.__replaceCommands['-x'] + ' '
             cmd += '000300' + '%04x' % xChannelTlv
 
         return self.__executeCommand(cmd)[-1] == 'Done'
@@ -2900,7 +2897,7 @@ class OpenThreadTHCI(object):
         if ReRegDelay is not None:
             self.bbrReRegDelay = ReRegDelay
 
-        cmd = self.__commands['netdata register']
+        cmd = self.__replaceCommands['netdata register']
         self.__executeCommand(cmd)
 
         return ret
@@ -3240,7 +3237,7 @@ class OpenThreadTHCI(object):
         self.IsReference20200818 = not self.__executeCommand('version api')[0].isdigit()
 
         if self.IsReference20200818:
-            self.__commands = {
+            self.__replaceCommands = {
                 '-x': 'binary',
                 'allowlist': 'whitelist',
                 'denylist': 'blacklist',
@@ -3255,7 +3252,7 @@ class OpenThreadTHCI(object):
                 def __getitem__(self, key):
                     return key
 
-            self.__commands = IdentityDict()
+            self.__replaceCommands = IdentityDict()
 
     def __discoverDeviceCapability(self):
         """Discover device capability according to version"""
