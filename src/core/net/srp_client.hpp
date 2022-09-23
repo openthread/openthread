@@ -106,6 +106,7 @@ public:
     class HostInfo : public otSrpClientHostInfo, private Clearable<HostInfo>
     {
         friend class Client;
+        friend class Clearable<HostInfo>;
 
     public:
         /**
@@ -890,7 +891,7 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    class AutoStart : Clearable<AutoStart>
+    class AutoStart : public Clearable<AutoStart>
     {
     public:
         enum State : uint8_t{
