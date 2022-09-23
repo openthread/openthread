@@ -50,7 +50,7 @@ RegisterLogModule("Nat64");
 
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEnabled(true)
+    , mEnabled(false)
     , mMappingExpirer(aInstance, MappingExpirerHandler)
 {
     Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
@@ -302,6 +302,19 @@ void Translator::AddressMapping::CopyTo(otNat64AddressMapping &aMapping, TimeMil
     }
 }
 
+uint16_t Translator::ReleaseMappings(LinkedList<AddressMapping> &aMappings)
+{
+    uint16_t numRemoved = 0;
+
+    for (AddressMapping *mapping = aMappings.Pop(); mapping != nullptr; mapping = aMappings.Pop())
+    {
+        numRemoved++;
+        ReleaseMapping(*mapping);
+    }
+
+    return numRemoved;
+}
+
 void Translator::ReleaseMapping(AddressMapping &aMapping)
 {
     IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4));
@@ -316,12 +329,7 @@ uint16_t Translator::ReleaseExpiredMappings(void)
     LinkedList<AddressMapping> idleMappings;
 
     mActiveAddressMappings.RemoveAllMatching(now, idleMappings);
-
-    for (AddressMapping *idleMapping = idleMappings.Pop(); idleMapping != nullptr; idleMapping = idleMappings.Pop())
-    {
-        numRemoved++;
-        ReleaseMapping(*idleMapping);
-    }
+    ReleaseMappings(idleMappings);
 
     return numRemoved;
 }
@@ -442,16 +450,48 @@ Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
 {
     Error err = kErrorNone;
 
+    uint32_t numberOfHosts;
+    uint32_t hostIdBegin;
+
     VerifyOrExit(aCidr.mLength > 0 && aCidr.mLength <= 32, err = kErrorInvalidArgs);
 
     VerifyOrExit(mIp4Cidr != aCidr);
 
-    mIp4Cidr = aCidr;
+    // Avoid using the 0s and 1s in the host id of an address, but what if the user provides us with /32 or /31
+    // addresses?
+    if (aCidr.mLength == 32)
+    {
+        hostIdBegin   = 0;
+        numberOfHosts = 1;
+    }
+    else if (aCidr.mLength == 31)
+    {
+        hostIdBegin   = 0;
+        numberOfHosts = 2;
+    }
+    else
+    {
+        hostIdBegin   = 1;
+        numberOfHosts = static_cast<uint32_t>((1 << (Ip4::Address::kSize * 8 - aCidr.mLength)) - 2);
+    }
+    numberOfHosts = OT_MIN(numberOfHosts, kAddressMappingPoolSize);
 
-    ResetMappings();
-    LogInfo("IPv4 CIDR for NAT64: %s (actual address pool: %s - %s, %u addresses)", mIp4Cidr.ToString().AsCString(),
+    mAddressMappingPool.FreeAll();
+    mActiveAddressMappings.Clear();
+    mIp4AddressPool.Clear();
+
+    for (uint32_t i = 0; i < numberOfHosts; i++)
+    {
+        Ip4::Address addr;
+
+        addr.SynthesizeFromCidrAndHost(aCidr, i + hostIdBegin);
+        IgnoreError(mIp4AddressPool.PushBack(addr));
+    }
+
+    LogInfo("IPv4 CIDR for NAT64: %s (actual address pool: %s - %s, %u addresses)", aCidr.ToString().AsCString(),
             mIp4AddressPool.Front()->ToString().AsCString(), mIp4AddressPool.Back()->ToString().AsCString(),
-            mIp4AddressPool.GetLength());
+            numberOfHosts);
+    mIp4Cidr = aCidr;
 
 exit:
     return err;
@@ -561,65 +601,27 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
 
 Translator::State Translator::GetState()
 {
-    return mEnabled ? kStateActive : kStateDisabled;
+    State ret = kStateDisabled;
+
+    VerifyOrExit(mEnabled);
+    VerifyOrExit(mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64(), ret = kStateIdle);
+    ret = kStateActive;
+
+exit:
+    return ret;
 }
 
-void Translator::ResetMappings()
+void Translator::SetEnabled(bool aEnabled)
 {
-    uint32_t numberOfHosts;
-    uint32_t hostIdBegin;
-
-    LogInfo("Reset Translator mapping");
-
-    // Avoid using the 0s and 1s in the host id of an address, but what if the user provides us with /32 or /31
-    // addresses?
-    if (mIp4Cidr.mLength == 32)
-    {
-        hostIdBegin   = 0;
-        numberOfHosts = 1;
-    }
-    else if (mIp4Cidr.mLength == 31)
-    {
-        hostIdBegin   = 0;
-        numberOfHosts = 2;
-    }
-    else
-    {
-        hostIdBegin   = 1;
-        numberOfHosts = static_cast<uint32_t>((1 << (Ip4::Address::kSize * 8 - mIp4Cidr.mLength)) - 2);
-    }
-    numberOfHosts = OT_MIN(numberOfHosts, kAddressMappingPoolSize);
-
-    mAddressMappingPool.FreeAll();
-    mActiveAddressMappings.Clear();
-    mIp4AddressPool.Clear();
-
-    for (uint32_t i = 0; i < numberOfHosts; i++)
-    {
-        Ip4::Address addr;
-
-        addr.SynthesizeFromCidrAndHost(mIp4Cidr, i + hostIdBegin);
-        IgnoreError(mIp4AddressPool.PushBack(addr));
-    }
-}
-
-Error Translator::SetEnabled(bool aEnabled)
-{
-    Error error = kErrorNone;
-
     if (aEnabled)
     {
-        VerifyOrExit(mIp4Cidr.mLength > 0, error = kErrorInvalidState);
         mEnabled = true;
     }
     else
     {
-        ResetMappings();
+        ReleaseMappings(mActiveAddressMappings);
         mEnabled = false;
     }
-
-exit:
-    return error;
 }
 
 } // namespace Nat64

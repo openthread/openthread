@@ -735,7 +735,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -756,7 +756,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      */
     else if (aArgs[0] == "enable")
     {
-        error = otNat64SetEnabled(GetInstancePtr(), true);
+        otNat64SetEnabled(GetInstancePtr(), true);
     }
     /**
      * @cli nat64 disable
@@ -770,27 +770,36 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      */
     else if (aArgs[0] == "disable")
     {
-        error = otNat64SetEnabled(GetInstancePtr(), false);
+        otNat64SetEnabled(GetInstancePtr(), false);
     }
     /**
      * @cli nat64 state
      * @code
-     * nat64 state
-     * Active
+     * PrefixManager: Active
+     * Translator:    Active
      * Done
      * @endcode
-     * @par api_copy
-     * #otNat64GetState
+     * @par
+     * Gets the state of NAT64 functions.
+     * @par
+     * PrefixManager state is available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
+     * Translator state is available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+     * @sa otNat64GetPrefixManagerState
+     * @sa otNat64GetTranslatorState
      *
      */
     else if (aArgs[0] == "state")
     {
-        otNat64State state = otNat64GetState(GetInstancePtr());
-
         static const char *const kNat64State[] = {"Disabled", "Idle", "Active"};
 
-        OutputLine("%s", kNat64State[state]);
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        OutputLine("PrefixManager: %s", kNat64State[otNat64GetPrefixManagerState(GetInstancePtr())]);
+#endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+        OutputLine("Translator:    %s", kNat64State[otNat64GetTranslatorState(GetInstancePtr())]);
+#endif
     }
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     /**
      * @cli nat64 cidr
      * @code
@@ -979,6 +988,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
                        errorCounters.mCount6To4[i]);
         }
     }
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -987,7 +997,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
@@ -6724,7 +6734,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("mode"),
         CmdEntry("multiradio"),
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         CmdEntry("nat64"),
 #endif
 #if OPENTHREAD_FTD

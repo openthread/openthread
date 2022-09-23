@@ -170,22 +170,10 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-Error RoutingManager::SetNat64PrefixManagerEnabled(bool aEnabled)
+void RoutingManager::SetNat64PrefixManagerEnabled(bool aEnabled)
 {
-    Error error = kErrorNone;
-
-    if (aEnabled)
-    {
-        VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-        mNat64PrefixManager.Start();
-    }
-    else
-    {
-        mNat64PrefixManager.Stop();
-    }
-
-exit:
-    return error;
+    // PrefixManager will start itself if routing manager is running.
+    mNat64PrefixManager.SetEnabled(aEnabled);
 }
 
 Error RoutingManager::GetNat64Prefix(Ip6::Prefix &aPrefix)
@@ -267,7 +255,7 @@ void RoutingManager::Start(void)
         mLocalOnLinkPrefix.Start();
         mRsSender.Start();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-        mNat64PrefixManager.Start();
+        mNat64PrefixManager.OnRoutingManagerStart();
 #endif
     }
 }
@@ -284,7 +272,7 @@ void RoutingManager::Stop(void)
     mLocalOnLinkPrefix.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    mNat64PrefixManager.Stop();
+    mNat64PrefixManager.OnRoutingManagerStop();
 #endif
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
@@ -576,7 +564,10 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     EvaluateOnLinkPrefix();
     EvaluateOmrPrefix();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    mNat64PrefixManager.Evaluate();
+    if (mNat64PrefixManager.IsEnabled())
+    {
+        mNat64PrefixManager.Evaluate();
+    }
 #endif
 
     SendRouterAdvertisement(kAdvPrefixesFromNetData);
@@ -2255,6 +2246,7 @@ void RoutingManager::OnMeshPrefixArray::MarkAsDeleted(const OnMeshPrefix &aPrefi
 
 RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mEnabled(false)
     , mTimer(aInstance, HandleTimer)
 {
     mInfraIfPrefix.Clear();
@@ -2262,8 +2254,40 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     mPublishedPrefix.Clear();
 }
 
+void RoutingManager::Nat64PrefixManager::SetEnabled(bool aEnabled)
+{
+    mEnabled = aEnabled;
+
+    if (aEnabled)
+    {
+        if (Get<RoutingManager>().IsRunning())
+        {
+            Start();
+        }
+    }
+    else
+    {
+        Stop();
+    }
+}
+
+void RoutingManager::Nat64PrefixManager::OnRoutingManagerStart(void)
+{
+    if (IsEnabled())
+    {
+        Start();
+    }
+}
+
+void RoutingManager::Nat64PrefixManager::OnRoutingManagerStop(void)
+{
+    Stop();
+}
+
 void RoutingManager::Nat64PrefixManager::Start(void)
 {
+    OT_ASSERT(IsEnabled());
+
     if (!mTimer.IsRunning())
     {
         mTimer.Start(0);
@@ -2317,6 +2341,8 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     NetworkData::ExternalRouteConfig netdataPrefixConfig;
     bool                             shouldPublish;
 
+    VerifyOrExit(IsEnabled());
+
     LogInfo("Evaluating NAT64 prefix");
 
     prefix = GetFavoredPrefix(preference);
@@ -2356,6 +2382,9 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     Get<Nat64::Translator>().SetNat64Prefix(mPublishedPrefix);
 #endif
+
+exit:
+    (void)0;
 }
 
 void RoutingManager::Nat64PrefixManager::HandleTimer(Timer &aTimer)
@@ -2365,6 +2394,9 @@ void RoutingManager::Nat64PrefixManager::HandleTimer(Timer &aTimer)
 
 void RoutingManager::Nat64PrefixManager::HandleTimer(void)
 {
+    // The timer should not be running when PrefixManager is disabled.
+    OT_ASSERT(IsEnabled());
+
     Discover();
 
     mTimer.Start(TimeMilli::SecToMsec(kDefaultNat64PrefixLifetime));
@@ -2397,13 +2429,12 @@ void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &a
     }
 }
 
-RoutingManager::Nat64PrefixManagerState RoutingManager::Nat64PrefixManager::GetState()
+RoutingManager::Nat64PrefixManagerState RoutingManager::Nat64PrefixManager::GetState(void)
 {
     Nat64PrefixManagerState state = kNat64StateDisabled;
 
-    VerifyOrExit(mTimer.IsRunning());
+    VerifyOrExit(IsEnabled());
     VerifyOrExit(mPublishedPrefix.IsValidNat64(), state = kNat64StateIdle);
-
     state = kNat64StateActive;
 
 exit:
