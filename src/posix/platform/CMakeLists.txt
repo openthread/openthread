@@ -121,6 +121,7 @@ target_link_libraries(openthread-posix
         openthread-platform
     PRIVATE
         openthread-url
+        ot-config-ftd
         ot-config
         ot-posix-config
         util
