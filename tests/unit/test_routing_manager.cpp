@@ -1487,6 +1487,7 @@ void TestExtPanIdChange(void)
 
     static const otExtendedPanId kExtPanId1 = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x08}};
     static const otExtendedPanId kExtPanId2 = {{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x99, 0x88}};
+    static const otExtendedPanId kExtPanId3 = {{0x12, 0x34, 056, 0x78, 0x9a, 0xab, 0xcd, 0xef}};
 
     Ip6::Prefix          localOnLink;
     Ip6::Prefix          oldLocalOnLink;
@@ -1565,6 +1566,43 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate the Network Data to contain both the current and old
     // local on-link prefixes.
+
+    VerifyOmrPrefixInNetData(localOmr);
+    VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium),
+                                   ExternalRoute(oldLocalOnLink, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Change the extended PAN ID again.
+
+    Log("Changing ext PAN ID again");
+
+    oldLocalOnLink    = localOnLink;
+    oldPrefixLifetime = sOnLinkLifetime;
+
+    sRaValidated        = false;
+    sExpectOldOnLinkPio = true;
+    sExpectedPio        = kPioAdvertisingLocalOnLink;
+
+    dataset.mExtendedPanId = kExtPanId3;
+    SuccessOrQuit(otDatasetSetActive(sInstance, &dataset));
+
+    AdvanceTime(500);
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    Log("Local on-link prefix changed to %s from %s", localOnLink.ToString().AsCString(),
+        oldLocalOnLink.ToString().AsCString());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate the received RA message and that it contains the
+    // old on-link prefix being deprecated.
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sOldOnLinkPrefix == oldLocalOnLink);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate the Network Data to contain both the current and old
+    // local on-link prefixes and the previous old prefix is now removed.
 
     VerifyOmrPrefixInNetData(localOmr);
     VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium),
