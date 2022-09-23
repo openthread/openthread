@@ -79,7 +79,8 @@ public:
     enum State : uint8_t
     {
         kStateDisabled = OT_NAT64_STATE_DISABLED, ///< The translator is disabled.
-        kStateIdle   = OT_NAT64_STATE_IDLE, ///< The translator is not configured with a valid NAT64 prefix and a CIDR.
+        kStateNotRunning =
+            OT_NAT64_STATE_NOT_RUNNING, ///< The translator is not configured with a valid NAT64 prefix and a CIDR.
         kStateActive = OT_NAT64_STATE_ACTIVE, ///< The translator is translating packets.
     };
 

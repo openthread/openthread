@@ -604,7 +604,7 @@ Translator::State Translator::GetState()
     State ret = kStateDisabled;
 
     VerifyOrExit(mEnabled);
-    VerifyOrExit(mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64(), ret = kStateIdle);
+    VerifyOrExit(mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64(), ret = kStateNotRunning);
     ret = kStateActive;
 
 exit:

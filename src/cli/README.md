@@ -1854,7 +1854,7 @@ Disable NAT64 functions, including the translator and the prefix publishing.
 
 This command will reset the mapping table in the translator (if NAT64 translator is enabled in the build).
 
-This command is only available when device enables NAT64 translator.
+This command is only available when device enables NAT64 translator or NAT64 prefix manager.
 
 ```bash
 > nat64 disable
@@ -1867,7 +1867,7 @@ Enable NAT64 functions, including the translator and the prefix publishing.
 
 The border routing manager should be enabled (if it is enabled in the build), and the NAT64 translator should be configured with a CIDR (if it is enabled in the build).
 
-This command is only available when device enables NAT64 translator.
+This command is only available when device enables NAT64 translator or NAT64 prefix manager.
 
 ```bash
 > nat64 enable
@@ -1878,17 +1878,35 @@ Done
 
 Gets the state of NAT64 functions.
 
-Possible results are:
+Possible results for prefix manager are (when NAT64 prefix manager is enabled):
 
-- `Disabled`: NAT64 functions are disabled.
-- `Idle`: (Only when routing manager is enabled in the build) NAT64 is enabled, but is not publishing a NAT64 prefix. Usually when there is another border router publishing a NAT64 prefix with higher priority.
-- `Active`: NAT64 functions are enabled, and this border router is publishing a NAT64 prefix (when routing manager is enabled in the build) and translating packages (when NAT64 translator is enabled in the build).
+- `Disabled`: NAT64 prefix manager is disabled.
+- `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably bacause the routing manager is disabled.
+- `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. Usually when there is another border router publishing a NAT64 prefix with higher priority.
+- `Active`: NAT64 prefix manager is enabled, running and publishing a NAT64 prefix.
 
-This command is only available when device enables NAT64 translator.
+Possible results for NAT64 translator are (when NAT64 translator is enabled):
+
+- `Disabled`: NAT64 translator is disabled.
+- `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued with a NAT64 prefix or a CIDR for NAT64.
+- `Active`: NAT64 translator is enabled and is translating packets.
+
+This command is only available when device enables NAT64 translator or NAT64 prefix manager.
 
 ```bash
 > nat64 state
-Active
+PrefixManager: NotRunning
+Translator:    NotRunning
+Done
+
+> nat64 state
+PrefixManager: Idle
+Translator:    NotRunning
+Done
+
+> nat64 state
+PrefixManager: Active
+Translator:    Active
 Done
 ```
 

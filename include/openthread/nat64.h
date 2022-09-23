@@ -95,6 +95,7 @@ typedef struct otIp4Cidr
 typedef enum
 {
     OT_NAT64_STATE_DISABLED = 0, ///< NAT64 is disabled.
+    OT_NAT64_STATE_NOT_RUNNING,  ///< NAT64 is enabled, but is not in function.
     OT_NAT64_STATE_IDLE,         ///< NAT64 is enabled, but is not publishing a NAT64 prefix.
     OT_NAT64_STATE_ACTIVE,       ///< NAT64 is enabled, and is publishing a NAT64 prefix and/or translating packets.
 } otNat64State;
@@ -341,10 +342,10 @@ otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  *
- * @retval     OT_NAT64_STATE_DISABLED  NAT64 translator is disabled.
- * @retval     OT_NAT64_STATE_IDLE      NAT64 translator is enabled, the translator is not configured with a valid NAT64
- *                                      prefix and a CIDR.
- * @retval     OT_NAT64_STATE_ACTIVE    NAT64 translator is enabled, and is translating packets.
+ * @retval  OT_NAT64_STATE_DISABLED     NAT64 translator is disabled.
+ * @retval  OT_NAT64_STATE_NOT_RUNNING  NAT64 translator is enabled, but the translator is not configured with a valid
+ *                                      NAT64 prefix and a CIDR.
+ * @retval  OT_NAT64_STATE_ACTIVE       NAT64 translator is enabled, and is translating packets.
  *
  */
 otNat64State otNat64GetTranslatorState(otInstance *aInstance);
@@ -356,10 +357,13 @@ otNat64State otNat64GetTranslatorState(otInstance *aInstance);
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  *
- * @retval     OT_NAT64_STATE_DISABLED  NAT64 is disabled.
- * @retval     OT_NAT64_STATE_IDLE      NAT64 is enabled, but is not publishing a NAT64 prefix. Usually when there is
- *                                      another border router publishing a NAT64 prefix with higher priority.
- * @retval     OT_NAT64_STATE_ACTIVE    NAT64 is enabled, and is translating packets.
+ * @retval OT_NAT64_STATE_DISABLED     NAT64 prefix manager is disabled.
+ * @retval OT_NAT64_STATE_NOT_RUNNING  NAT64 prefix manager is enabled, but is not running (because the routing manager
+ *                                     is not running).
+ * @retval OT_NAT64_STATE_IDLE         NAT64 prefix manager is enabled, but is not publishing a NAT64 prefix. Usually
+ *                                     when there is another border router publishing a NAT64 prefix with higher
+ *                                     priority.
+ * @retval OT_NAT64_STATE_ACTIVE       NAT64 prefix manager is enabled, and is translating packets.
  *
  */
 otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
@@ -368,7 +372,7 @@ otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
  * Set the state of NAT64 functions.
  *
  * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is
- *enabled.
+ * enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable the NAT64 functions

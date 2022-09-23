@@ -2434,6 +2434,7 @@ RoutingManager::Nat64PrefixManagerState RoutingManager::Nat64PrefixManager::GetS
     Nat64PrefixManagerState state = kNat64StateDisabled;
 
     VerifyOrExit(IsEnabled());
+    VerifyOrExit(Get<RoutingManager>().IsRunning(), state = kNat64StateNotRunning);
     VerifyOrExit(mPublishedPrefix.IsValidNat64(), state = kNat64StateIdle);
     state = kNat64StateActive;
 

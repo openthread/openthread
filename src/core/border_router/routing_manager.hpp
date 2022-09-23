@@ -206,9 +206,11 @@ public:
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     enum Nat64PrefixManagerState : uint8_t
     {
-        kNat64StateDisabled = OT_NAT64_STATE_DISABLED, ///< NAT64 is disabled.
-        kNat64StateIdle     = OT_NAT64_STATE_IDLE,     ///< Border router is not publishing a NAT64 prefix.
-        kNat64StateActive   = OT_NAT64_STATE_ACTIVE,   ///< Border router is publishing a NAT64 prefix.
+        kNat64StateDisabled   = OT_NAT64_STATE_DISABLED,    ///< NAT64 is disabled.
+        kNat64StateNotRunning = OT_NAT64_STATE_NOT_RUNNING, ///< Prefix manager is enabled, but is not running (because
+                                                            ///< the routing manager is not running).
+        kNat64StateIdle   = OT_NAT64_STATE_IDLE,            ///< Border router is not publishing a NAT64 prefix.
+        kNat64StateActive = OT_NAT64_STATE_ACTIVE,          ///< Border router is publishing a NAT64 prefix.
     };
 
     /**

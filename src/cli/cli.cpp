@@ -739,27 +739,18 @@ exit:
 template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
+    bool    enable;
 
     if (aArgs[0].IsEmpty())
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
     /**
-     * @cli nat64 enable
+     * @cli nat64 (enable,disable)
      * @code
      * nat64 enable
      * Done
      * @endcode
-     * @par api_copy
-     * #otNat64SetEnabled
-     *
-     */
-    else if (aArgs[0] == "enable")
-    {
-        otNat64SetEnabled(GetInstancePtr(), true);
-    }
-    /**
-     * @cli nat64 disable
      * @code
      * nat64 disable
      * Done
@@ -768,9 +759,9 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * #otNat64SetEnabled
      *
      */
-    else if (aArgs[0] == "disable")
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
-        otNat64SetEnabled(GetInstancePtr(), false);
+        otNat64SetEnabled(GetInstancePtr(), enable);
     }
     /**
      * @cli nat64 state
@@ -790,7 +781,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      */
     else if (aArgs[0] == "state")
     {
-        static const char *const kNat64State[] = {"Disabled", "Idle", "Active"};
+        static const char *const kNat64State[] = {"Disabled", "NotRunning", "Idle", "Active"};
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         OutputLine("PrefixManager: %s", kNat64State[otNat64GetPrefixManagerState(GetInstancePtr())]);
