@@ -322,10 +322,8 @@ do_build_otbr_docker()
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
     local docker_build_args=()
 
-    for arg in "${args[@]}"
-    do
-        docker_build_args+=("--build-arg")
-        docker_build_args+=("$arg")
+    for arg in "${args[@]}"; do
+        docker_build_args+=("--build-arg" "$arg")
     done
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
