@@ -43,7 +43,7 @@
  * The run time data path.
  *
  */
-#define OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/data/misc/thread"
+#define OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH "/data/misc/threadnetwork"
 
 /**
  * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
@@ -51,7 +51,7 @@
  * Define socket basename used by POSIX app daemon.
  *
  */
-#define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/data/misc/thread/openthread-%s"
+#define OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME "/data/misc/threadnetwork/openthread-%s"
 
 /**
  * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
