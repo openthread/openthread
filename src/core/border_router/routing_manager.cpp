@@ -564,10 +564,8 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     EvaluateOnLinkPrefix();
     EvaluateOmrPrefix();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    if (mNat64PrefixManager.IsEnabled())
-    {
-        mNat64PrefixManager.Evaluate();
-    }
+    // Nat64PrefixManager::Evaluate() is no-op if Nat64PrefixManager is disabled.
+    mNat64PrefixManager.Evaluate();
 #endif
 
     SendRouterAdvertisement(kAdvPrefixesFromNetData);
@@ -2384,7 +2382,7 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
 #endif
 
 exit:
-    (void)0;
+    return;
 }
 
 void RoutingManager::Nat64PrefixManager::HandleTimer(Timer &aTimer)

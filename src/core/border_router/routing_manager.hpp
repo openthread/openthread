@@ -216,10 +216,12 @@ public:
     /**
      * Gets the state of NAT64 prefix publishing.
      *
-     * @retval  kNat64StateDisabled  NAT64 is disabled.
-     * @retval  kNat64StateIdle      NAT64 is enabled, but the border router is not publishing a NAT64 prefix.. Usually
-     *                               when there is another border router publishing a NAT64 prefix with higher priority.
-     * @retval  kNat64StateActive    The Border router is publishing a NAT64 prefix.
+     * @retval  kNat64StateDisabled   NAT64 is disabled.
+     * @retval  kNat64StateNotRunning NAT64 is enabled, but is not running since routing manager is not running.
+     * @retval  kNat64StateIdle       NAT64 is enabled, but the border router is not publishing a NAT64 prefix.. Usually
+     *                                when there is another border router publishing a NAT64 prefix with higher
+     *                                priority.
+     * @retval  kNat64StateActive     The Border router is publishing a NAT64 prefix.
      *
      */
     Nat64PrefixManagerState GetNat64PrefixManagerState() { return mNat64PrefixManager.GetState(); }

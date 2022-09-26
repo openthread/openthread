@@ -130,7 +130,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertEqual(br2.get_nat64_state()['PrefixManager'], NAT64_STATE_ACTIVE)
 
         #
-        # Case 2. Disable border routing on BR2.
+        # Case 2. Disable NAT64 on BR2.
         #         BR1 will add its local nat64 prefix.
         #
         br2.disable_nat64()
@@ -162,7 +162,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertEqual(br2.get_nat64_state()['PrefixManager'], NAT64_STATE_IDLE)
 
         #
-        # Case 4. Disable border routing on BR1.
+        # Case 4. Disable NAT64 on BR1.
         #         BR1 withdraws its local prefix and BR2 advertises its local prefix.
         #
         br1.disable_nat64()
@@ -176,7 +176,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertEqual(br2.get_nat64_state()['PrefixManager'], NAT64_STATE_ACTIVE)
 
         #
-        # Case 5. Re-enable border routing on BR1.
+        # Case 5. Re-enable NAT64 on BR1.
         #         NAT64 prefix in Network Data is still BR2's local prefix.
         #
         br1.enable_nat64()
@@ -203,17 +203,17 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertEqual(br2.get_nat64_state()['PrefixManager'], NAT64_STATE_NOT_RUNNING)
 
         #
-        # Case 6. Enable the routing manager the BR should start NAT64 prefix manager if the prefix manager is enabled..
+        # Case 7. Enable the routing manager the BR should start NAT64 prefix manager if the prefix manager is enabled..
         #
         #
         br2.enable_br()
-        self.simulator.go(30)
+        self.simulator.go(10)
         self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
         nat64_prefix = br1.get_netdata_nat64_prefix()[0]
-        self.assertEqual(br2_local_nat64_prefix, nat64_prefix)
-        self.assertNotEqual(br1_local_nat64_prefix, nat64_prefix)
-        self.assertEqual(br1.get_nat64_state()['PrefixManager'], str(NAT64_STATE_IDLE))
-        self.assertEqual(br2.get_nat64_state()['PrefixManager'], str(NAT64_STATE_ACTIVE))
+        self.assertEqual(br1_local_nat64_prefix, nat64_prefix)
+        self.assertNotEqual(br2_local_nat64_prefix, nat64_prefix)
+        self.assertEqual(br1.get_nat64_state()['PrefixManager'], NAT64_STATE_ACTIVE)
+        self.assertEqual(br2.get_nat64_state()['PrefixManager'], NAT64_STATE_IDLE)
 
 
 if __name__ == '__main__':
