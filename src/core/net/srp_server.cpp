@@ -1760,13 +1760,22 @@ TimeMilli Server::Service::GetKeyExpireTime(void) const
 void Server::Service::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
 {
     TimeMilli now           = TimerMilli::GetNow();
-    TimeMilli expireTime    = GetExpireTime();
     TimeMilli keyExpireTime = GetKeyExpireTime();
 
     aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
     aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
     aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
+
+    if (!mIsDeleted)
+    {
+        TimeMilli expireTime = GetExpireTime();
+
+        aLeaseInfo.mRemainingLease = (now <= expireTime) ? (expireTime - now) : 0;
+    }
+    else
+    {
+        aLeaseInfo.mRemainingLease = 0;
+    }
 }
 
 bool Server::Service::MatchesInstanceName(const char *aInstanceName) const
@@ -1974,13 +1983,22 @@ TimeMilli Server::Host::GetKeyExpireTime(void) const
 void Server::Host::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
 {
     TimeMilli now           = TimerMilli::GetNow();
-    TimeMilli expireTime    = GetExpireTime();
     TimeMilli keyExpireTime = GetKeyExpireTime();
 
     aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
     aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
     aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
+
+    if (!IsDeleted())
+    {
+        TimeMilli expireTime = GetExpireTime();
+
+        aLeaseInfo.mRemainingLease = (now <= expireTime) ? (expireTime - now) : 0;
+    }
+    else
+    {
+        aLeaseInfo.mRemainingLease = 0;
+    }
 }
 
 Error Server::Host::ProcessTtl(uint32_t aTtl)
