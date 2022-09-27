@@ -378,7 +378,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
 
         default_leases = server.srp_server_get_lease()
-        self.assertEqual(default_leases, (1800, 7200, 86400, 1209600))
+        self.assertEqual(default_leases, (30, 97200, 30, 680400))
         server.srp_server_set_lease(1801, 7201, 86401, 1209601)
         leases = server.srp_server_get_lease()
         self.assertEqual(leases, (1801, 7201, 86401, 1209601))
