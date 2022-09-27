@@ -87,7 +87,10 @@ public:
      * @retval FALSE  If the two `Type` instances are not equal.
      *
      */
-    bool operator==(const Type &aOther) const { return memcmp(this, &aOther, sizeof(Type)) == 0; }
+    bool operator==(const Type &aOther) const
+    {
+        return memcmp(static_cast<const Type *>(this), &aOther, sizeof(Type)) == 0;
+    }
 };
 
 } // namespace ot

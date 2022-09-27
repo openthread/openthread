@@ -43,6 +43,7 @@ target_sources(openthread-mtd PRIVATE ${COMMON_SOURCES})
 target_link_libraries(openthread-mtd
     PRIVATE
         ${OT_MBEDTLS}
+        ot-config-mtd
         ot-config
 )
 

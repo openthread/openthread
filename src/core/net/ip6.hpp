@@ -416,6 +416,8 @@ private:
  */
 class Headers : private Clearable<Headers>
 {
+    friend class Clearable<Headers>;
+
 public:
     /**
      * This method parses the IPv6 and UDP/TCP/ICMP6 headers from a given message.
