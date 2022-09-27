@@ -297,6 +297,7 @@ do_build_otbr_docker()
         "REFERENCE_DEVICE=1"
         "OT_BACKBONE_CI=1"
         "NAT64=${NAT64}"
+        "NAT64_SERVICE=${NAT64_SERVICE}"
         "DNS64=${NAT64}"
         "REST_API=0"
         "WEB_GUI=0"
@@ -307,16 +308,6 @@ do_build_otbr_docker()
         otbr_options+=("-DOTBR_TREL=ON")
     else
         otbr_options+=("-DOTBR_TREL=OFF")
-    fi
-
-    if [[ ${NAT64} == 1 ]]; then
-        otbr_options+=("-DOT_NAT64_BORDER_ROUTING=ON")
-        if [[ ${NAT64_SERVICE} == "openthread" ]]; then
-            otbr_options+=("-DOT_NAT64_TRANSLATOR=ON")
-        fi
-        args+=("NAT64_SERVICE=${NAT64_SERVICE}")
-    else
-        otbr_options+=("-DOT_NAT64_BORDER_ROUTING=OFF")
     fi
 
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}

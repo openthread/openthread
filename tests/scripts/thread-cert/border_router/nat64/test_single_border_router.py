@@ -63,11 +63,13 @@ SMALL_NAT64_PREFIX = "fd00:00:00:01:00:00::/96"
 # So the BR will remove the random-generated one.
 LARGE_NAT64_PREFIX = "ff00:00:00:01:00:00::/96"
 
+
 def SynthersizeIp6Address(ip6_network: ipaddress.IPv6Network, ip4_address: ipaddress.IPv4Address):
     if ip6_network.prefixlen != 96:
         # We are only using /96 networks in openthread
         raise NotImplementedError("SynthersizeIp6Address only supports /96 networks")
-    return ipaddress.IPv6Address(int(ip6_network) | int(ip4_address))
+    return ipaddress.IPv6Address(int(ip6_network.network_address) | int(ip4_address))
+
 
 class Nat64SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -212,7 +214,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         # We should be able to get a IPv4 mapped IPv6 address.
         # 203.0.113.1, RFC5737 TEST-NET-3, should be unreachable.
-        mapped_ip6_address = str(SynthersizeIp6Address(nat64_prefix, ipaddress.IPv4Address('203.0.113.1')))
+        mapped_ip6_address = str(
+            SynthersizeIp6Address(ipaddress.IPv6Network(nat64_prefix), ipaddress.IPv4Address('203.0.113.1')))
         self.assertFalse(router.ping(ipaddr=mapped_ip6_address))
 
         mappings = br.get_nat64_mappings()
