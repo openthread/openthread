@@ -2090,18 +2090,6 @@ class NodeImpl:
                 continue
         return {'protocol': protocol_counters, 'errors': error_counters}
 
-    def get_nat64_cidr(self):
-        cmd = 'nat64 cidr'
-        self.send_command(cmd)
-        result = self._expect_command_output()
-
-        for line in result:
-            m = re.findall(r'(\d+\.\d+\.\d+\.\d+/\d+)', line)
-            if m:
-                return m[0]
-
-        return None
-
     def get_netdata_nat64_prefix(self):
         prefixes = []
         routes = self.get_routes()

@@ -63,6 +63,11 @@ SMALL_NAT64_PREFIX = "fd00:00:00:01:00:00::/96"
 # So the BR will remove the random-generated one.
 LARGE_NAT64_PREFIX = "ff00:00:00:01:00:00::/96"
 
+def SynthersizeIp6Address(ip6_network: ipaddress.IPv6Network, ip4_address: ipaddress.IPv4Address):
+    if ip6_network.prefixlen != 96:
+        # We are only using /96 networks in openthread
+        raise NotImplementedError("SynthersizeIp6Address only supports /96 networks")
+    return ipaddress.IPv6Address(int(ip6_network) | int(ip4_address))
 
 class Nat64SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -164,26 +169,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
 
         #
-        # Case 5. Disable and re-enable ethernet on the border router.
-        #
-        br.disable_ether()
-        self.simulator.go(5)
-
-        # NAT64 prefix is withdrawn from Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 0)
-
-        br.enable_ether()
-        self.simulator.go(80)
-
-        # Same NAT64 prefix is advertised to Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
-        # Same NAT64 prefix is advertised to Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
-
-        #
-        # Case 6. NAT64 connectivity and counters.
+        # Case 5. NAT64 connectivity and counters.
         #
         # UDP Connectivity -- Get local host IP
         # Note: The incoming UDP connection from BR is already NAT-ed IPv4 since it lives in docker.
@@ -191,7 +177,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         sock.setblocking(False)
         # Note: The address is not important, we use this function to get the host ip address.
         sock.connect(('8.8.8.8', 54321))
-        host_ip, host_port = sock.getsockname()
+        host_ip, _ = sock.getsockname()
         sock.close()
 
         self.assertTrue(router.ping(ipaddr=host_ip))
@@ -212,7 +198,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         router.udp_start('::', 54321)
         # We can use IPv4 addresses for commands like UDP send.
         # The address will be converted to an IPv6 address by CLI.
-        router.udp_send(10, host_ip, host_port)
+        router.udp_send(10, host_ip, 54321)
         ready = select.select([sock], [], [], 1)
         if ready[0]:
             data = sock.recv(1024)
@@ -222,11 +208,11 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         counters = br.get_nat64_counters()
         self.assertEqual(counters['protocol']['UDP']['6to4']['packets'], 1)
         mappings = br.get_nat64_mappings()
-        self.assertEqual(mappings[0]['counters']['UDP']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['UDP']['6to4']['packets'], 1)
 
         # We should be able to get a IPv4 mapped IPv6 address.
         # 203.0.113.1, RFC5737 TEST-NET-3, should be unreachable.
-        mapped_ip6_address = ipaddress.IPv6Network(nat64_prefix).network_address.exploded[0:30] + 'cb00:7101'
+        mapped_ip6_address = str(SynthersizeIp6Address(nat64_prefix, ipaddress.IPv4Address('203.0.113.1')))
         self.assertFalse(router.ping(ipaddr=mapped_ip6_address))
 
         mappings = br.get_nat64_mappings()
@@ -238,6 +224,28 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         counters = br.get_nat64_counters()
         self.assertEqual(counters['protocol']['ICMP']['4to6']['packets'], 1)
         self.assertEqual(counters['protocol']['ICMP']['6to4']['packets'], 2)
+
+        #
+        # Case 6. Disable and re-enable ethernet on the border router.
+        # Note: disable_ether will remove default route but enable_ether won't add it back,
+        # NAT64 connectivity tests will fail after this.
+        # TODO: Add a default IPv4 route after enable_ether.
+        #
+        br.disable_ether()
+        self.simulator.go(5)
+
+        # NAT64 prefix is withdrawn from Network Data.
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 0)
+
+        br.enable_ether()
+        self.simulator.go(80)
+
+        # Same NAT64 prefix is advertised to Network Data.
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
+        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        # Same NAT64 prefix is advertised to Network Data.
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
+        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
 
 
 if __name__ == '__main__':
