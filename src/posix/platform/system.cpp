@@ -197,10 +197,6 @@ void platformSetUp(void)
     SuccessOrDie(otSetStateChangedCallback(gInstance, processStateChange, gInstance));
 #endif
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    otNat64SetEnabled(gInstance, true);
-#endif
-
 exit:
     return;
 }

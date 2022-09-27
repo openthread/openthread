@@ -783,6 +783,11 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
     {
         static const char *const kNat64State[] = {"Disabled", "NotRunning", "Idle", "Active"};
 
+        static_assert(0 == OT_NAT64_STATE_DISABLED, "OT_NAT64_STATE_DISABLED value is incorrect");
+        static_assert(1 == OT_NAT64_STATE_NOT_RUNNING, "OT_NAT64_STATE_NOT_RUNNING value is incorrect");
+        static_assert(2 == OT_NAT64_STATE_IDLE, "OT_NAT64_STATE_IDLE value is incorrect");
+        static_assert(3 == OT_NAT64_STATE_ACTIVE, "OT_NAT64_STATE_ACTIVE value is incorrect");
+
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         OutputLine("PrefixManager: %s", kNat64State[otNat64GetPrefixManagerState(GetInstancePtr())]);
 #endif

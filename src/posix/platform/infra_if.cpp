@@ -363,6 +363,9 @@ void InfraNetif::SetUp(void)
 
     SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, platformInfraIfIsRunning()));
     SuccessOrDie(otBorderRoutingSetEnabled(gInstance, /* aEnabled */ true));
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    otNat64SetEnabled(gInstance, true);
+#endif
     Mainloop::Manager::Get().Add(*this);
 exit:
     return;

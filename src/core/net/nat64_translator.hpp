@@ -37,8 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-
 #include "common/array.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -49,6 +47,17 @@
 
 namespace ot {
 namespace Nat64 {
+
+enum State : uint8_t
+{
+    kStateDisabled   = OT_NAT64_STATE_DISABLED,    ///< The component is disabled.
+    kStateNotRunning = OT_NAT64_STATE_NOT_RUNNING, ///< The component is enabled, but is not running.
+    kStateIdle = OT_NAT64_STATE_IDLE, ///< NAT64 is enabled, but the border router is not an active NAT64 border router
+                                      ///< in the network.
+    kStateActive = OT_NAT64_STATE_ACTIVE, ///< The component is running.
+};
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 /**
  * This class implements the NAT64 translator.
@@ -74,14 +83,6 @@ public:
         kForward,       ///< Message is successfully translated, the caller should continue forwarding the translated
                         ///< datagram.
         kDrop,          ///< The caller should drop the datagram silently.
-    };
-
-    enum State : uint8_t
-    {
-        kStateDisabled = OT_NAT64_STATE_DISABLED, ///< The translator is disabled.
-        kStateNotRunning =
-            OT_NAT64_STATE_NOT_RUNNING, ///< The translator is not configured with a valid NAT64 prefix and a CIDR.
-        kStateActive = OT_NAT64_STATE_ACTIVE, ///< The translator is translating packets.
     };
 
     /**
@@ -379,13 +380,16 @@ private:
     ErrorCounters    mErrorCounters;
 };
 
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
 } // namespace Nat64
 
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 DefineCoreType(otNat64ProtocolCounters, Nat64::Translator::ProtocolCounters);
 DefineCoreType(otNat64ErrorCounters, Nat64::Translator::ErrorCounters);
+#endif
 
 } // namespace ot
-
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #endif // NAT64_TRANSLATOR_HPP_

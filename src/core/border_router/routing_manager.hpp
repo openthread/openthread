@@ -204,30 +204,21 @@ public:
     Error GetOnLinkPrefix(Ip6::Prefix &aPrefix);
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    enum Nat64PrefixManagerState : uint8_t
-    {
-        kNat64StateDisabled   = OT_NAT64_STATE_DISABLED,    ///< NAT64 is disabled.
-        kNat64StateNotRunning = OT_NAT64_STATE_NOT_RUNNING, ///< Prefix manager is enabled, but is not running (because
-                                                            ///< the routing manager is not running).
-        kNat64StateIdle   = OT_NAT64_STATE_IDLE,            ///< Border router is not publishing a NAT64 prefix.
-        kNat64StateActive = OT_NAT64_STATE_ACTIVE,          ///< Border router is publishing a NAT64 prefix.
-    };
-
     /**
      * Gets the state of NAT64 prefix publishing.
      *
-     * @retval  kNat64StateDisabled   NAT64 is disabled.
-     * @retval  kNat64StateNotRunning NAT64 is enabled, but is not running since routing manager is not running.
-     * @retval  kNat64StateIdle       NAT64 is enabled, but the border router is not publishing a NAT64 prefix.. Usually
-     *                                when there is another border router publishing a NAT64 prefix with higher
-     *                                priority.
-     * @retval  kNat64StateActive     The Border router is publishing a NAT64 prefix.
+     * @retval  kStateDisabled   NAT64 is disabled.
+     * @retval  kStateNotRunning NAT64 is enabled, but is not running since routing manager is not running.
+     * @retval  kStateIdle       NAT64 is enabled, but the border router is not publishing a NAT64 prefix.. Usually
+     *                           when there is another border router publishing a NAT64 prefix with higher
+     *                           priority.
+     * @retval  kStateActive     The Border router is publishing a NAT64 prefix.
      *
      */
-    Nat64PrefixManagerState GetNat64PrefixManagerState() { return mNat64PrefixManager.GetState(); }
+    Nat64::State GetNat64PrefixManagerState(void) const { return mNat64PrefixManager.GetState(); }
 
     /**
-     * Set the state of NAT64 orefix publishing.
+     * Enable or disable NAT64 orefix publishing.
      *
      * @param[in]  aEnabled   A boolean to enable/disable NAT64 prefix publishing.
      *
@@ -693,8 +684,11 @@ private:
 
         explicit Nat64PrefixManager(Instance &aInstance);
 
-        void OnRoutingManagerStart(void);
-        void OnRoutingManagerStop(void);
+        void         SetEnabled(bool aEnabled);
+        Nat64::State GetState(void) const;
+
+        void Start(void);
+        void Stop(void);
 
         void               GenerateLocalPrefix(const Ip6::Prefix &aBrUlaPrefix);
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
@@ -702,13 +696,7 @@ private:
         void               Evaluate(void);
         void               HandleDiscoverDone(const Ip6::Prefix &aPrefix);
 
-        void                    SetEnabled(bool aEnabled);
-        bool                    IsEnabled(void) const { return mEnabled; }
-        Nat64PrefixManagerState GetState(void);
-
     private:
-        void        Start(void);
-        void        Stop(void);
         void        Discover(void);
         static void HandleTimer(Timer &aTimer);
         void        HandleTimer(void);
