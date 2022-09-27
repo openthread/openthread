@@ -1638,7 +1638,9 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
     if (aPlatformConfig->mPersistentInterface)
     {
         VerifyOrDie(ioctl(sTunFd, TUNSETPERSIST, 1) == 0, OT_EXIT_ERROR_ERRNO);
-        SetLinkState(gInstance, false); // Set link down to reset the tun configuration.
+        // Set link down to reset the tun configuration.
+        // This will drop all existing IP addresses on the interface.
+        SetLinkState(gInstance, false);
     }
 
     VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
