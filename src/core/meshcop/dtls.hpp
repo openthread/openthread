@@ -450,7 +450,7 @@ private:
 
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 #if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-    static const uint16_t sHashes[];
+    static const uint16_t sSignatures[];
 #else
     static const int sHashes[];
 #endif
