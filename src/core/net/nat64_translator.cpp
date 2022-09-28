@@ -302,6 +302,13 @@ void Translator::AddressMapping::CopyTo(otNat64AddressMapping &aMapping, TimeMil
     }
 }
 
+void Translator::ReleaseMapping(AddressMapping &aMapping)
+{
+    IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4));
+    mAddressMappingPool.Free(aMapping);
+    LogInfo("mapping removed: %s", aMapping.ToString().AsCString());
+}
+
 uint16_t Translator::ReleaseMappings(LinkedList<AddressMapping> &aMappings)
 {
     uint16_t numRemoved = 0;
@@ -315,23 +322,13 @@ uint16_t Translator::ReleaseMappings(LinkedList<AddressMapping> &aMappings)
     return numRemoved;
 }
 
-void Translator::ReleaseMapping(AddressMapping &aMapping)
-{
-    IgnoreError(mIp4AddressPool.PushBack(aMapping.mIp4));
-    mAddressMappingPool.Free(aMapping);
-    LogInfo("mapping removed: %s", aMapping.ToString().AsCString());
-}
-
 uint16_t Translator::ReleaseExpiredMappings(void)
 {
-    uint16_t                   numRemoved = 0;
-    TimeMilli                  now        = TimerMilli::GetNow();
     LinkedList<AddressMapping> idleMappings;
 
-    mActiveAddressMappings.RemoveAllMatching(now, idleMappings);
-    ReleaseMappings(idleMappings);
+    mActiveAddressMappings.RemoveAllMatching(TimerMilli::GetNow(), idleMappings);
 
-    return numRemoved;
+    return ReleaseMappings(idleMappings);
 }
 
 Translator::AddressMapping *Translator::AllocateMapping(const Ip6::Address &aIp6Addr)
@@ -599,7 +596,7 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
     mTotal.m4To6Bytes += aPacketSize;
 }
 
-State Translator::GetState()
+State Translator::GetState() const
 {
     State ret = kStateDisabled;
 
@@ -613,15 +610,18 @@ exit:
 
 void Translator::SetEnabled(bool aEnabled)
 {
-    if (aEnabled)
-    {
-        mEnabled = true;
-    }
-    else
+    VerifyOrExit(mEnabled != aEnabled);
+    mEnabled = aEnabled;
+
+    if (!aEnabled)
     {
         ReleaseMappings(mActiveAddressMappings);
-        mEnabled = false;
     }
+
+    LogInfo("NAT64 translator %s", aEnabled ? "enabled" : "disabled");
+
+exit:
+    return;
 }
 
 } // namespace Nat64

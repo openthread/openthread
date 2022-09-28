@@ -150,6 +150,26 @@ public:
     explicit Translator(Instance &aInstance);
 
     /**
+     * Set the state of NAT64 translator.
+     *
+     * Note: Disable the translator will invalidate all address mappings.
+     *
+     * @param[in]  aEnabled   A boolean to enable/disable NAT64 translator.
+     *
+     */
+    void SetEnabled(bool aEnabled);
+
+    /**
+     * Gets the state of NAT64 translator.
+     *
+     * @retval  kNat64StateDisabled  The translator is disabled.
+     * @retval  kNat64StateIdle      The translator is not configured with a valid NAT64 prefix and a CIDR.
+     * @retval  kNat64StateActive    The translator is translating packets.
+     *
+     */
+    State GetState(void) const;
+
+    /**
      * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
      *
      * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
@@ -302,26 +322,6 @@ public:
      */
     Error GetIp6Prefix(Ip6::Prefix &aPrefix);
 
-    /**
-     * Gets the state of NAT64 translator.
-     *
-     * @retval  kNat64StateDisabled  The translator is disabled.
-     * @retval  kNat64StateIdle      The translator is not configured with a valid NAT64 prefix and a CIDR.
-     * @retval  kNat64StateActive    The translator is translating packets.
-     *
-     */
-    State GetState(void);
-
-    /**
-     * Set the state of NAT64 translator.
-     *
-     * Note: Disable the translator will invalidate all address mappings.
-     *
-     * @param[in]  aEnabled   A boolean to enable/disable NAT64 translator.
-     *
-     */
-    void SetEnabled(bool aEnabled);
-
 private:
     class AddressMapping : public LinkedListEntry<AddressMapping>
     {
@@ -379,11 +379,9 @@ private:
     ProtocolCounters mCounters;
     ErrorCounters    mErrorCounters;
 };
-
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 } // namespace Nat64
-
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 DefineCoreType(otNat64ProtocolCounters, Nat64::Translator::ProtocolCounters);

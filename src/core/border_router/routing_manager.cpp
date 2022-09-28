@@ -2254,6 +2254,7 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
 void RoutingManager::Nat64PrefixManager::SetEnabled(bool aEnabled)
 {
     VerifyOrExit(mEnabled != aEnabled);
+    mEnabled = aEnabled;
 
     if (aEnabled)
     {
@@ -2274,7 +2275,7 @@ exit:
 void RoutingManager::Nat64PrefixManager::Start(void)
 {
     VerifyOrExit(mEnabled);
-    LogInfo("Starting Nat64PrefixManager.");
+    LogInfo("Starting Nat64PrefixManager");
     mTimer.Start(0);
 
 exit:
@@ -2283,7 +2284,7 @@ exit:
 
 void RoutingManager::Nat64PrefixManager::Stop(void)
 {
-    LogInfo("Stopping Nat64PrefixManager.");
+    LogInfo("Stopping Nat64PrefixManager");
 
     if (mPublishedPrefix.IsValidNat64())
     {
