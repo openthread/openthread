@@ -2459,6 +2459,9 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 {&otMacCounters::mTxRetry, "TxRetry"},
                 {&otMacCounters::mTxErrCca, "TxErrCca"},
                 {&otMacCounters::mTxErrBusyChannel, "TxErrBusyChannel"},
+                {&otMacCounters::mTxErrAbort, "TxErrAbort"},
+                {&otMacCounters::mTxDirectMaxRetryExpiry, "TxDirectMaxRetryExpiry"},
+                {&otMacCounters::mTxIndirectMaxRetryExpiry, "TxIndirectMaxRetryExpiry"},
             };
 
             static const MacCounterName kRxCounterNames[] = {
