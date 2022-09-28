@@ -93,6 +93,25 @@ def calculate_checksum(data):
         return checksum
 
 
+def synthersize_ip6_address(ip6_network: ipaddress.IPv6Network,
+                            ip4_address: ipaddress.IPv4Address) -> ipaddress.IPv6Address:
+    """ Synthersize an IPv6 address from a prefix for NAT64 and an IPv4 address.
+
+    Only supports /96 network for now.
+
+    Args:
+        ip6_network: The network for NAT64.
+        ip4_address: The IPv4 address.
+
+    Returns:
+        ipaddress.IPv6Address: The synthersized IPv6 address.
+    """
+    if ip6_network.prefixlen != 96:
+        # We are only using /96 networks in openthread
+        raise NotImplementedError("synthersize_ip6_address only supports /96 networks")
+    return ipaddress.IPv6Address(int(ip6_network.network_address) | int(ip4_address))
+
+
 class PacketFactory(object):
     """ Interface for classes that produce objects from data. """
 
@@ -1196,22 +1215,3 @@ class ICMPv6DestinationUnreachable(ConvertibleToBytes, BuildableFromBytes):
 
     def __len__(self):
         return self._header_length + len(self.data)
-
-
-def synthersize_ip6_address(ip6_network: ipaddress.IPv6Network,
-                            ip4_address: ipaddress.IPv4Address) -> ipaddress.IPv6Address:
-    """ Class to synthersize an IPv6 address from a prefix for NAT64 and an IPv4 address.
-
-    Only supports /96 network for now.
-
-    Args:
-        ip6_network: The network for NAT64.
-        ip4_address: The IPv4 address.
-
-    Returns:
-        ipaddress.IPv6Address: The synthersized IPv6 address.
-    """
-    if ip6_network.prefixlen != 96:
-        # We are only using /96 networks in openthread
-        raise NotImplementedError("synthersize_ip6_address only supports /96 networks")
-    return ipaddress.IPv6Address(int(ip6_network.network_address) | int(ip4_address))
