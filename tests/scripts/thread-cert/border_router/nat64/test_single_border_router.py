@@ -86,6 +86,28 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         },
     }
 
+    def get_host_ip(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setblocking(False)
+        # Note: The address is not important, we use this function to get the host ip address.
+        sock.connect(('8.8.8.8', 54321))
+        host_ip, _ = sock.getsockname()
+        sock.close()
+        return host_ip
+
+    def receive_from(self, sock, timeout_seconds):
+        ready = select.select([sock], [], [], timeout_seconds)
+        if ready[0]:
+            return sock.recv(1024)
+        else:
+            raise AssertionError("No data recevied")
+
+    def listen_udp(self, addr, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setblocking(False)
+        sock.bind((addr, port))
+        return sock
+
     def test(self):
         br = self.nodes[BR]
         router = self.nodes[ROUTER]
@@ -167,15 +189,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         #
         # Case 5. NAT64 connectivity and counters.
         #
-        # UDP Connectivity -- Get local host IP
-        # Note: The incoming UDP connection from BR is already NAT-ed IPv4 since it lives in docker.
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setblocking(False)
-        # Note: The address is not important, we use this function to get the host ip address.
-        sock.connect(('8.8.8.8', 54321))
-        host_ip, _ = sock.getsockname()
-        sock.close()
-
+        host_ip = self.get_host_ip()
         self.assertTrue(router.ping(ipaddr=host_ip))
 
         mappings = br.get_nat64_mappings()
@@ -188,17 +202,13 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(counters['protocol']['ICMP']['4to6']['packets'], 1)
         self.assertEqual(counters['protocol']['ICMP']['6to4']['packets'], 1)
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setblocking(False)
-        sock.bind(('0.0.0.0', 54321))
+        sock = self.listen_udp('0.0.0.0', 54321)
         router.udp_start('::', 54321)
         # We can use IPv4 addresses for commands like UDP send.
         # The address will be converted to an IPv6 address by CLI.
         router.udp_send(10, host_ip, 54321)
-        ready = select.select([sock], [], [], 1)
-        if ready[0]:
-            data = sock.recv(1024)
-            self.assertEqual(len(data), 10)
+        self.assertTrue(len(self.receive_from(sock, timeout_seconds=1)) == 10)
+
         sock.close()
 
         counters = br.get_nat64_counters()
