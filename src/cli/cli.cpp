@@ -2942,17 +2942,24 @@ exit:
 otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 {
     // This method gets the optional DNS config from `aArgs[]`.
-    // The format: `[server IPv6 address] [server port] [timeout]
+    // The format: `[server IP address] [server port] [timeout]
     // [max tx attempt] [recursion desired]`.
 
     otError error = OT_ERROR_NONE;
     bool    recursionDesired;
+    bool    nat64SynthesizedAddress;
 
     memset(aConfig, 0, sizeof(otDnsQueryConfig));
 
     VerifyOrExit(!aArgs[0].IsEmpty(), aConfig = nullptr);
 
-    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(aConfig->mServerSockAddr.mAddress));
+    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], aConfig->mServerSockAddr.mAddress,
+                                                         nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
+    {
+        OutputFormat("Synthesized IPv6 DNS server address: ");
+        OutputIp6AddressLine(aConfig->mServerSockAddr.mAddress);
+    }
 
     VerifyOrExit(!aArgs[1].IsEmpty());
     SuccessOrExit(error = aArgs[1].ParseAsUint16(aConfig->mServerSockAddr.mPort));

@@ -1063,6 +1063,17 @@ The parameters after `hostname` are optional. Any unspecified (or zero) value fo
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
 
+The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the DNS server IP is an IPv4 address and the preferred NAT64 prefix is unavailable.
+
+```bash
+> dns resolve example.com 8.8.8.8
+Synthesized IPv6 DNS server address: fdde:ad00:beef:2:0:0:808:808
+DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
+Done
+```
+
 ### dns browse \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
 
 Send a browse (service instance enumeration) DNS query to get the list of services for given service-name.
@@ -1085,11 +1096,15 @@ instance2
 Done
 ```
 
+> Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data. The command will return `InvalidState` when the DNS server IP is an IPv4 address and the preferred NAT64 prefix is unavailable.
+
 ### dns service \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
 
 Send a service instance resolution DNS query for a given service instance. Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
+> Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data. The command will return `InvalidState` when the DNS server IP is an IPv4 address and the preferred NAT64 prefix is unavailable.
 
 ### dns compression \[enable|disable\]
 
