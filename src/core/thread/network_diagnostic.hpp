@@ -40,11 +40,11 @@
 
 #include <openthread/netdiag.h>
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -65,6 +65,8 @@ namespace NetworkDiagnostic {
  */
 class NetworkDiagnostic : public InstanceLocator, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This type represents an iterator used to iterate through Network Diagnostic TLVs from `GetNextDiagTlv()`.
@@ -129,32 +131,22 @@ private:
     void  FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
     Error FillRequestedTlvs(const Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
-    static void HandleDiagnosticGetRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleDiagnosticGetQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleDiagnosticGetQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     static void HandleDiagnosticGetResponse(void *               aContext,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             Error                aResult);
     void HandleDiagnosticGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleDiagnosticGetAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleDiagnosticReset(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleDiagnosticReset(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    Coap::Resource mDiagnosticGetRequest;
-    Coap::Resource mDiagnosticGetQuery;
-    Coap::Resource mDiagnosticGetAnswer;
-    Coap::Resource mDiagnosticReset;
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
     void *                         mReceiveDiagnosticGetCallbackContext;
 };
+
+DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetRequest);
+DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetQuery);
+DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetAnswer);
+DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticReset);
 
 /**
  * @}

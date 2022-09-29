@@ -37,7 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -45,6 +44,7 @@
 #include "meshcop/dataset.hpp"
 #include "meshcop/dataset_local.hpp"
 #include "net/udp6.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -365,6 +365,8 @@ private:
 
 class ActiveDatasetManager : public DatasetManager, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This constructor initializes the ActiveDatasetManager object.
@@ -470,12 +472,6 @@ public:
     void StartLeader(void);
 
     /**
-     * This method stops the Leader functions for maintaining the Active Operational Dataset.
-     *
-     */
-    void StopLeader(void);
-
-    /**
      * This method generate a default Active Operational Dataset.
      *
      * @retval kErrorNone          Successfully generated an Active Operational Dataset.
@@ -487,26 +483,21 @@ public:
 #endif
 
 private:
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
-
-    static void HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
-
-#if OPENTHREAD_FTD
-    static void HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#endif
-
-    Coap::Resource mResourceGet;
-
-#if OPENTHREAD_FTD
-    Coap::Resource mResourceSet;
-#endif
 };
+
+DeclareTmfHandler(ActiveDatasetManager, kUriActiveGet);
+#if OPENTHREAD_FTD
+DeclareTmfHandler(ActiveDatasetManager, kUriActiveSet);
+#endif
 
 class PendingDatasetManager : public DatasetManager, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This constructor initializes the PendingDatasetManager object.
@@ -592,12 +583,6 @@ public:
     void StartLeader(void);
 
     /**
-     * This method stops the Leader functions for maintaining the Active Operational Dataset.
-     *
-     */
-    void StopLeader(void);
-
-    /**
      * This method generates a Pending Dataset from an Active Dataset.
      *
      * @param[in]  aTimestamp  The Active Dataset Timestamp.
@@ -613,26 +598,18 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
-    void HandleDelayTimer(void);
-
-    static void HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
-
-#if OPENTHREAD_FTD
-    static void HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#endif
+    void                     HandleDelayTimer(void);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     using DelayTimer = TimerMilliIn<PendingDatasetManager, &PendingDatasetManager::HandleDelayTimer>;
 
     DelayTimer mDelayTimer;
-
-    Coap::Resource mResourceGet;
-
-#if OPENTHREAD_FTD
-    Coap::Resource mResourceSet;
-#endif
 };
+
+DeclareTmfHandler(PendingDatasetManager, kUriPendingGet);
+#if OPENTHREAD_FTD
+DeclareTmfHandler(PendingDatasetManager, kUriPendingSet);
+#endif
 
 } // namespace MeshCoP
 } // namespace ot

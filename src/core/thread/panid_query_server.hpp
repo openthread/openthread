@@ -36,13 +36,13 @@
 
 #include "openthread-core-config.h"
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -52,6 +52,8 @@ namespace ot {
  */
 class PanIdQueryServer : public InstanceLocator, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This constructor initializes the object.
@@ -62,8 +64,7 @@ public:
 private:
     static constexpr uint32_t kScanDelay = 1000; ///< SCAN_DELAY (in msec)
 
-    static void HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext);
     void        HandleScanResult(Mac::ActiveScanResult *aScanResult);
@@ -81,9 +82,9 @@ private:
     uint16_t     mPanId;
 
     DelayTimer mTimer;
-
-    Coap::Resource mPanIdQuery;
 };
+
+DeclareTmfHandler(PanIdQueryServer, kUriPanIdQuery);
 
 /**
  * @}

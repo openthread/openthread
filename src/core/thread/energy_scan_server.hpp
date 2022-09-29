@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -44,6 +43,7 @@
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -54,6 +54,7 @@ namespace ot {
 class EnergyScanServer : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -66,8 +67,7 @@ private:
     static constexpr uint32_t kScanDelay   = 1000; // SCAN_DELAY (milliseconds)
     static constexpr uint32_t kReportDelay = 500;  // Delay before sending a report (milliseconds)
 
-    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleScanResult(Mac::EnergyScanResult *aResult, void *aContext);
     void        HandleScanResult(Mac::EnergyScanResult *aResult);
@@ -89,9 +89,9 @@ private:
     uint8_t        mNumScanResults;
     Coap::Message *mReportMessage;
     ScanTimer      mTimer;
-
-    Coap::Resource mEnergyScan;
 };
+
+DeclareTmfHandler(EnergyScanServer, kUriEnergyScan);
 
 /**
  * @}

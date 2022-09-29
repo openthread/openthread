@@ -67,21 +67,21 @@ void Message::Init(Type aType, Code aCode)
     SetCode(aCode);
 }
 
-Error Message::Init(Type aType, Code aCode, const char *aUriPath)
+Error Message::Init(Type aType, Code aCode, Uri aUri)
 {
     Error error;
 
     Init(aType, aCode);
     SuccessOrExit(error = GenerateRandomToken(kDefaultTokenLength));
-    SuccessOrExit(error = AppendUriPathOptions(aUriPath));
+    SuccessOrExit(error = AppendUriPathOptions(PathForUri(aUri)));
 
 exit:
     return error;
 }
 
-Error Message::InitAsPost(const Ip6::Address &aDestination, const char *aUriPath)
+Error Message::InitAsPost(const Ip6::Address &aDestination, Uri aUri)
 {
-    return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUriPath);
+    return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUri);
 }
 
 bool Message::IsConfirmablePostRequest(void) const

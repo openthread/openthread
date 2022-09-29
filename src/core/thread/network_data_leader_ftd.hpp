@@ -40,12 +40,12 @@
 
 #include <stdint.h>
 
-#include "coap/coap.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/network_data.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -67,6 +67,8 @@ namespace NetworkData {
  */
 class Leader : public LeaderBase, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This enumeration defines the match mode constants to compare two RLOC16 values.
@@ -104,12 +106,6 @@ public:
      *
      */
     void Start(Mle::LeaderStartMode aStartMode);
-
-    /**
-     * This method stops the Leader services.
-     *
-     */
-    void Stop(void);
 
     /**
      * This method increments the Thread Network Data version.
@@ -223,8 +219,7 @@ private:
         kTlvUpdated, // TLV stable flag is updated based on its sub TLVs.
     };
 
-    static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleTimer(void);
 
@@ -292,12 +287,6 @@ private:
     UpdateStatus UpdateService(ServiceTlv &aService);
     UpdateStatus UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs);
 
-    static void HandleCommissioningSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleCommissioningGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     void SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                       uint16_t                aLength,
                                       const Ip6::MessageInfo &aMessageInfo);
@@ -320,12 +309,11 @@ private:
     TimeMilli   mContextLastUsed[kNumContextIds];
     uint32_t    mContextIdReuseDelay;
     UpdateTimer mTimer;
-
-    Coap::Resource mServerData;
-
-    Coap::Resource mCommissioningDataGet;
-    Coap::Resource mCommissioningDataSet;
 };
+
+DeclareTmfHandler(Leader, kUriServerData);
+DeclareTmfHandler(Leader, kUriCommissionerGet);
+DeclareTmfHandler(Leader, kUriCommissionerSet);
 
 /**
  * @}
