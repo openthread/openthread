@@ -408,7 +408,7 @@ otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress);
  * @returns  OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
  *
  */
-otError otNat64SynthersizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
+otError otNat64SynthesizeIp6Address(otInstance *aInstance, const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
 
 /**
  * @}
