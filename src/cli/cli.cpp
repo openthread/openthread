@@ -472,7 +472,7 @@ otError Interpreter::ParseToIp6Address(otInstance *  aInstance,
 
         // Do not touch the error value if we failed to parse it as an IPv4 address.
         SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
-        SuccessOrExit(error = otNat64SynthersizeIp6Address(aInstance, &ip4Address, &aAddress));
+        SuccessOrExit(error = otNat64SynthesizeIp6Address(aInstance, &ip4Address, &aAddress));
         aSynthesized = true;
     }
 
