@@ -267,7 +267,8 @@ otNat64State otNat64GetTranslatorState(otInstance *aInstance);
  * @retval OT_NAT64_STATE_IDLE        NAT64 prefix manager is enabled, but is not publishing a NAT64 prefix. Usually
  *                                    when there is another border router publishing a NAT64 prefix with higher
  *                                    priority.
- * @retval OT_NAT64_STATE_ACTIVE      NAT64 prefix manager is enabled, and is translating packets.
+ * @retval OT_NAT64_STATE_ACTIVE      NAT64 prefix manager is enabled, and is publishing NAT64 prefix to the Thread
+ *                                    network.
  *
  */
 otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
