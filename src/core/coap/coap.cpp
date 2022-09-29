@@ -1701,7 +1701,7 @@ Coap::Coap(Instance &aInstance)
 {
 }
 
-Error Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
+Error Coap::Start(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier)
 {
     Error error        = kErrorNone;
     bool  socketOpened = false;

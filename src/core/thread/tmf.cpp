@@ -82,7 +82,7 @@ void MessageInfo::SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress)
 
 Error Agent::Start(void)
 {
-    return Coap::Start(kUdpPort, OT_NETIF_THREAD);
+    return Coap::Start(kUdpPort, Ip6::kNetifThread);
 }
 
 Error Agent::Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
