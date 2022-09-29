@@ -219,7 +219,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         # We should be able to get a IPv4 mapped IPv6 address.
         # 203.0.113.1, RFC5737 TEST-NET-3, should be unreachable.
         mapped_ip6_address = str(
-            ipv6.synthersize_ip6_address(ipaddress.IPv6Network(nat64_prefix), ipaddress.IPv4Address('203.0.113.1')))
+            ipv6.synthesize_ip6_address(ipaddress.IPv6Network(nat64_prefix), ipaddress.IPv4Address('203.0.113.1')))
         self.assertFalse(router.ping(ipaddr=mapped_ip6_address))
 
         mappings = br.get_nat64_mappings()
