@@ -27,6 +27,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+set -euxo pipefail
+
 (
     mkdir build
     cd build || exit
