@@ -65,6 +65,7 @@ public:
     class NdProxy : private Clearable<NdProxy>
     {
         friend class NdProxyTable;
+        friend class Clearable<NdProxy>;
 
     public:
         /**

@@ -83,6 +83,12 @@ extern otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aA
 static const otCliCommand kCommands[] = {
     {"exit", ProcessExit},
 #if OPENTHREAD_EXAMPLES_SIMULATION
+    /*
+     * The CLI command `nodeidfilter` only works for simulation in real time.
+     * The usage of the command `nodeidfilter`:
+     *     - `nodeidfilter deny <nodeid>`:  It denies the connection to a specified node.
+     *     - `nodeidfilter clear`:          It restores the filter state to default.
+     */
     {"nodeidfilter", ProcessNodeIdFilter},
 #endif
 };

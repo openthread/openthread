@@ -913,12 +913,12 @@ public:
 private:
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
-    static constexpr uint32_t kDefaultMinTtl               = 60u;             // 1 min (in seconds).
-    static constexpr uint32_t kDefaultMaxTtl               = 3600u * 2;       // 2 hours (in seconds).
-    static constexpr uint32_t kDefaultMinLease             = 60u * 30;        // 30 min (in seconds).
-    static constexpr uint32_t kDefaultMaxLease             = 3600u * 2;       // 2 hours (in seconds).
-    static constexpr uint32_t kDefaultMinKeyLease          = 3600u * 24;      // 1 day (in seconds).
-    static constexpr uint32_t kDefaultMaxKeyLease          = 3600u * 24 * 14; // 14 days (in seconds).
+    static constexpr uint32_t kDefaultMinLease             = 30;          // 30 seconds.
+    static constexpr uint32_t kDefaultMaxLease             = 27u * 3600;  // 27 hours (in seconds).
+    static constexpr uint32_t kDefaultMinKeyLease          = 30;          // 30 seconds.
+    static constexpr uint32_t kDefaultMaxKeyLease          = 189u * 3600; // 189 hours (in seconds).
+    static constexpr uint32_t kDefaultMinTtl               = kDefaultMinLease;
+    static constexpr uint32_t kDefaultMaxTtl               = kDefaultMaxLease;
     static constexpr uint32_t kDefaultEventsHandlerTimeout = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT;
 
     static constexpr AddressMode kDefaultAddressMode =

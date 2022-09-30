@@ -2015,6 +2015,97 @@ class NodeImpl:
             res[state[0].strip()] = state[1].strip()
         return res
 
+    def get_nat64_mappings(self):
+        cmd = 'nat64 mappings'
+        self.send_command(cmd)
+        result = self._expect_command_output()
+        session = None
+        session_counters = None
+        sessions = []
+
+        for line in result:
+            m = re.match(
+                r'\|\s+([a-f0-9]+)\s+\|\s+(.+)\s+\|\s+(.+)\s+\|\s+(\d+)s\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|',
+                line)
+            if m:
+                groups = m.groups()
+                if session:
+                    session['counters'] = session_counters
+                    sessions.append(session)
+                session = {
+                    'id': groups[0],
+                    'ip6': groups[1],
+                    'ip4': groups[2],
+                    'expiry': int(groups[3]),
+                }
+                session_counters = {}
+                session_counters['total'] = {
+                    '4to6': {
+                        'packets': int(groups[4]),
+                        'bytes': int(groups[5]),
+                    },
+                    '6to4': {
+                        'packets': int(groups[6]),
+                        'bytes': int(groups[7]),
+                    },
+                }
+                continue
+            if not session:
+                continue
+            m = re.match(r'\|\s+\|\s+(.+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|', line)
+            if m:
+                groups = m.groups()
+                session_counters[groups[0]] = {
+                    '4to6': {
+                        'packets': int(groups[1]),
+                        'bytes': int(groups[2]),
+                    },
+                    '6to4': {
+                        'packets': int(groups[3]),
+                        'bytes': int(groups[4]),
+                    },
+                }
+        if session:
+            session['counters'] = session_counters
+            sessions.append(session)
+        return sessions
+
+    def get_nat64_counters(self):
+        cmd = 'nat64 counters'
+        self.send_command(cmd)
+        result = self._expect_command_output()
+
+        protocol_counters = {}
+        error_counters = {}
+        for line in result:
+            m = re.match(r'\|\s+(.+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|', line)
+            if m:
+                groups = m.groups()
+                protocol_counters[groups[0]] = {
+                    '4to6': {
+                        'packets': int(groups[1]),
+                        'bytes': int(groups[2]),
+                    },
+                    '6to4': {
+                        'packets': int(groups[3]),
+                        'bytes': int(groups[4]),
+                    },
+                }
+                continue
+            m = re.match(r'\|\s+(.+)\s+\|\s+(\d+)\s+\|\s+(\d+)\s+\|', line)
+            if m:
+                groups = m.groups()
+                error_counters[groups[0]] = {
+                    '4to6': {
+                        'packets': int(groups[1]),
+                    },
+                    '6to4': {
+                        'packets': int(groups[2]),
+                    },
+                }
+                continue
+        return {'protocol': protocol_counters, 'errors': error_counters}
+
     def get_netdata_nat64_prefix(self):
         prefixes = []
         routes = self.get_routes()

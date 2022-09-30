@@ -976,6 +976,11 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
 
     removing = ((aService.GetState() == kToRemove) || (aService.GetState() == kRemoving));
 
+    if (mSingleServiceMode.IsEnabled())
+    {
+        mSingleServiceMode.SetService(aService);
+    }
+
     //----------------------------------
     // Service Discovery Instruction
 
@@ -1081,11 +1086,6 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
         SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
     }
 #endif
-
-    if (mSingleServiceMode.IsEnabled())
-    {
-        mSingleServiceMode.SetService(aService);
-    }
 
 exit:
     return error;

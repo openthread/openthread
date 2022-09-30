@@ -134,7 +134,7 @@ jobs:
             cert_scripts: ./tests/scripts/thread-cert/border_router/nat64/*.py
             packet_verification: 1
             nat64: 1
-            description: "nat64"
+            description: "nat64 openthread"
           - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py

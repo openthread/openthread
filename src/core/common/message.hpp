@@ -1506,6 +1506,7 @@ class PriorityQueue : private Clearable<PriorityQueue>
     friend class Message;
     friend class MessageQueue;
     friend class MessagePool;
+    friend class Clearable<PriorityQueue>;
 
 public:
     typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.

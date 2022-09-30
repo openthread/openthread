@@ -175,6 +175,8 @@ private:
 OT_TOOL_PACKED_BEGIN
 class PrefixInfoOption : public Option, private Clearable<PrefixInfoOption>
 {
+    friend class Clearable<PrefixInfoOption>;
+
 public:
     static constexpr Type kType = kTypePrefixInfo; ///< Prefix Information Option Type.
 
@@ -330,6 +332,8 @@ static_assert(sizeof(PrefixInfoOption) == 32, "invalid PrefixInfoOption structur
 OT_TOOL_PACKED_BEGIN
 class RouteInfoOption : public Option, private Clearable<RouteInfoOption>
 {
+    friend class Clearable<RouteInfoOption>;
+
 public:
     static constexpr uint16_t kMinSize = kLengthUnit;    ///< Minimum size (in bytes) of a Route Info Option
     static constexpr Type     kType    = kTypeRouteInfo; ///< Route Information Option Type.
@@ -470,6 +474,8 @@ public:
     OT_TOOL_PACKED_BEGIN
     class Header : public Equatable<Header>, private Clearable<Header>
     {
+        friend class Clearable<Header>;
+
     public:
         /**
          * This constructor initializes the Router Advertisement message with

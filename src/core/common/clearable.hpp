@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This template class defines a Clearable object which provides `Clear()` method.
+ * This template class defines a `Clearable` object which provides `Clear()` method.
  *
  * The `Clear` implementation simply sets all the bytes of a `Type` instance to zero.
  *
@@ -52,7 +52,7 @@ namespace ot {
 template <typename Type> class Clearable
 {
 public:
-    void Clear(void) { memset(reinterpret_cast<void *>(this), 0, sizeof(Type)); }
+    void Clear(void) { memset(reinterpret_cast<void *>(static_cast<Type *>(this)), 0, sizeof(Type)); }
 };
 
 } // namespace ot

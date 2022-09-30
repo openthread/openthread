@@ -43,6 +43,7 @@ target_link_libraries(ot-rcp PRIVATE
     openthread-radio
     ${OT_PLATFORM_LIB_RCP}
     openthread-rcp
+    ot-config-radio
     ot-config
 )
 

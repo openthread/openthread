@@ -492,6 +492,7 @@ void TestSrpServerReject(void)
     heapAllocations = sHeapAllocatedPtrs.GetLength();
 
     PrepareService1(service1);
+    PrepareService2(service2);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start SRP server.
@@ -603,6 +604,7 @@ void TestSrpServerIgnore(void)
     heapAllocations = sHeapAllocatedPtrs.GetLength();
 
     PrepareService1(service1);
+    PrepareService2(service2);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start SRP server.

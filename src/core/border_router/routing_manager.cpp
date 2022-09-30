@@ -816,14 +816,19 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
         {
         case Ip6::Nd::Option::kTypePrefixInfo:
         {
-            // PIO should match `mLocalOnLinkPrefix`.
-
             const Ip6::Nd::PrefixInfoOption &pio = static_cast<const Ip6::Nd::PrefixInfoOption &>(option);
 
             VerifyOrExit(pio.IsValid());
             pio.GetPrefix(prefix);
 
-            VerifyOrExit(prefix == mLocalOnLinkPrefix.GetPrefix());
+            // If it is a non-deprecated PIO, it should match the
+            // local on-link prefix.
+
+            if (pio.GetPreferredLifetime() > 0)
+            {
+                VerifyOrExit(prefix == mLocalOnLinkPrefix.GetPrefix());
+            }
+
             break;
         }
 
@@ -2146,6 +2151,11 @@ void RoutingManager::LocalOnLinkPrefix::HandleExtPanIdChange(void)
 
     case kAdvertising:
     case kDeprecating:
+        if (mOldPrefix.GetLength() != 0)
+        {
+            Unpublish(mOldPrefix);
+        }
+
         mOldPrefix     = mPrefix;
         mOldExpireTime = mExpireTime;
         mTimer.FireAtIfEarlier(mOldExpireTime);
