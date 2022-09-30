@@ -49,7 +49,7 @@ RegisterLogModule("NetworkData");
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
     , mSynchronizeDataTask(aInstance)
     , mNextDelay(0)
     , mWaitingForResponse(false)
@@ -136,11 +136,6 @@ void Notifier::HandleNotifierEvents(Events aEvents)
     {
         SynchronizeServerData();
     }
-}
-
-void Notifier::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Notifier>().HandleTimer();
 }
 
 void Notifier::HandleTimer(void)

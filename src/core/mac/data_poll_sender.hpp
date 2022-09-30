@@ -276,19 +276,21 @@ private:
     void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t        CalculatePollPeriod(void) const;
     const Neighbor &GetParent(void) const;
-    static void     HandlePollTimer(Timer &aTimer);
+    void            HandlePollTimer(void) { IgnoreError(SendDataPoll()); }
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
 #else
     Error GetPollDestinationAddress(Mac::Address &aDest) const;
 #endif
 
+    using PollTimer = TimerMilliIn<DataPollSender, &DataPollSender::HandlePollTimer>;
+
     TimeMilli mTimerStartTime;
     uint32_t  mPollPeriod;
     uint32_t  mExternalPollPeriod : 26; // In milliseconds.
     uint8_t   mFastPollsUsers : 6;      // Number of callers which request fast polls.
 
-    TimerMilli mTimer;
+    PollTimer mTimer;
 
     bool    mEnabled : 1;              // Indicates whether data polling is enabled/started.
     bool    mAttachMode : 1;           // Indicates whether in attach mode (to use attach poll period).

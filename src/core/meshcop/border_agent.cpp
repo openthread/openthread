@@ -291,7 +291,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mPendingSet(UriPath::kPendingSet, BorderAgent::HandleRequest<&BorderAgent::mPendingSet>, this)
     , mProxyTransmit(UriPath::kProxyTx, BorderAgent::HandleRequest<&BorderAgent::mProxyTransmit>, this)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
-    , mTimer(aInstance, HandleTimeout)
+    , mTimer(aInstance)
     , mState(kStateStopped)
     , mUdpProxyPort(0)
 {
@@ -603,11 +603,6 @@ exit:
     {
         LogWarn("failed to start Border Agent on port %d: %s", kBorderAgentUdpPort, ErrorToString(error));
     }
-}
-
-void BorderAgent::HandleTimeout(Timer &aTimer)
-{
-    aTimer.Get<BorderAgent>().HandleTimeout();
 }
 
 void BorderAgent::HandleTimeout(void)

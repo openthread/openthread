@@ -953,13 +953,14 @@ private:
 
     Connection *AcceptConnection(const Ip6::SockAddr &aPeerSockAddr);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
+
+    using DsoTimer = TimerMilliIn<Dso, &Dso::HandleTimer>;
 
     AcceptHandler          mAcceptHandler;
     LinkedList<Connection> mClientConnections;
     LinkedList<Connection> mServerConnections;
-    TimerMilli             mTimer;
+    DsoTimer               mTimer;
 };
 
 } // namespace Dns

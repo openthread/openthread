@@ -378,21 +378,22 @@ private:
         RecordMessage(aMessage, aMacDest, kTxMessage);
     }
 
-    void        RecordNetworkInfo(void);
-    void        RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType);
-    void        RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
-    void        RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress);
-    void        RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
-                                   const Ip6::Netif::MulticastAddress &aMulticastAddress,
-                                   Ip6::Netif::AddressOrigin           aAddressOrigin);
-    void        HandleNotifierEvents(Events aEvents);
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void RecordNetworkInfo(void);
+    void RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType);
+    void RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
+    void RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress);
+    void RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
+                            const Ip6::Netif::MulticastAddress &aMulticastAddress,
+                            Ip6::Netif::AddressOrigin           aAddressOrigin);
+    void HandleNotifierEvents(Events aEvents);
+    void HandleTimer(void);
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
     void RecordNetworkDataChange(void);
     void RecordOnMeshPrefixEvent(NetDataEvent aEvent, const NetworkData::OnMeshPrefixConfig &aPrefix);
     void RecordExternalRouteEvent(NetDataEvent aEvent, const NetworkData::ExternalRouteConfig &aRoute);
 #endif
+
+    using TrackerTimer = TimerMilliIn<HistoryTracker, &HistoryTracker::HandleTimer>;
 
     EntryList<NetworkInfo, kNetInfoListSize>                mNetInfoHistory;
     EntryList<UnicastAddressInfo, kUnicastAddrListSize>     mUnicastAddressHistory;
@@ -403,7 +404,7 @@ private:
     EntryList<OnMeshPrefixInfo, kOnMeshPrefixListSize>      mOnMeshPrefixHistory;
     EntryList<ExternalRouteInfo, kExternalRouteListSize>    mExternalRouteHistory;
 
-    TimerMilli mTimer;
+    TrackerTimer mTimer;
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
     NetworkData::MutableNetworkData mPreviousNetworkData;

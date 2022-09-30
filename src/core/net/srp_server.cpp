@@ -88,8 +88,8 @@ Server::Server(Instance &aInstance)
     , mSocket(aInstance)
     , mServiceUpdateHandler(nullptr)
     , mServiceUpdateHandlerContext(nullptr)
-    , mLeaseTimer(aInstance, HandleLeaseTimer)
-    , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
+    , mLeaseTimer(aInstance)
+    , mOutstandingUpdatesTimer(aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mPort(kUdpPortMin)
     , mState(kStateDisabled)
@@ -1528,11 +1528,6 @@ exit:
     return error;
 }
 
-void Server::HandleLeaseTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleLeaseTimer();
-}
-
 void Server::HandleLeaseTimer(void)
 {
     TimeMilli now                = TimerMilli::GetNow();
@@ -1645,11 +1640,6 @@ void Server::HandleLeaseTimer(void)
         LogInfo("Lease timer is stopped");
         mLeaseTimer.Stop();
     }
-}
-
-void Server::HandleOutstandingUpdatesTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleOutstandingUpdatesTimer();
 }
 
 void Server::HandleOutstandingUpdatesTimer(void)

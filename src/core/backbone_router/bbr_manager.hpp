@@ -226,10 +226,11 @@ private:
 #endif
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void LogError(const char *aText, Error aError) const;
+
+    using BbrTimer = TimerMilliIn<Manager, &Manager::HandleTimer>;
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     Coap::Resource mMulticastListenerRegistration;
@@ -244,7 +245,7 @@ private:
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     MulticastListenersTable mMulticastListenersTable;
 #endif
-    TimerMilli mTimer;
+    BbrTimer mTimer;
 
     BackboneTmfAgent mBackboneTmfAgent;
 

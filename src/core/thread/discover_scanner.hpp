@@ -172,16 +172,15 @@ private:
 
     void HandleDiscoverComplete(void);
     void HandleScanDoneTask(void);
+    void HandleTimer(void);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-
+    using ScanTimer    = TimerMilliIn<DiscoverScanner, &DiscoverScanner::HandleTimer>;
     using ScanDoneTask = TaskletIn<DiscoverScanner, &DiscoverScanner::HandleScanDoneTask>;
 
     Handler          mHandler;
     void *           mHandlerContext;
-    TimerMilli       mTimer;
     ScanDoneTask     mScanDoneTask;
+    ScanTimer        mTimer;
     FilterIndexes    mFilterIndexes;
     Mac::ChannelMask mScanChannels;
     State            mState;

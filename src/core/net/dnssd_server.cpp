@@ -63,7 +63,7 @@ Server::Server(Instance &aInstance)
     , mQueryCallbackContext(nullptr)
     , mQuerySubscribe(nullptr)
     , mQueryUnsubscribe(nullptr)
-    , mTimer(aInstance, Server::HandleTimer)
+    , mTimer(aInstance)
 {
     mCounters.Clear();
 }
@@ -1121,11 +1121,6 @@ bool Server::HasQuestion(const Header &aHeader, const Message &aMessage, const c
 
 exit:
     return found;
-}
-
-void Server::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleTimer();
 }
 
 void Server::HandleTimer(void)

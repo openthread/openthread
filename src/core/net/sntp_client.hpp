@@ -524,16 +524,17 @@ private:
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
     void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, Error aResult);
 
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    void        HandleRetransmissionTimer(void);
+    void HandleRetransmissionTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    using RetxTimer = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
+
     Ip6::Udp::Socket mSocket;
 
     MessageQueue mPendingQueries;
-    TimerMilli   mRetransmissionTimer;
+    RetxTimer    mRetransmissionTimer;
 
     uint32_t mUnixEra;
 };

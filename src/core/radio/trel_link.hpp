@@ -173,22 +173,20 @@ private:
     void ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError);
     void HandleTimer(Neighbor &aNeighbor);
     void HandleNotifierEvents(Events aEvents);
-
     void HandleTxTasklet(void);
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     static const char *StateToString(State aState);
 
-    using TxTasklet = TaskletIn<Link, &Link::HandleTxTasklet>;
+    using TxTasklet    = TaskletIn<Link, &Link::HandleTxTasklet>;
+    using TimeoutTimer = TimerMilliIn<Link, &Link::HandleTimer>;
 
     State        mState;
     uint8_t      mRxChannel;
     Mac::PanId   mPanId;
     uint32_t     mTxPacketNumber;
     TxTasklet    mTxTasklet;
-    TimerMilli   mTimer;
+    TimeoutTimer mTimer;
     Interface    mInterface;
     Mac::RxFrame mRxFrame;
     Mac::TxFrame mTxFrame;

@@ -1449,7 +1449,7 @@ exit:
 Dso::Dso(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mAcceptHandler(nullptr)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
 }
 
@@ -1486,11 +1486,6 @@ Dso::Connection *Dso::AcceptConnection(const Ip6::SockAddr &aPeerSockAddr)
 
 exit:
     return connection;
-}
-
-void Dso::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Dso>().HandleTimer();
 }
 
 void Dso::HandleTimer(void)

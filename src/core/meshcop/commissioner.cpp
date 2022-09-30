@@ -64,8 +64,8 @@ Commissioner::Commissioner(Instance &aInstance)
     , mJoinerRloc(0)
     , mSessionId(0)
     , mTransmitAttempts(0)
-    , mJoinerExpirationTimer(aInstance, HandleJoinerExpirationTimer)
-    , mTimer(aInstance, HandleTimer)
+    , mJoinerExpirationTimer(aInstance)
+    , mTimer(aInstance)
     , mRelayReceive(UriPath::kRelayRx, &Commissioner::HandleRelayReceive, this)
     , mDatasetChanged(UriPath::kDatasetChanged, &Commissioner::HandleDatasetChanged, this)
     , mJoinerFinalize(UriPath::kJoinerFinalize, &Commissioner::HandleJoinerFinalize, this)
@@ -628,11 +628,6 @@ exit:
     return error;
 }
 
-void Commissioner::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Commissioner>().HandleTimer();
-}
-
 void Commissioner::HandleTimer(void)
 {
     switch (mState)
@@ -648,11 +643,6 @@ void Commissioner::HandleTimer(void)
         SendKeepAlive();
         break;
     }
-}
-
-void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
-{
-    aTimer.Get<Commissioner>().HandleJoinerExpirationTimer();
 }
 
 void Commissioner::HandleJoinerExpirationTimer(void)

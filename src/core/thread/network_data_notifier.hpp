@@ -106,8 +106,7 @@ private:
 
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     static void HandleCoapResponse(void *               aContext,
                                    otMessage *          aMessage,
@@ -122,8 +121,9 @@ private:
 #endif
 
     using SynchronizeDataTask = TaskletIn<Notifier, &Notifier::SynchronizeServerData>;
+    using DelayTimer          = TimerMilliIn<Notifier, &Notifier::HandleTimer>;
 
-    TimerMilli          mTimer;
+    DelayTimer          mTimer;
     SynchronizeDataTask mSynchronizeDataTask;
     uint32_t            mNextDelay;
     bool                mWaitingForResponse : 1;

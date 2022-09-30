@@ -706,7 +706,7 @@ void ActiveDatasetManager::HandleTimer(Timer &aTimer)
 
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
-    , mDelayTimer(aInstance, PendingDatasetManager::HandleDelayTimer)
+    , mDelayTimer(aInstance)
     , mResourceGet(UriPath::kPendingGet, &PendingDatasetManager::HandleGet, this)
 #if OPENTHREAD_FTD
     , mResourceSet(UriPath::kPendingSet, &PendingDatasetManager::HandleSet, this)
@@ -802,11 +802,6 @@ void PendingDatasetManager::StartDelayTimer(void)
         mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
         LogInfo("delay timer started %d", delay);
     }
-}
-
-void PendingDatasetManager::HandleDelayTimer(Timer &aTimer)
-{
-    aTimer.Get<PendingDatasetManager>().HandleDelayTimer();
 }
 
 void PendingDatasetManager::HandleDelayTimer(void)

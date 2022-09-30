@@ -56,6 +56,20 @@ void TaskletIn<Owner, HandleTaskletPtr>::HandleTasklet(Tasklet &aTasklet)
     (aTasklet.Get<Owner>().*HandleTaskletPtr)();
 }
 
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMilliIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
+#endif
+
 } // namespace ot
 
 #endif // LOCATOR_GETTERS_HPP_

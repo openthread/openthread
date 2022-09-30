@@ -264,7 +264,7 @@ Client::Client(Instance &aInstance)
     , mCallback(nullptr)
     , mCallbackContext(nullptr)
     , mDomainName(kDefaultDomainName)
-    , mTimer(aInstance, Client::HandleTimer)
+    , mTimer(aInstance)
 {
     mHostInfo.Init();
 
@@ -1755,11 +1755,6 @@ bool Client::ShouldRenewEarly(const Service &aService) const
 #endif
 
     return shouldRenew;
-}
-
-void Client::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Client>().HandleTimer();
 }
 
 void Client::HandleTimer(void)

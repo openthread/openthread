@@ -51,7 +51,7 @@ JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mHandler(nullptr)
     , mContext(nullptr)
-    , mTimer(aInstance, JamDetector::HandleTimer)
+    , mTimer(aInstance)
     , mHistoryBitmap(0)
     , mCurSecondStartTime(0)
     , mSampleInterval(0)
@@ -159,11 +159,6 @@ Error JamDetector::SetBusyPeriod(uint8_t aBusyPeriod)
 
 exit:
     return error;
-}
-
-void JamDetector::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<JamDetector>().HandleTimer();
 }
 
 void JamDetector::HandleTimer(void)

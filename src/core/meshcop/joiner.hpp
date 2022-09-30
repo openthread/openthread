@@ -208,8 +208,7 @@ private:
     static void HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void    SetState(State aState);
     void    SetIdFromIeeeEui64(void);
@@ -232,6 +231,8 @@ private:
     void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
 #endif
 
+    using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
+
     Mac::ExtAddress mId;
     JoinerDiscerner mDiscerner;
 
@@ -245,7 +246,7 @@ private:
 
     Coap::Message *mFinalizeMessage;
 
-    TimerMilli     mTimer;
+    JoinerTimer    mTimer;
     Coap::Resource mJoinerEntrust;
 };
 

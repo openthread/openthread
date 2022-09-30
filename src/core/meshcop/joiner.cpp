@@ -66,7 +66,7 @@ Joiner::Joiner(Instance &aInstance)
     , mContext(nullptr)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
-    , mTimer(aInstance, Joiner::HandleTimer)
+    , mTimer(aInstance)
     , mJoinerEntrust(UriPath::kJoinerEntrust, &Joiner::HandleJoinerEntrust, this)
 {
     SetIdFromIeeeEui64();
@@ -613,11 +613,6 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
 
 exit:
     FreeMessageOnError(message, error);
-}
-
-void Joiner::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Joiner>().HandleTimer();
 }
 
 void Joiner::HandleTimer(void)

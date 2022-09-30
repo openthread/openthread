@@ -68,18 +68,19 @@ private:
     static void HandleScanResult(Mac::ActiveScanResult *aScanResult, void *aContext);
     void        HandleScanResult(Mac::ActiveScanResult *aScanResult);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     void SendConflict(void);
 
+    using DelayTimer = TimerMilliIn<PanIdQueryServer, &PanIdQueryServer::HandleTimer>;
+
     Ip6::Address mCommissioner;
     uint32_t     mChannelMask;
     uint16_t     mPanId;
 
-    TimerMilli mTimer;
+    DelayTimer mTimer;
 
     Coap::Resource mPanIdQuery;
 };

@@ -103,12 +103,13 @@ private:
 
     static_assert(static_cast<uint32_t>(4 * kTimerInterval) == 0, "kTimerInterval is not correct");
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
-    TimeMilli  mStartTime;
-    uint32_t   mOverflowCount;
-    TimerMilli mTimer;
+    using UptimeTimer = TimerMilliIn<Uptime, &Uptime::HandleTimer>;
+
+    TimeMilli   mStartTime;
+    uint32_t    mOverflowCount;
+    UptimeTimer mTimer;
 };
 
 } // namespace ot

@@ -602,12 +602,17 @@ private:
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
     void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void               SetState(State aState);
     static const char *StateToString(State aState);
+
+    using SubMacTimer =
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+        TimerMicroIn<SubMac, &SubMac::HandleTimer>;
+#else
+        TimerMilliIn<SubMac, &SubMac::HandleTimer>;
+#endif
 
     otRadioCaps  mRadioCaps;
     State        mState;
@@ -633,11 +638,7 @@ private:
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackOffExponent;
 #endif
-#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    TimerMicro mTimer;
-#else
-    TimerMilli                mTimer;
-#endif
+    SubMacTimer mTimer;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     uint16_t mCslPeriod;      // The CSL sample period, in units of 10 symbols (160 microseconds).
