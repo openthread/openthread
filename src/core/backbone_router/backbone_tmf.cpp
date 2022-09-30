@@ -47,7 +47,7 @@ Error BackboneTmfAgent::Start(void)
 {
     Error error = kErrorNone;
 
-    SuccessOrExit(error = Coap::Start(kBackboneUdpPort, OT_NETIF_BACKBONE));
+    SuccessOrExit(error = Coap::Start(kBackboneUdpPort, Ip6::kNetifBackbone));
     SubscribeMulticast(Get<Local>().GetAllNetworkBackboneRoutersAddress());
 
 exit:
@@ -79,14 +79,14 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
 
 void BackboneTmfAgent::SubscribeMulticast(const Ip6::Address &aAddress)
 {
-    Error error = mSocket.JoinNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
+    Error error = mSocket.JoinNetifMulticastGroup(Ip6::kNetifBackbone, aAddress);
 
     LogError("Backbone TMF subscribes", aAddress, error);
 }
 
 void BackboneTmfAgent::UnsubscribeMulticast(const Ip6::Address &aAddress)
 {
-    Error error = mSocket.LeaveNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
+    Error error = mSocket.LeaveNetifMulticastGroup(Ip6::kNetifBackbone, aAddress);
 
     LogError("Backbone TMF unsubscribes", aAddress, error);
 }

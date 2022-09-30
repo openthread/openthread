@@ -598,7 +598,7 @@ void Server::PrepareSocket(void)
 
     VerifyOrExit(!mSocket.IsOpen());
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    error = mSocket.Bind(mPort, OT_NETIF_THREAD);
+    error = mSocket.Bind(mPort, Ip6::kNetifThread);
 
 exit:
     if (error != kErrorNone)

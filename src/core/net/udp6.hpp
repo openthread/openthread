@@ -66,6 +66,17 @@ class Udp;
 #endif
 
 /**
+ * This enumeration defines the network interface identifiers.
+ *
+ */
+enum NetifIdentifier : uint8_t
+{
+    kNetifUnspecified = OT_NETIF_UNSPECIFIED, ///< Unspecified network interface.
+    kNetifThread      = OT_NETIF_THREAD,      ///< The Thread interface.
+    kNetifBackbone    = OT_NETIF_BACKBONE,    ///< The Backbone interface.
+};
+
+/**
  * This class implements core UDP message handling.
  *
  */
@@ -191,7 +202,7 @@ public:
          * @retval kErrorFailed          Failed to bind UDP Socket.
          *
          */
-        Error Bind(const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier = OT_NETIF_THREAD);
+        Error Bind(const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier = kNetifThread);
 
         /**
          * This method binds the UDP socket.
@@ -203,7 +214,7 @@ public:
          * @retval kErrorFailed          Failed to bind UDP Socket.
          *
          */
-        Error Bind(uint16_t aPort, otNetifIdentifier aNetifIdentifier = OT_NETIF_THREAD);
+        Error Bind(uint16_t aPort, NetifIdentifier aNetifIdentifier = kNetifThread);
 
         /**
          * This method binds the UDP socket.
@@ -278,7 +289,7 @@ public:
          * @retval  kErrorFailed  Failed to join the multicast group.
          *
          */
-        Error JoinNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+        Error JoinNetifMulticastGroup(NetifIdentifier aNetifIdentifier, const Address &aAddress);
 
         /**
          * This method configures the UDP socket to leave a multicast group on a Host network interface.
@@ -290,7 +301,7 @@ public:
          * @retval  kErrorFailed Failed to leave the multicast group.
          *
          */
-        Error LeaveNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+        Error LeaveNetifMulticastGroup(NetifIdentifier aNetifIdentifier, const Address &aAddress);
 #endif
     };
 
@@ -474,7 +485,7 @@ public:
      * @retval kErrorFailed          Failed to bind UDP Socket.
      *
      */
-    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier);
+    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier);
 
     /**
      * This method connects a UDP socket.
@@ -655,6 +666,7 @@ private:
 
 DefineCoreType(otUdpSocket, Ip6::Udp::SocketHandle);
 DefineCoreType(otUdpReceiver, Ip6::Udp::Receiver);
+DefineMapEnum(otNetifIdentifier, Ip6::NetifIdentifier);
 
 } // namespace ot
 
