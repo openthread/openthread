@@ -2304,6 +2304,10 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
     mPublishedPrefix.Clear();
     mInfraIfPrefix.Clear();
     mTimer.Stop();
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    Get<Nat64::Translator>().SetNat64Prefix(mPublishedPrefix);
+#endif
 }
 
 void RoutingManager::Nat64PrefixManager::GenerateLocalPrefix(const Ip6::Prefix &aBrUlaPrefix)
