@@ -598,7 +598,13 @@ public:
      * @returns A reference to the MLE counters.
      *
      */
-    const otMleCounters &GetCounters(void) const { return mCounters; }
+    const otMleCounters &GetCounters(void)
+    {
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+        UpdateTimeCounter(mRole);
+#endif
+        return mCounters;
+    }
 
     /**
      * This method resets the MLE counters.
@@ -2024,7 +2030,10 @@ private:
 #endif
 
     otMleCounters mCounters;
-
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    void     UpdateTimeCounter(DeviceRole aRole);
+    uint64_t mLastUpdatedTimestamp;
+#endif
     static const otMeshLocalPrefix sMeshLocalPrefixInit;
 
     Ip6::Netif::UnicastAddress   mLinkLocal64;

@@ -888,6 +888,12 @@ Attach Attempts: 1
 Partition Id Changes: 1
 Better Partition Attach Attempts: 0
 Parent Changes: 0
+Time Disabled Milli: 10026
+Time Detached Milli: 6852
+Time Child Milli: 0
+Time Router Milli: 0
+Time Leader Milli: 16195
+Time Tracked Milli: 33073
 Done
 > counters ip
 TxSuccess: 10

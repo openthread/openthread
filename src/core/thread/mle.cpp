@@ -264,6 +264,36 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+void Mle::UpdateTimeCounter(DeviceRole aRole)
+{
+    uint64_t currentUptimeMsec = Get<Uptime>().GetUptime();
+    uint64_t durationMsec      = currentUptimeMsec - mLastUpdatedTimestamp;
+    mLastUpdatedTimestamp      = currentUptimeMsec;
+
+    mCounters.mTrackedTime += durationMsec;
+
+    switch (aRole)
+    {
+    case kRoleDisabled:
+        mCounters.mDisabledTime += durationMsec;
+        break;
+    case kRoleDetached:
+        mCounters.mDetachedTime += durationMsec;
+        break;
+    case kRoleChild:
+        mCounters.mChildTime += durationMsec;
+        break;
+    case kRoleRouter:
+        mCounters.mRouterTime += durationMsec;
+        break;
+    case kRoleLeader:
+        mCounters.mLeaderTime += durationMsec;
+        break;
+    }
+}
+#endif
+
 void Mle::SetRole(DeviceRole aRole)
 {
     DeviceRole oldRole = mRole;
@@ -271,6 +301,10 @@ void Mle::SetRole(DeviceRole aRole)
     SuccessOrExit(Get<Notifier>().Update(mRole, aRole, kEventThreadRoleChanged));
 
     LogNote("Role %s -> %s", RoleToString(oldRole), RoleToString(mRole));
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    UpdateTimeCounter(oldRole);
+#endif
 
     switch (mRole)
     {
