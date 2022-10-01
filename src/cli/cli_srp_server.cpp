@@ -43,29 +43,7 @@
 namespace ot {
 namespace Cli {
 
-constexpr SrpServer::Command SrpServer::sCommands[];
-
-otError SrpServer::Process(Arg aArgs[])
-{
-    otError        error = OT_ERROR_INVALID_COMMAND;
-    const Command *command;
-
-    if (aArgs[0].IsEmpty())
-    {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
-    }
-
-    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
-    VerifyOrExit(command != nullptr);
-
-    error = (this->*command->mHandler)(aArgs + 1);
-
-exit:
-    return error;
-}
-
-otError SrpServer::ProcessAddrMode(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
 
@@ -97,7 +75,7 @@ otError SrpServer::ProcessAddrMode(Arg aArgs[])
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError SrpServer::ProcessAuto(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -137,7 +115,7 @@ exit:
 }
 #endif
 
-otError SrpServer::ProcessDomain(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -153,7 +131,7 @@ otError SrpServer::ProcessDomain(Arg aArgs[])
     return error;
 }
 
-otError SrpServer::ProcessState(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("state")>(Arg aArgs[])
 {
     static const char *const kStateStrings[] = {
         "disabled", // (0) OT_SRP_SERVER_STATE_DISABLED
@@ -172,7 +150,7 @@ otError SrpServer::ProcessState(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError SrpServer::ProcessEnable(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("enable")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -181,7 +159,7 @@ otError SrpServer::ProcessEnable(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError SrpServer::ProcessDisable(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("disable")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -190,7 +168,7 @@ otError SrpServer::ProcessDisable(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError SrpServer::ProcessTtl(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("ttl")>(Arg aArgs[])
 {
     otError              error = OT_ERROR_NONE;
     otSrpServerTtlConfig ttlConfig;
@@ -214,7 +192,7 @@ exit:
     return error;
 }
 
-otError SrpServer::ProcessLease(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("lease")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
     otSrpServerLeaseConfig leaseConfig;
@@ -242,7 +220,7 @@ exit:
     return error;
 }
 
-otError SrpServer::ProcessHost(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("host")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
     const otSrpServerHost *host;
@@ -304,7 +282,7 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
     OutputFormat("]");
 }
 
-otError SrpServer::ProcessService(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
 {
     static constexpr char *kAnyServiceName  = nullptr;
     static constexpr char *kAnyInstanceName = nullptr;
@@ -373,7 +351,7 @@ exit:
     return error;
 }
 
-otError SrpServer::ProcessSeqNum(Arg aArgs[])
+template <> otError SrpServer::Process<Cmd("seqnum")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -393,16 +371,47 @@ exit:
     return error;
 }
 
-otError SrpServer::ProcessHelp(Arg aArgs[])
+otError SrpServer::Process(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
+#define CmdEntry(aCommandString)                                 \
+    {                                                            \
+        aCommandString, &SrpServer::Process<Cmd(aCommandString)> \
     }
 
-    return OT_ERROR_NONE;
+    static constexpr Command kCommands[] = {
+        CmdEntry("addrmode"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        CmdEntry("auto"),
+#endif
+        CmdEntry("disable"),
+        CmdEntry("domain"),
+        CmdEntry("enable"),
+        CmdEntry("host"),
+        CmdEntry("lease"),
+        CmdEntry("seqnum"),
+        CmdEntry("service"),
+        CmdEntry("state"),
+        CmdEntry("ttl"),
+    };
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
+
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
+    {
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
+    }
+
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
+    VerifyOrExit(command != nullptr);
+
+    error = (this->*command->mHandler)(aArgs + 1);
+
+exit:
+    return error;
 }
 
 } // namespace Cli

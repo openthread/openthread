@@ -43,8 +43,6 @@
 namespace ot {
 namespace Cli {
 
-constexpr UdpExample::Command UdpExample::sCommands[];
-
 UdpExample::UdpExample(Output &aOutput)
     : OutputWrapper(aOutput)
     , mLinkSecurityEnabled(true)
@@ -52,19 +50,7 @@ UdpExample::UdpExample(Output &aOutput)
     memset(&mSocket, 0, sizeof(mSocket));
 }
 
-otError UdpExample::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError UdpExample::ProcessBind(Arg aArgs[])
+template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
     otError           error;
     otSockAddr        sockaddr;
@@ -91,7 +77,7 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessConnect(Arg aArgs[])
+template <> otError UdpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
@@ -114,14 +100,14 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessClose(Arg aArgs[])
+template <> otError UdpExample::Process<Cmd("close")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
     return otUdpClose(GetInstancePtr(), &mSocket);
 }
 
-otError UdpExample::ProcessOpen(Arg aArgs[])
+template <> otError UdpExample::Process<Cmd("open")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -134,7 +120,7 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessSend(Arg aArgs[])
+template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
 {
     otError           error   = OT_ERROR_NONE;
     otMessage *       message = nullptr;
@@ -211,7 +197,7 @@ exit:
     return error;
 }
 
-otError UdpExample::ProcessLinkSecurity(Arg aArgs[])
+template <> otError UdpExample::Process<Cmd("linksecurity")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -286,17 +272,29 @@ exit:
 
 otError UdpExample::Process(Arg aArgs[])
 {
-    otError        error = OT_ERROR_INVALID_ARGS;
-    const Command *command;
-
-    if (aArgs[0].IsEmpty())
-    {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
+#define CmdEntry(aCommandString)                                  \
+    {                                                             \
+        aCommandString, &UdpExample::Process<Cmd(aCommandString)> \
     }
 
-    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
-    VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
+    static constexpr Command kCommands[] = {
+        CmdEntry("bind"),         CmdEntry("close"), CmdEntry("connect"),
+        CmdEntry("linksecurity"), CmdEntry("open"),  CmdEntry("send"),
+    };
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
+
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
+    {
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
+    }
+
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
+    VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);
 

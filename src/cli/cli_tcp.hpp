@@ -74,17 +74,7 @@ public:
 private:
     using Command = CommandEntry<TcpExample>;
 
-    otError ProcessHelp(Arg aArgs[]);
-    otError ProcessInit(Arg aArgs[]);
-    otError ProcessDeinit(Arg aArgs[]);
-    otError ProcessBind(Arg aArgs[]);
-    otError ProcessConnect(Arg aArgs[]);
-    otError ProcessSend(Arg aArgs[]);
-    otError ProcessBenchmark(Arg aArgs[]);
-    otError ProcessSendEnd(Arg aArgs[]);
-    otError ProcessAbort(Arg aArgs[]);
-    otError ProcessListen(Arg aArgs[]);
-    otError ProcessStopListening(Arg aArgs[]);
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ContinueBenchmarkCircularSend(void);
     void    CompleteBenchmark(void);
@@ -116,22 +106,6 @@ private:
                                                        const otSockAddr *aPeer,
                                                        otTcpEndpoint **  aAcceptInto);
     void HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer);
-
-    static constexpr Command sCommands[] = {
-        {"abort", &TcpExample::ProcessAbort},
-        {"benchmark", &TcpExample::ProcessBenchmark},
-        {"bind", &TcpExample::ProcessBind},
-        {"connect", &TcpExample::ProcessConnect},
-        {"deinit", &TcpExample::ProcessDeinit},
-        {"help", &TcpExample::ProcessHelp},
-        {"init", &TcpExample::ProcessInit},
-        {"listen", &TcpExample::ProcessListen},
-        {"send", &TcpExample::ProcessSend},
-        {"sendend", &TcpExample::ProcessSendEnd},
-        {"stoplistening", &TcpExample::ProcessStopListening},
-    };
-
-    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     otTcpEndpoint mEndpoint;
     otTcpListener mListener;
