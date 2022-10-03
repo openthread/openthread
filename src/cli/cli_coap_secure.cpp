@@ -46,8 +46,6 @@
 namespace ot {
 namespace Cli {
 
-constexpr CoapSecure::Command CoapSecure::sCommands[];
-
 CoapSecure::CoapSecure(Output &aOutput)
     : OutputWrapper(aOutput)
     , mShutdownFlag(false)
@@ -92,19 +90,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage)
     OutputLine("");
 }
 
-otError CoapSecure::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError CoapSecure::ProcessResource(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("resource")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -142,7 +128,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessSet(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("set")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -161,7 +147,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessStart(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("start")>(Arg aArgs[])
 {
     otError error          = OT_ERROR_NONE;
     bool    verifyPeerCert = true;
@@ -191,7 +177,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessStop(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -214,22 +200,22 @@ otError CoapSecure::ProcessStop(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessGet(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_GET);
 }
 
-otError CoapSecure::ProcessPost(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_POST);
 }
 
-otError CoapSecure::ProcessPut(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_PUT);
 }
 
-otError CoapSecure::ProcessDelete(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("delete")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_DELETE);
 }
@@ -384,7 +370,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessConnect(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("connect")>(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
@@ -404,7 +390,7 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessDisconnect(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -414,7 +400,7 @@ otError CoapSecure::ProcessDisconnect(Arg aArgs[])
 }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-otError CoapSecure::ProcessPsk(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("psk")>(Arg aArgs[])
 {
     otError  error = OT_ERROR_NONE;
     uint16_t length;
@@ -440,7 +426,7 @@ exit:
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-otError CoapSecure::ProcessX509(Arg aArgs[])
+template <> otError CoapSecure::Process<Cmd("x509")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -459,17 +445,37 @@ otError CoapSecure::ProcessX509(Arg aArgs[])
 
 otError CoapSecure::Process(Arg aArgs[])
 {
-    otError        error = OT_ERROR_INVALID_ARGS;
-    const Command *command;
-
-    if (aArgs[0].IsEmpty())
-    {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
+#define CmdEntry(aCommandString)                                  \
+    {                                                             \
+        aCommandString, &CoapSecure::Process<Cmd(aCommandString)> \
     }
 
-    command = BinarySearch::Find(aArgs[0].GetCString(), sCommands);
-    VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
+    static constexpr Command kCommands[] = {
+        CmdEntry("connect"), CmdEntry("delete"),   CmdEntry("disconnect"), CmdEntry("get"),   CmdEntry("post"),
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+        CmdEntry("psk"),
+#endif
+        CmdEntry("put"),     CmdEntry("resource"), CmdEntry("set"),        CmdEntry("start"), CmdEntry("stop"),
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+        CmdEntry("x509"),
+#endif
+    };
+
+#undef CmdEntry
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
+    otError        error = OT_ERROR_INVALID_COMMAND;
+    const Command *command;
+
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
+    {
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? OT_ERROR_INVALID_ARGS : OT_ERROR_NONE);
+    }
+
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
+    VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);
 

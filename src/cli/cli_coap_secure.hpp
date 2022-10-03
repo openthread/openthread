@@ -96,19 +96,7 @@ private:
 
     void PrintPayload(otMessage *aMessage);
 
-    otError ProcessConnect(Arg aArgs[]);
-    otError ProcessDelete(Arg aArgs[]);
-    otError ProcessDisconnect(Arg aArgs[]);
-    otError ProcessGet(Arg aArgs[]);
-    otError ProcessHelp(Arg aArgs[]);
-    otError ProcessPost(Arg aArgs[]);
-    otError ProcessPsk(Arg aArgs[]);
-    otError ProcessPut(Arg aArgs[]);
-    otError ProcessResource(Arg aArgs[]);
-    otError ProcessSet(Arg aArgs[]);
-    otError ProcessStart(Arg aArgs[]);
-    otError ProcessStop(Arg aArgs[]);
-    otError ProcessX509(Arg aArgs[]);
+    template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
 
@@ -148,28 +136,6 @@ private:
 
     static void HandleConnected(bool aConnected, void *aContext);
     void        HandleConnected(bool aConnected);
-
-    static constexpr Command sCommands[] = {
-        {"connect", &CoapSecure::ProcessConnect},
-        {"delete", &CoapSecure::ProcessDelete},
-        {"disconnect", &CoapSecure::ProcessDisconnect},
-        {"get", &CoapSecure::ProcessGet},
-        {"help", &CoapSecure::ProcessHelp},
-        {"post", &CoapSecure::ProcessPost},
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-        {"psk", &CoapSecure::ProcessPsk},
-#endif
-        {"put", &CoapSecure::ProcessPut},
-        {"resource", &CoapSecure::ProcessResource},
-        {"set", &CoapSecure::ProcessSet},
-        {"start", &CoapSecure::ProcessStart},
-        {"stop", &CoapSecure::ProcessStop},
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-        {"x509", &CoapSecure::ProcessX509},
-#endif
-    };
-
-    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     otCoapBlockwiseResource mResource;
