@@ -269,11 +269,10 @@ Error Client::Response::FindServiceInfo(Section aSection, const Name &aName, Ser
     {
         AsCoreType(&aServiceInfo.mHostAddress).Clear();
         aServiceInfo.mHostAddressTtl = 0;
+        error                        = kErrorNone;
     }
-    else
-    {
-        SuccessOrExit(error);
-    }
+
+    SuccessOrExit(error);
 
     // A null `mTxtData` indicates that caller does not want to retrieve TXT data.
     VerifyOrExit(aServiceInfo.mTxtData != nullptr);
@@ -282,19 +281,30 @@ Error Client::Response::FindServiceInfo(Section aSection, const Name &aName, Ser
     // setting `aServiceInfo.mTxtDataSize` to zero.
 
     SelectSection(aSection, offset, numRecords);
+
+    aServiceInfo.mTxtDataTruncated = false;
+
     error = ResourceRecord::FindRecord(*mMessage, offset, numRecords, /* aIndex */ 0, aName, txtRecord);
 
     switch (error)
     {
     case kErrorNone:
-        SuccessOrExit(error =
-                          txtRecord.ReadTxtData(*mMessage, offset, aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize));
+        error = txtRecord.ReadTxtData(*mMessage, offset, aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+
+        if (error == kErrorNoBufs)
+        {
+            error                          = kErrorNone;
+            aServiceInfo.mTxtDataTruncated = true;
+        }
+
+        SuccessOrExit(error);
         aServiceInfo.mTxtDataTtl = txtRecord.GetTtl();
         break;
 
     case kErrorNotFound:
         aServiceInfo.mTxtDataSize = 0;
         aServiceInfo.mTxtDataTtl  = 0;
+        error                     = kErrorNone;
         break;
 
     default:

@@ -1021,6 +1021,8 @@ void TestHeaderAndResourceRecords(void)
 
     for (const char *instanceName : kInstanceNames)
     {
+        uint16_t savedOffset;
+
         // SRV record
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName));
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord));
@@ -1037,12 +1039,21 @@ void TestHeaderAndResourceRecords(void)
         SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName));
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, txtRecord));
         VerifyOrQuit(txtRecord.GetTtl() == kTxtTtl);
-        len = sizeof(buffer);
+        savedOffset = offset;
+        len         = sizeof(buffer);
         SuccessOrQuit(txtRecord.ReadTxtData(*message, offset, buffer, len));
         VerifyOrQuit(len == sizeof(kTxtData));
         VerifyOrQuit(memcmp(buffer, kTxtData, len) == 0);
         printf("    \"%s\" TXT %u %d \"%s\"\n", instanceName, txtRecord.GetTtl(), txtRecord.GetLength(),
                reinterpret_cast<const char *>(buffer));
+
+        // Partial read of TXT data
+        len = sizeof(kTxtData) - 1;
+        memset(buffer, 0, sizeof(buffer));
+        VerifyOrQuit(txtRecord.ReadTxtData(*message, savedOffset, buffer, len) == kErrorNoBufs);
+        VerifyOrQuit(len == sizeof(kTxtData) - 1);
+        VerifyOrQuit(memcmp(buffer, kTxtData, len) == 0);
+        VerifyOrQuit(savedOffset == offset);
     }
 
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kHostName));

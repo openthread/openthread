@@ -126,4 +126,17 @@
 #define OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE
+ *
+ * Specifies the max TXT record data length to use when performing DNS queries.
+ *
+ * If the service TXT record data length is greater than the specified value, it will be read partially (up to the given
+ * size) and output as a sequence of raw hex bytes `[{hex-bytes}...]`
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE
+#define OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE 512
+#endif
+
 #endif // CONFIG_CLI_H_

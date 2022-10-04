@@ -323,7 +323,8 @@ typedef struct otDnsServiceInfo
     otIp6Address mHostAddress;        ///< The host IPv6 address. Set to all zero if not available.
     uint32_t     mHostAddressTtl;     ///< The host address TTL.
     uint8_t *    mTxtData;            ///< Buffer to output TXT data (can be NULL if not needed).
-    uint16_t     mTxtDataSize;        ///< On input, size of `mTxtData` buffer. On output `mTxtData` length.
+    uint16_t     mTxtDataSize;        ///< On input, size of `mTxtData` buffer. On output number bytes written.
+    bool         mTxtDataTruncated;   ///< Indicates if TXT data could not fit in `mTxtDataSize` and was truncated.
     uint32_t     mTxtDataTtl;         ///< The TXT data TTL.
 } otDnsServiceInfo;
 
@@ -408,6 +409,7 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
  * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
  * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
  * - If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
+ * - If TXT data length is greater than `mTxtDataSize`, it is read partially and `mTxtDataTruncated` is set to true.
  * - If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
  * - If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
  *   other addresses can be retrieved using `otDnsBrowseResponseGetHostAddress()`.
@@ -537,6 +539,7 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
  * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
  * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
  * - If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
+ * - If TXT data length is greater than `mTxtDataSize`, it is read partially and `mTxtDataTruncated` is set to true.
  * - If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
  * - If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
  *   other addresses can be retrieved using `otDnsServiceResponseGetHostAddress()`.
