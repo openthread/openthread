@@ -35,6 +35,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/instance.hpp"
+#include "common/time.hpp"
 #include "net/dns_dso.hpp"
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
@@ -78,7 +79,7 @@ void AdvanceTime(uint32_t aDuration)
 
     Log(" AdvanceTime for %u.%03u", aDuration / 1000, aDuration % 1000);
 
-    while (sAlarmTime <= time)
+    while (ot::TimeMilli(sAlarmTime) <= ot::TimeMilli(time))
     {
         sNow = sAlarmTime;
         otPlatAlarmMilliFired(sInstance);
