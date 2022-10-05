@@ -1692,7 +1692,8 @@ public:
     /**
      * This method parses and reads the TXT record data from a message.
      *
-     * This method also checks if the TXT data is well-formed by calling `VerifyTxtData()`.
+     * This method also checks if the TXT data is well-formed by calling `VerifyTxtData()` when it is successfully
+     * read.
      *
      * @param[in]      aMessage         The message to read from.
      * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of TXT record data.
@@ -1705,7 +1706,9 @@ public:
      * @retval kErrorNone           The TXT data was read successfully. @p aOffset, @p aTxtBuffer and @p aTxtBufferSize
      *                              are updated.
      * @retval kErrorParse          The TXT record in @p aMessage could not be parsed (invalid format).
-     * @retval kErrorNoBufs         TXT data could not fit in @p aTxtBufferSize bytes.
+     * @retval kErrorNoBufs         TXT data could not fit in @p aTxtBufferSize bytes. TXT data is still partially read
+     *                              into @p aTxtBuffer up to its size and @p aOffset is updated to skip over the full
+     *                              TXT record.
      *
      */
     Error ReadTxtData(const Message &aMessage, uint16_t &aOffset, uint8_t *aTxtBuffer, uint16_t &aTxtBufferSize) const;

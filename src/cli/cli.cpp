@@ -3023,7 +3023,18 @@ void Interpreter::OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceIn
     OutputIp6Address(aServiceInfo.mHostAddress);
     OutputLine(" TTL:%u", aServiceInfo.mHostAddressTtl);
     OutputFormat(aIndentSize, "TXT:");
-    OutputDnsTxtData(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+
+    if (!aServiceInfo.mTxtDataTruncated)
+    {
+        OutputDnsTxtData(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+    }
+    else
+    {
+        OutputFormat("[");
+        OutputBytes(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+        OutputFormat("...]");
+    }
+
     OutputLine(" TTL:%u", aServiceInfo.mTxtDataTtl);
 }
 
@@ -3036,7 +3047,7 @@ void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseRespo
 {
     char             name[OT_DNS_MAX_NAME_SIZE];
     char             label[OT_DNS_MAX_LABEL_SIZE];
-    uint8_t          txtBuffer[255];
+    uint8_t          txtBuffer[kMaxTxtDataSize];
     otDnsServiceInfo serviceInfo;
 
     IgnoreError(otDnsBrowseResponseGetServiceName(aResponse, name, sizeof(name)));
@@ -3078,7 +3089,7 @@ void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceRes
 {
     char             name[OT_DNS_MAX_NAME_SIZE];
     char             label[OT_DNS_MAX_LABEL_SIZE];
-    uint8_t          txtBuffer[255];
+    uint8_t          txtBuffer[kMaxTxtDataSize];
     otDnsServiceInfo serviceInfo;
 
     IgnoreError(otDnsServiceResponseGetServiceName(aResponse, label, sizeof(label), name, sizeof(name)));
