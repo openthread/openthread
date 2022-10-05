@@ -290,7 +290,7 @@ public:
      * @returns A reference to the Heap object.
      *
      */
-    static Utils::Heap &GetHeap(void) { return sHeap; }
+    static Utils::Heap &GetHeap(void);
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -380,9 +380,6 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Random::Manager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    static Utils::Heap sHeap;
-#endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
