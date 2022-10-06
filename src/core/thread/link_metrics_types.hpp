@@ -49,6 +49,8 @@
 namespace ot {
 namespace LinkMetrics {
 
+constexpr uint8_t kMaxTypeIds = 4; ///< Maximum number of Type IDs in a `Metrics`.
+
 /**
  * This type represents Link Metric Flags indicating a set of metrics.
  *
@@ -57,6 +59,16 @@ namespace LinkMetrics {
  */
 class Metrics : public otLinkMetrics, public Clearable<Metrics>
 {
+public:
+    /**
+     * This method converts the `Metrics` into an array of Type IDs.
+     *
+     * @param[out] aTypeIds   The array of Type IDs to populate. MUST have at least `kMaxTypeIds` elements.
+     *
+     * @returns Number of entries added in the array @p aTypeIds.
+     *
+     */
+    uint8_t ConvertToTypeIds(uint8_t aTypeIds[]) const;
 };
 
 /**
@@ -93,209 +105,78 @@ public:
     void SetMetrics(const Metrics &aMetrics) { mMetrics = aMetrics; }
 };
 
-/**
- * This class implements Link Metrics Type ID Flags generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN class TypeIdFlags
+class TypeId
 {
-    static constexpr uint8_t kExtendedFlag     = 1 << 7;
-    static constexpr uint8_t kLengthOffset     = 6;
-    static constexpr uint8_t kLengthFlag       = 1 << kLengthOffset;
-    static constexpr uint8_t kTypeEnumOffset   = 3;
-    static constexpr uint8_t kTypeEnumMask     = 7 << kTypeEnumOffset;
-    static constexpr uint8_t kMetricEnumOffset = 0;
-    static constexpr uint8_t kMetricEnumMask   = 7 << kMetricEnumOffset;
+    // Type ID Flags
+    //
+    //   7   6   5   4   3   2   1   0
+    // +---+---+---+---+---+---+---+---+
+    // | E | L |   Type    |   Metric  |
+    // +---+---+---+---+---+---+---+---+
+    //
+
+    static constexpr uint8_t kExtendedFlag = 1 << 7;
+    static constexpr uint8_t kLengthFlag   = 1 << 6;
+    static constexpr uint8_t kTypeOffset   = 3;
+    static constexpr uint8_t kMetricOffset = 0;
+    static constexpr uint8_t kTypeMask     = (7 << kTypeOffset);
+
+    static constexpr uint8_t kTypeCount    = (0 << kTypeOffset); // Count/summation
+    static constexpr uint8_t kTypeAve      = (1 << kTypeOffset); // Exponential Moving average
+    static constexpr uint8_t kTypeReserved = (2 << kTypeOffset); // Reserved
+
+    static constexpr uint8_t kMetricPdu        = (0 << kMetricOffset); // Number of PDUs received.
+    static constexpr uint8_t kMetricLqi        = (1 << kMetricOffset);
+    static constexpr uint8_t kMetricLinkMargin = (2 << kMetricOffset);
+    static constexpr uint8_t kMetricRssi       = (3 << kMetricOffset);
 
 public:
+    static constexpr uint8_t kPdu        = (kMetricPdu | kTypeCount | kLengthFlag); ///< Type ID for num PDU received.
+    static constexpr uint8_t kLqi        = (kMetricLqi | kTypeAve);                 ///< Type ID for LQI.
+    static constexpr uint8_t kLinkMargin = (kMetricLinkMargin | kTypeAve);          ///< Type ID for Link Margin.
+    static constexpr uint8_t kRssi       = (kMetricRssi | kTypeAve);                ///< Type ID for RSSI.
+
     /**
-     * This enumeration specifies the Length field in Type ID Flags.
+     * This static method indicates whether or not a given Type ID is extended.
+     *
+     * Extended Type IDs are reserved for future use. When set an additional second byte follows the current ID flags.
+     *
+     * @param[in] aTypeId   The Type ID to check.
+     *
+     * @retval TRUE  The @p aTypeId is extended.
+     * @retval FALSE The @p aTypeId is not extended.
      *
      */
-    enum Length
+    static bool IsExtended(uint8_t aTypeId) { return (aTypeId & kExtendedFlag); }
+
+    /**
+     * This static method determines the value length (number of bytes) associated with a given Type ID.
+     *
+     * Type IDs can either have a short value as a `uint8_t` (e.g., `kLqi`, `kLinkMargin` or `kRssi`) or a long value as
+     * a `uint32_t` (`kPdu`).
+     *
+     * @param[in] aTypeId   The Type ID.
+     *
+     * @returns the associated value length of @p aTypeId.
+     *
+     */
+    static uint8_t GetValueLength(uint8_t aTypeId)
     {
-        kShortLength    = 0, ///< Short value length (1 byte value)
-        kExtendedLength = 1, ///< Extended value length (4 bytes value)
-    };
-
-    /**
-     * This enumeration specifies the Type values in Type ID Flags.
-     *
-     */
-    enum TypeEnum : uint8_t
-    {
-        kTypeCountSummation   = 0, ///< Count or summation
-        kTypeExpMovingAverage = 1, ///< Exponential moving average.
-        kTypeReserved         = 2, ///< Reserved for future use.
-    };
-
-    /**
-     * This enumeration specifies the Metric values in Type ID Flag.
-     *
-     */
-    enum MetricEnum : uint8_t
-    {
-        kMetricPdusReceived = 0, ///< Number of PDUs received.
-        kMetricLqi          = 1, ///< Link Quality Indicator.
-        kMetricLinkMargin   = 2, ///< Link Margin.
-        kMetricRssi         = 3, ///< RSSI in dbm.
-    };
-
-    /**
-     * This constant defines the raw value for Type ID Flag for PDU.
-     *
-     */
-    static constexpr uint8_t kPdu = (kExtendedLength << kLengthOffset) | (kTypeCountSummation << kTypeEnumOffset) |
-                                    (kMetricPdusReceived << kMetricEnumOffset);
-
-    /**
-     * This constant defines the raw value for Type ID Flag for LQI.
-     *
-     */
-    static constexpr uint8_t kLqi = (kShortLength << kLengthOffset) | (kTypeExpMovingAverage << kTypeEnumOffset) |
-                                    (kMetricLqi << kMetricEnumOffset);
-
-    /**
-     * This constant defines the raw value for Type ID Flag for Link Margin.
-     *
-     */
-    static constexpr uint8_t kLinkMargin = (kShortLength << kLengthOffset) |
-                                           (kTypeExpMovingAverage << kTypeEnumOffset) |
-                                           (kMetricLinkMargin << kMetricEnumOffset);
-
-    /**
-     * This constant defines the raw value for Type ID Flag for RSSI
-     *
-     */
-    static constexpr uint8_t kRssi = (kShortLength << kLengthOffset) | (kTypeExpMovingAverage << kTypeEnumOffset) |
-                                     (kMetricRssi << kMetricEnumOffset);
-
-    /**
-     * Default constructor.
-     *
-     */
-    TypeIdFlags(void) = default;
-
-    /**
-     * Constructor to initialize from raw value.
-     *
-     * @param[in] aFlags  The raw flags value.
-     *
-     */
-    explicit TypeIdFlags(uint8_t aFlags)
-        : mFlags(aFlags)
-    {
+        return (aTypeId & kLengthFlag) ? sizeof(uint32_t) : sizeof(uint8_t);
     }
 
     /**
-     * This method initializes the Type ID value
+     * This static method updates a Type ID to mark it as reversed.
+     *
+     * This is used for testing only.
+     *
+     * @param[in, out] aTypeId    A reference to a Type ID variable to update.
      *
      */
-    void Init(void) { mFlags = 0; }
+    static void MarkAsReserverd(uint8_t &aTypeId) { aTypeId = (aTypeId & ~kTypeMask) | kTypeReserved; }
 
-    /**
-     * This method clears the Extended flag.
-     *
-     */
-    void ClearExtendedFlag(void) { mFlags &= ~kExtendedFlag; }
-
-    /**
-     * This method sets the Extended flag, indicating an additional second flags byte after the current 1-byte flags.
-     * MUST NOT set in Thread 1.2.1.
-     *
-     */
-    void SetExtendedFlag(void) { mFlags |= kExtendedFlag; }
-
-    /**
-     * This method indicates whether or not the Extended flag is set.
-     *
-     * @retval true   The Extended flag is set.
-     * @retval false  The Extended flag is not set.
-     *
-     */
-    bool IsExtendedFlagSet(void) const { return (mFlags & kExtendedFlag) != 0; }
-
-    /**
-     * This method clears value length flag.
-     *
-     */
-    void ClearLengthFlag(void) { mFlags &= ~kLengthFlag; }
-
-    /**
-     * This method sets the value length flag.
-     *
-     */
-    void SetLengthFlag(void) { mFlags |= kLengthFlag; }
-
-    /**
-     * This method indicates whether or not the value length flag is set.
-     *
-     * @retval true   The value length flag is set, extended value length (4 bytes)
-     * @retval false  The value length flag is not set, short value length (1 byte)
-     *
-     */
-    bool IsLengthFlagSet(void) const { return (mFlags & kLengthFlag) != 0; }
-
-    /**
-     * This method sets the Type/Average Enum.
-     *
-     * @param[in]  aTypeEnum  Type/Average Enum.
-     *
-     */
-    void SetTypeEnum(TypeEnum aTypeEnum)
-    {
-        mFlags = (mFlags & ~kTypeEnumMask) | ((aTypeEnum << kTypeEnumOffset) & kTypeEnumMask);
-    }
-
-    /**
-     * This method returns the Type/Average Enum.
-     *
-     * @returns The Type/Average Enum.
-     *
-     */
-    TypeEnum GetTypeEnum(void) const { return static_cast<TypeEnum>((mFlags & kTypeEnumMask) >> kTypeEnumOffset); }
-
-    /**
-     * This method sets the Metric Enum.
-     *
-     * @param[in]  aMetricEnum  Metric Enum.
-     *
-     */
-    void SetMetricEnum(MetricEnum aMetricEnum)
-    {
-        mFlags = (mFlags & ~kMetricEnumMask) | ((aMetricEnum << kMetricEnumOffset) & kMetricEnumMask);
-    }
-
-    /**
-     * This method returns the Metric Enum.
-     *
-     * @returns The Metric Enum.
-     *
-     */
-    MetricEnum GetMetricEnum(void) const
-    {
-        return static_cast<MetricEnum>((mFlags & kMetricEnumMask) >> kMetricEnumOffset);
-    }
-
-    /**
-     * This method returns the raw value of the entire TypeIdFlags.
-     *
-     * @returns The raw value of TypeIdFlags.
-     *
-     */
-    uint8_t GetRawValue(void) const { return mFlags; }
-
-    /**
-     * This method sets the raw value of the entire TypeIdFlags.
-     *
-     * @param[in]  aFlags  The raw flags value.
-     *
-     */
-    void SetRawValue(uint8_t aFlags) { mFlags = aFlags; }
-
-private:
-    uint8_t mFlags;
-} OT_TOOL_PACKED_END;
+    TypeId(void) = delete;
+};
 
 /**
  * This class represents the Series Flags for Forward Tracking Series.
@@ -372,10 +253,6 @@ enum EnhAckFlags : uint8_t
     kEnhAckClear    = OT_LINK_METRICS_ENH_ACK_CLEAR,    ///< Clear.
     kEnhAckRegister = OT_LINK_METRICS_ENH_ACK_REGISTER, ///< Register.
 };
-
-constexpr uint8_t kMaxTypeIdFlags = 4; ///< Maximum number of TypeIdFlags in a `Metrics`
-
-uint8_t TypeIdFlagsFromMetrics(TypeIdFlags aTypeIdFlags[], const Metrics &aMetrics);
 
 /**
  * This class represents one Series that is being tracked by the Subject.
