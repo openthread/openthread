@@ -35,8 +35,6 @@
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-#ifndef MBEDTLS_USE_TINYCRYPT
-
 #include <string.h>
 
 #include <mbedtls/ctr_drbg.h>
@@ -286,5 +284,4 @@ exit:
 } // namespace Crypto
 } // namespace ot
 
-#endif // MBEDTLS_USE_TINYCRYPT
 #endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
