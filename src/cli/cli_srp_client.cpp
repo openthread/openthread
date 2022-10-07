@@ -355,7 +355,7 @@ exit:
 
 otError SrpClient::ProcessServiceAdd(Arg aArgs[])
 {
-    // `add` <instance-name> <service-name> <port> [priority] [weight] [txt]
+    // `add` <instance-name> <service-name> <port> [priority] [weight] [txt] [lease] [key-lease]
 
     otSrpClientBuffersServiceEntry *entry = nullptr;
     uint16_t                        size;
@@ -417,7 +417,7 @@ otError SrpClient::ProcessServiceAdd(Arg aArgs[])
         SuccessOrExit(error = aArgs[5].ParseAsUint16(entry->mService.mWeight));
     }
 
-    if (!aArgs[6].IsEmpty())
+    if (!aArgs[6].IsEmpty() && (aArgs[6] != "-"))
     {
         uint8_t *txtBuffer;
 
@@ -425,11 +425,21 @@ otError SrpClient::ProcessServiceAdd(Arg aArgs[])
         entry->mTxtEntry.mValueLength = size;
 
         SuccessOrExit(error = aArgs[6].ParseAsHexString(entry->mTxtEntry.mValueLength, txtBuffer));
-        VerifyOrExit(aArgs[7].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     }
     else
     {
         entry->mService.mNumTxtEntries = 0;
+    }
+
+    if (!aArgs[7].IsEmpty())
+    {
+        SuccessOrExit(error = aArgs[7].ParseAsUint32(entry->mService.mLease));
+    }
+
+    if (!aArgs[8].IsEmpty())
+    {
+        SuccessOrExit(error = aArgs[8].ParseAsUint32(entry->mService.mKeyLease));
+        VerifyOrExit(aArgs[9].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     }
 
     SuccessOrExit(error = otSrpClientAddService(GetInstancePtr(), &entry->mService));

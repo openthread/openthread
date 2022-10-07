@@ -305,6 +305,7 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
             const uint8_t *           txtData;
             uint16_t                  txtDataLength;
             bool                      hasSubType = false;
+            otSrpServerLeaseInfo      leaseInfo;
 
             OutputLine("%s", instanceName);
             OutputLine(kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
@@ -313,6 +314,8 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
             {
                 continue;
             }
+
+            otSrpServerServiceGetLeaseInfo(service, &leaseInfo);
 
             OutputFormat(kIndentSize, "subtypes: ");
 
@@ -332,7 +335,9 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
             OutputLine(kIndentSize, "port: %hu", otSrpServerServiceGetPort(service));
             OutputLine(kIndentSize, "priority: %hu", otSrpServerServiceGetPriority(service));
             OutputLine(kIndentSize, "weight: %hu", otSrpServerServiceGetWeight(service));
-            OutputLine(kIndentSize, "ttl: %hu", otSrpServerServiceGetTtl(service));
+            OutputLine(kIndentSize, "ttl: %u", otSrpServerServiceGetTtl(service));
+            OutputLine(kIndentSize, "lease: %u", leaseInfo.mLease / 1000);
+            OutputLine(kIndentSize, "key-lease: %u", leaseInfo.mKeyLease / 1000);
 
             txtData = otSrpServerServiceGetTxtData(service, &txtDataLength);
             OutputFormat(kIndentSize, "TXT: ");

@@ -1023,6 +1023,8 @@ class NodeImpl:
                'priority': '0',
                'weight': '0',
                'ttl': '7200',
+               'lease': '7200',
+               'key-lease': '7200',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -1035,6 +1037,7 @@ class NodeImpl:
         cmd = 'srp server service'
         self.send_command(cmd)
         lines = self._expect_command_output()
+
         service_list = []
         while lines:
             service = {}
@@ -1049,8 +1052,8 @@ class NodeImpl:
                 service_list.append(service)
                 continue
 
-            # 'subtypes', port', 'priority', 'weight', 'ttl'
-            for i in range(0, 5):
+            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', and 'key-lease'
+            for i in range(0, 7):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
 
@@ -1163,11 +1166,22 @@ class NodeImpl:
         self.send_command(f'srp client host address')
         self._expect_done()
 
-    def srp_client_add_service(self, instance_name, service_name, port, priority=0, weight=0, txt_entries=[]):
+    def srp_client_add_service(self,
+                               instance_name,
+                               service_name,
+                               port,
+                               priority=0,
+                               weight=0,
+                               txt_entries=[],
+                               lease=0,
+                               key_lease=0):
         txt_record = "".join(self._encode_txt_entry(entry) for entry in txt_entries)
+        if txt_record == '':
+            txt_record = '-'
         instance_name = self._escape_escapable(instance_name)
         self.send_command(
-            f'srp client service add {instance_name} {service_name} {port} {priority} {weight} {txt_record}')
+            f'srp client service add {instance_name} {service_name} {port} {priority} {weight} {txt_record} {lease} {key_lease}'
+        )
         self._expect_done()
 
     def srp_client_remove_service(self, instance_name, service_name):
@@ -1191,6 +1205,16 @@ class NodeImpl:
 
     def srp_client_get_lease_interval(self) -> int:
         cmd = 'srp client leaseinterval'
+        self.send_command(cmd)
+        return int(self._expect_result('\d+'))
+
+    def srp_client_set_key_lease_interval(self, leaseinterval: int):
+        cmd = f'srp client keyleaseinterval {leaseinterval}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_client_get_key_lease_interval(self) -> int:
+        cmd = 'srp client keyleaseinterval'
         self.send_command(cmd)
         return int(self._expect_result('\d+'))
 
