@@ -404,7 +404,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
-    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kMlr);
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     addressesTlv.Init();

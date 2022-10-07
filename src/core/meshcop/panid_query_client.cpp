@@ -55,9 +55,7 @@ PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCallback(nullptr)
     , mContext(nullptr)
-    , mPanIdQuery(UriPath::kPanIdConflict, &PanIdQueryClient::HandleConflict, this)
 {
-    Get<Tmf::Agent>().AddResource(mPanIdQuery);
 }
 
 Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
@@ -74,7 +72,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kPanIdQuery));
+    SuccessOrExit(error = message->InitAsPost(aAddress, kUriPanIdQuery));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(
@@ -99,12 +97,8 @@ exit:
     return error;
 }
 
-void PanIdQueryClient::HandleConflict(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<PanIdQueryClient *>(aContext)->HandleConflict(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void PanIdQueryClient::HandleConflict(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void PanIdQueryClient::HandleTmf<kUriPanIdConflict>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t         panId;
     Ip6::MessageInfo responseInfo(aMessageInfo);

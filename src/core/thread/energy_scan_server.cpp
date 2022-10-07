@@ -43,7 +43,6 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -58,17 +57,11 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
     , mCount(0)
     , mReportMessage(nullptr)
     , mTimer(aInstance)
-    , mEnergyScan(UriPath::kEnergyScan, &EnergyScanServer::HandleRequest, this)
 {
-    Get<Tmf::Agent>().AddResource(mEnergyScan);
 }
 
-void EnergyScanServer::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<EnergyScanServer *>(aContext)->HandleRequest(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint8_t                 count;
     uint16_t                period;
@@ -86,7 +79,7 @@ void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::Message
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
     FreeMessage(mReportMessage);
-    mReportMessage = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kEnergyReport);
+    mReportMessage = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriEnergyReport);
     VerifyOrExit(mReportMessage != nullptr);
 
     channelMaskTlv.Init();

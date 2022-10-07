@@ -36,11 +36,11 @@
 
 #include "openthread-core-config.h"
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/announce_sender.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -50,6 +50,8 @@ namespace ot {
  */
 class AnnounceBeginServer : public AnnounceSenderBase
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This constructor initializes the object.
@@ -72,13 +74,12 @@ private:
     static constexpr uint16_t kDefaultPeriod = 1000;
     static constexpr uint16_t kDefaultJitter = 0;
 
-    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
-
-    Coap::Resource mAnnounceBegin;
 };
+
+DeclareTmfHandler(AnnounceBeginServer, kUriAnnounceBegin);
 
 /**
  * @}

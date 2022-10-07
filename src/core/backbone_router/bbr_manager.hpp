@@ -49,6 +49,7 @@
 #include "common/non_copyable.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -61,6 +62,7 @@ namespace BackboneRouter {
 class Manager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -171,14 +173,9 @@ public:
 private:
     static constexpr uint32_t kTimerInterval = 1000;
 
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    static void HandleMulticastListenerRegistration(void *               aContext,
-                                                    otMessage *          aMessage,
-                                                    const otMessageInfo *aMessageInfo)
-    {
-        static_cast<Manager *>(aContext)->HandleMulticastListenerRegistration(
-            *static_cast<const Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-    }
     void HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendMulticastListenerRegistrationResponse(const Coap::Message &      aMessage,
@@ -192,11 +189,6 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    static void HandleDuaRegistration(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-    {
-        static_cast<Manager *>(aContext)->HandleDuaRegistration(*static_cast<const Coap::Message *>(aMessage),
-                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-    }
     void        HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleBackboneQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -232,11 +224,7 @@ private:
 
     using BbrTimer = TimerMilliIn<Manager, &Manager::HandleTimer>;
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    Coap::Resource mMulticastListenerRegistration;
-#endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    Coap::Resource mDuaRegistration;
     Coap::Resource mBackboneQuery;
     Coap::Resource mBackboneAnswer;
     NdProxyTable   mNdProxyTable;

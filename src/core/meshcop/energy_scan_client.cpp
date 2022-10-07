@@ -57,9 +57,7 @@ EnergyScanClient::EnergyScanClient(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCallback(nullptr)
     , mContext(nullptr)
-    , mEnergyScan(UriPath::kEnergyReport, &EnergyScanClient::HandleReport, this)
 {
-    Get<Tmf::Agent>().AddResource(mEnergyScan);
 }
 
 Error EnergyScanClient::SendQuery(uint32_t                           aChannelMask,
@@ -78,7 +76,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kEnergyScan));
+    SuccessOrExit(error = message->InitAsPost(aAddress, kUriEnergyScan));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(
@@ -105,12 +103,8 @@ exit:
     return error;
 }
 
-void EnergyScanClient::HandleReport(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<EnergyScanClient *>(aContext)->HandleReport(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint32_t               mask;
     MeshCoP::EnergyListTlv energyListTlv;

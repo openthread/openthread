@@ -67,12 +67,10 @@ Joiner::Joiner(Instance &aInstance)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
-    , mJoinerEntrust(UriPath::kJoinerEntrust, &Joiner::HandleJoinerEntrust, this)
 {
     SetIdFromIeeeEui64();
     mDiscerner.Clear();
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
-    Get<Tmf::Agent>().AddResource(mJoinerEntrust);
 }
 
 void Joiner::SetIdFromIeeeEui64(void)
@@ -442,7 +440,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     VendorStackVersionTlv vendorStackVersionTlv;
     ProvisioningUrlTlv    provisioningUrlTlv;
 
-    mFinalizeMessage = Get<Coap::CoapSecure>().NewPriorityConfirmablePostMessage(UriPath::kJoinerFinalize);
+    mFinalizeMessage = Get<Coap::CoapSecure>().NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
@@ -557,12 +555,7 @@ exit:
     IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
 }
 
-void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Joiner *>(aContext)->HandleJoinerEntrust(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error         error;
     Dataset::Info datasetInfo;
