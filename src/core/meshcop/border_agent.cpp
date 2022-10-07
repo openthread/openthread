@@ -468,7 +468,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("Sent to joiner router request on %s", kUriRelayTx);
+    LogInfo("Sent to joiner router request on RelayTx (c/tx)");
 
 exit:
     FreeMessageOnError(message, error);
