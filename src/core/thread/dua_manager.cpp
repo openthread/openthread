@@ -595,7 +595,7 @@ void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Message &aMessage, c
 
 exit:
     OT_UNUSED_VARIABLE(error);
-    LogInfo("Received DUA.ntf: %d", ErrorToString(error));
+    LogInfo("Received DUA.ntf: %s", ErrorToString(error));
 }
 
 Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
