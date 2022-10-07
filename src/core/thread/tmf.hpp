@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
@@ -192,6 +193,33 @@ private:
 
     static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
+
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+
+/**
+ * This class implements functionality of the secure TMF agent.
+ *
+ */
+class SecureAgent : public Coap::CoapSecure
+{
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     *
+     */
+    explicit SecureAgent(Instance &aInstance);
+
+private:
+    static bool HandleResource(CoapBase &              aCoapBase,
+                               const char *            aUriPath,
+                               Message &               aMessage,
+                               const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+};
+
+#endif
 
 } // namespace Tmf
 } // namespace ot

@@ -145,7 +145,7 @@ Instance::Instance(void)
     , mCommissioner(*this)
 #endif
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
-    , mCoapSecure(*this)
+    , mTmfSecureAgent(*this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
@@ -390,8 +390,8 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
     Get<Tmf::Agent>().GetCachedResponses().GetInfo(aInfo.mCoapQueue);
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
-    Get<Coap::CoapSecure>().GetRequestMessages().GetInfo(aInfo.mCoapSecureQueue);
-    Get<Coap::CoapSecure>().GetCachedResponses().GetInfo(aInfo.mCoapSecureQueue);
+    Get<Tmf::SecureAgent>().GetRequestMessages().GetInfo(aInfo.mCoapSecureQueue);
+    Get<Tmf::SecureAgent>().GetCachedResponses().GetInfo(aInfo.mCoapSecureQueue);
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE

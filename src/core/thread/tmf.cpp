@@ -228,5 +228,65 @@ exit:
     return isTmf;
 }
 
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+
+SecureAgent::SecureAgent(Instance &aInstance)
+    : Coap::CoapSecure(aInstance)
+{
+    SetResourceHandler(&HandleResource);
+}
+
+bool SecureAgent::HandleResource(CoapBase &              aCoapBase,
+                                 const char *            aUriPath,
+                                 Message &               aMessage,
+                                 const Ip6::MessageInfo &aMessageInfo)
+{
+    return static_cast<SecureAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+}
+
+bool SecureAgent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    bool didHandle = true;
+    Uri  uri       = UriFromPath(aUriPath);
+
+#define Case(kUri, Type)                                     \
+    case kUri:                                               \
+        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+        break
+
+    switch (uri)
+    {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+        Case(kUriJoinerFinalize, MeshCoP::Commissioner);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+        Case(kUriCommissionerPetition, MeshCoP::BorderAgent);
+        Case(kUriCommissionerKeepAlive, MeshCoP::BorderAgent);
+        Case(kUriRelayTx, MeshCoP::BorderAgent);
+        Case(kUriCommissionerGet, MeshCoP::BorderAgent);
+        Case(kUriCommissionerSet, MeshCoP::BorderAgent);
+        Case(kUriActiveGet, MeshCoP::BorderAgent);
+        Case(kUriActiveSet, MeshCoP::BorderAgent);
+        Case(kUriPendingGet, MeshCoP::BorderAgent);
+        Case(kUriPendingSet, MeshCoP::BorderAgent);
+        Case(kUriProxyTx, MeshCoP::BorderAgent);
+#endif
+
+    default:
+        didHandle = false;
+        break;
+    }
+
+#undef Case
+
+    return didHandle;
+}
+
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
+
 } // namespace Tmf
 } // namespace ot

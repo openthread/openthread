@@ -65,6 +65,7 @@ namespace MeshCoP {
 class Commissioner : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class Tmf::SecureAgent;
 
 public:
     /**
@@ -541,9 +542,6 @@ private:
     Error RemoveJoiner(const Mac::ExtAddress *aEui64, const JoinerDiscerner *aDiscerner, uint32_t aDelay);
     void  RemoveJoiner(Joiner &aJoiner, uint32_t aDelay);
 
-    void AddCoapResources(void);
-    void RemoveCoapResources(void);
-
     void HandleTimer(void);
     void HandleJoinerExpirationTimer(void);
 
@@ -574,15 +572,12 @@ private:
                                               Error                aResult);
     void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleCoapsConnected(bool aConnected, void *aContext);
-    void        HandleCoapsConnected(bool aConnected);
+    static void HandleSecureAgentConnected(bool aConnected, void *aContext);
+    void        HandleSecureAgentConnected(bool aConnected);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleJoinerFinalize(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState);
 
@@ -615,8 +610,6 @@ private:
     JoinerExpirationTimer    mJoinerExpirationTimer;
     CommissionerTimer        mTimer;
 
-    Coap::Resource mJoinerFinalize;
-
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient    mEnergyScan;
     PanIdQueryClient    mPanIdQuery;
@@ -635,6 +628,7 @@ private:
 
 DeclareTmfHandler(Commissioner, kUriDatasetChanged);
 DeclareTmfHandler(Commissioner, kUriRelayRx);
+DeclareTmfHandler(Commissioner, kUriJoinerFinalize);
 
 } // namespace MeshCoP
 
