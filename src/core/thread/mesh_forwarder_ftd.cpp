@@ -959,7 +959,7 @@ void MeshForwarder::GetForwardFramePriority(const FrameData &     aFrameData,
 exit:
     if (error != kErrorNone)
     {
-        LogNote("Failed to get forwarded frame priority, error:%s, len:%d, src:%d, dst:%s", ErrorToString(error),
+        LogNote("Failed to get forwarded frame priority, error:%s, len:%d, src:%s, dst:%s", ErrorToString(error),
                 frameData.GetLength(), aMeshAddrs.mSource.ToString().AsCString(),
                 aMeshAddrs.mDestination.ToString().AsCString());
     }
