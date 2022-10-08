@@ -158,11 +158,7 @@ private:
                                    Error                aResult);
     void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
 
-    Error       ForwardToLeader(const Coap::Message &   aMessage,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                Uri                     aUri,
-                                bool                    aPetition,
-                                bool                    aSeparate);
+    Error       ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
     Error       ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {

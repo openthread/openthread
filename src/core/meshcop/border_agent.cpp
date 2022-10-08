@@ -380,39 +380,39 @@ exit:
 template <>
 void BorderAgent::HandleTmf<kUriCommissionerPetition>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderPetition, true, true));
+    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderPetition));
 }
 
 template <>
 void BorderAgent::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerGet, false, false));
+    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerGet));
 }
 
 template <>
 void BorderAgent::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerSet, false, false));
+    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriCommissionerSet));
 }
 
 template <> void BorderAgent::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriActiveGet, false, false));
+    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriActiveGet));
 }
 
 template <> void BorderAgent::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriActiveSet, false, false));
+    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriActiveSet));
 }
 
 template <> void BorderAgent::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriPendingGet, false, false));
+    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriPendingGet));
 }
 
 template <> void BorderAgent::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriPendingSet, false, false));
+    IgnoreError(ForwardToLeader(aMessage, aMessageInfo, kUriPendingSet));
 }
 
 template <>
@@ -420,7 +420,7 @@ void BorderAgent::HandleTmf<kUriCommissionerKeepAlive>(Coap::Message &aMessage, 
 {
     VerifyOrExit(mState != kStateStopped);
 
-    SuccessOrExit(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderKeepAlive, false, true));
+    SuccessOrExit(ForwardToLeader(aMessage, aMessageInfo, kUriLeaderKeepAlive));
     mTimer.Start(kKeepAliveTimeout);
 
 exit:
@@ -462,21 +462,32 @@ exit:
     LogError("send to joiner router request RelayTx (c/tx)", error);
 }
 
-Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   Uri                     aUri,
-                                   bool                    aPetition,
-                                   bool                    aSeparate)
+Error BorderAgent::ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri)
 {
     Error            error          = kErrorNone;
     ForwardContext * forwardContext = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message *  message = nullptr;
-    uint16_t         offset  = 0;
+    Coap::Message *  message  = nullptr;
+    uint16_t         offset   = 0;
+    bool             petition = false;
+    bool             separate = false;
 
     VerifyOrExit(mState != kStateStopped);
 
-    if (aSeparate)
+    switch (aUri)
+    {
+    case kUriLeaderPetition:
+        petition = true;
+        separate = true;
+        break;
+    case kUriLeaderKeepAlive:
+        separate = true;
+        break;
+    default:
+        break;
+    }
+
+    if (separate)
     {
         SuccessOrExit(error = Get<Tmf::SecureAgent>().SendAck(aMessage, aMessageInfo));
     }
@@ -484,7 +495,7 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     forwardContext = static_cast<ForwardContext *>(Heap::CAlloc(1, sizeof(ForwardContext)));
     VerifyOrExit(forwardContext != nullptr, error = kErrorNoBufs);
 
-    forwardContext->Init(GetInstance(), aMessage, aPetition, aSeparate);
+    forwardContext->Init(GetInstance(), aMessage, petition, separate);
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(aUri);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -514,7 +525,7 @@ exit:
         }
 
         FreeMessage(message);
-        SendErrorMessage(aMessage, aSeparate, error);
+        SendErrorMessage(aMessage, separate, error);
     }
 
     return error;
