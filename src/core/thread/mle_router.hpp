@@ -38,7 +38,6 @@
 
 #include <openthread/thread_ftd.h>
 
-#include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
@@ -52,6 +51,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/router_table.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -77,6 +77,7 @@ class MleRouter : public Mle
     friend class Mle;
     friend class ot::Instance;
     friend class ot::TimeTicker;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -638,10 +639,8 @@ private:
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult);
     void HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-    static void HandleAddressRelease(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleAddressRelease(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static bool IsSingleton(const RouteTlv &aRouteTlv);
 
@@ -659,9 +658,6 @@ private:
     void        HandleTimeTick(void);
 
     TrickleTimer mAdvertiseTrickleTimer;
-
-    Coap::Resource mAddressSolicit;
-    Coap::Resource mAddressRelease;
 
     ChildTable  mChildTable;
     RouterTable mRouterTable;
@@ -711,6 +707,9 @@ private:
     otThreadDiscoveryRequestCallback mDiscoveryRequestCallback;
     void *                           mDiscoveryRequestCallbackContext;
 };
+
+DeclareTmfHandler(MleRouter, kUriAddressSolicit);
+DeclareTmfHandler(MleRouter, kUriAddressRelease);
 
 #endif // OPENTHREAD_FTD
 

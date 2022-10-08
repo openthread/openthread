@@ -278,8 +278,7 @@ void DatasetManager::SendSet(void)
         }
     }
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? UriPath::kActiveSet
-                                                                                    : UriPath::kPendingSet);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet : kUriPendingSet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     IgnoreError(Read(dataset));
@@ -481,8 +480,7 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &    aDatasetInfo,
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? UriPath::kActiveSet
-                                                                                    : UriPath::kPendingSet);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet : kUriPendingSet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
@@ -606,8 +604,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? UriPath::kActiveGet
-                                                                                    : UriPath::kPendingGet);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveGet : kUriPendingGet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aLength + length > 0)
@@ -646,12 +643,7 @@ exit:
 
 ActiveDatasetManager::ActiveDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kActive, ActiveDatasetManager::HandleTimer)
-    , mResourceGet(UriPath::kActiveGet, &ActiveDatasetManager::HandleGet, this)
-#if OPENTHREAD_FTD
-    , mResourceSet(UriPath::kActiveSet, &ActiveDatasetManager::HandleSet, this)
-#endif
 {
-    Get<Tmf::Agent>().AddResource(mResourceGet);
 }
 
 bool ActiveDatasetManager::IsPartiallyComplete(void) const
@@ -689,12 +681,8 @@ exit:
     return error;
 }
 
-void ActiveDatasetManager::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<ActiveDatasetManager *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void ActiveDatasetManager::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+template <>
+void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     DatasetManager::HandleGet(aMessage, aMessageInfo);
 }
@@ -706,13 +694,8 @@ void ActiveDatasetManager::HandleTimer(Timer &aTimer)
 
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
-    , mDelayTimer(aInstance, PendingDatasetManager::HandleDelayTimer)
-    , mResourceGet(UriPath::kPendingGet, &PendingDatasetManager::HandleGet, this)
-#if OPENTHREAD_FTD
-    , mResourceSet(UriPath::kPendingSet, &PendingDatasetManager::HandleSet, this)
-#endif
+    , mDelayTimer(aInstance)
 {
-    Get<Tmf::Agent>().AddResource(mResourceGet);
 }
 
 void PendingDatasetManager::Clear(void)
@@ -804,11 +787,6 @@ void PendingDatasetManager::StartDelayTimer(void)
     }
 }
 
-void PendingDatasetManager::HandleDelayTimer(Timer &aTimer)
-{
-    aTimer.Get<PendingDatasetManager>().HandleDelayTimer();
-}
-
 void PendingDatasetManager::HandleDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
@@ -842,12 +820,8 @@ exit:
     return;
 }
 
-void PendingDatasetManager::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<PendingDatasetManager *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void PendingDatasetManager::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
+template <>
+void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     DatasetManager::HandleGet(aMessage, aMessageInfo);
 }

@@ -226,7 +226,7 @@ Error Dtls::Bind(uint16_t aPort)
     VerifyOrExit(mState == kStateOpen, error = kErrorInvalidState);
     VerifyOrExit(mTransportCallback == nullptr, error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Bind(aPort, OT_NETIF_UNSPECIFIED));
+    SuccessOrExit(error = mSocket.Bind(aPort, Ip6::kNetifUnspecified));
 
 exit:
     return error;

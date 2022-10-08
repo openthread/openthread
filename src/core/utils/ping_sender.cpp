@@ -91,7 +91,7 @@ PingSender::PingSender(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIdentifier(0)
     , mTargetEchoSequence(0)
-    , mTimer(aInstance, PingSender::HandleTimer)
+    , mTimer(aInstance)
     , mIcmpHandler(PingSender::HandleIcmpReceive, this)
 {
     IgnoreError(Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler));
@@ -167,11 +167,6 @@ exit:
     {
         mTimer.Start(mConfig.mTimeout);
     }
-}
-
-void PingSender::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<PingSender>().HandleTimer();
 }
 
 void PingSender::HandleTimer(void)

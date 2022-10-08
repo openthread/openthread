@@ -286,14 +286,15 @@ private:
         uint8_t  mLifetime;
     };
 
-    static void HandleSeedSetTimer(Timer &aTimer);
-    void        HandleSeedSetTimer(void);
+    void HandleSeedSetTimer(void);
 
     Error UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
 
+    using SeedSetTimer = TimerMilliIn<Mpl, &Mpl::HandleSeedSetTimer>;
+
     SeedEntry      mSeedSet[kNumSeedEntries];
     const Address *mMatchingAddress;
-    TimerMilli     mSeedSetTimer;
+    SeedSetTimer   mSeedSetTimer;
     uint16_t       mSeedId;
     uint8_t        mSequence;
 
@@ -313,13 +314,14 @@ private:
         uint8_t   mIntervalOffset;
     };
 
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    void        HandleRetransmissionTimer(void);
+    void HandleRetransmissionTimer(void);
 
     void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
+    using RetxTimer = TimerMilliIn<Mpl, &Mpl::HandleRetransmissionTimer>;
+
     MessageQueue mBufferedMessageSet;
-    TimerMilli   mRetransmissionTimer;
+    RetxTimer    mRetransmissionTimer;
     uint8_t      mTimerExpirations;
 #endif // OPENTHREAD_FTD
 };

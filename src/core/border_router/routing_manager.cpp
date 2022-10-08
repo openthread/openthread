@@ -75,8 +75,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mNat64PrefixManager(aInstance)
 #endif
     , mRsSender(aInstance)
-    , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
-    , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
+    , mDiscoveredPrefixStaleTimer(aInstance)
+    , mRoutingPolicyTimer(aInstance)
 {
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
@@ -919,20 +919,10 @@ void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
     ScheduleRoutingPolicyEvaluation(kImmediately);
 }
 
-void RoutingManager::HandleDiscoveredPrefixStaleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().HandleDiscoveredPrefixStaleTimer();
-}
-
 void RoutingManager::HandleDiscoveredPrefixStaleTimer(void)
 {
     LogInfo("Stale On-Link or OMR Prefixes or RA messages are detected");
     mRsSender.Start();
-}
-
-void RoutingManager::HandleRoutingPolicyTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().EvaluateRoutingPolicy();
 }
 
 void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
@@ -1172,7 +1162,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 
 RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
     , mSignalTask(aInstance)
     , mAllowDefaultRouteInNetData(false)
 {
@@ -1640,11 +1630,6 @@ void RoutingManager::DiscoveredPrefixTable::UnpublishEntry(const Entry &aEntry)
     Get<RoutingManager>().UnpublishExternalRoute(aEntry.GetPrefix());
 }
 
-void RoutingManager::DiscoveredPrefixTable::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mDiscoveredPrefixTable.HandleTimer();
-}
-
 void RoutingManager::DiscoveredPrefixTable::HandleTimer(void)
 {
     RemoveExpiredEntries();
@@ -1987,7 +1972,7 @@ exit:
 RoutingManager::LocalOnLinkPrefix::LocalOnLinkPrefix(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kIdle)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
     mPrefix.Clear();
     mOldPrefix.Clear();
@@ -2166,11 +2151,6 @@ void RoutingManager::LocalOnLinkPrefix::HandleExtPanIdChange(void)
     Generate();
 }
 
-void RoutingManager::LocalOnLinkPrefix::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mLocalOnLinkPrefix.HandleTimer();
-}
-
 void RoutingManager::LocalOnLinkPrefix::HandleTimer(void)
 {
     TimeMilli now = TimerMilli::GetNow();
@@ -2254,7 +2234,7 @@ void RoutingManager::OnMeshPrefixArray::MarkAsDeleted(const OnMeshPrefix &aPrefi
 RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
     mInfraIfPrefix.Clear();
     mLocalPrefix.Clear();
@@ -2391,11 +2371,6 @@ exit:
     return;
 }
 
-void RoutingManager::Nat64PrefixManager::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mNat64PrefixManager.HandleTimer();
-}
-
 void RoutingManager::Nat64PrefixManager::HandleTimer(void)
 {
     OT_ASSERT(mEnabled);
@@ -2453,7 +2428,7 @@ exit:
 RoutingManager::RsSender::RsSender(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTxCount(0)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
 }
 
@@ -2489,11 +2464,6 @@ Error RoutingManager::RsSender::SendRs(void)
     destAddress.SetToLinkLocalAllRoutersMulticast();
 
     return Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
-}
-
-void RoutingManager::RsSender::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mRsSender.HandleTimer();
 }
 
 void RoutingManager::RsSender::HandleTimer(void)

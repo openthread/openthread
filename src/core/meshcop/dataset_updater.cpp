@@ -50,7 +50,7 @@ DatasetUpdater::DatasetUpdater(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCallback(nullptr)
     , mCallbackContext(nullptr)
-    , mTimer(aInstance, DatasetUpdater::HandleTimer)
+    , mTimer(aInstance)
     , mDataset(nullptr)
 {
 }
@@ -92,11 +92,6 @@ void DatasetUpdater::CancelUpdate(void)
 
 exit:
     return;
-}
-
-void DatasetUpdater::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<DatasetUpdater>().HandleTimer();
 }
 
 void DatasetUpdater::HandleTimer(void)

@@ -40,7 +40,6 @@
 
 #include <openthread/joiner.h>
 
-#include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
@@ -53,6 +52,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/discover_scanner.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -60,6 +60,8 @@ namespace MeshCoP {
 
 class Joiner : public InstanceLocator, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This enumeration type defines the Joiner State.
@@ -205,11 +207,9 @@ private:
                                              Error                aResult);
     void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void    SetState(State aState);
     void    SetIdFromIeeeEui64(void);
@@ -232,6 +232,8 @@ private:
     void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
 #endif
 
+    using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
+
     Mac::ExtAddress mId;
     JoinerDiscerner mDiscerner;
 
@@ -245,9 +247,10 @@ private:
 
     Coap::Message *mFinalizeMessage;
 
-    TimerMilli     mTimer;
-    Coap::Resource mJoinerEntrust;
+    JoinerTimer mTimer;
 };
+
+DeclareTmfHandler(Joiner, kUriJoinerEntrust);
 
 } // namespace MeshCoP
 

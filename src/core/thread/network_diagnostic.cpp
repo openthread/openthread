@@ -50,7 +50,6 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
-#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -60,17 +59,9 @@ namespace NetworkDiagnostic {
 
 NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mDiagnosticGetRequest(UriPath::kDiagnosticGetRequest, &NetworkDiagnostic::HandleDiagnosticGetRequest, this)
-    , mDiagnosticGetQuery(UriPath::kDiagnosticGetQuery, &NetworkDiagnostic::HandleDiagnosticGetQuery, this)
-    , mDiagnosticGetAnswer(UriPath::kDiagnosticGetAnswer, &NetworkDiagnostic::HandleDiagnosticGetAnswer, this)
-    , mDiagnosticReset(UriPath::kDiagnosticReset, &NetworkDiagnostic::HandleDiagnosticReset, this)
     , mReceiveDiagnosticGetCallback(nullptr)
     , mReceiveDiagnosticGetCallbackContext(nullptr)
 {
-    Get<Tmf::Agent>().AddResource(mDiagnosticGetRequest);
-    Get<Tmf::Agent>().AddResource(mDiagnosticGetQuery);
-    Get<Tmf::Agent>().AddResource(mDiagnosticGetAnswer);
-    Get<Tmf::Agent>().AddResource(mDiagnosticReset);
 }
 
 Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDestination,
@@ -86,13 +77,13 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
 
     if (aDestination.IsMulticast())
     {
-        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(UriPath::kDiagnosticGetQuery);
+        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(kUriDiagnosticGetQuery);
         messageInfo.SetMulticastLoop(true);
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
-        message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticGetRequest);
+        message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetRequest);
     }
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -153,15 +144,9 @@ exit:
     return;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetAnswer(void *               aContext,
-                                                  otMessage *          aMessage,
-                                                  const otMessageInfo *aMessageInfo)
-{
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetAnswer(AsCoapMessage(aMessage),
-                                                                          AsCoreType(aMessageInfo));
-}
-
-void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message &         aMessage,
+                                                           const Ip6::MessageInfo &aMessageInfo)
 {
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
@@ -450,13 +435,8 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetQuery(AsCoapMessage(aMessage),
-                                                                         AsCoreType(aMessageInfo));
-}
-
-void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                error   = kErrorNone;
     Coap::Message *      message = nullptr;
@@ -480,7 +460,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
         }
     }
 
-    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticGetAnswer);
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aMessageInfo.GetPeerAddr().IsLinkLocal())
@@ -504,15 +484,9 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetRequest(void *               aContext,
-                                                   otMessage *          aMessage,
-                                                   const otMessageInfo *aMessageInfo)
-{
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGetRequest(AsCoapMessage(aMessage),
-                                                                           AsCoreType(aMessageInfo));
-}
-
-void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message &         aMessage,
+                                                            const Ip6::MessageInfo &aMessageInfo)
 {
     Error                error   = kErrorNone;
     Coap::Message *      message = nullptr;
@@ -548,7 +522,7 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     Coap::Message *  message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
 
-    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticReset);
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticReset);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aCount > 0)
@@ -576,13 +550,8 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticReset(AsCoapMessage(aMessage),
-                                                                      AsCoreType(aMessageInfo));
-}
-
-void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void NetworkDiagnostic::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t             offset = 0;
     uint8_t              type;

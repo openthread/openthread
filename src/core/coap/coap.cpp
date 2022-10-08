@@ -59,6 +59,7 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     , mResponsesQueue(aInstance)
     , mDefaultHandler(nullptr)
     , mDefaultHandlerContext(nullptr)
+    , mResourceHandler(nullptr)
     , mSender(aSender)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     , mLastResponse(nullptr)
@@ -139,24 +140,24 @@ exit:
     return message;
 }
 
-Message *CoapBase::NewPriorityConfirmablePostMessage(const char *aUriPath)
+Message *CoapBase::NewPriorityConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUriPath);
+    return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUri);
 }
 
-Message *CoapBase::NewConfirmablePostMessage(const char *aUriPath)
+Message *CoapBase::NewConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewMessage(), kTypeConfirmable, aUriPath);
+    return InitMessage(NewMessage(), kTypeConfirmable, aUri);
 }
 
-Message *CoapBase::NewPriorityNonConfirmablePostMessage(const char *aUriPath)
+Message *CoapBase::NewPriorityNonConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewPriorityMessage(), kTypeNonConfirmable, aUriPath);
+    return InitMessage(NewPriorityMessage(), kTypeNonConfirmable, aUri);
 }
 
-Message *CoapBase::NewNonConfirmablePostMessage(const char *aUriPath)
+Message *CoapBase::NewNonConfirmablePostMessage(Uri aUri)
 {
-    return InitMessage(NewMessage(), kTypeNonConfirmable, aUriPath);
+    return InitMessage(NewMessage(), kTypeNonConfirmable, aUri);
 }
 
 Message *CoapBase::NewPriorityResponseMessage(const Message &aRequest)
@@ -169,13 +170,13 @@ Message *CoapBase::NewResponseMessage(const Message &aRequest)
     return InitResponse(NewMessage(), aRequest);
 }
 
-Message *CoapBase::InitMessage(Message *aMessage, Type aType, const char *aUriPath)
+Message *CoapBase::InitMessage(Message *aMessage, Type aType, Uri aUri)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(aMessage != nullptr);
 
-    SuccessOrExit(error = aMessage->Init(aType, kCodePost, aUriPath));
+    SuccessOrExit(error = aMessage->Init(aType, kCodePost, aUri));
     SuccessOrExit(error = aMessage->SetPayloadMarker());
 
 exit:
@@ -1433,6 +1434,12 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
+    if ((mResourceHandler != nullptr) && mResourceHandler(*this, uriPath, aMessage, aMessageInfo))
+    {
+        error = kErrorNone;
+        ExitNow();
+    }
+
     for (const Resource &resource : mResources)
     {
         if (strcmp(resource.mUriPath, uriPath) == 0)
@@ -1695,13 +1702,30 @@ const otCoapTxParameters TxParameters::kDefaultTxParameters = {
     kDefaultMaxRetransmit,
 };
 
+//----------------------------------------------------------------------------------------------------------------------
+
+Resource::Resource(const char *aUriPath, RequestHandler aHandler, void *aContext)
+{
+    mUriPath = aUriPath;
+    mHandler = aHandler;
+    mContext = aContext;
+    mNext    = nullptr;
+}
+
+Resource::Resource(Uri aUri, RequestHandler aHandler, void *aContext)
+    : Resource(PathForUri(aUri), aHandler, aContext)
+{
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 Coap::Coap(Instance &aInstance)
     : CoapBase(aInstance, &Coap::Send)
     , mSocket(aInstance)
 {
 }
 
-Error Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
+Error Coap::Start(uint16_t aPort, Ip6::NetifIdentifier aNetifIdentifier)
 {
     Error error        = kErrorNone;
     bool  socketOpened = false;

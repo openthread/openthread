@@ -72,7 +72,7 @@ static_assert(offsetof(Tcp::Listener, mTcbListen) == 0, "mTcbListen field in otT
 
 Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, Tcp::HandleTimer)
+    , mTimer(aInstance)
     , mTasklet(aInstance)
     , mEphemeralPort(kDynamicPortMin)
 {
@@ -849,20 +849,13 @@ exit:
     return success;
 }
 
-void Tcp::HandleTimer(Timer &aTimer)
-{
-    OT_ASSERT(&aTimer == &aTimer.Get<Tcp>().mTimer);
-    LogDebg("Main TCP timer expired");
-    aTimer.Get<Tcp>().ProcessTimers();
-}
-
-void Tcp::ProcessTimers(void)
+void Tcp::HandleTimer(void)
 {
     TimeMilli now = TimerMilli::GetNow();
     bool      pendingTimer;
     TimeMilli earliestPendingTimerExpiry;
 
-    OT_ASSERT(!mTimer.IsRunning());
+    LogDebg("Main TCP timer expired");
 
     /*
      * The timer callbacks could potentially set/reset/cancel timers.

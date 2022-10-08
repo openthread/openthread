@@ -269,17 +269,45 @@ public:
         uint8_t GetNumTxtEntries(void) const { return mNumTxtEntries; }
 
         /**
-         * This method get the state of service.
+         * This method gets the state of service.
          *
          * @returns The service state.
          *
          */
         ItemState GetState(void) const { return static_cast<ItemState>(mState); }
 
+        /**
+         * This method gets the desired lease interval to request when registering this service.
+         *
+         * @returns The desired lease interval in sec. Zero indicates to use default.
+         *
+         */
+        uint32_t GetLease(void) const { return (mLease & kLeaseMask); }
+
+        /**
+         * This method gets the desired key lease interval to request when registering this service.
+         *
+         * @returns The desired lease interval in sec. Zero indicates to use default.
+         *
+         */
+        uint32_t GetKeyLease(void) const { return mKeyLease; }
+
     private:
+        // We use the high (MSB) bit of `mLease` as flag to indicate
+        // whether or not the service is appended in the message.
+        // This is then used when updating the service state. Note that
+        // we guarantee that `mLease` is not greater than `kMaxLease`
+        // which ensures that the last bit is unused.
+
+        static constexpr uint32_t kAppendedInMsgFlag = (1U << 31);
+        static constexpr uint32_t kLeaseMask         = ~kAppendedInMsgFlag;
+
         void      SetState(ItemState aState);
         TimeMilli GetLeaseRenewTime(void) const { return TimeMilli(mData); }
         void      SetLeaseRenewTime(TimeMilli aTime) { mData = aTime.GetValue(); }
+        bool      IsAppendedInMessage(void) const { return mLease & kAppendedInMsgFlag; }
+        void      MarkAsAppendedInMessage(void) { mLease |= kAppendedInMsgFlag; }
+        void      ClearAppendedInMessageFlag(void) { mLease &= ~kAppendedInMsgFlag; }
         bool      Matches(const Service &aOther) const;
         bool      Matches(ItemState aState) const { return GetState() == aState; }
     };
@@ -446,7 +474,7 @@ public:
      * @returns The TTL (in seconds).
      *
      */
-    uint32_t GetTtl(void) const { return (0 < mTtl && mTtl < mLeaseInterval) ? mTtl : mLeaseInterval; }
+    uint32_t GetTtl(void) const { return mTtl; }
 
     /**
      * This method sets the TTL used in SRP update requests.
@@ -469,7 +497,7 @@ public:
      * @returns The lease interval (in seconds).
      *
      */
-    uint32_t GetLeaseInterval(void) const { return mLeaseInterval; }
+    uint32_t GetLeaseInterval(void) const { return mDefaultLease; }
 
     /**
      * This method sets the lease interval used in SRP update requests.
@@ -480,7 +508,7 @@ public:
      * @param[in] aInterval  The lease interval (in seconds). If zero, the default value `kDefaultLease` would be used.
      *
      */
-    void SetLeaseInterval(uint32_t aInterval) { mLeaseInterval = GetBoundedLeaseInterval(aInterval, kDefaultLease); }
+    void SetLeaseInterval(uint32_t aInterval) { mDefaultLease = DetermineLeaseInterval(aInterval, kDefaultLease); }
 
     /**
      * This method gets the key lease interval used in SRP update requests.
@@ -488,7 +516,7 @@ public:
      * @returns The key lease interval (in seconds).
      *
      */
-    uint32_t GetKeyLeaseInterval(void) const { return mKeyLeaseInterval; }
+    uint32_t GetKeyLeaseInterval(void) const { return mDefaultKeyLease; }
 
     /**
      * This method sets the key lease interval used in SRP update requests.
@@ -502,7 +530,7 @@ public:
      */
     void SetKeyLeaseInterval(uint32_t aInterval)
     {
-        mKeyLeaseInterval = GetBoundedLeaseInterval(aInterval, kDefaultKeyLease);
+        mDefaultKeyLease = DetermineLeaseInterval(aInterval, kDefaultKeyLease);
     }
 
     /**
@@ -851,6 +879,8 @@ private:
     // Port number to use when server is discovered using "network data anycast service".
     static constexpr uint16_t kAnycastServerPort = 53;
 
+    static constexpr uint32_t kUnspecifiedInterval = 0; // Used for lease/key-lease intervals.
+
     // This enumeration type is used by the private `Start()` and
     // `Stop()` methods to indicate whether it is being requested by the
     // user or by the auto-start feature.
@@ -870,24 +900,11 @@ private:
         kKeepRetryInterval,
     };
 
-    class SingleServiceMode
+    // Used in `ChangeHostAndServiceStates()`
+    enum ServiceStateChangeMode : uint8_t
     {
-    public:
-        SingleServiceMode(void)
-            : mEnabled(false)
-            , mService(nullptr)
-        {
-        }
-
-        void     Enable(void) { mEnabled = true, mService = nullptr; }
-        void     Disable(void) { mEnabled = false; }
-        bool     IsEnabled(void) const { return mEnabled; }
-        Service *GetService(void) { return mService; }
-        void     SetService(Service &aService) { mService = &aService; }
-
-    private:
-        bool     mEnabled;
-        Service *mService;
+        kForAllServices,
+        kForServicesAppendedInMessage,
     };
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
@@ -958,20 +975,22 @@ private:
     void         UpdateServiceStateToRemove(Service &aService);
     State        GetState(void) const { return mState; }
     void         SetState(State aState);
-    void         ChangeHostAndServiceStates(const ItemState *aNewStates);
+    void         ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
     void         InvokeCallback(Error aError) const;
     void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
     void         HandleHostInfoOrServiceChange(void);
     void         SendUpdate(void);
     Error        PrepareUpdateMessage(Message &aMessage);
     Error        ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
-    Error        AppendServiceInstructions(Service &aService, Message &aMessage, Info &aInfo);
+    Error        AppendServiceInstructions(Message &aMessage, Info &aInfo);
+    bool         CanAppendService(const Service &aService);
+    Error        AppendServiceInstruction(Service &aService, Message &aMessage, Info &aInfo);
     Error        AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo);
     Error        AppendKeyRecord(Message &aMessage, Info &aInfo) const;
     Error        AppendDeleteAllRrsets(Message &aMessage) const;
     Error        AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress = false) const;
     Error        AppendAaaaRecord(const Ip6::Address &aAddress, Message &aMessage, Info &aInfo) const;
-    Error        AppendUpdateLeaseOptRecord(Message &aMessage) const;
+    Error        AppendUpdateLeaseOptRecord(Message &aMessage);
     Error        AppendSignature(Message &aMessage, Info &aInfo);
     void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
     static void  HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -984,9 +1003,9 @@ private:
     uint32_t     GetRetryWaitInterval(void) const { return mRetryWaitInterval; }
     void         ResetRetryWaitInterval(void) { mRetryWaitInterval = kMinRetryWaitInterval; }
     void         GrowRetryWaitInterval(void);
-    uint32_t     GetBoundedLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const;
+    uint32_t     DetermineLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const;
+    uint32_t     DetermineTtl(void) const;
     bool         ShouldRenewEarly(const Service &aService) const;
-    static void  HandleTimer(Timer &aTimer);
     void         HandleTimer(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void  ProcessAutoStart(void);
@@ -1007,10 +1026,13 @@ private:
 
     static_assert(kMaxTxFailureRetries < 16, "kMaxTxFailureRetries exceed the range of mTxFailureRetryCount (4-bit)");
 
+    using DelayTimer = TimerMilliIn<Client, &Client::HandleTimer>;
+
     State   mState;
     uint8_t mTxFailureRetryCount : 4;
     bool    mShouldRemoveKeyLease : 1;
     bool    mAutoHostAddressAddedMeshLocal : 1;
+    bool    mSingleServiceMode : 1;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
 #endif
@@ -1019,10 +1041,11 @@ private:
     uint32_t mRetryWaitInterval;
 
     TimeMilli mLeaseRenewTime;
-    uint32_t  mAcceptedLeaseInterval;
     uint32_t  mTtl;
-    uint32_t  mLeaseInterval;
-    uint32_t  mKeyLeaseInterval;
+    uint32_t  mLease;
+    uint32_t  mKeyLease;
+    uint32_t  mDefaultLease;
+    uint32_t  mDefaultKeyLease;
 
     Ip6::Udp::Socket mSocket;
 
@@ -1031,8 +1054,7 @@ private:
     const char *        mDomainName;
     HostInfo            mHostInfo;
     LinkedList<Service> mServices;
-    SingleServiceMode   mSingleServiceMode;
-    TimerMilli          mTimer;
+    DelayTimer          mTimer;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     AutoStart mAutoStart;
 #endif

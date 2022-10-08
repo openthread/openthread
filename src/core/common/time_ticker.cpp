@@ -45,7 +45,7 @@ namespace ot {
 TimeTicker::TimeTicker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mReceivers(0)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
 }
 
@@ -67,11 +67,6 @@ void TimeTicker::UnregisterReceiver(Receiver aReceiver)
     {
         mTimer.Stop();
     }
-}
-
-void TimeTicker::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<TimeTicker>().HandleTimer();
 }
 
 void TimeTicker::HandleTimer(void)

@@ -80,9 +80,120 @@ void MessageInfo::SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress)
 //----------------------------------------------------------------------------------------------------------------------
 // Agent
 
+Agent::Agent(Instance &aInstance)
+    : Coap::Coap(aInstance)
+{
+    SetInterceptor(&Filter, this);
+    SetResourceHandler(&HandleResource);
+}
+
 Error Agent::Start(void)
 {
-    return Coap::Start(kUdpPort, OT_NETIF_THREAD);
+    return Coap::Start(kUdpPort, Ip6::kNetifThread);
+}
+
+template <> void Agent::HandleTmf<kUriRelayRx>(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
+    Get<MeshCoP::Commissioner>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+#endif
+}
+
+bool Agent::HandleResource(CoapBase &              aCoapBase,
+                           const char *            aUriPath,
+                           Message &               aMessage,
+                           const Ip6::MessageInfo &aMessageInfo)
+{
+    return static_cast<Agent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+}
+
+bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    bool didHandle = true;
+    Uri  uri       = UriFromPath(aUriPath);
+
+#define Case(kUri, Type)                                     \
+    case kUri:                                               \
+        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+        break
+
+    switch (uri)
+    {
+        Case(kUriAddressError, AddressResolver);
+        Case(kUriEnergyScan, EnergyScanServer);
+        Case(kUriActiveGet, MeshCoP::ActiveDatasetManager);
+        Case(kUriPendingGet, MeshCoP::PendingDatasetManager);
+
+#if OPENTHREAD_FTD
+        Case(kUriAddressQuery, AddressResolver);
+        Case(kUriAddressNotify, AddressResolver);
+        Case(kUriAddressSolicit, Mle::MleRouter);
+        Case(kUriAddressRelease, Mle::MleRouter);
+        Case(kUriActiveSet, MeshCoP::ActiveDatasetManager);
+        Case(kUriPendingSet, MeshCoP::PendingDatasetManager);
+        Case(kUriLeaderPetition, MeshCoP::Leader);
+        Case(kUriLeaderKeepAlive, MeshCoP::Leader);
+        Case(kUriServerData, NetworkData::Leader);
+        Case(kUriCommissionerGet, NetworkData::Leader);
+        Case(kUriCommissionerSet, NetworkData::Leader);
+        Case(kUriAnnounceBegin, AnnounceBeginServer);
+        Case(kUriPanIdQuery, PanIdQueryServer);
+        Case(kUriRelayTx, MeshCoP::JoinerRouter);
+#endif
+
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+        Case(kUriJoinerEntrust, MeshCoP::Joiner);
+#endif
+
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+        Case(kUriPanIdConflict, PanIdQueryClient);
+        Case(kUriEnergyReport, EnergyScanClient);
+        Case(kUriDatasetChanged, MeshCoP::Commissioner);
+        // kUriRelayRx is handled below
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
+        Case(kUriRelayRx, Agent);
+#endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+        Case(kUriDuaRegistrationNotify, DuaManager);
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+        Case(kUriAnycastLocate, AnycastLocator);
+#endif
+
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+        Case(kUriDiagnosticGetRequest, NetworkDiagnostic::NetworkDiagnostic);
+        Case(kUriDiagnosticGetQuery, NetworkDiagnostic::NetworkDiagnostic);
+        Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::NetworkDiagnostic);
+        Case(kUriDiagnosticReset, NetworkDiagnostic::NetworkDiagnostic);
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+        Case(kUriMlr, BackboneRouter::Manager);
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+        Case(kUriDuaRegistrationRequest, BackboneRouter::Manager);
+#endif
+#endif
+
+    default:
+        didHandle = false;
+        break;
+    }
+
+#undef Case
+
+    return didHandle;
 }
 
 Error Agent::Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)

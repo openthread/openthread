@@ -38,10 +38,10 @@
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -54,6 +54,8 @@ namespace ot {
  */
 class AnycastLocator : public InstanceLocator, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This function pointer type defines the callback to notify the outcome of a request.
@@ -99,17 +101,15 @@ private:
 
     void HandleResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
 
-#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE
-    static void HandleAnycastLocate(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleAnycastLocate(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
-#endif
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Callback mCallback;
     void *   mContext;
-#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE
-    Coap::Resource mAnycastLocate;
-#endif
 };
+
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE
+DeclareTmfHandler(AnycastLocator, kUriAnycastLocate);
+#endif
 
 } // namespace ot
 

@@ -57,12 +57,10 @@ RegisterLogModule("JoinerRouter");
 JoinerRouter::JoinerRouter(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mRelayTransmit(UriPath::kRelayTx, &JoinerRouter::HandleRelayTransmit, this)
-    , mTimer(aInstance, JoinerRouter::HandleTimer)
+    , mTimer(aInstance)
     , mJoinerUdpPort(0)
     , mIsJoinerPortConfigured(false)
 {
-    Get<Tmf::Agent>().AddResource(mRelayTransmit);
 }
 
 void JoinerRouter::HandleNotifierEvents(Events aEvents)
@@ -142,7 +140,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = GetBorderAgentRloc(Get<ThreadNetif>(), borderAgentRloc));
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(UriPath::kRelayRx);
+    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aMessageInfo.GetPeerPort()));
@@ -166,12 +164,7 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void JoinerRouter::HandleRelayTransmit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<JoinerRouter *>(aContext)->HandleRelayTransmit(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void JoinerRouter::HandleRelayTransmit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -242,11 +235,6 @@ exit:
     LogError("schedule joiner entrust", error);
 }
 
-void JoinerRouter::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<JoinerRouter>().HandleTimer();
-}
-
 void JoinerRouter::HandleTimer(void)
 {
     SendDelayedJoinerEntrust();
@@ -313,7 +301,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     const Tlv *    tlv;
     NetworkKey     networkKey;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kJoinerEntrust);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriJoinerEntrust);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);

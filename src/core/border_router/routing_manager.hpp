@@ -406,6 +406,7 @@ private:
     };
 
     void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
+    void HandleDiscoveredPrefixTableTimer(void) { mDiscoveredPrefixTable.HandleTimer(); }
 
     class DiscoveredPrefixTable : public InstanceLocator
     {
@@ -455,6 +456,8 @@ private:
 
         void  InitIterator(PrefixTableIterator &aIterator) const;
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
+
+        void HandleTimer(void);
 
     private:
         static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
@@ -559,29 +562,28 @@ private:
             void          SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
         };
 
-        void        ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
-        void        ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, Router &aRouter);
-        void        ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
-        bool        ContainsPrefix(const Entry::Matcher &aMatcher) const;
-        void        RemovePrefix(const Entry::Matcher &aMatcher, NetDataMode aNetDataMode);
-        void        RemoveRoutersWithNoEntries(void);
-        Entry *     AllocateEntry(void) { return mEntryPool.Allocate(); }
-        void        FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
-        void        FreeEntries(LinkedList<Entry> &aEntries);
-        void        UpdateNetworkDataOnChangeTo(Entry &aEntry);
-        Entry *     FindFavoredEntryToPublish(const Ip6::Prefix &aPrefix);
-        void        PublishEntry(const Entry &aEntry);
-        void        UnpublishEntry(const Entry &aEntry);
-        static void HandleTimer(Timer &aTimer);
-        void        HandleTimer(void);
-        void        RemoveExpiredEntries(void);
-        void        SignalTableChanged(void);
+        void   ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
+        void   ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, Router &aRouter);
+        void   ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
+        bool   ContainsPrefix(const Entry::Matcher &aMatcher) const;
+        void   RemovePrefix(const Entry::Matcher &aMatcher, NetDataMode aNetDataMode);
+        void   RemoveRoutersWithNoEntries(void);
+        Entry *AllocateEntry(void) { return mEntryPool.Allocate(); }
+        void   FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
+        void   FreeEntries(LinkedList<Entry> &aEntries);
+        void   UpdateNetworkDataOnChangeTo(Entry &aEntry);
+        Entry *FindFavoredEntryToPublish(const Ip6::Prefix &aPrefix);
+        void   PublishEntry(const Entry &aEntry);
+        void   UnpublishEntry(const Entry &aEntry);
+        void   RemoveExpiredEntries(void);
+        void   SignalTableChanged(void);
 
         using SignalTask = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
+        using TableTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableTimer>;
 
         Array<Router, kMaxRouters> mRouters;
         Pool<Entry, kMaxEntries>   mEntryPool;
-        TimerMilli                 mTimer;
+        TableTimer                 mTimer;
         SignalTask                 mSignalTask;
         bool                       mAllowDefaultRouteInNetData;
     };
@@ -623,6 +625,8 @@ private:
         bool        mIsAddedInNetData;
     };
 
+    void HandleLocalOnLinkPrefixTimer(void) { mLocalOnLinkPrefix.HandleTimer(); }
+
     class LocalOnLinkPrefix : public InstanceLocator
     {
     public:
@@ -637,6 +641,7 @@ private:
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         bool               IsAdvertising(void) const { return (mState == kAdvertising); }
         void               HandleExtPanIdChange(void);
+        void               HandleTimer(void);
 
     private:
         enum State : uint8_t
@@ -650,15 +655,14 @@ private:
         void AppendOldPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         void Unpublish(const Ip6::Prefix &aPrefix);
 
-        static void HandleTimer(Timer &aTimer);
-        void        HandleTimer(void);
+        using ExpireTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleLocalOnLinkPrefixTimer>;
 
         Ip6::Prefix mPrefix;
         State       mState;
         TimeMilli   mExpireTime;
         Ip6::Prefix mOldPrefix;
         TimeMilli   mOldExpireTime;
-        TimerMilli  mTimer;
+        ExpireTimer mTimer;
     };
 
     typedef Ip6::Prefix OnMeshPrefix;
@@ -671,6 +675,8 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    void HandleNat64PrefixManagerTimer(void) { mNat64PrefixManager.HandleTimer(); }
+
     class Nat64PrefixManager : public InstanceLocator
     {
     public:
@@ -696,17 +702,18 @@ private:
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
         void               Evaluate(void);
         void               HandleDiscoverDone(const Ip6::Prefix &aPrefix);
+        void               HandleTimer(void);
 
     private:
-        void        Discover(void);
-        static void HandleTimer(Timer &aTimer);
-        void        HandleTimer(void);
+        void Discover(void);
+
+        using Nat64Timer = TimerMilliIn<RoutingManager, &RoutingManager::HandleNat64PrefixManagerTimer>;
 
         bool        mEnabled;
         Ip6::Prefix mInfraIfPrefix;   // The latest NAT64 prefix discovered on the infrastructure interface.
         Ip6::Prefix mLocalPrefix;     // The local prefix (from BR ULA prefix).
         Ip6::Prefix mPublishedPrefix; // The prefix published in Network Data (may be empty or local or from infra-if).
-        TimerMilli  mTimer;
+        Nat64Timer  mTimer;
     };
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
@@ -734,6 +741,8 @@ private:
         TimeMilli                            mLastTxTime;
     };
 
+    void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
+
     class RsSender : public InstanceLocator
     {
     public:
@@ -749,6 +758,7 @@ private:
         bool IsInProgress(void) const { return mTimer.IsRunning(); }
         void Start(void);
         void Stop(void);
+        void HandleTimer(void);
 
     private:
         // All time intervals are in msec.
@@ -758,13 +768,13 @@ private:
         static constexpr uint32_t kWaitOnLastAttempt = 1000;        // Wait interval after last RS tx.
         static constexpr uint8_t  kMaxTxCount        = 3;           // Number of RS tx in one cycle.
 
-        Error       SendRs(void);
-        static void HandleTimer(Timer &aTimer);
-        void        HandleTimer(void);
+        Error SendRs(void);
 
-        uint8_t    mTxCount;
-        TimerMilli mTimer;
-        TimeMilli  mStartTime;
+        using RsTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRsSenderTimer>;
+
+        uint8_t   mTxCount;
+        RsTimer   mTimer;
+        TimeMilli mStartTime;
     };
 
     void  EvaluateState(void);
@@ -785,11 +795,7 @@ private:
     void  HandleRsSenderFinished(TimeMilli aStartTime);
     void  SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
 
-    static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
-    void        HandleDiscoveredPrefixInvalidTimer(void);
-    static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
-    void        HandleDiscoveredPrefixStaleTimer(void);
-    static void HandleRoutingPolicyTimer(Timer &aTimer);
+    void HandleDiscoveredPrefixStaleTimer(void);
 
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
@@ -804,6 +810,9 @@ private:
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
     static bool IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
+
+    using RoutingPolicyTimer         = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
+    using DiscoveredPrefixStaleTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixStaleTimer>;
 
     // Indicates whether the Routing Manager is running (started).
     bool mIsRunning;
@@ -842,8 +851,8 @@ private:
     RaInfo   mRaInfo;
     RsSender mRsSender;
 
-    TimerMilli mDiscoveredPrefixStaleTimer;
-    TimerMilli mRoutingPolicyTimer;
+    DiscoveredPrefixStaleTimer mDiscoveredPrefixStaleTimer;
+    RoutingPolicyTimer         mRoutingPolicyTimer;
 };
 
 } // namespace BorderRouter

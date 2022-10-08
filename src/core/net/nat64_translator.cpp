@@ -51,13 +51,13 @@ RegisterLogModule("Nat64");
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
-    , mMappingExpirer(aInstance, MappingExpirerHandler)
+    , mMappingExpirerTimer(aInstance)
 {
     Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
 
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();
-    mMappingExpirer.Start(kAddressMappingIdleTimeoutMsec);
+    mMappingExpirerTimer.Start(kAddressMappingIdleTimeoutMsec);
 }
 
 Message *Translator::NewIp4Message(const Message::Settings &aSettings)
@@ -503,10 +503,10 @@ void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
     }
 }
 
-void Translator::MappingExpirerHandler(Timer &aTimer)
+void Translator::HandleMappingExpirerTimer(void)
 {
-    LogInfo("Released %d expired mappings", aTimer.Get<Translator>().ReleaseExpiredMappings());
-    aTimer.Get<Translator>().mMappingExpirer.Start(kAddressMappingIdleTimeoutMsec);
+    LogInfo("Released %d expired mappings", ReleaseExpiredMappings());
+    mMappingExpirerTimer.Start(kAddressMappingIdleTimeoutMsec);
 }
 
 void Translator::InitAddressMappingIterator(AddressMappingIterator &aIterator)

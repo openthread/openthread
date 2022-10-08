@@ -338,9 +338,18 @@ class Node(object):
     def srp_client_get_host_address(self):
         return self.cli('srp client host address')
 
-    def srp_client_add_service(self, instance_name, service_name, port, priority=0, weight=0, txt_entries=[]):
+    def srp_client_add_service(self,
+                               instance_name,
+                               service_name,
+                               port,
+                               priority=0,
+                               weight=0,
+                               txt_entries=[],
+                               lease=0,
+                               key_lease=0):
         txt_record = "".join(self._encode_txt_entry(entry) for entry in txt_entries)
-        self._cli_no_output('srp client service add', instance_name, service_name, port, priority, weight, txt_record)
+        self._cli_no_output('srp client service add', instance_name, service_name, port, priority, weight, txt_record,
+                            lease, key_lease)
 
     def srp_client_remove_service(self, instance_name, service_name):
         self._cli_no_output('srp client service remove', instance_name, service_name)
@@ -462,6 +471,8 @@ class Node(object):
                'priority': '0',
                'weight': '0',
                'ttl': '7200',
+               'lease': '7200',
+               'key-lease', '1209600',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -482,8 +493,8 @@ class Node(object):
             if service['deleted'] == 'true':
                 service_list.append(service)
                 continue
-            # 'subtypes', port', 'priority', 'weight', 'ttl'
-            for i in range(0, 5):
+            # 'subtypes', port', 'priority', 'weight', 'ttl', 'lease', 'key-lease'
+            for i in range(0, 7):
                 key_value = outputs.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
             txt_entries = outputs.pop(0).strip().split('[')[1].strip(' ]').split(',')

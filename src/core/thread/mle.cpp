@@ -80,9 +80,9 @@ Mle::Mle(Instance &aInstance)
     , mReattachState(kReattachStop)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
-    , mAttachTimer(aInstance, Mle::HandleAttachTimer)
-    , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer)
-    , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer)
+    , mAttachTimer(aInstance)
+    , mDelayedResponseTimer(aInstance)
+    , mMessageTransmissionTimer(aInstance)
     , mAttachMode(kAnyPartition)
     , mChildUpdateAttempts(0)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
@@ -104,7 +104,7 @@ Mle::Mle(Instance &aInstance)
     , mAlternateChannel(0)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
-    , mDetachGracefullyTimer(aInstance, Mle::HandleDetachGracefullyTimer)
+    , mDetachGracefullyTimer(aInstance)
     , mDetachGracefullyCallback(nullptr)
     , mDetachGracefullyContext(nullptr)
     , mParentResponseCb(nullptr)
@@ -1276,11 +1276,6 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-void Mle::HandleAttachTimer(Timer &aTimer)
-{
-    aTimer.Get<Mle>().HandleAttachTimer();
-}
-
 Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
 {
     // This method determines the Parent Request type to use during an
@@ -1576,11 +1571,6 @@ uint32_t Mle::Reattach(void)
 
 exit:
     return delay;
-}
-
-void Mle::HandleDelayedResponseTimer(Timer &aTimer)
-{
-    aTimer.Get<Mle>().HandleDelayedResponseTimer();
 }
 
 void Mle::HandleDelayedResponseTimer(void)
@@ -1907,11 +1897,6 @@ exit:
     {
         mMessageTransmissionTimer.Stop();
     }
-}
-
-void Mle::HandleMessageTransmissionTimer(Timer &aTimer)
-{
-    aTimer.Get<Mle>().HandleMessageTransmissionTimer();
 }
 
 void Mle::HandleMessageTransmissionTimer(void)
@@ -3880,11 +3865,6 @@ exit:
 #endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-void Mle::ParentSearch::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Mle>().mParentSearch.HandleTimer();
-}
-
 void Mle::ParentSearch::HandleTimer(void)
 {
     int8_t parentRss;
@@ -4347,11 +4327,6 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
 
 exit:
     return error;
-}
-
-void Mle::HandleDetachGracefullyTimer(Timer &aTimer)
-{
-    aTimer.Get<Mle>().HandleDetachGracefullyTimer();
 }
 
 void Mle::HandleDetachGracefullyTimer(void)

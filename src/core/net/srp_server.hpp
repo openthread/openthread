@@ -1043,7 +1043,6 @@ private:
                              const Ip6::MessageInfo & aMessageInfo);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleLeaseTimer(Timer &aTimer);
     void        HandleLeaseTimer(void);
     static void HandleOutstandingUpdatesTimer(Timer &aTimer);
     void        HandleOutstandingUpdatesTimer(void);
@@ -1053,6 +1052,9 @@ private:
     static const char *   AddressModeToString(AddressMode aMode);
 
     void UpdateResponseCounters(Dns::Header::Response aResponseCode);
+
+    using LeaseTimer  = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
+    using UpdateTimer = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;
 
     Ip6::Udp::Socket                mSocket;
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
@@ -1064,9 +1066,9 @@ private:
     LeaseConfig mLeaseConfig;
 
     LinkedList<Host> mHosts;
-    TimerMilli       mLeaseTimer;
+    LeaseTimer       mLeaseTimer;
 
-    TimerMilli                 mOutstandingUpdatesTimer;
+    UpdateTimer                mOutstandingUpdatesTimer;
     LinkedList<UpdateMetadata> mOutstandingUpdates;
 
     ServiceUpdateId mServiceUpdateId;

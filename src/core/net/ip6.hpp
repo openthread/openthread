@@ -227,7 +227,10 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error HandleDatagram(Message &aMessage, MessageOrigin aOrigin, const void *aLinkMessageInfo = nullptr);
+    Error HandleDatagram(Message &     aMessage,
+                         MessageOrigin aOrigin,
+                         const void *  aLinkMessageInfo = nullptr,
+                         bool          aIsReassembled   = false);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.

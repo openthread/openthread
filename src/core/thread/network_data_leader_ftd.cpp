@@ -61,10 +61,7 @@ RegisterLogModule("NetworkData");
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
     , mWaitingForNetDataSync(false)
-    , mTimer(aInstance, Leader::HandleTimer)
-    , mServerData(UriPath::kServerData, &Leader::HandleServerData, this)
-    , mCommissioningDataGet(UriPath::kCommissionerGet, &Leader::HandleCommissioningGet, this)
-    , mCommissioningDataSet(UriPath::kCommissionerSet, &Leader::HandleCommissioningSet, this)
+    , mTimer(aInstance)
 {
     Reset();
 }
@@ -86,17 +83,6 @@ void Leader::Start(Mle::LeaderStartMode aStartMode)
     {
         mTimer.Start(kMaxNetDataSyncWait);
     }
-
-    Get<Tmf::Agent>().AddResource(mServerData);
-    Get<Tmf::Agent>().AddResource(mCommissioningDataGet);
-    Get<Tmf::Agent>().AddResource(mCommissioningDataSet);
-}
-
-void Leader::Stop(void)
-{
-    Get<Tmf::Agent>().RemoveResource(mServerData);
-    Get<Tmf::Agent>().RemoveResource(mCommissioningDataGet);
-    Get<Tmf::Agent>().RemoveResource(mCommissioningDataSet);
 }
 
 void Leader::IncrementVersion(void)
@@ -142,15 +128,12 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
     IncrementVersions(flags);
 }
 
-void Leader::HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Leader *>(aContext)->HandleServerData(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadNetworkDataTlv networkDataTlv;
     uint16_t             rloc16;
+
+    VerifyOrExit(Get<Mle::Mle>().IsLeader());
 
     LogInfo("Received network data registration");
 
@@ -188,12 +171,7 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Leader *>(aContext)->HandleCommissioningSet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t                 offset = aMessage.GetOffset();
     uint16_t                 length = aMessage.GetLength() - aMessage.GetOffset();
@@ -206,6 +184,8 @@ void Leader::HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageI
 
     MeshCoP::Tlv *cur;
     MeshCoP::Tlv *end;
+
+    VerifyOrExit(Get<Mle::Mle>().IsLeader());
 
     VerifyOrExit(length <= sizeof(tlvs));
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
@@ -290,21 +270,21 @@ exit:
     }
 }
 
-void Leader::HandleCommissioningGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Leader *>(aContext)->HandleCommissioningGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Leader::HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t length = 0;
     uint16_t offset;
+
+    VerifyOrExit(Get<Mle::Mle>().IsLeader());
 
     SuccessOrExit(Tlv::FindTlvValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
     aMessage.SetOffset(offset);
 
 exit:
-    SendCommissioningGetResponse(aMessage, length, aMessageInfo);
+    if (Get<Mle::MleRouter>().IsLeader())
+    {
+        SendCommissioningGetResponse(aMessage, length, aMessageInfo);
+    }
 }
 
 void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
@@ -1336,11 +1316,6 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
             StartContextReuseTimer(context->GetContextId());
         }
     }
-}
-
-void Leader::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)

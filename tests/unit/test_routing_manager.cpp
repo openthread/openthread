@@ -37,6 +37,7 @@
 #include "common/arg_macros.hpp"
 #include "common/array.hpp"
 #include "common/instance.hpp"
+#include "common/time.hpp"
 #include "net/icmp6.hpp"
 #include "net/nd6.hpp"
 
@@ -245,7 +246,7 @@ void AdvanceTime(uint32_t aDuration)
 
     Log("AdvanceTime for %u.%03u", aDuration / 1000, aDuration % 1000);
 
-    while (sAlarmTime <= time)
+    while (TimeMilli(sAlarmTime) <= TimeMilli(time))
     {
         ProcessRadioTxAndTasklets();
         sNow = sAlarmTime;

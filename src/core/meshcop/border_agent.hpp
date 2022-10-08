@@ -40,12 +40,13 @@
 
 #include <openthread/border_agent.h>
 
-#include "coap/coap.hpp"
 #include "common/as_core_type.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "net/udp6.hpp"
+#include "thread/tmf.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -54,6 +55,7 @@ namespace MeshCoP {
 class BorderAgent : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -145,11 +147,12 @@ private:
     static void HandleConnected(bool aConnected, void *aContext);
     void        HandleConnected(bool aConnected);
 
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     template <Coap::Resource BorderAgent::*aResource>
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    static void HandleTimeout(Timer &aTimer);
-    void        HandleTimeout(void);
+    void HandleTimeout(void);
 
     static void HandleCoapResponse(void *               aContext,
                                    otMessage *          aMessage,
@@ -159,13 +162,12 @@ private:
 
     Error       ForwardToLeader(const Coap::Message &   aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
-                                const char *            aPath,
+                                Uri                     aUri,
                                 bool                    aPetition,
                                 bool                    aSeparate);
     Error       ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
     void        HandleKeepAlive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        HandleRelayTransmit(const Coap::Message &aMessage);
-    void        HandleRelayReceive(const Coap::Message &aMessage);
     void        HandleProxyTransmit(const Coap::Message &aMessage);
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
@@ -175,12 +177,13 @@ private:
 
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner.
 
+    using TimeoutTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleTimeout>;
+
     Ip6::MessageInfo mMessageInfo;
 
     Coap::Resource mCommissionerPetition;
     Coap::Resource mCommissionerKeepAlive;
     Coap::Resource mRelayTransmit;
-    Coap::Resource mRelayReceive;
     Coap::Resource mCommissionerGet;
     Coap::Resource mCommissionerSet;
     Coap::Resource mActiveGet;
@@ -192,10 +195,12 @@ private:
     Ip6::Udp::Receiver         mUdpReceiver; ///< The UDP receiver to receive packets from external commissioner
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
-    TimerMilli mTimer;
-    State      mState;
-    uint16_t   mUdpProxyPort;
+    TimeoutTimer mTimer;
+    State        mState;
+    uint16_t     mUdpProxyPort;
 };
+
+DeclareTmfHandler(BorderAgent, kUriRelayRx);
 
 } // namespace MeshCoP
 

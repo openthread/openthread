@@ -40,12 +40,12 @@
 
 #include <stdint.h>
 
-#include "coap/coap.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/network_data.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -67,6 +67,8 @@ namespace NetworkData {
  */
 class Leader : public LeaderBase, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This enumeration defines the match mode constants to compare two RLOC16 values.
@@ -104,12 +106,6 @@ public:
      *
      */
     void Start(Mle::LeaderStartMode aStartMode);
-
-    /**
-     * This method stops the Leader services.
-     *
-     */
-    void Stop(void);
 
     /**
      * This method increments the Thread Network Data version.
@@ -223,11 +219,9 @@ private:
         kTlvUpdated, // TLV stable flag is updated based on its sub TLVs.
     };
 
-    static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
 
@@ -293,12 +287,6 @@ private:
     UpdateStatus UpdateService(ServiceTlv &aService);
     UpdateStatus UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs);
 
-    static void HandleCommissioningSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleCommissioningSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleCommissioningGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleCommissioningGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     void SendCommissioningGetResponse(const Coap::Message &   aRequest,
                                       uint16_t                aLength,
                                       const Ip6::MessageInfo &aMessageInfo);
@@ -308,23 +296,24 @@ private:
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
+    using UpdateTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
+
     static constexpr uint8_t  kMinContextId        = 1;            // Minimum Context ID (0 is used for Mesh Local)
     static constexpr uint8_t  kNumContextIds       = 15;           // Maximum Context ID
     static constexpr uint32_t kContextIdReuseDelay = 48 * 60 * 60; // in seconds
     static constexpr uint32_t kStateUpdatePeriod   = 60 * 1000;    // State update period in milliseconds
     static constexpr uint32_t kMaxNetDataSyncWait  = 60 * 1000;    // Maximum time to wait for netdata sync.
 
-    bool       mWaitingForNetDataSync;
-    uint16_t   mContextUsed;
-    TimeMilli  mContextLastUsed[kNumContextIds];
-    uint32_t   mContextIdReuseDelay;
-    TimerMilli mTimer;
-
-    Coap::Resource mServerData;
-
-    Coap::Resource mCommissioningDataGet;
-    Coap::Resource mCommissioningDataSet;
+    bool        mWaitingForNetDataSync;
+    uint16_t    mContextUsed;
+    TimeMilli   mContextLastUsed[kNumContextIds];
+    uint32_t    mContextIdReuseDelay;
+    UpdateTimer mTimer;
 };
+
+DeclareTmfHandler(Leader, kUriServerData);
+DeclareTmfHandler(Leader, kUriCommissionerGet);
+DeclareTmfHandler(Leader, kUriCommissionerSet);
 
 /**
  * @}

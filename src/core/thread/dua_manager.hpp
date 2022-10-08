@@ -47,7 +47,6 @@
 #endif
 
 #include "backbone_router/bbr_leader.hpp"
-#include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -58,6 +57,7 @@
 #include "common/timer.hpp"
 #include "net/netif.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -84,6 +84,7 @@ class DuaManager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class ot::TimeTicker;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -203,8 +204,7 @@ private:
                                   Error                aResult);
     void        HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleDuaNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Error ProcessDuaResponse(Coap::Message &aMessage);
 
@@ -215,7 +215,6 @@ private:
     using RegistrationTask = TaskletIn<DuaManager, &DuaManager::PerformNextRegistration>;
 
     RegistrationTask mRegistrationTask;
-    Coap::Resource   mDuaNotification;
     Ip6::Address     mRegisteringDua;
     bool             mIsDuaPending : 1;
 
@@ -257,6 +256,8 @@ private:
     uint16_t  mChildIndexDuaRegistering; // Child Index of the DUA being registered.
 #endif
 };
+
+DeclareTmfHandler(DuaManager, kUriDuaRegistrationNotify);
 
 } // namespace ot
 

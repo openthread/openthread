@@ -63,7 +63,7 @@ Server::Server(Instance &aInstance)
     , mQueryCallbackContext(nullptr)
     , mQuerySubscribe(nullptr)
     , mQueryUnsubscribe(nullptr)
-    , mTimer(aInstance, Server::HandleTimer)
+    , mTimer(aInstance)
 {
     mCounters.Clear();
 }
@@ -75,7 +75,7 @@ Error Server::Start(void)
     VerifyOrExit(!IsRunning());
 
     SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(kPort, kBindUnspecifiedNetif ? OT_NETIF_UNSPECIFIED : OT_NETIF_THREAD));
+    SuccessOrExit(error = mSocket.Bind(kPort, kBindUnspecifiedNetif ? Ip6::kNetifUnspecified : Ip6::kNetifThread));
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Get<Srp::Server>().HandleDnssdServerStateChange();
@@ -1121,11 +1121,6 @@ bool Server::HasQuestion(const Header &aHeader, const Message &aMessage, const c
 
 exit:
     return found;
-}
-
-void Server::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleTimer();
 }
 
 void Server::HandleTimer(void)

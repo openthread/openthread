@@ -1136,11 +1136,12 @@ Error TxtRecord::ReadTxtData(const Message &aMessage,
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(GetLength() <= aTxtBufferSize, error = kErrorNoBufs);
-    SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, GetLength()));
-    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength(), /* aAllowEmpty */ true), error = kErrorParse);
-    aTxtBufferSize = GetLength();
+    SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, Min(GetLength(), aTxtBufferSize)));
     aOffset += GetLength();
+
+    VerifyOrExit(GetLength() <= aTxtBufferSize, error = kErrorNoBufs);
+    aTxtBufferSize = GetLength();
+    VerifyOrExit(VerifyTxtData(aTxtBuffer, aTxtBufferSize, /* aAllowEmpty */ true), error = kErrorParse);
 
 exit:
     return error;

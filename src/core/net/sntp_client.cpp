@@ -95,7 +95,7 @@ QueryMetadata::QueryMetadata(otSntpResponseHandler aHandler, void *aContext)
 
 Client::Client(Instance &aInstance)
     : mSocket(aInstance)
-    , mRetransmissionTimer(aInstance, Client::HandleRetransmissionTimer)
+    , mRetransmissionTimer(aInstance)
     , mUnixEra(0)
 {
 }
@@ -105,7 +105,7 @@ Error Client::Start(void)
     Error error;
 
     SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(0, OT_NETIF_UNSPECIFIED));
+    SuccessOrExit(error = mSocket.Bind(0, Ip6::kNetifUnspecified));
 
 exit:
     return error;
@@ -267,11 +267,6 @@ void Client::FinalizeSntpTransaction(Message &            aQuery,
     {
         aQueryMetadata.mResponseHandler(aQueryMetadata.mResponseContext, aTime, aResult);
     }
-}
-
-void Client::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.Get<Client>().HandleRetransmissionTimer();
 }
 
 void Client::HandleRetransmissionTimer(void)

@@ -662,7 +662,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             return self._mdns_query_impl(service, find_active=(addrs_allowlist or addrs_denylist))
 
         finally:
-            self.bash('ip6tables -L INPUT -v')
             self.bash('ip6tables -F INPUT')
             time.sleep(1)
 
