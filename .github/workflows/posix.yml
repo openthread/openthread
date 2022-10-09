@@ -65,6 +65,9 @@ jobs:
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
         OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test build expect
+    - name: Run ot-fct
+      run: |
+        OT_NODE_TYPE=fct ./script/test build expect
     - name: Check Crash
       if: ${{ failure() }}
       run: |

@@ -176,4 +176,13 @@
 #endif
 #endif
 
+/**
+ * @def OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+ *
+ * Define as 1 to enable power calibration support.
+ *
+ */
+#ifndef OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#define OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE 0
+#endif
 #endif // CONFIG_PLATFORM_H_

@@ -2566,6 +2566,51 @@ exit:
 }
 #endif
 
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_CHAN_TARGET_POWER>(void)
+{
+    otError error;
+    uint8_t channel;
+    int16_t targetPower;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+    SuccessOrExit(error = mDecoder.ReadInt16(targetPower));
+    error = otPlatRadioSetChannelTargetPower(mInstance, channel, targetPower);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_RADIO_CALIBRATED_POWER>(void)
+{
+    otError           error;
+    uint8_t           channel     = 0;
+    int16_t           actualPower = 0;
+    otRawPowerSetting rawPowerSetting;
+    const uint8_t *   dataPtr;
+    uint16_t          dataLen;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+    SuccessOrExit(error = mDecoder.ReadInt16(actualPower));
+
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(dataPtr, dataLen));
+    VerifyOrExit(dataLen <= sizeof(rawPowerSetting.m8), error = OT_ERROR_PARSE);
+    memset(rawPowerSetting.m8, 0, sizeof(rawPowerSetting.m8));
+    memcpy(rawPowerSetting.m8, dataPtr, dataLen);
+    rawPowerSetting.mLength = static_cast<uint8_t>(dataLen);
+
+    error = otPlatRadioAddCalibratedPower(mInstance, channel, actualPower, &rawPowerSetting);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_RADIO_CALIBRATED_POWER>(void)
+{
+    return otPlatRadioClearCalibratedPowers(mInstance);
+}
+#endif
+
 } // namespace Ncp
 } // namespace ot
 

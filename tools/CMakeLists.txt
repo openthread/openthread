@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-platform-utils OBJECT
-    debug_uart.c
-    link_metrics.cpp
-    logging_rtt.c
-    mac_frame.cpp
-    otns_utils.cpp
-    power_calibration.cpp
-    settings_ram.c
-    soft_source_match_table.c
-)
-
-target_compile_definitions(openthread-platform-utils PRIVATE
-    $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
-)
-
-target_include_directories(openthread-platform-utils PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
-    ${PROJECT_SOURCE_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
-)
-
-# Provide a static library implementation of platform-utils for non-cmake platforms
-add_library(openthread-platform-utils-static $<TARGET_OBJECTS:openthread-platform-utils>)
+if(OT_PLATFORM STREQUAL "posix")
+    add_subdirectory(ot-fct)
+endif()

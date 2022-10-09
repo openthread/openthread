@@ -60,6 +60,8 @@ libopenthread_platform_utils_a_SOURCES  = \
     mac_frame.cpp                         \
     mac_frame.h                           \
     otns_utils.cpp                        \
+    power_calibration.cpp                 \
+    power_calibration.h                   \
     settings.h                            \
     settings_ram.c                        \
     soft_source_match_table.c             \

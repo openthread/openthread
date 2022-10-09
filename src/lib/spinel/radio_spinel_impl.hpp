@@ -2516,6 +2516,42 @@ uint8_t RadioSpinel<InterfaceType, ProcessContextType>::GetCslUncertainty(void)
 }
 #endif
 
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::AddCalibratedPower(uint8_t                  aChannel,
+                                                                           int16_t                  aActualPower,
+                                                                           const otRawPowerSetting *aRawPowerSetting)
+{
+    otError error;
+
+    assert(aRawPowerSetting != nullptr);
+    SuccessOrExit(error = Insert(SPINEL_PROP_RADIO_CALIBRATED_POWER,
+                                 SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT16_S SPINEL_DATATYPE_DATA_WLEN_S, aChannel,
+                                 aActualPower, aRawPowerSetting->m8, aRawPowerSetting->mLength));
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::ClearCalibratedPowers(void)
+{
+    return Remove(SPINEL_PROP_RADIO_CALIBRATED_POWER, nullptr);
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    error = Set(SPINEL_PROP_RADIO_CHAN_TARGET_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT16_S, aChannel,
+                aTargetPower);
+
+exit:
+    return error;
+}
+#endif
+
 template <typename InterfaceType, typename ProcessContextType>
 uint32_t RadioSpinel<InterfaceType, ProcessContextType>::Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...)
 {

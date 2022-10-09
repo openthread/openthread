@@ -417,7 +417,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 6
+#define SPINEL_RCP_API_VERSION 7
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -1943,6 +1943,25 @@ enum
      * Indicates if radio coex is enabled or disabled. Set to true to enable radio coex.
      */
     SPINEL_PROP_RADIO_COEX_ENABLE = SPINEL_PROP_PHY_EXT__BEGIN + 13,
+
+    /// Calibrated power
+    /** Format: `t(CsU)`
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Actual power in 0.01 dBm.
+     *  `U`: Raw power setting.
+     */
+    SPINEL_PROP_RADIO_CALIBRATED_POWER = SPINEL_PROP_PHY_EXT__BEGIN + 14,
+
+    /// Target power for a channel
+    /** Format: `t(Cs)`
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Target power in 0.01 dBm.
+     */
+    SPINEL_PROP_RADIO_CHAN_TARGET_POWER = SPINEL_PROP_PHY_EXT__BEGIN + 15,
 
     SPINEL_PROP_PHY_EXT__END = 0x1300,
 
