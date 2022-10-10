@@ -2870,7 +2870,8 @@ class OpenThreadTHCI(object):
                 self.bbrSeqNum = 128
             else:
                 self.bbrSeqNum = (self.bbrSeqNum + 1) % 256
-        else:
+
+        if SeqNum:
             self.bbrSeqNum = SeqNum
 
         return self.__configBbrDataset(SeqNum=self.bbrSeqNum, MlrTimeout=MlrTimeout, ReRegDelay=ReRegDelay)
