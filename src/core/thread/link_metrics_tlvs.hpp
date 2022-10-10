@@ -94,17 +94,13 @@ OT_TOOL_PACKED_BEGIN
 class ReportSubTlv : public Tlv, public TlvInfo<SubTlv::kReport>
 {
 public:
-    static constexpr uint8_t kMinLength = sizeof(TypeIdFlags) + sizeof(uint8_t); ///< Minimum expected TLV length.
+    static constexpr uint8_t kMinLength = 2; ///< Minimum expected TLV length (type ID and u8 value).
 
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void)
-    {
-        SetType(SubTlv::kReport);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
+    void Init(void) { SetType(SubTlv::kReport); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -121,7 +117,7 @@ public:
      * @returns The Link Metrics Type ID.
      *
      */
-    TypeIdFlags GetMetricsTypeId(void) const { return mMetricsTypeId; }
+    uint8_t GetMetricsTypeId(void) const { return mMetricsTypeId; }
 
     /**
      * This method sets the Link Metrics Type ID.
@@ -129,15 +125,7 @@ public:
      * @param[in]  aMetricsTypeId  The Link Metrics Type ID to set.
      *
      */
-    void SetMetricsTypeId(TypeIdFlags aMetricsTypeId)
-    {
-        mMetricsTypeId = aMetricsTypeId;
-
-        if (!aMetricsTypeId.IsLengthFlagSet())
-        {
-            SetLength(sizeof(*this) - sizeof(Tlv) - sizeof(uint32_t) + sizeof(uint8_t)); // The value is 1 byte long
-        }
-    }
+    void SetMetricsTypeId(uint8_t aMetricsTypeId) { mMetricsTypeId = aMetricsTypeId; }
 
     /**
      * This method returns the metric value in 8 bits.
@@ -161,7 +149,11 @@ public:
      * @param[in]  aMetricsValue  Metrics value.
      *
      */
-    void SetMetricsValue8(uint8_t aMetricsValue) { mMetricsValue.m8 = aMetricsValue; }
+    void SetMetricsValue8(uint8_t aMetricsValue)
+    {
+        mMetricsValue.m8 = aMetricsValue;
+        SetLength(kMinLength);
+    }
 
     /**
      * This method sets the metric value (32 bits).
@@ -169,10 +161,14 @@ public:
      * @param[in]  aMetricsValue  Metrics value.
      *
      */
-    void SetMetricsValue32(uint32_t aMetricsValue) { mMetricsValue.m32 = HostSwap32(aMetricsValue); }
+    void SetMetricsValue32(uint32_t aMetricsValue)
+    {
+        mMetricsValue.m32 = HostSwap32(aMetricsValue);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
 private:
-    TypeIdFlags mMetricsTypeId;
+    uint8_t mMetricsTypeId;
     union
     {
         uint8_t  m8;
@@ -205,7 +201,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(TypeIdFlags); }
+    bool IsValid(void) const { return GetLength() >= sizeof(uint8_t); }
 
 } OT_TOOL_PACKED_END;
 
@@ -271,17 +267,17 @@ public:
     void SetSeriesFlagsMask(uint8_t aSeriesFlagsMask) { mSeriesFlagsMask = aSeriesFlagsMask; }
 
     /**
-     * This method gets the start of Type ID Flags array.
+     * This method gets the start of Type ID array.
      *
-     * @returns The start of Type ID Flags array. Array has `kMaxTypeIdFlags` max length.
+     * @returns The start of Type ID array. Array has `kMaxTypeIds` max length.
      *
      */
-    TypeIdFlags *GetTypeIds(void) { return mTypeIds; }
+    uint8_t *GetTypeIds(void) { return mTypeIds; }
 
 private:
-    uint8_t     mSeriesId;
-    uint8_t     mSeriesFlagsMask;
-    TypeIdFlags mTypeIds[kMaxTypeIdFlags];
+    uint8_t mSeriesId;
+    uint8_t mSeriesFlagsMask;
+    uint8_t mTypeIds[kMaxTypeIds];
 } OT_TOOL_PACKED_END;
 
 OT_TOOL_PACKED_BEGIN
@@ -326,16 +322,16 @@ public:
     void SetEnhAckFlags(EnhAckFlags aEnhAckFlags) { mEnhAckFlags = aEnhAckFlags; }
 
     /**
-     * This method gets the start of Type ID Flags array.
+     * This method gets the start of Type ID array.
      *
-     * @returns The start of Type ID Flags array. Array has `kMaxTypeIdFlags` max length.
+     * @returns The start of Type ID array. Array has `kMaxTypeIds` max length.
      *
      */
-    TypeIdFlags *GetTypeIds(void) { return mTypeIds; }
+    uint8_t *GetTypeIds(void) { return mTypeIds; }
 
 private:
-    uint8_t     mEnhAckFlags;
-    TypeIdFlags mTypeIds[kMaxTypeIdFlags];
+    uint8_t mEnhAckFlags;
+    uint8_t mTypeIds[kMaxTypeIds];
 } OT_TOOL_PACKED_END;
 
 } // namespace LinkMetrics
