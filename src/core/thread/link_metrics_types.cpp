@@ -41,36 +41,39 @@
 namespace ot {
 namespace LinkMetrics {
 
-uint8_t TypeIdFlagsFromMetrics(TypeIdFlags aTypeIdFlags[], const Metrics &aMetrics)
+//----------------------------------------------------------------------------------------------------------------------
+// Metrics
+
+uint8_t Metrics::ConvertToTypeIds(uint8_t aTypeIds[]) const
 {
     uint8_t count = 0;
 
-    if (aMetrics.mPduCount)
+    if (mPduCount)
     {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kPdu);
+        aTypeIds[count++] = TypeId::kPdu;
     }
 
-    if (aMetrics.mLqi)
+    if (mLqi)
     {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kLqi);
+        aTypeIds[count++] = TypeId::kLqi;
     }
 
-    if (aMetrics.mLinkMargin)
+    if (mLinkMargin)
     {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kLinkMargin);
+        aTypeIds[count++] = TypeId::kLinkMargin;
     }
 
-    if (aMetrics.mRssi)
+    if (mRssi)
     {
-        aTypeIdFlags[count++].SetRawValue(TypeIdFlags::kRssi);
+        aTypeIds[count++] = TypeId::kRssi;
     }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    if (aMetrics.mReserved)
+    if (mReserved)
     {
         for (uint8_t i = 0; i < count; i++)
         {
-            aTypeIdFlags[i].SetTypeEnum(TypeIdFlags::kTypeReserved);
+            TypeId::MarkAsReserverd(aTypeIds[i]);
         }
     }
 #endif
