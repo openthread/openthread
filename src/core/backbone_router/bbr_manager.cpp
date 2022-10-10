@@ -56,8 +56,6 @@ RegisterLogModule("BbrManager");
 Manager::Manager(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    , mBackboneQuery(kUriBackboneQuery, Manager::HandleBackboneQuery, this)
-    , mBackboneAnswer(kUriBackboneAnswer, Manager::HandleBackboneAnswer, this)
     , mNdProxyTable(aInstance)
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
@@ -80,10 +78,6 @@ Manager::Manager(Instance &aInstance)
 #endif
 #endif
 {
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    mBackboneTmfAgent.AddResource(mBackboneQuery);
-    mBackboneTmfAgent.AddResource(mBackboneAnswer);
-#endif
 }
 
 void Manager::HandleNotifierEvents(Events aEvents)
@@ -555,12 +549,7 @@ exit:
     return error;
 }
 
-void Manager::HandleBackboneQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Manager *>(aContext)->HandleBackboneQuery(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Manager::HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Manager::HandleTmf<kUriBackboneQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                  error = kErrorNone;
     Ip6::Address           dua;
@@ -589,12 +578,7 @@ exit:
     LogInfo("HandleBackboneQuery: %s", ErrorToString(error));
 }
 
-void Manager::HandleBackboneAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Manager *>(aContext)->HandleBackboneAnswer(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Manager::HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Manager::HandleTmf<kUriBackboneAnswer>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                    error = kErrorNone;
     bool                     proactive;

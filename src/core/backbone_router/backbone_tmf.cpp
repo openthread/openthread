@@ -43,6 +43,13 @@ namespace BackboneRouter {
 
 RegisterLogModule("Bbr");
 
+BackboneTmfAgent::BackboneTmfAgent(Instance &aInstance)
+    : Coap::Coap(aInstance)
+{
+    SetInterceptor(&Filter, this);
+    SetResourceHandler(&HandleResource);
+}
+
 Error BackboneTmfAgent::Start(void)
 {
     Error error = kErrorNone;
@@ -52,6 +59,46 @@ Error BackboneTmfAgent::Start(void)
 
 exit:
     return error;
+}
+
+bool BackboneTmfAgent::HandleResource(CoapBase &              aCoapBase,
+                                      const char *            aUriPath,
+                                      ot::Coap::Message &     aMessage,
+                                      const Ip6::MessageInfo &aMessageInfo)
+{
+    return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+}
+
+bool BackboneTmfAgent::HandleResource(const char *            aUriPath,
+                                      ot::Coap::Message &     aMessage,
+                                      const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    bool didHandle = true;
+    Uri  uri       = UriFromPath(aUriPath);
+
+#define Case(kUri, Type)                                     \
+    case kUri:                                               \
+        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+        break
+
+    switch (uri)
+    {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+        Case(kUriBackboneQuery, Manager);
+        Case(kUriBackboneAnswer, Manager);
+#endif
+
+    default:
+        didHandle = false;
+        break;
+    }
+
+#undef Case
+
+    return didHandle;
 }
 
 Error BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)

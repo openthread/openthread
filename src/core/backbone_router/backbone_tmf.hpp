@@ -39,6 +39,7 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #include "coap/coap.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 namespace BackboneRouter {
@@ -58,11 +59,7 @@ public:
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    explicit BackboneTmfAgent(Instance &aInstance)
-        : Coap::Coap(aInstance)
-    {
-        SetInterceptor(&Filter, this);
-    }
+    explicit BackboneTmfAgent(Instance &aInstance);
 
     /**
      * This method starts the Backbone TMF agent.
@@ -99,7 +96,12 @@ public:
     void UnsubscribeMulticast(const Ip6::Address &aAddress);
 
 private:
-    void         LogError(const char *aText, const Ip6::Address &aAddress, Error aError) const;
+    static bool HandleResource(CoapBase &              aCoapBase,
+                               const char *            aUriPath,
+                               ot::Coap::Message &     aMessage,
+                               const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleResource(const char *aUriPath, ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        LogError(const char *aText, const Ip6::Address &aAddress, Error aError) const;
     static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 
