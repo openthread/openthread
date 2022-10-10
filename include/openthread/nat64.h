@@ -233,10 +233,9 @@ otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
 typedef enum
 {
     OT_NAT64_STATE_DISABLED = 0, ///< NAT64 is disabled.
-    OT_NAT64_STATE_NOT_RUNNING,  ///< NAT64 is enabled, but is not in function.
-    OT_NAT64_STATE_IDLE,   ///< NAT64 is enabled, but the border router is not an active NAT64 border router in the
-                           ///< network.
-    OT_NAT64_STATE_ACTIVE, ///< NAT64 is enabled, and is publishing a NAT64 prefix and/or translating packets.
+    OT_NAT64_STATE_NOT_RUNNING,  ///< NAT64 is enabled, but one or more dependencies of NAT64 are not running.
+    OT_NAT64_STATE_IDLE,         ///< NAT64 is enabled, but this BR is not a active NAT64 BR.
+    OT_NAT64_STATE_ACTIVE,       ///< The BR is publishing a NAT64 prefix and/or translating packets.
 } otNat64State;
 
 /**

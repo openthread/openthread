@@ -792,7 +792,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         OutputLine("PrefixManager: %s", kNat64State[otNat64GetPrefixManagerState(GetInstancePtr())]);
 #endif
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-        OutputLine("Translator:    %s", kNat64State[otNat64GetTranslatorState(GetInstancePtr())]);
+        OutputLine("Translator: %s", kNat64State[otNat64GetTranslatorState(GetInstancePtr())]);
 #endif
     }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE

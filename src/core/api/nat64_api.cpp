@@ -101,15 +101,14 @@ otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr)
 
 otNat64State otNat64GetTranslatorState(otInstance *aInstance)
 {
-    return static_cast<otNat64State>(AsCoreType(aInstance).Get<Nat64::Translator>().GetState());
+    return MapEnum(AsCoreType(aInstance).Get<Nat64::Translator>().GetState());
 }
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 otNat64State otNat64GetPrefixManagerState(otInstance *aInstance)
 {
-    return static_cast<otNat64State>(
-        AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNat64PrefixManagerState());
+    return MapEnum(AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNat64PrefixManagerState());
 }
 #endif
 

@@ -596,7 +596,7 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
     mTotal.m4To6Bytes += aPacketSize;
 }
 
-State Translator::GetState() const
+State Translator::GetState(void) const
 {
     State ret = kStateDisabled;
 

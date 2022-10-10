@@ -385,6 +385,7 @@ private:
 
 } // namespace Nat64
 
+DefineMapEnum(otNat64State, Nat64::State);
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 DefineCoreType(otNat64ProtocolCounters, Nat64::Translator::ProtocolCounters);
 DefineCoreType(otNat64ErrorCounters, Nat64::Translator::ErrorCounters);
