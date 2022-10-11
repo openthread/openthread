@@ -777,7 +777,7 @@ void Client::SendUpdate(void)
 
     if (length >= Ip6::kMaxDatagramLength)
     {
-        LogInfo("Msg len %u is larger than MTU, enabling single service mode", length);
+        LogInfo("Msg len %lu is larger than MTU, enabling single service mode", ToUlong(length));
         mSingleServiceMode = true;
         IgnoreError(message->SetLength(0));
         SuccessOrExit(error = PrepareUpdateMessage(*message));
@@ -833,7 +833,7 @@ exit:
             interval = Random::NonCrypto::AddJitter(kTxFailureRetryInterval, kTxFailureRetryJitter);
             mTimer.Start(interval);
 
-            LogInfo("Quick retry %d in %u msec", mTxFailureRetryCount, interval);
+            LogInfo("Quick retry %u in %lu msec", mTxFailureRetryCount, ToUlong(interval));
 
             // Do not report message preparation errors to user
             // until `kMaxTxFailureRetries` are exhausted.
@@ -2220,7 +2220,7 @@ void Client::LogRetryWaitInterval(void) const
 
     uint32_t interval = GetRetryWaitInterval();
 
-    LogInfo("Retry interval %u %s", (interval < kLogInMsecLimit) ? interval : Time::MsecToSec(interval),
+    LogInfo("Retry interval %lu %s", ToUlong((interval < kLogInMsecLimit) ? interval : Time::MsecToSec(interval)),
             (interval < kLogInMsecLimit) ? "ms" : "sec");
 }
 

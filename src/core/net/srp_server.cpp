@@ -346,7 +346,7 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyS
     {
         uint32_t updateId = AllocateId();
 
-        LogInfo("SRP update handler is notified (updatedId = %u)", updateId);
+        LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
         mServiceUpdateHandler(updateId, aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the host (and its services) regardless of
@@ -406,13 +406,14 @@ void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
     }
     else
     {
-        LogInfo("Delayed SRP host update result, the SRP update has been committed (updateId = %u)", aId);
+        LogInfo("Delayed SRP host update result, the SRP update has been committed (updateId = %lu)", ToUlong(aId));
     }
 }
 
 void Server::HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError)
 {
-    LogInfo("Handler result of SRP update (id = %u) is received: %s", aUpdate->GetId(), ErrorToString(aError));
+    LogInfo("Handler result of SRP update (id = %lu) is received: %s", ToUlong(aUpdate->GetId()),
+            ErrorToString(aError));
 
     IgnoreError(mOutstandingUpdates.Remove(*aUpdate));
     CommitSrpUpdate(aError, *aUpdate);
@@ -734,7 +735,7 @@ void Server::ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata)
 
     if (FindOutstandingUpdate(aMetadata) != nullptr)
     {
-        LogInfo("Drop duplicated SRP update request: MessageId=%hu", aMetadata.mDnsHeader.GetMessageId());
+        LogInfo("Drop duplicated SRP update request: MessageId=%u", aMetadata.mDnsHeader.GetMessageId());
 
         // Silently drop duplicate requests.
         // This could rarely happen, because the outstanding SRP update timer should
@@ -1337,7 +1338,8 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
 
         LogInfo("Processed DNS update info");
         LogInfo("    Host:%s", aHost.GetFullName());
-        LogInfo("    Lease:%u, key-lease:%u, ttl:%u", aHost.GetLease(), aHost.GetKeyLease(), aHost.GetTtl());
+        LogInfo("    Lease:%lu, key-lease:%lu, ttl:%lu", ToUlong(aHost.GetLease()), ToUlong(aHost.GetKeyLease()),
+                ToUlong(aHost.GetTtl()));
 
         addrs = aHost.GetAddresses(numAddrs);
 
@@ -1380,7 +1382,7 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
             mOutstandingUpdates.Push(*update);
             mOutstandingUpdatesTimer.FireAtIfEarlier(update->GetExpireTime());
 
-            LogInfo("SRP update handler is notified (updatedId = %u)", update->GetId());
+            LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(update->GetId()));
             mServiceUpdateHandler(update->GetId(), &aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
             ExitNow();
         }
@@ -1469,7 +1471,7 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
 
     SuccessOrExit(error = GetSocket().SendTo(*response, aMessageInfo));
 
-    LogInfo("Send success response with granted lease: %u and key lease: %u", aLease, aKeyLease);
+    LogInfo("Send success response with granted lease: %lu and key lease: %lu", ToUlong(aLease), ToUlong(aKeyLease));
 
     UpdateResponseCounters(Dns::UpdateHeader::kResponseSuccess);
 
@@ -1631,7 +1633,7 @@ void Server::HandleLeaseTimer(void)
         OT_ASSERT(earliestExpireTime >= now);
         if (!mLeaseTimer.IsRunning() || earliestExpireTime <= mLeaseTimer.GetFireTime())
         {
-            LogInfo("Lease timer is scheduled for %u seconds", Time::MsecToSec(earliestExpireTime - now));
+            LogInfo("Lease timer is scheduled for %lu seconds", ToUlong(Time::MsecToSec(earliestExpireTime - now)));
             mLeaseTimer.StartAt(earliestExpireTime, 0);
         }
     }
@@ -1646,7 +1648,7 @@ void Server::HandleOutstandingUpdatesTimer(void)
 {
     while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
     {
-        LogInfo("Outstanding service update timeout (updateId = %u)", mOutstandingUpdates.GetTail()->GetId());
+        LogInfo("Outstanding service update timeout (updateId = %lu)", ToUlong(mOutstandingUpdates.GetTail()->GetId()));
         HandleServiceUpdateResult(mOutstandingUpdates.GetTail(), kErrorResponseTimeout);
     }
 }
@@ -2078,7 +2080,7 @@ void Server::Host::RemoveService(Service *aService, RetainName aRetainName, Noti
     {
         uint32_t updateId = server.AllocateId();
 
-        LogInfo("SRP update handler is notified (updatedId = %u)", updateId);
+        LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
         server.mServiceUpdateHandler(updateId, this, kDefaultEventsHandlerTimeout, server.mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the service regardless of service update result.

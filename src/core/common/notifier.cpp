@@ -228,7 +228,7 @@ void Notifier::LogEvents(Events aEvents) const
         {
             if (string.GetLength() >= kFlagsStringLineLimit)
             {
-                LogInfo("StateChanged (0x%08x) %s%s ...", aEvents.GetAsFlags(), didLog ? "... " : "[",
+                LogInfo("StateChanged (0x%08lx) %s%s ...", ToUlong(aEvents.GetAsFlags()), didLog ? "... " : "[",
                         string.AsCString());
                 string.Clear();
                 didLog   = true;
@@ -243,7 +243,7 @@ void Notifier::LogEvents(Events aEvents) const
     }
 
 exit:
-    LogInfo("StateChanged (0x%08x) %s%s]", aEvents.GetAsFlags(), didLog ? "... " : "[", string.AsCString());
+    LogInfo("StateChanged (0x%08lx) %s%s]", ToUlong(aEvents.GetAsFlags()), didLog ? "... " : "[", string.AsCString());
 }
 
 const char *Notifier::EventToString(Event aEvent) const

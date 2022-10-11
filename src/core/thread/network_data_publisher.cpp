@@ -472,7 +472,7 @@ exit:
 
 void Publisher::Entry::LogUpdateTime(void) const
 {
-    LogInfo("%s - update in %u msec", ToString().AsCString(), mUpdateTime - TimerMilli::GetNow());
+    LogInfo("%s - update in %lu msec", ToString().AsCString(), ToUlong(mUpdateTime - TimerMilli::GetNow()));
 }
 
 const char *Publisher::Entry::StateToString(State aState)

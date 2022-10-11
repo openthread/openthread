@@ -464,25 +464,25 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
             case TypeId::kPdu:
                 values.mMetrics.mPduCount = true;
                 values.mPduCountValue     = reportTlv.GetMetricsValue32();
-                LogDebg(" - PDU Counter: %d (Count/Summation)", values.mPduCountValue);
+                LogDebg(" - PDU Counter: %lu (Count/Summation)", ToUlong(values.mPduCountValue));
                 break;
 
             case TypeId::kLqi:
                 values.mMetrics.mLqi = true;
                 values.mLqiValue     = reportTlv.GetMetricsValue8();
-                LogDebg(" - LQI: %d (Exponential Moving Average)", values.mLqiValue);
+                LogDebg(" - LQI: %u (Exponential Moving Average)", values.mLqiValue);
                 break;
 
             case TypeId::kLinkMargin:
                 values.mMetrics.mLinkMargin = true;
                 values.mLinkMarginValue     = ScaleRawValueToLinkMargin(reportTlv.GetMetricsValue8());
-                LogDebg(" - Margin: %d (dB) (Exponential Moving Average)", values.mLinkMarginValue);
+                LogDebg(" - Margin: %u (dB) (Exponential Moving Average)", values.mLinkMarginValue);
                 break;
 
             case TypeId::kRssi:
                 values.mMetrics.mRssi = true;
                 values.mRssiValue     = ScaleRawValueToRssi(reportTlv.GetMetricsValue8());
-                LogDebg(" - RSSI: %d (dBm) (Exponential Moving Average)", values.mRssiValue);
+                LogDebg(" - RSSI: %u (dBm) (Exponential Moving Average)", values.mRssiValue);
                 break;
             }
 

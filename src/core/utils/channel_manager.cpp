@@ -186,8 +186,8 @@ Error ChannelManager::FindBetterChannel(uint8_t &aNewChannel, uint16_t &aOccupan
 
     if (Get<ChannelMonitor>().GetSampleCount() <= kMinChannelMonitorSampleCount)
     {
-        LogInfo("Too few samples (%d <= %d) to select channel", Get<ChannelMonitor>().GetSampleCount(),
-                kMinChannelMonitorSampleCount);
+        LogInfo("Too few samples (%lu <= %lu) to select channel", ToUlong(Get<ChannelMonitor>().GetSampleCount()),
+                ToUlong(kMinChannelMonitorSampleCount));
         ExitNow(error = kErrorInvalidState);
     }
 

@@ -195,7 +195,7 @@ void ChannelMonitor::LogResults(void)
         logString.Append("%02x ", channel >> 8);
     }
 
-    LogInfo("%u [%s]", mSampleCount, logString.AsCString());
+    LogInfo("%lu [%s]", ToUlong(mSampleCount), logString.AsCString());
 #endif
 }
 

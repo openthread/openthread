@@ -454,8 +454,8 @@ void Local::LogDomainPrefix(const char *aAction, Error aError)
 
 void Local::LogBackboneRouterService(const char *aAction, Error aError)
 {
-    LogInfo("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
-            mReregistrationDelay, mMlrTimeout, ErrorToString(aError));
+    LogInfo("%s BBR Service: seqno (%u), delay (%us), timeout (%lus), %s", aAction, mSequenceNumber,
+            mReregistrationDelay, ToUlong(mMlrTimeout), ErrorToString(aError));
 }
 #endif
 

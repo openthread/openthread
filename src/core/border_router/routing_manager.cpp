@@ -598,7 +598,7 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
     // Ensure we wait a min delay after last RA tx
     evaluateTime = Max(now + delay, mRaInfo.mLastTxTime + kMinDelayBetweenRtrAdvs);
 
-    LogInfo("Start evaluating routing policy, scheduled in %u milliseconds", evaluateTime - now);
+    LogInfo("Start evaluating routing policy, scheduled in %lu milliseconds", ToUlong(evaluateTime - now));
 
     mRoutingPolicyTimer.FireAtIfEarlier(evaluateTime);
 }
@@ -739,8 +739,8 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         for (const OnMeshPrefix &prefix : mAdvertisedPrefixes)
         {
             SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRouteInfoOptionPreference));
-            LogInfo("RouterAdvert: Added RIO for %s (lifetime=%u)", prefix.ToString().AsCString(),
-                    kDefaultOmrPrefixLifetime);
+            LogInfo("RouterAdvert: Added RIO for %s (lifetime=%lu)", prefix.ToString().AsCString(),
+                    ToUlong(kDefaultOmrPrefixLifetime));
         }
     }
 
@@ -1145,7 +1145,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     else
     {
         mDiscoveredPrefixStaleTimer.FireAt(nextStaleTime);
-        LogDebg("Prefix stale timer scheduled in %lu ms", nextStaleTime - now);
+        LogDebg("Prefix stale timer scheduled in %lu ms", ToUlong(nextStaleTime - now));
     }
 }
 
@@ -1264,7 +1264,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::N
 
     VerifyOrExit(Get<RoutingManager>().ShouldProcessPrefixInfoOption(aPio, prefix));
 
-    LogInfo("Processing PIO (%s, %u seconds)", prefix.ToString().AsCString(), aPio.GetValidLifetime());
+    LogInfo("Processing PIO (%s, %lu seconds)", prefix.ToString().AsCString(), ToUlong(aPio.GetValidLifetime()));
 
     entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeOnLink));
 
@@ -1311,7 +1311,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd
 
     VerifyOrExit(Get<RoutingManager>().ShouldProcessRouteInfoOption(aRio, prefix));
 
-    LogInfo("Processing RIO (%s, %u seconds)", prefix.ToString().AsCString(), aRio.GetRouteLifetime());
+    LogInfo("Processing RIO (%s, %lu seconds)", prefix.ToString().AsCString(), ToUlong(aRio.GetRouteLifetime()));
 
     entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
 
@@ -1761,7 +1761,7 @@ void RoutingManager::DiscoveredPrefixTable::SendNeighborSolicitToRouter(const Ro
 
     IgnoreError(Get<RoutingManager>().mInfraIf.Send(packet, aRouter.mAddress));
 
-    LogInfo("Sent Neighbor Solicitation to %s - attempt:%d/%d", aRouter.mAddress.ToString().AsCString(),
+    LogInfo("Sent Neighbor Solicitation to %s - attempt:%u/%u", aRouter.mAddress.ToString().AsCString(),
             aRouter.mNsProbeCount, Router::kMaxNsProbes);
 
 exit:
@@ -2403,8 +2403,8 @@ void RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvertM
 
     SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime));
 
-    LogInfo("RouterAdvert: Added PIO for %s (valid=%u, preferred=%u)", mLocalPrefix.ToString().AsCString(),
-            validLifetime, preferredLifetime);
+    LogInfo("RouterAdvert: Added PIO for %s (valid=%lu, preferred=%lu)", mLocalPrefix.ToString().AsCString(),
+            ToUlong(validLifetime), ToUlong(preferredLifetime));
 
 exit:
     return;
@@ -2425,8 +2425,8 @@ void RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(Ip6::Nd::RouterAdver
         validLifetime = TimeMilli::MsecToSec(oldPrefix.mExpireTime - now);
         SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0));
 
-        LogInfo("RouterAdvert: Added PIO for %s (valid=%u, preferred=0)", oldPrefix.mPrefix.ToString().AsCString(),
-                validLifetime);
+        LogInfo("RouterAdvert: Added PIO for %s (valid=%lu, preferred=0)", oldPrefix.mPrefix.ToString().AsCString(),
+                ToUlong(validLifetime));
     }
 }
 
@@ -2801,7 +2801,7 @@ void RoutingManager::Nat64PrefixManager::HandleTimer(void)
     Discover();
 
     mTimer.Start(TimeMilli::SecToMsec(kDefaultNat64PrefixLifetime));
-    LogInfo("NAT64 prefix timer scheduled in %u seconds", kDefaultNat64PrefixLifetime);
+    LogInfo("NAT64 prefix timer scheduled in %lu seconds", ToUlong(kDefaultNat64PrefixLifetime));
 }
 
 void RoutingManager::Nat64PrefixManager::Discover(void)
@@ -2862,7 +2862,7 @@ void RoutingManager::RsSender::Start(void)
     VerifyOrExit(!IsInProgress());
 
     delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
-    LogInfo("Scheduled Router Solicitation in %u milliseconds", delay);
+    LogInfo("Scheduled Router Solicitation in %lu milliseconds", ToUlong(delay));
 
     mTxCount   = 0;
     mStartTime = TimerMilli::GetNow();
@@ -2905,12 +2905,12 @@ void RoutingManager::RsSender::HandleTimer(void)
     if (error == kErrorNone)
     {
         mTxCount++;
-        LogInfo("Successfully sent RS %d/%d", mTxCount, kMaxTxCount);
+        LogInfo("Successfully sent RS %u/%u", mTxCount, kMaxTxCount);
         delay = (mTxCount == kMaxTxCount) ? kWaitOnLastAttempt : kTxInterval;
     }
     else
     {
-        LogCrit("Failed to send RS %d, error:%s", mTxCount + 1, ErrorToString(error));
+        LogCrit("Failed to send RS %u, error:%s", mTxCount + 1, ErrorToString(error));
 
         // Note that `mTxCount` is intentionally not incremented
         // if the tx fails.

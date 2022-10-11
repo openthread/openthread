@@ -783,7 +783,7 @@ void PendingDatasetManager::StartDelayTimer(void)
         }
 
         mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
-        LogInfo("delay timer started %d", delay);
+        LogInfo("delay timer started %lu", ToUlong(delay));
     }
 }
 
