@@ -458,9 +458,8 @@ exit:
     return;
 }
 
-Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
+void RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
 {
-    Error                            error;
     NetworkData::ExternalRouteConfig routeConfig;
 
     OT_ASSERT(mIsRunning);
@@ -471,14 +470,8 @@ Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePref
     routeConfig.mNat64      = aNat64;
     routeConfig.mPreference = aRoutePreference;
 
-    error = Get<NetworkData::Publisher>().PublishExternalRoute(routeConfig);
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to publish external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
-    }
-
-    return error;
+    SuccessOrAssert(
+        Get<NetworkData::Publisher>().PublishExternalRoute(routeConfig, NetworkData::Publisher::kFromRoutingManager));
 }
 
 void RoutingManager::UnpublishExternalRoute(const Ip6::Prefix &aPrefix)
@@ -507,7 +500,7 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
         // and therefore is the same for all BRs on the same Thread
         // mesh.
 
-        SuccessOrExit(mLocalOnLinkPrefix.Advertise());
+        mLocalOnLinkPrefix.Advertise();
 
         // We remove the local on-link prefix from discovered prefix
         // table, in case it was previously discovered and included in
@@ -1616,7 +1609,7 @@ exit:
 
 void RoutingManager::DiscoveredPrefixTable::PublishEntry(const Entry &aEntry)
 {
-    IgnoreError(Get<RoutingManager>().PublishExternalRoute(aEntry.GetPrefix(), aEntry.GetPreference()));
+    Get<RoutingManager>().PublishExternalRoute(aEntry.GetPrefix(), aEntry.GetPreference());
 }
 
 void RoutingManager::DiscoveredPrefixTable::UnpublishEntry(const Entry &aEntry)
@@ -2015,24 +2008,22 @@ exit:
     return;
 }
 
-Error RoutingManager::LocalOnLinkPrefix::Advertise(void)
+void RoutingManager::LocalOnLinkPrefix::Advertise(void)
 {
     // Start advertising the local on-link prefix if not already. This
     // will also publish it in the Network Data as an external route
     // entry.
 
-    Error error = kErrorNone;
-
     VerifyOrExit(mState != kAdvertising);
 
-    SuccessOrExit(error = Get<RoutingManager>().PublishExternalRoute(mPrefix, NetworkData::kRoutePreferenceMedium));
+    Get<RoutingManager>().PublishExternalRoute(mPrefix, NetworkData::kRoutePreferenceMedium);
 
     mState      = kAdvertising;
     mExpireTime = TimerMilli::GetNow() + TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime);
     LogInfo("Start advertising on-link prefix %s", mPrefix.ToString().AsCString());
 
 exit:
-    return error;
+    return;
 }
 
 void RoutingManager::LocalOnLinkPrefix::Deprecate(void)
@@ -2316,9 +2307,9 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
         mPublishedPrefix.Clear();
     }
 
-    if (shouldPublish && (prefix != mPublishedPrefix) &&
-        (Get<RoutingManager>().PublishExternalRoute(prefix, preference, /* aNat64 */ true) == kErrorNone))
+    if (shouldPublish && (prefix != mPublishedPrefix))
     {
+        Get<RoutingManager>().PublishExternalRoute(prefix, preference, /* aNat64 */ true);
         mPublishedPrefix = prefix;
     }
 
