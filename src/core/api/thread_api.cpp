@@ -202,7 +202,7 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-#if !OPENTHREAD_CONFIG_NETWORK_NAME_ZERO_LENGTH_ENABLE
+#if !OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
     // Thread interfaces support a zero length name internally for backwards compatibility, but new names
     // must be at least one valid character long.
     VerifyOrExit(nullptr != aNetworkName && aNetworkName[0] != '\0', error = kErrorInvalidArgs);
