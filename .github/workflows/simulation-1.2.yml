@@ -55,7 +55,7 @@ jobs:
         compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang-10", cxx: "clang++-10", gcov: "llvm"}]
         arch: ["m32", "m64"]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -111,7 +111,7 @@ jobs:
       INTER_OP: 1
       INTER_OP_BBR: 0
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -169,7 +169,7 @@ jobs:
       THREAD_VERSION: 1.3
       MULTIPLY: 3
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -208,7 +208,7 @@ jobs:
       THREAD_VERSION: 1.3
       VIRTUAL_TIME: 0
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -251,7 +251,7 @@ jobs:
       VIRTUAL_TIME: 1
       INTER_OP: 1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -306,7 +306,7 @@ jobs:
     - thread-1-3-posix
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
