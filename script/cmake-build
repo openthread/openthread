@@ -122,11 +122,11 @@ build()
     cd "${builddir}"
 
     cmake -GNinja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DOT_COMPILE_WARNING_AS_ERROR=ON "$@" "${OT_SRCDIR}"
-
-    if [[ -n ${OT_CMAKE_NINJA_TARGET[*]} ]]; then
-        ninja "${OT_CMAKE_NINJA_TARGET[@]}"
-    else
+    if [[ -z ${OT_CMAKE_NINJA_TARGET// /} ]]; then
         ninja
+    else
+        IFS=' ' read -r -a OT_CMAKE_NINJA_TARGET <<<"${OT_CMAKE_NINJA_TARGET}"
+        ninja "${OT_CMAKE_NINJA_TARGET[@]}"
     fi
 
     cd "${OT_SRCDIR}"
