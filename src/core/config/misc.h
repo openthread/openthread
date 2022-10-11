@@ -631,4 +631,14 @@
 #define OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+ *
+ * Define as 1 to enable support for an empty network name (zero-length: "")
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+#define OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME 0
+#endif
+
 #endif // CONFIG_MISC_H_
