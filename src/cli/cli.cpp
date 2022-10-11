@@ -4261,7 +4261,7 @@ otError Interpreter::ProcessLinkMetricsMgmt(Arg aArgs[])
      * - `peer-ipaddr`: Peer address.
      * - `series-id`: The Series ID.
      * - [`l`, `d`, `r`, and `a`] map to #otLinkMetricsSeriesFlags. `X` represents none of the
-     *   `otLinkMetricsSeriesFlags`, and indicates to stop accounting and remove the series.
+     *   `otLinkMetricsSeriesFlags`, and stops the accounting and removes the series.
      *   - `l`: MLE Link Probe.
      *   - `d`: MAC Data.
      *   - `r`: MAC Data Request.
@@ -4365,8 +4365,8 @@ otError Interpreter::ProcessLinkMetricsMgmt(Arg aArgs[])
          * Status: Cannot support new series
          * @endcode
          * @cparam linkmetrics mgmt @ca{peer-ipaddr} enhanced-ack register [@ca{qmr}][@ca{r}]
-         * [`q`, `m`, and `r`] map to #otLinkMetricsValues. At most, two options are allowed to
-         * select (per spec 4.11.3.4.4.6).
+         * [`q`, `m`, and `r`] map to #otLinkMetricsValues. Per spec 4.11.3.4.4.6, you can
+         * only use a maximum of two options at once, for example `q`, or `qm`.
          * - `q`: Layer 2 LQI.
          * - `m`: Link Margin.
          * - `r`: RSSI.
