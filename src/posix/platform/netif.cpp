@@ -211,8 +211,7 @@ static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static constexpr uint32_t kNat64RoutePriority =
-    100; ///< Priority for the route to NAT64 CIDR, 100 means a high priority route.
+static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
 #endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
