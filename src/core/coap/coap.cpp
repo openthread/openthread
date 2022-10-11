@@ -455,7 +455,6 @@ Error CoapBase::SendHeaderResponse(Message::Code aCode, const Message &aRequest,
 
     default:
         ExitNow(error = kErrorInvalidArgs);
-        OT_UNREACHABLE_CODE(break);
     }
 
     SuccessOrExit(error = message->SetTokenFromMessage(aRequest));
