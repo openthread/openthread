@@ -63,6 +63,7 @@ class Manager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class Tmf::Agent;
+    friend class BackboneTmfAgent;
 
 public:
     /**
@@ -189,32 +190,28 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    void        HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleBackboneQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleBackboneAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error       SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
-                                   const Ip6::Address &         aDua,
-                                   uint16_t                     aSrcRloc16,
-                                   const NdProxyTable::NdProxy &aNdProxy);
-    Error       SendBackboneAnswer(const Ip6::Address &            aDstAddr,
-                                   const Ip6::Address &            aDua,
-                                   const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                   uint32_t                        aTimeSinceLastTransaction,
-                                   uint16_t                        aSrcRloc16);
-    void        HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid);
-    void        HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
-                                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                             uint32_t                        aTimeSinceLastTransaction,
-                                             uint16_t                        aSrcRloc16);
-    void        HandleProactiveBackboneNotification(const Ip6::Address &            aDua,
-                                                    const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                                    uint32_t                        aTimeSinceLastTransaction);
-    void        SendDuaRegistrationResponse(const Coap::Message &      aMessage,
-                                            const Ip6::MessageInfo &   aMessageInfo,
-                                            const Ip6::Address &       aTarget,
-                                            ThreadStatusTlv::DuaStatus aStatus);
+    void  HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
+                             const Ip6::Address &         aDua,
+                             uint16_t                     aSrcRloc16,
+                             const NdProxyTable::NdProxy &aNdProxy);
+    Error SendBackboneAnswer(const Ip6::Address &            aDstAddr,
+                             const Ip6::Address &            aDua,
+                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                             uint32_t                        aTimeSinceLastTransaction,
+                             uint16_t                        aSrcRloc16);
+    void  HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid);
+    void  HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
+                                       const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                       uint32_t                        aTimeSinceLastTransaction,
+                                       uint16_t                        aSrcRloc16);
+    void  HandleProactiveBackboneNotification(const Ip6::Address &            aDua,
+                                              const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                              uint32_t                        aTimeSinceLastTransaction);
+    void  SendDuaRegistrationResponse(const Coap::Message &      aMessage,
+                                      const Ip6::MessageInfo &   aMessageInfo,
+                                      const Ip6::Address &       aTarget,
+                                      ThreadStatusTlv::DuaStatus aStatus);
 #endif
     void HandleNotifierEvents(Events aEvents);
 
@@ -225,9 +222,7 @@ private:
     using BbrTimer = TimerMilliIn<Manager, &Manager::HandleTimer>;
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    Coap::Resource mBackboneQuery;
-    Coap::Resource mBackboneAnswer;
-    NdProxyTable   mNdProxyTable;
+    NdProxyTable mNdProxyTable;
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
@@ -253,6 +248,15 @@ private:
 #endif
 #endif
 };
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+DeclareTmfHandler(Manager, kUriMlr);
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+DeclareTmfHandler(Manager, kUriDuaRegistrationRequest);
+DeclareTmfHandler(Manager, kUriBackboneQuery);
+DeclareTmfHandler(Manager, kUriBackboneAnswer);
+#endif
 
 } // namespace BackboneRouter
 
