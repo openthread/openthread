@@ -234,7 +234,7 @@ typedef enum
 {
     OT_NAT64_STATE_DISABLED = 0, ///< NAT64 is disabled.
     OT_NAT64_STATE_NOT_RUNNING,  ///< NAT64 is enabled, but one or more dependencies of NAT64 are not running.
-    OT_NAT64_STATE_IDLE,         ///< NAT64 is enabled, but this BR is not a active NAT64 BR.
+    OT_NAT64_STATE_IDLE,         ///< NAT64 is enabled, but this BR is not an active NAT64 BR.
     OT_NAT64_STATE_ACTIVE,       ///< The BR is publishing a NAT64 prefix and/or translating packets.
 } otNat64State;
 
