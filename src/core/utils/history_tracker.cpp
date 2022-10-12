@@ -53,7 +53,7 @@ namespace Utils {
 
 HistoryTracker::HistoryTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
     , mPreviousNetworkData(aInstance, mNetworkDataTlvBuffer, 0, sizeof(mNetworkDataTlvBuffer))
 #endif
@@ -373,11 +373,6 @@ void HistoryTracker::HandleNotifierEvents(Events aEvents)
         RecordNetworkDataChange();
     }
 #endif
-}
-
-void HistoryTracker::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<HistoryTracker>().HandleTimer();
 }
 
 void HistoryTracker::HandleTimer(void)

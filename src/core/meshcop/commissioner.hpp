@@ -40,7 +40,6 @@
 
 #include <openthread/commissioner.h>
 
-#include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
@@ -57,6 +56,7 @@
 #include "net/udp6.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/mle.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -64,6 +64,9 @@ namespace MeshCoP {
 
 class Commissioner : public InstanceLocator, private NonCopyable
 {
+    friend class Tmf::Agent;
+    friend class Tmf::SecureAgent;
+
 public:
     /**
      * This enumeration type represents the Commissioner State.
@@ -539,14 +542,8 @@ private:
     Error RemoveJoiner(const Mac::ExtAddress *aEui64, const JoinerDiscerner *aDiscerner, uint32_t aDelay);
     void  RemoveJoiner(Joiner &aJoiner, uint32_t aDelay);
 
-    void AddCoapResources(void);
-    void RemoveCoapResources(void);
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-
-    static void HandleJoinerExpirationTimer(Timer &aTimer);
-    void        HandleJoinerExpirationTimer(void);
+    void HandleTimer(void);
+    void HandleJoinerExpirationTimer(void);
 
     void UpdateJoinerExpirationTimer(void);
 
@@ -575,17 +572,12 @@ private:
                                               Error                aResult);
     void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleCoapsConnected(bool aConnected, void *aContext);
-    void        HandleCoapsConnected(bool aConnected);
+    static void HandleSecureAgentConnected(bool aConnected, void *aContext);
+    void        HandleSecureAgentConnected(bool aConnected);
 
-    static void HandleRelayReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDatasetChanged(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleJoinerFinalize(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState);
 
@@ -604,6 +596,9 @@ private:
 
     static const char *StateToString(State aState);
 
+    using JoinerExpirationTimer = TimerMilliIn<Commissioner, &Commissioner::HandleJoinerExpirationTimer>;
+    using CommissionerTimer     = TimerMilliIn<Commissioner, &Commissioner::HandleTimer>;
+
     Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
 
     Joiner *                 mActiveJoiner;
@@ -612,12 +607,8 @@ private:
     uint16_t                 mJoinerRloc;
     uint16_t                 mSessionId;
     uint8_t                  mTransmitAttempts;
-    TimerMilli               mJoinerExpirationTimer;
-    TimerMilli               mTimer;
-
-    Coap::Resource mRelayReceive;
-    Coap::Resource mDatasetChanged;
-    Coap::Resource mJoinerFinalize;
+    JoinerExpirationTimer    mJoinerExpirationTimer;
+    CommissionerTimer        mTimer;
 
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient    mEnergyScan;
@@ -634,6 +625,10 @@ private:
     JoinerCallback mJoinerCallback;
     void *         mCallbackContext;
 };
+
+DeclareTmfHandler(Commissioner, kUriDatasetChanged);
+DeclareTmfHandler(Commissioner, kUriRelayRx);
+DeclareTmfHandler(Commissioner, kUriJoinerFinalize);
 
 } // namespace MeshCoP
 

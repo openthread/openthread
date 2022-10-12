@@ -67,7 +67,7 @@ const mbedtls_ecp_group_id Dtls::sCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_
 
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 #if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-const uint16_t Dtls::sHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
+const uint16_t Dtls::sSignatures[] = {MBEDTLS_TLS1_3_SIG_ECDSA_SECP256R1_SHA256, MBEDTLS_TLS1_3_SIG_NONE};
 #else
 const int Dtls::sHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
 #endif
@@ -226,7 +226,7 @@ Error Dtls::Bind(uint16_t aPort)
     VerifyOrExit(mState == kStateOpen, error = kErrorInvalidState);
     VerifyOrExit(mTransportCallback == nullptr, error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Bind(aPort, OT_NETIF_UNSPECIFIED));
+    SuccessOrExit(error = mSocket.Bind(aPort, Ip6::kNetifUnspecified));
 
 exit:
     return error;
@@ -306,7 +306,7 @@ Error Dtls::Setup(bool aClient)
 #endif
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
 #if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
-        mbedtls_ssl_conf_sig_algs(&mConf, sHashes);
+        mbedtls_ssl_conf_sig_algs(&mConf, sSignatures);
 #else
         mbedtls_ssl_conf_sig_hashes(&mConf, sHashes);
 #endif

@@ -78,7 +78,7 @@ Error LinkMetrics::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, co
 
     if (aMetrics != nullptr)
     {
-        info.mTypeIdCount = TypeIdFlagsFromMetrics(info.mTypeIds, *aMetrics);
+        info.mTypeIdCount = aMetrics->ConvertToTypeIds(info.mTypeIds);
     }
 
     if (aSeriesId != 0)
@@ -114,10 +114,10 @@ Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDes
 
     if (aMetrics != nullptr)
     {
-        typeIdCount = TypeIdFlagsFromMetrics(fwdProbingSubTlv.GetTypeIds(), *aMetrics);
+        typeIdCount = aMetrics->ConvertToTypeIds(fwdProbingSubTlv.GetTypeIds());
     }
 
-    fwdProbingSubTlv.SetLength(sizeof(aSeriesId) + sizeof(uint8_t) + typeIdCount * sizeof(TypeIdFlags));
+    fwdProbingSubTlv.SetLength(sizeof(aSeriesId) + sizeof(uint8_t) + typeIdCount);
 
     error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, fwdProbingSubTlv);
 
@@ -148,10 +148,10 @@ Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination
 
     if (aMetrics != nullptr)
     {
-        typeIdCount = TypeIdFlagsFromMetrics(enhAckConfigSubTlv.GetTypeIds(), *aMetrics);
+        typeIdCount = aMetrics->ConvertToTypeIds(enhAckConfigSubTlv.GetTypeIds());
     }
 
-    enhAckConfigSubTlv.SetLength(EnhAckConfigSubTlv::kMinLength + typeIdCount * sizeof(TypeIdFlags));
+    enhAckConfigSubTlv.SetLength(EnhAckConfigSubTlv::kMinLength + typeIdCount);
 
     error = Get<Mle::MleRouter>().SendLinkMetricsManagementRequest(aDestination, enhAckConfigSubTlv);
 
@@ -225,9 +225,9 @@ Error LinkMetrics::AppendReport(Message &aMessage, const Message &aRequestMessag
             break;
 
         case SubTlv::kQueryOptions:
-            SuccessOrExit(error = ReadTypeIdFlagsFromMessage(aRequestMessage, offset + sizeof(tlv),
-                                                             static_cast<uint16_t>(offset + tlv.GetSize()),
-                                                             values.GetMetrics()));
+            SuccessOrExit(error = ReadTypeIdsFromMessage(aRequestMessage, offset + sizeof(tlv),
+                                                         static_cast<uint16_t>(offset + tlv.GetSize()),
+                                                         values.GetMetrics()));
             break;
 
         default:
@@ -321,7 +321,7 @@ Error LinkMetrics::HandleManagementRequest(const Message &aMessage, Neighbor &aN
             pos += sizeof(seriesId);
             SuccessOrExit(aMessage.Read(pos, seriesFlagsMask));
             pos += sizeof(seriesFlagsMask);
-            SuccessOrExit(error = ReadTypeIdFlagsFromMessage(
+            SuccessOrExit(error = ReadTypeIdsFromMessage(
                               aMessage, pos, static_cast<uint16_t>(offset + index + tlv.GetSize()), metrics));
             hasForwardProbingRegistrationTlv = true;
             break;
@@ -331,7 +331,7 @@ Error LinkMetrics::HandleManagementRequest(const Message &aMessage, Neighbor &aN
             VerifyOrExit(tlv.GetLength() >= sizeof(EnhAckFlags), error = kErrorParse);
             SuccessOrExit(aMessage.Read(pos, enhAckFlags));
             pos += sizeof(enhAckFlags);
-            SuccessOrExit(error = ReadTypeIdFlagsFromMessage(
+            SuccessOrExit(error = ReadTypeIdsFromMessage(
                               aMessage, pos, static_cast<uint16_t>(offset + index + tlv.GetSize()), metrics));
             hasEnhAckProbingTlv = true;
             break;
@@ -414,6 +414,7 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
     ReportSubTlv  reportTlv;
     MetricsValues values;
     uint8_t       status;
+    uint8_t       typeId;
 
     OT_UNUSED_VARIABLE(error);
 
@@ -447,40 +448,42 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
             VerifyOrExit(reportTlv.IsValid(), error = kErrorParse);
             hasReport = true;
 
-            if (reportTlv.GetMetricsTypeId().IsExtendedFlagSet())
+            typeId = reportTlv.GetMetricsTypeId();
+
+            if (TypeId::IsExtended(typeId))
             {
                 // Skip the sub-TLV if `E` flag is set.
                 break;
             }
 
-            if (reportTlv.GetMetricsTypeId().IsLengthFlagSet())
+            if (TypeId::GetValueLength(typeId) > sizeof(uint8_t))
             {
                 // If Type ID indicates metric value has 4 bytes length, we
                 // read the full `reportTlv`.
                 SuccessOrExit(error = aMessage.Read(offset, reportTlv));
             }
 
-            switch (reportTlv.GetMetricsTypeId().GetRawValue())
+            switch (typeId)
             {
-            case TypeIdFlags::kPdu:
+            case TypeId::kPdu:
                 values.mMetrics.mPduCount = true;
                 values.mPduCountValue     = reportTlv.GetMetricsValue32();
                 LogDebg(" - PDU Counter: %d (Count/Summation)", values.mPduCountValue);
                 break;
 
-            case TypeIdFlags::kLqi:
+            case TypeId::kLqi:
                 values.mMetrics.mLqi = true;
                 values.mLqiValue     = reportTlv.GetMetricsValue8();
                 LogDebg(" - LQI: %d (Exponential Moving Average)", values.mLqiValue);
                 break;
 
-            case TypeIdFlags::kLinkMargin:
+            case TypeId::kLinkMargin:
                 values.mMetrics.mLinkMargin = true;
                 values.mLinkMarginValue     = ScaleRawValueToLinkMargin(reportTlv.GetMetricsValue8());
                 LogDebg(" - Margin: %d (dB) (Exponential Moving Average)", values.mLinkMarginValue);
                 break;
 
-            case TypeIdFlags::kRssi:
+            case TypeId::kRssi:
                 values.mMetrics.mRssi = true;
                 values.mRssiValue     = ScaleRawValueToRssi(reportTlv.GetMetricsValue8());
                 LogDebg(" - RSSI: %d (dBm) (Exponential Moving Average)", values.mRssiValue);
@@ -678,47 +681,47 @@ exit:
     return neighbor;
 }
 
-Error LinkMetrics::ReadTypeIdFlagsFromMessage(const Message &aMessage,
-                                              uint16_t       aStartPos,
-                                              uint16_t       aEndPos,
-                                              Metrics &      aMetrics)
+Error LinkMetrics::ReadTypeIdsFromMessage(const Message &aMessage,
+                                          uint16_t       aStartOffset,
+                                          uint16_t       aEndOffset,
+                                          Metrics &      aMetrics)
 {
     Error error = kErrorNone;
 
-    memset(&aMetrics, 0, sizeof(aMetrics));
+    aMetrics.Clear();
 
-    for (uint16_t pos = aStartPos; pos < aEndPos; pos += sizeof(TypeIdFlags))
+    for (uint16_t offset = aStartOffset; offset < aEndOffset; offset++)
     {
-        TypeIdFlags typeIdFlags;
+        uint8_t typeId;
 
-        SuccessOrExit(aMessage.Read(pos, typeIdFlags));
+        SuccessOrExit(aMessage.Read(offset, typeId));
 
-        switch (typeIdFlags.GetRawValue())
+        switch (typeId)
         {
-        case TypeIdFlags::kPdu:
+        case TypeId::kPdu:
             VerifyOrExit(!aMetrics.mPduCount, error = kErrorParse);
             aMetrics.mPduCount = true;
             break;
 
-        case TypeIdFlags::kLqi:
+        case TypeId::kLqi:
             VerifyOrExit(!aMetrics.mLqi, error = kErrorParse);
             aMetrics.mLqi = true;
             break;
 
-        case TypeIdFlags::kLinkMargin:
+        case TypeId::kLinkMargin:
             VerifyOrExit(!aMetrics.mLinkMargin, error = kErrorParse);
             aMetrics.mLinkMargin = true;
             break;
 
-        case TypeIdFlags::kRssi:
+        case TypeId::kRssi:
             VerifyOrExit(!aMetrics.mRssi, error = kErrorParse);
             aMetrics.mRssi = true;
             break;
 
         default:
-            if (typeIdFlags.IsExtendedFlagSet())
+            if (TypeId::IsExtended(typeId))
             {
-                pos += sizeof(uint8_t); // Skip the additional second flags byte.
+                offset += sizeof(uint8_t); // Skip the additional second byte.
             }
             else
             {
@@ -741,28 +744,28 @@ Error LinkMetrics::AppendReportSubTlvToMessage(Message &aMessage, const MetricsV
 
     if (aValues.mMetrics.mPduCount)
     {
-        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kPdu));
+        reportTlv.SetMetricsTypeId(TypeId::kPdu);
         reportTlv.SetMetricsValue32(aValues.mPduCountValue);
         SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
     if (aValues.mMetrics.mLqi)
     {
-        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kLqi));
+        reportTlv.SetMetricsTypeId(TypeId::kLqi);
         reportTlv.SetMetricsValue8(aValues.mLqiValue);
         SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
     if (aValues.mMetrics.mLinkMargin)
     {
-        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kLinkMargin));
+        reportTlv.SetMetricsTypeId(TypeId::kLinkMargin);
         reportTlv.SetMetricsValue8(ScaleLinkMarginToRawValue(aValues.mLinkMarginValue));
         SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }
 
     if (aValues.mMetrics.mRssi)
     {
-        reportTlv.SetMetricsTypeId(TypeIdFlags(TypeIdFlags::kRssi));
+        reportTlv.SetMetricsTypeId(TypeId::kRssi);
         reportTlv.SetMetricsValue8(ScaleRssiToRawValue(aValues.mRssiValue));
         SuccessOrExit(error = reportTlv.AppendTo(aMessage));
     }

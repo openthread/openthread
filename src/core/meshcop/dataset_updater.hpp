@@ -118,16 +118,17 @@ private:
     // Retry interval (in ms) when preparing and/or sending Pending Dataset fails.
     static constexpr uint32_t kRetryInterval = 1000;
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-    void        PreparePendingDataset(void);
-    void        Finish(Error aError);
-    void        HandleNotifierEvents(Events aEvents);
+    void HandleTimer(void);
+    void PreparePendingDataset(void);
+    void Finish(Error aError);
+    void HandleNotifierEvents(Events aEvents);
 
-    Callback   mCallback;
-    void *     mCallbackContext;
-    TimerMilli mTimer;
-    Message *  mDataset;
+    using UpdaterTimer = TimerMilliIn<DatasetUpdater, &DatasetUpdater::HandleTimer>;
+
+    Callback     mCallback;
+    void *       mCallbackContext;
+    UpdaterTimer mTimer;
+    Message *    mDataset;
 };
 
 } // namespace MeshCoP

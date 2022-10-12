@@ -193,18 +193,19 @@ private:
     static constexpr uint16_t kMaxJitterInterval = 4096;
     static constexpr uint32_t kMaxOccupancy      = 0xffff;
 
-    static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
     static void HandleEnergyScanResult(Mac::EnergyScanResult *aResult, void *aContext);
     void        HandleEnergyScanResult(Mac::EnergyScanResult *aResult);
     void        LogResults(void);
 
+    using ScanTimer = TimerMilliIn<ChannelMonitor, &ChannelMonitor::HandleTimer>;
+
     static const uint32_t mScanChannelMasks[kNumChannelMasks];
 
-    uint8_t    mChannelMaskIndex : 3;
-    uint32_t   mSampleCount : 29;
-    uint16_t   mChannelOccupancy[kNumChannels];
-    TimerMilli mTimer;
+    uint8_t   mChannelMaskIndex : 3;
+    uint32_t  mSampleCount : 29;
+    uint16_t  mChannelOccupancy[kNumChannels];
+    ScanTimer mTimer;
 };
 
 /**

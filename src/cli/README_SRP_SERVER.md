@@ -178,6 +178,9 @@ srp-api-test-1._ipps._tcp.default.service.arpa.
     port: 49152
     priority: 0
     weight: 0
+    ttl: 7200
+    lease: 7200
+    key-lease: 1209600
     TXT: 0130
     host: srp-api-test-1.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
@@ -187,6 +190,9 @@ srp-api-test-0._ipps._tcp.default.service.arpa.
     port: 49152
     priority: 0
     weight: 0
+    ttl: 3600
+    lease: 3600
+    key-lease: 1209600
     TXT: 0130
     host: srp-api-test-0.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]

@@ -171,14 +171,6 @@ private:
     void HandleNotifierEvents(Events aEvents);
 
     /**
-     * Callback to be called when timer expires.
-     *
-     * @param[in] aTimer The corresponding timer.
-     *
-     */
-    static void HandleTimeout(Timer &aTimer);
-
-    /**
      * Check and handle any status change, and notify observers if applicable.
      *
      * @param[in] aNotifyTimeUpdated True to denote that observers should be notified due to a time change, false
@@ -199,6 +191,8 @@ private:
      */
     void NotifyTimeSyncCallback(void);
 
+    using SyncTimer = TimerMilliIn<TimeSync, &TimeSync::HandleTimeout>;
+
     bool     mTimeSyncRequired; ///< Indicate whether or not a time synchronization message is required.
     uint8_t  mTimeSyncSeq;      ///< The time synchronization sequence.
     uint16_t mTimeSyncPeriod;   ///< The time synchronization period.
@@ -211,7 +205,7 @@ private:
     otNetworkTimeSyncCallbackFn
                         mTimeSyncCallback; ///< The callback to be called when time sync is handled or status updated.
     void *              mTimeSyncCallbackContext; ///< The context to be passed to callback.
-    TimerMilli          mTimer;                   ///< Timer for checking if a resync is required.
+    SyncTimer           mTimer;                   ///< Timer for checking if a resync is required.
     otNetworkTimeStatus mCurrentStatus;           ///< Current network time status.
 };
 

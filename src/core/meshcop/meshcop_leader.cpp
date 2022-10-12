@@ -57,22 +57,13 @@ RegisterLogModule("MeshCoPLeader");
 
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mPetition(UriPath::kLeaderPetition, Leader::HandlePetition, this)
-    , mKeepAlive(UriPath::kLeaderKeepAlive, Leader::HandleKeepAlive, this)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
-    Get<Tmf::Agent>().AddResource(mPetition);
-    Get<Tmf::Agent>().AddResource(mKeepAlive);
 }
 
-void Leader::HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Leader *>(aContext)->HandlePetition(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -152,12 +143,7 @@ exit:
     LogError("send petition response", error);
 }
 
-void Leader::HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Leader *>(aContext)->HandleKeepAlive(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint8_t                state;
     uint16_t               sessionId;
@@ -229,7 +215,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     Tmf::MessageInfo messageInfo(GetInstance());
     Coap::Message *  message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kDatasetChanged);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDatasetChanged);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
@@ -256,11 +242,6 @@ exit:
 uint32_t Leader::GetDelayTimerMinimal(void) const
 {
     return mDelayTimerMinimal;
-}
-
-void Leader::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)

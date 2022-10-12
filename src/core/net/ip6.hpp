@@ -227,7 +227,10 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error HandleDatagram(Message &aMessage, MessageOrigin aOrigin, const void *aLinkMessageInfo = nullptr);
+    Error HandleDatagram(Message &     aMessage,
+                         MessageOrigin aOrigin,
+                         const void *  aLinkMessageInfo = nullptr,
+                         bool          aIsReassembled   = false);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -416,6 +419,8 @@ private:
  */
 class Headers : private Clearable<Headers>
 {
+    friend class Clearable<Headers>;
+
 public:
     /**
      * This method parses the IPv6 and UDP/TCP/ICMP6 headers from a given message.

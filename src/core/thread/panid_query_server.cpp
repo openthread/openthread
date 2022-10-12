@@ -53,18 +53,12 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMask(0)
     , mPanId(Mac::kPanIdBroadcast)
-    , mTimer(aInstance, PanIdQueryServer::HandleTimer)
-    , mPanIdQuery(UriPath::kPanIdQuery, &PanIdQueryServer::HandleQuery, this)
+    , mTimer(aInstance)
 {
-    Get<Tmf::Agent>().AddResource(mPanIdQuery);
 }
 
-void PanIdQueryServer::HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<PanIdQueryServer *>(aContext)->HandleQuery(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void PanIdQueryServer::HandleQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t         panId;
     Ip6::MessageInfo responseInfo(aMessageInfo);
@@ -117,7 +111,7 @@ void PanIdQueryServer::SendConflict(void)
     Tmf::MessageInfo        messageInfo(GetInstance());
     Coap::Message *         message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kPanIdConflict);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriPanIdConflict);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     channelMask.Init();
@@ -135,11 +129,6 @@ void PanIdQueryServer::SendConflict(void)
 exit:
     FreeMessageOnError(message, error);
     MeshCoP::LogError("send panid conflict", error);
-}
-
-void PanIdQueryServer::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<PanIdQueryServer>().HandleTimer();
 }
 
 void PanIdQueryServer::HandleTimer(void)

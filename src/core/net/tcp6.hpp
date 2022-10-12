@@ -686,14 +686,14 @@ private:
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
 
-    static void HandleTimer(Timer &aTimer);
-    void        ProcessTimers(void);
+    void HandleTimer(void);
 
     void ProcessCallbacks(void);
 
     using TcpTasklet = TaskletIn<Tcp, &Tcp::ProcessCallbacks>;
+    using TcpTimer   = TimerMilliIn<Tcp, &Tcp::HandleTimer>;
 
-    TimerMilli mTimer;
+    TcpTimer   mTimer;
     TcpTasklet mTasklet;
 
     LinkedList<Endpoint> mEndpoints;

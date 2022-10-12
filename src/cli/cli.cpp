@@ -472,7 +472,7 @@ otError Interpreter::ParseToIp6Address(otInstance *  aInstance,
 
         // Do not touch the error value if we failed to parse it as an IPv4 address.
         SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
-        SuccessOrExit(error = otNat64SynthersizeIp6Address(aInstance, &ip4Address, &aAddress));
+        SuccessOrExit(error = otNat64SynthesizeIp6Address(aInstance, &ip4Address, &aAddress));
         aSynthesized = true;
     }
 
@@ -748,7 +748,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * @cli nat64 cidr
      * @code
      * nat64 cidr
-     * 192.168.64.0/24
+     * 192.168.255.0/24
      * Done
      * @endcode
      * @par api_copy
@@ -2459,6 +2459,9 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 {&otMacCounters::mTxRetry, "TxRetry"},
                 {&otMacCounters::mTxErrCca, "TxErrCca"},
                 {&otMacCounters::mTxErrBusyChannel, "TxErrBusyChannel"},
+                {&otMacCounters::mTxErrAbort, "TxErrAbort"},
+                {&otMacCounters::mTxDirectMaxRetryExpiry, "TxDirectMaxRetryExpiry"},
+                {&otMacCounters::mTxIndirectMaxRetryExpiry, "TxIndirectMaxRetryExpiry"},
             };
 
             static const MacCounterName kRxCounterNames[] = {
@@ -2942,17 +2945,24 @@ exit:
 otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 {
     // This method gets the optional DNS config from `aArgs[]`.
-    // The format: `[server IPv6 address] [server port] [timeout]
+    // The format: `[server IP address] [server port] [timeout]
     // [max tx attempt] [recursion desired]`.
 
     otError error = OT_ERROR_NONE;
     bool    recursionDesired;
+    bool    nat64SynthesizedAddress;
 
     memset(aConfig, 0, sizeof(otDnsQueryConfig));
 
     VerifyOrExit(!aArgs[0].IsEmpty(), aConfig = nullptr);
 
-    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(aConfig->mServerSockAddr.mAddress));
+    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], aConfig->mServerSockAddr.mAddress,
+                                                         nat64SynthesizedAddress));
+    if (nat64SynthesizedAddress)
+    {
+        OutputFormat("Synthesized IPv6 DNS server address: ");
+        OutputIp6AddressLine(aConfig->mServerSockAddr.mAddress);
+    }
 
     VerifyOrExit(!aArgs[1].IsEmpty());
     SuccessOrExit(error = aArgs[1].ParseAsUint16(aConfig->mServerSockAddr.mPort));
@@ -3013,7 +3023,18 @@ void Interpreter::OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceIn
     OutputIp6Address(aServiceInfo.mHostAddress);
     OutputLine(" TTL:%u", aServiceInfo.mHostAddressTtl);
     OutputFormat(aIndentSize, "TXT:");
-    OutputDnsTxtData(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+
+    if (!aServiceInfo.mTxtDataTruncated)
+    {
+        OutputDnsTxtData(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+    }
+    else
+    {
+        OutputFormat("[");
+        OutputBytes(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+        OutputFormat("...]");
+    }
+
     OutputLine(" TTL:%u", aServiceInfo.mTxtDataTtl);
 }
 
@@ -3026,7 +3047,7 @@ void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseRespo
 {
     char             name[OT_DNS_MAX_NAME_SIZE];
     char             label[OT_DNS_MAX_LABEL_SIZE];
-    uint8_t          txtBuffer[255];
+    uint8_t          txtBuffer[kMaxTxtDataSize];
     otDnsServiceInfo serviceInfo;
 
     IgnoreError(otDnsBrowseResponseGetServiceName(aResponse, name, sizeof(name)));
@@ -3068,7 +3089,7 @@ void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceRes
 {
     char             name[OT_DNS_MAX_NAME_SIZE];
     char             label[OT_DNS_MAX_LABEL_SIZE];
-    uint8_t          txtBuffer[255];
+    uint8_t          txtBuffer[kMaxTxtDataSize];
     otDnsServiceInfo serviceInfo;
 
     IgnoreError(otDnsServiceResponseGetServiceName(aResponse, label, sizeof(label), name, sizeof(name)));
@@ -3261,7 +3282,7 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
     else if (aArgs[0] == "filename")
     {
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = otPlatDebugUart_logfile(aArgs[1].GetCString()));
     }
 #endif

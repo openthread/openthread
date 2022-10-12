@@ -39,6 +39,7 @@
 #include "common/array.hpp"
 #include "common/instance.hpp"
 #include "common/string.hpp"
+#include "common/time.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE && \
     !OPENTHREAD_CONFIG_TIME_SYNC_ENABLE && !OPENTHREAD_PLATFORM_POSIX
@@ -179,7 +180,7 @@ void AdvanceTime(uint32_t aDuration)
 
     Log("AdvanceTime for %u.%03u", aDuration / 1000, aDuration % 1000);
 
-    while (sAlarmTime <= time)
+    while (TimeMilli(sAlarmTime) <= TimeMilli(time))
     {
         ProcessRadioTxAndTasklets();
         sNow = sAlarmTime;
@@ -492,6 +493,7 @@ void TestSrpServerReject(void)
     heapAllocations = sHeapAllocatedPtrs.GetLength();
 
     PrepareService1(service1);
+    PrepareService2(service2);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start SRP server.
@@ -603,6 +605,7 @@ void TestSrpServerIgnore(void)
     heapAllocations = sHeapAllocatedPtrs.GetLength();
 
     PrepareService1(service1);
+    PrepareService2(service2);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start SRP server.

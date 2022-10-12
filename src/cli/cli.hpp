@@ -238,7 +238,7 @@ public:
     /**
      * This method parses the argument as an IP address.
      *
-     * If the argument string is an IPv4 address, this method will try to synthersize an IPv6 address using preferred
+     * If the argument string is an IPv4 address, this method will try to synthesize an IPv6 address using preferred
      * NAT64 prefix in the network data.
      *
      * @param[in]  aInstance       A pointer to openthread instance.
@@ -270,6 +270,8 @@ private:
 
     static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
     static constexpr uint32_t kLocateTimeoutMsecs            = 2500;
+
+    static constexpr uint16_t kMaxTxtDataSize = OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE;
 
     using Command = CommandEntry<Interpreter>;
 

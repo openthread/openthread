@@ -54,10 +54,6 @@ We would love for you to contribute to OpenThread and help make it even better t
 
 Contributors are required to abide by our [Code of Conduct](https://github.com/openthread/openthread/blob/main/CODE_OF_CONDUCT.md) and [Coding Conventions and Style Guide](https://github.com/openthread/openthread/blob/main/STYLE_GUIDE.md).
 
-# Versioning
-
-OpenThread follows the [Semantic Versioning guidelines](http://semver.org/) for release cycle transparency and to maintain backwards compatibility. OpenThread's versioning is independent of the Thread protocol specification version but will clearly indicate which version of the specification it currently supports.
-
 # License
 
 OpenThread is released under the [BSD 3-Clause license](https://github.com/openthread/openthread/blob/main/LICENSE). See the [`LICENSE`](https://github.com/openthread/openthread/blob/main/LICENSE) file for more information.

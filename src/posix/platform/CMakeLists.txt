@@ -35,6 +35,14 @@ if(OT_DAEMON)
     target_compile_definitions(ot-posix-config
         INTERFACE "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1"
     )
+
+    # We have to add this definition to `ot-config` because openthread core
+    # libraries will set config file to "openthrad-core-posix-config.h" which
+    # depends on `OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE` to correctly enable
+    # PLATFORM_NETIF and PLATFORM_UDP features. Otherwise, openthread core and
+    # posix libraries will use different feature definitions.
+    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1")
+    set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 endif()
 
 option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" ON)
@@ -76,7 +84,7 @@ if(OT_POSIX_CONFIG_RCP_BUS)
     )
 endif()
 
-set(OT_POSIX_NAT64_CIDR "192.168.64.0/24" CACHE STRING "NAT64 CIDR for OpenThread NAT64")
+set(OT_POSIX_NAT64_CIDR "192.168.255.0/24" CACHE STRING "NAT64 CIDR for OpenThread NAT64")
 if(OT_POSIX_NAT64_CIDR)
     target_compile_definitions(ot-posix-config
         INTERFACE "OPENTHREAD_POSIX_CONFIG_NAT64_CIDR=\"${OT_POSIX_NAT64_CIDR}\""
@@ -121,6 +129,7 @@ target_link_libraries(openthread-posix
         openthread-platform
     PRIVATE
         openthread-url
+        ot-config-ftd
         ot-config
         ot-posix-config
         util

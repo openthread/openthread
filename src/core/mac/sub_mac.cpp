@@ -59,7 +59,7 @@ SubMac::SubMac(Instance &aInstance)
     , mCallbacks(aInstance)
     , mPcapCallback(nullptr)
     , mPcapCallbackContext(nullptr)
-    , mTimer(aInstance, SubMac::HandleTimer)
+    , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
 #endif
@@ -774,11 +774,6 @@ void SubMac::HandleEnergyScanDone(int8_t aMaxRssi)
 {
     SetState(kStateReceive);
     mCallbacks.EnergyScanDone(aMaxRssi);
-}
-
-void SubMac::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<SubMac>().HandleTimer();
 }
 
 void SubMac::HandleTimer(void)

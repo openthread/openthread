@@ -49,5 +49,6 @@ target_link_libraries(openthread-rcp
     PRIVATE
         openthread-hdlc
         openthread-spinel-rcp
+        ot-config-radio
         ot-config
 )

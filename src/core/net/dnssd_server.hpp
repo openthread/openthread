@@ -405,23 +405,26 @@ private:
                                             const Message &aMessage,
                                             char (&aName)[Name::kMaxNameSize]);
     static bool HasQuestion(const Header &aHeader, const Message &aMessage, const char *aName, uint16_t aQuestionType);
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-    void        ResetTimer(void);
+
+    void HandleTimer(void);
+    void ResetTimer(void);
 
     void UpdateResponseCounters(Header::Response aResponseCode);
+
+    using ServerTimer = TimerMilliIn<Server, &Server::HandleTimer>;
 
     static const char kDnssdProtocolUdp[];
     static const char kDnssdProtocolTcp[];
     static const char kDnssdSubTypeLabel[];
     static const char kDefaultDomainName[];
-    Ip6::Udp::Socket  mSocket;
+
+    Ip6::Udp::Socket mSocket;
 
     QueryTransaction                mQueryTransactions[kMaxConcurrentQueries];
     void *                          mQueryCallbackContext;
     otDnssdQuerySubscribeCallback   mQuerySubscribe;
     otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
-    TimerMilli                      mTimer;
+    ServerTimer                     mTimer;
 
     Counters mCounters;
 };

@@ -54,19 +54,12 @@ RegisterLogModule("AddrResolver");
 
 AddressResolver::AddressResolver(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mAddressError(UriPath::kAddressError, &AddressResolver::HandleAddressError, this)
 #if OPENTHREAD_FTD
-    , mAddressQuery(UriPath::kAddressQuery, &AddressResolver::HandleAddressQuery, this)
-    , mAddressNotification(UriPath::kAddressNotify, &AddressResolver::HandleAddressNotification, this)
     , mCacheEntryPool(aInstance)
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
 #endif
 {
-    Get<Tmf::Agent>().AddResource(mAddressError);
 #if OPENTHREAD_FTD
-    Get<Tmf::Agent>().AddResource(mAddressQuery);
-    Get<Tmf::Agent>().AddResource(mAddressNotification);
-
     IgnoreError(Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler));
 #endif
 }
@@ -561,7 +554,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     Coap::Message *  message;
     Tmf::MessageInfo messageInfo(GetInstance());
 
-    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(UriPath::kAddressQuery);
+    message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriAddressQuery);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aEid));
@@ -591,13 +584,8 @@ exit:
     return error;
 }
 
-void AddressResolver::HandleAddressNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<AddressResolver *>(aContext)->HandleAddressNotification(AsCoapMessage(aMessage),
-                                                                        AsCoreType(aMessageInfo));
-}
-
-void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void AddressResolver::HandleTmf<kUriAddressNotify>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Ip6::Address             target;
     Ip6::InterfaceIdentifier meshLocalIid;
@@ -676,7 +664,7 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
     VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     message->Init(aDestination == nullptr ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost);
-    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressError));
+    SuccessOrExit(error = message->AppendUriPathOptions(PathForUri(kUriAddressError)));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));
@@ -706,12 +694,8 @@ exit:
 
 #endif // OPENTHREAD_FTD
 
-void AddressResolver::HandleAddressError(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<AddressResolver *>(aContext)->HandleAddressError(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                    error = kErrorNone;
     Ip6::Address             target;
@@ -792,12 +776,8 @@ exit:
 
 #if OPENTHREAD_FTD
 
-void AddressResolver::HandleAddressQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void AddressResolver::HandleAddressQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Ip6::Address target;
     uint32_t     lastTransactionTime;
@@ -854,7 +834,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
     Coap::Message *  message;
     Tmf::MessageInfo messageInfo(GetInstance());
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kAddressNotify);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressNotify);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aTarget));

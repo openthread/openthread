@@ -57,7 +57,7 @@ ChannelManager::ChannelManager(Instance &aInstance)
     , mDelay(kMinimumDelay)
     , mChannel(0)
     , mState(kStateIdle)
-    , mTimer(aInstance, ChannelManager::HandleTimer)
+    , mTimer(aInstance)
     , mAutoSelectInterval(kDefaultAutoSelectInterval)
     , mAutoSelectEnabled(false)
     , mCcaFailureRateThreshold(kCcaFailureRateThreshold)
@@ -152,11 +152,6 @@ void ChannelManager::HandleDatasetUpdateDone(Error aError)
 
     mState = kStateIdle;
     StartAutoSelectTimer();
-}
-
-void ChannelManager::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<ChannelManager>().HandleTimer();
 }
 
 void ChannelManager::HandleTimer(void)

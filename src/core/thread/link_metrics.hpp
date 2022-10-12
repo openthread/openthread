@@ -90,9 +90,9 @@ public:
      */
     struct QueryInfo : public Clearable<QueryInfo>
     {
-        uint8_t     mSeriesId;                 ///< Series ID.
-        TypeIdFlags mTypeIds[kMaxTypeIdFlags]; ///< Type ID flags.
-        uint8_t     mTypeIdCount;              ///< Number of entries in `mTypeIds[]`.
+        uint8_t mSeriesId;             ///< Series ID.
+        uint8_t mTypeIds[kMaxTypeIds]; ///< Type IDs.
+        uint8_t mTypeIdCount;          ///< Number of entries in `mTypeIds[]`.
     };
 
     /**
@@ -114,7 +114,7 @@ public:
      *
      * @retval kErrorNone             Successfully sent a Link Metrics query message.
      * @retval kErrorNoBufs           Insufficient buffers to generate the MLE Data Request message.
-     * @retval kErrorInvalidArgs      TypeIdFlags are not valid or exceed the count limit.
+     * @retval kErrorInvalidArgs      Type IDs are not valid or exceed the count limit.
      * @retval kErrorUnknownNeighbor  @p aDestination is not link-local or the neighbor is not found.
      *
      */
@@ -309,10 +309,10 @@ private:
 
     Neighbor *GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination);
 
-    static Error ReadTypeIdFlagsFromMessage(const Message &aMessage,
-                                            uint16_t       aStartPos,
-                                            uint16_t       aEndPos,
-                                            Metrics &      aMetrics);
+    static Error ReadTypeIdsFromMessage(const Message &aMessage,
+                                        uint16_t       aStartOffset,
+                                        uint16_t       aEndOffset,
+                                        Metrics &      aMetrics);
     static Error AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues);
 
     static uint8_t ScaleLinkMarginToRawValue(uint8_t aLinkMargin);

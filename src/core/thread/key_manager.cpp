@@ -172,7 +172,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mHoursSinceKeyRotation(0)
     , mKeySwitchGuardTime(kDefaultKeySwitchGuardTime)
     , mKeySwitchGuardEnabled(false)
-    , mKeyRotationTimer(aInstance, KeyManager::HandleKeyRotationTimer)
+    , mKeyRotationTimer(aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
 {
@@ -495,11 +495,6 @@ void KeyManager::StartKeyRotationTimer(void)
 {
     mHoursSinceKeyRotation = 0;
     mKeyRotationTimer.Start(kOneHourIntervalInMsec);
-}
-
-void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
-{
-    aTimer.Get<KeyManager>().HandleKeyRotationTimer();
 }
 
 void KeyManager::HandleKeyRotationTimer(void)

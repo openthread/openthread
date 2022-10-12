@@ -913,12 +913,12 @@ public:
 private:
     static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
-    static constexpr uint32_t kDefaultMinTtl               = 60u;             // 1 min (in seconds).
-    static constexpr uint32_t kDefaultMaxTtl               = 3600u * 2;       // 2 hours (in seconds).
-    static constexpr uint32_t kDefaultMinLease             = 60u * 30;        // 30 min (in seconds).
-    static constexpr uint32_t kDefaultMaxLease             = 3600u * 2;       // 2 hours (in seconds).
-    static constexpr uint32_t kDefaultMinKeyLease          = 3600u * 24;      // 1 day (in seconds).
-    static constexpr uint32_t kDefaultMaxKeyLease          = 3600u * 24 * 14; // 14 days (in seconds).
+    static constexpr uint32_t kDefaultMinLease             = 30;          // 30 seconds.
+    static constexpr uint32_t kDefaultMaxLease             = 27u * 3600;  // 27 hours (in seconds).
+    static constexpr uint32_t kDefaultMinKeyLease          = 30;          // 30 seconds.
+    static constexpr uint32_t kDefaultMaxKeyLease          = 189u * 3600; // 189 hours (in seconds).
+    static constexpr uint32_t kDefaultMinTtl               = kDefaultMinLease;
+    static constexpr uint32_t kDefaultMaxTtl               = kDefaultMaxLease;
     static constexpr uint32_t kDefaultEventsHandlerTimeout = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT;
 
     static constexpr AddressMode kDefaultAddressMode =
@@ -1043,7 +1043,6 @@ private:
                              const Ip6::MessageInfo & aMessageInfo);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleLeaseTimer(Timer &aTimer);
     void        HandleLeaseTimer(void);
     static void HandleOutstandingUpdatesTimer(Timer &aTimer);
     void        HandleOutstandingUpdatesTimer(void);
@@ -1053,6 +1052,9 @@ private:
     static const char *   AddressModeToString(AddressMode aMode);
 
     void UpdateResponseCounters(Dns::Header::Response aResponseCode);
+
+    using LeaseTimer  = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
+    using UpdateTimer = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;
 
     Ip6::Udp::Socket                mSocket;
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
@@ -1064,9 +1066,9 @@ private:
     LeaseConfig mLeaseConfig;
 
     LinkedList<Host> mHosts;
-    TimerMilli       mLeaseTimer;
+    LeaseTimer       mLeaseTimer;
 
-    TimerMilli                 mOutstandingUpdatesTimer;
+    UpdateTimer                mOutstandingUpdatesTimer;
     LinkedList<UpdateMetadata> mOutstandingUpdates;
 
     ServiceUpdateId mServiceUpdateId;

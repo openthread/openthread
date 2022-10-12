@@ -88,8 +88,8 @@ Server::Server(Instance &aInstance)
     , mSocket(aInstance)
     , mServiceUpdateHandler(nullptr)
     , mServiceUpdateHandlerContext(nullptr)
-    , mLeaseTimer(aInstance, HandleLeaseTimer)
-    , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
+    , mLeaseTimer(aInstance)
+    , mOutstandingUpdatesTimer(aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mPort(kUdpPortMin)
     , mState(kStateDisabled)
@@ -598,7 +598,7 @@ void Server::PrepareSocket(void)
 
     VerifyOrExit(!mSocket.IsOpen());
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    error = mSocket.Bind(mPort, OT_NETIF_THREAD);
+    error = mSocket.Bind(mPort, Ip6::kNetifThread);
 
 exit:
     if (error != kErrorNone)
@@ -1528,11 +1528,6 @@ exit:
     return error;
 }
 
-void Server::HandleLeaseTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleLeaseTimer();
-}
-
 void Server::HandleLeaseTimer(void)
 {
     TimeMilli now                = TimerMilli::GetNow();
@@ -1647,11 +1642,6 @@ void Server::HandleLeaseTimer(void)
     }
 }
 
-void Server::HandleOutstandingUpdatesTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleOutstandingUpdatesTimer();
-}
-
 void Server::HandleOutstandingUpdatesTimer(void)
 {
     while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
@@ -1760,13 +1750,22 @@ TimeMilli Server::Service::GetKeyExpireTime(void) const
 void Server::Service::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
 {
     TimeMilli now           = TimerMilli::GetNow();
-    TimeMilli expireTime    = GetExpireTime();
     TimeMilli keyExpireTime = GetKeyExpireTime();
 
     aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
     aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
     aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
+
+    if (!mIsDeleted)
+    {
+        TimeMilli expireTime = GetExpireTime();
+
+        aLeaseInfo.mRemainingLease = (now <= expireTime) ? (expireTime - now) : 0;
+    }
+    else
+    {
+        aLeaseInfo.mRemainingLease = 0;
+    }
 }
 
 bool Server::Service::MatchesInstanceName(const char *aInstanceName) const
@@ -1974,13 +1973,22 @@ TimeMilli Server::Host::GetKeyExpireTime(void) const
 void Server::Host::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
 {
     TimeMilli now           = TimerMilli::GetNow();
-    TimeMilli expireTime    = GetExpireTime();
     TimeMilli keyExpireTime = GetKeyExpireTime();
 
     aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
     aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
     aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
+
+    if (!IsDeleted())
+    {
+        TimeMilli expireTime = GetExpireTime();
+
+        aLeaseInfo.mRemainingLease = (now <= expireTime) ? (expireTime - now) : 0;
+    }
+    else
+    {
+        aLeaseInfo.mRemainingLease = 0;
+    }
 }
 
 Error Server::Host::ProcessTtl(uint32_t aTtl)

@@ -47,11 +47,11 @@ namespace Ip6 {
 Mpl::Mpl(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMatchingAddress(nullptr)
-    , mSeedSetTimer(aInstance, Mpl::HandleSeedSetTimer)
+    , mSeedSetTimer(aInstance)
     , mSeedId(0)
     , mSequence(0)
 #if OPENTHREAD_FTD
-    , mRetransmissionTimer(aInstance, Mpl::HandleRetransmissionTimer)
+    , mRetransmissionTimer(aInstance)
     , mTimerExpirations(0)
 #endif
 {
@@ -261,11 +261,6 @@ exit:
     return error;
 }
 
-void Mpl::HandleSeedSetTimer(Timer &aTimer)
-{
-    aTimer.Get<Mpl>().HandleSeedSetTimer();
-}
-
 void Mpl::HandleSeedSetTimer(void)
 {
     bool startTimer = false;
@@ -332,11 +327,6 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
 
 exit:
     FreeMessageOnError(messageCopy, error);
-}
-
-void Mpl::HandleRetransmissionTimer(Timer &aTimer)
-{
-    aTimer.Get<Mpl>().HandleRetransmissionTimer();
 }
 
 void Mpl::HandleRetransmissionTimer(void)

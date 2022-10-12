@@ -101,7 +101,7 @@ class SrpManyServicesMtuCheck(thread_cert.TestCase):
             name = chr(ord('a') + num) * 63
             client.srp_client_add_service(
                 name,
-                '_longsrvname._udp,_subtype1,_subtype2,_subtype3,_subtype4,_subtype5,_subtype6',
+                '_longlongsrvname._udp,_subtype1,_subtype2,_subtype3,_subtype4,_subtype5,_subtype6',
                 1977,
                 txt_entries=txt_info)
 
@@ -118,6 +118,23 @@ class SrpManyServicesMtuCheck(thread_cert.TestCase):
 
         server_services = server.srp_server_get_services()
         self.assertEqual(len(server_services), num_services)
+
+        # Remove all 8 services.
+
+        for num in range(num_services):
+            name = chr(ord('a') + num) * 63
+            client.srp_client_remove_service(name, '_longlongsrvname._udp')
+
+        self.simulator.go(10)
+
+        client_services = client.srp_client_get_services()
+        self.assertEqual(len(client_services), 0)
+
+        server_services = server.srp_server_get_services()
+        self.assertEqual(len(server_services), num_services)
+
+        for service in server_services:
+            self.assertEqual(service['deleted'], 'true')
 
 
 if __name__ == '__main__':

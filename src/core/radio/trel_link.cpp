@@ -52,7 +52,7 @@ Link::Link(Instance &aInstance)
     , mPanId(Mac::kPanIdBroadcast)
     , mTxPacketNumber(0)
     , mTxTasklet(aInstance)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
     , mInterface(aInstance)
 {
     memset(&mTxFrame, 0, sizeof(mTxFrame));
@@ -259,11 +259,6 @@ void Link::InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame)
 
     Get<Mac::Mac>().RecordFrameTransmitStatus(mTxFrame, aAckFrame, aError, /* aRetryCount */ 0, /* aWillRetx */ false);
     Get<Mac::Mac>().HandleTransmitDone(mTxFrame, aAckFrame, aError);
-}
-
-void Link::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Link>().HandleTimer();
 }
 
 void Link::HandleTimer(void)

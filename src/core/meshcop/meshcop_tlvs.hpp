@@ -44,6 +44,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
@@ -1557,6 +1558,27 @@ public:
      *
      */
     bool IsValid(void) const { return true; }
+
+    /**
+     * This method returns a pointer to the start of energy measurement list.
+     *
+     * @returns A pointer to the start start of energy energy measurement list.
+     *
+     */
+    const uint8_t *GetEnergyList(void) const { return mEnergyList; }
+
+    /**
+     * This method returns the length of energy measurement list.
+     *
+     * @returns The length of energy measurement list.
+     *
+     */
+    uint8_t GetEnergyListLength(void) const { return Min(kMaxListLength, GetLength()); }
+
+private:
+    static constexpr uint8_t kMaxListLength = OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS;
+
+    uint8_t mEnergyList[kMaxListLength];
 } OT_TOOL_PACKED_END;
 
 /**

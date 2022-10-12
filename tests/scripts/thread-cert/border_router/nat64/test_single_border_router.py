@@ -30,6 +30,13 @@ import unittest
 
 import config
 import thread_cert
+import ipv6
+
+import ipaddress
+
+# For NAT64 connectivity tests
+import socket
+import select
 
 # Test description:
 #   This test verifies the advertisement of local NAT64 prefix in Thread network
@@ -78,6 +85,28 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
             'is_host': True
         },
     }
+
+    def get_host_ip(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setblocking(False)
+        # Note: The address is not important, we use this function to get the host ip address.
+        sock.connect(('8.8.8.8', 54321))
+        host_ip, _ = sock.getsockname()
+        sock.close()
+        return host_ip
+
+    def receive_from(self, sock, timeout_seconds):
+        ready = select.select([sock], [], [], timeout_seconds)
+        if ready[0]:
+            return sock.recv(1024)
+        else:
+            raise AssertionError("No data recevied")
+
+    def listen_udp(self, addr, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setblocking(False)
+        sock.bind((addr, port))
+        return sock
 
     def test(self):
         br = self.nodes[BR]
@@ -157,12 +186,57 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.enable_br()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
 
-        # Same NAT64 prefix is advertised to Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        #
+        # Case 5. NAT64 connectivity and counters.
+        #
+        host_ip = self.get_host_ip()
+        self.assertTrue(router.ping(ipaddr=host_ip))
+
+        mappings = br.get_nat64_mappings()
+        self.assertEqual(mappings[0]['counters']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['ICMP']['6to4']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['total']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['total']['6to4']['packets'], 1)
+
+        counters = br.get_nat64_counters()
+        self.assertEqual(counters['protocol']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(counters['protocol']['ICMP']['6to4']['packets'], 1)
+
+        sock = self.listen_udp('0.0.0.0', 54321)
+        router.udp_start('::', 54321)
+        # We can use IPv4 addresses for commands like UDP send.
+        # The address will be converted to an IPv6 address by CLI.
+        router.udp_send(10, host_ip, 54321)
+        self.assertTrue(len(self.receive_from(sock, timeout_seconds=1)) == 10)
+
+        sock.close()
+
+        counters = br.get_nat64_counters()
+        self.assertEqual(counters['protocol']['UDP']['6to4']['packets'], 1)
+        mappings = br.get_nat64_mappings()
+        self.assertEqual(mappings[0]['counters']['UDP']['6to4']['packets'], 1)
+
+        # We should be able to get a IPv4 mapped IPv6 address.
+        # 203.0.113.1, RFC5737 TEST-NET-3, should be unreachable.
+        mapped_ip6_address = str(
+            ipv6.synthesize_ip6_address(ipaddress.IPv6Network(nat64_prefix), ipaddress.IPv4Address('203.0.113.1')))
+        self.assertFalse(router.ping(ipaddr=mapped_ip6_address))
+
+        mappings = br.get_nat64_mappings()
+        self.assertEqual(mappings[0]['counters']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['ICMP']['6to4']['packets'], 2)
+        self.assertEqual(mappings[0]['counters']['total']['4to6']['packets'], 1)
+        self.assertEqual(mappings[0]['counters']['total']['6to4']['packets'], 3)
+
+        counters = br.get_nat64_counters()
+        self.assertEqual(counters['protocol']['ICMP']['4to6']['packets'], 1)
+        self.assertEqual(counters['protocol']['ICMP']['6to4']['packets'], 2)
 
         #
-        # Case 5. Disable and re-enable ethernet on the border router.
+        # Case 6. Disable and re-enable ethernet on the border router.
+        # Note: disable_ether will remove default route but enable_ether won't add it back,
+        # NAT64 connectivity tests will fail after this.
+        # TODO: Add a default IPv4 route after enable_ether.
         #
         br.disable_ether()
         self.simulator.go(5)
@@ -173,6 +247,9 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.enable_ether()
         self.simulator.go(80)
 
+        # Same NAT64 prefix is advertised to Network Data.
+        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
+        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
         # Same NAT64 prefix is advertised to Network Data.
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])

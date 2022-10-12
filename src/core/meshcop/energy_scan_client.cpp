@@ -43,6 +43,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/num_utils.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -56,9 +57,7 @@ EnergyScanClient::EnergyScanClient(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mCallback(nullptr)
     , mContext(nullptr)
-    , mEnergyScan(UriPath::kEnergyReport, &EnergyScanClient::HandleReport, this)
 {
-    Get<Tmf::Agent>().AddResource(mEnergyScan);
 }
 
 Error EnergyScanClient::SendQuery(uint32_t                           aChannelMask,
@@ -77,7 +76,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kEnergyScan));
+    SuccessOrExit(error = message->InitAsPost(aAddress, kUriEnergyScan));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(
@@ -104,21 +103,11 @@ exit:
     return error;
 }
 
-void EnergyScanClient::HandleReport(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+template <>
+void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    static_cast<EnergyScanClient *>(aContext)->HandleReport(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    uint32_t mask;
-
-    OT_TOOL_PACKED_BEGIN
-    struct
-    {
-        MeshCoP::EnergyListTlv tlv;
-        uint8_t                list[OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS];
-    } OT_TOOL_PACKED_END energyList;
+    uint32_t               mask;
+    MeshCoP::EnergyListTlv energyListTlv;
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
@@ -126,12 +115,11 @@ void EnergyScanClient::HandleReport(Coap::Message &aMessage, const Ip6::MessageI
 
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
-    SuccessOrExit(MeshCoP::Tlv::FindTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
-    VerifyOrExit(energyList.tlv.IsValid());
+    SuccessOrExit(MeshCoP::Tlv::FindTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyListTlv), energyListTlv));
 
     if (mCallback != nullptr)
     {
-        mCallback(mask, energyList.list, energyList.tlv.GetLength(), mContext);
+        mCallback(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength(), mContext);
     }
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));

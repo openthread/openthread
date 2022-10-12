@@ -331,7 +331,9 @@ private:
     AddressMapping *FindOrAllocateMapping(const Ip6::Address &aIp6Addr);
     AddressMapping *FindMapping(const Ip4::Address &aIp4Addr);
 
-    static void MappingExpirerHandler(Timer &aTimer);
+    void HandleMappingExpirerTimer(void);
+
+    using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
     uint64_t mNextMappingId;
 
@@ -342,7 +344,7 @@ private:
     Ip6::Prefix mNat64Prefix;
     Ip4::Cidr   mIp4Cidr;
 
-    TimerMilli mMappingExpirer;
+    MappingTimer mMappingExpirerTimer;
 
     ProtocolCounters mCounters;
     ErrorCounters    mErrorCounters;

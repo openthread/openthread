@@ -522,6 +522,7 @@ Error Name::LabelIterator::GetNextLabel(void)
             // specify an offset value from the start of the DNS header.
 
             uint16_t pointerValue;
+            uint16_t nextLabelOffset;
 
             SuccessOrExit(error = mMessage.Read(mNextLabelOffset, pointerValue));
 
@@ -532,7 +533,9 @@ Error Name::LabelIterator::GetNextLabel(void)
 
             // `mMessage.GetOffset()` must point to the start of the
             // DNS header.
-            mNextLabelOffset = mMessage.GetOffset() + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            nextLabelOffset = mMessage.GetOffset() + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            VerifyOrExit(nextLabelOffset < mNextLabelOffset, error = kErrorParse);
+            mNextLabelOffset = nextLabelOffset;
 
             // Go back through the `while(true)` loop to get the next label.
         }
@@ -1136,11 +1139,12 @@ Error TxtRecord::ReadTxtData(const Message &aMessage,
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(GetLength() <= aTxtBufferSize, error = kErrorNoBufs);
-    SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, GetLength()));
-    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength(), /* aAllowEmpty */ true), error = kErrorParse);
-    aTxtBufferSize = GetLength();
+    SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, Min(GetLength(), aTxtBufferSize)));
     aOffset += GetLength();
+
+    VerifyOrExit(GetLength() <= aTxtBufferSize, error = kErrorNoBufs);
+    aTxtBufferSize = GetLength();
+    VerifyOrExit(VerifyTxtData(aTxtBuffer, aTxtBufferSize, /* aAllowEmpty */ true), error = kErrorParse);
 
 exit:
     return error;

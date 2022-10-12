@@ -67,5 +67,14 @@ target_include_directories(openthread-spinel-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PR
 target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})
 
-target_link_libraries(openthread-spinel-ncp PRIVATE ot-config)
-target_link_libraries(openthread-spinel-rcp PRIVATE ot-config)
+target_link_libraries(openthread-spinel-ncp
+    PRIVATE
+        ot-config-ftd
+        ot-config
+)
+
+target_link_libraries(openthread-spinel-rcp
+    PRIVATE
+        ot-config-radio
+        ot-config
+)

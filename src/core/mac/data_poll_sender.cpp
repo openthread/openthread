@@ -55,7 +55,7 @@ DataPollSender::DataPollSender(Instance &aInstance)
     , mPollPeriod(0)
     , mExternalPollPeriod(0)
     , mFastPollsUsers(0)
-    , mTimer(aInstance, DataPollSender::HandlePollTimer)
+    , mTimer(aInstance)
     , mEnabled(false)
     , mAttachMode(false)
     , mRetxMode(false)
@@ -531,11 +531,6 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
     }
 
     return period;
-}
-
-void DataPollSender::HandlePollTimer(Timer &aTimer)
-{
-    IgnoreError(aTimer.Get<DataPollSender>().SendDataPoll());
 }
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const

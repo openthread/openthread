@@ -68,7 +68,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kAnnounceBegin));
+    SuccessOrExit(error = message->InitAsPost(aAddress, kUriAnnounceBegin));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(

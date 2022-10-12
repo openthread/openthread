@@ -644,7 +644,7 @@ Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
     Coap::Message *  message;
     Tmf::MessageInfo messageInfo(GetInstance());
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kServerData);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriServerData);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aAppendNetDataTlv)

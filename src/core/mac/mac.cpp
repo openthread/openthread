@@ -101,7 +101,7 @@ Mac::Mac(Instance &aInstance)
     , mScanHandlerContext(nullptr)
     , mLinks(aInstance)
     , mOperationTask(aInstance)
-    , mTimer(aInstance, Mac::HandleTimer)
+    , mTimer(aInstance)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1446,11 +1446,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
 exit:
     return;
-}
-
-void Mac::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Mac>().HandleTimer();
 }
 
 void Mac::HandleTimer(void)

@@ -46,7 +46,7 @@ Uptime::Uptime(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mStartTime(TimerMilli::GetNow())
     , mOverflowCount(0)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
     mTimer.FireAt(mStartTime + kTimerInterval);
 }
@@ -86,11 +86,6 @@ void Uptime::GetUptime(char *aBuffer, uint16_t aSize) const
     StringWriter writer(aBuffer, aSize);
 
     UptimeToString(GetUptime(), writer);
-}
-
-void Uptime::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Uptime>().HandleTimer();
 }
 
 void Uptime::HandleTimer(void)

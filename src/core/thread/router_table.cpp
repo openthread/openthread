@@ -550,6 +550,47 @@ exit:
 }
 #endif
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void RouterTable::LogRouteTable(void)
+{
+    static constexpr uint16_t kStringSize = 128;
+
+    LogInfo("Route table");
+
+    for (Router &router : Iterate())
+    {
+        String<kStringSize> string;
+
+        string.Append("    %2d 0x%04x", router.GetRouterId(), router.GetRloc16());
+
+        if (router.GetRloc16() == Get<Mle::Mle>().GetRloc16())
+        {
+            string.Append(" - me");
+        }
+        else
+        {
+            if (router.IsStateValid())
+            {
+                string.Append(" - nbr{lq[i/o]:%d/%d cost:%d}", router.GetLinkQualityIn(), router.GetLinkQualityOut(),
+                              GetLinkCost(router));
+            }
+
+            if (router.GetNextHop() != Mle::kInvalidRouterId)
+            {
+                string.Append(" - nexthop{%d cost:%d}", router.GetNextHop(), router.GetCost());
+            }
+        }
+
+        if (router.GetRouterId() == Get<Mle::Mle>().GetLeaderId())
+        {
+            string.Append(" - leader");
+        }
+
+        LogInfo("%s", string.AsCString());
+    }
+}
+#endif
+
 } // namespace ot
 
 #endif // OPENTHREAD_FTD

@@ -228,7 +228,7 @@ otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);

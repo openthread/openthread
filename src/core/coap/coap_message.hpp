@@ -47,6 +47,7 @@
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -208,13 +209,13 @@ public:
      *
      * @param[in]  aType              The Type value.
      * @param[in]  aCode              The Code value.
-     * @param[in]  aUriPath           A pointer to a null-terminated string.
+     * @param[in]  aUri               The URI.
      *
      * @retval kErrorNone         Successfully appended the option.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    Error Init(Type aType, Code aCode, const char *aUriPath);
+    Error Init(Type aType, Code aCode, Uri aUri);
 
     /**
      * This method initializes the CoAP header as `kCodePost` with a given URI Path with its type determined from a
@@ -222,13 +223,13 @@ public:
      *
      * @param[in]  aDestination       The message destination IPv6 address used to determine the CoAP type,
      *                                `kTypeNonConfirmable` if multicast address, `kTypeConfirmable` otherwise.
-     * @param[in]  aUriPath           A pointer to a null-terminated string.
+     * @param[in]  aUri               The URI.
      *
      * @retval kErrorNone         Successfully appended the option.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    Error InitAsPost(const Ip6::Address &aDestination, const char *aUriPath);
+    Error InitAsPost(const Ip6::Address &aDestination, Uri aUri);
 
     /**
      * This method writes header to the message. This must be called before sending the message.

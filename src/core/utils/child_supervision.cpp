@@ -157,7 +157,7 @@ void ChildSupervisor::HandleNotifierEvents(Events aEvents)
 SupervisionListener::SupervisionListener(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimeout(0)
-    , mTimer(aInstance, SupervisionListener::HandleTimer)
+    , mTimer(aInstance)
 {
     SetTimeout(kDefaultTimeout);
 }
@@ -204,11 +204,6 @@ void SupervisionListener::RestartTimer(void)
     {
         mTimer.Stop();
     }
-}
-
-void SupervisionListener::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<SupervisionListener>().HandleTimer();
 }
 
 void SupervisionListener::HandleTimer(void)

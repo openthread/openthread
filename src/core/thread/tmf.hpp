@@ -37,10 +37,25 @@
 #include "openthread-core-config.h"
 
 #include "coap/coap.hpp"
+#include "coap/coap_secure.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
 namespace Tmf {
+
+/**
+ * This macro declares a TMF handler (a full template specialization of `HandleTmf<Uri>` method) in a given `Type`.
+ *
+ * The class `Type` MUST declare a template method of the following format:
+ *
+ *  template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+ *
+ * @param[in] Type      The `Type` in which the TMF handler is declared.
+ * @param[in] kUri      The `Uri` which is handled.
+ *
+ */
+#define DeclareTmfHandler(Type, kUri) \
+    template <> void Type::HandleTmf<kUri>(Coap::Message & aMessage, const Ip6::MessageInfo &aMessageInfo)
 
 constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
@@ -137,11 +152,7 @@ public:
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    explicit Agent(Instance &aInstance)
-        : Coap::Coap(aInstance)
-    {
-        SetInterceptor(&Filter, this);
-    }
+    explicit Agent(Instance &aInstance);
 
     /**
      * This method starts the TMF agent.
@@ -172,8 +183,43 @@ public:
     bool IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const;
 
 private:
+    template <Uri kUri> void HandleTmf(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static bool HandleResource(CoapBase &              aCoapBase,
+                               const char *            aUriPath,
+                               Message &               aMessage,
+                               const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
+
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+
+/**
+ * This class implements functionality of the secure TMF agent.
+ *
+ */
+class SecureAgent : public Coap::CoapSecure
+{
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in] aInstance      A reference to the OpenThread instance.
+     *
+     */
+    explicit SecureAgent(Instance &aInstance);
+
+private:
+    static bool HandleResource(CoapBase &              aCoapBase,
+                               const char *            aUriPath,
+                               Message &               aMessage,
+                               const Ip6::MessageInfo &aMessageInfo);
+    bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+};
+
+#endif
 
 } // namespace Tmf
 } // namespace ot

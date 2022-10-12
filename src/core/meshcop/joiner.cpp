@@ -66,13 +66,11 @@ Joiner::Joiner(Instance &aInstance)
     , mContext(nullptr)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
-    , mTimer(aInstance, Joiner::HandleTimer)
-    , mJoinerEntrust(UriPath::kJoinerEntrust, &Joiner::HandleJoinerEntrust, this)
+    , mTimer(aInstance)
 {
     SetIdFromIeeeEui64();
     mDiscerner.Clear();
     memset(mJoinerRouters, 0, sizeof(mJoinerRouters));
-    Get<Tmf::Agent>().AddResource(mJoinerEntrust);
 }
 
 void Joiner::SetIdFromIeeeEui64(void)
@@ -159,8 +157,8 @@ Error Joiner::Start(const char *     aPskd,
     Get<Mac::Mac>().SetExtAddress(randomAddress);
     Get<Mle::MleRouter>().UpdateLinkLocalAddress();
 
-    SuccessOrExit(error = Get<Coap::CoapSecure>().Start(kJoinerUdpPort));
-    Get<Coap::CoapSecure>().SetPsk(joinerPskd);
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(kJoinerUdpPort));
+    Get<Tmf::SecureAgent>().SetPsk(joinerPskd);
 
     for (JoinerRouter &router : mJoinerRouters)
     {
@@ -217,14 +215,14 @@ void Joiner::Finish(Error aError)
     case kStateConnected:
     case kStateEntrust:
     case kStateJoined:
-        Get<Coap::CoapSecure>().Disconnect();
+        Get<Tmf::SecureAgent>().Disconnect();
         IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
         mTimer.Stop();
 
         OT_FALL_THROUGH;
 
     case kStateDiscover:
-        Get<Coap::CoapSecure>().Stop();
+        Get<Tmf::SecureAgent>().Stop();
         break;
     }
 
@@ -396,7 +394,7 @@ Error Joiner::Connect(JoinerRouter &aRouter)
 
     sockAddr.GetAddress().SetToLinkLocalAddress(aRouter.mExtAddr);
 
-    SuccessOrExit(error = Get<Coap::CoapSecure>().Connect(sockAddr, Joiner::HandleSecureCoapClientConnect, this));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Connect(sockAddr, Joiner::HandleSecureCoapClientConnect, this));
 
     SetState(kStateConnect);
 
@@ -442,7 +440,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
     VendorStackVersionTlv vendorStackVersionTlv;
     ProvisioningUrlTlv    provisioningUrlTlv;
 
-    mFinalizeMessage = Get<Coap::CoapSecure>().NewPriorityConfirmablePostMessage(UriPath::kJoinerFinalize);
+    mFinalizeMessage = Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
 
     mFinalizeMessage->SetOffset(mFinalizeMessage->GetLength());
@@ -512,7 +510,7 @@ void Joiner::SendJoinerFinalize(void)
     LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
 #endif
 
-    SuccessOrExit(Get<Coap::CoapSecure>().SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
+    SuccessOrExit(Get<Tmf::SecureAgent>().SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
     mFinalizeMessage = nullptr;
 
     LogInfo("Joiner sent finalize");
@@ -553,16 +551,11 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::Me
 #endif
 
 exit:
-    Get<Coap::CoapSecure>().Disconnect();
+    Get<Tmf::SecureAgent>().Disconnect();
     IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
 }
 
-void Joiner::HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Joiner *>(aContext)->HandleJoinerEntrust(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error         error;
     Dataset::Info datasetInfo;
@@ -613,11 +606,6 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
 
 exit:
     FreeMessageOnError(message, error);
-}
-
-void Joiner::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Joiner>().HandleTimer();
 }
 
 void Joiner::HandleTimer(void)

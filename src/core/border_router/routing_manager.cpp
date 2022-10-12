@@ -75,8 +75,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mNat64PrefixManager(aInstance)
 #endif
     , mRsSender(aInstance)
-    , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
-    , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
+    , mDiscoveredPrefixStaleTimer(aInstance)
+    , mRoutingPolicyTimer(aInstance)
 {
     mFavoredDiscoveredOnLinkPrefix.Clear();
 
@@ -458,9 +458,8 @@ exit:
     return;
 }
 
-Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
+void RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference, bool aNat64)
 {
-    Error                            error;
     NetworkData::ExternalRouteConfig routeConfig;
 
     OT_ASSERT(mIsRunning);
@@ -471,14 +470,8 @@ Error RoutingManager::PublishExternalRoute(const Ip6::Prefix &aPrefix, RoutePref
     routeConfig.mNat64      = aNat64;
     routeConfig.mPreference = aRoutePreference;
 
-    error = Get<NetworkData::Publisher>().PublishExternalRoute(routeConfig);
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to publish external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
-    }
-
-    return error;
+    SuccessOrAssert(
+        Get<NetworkData::Publisher>().PublishExternalRoute(routeConfig, NetworkData::Publisher::kFromRoutingManager));
 }
 
 void RoutingManager::UnpublishExternalRoute(const Ip6::Prefix &aPrefix)
@@ -507,7 +500,7 @@ void RoutingManager::EvaluateOnLinkPrefix(void)
         // and therefore is the same for all BRs on the same Thread
         // mesh.
 
-        SuccessOrExit(mLocalOnLinkPrefix.Advertise());
+        mLocalOnLinkPrefix.Advertise();
 
         // We remove the local on-link prefix from discovered prefix
         // table, in case it was previously discovered and included in
@@ -810,14 +803,19 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
         {
         case Ip6::Nd::Option::kTypePrefixInfo:
         {
-            // PIO should match `mLocalOnLinkPrefix`.
-
             const Ip6::Nd::PrefixInfoOption &pio = static_cast<const Ip6::Nd::PrefixInfoOption &>(option);
 
             VerifyOrExit(pio.IsValid());
             pio.GetPrefix(prefix);
 
-            VerifyOrExit(prefix == mLocalOnLinkPrefix.GetPrefix());
+            // If it is a non-deprecated PIO, it should match the
+            // local on-link prefix.
+
+            if (pio.GetPreferredLifetime() > 0)
+            {
+                VerifyOrExit(prefix == mLocalOnLinkPrefix.GetPrefix());
+            }
+
             break;
         }
 
@@ -908,20 +906,10 @@ void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
     ScheduleRoutingPolicyEvaluation(kImmediately);
 }
 
-void RoutingManager::HandleDiscoveredPrefixStaleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().HandleDiscoveredPrefixStaleTimer();
-}
-
 void RoutingManager::HandleDiscoveredPrefixStaleTimer(void)
 {
     LogInfo("Stale On-Link or OMR Prefixes or RA messages are detected");
     mRsSender.Start();
-}
-
-void RoutingManager::HandleRoutingPolicyTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().EvaluateRoutingPolicy();
 }
 
 void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
@@ -1161,7 +1149,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 
 RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
     , mSignalTask(aInstance)
     , mAllowDefaultRouteInNetData(false)
 {
@@ -1621,17 +1609,12 @@ exit:
 
 void RoutingManager::DiscoveredPrefixTable::PublishEntry(const Entry &aEntry)
 {
-    IgnoreError(Get<RoutingManager>().PublishExternalRoute(aEntry.GetPrefix(), aEntry.GetPreference()));
+    Get<RoutingManager>().PublishExternalRoute(aEntry.GetPrefix(), aEntry.GetPreference());
 }
 
 void RoutingManager::DiscoveredPrefixTable::UnpublishEntry(const Entry &aEntry)
 {
     Get<RoutingManager>().UnpublishExternalRoute(aEntry.GetPrefix());
-}
-
-void RoutingManager::DiscoveredPrefixTable::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mDiscoveredPrefixTable.HandleTimer();
 }
 
 void RoutingManager::DiscoveredPrefixTable::HandleTimer(void)
@@ -1976,7 +1959,7 @@ exit:
 RoutingManager::LocalOnLinkPrefix::LocalOnLinkPrefix(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kIdle)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
     mPrefix.Clear();
     mOldPrefix.Clear();
@@ -2025,24 +2008,22 @@ exit:
     return;
 }
 
-Error RoutingManager::LocalOnLinkPrefix::Advertise(void)
+void RoutingManager::LocalOnLinkPrefix::Advertise(void)
 {
     // Start advertising the local on-link prefix if not already. This
     // will also publish it in the Network Data as an external route
     // entry.
 
-    Error error = kErrorNone;
-
     VerifyOrExit(mState != kAdvertising);
 
-    SuccessOrExit(error = Get<RoutingManager>().PublishExternalRoute(mPrefix, NetworkData::kRoutePreferenceMedium));
+    Get<RoutingManager>().PublishExternalRoute(mPrefix, NetworkData::kRoutePreferenceMedium);
 
     mState      = kAdvertising;
     mExpireTime = TimerMilli::GetNow() + TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime);
     LogInfo("Start advertising on-link prefix %s", mPrefix.ToString().AsCString());
 
 exit:
-    return error;
+    return;
 }
 
 void RoutingManager::LocalOnLinkPrefix::Deprecate(void)
@@ -2140,6 +2121,11 @@ void RoutingManager::LocalOnLinkPrefix::HandleExtPanIdChange(void)
 
     case kAdvertising:
     case kDeprecating:
+        if (mOldPrefix.GetLength() != 0)
+        {
+            Unpublish(mOldPrefix);
+        }
+
         mOldPrefix     = mPrefix;
         mOldExpireTime = mExpireTime;
         mTimer.FireAtIfEarlier(mOldExpireTime);
@@ -2148,11 +2134,6 @@ void RoutingManager::LocalOnLinkPrefix::HandleExtPanIdChange(void)
 
     mState = kIdle;
     Generate();
-}
-
-void RoutingManager::LocalOnLinkPrefix::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mLocalOnLinkPrefix.HandleTimer();
 }
 
 void RoutingManager::LocalOnLinkPrefix::HandleTimer(void)
@@ -2237,7 +2218,7 @@ void RoutingManager::OnMeshPrefixArray::MarkAsDeleted(const OnMeshPrefix &aPrefi
 
 RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
     mInfraIfPrefix.Clear();
     mLocalPrefix.Clear();
@@ -2326,20 +2307,15 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
         mPublishedPrefix.Clear();
     }
 
-    if (shouldPublish && (prefix != mPublishedPrefix) &&
-        (Get<RoutingManager>().PublishExternalRoute(prefix, preference, /* aNat64 */ true) == kErrorNone))
+    if (shouldPublish && (prefix != mPublishedPrefix))
     {
+        Get<RoutingManager>().PublishExternalRoute(prefix, preference, /* aNat64 */ true);
         mPublishedPrefix = prefix;
     }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     Get<Nat64::Translator>().SetNat64Prefix(mPublishedPrefix);
 #endif
-}
-
-void RoutingManager::Nat64PrefixManager::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mNat64PrefixManager.HandleTimer();
 }
 
 void RoutingManager::Nat64PrefixManager::HandleTimer(void)
@@ -2384,7 +2360,7 @@ void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &a
 RoutingManager::RsSender::RsSender(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTxCount(0)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
 }
 
@@ -2420,11 +2396,6 @@ Error RoutingManager::RsSender::SendRs(void)
     destAddress.SetToLinkLocalAllRoutersMulticast();
 
     return Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
-}
-
-void RoutingManager::RsSender::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<RoutingManager>().mRsSender.HandleTimer();
 }
 
 void RoutingManager::RsSender::HandleTimer(void)

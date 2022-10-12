@@ -233,12 +233,13 @@ public:
 private:
     static constexpr uint16_t kDefaultTimeout = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT; // (seconds)
 
-    void        RestartTimer(void);
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void RestartTimer(void);
+    void HandleTimer(void);
 
-    uint16_t   mTimeout;
-    TimerMilli mTimer;
+    using ListenerTimer = TimerMilliIn<SupervisionListener, &SupervisionListener::HandleTimer>;
+
+    uint16_t      mTimeout;
+    ListenerTimer mTimer;
 };
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

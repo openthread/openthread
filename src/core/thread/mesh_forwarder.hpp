@@ -508,8 +508,7 @@ private:
     void ResumeMessageTransmissions(void);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
-    static void HandleTxDelayTimer(Timer &aTimer);
-    void        HandleTxDelayTimer(void);
+    void HandleTxDelayTimer(void);
 #endif
 
     void LogMessage(MessageAction       aAction,
@@ -556,6 +555,10 @@ private:
 
     using TxTask = TaskletIn<MeshForwarder, &MeshForwarder::ScheduleTransmissionTask>;
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    using TxDelayTimer = TimerMilliIn<MeshForwarder, &MeshForwarder::HandleTxDelayTimer>;
+#endif
+
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
     uint16_t      mFragTag;
@@ -571,8 +574,8 @@ private:
     bool           mTxPaused : 1;
     bool           mSendBusy : 1;
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
-    bool       mDelayNextTx : 1;
-    TimerMilli mTxDelayTimer;
+    bool         mDelayNextTx : 1;
+    TxDelayTimer mTxDelayTimer;
 #endif
 
     TxTask mScheduleTransmissionTask;
