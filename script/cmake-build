@@ -45,6 +45,7 @@
 #  Compile with the specified ninja build target:
 #
 #      OT_CMAKE_NINJA_TARGET="ot-cli-ftd" script/cmake-build ${platform}
+#      OT_CMAKE_NINJA_TARGET="ot-cli-ftd ot-cli-mtd" script/cmake-build ${platform}
 #
 #  Compile with the specified build directory:
 #
