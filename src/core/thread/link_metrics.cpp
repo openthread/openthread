@@ -67,11 +67,10 @@ Error LinkMetrics::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, co
     static const uint8_t kTlvs[] = {Mle::Tlv::kLinkMetricsReport};
 
     Error     error;
-    Neighbor *neighbor = GetNeighborFromLinkLocalAddr(aDestination);
+    Neighbor *neighbor;
     QueryInfo info;
 
-    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
+    SuccessOrExit(error = FindNeighbor(aDestination, neighbor));
 
     info.Clear();
     info.mSeriesId = aSeriesId;
@@ -98,13 +97,12 @@ Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDes
                                                         const SeriesFlags & aSeriesFlags,
                                                         const Metrics *     aMetrics)
 {
-    Error               error       = kErrorNone;
-    Neighbor *          neighbor    = GetNeighborFromLinkLocalAddr(aDestination);
+    Error               error;
+    Neighbor *          neighbor;
     uint8_t             typeIdCount = 0;
     FwdProbingRegSubTlv fwdProbingSubTlv;
 
-    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
+    SuccessOrExit(error = FindNeighbor(aDestination, neighbor));
 
     VerifyOrExit(aSeriesId > kQueryIdSingleProbe, error = kErrorInvalidArgs);
 
@@ -130,13 +128,12 @@ Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination
                                                 const EnhAckFlags   aEnhAckFlags,
                                                 const Metrics *     aMetrics)
 {
-    Error              error       = kErrorNone;
-    Neighbor *         neighbor    = GetNeighborFromLinkLocalAddr(aDestination);
+    Error              error;
+    Neighbor *         neighbor;
     uint8_t            typeIdCount = 0;
     EnhAckConfigSubTlv enhAckConfigSubTlv;
 
-    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
+    SuccessOrExit(error = FindNeighbor(aDestination, neighbor));
 
     if (aEnhAckFlags == kEnhAckClear)
     {
@@ -173,12 +170,11 @@ exit:
 
 Error LinkMetrics::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength)
 {
-    Error     error = kErrorNone;
+    Error     error;
     uint8_t   buf[kLinkProbeMaxLen];
-    Neighbor *neighbor = GetNeighborFromLinkLocalAddr(aDestination);
+    Neighbor *neighbor;
 
-    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    VerifyOrExit(neighbor->IsThreadVersion1p2OrHigher(), error = kErrorNotCapable);
+    SuccessOrExit(error = FindNeighbor(aDestination, neighbor));
 
     VerifyOrExit(aLength <= LinkMetrics::kLinkProbeMaxLen && aSeriesId != kQueryIdSingleProbe &&
                      aSeriesId != kSeriesIdAllSeries,
@@ -668,17 +664,24 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-Neighbor *LinkMetrics::GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination)
+Error LinkMetrics::FindNeighbor(const Ip6::Address &aDestination, Neighbor *&aNeighbor) const
 {
-    Neighbor *   neighbor = nullptr;
+    Error        error = kErrorUnknownNeighbor;
     Mac::Address macAddress;
+
+    aNeighbor = nullptr;
 
     VerifyOrExit(aDestination.IsLinkLocal());
     aDestination.GetIid().ConvertToMacAddress(macAddress);
-    neighbor = Get<NeighborTable>().FindNeighbor(macAddress);
+
+    aNeighbor = Get<NeighborTable>().FindNeighbor(macAddress);
+    VerifyOrExit(aNeighbor != nullptr);
+
+    VerifyOrExit(aNeighbor->GetVersion() >= kThreadVersion1p2, error = kErrorNotCapable);
+    error = kErrorNone;
 
 exit:
-    return neighbor;
+    return error;
 }
 
 Error LinkMetrics::ReadTypeIdsFromMessage(const Message &aMessage,

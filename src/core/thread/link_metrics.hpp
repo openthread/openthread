@@ -307,7 +307,7 @@ private:
 
     Status ConfigureEnhAckProbing(EnhAckFlags aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor);
 
-    Neighbor *GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination);
+    Error FindNeighbor(const Ip6::Address &aDestination, Neighbor *&aNeighbor) const;
 
     static Error ReadTypeIdsFromMessage(const Message &aMessage,
                                         uint16_t       aStartOffset,
