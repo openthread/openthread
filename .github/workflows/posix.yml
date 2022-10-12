@@ -42,7 +42,7 @@ jobs:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
@@ -110,7 +110,7 @@ jobs:
   tcplp-buffering:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Build
@@ -129,7 +129,7 @@ jobs:
       VIRTUAL_TIME: 1
       VIRTUAL_TIME_UART: 1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -163,7 +163,7 @@ jobs:
     env:
       COVERAGE: 1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -197,7 +197,7 @@ jobs:
       OT_DAEMON: ${{ matrix.OT_DAEMON }}
       OT_READLINE: 'readline'
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -241,7 +241,7 @@ jobs:
       OT_DAEMON: ${{ matrix.OT_DAEMON }}
       OT_READLINE: 'off'
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Bootstrap
       run: |
         rm -f '/usr/local/bin/2to3'
@@ -257,7 +257,7 @@ jobs:
   rcp-stack-reset:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Bootstrap
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
@@ -286,7 +286,7 @@ jobs:
     - thread-cert
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap

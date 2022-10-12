@@ -48,7 +48,7 @@ jobs:
     name: Unittests
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: actions/setup-go@v1
       with:
         go-version: '1.14'
@@ -88,7 +88,7 @@ jobs:
     name: Examples
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v1
         with:
           go-version: '1.14'
@@ -146,7 +146,7 @@ jobs:
     env:
       STRESS_LEVEL: ${{ matrix.stress_level }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v1
         with:
           go-version: '1.14'
@@ -189,7 +189,7 @@ jobs:
       - stress-tests
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Bootstrap
         run: |
           sudo apt-get --no-install-recommends install -y lcov
