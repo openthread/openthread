@@ -748,7 +748,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * @cli nat64 cidr
      * @code
      * nat64 cidr
-     * 192.168.64.0/24
+     * 192.168.255.0/24
      * Done
      * @endcode
      * @par api_copy
