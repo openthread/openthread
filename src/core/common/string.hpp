@@ -313,7 +313,7 @@ public:
      * @returns The string writer.
      *
      */
-    StringWriter &Append(const char *aFormat, ...);
+    StringWriter &Append(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
      * This method appends `printf()` style formatted data to the buffer.

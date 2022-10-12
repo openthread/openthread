@@ -456,7 +456,7 @@ Publisher::Entry::InfoString Publisher::Entry::ToString(bool aIncludeState) cons
             break;
         }
 
-        string.Append(prefixEntry.mPrefix.ToString().AsCString());
+        string.Append("%s", prefixEntry.mPrefix.ToString().AsCString());
         ExitNow();
     }
 #endif

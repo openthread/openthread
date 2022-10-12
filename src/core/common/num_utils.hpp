@@ -187,6 +187,19 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
     return (aDividend + (aDivisor / 2)) / aDivisor;
 }
 
+/**
+ * This function casts a given `uint32_t` to `unsigned long`.
+ *
+ * @param[in] aUint32   A `uint32_t` value.
+ *
+ * @returns The @p aUint32 value as `unsigned long`.
+ *
+ */
+inline unsigned long ToUlong(uint32_t aUint32)
+{
+    return static_cast<unsigned long>(aUint32);
+}
+
 } // namespace ot
 
 #endif // NUM_UTILS_HPP_
