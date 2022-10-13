@@ -83,7 +83,7 @@ void Client::HostInfo::EnableAutoAddress(void)
     mNumAddresses = 0;
     mAutoAddress  = true;
 
-    LogInfo("HostInfo enabled auto address", GetNumAddresses());
+    LogInfo("HostInfo enabled auto address");
 }
 
 void Client::HostInfo::SetAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddresses)

@@ -82,12 +82,14 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance)
 
 otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishOnMeshPrefix(AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishOnMeshPrefix(AsCoreType(aConfig),
+                                                                                   NetworkData::Publisher::kFromUser);
 }
 
 otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
 {
-    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishExternalRoute(AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishExternalRoute(AsCoreType(aConfig),
+                                                                                    NetworkData::Publisher::kFromUser);
 }
 
 bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix)

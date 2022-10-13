@@ -72,15 +72,14 @@ void TestNetworkName(void)
     SuccessOrQuit(networkName.Set(MeshCoP::NameData(kName2, sizeof(kName2))));
     CompareNetworkName(networkName, kName2);
 
-    VerifyOrQuit(networkName.Set(MeshCoP::NameData(kEmptyName, 0)) == kErrorInvalidArgs);
+    SuccessOrQuit(networkName.Set(MeshCoP::NameData(kEmptyName, 0)));
+    CompareNetworkName(networkName, kEmptyName);
 
     SuccessOrQuit(networkName.Set(MeshCoP::NameData(kLongName, sizeof(kLongName))));
     CompareNetworkName(networkName, kLongName);
 
     VerifyOrQuit(networkName.Set(MeshCoP::NameData(kLongName, sizeof(kLongName) - 1)) == kErrorAlready,
                  "failed to detect duplicate");
-
-    VerifyOrQuit(networkName.Set(kEmptyName) == kErrorInvalidArgs);
 
     SuccessOrQuit(networkName.Set(MeshCoP::NameData(kName1, sizeof(kName1))));
 

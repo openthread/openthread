@@ -210,6 +210,10 @@ static uint8_t            sAddedExternalRoutesNum = 0;
 static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
+#endif
+
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
 // on NetBSD, MLD monitoring simply doesn't work
@@ -566,10 +570,8 @@ exit:
     }
 }
 
-#if __linux__ && \
-    (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
-
-template <size_t N> static otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPrefixLen, uint32_t aPriority)
+#if defined(__linux__)
+template <size_t N> otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPrefixLen, uint32_t aPriority)
 {
     constexpr unsigned int kBufSize = 128;
     struct
@@ -616,6 +618,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 static otError DeleteRoute(const otIp6Prefix &aPrefix)
 {
     constexpr unsigned int kBufSize = 512;
@@ -669,19 +672,9 @@ static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
 {
     return AddRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength, aPriority);
 }
+#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
-{
-    return AddRoute(aCidr.mAddress.mFields.m8, aCidr.mLength, aPriority);
-}
-#endif
-
-#endif // __linux__ && (OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE ||
-       // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE)
-
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
-
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 static bool HasAddedOmrRoute(const otIp6Prefix &aOmrPrefix)
 {
     bool found = false;
@@ -760,11 +753,9 @@ static void UpdateOmrRoutes(otInstance *aInstance)
         }
     }
 }
+#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE
 
-#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
-
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
-
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 {
     otError error;
@@ -861,7 +852,15 @@ static void UpdateExternalRoutes(otInstance *aInstance)
 exit:
     return;
 }
-#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
+#endif // OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
+{
+    return AddRoute(aCidr.mAddress.mFields.m8, aCidr.mLength, aPriority);
+}
+#endif
+#endif // defined(__linux__)
 
 static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext)
 {
@@ -1162,7 +1161,7 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     if (isUp && gNat64Cidr.mLength > 0)
     {
         SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
-        AddIp4Route(gNat64Cidr, kExternalRoutePriority);
+        AddIp4Route(gNat64Cidr, kNat64RoutePriority);
         otLogInfoPlat("[netif] Succeeded to enable NAT64");
     }
 #endif
@@ -1173,7 +1172,7 @@ exit:
         otLogWarnPlat("[netif] Failed to sync netif state with host: %s", otThreadErrorToString(error));
     }
 }
-#endif
+#endif // defined(__linux__)
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 

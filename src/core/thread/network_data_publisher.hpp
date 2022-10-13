@@ -43,14 +43,9 @@
             "or OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE"
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && (OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES < \
-                                                (OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES + 4))
-#error "OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES needs to support more entries when "\
-       "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE is enabled to accommodate for max on-link prefixes"
-#endif
-
 #include <openthread/netdata_publisher.h>
 
+#include "border_router/routing_manager.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/error.hpp"
@@ -85,6 +80,16 @@ public:
     {
         kEventEntryAdded   = OT_NETDATA_PUBLISHER_EVENT_ENTRY_ADDED,   ///< Entry is added to Network Data.
         kEventEntryRemoved = OT_NETDATA_PUBLISHER_EVENT_ENTRY_REMOVED, ///< Entry is removed from Network Data.
+    };
+
+    /**
+     * This enumeration represents the requester associated with a published prefix.
+     *
+     */
+    enum Requester : uint8_t
+    {
+        kFromUser,           ///< Requested by user (public OT API).
+        kFromRoutingManager, ///< Requested by `RoutingManager` module.
     };
 
     /**
@@ -222,6 +227,7 @@ public:
      * same prefix with the same or higher preference.
      *
      * @param[in] aConfig         The on-mesh prefix config to publish.
+     * @param[in] aRequester      The requester (`kFromUser` or `kFromRoutingManager` module).
      *
      * @retval kErrorNone         The on-mesh prefix is published successfully.
      * @retval kErrorInvalidArgs  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).
@@ -232,7 +238,7 @@ public:
      *
      *
      */
-    Error PublishOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
+    Error PublishOnMeshPrefix(const OnMeshPrefixConfig &aConfig, Requester aRequester);
 
     /**
      * This method requests an external route prefix to be published in the Thread Network Data.
@@ -247,6 +253,7 @@ public:
      * same prefix with the same or higher preference.
      *
      * @param[in] aConfig         The external route config to publish.
+     * @param[in] aRequester      The requester (`kFromUser` or `kFromRoutingManager` module).
      *
      * @retval kErrorNone         The external route is published successfully.
      * @retval kErrorInvalidArgs  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).
@@ -256,7 +263,7 @@ public:
      *
      *
      */
-    Error PublishExternalRoute(const ExternalRouteConfig &aConfig);
+    Error PublishExternalRoute(const ExternalRouteConfig &aConfig, Requester aRequester);
 
     /**
      * This method indicates whether or not currently a published prefix entry (on-mesh or external route) is added to
@@ -401,22 +408,30 @@ private:
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+
     // Max number of prefix (on-mesh or external route) entries.
-    static constexpr uint16_t kMaxPrefixEntries = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES;
+    static constexpr uint16_t kMaxUserPrefixEntries = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    static constexpr uint16_t kMaxRoutingManagerPrefixEntries = BorderRouter::RoutingManager::kMaxPublishedPrefixes;
+#else
+    static constexpr uint16_t kMaxRoutingManagerPrefixEntries = 0;
+#endif
 
     class PrefixEntry : public Entry, private NonCopyable
     {
         friend class Entry;
 
     public:
-        void Init(Instance &aInstance) { Entry::Init(aInstance); }
-        bool IsInUse(void) const { return GetState() != kNoEntry; }
-        bool Matches(const Ip6::Prefix &aPrefix) const { return mPrefix == aPrefix; }
-        void Publish(const OnMeshPrefixConfig &aConfig);
-        void Publish(const ExternalRouteConfig &aConfig);
-        void Unpublish(void);
-        void HandleTimer(void) { Entry::HandleTimer(); }
-        void HandleNotifierEvents(Events aEvents);
+        void      Init(Instance &aInstance) { Entry::Init(aInstance); }
+        bool      IsInUse(void) const { return GetState() != kNoEntry; }
+        bool      Matches(const Ip6::Prefix &aPrefix) const { return mPrefix == aPrefix; }
+        void      Publish(const OnMeshPrefixConfig &aConfig, Requester aRequester);
+        void      Publish(const ExternalRouteConfig &aConfig, Requester aRequester);
+        Requester GetRequester(void) const { return mRequester; }
+        void      Unpublish(void);
+        void      HandleTimer(void) { Entry::HandleTimer(); }
+        void      HandleNotifierEvents(Events aEvents);
 
     private:
         static constexpr uint8_t kDesiredNumOnMeshPrefix =
@@ -431,7 +446,7 @@ private:
             kTypeExternalRoute,
         };
 
-        void  Publish(const Ip6::Prefix &aPrefix, uint16_t aNewFlags, Type aNewType);
+        void  Publish(const Ip6::Prefix &aPrefix, uint16_t aNewFlags, Type aNewType, Requester aRequester);
         void  Add(void);
         Error AddOnMeshPrefix(void);
         Error AddExternalRoute(void);
@@ -441,6 +456,7 @@ private:
         void  CountExternalRouteEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
 
         Type        mType;
+        Requester   mRequester;
         Ip6::Prefix mPrefix;
         uint16_t    mFlags;
     };
@@ -451,7 +467,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    PrefixEntry *      FindOrAllocatePrefixEntry(const Ip6::Prefix &aPrefix);
+    PrefixEntry *      FindOrAllocatePrefixEntry(const Ip6::Prefix &aPrefix, Requester aRequester);
     PrefixEntry *      FindMatchingPrefixEntry(const Ip6::Prefix &aPrefix);
     const PrefixEntry *FindMatchingPrefixEntry(const Ip6::Prefix &aPrefix) const;
     bool               IsAPrefixEntry(const Entry &aEntry) const;
@@ -469,7 +485,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    PrefixEntry    mPrefixEntries[kMaxPrefixEntries];
+    PrefixEntry    mPrefixEntries[kMaxUserPrefixEntries + kMaxRoutingManagerPrefixEntries];
     PrefixCallback mPrefixCallback;
     void *         mPrefixCallbackContext;
 #endif

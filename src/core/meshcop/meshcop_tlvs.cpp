@@ -138,7 +138,7 @@ void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
 
 bool NetworkNameTlv::IsValid(void) const
 {
-    return GetLength() >= 1 && IsValidUtf8String(mNetworkName, GetLength());
+    return IsValidUtf8String(mNetworkName, GetLength());
 }
 
 void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const

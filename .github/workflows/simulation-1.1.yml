@@ -45,7 +45,7 @@ jobs:
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -71,7 +71,7 @@ jobs:
       VIRTUAL_TIME: 1
       MULTIPLY: 3
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -114,7 +114,7 @@ jobs:
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -160,7 +160,7 @@ jobs:
       VIRTUAL_TIME: 1
       MESSAGE_USE_HEAP: ${{ matrix.message_use_heap }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -200,7 +200,7 @@ jobs:
       TIME_SYNC: 1
       VIRTUAL_TIME: 1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -235,7 +235,7 @@ jobs:
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       THREAD_VERSION: 1.1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
@@ -269,7 +269,7 @@ jobs:
     env:
       THREAD_VERSION: 1.1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -317,7 +317,7 @@ jobs:
       VIRTUAL_TIME: 1
       CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -355,7 +355,7 @@ jobs:
     - multiple-instance
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap

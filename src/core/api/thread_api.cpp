@@ -202,6 +202,12 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
+#if !OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+    // Thread interfaces support a zero length name internally for backwards compatibility, but new names
+    // must be at least one valid character long.
+    VerifyOrExit(nullptr != aNetworkName && aNetworkName[0] != '\0', error = kErrorInvalidArgs);
+#endif
+
     error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);
     AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
     AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();

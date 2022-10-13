@@ -522,6 +522,7 @@ Error Name::LabelIterator::GetNextLabel(void)
             // specify an offset value from the start of the DNS header.
 
             uint16_t pointerValue;
+            uint16_t nextLabelOffset;
 
             SuccessOrExit(error = mMessage.Read(mNextLabelOffset, pointerValue));
 
@@ -532,7 +533,9 @@ Error Name::LabelIterator::GetNextLabel(void)
 
             // `mMessage.GetOffset()` must point to the start of the
             // DNS header.
-            mNextLabelOffset = mMessage.GetOffset() + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            nextLabelOffset = mMessage.GetOffset() + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            VerifyOrExit(nextLabelOffset < mNextLabelOffset, error = kErrorParse);
+            mNextLabelOffset = nextLabelOffset;
 
             // Go back through the `while(true)` loop to get the next label.
         }

@@ -66,7 +66,6 @@ Commissioner::Commissioner(Instance &aInstance)
     , mTransmitAttempts(0)
     , mJoinerExpirationTimer(aInstance)
     , mTimer(aInstance)
-    , mJoinerFinalize(kUriJoinerFinalize, &Commissioner::HandleJoinerFinalize, this)
     , mAnnounceBegin(aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
@@ -137,22 +136,12 @@ exit:
     return;
 }
 
-void Commissioner::AddCoapResources(void)
+void Commissioner::HandleSecureAgentConnected(bool aConnected, void *aContext)
 {
-    Get<Coap::CoapSecure>().AddResource(mJoinerFinalize);
+    static_cast<Commissioner *>(aContext)->HandleSecureAgentConnected(aConnected);
 }
 
-void Commissioner::RemoveCoapResources(void)
-{
-    Get<Coap::CoapSecure>().RemoveResource(mJoinerFinalize);
-}
-
-void Commissioner::HandleCoapsConnected(bool aConnected, void *aContext)
-{
-    static_cast<Commissioner *>(aContext)->HandleCoapsConnected(aConnected);
-}
-
-void Commissioner::HandleCoapsConnected(bool aConnected)
+void Commissioner::HandleSecureAgentConnected(bool aConnected)
 {
     SignalJoinerEvent(aConnected ? kJoinerEventConnected : kJoinerEventEnd, mActiveJoiner);
 }
@@ -303,8 +292,8 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     Get<BorderAgent>().Stop();
 #endif
 
-    SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
-    Get<Coap::CoapSecure>().SetConnectedCallback(&Commissioner::HandleCoapsConnected, this);
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(SendRelayTransmit, this));
+    Get<Tmf::SecureAgent>().SetConnectedCallback(&Commissioner::HandleSecureAgentConnected, this);
 
     mStateCallback    = aStateCallback;
     mJoinerCallback   = aJoinerCallback;
@@ -319,7 +308,7 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
 exit:
     if ((error != kErrorNone) && (error != kErrorAlready))
     {
-        Get<Coap::CoapSecure>().Stop();
+        Get<Tmf::SecureAgent>().Stop();
     }
 
     LogError("start commissioner", error);
@@ -333,12 +322,11 @@ Error Commissioner::Stop(ResignMode aResignMode)
 
     VerifyOrExit(mState != kStateDisabled, error = kErrorAlready);
 
-    Get<Coap::CoapSecure>().Stop();
+    Get<Tmf::SecureAgent>().Stop();
 
     if (mState == kStateActive)
     {
         Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-        RemoveCoapResources();
         ClearJoiners();
         needResign = true;
     }
@@ -879,7 +867,6 @@ void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage
     IgnoreError(Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId));
     Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
 
-    AddCoapResources();
     SetState(kStateActive);
 
     mTransmitAttempts = 0;
@@ -985,7 +972,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
     VerifyOrExit(length <= aMessage.GetLength() - offset, error = kErrorParse);
 
-    if (!Get<Coap::CoapSecure>().IsConnectionActive())
+    if (!Get<Tmf::SecureAgent>().IsConnectionActive())
     {
         Mac::ExtAddress receivedId;
         Joiner *        joiner;
@@ -996,7 +983,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
         joiner = FindBestMatchingJoinerEntry(receivedId);
         VerifyOrExit(joiner != nullptr);
 
-        Get<Coap::CoapSecure>().SetPsk(joiner->mPskd);
+        Get<Tmf::SecureAgent>().SetPsk(joiner->mPskd);
         mActiveJoiner = joiner;
 
         LogJoinerEntry("Starting new session with", *joiner);
@@ -1019,7 +1006,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-    Get<Coap::CoapSecure>().HandleUdpReceive(aMessage, joinerMessageInfo);
+    Get<Tmf::SecureAgent>().HandleUdpReceive(aMessage, joinerMessageInfo);
 
 exit:
     return;
@@ -1041,17 +1028,15 @@ exit:
     return;
 }
 
-void Commissioner::HandleJoinerFinalize(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <>
+void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     StateTlv::State    state = StateTlv::kAccept;
     ProvisioningUrlTlv provisioningUrl;
+
+    VerifyOrExit(mState == kStateActive);
 
     LogInfo("received joiner finalize");
 
@@ -1077,6 +1062,9 @@ void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::Mess
 #endif
 
     SendJoinFinalizeResponse(aMessage, state);
+
+exit:
+    return;
 }
 
 void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState)
@@ -1085,7 +1073,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     Ip6::MessageInfo joinerMessageInfo;
     Coap::Message *  message;
 
-    message = Get<Coap::CoapSecure>().NewPriorityResponseMessage(aRequest);
+    message = Get<Tmf::SecureAgent>().NewPriorityResponseMessage(aRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetOffset(message->GetLength());
@@ -1105,7 +1093,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
     DumpCert("[THCI] direction=send | type=JOIN_FIN.rsp |", buf, message->GetLength() - message->GetOffset());
 #endif
 
-    SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, joinerMessageInfo));
+    SuccessOrExit(error = Get<Tmf::SecureAgent>().SendMessage(*message, joinerMessageInfo));
 
     SignalJoinerEvent(kJoinerEventFinalize, mActiveJoiner);
 

@@ -56,6 +56,7 @@ class BorderAgent : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
     friend class Tmf::Agent;
+    friend class Tmf::SecureAgent;
 
 public:
     /**
@@ -149,9 +150,6 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    template <Coap::Resource BorderAgent::*aResource>
-    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-
     void HandleTimeout(void);
 
     static void HandleCoapResponse(void *               aContext,
@@ -160,15 +158,8 @@ private:
                                    Error                aResult);
     void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
 
-    Error       ForwardToLeader(const Coap::Message &   aMessage,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                Uri                     aUri,
-                                bool                    aPetition,
-                                bool                    aSeparate);
+    Error       ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
     Error       ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
-    void        HandleKeepAlive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        HandleRelayTransmit(const Coap::Message &aMessage);
-    void        HandleProxyTransmit(const Coap::Message &aMessage);
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
         return static_cast<BorderAgent *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
@@ -181,17 +172,6 @@ private:
 
     Ip6::MessageInfo mMessageInfo;
 
-    Coap::Resource mCommissionerPetition;
-    Coap::Resource mCommissionerKeepAlive;
-    Coap::Resource mRelayTransmit;
-    Coap::Resource mCommissionerGet;
-    Coap::Resource mCommissionerSet;
-    Coap::Resource mActiveGet;
-    Coap::Resource mActiveSet;
-    Coap::Resource mPendingGet;
-    Coap::Resource mPendingSet;
-    Coap::Resource mProxyTransmit;
-
     Ip6::Udp::Receiver         mUdpReceiver; ///< The UDP receiver to receive packets from external commissioner
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
@@ -201,6 +181,16 @@ private:
 };
 
 DeclareTmfHandler(BorderAgent, kUriRelayRx);
+DeclareTmfHandler(BorderAgent, kUriCommissionerPetition);
+DeclareTmfHandler(BorderAgent, kUriCommissionerKeepAlive);
+DeclareTmfHandler(BorderAgent, kUriRelayTx);
+DeclareTmfHandler(BorderAgent, kUriCommissionerGet);
+DeclareTmfHandler(BorderAgent, kUriCommissionerSet);
+DeclareTmfHandler(BorderAgent, kUriActiveGet);
+DeclareTmfHandler(BorderAgent, kUriActiveSet);
+DeclareTmfHandler(BorderAgent, kUriPendingGet);
+DeclareTmfHandler(BorderAgent, kUriPendingSet);
+DeclareTmfHandler(BorderAgent, kUriProxyTx);
 
 } // namespace MeshCoP
 

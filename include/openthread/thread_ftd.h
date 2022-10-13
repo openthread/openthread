@@ -196,7 +196,7 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
- * Get the Thread Leader Weight used when operating in the Leader role.
+ * Gets the Thread Leader Weight used when operating in the Leader role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -208,7 +208,7 @@ otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance);
 
 /**
- * Set the Thread Leader Weight used when operating in the Leader role.
+ * Sets the Thread Leader Weight used when operating in the Leader role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aWeight   The Thread Leader Weight value.
@@ -238,7 +238,7 @@ uint32_t otThreadGetPreferredLeaderPartitionId(otInstance *aInstance);
 void otThreadSetPreferredLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
- * Get the Joiner UDP Port.
+ * Gets the Joiner UDP Port.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -250,7 +250,7 @@ void otThreadSetPreferredLeaderPartitionId(otInstance *aInstance, uint32_t aPart
 uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance);
 
 /**
- * Set the Joiner UDP Port.
+ * Sets the Joiner UDP Port.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
