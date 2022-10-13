@@ -614,12 +614,6 @@ void Joiner::HandleTimer(void)
 
     switch (mState)
     {
-    case kStateIdle:
-    case kStateDiscover:
-    case kStateConnect:
-        OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
-
     case kStateConnected:
     case kStateEntrust:
         error = kErrorResponseTimeout;
@@ -634,6 +628,11 @@ void Joiner::HandleTimer(void)
 
         error = kErrorNone;
         break;
+
+    case kStateIdle:
+    case kStateDiscover:
+    case kStateConnect:
+        OT_ASSERT(false);
     }
 
     Finish(error);
