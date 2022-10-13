@@ -633,21 +633,22 @@ private:
         bool        mIsAddedInNetData;
     };
 
-    void HandleLocalOnLinkPrefixTimer(void) { mLocalOnLinkPrefix.HandleTimer(); }
+    void HandleOnLinkPrefixManagerTimer(void) { mOnLinkPrefixManager.HandleTimer(); }
 
-    class LocalOnLinkPrefix : public InstanceLocator
+    class OnLinkPrefixManager : public InstanceLocator
     {
     public:
-        explicit LocalOnLinkPrefix(Instance &aInstance);
+        explicit OnLinkPrefixManager(Instance &aInstance);
 
-        void               Generate(void);
+        void               GenerateLocalPrefix(void);
         void               Start(void);
         void               Stop(void);
-        void               PublishAndAdvertise(void);
-        void               Deprecate(void);
+        void               Evaluate(void);
+        const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
+        bool               IsInitalEvaluationDone(void) const;
+        void               HandleDiscoveredPrefixTableChanged(void);
         bool               ShouldPublish(NetworkData::ExternalRouteConfig &aRouteConfig) const;
         void               AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage);
-        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         bool               IsPublishingOrAdvertising(void) const;
         void               HandleNetDataChange(void);
         void               HandleExtPanIdChange(void);
@@ -662,16 +663,19 @@ private:
             kDeprecating,
         };
 
+        void PublishAndAdvertise(void);
+        void Deprecate(void);
         void EnterAdvertisingState(void);
         void AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         void AppendOldPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
 
-        using ExpireTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleLocalOnLinkPrefixTimer>;
+        using ExpireTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleOnLinkPrefixManagerTimer>;
 
-        Ip6::Prefix mPrefix;
+        Ip6::Prefix mLocalPrefix;
+        Ip6::Prefix mFavoredDiscoveredPrefix;
         State       mState;
         TimeMilli   mExpireTime;
-        Ip6::Prefix mOldPrefix;
+        Ip6::Prefix mOldLocalPrefix;
         TimeMilli   mOldExpireTime;
         ExpireTimer mTimer;
     };
@@ -799,7 +803,6 @@ private:
     bool  IsEnabled(void) const { return mIsEnabled; }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
 
-    void EvaluateOnLinkPrefix(void);
     void EvaluateRoutingPolicy(void);
     bool IsInitalPolicyEvaluationDone(void) const;
     void ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
@@ -851,11 +854,7 @@ private:
 
     RoutePreference mRouteInfoOptionPreference;
 
-    // The currently favored (smallest) discovered on-link prefix.
-    // Prefix length of zero indicates there is none.
-    Ip6::Prefix mFavoredDiscoveredOnLinkPrefix;
-
-    LocalOnLinkPrefix mLocalOnLinkPrefix;
+    OnLinkPrefixManager mOnLinkPrefixManager;
 
     DiscoveredPrefixTable mDiscoveredPrefixTable;
 
