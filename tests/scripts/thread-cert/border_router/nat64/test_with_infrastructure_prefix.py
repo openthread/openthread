@@ -75,6 +75,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         router = self.nodes[ROUTER]
 
         br.start()
+        br.enable_nat64()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
 

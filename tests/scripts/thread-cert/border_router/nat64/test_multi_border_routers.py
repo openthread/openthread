@@ -111,6 +111,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         br1.start()
+        br1.enable_nat64()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         br1.bash("service bind9 stop")
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
@@ -125,11 +126,9 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         #         it will add the infrastructure nat64 prefix to Network Data.
         #
         br2.start()
+        br2.enable_nat64()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
-
-        br1.enable_nat64()
-        br2.enable_nat64()
 
         self.simulator.go(10)
         self.assertNotEqual(br1.get_br_favored_nat64_prefix(), br2.get_br_favored_nat64_prefix())
