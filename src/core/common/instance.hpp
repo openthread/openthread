@@ -380,6 +380,9 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Random::Manager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static Utils::Heap *sHeap;
+#endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
