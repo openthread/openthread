@@ -1880,7 +1880,7 @@ Done
 
 Enable NAT64 functions, including the translator and the prefix publishing.
 
-The border routing manager should be enabled (if it is enabled in the build), and the NAT64 translator should be configured with a CIDR (if it is enabled in the build).
+This command can be called anytime.
 
 This command is only available when device enables NAT64 translator or NAT64 prefix manager.
 
@@ -1893,14 +1893,14 @@ Done
 
 Gets the state of NAT64 functions.
 
-Possible results for prefix manager are (when NAT64 prefix manager is enabled):
+Possible results for prefix manager are (`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required):
 
 - `Disabled`: NAT64 prefix manager is disabled.
 - `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably bacause the routing manager is disabled.
 - `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. Usually when there is another border router publishing a NAT64 prefix with higher priority.
 - `Active`: NAT64 prefix manager is enabled, running and publishing a NAT64 prefix.
 
-Possible results for NAT64 translator are (when NAT64 translator is enabled):
+Possible results for NAT64 translator are (`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required):
 
 - `Disabled`: NAT64 translator is disabled.
 - `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued with a NAT64 prefix or a CIDR for NAT64.

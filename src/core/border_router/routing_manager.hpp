@@ -223,7 +223,7 @@ public:
      *
      * @retval  kStateDisabled   NAT64 is disabled.
      * @retval  kStateNotRunning NAT64 is enabled, but is not running since routing manager is not running.
-     * @retval  kStateIdle       NAT64 is enabled, but the border router is not publishing a NAT64 prefix.. Usually
+     * @retval  kStateIdle       NAT64 is enabled, but the border router is not publishing a NAT64 prefix. Usually
      *                           when there is another border router publishing a NAT64 prefix with higher
      *                           priority.
      * @retval  kStateActive     The Border router is publishing a NAT64 prefix.

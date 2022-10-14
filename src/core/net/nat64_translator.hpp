@@ -52,9 +52,8 @@ enum State : uint8_t
 {
     kStateDisabled   = OT_NAT64_STATE_DISABLED,    ///< The component is disabled.
     kStateNotRunning = OT_NAT64_STATE_NOT_RUNNING, ///< The component is enabled, but is not running.
-    kStateIdle = OT_NAT64_STATE_IDLE, ///< NAT64 is enabled, but the border router is not an active NAT64 border router
-                                      ///< in the network.
-    kStateActive = OT_NAT64_STATE_ACTIVE, ///< The component is running.
+    kStateIdle       = OT_NAT64_STATE_IDLE,        ///< NAT64 is enabled, but this BR is not an active NAT64 BR.
+    kStateActive     = OT_NAT64_STATE_ACTIVE,      ///< The component is running.
 };
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -152,7 +151,7 @@ public:
     /**
      * Set the state of NAT64 translator.
      *
-     * Note: Disable the translator will invalidate all address mappings.
+     * Note: Disabling the translator will invalidate all address mappings.
      *
      * @param[in]  aEnabled   A boolean to enable/disable NAT64 translator.
      *

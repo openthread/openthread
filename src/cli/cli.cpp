@@ -755,6 +755,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * nat64 disable
      * Done
      * @endcode
+     * @cparam nat64 @ca{enable|disable}
      * @par api_copy
      * #otNat64SetEnabled
      *
@@ -766,8 +767,9 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
     /**
      * @cli nat64 state
      * @code
+     * nat64 state
      * PrefixManager: Active
-     * Translator:    Active
+     * Translator: Active
      * Done
      * @endcode
      * @par
@@ -775,6 +777,23 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * @par
      * PrefixManager state is available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
      * Translator state is available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+     * @par
+     * Possible results for prefix manager are (`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required):
+     *
+     * - `Disabled`: NAT64 prefix manager is disabled.
+     * - `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably bacause the routing manager is
+     *   disabled.
+     * - `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. Usually when
+     *   there is another border router publishing a NAT64 prefix with higher priority.
+     * - `Active`: NAT64 prefix manager is enabled, running and publishing a NAT64 prefix.
+     *
+     * Possible results for NAT64 translator are (`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required):
+     *
+     * - `Disabled`: NAT64 translator is disabled.
+     * - `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued
+     *   with a NAT64 prefix or a CIDR for NAT64.
+     * - `Active`: NAT64 translator is enabled and is translating packets.
+     *
      * @sa otNat64GetPrefixManagerState
      * @sa otNat64GetTranslatorState
      *

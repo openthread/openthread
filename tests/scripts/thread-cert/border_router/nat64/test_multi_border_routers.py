@@ -252,7 +252,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         })
 
         #
-        # Case 7. Enable the routing manager the BR should start NAT64 prefix manager if the prefix manager is enabled..
+        # Case 7. Enable the routing manager the BR should start NAT64 prefix manager if the prefix manager is enabled.
         #
         #
         br2.enable_br()
