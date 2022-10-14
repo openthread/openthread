@@ -84,7 +84,7 @@
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #include <openthread/trel.h>
 #endif
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 #include <openthread/nat64.h>
 #endif
 
@@ -793,6 +793,8 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * - `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued
      *   with a NAT64 prefix or a CIDR for NAT64.
      * - `Active`: NAT64 translator is enabled and is translating packets.
+     *
+     * `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
      *
      * @sa otNat64GetPrefixManagerState
      * @sa otNat64GetTranslatorState

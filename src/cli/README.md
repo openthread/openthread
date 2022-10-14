@@ -1855,7 +1855,7 @@ Done
 
 Gets the IPv4 configured CIDR in the NAT64 translator.
 
-This command is only available when device enables NAT64 translator.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required.
 
 ```bash
 > nat64 cidr
@@ -1869,7 +1869,7 @@ Disable NAT64 functions, including the translator and the prefix publishing.
 
 This command will reset the mapping table in the translator (if NAT64 translator is enabled in the build).
 
-This command is only available when device enables NAT64 translator or NAT64 prefix manager.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
 
 ```bash
 > nat64 disable
@@ -1882,7 +1882,7 @@ Enable NAT64 functions, including the translator and the prefix publishing.
 
 This command can be called anytime.
 
-This command is only available when device enables NAT64 translator or NAT64 prefix manager.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
 
 ```bash
 > nat64 enable
@@ -1906,7 +1906,7 @@ Possible results for NAT64 translator are (`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_E
 - `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued with a NAT64 prefix or a CIDR for NAT64.
 - `Active`: NAT64 translator is enabled and is translating packets.
 
-This command is only available when device enables NAT64 translator or NAT64 prefix manager.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
 
 ```bash
 > nat64 state
@@ -1929,7 +1929,7 @@ Done
 
 Get the NAT64 translator mappings.
 
-This command is only available when device enables NAT64 translator.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required.
 
 ```bash
 > nat64 mappings
@@ -1947,7 +1947,7 @@ This command is only available when device enables NAT64 translator.
 
 Get the NAT64 translator packet and error counters.
 
-This command is only available when device enables NAT64 translator.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required.
 
 ```bash
 > nat64 counters
