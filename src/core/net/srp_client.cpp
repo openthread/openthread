@@ -575,16 +575,6 @@ Error Client::RemoveService(Service &aService)
     VerifyOrExit(mServices.Contains(aService), error = kErrorNotFound);
 
     UpdateServiceStateToRemove(aService);
-
-    // Check if the service was removed immediately, if so
-    // invoke the callback to report the removed service.
-    GetRemovedServices(removedServices);
-
-    if (!removedServices.IsEmpty())
-    {
-        InvokeCallback(kErrorNone, mHostInfo, removedServices.GetHead());
-    }
-
     UpdateState();
 
 exit:
@@ -593,12 +583,7 @@ exit:
 
 void Client::UpdateServiceStateToRemove(Service &aService)
 {
-    if (aService.GetState() == kToAdd)
-    {
-        // If the service has not been added yet, we can remove it immediately.
-        aService.SetState(kRemoved);
-    }
-    else if (aService.GetState() != kRemoving)
+    if (aService.GetState() != kRemoving)
     {
         aService.SetState(kToRemove);
     }
