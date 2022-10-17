@@ -453,7 +453,7 @@ bool MulticastRoutingManager::UpdateMulticastRouteInfo(MulticastForwardingCache 
     }
     else
     {
-        otLogWarnPlat("MulticastRoutingManager: %s: SIOCGETSGCNT_IN6 %s => %s failed: %s", __FUNCTION__,
+        otLogDebgPlat("MulticastRoutingManager: %s: SIOCGETSGCNT_IN6 %s => %s failed: %s", __FUNCTION__,
                       aMfc.mSrcAddr.ToString().AsCString(), aMfc.mGroupAddr.ToString().AsCString(), strerror(errno));
     }
 
