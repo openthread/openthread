@@ -1302,7 +1302,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 {
     char     uriPath[Message::kMaxReceivedUriPath + 1];
     Message *cachedResponse = nullptr;
-    Error    error          = kErrorNotFound;
+    Error    error          = kErrorNone;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     Option::Iterator iterator;
     char *           curUriPath         = uriPath;
@@ -1453,7 +1453,10 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     {
         mDefaultHandler(mDefaultHandlerContext, &aMessage, &aMessageInfo);
         error = kErrorNone;
+        ExitNow();
     }
+
+    error = kErrorNotFound;
 
 exit:
 
