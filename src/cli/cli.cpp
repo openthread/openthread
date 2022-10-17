@@ -775,27 +775,23 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * @par
      * Gets the state of NAT64 functions.
      * @par
-     * PrefixManager state is available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
-     * Translator state is available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+     * `PrefixManager` state is available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
+     * `Translator` state is available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
      * @par
-     * Possible results for prefix manager are (`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required):
-     *
+     * When `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled, `PrefixManager` returns one of the following
+     * states:
      * - `Disabled`: NAT64 prefix manager is disabled.
-     * - `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably bacause the routing manager is
+     * - `NotRunning`: NAT64 prefix manager is enabled, but is not running. This could mean that the routing manager is
      *   disabled.
-     * - `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. Usually when
-     *   there is another border router publishing a NAT64 prefix with higher priority.
-     * - `Active`: NAT64 prefix manager is enabled, running and publishing a NAT64 prefix.
-     *
-     * Possible results for NAT64 translator are (`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required):
-     *
+     * - `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. This can happen
+     *   when there is another border router publishing a NAT64 prefix with a higher priority.
+     * - `Active`: NAT64 prefix manager is enabled, running, and publishing a NAT64 prefix.
+     * @par
+     * When `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled, `Translator` returns one of the following states:
      * - `Disabled`: NAT64 translator is disabled.
-     * - `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued
-     *   with a NAT64 prefix or a CIDR for NAT64.
+     * - `NotRunning`: NAT64 translator is enabled, but is not translating packets. This could mean that the Translator
+     *   is not configured with a NAT64 prefix or a CIDR for NAT64.
      * - `Active`: NAT64 translator is enabled and is translating packets.
-     *
-     * `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
-     *
      * @sa otNat64GetPrefixManagerState
      * @sa otNat64GetTranslatorState
      *

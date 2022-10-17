@@ -275,11 +275,20 @@ otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
 /**
  * Enable or disable NAT64 functions.
  *
+ * Note: This includes the NAT64 Translator (when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled) and the NAT64
+ * Prefix Manager (when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled).
+ *
+ * When `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled, setting disabled to true resets the
+ * mapping table in the translator.
+ *
  * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is
  * enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable the NAT64 functions
+ *
+ * @sa otNat64GetTranslatorState
+ * @sa otNat64GetPrefixManagerState
  *
  */
 void otNat64SetEnabled(otInstance *aInstance, bool aEnable);
