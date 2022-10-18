@@ -46,6 +46,12 @@
 
 using namespace ot;
 
+// Note: We support the following scenrios:
+// - Using OpenThread's routing manager, while using external NAT64 translator (like tayga).
+// - Using OpenThread's NAT64 translator, while using external routing manager.
+// So OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE translator and OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE are two
+// separate build flags and they are not depending on each other.
+
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr)
 {
@@ -98,7 +104,31 @@ otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr)
 {
     return AsCoreType(aInstance).Get<Nat64::Translator>().GetIp4Cidr(AsCoreType(aCidr));
 }
+
+otNat64State otNat64GetTranslatorState(otInstance *aInstance)
+{
+    return MapEnum(AsCoreType(aInstance).Get<Nat64::Translator>().GetState());
+}
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+otNat64State otNat64GetPrefixManagerState(otInstance *aInstance)
+{
+    return MapEnum(AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNat64PrefixManagerState());
+}
+#endif
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+void otNat64SetEnabled(otInstance *aInstance, bool aEnabled)
+{
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(aEnabled);
+#endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    AsCoreType(aInstance).Get<Nat64::Translator>().SetEnabled(aEnabled);
+#endif
+}
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond)
 {

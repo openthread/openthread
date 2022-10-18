@@ -84,7 +84,7 @@
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 #include <openthread/trel.h>
 #endif
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 #include <openthread/nat64.h>
 #endif
 
@@ -735,15 +735,84 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
+    bool    enable;
 
     if (aArgs[0].IsEmpty())
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
+    /**
+     * @cli nat64 (enable,disable)
+     * @code
+     * nat64 enable
+     * Done
+     * @endcode
+     * @code
+     * nat64 disable
+     * Done
+     * @endcode
+     * @cparam nat64 @ca{enable|disable}
+     * @par api_copy
+     * #otNat64SetEnabled
+     *
+     */
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        otNat64SetEnabled(GetInstancePtr(), enable);
+    }
+    /**
+     * @cli nat64 state
+     * @code
+     * nat64 state
+     * PrefixManager: Active
+     * Translator: Active
+     * Done
+     * @endcode
+     * @par
+     * Gets the state of NAT64 functions.
+     * @par
+     * `PrefixManager` state is available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
+     * `Translator` state is available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+     * @par
+     * When `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled, `PrefixManager` returns one of the following
+     * states:
+     * - `Disabled`: NAT64 prefix manager is disabled.
+     * - `NotRunning`: NAT64 prefix manager is enabled, but is not running. This could mean that the routing manager is
+     *   disabled.
+     * - `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. This can happen
+     *   when there is another border router publishing a NAT64 prefix with a higher priority.
+     * - `Active`: NAT64 prefix manager is enabled, running, and publishing a NAT64 prefix.
+     * @par
+     * When `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled, `Translator` returns one of the following states:
+     * - `Disabled`: NAT64 translator is disabled.
+     * - `NotRunning`: NAT64 translator is enabled, but is not translating packets. This could mean that the Translator
+     *   is not configured with a NAT64 prefix or a CIDR for NAT64.
+     * - `Active`: NAT64 translator is enabled and is translating packets.
+     * @sa otNat64GetPrefixManagerState
+     * @sa otNat64GetTranslatorState
+     *
+     */
+    else if (aArgs[0] == "state")
+    {
+        static const char *const kNat64State[] = {"Disabled", "NotRunning", "Idle", "Active"};
+
+        static_assert(0 == OT_NAT64_STATE_DISABLED, "OT_NAT64_STATE_DISABLED value is incorrect");
+        static_assert(1 == OT_NAT64_STATE_NOT_RUNNING, "OT_NAT64_STATE_NOT_RUNNING value is incorrect");
+        static_assert(2 == OT_NAT64_STATE_IDLE, "OT_NAT64_STATE_IDLE value is incorrect");
+        static_assert(3 == OT_NAT64_STATE_ACTIVE, "OT_NAT64_STATE_ACTIVE value is incorrect");
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        OutputLine("PrefixManager: %s", kNat64State[otNat64GetPrefixManagerState(GetInstancePtr())]);
+#endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+        OutputLine("Translator: %s", kNat64State[otNat64GetTranslatorState(GetInstancePtr())]);
+#endif
+    }
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     /**
      * @cli nat64 cidr
      * @code
@@ -932,6 +1001,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
                        errorCounters.mCount6To4[i]);
         }
     }
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -940,7 +1010,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
@@ -7091,7 +7161,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("mode"),
         CmdEntry("multiradio"),
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         CmdEntry("nat64"),
 #endif
 #if OPENTHREAD_FTD

@@ -50,6 +50,7 @@ RegisterLogModule("Nat64");
 
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mEnabled(false)
     , mMappingExpirerTimer(aInstance)
 {
     Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
@@ -308,21 +309,26 @@ void Translator::ReleaseMapping(AddressMapping &aMapping)
     LogInfo("mapping removed: %s", aMapping.ToString().AsCString());
 }
 
-uint16_t Translator::ReleaseExpiredMappings(void)
+uint16_t Translator::ReleaseMappings(LinkedList<AddressMapping> &aMappings)
 {
-    uint16_t                   numRemoved = 0;
-    TimeMilli                  now        = TimerMilli::GetNow();
-    LinkedList<AddressMapping> idleMappings;
+    uint16_t numRemoved = 0;
 
-    mActiveAddressMappings.RemoveAllMatching(now, idleMappings);
-
-    for (AddressMapping *idleMapping = idleMappings.Pop(); idleMapping != nullptr; idleMapping = idleMappings.Pop())
+    for (AddressMapping *mapping = aMappings.Pop(); mapping != nullptr; mapping = aMappings.Pop())
     {
         numRemoved++;
-        ReleaseMapping(*idleMapping);
+        ReleaseMapping(*mapping);
     }
 
     return numRemoved;
+}
+
+uint16_t Translator::ReleaseExpiredMappings(void)
+{
+    LinkedList<AddressMapping> idleMappings;
+
+    mActiveAddressMappings.RemoveAllMatching(TimerMilli::GetNow(), idleMappings);
+
+    return ReleaseMappings(idleMappings);
 }
 
 Translator::AddressMapping *Translator::AllocateMapping(const Ip6::Address &aIp6Addr)
@@ -588,6 +594,34 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
 
     mTotal.m4To6Packets++;
     mTotal.m4To6Bytes += aPacketSize;
+}
+
+State Translator::GetState(void) const
+{
+    State ret = kStateDisabled;
+
+    VerifyOrExit(mEnabled);
+    VerifyOrExit(mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64(), ret = kStateNotRunning);
+    ret = kStateActive;
+
+exit:
+    return ret;
+}
+
+void Translator::SetEnabled(bool aEnabled)
+{
+    VerifyOrExit(mEnabled != aEnabled);
+    mEnabled = aEnabled;
+
+    if (!aEnabled)
+    {
+        ReleaseMappings(mActiveAddressMappings);
+    }
+
+    LogInfo("NAT64 translator %s", aEnabled ? "enabled" : "disabled");
+
+exit:
+    return;
 }
 
 } // namespace Nat64

@@ -26,10 +26,12 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+from typing import Mapping
 import unittest
 
 import config
 import thread_cert
+import enum
 
 # Test description:
 #   This test verifies that a single NAT64 prefix is advertised when there are
@@ -52,6 +54,11 @@ BR2 = 3
 HOST = 4
 
 NAT64_PREFIX_REFRESH_DELAY = 305
+
+NAT64_STATE_DISABLED = 'Disabled'
+NAT64_STATE_NOT_RUNNING = 'NotRunning'
+NAT64_STATE_IDLE = 'Idle'
+NAT64_STATE_ACTIVE = 'Active'
 
 
 class Nat64MultiBorderRouter(thread_cert.TestCase):
@@ -81,6 +88,19 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         },
     }
 
+    def assertDictIncludes(self, actual: Mapping[str, str], expected: Mapping[str, str]):
+        """ Asserts the `actual` dict includes the `expected` dict.
+
+        Args:
+            actual: A dict for checking.
+            expected: The expected items that the actual dict should contains.
+        """
+        for k, v in expected.items():
+            if k not in actual:
+                raise AssertionError(f"key {k} is not found in first dict")
+            if v != actual[k]:
+                raise AssertionError(f"{repr(actual[k])} != {repr(v)} for key {k}")
+
     def test(self):
         br1 = self.nodes[BR1]
         router = self.nodes[ROUTER]
@@ -91,6 +111,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         br1.start()
+        br1.enable_nat64()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         br1.bash("service bind9 stop")
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
@@ -105,6 +126,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         #         it will add the infrastructure nat64 prefix to Network Data.
         #
         br2.start()
+        br2.enable_nat64()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
@@ -117,17 +139,33 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         nat64_prefix = br1.get_netdata_nat64_prefix()[0]
         self.assertEqual(nat64_prefix, br2_infra_nat64_prefix)
         self.assertNotEqual(nat64_prefix, br1_local_nat64_prefix)
+        self.assertDictIncludes(br1.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_IDLE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
+        self.assertDictIncludes(br2.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
 
         #
-        # Case 2. Disable border routing on BR2.
+        # Case 2. Disable NAT64 on BR2.
         #         BR1 will add its local nat64 prefix.
         #
-        br2.disable_br()
+        br2.disable_nat64()
         self.simulator.go(10)
 
         self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
         nat64_prefix = br1.get_netdata_nat64_prefix()[0]
         self.assertEqual(nat64_prefix, br1_local_nat64_prefix)
+        self.assertDictIncludes(br1.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
+        self.assertDictIncludes(br2.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_DISABLED,
+            'Translator': NAT64_STATE_DISABLED
+        })
 
         #
         # Case 3. Re-enables BR2 with a local prefix and it will not add
@@ -135,7 +173,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         #
         br2.bash("service bind9 stop")
         self.simulator.go(5)
-        br2.enable_br()
+        br2.enable_nat64()
 
         self.simulator.go(10)
         self.assertNotEqual(br2_infra_nat64_prefix, br2.get_br_favored_nat64_prefix())
@@ -145,30 +183,92 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         nat64_prefix = br1.get_netdata_nat64_prefix()[0]
         self.assertEqual(nat64_prefix, br1_local_nat64_prefix)
         self.assertNotEqual(nat64_prefix, br2_local_nat64_prefix)
+        self.assertDictIncludes(br1.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
+        self.assertDictIncludes(br2.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_IDLE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
 
         #
-        # Case 4. Disable border routing on BR1.
+        # Case 4. Disable NAT64 on BR1.
         #         BR1 withdraws its local prefix and BR2 advertises its local prefix.
         #
-        br1.disable_br()
+        br1.disable_nat64()
 
         self.simulator.go(10)
         self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
         nat64_prefix = br1.get_netdata_nat64_prefix()[0]
         self.assertEqual(br2_local_nat64_prefix, nat64_prefix)
         self.assertNotEqual(br1_local_nat64_prefix, nat64_prefix)
+        self.assertDictIncludes(br1.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_DISABLED,
+            'Translator': NAT64_STATE_DISABLED
+        })
+        self.assertDictIncludes(br2.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
 
         #
-        # Case 5. Re-enable border routing on BR1.
+        # Case 5. Re-enable NAT64 on BR1.
         #         NAT64 prefix in Network Data is still BR2's local prefix.
         #
-        br1.enable_br()
+        br1.enable_nat64()
 
         self.simulator.go(10)
         self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
         nat64_prefix = br1.get_netdata_nat64_prefix()[0]
         self.assertEqual(br2_local_nat64_prefix, nat64_prefix)
         self.assertNotEqual(br1_local_nat64_prefix, nat64_prefix)
+        self.assertDictIncludes(br1.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_IDLE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
+        self.assertDictIncludes(br2.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
+
+        #
+        # Case 6. Disable the routing manager should stop NAT64 prefix manager.
+        #
+        #
+        br2.disable_br()
+        self.simulator.go(10)
+        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
+        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(br1_local_nat64_prefix, nat64_prefix)
+        self.assertNotEqual(br2_local_nat64_prefix, nat64_prefix)
+        self.assertDictIncludes(br1.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
+        self.assertDictIncludes(br2.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_NOT_RUNNING,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
+
+        #
+        # Case 7. Enable the routing manager the BR should start NAT64 prefix manager if the prefix manager is enabled.
+        #
+        #
+        br2.enable_br()
+        self.simulator.go(10)
+        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
+        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(br1_local_nat64_prefix, nat64_prefix)
+        self.assertNotEqual(br2_local_nat64_prefix, nat64_prefix)
+        self.assertDictIncludes(br1.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
+        self.assertDictIncludes(br2.get_nat64_state(), {
+            'PrefixManager': NAT64_STATE_IDLE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
 
 
 if __name__ == '__main__':

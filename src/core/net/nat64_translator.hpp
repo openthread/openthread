@@ -37,8 +37,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-
 #include "common/array.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -49,6 +47,16 @@
 
 namespace ot {
 namespace Nat64 {
+
+enum State : uint8_t
+{
+    kStateDisabled   = OT_NAT64_STATE_DISABLED,    ///< The component is disabled.
+    kStateNotRunning = OT_NAT64_STATE_NOT_RUNNING, ///< The component is enabled, but is not running.
+    kStateIdle       = OT_NAT64_STATE_IDLE,        ///< NAT64 is enabled, but this BR is not an active NAT64 BR.
+    kStateActive     = OT_NAT64_STATE_ACTIVE,      ///< The component is running.
+};
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 /**
  * This class implements the NAT64 translator.
@@ -139,6 +147,26 @@ public:
      *
      */
     explicit Translator(Instance &aInstance);
+
+    /**
+     * Set the state of NAT64 translator.
+     *
+     * Note: Disabling the translator will invalidate all address mappings.
+     *
+     * @param[in]  aEnabled   A boolean to enable/disable NAT64 translator.
+     *
+     */
+    void SetEnabled(bool aEnabled);
+
+    /**
+     * Gets the state of NAT64 translator.
+     *
+     * @retval  kNat64StateDisabled  The translator is disabled.
+     * @retval  kNat64StateIdle      The translator is not configured with a valid NAT64 prefix and a CIDR.
+     * @retval  kNat64StateActive    The translator is translating packets.
+     *
+     */
+    State GetState(void) const;
 
     /**
      * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
@@ -325,6 +353,7 @@ private:
     Error TranslateIcmp4(Message &aMessage);
     Error TranslateIcmp6(Message &aMessage);
 
+    uint16_t        ReleaseMappings(LinkedList<AddressMapping> &aMappings);
     void            ReleaseMapping(AddressMapping &aMapping);
     uint16_t        ReleaseExpiredMappings(void);
     AddressMapping *AllocateMapping(const Ip6::Address &aIp6Addr);
@@ -334,6 +363,8 @@ private:
     void HandleMappingExpirerTimer(void);
 
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
+
+    bool mEnabled;
 
     uint64_t mNextMappingId;
 
@@ -349,14 +380,16 @@ private:
     ProtocolCounters mCounters;
     ErrorCounters    mErrorCounters;
 };
+#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 } // namespace Nat64
 
+DefineMapEnum(otNat64State, Nat64::State);
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 DefineCoreType(otNat64ProtocolCounters, Nat64::Translator::ProtocolCounters);
 DefineCoreType(otNat64ErrorCounters, Nat64::Translator::ErrorCounters);
+#endif
 
 } // namespace ot
-
-#endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #endif // NAT64_TRANSLATOR_HPP_

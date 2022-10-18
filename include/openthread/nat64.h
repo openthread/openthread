@@ -227,6 +227,73 @@ otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
                                      otNat64AddressMapping *        aMapping);
 
 /**
+ * States of NAT64.
+ *
+ */
+typedef enum
+{
+    OT_NAT64_STATE_DISABLED = 0, ///< NAT64 is disabled.
+    OT_NAT64_STATE_NOT_RUNNING,  ///< NAT64 is enabled, but one or more dependencies of NAT64 are not running.
+    OT_NAT64_STATE_IDLE,         ///< NAT64 is enabled, but this BR is not an active NAT64 BR.
+    OT_NAT64_STATE_ACTIVE,       ///< The BR is publishing a NAT64 prefix and/or translating packets.
+} otNat64State;
+
+/**
+ * Gets the state of NAT64 translator.
+ *
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ *
+ * @retval OT_NAT64_STATE_DISABLED    NAT64 translator is disabled.
+ * @retval OT_NAT64_STATE_NOT_RUNNING NAT64 translator is enabled, but the translator is not configured with a valid
+ *                                    NAT64 prefix and a CIDR.
+ * @retval OT_NAT64_STATE_ACTIVE      NAT64 translator is enabled, and is translating packets.
+ *
+ */
+otNat64State otNat64GetTranslatorState(otInstance *aInstance);
+
+/**
+ * Gets the state of NAT64 prefix manager.
+ *
+ * Available when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ *
+ * @retval OT_NAT64_STATE_DISABLED    NAT64 prefix manager is disabled.
+ * @retval OT_NAT64_STATE_NOT_RUNNING NAT64 prefix manager is enabled, but is not running (because the routing manager
+ *                                    is not running).
+ * @retval OT_NAT64_STATE_IDLE        NAT64 prefix manager is enabled, but is not publishing a NAT64 prefix. Usually
+ *                                    when there is another border router publishing a NAT64 prefix with higher
+ *                                    priority.
+ * @retval OT_NAT64_STATE_ACTIVE      NAT64 prefix manager is enabled, and is publishing NAT64 prefix to the Thread
+ *                                    network.
+ *
+ */
+otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
+
+/**
+ * Enable or disable NAT64 functions.
+ *
+ * Note: This includes the NAT64 Translator (when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled) and the NAT64
+ * Prefix Manager (when `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is enabled).
+ *
+ * When `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled, setting disabled to true resets the
+ * mapping table in the translator.
+ *
+ * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is
+ * enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   A boolean to enable/disable the NAT64 functions
+ *
+ * @sa otNat64GetTranslatorState
+ * @sa otNat64GetPrefixManagerState
+ *
+ */
+void otNat64SetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
  * Allocate a new message buffer for sending an IPv4 message to the NAT64 translator.
  *
  * Message buffers allocated by this function will have 20 bytes (difference between the size of IPv6 headers

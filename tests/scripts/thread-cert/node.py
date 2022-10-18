@@ -2023,6 +2023,22 @@ class NodeImpl:
         self.send_command(cmd)
         return self._expect_command_output()[0].split(' ')[0]
 
+    def enable_nat64(self):
+        self.send_command(f'nat64 enable')
+        self._expect_done()
+
+    def disable_nat64(self):
+        self.send_command(f'nat64 disable')
+        self._expect_done()
+
+    def get_nat64_state(self):
+        self.send_command('nat64 state')
+        res = {}
+        for line in self._expect_command_output():
+            state = line.split(':')
+            res[state[0].strip()] = state[1].strip()
+        return res
+
     def get_nat64_mappings(self):
         cmd = 'nat64 mappings'
         self.send_command(cmd)

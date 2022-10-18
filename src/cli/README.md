@@ -1855,7 +1855,7 @@ Done
 
 Gets the IPv4 configured CIDR in the NAT64 translator.
 
-This command is only available when device enables NAT64 translator.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required.
 
 ```bash
 > nat64 cidr
@@ -1863,11 +1863,73 @@ This command is only available when device enables NAT64 translator.
 Done
 ```
 
+### nat64 disable
+
+Disable NAT64 functions, including the translator and the prefix publishing.
+
+This command will reset the mapping table in the translator (if NAT64 translator is enabled in the build).
+
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
+
+```bash
+> nat64 disable
+Done
+```
+
+### nat64 enable
+
+Enable NAT64 functions, including the translator and the prefix publishing.
+
+This command can be called anytime.
+
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
+
+```bash
+> nat64 enable
+Done
+```
+
+### nat64 state
+
+Gets the state of NAT64 functions.
+
+Possible results for prefix manager are (`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required):
+
+- `Disabled`: NAT64 prefix manager is disabled.
+- `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably bacause the routing manager is disabled.
+- `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. Usually when there is another border router publishing a NAT64 prefix with higher priority.
+- `Active`: NAT64 prefix manager is enabled, running and publishing a NAT64 prefix.
+
+Possible results for NAT64 translator are (`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required):
+
+- `Disabled`: NAT64 translator is disabled.
+- `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued with a NAT64 prefix or a CIDR for NAT64.
+- `Active`: NAT64 translator is enabled and is translating packets.
+
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
+
+```bash
+> nat64 state
+PrefixManager: NotRunning
+Translator:    NotRunning
+Done
+
+> nat64 state
+PrefixManager: Idle
+Translator:    NotRunning
+Done
+
+> nat64 state
+PrefixManager: Active
+Translator:    Active
+Done
+```
+
 ### nat64 mappings
 
 Get the NAT64 translator mappings.
 
-This command is only available when device enables NAT64 translator.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required.
 
 ```bash
 > nat64 mappings
@@ -1885,7 +1947,7 @@ This command is only available when device enables NAT64 translator.
 
 Get the NAT64 translator packet and error counters.
 
-This command is only available when device enables NAT64 translator.
+`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required.
 
 ```bash
 > nat64 counters

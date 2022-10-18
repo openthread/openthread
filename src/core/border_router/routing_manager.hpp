@@ -219,6 +219,27 @@ public:
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
+     * Gets the state of NAT64 prefix publishing.
+     *
+     * @retval  kStateDisabled   NAT64 is disabled.
+     * @retval  kStateNotRunning NAT64 is enabled, but is not running since routing manager is not running.
+     * @retval  kStateIdle       NAT64 is enabled, but the border router is not publishing a NAT64 prefix. Usually
+     *                           when there is another border router publishing a NAT64 prefix with higher
+     *                           priority.
+     * @retval  kStateActive     The Border router is publishing a NAT64 prefix.
+     *
+     */
+    Nat64::State GetNat64PrefixManagerState(void) const { return mNat64PrefixManager.GetState(); }
+
+    /**
+     * Enable or disable NAT64 orefix publishing.
+     *
+     * @param[in]  aEnabled   A boolean to enable/disable NAT64 prefix publishing.
+     *
+     */
+    void SetNat64PrefixManagerEnabled(bool aEnabled);
+
+    /**
      * This method returns the local NAT64 prefix.
      *
      * @param[out]  aPrefix  A reference to where the prefix will be output to.
@@ -333,6 +354,15 @@ public:
      */
     void HandleSrpServerAutoEnableMode(void);
 #endif
+
+    /**
+     * Gets the state of RoutingManager.
+     *
+     * @retval TRUE  The RoutingManager is currently running.
+     * @retval FALSE The RoutingManager is not running.
+     *
+     */
+    bool IsRunning(void) const { return mIsRunning; }
 
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
@@ -666,11 +696,18 @@ private:
         // interface prefix, maintaining the discovered prefix
         // lifetime, and selection of the NAT64 prefix to publish in
         // Network Data.
+        //
+        // Calling methods except GeneratrLocalPrefix and SetEnabled
+        // when disabled becomes no-op.
 
         explicit Nat64PrefixManager(Instance &aInstance);
 
-        void               Start(void);
-        void               Stop(void);
+        void         SetEnabled(bool aEnabled);
+        Nat64::State GetState(void) const;
+
+        void Start(void);
+        void Stop(void);
+
         void               GenerateLocalPrefix(const Ip6::Prefix &aBrUlaPrefix);
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredPrefix(RoutePreference &aPreference) const;
@@ -683,6 +720,8 @@ private:
         void Discover(void);
 
         using Nat64Timer = TimerMilliIn<RoutingManager, &RoutingManager::HandleNat64PrefixManagerTimer>;
+
+        bool mEnabled;
 
         Ip6::Prefix     mInfraIfPrefix;       // The latest NAT64 prefix discovered on the infrastructure interface.
         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
