@@ -738,6 +738,10 @@ Error Client::AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const ch
 {
     Error error = kErrorNone;
 
+    aQuery = nullptr;
+
+    VerifyOrExit(aInfo.mConfig.GetResponseTimeout() <= TimerMilli::kMaxDelay, error = kErrorInvalidArgs);
+
     aQuery = Get<MessagePool>().Allocate(Message::kTypeOther);
     VerifyOrExit(aQuery != nullptr, error = kErrorNoBufs);
 

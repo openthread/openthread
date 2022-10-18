@@ -351,7 +351,6 @@ Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &a
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
 exit:
@@ -465,7 +464,6 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
     if ((message != nullptr) && (nextOffset < message->GetLength()))

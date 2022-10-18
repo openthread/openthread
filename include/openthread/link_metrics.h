@@ -170,7 +170,7 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
                            void *                      aCallbackContext);
 
 /**
- * This function sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
+ * Sends an MLE Link Metrics Management Request to configure or clear a Forward Tracking Series.
  *
  * @param[in] aInstance          A pointer to an OpenThread instance.
  * @param[in] aDestination       A pointer to the destination address.
@@ -228,7 +228,7 @@ otError otLinkMetricsConfigEnhAckProbing(otInstance *                           
                                          void *                                     aEnhAckCallbackContext);
 
 /**
- * This function sends an MLE Link Probe message.
+ * Sends an MLE Link Probe message.
  *
  * @param[in] aInstance       A pointer to an OpenThread instance.
  * @param[in] aDestination    A pointer to the destination address.

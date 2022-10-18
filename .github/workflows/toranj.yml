@@ -47,7 +47,7 @@ jobs:
       COVERAGE: 1
       TORANJ_RADIO : ${{ matrix.TORANJ_RADIO }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -79,7 +79,7 @@ jobs:
       if: "matrix.TORANJ_RADIO != 'multi'"
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: "matrix.TORANJ_RADIO != 'multi'"
       with:
         name: cov-toranj-ncp-${{ matrix.TORANJ_RADIO }}
@@ -96,7 +96,7 @@ jobs:
       TORANJ_RADIO : ${{ matrix.TORANJ_RADIO }}
       TORANJ_CLI: 1
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -113,7 +113,7 @@ jobs:
       if: "matrix.TORANJ_RADIO != 'multi'"
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: "matrix.TORANJ_RADIO != 'multi'"
       with:
         name: cov-toranj-cli-${{ matrix.TORANJ_RADIO }}
@@ -123,7 +123,7 @@ jobs:
     name: toranj-unittest
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap
@@ -146,7 +146,7 @@ jobs:
     - toranj-cli
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - name: Bootstrap

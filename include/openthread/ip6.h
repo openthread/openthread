@@ -257,9 +257,9 @@ enum
 };
 
 /**
- * This function brings up/down the IPv6 interface.
+ * Brings the IPv6 interface up or down.
  *
- * Call this function to enable/disable IPv6 communication.
+ * Call this to enable or disable IPv6 communication.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  TRUE to enable IPv6, FALSE otherwise.
@@ -272,7 +272,7 @@ enum
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether or not the IPv6 interface is up.
+ * Indicates whether or not the IPv6 interface is up.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -283,10 +283,10 @@ otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled);
 bool otIp6IsEnabled(otInstance *aInstance);
 
 /**
- * Add a Network Interface Address to the Thread interface.
+ * Adds a Network Interface Address to the Thread interface.
  *
  * The passed-in instance @p aAddress is copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS.
+ * supports a fixed number of externally added unicast addresses. See `OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS`.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to a Network Interface Address.
@@ -298,7 +298,7 @@ bool otIp6IsEnabled(otInstance *aInstance);
 otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
 
 /**
- * Remove a Network Interface Address from the Thread interface.
+ * Removes a Network Interface Address from the Thread interface.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
@@ -310,7 +310,7 @@ otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAdd
 otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
- * Get the list of IPv6 addresses assigned to the Thread interface.
+ * Gets the list of IPv6 addresses assigned to the Thread interface.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -319,10 +319,10 @@ otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAd
 const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance);
 
 /**
- * Subscribe the Thread interface to a Network Interface Multicast Address.
+ * Subscribes the Thread interface to a Network Interface Multicast Address.
  *
  * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
- * supports a fixed number of externally added multicast addresses. See OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS.
+ * supports a fixed number of externally added multicast addresses. See `OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS`.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
@@ -338,7 +338,7 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance);
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
- * Unsubscribe the Thread interface to a Network Interface Multicast Address.
+ * Unsubscribes the Thread interface to a Network Interface Multicast Address.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to an IP Address.
@@ -351,7 +351,7 @@ otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address
 otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
- * Get the list of IPv6 multicast addresses subscribed to the Thread interface.
+ * Gets the list of IPv6 multicast addresses subscribed to the Thread interface.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -361,7 +361,7 @@ otError otIp6UnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Addre
 const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance);
 
 /**
- * Check if multicast promiscuous mode is enabled on the Thread interface.
+ * Checks if multicast promiscuous mode is enabled on the Thread interface.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -371,7 +371,7 @@ const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
 bool otIp6IsMulticastPromiscuousEnabled(otInstance *aInstance);
 
 /**
- * Enable multicast promiscuous mode on the Thread interface.
+ * Enables or disables multicast promiscuous mode on the Thread interface.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   TRUE to enable Multicast Promiscuous mode, FALSE otherwise.
@@ -638,8 +638,9 @@ void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t 
 /**
  * This function converts a given IPv6 socket address to a human-readable string.
  *
- * The IPv6 socket address string is formatted as "[<address>]:<port>" where `<address> is shown as 16 hex values
- * separated by ':' and `<port>` is the port number in decimal format (i.e., "[%x:%x:...:%x]:%u")
+ * The IPv6 socket address string is formatted as [`address`]:`port` where `address` is shown
+ * as 16 hex values separated by `:` and `port` is the port number in decimal format,
+ * for example "[%x:%x:...:%x]:%u".
  *
  * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
  * but the outputted string is always null-terminated.

@@ -39,7 +39,7 @@ jobs:
   size-report:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Bootstrap
       if: "github.event_name == 'push'"
       run: |

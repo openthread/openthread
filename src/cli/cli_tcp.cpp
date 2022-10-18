@@ -213,7 +213,7 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = otTcpConnect(&mEndpoint, &sockaddr, OT_TCP_CONNECT_NO_FAST_OPEN));
-    mEndpointConnected = false;
+    mEndpointConnected = true;
 
 exit:
     return error;
@@ -596,6 +596,7 @@ void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aE
     OT_UNUSED_VARIABLE(aListener);
     OT_UNUSED_VARIABLE(aEndpoint);
 
+    mEndpointConnected = true;
     OutputFormat("Accepted connection from ");
     OutputSockAddrLine(*aPeer);
 }
