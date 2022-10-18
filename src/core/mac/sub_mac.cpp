@@ -338,16 +338,15 @@ Error SubMac::Send(void)
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     case kStateDelayBeforeRetx:
 #endif
-    case kStateEnergyScan:
-        ExitNow(error = kErrorInvalidState);
-        OT_UNREACHABLE_CODE(break);
-
     case kStateSleep:
     case kStateReceive:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     case kStateCslSample:
 #endif
         break;
+
+    case kStateEnergyScan:
+        ExitNow(error = kErrorInvalidState);
     }
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

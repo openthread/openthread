@@ -773,6 +773,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 		}
 		if (tp == (struct tcpcb *) -1) {
 			rstreason = ECONNREFUSED;
+			tp = NULL;
 			goto dropwithreset;
 		}
 		tcp_state_change(tp, TCPS_SYN_RECEIVED);

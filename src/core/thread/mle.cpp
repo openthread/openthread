@@ -2015,7 +2015,6 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
     case kRoleRouter:
     case kRoleLeader:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
     if (!IsFullThreadDevice())
@@ -3513,7 +3512,6 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
     // Status
@@ -3607,7 +3605,6 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 
     aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;

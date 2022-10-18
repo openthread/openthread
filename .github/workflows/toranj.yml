@@ -79,7 +79,7 @@ jobs:
       if: "matrix.TORANJ_RADIO != 'multi'"
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: "matrix.TORANJ_RADIO != 'multi'"
       with:
         name: cov-toranj-ncp-${{ matrix.TORANJ_RADIO }}
@@ -113,7 +113,7 @@ jobs:
       if: "matrix.TORANJ_RADIO != 'multi'"
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: "matrix.TORANJ_RADIO != 'multi'"
       with:
         name: cov-toranj-cli-${{ matrix.TORANJ_RADIO }}

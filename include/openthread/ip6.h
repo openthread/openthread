@@ -638,8 +638,9 @@ void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t 
 /**
  * This function converts a given IPv6 socket address to a human-readable string.
  *
- * The IPv6 socket address string is formatted as "[<address>]:<port>" where `<address> is shown as 16 hex values
- * separated by ':' and `<port>` is the port number in decimal format (i.e., "[%x:%x:...:%x]:%u")
+ * The IPv6 socket address string is formatted as [`address`]:`port` where `address` is shown
+ * as 16 hex values separated by `:` and `port` is the port number in decimal format,
+ * for example "[%x:%x:...:%x]:%u".
  *
  * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
  * but the outputted string is always null-terminated.

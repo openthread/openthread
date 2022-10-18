@@ -643,12 +643,13 @@ private:
         void               Generate(void);
         void               Start(void);
         void               Stop(void);
-        void               Advertise(void);
+        void               PublishAndAdvertise(void);
         void               Deprecate(void);
         bool               ShouldPublish(NetworkData::ExternalRouteConfig &aRouteConfig) const;
         void               AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
-        bool               IsAdvertising(void) const { return (mState == kAdvertising); }
+        bool               IsPublishingOrAdvertising(void) const;
+        void               HandleNetDataChange(void);
         void               HandleExtPanIdChange(void);
         void               HandleTimer(void);
 
@@ -656,10 +657,12 @@ private:
         enum State : uint8_t
         {
             kIdle,
+            kPublishing,
             kAdvertising,
             kDeprecating,
         };
 
+        void EnterAdvertisingState(void);
         void AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
         void AppendOldPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
 
@@ -814,6 +817,7 @@ private:
     bool ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
     void UpdateDiscoveredPrefixTableOnNetDataChange(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
+    bool NetworkDataContainsExternalRoute(const Ip6::Prefix &aPrefix) const;
     void UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
     bool IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
     void ResetDiscoveredPrefixStaleTimer(void);
