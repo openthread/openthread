@@ -93,12 +93,13 @@ public:
      *
      * The number of published entries accounts for:
      * - Max number of discovered prefix entries,
-     * - Two entries for local on-link prefixes (current prefix and old one deprecating on extended PAN ID change),
+     * - One entry for local on-link prefixes,
+     * - Max number of old (deprecating) local on-link prefixes,
      * - One entry for NAT64 published prefix.
      *
      */
-    static constexpr uint16_t kMaxPublishedPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES + 3;
-
+    static constexpr uint16_t kMaxPublishedPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES + 1 +
+                                                      OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES + 1;
     /**
      * This constructor initializes the routing manager.
      *
@@ -640,6 +641,9 @@ private:
     public:
         explicit OnLinkPrefixManager(Instance &aInstance);
 
+        // Max number of old on-link prefixes to retain to deprecate.
+        static constexpr uint16_t kMaxOldPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES;
+
         void               GenerateLocalPrefix(void);
         void               Start(void);
         void               Stop(void);
@@ -655,7 +659,7 @@ private:
         void               HandleTimer(void);
 
     private:
-        enum State : uint8_t
+        enum State : uint8_t // State of `mLocalPrefix`
         {
             kIdle,
             kPublishing,
@@ -663,21 +667,30 @@ private:
             kDeprecating,
         };
 
+        struct OldPrefix
+        {
+            bool Matches(const Ip6::Prefix &aPrefix) const { return mPrefix == aPrefix; }
+
+            Ip6::Prefix mPrefix;
+            TimeMilli   mExpireTime;
+        };
+
         void PublishAndAdvertise(void);
         void Deprecate(void);
+        void ResetExpireTime(TimeMilli aNow);
         void EnterAdvertisingState(void);
         void AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
-        void AppendOldPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        void AppendOldPrefixes(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        void DeprecateOldPrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime);
 
         using ExpireTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleOnLinkPrefixManagerTimer>;
 
-        Ip6::Prefix mLocalPrefix;
-        Ip6::Prefix mFavoredDiscoveredPrefix;
-        State       mState;
-        TimeMilli   mExpireTime;
-        Ip6::Prefix mOldLocalPrefix;
-        TimeMilli   mOldExpireTime;
-        ExpireTimer mTimer;
+        Ip6::Prefix                       mLocalPrefix;
+        State                             mState;
+        TimeMilli                         mExpireTime;
+        Ip6::Prefix                       mFavoredDiscoveredPrefix;
+        Array<OldPrefix, kMaxOldPrefixes> mOldLocalPrefixes;
+        ExpireTimer                       mTimer;
     };
 
     typedef Ip6::Prefix OnMeshPrefix;
