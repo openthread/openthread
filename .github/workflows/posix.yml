@@ -308,7 +308,7 @@ jobs:
     needs: upload-coverage
     runs-on: ubuntu-20.04
     steps:
-    - uses: geekyeggo/delete-artifact@1-glob-support
+    - uses: geekyeggo/delete-artifact@v2
       with:
         name: cov-*
         useGlob: true
