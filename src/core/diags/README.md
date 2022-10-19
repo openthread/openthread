@@ -157,6 +157,27 @@ Clear statistics during diagnostics mode.
 stats cleared
 ```
 
+### diag gpio get \<gpio\>
+
+Get the gpio value.
+
+```bash
+> diag gpio get 0
+1
+Done
+```
+
+### diag gpio set \<gpio\> \<value\>
+
+Set the gpio value.
+
+The parameter 'value' has to be in range [0, 1].
+
+```bash
+> diag gpio set 0 1
+Done
+```
+
 ### diag stop
 
 Stop diagnostics mode and print statistics.
