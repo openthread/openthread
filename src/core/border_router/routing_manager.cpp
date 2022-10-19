@@ -69,7 +69,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mInfraIf(aInstance)
     , mLocalOmrPrefix(aInstance)
     , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
-    , mLocalOnLinkPrefix(aInstance)
+    , mOnLinkPrefixManager(aInstance)
     , mDiscoveredPrefixTable(aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     , mNat64PrefixManager(aInstance)
@@ -78,8 +78,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mDiscoveredPrefixStaleTimer(aInstance)
     , mRoutingPolicyTimer(aInstance)
 {
-    mFavoredDiscoveredOnLinkPrefix.Clear();
-
     mBrUlaPrefix.Clear();
 }
 
@@ -94,7 +92,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
 #endif
-    mLocalOnLinkPrefix.Generate();
+    mOnLinkPrefixManager.GenerateLocalPrefix();
 
     error = mInfraIf.HandleStateChanged(mInfraIf.GetIfIndex(), aInfraIfIsRunning);
 
@@ -163,7 +161,7 @@ Error RoutingManager::GetOnLinkPrefix(Ip6::Prefix &aPrefix)
     Error error = kErrorNone;
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
-    aPrefix = mLocalOnLinkPrefix.GetPrefix();
+    aPrefix = mOnLinkPrefixManager.GetLocalPrefix();
 
 exit:
     return error;
@@ -252,7 +250,7 @@ void RoutingManager::Start(void)
 
         mIsRunning = true;
         UpdateDiscoveredPrefixTableOnNetDataChange();
-        mLocalOnLinkPrefix.Start();
+        mOnLinkPrefixManager.Start();
         mRsSender.Start();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.Start();
@@ -267,9 +265,7 @@ void RoutingManager::Stop(void)
     mLocalOmrPrefix.RemoveFromNetData();
     mFavoredOmrPrefix.Clear();
 
-    mFavoredDiscoveredOnLinkPrefix.Clear();
-
-    mLocalOnLinkPrefix.Stop();
+    mOnLinkPrefixManager.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Stop();
@@ -358,13 +354,13 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
         UpdateDiscoveredPrefixTableOnNetDataChange();
-        mLocalOnLinkPrefix.HandleNetDataChange();
+        mOnLinkPrefixManager.HandleNetDataChange();
         ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
 
     if (aEvents.Contains(kEventThreadExtPanIdChanged))
     {
-        mLocalOnLinkPrefix.HandleExtPanIdChange();
+        mOnLinkPrefixManager.HandleExtPanIdChange();
 
         if (mIsRunning)
         {
@@ -490,7 +486,7 @@ void RoutingManager::EvaluatePublishingPrefix(const Ip6::Prefix &aPrefix)
 
     shouldPublish = mDiscoveredPrefixTable.ShouldPublish(routeConfig);
 
-    if (mLocalOnLinkPrefix.ShouldPublish(routeConfig))
+    if (mOnLinkPrefixManager.ShouldPublish(routeConfig))
     {
         shouldPublish = true;
     }
@@ -522,60 +518,6 @@ exit:
     return;
 }
 
-void RoutingManager::EvaluateOnLinkPrefix(void)
-{
-    VerifyOrExit(!mRsSender.IsInProgress());
-
-    mDiscoveredPrefixTable.FindFavoredOnLinkPrefix(mFavoredDiscoveredOnLinkPrefix);
-
-    if ((mFavoredDiscoveredOnLinkPrefix.GetLength() == 0) ||
-        (mFavoredDiscoveredOnLinkPrefix == mLocalOnLinkPrefix.GetPrefix()))
-    {
-        // We need to advertise our local on-link prefix when there is
-        // no discovered on-link prefix. If the favored discovered
-        // prefix is the same as our local on-link prefix we also
-        // start advertising the local prefix to add redundancy. Note
-        // that local on-link prefix is derived from extended PAN ID
-        // and therefore is the same for all BRs on the same Thread
-        // mesh.
-
-        mLocalOnLinkPrefix.PublishAndAdvertise();
-
-        // We remove the local on-link prefix from discovered prefix
-        // table, in case it was previously discovered and included in
-        // the table (now as a deprecating entry). We remove it with
-        // `kKeepInNetData` flag to ensure that the prefix is not
-        // unpublished from network data.
-        //
-        // Note that `ShouldProcessPrefixInfoOption()` will also check
-        // not allow the local on-link prefix to be added in the prefix
-        // table while we are advertising it.
-
-        mDiscoveredPrefixTable.RemoveOnLinkPrefix(mLocalOnLinkPrefix.GetPrefix());
-
-        mFavoredDiscoveredOnLinkPrefix.Clear();
-    }
-    else if (mLocalOnLinkPrefix.IsPublishingOrAdvertising())
-    {
-        // When an application-specific on-link prefix is received and
-        // it is larger than the local prefix, we will not remove the
-        // advertised local prefix. In this case, there will be two
-        // on-link prefixes on the infra link. But all BRs will still
-        // converge to the same smallest/favored on-link prefix and the
-        // application-specific prefix is not used.
-
-        if (!(mLocalOnLinkPrefix.GetPrefix() < mFavoredDiscoveredOnLinkPrefix))
-        {
-            LogInfo("EvaluateOnLinkPrefix: There is already favored on-link prefix %s on %s",
-                    mFavoredDiscoveredOnLinkPrefix.ToString().AsCString(), mInfraIf.ToString().AsCString());
-            mLocalOnLinkPrefix.Deprecate();
-        }
-    }
-
-exit:
-    return;
-}
-
 // This method evaluate the routing policy depends on prefix and route
 // information on Thread Network and infra link. As a result, this
 // method May send RA messages on infra link and publish/unpublish
@@ -586,7 +528,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
 
     LogInfo("Evaluating routing policy");
 
-    EvaluateOnLinkPrefix();
+    mOnLinkPrefixManager.Evaluate();
     EvaluateOmrPrefix();
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Evaluate();
@@ -617,8 +559,7 @@ bool RoutingManager::IsInitalPolicyEvaluationDone(void) const
     // the emitted Router Advert message on infrastructure side
     // and published in the Thread Network Data.
 
-    return mIsRunning && !mFavoredOmrPrefix.IsEmpty() &&
-           (mFavoredDiscoveredOnLinkPrefix.GetLength() != 0 || mLocalOnLinkPrefix.IsPublishingOrAdvertising());
+    return mIsRunning && !mFavoredOmrPrefix.IsEmpty() && mOnLinkPrefixManager.IsInitalEvaluationDone();
 }
 
 void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
@@ -682,7 +623,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     // advertised or deprecated and for old prefix if is being
     // deprecated.
 
-    mLocalOnLinkPrefix.AppendAsPiosTo(raMsg);
+    mOnLinkPrefixManager.AppendAsPiosTo(raMsg);
 
     // Determine which previously advertised prefixes need to be
     // invalidated. Under `kInvalidateAllPrevPrefixes` mode we need
@@ -851,7 +792,7 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
 
             if (pio.GetPreferredLifetime() > 0)
             {
-                VerifyOrExit(prefix == mLocalOnLinkPrefix.GetPrefix());
+                VerifyOrExit(prefix == mOnLinkPrefixManager.GetLocalPrefix());
             }
 
             break;
@@ -1001,9 +942,9 @@ bool RoutingManager::ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOpti
         ExitNow();
     }
 
-    if (mLocalOnLinkPrefix.IsPublishingOrAdvertising())
+    if (mOnLinkPrefixManager.IsPublishingOrAdvertising())
     {
-        VerifyOrExit(aPrefix != mLocalOnLinkPrefix.GetPrefix());
+        VerifyOrExit(aPrefix != mOnLinkPrefixManager.GetLocalPrefix());
     }
 
     shouldProcess = true;
@@ -1059,22 +1000,12 @@ exit:
 void RoutingManager::HandleDiscoveredPrefixTableChanged(void)
 {
     // This is a callback from `mDiscoveredPrefixTable` indicating that
-    // there has been a change in the table. If the favored on-link
-    // prefix has changed, we trigger a re-evaluation of the routing
-    // policy.
-
-    Ip6::Prefix newFavoredPrefix;
+    // there has been a change in the table.
 
     VerifyOrExit(mIsRunning);
 
     ResetDiscoveredPrefixStaleTimer();
-
-    mDiscoveredPrefixTable.FindFavoredOnLinkPrefix(newFavoredPrefix);
-
-    if (newFavoredPrefix != mFavoredDiscoveredOnLinkPrefix)
-    {
-        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-    }
+    mOnLinkPrefixManager.HandleDiscoveredPrefixTableChanged();
 
 exit:
     return;
@@ -1975,49 +1906,51 @@ exit:
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// LocalOnLinkPrefix
+// OnLinkPrefixManager
 
-RoutingManager::LocalOnLinkPrefix::LocalOnLinkPrefix(Instance &aInstance)
+RoutingManager::OnLinkPrefixManager::OnLinkPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kIdle)
     , mTimer(aInstance)
 {
-    mPrefix.Clear();
-    mOldPrefix.Clear();
+    mLocalPrefix.Clear();
+    mFavoredDiscoveredPrefix.Clear();
+    mOldLocalPrefix.Clear();
 }
 
-void RoutingManager::LocalOnLinkPrefix::Generate(void)
+void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
 {
     MeshCoP::ExtendedPanId extPanId = Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
 
-    mPrefix.mPrefix.mFields.m8[0] = 0xfd;
+    mLocalPrefix.mPrefix.mFields.m8[0] = 0xfd;
     // Global ID: 40 most significant bits of Extended PAN ID
-    memcpy(mPrefix.mPrefix.mFields.m8 + 1, extPanId.m8, 5);
+    memcpy(mLocalPrefix.mPrefix.mFields.m8 + 1, extPanId.m8, 5);
     // Subnet ID: 16 least significant bits of Extended PAN ID
-    memcpy(mPrefix.mPrefix.mFields.m8 + 6, extPanId.m8 + 6, 2);
-    mPrefix.SetLength(kOnLinkPrefixLength);
+    memcpy(mLocalPrefix.mPrefix.mFields.m8 + 6, extPanId.m8 + 6, 2);
+    mLocalPrefix.SetLength(kOnLinkPrefixLength);
 
-    LogNote("Local on-link prefix: %s", mPrefix.ToString().AsCString());
+    LogNote("Local on-link prefix: %s", mLocalPrefix.ToString().AsCString());
 }
 
-void RoutingManager::LocalOnLinkPrefix::Start(void)
+void RoutingManager::OnLinkPrefixManager::Start(void)
 {
     mState = kIdle;
 }
 
-void RoutingManager::LocalOnLinkPrefix::Stop(void)
+void RoutingManager::OnLinkPrefixManager::Stop(void)
 {
     mTimer.Stop();
+    mFavoredDiscoveredPrefix.Clear();
 
-    if (mOldPrefix.GetLength() != 0)
+    if (mOldLocalPrefix.GetLength() != 0)
     {
-        Get<RoutingManager>().UnpublishExternalRoute(mOldPrefix);
-        mOldPrefix.Clear();
+        Get<RoutingManager>().UnpublishExternalRoute(mOldLocalPrefix);
+        mOldLocalPrefix.Clear();
     }
 
     VerifyOrExit(mState != kIdle);
 
-    Get<RoutingManager>().UnpublishExternalRoute(mPrefix);
+    Get<RoutingManager>().UnpublishExternalRoute(mLocalPrefix);
 
     if (mState == kPublishing)
     {
@@ -2038,7 +1971,88 @@ exit:
     return;
 }
 
-void RoutingManager::LocalOnLinkPrefix::PublishAndAdvertise(void)
+void RoutingManager::OnLinkPrefixManager::Evaluate(void)
+{
+    VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
+
+    Get<RoutingManager>().mDiscoveredPrefixTable.FindFavoredOnLinkPrefix(mFavoredDiscoveredPrefix);
+
+    if ((mFavoredDiscoveredPrefix.GetLength() == 0) || (mFavoredDiscoveredPrefix == mLocalPrefix))
+    {
+        // We need to advertise our local on-link prefix when there is
+        // no discovered on-link prefix. If the favored discovered
+        // prefix is the same as our local on-link prefix we also
+        // start advertising the local prefix to add redundancy. Note
+        // that local on-link prefix is derived from extended PAN ID
+        // and therefore is the same for all BRs on the same Thread
+        // mesh.
+
+        PublishAndAdvertise();
+
+        // We remove the local on-link prefix from discovered prefix
+        // table, in case it was previously discovered and included in
+        // the table (now as a deprecating entry). We remove it with
+        // `kKeepInNetData` flag to ensure that the prefix is not
+        // unpublished from network data.
+        //
+        // Note that `ShouldProcessPrefixInfoOption()` will also check
+        // not allow the local on-link prefix to be added in the prefix
+        // table while we are advertising it.
+
+        Get<RoutingManager>().mDiscoveredPrefixTable.RemoveOnLinkPrefix(mLocalPrefix);
+
+        mFavoredDiscoveredPrefix.Clear();
+    }
+    else if (IsPublishingOrAdvertising())
+    {
+        // When an application-specific on-link prefix is received and
+        // it is larger than the local prefix, we will not remove the
+        // advertised local prefix. In this case, there will be two
+        // on-link prefixes on the infra link. But all BRs will still
+        // converge to the same smallest/favored on-link prefix and the
+        // application-specific prefix is not used.
+
+        if (!(mLocalPrefix < mFavoredDiscoveredPrefix))
+        {
+            LogInfo("EvaluateOnLinkPrefix: There is already favored on-link prefix %s",
+                    mFavoredDiscoveredPrefix.ToString().AsCString());
+            Deprecate();
+        }
+    }
+
+exit:
+    return;
+}
+
+bool RoutingManager::OnLinkPrefixManager::IsInitalEvaluationDone(void) const
+{
+    // This method indicates whether or not we are done with the
+    // initial policy evaluation of the on-link prefixes, i.e., either
+    // we have discovered a favored on-link prefix (being advertised by
+    // another router on infra link) or we are advertising our local
+    // on-link prefix.
+
+    return (mFavoredDiscoveredPrefix.GetLength() != 0 || IsPublishingOrAdvertising());
+}
+
+void RoutingManager::OnLinkPrefixManager::HandleDiscoveredPrefixTableChanged(void)
+{
+    // This is a callback from `mDiscoveredPrefixTable` indicating that
+    // there has been a change in the table. If the favored on-link
+    // prefix has changed, we trigger a re-evaluation of the routing
+    // policy.
+
+    Ip6::Prefix newFavoredPrefix;
+
+    Get<RoutingManager>().mDiscoveredPrefixTable.FindFavoredOnLinkPrefix(newFavoredPrefix);
+
+    if (newFavoredPrefix != mFavoredDiscoveredPrefix)
+    {
+        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+    }
+}
+
+void RoutingManager::OnLinkPrefixManager::PublishAndAdvertise(void)
 {
     // Start publishing and advertising the local on-link prefix if
     // not already.
@@ -2055,16 +2069,16 @@ void RoutingManager::LocalOnLinkPrefix::PublishAndAdvertise(void)
     }
 
     mState = kPublishing;
-    LogInfo("Publishing local on-link prefix %s in netdata", mPrefix.ToString().AsCString());
+    LogInfo("Publishing local on-link prefix %s in netdata", mLocalPrefix.ToString().AsCString());
 
-    Get<RoutingManager>().EvaluatePublishingPrefix(mPrefix);
+    Get<RoutingManager>().EvaluatePublishingPrefix(mLocalPrefix);
 
     // We wait for the prefix to be added in Network Data before
     // starting to advertise it in RAs. However, if it is already
     // present in Network Data (e.g., added by another BR on the same
     // Thread mesh), we can immediately start advertising it.
 
-    if (Get<RoutingManager>().NetworkDataContainsExternalRoute(mPrefix))
+    if (Get<RoutingManager>().NetworkDataContainsExternalRoute(mLocalPrefix))
     {
         EnterAdvertisingState();
     }
@@ -2073,7 +2087,7 @@ exit:
     return;
 }
 
-void RoutingManager::LocalOnLinkPrefix::Deprecate(void)
+void RoutingManager::OnLinkPrefixManager::Deprecate(void)
 {
     // Deprecate the local on-link prefix if it was being advertised
     // before. While depreciating the prefix, we wait for the lifetime
@@ -2086,14 +2100,14 @@ void RoutingManager::LocalOnLinkPrefix::Deprecate(void)
     {
     case kPublishing:
         mState = kIdle;
-        Get<RoutingManager>().EvaluatePublishingPrefix(mPrefix);
+        Get<RoutingManager>().EvaluatePublishingPrefix(mLocalPrefix);
         mState = kIdle;
         break;
 
     case kAdvertising:
         mState = kDeprecating;
         mTimer.FireAtIfEarlier(mExpireTime);
-        LogInfo("Deprecate local on-link prefix %s", mPrefix.ToString().AsCString());
+        LogInfo("Deprecate local on-link prefix %s", mLocalPrefix.ToString().AsCString());
         break;
 
     case kIdle:
@@ -2105,11 +2119,11 @@ exit:
     return;
 }
 
-bool RoutingManager::LocalOnLinkPrefix::ShouldPublish(NetworkData::ExternalRouteConfig &aRouteConfig) const
+bool RoutingManager::OnLinkPrefixManager::ShouldPublish(NetworkData::ExternalRouteConfig &aRouteConfig) const
 {
     bool shouldPublish = false;
 
-    if (aRouteConfig.GetPrefix() == mPrefix)
+    if (aRouteConfig.GetPrefix() == mLocalPrefix)
     {
         switch (mState)
         {
@@ -2123,7 +2137,7 @@ bool RoutingManager::LocalOnLinkPrefix::ShouldPublish(NetworkData::ExternalRoute
             break;
         }
     }
-    else if ((mOldPrefix.GetLength() != 0) && (aRouteConfig.GetPrefix() == mOldPrefix))
+    else if ((mOldLocalPrefix.GetLength() != 0) && (aRouteConfig.GetPrefix() == mOldLocalPrefix))
     {
         shouldPublish            = true;
         aRouteConfig.mPreference = NetworkData::kRoutePreferenceMedium;
@@ -2132,26 +2146,26 @@ bool RoutingManager::LocalOnLinkPrefix::ShouldPublish(NetworkData::ExternalRoute
     return shouldPublish;
 }
 
-void RoutingManager::LocalOnLinkPrefix::EnterAdvertisingState(void)
+void RoutingManager::OnLinkPrefixManager::EnterAdvertisingState(void)
 {
     mState      = kAdvertising;
     mExpireTime = TimerMilli::GetNow() + TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime);
 
-    LogInfo("Start advertising local on-link prefix %s", mPrefix.ToString().AsCString());
+    LogInfo("Start advertising local on-link prefix %s", mLocalPrefix.ToString().AsCString());
 }
 
-bool RoutingManager::LocalOnLinkPrefix::IsPublishingOrAdvertising(void) const
+bool RoutingManager::OnLinkPrefixManager::IsPublishingOrAdvertising(void) const
 {
     return (mState == kPublishing) || (mState == kAdvertising);
 }
 
-void RoutingManager::LocalOnLinkPrefix::AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+void RoutingManager::OnLinkPrefixManager::AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage)
 {
     AppendCurPrefix(aRaMessage);
     AppendOldPrefix(aRaMessage);
 }
 
-void RoutingManager::LocalOnLinkPrefix::AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+void RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage)
 {
     // Append the local on-link prefix to the `aRaMessage` as a PIO
     // only if it is being advertised or deprecated.
@@ -2181,36 +2195,37 @@ void RoutingManager::LocalOnLinkPrefix::AppendCurPrefix(Ip6::Nd::RouterAdvertMes
         ExitNow();
     }
 
-    SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(mPrefix, validLifetime, preferredLifetime));
+    SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime));
 
-    LogInfo("RouterAdvert: Added PIO for %s (valid=%u, preferred=%u)", mPrefix.ToString().AsCString(), validLifetime,
-            preferredLifetime);
+    LogInfo("RouterAdvert: Added PIO for %s (valid=%u, preferred=%u)", mLocalPrefix.ToString().AsCString(),
+            validLifetime, preferredLifetime);
 
 exit:
     return;
 }
 
-void RoutingManager::LocalOnLinkPrefix::AppendOldPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+void RoutingManager::OnLinkPrefixManager::AppendOldPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage)
 {
     TimeMilli now = TimerMilli::GetNow();
     uint32_t  validLifetime;
 
-    VerifyOrExit((mOldPrefix.GetLength() != 0) && (mOldExpireTime > now));
+    VerifyOrExit((mOldLocalPrefix.GetLength() != 0) && (mOldExpireTime > now));
 
     validLifetime = TimeMilli::MsecToSec(mOldExpireTime - now);
-    SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(mOldPrefix, validLifetime, 0));
+    SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(mOldLocalPrefix, validLifetime, 0));
 
-    LogInfo("RouterAdvert: Added PIO for %s (valid=%u, preferred=0)", mOldPrefix.ToString().AsCString(), validLifetime);
+    LogInfo("RouterAdvert: Added PIO for %s (valid=%u, preferred=0)", mOldLocalPrefix.ToString().AsCString(),
+            validLifetime);
 
 exit:
     return;
 }
 
-void RoutingManager::LocalOnLinkPrefix::HandleNetDataChange(void)
+void RoutingManager::OnLinkPrefixManager::HandleNetDataChange(void)
 {
     VerifyOrExit(mState == kPublishing);
 
-    if (Get<RoutingManager>().NetworkDataContainsExternalRoute(mPrefix))
+    if (Get<RoutingManager>().NetworkDataContainsExternalRoute(mLocalPrefix))
     {
         EnterAdvertisingState();
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
@@ -2220,10 +2235,10 @@ exit:
     return;
 }
 
-void RoutingManager::LocalOnLinkPrefix::HandleExtPanIdChange(void)
+void RoutingManager::OnLinkPrefixManager::HandleExtPanIdChange(void)
 {
     // If the prefix is advertised or being deprecated we remember it
-    // as `mOldPrefix` and deprecate it. It will be included in
+    // as `mOldLocalPrefix` and deprecate it. It will be included in
     // emitted RAs as PIO with zero preferred lifetime. It will still
     // be present in Network Data until its expire time so to allow
     // Thread nodes to continue to communicate with `InfraIf` devices
@@ -2235,46 +2250,46 @@ void RoutingManager::LocalOnLinkPrefix::HandleExtPanIdChange(void)
         break;
 
     case kPublishing:
-        Get<RoutingManager>().UnpublishExternalRoute(mPrefix);
+        Get<RoutingManager>().UnpublishExternalRoute(mLocalPrefix);
         break;
 
     case kAdvertising:
     case kDeprecating:
-        if (mOldPrefix.GetLength() != 0)
+        if (mOldLocalPrefix.GetLength() != 0)
         {
-            Ip6::Prefix prevPrefix = mOldPrefix;
+            Ip6::Prefix prevPrefix = mOldLocalPrefix;
 
-            mOldPrefix.Clear();
+            mOldLocalPrefix.Clear();
             Get<RoutingManager>().EvaluatePublishingPrefix(prevPrefix);
         }
 
-        mOldPrefix     = mPrefix;
-        mOldExpireTime = mExpireTime;
+        mOldLocalPrefix = mLocalPrefix;
+        mOldExpireTime  = mExpireTime;
         mTimer.FireAtIfEarlier(mOldExpireTime);
         break;
     }
 
     mState = kIdle;
-    Generate();
+    GenerateLocalPrefix();
 }
 
-void RoutingManager::LocalOnLinkPrefix::HandleTimer(void)
+void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
 {
     TimeMilli now = TimerMilli::GetNow();
 
     if ((mState == kDeprecating) && (now >= mExpireTime))
     {
-        LogInfo("Local on-link prefix %s expired", mPrefix.ToString().AsCString());
+        LogInfo("Local on-link prefix %s expired", mLocalPrefix.ToString().AsCString());
         mState = kIdle;
-        Get<RoutingManager>().EvaluatePublishingPrefix(mPrefix);
+        Get<RoutingManager>().EvaluatePublishingPrefix(mLocalPrefix);
     }
 
-    if ((mOldPrefix.GetLength() != 0) && (now >= mOldExpireTime))
+    if ((mOldLocalPrefix.GetLength() != 0) && (now >= mOldExpireTime))
     {
-        Ip6::Prefix oldPrefix = mOldPrefix;
+        Ip6::Prefix oldPrefix = mOldLocalPrefix;
 
-        LogInfo("Old local on-link prefix %s expired", mOldPrefix.ToString().AsCString());
-        mOldPrefix.Clear();
+        LogInfo("Old local on-link prefix %s expired", mOldLocalPrefix.ToString().AsCString());
+        mOldLocalPrefix.Clear();
         Get<RoutingManager>().EvaluatePublishingPrefix(oldPrefix);
     }
 
@@ -2285,7 +2300,7 @@ void RoutingManager::LocalOnLinkPrefix::HandleTimer(void)
         mTimer.FireAt(mExpireTime);
     }
 
-    if (mOldPrefix.GetLength() != 0)
+    if (mOldLocalPrefix.GetLength() != 0)
     {
         mTimer.FireAtIfEarlier(mOldExpireTime);
     }
