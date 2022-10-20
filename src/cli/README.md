@@ -844,6 +844,8 @@ Done
 
 Get the counter value.
 
+Note: `OPENTHREAD_CONFIG_UPTIME_ENABLE` is required for MLE role time tracking in `counters mle`
+
 ```bash
 > counters mac
 TxTotal: 10
