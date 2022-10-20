@@ -601,7 +601,7 @@ public:
     const otMleCounters &GetCounters(void)
     {
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-        UpdateTimeCounter(mRole);
+        UpdateRoleTimeCounters(mRole);
 #endif
         return mCounters;
     }
@@ -1989,6 +1989,10 @@ private:
     static const char *MessageTypeActionToSuffixString(MessageType aType, MessageAction aAction);
 #endif
 
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    void UpdateRoleTimeCounters(DeviceRole aRole);
+#endif
+
     using DetachGracefullyTimer = TimerMilliIn<Mle, &Mle::HandleDetachGracefullyTimer>;
 
     MessageQueue mDelayedResponses;
@@ -2031,7 +2035,6 @@ private:
 
     otMleCounters mCounters;
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    void     UpdateTimeCounter(DeviceRole aRole);
     uint64_t mLastUpdatedTimestamp;
 #endif
     static const otMeshLocalPrefix sMeshLocalPrefixInit;

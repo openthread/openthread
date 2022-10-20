@@ -265,11 +265,12 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-void Mle::UpdateTimeCounter(DeviceRole aRole)
+void Mle::UpdateRoleTimeCounters(DeviceRole aRole)
 {
     uint64_t currentUptimeMsec = Get<Uptime>().GetUptime();
     uint64_t durationMsec      = currentUptimeMsec - mLastUpdatedTimestamp;
-    mLastUpdatedTimestamp      = currentUptimeMsec;
+
+    mLastUpdatedTimestamp = currentUptimeMsec;
 
     mCounters.mTrackedTime += durationMsec;
 
@@ -303,7 +304,7 @@ void Mle::SetRole(DeviceRole aRole)
     LogNote("Role %s -> %s", RoleToString(oldRole), RoleToString(mRole));
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-    UpdateTimeCounter(oldRole);
+    UpdateRoleTimeCounters(oldRole);
 #endif
 
     switch (mRole)

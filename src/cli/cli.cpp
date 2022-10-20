@@ -2636,25 +2636,25 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputLine("%s: %d", counter.mName, mleCounters->*counter.mValuePtr);
             }
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-            struct MleTimeCounterName
             {
-                const uint64_t otMleCounters::*mValuePtr;
-                const char *                   mName;
-            };
+                struct MleTimeCounterName
+                {
+                    const uint64_t otMleCounters::*mValuePtr;
+                    const char *                   mName;
+                };
 
-            static const MleTimeCounterName kTimeCounterNames[] = {
-                {&otMleCounters::mDisabledTime, "Time Disabled"}, {&otMleCounters::mDetachedTime, "Time Detached"},
-                {&otMleCounters::mChildTime, "Time Child"},       {&otMleCounters::mRouterTime, "Time Router"},
-                {&otMleCounters::mLeaderTime, "Time Leader"},
-            };
+                static const MleTimeCounterName kTimeCounterNames[] = {
+                    {&otMleCounters::mDisabledTime, "Time Disabled"}, {&otMleCounters::mDetachedTime, "Time Detached"},
+                    {&otMleCounters::mChildTime, "Time Child"},       {&otMleCounters::mRouterTime, "Time Router"},
+                    {&otMleCounters::mLeaderTime, "Time Leader"},
+                };
 
-            const uint64_t trackedTime = mleCounters->mTrackedTime;
-            for (const MleTimeCounterName &counter : kTimeCounterNames)
-            {
-                uint64_t time = mleCounters->*counter.mValuePtr;
-                OutputLine("%s Milli: %lu", counter.mName, time);
+                for (const MleTimeCounterName &counter : kTimeCounterNames)
+                {
+                    OutputLine("%s Milli: %lu", counter.mName, mleCounters->*counter.mValuePtr);
+                }
+                OutputLine("Time Tracked Milli: %lu", mleCounters->mTrackedTime);
             }
-            OutputLine("Time Tracked Milli: %lu", trackedTime);
 #endif
         }
         /**
