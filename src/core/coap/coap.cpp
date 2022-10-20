@@ -1320,10 +1320,10 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     case kErrorNone:
         cachedResponse->Finish();
         error = Send(*cachedResponse, aMessageInfo);
-
-        OT_FALL_THROUGH;
+        ExitNow();
 
     case kErrorNoBufs:
+        error = kErrorNoBufs;
         ExitNow();
 
     case kErrorNotFound:
