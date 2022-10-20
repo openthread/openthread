@@ -2644,14 +2644,14 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 };
 
                 static const MleTimeCounterName kTimeCounterNames[] = {
-                    {&otMleCounters::mDisabledTime, "Time Disabled"}, {&otMleCounters::mDetachedTime, "Time Detached"},
-                    {&otMleCounters::mChildTime, "Time Child"},       {&otMleCounters::mRouterTime, "Time Router"},
-                    {&otMleCounters::mLeaderTime, "Time Leader"},
+                    {&otMleCounters::mDisabledTime, "Disabled"}, {&otMleCounters::mDetachedTime, "Detached"},
+                    {&otMleCounters::mChildTime, "Child"},       {&otMleCounters::mRouterTime, "Router"},
+                    {&otMleCounters::mLeaderTime, "Leader"},
                 };
 
                 for (const MleTimeCounterName &counter : kTimeCounterNames)
                 {
-                    OutputLine("%s Milli: %lu", counter.mName, mleCounters->*counter.mValuePtr);
+                    OutputLine("Time %s Milli: %lu", counter.mName, mleCounters->*counter.mValuePtr);
                 }
                 OutputLine("Time Tracked Milli: %lu", mleCounters->mTrackedTime);
             }
