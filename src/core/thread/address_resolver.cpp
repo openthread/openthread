@@ -376,6 +376,10 @@ void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
 
     VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
 
+#if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+    VerifyOrExit(ResolveUsingNetDataServices(aEid, macAddress) != kErrorNone);
+#endif
+
     VerifyOrExit(UpdateCacheEntry(aEid, aRloc16) != kErrorNone);
 
     // Skip if the `aRloc16` (i.e., the source of the snooped message)
@@ -470,6 +474,10 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
     CacheEntry *    prev = nullptr;
     CacheEntryList *list;
 
+#if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+    VerifyOrExit(ResolveUsingNetDataServices(aEid, aRloc16) != kErrorNone);
+#endif
+
     entry = FindCacheEntry(aEid, list, prev);
 
     if (entry == nullptr)
@@ -547,6 +555,41 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+
+Error AddressResolver::ResolveUsingNetDataServices(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16)
+{
+    // Tries to resolve `aEid` Network Data DNS/SRP Unicast address
+    // service entries.  Returns `kErrorNone` and updates `aRloc16`
+    // if successful, otherwise returns `kErrorNotFound`.
+
+    Error                                     error = kErrorNotFound;
+    NetworkData::Service::Manager::Iterator   iterator;
+    NetworkData::Service::DnsSrpUnicast::Info unicastInfo;
+
+    VerifyOrExit(Get<Mle::Mle>().GetDeviceMode().GetNetworkDataType() == NetworkData::kFullSet);
+
+    while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNone)
+    {
+        if (unicastInfo.mOrigin != NetworkData::Service::DnsSrpUnicast::kFromServerData)
+        {
+            continue;
+        }
+
+        if (aEid == unicastInfo.mSockAddr.GetAddress())
+        {
+            aRloc16 = unicastInfo.mRloc16;
+            error   = kErrorNone;
+            ExitNow();
+        }
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
 
 Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 {

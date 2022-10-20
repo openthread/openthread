@@ -161,6 +161,8 @@ constexpr uint8_t kRouterSelectionJitter      = 120; ///< (in sec)
 constexpr uint8_t kRouterDowngradeThreshold = 23;
 constexpr uint8_t kRouterUpgradeThreshold   = 16;
 
+constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid; ///< Invalid RLOC16.
+
 /**
  * Threshold to accept a router upgrade request with reason `kBorderRouterRequest` (number of BRs acting as router in
  * Network Data).

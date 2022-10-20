@@ -642,6 +642,7 @@ void TestNetworkDataDsnSrpServices(void)
             const char *                   mAddress;
             uint16_t                       mPort;
             Service::DnsSrpUnicast::Origin mOrigin;
+            uint16_t                       mRloc16;
 
             bool Matches(Service::DnsSrpUnicast::Info aInfo) const
             {
@@ -650,7 +651,7 @@ void TestNetworkDataDsnSrpServices(void)
                 SuccessOrQuit(sockAddr.GetAddress().FromString(mAddress));
                 sockAddr.SetPort(mPort);
 
-                return (aInfo.mSockAddr == sockAddr) && (aInfo.mOrigin == mOrigin);
+                return (aInfo.mSockAddr == sockAddr) && (aInfo.mOrigin == mOrigin) && (aInfo.mRloc16 == mRloc16);
             }
         };
 
@@ -671,11 +672,11 @@ void TestNetworkDataDsnSrpServices(void)
         };
 
         const UnicastEntry kUnicastEntries[] = {
-            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234, Service::DnsSrpUnicast::kFromServiceData},
-            {"fd00:aabb:ccdd:eeff:11:2233:4455:6677", 0xabcd, Service::DnsSrpUnicast::kFromServerData},
-            {"fdde:ad00:beef:0:0:ff:fe00:2800", 0x5678, Service::DnsSrpUnicast::kFromServerData},
-            {"fd00:1234:5678:9abc:def0:123:4567:89ab", 0x0e, Service::DnsSrpUnicast::kFromServerData},
-            {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12, Service::DnsSrpUnicast::kFromServerData},
+            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234, Service::DnsSrpUnicast::kFromServiceData, 0xfffe},
+            {"fd00:aabb:ccdd:eeff:11:2233:4455:6677", 0xabcd, Service::DnsSrpUnicast::kFromServerData, 0x6c00},
+            {"fdde:ad00:beef:0:0:ff:fe00:2800", 0x5678, Service::DnsSrpUnicast::kFromServerData, 0x2800},
+            {"fd00:1234:5678:9abc:def0:123:4567:89ab", 0x0e, Service::DnsSrpUnicast::kFromServerData, 0x4c00},
+            {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12, Service::DnsSrpUnicast::kFromServerData, 0x6c00},
         };
 
         const uint8_t kPreferredAnycastEntryIndex = 2;
@@ -725,8 +726,8 @@ void TestNetworkDataDsnSrpServices(void)
         for (const UnicastEntry &entry : kUnicastEntries)
         {
             SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo));
-            printf("\nunicastInfo { %s, origin:%s }", unicastInfo.mSockAddr.ToString().AsCString(),
-                   kOriginStrings[unicastInfo.mOrigin]);
+            printf("\nunicastInfo { %s, origin:%s, rloc16:%04x }", unicastInfo.mSockAddr.ToString().AsCString(),
+                   kOriginStrings[unicastInfo.mOrigin], unicastInfo.mRloc16);
 
             VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");
         }

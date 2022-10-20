@@ -107,6 +107,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+ *
+ * Define as 1 to allow address resolution of on-mesh addresses using Thread Network Data DNS/SRP Service entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+#define OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY
  *
  * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
