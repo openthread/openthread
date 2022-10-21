@@ -1740,7 +1740,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
     IgnoreError(aFrame->GetSrcAddr(srcaddr));
     IgnoreError(aFrame->GetDstAddr(dstaddr));
-    neighbor = Get<NeighborTable>().FindNeighbor(srcaddr);
+    neighbor = !srcaddr.IsNone() ? Get<NeighborTable>().FindNeighbor(srcaddr) : nullptr;
 
     // Destination Address Filtering
     switch (dstaddr.GetType())
