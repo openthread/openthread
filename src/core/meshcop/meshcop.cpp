@@ -174,11 +174,12 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
     }
     else if (mLength <= sizeof(uint32_t) * CHAR_BIT)
     {
-        string.Append("0x%08x", static_cast<uint32_t>(mValue));
+        string.Append("0x%08lx", ToUlong(static_cast<uint32_t>(mValue)));
     }
     else
     {
-        string.Append("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue));
+        string.Append("0x%lx-%08lx", ToUlong(static_cast<uint32_t>(mValue >> 32)),
+                      ToUlong(static_cast<uint32_t>(mValue)));
     }
 
     string.Append("/len:%d", mLength);
