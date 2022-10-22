@@ -2635,6 +2635,27 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             {
                 OutputLine("%s: %d", counter.mName, mleCounters->*counter.mValuePtr);
             }
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+            {
+                struct MleTimeCounterName
+                {
+                    const uint64_t otMleCounters::*mValuePtr;
+                    const char *                   mName;
+                };
+
+                static const MleTimeCounterName kTimeCounterNames[] = {
+                    {&otMleCounters::mDisabledTime, "Disabled"}, {&otMleCounters::mDetachedTime, "Detached"},
+                    {&otMleCounters::mChildTime, "Child"},       {&otMleCounters::mRouterTime, "Router"},
+                    {&otMleCounters::mLeaderTime, "Leader"},
+                };
+
+                for (const MleTimeCounterName &counter : kTimeCounterNames)
+                {
+                    OutputLine("Time %s Milli: %lu", counter.mName, mleCounters->*counter.mValuePtr);
+                }
+                OutputLine("Time Tracked Milli: %lu", mleCounters->mTrackedTime);
+            }
+#endif
         }
         /**
          * @cli counters mle reset
