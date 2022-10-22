@@ -68,7 +68,7 @@
 /**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES
  *
- * Specified maximum number of on-mesh prefixes (discovered from Thread Network Data) that are included as Route Info
+ * Specifies maximum number of on-mesh prefixes (discovered from Thread Network Data) that are included as Route Info
  * Option in emitted Router Advertisement messages.
  *
  */
@@ -76,4 +76,13 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES 16
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES
+ *
+ * Specifies maximum number of old local on-link prefixes (being deprecated) maintained by routing manager.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES 3
+#endif
 #endif // CONFIG_BORDER_ROUTING_H_
