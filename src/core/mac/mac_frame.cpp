@@ -378,8 +378,13 @@ Error Frame::GetSrcAddr(Address &aAddress) const
         aAddress.SetExtended(&mPsdu[index], ExtAddress::kReverseByteOrder);
         break;
 
-    default:
+    case kFcfSrcAddrNone:
         aAddress.SetNone();
+        break;
+
+    default:
+        // reserved value
+        error = kErrorParse;
         break;
     }
 
