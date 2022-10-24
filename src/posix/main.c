@@ -141,6 +141,7 @@ enum
     OT_POSIX_OPT_DRY_RUN                 = 'n',
     OT_POSIX_OPT_HELP                    = 'h',
     OT_POSIX_OPT_INTERFACE_NAME          = 'I',
+    OT_POSIX_OPT_PERSISTENT_INTERFACE    = 'p',
     OT_POSIX_OPT_TIME_SPEED              = 's',
     OT_POSIX_OPT_VERBOSE                 = 'v',
 
@@ -156,6 +157,7 @@ static const struct option kOptions[] = {
     {"dry-run", no_argument, NULL, OT_POSIX_OPT_DRY_RUN},
     {"help", no_argument, NULL, OT_POSIX_OPT_HELP},
     {"interface-name", required_argument, NULL, OT_POSIX_OPT_INTERFACE_NAME},
+    {"persistent-interface", no_argument, NULL, OT_POSIX_OPT_PERSISTENT_INTERFACE},
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
@@ -174,6 +176,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -I  --interface-name name     Thread network interface name.\n"
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --radio-version           Print radio firmware version.\n"
+            "    -p  --persistent-interface    Persistent the created thread network interface\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
@@ -191,8 +194,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
 {
     memset(aConfig, 0, sizeof(*aConfig));
 
-    aConfig->mPlatformConfig.mSpeedUpFactor = 1;
-    aConfig->mLogLevel                      = OT_LOG_LEVEL_CRIT;
+    aConfig->mPlatformConfig.mPersistentInterface = false;
+    aConfig->mPlatformConfig.mSpeedUpFactor       = 1;
+    aConfig->mLogLevel                            = OT_LOG_LEVEL_CRIT;
 #ifdef __linux__
     aConfig->mPlatformConfig.mRealTimeSignal = SIGRTMIN;
 #endif
@@ -202,7 +206,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:ns:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:nps:v", kOptions, &index);
 
         if (option == -1)
         {
@@ -219,6 +223,9 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case OT_POSIX_OPT_INTERFACE_NAME:
             aConfig->mPlatformConfig.mInterfaceName = optarg;
+            break;
+        case OT_POSIX_OPT_PERSISTENT_INTERFACE:
+            aConfig->mPlatformConfig.mPersistentInterface = true;
             break;
         case OT_POSIX_OPT_BACKBONE_INTERFACE_NAME:
             aConfig->mPlatformConfig.mBackboneInterfaceName = optarg;

@@ -154,7 +154,7 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    platformNetifInit(aPlatformConfig->mInterfaceName);
+    platformNetifInit(aPlatformConfig);
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE

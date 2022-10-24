@@ -80,6 +80,7 @@ typedef struct otPlatformConfig
     uint8_t     mRadioUrlNum;                                  ///< Number of Radio URLs.
     int         mRealTimeSignal;                               ///< The real-time signal for microsecond timer.
     uint32_t    mSpeedUpFactor;                                ///< Speed up factor.
+    bool        mPersistentInterface;                          ///< Whether persistent the interface
     bool        mDryRun;                                       ///< If 'DryRun' is set, the posix daemon will exit
                                                                ///< directly after initialization.
 } otPlatformConfig;
