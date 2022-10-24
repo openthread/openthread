@@ -480,14 +480,87 @@ void otPlatCryptoRandomDeinit(void);
 /**
  * Fills a given buffer with cryptographically secure random bytes.
  *
- * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
- * @param[in]  aSize    Size of buffer (number of bytes to fill).
+ * @param[out] aBuffer            A pointer to a buffer to fill with the random bytes.
+ * @param[in]  aSize              Size of buffer (number of bytes to fill).
  *
- * @retval OT_ERROR_NONE     Successfully filled buffer with random values.
- * @retval OT_ERROR_FAILED   Operation failed.
+ * @retval OT_ERROR_NONE          Successfully filled buffer with random values.
+ * @retval OT_ERROR_FAILED        Operation failed.
  *
  */
 otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize);
+
+/**
+ * Generate and populate the output buffer with a new key-pair.
+ *
+ * @param[out] aBuffer            A pointer to a buffer to store the generated key-pair.
+ * @param[in]  aInLen             Size of the input buffer.
+ * @param[out] aOutLen            A pointer to a variable to store the size of the generated key-pair.
+ *
+ * @retval OT_ERROR_NONE          A new key-pair was generated successfully.
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for key generation.
+ * @retval OT_ERROR_NOT_CAPABLE   Feature not supported.
+ * @retval OT_ERROR_FAILED        Failed to generate key-pair.
+ *
+ */
+otError otPlatCryptoEcdsaGenerate(uint8_t *aBuffer, uint8_t aInLen, uint8_t *aOutLen);
+
+/**
+ * Parse the input key-pair in DER format and generate a key-pair context.
+ *
+ * @param[out] aContext           A pointer to a context to store the key-pair.
+ * @param[in]  aBuffer            A pointer to a buffer where the key-pair is stored in DER format.
+ * @param[in]  aSize              The size of the input buffer.
+ *
+ * @retval OT_ERROR_NONE          The key was retrieved successfully, and @p aContext is updated.
+ * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
+ *
+ */
+otError otPlatCryptoEcdsaParse(void *aContext, const uint8_t *aBuffer, uint8_t aSize);
+
+/**
+ * Get the associated public key from the input context.
+ *
+ * @param[in]  aContext           A pointer to a context where the key-pair is stored.
+ * @param[out] aBuffer            A pointer to a buffer where the public key should be copied to.
+ *
+ * @retval OT_ERROR_NONE          Public key was retrieved successfully, and @p aBuffer is updated.
+ * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
+ * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
+ *
+ */
+otError otPlatCryptoEcdsaGetPublicKey(void *aContext, uint8_t *aBuffer);
+
+/**
+ * Calculate the ECDSA signature for a hashed message using the private key from the input context.
+ *
+ * This method uses the deterministic digital signature generation procedure from RFC 6979.
+ *
+ * @param[in]  aContext           A pointer to a context where the key-pair is stored.
+ * @param[in]  aHash              The SHA-256 hash value of the message to use for signature calculation.
+ * @param[out] aSignature         A pointer to a buffer to output the calculated signature value.
+ *
+ * @retval OT_ERROR_NONE          The signature was calculated successfully, @p aSignature was updated.
+ * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature calculation.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
+ *
+ */
+otError otPlatCryptoEcdsaSign(void *aContext, const uint8_t *aHash, uint8_t *aSignature);
+
+/**
+ * Use the key from the input context to verify the ECDSA signature of a hashed message.
+ *
+ * @param[in] aHash               The SHA-256 hash value of a message to use for signature verification.
+ * @param[in] aSignature          The signature value to verify.
+ * @param[in] aBuffer             A pointer to a buffer where the key-pair is stored.
+ *
+ * @retval OT_ERROR_NONE          The signature was verified successfully.
+ * @retval OT_ERROR_SECURITY      The signature is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  The key or hash is invalid.
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature verification
+ *
+ */
+otError otPlatCryptoEcdsaVerify(const uint8_t *aHash, const uint8_t *aSignature, const uint8_t *aBuffer);
 
 /**
  * @}
