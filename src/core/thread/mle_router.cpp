@@ -802,13 +802,15 @@ Error MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
         SuccessOrExit(error = message->SendAfterDelay(aMessageInfo.GetPeerAddr(),
                                                       1 + Random::NonCrypto::GetUint16InRange(0, kMaxResponseDelay)));
 
-        Log(kMessageDelay, kTypeLinkAccept, aMessageInfo.GetPeerAddr());
+        Log(kMessageDelay, (command == kCommandLinkAccept) ? kTypeLinkAccept : kTypeLinkAcceptAndRequest,
+            aMessageInfo.GetPeerAddr());
     }
     else
     {
         SuccessOrExit(error = message->SendTo(aMessageInfo.GetPeerAddr()));
 
-        Log(kMessageSend, kTypeLinkAccept, aMessageInfo.GetPeerAddr());
+        Log(kMessageSend, (command == kCommandLinkAccept) ? kTypeLinkAccept : kTypeLinkAcceptAndRequest,
+            aMessageInfo.GetPeerAddr());
     }
 
 exit:
