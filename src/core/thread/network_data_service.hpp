@@ -258,6 +258,7 @@ public:
     {
         Ip6::SockAddr mSockAddr; ///< The socket address (IPv6 address and port) of the DNS/SRP server.
         Origin        mOrigin;   ///< The origin of the socket address (whether from service or server data).
+        uint16_t      mRloc16;   ///< The BR RLOC16 adding the entry (only used when `mOrigin == kFromServerData`).
     };
 
     /**

@@ -338,8 +338,10 @@ private:
     CacheEntry *NewCacheEntry(bool aSnoopedEntry);
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
     Error       UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
-
-    Error SendAddressQuery(const Ip6::Address &aEid);
+    Error       SendAddressQuery(const Ip6::Address &aEid);
+#if OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+    Error ResolveUsingNetDataServices(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16);
+#endif
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

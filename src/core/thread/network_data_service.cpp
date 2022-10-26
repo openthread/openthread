@@ -288,6 +288,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                 aInfo.mSockAddr.SetAddress(serverData->GetAddress());
                 aInfo.mSockAddr.SetPort(serverData->GetPort());
                 aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
+                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();
             }
 
@@ -300,6 +301,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                                                                  aIterator.mServerSubTlv->GetServer16());
                 aInfo.mSockAddr.SetPort(Encoding::BigEndian::ReadUint16(data.GetBytes()));
                 aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
+                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();
             }
         }
@@ -322,6 +324,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
             aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
             aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
             aInfo.mOrigin = DnsSrpUnicast::kFromServiceData;
+            aInfo.mRloc16 = Mle::kInvalidRloc16;
             ExitNow();
         }
 
