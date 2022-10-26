@@ -133,11 +133,9 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, cons
     ThreadNetworkDataTlv networkDataTlv;
     uint16_t             rloc16;
 
-    VerifyOrExit(Get<Mle::Mle>().IsLeader());
+    VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
     LogInfo("Received network data registration");
-
-    VerifyOrExit(!mWaitingForNetDataSync);
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator());
 
@@ -185,10 +183,9 @@ template <> void Leader::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage,
     MeshCoP::Tlv *cur;
     MeshCoP::Tlv *end;
 
-    VerifyOrExit(Get<Mle::Mle>().IsLeader());
+    VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
     VerifyOrExit(length <= sizeof(tlvs));
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     aMessage.ReadBytes(offset, tlvs, length);
 
@@ -275,7 +272,7 @@ template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage,
     uint16_t length = 0;
     uint16_t offset;
 
-    VerifyOrExit(Get<Mle::Mle>().IsLeader());
+    VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
     SuccessOrExit(Tlv::FindTlvValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
     aMessage.SetOffset(offset);
