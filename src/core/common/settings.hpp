@@ -119,9 +119,11 @@ public:
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
         kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
+        kKeyBrOnLinkPrefixes  = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
     };
 
-    static constexpr Key kLastKey = kKeyBrUlaPrefix; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyBrOnLinkPrefixes; ///< The last (numerically) enumerator value in `Key`.
+
     static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
                   "Core settings keys overlap with vendor reserved keys");
 
@@ -583,7 +585,65 @@ public:
     private:
         BrUlaPrefix(void) = default;
     };
-#endif
+
+    /**
+     * This class represents a BR on-link prefix entry for settings storage.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class BrOnLinkPrefix : public Clearable<BrOnLinkPrefix>
+    {
+        friend class Settings;
+
+    public:
+        static constexpr Key kKey = kKeyBrOnLinkPrefixes; ///< The associated key.
+
+        /**
+         * This method initializes the `BrOnLinkPrefix` object.
+         *
+         */
+        void Init(void) { Clear(); }
+
+        /**
+         * This method gets the prefix.
+         *
+         * @returns The prefix.
+         *
+         */
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+
+        /**
+         * This method set the prefix.
+         *
+         * @param[in] aPrefix   The prefix.
+         *
+         */
+        void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
+
+        /**
+         * This method gets the remaining prefix lifetime in seconds.
+         *
+         * @returns The prefix lifetime in seconds.
+         *
+         */
+        uint32_t GetLifetime(void) const { return mLifetime; }
+
+        /**
+         * This method sets the the prefix lifetime.
+         *
+         * @param[in] aLifetime  The prefix lifetime in seconds.
+         *
+         */
+        void SetLifetime(uint32_t aLifetime) { mLifetime = aLifetime; }
+
+    private:
+        void Log(const char *aActionText) const;
+
+        Ip6::Prefix mPrefix;
+        uint32_t    mLifetime;
+    } OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     /**
@@ -1067,6 +1127,56 @@ public:
         bool      mIsDone;
     };
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    /**
+     * This method adds or updates an on-link prefix.
+     *
+     * If there is no matching entry (matching the same `GetPrefix()`) saved in `Settings`, the new entry will be added.
+     * If there is matching entry, it will be updated to the new @p aPrefix.
+     *
+     * @param[in] aBrOnLinkPrefix    The on-link prefix to save (add or updated).
+     *
+     * @retval kErrorNone             Successfully added or updated the entry in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     *
+     */
+    Error AddOrUpdateBrOnLinkPrefix(const BrOnLinkPrefix &aBrOnLinkPrefix);
+
+    /**
+     * This method removes an on-link prefix entry matching a given prefix.
+     *
+     * @param[in] aPrefix            The prefix to remove
+     *
+     * @retval kErrorNone            Successfully removed the matching entry in settings.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
+     *
+     */
+    Error RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix);
+
+    /**
+     * This method deletes all on-link prefix entries from the settings.
+     *
+     * @retval kErrorNone            Successfully deleted the entries.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
+     *
+     */
+    Error DeleteAllBrOnLinkPrefixes(void);
+
+    /**
+     * This method retrieves an entry from on-link prefixes list at a given index.
+     *
+     * @param[in]  aIndex            The index to read.
+     * @param[out] aBrOnLinkPrefix   A reference to `BrOnLinkPrefix` to output the read value.
+     *
+     * @retval kErrorNone             Successfully read the value.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     *
+     */
+    Error ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix);
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 private:
 #if OPENTHREAD_FTD

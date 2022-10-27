@@ -92,7 +92,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
 #endif
-    mOnLinkPrefixManager.GenerateLocalPrefix();
+    mOnLinkPrefixManager.Init();
 
     error = mInfraIf.HandleStateChanged(mInfraIf.GetIfIndex(), aInfraIfIsRunning);
 
@@ -2054,6 +2054,66 @@ RoutingManager::OnLinkPrefixManager::OnLinkPrefixManager(Instance &aInstance)
     mOldLocalPrefixes.Clear();
 }
 
+void RoutingManager::OnLinkPrefixManager::Init(void)
+{
+    TimeMilli                now = TimerMilli::GetNow();
+    Settings::BrOnLinkPrefix savedPrefix;
+    bool                     refreshStoredPrefixes = false;
+
+    // Restore old prefixes from `Settings`
+
+    for (int index = 0; Get<Settings>().ReadBrOnLinkPrefix(index, savedPrefix) == kErrorNone; index++)
+    {
+        uint32_t   lifetime;
+        OldPrefix *entry;
+
+        if (mOldLocalPrefixes.ContainsMatching(savedPrefix.GetPrefix()))
+        {
+            // We should not see duplicate entries in `Settings`
+            // but if we do we refresh the stored prefixes to make
+            // it consistent.
+            refreshStoredPrefixes = true;
+            continue;
+        }
+
+        entry = mOldLocalPrefixes.PushBack();
+
+        if (entry == nullptr)
+        {
+            // If there are more stored prefixes, we refresh the
+            // prefixes in `Settings` to remove the ones we cannot
+            // handle.
+
+            refreshStoredPrefixes = true;
+            break;
+        }
+
+        lifetime = Min(savedPrefix.GetLifetime(), Time::MsecToSec(TimerMilli::kMaxDelay));
+
+        entry->mPrefix     = savedPrefix.GetPrefix();
+        entry->mExpireTime = now + Time::SecToMsec(lifetime);
+
+        LogInfo("Restored old prefix %s, lifetime:%u", entry->mPrefix.ToString().AsCString(), lifetime);
+
+        mTimer.FireAtIfEarlier(entry->mExpireTime);
+    }
+
+    if (refreshStoredPrefixes)
+    {
+        // We clear the entries in `Settings` and re-write the entries
+        // from `mOldLocalPrefixes` array.
+
+        IgnoreError(Get<Settings>().DeleteAllBrOnLinkPrefixes());
+
+        for (OldPrefix &oldPrefix : mOldLocalPrefixes)
+        {
+            SavePrefix(oldPrefix.mPrefix, oldPrefix.mExpireTime);
+        }
+    }
+
+    GenerateLocalPrefix();
+}
+
 void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
 {
     const MeshCoP::ExtendedPanId &extPanId = Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
@@ -2291,6 +2351,7 @@ void RoutingManager::OnLinkPrefixManager::ResetExpireTime(TimeMilli aNow)
 {
     mExpireTime = aNow + TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime);
     mTimer.FireAtIfEarlier(mExpireTime);
+    SavePrefix(mLocalPrefix, mExpireTime);
 }
 
 void RoutingManager::OnLinkPrefixManager::EnterAdvertisingState(void)
@@ -2427,6 +2488,8 @@ void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &
 
     VerifyOrExit(!mOldLocalPrefixes.ContainsMatching(aPrefix));
 
+    LogInfo("Deprecating old on-link prefix %s", aPrefix.ToString().AsCString());
+
     if (!mOldLocalPrefixes.IsFull())
     {
         entry = mOldLocalPrefixes.PushBack();
@@ -2447,11 +2510,15 @@ void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &
         }
 
         removedPrefix = entry->mPrefix;
+
+        IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(removedPrefix));
     }
 
     entry->mPrefix     = aPrefix;
     entry->mExpireTime = aExpireTime;
     mTimer.FireAtIfEarlier(aExpireTime);
+
+    SavePrefix(aPrefix, aExpireTime);
 
     Get<RoutingManager>().EvaluatePublishingPrefix(aPrefix);
 
@@ -2462,6 +2529,15 @@ void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &
 
 exit:
     return;
+}
+
+void RoutingManager::OnLinkPrefixManager::SavePrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime)
+{
+    Settings::BrOnLinkPrefix savedPrefix;
+
+    savedPrefix.SetPrefix(aPrefix);
+    savedPrefix.SetLifetime(TimeMilli::MsecToSec(aExpireTime - TimerMilli::GetNow()));
+    IgnoreError(Get<Settings>().AddOrUpdateBrOnLinkPrefix(savedPrefix));
 }
 
 void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
@@ -2480,6 +2556,7 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
         if (now >= mExpireTime)
         {
             LogInfo("Local on-link prefix %s expired", mLocalPrefix.ToString().AsCString());
+            IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(mLocalPrefix));
             mState = kIdle;
             Get<RoutingManager>().EvaluatePublishingPrefix(mLocalPrefix);
         }
@@ -2505,7 +2582,9 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
     for (const Ip6::Prefix &prefix : expiredPrefixes)
     {
         LogInfo("Old local on-link prefix %s expired", prefix.ToString().AsCString());
+        IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(prefix));
         mOldLocalPrefixes.RemoveMatching(prefix);
+
         Get<RoutingManager>().EvaluatePublishingPrefix(prefix);
     }
 

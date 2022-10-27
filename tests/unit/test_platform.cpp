@@ -37,8 +37,6 @@ enum
     FLASH_SWAP_NUM  = 2,
 };
 
-static uint8_t sFlash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
-
 ot::Instance *testInitInstance(void)
 {
     otInstance *instance = nullptr;
@@ -362,9 +360,22 @@ OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *)
 {
 }
 
+uint8_t *GetFlash(void)
+{
+    static uint8_t sFlash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
+    static bool    sInitialized;
+
+    if (!sInitialized)
+    {
+        memset(sFlash, 0xff, sizeof(sFlash));
+        sInitialized = true;
+    }
+
+    return sFlash;
+}
+
 OT_TOOL_WEAK void otPlatFlashInit(otInstance *)
 {
-    memset(sFlash, 0xff, sizeof(sFlash));
 }
 
 OT_TOOL_WEAK uint32_t otPlatFlashGetSwapSize(otInstance *)
@@ -380,7 +391,7 @@ OT_TOOL_WEAK void otPlatFlashErase(otInstance *, uint8_t aSwapIndex)
 
     address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
 
-    memset(sFlash + address, 0xff, FLASH_SWAP_SIZE);
+    memset(GetFlash() + address, 0xff, FLASH_SWAP_SIZE);
 }
 
 OT_TOOL_WEAK void otPlatFlashRead(otInstance *, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
@@ -393,7 +404,7 @@ OT_TOOL_WEAK void otPlatFlashRead(otInstance *, uint8_t aSwapIndex, uint32_t aOf
 
     address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
 
-    memcpy(aData, sFlash + address + aOffset, aSize);
+    memcpy(aData, GetFlash() + address + aOffset, aSize);
 }
 
 OT_TOOL_WEAK void otPlatFlashWrite(otInstance *,
@@ -412,7 +423,7 @@ OT_TOOL_WEAK void otPlatFlashWrite(otInstance *,
 
     for (uint32_t index = 0; index < aSize; index++)
     {
-        sFlash[address + aOffset + index] &= ((uint8_t *)aData)[index];
+        GetFlash()[address + aOffset + index] &= ((uint8_t *)aData)[index];
     }
 }
 
