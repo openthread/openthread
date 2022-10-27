@@ -91,6 +91,14 @@ public:
     static NcpBase *GetNcpInstance(void);
 
     /**
+     * Returns the IID of the current spinel command.
+     *
+     * @returns IID.
+     *
+     */
+    spinel_iid_t GetCurCommandIid(void);
+
+    /**
      * Sends data to host via specific stream.
      *
      *
@@ -170,6 +178,7 @@ protected:
      */
     struct ResponseEntry
     {
+        uint8_t      mIid : 2;              ///< Spinel interface id.
         uint8_t      mTid : 4;              ///< Spinel transaction id.
         bool         mIsInUse : 1;          ///< `true` if this entry is in use, `false` otherwise.
         ResponseType mType : 2;             ///< Response type.
@@ -227,7 +236,7 @@ protected:
         return EnqueueResponse(aHeader, kResponseTypeLastStatus, aStatus);
     }
 
-    static uint8_t GetWrappedResponseQueueIndex(uint8_t aPosition);
+    static uint8_t GetWrappedQueueIndex(uint8_t aPosition, uint8_t aQueueSize);
 
     static void UpdateChangedProps(Tasklet &aTasklet);
     void        UpdateChangedProps(void);
@@ -552,6 +561,11 @@ protected:
     bool            mDiscoveryScanEnableFiltering;
     uint16_t        mDiscoveryScanPanId;
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    Tasklet mHandlePendingCommandsTask;
+#endif
+#endif
     Tasklet         mUpdateChangedPropsTask;
     uint32_t        mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
@@ -567,7 +581,7 @@ protected:
 
     uint8_t mTxBuffer[kTxBufferSize];
 
-    spinel_tid_t mNextExpectedTid;
+    spinel_tid_t mNextExpectedTid[SPINEL_HEADER_IID_MAX + 1];
 
     uint8_t       mResponseQueueHead;
     uint8_t       mResponseQueueTail;
@@ -590,11 +604,46 @@ protected:
     uint8_t mPreferredRouteId;
 #endif
 
+    uint8_t mCurCommandIid;
+
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    uint8_t mCurTransmitIid;
     uint8_t mCurTransmitTID;
     int8_t  mCurScanChannel;
     bool    mSrcMatchEnabled;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    static constexpr uint16_t kPendingCommandQueueSize = SPINEL_HEADER_IID_MAX;
+
+    enum PendingCommandType
+    {
+        kPendingCommandTypeTransmit,
+        kPendingCommandTypeEnergyScan,
+    };
+
+    struct PendingCommandEntry
+    {
+        uint8_t      mType : 2;
+        uint8_t      mIid : 2;
+        uint8_t      mTid : 4;
+        uint8_t      mScanChannel;
+        otRadioFrame mTransmitFrame;
+        uint8_t      mTransmitPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    };
+
+    uint8_t             mPendingCommandQueueHead;
+    uint8_t             mPendingCommandQueueTail;
+    PendingCommandEntry mPendingCommandQueue[kPendingCommandQueueSize];
+
+    otError     EnqueuePendingCommand(PendingCommandType aType, uint8_t aHeader, uint8_t aScanChannel);
+    otError     HandlePendingTransmit(PendingCommandEntry *aEntry);
+    otError     HandlePendingEnergyScan(PendingCommandEntry *aEntry);
+    static void HandlePendingCommands(Tasklet &aTasklet);
+    void        HandlePendingCommands(void);
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueue mMessageQueue;

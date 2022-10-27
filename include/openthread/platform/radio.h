@@ -261,6 +261,23 @@ typedef struct otRadioFrame
     uint8_t mRadioType; ///< Radio link type - should be ignored by radio driver.
 
     /**
+     * Interface Id for the incoming/outgoing radio packet.
+     *
+     * This field is used by RCP when OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE is enabled.
+     * If not enabled, this field defaults to zero.
+     *
+     * Incoming packets are marked with the correct IID to deliver to the appropriate host.
+     * RCP determines the IID value based on the destination PAN ID of the received packet.
+     * The IID value of zero indicates the broadcast packet, which will send it to all the hosts.
+     *
+     * For outgoing packets, IID is used to format the transmit done callback for the appropriate
+     * host. RCP extracts the IID value while processing the received spinel frame from the spinel
+     * header.
+     *
+     * */
+    uint8_t mIid;
+
+    /**
      * The union of transmit and receive information for a radio frame.
      */
     union

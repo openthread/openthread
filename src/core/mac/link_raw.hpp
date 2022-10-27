@@ -123,6 +123,14 @@ public:
     void InvokeReceiveDone(RxFrame *aFrame, Error aError);
 
     /**
+     * Returns true if the raw link-layer is busy transmitting or scanning.
+     *
+     * @returns true if busy transmitting or scanning, false otherwise.
+     *
+     */
+    bool IsTransmittingOrScanning(void) const { return mSubMac.IsTransmittingOrScanning(); }
+
+    /**
      * Gets the radio transmit frame.
      *
      * @returns The transmit frame.

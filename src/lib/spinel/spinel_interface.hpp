@@ -158,9 +158,25 @@ protected:
      */
     bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)
     {
-        static constexpr uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
-        return (aLength >= sizeof(kSpinelResetCommand)) &&
-               (memcmp(aFrame, kSpinelResetCommand, sizeof(kSpinelResetCommand)) == 0);
+        const uint8_t kSpinelResetCommandLength = 2;
+        bool          resetCmd                  = false;
+
+        if (aLength >= kSpinelResetCommandLength)
+        {
+#ifndef OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+            VerifyOrExit(((aFrame[0] & SPINEL_HEADER_IID_MASK) == SPINEL_HEADER_IID_0));
+#endif
+
+            // Validate the header flag by masking out the iid bits as it is validated above.
+            VerifyOrExit(((aFrame[0] & ~SPINEL_HEADER_IID_MASK) == SPINEL_HEADER_FLAG));
+
+            VerifyOrExit(aFrame[1] == SPINEL_CMD_RESET);
+
+            ExitNow(resetCmd = true);
+        }
+
+    exit:
+        return resetCmd;
     }
 };
 } // namespace Spinel

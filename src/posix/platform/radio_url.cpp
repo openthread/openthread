@@ -103,7 +103,11 @@ const char *otSysGetRadioUrlHelpString(void)
            "                                  Disable coex with 0, and enable it with other values.\n"
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
            "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
-           "    skip-rcp-compatibility-check  Skip checking RCP API version and capabilities during initialization.\n";
+           "    skip-rcp-compatibility-check  Skip checking RCP API version and capabilities during initialization.\n"
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+           "    iid                           Set the Spinel Interface ID for this process. Valid values are 1-3.\n"
+#endif
+        ;
 }
 
 namespace ot {

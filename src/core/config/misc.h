@@ -142,6 +142,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+ *
+ * Define to 1 to enable multipan RCP support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#define OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
  * Define to 1 to enable Thread Test Harness reference device support.

@@ -130,7 +130,9 @@ void NcpBase::LinkRawReceiveDone(otInstance *, otRadioFrame *aFrame, otError aEr
 
 void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 {
-    uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
+    uint8_t header = SPINEL_HEADER_FLAG;
+
+    header |= ((aFrame->mIid <= SPINEL_HEADER_IID_MAX) ? SPINEL_HEADER_IID(aFrame->mIid) : SPINEL_HEADER_IID_0);
 
     // Append frame header
     SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));
@@ -153,9 +155,11 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
 
     if (mCurTransmitTID)
     {
-        uint8_t header        = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
-        bool    framePending  = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
-        bool    headerUpdated = static_cast<Mac::TxFrame *>(aFrame)->IsHeaderUpdated();
+        uint8_t header = SPINEL_HEADER_FLAG | mCurTransmitTID;
+        header |= SPINEL_HEADER_IID(mCurTransmitIid);
+
+        bool framePending  = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
+        bool headerUpdated = static_cast<Mac::TxFrame *>(aFrame)->IsHeaderUpdated();
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;
@@ -186,6 +190,10 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
         SuccessOrExit(mEncoder.EndFrame());
     }
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    mHandlePendingCommandsTask.Post();
+#endif
+
 exit:
     return;
 }
@@ -206,7 +214,7 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
     // since the energy scan could have been on a different channel.
     IgnoreError(otLinkRawReceive(mInstance));
 
-    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(mCurTransmitIid), SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
 
     SuccessOrExit(mEncoder.WriteUint8(static_cast<uint8_t>(scanChannel)));
@@ -215,11 +223,15 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
     // We are finished with the scan, so send out
     // a property update indicating such.
-    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(mCurTransmitIid), SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_MAC_SCAN_STATE));
 
     SuccessOrExit(mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE));
     SuccessOrExit(mEncoder.EndFrame());
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    mHandlePendingCommandsTask.Post();
+#endif
 
 exit:
     return;
@@ -452,28 +464,40 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
     otRadioFrame *frame;
 
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
-
-    frame = otLinkRawGetTransmitBuffer(mInstance);
-    VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
-
-    SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
-
-    // Pass frame to the radio layer. Note, this fails if we
-    // haven't enabled raw stream or are already transmitting.
-    SuccessOrExit(error = otLinkRawTransmit(mInstance, &NcpBase::LinkRawTransmitDone));
-
-    // Cache the transaction ID for async response
-    mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
-
-exit:
-
-    if (error == OT_ERROR_NONE)
+    if (otLinkRawIsTransmittingOrScanning(mInstance))
     {
-        // Don't do anything here yet. We will complete the transaction when we get a transmit done callback
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+        ExitNow(error = EnqueuePendingCommand(kPendingCommandTypeTransmit, aHeader, 0));
+#else
+        ExitNow(error = OT_ERROR_INVALID_STATE);
+#endif
     }
     else
     {
-        error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error));
+        frame = otLinkRawGetTransmitBuffer(mInstance);
+        VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
+
+        SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
+
+        frame->mIid = mCurCommandIid;
+
+        // Pass frame to the radio layer. Note, this fails if we
+        // haven't enabled raw stream or are already transmitting.
+        SuccessOrExit(error = otLinkRawTransmit(mInstance, &NcpBase::LinkRawTransmitDone));
+
+        // Cache the interface and transaction ID for async response
+        mCurTransmitIid = SPINEL_HEADER_GET_IID(aHeader);
+        mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
+    }
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        // If we fail to report the error now, it will be reported later in HandleReceive() of ncp_base.cpp.
+        if (WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)) == OT_ERROR_NONE)
+        {
+            error = OT_ERROR_NONE;
+        }
     }
 
     return error;

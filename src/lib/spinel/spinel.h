@@ -78,20 +78,23 @@
  *
  *   The Interface Identifier (IID) is a number between 0 and 3, which
  *   is associated by the OS with a specific NCP. This allows the protocol
- *   to support up to 4 NCPs under same connection.
+ *   to support multiple networks under same connection.
  *
  *   The least significant bits of the header represent the Transaction
  *   Identifier (TID). The TID is used for correlating responses to the
  *   commands which generated them.
  *
  *   When a command is sent from the host, any reply to that command sent
- *   by the NCP will use the same value for the TID.  When the host
- *   receives a frame that matches the TID of the command it sent, it can
- *   easily recognize that frame as the actual response to that command.
+ *   by the NCP will use the same value for the IID and TID.  When the host
+ *   receives a frame that matches the IID and TID of the command it sent, it
+ *   can easily recognize that frame as the actual response to that command.
  *
  *   The TID value of zero (0) is used for commands to which a correlated
  *   response is not expected or needed, such as for unsolicited update
  *   commands sent to the host from the NCP.
+ *
+ *   In case of multiple IID support, the co-processor can use the IID value
+ *   of zero to broadcast spinel frames to all the hosts.
  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  *
@@ -883,6 +886,7 @@ typedef struct
 
 typedef int          spinel_ssize_t;
 typedef unsigned int spinel_size_t;
+typedef uint8_t      spinel_iid_t;
 typedef uint8_t      spinel_tid_t;
 
 enum
@@ -4940,11 +4944,17 @@ typedef uint32_t spinel_prop_key_t;
 
 #define SPINEL_HEADER_IID_SHIFT 4
 #define SPINEL_HEADER_IID_MASK (3 << SPINEL_HEADER_IID_SHIFT)
+#define SPINEL_HEADER_IID(iid) (static_cast<uint8_t>((iid) << SPINEL_HEADER_IID_SHIFT))
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#define SPINEL_HEADER_IID_MAX 3
+#else // !OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#define SPINEL_HEADER_IID_MAX 0
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 
-#define SPINEL_HEADER_IID_0 (0 << SPINEL_HEADER_IID_SHIFT)
-#define SPINEL_HEADER_IID_1 (1 << SPINEL_HEADER_IID_SHIFT)
-#define SPINEL_HEADER_IID_2 (2 << SPINEL_HEADER_IID_SHIFT)
-#define SPINEL_HEADER_IID_3 (3 << SPINEL_HEADER_IID_SHIFT)
+#define SPINEL_HEADER_IID_0 SPINEL_HEADER_IID(0)
+#define SPINEL_HEADER_IID_1 SPINEL_HEADER_IID(1)
+#define SPINEL_HEADER_IID_2 SPINEL_HEADER_IID(2)
+#define SPINEL_HEADER_IID_3 SPINEL_HEADER_IID(3)
 
 #define SPINEL_HEADER_GET_IID(x) (((x)&SPINEL_HEADER_IID_MASK) >> SPINEL_HEADER_IID_SHIFT)
 #define SPINEL_HEADER_GET_TID(x) (spinel_tid_t)(((x)&SPINEL_HEADER_TID_MASK) >> SPINEL_HEADER_TID_SHIFT)
