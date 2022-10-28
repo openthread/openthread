@@ -5539,6 +5539,9 @@ otError Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
                     aConfig.mDp = true;
                     break;
 #endif
+                case '-':
+                    break;
+
                 default:
                     ExitNow(error = OT_ERROR_INVALID_ARGS);
                 }
@@ -5767,21 +5770,31 @@ otError Interpreter::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
     {
         otRoutePreference preference;
 
-        if (*aArgs == "s")
-        {
-            aConfig.mStable = true;
-        }
-        else if (*aArgs == "n")
-        {
-            aConfig.mNat64 = true;
-        }
-        else if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
+        if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
         {
             aConfig.mPreference = preference;
         }
         else
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            for (char *arg = aArgs->GetCString(); *arg != '\0'; arg++)
+            {
+                switch (*arg)
+                {
+                case 's':
+                    aConfig.mStable = true;
+                    break;
+
+                case 'n':
+                    aConfig.mNat64 = true;
+                    break;
+
+                case '-':
+                    break;
+
+                default:
+                    ExitNow(error = OT_ERROR_INVALID_ARGS);
+                }
+            }
         }
     }
 
