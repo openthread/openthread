@@ -755,7 +755,7 @@ static void UpdateOmrRoutes(otInstance *aInstance)
         else
         {
             sAddedOmrRoutes[sAddedOmrRoutesNum++] = config.mPrefix;
-            otLogInfoPlat("[netif] Successfully added an OMR route %s in kernel: %s", prefixString);
+            otLogInfoPlat("[netif] Successfully added an OMR route %s in kernel", prefixString);
         }
     }
 }
