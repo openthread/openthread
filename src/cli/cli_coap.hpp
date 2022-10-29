@@ -49,7 +49,7 @@ namespace Cli {
  * This class implements the CLI CoAP server and client.
  *
  */
-class Coap : private OutputWrapper
+class Coap : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -57,10 +57,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput The CLI console output context
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit Coap(Output &aOutput);
+    Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
      * This method interprets a list of CLI arguments.

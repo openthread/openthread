@@ -49,13 +49,13 @@ namespace Cli {
  * This class implements the Dataset CLI interpreter.
  *
  */
-class Dataset : private OutputWrapper
+class Dataset : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
 
-    explicit Dataset(Output &aOutput)
-        : OutputWrapper(aOutput)
+    Dataset(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+        : Output(aInstance, aOutputImplementer)
     {
     }
 

@@ -57,8 +57,8 @@ exit:
     return error;
 }
 
-SrpClient::SrpClient(Output &aOutput)
-    : OutputWrapper(aOutput)
+SrpClient::SrpClient(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+    : Output(aInstance, aOutputImplementer)
     , mCallbackEnabled(false)
 {
     otSrpClientSetCallback(GetInstancePtr(), SrpClient::HandleCallback, this);

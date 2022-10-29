@@ -43,8 +43,8 @@
 namespace ot {
 namespace Cli {
 
-UdpExample::UdpExample(Output &aOutput)
-    : OutputWrapper(aOutput)
+UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+    : Output(aInstance, aOutputImplementer)
     , mLinkSecurityEnabled(true)
 {
     memset(&mSocket, 0, sizeof(mSocket));

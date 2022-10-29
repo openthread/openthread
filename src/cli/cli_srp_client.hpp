@@ -51,7 +51,7 @@ namespace Cli {
  * This class implements the SRP Client CLI interpreter.
  *
  */
-class SrpClient : private OutputWrapper
+class SrpClient : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -59,10 +59,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput  The CLI console output context.
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit SrpClient(Output &aOutput);
+    SrpClient(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
      * This method interprets a list of CLI arguments.

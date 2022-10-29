@@ -42,16 +42,16 @@
 #endif
 #include <openthread/logging.h>
 
+#include "cli/cli.hpp"
 #include "common/string.hpp"
 
 namespace ot {
 namespace Cli {
 
-const char OutputBase::kUnknownString[] = "unknown";
+const char Output::kUnknownString[] = "unknown";
 
-Output::Output(otInstance *aInstance, otCliOutputCallback aCallback, void *aCallbackContext)
-    : mInstance(aInstance)
-    , mCallback(aCallback)
+OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext)
+    : mCallback(aCallback)
     , mCallbackContext(aCallbackContext)
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     , mOutputLength(0)
@@ -238,6 +238,11 @@ void Output::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void Output::OutputFormatV(const char *aFormat, va_list aArguments)
+{
+    mImplementer.OutputV(aFormat, aArguments);
+}
+
+void OutputImplementer::OutputV(const char *aFormat, va_list aArguments)
 {
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     va_list args;

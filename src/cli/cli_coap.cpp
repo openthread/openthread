@@ -44,8 +44,8 @@
 namespace ot {
 namespace Cli {
 
-Coap::Coap(Output &aOutput)
-    : OutputWrapper(aOutput)
+Coap::Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+    : Output(aInstance, aOutputImplementer)
     , mUseDefaultRequestTxParameters(true)
     , mUseDefaultResponseTxParameters(true)
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
