@@ -996,6 +996,9 @@ private:
         mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
     }
 
+    otError SpinelFrameToString(const uint8_t *aFrame, uint16_t aFrameLength, char *aOutput, uint16_t aOutputMaxLen);
+    void    LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
+
     otInstance *mInstance;
 
     SpinelInterface::RxFrameBuffer mRxFrameBuffer;

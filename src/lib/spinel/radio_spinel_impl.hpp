@@ -461,6 +461,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleReceivedFrame(void)
     uint8_t        header;
     spinel_ssize_t unpacked;
 
+    LogSpinelFrame(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), false);
     unpacked = spinel_datatype_unpack(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), "C", &header);
 
     VerifyOrExit(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG &&
@@ -1737,6 +1738,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SendReset(uint8_t aReset
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mSpinelInterface.SendFrame(buffer, static_cast<uint16_t>(packed)));
+    LogSpinelFrame(buffer, static_cast<uint16_t>(packed), true);
 
 exit:
     return error;
@@ -1771,7 +1773,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SendCommand(uint32_t    
         offset += static_cast<uint16_t>(packed);
     }
 
-    error = mSpinelInterface.SendFrame(buffer, offset);
+    SuccessOrExit(error = mSpinelInterface.SendFrame(buffer, offset));
+    LogSpinelFrame(buffer, offset, true);
 
 exit:
     return error;
@@ -2508,6 +2511,617 @@ uint8_t RadioSpinel<InterfaceType, ProcessContextType>::GetCslUncertainty(void)
     return uncertainty;
 }
 #endif
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(const uint8_t *aFrame,
+                                                                            uint16_t       aFrameLength,
+                                                                            char *         aOutput,
+                                                                            uint16_t       aOutputMaxLen)
+{
+    otError           error = OT_ERROR_NONE;
+    spinel_ssize_t    unpacked;
+    uint8_t           header;
+    uint32_t          cmd;
+    spinel_prop_key_t key;
+    uint8_t *         data;
+    spinel_size_t     len;
+    char *            start = aOutput;
+    char *            end   = aOutput + aOutputMaxLen;
+
+    unpacked = spinel_datatype_unpack(aFrame, aFrameLength, "CiiD", &header, &cmd, &key, &data, &len);
+    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+    start += snprintf(start, static_cast<size_t>(end - start), "flg:0x%x, tid:%u", SPINEL_HEADER_GET_FLAG(header),
+                      SPINEL_HEADER_GET_TID(header));
+    start += snprintf(start, static_cast<size_t>(end - start), ", cmd:%s", spinel_command_to_cstr(cmd));
+    VerifyOrExit(cmd != SPINEL_CMD_RESET);
+
+    start += snprintf(start, static_cast<size_t>(end - start), ", key:%s", spinel_prop_key_to_cstr(key));
+    VerifyOrExit(cmd != SPINEL_CMD_PROP_VALUE_GET);
+
+    switch (key)
+    {
+    case SPINEL_PROP_LAST_STATUS:
+    {
+        spinel_status_t status;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &status);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", status:%s", spinel_status_to_cstr(status));
+    }
+    break;
+
+    case SPINEL_PROP_PROTOCOL_VERSION:
+    {
+        unsigned int major;
+        unsigned int minor;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S,
+                                          &major, &minor);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", major:%u, minor:%u", major, minor);
+    }
+    break;
+
+    case SPINEL_PROP_CAPS:
+    {
+        unsigned int capability;
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", caps:");
+
+        while (len > 0)
+        {
+            unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            data += unpacked;
+            len -= static_cast<spinel_size_t>(unpacked);
+            start += snprintf(start, static_cast<size_t>(end - start), "%s ", spinel_capability_to_cstr(capability));
+        }
+    }
+    break;
+
+    case SPINEL_PROP_RADIO_CAPS:
+    {
+        unsigned int capability;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", caps:0x%08x", capability);
+    }
+    break;
+
+    case SPINEL_PROP_RADIO_COEX_ENABLE:
+    case SPINEL_PROP_MAC_RAW_STREAM_ENABLED:
+    case SPINEL_PROP_MAC_SRC_MATCH_ENABLED:
+    case SPINEL_PROP_PHY_ENABLED:
+    {
+        bool enabled;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_BOOL_S, &enabled);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", enabled:%u", enabled);
+    }
+    break;
+
+    case SPINEL_PROP_PHY_TX_POWER:
+    case SPINEL_PROP_PHY_CCA_THRESHOLD:
+    case SPINEL_PROP_PHY_FEM_LNA_GAIN:
+    case SPINEL_PROP_PHY_RX_SENSITIVITY:
+    case SPINEL_PROP_PHY_RSSI:
+    {
+        int8_t      value;
+        const char *name = nullptr;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_INT8_S, &value);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        switch (key)
+        {
+        case SPINEL_PROP_PHY_TX_POWER:
+            name = "power";
+            break;
+        case SPINEL_PROP_PHY_CCA_THRESHOLD:
+            name = "threshold";
+            break;
+        case SPINEL_PROP_PHY_FEM_LNA_GAIN:
+            name = "gain";
+            break;
+        case SPINEL_PROP_PHY_RX_SENSITIVITY:
+            name = "sensitivity";
+            break;
+        case SPINEL_PROP_PHY_RSSI:
+            name = "rssi";
+            break;
+        }
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", %s:%d", name, value);
+    }
+    break;
+
+    case SPINEL_PROP_MAC_SCAN_STATE:
+    case SPINEL_PROP_RCP_CSL_ACCURACY:
+    case SPINEL_PROP_RCP_CSL_UNCERTAINTY:
+    case SPINEL_PROP_MAC_PROMISCUOUS_MODE:
+    case SPINEL_PROP_PHY_CHAN:
+    {
+        const char *name = nullptr;
+        uint8_t     value;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S, &value);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        switch (key)
+        {
+        case SPINEL_PROP_MAC_SCAN_STATE:
+            name = "state";
+            break;
+        case SPINEL_PROP_RCP_CSL_ACCURACY:
+            name = "accuracy";
+            break;
+        case SPINEL_PROP_RCP_CSL_UNCERTAINTY:
+            name = "uncertainty";
+            break;
+        case SPINEL_PROP_MAC_PROMISCUOUS_MODE:
+            name = "mode";
+            break;
+        case SPINEL_PROP_PHY_CHAN:
+            name = "channel";
+            break;
+        }
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", %s:%u", name, value);
+    }
+    break;
+
+    case SPINEL_PROP_MAC_SCAN_PERIOD:
+    case SPINEL_PROP_PHY_REGION_CODE:
+    case SPINEL_PROP_MAC_15_4_SADDR:
+    case SPINEL_PROP_MAC_15_4_PANID:
+    {
+        const char *name = nullptr;
+        uint16_t    value;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT16_S, &value);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        switch (key)
+        {
+        case SPINEL_PROP_MAC_SCAN_PERIOD:
+            name = "period";
+            break;
+        case SPINEL_PROP_PHY_REGION_CODE:
+            name = "region";
+            break;
+        case SPINEL_PROP_MAC_15_4_SADDR:
+            name = "saddr";
+            break;
+        case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
+            name = "saddr";
+            break;
+        case SPINEL_PROP_MAC_15_4_PANID:
+            name = "panid";
+            break;
+        }
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", %s:0x%04x", name, value);
+    }
+    break;
+
+    case SPINEL_PROP_MAC_SRC_MATCH_SHORT_ADDRESSES:
+    {
+        uint16_t saddr;
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", saddr:");
+
+        if (len < sizeof(saddr))
+        {
+            start += snprintf(start, static_cast<size_t>(end - start), "none");
+        }
+        else
+        {
+            while (len >= sizeof(saddr))
+            {
+                unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT16_S, &saddr);
+                VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+                data += unpacked;
+                len -= static_cast<spinel_size_t>(unpacked);
+                start += snprintf(start, static_cast<size_t>(end - start), "0x%04x ", saddr);
+            }
+        }
+    }
+    break;
+
+    case SPINEL_PROP_RCP_TIMESTAMP:
+    case SPINEL_PROP_RCP_MAC_FRAME_COUNTER:
+    {
+        const char *name = nullptr;
+        uint32_t    value;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT32_S, &value);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        switch (key)
+        {
+        case SPINEL_PROP_RCP_TIMESTAMP:
+            name = "timestamp";
+            break;
+        case SPINEL_PROP_RCP_API_VERSION:
+            name = "version";
+            break;
+        case SPINEL_PROP_RCP_MAC_FRAME_COUNTER:
+            name = "counter";
+            break;
+        }
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", %s:%u", name, value);
+    }
+    break;
+
+    case SPINEL_PROP_RCP_API_VERSION:
+    {
+        unsigned int version;
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &version);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", version:%u", version);
+    }
+    break;
+
+    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
+    case SPINEL_PROP_PHY_CHAN_PREFERRED:
+    {
+        uint8_t        maskBuffer[kChannelMaskBufferSize];
+        uint32_t       channelMask = 0;
+        const uint8_t *maskData    = maskBuffer;
+        spinel_size_t  maskLength  = sizeof(maskBuffer);
+
+        unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, maskBuffer, &maskLength);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        while (maskLength > 0)
+        {
+            uint8_t channel;
+
+            unpacked = spinel_datatype_unpack(maskData, maskLength, SPINEL_DATATYPE_UINT8_S, &channel);
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            VerifyOrExit(channel < kChannelMaskBufferSize, error = OT_ERROR_PARSE);
+            channelMask |= (1UL << channel);
+
+            maskData += unpacked;
+            maskLength -= static_cast<spinel_size_t>(unpacked);
+        }
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", channelMask:0x%08x", channelMask);
+    }
+    break;
+
+    case SPINEL_PROP_NCP_VERSION:
+    {
+        const char *version;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UTF8_S, &version);
+        VerifyOrExit(unpacked >= 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", version:%s", version);
+    }
+    break;
+
+    case SPINEL_PROP_STREAM_RAW:
+    {
+        otRadioFrame frame;
+
+        if (cmd == SPINEL_CMD_PROP_VALUE_IS)
+        {
+            uint16_t     flags;
+            int8_t       noiseFloor;
+            unsigned int receiveError;
+
+            unpacked = spinel_datatype_unpack(data, len,
+                                              SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
+                                                  SPINEL_DATATYPE_INT8_S                           // RSSI
+                                                      SPINEL_DATATYPE_INT8_S                       // Noise Floor
+                                                          SPINEL_DATATYPE_UINT16_S                 // Flags
+                                                              SPINEL_DATATYPE_STRUCT_S(            // PHY-data
+                                                                  SPINEL_DATATYPE_UINT8_S          // 802.15.4 channel
+                                                                      SPINEL_DATATYPE_UINT8_S      // 802.15.4 LQI
+                                                                          SPINEL_DATATYPE_UINT64_S // Timestamp (us).
+                                                                  ) SPINEL_DATATYPE_STRUCT_S(      // Vendor-data
+                                                                  SPINEL_DATATYPE_UINT_PACKED_S    // Receive error
+                                                                  ),
+                                              &frame.mPsdu, &frame.mLength, &frame.mInfo.mRxInfo.mRssi, &noiseFloor,
+                                              &flags, &frame.mChannel, &frame.mInfo.mRxInfo.mLqi,
+                                              &frame.mInfo.mRxInfo.mTimestamp, &receiveError);
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            start += snprintf(start, static_cast<size_t>(end - start),
+                              ", length:%u, rssi:%d, noiseFloor:%d, flags:0x%04x, channel:%u, lqi:%u"
+                              ", timestamp:%lu, rxerr:%u",
+                              frame.mLength, frame.mInfo.mRxInfo.mRssi, noiseFloor, flags, frame.mChannel,
+                              frame.mInfo.mRxInfo.mLqi, static_cast<unsigned long>(frame.mInfo.mRxInfo.mTimestamp),
+                              receiveError);
+        }
+        else if (cmd == SPINEL_CMD_PROP_VALUE_SET)
+        {
+            bool csmaCaEnabled;
+            bool isHeaderUpdated;
+            bool isARetx;
+            bool isSecurityProcessed;
+
+            unpacked = spinel_datatype_unpack(
+                data, len,
+                SPINEL_DATATYPE_DATA_WLEN_S                                   // Frame data
+                    SPINEL_DATATYPE_UINT8_S                                   // Channel
+                        SPINEL_DATATYPE_UINT8_S                               // MaxCsmaBackoffs
+                            SPINEL_DATATYPE_UINT8_S                           // MaxFrameRetries
+                                SPINEL_DATATYPE_BOOL_S                        // CsmaCaEnabled
+                                    SPINEL_DATATYPE_BOOL_S                    // IsHeaderUpdated
+                                        SPINEL_DATATYPE_BOOL_S                // IsARetx
+                                            SPINEL_DATATYPE_BOOL_S            // SkipAes
+                                                SPINEL_DATATYPE_UINT32_S      // TxDelay
+                                                    SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
+                &frame.mPsdu, &frame.mLength, &frame.mChannel, &frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
+                &frame.mInfo.mTxInfo.mMaxFrameRetries, &csmaCaEnabled, &isHeaderUpdated, &isARetx, &isSecurityProcessed,
+                &frame.mInfo.mTxInfo.mTxDelay, &frame.mInfo.mTxInfo.mTxDelayBaseTime);
+
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            start += snprintf(start, static_cast<size_t>(end - start),
+                              ", length:%u, channel:%u, maxCsmaBackoffs:%u, maxFrameBackoffs:%u, csmaCaEnabled:%u"
+                              ", isHeaderUpdated:%u, isARetx:%u, isSecurityProcessed:%u"
+                              ", txDelay:%u, txDelayBaseTime:%u",
+                              frame.mLength, frame.mChannel, frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
+                              frame.mInfo.mTxInfo.mMaxFrameRetries, csmaCaEnabled, isHeaderUpdated, isARetx,
+                              isSecurityProcessed, frame.mInfo.mTxInfo.mTxDelay, frame.mInfo.mTxInfo.mTxDelayBaseTime);
+        }
+    }
+    break;
+
+    case SPINEL_PROP_MAC_ENERGY_SCAN_RESULT:
+    {
+        uint8_t channel;
+        int8_t  rssi;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, &channel, &rssi);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", channel:%u, rssi:%d", channel, rssi);
+    }
+    break;
+
+    case SPINEL_PROP_STREAM_DEBUG:
+    {
+        char          debugString[OPENTHREAD_CONFIG_NCP_SPINEL_LOG_MAX_SIZE + 1];
+        spinel_size_t stringLength = sizeof(debugString);
+
+        unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, debugString, &stringLength);
+        assert(stringLength < sizeof(debugString));
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        debugString[stringLength] = '\0';
+        start += snprintf(start, static_cast<size_t>(end - start), ", debug:%s", debugString);
+    }
+    break;
+
+    case SPINEL_PROP_STREAM_LOG:
+    {
+        const char *logString;
+        uint8_t     logLevel;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UTF8_S, &logString);
+        VerifyOrExit(unpacked >= 0, error = OT_ERROR_PARSE);
+        data += unpacked;
+        len -= static_cast<spinel_size_t>(unpacked);
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S, &logLevel);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", level:%u, log:%s", logLevel, logString);
+    }
+    break;
+
+    case SPINEL_PROP_NEST_STREAM_MFG:
+    {
+        const char *output;
+        size_t      outputLen;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UTF8_S, &output, &outputLen);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", diag:%s", output);
+    }
+    break;
+
+    case SPINEL_PROP_RCP_MAC_KEY:
+    {
+        uint8_t      keyIdMode;
+        uint8_t      keyId;
+        otMacKey     prevKey;
+        unsigned int prevKeyLen = sizeof(otMacKey);
+        otMacKey     currKey;
+        unsigned int currKeyLen = sizeof(otMacKey);
+        otMacKey     nextKey;
+        unsigned int nextKeyLen = sizeof(otMacKey);
+
+        unpacked = spinel_datatype_unpack(data, len,
+                                          SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
+                                              SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
+                                          &keyIdMode, &keyId, prevKey.m8, &prevKeyLen, currKey.m8, &currKeyLen,
+                                          nextKey.m8, &nextKeyLen);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start),
+                          ", keyIdMode:%u, keyId:%u, prevKey:***, currKey:***, nextKey:***", keyIdMode, keyId);
+    }
+    break;
+
+    case SPINEL_PROP_HWADDR:
+    case SPINEL_PROP_MAC_15_4_LADDR:
+    {
+        const char *name                    = nullptr;
+        uint8_t     m8[OT_EXT_ADDRESS_SIZE] = {0};
+
+        unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_EUI64_S, &m8[0]);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        name = (key == SPINEL_PROP_HWADDR) ? "eui64" : "laddr";
+        start += snprintf(start, static_cast<size_t>(end - start), ", %s:%02x%02x%02x%02x%02x%02x%02x%02x", name, m8[0],
+                          m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
+    }
+    break;
+
+    case SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES:
+    {
+        uint8_t m8[OT_EXT_ADDRESS_SIZE];
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", extaddr:");
+
+        if (len < sizeof(m8))
+        {
+            start += snprintf(start, static_cast<size_t>(end - start), "none");
+        }
+        else
+        {
+            while (len >= sizeof(m8))
+            {
+                unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_EUI64_S, m8);
+                VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+                data += unpacked;
+                len -= static_cast<spinel_size_t>(unpacked);
+                start += snprintf(start, static_cast<size_t>(end - start), "%02x%02x%02x%02x%02x%02x%02x%02x ", m8[0],
+                                  m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
+            }
+        }
+    }
+    break;
+
+    case SPINEL_PROP_PHY_CHAN_MAX_POWER:
+    {
+        uint8_t channel;
+        int8_t  maxPower;
+
+        unpacked =
+            spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, &channel, &maxPower);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", channel:%d, maxPower:%d", channel, maxPower);
+    }
+    break;
+
+    case SPINEL_PROP_RADIO_COEX_METRICS:
+    {
+        otRadioCoexMetrics metrics;
+        unpacked = spinel_datatype_unpack(
+            data, len,
+            SPINEL_DATATYPE_STRUCT_S(                                    // Tx Coex Metrics Structure
+                SPINEL_DATATYPE_UINT32_S                                 // NumTxRequest
+                    SPINEL_DATATYPE_UINT32_S                             // NumTxGrantImmediate
+                        SPINEL_DATATYPE_UINT32_S                         // NumTxGrantWait
+                            SPINEL_DATATYPE_UINT32_S                     // NumTxGrantWaitActivated
+                                SPINEL_DATATYPE_UINT32_S                 // NumTxGrantWaitTimeout
+                                    SPINEL_DATATYPE_UINT32_S             // NumTxGrantDeactivatedDuringRequest
+                                        SPINEL_DATATYPE_UINT32_S         // NumTxDelayedGrant
+                                            SPINEL_DATATYPE_UINT32_S     // AvgTxRequestToGrantTime
+                ) SPINEL_DATATYPE_STRUCT_S(                              // Rx Coex Metrics Structure
+                SPINEL_DATATYPE_UINT32_S                                 // NumRxRequest
+                    SPINEL_DATATYPE_UINT32_S                             // NumRxGrantImmediate
+                        SPINEL_DATATYPE_UINT32_S                         // NumRxGrantWait
+                            SPINEL_DATATYPE_UINT32_S                     // NumRxGrantWaitActivated
+                                SPINEL_DATATYPE_UINT32_S                 // NumRxGrantWaitTimeout
+                                    SPINEL_DATATYPE_UINT32_S             // NumRxGrantDeactivatedDuringRequest
+                                        SPINEL_DATATYPE_UINT32_S         // NumRxDelayedGrant
+                                            SPINEL_DATATYPE_UINT32_S     // AvgRxRequestToGrantTime
+                                                SPINEL_DATATYPE_UINT32_S // NumRxGrantNone
+                ) SPINEL_DATATYPE_BOOL_S                                 // Stopped
+                SPINEL_DATATYPE_UINT32_S,                                // NumGrantGlitch
+            &metrics.mNumTxRequest, &metrics.mNumTxGrantImmediate, &metrics.mNumTxGrantWait,
+            &metrics.mNumTxGrantWaitActivated, &metrics.mNumTxGrantWaitTimeout,
+            &metrics.mNumTxGrantDeactivatedDuringRequest, &metrics.mNumTxDelayedGrant,
+            &metrics.mAvgTxRequestToGrantTime, &metrics.mNumRxRequest, &metrics.mNumRxGrantImmediate,
+            &metrics.mNumRxGrantWait, &metrics.mNumRxGrantWaitActivated, &metrics.mNumRxGrantWaitTimeout,
+            &metrics.mNumRxGrantDeactivatedDuringRequest, &metrics.mNumRxDelayedGrant,
+            &metrics.mAvgRxRequestToGrantTime, &metrics.mNumRxGrantNone, &metrics.mStopped, &metrics.mNumGrantGlitch);
+
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", txRequest:%u", metrics.mNumTxRequest);
+        start +=
+            snprintf(start, static_cast<size_t>(end - start), ", txGrantImmediate:%u", metrics.mNumTxGrantImmediate);
+        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantWait:%u", metrics.mNumTxGrantWait);
+        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantWaitActivated:%u",
+                          metrics.mNumTxGrantWaitActivated);
+        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantWaitTimeout:%u",
+                          metrics.mNumTxGrantWaitTimeout);
+        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantDeactivatedDuringRequest:%u",
+                          metrics.mNumTxGrantDeactivatedDuringRequest);
+        start += snprintf(start, static_cast<size_t>(end - start), ", txDelayedGrant:%u", metrics.mNumTxDelayedGrant);
+        start += snprintf(start, static_cast<size_t>(end - start), ", avgTxRequestToGrantTime:%u",
+                          metrics.mAvgTxRequestToGrantTime);
+        start += snprintf(start, static_cast<size_t>(end - start), ", rxRequest:%u", metrics.mNumRxRequest);
+        start +=
+            snprintf(start, static_cast<size_t>(end - start), ", rxGrantImmediate:%u", metrics.mNumRxGrantImmediate);
+        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantWait:%u", metrics.mNumRxGrantWait);
+        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantWaitActivated:%u",
+                          metrics.mNumRxGrantWaitActivated);
+        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantWaitTimeout:%u",
+                          metrics.mNumRxGrantWaitTimeout);
+        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantDeactivatedDuringRequest:%u",
+                          metrics.mNumRxGrantDeactivatedDuringRequest);
+        start += snprintf(start, static_cast<size_t>(end - start), ", rxDelayedGrant:%u", metrics.mNumRxDelayedGrant);
+        start += snprintf(start, static_cast<size_t>(end - start), ", avgRxRequestToGrantTime:%u",
+                          metrics.mAvgRxRequestToGrantTime);
+        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantNone:%u", metrics.mNumRxGrantNone);
+        start += snprintf(start, static_cast<size_t>(end - start), ", stopped:%u", metrics.mStopped);
+        start += snprintf(start, static_cast<size_t>(end - start), ", grantGlitch:%u", metrics.mNumGrantGlitch);
+    }
+    break;
+
+    case SPINEL_PROP_MAC_SCAN_MASK:
+    {
+        uint8_t       channels[16];
+        spinel_size_t size;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_DATA_S, channels, &size);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", channels:");
+
+        for (uint8_t i = 0; i < size; i++)
+        {
+            start += snprintf(start, static_cast<size_t>(end - start), "%u ", channels[i]);
+        }
+    }
+    break;
+
+    case SPINEL_PROP_RCP_ENH_ACK_PROBING:
+    {
+        uint16_t saddr;
+        uint8_t  m8[OT_EXT_ADDRESS_SIZE];
+        uint8_t  flags;
+
+        unpacked = spinel_datatype_unpack(
+            data, len, SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S, &saddr, m8, &flags);
+
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start),
+                          ", saddr:%04x, extaddr:%02x%02x%02x%02x%02x%02x%02x%02x, flags:0x%02x", saddr, m8[0], m8[1],
+                          m8[2], m8[3], m8[4], m8[5], m8[6], m8[7], flags);
+    }
+    break;
+    }
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
+{
+    constexpr uint16_t kLogBufferSize      = 512;
+    char               buf[kLogBufferSize] = {0};
+
+    VerifyOrExit(otLoggingGetLevel() >= OT_LOG_LEVEL_DEBG);
+
+    if (SpinelFrameToString(aFrame, aLength, buf, sizeof(buf)) == OT_ERROR_NONE)
+    {
+        otLogDebgPlat("%s, %s", aTx ? "Sent spinel frame" : "Received spinel frame", buf);
+    }
+    else
+    {
+        otLogDebgPlat("%s, parse spinel frame failed!", aTx ? "Sent spinel frame" : "Received spinel frame");
+    }
+
+exit:
+    return;
+}
 
 } // namespace Spinel
 } // namespace ot
