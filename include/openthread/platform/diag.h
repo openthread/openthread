@@ -130,6 +130,32 @@ void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otErro
 void otPlatDiagAlarmCallback(otInstance *aInstance);
 
 /**
+ * This function sets the gpio value.
+ *
+ * @param[in]  aGpio   The gpio number.
+ * @param[in]  aValue  true to set the gpio to high level, or false otherwise.
+ *
+ * @retval OT_ERROR_NONE             Successfully set the gpio.
+ * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on the platform.
+ *
+ */
+otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue);
+
+/**
+ * This function gets the gpio value.
+ *
+ * @param[in]   aGpio   The gpio number.
+ * @param[out]  aValue  A pointer where to put gpio value.
+ *
+ * @retval OT_ERROR_NONE             Successfully got the gpio value.
+ * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported or @p aValue is NULL.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on the platform.
+ *
+ */
+otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue);
+
+/**
  * @}
  *
  */

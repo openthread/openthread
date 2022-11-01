@@ -14,6 +14,7 @@ The diagnostics module supports common diagnostics features that are listed belo
 - [diag repeat](#diag-repeat-delay-length)
 - [diag radio](#diag-radio-sleep)
 - [diag stats](#diag-stats)
+- [diag gpio](#diag-gpio-get-gpio)
 - [diag stop](#diag-stop)
 
 ### diag
@@ -155,6 +156,27 @@ Clear statistics during diagnostics mode.
 ```bash
 > diag stats clear
 stats cleared
+```
+
+### diag gpio get \<gpio\>
+
+Get the gpio value.
+
+```bash
+> diag gpio get 0
+1
+Done
+```
+
+### diag gpio set \<gpio\> \<value\>
+
+Set the gpio value.
+
+The parameter `value` has to be `0` or `1`.
+
+```bash
+> diag gpio set 0 1
+Done
 ```
 
 ### diag stop

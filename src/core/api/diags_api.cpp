@@ -42,11 +42,11 @@
 
 using namespace ot;
 
-void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
+otError otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
     AssertPointerIsNotNull(aString);
 
-    AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
+    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
 }
 
 otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)

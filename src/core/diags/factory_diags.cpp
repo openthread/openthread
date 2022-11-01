@@ -70,8 +70,8 @@ namespace FactoryDiags {
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 
 const struct Diags::Command Diags::sCommands[] = {
-    {"channel", &Diags::ProcessChannel}, {"echo", &Diags::ProcessEcho}, {"power", &Diags::ProcessPower},
-    {"start", &Diags::ProcessStart},     {"stop", &Diags::ProcessStop},
+    {"channel", &Diags::ProcessChannel}, {"echo", &Diags::ProcessEcho},   {"gpio", &Diags::ProcessGpio},
+    {"power", &Diags::ProcessPower},     {"start", &Diags::ProcessStart}, {"stop", &Diags::ProcessStop},
 };
 
 Diags::Diags(Instance &aInstance)
@@ -181,9 +181,9 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 #else // OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 // For OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO_CLI
 const struct Diags::Command Diags::sCommands[] = {
-    {"channel", &Diags::ProcessChannel}, {"power", &Diags::ProcessPower}, {"radio", &Diags::ProcessRadio},
-    {"repeat", &Diags::ProcessRepeat},   {"send", &Diags::ProcessSend},   {"start", &Diags::ProcessStart},
-    {"stats", &Diags::ProcessStats},     {"stop", &Diags::ProcessStop},
+    {"channel", &Diags::ProcessChannel}, {"gpio", &Diags::ProcessGpio},     {"power", &Diags::ProcessPower},
+    {"radio", &Diags::ProcessRadio},     {"repeat", &Diags::ProcessRepeat}, {"send", &Diags::ProcessSend},
+    {"start", &Diags::ProcessStart},     {"stats", &Diags::ProcessStats},   {"stop", &Diags::ProcessStop},
 };
 
 Diags::Diags(Instance &aInstance)
@@ -543,6 +543,37 @@ exit:
 
 #endif // OPENTHREAD_RADIO
 
+Error Diags::ProcessGpio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error    error = kErrorNone;
+    long     value;
+    uint32_t gpio;
+    bool     level;
+
+    if ((aArgsLength == 2) && (strcmp(aArgs[0], "get") == 0))
+    {
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        gpio = static_cast<uint32_t>(value);
+        SuccessOrExit(error = otPlatDiagGpioGet(gpio, &level));
+        snprintf(aOutput, aOutputMaxLen, "%d\r\n", level);
+    }
+    else if ((aArgsLength == 3) && (strcmp(aArgs[0], "set") == 0))
+    {
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        gpio = static_cast<uint32_t>(value);
+        SuccessOrExit(error = ParseBool(aArgs[2], level));
+        SuccessOrExit(error = otPlatDiagGpioSet(gpio, level));
+    }
+    else
+    {
+        error = kErrorInvalidArgs;
+    }
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
 void Diags::AppendErrorResult(Error aError, char *aOutput, size_t aOutputMaxLen)
 {
     if (aError != kErrorNone)
@@ -558,6 +589,19 @@ Error Diags::ParseLong(char *aString, long &aLong)
     return (*endptr == '\0') ? kErrorNone : kErrorParse;
 }
 
+Error Diags::ParseBool(char *aString, bool &aBool)
+{
+    Error error;
+    long  value;
+
+    SuccessOrExit(error = ParseLong(aString, value));
+    VerifyOrExit((value == 0) || (value == 1), error = kErrorParse);
+    aBool = static_cast<bool>(value);
+
+exit:
+    return error;
+}
+
 Error Diags::ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[])
 {
     Error                     error;
@@ -571,7 +615,7 @@ exit:
     return error;
 }
 
-void Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
+Error Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
     constexpr uint16_t kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE;
 
@@ -591,7 +635,7 @@ exit:
     {
     case kErrorNone:
         aOutput[0] = '\0'; // In case there is no output.
-        IgnoreError(ProcessCmd(argCount, &args[0], aOutput, aOutputMaxLen));
+        error      = ProcessCmd(argCount, &args[0], aOutput, aOutputMaxLen);
         break;
 
     case kErrorNoBufs:
@@ -606,6 +650,8 @@ exit:
         snprintf(aOutput, aOutputMaxLen, "failed to parse command string\r\n");
         break;
     }
+
+    return error;
 }
 
 Error Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
@@ -662,5 +708,21 @@ bool Diags::IsEnabled(void)
 
 } // namespace FactoryDiags
 } // namespace ot
+
+OT_TOOL_WEAK otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aValue);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aValue);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
