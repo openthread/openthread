@@ -852,6 +852,40 @@ otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifi
 const char *otIp6ProtoToString(uint8_t aIpProto);
 
 /**
+ * This structure represents the counters for packets and bytes.
+ *
+ */
+typedef struct otPacketsAndBytes
+{
+    uint64_t mPackets; ///< The number of packets.
+    uint64_t mBytes;   ///< The number of bytes.
+} otPacketsAndBytes;
+
+/**
+ * This structure represents the counters of packets forwarded via Border Routing.
+ *
+ */
+typedef struct otBorderRoutingCounters
+{
+    otPacketsAndBytes mInboundUnicast;    ///< The counters for inbound unicast.
+    otPacketsAndBytes mInboundMulticast;  ///< The counters for inbound multicast.
+    otPacketsAndBytes mOutboundUnicast;   ///< The counters for outbound unicast.
+    otPacketsAndBytes mOutboundMulticast; ///< The counters for outbound multicast.
+} otBorderRoutingCounters;
+
+/**
+ * Gets the Border Routing counters.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE` to be enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the Border Routing counters.
+ *
+ */
+const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstance);
+
+/**
  * @}
  *
  */

@@ -1019,6 +1019,11 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
 {
     Error    error   = kErrorNone;
     Message *message = &aMessage;
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    Header header;
+
+    IgnoreError(header.ParseFrom(aMessage));
+#endif
 
     VerifyOrExit(aOrigin != kFromHostDisallowLoopBack, error = kErrorNoRoute);
 
@@ -1103,6 +1108,10 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
 
     mReceiveIp6DatagramCallback(message, mReceiveIp6DatagramCallbackContext);
 
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    UpdateBorderRoutingCounters(header, aMessage.GetLength(), /* aIsInbound */ false);
+#endif
+
 exit:
 
     if ((error != kErrorNone) && (aMessageOwnership == Message::kTakeCustody))
@@ -1134,6 +1143,10 @@ Error Ip6::SendRaw(Message &aMessage, bool aAllowLoopBackToHost)
 
     error = HandleDatagram(aMessage, aAllowLoopBackToHost ? kFromHostAllowLoopBack : kFromHostDisallowLoopBack);
     freed = true;
+
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    UpdateBorderRoutingCounters(header, aMessage.GetLength(), /* aIsInbound */ true);
+#endif
 
 exit:
 
@@ -1491,6 +1504,55 @@ bool Ip6::IsOnLink(const Address &aAddress) const
 exit:
     return rval;
 }
+
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+void Ip6::UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound)
+{
+    otPacketsAndBytes *counter = nullptr;
+
+    VerifyOrExit(!aHeader.GetSource().IsLinkLocal());
+    VerifyOrExit(!aHeader.GetDestination().IsLinkLocal());
+    VerifyOrExit(aHeader.GetSource().GetPrefix() != Get<Mle::Mle>().GetMeshLocalPrefix());
+    VerifyOrExit(aHeader.GetDestination().GetPrefix() != Get<Mle::Mle>().GetMeshLocalPrefix());
+
+    if (aIsInbound)
+    {
+        VerifyOrExit(!Get<Netif>().HasUnicastAddress(aHeader.GetSource()));
+
+        if (aHeader.GetDestination().IsMulticast())
+        {
+            VerifyOrExit(aHeader.GetDestination().IsMulticastLargerThanRealmLocal());
+            counter = &mBorderRoutingCounters.mInboundMulticast;
+        }
+        else
+        {
+            counter = &mBorderRoutingCounters.mInboundUnicast;
+        }
+    }
+    else
+    {
+        VerifyOrExit(!Get<Netif>().HasUnicastAddress(aHeader.GetDestination()));
+
+        if (aHeader.GetDestination().IsMulticast())
+        {
+            VerifyOrExit(aHeader.GetDestination().IsMulticastLargerThanRealmLocal());
+            counter = &mBorderRoutingCounters.mOutboundMulticast;
+        }
+        else
+        {
+            counter = &mBorderRoutingCounters.mOutboundUnicast;
+        }
+    }
+
+exit:
+
+    if (counter)
+    {
+        counter->mPackets += 1;
+        counter->mBytes += aMessageLength;
+    }
+}
+#endif
 
 // LCOV_EXCL_START
 
