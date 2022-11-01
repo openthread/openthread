@@ -51,12 +51,14 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 {
     if (aDataset.mComponents.mIsPendingTimestampPresent)
     {
-        OutputLine("Pending Timestamp: %lu", aDataset.mPendingTimestamp.mSeconds);
+        OutputFormat("Pending Timestamp: ");
+        OutputUint64Line(aDataset.mPendingTimestamp.mSeconds);
     }
 
     if (aDataset.mComponents.mIsActiveTimestampPresent)
     {
-        OutputLine("Active Timestamp: %lu", aDataset.mActiveTimestamp.mSeconds);
+        OutputFormat("Active Timestamp: ");
+        OutputUint64Line(aDataset.mActiveTimestamp.mSeconds);
     }
 
     if (aDataset.mComponents.mIsChannelPresent)
@@ -264,7 +266,7 @@ template <> otError Dataset::Process<Cmd("activetimestamp")>(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsActiveTimestampPresent)
         {
-            OutputLine("%lu", sDataset.mActiveTimestamp.mSeconds);
+            OutputUint64Line(sDataset.mActiveTimestamp.mSeconds);
         }
     }
     else
@@ -666,7 +668,7 @@ template <> otError Dataset::Process<Cmd("pendingtimestamp")>(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsPendingTimestampPresent)
         {
-            OutputLine("%lu", sDataset.mPendingTimestamp.mSeconds);
+            OutputUint64Line(sDataset.mPendingTimestamp.mSeconds);
         }
     }
     else

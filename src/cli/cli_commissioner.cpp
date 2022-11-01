@@ -117,7 +117,9 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
                 break;
 
             case OT_JOINER_INFO_TYPE_DISCERNER:
-                OutputFormat("| 0x%016llx/%2u", static_cast<unsigned long long>(joinerInfo.mSharedId.mDiscerner.mValue),
+                OutputFormat("| 0x%08lx%08lx/%2u",
+                             static_cast<unsigned long>(joinerInfo.mSharedId.mDiscerner.mValue >> 32),
+                             static_cast<unsigned long>(joinerInfo.mSharedId.mDiscerner.mValue & 0xffffffff),
                              joinerInfo.mSharedId.mDiscerner.mLength);
                 break;
             }

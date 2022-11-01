@@ -203,6 +203,28 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
+     * This structure represents a buffer which is sued when converting a `uint64` value to string in decimal format.
+     *
+     */
+    struct Uint64StringBuffer
+    {
+        static constexpr uint16_t kSize = 21; ///< Size of a buffer
+
+        char mChars[kSize]; ///< Char array (do not access the array directly).
+    };
+
+    /**
+     * This static method converts a `uint64_t` value to a decimal format string.
+     *
+     * @param[in] aUint64  The `uint64_t` value to convert.
+     * @param[in] aBuffer  A buffer to allocate the string from.
+     *
+     * @returns A pointer to the start of the string (null-terminated) representation of @p aUint64.
+     *
+     */
+    static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
+
+    /**
      * This method delivers a formatted output string to the CLI console.
      *
      * @param[in]  aFormat  A pointer to the format string.
@@ -311,6 +333,22 @@ public:
      *
      */
     void OutputExtAddressLine(const otExtAddress &aExtAddress) { OutputBytesLine(aExtAddress.m8); }
+
+    /**
+     * This method outputs a `uint64_t` value in decimal format.
+     *
+     * @param[in] aUint64   The `uint64_t` value to output.
+     *
+     */
+    void OutputUint64(uint64_t aUint64);
+
+    /**
+     * This method outputs a `uint64_t` value in decimal format and at the end it also outputs newline "\r\n".
+     *
+     * @param[in] aUint64   The `uint64_t` value to output.
+     *
+     */
+    void OutputUint64Line(uint64_t aUint64);
 
     /**
      * This method outputs "Enabled" or "Disabled" status to the CLI console (it also appends newline "\r\n").

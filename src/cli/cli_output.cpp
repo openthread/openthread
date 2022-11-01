@@ -127,6 +127,40 @@ void Output::OutputBytesLine(const uint8_t *aBytes, uint16_t aLength)
     OutputLine("");
 }
 
+const char *Output::Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer)
+{
+    char *cur = &aBuffer.mChars[Uint64StringBuffer::kSize - 1];
+
+    *cur = '\0';
+
+    if (aUint64 == 0)
+    {
+        *(--cur) = '0';
+    }
+    else
+    {
+        for (; aUint64 != 0; aUint64 /= 10)
+        {
+            *(--cur) = static_cast<char>('0' + static_cast<uint8_t>(aUint64 % 10));
+        }
+    }
+
+    return cur;
+}
+
+void Output::OutputUint64(uint64_t aUint64)
+{
+    Uint64StringBuffer buffer;
+
+    OutputFormat("%s", Uint64ToString(aUint64, buffer));
+}
+
+void Output::OutputUint64Line(uint64_t aUint64)
+{
+    OutputUint64(aUint64);
+    OutputLine("");
+}
+
 void Output::OutputEnabledDisabledStatus(bool aEnabled)
 {
     OutputLine(aEnabled ? "Enabled" : "Disabled");

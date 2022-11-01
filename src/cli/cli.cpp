@@ -876,45 +876,47 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         otNat64InitAddressMappingIterator(GetInstancePtr(), &iterator);
         while (otNat64GetNextAddressMapping(GetInstancePtr(), &iterator, &mapping) == OT_ERROR_NONE)
         {
-            char ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
-            char ip6AddressString[OT_IP6_PREFIX_STRING_SIZE];
+            char               ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
+            char               ip6AddressString[OT_IP6_PREFIX_STRING_SIZE];
+            Uint64StringBuffer u64StringBuffer;
 
             otIp6AddressToString(&mapping.mIp6, ip6AddressString, sizeof(ip6AddressString));
             otIp4AddressToString(&mapping.mIp4, ip4AddressString, sizeof(ip4AddressString));
 
-            OutputFormat("| %016llx ", mapping.mId);
+            OutputFormat("| %08lx%08lx ", ToUlong(static_cast<uint32_t>(mapping.mId >> 32)),
+                         ToUlong(static_cast<uint32_t>(mapping.mId & 0xffffffff)));
             OutputFormat("| %40s ", ip6AddressString);
             OutputFormat("| %16s ", ip4AddressString);
-            OutputFormat("| %5llus ", mapping.mRemainingTimeMs / 1000);
-            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m4To6Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m4To6Bytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mTotal.m6To4Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTotal.m6To4Bytes);
+            OutputFormat("| %5lus ", ToUlong(mapping.mRemainingTimeMs / 1000));
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTotal.m4To6Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTotal.m4To6Bytes, u64StringBuffer));
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTotal.m6To4Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTotal.m6To4Bytes, u64StringBuffer));
 
             OutputLine("|");
 
             OutputFormat("| %016s ", "");
             OutputFormat("| %68s ", "TCP");
-            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m4To6Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m4To6Bytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mTcp.m6To4Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mTcp.m6To4Bytes);
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTcp.m4To6Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTcp.m4To6Bytes, u64StringBuffer));
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTcp.m6To4Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTcp.m6To4Bytes, u64StringBuffer));
             OutputLine("|");
 
             OutputFormat("| %016s ", "");
             OutputFormat("| %68s ", "UDP");
-            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m4To6Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m4To6Bytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mUdp.m6To4Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mUdp.m6To4Bytes);
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mUdp.m4To6Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mUdp.m4To6Bytes, u64StringBuffer));
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mUdp.m6To4Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mUdp.m6To4Bytes, u64StringBuffer));
             OutputLine("|");
 
             OutputFormat("| %016s ", "");
             OutputFormat("| %68s ", "ICMP");
-            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m4To6Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m4To6Bytes);
-            OutputFormat("| %8llu ", mapping.mCounters.mIcmp.m6To4Packets);
-            OutputFormat("| %12llu ", mapping.mCounters.mIcmp.m6To4Bytes);
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mIcmp.m4To6Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mIcmp.m4To6Bytes, u64StringBuffer));
+            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mIcmp.m6To4Packets, u64StringBuffer));
+            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mIcmp.m6To4Bytes, u64StringBuffer));
             OutputLine("|");
         }
     }
@@ -979,6 +981,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 
         otNat64ProtocolCounters counters;
         otNat64ErrorCounters    errorCounters;
+        Uint64StringBuffer      u64StringBuffer;
 
         OutputTableHeader(kNat64CounterTableHeader, kNat64CounterTableHeaderColumns);
         OutputTableHeader(kNat64CounterTableSubHeader, kNat64CounterTableSubHeaderColumns);
@@ -986,20 +989,36 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         otNat64GetCounters(GetInstancePtr(), &counters);
         otNat64GetErrorCounters(GetInstancePtr(), &errorCounters);
 
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "Total", counters.mTotal.m4To6Packets,
-                   counters.mTotal.m4To6Bytes, counters.mTotal.m6To4Packets, counters.mTotal.m6To4Bytes);
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "TCP", counters.mTcp.m4To6Packets,
-                   counters.mTcp.m4To6Bytes, counters.mTcp.m6To4Packets, counters.mTcp.m6To4Bytes);
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "UDP", counters.mUdp.m4To6Packets,
-                   counters.mUdp.m4To6Bytes, counters.mUdp.m6To4Packets, counters.mUdp.m6To4Bytes);
-        OutputLine("| %13s | %8llu | %12llu | %8llu | %12llu |", "ICMP", counters.mIcmp.m4To6Packets,
-                   counters.mIcmp.m4To6Bytes, counters.mIcmp.m6To4Packets, counters.mIcmp.m6To4Bytes);
+        OutputFormat("| %13s ", "Total");
+        OutputFormat("| %8s ", Uint64ToString(counters.mTotal.m4To6Packets, u64StringBuffer));
+        OutputFormat("| %12s ", Uint64ToString(counters.mTotal.m4To6Bytes, u64StringBuffer));
+        OutputFormat("| %8s ", Uint64ToString(counters.mTotal.m6To4Packets, u64StringBuffer));
+        OutputLine("| %12s |", Uint64ToString(counters.mTotal.m6To4Bytes, u64StringBuffer));
+
+        OutputFormat("| %13s ", "TCP");
+        OutputFormat("| %8s ", Uint64ToString(counters.mTcp.m4To6Packets, u64StringBuffer));
+        OutputFormat("| %12s ", Uint64ToString(counters.mTcp.m4To6Bytes, u64StringBuffer));
+        OutputFormat("| %8s ", Uint64ToString(counters.mTcp.m6To4Packets, u64StringBuffer));
+        OutputLine("| %12s |", Uint64ToString(counters.mTcp.m6To4Bytes, u64StringBuffer));
+
+        OutputFormat("| %13s ", "UDP");
+        OutputFormat("| %8s ", Uint64ToString(counters.mUdp.m4To6Packets, u64StringBuffer));
+        OutputFormat("| %12s ", Uint64ToString(counters.mUdp.m4To6Bytes, u64StringBuffer));
+        OutputFormat("| %8s ", Uint64ToString(counters.mUdp.m6To4Packets, u64StringBuffer));
+        OutputLine("| %12s |", Uint64ToString(counters.mUdp.m6To4Bytes, u64StringBuffer));
+
+        OutputFormat("| %13s ", "ICMP");
+        OutputFormat("| %8s ", Uint64ToString(counters.mIcmp.m4To6Packets, u64StringBuffer));
+        OutputFormat("| %12s ", Uint64ToString(counters.mIcmp.m4To6Bytes, u64StringBuffer));
+        OutputFormat("| %8s ", Uint64ToString(counters.mIcmp.m6To4Packets, u64StringBuffer));
+        OutputLine("| %12s |", Uint64ToString(counters.mIcmp.m6To4Bytes, u64StringBuffer));
 
         OutputTableHeader(kNat64CounterTableErrorSubHeader, kNat64CounterTableErrorSubHeaderColumns);
         for (uint8_t i = 0; i < OT_NAT64_DROP_REASON_COUNT; i++)
         {
-            OutputLine("| %13s | %23llu | %23llu |", kNat64CounterErrorType[i], errorCounters.mCount4To6[i],
-                       errorCounters.mCount6To4[i]);
+            OutputFormat("| %13s | %23s ", kNat64CounterErrorType[i],
+                         Uint64ToString(errorCounters.mCount4To6[i], u64StringBuffer));
+            OutputLine("| %23s |", Uint64ToString(errorCounters.mCount6To4[i], u64StringBuffer));
         }
     }
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
@@ -2652,9 +2671,12 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
 
                 for (const MleTimeCounterName &counter : kTimeCounterNames)
                 {
-                    OutputLine("Time %s Milli: %lu", counter.mName, mleCounters->*counter.mValuePtr);
+                    OutputFormat("Time %s Milli: ", counter.mName);
+                    OutputUint64Line(mleCounters->*counter.mValuePtr);
                 }
-                OutputLine("Time Tracked Milli: %lu", mleCounters->mTrackedTime);
+
+                OutputFormat("Time Tracked Milli: ");
+                OutputUint64Line(mleCounters->mTrackedTime);
             }
 #endif
         }
@@ -5076,7 +5098,9 @@ template <> otError Interpreter::Process<Cmd("networktime")>(Arg aArgs[])
 
         networkTimeStatus = otNetworkTimeGet(GetInstancePtr(), &time);
 
-        OutputFormat("Network Time:     %luus", time);
+        OutputFormat("Network Time:     ");
+        OutputUint64(time);
+        OutputFormat("us");
 
         switch (networkTimeStatus)
         {
@@ -6336,7 +6360,7 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
     }
     else if (aArgs[0] == "ms")
     {
-        OutputLine("%lu", otInstanceGetUptime(GetInstancePtr()));
+        OutputUint64Line(otInstanceGetUptime(GetInstancePtr()));
     }
     else
     {
