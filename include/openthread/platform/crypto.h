@@ -131,6 +131,95 @@ typedef struct otCryptoContext
 } otCryptoContext;
 
 /**
+ * Length of SHA256 hash (in bytes).
+ *
+ */
+#define OT_CRYPTO_SHA256_HASH_SIZE 32
+
+/**
+ * @struct otPlatCryptoSha256Hash
+ *
+ * This structure represents a SHA-256 hash.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otPlatCryptoSha256Hash
+{
+    uint8_t m8[OT_CRYPTO_SHA256_HASH_SIZE]; ///< Hash bytes.
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents a SHA-256 hash.
+ *
+ */
+typedef struct otPlatCryptoSha256Hash otPlatCryptoSha256Hash;
+
+/**
+ * Max buffer size (in bytes) for representing the EDCSA key-pair in DER format.
+ *
+ */
+#define OT_CRYPTO_ECDSA_MAX_DER_SIZE 125
+
+/**
+ * @struct otPlatCryptoEcdsaKeyPair
+ *
+ * This structure represents an ECDSA key pair (public and private keys).
+ *
+ * The key pair is stored using Distinguished Encoding Rules (DER) format (per RFC 5915).
+ *
+ */
+typedef struct otPlatCryptoEcdsaKeyPair
+{
+    uint8_t mDerBytes[OT_CRYPTO_ECDSA_MAX_DER_SIZE];
+    uint8_t mDerLength;
+} otPlatCryptoEcdsaKeyPair;
+
+/**
+ * Buffer size (in bytes) for representing the EDCSA public key.
+ *
+ */
+#define OT_CRYPTO_ECDSA_PUBLIC_KEY_SIZE 64
+
+/**
+ * @struct otPlatCryptoEcdsaPublicKey
+ *
+ * This struct represents a ECDSA public key.
+ *
+ * The public key is stored as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otPlatCryptoEcdsaPublicKey
+{
+    uint8_t m8[OT_CRYPTO_ECDSA_PUBLIC_KEY_SIZE];
+} OT_TOOL_PACKED_END;
+
+typedef struct otPlatCryptoEcdsaPublicKey otPlatCryptoEcdsaPublicKey;
+
+/**
+ * Buffer size (in bytes) for representing the EDCSA signature.
+ *
+ */
+#define OT_CRYPTO_ECDSA_SIGNATURE_SIZE 64
+
+/**
+ * @struct otPlatCryptoEcdsaSignature
+ *
+ * This struct represents an ECDSA signature.
+ *
+ * The signature is encoded as the concatenated binary representation of two MPIs `r` and `s` which are calculated
+ * during signing (RFC 6605 - section 4).
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otPlatCryptoEcdsaSignature
+{
+    uint8_t m8[OT_CRYPTO_ECDSA_SIGNATURE_SIZE];
+} OT_TOOL_PACKED_END;
+
+typedef struct otPlatCryptoEcdsaSignature otPlatCryptoEcdsaSignature;
+
+/**
  * Initialize the Crypto module.
  *
  */
@@ -490,11 +579,9 @@ void otPlatCryptoRandomDeinit(void);
 otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize);
 
 /**
- * Generate and populate the output buffer with a new key-pair.
+ * Generate and populate the output buffer with a new ECDSA key-pair.
  *
- * @param[out] aBuffer            A pointer to a buffer to store the generated key-pair.
- * @param[in]  aInLen             Size of the input buffer.
- * @param[out] aOutLen            A pointer to a variable to store the size of the generated key-pair.
+ * @param[out] aKeyPair           A pointer to an ECDSA key-pair structure to store the generated key-pair.
  *
  * @retval OT_ERROR_NONE          A new key-pair was generated successfully.
  * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for key generation.
@@ -502,42 +589,30 @@ otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize);
  * @retval OT_ERROR_FAILED        Failed to generate key-pair.
  *
  */
-otError otPlatCryptoEcdsaGenerate(uint8_t *aBuffer, uint8_t aInLen, uint8_t *aOutLen);
-
-/**
- * Parse the input key-pair in DER format and generate a key-pair context.
- *
- * @param[out] aContext           A pointer to a context to store the key-pair.
- * @param[in]  aBuffer            A pointer to a buffer where the key-pair is stored in DER format.
- * @param[in]  aSize              The size of the input buffer.
- *
- * @retval OT_ERROR_NONE          The key was retrieved successfully, and @p aContext is updated.
- * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
- *
- */
-otError otPlatCryptoEcdsaParse(void *aContext, const uint8_t *aBuffer, uint8_t aSize);
+otError otPlatCryptoEcdsaGenerateKey(otPlatCryptoEcdsaKeyPair *aKeyPair);
 
 /**
  * Get the associated public key from the input context.
  *
- * @param[in]  aContext           A pointer to a context where the key-pair is stored.
- * @param[out] aBuffer            A pointer to a buffer where the public key should be copied to.
+ * @param[in]  aKeyPair           A pointer to an ECDSA key-pair structure where the key-pair is stored.
+ * @param[out] aPublicKey         A pointer to an ECDSA public key structure to store the public key.
  *
  * @retval OT_ERROR_NONE          Public key was retrieved successfully, and @p aBuffer is updated.
  * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
  * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
  *
  */
-otError otPlatCryptoEcdsaGetPublicKey(void *aContext, uint8_t *aBuffer);
+otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair, otPlatCryptoEcdsaPublicKey *aPublicKey);
 
 /**
  * Calculate the ECDSA signature for a hashed message using the private key from the input context.
  *
  * This method uses the deterministic digital signature generation procedure from RFC 6979.
  *
- * @param[in]  aContext           A pointer to a context where the key-pair is stored.
- * @param[in]  aHash              The SHA-256 hash value of the message to use for signature calculation.
- * @param[out] aSignature         A pointer to a buffer to output the calculated signature value.
+ * @param[in]  aKeyPair           A pointer to an ECDSA key-pair structure where the key-pair is stored.
+ * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature calculation
+ * is stored.
+ * @param[out] aSignature         A pointer to an ECDSA signature structure to output the calculated signature.
  *
  * @retval OT_ERROR_NONE          The signature was calculated successfully, @p aSignature was updated.
  * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
@@ -545,14 +620,19 @@ otError otPlatCryptoEcdsaGetPublicKey(void *aContext, uint8_t *aBuffer);
  * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
  *
  */
-otError otPlatCryptoEcdsaSign(void *aContext, const uint8_t *aHash, uint8_t *aSignature);
+otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
+                              const otPlatCryptoSha256Hash *  aHash,
+                              otPlatCryptoEcdsaSignature *    aSignature);
 
 /**
  * Use the key from the input context to verify the ECDSA signature of a hashed message.
  *
- * @param[in] aHash               The SHA-256 hash value of a message to use for signature verification.
- * @param[in] aSignature          The signature value to verify.
- * @param[in] aBuffer             A pointer to a buffer where the key-pair is stored.
+ * @param[in] aPublicKey          A pointer to an ECDSA public key structure where the public key for signature
+ * verification is stored.
+ * @param[in] aHash               A pointer to a SHA-256 hash structure where the hash value for signature verification
+ * is stored.
+ * @param[in] aSignature          A pointer to an ECDSA signature structure where the signature value to be verified is
+ * stored.
  *
  * @retval OT_ERROR_NONE          The signature was verified successfully.
  * @retval OT_ERROR_SECURITY      The signature is invalid.
@@ -560,7 +640,9 @@ otError otPlatCryptoEcdsaSign(void *aContext, const uint8_t *aHash, uint8_t *aSi
  * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature verification
  *
  */
-otError otPlatCryptoEcdsaVerify(const uint8_t *aHash, const uint8_t *aSignature, const uint8_t *aBuffer);
+otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
+                                const otPlatCryptoSha256Hash *    aHash,
+                                const otPlatCryptoEcdsaSignature *aSignature);
 
 /**
  * @}

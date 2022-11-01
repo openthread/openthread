@@ -41,6 +41,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <openthread/crypto.h>
+#include <openthread/platform/crypto.h>
+
 #include "common/error.hpp"
 #include "crypto/sha256.hpp"
 
@@ -83,13 +86,13 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Signature
+    class Signature : public otPlatCryptoEcdsaSignature
     {
         friend class KeyPair;
         friend class PublicKey;
 
     public:
-        static constexpr uint8_t kSize = 2 * kMpiSize; ///< Signature size in bytes (two times the curve MPI size).
+        static constexpr uint8_t kSize = OT_CRYPTO_ECDSA_SIGNATURE_SIZE; ///< Signature size in bytes.
 
         /**
          * This method returns the signature as a byte array.
@@ -97,21 +100,7 @@ public:
          * @returns A pointer to the byte array containing the signature.
          *
          */
-        const uint8_t *GetBytes(void) const { return mShared.mKey; }
-
-    private:
-        OT_TOOL_PACKED_BEGIN
-        struct Mpis
-        {
-            uint8_t mR[kMpiSize];
-            uint8_t mS[kMpiSize];
-        } OT_TOOL_PACKED_END;
-
-        union OT_TOOL_PACKED_FIELD
-        {
-            Mpis    mMpis;
-            uint8_t mKey[kSize];
-        } mShared;
+        const uint8_t *GetBytes(void) const { return m8; }
     } OT_TOOL_PACKED_END;
 
     /**
@@ -120,23 +109,20 @@ public:
      * The key pair is stored using Distinguished Encoding Rules (DER) format (per RFC 5915).
      *
      */
-    class KeyPair
+    class KeyPair : public otPlatCryptoEcdsaKeyPair
     {
     public:
         /**
          * Max buffer size (in bytes) for representing the key-pair in DER format.
          *
          */
-        static constexpr uint8_t kMaxDerSize = 125;
+        static constexpr uint8_t kMaxDerSize = OT_CRYPTO_ECDSA_MAX_DER_SIZE;
 
         /**
          * This constructor initializes a `KeyPair` as empty (no key).
          *
          */
-        KeyPair(void)
-            : mDerLength(0)
-        {
-        }
+        KeyPair(void) { mDerLength = 0; }
 
         /**
          * This method generates and populates the `KeyPair` with a new public/private keys.
@@ -213,12 +199,6 @@ public:
          *
          */
         Error Sign(const Sha256::Hash &aHash, Signature &aSignature) const;
-
-    private:
-        Error Parse(void *aContext) const;
-
-        uint8_t mDerBytes[kMaxDerSize];
-        uint8_t mDerLength;
     };
 
     /**
@@ -228,12 +208,12 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class PublicKey : public Equatable<PublicKey>
+    class PublicKey : public otPlatCryptoEcdsaPublicKey, public Equatable<PublicKey>
     {
         friend class KeyPair;
 
     public:
-        static constexpr uint8_t kSize = kMpiSize * 2; ///< Size of the public key in bytes.
+        static constexpr uint8_t kSize = OT_CRYPTO_ECDSA_PUBLIC_KEY_SIZE; ///< Size of the public key in bytes.
 
         /**
          * This method gets the pointer to the buffer containing the public key (as an uncompressed curve point).
@@ -241,7 +221,7 @@ public:
          * @return The pointer to the buffer containing the public key (with `kSize` bytes).
          *
          */
-        const uint8_t *GetBytes(void) const { return mData; }
+        const uint8_t *GetBytes(void) const { return m8; }
 
         /**
          * This method uses the `PublicKey` to verify the ECDSA signature of a hashed message.
@@ -256,9 +236,6 @@ public:
          *
          */
         Error Verify(const Sha256::Hash &aHash, const Signature &aSignature) const;
-
-    private:
-        uint8_t mData[kSize];
     } OT_TOOL_PACKED_END;
 };
 
@@ -292,6 +269,11 @@ Error Sign(uint8_t *      aOutput,
 
 } // namespace Ecdsa
 } // namespace Crypto
+
+DefineCoreType(otPlatCryptoEcdsaSignature, Crypto::Ecdsa::P256::Signature);
+DefineCoreType(otPlatCryptoEcdsaKeyPair, Crypto::Ecdsa::P256::KeyPair);
+DefineCoreType(otPlatCryptoEcdsaPublicKey, Crypto::Ecdsa::P256::PublicKey);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_ECDSA_ENABLE

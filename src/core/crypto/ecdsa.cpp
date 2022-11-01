@@ -53,45 +53,22 @@ namespace Ecdsa {
 
 Error P256::KeyPair::Generate(void)
 {
-    return otPlatCryptoEcdsaGenerate(mDerBytes, sizeof(mDerBytes), &mDerLength);
-}
-
-Error P256::KeyPair::Parse(void *aContext) const
-{
-    return otPlatCryptoEcdsaParse(aContext, mDerBytes, mDerLength);
+    return otPlatCryptoEcdsaGenerateKey(this);
 }
 
 Error P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
 {
-    Error              error;
-    mbedtls_pk_context pk;
-
-    SuccessOrExit(error = Parse(&pk));
-
-    error = otPlatCryptoEcdsaGetPublicKey(&pk, aPublicKey.mData);
-
-exit:
-    mbedtls_pk_free(&pk);
-    return error;
+    return otPlatCryptoEcdsaGetPublicKey(this, &aPublicKey);
 }
 
 Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) const
 {
-    Error              error;
-    mbedtls_pk_context pk;
-
-    SuccessOrExit(error = Parse(&pk));
-
-    error = otPlatCryptoEcdsaSign(&pk, aHash.GetBytes(), aSignature.mShared.mKey);
-
-exit:
-    mbedtls_pk_free(&pk);
-    return error;
+    return otPlatCryptoEcdsaSign(this, &aHash, &aSignature);
 }
 
 Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
 {
-    return otPlatCryptoEcdsaVerify(aHash.GetBytes(), aSignature.mShared.mKey, GetBytes());
+    return otPlatCryptoEcdsaVerify(this, &aHash, &aSignature);
 }
 
 Error Sign(uint8_t *      aOutput,
