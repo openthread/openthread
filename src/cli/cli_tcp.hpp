@@ -50,7 +50,7 @@ namespace Cli {
  * This class implements a CLI-based TCP example.
  *
  */
-class TcpExample : private OutputWrapper
+class TcpExample : private Output
 {
 public:
     using Arg = Utils::CmdLineParser::Arg;
@@ -58,10 +58,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput  The CLI console output context.
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit TcpExample(Output &aOutput);
+    TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
      * This method interprets a list of CLI arguments.

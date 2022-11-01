@@ -47,7 +47,7 @@ namespace Cli {
  * This class implements a CLI-based UDP example.
  *
  */
-class UdpExample : private OutputWrapper
+class UdpExample : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -55,10 +55,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput The CLI console output context.
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit UdpExample(Output &aOutput);
+    UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
      * This method interprets a list of CLI arguments.

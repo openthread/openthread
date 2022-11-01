@@ -55,7 +55,7 @@ namespace Cli {
  * This class implements the CLI CoAP Secure server and client.
  *
  */
-class CoapSecure : private OutputWrapper
+class CoapSecure : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -63,10 +63,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput The CLI console output context
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit CoapSecure(Output &aOutput);
+    CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
      * This method interprets a list of CLI arguments.

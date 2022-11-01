@@ -99,7 +99,7 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
  * This class implements the CLI interpreter.
  *
  */
-class Interpreter : public Output
+class Interpreter : public OutputImplementer, public Output
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     friend class Commissioner;

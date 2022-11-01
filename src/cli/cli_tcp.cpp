@@ -49,8 +49,8 @@
 namespace ot {
 namespace Cli {
 
-TcpExample::TcpExample(Output &aOutput)
-    : OutputWrapper(aOutput)
+TcpExample::TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+    : Output(aInstance, aOutputImplementer)
     , mInitialized(false)
     , mEndpointConnected(false)
     , mSendBusy(false)

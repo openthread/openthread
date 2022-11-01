@@ -99,7 +99,8 @@ Interpreter *Interpreter::sInterpreter = nullptr;
 static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
-    : Output(aInstance, aCallback, aContext)
+    : OutputImplementer(aCallback, aContext)
+    , Output(aInstance, *this)
     , mUserCommands(nullptr)
     , mUserCommandsLength(0)
     , mCommandIsPending(false)
@@ -108,32 +109,32 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
-    , mDataset(*this)
-    , mNetworkData(*this)
-    , mUdp(*this)
+    , mDataset(aInstance, *this)
+    , mNetworkData(aInstance, *this)
+    , mUdp(aInstance, *this)
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
-    , mTcp(*this)
+    , mTcp(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-    , mCoap(*this)
+    , mCoap(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-    , mCoapSecure(*this)
+    , mCoapSecure(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    , mCommissioner(*this)
+    , mCommissioner(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
-    , mJoiner(*this)
+    , mJoiner(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-    , mSrpClient(*this)
+    , mSrpClient(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    , mSrpServer(*this)
+    , mSrpServer(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    , mHistory(*this)
+    , mHistory(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     , mLocateInProgress(false)
