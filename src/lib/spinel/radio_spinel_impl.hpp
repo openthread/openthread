@@ -2513,27 +2513,28 @@ uint8_t RadioSpinel<InterfaceType, ProcessContextType>::GetCslUncertainty(void)
 #endif
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(const uint8_t *aFrame,
-                                                                            uint16_t       aFrameLength,
-                                                                            char *         aOutput,
-                                                                            uint16_t       aOutputMaxLen)
+void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
 {
-    otError           error = OT_ERROR_NONE;
+    otError           error                               = OT_ERROR_NONE;
+    char              buf[OPENTHREAD_CONFIG_LOG_MAX_SIZE] = {0};
     spinel_ssize_t    unpacked;
     uint8_t           header;
     uint32_t          cmd;
     spinel_prop_key_t key;
     uint8_t *         data;
     spinel_size_t     len;
-    char *            start = aOutput;
-    char *            end   = aOutput + aOutputMaxLen;
+    const char *      prefix = nullptr;
+    char *            start  = buf;
+    char *            end    = buf + sizeof(buf);
 
-    unpacked = spinel_datatype_unpack(aFrame, aFrameLength, "CiiD", &header, &cmd, &key, &data, &len);
+    VerifyOrExit(otLoggingGetLevel() >= OT_LOG_LEVEL_DEBG);
+
+    prefix   = aTx ? "Sent spinel frame" : "Received spinel frame";
+    unpacked = spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &data, &len);
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
-    start += snprintf(start, static_cast<size_t>(end - start), "flg:0x%x, tid:%u", SPINEL_HEADER_GET_FLAG(header),
-                      SPINEL_HEADER_GET_TID(header));
-    start += snprintf(start, static_cast<size_t>(end - start), ", cmd:%s", spinel_command_to_cstr(cmd));
+    start += snprintf(start, static_cast<size_t>(end - start), "%s, flg:0x%x, tid:%u, cmd:%s", prefix,
+                      SPINEL_HEADER_GET_FLAG(header), SPINEL_HEADER_GET_TID(header), spinel_command_to_cstr(cmd));
     VerifyOrExit(cmd != SPINEL_CMD_RESET);
 
     start += snprintf(start, static_cast<size_t>(end - start), ", key:%s", spinel_prop_key_to_cstr(key));
@@ -2551,49 +2552,10 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
     }
     break;
 
-    case SPINEL_PROP_PROTOCOL_VERSION:
-    {
-        unsigned int major;
-        unsigned int minor;
-
-        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S,
-                                          &major, &minor);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += snprintf(start, static_cast<size_t>(end - start), ", major:%u, minor:%u", major, minor);
-    }
-    break;
-
-    case SPINEL_PROP_CAPS:
-    {
-        unsigned int capability;
-
-        start += snprintf(start, static_cast<size_t>(end - start), ", caps:");
-
-        while (len > 0)
-        {
-            unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-            data += unpacked;
-            len -= static_cast<spinel_size_t>(unpacked);
-            start += snprintf(start, static_cast<size_t>(end - start), "%s ", spinel_capability_to_cstr(capability));
-        }
-    }
-    break;
-
-    case SPINEL_PROP_RADIO_CAPS:
-    {
-        unsigned int capability;
-
-        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += snprintf(start, static_cast<size_t>(end - start), ", caps:0x%08x", capability);
-    }
-    break;
-
-    case SPINEL_PROP_RADIO_COEX_ENABLE:
     case SPINEL_PROP_MAC_RAW_STREAM_ENABLED:
     case SPINEL_PROP_MAC_SRC_MATCH_ENABLED:
     case SPINEL_PROP_PHY_ENABLED:
+    case SPINEL_PROP_RADIO_COEX_ENABLE:
     {
         bool enabled;
 
@@ -2603,14 +2565,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
     }
     break;
 
-    case SPINEL_PROP_PHY_TX_POWER:
     case SPINEL_PROP_PHY_CCA_THRESHOLD:
     case SPINEL_PROP_PHY_FEM_LNA_GAIN:
     case SPINEL_PROP_PHY_RX_SENSITIVITY:
     case SPINEL_PROP_PHY_RSSI:
+    case SPINEL_PROP_PHY_TX_POWER:
     {
-        int8_t      value;
         const char *name = nullptr;
+        int8_t      value;
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_INT8_S, &value);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
@@ -2638,11 +2600,11 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
     }
     break;
 
+    case SPINEL_PROP_MAC_PROMISCUOUS_MODE:
     case SPINEL_PROP_MAC_SCAN_STATE:
+    case SPINEL_PROP_PHY_CHAN:
     case SPINEL_PROP_RCP_CSL_ACCURACY:
     case SPINEL_PROP_RCP_CSL_UNCERTAINTY:
-    case SPINEL_PROP_MAC_PROMISCUOUS_MODE:
-    case SPINEL_PROP_PHY_CHAN:
     {
         const char *name = nullptr;
         uint8_t     value;
@@ -2673,10 +2635,10 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
     }
     break;
 
+    case SPINEL_PROP_MAC_15_4_PANID:
+    case SPINEL_PROP_MAC_15_4_SADDR:
     case SPINEL_PROP_MAC_SCAN_PERIOD:
     case SPINEL_PROP_PHY_REGION_CODE:
-    case SPINEL_PROP_MAC_15_4_SADDR:
-    case SPINEL_PROP_MAC_15_4_PANID:
     {
         const char *name = nullptr;
         uint16_t    value;
@@ -2731,43 +2693,80 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
     }
     break;
 
-    case SPINEL_PROP_RCP_TIMESTAMP:
     case SPINEL_PROP_RCP_MAC_FRAME_COUNTER:
+    case SPINEL_PROP_RCP_TIMESTAMP:
     {
-        const char *name = nullptr;
+        const char *name;
         uint32_t    value;
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT32_S, &value);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
-        switch (key)
-        {
-        case SPINEL_PROP_RCP_TIMESTAMP:
-            name = "timestamp";
-            break;
-        case SPINEL_PROP_RCP_API_VERSION:
-            name = "version";
-            break;
-        case SPINEL_PROP_RCP_MAC_FRAME_COUNTER:
-            name = "counter";
-            break;
-        }
-
+        name = (key == SPINEL_PROP_RCP_TIMESTAMP) ? "timestamp" : "counter";
         start += snprintf(start, static_cast<size_t>(end - start), ", %s:%u", name, value);
     }
     break;
 
+    case SPINEL_PROP_RADIO_CAPS:
     case SPINEL_PROP_RCP_API_VERSION:
     {
-        unsigned int version;
-        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &version);
+        const char * name;
+        unsigned int value;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &value);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += snprintf(start, static_cast<size_t>(end - start), ", version:%u", version);
+
+        name = (key == SPINEL_PROP_RADIO_CAPS) ? "caps" : "version";
+        start += snprintf(start, static_cast<size_t>(end - start), ", %s:%u", name, value);
     }
     break;
 
-    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
+    case SPINEL_PROP_MAC_ENERGY_SCAN_RESULT:
+    case SPINEL_PROP_PHY_CHAN_MAX_POWER:
+    {
+        const char *name;
+        uint8_t     channel;
+        int8_t      value;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, &channel, &value);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        name = (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT) ? "rssi" : "power";
+        start += snprintf(start, static_cast<size_t>(end - start), ", channel:%u, %s:%d", channel, name, value);
+    }
+    break;
+
+    case SPINEL_PROP_CAPS:
+    {
+        unsigned int capability;
+
+        start += snprintf(start, static_cast<size_t>(end - start), ", caps:");
+
+        while (len > 0)
+        {
+            unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            data += unpacked;
+            len -= static_cast<spinel_size_t>(unpacked);
+            start += snprintf(start, static_cast<size_t>(end - start), "%s ", spinel_capability_to_cstr(capability));
+        }
+    }
+    break;
+
+    case SPINEL_PROP_PROTOCOL_VERSION:
+    {
+        unsigned int major;
+        unsigned int minor;
+
+        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S,
+                                          &major, &minor);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        start += snprintf(start, static_cast<size_t>(end - start), ", major:%u, minor:%u", major, minor);
+    }
+    break;
+
     case SPINEL_PROP_PHY_CHAN_PREFERRED:
+    case SPINEL_PROP_PHY_CHAN_SUPPORTED:
     {
         uint8_t        maskBuffer[kChannelMaskBufferSize];
         uint32_t       channelMask = 0;
@@ -2830,19 +2829,22 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
                                               &flags, &frame.mChannel, &frame.mInfo.mRxInfo.mLqi,
                                               &frame.mInfo.mRxInfo.mTimestamp, &receiveError);
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            start += snprintf(start, static_cast<size_t>(end - start), ", len:%u, rssi:%d ...", frame.mLength,
+                              frame.mInfo.mRxInfo.mRssi);
+            otLogDebgPlat("%s", buf);
+
+            start = buf;
             start += snprintf(start, static_cast<size_t>(end - start),
-                              ", length:%u, rssi:%d, noiseFloor:%d, flags:0x%04x, channel:%u, lqi:%u"
-                              ", timestamp:%lu, rxerr:%u",
-                              frame.mLength, frame.mInfo.mRxInfo.mRssi, noiseFloor, flags, frame.mChannel,
-                              frame.mInfo.mRxInfo.mLqi, static_cast<unsigned long>(frame.mInfo.mRxInfo.mTimestamp),
-                              receiveError);
+                              "... noise:%d, flags:0x%04x, channel:%u, lqi:%u, timestamp:%lu, rxerr:%u", noiseFloor,
+                              flags, frame.mChannel, frame.mInfo.mRxInfo.mLqi,
+                              static_cast<unsigned long>(frame.mInfo.mRxInfo.mTimestamp), receiveError);
         }
         else if (cmd == SPINEL_CMD_PROP_VALUE_SET)
         {
             bool csmaCaEnabled;
             bool isHeaderUpdated;
             bool isARetx;
-            bool isSecurityProcessed;
+            bool skipAes;
 
             unpacked = spinel_datatype_unpack(
                 data, len,
@@ -2857,29 +2859,22 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
                                                 SPINEL_DATATYPE_UINT32_S      // TxDelay
                                                     SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
                 &frame.mPsdu, &frame.mLength, &frame.mChannel, &frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
-                &frame.mInfo.mTxInfo.mMaxFrameRetries, &csmaCaEnabled, &isHeaderUpdated, &isARetx, &isSecurityProcessed,
+                &frame.mInfo.mTxInfo.mMaxFrameRetries, &csmaCaEnabled, &isHeaderUpdated, &isARetx, &skipAes,
                 &frame.mInfo.mTxInfo.mTxDelay, &frame.mInfo.mTxInfo.mTxDelayBaseTime);
 
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
             start += snprintf(start, static_cast<size_t>(end - start),
-                              ", length:%u, channel:%u, maxCsmaBackoffs:%u, maxFrameBackoffs:%u, csmaCaEnabled:%u"
-                              ", isHeaderUpdated:%u, isARetx:%u, isSecurityProcessed:%u"
-                              ", txDelay:%u, txDelayBaseTime:%u",
-                              frame.mLength, frame.mChannel, frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
-                              frame.mInfo.mTxInfo.mMaxFrameRetries, csmaCaEnabled, isHeaderUpdated, isARetx,
-                              isSecurityProcessed, frame.mInfo.mTxInfo.mTxDelay, frame.mInfo.mTxInfo.mTxDelayBaseTime);
+                              ", len:%u, channel:%u, maxbackoffs:%u, maxretries:%u ...", frame.mLength, frame.mChannel,
+                              frame.mInfo.mTxInfo.mMaxCsmaBackoffs, frame.mInfo.mTxInfo.mMaxFrameRetries);
+            otLogDebgPlat("%s", buf);
+
+            start = buf;
+            start += snprintf(start, static_cast<size_t>(end - start),
+                              "... csmaCaEnabled:%u, isHeaderUpdated:%u, isARetx:%u, skipAes:%u"
+                              ", txDelay:%u, txDelayBase:%u",
+                              csmaCaEnabled, isHeaderUpdated, isARetx, skipAes, frame.mInfo.mTxInfo.mTxDelay,
+                              frame.mInfo.mTxInfo.mTxDelayBaseTime);
         }
-    }
-    break;
-
-    case SPINEL_PROP_MAC_ENERGY_SCAN_RESULT:
-    {
-        uint8_t channel;
-        int8_t  rssi;
-
-        unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, &channel, &rssi);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += snprintf(start, static_cast<size_t>(end - start), ", channel:%u, rssi:%d", channel, rssi);
     }
     break;
 
@@ -2985,18 +2980,6 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
     }
     break;
 
-    case SPINEL_PROP_PHY_CHAN_MAX_POWER:
-    {
-        uint8_t channel;
-        int8_t  maxPower;
-
-        unpacked =
-            spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, &channel, &maxPower);
-        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += snprintf(start, static_cast<size_t>(end - start), ", channel:%d, maxPower:%d", channel, maxPower);
-    }
-    break;
-
     case SPINEL_PROP_RADIO_COEX_METRICS:
     {
         otRadioCoexMetrics metrics;
@@ -3033,42 +3016,36 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
-        start += snprintf(start, static_cast<size_t>(end - start), ", txRequest:%u", metrics.mNumTxRequest);
-        start +=
-            snprintf(start, static_cast<size_t>(end - start), ", txGrantImmediate:%u", metrics.mNumTxGrantImmediate);
-        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantWait:%u", metrics.mNumTxGrantWait);
-        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantWaitActivated:%u",
-                          metrics.mNumTxGrantWaitActivated);
-        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantWaitTimeout:%u",
-                          metrics.mNumTxGrantWaitTimeout);
-        start += snprintf(start, static_cast<size_t>(end - start), ", txGrantDeactivatedDuringRequest:%u",
-                          metrics.mNumTxGrantDeactivatedDuringRequest);
-        start += snprintf(start, static_cast<size_t>(end - start), ", txDelayedGrant:%u", metrics.mNumTxDelayedGrant);
-        start += snprintf(start, static_cast<size_t>(end - start), ", avgTxRequestToGrantTime:%u",
-                          metrics.mAvgTxRequestToGrantTime);
-        start += snprintf(start, static_cast<size_t>(end - start), ", rxRequest:%u", metrics.mNumRxRequest);
-        start +=
-            snprintf(start, static_cast<size_t>(end - start), ", rxGrantImmediate:%u", metrics.mNumRxGrantImmediate);
-        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantWait:%u", metrics.mNumRxGrantWait);
-        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantWaitActivated:%u",
-                          metrics.mNumRxGrantWaitActivated);
-        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantWaitTimeout:%u",
-                          metrics.mNumRxGrantWaitTimeout);
-        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantDeactivatedDuringRequest:%u",
-                          metrics.mNumRxGrantDeactivatedDuringRequest);
-        start += snprintf(start, static_cast<size_t>(end - start), ", rxDelayedGrant:%u", metrics.mNumRxDelayedGrant);
-        start += snprintf(start, static_cast<size_t>(end - start), ", avgRxRequestToGrantTime:%u",
-                          metrics.mAvgRxRequestToGrantTime);
-        start += snprintf(start, static_cast<size_t>(end - start), ", rxGrantNone:%u", metrics.mNumRxGrantNone);
-        start += snprintf(start, static_cast<size_t>(end - start), ", stopped:%u", metrics.mStopped);
-        start += snprintf(start, static_cast<size_t>(end - start), ", grantGlitch:%u", metrics.mNumGrantGlitch);
+        otLogDebgPlat("%s ...", buf);
+        otLogDebgPlat(" txRequest:%u", metrics.mNumTxRequest);
+        otLogDebgPlat(" txGrantImmediate:%u", metrics.mNumTxGrantImmediate);
+        otLogDebgPlat(" txGrantWait:%u", metrics.mNumTxGrantWait);
+        otLogDebgPlat(" txGrantWaitActivated:%u", metrics.mNumTxGrantWaitActivated);
+        otLogDebgPlat(" txGrantWaitTimeout:%u", metrics.mNumTxGrantWaitTimeout);
+        otLogDebgPlat(" txGrantDeactivatedDuringRequest:%u", metrics.mNumTxGrantDeactivatedDuringRequest);
+        otLogDebgPlat(" txDelayedGrant:%u", metrics.mNumTxDelayedGrant);
+        otLogDebgPlat(" avgTxRequestToGrantTime:%u", metrics.mAvgTxRequestToGrantTime);
+        otLogDebgPlat(" rxRequest:%u", metrics.mNumRxRequest);
+        otLogDebgPlat(" rxGrantImmediate:%u", metrics.mNumRxGrantImmediate);
+        otLogDebgPlat(" rxGrantWait:%u", metrics.mNumRxGrantWait);
+        otLogDebgPlat(" rxGrantWaitActivated:%u", metrics.mNumRxGrantWaitActivated);
+        otLogDebgPlat(" rxGrantWaitTimeout:%u", metrics.mNumRxGrantWaitTimeout);
+        otLogDebgPlat(" rxGrantDeactivatedDuringRequest:%u", metrics.mNumRxGrantDeactivatedDuringRequest);
+        otLogDebgPlat(" rxDelayedGrant:%u", metrics.mNumRxDelayedGrant);
+        otLogDebgPlat(" avgRxRequestToGrantTime:%u", metrics.mAvgRxRequestToGrantTime);
+        otLogDebgPlat(" rxGrantNone:%u", metrics.mNumRxGrantNone);
+        otLogDebgPlat(" stopped:%u", metrics.mStopped);
+
+        start = buf;
+        start += snprintf(start, static_cast<size_t>(end - start), " grantGlitch:%u", metrics.mNumGrantGlitch);
     }
     break;
 
     case SPINEL_PROP_MAC_SCAN_MASK:
     {
-        uint8_t       channels[16];
-        spinel_size_t size;
+        constexpr uint8_t kNumChannels = 16;
+        uint8_t           channels[kNumChannels];
+        spinel_size_t     size;
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_DATA_S, channels, &size);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
@@ -3099,27 +3076,19 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SpinelFrameToString(cons
     }
 
 exit:
-    return error;
-}
 
-template <typename InterfaceType, typename ProcessContextType>
-void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
-{
-    constexpr uint16_t kLogBufferSize      = 512;
-    char               buf[kLogBufferSize] = {0};
-
-    VerifyOrExit(otLoggingGetLevel() >= OT_LOG_LEVEL_DEBG);
-
-    if (SpinelFrameToString(aFrame, aLength, buf, sizeof(buf)) == OT_ERROR_NONE)
+    if (otLoggingGetLevel() >= OT_LOG_LEVEL_DEBG)
     {
-        otLogDebgPlat("%s, %s", aTx ? "Sent spinel frame" : "Received spinel frame", buf);
-    }
-    else
-    {
-        otLogDebgPlat("%s, parse spinel frame failed!", aTx ? "Sent spinel frame" : "Received spinel frame");
+        if (error == OT_ERROR_NONE)
+        {
+            otLogDebgPlat("%s", buf);
+        }
+        else
+        {
+            otLogDebgPlat("%s, failed to parse spinel frame !", prefix);
+        }
     }
 
-exit:
     return;
 }
 
