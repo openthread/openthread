@@ -282,13 +282,14 @@ private:
     // Returns format string to output a `ValueType` (e.g., "%u" for `uint16_t`).
     template <typename ValueType> static constexpr const char *FormatStringFor(void);
 
+    // General temaplate implementaion.
+    // Specializations for `uint32_t` and `int32_t` are added at the end.
     template <typename ValueType> otError ProcessGet(Arg aArgs[], GetHandler<ValueType> aGetHandler)
     {
         static_assert(
             TypeTraits::IsSame<ValueType, uint8_t>::kValue || TypeTraits::IsSame<ValueType, uint16_t>::kValue ||
-                TypeTraits::IsSame<ValueType, uint32_t>::kValue || TypeTraits::IsSame<ValueType, int8_t>::kValue ||
-                TypeTraits::IsSame<ValueType, int16_t>::kValue || TypeTraits::IsSame<ValueType, int32_t>::kValue,
-            "ValueType must be an  8, 16, or 32 bit `int` or `uint` type");
+                TypeTraits::IsSame<ValueType, int8_t>::kValue || TypeTraits::IsSame<ValueType, int16_t>::kValue,
+            "ValueType must be an  8, 16 `int` or `uint` type");
 
         otError error = OT_ERROR_NONE;
 
@@ -590,7 +591,7 @@ template <> inline constexpr const char *Interpreter::FormatStringFor<uint16_t>(
 
 template <> inline constexpr const char *Interpreter::FormatStringFor<uint32_t>(void)
 {
-    return "%u";
+    return "%lu";
 }
 
 template <> inline constexpr const char *Interpreter::FormatStringFor<int8_t>(void)
@@ -605,7 +606,31 @@ template <> inline constexpr const char *Interpreter::FormatStringFor<int16_t>(v
 
 template <> inline constexpr const char *Interpreter::FormatStringFor<int32_t>(void)
 {
-    return "%d";
+    return "%ld";
+}
+
+// Specialization of ProcessGet<> for `uint32_t` and `int32_t`
+
+template <> inline otError Interpreter::ProcessGet<uint32_t>(Arg aArgs[], GetHandler<uint32_t> aGetHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    OutputLine(FormatStringFor<uint32_t>(), ToUlong(aGetHandler(GetInstancePtr())));
+
+exit:
+    return error;
+}
+
+template <> inline otError Interpreter::ProcessGet<int32_t>(Arg aArgs[], GetHandler<int32_t> aGetHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    OutputLine(FormatStringFor<int32_t>(), static_cast<long int>(aGetHandler(GetInstancePtr())));
+
+exit:
+    return error;
 }
 
 } // namespace Cli

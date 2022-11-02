@@ -138,7 +138,7 @@ void Coap::PrintPayload(otMessage *aMessage)
         }
     }
 
-    OutputLine("");
+    OutputNewLine();
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -319,7 +319,7 @@ template <> otError Coap::Process<Cmd("parameters")>(Arg aArgs[])
     }
     else
     {
-        OutputLine("ACK_TIMEOUT=%u ms, ACK_RANDOM_FACTOR=%u/%u, MAX_RETRANSMIT=%u", txParameters->mAckTimeout,
+        OutputLine("ACK_TIMEOUT=%lu ms, ACK_RANDOM_FACTOR=%u/%u, MAX_RETRANSMIT=%u", ToUlong(txParameters->mAckTimeout),
                    txParameters->mAckRandomFactorNumerator, txParameters->mAckRandomFactorDenominator,
                    txParameters->mMaxRetransmit);
     }
@@ -647,7 +647,8 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
             SuccessOrExit(error = otCoapOptionIteratorGetOptionUintValue(&iterator, &observe));
             observePresent = true;
 
-            OutputFormat(" OBS=%lu", static_cast<uint32_t>(observe));
+            OutputFormat(" OBS=");
+            OutputUint64(observe);
         }
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -862,7 +863,8 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
 
                 if (error == OT_ERROR_NONE)
                 {
-                    OutputFormat(" OBS=%u", observeVal);
+                    OutputFormat(" OBS=");
+                    OutputUint64(observeVal);
                 }
             }
         }

@@ -146,7 +146,7 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
 
 void NetworkData::OutputService(const otServiceConfig &aConfig)
 {
-    OutputFormat("%u ", aConfig.mEnterpriseNumber);
+    OutputFormat("%lu ", ToUlong(aConfig.mEnterpriseNumber));
     OutputBytes(aConfig.mServiceData, aConfig.mServiceDataLength);
     OutputFormat(" ");
     OutputBytes(aConfig.mServerConfig.mServerData, aConfig.mServerConfig.mServerDataLength);

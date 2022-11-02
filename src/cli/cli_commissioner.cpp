@@ -124,8 +124,8 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
                 break;
             }
 
-            OutputFormat(" | %32s | %10d |", joinerInfo.mPskd.m8, joinerInfo.mExpirationTime);
-            OutputLine("");
+            OutputFormat(" | %32s | %10lu |", joinerInfo.mPskd.m8, ToUlong(joinerInfo.mExpirationTime));
+            OutputNewLine();
         }
 
         ExitNow(error = OT_ERROR_NONE);
@@ -419,7 +419,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
         OutputExtAddress(*aJoinerId);
     }
 
-    OutputLine("");
+    OutputNewLine();
 }
 
 template <> otError Commissioner::Process<Cmd("stop")>(Arg aArgs[])
@@ -433,7 +433,7 @@ template <> otError Commissioner::Process<Cmd("state")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    OutputLine(StateToString(otCommissionerGetState(GetInstancePtr())));
+    OutputLine("%s", StateToString(otCommissionerGetState(GetInstancePtr())));
 
     return OT_ERROR_NONE;
 }
@@ -483,14 +483,14 @@ void Commissioner::HandleEnergyReport(uint32_t       aChannelMask,
 
 void Commissioner::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength)
 {
-    OutputFormat("Energy: %08x ", aChannelMask);
+    OutputFormat("Energy: %08lx ", ToUlong(aChannelMask));
 
     for (uint8_t i = 0; i < aEnergyListLength; i++)
     {
         OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
     }
 
-    OutputLine("");
+    OutputNewLine();
 }
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
@@ -500,7 +500,7 @@ void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, v
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 {
-    OutputLine("Conflict: %04x, %08x", aPanId, aChannelMask);
+    OutputLine("Conflict: %04x, %08lx", aPanId, ToUlong(aChannelMask));
 }
 
 } // namespace Cli

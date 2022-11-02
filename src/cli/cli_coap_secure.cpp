@@ -87,7 +87,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage)
         }
     }
 
-    OutputLine("");
+    OutputNewLine();
 }
 
 template <> otError CoapSecure::Process<Cmd("resource")>(Arg aArgs[])
