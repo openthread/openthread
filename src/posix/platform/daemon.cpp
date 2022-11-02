@@ -145,7 +145,7 @@ exit:
     }
     else
     {
-        otLogInfoPlat("Session socket is ready", strerror(errno));
+        otLogInfoPlat("Session socket is ready");
     }
 }
 

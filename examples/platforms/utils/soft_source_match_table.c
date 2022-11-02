@@ -148,7 +148,7 @@ void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otLogDebgPlat("Clear ShortAddr entries", NULL);
+    otLogDebgPlat("Clear ShortAddr entries");
 
     memset(srcMatchShortEntry, 0, sizeof(srcMatchShortEntry));
 }
@@ -260,7 +260,7 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otLogDebgPlat("Clear ExtAddr entries", NULL);
+    otLogDebgPlat("Clear ExtAddr entries");
 
     memset(srcMatchExtEntry, 0, sizeof(srcMatchExtEntry));
 }
