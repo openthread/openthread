@@ -3076,17 +3076,13 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
     }
 
 exit:
-
-    if (otLoggingGetLevel() >= OT_LOG_LEVEL_DEBG)
+    if (error == OT_ERROR_NONE)
     {
-        if (error == OT_ERROR_NONE)
-        {
-            otLogDebgPlat("%s", buf);
-        }
-        else
-        {
-            otLogDebgPlat("%s, failed to parse spinel frame !", prefix);
-        }
+        otLogDebgPlat("%s", buf);
+    }
+    else
+    {
+        otLogDebgPlat("%s, failed to parse spinel frame !", prefix);
     }
 
     return;
