@@ -852,7 +852,7 @@ static void UpdateExternalRoutes(otInstance *aInstance)
         else
         {
             sAddedExternalRoutes[sAddedExternalRoutesNum++] = config.mPrefix;
-            otLogWarnPlat("[netif] Successfully added an external route %s in kernel: %s", prefixString);
+            otLogWarnPlat("[netif] Successfully added an external route %s in kernel", prefixString);
         }
     }
 exit:
