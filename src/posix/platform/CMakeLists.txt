@@ -98,9 +98,12 @@ endif()
 set(OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE "vendor_interface_example.cpp"
        CACHE STRING "vendor interface implementation")
 
+set(CMAKE_EXE_LINKER_FLAGS "-rdynamic ${CMAKE_EXE_LINKER_FLAGS}" PARENT_SCOPE)
+
 add_library(openthread-posix
     alarm.cpp
     backbone.cpp
+    backtrace.cpp
     daemon.cpp
     entropy.cpp
     firewall.cpp

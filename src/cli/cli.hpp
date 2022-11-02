@@ -460,7 +460,6 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
-
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     void HandlePingReply(const otPingSenderReply *aReply);
     void HandlePingStatistics(const otPingSenderStatistics *aStatistics);
