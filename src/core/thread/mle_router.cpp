@@ -439,7 +439,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
     Get<Mac::Mac>().UpdateCsl();
 #endif
 
-    LogNote("Leader partition id 0x%x", mLeaderData.GetPartitionId());
+    LogNote("Leader partition id 0x%lx", ToUlong(mLeaderData.GetPartitionId()));
 }
 
 void MleRouter::HandleAdvertiseTrickleTimer(TrickleTimer &aTimer)
@@ -1246,7 +1246,8 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
 
     if (partitionId != mLeaderData.GetPartitionId())
     {
-        LogNote("Different partition (peer:%u, local:%u)", partitionId, mLeaderData.GetPartitionId());
+        LogNote("Different partition (peer:%lu, local:%lu)", ToUlong(partitionId),
+                ToUlong(mLeaderData.GetPartitionId()));
 
         VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = kErrorLinkMarginLow);
 
@@ -1873,7 +1874,7 @@ void MleRouter::HandleTimeTick(void)
 
     case kRoleRouter:
         // verify path to leader
-        LogDebg("network id timeout = %d", mRouterTable.GetLeaderAge());
+        LogDebg("network id timeout = %lu", ToUlong(mRouterTable.GetLeaderAge()));
 
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
@@ -2175,7 +2176,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
         {
             if (Get<NetworkData::Leader>().GetContext(entry.GetContextId(), context) != kErrorNone)
             {
-                LogWarn("Failed to get context %d for compressed address from child 0x%04x", entry.GetContextId(),
+                LogWarn("Failed to get context %u for compressed address from child 0x%04x", entry.GetContextId(),
                         aChild.GetRloc16());
                 continue;
             }
@@ -2225,7 +2226,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
             }
 #endif
 
-            LogInfo("Child 0x%04x IPv6 address[%d]=%s", aChild.GetRloc16(), storedCount,
+            LogInfo("Child 0x%04x IPv6 address[%u]=%s", aChild.GetRloc16(), storedCount,
                     address.ToString().AsCString());
         }
         else
@@ -2288,7 +2289,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
     }
     else
     {
-        LogInfo("Child 0x%04x has %d registered IPv6 address%s, %d address%s stored", aChild.GetRloc16(),
+        LogInfo("Child 0x%04x has %u registered IPv6 address%s, %u address%s stored", aChild.GetRloc16(),
                 registeredCount, (registeredCount == 1) ? "" : "es", storedCount, (storedCount == 1) ? "" : "es");
     }
 
@@ -3936,7 +3937,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
             (Get<NetworkData::Leader>().CountBorderRouters(NetworkData::kRouterRoleOnly) >=
              kRouterUpgradeBorderRouterRequestThreshold))
         {
-            LogInfo("Rejecting BR %s router role req - have %d BR routers", extAddress.ToString().AsCString(),
+            LogInfo("Rejecting BR %s router role req - have %u BR routers", extAddress.ToString().AsCString(),
                     kRouterUpgradeBorderRouterRequestThreshold);
             ExitNow();
         }
@@ -3953,7 +3954,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
 
         if (router != nullptr)
         {
-            LogInfo("Router id %d requested and provided!", RouterIdFromRloc16(rloc16));
+            LogInfo("Router id %u requested and provided!", RouterIdFromRloc16(rloc16));
         }
     }
 

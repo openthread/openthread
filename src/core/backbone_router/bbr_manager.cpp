@@ -213,7 +213,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
             if (timeout != origTimeout)
             {
-                LogNote("MLR.req: MLR timeout is normalized from %u to %u", origTimeout, timeout);
+                LogNote("MLR.req: MLR timeout is normalized from %lu to %lu", ToUlong(origTimeout), ToUlong(timeout));
             }
         }
     }
@@ -728,8 +728,8 @@ void Manager::HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
     dest.SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aSrcRloc16);
     Get<AddressResolver>().SendAddressQueryResponse(aDua, aMeshLocalIid, &aTimeSinceLastTransaction, dest);
 
-    LogInfo("HandleExtendedBackboneAnswer: target=%s, mliid=%s, LTT=%lds, rloc16=%04x", aDua.ToString().AsCString(),
-            aMeshLocalIid.ToString().AsCString(), aTimeSinceLastTransaction, aSrcRloc16);
+    LogInfo("HandleExtendedBackboneAnswer: target=%s, mliid=%s, LTT=%lus, rloc16=%04x", aDua.ToString().AsCString(),
+            aMeshLocalIid.ToString().AsCString(), ToUlong(aTimeSinceLastTransaction), aSrcRloc16);
 }
 
 void Manager::HandleProactiveBackboneNotification(const Ip6::Address &            aDua,
@@ -765,8 +765,8 @@ void Manager::HandleProactiveBackboneNotification(const Ip6::Address &          
     }
 
 exit:
-    LogInfo("HandleProactiveBackboneNotification: %s, target=%s, mliid=%s, LTT=%lds", ErrorToString(error),
-            aDua.ToString().AsCString(), aMeshLocalIid.ToString().AsCString(), aTimeSinceLastTransaction);
+    LogInfo("HandleProactiveBackboneNotification: %s, target=%s, mliid=%s, LTT=%lus", ErrorToString(error),
+            aDua.ToString().AsCString(), aMeshLocalIid.ToString().AsCString(), ToUlong(aTimeSinceLastTransaction));
 }
 #endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 

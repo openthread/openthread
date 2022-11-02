@@ -53,26 +53,26 @@ RegisterLogModule("Settings");
 
 void SettingsBase::NetworkInfo::Log(Action aAction) const
 {
-    LogInfo("%s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%hu, keyseq:0x%x, ...",
+    LogInfo("%s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%u, keyseq:0x%lx, ...",
             ActionToString(aAction), GetRloc16(), GetExtAddress().ToString().AsCString(),
             Mle::RoleToString(static_cast<Mle::DeviceRole>(GetRole())), GetDeviceMode(), GetVersion(),
-            GetKeySequence());
+            ToUlong(GetKeySequence()));
 
-    LogInfo("... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%s}", GetPreviousPartitionId(), GetMleFrameCounter(),
-            GetMacFrameCounter(), GetMeshLocalIid().ToString().AsCString());
+    LogInfo("... pid:0x%lx, mlecntr:0x%lx, maccntr:0x%lx, mliid:%s}", ToUlong(GetPreviousPartitionId()),
+            ToUlong(GetMleFrameCounter()), ToUlong(GetMacFrameCounter()), GetMeshLocalIid().ToString().AsCString());
 }
 
 void SettingsBase::ParentInfo::Log(Action aAction) const
 {
-    LogInfo("%s ParentInfo {extaddr:%s, version:%hu}", ActionToString(aAction), GetExtAddress().ToString().AsCString(),
+    LogInfo("%s ParentInfo {extaddr:%s, version:%u}", ActionToString(aAction), GetExtAddress().ToString().AsCString(),
             GetVersion());
 }
 
 #if OPENTHREAD_FTD
 void SettingsBase::ChildInfo::Log(Action aAction) const
 {
-    LogInfo("%s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:%hu}", ActionToString(aAction),
-            GetRloc16(), GetExtAddress().ToString().AsCString(), GetTimeout(), GetMode(), GetVersion());
+    LogInfo("%s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%lu, mode:0x%02x, version:%u}", ActionToString(aAction),
+            GetRloc16(), GetExtAddress().ToString().AsCString(), ToUlong(GetTimeout()), GetMode(), GetVersion());
 }
 #endif
 

@@ -672,7 +672,7 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
     UpdateTimeTickerRegistration();
 
     LogDebg("MlrManager::UpdateReregistrationDelay: rereg=%d, needSendMlr=%d, ReregDelay=%lu", aRereg, needSendMlr,
-            mReregistrationDelay);
+            ToUlong(mReregistrationDelay));
 }
 
 void MlrManager::LogMulticastAddresses(void)

@@ -259,7 +259,7 @@ void AnnounceSender::HandleActiveDatasetChanged(void)
 
     SetChannelMask(channelMask);
     SetPeriod(kTxInterval / channelMask.GetNumberOfChannels());
-    LogInfo("ChannelMask:%s, period:%u", GetChannelMask().ToString().AsCString(), GetPeriod());
+    LogInfo("ChannelMask:%s, period:%lu", GetChannelMask().ToString().AsCString(), ToUlong(GetPeriod()));
 
     // When channel mask is changed, we also check and update the PAN
     // channel. This handles the case where `ThreadChannelChanged` event

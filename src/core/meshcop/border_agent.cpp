@@ -211,7 +211,7 @@ exit:
     {
         FreeMessage(message);
 
-        LogWarn("Commissioner request[%hu] failed: %s", aForwardContext.GetMessageId(), ErrorToString(error));
+        LogWarn("Commissioner request[%u] failed: %s", aForwardContext.GetMessageId(), ErrorToString(error));
 
         SendErrorMessage(aForwardContext, error);
     }

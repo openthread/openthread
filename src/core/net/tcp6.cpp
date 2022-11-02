@@ -1116,7 +1116,7 @@ void tcplp_sys_log(const char *aFormat, ...)
     vsnprintf(buffer, sizeof(buffer), aFormat, args);
     va_end(args);
 
-    LogDebg(buffer);
+    LogDebg("%s", buffer);
 }
 
 void tcplp_sys_panic(const char *aFormat, ...)

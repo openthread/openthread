@@ -157,7 +157,7 @@ void MulticastListenersTable::LogMulticastListenersTable(const char *        aAc
     OT_UNUSED_VARIABLE(aExpireTime);
     OT_UNUSED_VARIABLE(aError);
 
-    LogDebg("%s %s expire %u: %s", aAction, aAddress.ToString().AsCString(), aExpireTime.GetValue(),
+    LogDebg("%s %s expire %lu: %s", aAction, aAddress.ToString().AsCString(), ToUlong(aExpireTime.GetValue()),
             ErrorToString(aError));
 }
 

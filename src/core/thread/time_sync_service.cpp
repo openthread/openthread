@@ -237,8 +237,8 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
         {
             // The device hasn’t received time sync for more than two periods time.
             networkTimeStatus = OT_NETWORK_TIME_RESYNC_NEEDED;
-            LogInfo("Time sync status RESYNC_NEEDED as timeSyncLastSyncMs:%u > resyncNeededThresholdMs:%u",
-                    timeSyncLastSyncMs, resyncNeededThresholdMs);
+            LogInfo("Time sync status RESYNC_NEEDED as timeSyncLastSyncMs:%lu > resyncNeededThresholdMs:%lu",
+                    ToUlong(timeSyncLastSyncMs), ToUlong(resyncNeededThresholdMs));
         }
         else
         {

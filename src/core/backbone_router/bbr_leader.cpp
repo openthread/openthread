@@ -92,8 +92,8 @@ void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &
 
     if (aState != kStateRemoved && aState != kStateNone)
     {
-        LogInfo("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
-                aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
+        LogInfo("Rloc16:0x%4x, seqno:%u, delay:%u, timeout:%lu", aConfig.mServer16, aConfig.mSequenceNumber,
+                aConfig.mReregistrationDelay, ToUlong(aConfig.mMlrTimeout));
     }
 }
 
@@ -205,7 +205,8 @@ void Leader::UpdateBackboneRouterPrimary(void)
 
         if (config.mMlrTimeout != origMlrTimeout)
         {
-            LogNote("Leader MLR Timeout is normalized from %u to %u", origMlrTimeout, config.mMlrTimeout);
+            LogNote("Leader MLR Timeout is normalized from %lu to %lu", ToUlong(origMlrTimeout),
+                    ToUlong(config.mMlrTimeout));
         }
     }
 

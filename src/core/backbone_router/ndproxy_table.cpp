@@ -188,8 +188,8 @@ Error NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
     mIsAnyDadInProcess = true;
 
 exit:
-    LogInfo("NdProxyTable::Register %s MLIID %s RLOC16 %04x LTT %u => %s", aAddressIid.ToString().AsCString(),
-            aMeshLocalIid.ToString().AsCString(), aRloc16, timeSinceLastTransaction, ErrorToString(error));
+    LogInfo("NdProxyTable::Register %s MLIID %s RLOC16 %04x LTT %lu => %s", aAddressIid.ToString().AsCString(),
+            aMeshLocalIid.ToString().AsCString(), aRloc16, ToUlong(timeSinceLastTransaction), ErrorToString(error));
     return error;
 }
 

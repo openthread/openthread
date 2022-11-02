@@ -1244,7 +1244,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, Error aError)
     if (mDelayNextTx && (aError == kErrorNone))
     {
         mTxDelayTimer.Start(kTxDelayInterval);
-        LogDebg("Start tx delay timer for %u msec", kTxDelayInterval);
+        LogDebg("Start tx delay timer for %lu msec", ToUlong(kTxDelayInterval));
     }
     else
     {
