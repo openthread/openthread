@@ -611,7 +611,7 @@ otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair, 
  *
  * @param[in]  aKeyPair           A pointer to an ECDSA key-pair structure where the key-pair is stored.
  * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature calculation
- * is stored.
+ *                                is stored.
  * @param[out] aSignature         A pointer to an ECDSA signature structure to output the calculated signature.
  *
  * @retval OT_ERROR_NONE          The signature was calculated successfully, @p aSignature was updated.
@@ -627,17 +627,17 @@ otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
 /**
  * Use the key from the input context to verify the ECDSA signature of a hashed message.
  *
- * @param[in] aPublicKey          A pointer to an ECDSA public key structure where the public key for signature
- * verification is stored.
- * @param[in] aHash               A pointer to a SHA-256 hash structure where the hash value for signature verification
- * is stored.
- * @param[in] aSignature          A pointer to an ECDSA signature structure where the signature value to be verified is
- * stored.
+ * @param[in]  aPublicKey         A pointer to an ECDSA public key structure where the public key for signature
+ *                                verification is stored.
+ * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature verification
+ *                                is stored.
+ * @param[in]  aSignature         A pointer to an ECDSA signature structure where the signature value to be verified is
+ *                                stored.
  *
  * @retval OT_ERROR_NONE          The signature was verified successfully.
  * @retval OT_ERROR_SECURITY      The signature is invalid.
  * @retval OT_ERROR_INVALID_ARGS  The key or hash is invalid.
- * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature verification
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature verification.
  *
  */
 otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,

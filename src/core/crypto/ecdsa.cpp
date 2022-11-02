@@ -51,26 +51,6 @@ namespace ot {
 namespace Crypto {
 namespace Ecdsa {
 
-Error P256::KeyPair::Generate(void)
-{
-    return otPlatCryptoEcdsaGenerateKey(this);
-}
-
-Error P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
-{
-    return otPlatCryptoEcdsaGetPublicKey(this, &aPublicKey);
-}
-
-Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) const
-{
-    return otPlatCryptoEcdsaSign(this, &aHash, &aSignature);
-}
-
-Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
-{
-    return otPlatCryptoEcdsaVerify(this, &aHash, &aSignature);
-}
-
 Error Sign(uint8_t *      aOutput,
            uint16_t &     aOutputLength,
            const uint8_t *aInputHash,

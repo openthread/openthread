@@ -133,7 +133,7 @@ public:
          * @retval kErrorFailed       Failed to generate key.
          *
          */
-        Error Generate(void);
+        Error Generate(void) { return otPlatCryptoEcdsaGenerateKey(this); }
 
         /**
          * This method gets the associated public key from the `KeyPair`.
@@ -144,7 +144,7 @@ public:
          * @retval kErrorParse     The key-pair DER format could not be parsed (invalid format).
          *
          */
-        Error GetPublicKey(PublicKey &aPublicKey) const;
+        Error GetPublicKey(PublicKey &aPublicKey) const { return otPlatCryptoEcdsaGetPublicKey(this, &aPublicKey); }
 
         /**
          * This method gets the pointer to start of the buffer containing the key-pair info in DER format.
@@ -198,7 +198,10 @@ public:
          * @retval kErrorNoBufs         Failed to allocate buffer for signature calculation.
          *
          */
-        Error Sign(const Sha256::Hash &aHash, Signature &aSignature) const;
+        Error Sign(const Sha256::Hash &aHash, Signature &aSignature) const
+        {
+            return otPlatCryptoEcdsaSign(this, &aHash, &aSignature);
+        }
     };
 
     /**
@@ -235,7 +238,10 @@ public:
          * @retval kErrorNoBufs        Failed to allocate buffer for signature verification
          *
          */
-        Error Verify(const Sha256::Hash &aHash, const Signature &aSignature) const;
+        Error Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
+        {
+            return otPlatCryptoEcdsaVerify(this, &aHash, &aSignature);
+        }
     } OT_TOOL_PACKED_END;
 };
 
