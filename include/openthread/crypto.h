@@ -55,25 +55,13 @@ extern "C" {
  *
  */
 
-#define OT_CRYPTO_SHA256_HASH_SIZE 32 ///< Length of SHA256 hash (in bytes).
-
 /**
  * @struct otCryptoSha256Hash
  *
  * This structure represents a SHA-256 hash.
  *
  */
-OT_TOOL_PACKED_BEGIN
-struct otCryptoSha256Hash
-{
-    uint8_t m8[OT_CRYPTO_SHA256_HASH_SIZE]; ///< Hash bytes.
-} OT_TOOL_PACKED_END;
-
-/**
- * This structure represents a SHA-256 hash.
- *
- */
-typedef struct otCryptoSha256Hash otCryptoSha256Hash;
+typedef otPlatCryptoSha256Hash otCryptoSha256Hash;
 
 /**
  * This function performs HMAC computation.
