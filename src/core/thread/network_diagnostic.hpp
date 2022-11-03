@@ -126,6 +126,16 @@ public:
     static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, otNetworkDiagTlv &aNetworkDiagTlv);
 
 private:
+    enum CommandType : uint8_t
+    {
+        kDiagnosticGet,
+        kDiagnosticReset,
+    };
+
+    Error SendDiagnosticCommand(CommandType         aCommandType,
+                                const Ip6::Address &aDestination,
+                                const uint8_t       aTlvTypes[],
+                                uint8_t             aCount);
     Error AppendIp6AddressList(Message &aMessage);
     Error AppendChildTable(Message &aMessage);
     void  FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
