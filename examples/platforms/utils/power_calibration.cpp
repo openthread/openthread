@@ -103,27 +103,29 @@ public:
     {
         otError                 error = OT_ERROR_NONE;
         uint8_t                 chIndex;
-        int8_t                  i;
+        uint8_t                 numCalibratedPowers;
+        int16_t                 i;
         int16_t                 targetPower;
-        struct CalibratedPower *calibratedPower;
+        struct CalibratedPower *calibratedPowers;
 
         otEXPECT_ACTION((aChannel >= kMinChannel) && (aChannel <= kMaxChannel) && (aRawPowerSetting != nullptr),
                         error = OT_ERROR_INVALID_ARGS);
         otEXPECT((mChannel != aChannel) || mPowerUpdated);
 
-        chIndex         = aChannel - kMinChannel;
-        targetPower     = mTargetPowerTable[chIndex];
-        calibratedPower = &mCalibrationPowerTable[chIndex][0];
+        chIndex             = aChannel - kMinChannel;
+        targetPower         = mTargetPowerTable[chIndex];
+        calibratedPowers    = &mCalibrationPowerTable[chIndex][0];
+        numCalibratedPowers = mNumCalibratedPowers[chIndex];
 
         otEXPECT_ACTION(targetPower != INT16_MAX, error = OT_ERROR_NOT_FOUND);
-        otEXPECT_ACTION(mNumCalibratedPowers[chIndex] > 0, error = OT_ERROR_NOT_FOUND);
+        otEXPECT_ACTION(numCalibratedPowers > 0, error = OT_ERROR_NOT_FOUND);
 
-        for (i = mNumCalibratedPowers[chIndex] - 1; (i >= 0) && (targetPower < calibratedPower[i].mActualPower); i--)
+        for (i = numCalibratedPowers - 1; (i >= 0) && (targetPower < calibratedPowers[i].mActualPower); i--)
             ;
 
         otEXPECT_ACTION(i >= 0, error = OT_ERROR_NOT_FOUND);
 
-        mRawPowerSetting = &calibratedPower[i].mRawPowerSetting;
+        mRawPowerSetting = &calibratedPowers[i].mRawPowerSetting;
         mChannel         = aChannel;
         mPowerUpdated    = false;
 
