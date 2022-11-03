@@ -43,6 +43,13 @@
 namespace ot {
 namespace Posix {
 
+ConfigFile::ConfigFile(const char *aFilePath)
+    : mFilePath(aFilePath)
+{
+    assert(mFilePath != nullptr);
+    VerifyOrDie(strlen(mFilePath) + strlen(kSwapSuffix) < kFileNameMaxSize, OT_EXIT_FAILURE);
+}
+
 otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength)
 {
     otError  error = OT_ERROR_NONE;
@@ -77,14 +84,13 @@ otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aVal
         *str = '\0';
         key  = line;
 
-        RemoveGarbage(key);
+        Strip(key);
 
         if (strcmp(aKey, key) == 0)
         {
             value = str + 1;
-            RemoveGarbage(value);
-            aValueLength = static_cast<int>(strlen(value)) < (aValueLength - 1) ? static_cast<int>(strlen(value))
-                                                                                : (aValueLength - 1);
+            Strip(value);
+            aValueLength = OT_MIN(static_cast<int>(strlen(value)), (aValueLength - 1));
             memcpy(aValue, value, static_cast<size_t>(aValueLength));
             aValue[aValueLength] = '\0';
             break;
@@ -118,14 +124,11 @@ otError ConfigFile::Add(const char *aKey, const char *aValue)
 
     if (stat(dir, &st) == -1)
     {
-        VerifyOrDie(mkdir(dir, 0755) == 0, OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(mkdir(dir, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
     VerifyOrDie((fp = fopen(mFilePath, "at")) != NULL, OT_EXIT_ERROR_ERRNO);
-    VerifyOrDie(fputs(aKey, fp) >= 0, OT_EXIT_ERROR_ERRNO);
-    VerifyOrDie(fputs("=", fp) >= 0, OT_EXIT_ERROR_ERRNO);
-    VerifyOrDie(fputs(aValue, fp) >= 0, OT_EXIT_ERROR_ERRNO);
-    VerifyOrDie(fputc('\n', fp) >= 0, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(fprintf(fp, "%s=%s\n", aKey, aValue) > 0, OT_EXIT_ERROR_ERRNO);
 
 exit:
     if (fp != nullptr)
@@ -143,17 +146,15 @@ exit:
 
 otError ConfigFile::Clear(const char *aKey)
 {
-    otError     error  = OT_ERROR_NONE;
-    const char *suffix = ".swap";
-    char        swapFile[kFileNameMaxSize];
-    char        line[kLineMaxSize];
-    FILE *      fp     = nullptr;
-    FILE *      fpSwap = nullptr;
+    otError error = OT_ERROR_NONE;
+    char    swapFile[kFileNameMaxSize];
+    char    line[kLineMaxSize];
+    FILE *  fp     = nullptr;
+    FILE *  fpSwap = nullptr;
 
     VerifyOrExit(aKey != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrDie((fp = fopen(mFilePath, "r")) != NULL, OT_EXIT_ERROR_ERRNO);
-    VerifyOrExit(strlen(mFilePath) + strlen(suffix) < sizeof(swapFile), error = OT_ERROR_FAILED);
-    snprintf(swapFile, sizeof(swapFile), "%s%s", mFilePath, suffix);
+    snprintf(swapFile, sizeof(swapFile), "%s%s", mFilePath, kSwapSuffix);
     VerifyOrDie((fpSwap = fopen(swapFile, "w+")) != NULL, OT_EXIT_ERROR_ERRNO);
 
     while (fgets(line, sizeof(line), fp) != nullptr)
@@ -165,6 +166,7 @@ otError ConfigFile::Clear(const char *aKey)
         str1 = strstr(line, kCommentDelimiter);
         str2 = strstr(line, aKey);
 
+        // If only the comment contains the key string, ignore it.
         containsKey = (str2 != nullptr) && (str1 == nullptr || str2 < str1);
 
         if (!containsKey)
@@ -192,7 +194,7 @@ exit:
     return error;
 }
 
-void ConfigFile::RemoveGarbage(char *aString)
+void ConfigFile::Strip(char *aString)
 {
     int count = 0;
 

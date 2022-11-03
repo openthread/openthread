@@ -1178,7 +1178,8 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
  *
  * @retval OT_ERROR_NONE             Successfully added the calibrated power to the power calibration table.
  * @retval OT_ERROR_NO_BUFS          No available entry in the power calibration table.
- * @retval OT_ERROR_INVALID_ARGS     The @p aChannel, @aActualPower or @p aRawPowerSetting is invalid.
+ * @retval OT_ERROR_INVALID_ARGS     The @p aChannel, @aActualPower or @p aRawPowerSetting is invalid or the
+ *                                   @ aActualPower already exists in the power calibration table;
  * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
  *
  */

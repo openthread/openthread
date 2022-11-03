@@ -50,32 +50,30 @@ public:
     otError AddCalibratedPower(uint8_t aChannel, int16_t aActualPower, const otRawPowerSetting *aRawPowerSetting)
     {
         otError                 error = OT_ERROR_NONE;
-        struct CalibratedPower *calibratedPower;
+        struct CalibratedPower *calibratedPowers;
+        uint8_t                 numCalibratedPowers;
         uint8_t                 chIndex;
         int16_t                 i = 0;
 
         otEXPECT_ACTION(aChannel >= kMinChannel && aChannel <= kMaxChannel && aRawPowerSetting != nullptr,
                         error = OT_ERROR_INVALID_ARGS);
-        chIndex = aChannel - kMinChannel;
-        otEXPECT_ACTION(mNumCalibratedPowers[chIndex] < kMaxNumCalibratedPowers, error = OT_ERROR_NO_BUFS);
-        calibratedPower = &mCalibrationPowerTable[chIndex][0];
+        chIndex             = aChannel - kMinChannel;
+        calibratedPowers    = &mCalibrationPowerTable[chIndex][0];
+        numCalibratedPowers = mNumCalibratedPowers[chIndex];
+
+        otEXPECT_ACTION(numCalibratedPowers < kMaxNumCalibratedPowers, error = OT_ERROR_NO_BUFS);
+        otEXPECT_ACTION(!calibratedPowerExist(calibratedPowers, numCalibratedPowers, aActualPower),
+                        error = OT_ERROR_INVALID_ARGS);
 
         // Insert the calibrated power in order from small to large.
-        for (i = mNumCalibratedPowers[chIndex]; i > 0; i--)
+        for (i = numCalibratedPowers; (i > 0) && (aActualPower < calibratedPowers[i - 1].mActualPower); i--)
         {
-            if (aActualPower < calibratedPower[i - 1].mActualPower)
-            {
-                calibratedPower[i] = calibratedPower[i - 1];
-            }
-            else
-            {
-                break;
-            }
+            calibratedPowers[i] = calibratedPowers[i - 1];
         }
 
-        calibratedPower[i].mActualPower     = aActualPower;
-        calibratedPower[i].mRawPowerSetting = *aRawPowerSetting;
-        mPowerUpdated                       = true;
+        calibratedPowers[i].mActualPower     = aActualPower;
+        calibratedPowers[i].mRawPowerSetting = *aRawPowerSetting;
+        mPowerUpdated                        = true;
         mNumCalibratedPowers[chIndex]++;
 
     exit:
@@ -105,7 +103,7 @@ public:
     {
         otError                 error = OT_ERROR_NONE;
         uint8_t                 chIndex;
-        uint8_t                 i;
+        int8_t                  i;
         int16_t                 targetPower;
         struct CalibratedPower *calibratedPower;
 
@@ -118,16 +116,12 @@ public:
         calibratedPower = &mCalibrationPowerTable[chIndex][0];
 
         otEXPECT_ACTION(targetPower != INT16_MAX, error = OT_ERROR_NOT_FOUND);
-        otEXPECT_ACTION((mNumCalibratedPowers[chIndex] != 0) && (targetPower >= calibratedPower[0].mActualPower),
-                        error = OT_ERROR_NOT_FOUND);
+        otEXPECT_ACTION(mNumCalibratedPowers[chIndex] > 0, error = OT_ERROR_NOT_FOUND);
 
-        for (i = 0; i < mNumCalibratedPowers[chIndex]; i++)
-        {
-            if (targetPower >= calibratedPower[i].mActualPower)
-            {
-                break;
-            }
-        }
+        for (i = mNumCalibratedPowers[chIndex] - 1; (i >= 0) && (targetPower < calibratedPower[i].mActualPower); i--)
+            ;
+
+        otEXPECT_ACTION(i >= 0, error = OT_ERROR_NOT_FOUND);
 
         mRawPowerSetting = &calibratedPower[i].mRawPowerSetting;
         mChannel         = aChannel;
@@ -149,6 +143,21 @@ private:
         int16_t           mActualPower;
         otRawPowerSetting mRawPowerSetting;
     } OT_TOOL_PACKED_END;
+
+    bool calibratedPowerExist(struct CalibratedPower *aCalibratedPowers,
+                              uint8_t                 aNumCalibratedPowers,
+                              int16_t                 aActualPower)
+    {
+        bool ret = false;
+
+        for (uint8_t i = 0; i < aNumCalibratedPowers; i++)
+        {
+            otEXPECT_ACTION(aCalibratedPowers[i].mActualPower != aActualPower, ret = true);
+        }
+
+    exit:
+        return ret;
+    }
 
     enum
     {

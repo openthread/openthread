@@ -37,7 +37,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class manages configuration file.
+ * This class provides read/write/clear methods for key/value configuration files.
  *
  */
 class ConfigFile
@@ -49,17 +49,13 @@ public:
      * @param[in]  aFilePath  A pointer to the null-terminated file path.
      *
      */
-    explicit ConfigFile(const char *aFilePath)
-        : mFilePath(aFilePath)
-    {
-        assert(mFilePath != nullptr);
-    }
+    explicit ConfigFile(const char *aFilePath);
 
     /**
      * This method gets a configuration from the configuration file.
      *
      * @param[in]      aKey          The key string associated with the requested configuration.
-     * @param[in,out]  aIterator     A pointer to an iterator. MUST be initialized to 0 or the behavior is undefined.
+     * @param[in,out]  aIterator     A reference to an iterator. MUST be initialized to 0 or the behavior is undefined.
      * @param[out]     aValue        A pointer to where the new value string of the configuration should be read from.
      *                               The @p aValue string will be terminated with `\0` if this method returns success.
      * @param[in]      aValueLength  The max length of the data pointed to by @p aValue.
@@ -96,10 +92,11 @@ public:
 
 private:
     const char *              kCommentDelimiter = "#";
+    const char *              kSwapSuffix       = ".swap";
     static constexpr uint16_t kLineMaxSize      = 512;
     static constexpr uint16_t kFileNameMaxSize  = 255;
 
-    void RemoveGarbage(char *aString);
+    void Strip(char *aString);
 
     const char *mFilePath;
 };

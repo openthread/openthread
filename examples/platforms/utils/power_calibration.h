@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file defines the power calibration interface for OpenThread platform radio layer.
+ *   This file provides utils functions to simplify the implementation of power calibration interfaces.
  *
  */
 

@@ -687,11 +687,11 @@ LOCAL_SRC_FILES                                          := \
     src/core/common/string.cpp                              \
     src/core/utils/parse_cmdline.cpp                        \
     src/lib/platform/exit_code.c                            \
-    src/posix/platform/power.cpp                            \
     src/posix/platform/config_file.cpp                      \
+    src/posix/platform/power.cpp                            \
     tools/ot-fct/cli.cpp                                    \
-    tools/ot-fct/main.cpp                                   \
     tools/ot-fct/logging.cpp                                \
+    tools/ot-fct/main.cpp                                   \
     $(NULL)
 
 include $(BUILD_EXECUTABLE)

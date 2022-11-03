@@ -1022,3 +1022,27 @@ target_link_libraries(ot-test-tlv
 )
 
 add_test(NAME ot-test-tlv COMMAND ot-test-tlv)
+
+add_executable(ot-test-platform-utils-power-calibration
+    test_platform_utils_power_calibration.cpp
+)
+
+target_include_directories(ot-test-platform-utils-power-calibration
+    PRIVATE
+        ${COMMON_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+)
+
+target_compile_options(ot-test-platform-utils-power-calibration
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+        -DOPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE=1
+)
+
+target_link_libraries(ot-test-platform-utils-power-calibration
+    PRIVATE
+        ${COMMON_LIBS}
+        openthread-platform-utils
+)
+
+add_test(NAME ot-test-platform-utils-power-calibration COMMAND ot-test-platform-utils-power-calibration)
