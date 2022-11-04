@@ -366,9 +366,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DUA_ID>(void)
     }
     else
     {
-        for (size_t i = 0; i < sizeof(otIp6InterfaceIdentifier); i++)
+        for (uint8_t i : iid->mFields.m8)
         {
-            SuccessOrExit(error = mEncoder.WriteUint8(iid->mFields.m8[i]));
+            SuccessOrExit(error = mEncoder.WriteUint8(i));
         }
     }
 
@@ -388,9 +388,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DUA_ID>(void)
     {
         otIp6InterfaceIdentifier iid;
 
-        for (size_t i = 0; i < sizeof(otIp6InterfaceIdentifier); i++)
+        for (uint8_t &i : iid.mFields.m8)
         {
-            SuccessOrExit(error = mDecoder.ReadUint8(iid.mFields.m8[i]));
+            SuccessOrExit(error = mDecoder.ReadUint8(i));
         }
 
         SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, &iid));

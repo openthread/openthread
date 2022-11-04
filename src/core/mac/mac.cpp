@@ -1028,10 +1028,8 @@ void Mac::BeginTransmit(void)
         // copy the frame into correct `TxFrame` for each radio type
         // (if it is not already prepared).
 
-        for (uint8_t index = 0; index < GetArrayLength(RadioTypes::kAllRadioTypes); index++)
+        for (RadioType radio : RadioTypes::kAllRadioTypes)
         {
-            RadioType radio = RadioTypes::kAllRadioTypes[index];
-
             if (txFrames.GetSelectedRadioTypes().Contains(radio))
             {
                 TxFrame &txFrame = txFrames.GetTxFrame(radio);
@@ -1047,10 +1045,8 @@ void Mac::BeginTransmit(void)
         // process security for each radio type separately. This
         // allows radio links to handle security differently, e.g.,
         // with different keys or link frame counters.
-        for (uint8_t index = 0; index < GetArrayLength(RadioTypes::kAllRadioTypes); index++)
+        for (RadioType radio : RadioTypes::kAllRadioTypes)
         {
-            RadioType radio = RadioTypes::kAllRadioTypes[index];
-
             if (txFrames.GetSelectedRadioTypes().Contains(radio))
             {
                 ProcessTransmitSecurity(txFrames.GetTxFrame(radio));
