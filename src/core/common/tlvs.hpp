@@ -177,6 +177,8 @@ public:
     /**
      * This static method reads a TLV's value in a message at a given offset expecting a minimum length for the value.
      *
+     * This method can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
+     *
      * @param[in]   aMessage    The message to read from.
      * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
      * @param[out]  aValue      A buffer to output the TLV's value, must contain (at least) @p aMinLength bytes.
