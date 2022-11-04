@@ -1042,7 +1042,7 @@ target_compile_options(ot-test-platform-utils-power-calibration
 target_link_libraries(ot-test-platform-utils-power-calibration
     PRIVATE
         ${COMMON_LIBS}
-        openthread-platform-utils
+        $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 add_test(NAME ot-test-platform-utils-power-calibration COMMAND ot-test-platform-utils-power-calibration)
