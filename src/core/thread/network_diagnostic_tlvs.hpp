@@ -38,6 +38,7 @@
 
 #include <openthread/thread.h>
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
@@ -127,6 +128,18 @@ typedef UintTlvInfo<NetworkDiagnosticTlv::kMode, uint8_t> ModeTlv;
 typedef UintTlvInfo<NetworkDiagnosticTlv::kTimeout, uint32_t> TimeoutTlv;
 
 /**
+ * This class defines Network Data TLV constants and types.
+ *
+ */
+typedef TlvInfo<NetworkDiagnosticTlv::kNetworkData> NetworkDataTlv;
+
+/**
+ * This class defines IPv6 Address List TLV constants and types.
+ *
+ */
+typedef TlvInfo<NetworkDiagnosticTlv::kIp6AddressList> Ip6AddressListTlv;
+
+/**
  * This class defines Battery Level TLV constants and types.
  *
  */
@@ -137,6 +150,12 @@ typedef UintTlvInfo<NetworkDiagnosticTlv::kBatteryLevel, uint8_t> BatteryLevelTl
  *
  */
 typedef UintTlvInfo<NetworkDiagnosticTlv::kSupplyVoltage, uint16_t> SupplyVoltageTlv;
+
+/**
+ * This class defines Child Table TLV constants and types.
+ *
+ */
+typedef TlvInfo<NetworkDiagnosticTlv::kChildTable> ChildTableTlv;
 
 /**
  * This class defines Max Child Timeout TLV constants and types.
@@ -227,95 +246,6 @@ public:
         Mle::LeaderDataTlv::Init();
         ot::Tlv::SetType(kType);
     }
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Network Data TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class NetworkDataTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kNetworkData>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kNetworkData);
-        SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() < sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
-
-    /**
-     * This method returns a pointer to the Network Data.
-     *
-     * @returns A pointer to the Network Data.
-     *
-     */
-    uint8_t *GetNetworkData(void) { return mNetworkData; }
-
-    /**
-     * This method sets the Network Data.
-     *
-     * @param[in]  aNetworkData  A pointer to the Network Data.
-     *
-     */
-    void SetNetworkData(const uint8_t *aNetworkData) { memcpy(mNetworkData, aNetworkData, GetLength()); }
-
-private:
-    uint8_t mNetworkData[255];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IPv6 Address List TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class Ip6AddressListTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kIp6AddressList>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kIp6AddressList);
-        SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return !IsExtended() && (GetLength() % sizeof(Ip6::Address) == 0); }
-
-    /**
-     * This method returns a pointer to the IPv6 address entry.
-     *
-     * @param[in]  aIndex  The index into the IPv6 address list.
-     *
-     * @returns A reference to the IPv6 address.
-     *
-     */
-    const Ip6::Address &GetIp6Address(uint8_t aIndex) const
-    {
-        return *reinterpret_cast<const Ip6::Address *>(GetValue() + (aIndex * sizeof(Ip6::Address)));
-    }
-
 } OT_TOOL_PACKED_END;
 
 /**
@@ -514,26 +444,16 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChildTableEntry
+class ChildTableEntry : public Clearable<ChildTableEntry>
 {
 public:
-    /**
-     * Default constructor.
-     *
-     */
-    ChildTableEntry(void)
-        : mTimeoutRsvChildId(0)
-        , mMode(0)
-    {
-    }
-
     /**
      * This method returns the Timeout value.
      *
      * @returns The Timeout value.
      *
      */
-    uint8_t GetTimeout(void) const { return (HostSwap16(mTimeoutRsvChildId) & kTimeoutMask) >> kTimeoutOffset; }
+    uint8_t GetTimeout(void) const { return (GetTimeoutChildId() & kTimeoutMask) >> kTimeoutOffset; }
 
     /**
      * This method sets the Timeout value.
@@ -543,8 +463,7 @@ public:
      */
     void SetTimeout(uint8_t aTimeout)
     {
-        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kTimeoutMask) |
-                                        ((aTimeout << kTimeoutOffset) & kTimeoutMask));
+        SetTimeoutChildId((GetTimeoutChildId() & ~kTimeoutMask) | ((aTimeout << kTimeoutOffset) & kTimeoutMask));
     }
 
     /**
@@ -553,7 +472,7 @@ public:
      * @returns The Child ID value.
      *
      */
-    uint16_t GetChildId(void) const { return HostSwap16(mTimeoutRsvChildId) & kChildIdMask; }
+    uint16_t GetChildId(void) const { return (GetTimeoutChildId() & kChildIdMask) >> kChildIdOffset; }
 
     /**
      * This method sets the Child ID value.
@@ -563,7 +482,7 @@ public:
      */
     void SetChildId(uint16_t aChildId)
     {
-        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kChildIdMask) | (aChildId & kChildIdMask));
+        SetTimeoutChildId((GetTimeoutChildId() & ~kChildIdMask) | ((aChildId << kChildIdOffset) & kChildIdMask));
     }
 
     /**
@@ -582,106 +501,23 @@ public:
      */
     void SetMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
 
-    /**
-     * This method returns the Reserved value.
-     *
-     * @returns The Reserved value.
-     *
-     */
-    uint8_t GetReserved(void) const { return (HostSwap16(mTimeoutRsvChildId) & kReservedMask) >> kReservedOffset; }
-
-    /**
-     * This method sets the Reserved value.
-     *
-     * @param[in]  aReserved  The Reserved value.
-     *
-     */
-    void SetReserved(uint8_t aReserved)
-    {
-        mTimeoutRsvChildId = HostSwap16((HostSwap16(mTimeoutRsvChildId) & ~kReservedMask) |
-                                        ((aReserved << kReservedOffset) & kReservedMask));
-    }
-
 private:
-    static constexpr uint8_t  kTimeoutOffset  = 11;
-    static constexpr uint8_t  kReservedOffset = 9;
-    static constexpr uint16_t kTimeoutMask    = 0xf800;
-    static constexpr uint16_t kReservedMask   = 0x0600;
-    static constexpr uint16_t kChildIdMask    = 0x1ff;
+    //             1                   0
+    //   5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  | Timeout |RSV|     Child ID    |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    uint16_t mTimeoutRsvChildId;
+    static constexpr uint8_t  kTimeoutOffset = 11;
+    static constexpr uint8_t  kChildIdOffset = 0;
+    static constexpr uint16_t kTimeoutMask   = 0x1f << kTimeoutOffset;
+    static constexpr uint16_t kChildIdMask   = 0x1ff << kChildIdOffset;
+
+    uint16_t GetTimeoutChildId(void) const { return HostSwap16(mTimeoutChildId); }
+    void     SetTimeoutChildId(uint16_t aTimeoutChildIf) { mTimeoutChildId = HostSwap16(aTimeoutChildIf); }
+
+    uint16_t mTimeoutChildId;
     uint8_t  mMode;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Child Table TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ChildTableTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kChildTable>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kChildTable);
-        SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return (GetLength() % sizeof(ChildTableEntry)) == 0; }
-
-    /**
-     * This method returns the number of Child Table entries.
-     *
-     * @returns The number of Child Table entries.
-     *
-     */
-    uint8_t GetNumEntries(void) const { return GetLength() / sizeof(ChildTableEntry); }
-
-    /**
-     * This method returns the Child Table entry at @p aIndex.
-     *
-     * @param[in]  aIndex  The index into the Child Table list.
-     *
-     * @returns  A reference to the Child Table entry.
-     *
-     */
-    ChildTableEntry &GetEntry(uint16_t aIndex)
-    {
-        return *reinterpret_cast<ChildTableEntry *>(GetValue() + (aIndex * sizeof(ChildTableEntry)));
-    }
-
-    /**
-     * This method reads the Child Table entry at @p aIndex.
-     *
-     * @param[out]  aEntry      A reference to a ChildTableEntry.
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aOffset     The offset of the ChildTableTLV in aMessage.
-     * @param[in]   aIndex      The index into the Child Table list.
-     *
-     * @retval  kErrorNotFound   No such entry is found.
-     * @retval  kErrorNone       Successfully read the entry.
-     *
-     */
-    Error ReadEntry(ChildTableEntry &aEntry, const Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
-    {
-        return ((aIndex < GetNumEntries()) &&
-                (aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)), aEntry) ==
-                 kErrorNone))
-                   ? kErrorNone
-                   : kErrorInvalidArgs;
-    }
-
 } OT_TOOL_PACKED_END;
 
 /**
