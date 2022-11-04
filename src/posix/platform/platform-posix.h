@@ -524,6 +524,12 @@ extern unsigned int gBackboneNetifIndex;
  */
 bool platformInfraIfIsRunning(void);
 
+/**
+ * This function initializes backtrace module.
+ *
+ */
+void platformBacktraceInit(void);
+
 #ifdef __cplusplus
 }
 #endif
