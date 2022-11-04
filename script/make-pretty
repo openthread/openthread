@@ -135,6 +135,7 @@ readonly OT_CLANG_TIDY_CHECKS="\
 google-explicit-constructor,\
 google-readability-casting,\
 misc-unused-using-decls,\
+modernize-loop-convert,\
 modernize-use-bool-literals,\
 modernize-use-equals-default,\
 modernize-use-equals-delete,\

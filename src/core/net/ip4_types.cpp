@@ -111,14 +111,14 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
     ip6Index = aPrefixLength / CHAR_BIT;
 
-    for (uint8_t i = 0; i < Ip4::Address::kSize; i++)
+    for (uint8_t &i : mFields.m8)
     {
         if (ip6Index == kSkipIndex)
         {
             ip6Index++;
         }
 
-        mFields.m8[i] = aIp6Address.GetBytes()[ip6Index++];
+        i = aIp6Address.GetBytes()[ip6Index++];
     }
 }
 
