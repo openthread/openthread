@@ -294,3 +294,10 @@ const char *otIp6ProtoToString(uint8_t aIpProto)
 {
     return Ip6::Ip6::IpProtoToString(aIpProto);
 }
+
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstance)
+{
+    return &AsCoreType(aInstance).Get<Ip6::Ip6>().GetBorderRoutingCounters();
+}
+#endif

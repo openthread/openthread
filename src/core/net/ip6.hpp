@@ -340,6 +340,16 @@ public:
      */
     static const char *EcnToString(Ecn aEcn);
 
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    /**
+     * This method returns a reference to the Border Routing counters.
+     *
+     * @returns A reference to the Border Routing counters.
+     *
+     */
+    const otBorderRoutingCounters &GetBorderRoutingCounters(void) const { return mBorderRoutingCounters; }
+#endif
+
 private:
     static constexpr uint8_t kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
     static constexpr uint8_t kIp6ReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
@@ -384,6 +394,9 @@ private:
                         Message::Ownership aMessageOwnership);
     bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, MessageOrigin aOrigin) const;
     bool  IsOnLink(const Address &aAddress) const;
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    void UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound);
+#endif
 
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
@@ -410,6 +423,10 @@ private:
 
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     MessageQueue mReassemblyList;
+#endif
+
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    otBorderRoutingCounters mBorderRoutingCounters;
 #endif
 };
 
