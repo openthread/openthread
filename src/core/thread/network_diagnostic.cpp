@@ -163,7 +163,6 @@ exit:
     {
         LogDebg("Received diagnostic get response, error = %s", ErrorToString(aResult));
     }
-    return;
 }
 
 template <>
