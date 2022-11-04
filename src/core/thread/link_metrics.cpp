@@ -499,7 +499,6 @@ void LinkMetrics::HandleReport(const Message &     aMessage,
 
 exit:
     LogDebg("HandleReport, error:%s", ErrorToString(error));
-    return;
 }
 
 Error LinkMetrics::HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId)

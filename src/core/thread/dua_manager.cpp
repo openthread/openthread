@@ -767,8 +767,6 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         mChildDuaMask.Set(childIndex, true);
         mChildDuaRegisteredMask.Set(childIndex, false);
     }
-
-    return;
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 
