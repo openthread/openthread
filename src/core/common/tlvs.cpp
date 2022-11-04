@@ -194,14 +194,34 @@ template Error Tlv::ReadUintTlv<uint32_t>(const Message &aMessage, uint16_t aOff
 
 Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
 {
-    Error error = kErrorNone;
-    Tlv   tlv;
+    Error    error = kErrorNone;
+    Tlv      tlv;
+    uint16_t valueOffset;
+    uint16_t length;
+    uint32_t size;
 
     SuccessOrExit(error = aMessage.Read(aOffset, tlv));
-    VerifyOrExit(!tlv.IsExtended() && (tlv.GetLength() >= aMinLength), error = kErrorParse);
-    VerifyOrExit(tlv.GetSize() + aOffset <= aMessage.GetLength(), error = kErrorParse);
 
-    aMessage.ReadBytes(aOffset + sizeof(Tlv), aValue, aMinLength);
+    if (!tlv.IsExtended())
+    {
+        valueOffset = aOffset + sizeof(Tlv);
+        length      = tlv.GetLength();
+        size        = sizeof(Tlv) + length;
+    }
+    else
+    {
+        ExtendedTlv extTlv;
+
+        SuccessOrExit(error = aMessage.Read(aOffset, extTlv));
+        valueOffset = aOffset + sizeof(ExtendedTlv);
+        length      = extTlv.GetLength();
+        size        = sizeof(ExtendedTlv) + length;
+    }
+
+    VerifyOrExit(length >= aMinLength, error = kErrorParse);
+    VerifyOrExit(aOffset + size <= aMessage.GetLength(), error = kErrorParse);
+
+    aMessage.ReadBytes(valueOffset, aValue, aMinLength);
 
 exit:
     return error;
