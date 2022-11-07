@@ -44,8 +44,7 @@
 #include "common/logging.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
-
-#if defined(__linux__) && !OPENTHREAD_ENABLE_ANDROID_NDK
+#if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
 #if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 #include <log/log.h>
 #include <utils/CallStack.h>
@@ -162,9 +161,9 @@ void platformBacktraceInit(void)
     sigaction(SIGTRAP, &sigact, (struct sigaction *)nullptr);
     sigaction(SIGFPE, &sigact, (struct sigaction *)nullptr);
 }
-#else  // defined(__linux__) && !OPENTHREAD_ENABLE_ANDROID_NDK
+#else  // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
 void platformBacktraceInit(void)
 {
 }
-#endif // defined(__linux__) && !OPENTHREAD_ENABLE_ANDROID_NDK
+#endif // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
 #endif // OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
