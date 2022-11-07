@@ -54,12 +54,16 @@ namespace ot {
 
 namespace NetworkData {
 
+class Notifier;
+
 /**
  * This class implements the Thread Network Data contributed by the local device.
  *
  */
 class Local : public MutableNetworkData, private NonCopyable
 {
+    friend class Notifier;
+
 public:
     /**
      * This constructor initializes the local Network Data.
@@ -69,7 +73,6 @@ public:
      */
     explicit Local(Instance &aInstance)
         : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
-        , mOldRloc(Mac::kShortAddrInvalid)
     {
     }
 
@@ -163,23 +166,8 @@ public:
     Error RemoveService(uint32_t aEnterpriseNumber, const ServiceData &aServiceData);
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-    /**
-     * This method sends a Server Data Notification message to the Leader.
-     *
-     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone          Successfully enqueued the notification message.
-     * @retval kErrorNoBufs        Insufficient message buffers to generate the notification message.
-     * @retval kErrorInvalidState  Device is a REED and is in the process of becoming a Router.
-     * @retval kErrorNotFound      Server Data is already consistent with network data.
-     *
-     */
-    Error UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext);
-
 private:
     void UpdateRloc(void);
-    bool IsConsistent(void) const;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     Error AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType, uint16_t aFlags, bool aStable);
@@ -191,8 +179,7 @@ private:
     void UpdateRloc(ServiceTlv &aService);
 #endif
 
-    uint8_t  mTlvBuffer[kMaxSize];
-    uint16_t mOldRloc;
+    uint8_t mTlvBuffer[kMaxSize];
 };
 
 } // namespace NetworkData

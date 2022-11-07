@@ -488,23 +488,6 @@ protected:
                                             const ServiceData &aServiceData,
                                             ServiceMatchMode   aServiceMatchMode) const;
 
-    /**
-     * This method sends a Server Data Notification message to the Leader.
-     *
-     * @param[in]  aRloc16            The old RLOC16 value that was previously registered.
-     * @param[in]  aAppendNetDataTlv  Indicates whether or not to append Thread Network Data TLV to the message.
-     * @param[in]  aHandler           A function pointer that is called when the transaction ends.
-     * @param[in]  aContext           A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone     Successfully enqueued the notification message.
-     * @retval kErrorNoBufs   Insufficient message buffers to generate the notification message.
-     *
-     */
-    Error SendServerDataNotification(uint16_t              aRloc16,
-                                     bool                  aAppendNetDataTlv,
-                                     Coap::ResponseHandler aHandler,
-                                     void *                aContext) const;
-
 private:
     class NetworkDataIterator
     {

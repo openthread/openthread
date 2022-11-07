@@ -273,41 +273,6 @@ void Local::UpdateRloc(void)
     }
 }
 
-bool Local::IsConsistent(void) const
-{
-    return Get<Leader>().ContainsEntriesFrom(*this, Get<Mle::MleRouter>().GetRloc16()) &&
-           ContainsEntriesFrom(Get<Leader>(), Get<Mle::MleRouter>().GetRloc16());
-}
-
-Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext)
-{
-    Error    error = kErrorNone;
-    uint16_t rloc  = Get<Mle::MleRouter>().GetRloc16();
-
-#if OPENTHREAD_FTD
-    // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if (Get<Mle::MleRouter>().IsExpectedToBecomeRouterSoon())
-    {
-        ExitNow(error = kErrorInvalidState);
-    }
-#endif
-
-    UpdateRloc();
-
-    VerifyOrExit(!IsConsistent(), error = kErrorNotFound);
-
-    if (mOldRloc == rloc)
-    {
-        mOldRloc = Mac::kShortAddrInvalid;
-    }
-
-    SuccessOrExit(error = SendServerDataNotification(mOldRloc, /* aAppendNetDataTlv */ true, aHandler, aContext));
-    mOldRloc = rloc;
-
-exit:
-    return error;
-}
-
 } // namespace NetworkData
 } // namespace ot
 
