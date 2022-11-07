@@ -53,7 +53,7 @@ ConfigFile::ConfigFile(const char *aFilePath)
 otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength)
 {
     otError  error = OT_ERROR_NONE;
-    char     line[kLineMaxSize];
+    char     line[kLineMaxSize + 1];
     FILE *   fp = nullptr;
     char *   ret;
     long int pos;
@@ -68,13 +68,16 @@ otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aVal
         char *key;
         char *value;
 
+        // If the string exceeds the `sizeof(line) - 1`, the string will be truncated to `sizeof(line) - 1` bytes string
+        // by the function `fgets()`.
         if (strlen(line) + 1 == sizeof(line))
         {
             // The line is too long.
             continue;
         }
 
-        strtok(line, kCommentDelimiter); // Remove comments
+        // Remove comments
+        strtok(line, kCommentDelimiter);
 
         if ((str = strstr(line, "=")) == nullptr)
         {
