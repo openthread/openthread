@@ -190,7 +190,6 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
     , mIsTimeSynced(false)
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     , mRcpFailureCount(0)
-    , mRcpFailure(kRcpFailureNone)
     , mSrcMatchShortEntryCount(0)
     , mSrcMatchExtEntryCount(0)
     , mMacKeySet(false)
@@ -198,6 +197,7 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
     , mTransmitPowerSet(false)
     , mCoexEnabledSet(false)
     , mFemLnaGainSet(false)
+    , mRcpFailed(false)
     , mEnergyScanning(false)
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -1392,7 +1392,7 @@ otError RadioSpinel<InterfaceType>::Get(spinel_prop_key_t aKey, const char *aFor
         error = RequestWithPropertyFormatV(aFormat, SPINEL_CMD_PROP_VALUE_GET, aKey, nullptr, mPropertyArgs);
         va_end(mPropertyArgs);
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    } while (mRcpFailure != kRcpFailureNone);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1420,7 +1420,7 @@ otError RadioSpinel<InterfaceType>::GetWithParam(spinel_prop_key_t aKey,
                                           aParamSize);
         va_end(mPropertyArgs);
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    } while (mRcpFailure != kRcpFailureNone);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1443,7 +1443,7 @@ otError RadioSpinel<InterfaceType>::Set(spinel_prop_key_t aKey, const char *aFor
                                             mPropertyArgs);
         va_end(mPropertyArgs);
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    } while (mRcpFailure != kRcpFailureNone);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1466,7 +1466,7 @@ otError RadioSpinel<InterfaceType>::Insert(spinel_prop_key_t aKey, const char *a
                                             mPropertyArgs);
         va_end(mPropertyArgs);
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    } while (mRcpFailure != kRcpFailureNone);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -1489,7 +1489,7 @@ otError RadioSpinel<InterfaceType>::Remove(spinel_prop_key_t aKey, const char *a
                                             mPropertyArgs);
         va_end(mPropertyArgs);
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    } while (mRcpFailure != kRcpFailureNone);
+    } while (mRcpFailed);
 #endif
 
     return error;
@@ -2039,7 +2039,7 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::HandleRcpUnex
     otLogCritPlat("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    mRcpFailure = kRcpFailureUnexpectedReset;
+    mRcpFailed = true;
 #elif OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
     abort();
 #else
@@ -2052,7 +2052,7 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::HandleRcpTime
     mRadioSpinelMetrics.mRcpTimeoutCount++;
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    mRcpFailure = kRcpFailureTimeout;
+    mRcpFailed = true;
 #else
     if (!mIsReady)
     {
