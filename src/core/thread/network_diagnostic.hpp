@@ -77,6 +77,18 @@ public:
     static constexpr Iterator kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT; ///< Initializer for Iterator.
 
     /**
+     * This type represents parsed information from a Network Diagnostic TLV.
+     *
+     */
+    typedef otNetworkDiagTlv TlvInfo;
+
+    /**
+     * This structure represents parsed information from Network Diagnostic Child Table entry.
+     *
+     */
+    typedef otNetworkDiagChildEntry ChildInfo;
+
+    /**
      * This constructor initializes the object.
      *
      */
@@ -116,16 +128,18 @@ public:
      * @param[in]      aMessage         A message.
      * @param[in,out]  aIterator        The Network Diagnostic iterator. To get the first TLV set it to
      *                                  `kIteratorInit`.
-     * @param[out]     aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
+     * @param[out]     aTlvInfo         A reference to a `TlvInfo` to output the next TLV data.
      *
      * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
      * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.
      * @retval kErrorParse      Parsing the next Network Diagnostic failed.
      *
      */
-    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, otNetworkDiagTlv &aNetworkDiagTlv);
+    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
 
 private:
+    static constexpr uint16_t kMaxChildEntries = 398;
+
     enum CommandType : uint8_t
     {
         kDiagnosticGet,
