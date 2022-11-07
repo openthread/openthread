@@ -300,4 +300,9 @@ const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstan
 {
     return &AsCoreType(aInstance).Get<Ip6::Ip6>().GetBorderRoutingCounters();
 }
+
+void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
+}
 #endif

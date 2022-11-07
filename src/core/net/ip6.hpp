@@ -348,6 +348,12 @@ public:
      *
      */
     const otBorderRoutingCounters &GetBorderRoutingCounters(void) const { return mBorderRoutingCounters; }
+
+    /**
+     * This method resets the Border Routing counters.
+     *
+     */
+    void ResetBorderRoutingCounters(void) { memset(&mBorderRoutingCounters, 0, sizeof(mBorderRoutingCounters)); }
 #endif
 
 private:
