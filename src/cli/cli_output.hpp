@@ -43,6 +43,7 @@
 #include "cli_config.h"
 
 #include "common/binary_search.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -231,7 +232,7 @@ public:
      * @param[in]  ...      A variable list of arguments to format.
      *
      */
-    void OutputFormat(const char *aFormat, ...);
+    void OutputFormat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
      * This method delivers a formatted output string to the CLI console (to which it prepends a given number
@@ -242,7 +243,7 @@ public:
      * @param[in]  ...           A variable list of arguments to format.
      *
      */
-    void OutputFormat(uint8_t aIndentSize, const char *aFormat, ...);
+    void OutputFormat(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
     /**
      * This method delivers a formatted output string to the CLI console (to which it also appends newline "\r\n").
@@ -251,7 +252,7 @@ public:
      * @param[in]  ...      A variable list of arguments to format.
      *
      */
-    void OutputLine(const char *aFormat, ...);
+    void OutputLine(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
      * This method delivers a formatted output string to the CLI console (to which it prepends a given number
@@ -262,7 +263,13 @@ public:
      * @param[in]  ...           A variable list of arguments to format.
      *
      */
-    void OutputLine(uint8_t aIndentSize, const char *aFormat, ...);
+    void OutputLine(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
+
+    /**
+     * This method delivered newline "\r\n" to the CLI console.
+     *
+     */
+    void OutputNewLine(void);
 
     /**
      * This method outputs a given number of space chars to the CLI console.

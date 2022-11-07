@@ -88,7 +88,7 @@ void Output::OutputLine(const char *aFormat, ...)
     OutputFormatV(aFormat, args);
     va_end(args);
 
-    OutputFormat("\r\n");
+    OutputNewLine();
 }
 
 void Output::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
@@ -101,6 +101,11 @@ void Output::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
     OutputFormatV(aFormat, args);
     va_end(args);
 
+    OutputNewLine();
+}
+
+void Output::OutputNewLine(void)
+{
     OutputFormat("\r\n");
 }
 
@@ -124,7 +129,7 @@ void Output::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
 void Output::OutputBytesLine(const uint8_t *aBytes, uint16_t aLength)
 {
     OutputBytes(aBytes, aLength);
-    OutputLine("");
+    OutputNewLine();
 }
 
 const char *Output::Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer)
@@ -158,7 +163,7 @@ void Output::OutputUint64(uint64_t aUint64)
 void Output::OutputUint64Line(uint64_t aUint64)
 {
     OutputUint64(aUint64);
-    OutputLine("");
+    OutputNewLine();
 }
 
 void Output::OutputEnabledDisabledStatus(bool aEnabled)
@@ -180,7 +185,7 @@ void Output::OutputIp6Address(const otIp6Address &aAddress)
 void Output::OutputIp6AddressLine(const otIp6Address &aAddress)
 {
     OutputIp6Address(aAddress);
-    OutputLine("");
+    OutputNewLine();
 }
 
 void Output::OutputIp6Prefix(const otIp6Prefix &aPrefix)
@@ -195,7 +200,7 @@ void Output::OutputIp6Prefix(const otIp6Prefix &aPrefix)
 void Output::OutputIp6PrefixLine(const otIp6Prefix &aPrefix)
 {
     OutputIp6Prefix(aPrefix);
-    OutputLine("");
+    OutputNewLine();
 }
 
 void Output::OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix)
@@ -207,7 +212,7 @@ void Output::OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix)
 void Output::OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix)
 {
     OutputIp6Prefix(aPrefix);
-    OutputLine("");
+    OutputNewLine();
 }
 
 void Output::OutputSockAddr(const otSockAddr &aSockAddr)
@@ -222,7 +227,7 @@ void Output::OutputSockAddr(const otSockAddr &aSockAddr)
 void Output::OutputSockAddrLine(const otSockAddr &aSockAddr)
 {
     OutputSockAddr(aSockAddr);
-    OutputLine("");
+    OutputNewLine();
 }
 
 void Output::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)

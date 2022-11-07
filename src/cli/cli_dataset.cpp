@@ -68,12 +68,12 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsChannelMaskPresent)
     {
-        OutputLine("Channel Mask: 0x%08x", aDataset.mChannelMask);
+        OutputLine("Channel Mask: 0x%08lx", ToUlong(aDataset.mChannelMask));
     }
 
     if (aDataset.mComponents.mIsDelayPresent)
     {
-        OutputLine("Delay: %d", aDataset.mDelay);
+        OutputLine("Delay: %lu", ToUlong(aDataset.mDelay));
     }
 
     if (aDataset.mComponents.mIsExtendedPanIdPresent)
@@ -342,7 +342,7 @@ template <> otError Dataset::Process<Cmd("channelmask")>(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsChannelMaskPresent)
         {
-            OutputLine("0x%08x", sDataset.mChannelMask);
+            OutputLine("0x%08lx", ToUlong(sDataset.mChannelMask));
         }
     }
     else
@@ -435,7 +435,7 @@ template <> otError Dataset::Process<Cmd("delay")>(Arg aArgs[])
     {
         if (sDataset.mComponents.mIsDelayPresent)
         {
-            OutputLine("%d", sDataset.mDelay);
+            OutputLine("%lu", ToUlong(sDataset.mDelay));
         }
     }
     else
@@ -1083,7 +1083,7 @@ void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
         OutputFormat("R");
     }
 
-    OutputLine("");
+    OutputNewLine();
 }
 
 otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs)

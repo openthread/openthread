@@ -520,8 +520,8 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
         IgnoreError(otTcpReceiveByReference(aEndpoint, &data));
         for (; data != nullptr; data = data->mNext)
         {
-            OutputLine("TCP: Received %u bytes: %.*s", data->mLength, data->mLength,
-                       reinterpret_cast<const char *>(data->mData));
+            OutputLine("TCP: Received %u bytes: %.*s", static_cast<unsigned>(data->mLength),
+                       static_cast<unsigned>(data->mLength), reinterpret_cast<const char *>(data->mData));
             totalReceived += data->mLength;
         }
         OT_ASSERT(aBytesAvailable == totalReceived);
@@ -635,8 +635,10 @@ void TcpExample::CompleteBenchmark(void)
     uint32_t milliseconds         = TimerMilli::GetNow() - mBenchmarkStart;
     uint32_t thousandTimesGoodput = (1000 * (mBenchmarkBytesTotal << 3) + (milliseconds >> 1)) / milliseconds;
 
-    OutputLine("TCP Benchmark Complete: Transferred %u bytes in %u milliseconds", mBenchmarkBytesTotal, milliseconds);
-    OutputLine("TCP Goodput: %u.%03u kb/s", thousandTimesGoodput / 1000, thousandTimesGoodput % 1000);
+    OutputLine("TCP Benchmark Complete: Transferred %lu bytes in %lu milliseconds", ToUlong(mBenchmarkBytesTotal),
+               ToUlong(milliseconds));
+    OutputLine("TCP Goodput: %lu.%03u kb/s", ToUlong(thousandTimesGoodput / 1000),
+               static_cast<uint16_t>(thousandTimesGoodput % 1000));
     mBenchmarkBytesTotal = 0;
 }
 
