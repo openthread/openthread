@@ -134,17 +134,13 @@ public:
      *
      * @param[in]   aSource             A reference to the IPv6 source address.
      * @param[in]   aDestination        A reference to the IPv6 destination address.
-     * @param[out]  aPrefixMatchLength  A pointer to output the longest prefix match length in bits.
-     * @param[out]  aRloc16             A pointer to the RLOC16 for the selected route.
+     * @param[out]  aRloc16             A reference to return the RLOC16 for the selected route.
      *
-     * @retval kErrorNone      Successfully found a route.
+     * @retval kErrorNone      Successfully found a route. @p aRloc16 is updated.
      * @retval kErrorNoRoute   No valid route was found.
      *
      */
-    Error RouteLookup(const Ip6::Address &aSource,
-                      const Ip6::Address &aDestination,
-                      uint8_t *           aPrefixMatchLength,
-                      uint16_t *          aRloc16) const;
+    Error RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint16_t &aRloc16) const;
 
     /**
      * This method is used by non-Leader devices to set newly received Network Data from the Leader.
@@ -292,11 +288,8 @@ private:
 
     void RemoveCommissioningData(void);
 
-    Error ExternalRouteLookup(uint8_t             aDomainId,
-                              const Ip6::Address &aDestination,
-                              uint8_t *           aPrefixMatchLength,
-                              uint16_t *          aRloc16) const;
-    Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
+    Error ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const;
+    Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
     void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
 

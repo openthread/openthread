@@ -1369,8 +1369,7 @@ bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, MessageOrigin a
         shouldForward = true;
 #endif
     }
-    else if (Get<ThreadNetif>().RouteLookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), nullptr) ==
-             kErrorNone)
+    else if (Get<ThreadNetif>().RouteLookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr()) == kErrorNone)
     {
         shouldForward = true;
     }
