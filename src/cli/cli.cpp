@@ -4620,7 +4620,7 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        OutputLine("0x%04x", otThreadGetPskcRef(GetInstancePtr()));
+        OutputLine("0x%08lx", ToUlong(otThreadGetPskcRef(GetInstancePtr())));
     }
     else
     {
@@ -5040,7 +5040,7 @@ template <> otError Interpreter::Process<Cmd("networkkeyref")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        OutputLine("0x%04x", otThreadGetNetworkKeyRef(GetInstancePtr()));
+        OutputLine("0x%08lx", ToUlong(otThreadGetNetworkKeyRef(GetInstancePtr())));
     }
     else
     {
