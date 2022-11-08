@@ -61,6 +61,9 @@ RegisterLogModule("NetworkData");
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
     , mWaitingForNetDataSync(false)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    , mIsClone(false)
+#endif
     , mTimer(aInstance)
 {
     Reset();
@@ -77,6 +80,10 @@ void Leader::Reset(void)
 
 void Leader::Start(Mle::LeaderStartMode aStartMode)
 {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    OT_ASSERT(!mIsClone);
+#endif
+
     mWaitingForNetDataSync = (aStartMode == Mle::kRestoringLeaderRoleAfterReset);
 
     if (mWaitingForNetDataSync)
@@ -125,7 +132,13 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
     ChangedFlags flags;
 
     RemoveRloc(aRloc16, aMatchMode, flags);
-    IncrementVersions(flags);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (!mIsClone)
+#endif
+    {
+        IncrementVersions(flags);
+    }
 }
 
 template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -155,9 +168,15 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, cons
         VerifyOrExit(networkDataTlv.IsValid());
 
         {
+            Error       error;
             NetworkData networkData(GetInstance(), networkDataTlv.GetTlvs(), networkDataTlv.GetLength());
 
-            RegisterNetworkData(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData);
+            error = RegisterNetworkData(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData);
+
+            if (error != kErrorNone)
+            {
+                LogNote("Failed to register network data: %s", ErrorToString(error));
+            }
         }
     }
 
@@ -679,7 +698,32 @@ exit:
     return status;
 }
 
-void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+Error Leader::CanRegisterNetworkData(const NetworkData &aNetworkData, uint16_t aOldRloc16) const
+{
+    // Create a clone of the leader's network data, and try to register
+    // `aNetworkData` into the copy (as if this device itself is the
+    // leader). `mIsClone` flag is used to mark the clone and ensure
+    // that the cloned instance does interact with other OT modules,
+    // e.g., does not start timer, or does not signal version change
+    // using `Get<ot::Notifier>().Signal()`, or allocate service or
+    // context ID.
+
+    Leader leaderClone(GetInstance());
+
+    leaderClone.mIsClone = true;
+    SuccessOrAssert(CopyNetworkData(kFullSet, leaderClone));
+
+    if (aOldRloc16 != Mac::kShortAddrInvalid)
+    {
+        leaderClone.RemoveBorderRouter(aOldRloc16, kMatchModeRloc16);
+    }
+
+    return leaderClone.RegisterNetworkData(Get<Mle::Mle>().GetRloc16(), aNetworkData);
+}
+#endif
+
+Error Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData)
 {
     Error        error = kErrorNone;
     ChangedFlags flags;
@@ -712,16 +756,16 @@ void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkDa
         }
     }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    VerifyOrExit(!mIsClone);
+#endif
+
     IncrementVersions(flags);
 
     DumpDebg("Register", GetBytes(), GetLength());
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        LogNote("Failed to register network data: %s", ErrorToString(error));
-    }
+    return error;
 }
 
 Error Leader::AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags)
@@ -951,6 +995,15 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
     Error   error = kErrorNotFound;
     uint8_t serviceId;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (mIsClone)
+    {
+        aServiceId = Mle::kServiceMinId;
+        error      = kErrorNone;
+        ExitNow();
+    }
+#endif
+
     for (serviceId = Mle::kServiceMinId; serviceId <= Mle::kServiceMaxId; serviceId++)
     {
         if (FindServiceById(serviceId) == nullptr)
@@ -958,10 +1011,11 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
             aServiceId = serviceId;
             error      = kErrorNone;
             LogInfo("Allocated Service ID = %d", serviceId);
-            break;
+            ExitNow();
         }
     }
 
+exit:
     return error;
 }
 
@@ -985,6 +1039,15 @@ Error Leader::AllocateContextId(uint8_t &aContextId)
 {
     Error error = kErrorNotFound;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (mIsClone)
+    {
+        aContextId = kMinContextId;
+        error      = kErrorNone;
+        ExitNow();
+    }
+#endif
+
     for (uint8_t contextId = kMinContextId; contextId < kMinContextId + kNumContextIds; contextId++)
     {
         if ((mContextUsed & (1 << contextId)) == 0)
@@ -993,10 +1056,11 @@ Error Leader::AllocateContextId(uint8_t &aContextId)
             aContextId = contextId;
             error      = kErrorNone;
             LogInfo("Allocated Context ID = %d", contextId);
-            break;
+            ExitNow();
         }
     }
 
+exit:
     return error;
 }
 
@@ -1010,19 +1074,29 @@ void Leader::FreeContextId(uint8_t aContextId)
 
 void Leader::StartContextReuseTimer(uint8_t aContextId)
 {
-    mContextLastUsed[aContextId - kMinContextId] = TimerMilli::GetNow();
-
-    if (mContextLastUsed[aContextId - kMinContextId].GetValue() == 0)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (!mIsClone)
+#endif
     {
-        mContextLastUsed[aContextId - kMinContextId].SetValue(1);
-    }
+        mContextLastUsed[aContextId - kMinContextId] = TimerMilli::GetNow();
 
-    mTimer.Start(kStateUpdatePeriod);
+        if (mContextLastUsed[aContextId - kMinContextId].GetValue() == 0)
+        {
+            mContextLastUsed[aContextId - kMinContextId].SetValue(1);
+        }
+
+        mTimer.Start(kStateUpdatePeriod);
+    }
 }
 
 void Leader::StopContextReuseTimer(uint8_t aContextId)
 {
-    mContextLastUsed[aContextId - kMinContextId].SetValue(0);
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (!mIsClone)
+#endif
+    {
+        mContextLastUsed[aContextId - kMinContextId].SetValue(0);
+    }
 }
 
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags)
@@ -1318,6 +1392,10 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
 void Leader::HandleTimer(void)
 {
     bool contextsWaiting = false;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    VerifyOrExit(!mIsClone);
+#endif
 
     if (mWaitingForNetDataSync)
     {
