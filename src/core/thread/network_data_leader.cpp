@@ -258,6 +258,48 @@ exit:
     return error;
 }
 
+template <typename EntryType>
+int LeaderBase::CompareRouteEntries(const EntryType &aFirst, const EntryType &aSecond) const
+{
+    // `EntryType` can be `HasRouteEntry` or `BorderRouterEntry`.
+
+    return CompareRouteEntries(aFirst.GetPreference(), aFirst.GetRloc(), aSecond.GetPreference(), aSecond.GetRloc());
+}
+
+int LeaderBase::CompareRouteEntries(int8_t   aFirstPreference,
+                                    uint16_t aFirstRloc,
+                                    int8_t   aSecondPreference,
+                                    uint16_t aSecondRloc) const
+{
+    // Performs three-way comparison between two BR entries.
+
+    int      result;
+    uint16_t deviceRloc;
+
+    // Prefer the entry with higher preference.
+
+    result = ThreeWayCompare(aFirstPreference, aSecondPreference);
+    VerifyOrExit(result == 0);
+
+    deviceRloc = Get<Mle::Mle>().GetRloc16();
+
+    // If same preference, prefer the BR that is this device itself.
+
+    result = ThreeWayCompare((aFirstRloc == deviceRloc), (aSecondRloc == deviceRloc));
+    VerifyOrExit(result == 0);
+
+    // If all the same, prefer the one with lower mesh path cost.
+    // Lower cost is preferred so we pass the second entry's cost as
+    // the first argument in the call to `ThreeWayCompare()`, i.e.,
+    // if the second entry's cost is larger, we return 1 indicating
+    // that the first entry is preferred over the second one.
+
+    result = ThreeWayCompare(Get<Mle::MleRouter>().GetCost(aSecondRloc), Get<Mle::MleRouter>().GetCost(aFirstRloc));
+
+exit:
+    return result;
+}
+
 Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const
 {
     Error                error = kErrorNoRoute;
@@ -292,12 +334,7 @@ Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDe
             for (const HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
                  entry                      = entry->GetNext())
             {
-                if (bestRouteEntry == nullptr || entry->GetPreference() > bestRouteEntry->GetPreference() ||
-                    (entry->GetPreference() == bestRouteEntry->GetPreference() &&
-                     (entry->GetRloc() == Get<Mle::MleRouter>().GetRloc16() ||
-                      (bestRouteEntry->GetRloc() != Get<Mle::MleRouter>().GetRloc16() &&
-                       Get<Mle::MleRouter>().GetCost(entry->GetRloc()) <
-                           Get<Mle::MleRouter>().GetCost(bestRouteEntry->GetRloc())))))
+                if (bestRouteEntry == nullptr || CompareRouteEntries(*entry, *bestRouteEntry) > 0)
                 {
                     bestRouteEntry  = entry;
                     bestMatchLength = prefixLength;
@@ -332,11 +369,7 @@ Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16
                 continue;
             }
 
-            if (route == nullptr || entry->GetPreference() > route->GetPreference() ||
-                (entry->GetPreference() == route->GetPreference() &&
-                 (entry->GetRloc() == Get<Mle::MleRouter>().GetRloc16() ||
-                  (route->GetRloc() != Get<Mle::MleRouter>().GetRloc16() &&
-                   Get<Mle::MleRouter>().GetCost(entry->GetRloc()) < Get<Mle::MleRouter>().GetCost(route->GetRloc())))))
+            if (route == nullptr || CompareRouteEntries(*entry, *route) > 0)
             {
                 route = entry;
             }

@@ -288,6 +288,12 @@ private:
 
     void RemoveCommissioningData(void);
 
+    template <typename EntryType> int CompareRouteEntries(const EntryType &aFirst, const EntryType &aSecond) const;
+    int                               CompareRouteEntries(int8_t   aFirstPreference,
+                                                          uint16_t aFirstRloc,
+                                                          int8_t   aSecondPreference,
+                                                          uint16_t aSecondRloc) const;
+
     Error ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const;
     Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
