@@ -97,13 +97,12 @@ public:
      *
      * @param[in]   aSource       A reference to the IPv6 source address.
      * @param[in]   aDestination  A reference to the IPv6 destination address.
-     * @param[out]  aPrefixMatch  A pointer where the number of prefix match bits for the chosen route is stored.
      *
      * @retval kErrorNone      Successfully found a route.
      * @retval kErrorNoRoute   Could not find a valid route.
      *
      */
-    Error RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    Error RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination);
 
     /**
      * This method indicates whether @p aAddress matches an on-mesh prefix.

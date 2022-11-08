@@ -236,28 +236,20 @@ exit:
     return rval;
 }
 
-Error LeaderBase::RouteLookup(const Ip6::Address &aSource,
-                              const Ip6::Address &aDestination,
-                              uint8_t *           aPrefixMatchLength,
-                              uint16_t *          aRloc16) const
+Error LeaderBase::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint16_t &aRloc16) const
 {
     Error            error  = kErrorNoRoute;
     const PrefixTlv *prefix = nullptr;
 
     while ((prefix = FindNextMatchingPrefix(aSource, prefix)) != nullptr)
     {
-        if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aPrefixMatchLength, aRloc16) == kErrorNone)
+        if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aRloc16) == kErrorNone)
         {
             ExitNow(error = kErrorNone);
         }
 
         if (DefaultRouteLookup(*prefix, aRloc16) == kErrorNone)
         {
-            if (aPrefixMatchLength)
-            {
-                *aPrefixMatchLength = 0;
-            }
-
             ExitNow(error = kErrorNone);
         }
     }
@@ -266,10 +258,7 @@ exit:
     return error;
 }
 
-Error LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
-                                      const Ip6::Address &aDestination,
-                                      uint8_t *           aPrefixMatchLength,
-                                      uint16_t *          aRloc16) const
+Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const
 {
     Error                error = kErrorNoRoute;
     TlvIterator          tlvIterator(GetTlvsStart(), GetTlvsEnd());
@@ -319,23 +308,14 @@ Error LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
 
     if (bestRouteEntry != nullptr)
     {
-        if (aRloc16 != nullptr)
-        {
-            *aRloc16 = bestRouteEntry->GetRloc();
-        }
-
-        if (aPrefixMatchLength != nullptr)
-        {
-            *aPrefixMatchLength = bestMatchLength;
-        }
-
-        error = kErrorNone;
+        aRloc16 = bestRouteEntry->GetRloc();
+        error   = kErrorNone;
     }
 
     return error;
 }
 
-Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const
+Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const
 {
     Error                    error = kErrorNoRoute;
     TlvIterator              subTlvIterator(aPrefix);
@@ -365,12 +345,8 @@ Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16
 
     if (route != nullptr)
     {
-        if (aRloc16 != nullptr)
-        {
-            *aRloc16 = route->GetRloc();
-        }
-
-        error = kErrorNone;
+        aRloc16 = route->GetRloc();
+        error   = kErrorNone;
     }
 
     return error;

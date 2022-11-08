@@ -617,8 +617,8 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
     }
     else
     {
-        IgnoreError(Get<NetworkData::Leader>().RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), nullptr,
-                                                           &mMeshDest));
+        IgnoreError(
+            Get<NetworkData::Leader>().RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), mMeshDest));
     }
 
     VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = kErrorDrop);
