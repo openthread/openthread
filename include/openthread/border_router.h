@@ -169,6 +169,35 @@ otError otBorderRouterGetNextRoute(otInstance            *aInstance,
 otError otBorderRouterRegister(otInstance *aInstance);
 
 /**
+ * Function pointer callback which is invoked when Network Data (local or leader) gets full.
+ *
+ *  @param[in] aContext A pointer to arbitrary context information.
+ *
+ */
+typedef void (*otBorderRouterNetDataFullCallback)(void *aContext);
+
+/**
+ * Sets the callback to indicate when Network Data gets full.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL`.
+ *
+ * The callback is invoked whenever:
+ * - The device is acting as a leader and receives a Network Data registration from a Border Router (BR) that it cannot
+ *   add to Network Data (running out of space).
+ * - The device is acting as a BR and new entries cannot be added to its local Network Data.
+ * - The device is acting as a BR and tries to register its local Network Data entries with the leader, but determines
+ *    that its local entries will not fit.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aCallback    The callback.
+ * @param[in]  aContext     A pointer to arbitrary context information used with @p aCallback.
+ *
+ */
+void otBorderRouterSetNetDataFullCallback(otInstance                       *aInstance,
+                                          otBorderRouterNetDataFullCallback aCallback,
+                                          void                             *aContext);
+
+/**
  * @}
  *
  */

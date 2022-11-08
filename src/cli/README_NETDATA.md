@@ -170,6 +170,39 @@ unpublish
 Done
 ```
 
+### full
+
+Usage: `netdata full`
+
+Print "yes" or "no" flag tracking whether or not "network data full" callback has been invoked since start of Thread operation or since last time `netdata full reset` was used to reset the flag.
+
+This command requires `OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL`.
+
+The "network data full callback" is invoked whenever:
+
+- The device is acting as a leader and receives a Network Data registration from a Border Router (BR) that it cannot add to Network Data (running out of space).
+- The device is acting as a BR and new entries cannot be added to its local Network Data.
+- The device is acting as a BR and tries to register its local Network Data entries with the leader, but determines that its local entries will not fit.
+
+```
+> netdata full
+no
+Done
+```
+
+### full reset
+
+Usage: `netdata full reset`
+
+Reset the flag tracking whether "network data full" callback was invoked.
+
+This command requires `OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL`.
+
+```
+> netdata full reset
+Done
+```
+
 ### length
 
 Usage: `netdata length`
