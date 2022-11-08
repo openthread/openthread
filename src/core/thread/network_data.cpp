@@ -635,42 +635,6 @@ void MutableNetworkData::RemoveTlv(NetworkDataTlv *aTlv)
     Remove(aTlv, aTlv->GetSize());
 }
 
-Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
-                                              bool                  aAppendNetDataTlv,
-                                              Coap::ResponseHandler aHandler,
-                                              void *                aContext) const
-{
-    Error            error = kErrorNone;
-    Coap::Message *  message;
-    Tmf::MessageInfo messageInfo(GetInstance());
-
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriServerData);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    if (aAppendNetDataTlv)
-    {
-        ThreadTlv tlv;
-        tlv.SetType(ThreadTlv::kThreadNetworkData);
-        tlv.SetLength(mLength);
-        SuccessOrExit(error = message->Append(tlv));
-        SuccessOrExit(error = message->AppendBytes(mTlvs, mLength));
-    }
-
-    if (aRloc16 != Mac::kShortAddrInvalid)
-    {
-        SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
-    }
-
-    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
-
-    LogInfo("Sent server data notification");
-
-exit:
-    FreeMessageOnError(message, error);
-    return error;
-}
-
 Error NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const
 {
     Error               error;

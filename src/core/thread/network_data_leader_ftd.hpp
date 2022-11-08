@@ -163,19 +163,6 @@ public:
      */
     const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
 
-    /**
-     * This method sends SVR_DATA.ntf message for any stale child entries that exist in the network data.
-     *
-     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone      A stale child entry was found and successfully enqueued a SVR_DATA.ntf message.
-     * @retval kErrorNoBufs    A stale child entry was found, but insufficient message buffers were available.
-     * @retval kErrorNotFound  No stale child entries were found.
-     *
-     */
-    Error RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext);
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
      * This method indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.

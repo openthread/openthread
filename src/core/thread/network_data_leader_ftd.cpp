@@ -1352,29 +1352,6 @@ exit:
     return;
 }
 
-Error Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext)
-{
-    Error    error    = kErrorNotFound;
-    Iterator iterator = kIteratorInit;
-    uint16_t rloc16;
-
-    VerifyOrExit(Get<Mle::MleRouter>().IsRouterOrLeader());
-
-    while (GetNextServer(iterator, rloc16) == kErrorNone)
-    {
-        if (!Mle::IsActiveRouter(rloc16) && Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
-            Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == nullptr)
-        {
-            // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.
-            error = SendServerDataNotification(rloc16, /* aAppendNetDataTlv */ false, aHandler, aContext);
-            ExitNow();
-        }
-    }
-
-exit:
-    return error;
-}
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix)
 {
