@@ -93,7 +93,7 @@ void VerifyRlocsArray(const uint16_t *aRlocs, uint16_t aRlocsLength, const uint1
 
     printf("\nRLOCs: { ");
 
-    for (uint8_t index = 0; index < aRlocsLength; index++)
+    for (uint16_t index = 0; index < aRlocsLength; index++)
     {
         VerifyOrQuit(aRlocs[index] == aExpectedRlocs[index]);
         printf("0x%04x ", aRlocs[index]);
