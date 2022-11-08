@@ -163,6 +163,28 @@ public:
      */
     const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    /**
+     * This method checks whether a given Network Data can be successfully registered into leader's Network Data.
+     *
+     * This method is used to determine whether there is still room in Network Data to register @p aNetworkData
+     * entries. The @p aNetworkData MUST follow the format of local Network Data (e.g., all entries associated with the
+     * RLOC16 of this device).
+     *
+     * Input @p aOldRloc16 can be used to indicate the old RLOC16 of the device. If provided, then entries matching old
+     * RLOC16 are first removed, before checking if new entries from @p aNetworkData can fit.
+     *
+     * @param[in] aNetworkData   The Network Data to check if can be registered.
+     * @param[in] aOldRloc16     Indicates the old RLOC16 of this device. `Mac::kShortAddrInvalid` is no old RLOC16.
+     *
+     * @retval kErrorNone     The @p aNetworkData can be registered (there is still room in Network Data).
+     * @retval kErrorNotBufs  No more room in Network Data to register new entries.
+     * @retval kErrorParse    The TLVs in @p aNetworkData are not well-formed.
+     *
+     */
+    Error CanRegisterNetworkData(const NetworkData &aNetworkData, uint16_t aOldRloc16) const;
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
      * This method indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
@@ -210,7 +232,7 @@ private:
 
     void HandleTimer(void);
 
-    void RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
+    Error RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
 
     Error AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
     Error AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
@@ -291,7 +313,10 @@ private:
     static constexpr uint32_t kStateUpdatePeriod   = 60 * 1000;    // State update period in milliseconds
     static constexpr uint32_t kMaxNetDataSyncWait  = 60 * 1000;    // Maximum time to wait for netdata sync.
 
-    bool        mWaitingForNetDataSync;
+    bool mWaitingForNetDataSync : 1;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    bool mIsClone : 1;
+#endif
     uint16_t    mContextUsed;
     TimeMilli   mContextLastUsed[kNumContextIds];
     uint32_t    mContextIdReuseDelay;

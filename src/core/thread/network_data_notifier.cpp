@@ -53,6 +53,11 @@ Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance)
     , mSynchronizeDataTask(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    , mNetDataFullTask(aInstance)
+    , mNetDataFullCallback(nullptr)
+    , mNetDataFullCallbackContext(nullptr)
+#endif
     , mNextDelay(0)
     , mOldRloc(Mac::kShortAddrInvalid)
     , mWaitingForResponse(false)
@@ -201,6 +206,13 @@ Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkDat
         tlv.SetLength(aNetworkData->GetLength());
         SuccessOrExit(error = message->Append(tlv));
         SuccessOrExit(error = message->AppendBytes(aNetworkData->GetBytes(), aNetworkData->GetLength()));
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        if (Get<Leader>().CanRegisterNetworkData(*aNetworkData, aOldRloc16) == kErrorNoBufs)
+        {
+            SignalNetworkDataFull();
+        }
+#endif
     }
 
     if (aOldRloc16 != Mac::kShortAddrInvalid)
@@ -272,6 +284,22 @@ void Notifier::HandleCoapResponse(Error aResult)
         OT_ASSERT(false);
     }
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+void Notifier::SetNetDataFullCallback(NetDataCallback aCallback, void *aContext)
+{
+    mNetDataFullCallback        = aCallback;
+    mNetDataFullCallbackContext = aContext;
+}
+
+void Notifier::HandleNetDataFull(void)
+{
+    if (mNetDataFullCallback != nullptr)
+    {
+        mNetDataFullCallback(mNetDataFullCallbackContext);
+    }
+}
+#endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
 
