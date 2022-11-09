@@ -2481,10 +2481,76 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
      */
     if (aArgs[0].IsEmpty())
     {
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+        OutputLine("br");
+#endif
         OutputLine("ip");
         OutputLine("mac");
         OutputLine("mle");
     }
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    /**
+     * @cli counters br
+     * @code
+     * counters br
+     * Inbound Unicast: Packets 4 Bytes 320
+     * Inbound Multicast: Packets 0 Bytes 0
+     * Outbound Unicast: Packets 2 Bytes 160
+     * Outbound Multicast: Packets 0 Bytes 0
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otIp6GetBorderRoutingCounters
+     */
+    else if (aArgs[0] == "br")
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            struct BrCounterName
+            {
+                const otPacketsAndBytes otBorderRoutingCounters::*mPacketsAndBytes;
+                const char *                                      mName;
+            };
+
+            static const BrCounterName kCounterNames[] = {
+                {&otBorderRoutingCounters::mInboundUnicast, "Inbound Unicast"},
+                {&otBorderRoutingCounters::mInboundMulticast, "Inbound Multicast"},
+                {&otBorderRoutingCounters::mOutboundUnicast, "Outbound Unicast"},
+                {&otBorderRoutingCounters::mOutboundMulticast, "Outbound Multicast"},
+            };
+
+            const otBorderRoutingCounters *brCounters = otIp6GetBorderRoutingCounters(GetInstancePtr());
+            Uint64StringBuffer             uint64StringBuffer;
+
+            for (const BrCounterName &counter : kCounterNames)
+            {
+                OutputFormat("%s:", counter.mName);
+                OutputFormat(" Packets %s",
+                             Uint64ToString((brCounters->*counter.mPacketsAndBytes).mPackets, uint64StringBuffer));
+                OutputFormat(" Bytes %s",
+                             Uint64ToString((brCounters->*counter.mPacketsAndBytes).mBytes, uint64StringBuffer));
+                OutputNewLine();
+            }
+        }
+        /**
+         * @cli counters br reset
+         * @code
+         * counters br reset
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otIp6ResetBorderRoutingCounters
+         */
+        else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
+        {
+            otIp6ResetBorderRoutingCounters(GetInstancePtr());
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+#endif
     /**
      * @cli counters (mac)
      * @code

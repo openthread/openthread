@@ -886,6 +886,14 @@ typedef struct otBorderRoutingCounters
 const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstance);
 
 /**
+ * Resets the Border Routing counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ */
+void otIp6ResetBorderRoutingCounters(otInstance *aInstance);
+
+/**
  * @}
  *
  */

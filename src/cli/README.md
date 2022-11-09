@@ -834,6 +834,7 @@ Get the supported counter names.
 
 ```bash
 > counters
+br
 ip
 mac
 mle
@@ -844,7 +845,10 @@ Done
 
 Get the counter value.
 
-Note: `OPENTHREAD_CONFIG_UPTIME_ENABLE` is required for MLE role time tracking in `counters mle`
+Note:
+
+- `OPENTHREAD_CONFIG_UPTIME_ENABLE` is required for MLE role time tracking in `counters mle`
+- `OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE` is required for `counters br`
 
 ```bash
 > counters mac
@@ -902,6 +906,12 @@ TxSuccess: 10
 TxFailed: 0
 RxSuccess: 5
 RxFailed: 0
+Done
+> counters br
+Inbound Unicast: Packets 4 Bytes 320
+Inbound Multicast: Packets 0 Bytes 0
+Outbound Unicast: Packets 2 Bytes 160
+Outbound Multicast: Packets 0 Bytes 0
 Done
 ```
 
