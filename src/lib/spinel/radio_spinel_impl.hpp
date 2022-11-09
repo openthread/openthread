@@ -2546,11 +2546,11 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
     unpacked = spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &data, &len);
     VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
-    start += Snprintf(start, end - start, "%s, flg:0x%x, tid:%u, cmd:%s", prefix, SPINEL_HEADER_GET_FLAG(header),
-                      SPINEL_HEADER_GET_TID(header), spinel_command_to_cstr(cmd));
+    start += Snprintf(start, static_cast<uint32_t>(end - start), "%s, flg:0x%x, tid:%u, cmd:%s", prefix,
+                      SPINEL_HEADER_GET_FLAG(header), SPINEL_HEADER_GET_TID(header), spinel_command_to_cstr(cmd));
     VerifyOrExit(cmd != SPINEL_CMD_RESET);
 
-    start += Snprintf(start, end - start, ", key:%s", spinel_prop_key_to_cstr(key));
+    start += Snprintf(start, static_cast<uint32_t>(end - start), ", key:%s", spinel_prop_key_to_cstr(key));
     VerifyOrExit(cmd != SPINEL_CMD_PROP_VALUE_GET);
 
     switch (key)
@@ -2561,7 +2561,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &status);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", status:%s", spinel_status_to_cstr(status));
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", status:%s", spinel_status_to_cstr(status));
     }
     break;
 
@@ -2574,7 +2574,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_BOOL_S, &enabled);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", enabled:%u", enabled);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", enabled:%u", enabled);
     }
     break;
 
@@ -2609,7 +2609,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
             break;
         }
 
-        start += Snprintf(start, end - start, ", %s:%d", name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%d", name, value);
     }
     break;
 
@@ -2644,7 +2644,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
             break;
         }
 
-        start += Snprintf(start, end - start, ", %s:%u", name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, value);
     }
     break;
 
@@ -2678,7 +2678,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
             break;
         }
 
-        start += Snprintf(start, end - start, ", %s:0x%04x", name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:0x%04x", name, value);
     }
     break;
 
@@ -2686,11 +2686,11 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
     {
         uint16_t saddr;
 
-        start += Snprintf(start, end - start, ", saddr:");
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", saddr:");
 
         if (len < sizeof(saddr))
         {
-            start += Snprintf(start, end - start, "none");
+            start += Snprintf(start, static_cast<uint32_t>(end - start), "none");
         }
         else
         {
@@ -2700,7 +2700,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
                 VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
                 data += unpacked;
                 len -= static_cast<spinel_size_t>(unpacked);
-                start += Snprintf(start, end - start, "0x%04x ", saddr);
+                start += Snprintf(start, static_cast<uint32_t>(end - start), "0x%04x ", saddr);
             }
         }
     }
@@ -2716,7 +2716,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
         name = (key == SPINEL_PROP_RCP_TIMESTAMP) ? "timestamp" : "counter";
-        start += Snprintf(start, end - start, ", %s:%u", name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, value);
     }
     break;
 
@@ -2730,7 +2730,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
         name = (key == SPINEL_PROP_RADIO_CAPS) ? "caps" : "version";
-        start += Snprintf(start, end - start, ", %s:%u", name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, value);
     }
     break;
 
@@ -2745,7 +2745,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
         name = (key == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT) ? "rssi" : "power";
-        start += Snprintf(start, end - start, ", channel:%u, %s:%d", channel, name, value);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", channel:%u, %s:%d", channel, name, value);
     }
     break;
 
@@ -2753,7 +2753,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
     {
         unsigned int capability;
 
-        start += Snprintf(start, end - start, ", caps:");
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", caps:");
 
         while (len > 0)
         {
@@ -2761,7 +2761,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
             data += unpacked;
             len -= static_cast<spinel_size_t>(unpacked);
-            start += Snprintf(start, end - start, "%s ", spinel_capability_to_cstr(capability));
+            start += Snprintf(start, static_cast<uint32_t>(end - start), "%s ", spinel_capability_to_cstr(capability));
         }
     }
     break;
@@ -2774,7 +2774,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S,
                                           &major, &minor);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", major:%u, minor:%u", major, minor);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", major:%u, minor:%u", major, minor);
     }
     break;
 
@@ -2802,7 +2802,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
             maskLength -= static_cast<spinel_size_t>(unpacked);
         }
 
-        start += Snprintf(start, end - start, ", channelMask:0x%08x", channelMask);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", channelMask:0x%08x", channelMask);
     }
     break;
 
@@ -2812,7 +2812,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UTF8_S, &version);
         VerifyOrExit(unpacked >= 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", version:%s", version);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", version:%s", version);
     }
     break;
 
@@ -2842,14 +2842,15 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
                                               &flags, &frame.mChannel, &frame.mInfo.mRxInfo.mLqi,
                                               &frame.mInfo.mRxInfo.mTimestamp, &receiveError);
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-            start += Snprintf(start, end - start, ", len:%u, rssi:%d ...", frame.mLength, frame.mInfo.mRxInfo.mRssi);
+            start += Snprintf(start, static_cast<uint32_t>(end - start), ", len:%u, rssi:%d ...", frame.mLength,
+                              frame.mInfo.mRxInfo.mRssi);
             otLogDebgPlat("%s", buf);
 
             start = buf;
-            start +=
-                Snprintf(start, end - start, "... noise:%d, flags:0x%04x, channel:%u, lqi:%u, timestamp:%lu, rxerr:%u",
-                         noiseFloor, flags, frame.mChannel, frame.mInfo.mRxInfo.mLqi,
-                         static_cast<unsigned long>(frame.mInfo.mRxInfo.mTimestamp), receiveError);
+            start += Snprintf(start, static_cast<uint32_t>(end - start),
+                              "... noise:%d, flags:0x%04x, channel:%u, lqi:%u, timestamp:%lu, rxerr:%u", noiseFloor,
+                              flags, frame.mChannel, frame.mInfo.mRxInfo.mLqi,
+                              static_cast<unsigned long>(frame.mInfo.mRxInfo.mTimestamp), receiveError);
         }
         else if (cmd == SPINEL_CMD_PROP_VALUE_SET)
         {
@@ -2875,13 +2876,13 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
                 &frame.mInfo.mTxInfo.mTxDelay, &frame.mInfo.mTxInfo.mTxDelayBaseTime);
 
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-            start +=
-                Snprintf(start, end - start, ", len:%u, channel:%u, maxbackoffs:%u, maxretries:%u ...", frame.mLength,
-                         frame.mChannel, frame.mInfo.mTxInfo.mMaxCsmaBackoffs, frame.mInfo.mTxInfo.mMaxFrameRetries);
+            start += Snprintf(start, static_cast<uint32_t>(end - start),
+                              ", len:%u, channel:%u, maxbackoffs:%u, maxretries:%u ...", frame.mLength, frame.mChannel,
+                              frame.mInfo.mTxInfo.mMaxCsmaBackoffs, frame.mInfo.mTxInfo.mMaxFrameRetries);
             otLogDebgPlat("%s", buf);
 
             start = buf;
-            start += Snprintf(start, end - start,
+            start += Snprintf(start, static_cast<uint32_t>(end - start),
                               "... csmaCaEnabled:%u, isHeaderUpdated:%u, isARetx:%u, skipAes:%u"
                               ", txDelay:%u, txDelayBase:%u",
                               csmaCaEnabled, isHeaderUpdated, isARetx, skipAes, frame.mInfo.mTxInfo.mTxDelay,
@@ -2899,7 +2900,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         assert(stringLength < sizeof(debugString));
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         debugString[stringLength] = '\0';
-        start += Snprintf(start, end - start, ", debug:%s", debugString);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", debug:%s", debugString);
     }
     break;
 
@@ -2915,7 +2916,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT8_S, &logLevel);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", level:%u, log:%s", logLevel, logString);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", level:%u, log:%s", logLevel, logString);
     }
     break;
 
@@ -2926,7 +2927,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UTF8_S, &output, &outputLen);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", diag:%s", output);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", diag:%s", output);
     }
     break;
 
@@ -2947,8 +2948,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
                                           &keyIdMode, &keyId, prevKey.m8, &prevKeyLen, currKey.m8, &currKeyLen,
                                           nextKey.m8, &nextKeyLen);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", keyIdMode:%u, keyId:%u, prevKey:***, currKey:***, nextKey:***",
-                          keyIdMode, keyId);
+        start += Snprintf(start, static_cast<uint32_t>(end - start),
+                          ", keyIdMode:%u, keyId:%u, prevKey:***, currKey:***, nextKey:***", keyIdMode, keyId);
     }
     break;
 
@@ -2962,8 +2963,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
         name = (key == SPINEL_PROP_HWADDR) ? "eui64" : "laddr";
-        start += Snprintf(start, end - start, ", %s:%02x%02x%02x%02x%02x%02x%02x%02x", name, m8[0], m8[1], m8[2], m8[3],
-                          m8[4], m8[5], m8[6], m8[7]);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%02x%02x%02x%02x%02x%02x%02x%02x", name,
+                          m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
     }
     break;
 
@@ -2971,11 +2972,11 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
     {
         uint8_t m8[OT_EXT_ADDRESS_SIZE];
 
-        start += Snprintf(start, end - start, ", extaddr:");
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", extaddr:");
 
         if (len < sizeof(m8))
         {
-            start += Snprintf(start, end - start, "none");
+            start += Snprintf(start, static_cast<uint32_t>(end - start), "none");
         }
         else
         {
@@ -2985,8 +2986,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
                 VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
                 data += unpacked;
                 len -= static_cast<spinel_size_t>(unpacked);
-                start += Snprintf(start, end - start, "%02x%02x%02x%02x%02x%02x%02x%02x ", m8[0], m8[1], m8[2], m8[3],
-                                  m8[4], m8[5], m8[6], m8[7]);
+                start += Snprintf(start, static_cast<uint32_t>(end - start), "%02x%02x%02x%02x%02x%02x%02x%02x ", m8[0],
+                                  m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7]);
             }
         }
     }
@@ -3049,7 +3050,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         otLogDebgPlat(" stopped:%u", metrics.mStopped);
 
         start = buf;
-        start += Snprintf(start, end - start, " grantGlitch:%u", metrics.mNumGrantGlitch);
+        start += Snprintf(start, static_cast<uint32_t>(end - start), " grantGlitch:%u", metrics.mNumGrantGlitch);
     }
     break;
 
@@ -3061,11 +3062,11 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_DATA_S, channels, &size);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", channels:");
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", channels:");
 
         for (uint8_t i = 0; i < size; i++)
         {
-            start += Snprintf(start, end - start, "%u ", channels[i]);
+            start += Snprintf(start, static_cast<uint32_t>(end - start), "%u ", channels[i]);
         }
     }
     break;
@@ -3080,8 +3081,9 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
             data, len, SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT8_S, &saddr, m8, &flags);
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-        start += Snprintf(start, end - start, ", saddr:%04x, extaddr:%02x%02x%02x%02x%02x%02x%02x%02x, flags:0x%02x",
-                          saddr, m8[0], m8[1], m8[2], m8[3], m8[4], m8[5], m8[6], m8[7], flags);
+        start += Snprintf(start, static_cast<uint32_t>(end - start),
+                          ", saddr:%04x, extaddr:%02x%02x%02x%02x%02x%02x%02x%02x, flags:0x%02x", saddr, m8[0], m8[1],
+                          m8[2], m8[3], m8[4], m8[5], m8[6], m8[7], flags);
     }
     break;
     }
