@@ -294,6 +294,10 @@ void Notifier::SetNetDataFullCallback(NetDataCallback aCallback, void *aContext)
 
 void Notifier::HandleNetDataFull(void)
 {
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    Get<Publisher>().HandleNetDataFull();
+#endif
+
     if (mNetDataFullCallback != nullptr)
     {
         mNetDataFullCallback(mNetDataFullCallbackContext);

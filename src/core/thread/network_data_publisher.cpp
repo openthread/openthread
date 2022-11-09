@@ -59,6 +59,10 @@ Publisher::Publisher(Instance &aInstance)
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mDnsSrpServiceEntry(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    , mMode(kNormalOperation)
+    , mModeTimer(aInstance)
+#endif
     , mTimer(aInstance)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -107,6 +111,13 @@ Error Publisher::PublishExternalRoute(const ExternalRouteConfig &aConfig, Reques
 
     entry->Publish(aConfig, aRequester);
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    if (mMode == kOptimizeNetData)
+    {
+        OptimizeNetDataUse();
+    }
+#endif
+
 exit:
     return error;
 }
@@ -134,6 +145,13 @@ Error Publisher::UnpublishPrefix(const Ip6::Prefix &aPrefix)
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
     entry->Unpublish();
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    if (mMode == kOptimizeNetData)
+    {
+        OptimizeNetDataUse();
+    }
+#endif
 
 exit:
     return error;
@@ -215,6 +233,257 @@ void Publisher::NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix
 {
     mPrefixCallback.InvokeIfSet(static_cast<otNetDataPublisherEvent>(aEvent), &aPrefix);
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+
+bool Publisher::CompactPrefix::Matches(const SubPrefixMatcher &aMatcher) const
+{
+    // Perform a strict sub-prefix match, i.e., check whether the
+    // prefix from `aMatcher` has a shorter length and is contained
+    // in `mPrefix`.
+
+    return (mPrefix.GetLength() > aMatcher.mPrefix.GetLength()) && mPrefix.ContainsPrefix(aMatcher.mPrefix);
+}
+
+const uint8_t Publisher::CompactPrefixLength::kLengths[] = {48, 10, 8};
+
+Error Publisher::CompactPrefixLength::SelectNext(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mIndex != GetArrayLength(kLengths) - 1, error = kErrorNotFound);
+    mIndex++;
+
+exit:
+    return error;
+}
+
+void Publisher::HandleNetDataFull(void)
+{
+    switch (mMode)
+    {
+    case kNormalOperation:
+        mCompactPrefixLength.Reset();
+        LogInfo("Netdata is full, trying to optimize route entries using plen %u", mCompactPrefixLength.Get());
+        break;
+
+    case kRecoverFromOptimize:
+        LogInfo("Netdata is still full, re-entering optimized mode");
+        break;
+
+    case kOptimizeNetData:
+        if (mCompactPrefixLength.SelectNext() != kErrorNone)
+        {
+            LogWarn("Netdata is still full even using the shortest compact len %u", mCompactPrefixLength.Get());
+            ExitNow();
+        }
+
+        LogInfo("Netdata is still full - switching to shorter compact len %u", mCompactPrefixLength.Get());
+        break;
+    }
+
+    mMode = kOptimizeNetData;
+    OptimizeNetDataUse();
+    mModeTimer.Start(Random::NonCrypto::AddJitter(kOptimizeNetDataRecoveryAttemptInterval,
+                                                  static_cast<uint16_t>(kOptimizeNetDataRecoveryJitter)));
+
+exit:
+    return;
+}
+
+void Publisher::OptimizeNetDataUse(void)
+{
+    bool                 didOptimize = false;
+    CompactPrefixesArray oldPrefixes;
+
+    OT_ASSERT(mMode == kOptimizeNetData);
+
+    for (PrefixEntry &entry : mPrefixEntries)
+    {
+        if (entry.Optimize() == kErrorNone)
+        {
+            didOptimize = true;
+        }
+    }
+
+    if (!didOptimize)
+    {
+        LogInfo("No optimizable route entries - entering normal mode");
+        EnterNormalMode();
+        ExitNow();
+    }
+
+    oldPrefixes = mCompactPrefixes;
+
+    while (DetermineCompactPrefixes() != kErrorNone)
+    {
+        if (mCompactPrefixLength.SelectNext() == kErrorNone)
+        {
+            LogInfo("Failed to determine compact prefixes - trying  with shorter len %u", mCompactPrefixLength.Get());
+        }
+        else
+        {
+            LogWarn("Too few compact prefix entries in array even using shortest len %u", mCompactPrefixLength.Get());
+            break;
+        }
+    }
+
+    // First remove all the prefixes in old array that are no longer
+    // seen in new `mCompactPrefixes`.
+
+    for (const CompactPrefix &oldPrefix : oldPrefixes)
+    {
+        if (!mCompactPrefixes.ContainsMatching(oldPrefix))
+        {
+            IgnoreError(Get<Local>().RemoveHasRoutePrefix(oldPrefix.GetPrefix()));
+            LogInfo("Removing old compact prefix %s", oldPrefix.ToString().AsCString());
+        }
+    }
+
+    // Then add all new prefixes in `mCompactPrefixes` that were not
+    // present in the old array.
+
+    for (const CompactPrefix &newPrefix : mCompactPrefixes)
+    {
+        if (!oldPrefixes.ContainsMatching(newPrefix))
+        {
+            ExternalRouteConfig config;
+
+            config.Clear();
+            config.mPrefix = newPrefix.GetPrefix();
+            config.mStable = true;
+
+            IgnoreError(Get<Local>().AddHasRoutePrefix(config));
+            LogInfo("Adding new compact prefix %s", newPrefix.ToString().AsCString());
+        }
+    }
+
+exit:
+    return;
+}
+
+Error Publisher::DetermineCompactPrefixes(void)
+{
+    Error   error           = kErrorNone;
+    uint8_t targetPrefixLen = mCompactPrefixLength.Get();
+
+    mCompactPrefixes.Clear();
+
+    for (const PrefixEntry &entry : mPrefixEntries)
+    {
+        Ip6::Prefix newPrefix;
+        bool        shouldAdd = true;
+
+        if (!entry.IsOptimized())
+        {
+            continue;
+        }
+
+        newPrefix = entry.GetPrefix();
+
+        if (newPrefix.GetLength() < targetPrefixLen)
+        {
+            // Remove all existing compact prefixes in the array that
+            // can be covered by the new shorter prefix.
+
+            mCompactPrefixes.RemoveAllMatching(SubPrefixMatcher(newPrefix));
+        }
+        else
+        {
+            newPrefix.SetLength(targetPrefixLen);
+        }
+
+        // Check if the new prefix is covered by an existing compact
+        // prefix in the `mCompactPrefixes`.
+
+        for (const CompactPrefix &compactPrefix : mCompactPrefixes)
+        {
+            if (newPrefix.ContainsPrefix(compactPrefix.GetPrefix()))
+            {
+                shouldAdd = false;
+                break;
+            }
+        }
+
+        if (shouldAdd)
+        {
+            CompactPrefix *newEntry = mCompactPrefixes.PushBack();
+
+            VerifyOrExit(newEntry != nullptr, error = kErrorNoBufs);
+            newEntry->SetPrefix(newPrefix);
+        }
+    }
+
+exit:
+    return error;
+}
+
+void Publisher::EnterNormalMode(void)
+{
+    bool didRemove = false;
+
+    VerifyOrExit(mMode != kNormalOperation);
+
+    for (const CompactPrefix &compactPrefix : mCompactPrefixes)
+    {
+        bool found = false;
+
+        for (const PrefixEntry &entry : mPrefixEntries)
+        {
+            if (entry.IsInUse() && entry.IsExternalRoute() && compactPrefix.Matches(entry.GetPrefix()))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            LogInfo("Removing compact prefix %s used while optimizing netdata", compactPrefix.ToString().AsCString());
+            IgnoreError(Get<Local>().RemoveHasRoutePrefix(compactPrefix.GetPrefix()));
+            didRemove = true;
+        }
+    }
+
+    if (didRemove)
+    {
+        Get<Notifier>().HandleServerDataUpdated();
+    }
+
+    mCompactPrefixes.Clear();
+    mMode = kNormalOperation;
+
+exit:
+    return;
+}
+
+void Publisher::HandleModeTimer(void)
+{
+    switch (mMode)
+    {
+    case kNormalOperation:
+        break;
+
+    case kOptimizeNetData:
+        LogInfo("Optimizing netdata use - check if we can re-add optimized entries");
+
+        for (PrefixEntry &entry : mPrefixEntries)
+        {
+            entry.ReaddIfOptimized();
+        }
+
+        mMode = kRecoverFromOptimize;
+        mModeTimer.Start(kOptimizeNetDataRecoveryWaitInterval);
+        break;
+
+    case kRecoverFromOptimize:
+        LogInfo("Optimizing netdata use - no error after recovery, entering normal mode");
+        EnterNormalMode();
+        break;
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
@@ -349,6 +618,9 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
             SetState(kAdded);
         }
         break;
+
+    case kOptimized:
+        break;
     }
 }
 
@@ -470,6 +742,7 @@ const char *Publisher::Entry::StateToString(State aState)
         "Adding",   // (2) kAdding
         "Added",    // (3) kAdded
         "Removing", // (4) kRemoving
+        "Optimize", // (5) kOptimized
     };
 
     static_assert(0 == kNoEntry, "kNoEntry value is not correct");
@@ -477,6 +750,7 @@ const char *Publisher::Entry::StateToString(State aState)
     static_assert(2 == kAdding, "kAdding value is not correct");
     static_assert(3 == kAdded, "kAdded value is not correct");
     static_assert(4 == kRemoving, "kRemoving value is not correct");
+    static_assert(5 == kOptimized, "kOptimized value is not correct");
 
     return kStateStrings[aState];
 }
@@ -1050,6 +1324,51 @@ void Publisher::PrefixEntry::CountExternalRouteEntries(uint8_t &aNumEntries, uin
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+
+Error Publisher::PrefixEntry::Optimize(void)
+{
+    // Optimize external route entries not marked as NAT64 prefix
+    // (exclude the default route `::/0`).
+
+    Error               error = kErrorNotCapable;
+    ExternalRouteConfig config;
+
+    VerifyOrExit(IsInUse() && (mType == kTypeExternalRoute));
+
+    VerifyOrExit(mPrefix.mLength > 0);
+
+    config.SetFromTlvFlags(static_cast<uint8_t>(mFlags));
+    VerifyOrExit(!config.mNat64);
+
+    Remove(/* aNextState */ kOptimized);
+    error = kErrorNone;
+
+    // If the optimized route prefix entry itself happens to be one of
+    // the compact prefixes (determined and added earlier), we remove
+    // it from `mCompactPrefixes` array since it now removed from
+    // netdata. It may be added again once the new list of compact
+    // prefixes is determined.
+
+    Get<Publisher>().mCompactPrefixes.RemoveMatching(mPrefix);
+
+exit:
+    return error;
+}
+
+void Publisher::PrefixEntry::ReaddIfOptimized(void)
+{
+    VerifyOrExit(GetState() == kOptimized);
+
+    SetState(kToAdd);
+    Process();
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 

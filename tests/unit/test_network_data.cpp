@@ -922,6 +922,645 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
     testFreeInstance(instance);
 }
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+
+// Logs a message and adds current time (sNow) as "<hours>:<min>:<secs>.<msec>"
+#define Log(...)                                                                                         \
+    printf("%02u:%02u:%02u.%03u " OT_FIRST_ARG(__VA_ARGS__) "\n", (sNow / 3600000), (sNow / 60000) % 60, \
+           (sNow / 1000) % 60, sNow % 1000 OT_REST_ARGS(__VA_ARGS__))
+
+static Instance *sInstance;
+
+static uint32_t sNow = 0;
+static uint32_t sAlarmTime;
+static bool     sAlarmOn = false;
+
+static otRadioFrame sRadioTxFrame;
+static uint8_t      sRadioTxFramePsdu[OT_RADIO_FRAME_MAX_SIZE];
+static bool         sRadioTxOngoing = false;
+
+static bool sNetDataFullCallbackInvoked = false;
+
+extern "C" {
+
+otError otPlatRadioTransmit(otInstance *, otRadioFrame *)
+{
+    sRadioTxOngoing = true;
+
+    return OT_ERROR_NONE;
+}
+
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *)
+{
+    return &sRadioTxFrame;
+}
+
+void otPlatAlarmMilliStop(otInstance *)
+{
+    sAlarmOn = false;
+}
+
+void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+{
+    sAlarmOn   = true;
+    sAlarmTime = aT0 + aDt;
+}
+
+uint32_t otPlatAlarmMilliGetNow(void)
+{
+    return sNow;
+}
+
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
+    va_list args;
+
+    printf("   ");
+    va_start(args, aFormat);
+    vprintf(aFormat, args);
+    va_end(args);
+    printf("\n");
+}
+#endif
+}
+
+void ProcessRadioTxAndTasklets(void)
+{
+    do
+    {
+        if (sRadioTxOngoing)
+        {
+            sRadioTxOngoing = false;
+            otPlatRadioTxStarted(sInstance, &sRadioTxFrame);
+            otPlatRadioTxDone(sInstance, &sRadioTxFrame, nullptr, OT_ERROR_NONE);
+        }
+
+        otTaskletsProcess(sInstance);
+    } while (otTaskletsArePending(sInstance));
+}
+
+void AdvanceTime(uint32_t aDuration)
+{
+    uint32_t time = sNow + aDuration;
+
+    Log("AdvanceTime for %u.%03u", aDuration / 1000, aDuration % 1000);
+
+    while (TimeMilli(sAlarmTime) <= TimeMilli(time))
+    {
+        ProcessRadioTxAndTasklets();
+        sNow = sAlarmTime;
+        otPlatAlarmMilliFired(sInstance);
+    }
+
+    ProcessRadioTxAndTasklets();
+    sNow = time;
+}
+
+void HandleNetDataFull(void *aContext)
+{
+    VerifyOrQuit(aContext == sInstance);
+    Log("Network data full callback is invoked");
+    sNetDataFullCallbackInvoked = true;
+}
+
+Ip6::Prefix PrefixFromString(const char *aString, uint8_t aPrefixLength)
+{
+    Ip6::Prefix prefix;
+
+    SuccessOrQuit(AsCoreType(&prefix.mPrefix).FromString(aString));
+    prefix.mLength = aPrefixLength;
+
+    return prefix;
+}
+
+void TestNetworkDataPublisherOptimizeOnFull(void)
+{
+    constexpr uint8_t  kMaxPrefixes      = 9;
+    constexpr uint32_t kRecoveryWaitTime = 5 * 60 * 60 * 1000; // 5 hours in msec
+
+    const Ip6::Prefix onMeshPrefix  = PrefixFromString("2000:abba:0::", 64);
+    const Ip6::Prefix commonPrefix  = PrefixFromString("fd00:007:0:0::", 56);
+    const Ip6::Prefix routePrefix1  = PrefixFromString("fd00:0:0:1111::", 64);
+    const Ip6::Prefix routePrefix2  = PrefixFromString("fd00:0:0:2222::", 64);
+    const Ip6::Prefix compactPrefix = PrefixFromString("fd00:0:0::", 48);
+
+    Iterator            iter = kIteratorInit;
+    Ip6::Prefix         prefix;
+    OnMeshPrefixConfig  prefixConfig;
+    ExternalRouteConfig routeConfig;
+    uint8_t             count;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataPublisherOptimizeOnFull()\n");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Initialize OT instance.
+
+    sNow      = 0;
+    sInstance = static_cast<Instance *>(testInitInstance());
+
+    memset(&sRadioTxFrame, 0, sizeof(sRadioTxFrame));
+    sRadioTxFrame.mPsdu = sRadioTxFramePsdu;
+
+    SuccessOrQuit(otLinkSetPanId(sInstance, 0x1234));
+    SuccessOrQuit(otIp6SetEnabled(sInstance, true));
+    SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+
+    sInstance->Get<Notifier>().SetNetDataFullCallback(HandleNetDataFull, sInstance);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Ensure device starts as leader.
+
+    AdvanceTime(10000);
+    VerifyOrQuit(otThreadGetDeviceRole(sInstance) == OT_DEVICE_ROLE_LEADER);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Publish one on-mesh and one external route prefix.
+
+    Log("Publish on-mesh %s and route %s", onMeshPrefix.ToString().AsCString(), routePrefix1.ToString().AsCString());
+
+    prefixConfig.Clear();
+    prefixConfig.mPrefix    = onMeshPrefix;
+    prefixConfig.mStable    = true;
+    prefixConfig.mPreferred = true;
+    prefixConfig.mOnMesh    = true;
+    prefixConfig.mSlaac     = true;
+
+    SuccessOrQuit(sInstance->Get<Publisher>().PublishOnMeshPrefix(prefixConfig, Publisher::kFromUser));
+
+    routeConfig.Clear();
+    routeConfig.mStable = true;
+    routeConfig.mPrefix = routePrefix1;
+    SuccessOrQuit(sInstance->Get<Publisher>().PublishExternalRoute(routeConfig, Publisher::kFromUser));
+
+    AdvanceTime(5000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate that network data contains all published prefixes.
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextOnMeshPrefix(iter, prefixConfig));
+    VerifyOrQuit(prefixConfig.GetPrefix() == onMeshPrefix);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextOnMeshPrefix(iter, prefixConfig) != kErrorNone);
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig));
+    VerifyOrQuit(routeConfig.GetPrefix() == routePrefix1);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Fill up the network data by adding 9 more prefixes.
+
+    for (count = 0; count < kMaxPrefixes; count++)
+    {
+        prefixConfig.Clear();
+        prefixConfig.mStable                       = true;
+        prefixConfig.mPreferred                    = true;
+        prefixConfig.mPrefix                       = commonPrefix;
+        prefixConfig.mPrefix.mLength               = 64;
+        prefixConfig.mPrefix.mPrefix.mFields.m8[7] = count;
+
+        SuccessOrQuit(sInstance->Get<Local>().AddOnMeshPrefix(prefixConfig));
+
+        Log("Added prefix %s to local netdata (count = %u)", prefixConfig.GetPrefix().ToString().AsCString(), count);
+    }
+
+    sInstance->Get<Notifier>().HandleServerDataUpdated();
+
+    AdvanceTime(2000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate that network data  contains the previous published prefixes
+    // and all newly added ones.
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig));
+    VerifyOrQuit(routeConfig.GetPrefix() == routePrefix1);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    iter  = kIteratorInit;
+    count = 0;
+
+    while (sInstance->Get<Leader>().GetNextOnMeshPrefix(iter, prefixConfig) == kErrorNone)
+    {
+        VerifyOrQuit(prefixConfig.GetPrefix() == onMeshPrefix || prefixConfig.GetPrefix().ContainsPrefix(commonPrefix));
+        count++;
+    }
+
+    VerifyOrQuit(count == kMaxPrefixes + 1);
+
+    VerifyOrQuit(!sNetDataFullCallbackInvoked);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Now publish a new external route. This will push the network data
+    // to get full.
+
+    routeConfig.Clear();
+    routeConfig.mStable = true;
+    routeConfig.mPrefix = routePrefix2;
+    SuccessOrQuit(sInstance->Get<Publisher>().PublishExternalRoute(routeConfig, Publisher::kFromUser));
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sNetDataFullCallbackInvoked);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate that network data now contains a compact /48 prefix
+    // instead of the two published prefixes. The on-mesh prefixes
+    // should remain unchanged.
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig));
+    VerifyOrQuit(routeConfig.GetPrefix() == compactPrefix);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    iter  = kIteratorInit;
+    count = 0;
+
+    while (sInstance->Get<Leader>().GetNextOnMeshPrefix(iter, prefixConfig) == kErrorNone)
+    {
+        VerifyOrQuit(prefixConfig.GetPrefix() == onMeshPrefix || prefixConfig.GetPrefix().ContainsPrefix(commonPrefix));
+        count++;
+    }
+
+    VerifyOrQuit(count == kMaxPrefixes + 1);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for recovery wait time (5 hours). Validate that the
+    // compact /48 route prefix is still included in network data.
+
+    sNetDataFullCallbackInvoked = false;
+    AdvanceTime(kRecoveryWaitTime);
+
+    VerifyOrQuit(sNetDataFullCallbackInvoked);
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig));
+    VerifyOrQuit(routeConfig.GetPrefix() == compactPrefix);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Unpublish the two prefixes. Make sure that the compact
+    // route is now removed.
+
+    SuccessOrQuit(sInstance->Get<Publisher>().UnpublishPrefix(routePrefix1));
+    SuccessOrQuit(sInstance->Get<Publisher>().UnpublishPrefix(routePrefix2));
+
+    AdvanceTime(10000);
+
+    iter = kIteratorInit;
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Publish the two prefixes again. Check that network data gets full and
+    // the optimization logic replaces the routes with the compact prefix
+
+    sNetDataFullCallbackInvoked = false;
+
+    routeConfig.Clear();
+    routeConfig.mStable = true;
+    routeConfig.mPrefix = routePrefix1;
+    SuccessOrQuit(sInstance->Get<Publisher>().PublishExternalRoute(routeConfig, Publisher::kFromUser));
+
+    routeConfig.mPrefix = routePrefix2;
+    SuccessOrQuit(sInstance->Get<Publisher>().PublishExternalRoute(routeConfig, Publisher::kFromUser));
+
+    AdvanceTime(10000);
+
+    VerifyOrQuit(sNetDataFullCallbackInvoked);
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig));
+    VerifyOrQuit(routeConfig.GetPrefix() == compactPrefix);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove all of the added on-mesh prefixes
+
+    for (count = 0; count < kMaxPrefixes; count++)
+    {
+        prefix                       = commonPrefix;
+        prefix.mLength               = 64;
+        prefix.mPrefix.mFields.m8[7] = count;
+
+        SuccessOrQuit(sInstance->Get<Local>().RemoveOnMeshPrefix(prefix));
+
+        Log("Remove prefix %s from local netdata (count = %u)", prefix.ToString().AsCString(), count);
+    }
+
+    sNetDataFullCallbackInvoked = false;
+    sInstance->Get<Notifier>().HandleServerDataUpdated();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for recovery wait time (5 hours). Now that the
+    // on-mesh prefixes are removed, the recovery should
+    // restore the published prefixes and remove the compact
+    // route.
+
+    AdvanceTime(kRecoveryWaitTime);
+
+    VerifyOrQuit(!sNetDataFullCallbackInvoked);
+
+    iter  = kIteratorInit;
+    count = 0;
+
+    while (sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) == kErrorNone)
+    {
+        VerifyOrQuit(routeConfig.GetPrefix() == routePrefix1 || routeConfig.GetPrefix() == routePrefix2);
+        count++;
+    }
+
+    VerifyOrQuit(count == 2);
+
+    SuccessOrQuit(sInstance->Get<Publisher>().UnpublishPrefix(routePrefix1));
+    SuccessOrQuit(sInstance->Get<Publisher>().UnpublishPrefix(routePrefix2));
+
+    AdvanceTime(10000);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Repeat the test but this time publish the compaxt /48 prefix
+    // as one of the two prefixes itself.
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Fill up the network data by adding prefixes again.
+
+    for (count = 0; count < kMaxPrefixes; count++)
+    {
+        prefixConfig.Clear();
+        prefixConfig.mStable                       = true;
+        prefixConfig.mPreferred                    = true;
+        prefixConfig.mPrefix                       = commonPrefix;
+        prefixConfig.mPrefix.mLength               = 64;
+        prefixConfig.mPrefix.mPrefix.mFields.m8[7] = count;
+
+        SuccessOrQuit(sInstance->Get<Local>().AddOnMeshPrefix(prefixConfig));
+
+        Log("Added prefix %s to local netdata (count = %u)", prefixConfig.GetPrefix().ToString().AsCString(), count);
+    }
+
+    sInstance->Get<Notifier>().HandleServerDataUpdated();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Publish two external routes, this time one of them is the
+    // compact /48 route.
+
+    sNetDataFullCallbackInvoked = false;
+
+    routeConfig.Clear();
+    routeConfig.mStable = true;
+    routeConfig.mPrefix = routePrefix1;
+    SuccessOrQuit(sInstance->Get<Publisher>().PublishExternalRoute(routeConfig, Publisher::kFromUser));
+
+    routeConfig.Clear();
+    routeConfig.mStable = true;
+    routeConfig.mPrefix = compactPrefix;
+    SuccessOrQuit(sInstance->Get<Publisher>().PublishExternalRoute(routeConfig, Publisher::kFromUser));
+
+    AdvanceTime(10000);
+
+    VerifyOrQuit(sNetDataFullCallbackInvoked);
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig));
+    VerifyOrQuit(routeConfig.GetPrefix() == compactPrefix);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for recovery wait time (5 hours). Validate that the
+    // compact route prefix is still included in network data.
+
+    sNetDataFullCallbackInvoked = false;
+    AdvanceTime(kRecoveryWaitTime);
+
+    VerifyOrQuit(sNetDataFullCallbackInvoked);
+
+    iter = kIteratorInit;
+    SuccessOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig));
+    VerifyOrQuit(routeConfig.GetPrefix() == compactPrefix);
+    VerifyOrQuit(sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) != kErrorNone);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove all of the added on-mesh prefixes
+
+    for (count = 0; count < kMaxPrefixes; count++)
+    {
+        prefix                       = commonPrefix;
+        prefix.mLength               = 64;
+        prefix.mPrefix.mFields.m8[7] = count;
+
+        SuccessOrQuit(sInstance->Get<Local>().RemoveOnMeshPrefix(prefix));
+
+        Log("Remove prefix %s from local netdata (count = %u)", prefix.ToString().AsCString(), count);
+    }
+
+    sNetDataFullCallbackInvoked = false;
+    sInstance->Get<Notifier>().HandleServerDataUpdated();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for recovery wait time (5 hours). Now that the
+    // on-mesh prefixes are removed, the recovery should
+    // restore the published prefixes one of which is
+    // the compact route itself.
+
+    AdvanceTime(kRecoveryWaitTime);
+
+    VerifyOrQuit(!sNetDataFullCallbackInvoked);
+
+    iter  = kIteratorInit;
+    count = 0;
+
+    while (sInstance->Get<Leader>().GetNextExternalRoute(iter, routeConfig) == kErrorNone)
+    {
+        VerifyOrQuit(routeConfig.GetPrefix() == routePrefix1 || routeConfig.GetPrefix() == compactPrefix);
+        count++;
+    }
+
+    VerifyOrQuit(count == 2);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize  OT instance.
+
+    Log("TestNetworkDataPublisherOptimizeOnFull passed");
+
+    SuccessOrQuit(otIp6SetEnabled(sInstance, false));
+    SuccessOrQuit(otThreadSetEnabled(sInstance, false));
+    SuccessOrQuit(otInstanceErasePersistentInfo(sInstance));
+    testFreeInstance(sInstance);
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+class UnitTester
+{
+public:
+    struct PrefixArray
+    {
+        const Ip6::Prefix *mArray;
+        uint8_t            mLength;
+    };
+
+#define ArrayEntry(name)            \
+    {                               \
+        name, OT_ARRAY_LENGTH(name) \
+    }
+
+    static constexpr uint8_t kNumCompactLengths = 2;
+
+    struct TestCase
+    {
+        PrefixArray mPrefixes;
+        PrefixArray mCompactPrefixesList[kNumCompactLengths];
+    };
+
+    static void TestCompactPrefix(void)
+    {
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        const Ip6::Prefix kTest1Prefixes[] = {
+            PrefixFromString("fd00:0:0:ffff::", 64),
+            PrefixFromString("fd00:0:0:1111::", 64),
+        };
+
+        const Ip6::Prefix kTest1Compacts48[] = {
+            PrefixFromString("fd00:0:0::", 48),
+        };
+
+        const Ip6::Prefix kTest1Compacts10[] = {
+            PrefixFromString("fd00::", 10),
+        };
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        const Ip6::Prefix kTest2Prefixes[] = {
+            PrefixFromString("fd00:0:a:0::", 64),
+            PrefixFromString("fd00:0:b:0::", 64),
+            PrefixFromString("fd00:0:a:1::", 64),
+            PrefixFromString("fd00:0:b:1::", 64),
+        };
+
+        const Ip6::Prefix kTest2Compacts48[] = {
+            PrefixFromString("fd00:0:a::", 48),
+            PrefixFromString("fd00:0:b::", 48),
+        };
+
+        const Ip6::Prefix kTest2Compacts10[] = {
+            PrefixFromString("fd00::", 10),
+        };
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        const Ip6::Prefix kTest3Prefixes[] = {
+            PrefixFromString("fd00:0:a:0::", 64),
+            PrefixFromString("fd00:0:b:0::", 64),
+            PrefixFromString("fd00:0::", 32),
+            PrefixFromString("fd00:0:c::", 48),
+            PrefixFromString("fd00:0:c:1::", 64),
+            PrefixFromString("fd01:0:0:d::", 64),
+            PrefixFromString("::", 0),
+        };
+
+        const Ip6::Prefix kTest3Compacts48[] = {
+            PrefixFromString("fd00:0::", 32),
+            PrefixFromString("fd01:0:0::", 48),
+
+        };
+
+        const Ip6::Prefix kTest3Compacts10[] = {
+            PrefixFromString("fd00::", 10),
+        };
+
+        //- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        const Ip6::Prefix kTest4Prefixes[] = {
+            PrefixFromString("fda0:a:a:a::", 64), PrefixFromString("fdb0:b:b:b::", 64),
+            PrefixFromString("fd70:7:7::", 48),   PrefixFromString("fd90:9::", 32),
+            PrefixFromString("fda0:a::", 32),     PrefixFromString("2001:0:0:1::", 64),
+            PrefixFromString("2001:0:0:2::", 64),
+        };
+
+        const Ip6::Prefix kTest4Compacts48[] = {
+            PrefixFromString("fda0:a::", 32), PrefixFromString("fdb0:b:b::", 48), PrefixFromString("fd70:7:7::", 48),
+            PrefixFromString("fd90:9::", 32), PrefixFromString("2001:0:0::", 48),
+        };
+
+        const Ip6::Prefix kTest4Compacts10[] = {
+            PrefixFromString("fd80::", 10),
+            PrefixFromString("fd70::", 10),
+            PrefixFromString("2000::", 10),
+        };
+
+        const TestCase testCases[] = {
+            {ArrayEntry(kTest1Prefixes), {ArrayEntry(kTest1Compacts48), ArrayEntry(kTest1Compacts10)}},
+            {ArrayEntry(kTest2Prefixes), {ArrayEntry(kTest2Compacts48), ArrayEntry(kTest2Compacts10)}},
+            {ArrayEntry(kTest3Prefixes), {ArrayEntry(kTest3Compacts48), ArrayEntry(kTest3Compacts10)}},
+            {ArrayEntry(kTest4Prefixes), {ArrayEntry(kTest4Compacts48), ArrayEntry(kTest4Compacts10)}},
+        };
+
+        Instance *          instance  = static_cast<Instance *>(testInitInstance());
+        Publisher &         publisher = instance->Get<Publisher>();
+        ExternalRouteConfig routeConfig;
+        uint8_t             index;
+
+        printf("\n\n-------------------------------------------------");
+        printf("\nTestCompactPrefix()\n");
+
+        routeConfig.Clear();
+        routeConfig.mStable = true;
+
+        for (const TestCase &testCase : testCases)
+        {
+            printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - ");
+            printf("\nPrefixes:");
+
+            for (index = 0; index < testCase.mPrefixes.mLength; index++)
+            {
+                const Ip6::Prefix &prefix = testCase.mPrefixes.mArray[index];
+
+                printf("\n  %2d) %s", index + 1, prefix.ToString().AsCString());
+                routeConfig.mPrefix = prefix;
+                SuccessOrQuit(publisher.PublishExternalRoute(routeConfig, Publisher::kFromRoutingManager));
+            }
+
+            for (const PrefixArray &compactPrefixes : testCase.mCompactPrefixesList)
+            {
+                publisher.HandleNetDataFull();
+
+                printf("\nCompact Prefixes:");
+                index = 0;
+
+                for (const Publisher::CompactPrefix &compactPrefix : publisher.mCompactPrefixes)
+                {
+                    printf("\n  %2d) %s", ++index, compactPrefix.ToString().AsCString());
+                }
+
+                // Make sure we see the correct set of compact prefixes
+                // in `Publisher`.
+
+                VerifyOrQuit(index == compactPrefixes.mLength);
+
+                for (index = 0; index < compactPrefixes.mLength; index++)
+                {
+                    VerifyOrQuit(publisher.mCompactPrefixes.ContainsMatching(compactPrefixes.mArray[index]));
+                }
+            }
+
+            for (index = 0; index < testCase.mPrefixes.mLength; index++)
+            {
+                SuccessOrQuit(publisher.UnpublishPrefix(testCase.mPrefixes.mArray[index]));
+            }
+
+            VerifyOrQuit(publisher.mCompactPrefixes.IsEmpty());
+        }
+
+        testFreeInstance(instance);
+    }
+};
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -933,6 +1572,12 @@ int main(void)
 #endif
     ot::NetworkData::TestNetworkDataDsnSrpServices();
     ot::NetworkData::TestNetworkDataDsnSrpAnycastSeqNumSelection();
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    ot::NetworkData::TestNetworkDataPublisherOptimizeOnFull();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    ot::NetworkData::UnitTester::TestCompactPrefix();
+#endif
+#endif
 
     printf("\nAll tests passed\n");
     return 0;

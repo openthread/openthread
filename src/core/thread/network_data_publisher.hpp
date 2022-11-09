@@ -43,6 +43,17 @@
             "or OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE"
 #endif
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#error "OPTIMIZE_ROUTES_ON_FULL_NETDATA requires OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE"
+#endif
+#if !OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+#error "OPTIMIZE_ROUTES_ON_FULL_NETDATA requires OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL"
+#endif
+
+#endif
+
 #include <openthread/netdata_publisher.h>
 
 #include "border_router/routing_manager.hpp"
@@ -61,6 +72,9 @@
 namespace ot {
 namespace NetworkData {
 
+class Notifier;
+class UnitTester;
+
 /**
  * This class implements the Network Data Publisher.
  *
@@ -71,6 +85,8 @@ namespace NetworkData {
 class Publisher : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class Notifier;
+    friend class UnitTester;
 
 public:
     /**
@@ -296,11 +312,12 @@ private:
     protected:
         enum State : uint8_t
         {
-            kNoEntry,  // Entry is unused (there is no entry).
-            kToAdd,    // Entry is ready to be added, monitoring network data to decide if/when to add it.
-            kAdding,   // Entry is being added in network data (random wait interval before add).
-            kAdded,    // Entry is added in network data, monitoring to determine if/when to remove.
-            kRemoving, // Entry is being removed from network data (random wait interval before remove).
+            kNoEntry,   // Entry is unused (there is no entry).
+            kToAdd,     // Entry is ready to be added, monitoring network data to decide if/when to add it.
+            kAdding,    // Entry is being added in network data (random wait interval before add).
+            kAdded,     // Entry is added in network data, monitoring to determine if/when to remove.
+            kRemoving,  // Entry is being removed from network data (random wait interval before remove).
+            kOptimized, // Entry is replaced with a compact prefix to optimize network data use.
         };
 
         // All intervals are in milliseconds.
@@ -425,6 +442,7 @@ private:
     public:
         void      Init(Instance &aInstance) { Entry::Init(aInstance); }
         bool      IsInUse(void) const { return GetState() != kNoEntry; }
+        bool      IsOptimized(void) const { return GetState() == kOptimized; }
         bool      Matches(const Ip6::Prefix &aPrefix) const { return mPrefix == aPrefix; }
         void      Publish(const OnMeshPrefixConfig &aConfig, Requester aRequester);
         void      Publish(const ExternalRouteConfig &aConfig, Requester aRequester);
@@ -432,6 +450,14 @@ private:
         void      Unpublish(void);
         void      HandleTimer(void) { Entry::HandleTimer(); }
         void      HandleNotifierEvents(Events aEvents);
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+        Error              Optimize(void);
+        void               ReaddIfOptimized(void);
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        bool               IsExternalRoute(void) const { return (mType == kTypeExternalRoute); }
+
+#endif
 
     private:
         static constexpr uint8_t kDesiredNumOnMeshPrefix =
@@ -460,6 +486,71 @@ private:
         Ip6::Prefix mPrefix;
         uint16_t    mFlags;
     };
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    static constexpr uint8_t kMaxCompactPrefixEntries = 20;
+
+    // All intervals are in msec
+    static constexpr uint32_t kOptimizeNetDataRecoveryAttemptInterval =
+        OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_MODE_RECOVERY_ATTEMPT_INTERVAL;
+    static constexpr uint32_t kOptimizeNetDataRecoveryJitter =
+        OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_MODE_RECOVERY_JITTER;
+    static constexpr uint32_t kOptimizeNetDataRecoveryWaitInterval = 1 * Time::kOneMinuteInMsec;
+
+    enum Mode : uint8_t{
+        kNormalOperation,
+        kOptimizeNetData,
+        kRecoverFromOptimize,
+    };
+
+    struct SubPrefixMatcher
+    {
+        explicit SubPrefixMatcher(const Ip6::Prefix &aPrefix)
+            : mPrefix(aPrefix)
+        {
+        }
+
+        const Ip6::Prefix &mPrefix;
+    };
+
+    class CompactPrefix
+    {
+    public:
+        using InfoString = Ip6::Prefix::InfoString;
+
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        void               SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
+        InfoString         ToString(void) const { return mPrefix.ToString(); }
+
+        bool Matches(const Ip6::Prefix &aPrefix) const { return aPrefix == mPrefix; }
+        bool Matches(const CompactPrefix &aCompactPrefix) const { return Matches(aCompactPrefix.mPrefix); }
+        bool Matches(const SubPrefixMatcher &aMatcher) const;
+
+    private:
+        Ip6::Prefix mPrefix;
+    };
+
+    typedef Array<CompactPrefix, kMaxCompactPrefixEntries> CompactPrefixesArray;
+
+    class CompactPrefixLength
+    {
+    public:
+        CompactPrefixLength(void)
+            : mIndex(0)
+        {
+        }
+
+        uint8_t Get(void) const { return kLengths[mIndex]; }
+        void    Reset(void) { mIndex = 0; }
+        Error   SelectNext(void);
+
+    private:
+        static const uint8_t kLengths[];
+
+        uint8_t mIndex;
+    };
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -472,7 +563,16 @@ private:
     const PrefixEntry *FindMatchingPrefixEntry(const Ip6::Prefix &aPrefix) const;
     bool               IsAPrefixEntry(const Entry &aEntry) const;
     void               NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix) const;
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    void  HandleNetDataFull(void);
+    void  OptimizeNetDataUse(void);
+    Error DetermineCompactPrefixes(void);
+    void  EnterNormalMode(void);
+    void  HandleModeTimer(void);
+
+    using ModeTimer = TimerMilliIn<Publisher, &Publisher::HandleModeTimer>;
 #endif
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
     TimerMilli &GetTimer(void) { return mTimer; }
     void        HandleNotifierEvents(Events aEvents);
@@ -487,7 +587,15 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     PrefixEntry              mPrefixEntries[kMaxUserPrefixEntries + kMaxRoutingManagerPrefixEntries];
     Callback<PrefixCallback> mPrefixCallback;
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES_ON_FULL_NETDATA
+    CompactPrefixesArray mCompactPrefixes;
+    CompactPrefixLength  mCompactPrefixLength;
+    Mode                 mMode;
+    ModeTimer            mModeTimer;
 #endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
     PublisherTimer mTimer;
 };
