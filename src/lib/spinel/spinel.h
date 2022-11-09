@@ -4831,6 +4831,9 @@ typedef uint32_t spinel_prop_key_t;
 // ----------------------------------------------------------------------------
 
 #define SPINEL_HEADER_FLAG 0x80
+#define SPINEL_HEADER_FLAGS_SHIFT 6
+#define SPINEL_HEADER_FLAGS_MASK (3 << SPINEL_HEADER_FLAGS_SHIFT)
+#define SPINEL_HEADER_GET_FLAG(x) (((x)&SPINEL_HEADER_FLAGS_MASK) >> SPINEL_HEADER_FLAGS_SHIFT)
 
 #define SPINEL_HEADER_TID_SHIFT 0
 #define SPINEL_HEADER_TID_MASK (15 << SPINEL_HEADER_TID_SHIFT)
