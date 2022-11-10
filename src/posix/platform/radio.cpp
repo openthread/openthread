@@ -575,6 +575,46 @@ exit:
     return error;
 }
 
+otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode)
+{
+    otError error;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+
+    snprintf(cmd, sizeof(cmd), "gpio mode %d %s", aGpio, aMode == OT_GPIO_MODE_INPUT ? "in" : "out");
+    SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, nullptr, 0));
+
+exit:
+    return error;
+}
+
+otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode)
+{
+    otError error;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+    char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    char *  str;
+
+    snprintf(cmd, sizeof(cmd), "gpio mode %d", aGpio);
+    SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, output, sizeof(output)));
+    VerifyOrExit((str = strtok(output, "\r")) != nullptr, error = OT_ERROR_FAILED);
+
+    if (strcmp(str, "in") == 0)
+    {
+        *aMode = OT_GPIO_MODE_INPUT;
+    }
+    else if (strcmp(str, "out") == 0)
+    {
+        *aMode = OT_GPIO_MODE_OUTPUT;
+    }
+    else
+    {
+        error = OT_ERROR_FAILED;
+    }
+
+exit:
+    return error;
+}
+
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);

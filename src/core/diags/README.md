@@ -179,6 +179,34 @@ The parameter `value` has to be `0` or `1`.
 Done
 ```
 
+### diag gpio mode \<gpio\>
+
+Get the gpio mode.
+
+```bash
+> diag gpio mode 1
+in
+Done
+```
+
+### diag gpio mode \<gpio\> in
+
+Sets the given gpio to the input mode without pull resistor.
+
+```bash
+> diag gpio mode 1 in
+Done
+```
+
+### diag gpio mode \<gpio\> out
+
+Sets the given gpio to the output mode.
+
+```bash
+> diag gpio mode 1 out
+Done
+```
+
 ### diag stop
 
 Stop diagnostics mode and print statistics.

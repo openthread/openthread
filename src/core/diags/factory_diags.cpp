@@ -545,10 +545,11 @@ exit:
 
 Error Diags::ProcessGpio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
-    Error    error = kErrorNone;
-    long     value;
-    uint32_t gpio;
-    bool     level;
+    Error      error = kErrorInvalidArgs;
+    long       value;
+    uint32_t   gpio;
+    bool       level;
+    otGpioMode mode;
 
     if ((aArgsLength == 2) && (strcmp(aArgs[0], "get") == 0))
     {
@@ -564,9 +565,31 @@ Error Diags::ProcessGpio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
         SuccessOrExit(error = ParseBool(aArgs[2], level));
         SuccessOrExit(error = otPlatDiagGpioSet(gpio, level));
     }
-    else
+    else if ((aArgsLength >= 2) && (strcmp(aArgs[0], "mode") == 0))
     {
-        error = kErrorInvalidArgs;
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        gpio = static_cast<uint32_t>(value);
+
+        if (aArgsLength == 2)
+        {
+            SuccessOrExit(error = otPlatDiagGpioGetMode(gpio, &mode));
+            if (mode == OT_GPIO_MODE_INPUT)
+            {
+                snprintf(aOutput, aOutputMaxLen, "in\r\n");
+            }
+            else if (mode == OT_GPIO_MODE_OUTPUT)
+            {
+                snprintf(aOutput, aOutputMaxLen, "out\r\n");
+            }
+        }
+        else if ((aArgsLength == 3) && (strcmp(aArgs[2], "in") == 0))
+        {
+            SuccessOrExit(error = otPlatDiagGpioSetMode(gpio, OT_GPIO_MODE_INPUT));
+        }
+        else if ((aArgsLength == 3) && (strcmp(aArgs[2], "out") == 0))
+        {
+            SuccessOrExit(error = otPlatDiagGpioSetMode(gpio, OT_GPIO_MODE_OUTPUT));
+        }
     }
 
 exit:
@@ -721,6 +744,22 @@ OT_TOOL_WEAK otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue)
 {
     OT_UNUSED_VARIABLE(aGpio);
     OT_UNUSED_VARIABLE(aValue);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aMode);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aMode);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }

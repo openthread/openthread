@@ -166,13 +166,6 @@ static otMacKeyMaterial sCurrKey;
 static otMacKeyMaterial sNextKey;
 static otRadioKeyType   sKeyType;
 
-enum
-{
-    SIM_GPIO = 0,
-};
-
-static bool sGpioValue = false;
-
 static int8_t GetRssi(uint16_t aChannel);
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
@@ -1405,26 +1398,4 @@ void parseFromEnvAsUint16(const char *aEnvName, uint16_t *aValue)
             exit(EXIT_FAILURE);
         }
     }
-}
-
-otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue)
-{
-    otError error = OT_ERROR_NONE;
-
-    otEXPECT_ACTION(aGpio == SIM_GPIO, error = OT_ERROR_INVALID_ARGS);
-    sGpioValue = aValue;
-
-exit:
-    return error;
-}
-
-otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue)
-{
-    otError error = OT_ERROR_NONE;
-
-    otEXPECT_ACTION((aGpio == SIM_GPIO) && (aValue != NULL), error = OT_ERROR_INVALID_ARGS);
-    *aValue = sGpioValue;
-
-exit:
-    return error;
 }
