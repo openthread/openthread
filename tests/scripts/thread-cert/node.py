@@ -33,6 +33,7 @@ import ipaddress
 import logging
 import os
 import re
+import shlex
 import socket
 import subprocess
 import sys
@@ -366,7 +367,7 @@ class OtbrDocker:
         return dig_result
 
     def call_dbus_method(self, *args):
-        args = ' '.join(args)
+        args = shlex.join([args[0], args[1], json.dumps(args[2:])])
         return json.loads(
             self.bash(f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/call_dbus_method.py {args}')
             [0])
@@ -385,6 +386,73 @@ class OtbrDocker:
         }
         logging.info(f'counters =  {counters} ')
         return counters
+
+    def _process_traffic_counters(self, counter):
+        return {
+            '4to6': {
+                'packets': counter[0],
+                'bytes': counter[1],
+            },
+            '6to4': {
+                'packets': counter[2],
+                'bytes': counter[3],
+            }
+        }
+
+    def _process_packet_counters(self, counter):
+        return {'4to6': {'packets': counter[0]}, '6to4': {'packets': counter[1]}}
+
+    def nat64_set_enabled(self, enable):
+        return self.call_dbus_method('io.openthread.BorderRouter', 'SetNat64Enabled', enable)
+
+    @property
+    def nat64_state(self):
+        state = self.get_dbus_property('Nat64State')
+        return {'PrefixManager': state[0], 'Translator': state[1]}
+
+    @property
+    def nat64_mappings(self):
+        return [{
+            'id': row[0],
+            'ip4': row[1],
+            'ip6': row[2],
+            'expiry': row[3],
+            'counters': {
+                'total': self._process_traffic_counters(row[4][0]),
+                'ICMP': self._process_traffic_counters(row[4][1]),
+                'UDP': self._process_traffic_counters(row[4][2]),
+                'TCP': self._process_traffic_counters(row[4][3]),
+            }
+        } for row in self.get_dbus_property('Nat64Mappings')]
+
+    @property
+    def nat64_counters(self):
+        res_error = self.get_dbus_property('Nat64ErrorCounters')
+        res_proto = self.get_dbus_property('Nat64ProtocolCounters')
+        return {
+            'protocol': {
+                'Total': self._process_traffic_counters(res_proto[0]),
+                'ICMP': self._process_traffic_counters(res_proto[1]),
+                'UDP': self._process_traffic_counters(res_proto[2]),
+                'TCP': self._process_traffic_counters(res_proto[3]),
+            },
+            'errors': {
+                'Unknown': self._process_packet_counters(res_error[0]),
+                'Illegal Pkt': self._process_packet_counters(res_error[1]),
+                'Unsup Proto': self._process_packet_counters(res_error[2]),
+                'No Mapping': self._process_packet_counters(res_error[3]),
+            }
+        }
+
+    @property
+    def nat64_traffic_counters(self):
+        res = self.get_dbus_property('Nat64TrafficCounters')
+        return {
+            'Total': self._process_traffic_counters(res[0]),
+            'ICMP': self._process_traffic_counters(res[1]),
+            'UDP': self._process_traffic_counters(res[2]),
+            'TCP': self._process_traffic_counters(res[3]),
+        }
 
     def read_border_routing_counters_delta(self):
         old_counters = self._border_routing_counters
