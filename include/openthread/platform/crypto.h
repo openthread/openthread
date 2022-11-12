@@ -185,12 +185,17 @@ typedef struct otPlatCryptoEcdsaKeyPair
  *
  * This struct represents a ECDSA public key.
  *
- * The public key is stored as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
+ * The public key is stored differently depending on the crypto backend library being used
+ * (OPENTHREAD_CONFIG_CRYPTO_LIB):
+ * - By default, as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
+ * - When ARM PSA crypto backend is enabled, as the uncompressed representation defined by SEC1 &sect;2.3.3 as the
+ * content of an ECPoint.
  *
  */
 OT_TOOL_PACKED_BEGIN
 struct otPlatCryptoEcdsaPublicKey
 {
+    uint8_t m04[1];
     uint8_t m8[OT_CRYPTO_ECDSA_PUBLIC_KEY_SIZE];
 } OT_TOOL_PACKED_END;
 

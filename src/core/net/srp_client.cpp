@@ -1302,10 +1302,10 @@ Error Client::AppendKeyRecord(Message &aMessage, Info &aInfo) const
                  Dns::KeyRecord::kSignatoryFlagGeneral);
     key.SetProtocol(Dns::KeyRecord::kProtocolDnsSec);
     key.SetAlgorithm(Dns::KeyRecord::kAlgorithmEcdsaP256Sha256);
-    key.SetLength(sizeof(Dns::KeyRecord) - sizeof(Dns::ResourceRecord) + sizeof(Crypto::Ecdsa::P256::PublicKey));
+    key.SetLength(sizeof(Dns::KeyRecord) - sizeof(Dns::ResourceRecord) + Crypto::Ecdsa::P256::PublicKey::kSize);
     SuccessOrExit(error = aMessage.Append(key));
     SuccessOrExit(error = aInfo.mKeyPair.GetPublicKey(publicKey));
-    SuccessOrExit(error = aMessage.Append(publicKey));
+    SuccessOrExit(error = aMessage.Append(publicKey.m8));
     aInfo.mRecordCount++;
 
 exit:
