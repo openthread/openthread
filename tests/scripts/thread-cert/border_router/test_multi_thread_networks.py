@@ -146,7 +146,18 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.assertTrue(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
 
         self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        self.verify_border_routing_counters(br1, {'inbound_unicast': 1, 'outbound_unicast': 1})
+        self.verify_border_routing_counters(br2, {'inbound_unicast': 1, 'outbound_unicast': 1})
         self.assertTrue(router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        self.verify_border_routing_counters(br1, {'inbound_unicast': 1, 'outbound_unicast': 1})
+        self.verify_border_routing_counters(br2, {'inbound_unicast': 1, 'outbound_unicast': 1})
+
+    def verify_border_routing_counters(self, br, expect_delta):
+        delta_counters = br.read_border_routing_counters_delta()
+        self.assertEqual(set(delta_counters.keys()), set(expect_delta.keys()))
+        for key in delta_counters:
+            self.assertEqual(delta_counters[key][0], expect_delta[key])
+            self.assertGreater(delta_counters[key][1], 0)
 
 
 if __name__ == '__main__':

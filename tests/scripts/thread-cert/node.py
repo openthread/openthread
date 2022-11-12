@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import json
 import binascii
 import ipaddress
 import logging
@@ -60,6 +61,7 @@ class OtbrDocker:
     _socat_proc = None
     _ot_rcp_proc = None
     _docker_proc = None
+    _border_routing_counters = None
 
     def __init__(self, nodeid: int, **kwargs):
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
@@ -362,6 +364,46 @@ class OtbrDocker:
                 dig_result[section].append(tuple(record))
 
         return dig_result
+
+    def call_dbus_method(self, *args):
+        args = ' '.join(args)
+        return json.loads(
+            self.bash(f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/call_dbus_method.py {args}')
+            [0])
+
+    def get_dbus_property(self, property_name):
+        return self.call_dbus_method('org.freedesktop.DBus.Properties', 'Get', 'io.openthread.BorderRouter',
+                                     property_name)
+
+    def get_border_routing_counters(self):
+        counters = self.get_dbus_property('BorderRoutingCounters')
+        counters = {
+            'inbound_unicast': counters[0],
+            'inbound_multicast': counters[1],
+            'outbound_unicast': counters[2],
+            'outbound_multicast': counters[3]
+        }
+        logging.info(f'counters =  {counters} ')
+        return counters
+
+    def read_border_routing_counters_delta(self):
+        old_counters = self._border_routing_counters
+        new_counters = self.get_border_routing_counters()
+        self._border_routing_counters = new_counters
+        delta_counters = {}
+        if old_counters is None:
+            delta_counters = new_counters
+        else:
+            for i in ('inbound', 'outbound'):
+                for j in ('unicast', 'multicast'):
+                    key = f'{i}_{j}'
+                    assert (key in old_counters)
+                    assert (key in new_counters)
+                    value = [new_counters[key][0] - old_counters[key][0], new_counters[key][1] - old_counters[key][1]]
+                    delta_counters[key] = value
+        delta_counters = {key: value for key, value in delta_counters.items() if value[0] and value[1]}
+
+        return delta_counters
 
     @staticmethod
     def __unescape_dns_instance_name(name: str) -> str:
