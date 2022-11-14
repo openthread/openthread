@@ -46,6 +46,7 @@
 
 #include "common/error.hpp"
 #include "crypto/sha256.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -122,15 +123,36 @@ public:
          * This constructor initializes a `KeyPair` as empty (no key).
          *
          */
-        KeyPair(void) { mDerLength = 0; }
+        KeyPair(void) { Init(); }
 
         /**
-         * This method generates and populates the `KeyPair` with a new public/private keys.
+         * This method initializes the keypair.
+         *
+         * @param[in] aKeyRef         KeyRef for PSA ITS where the key should be stored (this is only applicable under
+         *                           `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` config).
+         *
+         */
+        void Init(uint32_t aKeyRef = 0)
+        {
+            mKeyRef    = aKeyRef;
+            mDerLength = 0;
+        }
+
+        /**
+         * This method generates the `KeyPair` with new public/private keys.
+         *
+         * If OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE config is enabled, the
+         * generated keypair is stored inside PSA ITS and @p mDerBytes is not updated
+         * with the literal key.
+         *
+         * If OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE config is disabled, the
+         * generated keypair is populated into @p mDerBytes
          *
          * @retval kErrorNone         A new key pair was generated successfully.
          * @retval kErrorNoBufs       Failed to allocate buffer for key generation.
          * @retval kErrorNotCapable   Feature not supported.
          * @retval kErrorFailed       Failed to generate key.
+         * @retval kErrorAlready      There is a associated key already using KeyRef.
          *
          */
         Error Generate(void) { return otPlatCryptoEcdsaGenerateKey(this); }
@@ -138,13 +160,42 @@ public:
         /**
          * This method gets the associated public key from the `KeyPair`.
          *
-         * @param[out] aPublicKey     A reference to a `PublicKey` to output the value.
+         * @param[out] aPublicKey       A reference to a `PublicKey` to output the value.
          *
-         * @retval kErrorNone      Public key was retrieved successfully, and @p aPublicKey is updated.
-         * @retval kErrorParse     The key-pair DER format could not be parsed (invalid format).
+         * @retval kErrorNone           Public key was retrieved successfully, and @p aPublicKey is updated.
+         * @retval kErrorParse          The key-pair DER format could not be parsed (invalid format).
          *
          */
         Error GetPublicKey(PublicKey &aPublicKey) const { return otPlatCryptoEcdsaGetPublicKey(this, &aPublicKey); }
+
+        /**
+         * This method sets the public key from the buffer passed. This assumes the key to be in DER format.
+         *
+         * @param[in] aDerBytes         Buffer with public key in DER format.
+         * @param[in] aDerLength        Length of the buffer passed.
+         *
+         * @retval kErrorNone           Public key was updated successfully.
+         * @retval kErrorFailed         Failed to update the public key.
+         * @retval kErrorInvalidArgs    The configuration in @p aDerBytes is invalid.
+         *
+         */
+        Error SetKeyPairFrom(const uint8_t *aDerBytes, uint8_t aDerLength)
+        {
+            Error error = kErrorNone;
+
+            VerifyOrExit(aDerBytes != nullptr, error = kErrorInvalidArgs);
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+            error = Crypto::Storage::ImportKey(mKeyRef, Storage::kKeyTypeEcdsa, Storage::kKeyAlgorithmEcdsa,
+                                               (Storage::kUsageSignHash | Storage::kUsageVerifyHash),
+                                               Storage::kTypePersistent, aDerBytes, aDerLength);
+#else
+            memcpy(mDerBytes, aDerBytes, aDerLength);
+#endif
+            mDerLength = aDerLength;
+
+        exit:
+            return error;
+        }
 
         /**
          * This method gets the pointer to start of the buffer containing the key-pair info in DER format.

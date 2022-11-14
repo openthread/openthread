@@ -88,9 +88,10 @@ void TestEcdsaVector(void)
     printf("\n===========================================================================\n");
     printf("Test ECDA with test vector from RFC 6979 (A.2.5)\n");
 
+    keyPair.Init();
+
     printf("\nLoading key-pair ----------------------------------------------------------\n");
-    memcpy(keyPair.GetDerBytes(), kKeyPairInfo, sizeof(kKeyPairInfo));
-    keyPair.SetDerLength(sizeof(kKeyPairInfo));
+    IgnoreError(keyPair.SetKeyPairFrom(kKeyPairInfo, sizeof(kKeyPairInfo)));
 
     DumpBuffer("KeyPair", keyPair.GetDerBytes(), keyPair.GetDerLength());
 

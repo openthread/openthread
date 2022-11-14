@@ -657,7 +657,6 @@ exit:
 
     return error;
 }
-
 #endif // #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 #endif // #if !OPENTHREAD_RADIO

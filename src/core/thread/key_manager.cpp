@@ -284,7 +284,7 @@ exit:
     return;
 }
 
-void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
+void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys) const
 {
     Crypto::HmacSha256 hmac;
     uint8_t            keySequenceBytes[sizeof(uint32_t)];
@@ -306,7 +306,7 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey)
+void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const
 {
     Crypto::HkdfSha256 hkdf;
     uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];

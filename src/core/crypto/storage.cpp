@@ -41,7 +41,7 @@ namespace Crypto {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
 {
-    Error  error;
+    Error  error = kErrorNone;
     size_t readKeyLength;
 
     OT_ASSERT(IsKeyRef());

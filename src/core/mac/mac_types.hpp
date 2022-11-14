@@ -540,7 +540,7 @@ public:
      * @param[out] aKey  A reference to the output the key.
      *
      */
-    void ExtractKey(Key &aKey);
+    void ExtractKey(Key &aKey) const;
 
     /**
      * This method converts `KeyMaterial` to a `Crypto::Key`.

@@ -60,9 +60,10 @@ extern "C" {
  */
 typedef enum
 {
-    OT_CRYPTO_KEY_TYPE_RAW,  ///< Key Type: Raw Data.
-    OT_CRYPTO_KEY_TYPE_AES,  ///< Key Type: AES.
-    OT_CRYPTO_KEY_TYPE_HMAC, ///< Key Type: HMAC.
+    OT_CRYPTO_KEY_TYPE_RAW,   ///< Key Type: Raw Data.
+    OT_CRYPTO_KEY_TYPE_AES,   ///< Key Type: AES.
+    OT_CRYPTO_KEY_TYPE_HMAC,  ///< Key Type: HMAC.
+    OT_CRYPTO_KEY_TYPE_ECDSA, ///< Key Type: ECDSA.
 } otCryptoKeyType;
 
 /**
@@ -74,6 +75,7 @@ typedef enum
     OT_CRYPTO_KEY_ALG_VENDOR,       ///< Key Algorithm: Vendor Defined.
     OT_CRYPTO_KEY_ALG_AES_ECB,      ///< Key Algorithm: AES ECB.
     OT_CRYPTO_KEY_ALG_HMAC_SHA_256, ///< Key Algorithm: HMAC SHA-256.
+    OT_CRYPTO_KEY_ALG_ECDSA,        ///< Key Algorithm: ECDSA.
 } otCryptoKeyAlgorithm;
 
 /**
@@ -82,11 +84,12 @@ typedef enum
  */
 enum
 {
-    OT_CRYPTO_KEY_USAGE_NONE      = 0,      ///< Key Usage: Key Usage is empty.
-    OT_CRYPTO_KEY_USAGE_EXPORT    = 1 << 0, ///< Key Usage: Key can be exported.
-    OT_CRYPTO_KEY_USAGE_ENCRYPT   = 1 << 1, ///< Key Usage: Encryption (vendor defined).
-    OT_CRYPTO_KEY_USAGE_DECRYPT   = 1 << 2, ///< Key Usage: AES ECB.
-    OT_CRYPTO_KEY_USAGE_SIGN_HASH = 1 << 3, ///< Key Usage: HMAC SHA-256.
+    OT_CRYPTO_KEY_USAGE_NONE        = 0,      ///< Key Usage: Key Usage is empty.
+    OT_CRYPTO_KEY_USAGE_EXPORT      = 1 << 0, ///< Key Usage: Key can be exported.
+    OT_CRYPTO_KEY_USAGE_ENCRYPT     = 1 << 1, ///< Key Usage: Encryption (vendor defined).
+    OT_CRYPTO_KEY_USAGE_DECRYPT     = 1 << 2, ///< Key Usage: AES ECB.
+    OT_CRYPTO_KEY_USAGE_SIGN_HASH   = 1 << 3, ///< Key Usage: Sign Hash.
+    OT_CRYPTO_KEY_USAGE_VERIFY_HASH = 1 << 4, ///< Key Usage: Verify Hash.
 };
 
 /**
@@ -170,8 +173,9 @@ typedef struct otPlatCryptoSha256Hash otPlatCryptoSha256Hash;
  */
 typedef struct otPlatCryptoEcdsaKeyPair
 {
-    uint8_t mDerBytes[OT_CRYPTO_ECDSA_MAX_DER_SIZE];
-    uint8_t mDerLength;
+    uint8_t  mDerBytes[OT_CRYPTO_ECDSA_MAX_DER_SIZE]; ///< Used when using literal keys, needs mKeyRef to be 0.
+    uint8_t  mDerLength;                              ///< Length of the stored DER.
+    uint32_t mKeyRef; ///< The PSA key ref (used with OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE).
 } otPlatCryptoEcdsaKeyPair;
 
 /**
@@ -185,7 +189,11 @@ typedef struct otPlatCryptoEcdsaKeyPair
  *
  * This struct represents a ECDSA public key.
  *
- * The public key is stored as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
+ * The public key is stored differently depending on the crypto backend library being used
+ * (OPENTHREAD_CONFIG_CRYPTO_LIB):
+ * - By default, as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
+ * - When ARM PSA crypto backend is enabled, as the uncompressed representation defined by SEC1 &sect;2.3.3 as the
+ * content of an ECPoint.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -585,14 +593,20 @@ void otPlatCryptoRandomDeinit(void);
 otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize);
 
 /**
- * Generate and populate the output buffer with a new ECDSA key-pair.
+ * Generates and updates the `KeyPair`.
  *
- * @param[out] aKeyPair           A pointer to an ECDSA key-pair structure to store the generated key-pair.
+ * If OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE config is enabled, the
+ * generated keypair is stored inside PSA ITS and mDerBytes in @p aKeyPair is not updated
+ * with the literal key.
  *
- * @retval OT_ERROR_NONE          A new key-pair was generated successfully.
- * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for key generation.
- * @retval OT_ERROR_NOT_CAPABLE   Feature not supported.
- * @retval OT_ERROR_FAILED        Failed to generate key-pair.
+ * If OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE config is disabled, the
+ * generated keypair is populated into mDerBytes in @p aKeyPair
+ *
+ * @retval OT_ERROR_NONE         A new key pair was generated successfully.
+ * @retval OT_ERROR_NO_BUFS      Failed to allocate buffer for key generation.
+ * @retval OT_ERROR_NOT_CAPABLE  Feature not supported.
+ * @retval OT_ERROR_FAILED       Failed to generate key.
+ * @retval OT_ERROR_ALREADY      There is a associated key already using KeyRef.
  *
  */
 otError otPlatCryptoEcdsaGenerateKey(otPlatCryptoEcdsaKeyPair *aKeyPair);

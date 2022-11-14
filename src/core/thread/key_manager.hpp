@@ -254,7 +254,7 @@ public:
      * @returns A key reference to the Thread Network Key.
      *
      */
-    NetworkKeyRef GetNetworkKeyRef(void) { return mNetworkKeyRef; }
+    NetworkKeyRef GetNetworkKeyRef(void) const { return mNetworkKeyRef; }
 
     /**
      * This method sets the Thread Network Key using Key Reference.
@@ -299,7 +299,7 @@ public:
      * @returns A key reference to the PSKc.
      *
      */
-    const PskcRef &GetPskcRef(void) { return mPskcRef; }
+    const PskcRef &GetPskcRef(void) const { return mPskcRef; }
 
     /**
      * This method sets the PSKc as a Key reference.
@@ -571,10 +571,10 @@ private:
         const Mac::Key &GetMacKey(void) const { return mKeys.mMacKey; }
     };
 
-    void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
+    void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys) const;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey);
+    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const;
 #endif
 
     void StartKeyRotationTimer(void);

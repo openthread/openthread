@@ -92,6 +92,10 @@ public:
         kRemoved    = OT_SRP_CLIENT_ITEM_STATE_REMOVED,    ///< Item is removed.
     };
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    static constexpr uint32_t kSrpEcdsaKeyRef = Crypto::Storage::kEcdsaRef;
+#endif
+
     /**
      * This function pointer type defines the callback used by SRP client to notify user of a changes/events/errors.
      *

@@ -901,6 +901,12 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
         }
     }
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    aKeyPair.Init(kSrpEcdsaKeyRef);
+#else
+    aKeyPair.Init();
+#endif
+
     SuccessOrExit(error = aKeyPair.Generate());
     IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyPair));
 
