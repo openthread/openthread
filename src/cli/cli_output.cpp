@@ -111,11 +111,7 @@ void Output::OutputNewLine(void)
 
 void Output::OutputSpaces(uint8_t aCount)
 {
-    char format[sizeof("%256s")];
-
-    snprintf(format, sizeof(format), "%%%us", aCount);
-
-    OutputFormat(format, "");
+    OutputFormat("%*s", aCount, "");
 }
 
 void Output::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
