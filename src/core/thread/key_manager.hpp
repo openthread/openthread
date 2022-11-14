@@ -254,7 +254,7 @@ public:
      * @returns A key reference to the Thread Network Key.
      *
      */
-    NetworkKeyRef GetNetworkKeyRef(void) { return mNetworkKeyRef; }
+    NetworkKeyRef GetNetworkKeyRef(void) const { return mNetworkKeyRef; }
 
     /**
      * This method sets the Thread Network Key using Key Reference.
@@ -299,7 +299,7 @@ public:
      * @returns A key reference to the PSKc.
      *
      */
-    const PskcRef &GetPskcRef(void) { return mPskcRef; }
+    const PskcRef &GetPskcRef(void) const { return mPskcRef; }
 
     /**
      * This method sets the PSKc as a Key reference.
@@ -545,10 +545,24 @@ public:
      *
      * This is called to indicate the @p aMacFrameCounter value is now used.
      *
-     * @param[in]  aMacFrameCounter  The 15.4 link MAC frame counter value.
+     * @param[in]  aMacFrameCounter     The 15.4 link MAC frame counter value.
      *
      */
     void MacFrameCounterUsed(uint32_t aMacFrameCounter);
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    /**
+     * This method destroys all the volatile mac keys stored in PSA ITS.
+     *
+     */
+    void DestroyTemporaryKeys(void);
+
+    /**
+     * This method deletes all the persistent keys stored in PSA ITS.
+     *
+     */
+    void DestroyPersistentKeys(void);
+#endif
 
 private:
     static constexpr uint32_t kDefaultKeySwitchGuardTime = 624;
@@ -571,10 +585,10 @@ private:
         const Mac::Key &GetMacKey(void) const { return mKeys.mMacKey; }
     };
 
-    void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
+    void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys) const;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey);
+    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey) const;
 #endif
 
     void StartKeyRotationTimer(void);

@@ -60,9 +60,10 @@ extern "C" {
  */
 typedef enum
 {
-    OT_CRYPTO_KEY_TYPE_RAW,  ///< Key Type: Raw Data.
-    OT_CRYPTO_KEY_TYPE_AES,  ///< Key Type: AES.
-    OT_CRYPTO_KEY_TYPE_HMAC, ///< Key Type: HMAC.
+    OT_CRYPTO_KEY_TYPE_RAW,   ///< Key Type: Raw Data.
+    OT_CRYPTO_KEY_TYPE_AES,   ///< Key Type: AES.
+    OT_CRYPTO_KEY_TYPE_HMAC,  ///< Key Type: HMAC.
+    OT_CRYPTO_KEY_TYPE_ECDSA, ///< Key Type: ECDSA.
 } otCryptoKeyType;
 
 /**
@@ -74,6 +75,7 @@ typedef enum
     OT_CRYPTO_KEY_ALG_VENDOR,       ///< Key Algorithm: Vendor Defined.
     OT_CRYPTO_KEY_ALG_AES_ECB,      ///< Key Algorithm: AES ECB.
     OT_CRYPTO_KEY_ALG_HMAC_SHA_256, ///< Key Algorithm: HMAC SHA-256.
+    OT_CRYPTO_KEY_ALG_ECDSA,        ///< Key Algorithm: ECDSA.
 } otCryptoKeyAlgorithm;
 
 /**
@@ -82,11 +84,12 @@ typedef enum
  */
 enum
 {
-    OT_CRYPTO_KEY_USAGE_NONE      = 0,      ///< Key Usage: Key Usage is empty.
-    OT_CRYPTO_KEY_USAGE_EXPORT    = 1 << 0, ///< Key Usage: Key can be exported.
-    OT_CRYPTO_KEY_USAGE_ENCRYPT   = 1 << 1, ///< Key Usage: Encryption (vendor defined).
-    OT_CRYPTO_KEY_USAGE_DECRYPT   = 1 << 2, ///< Key Usage: AES ECB.
-    OT_CRYPTO_KEY_USAGE_SIGN_HASH = 1 << 3, ///< Key Usage: HMAC SHA-256.
+    OT_CRYPTO_KEY_USAGE_NONE        = 0,      ///< Key Usage: Key Usage is empty.
+    OT_CRYPTO_KEY_USAGE_EXPORT      = 1 << 0, ///< Key Usage: Key can be exported.
+    OT_CRYPTO_KEY_USAGE_ENCRYPT     = 1 << 1, ///< Key Usage: Encryption (vendor defined).
+    OT_CRYPTO_KEY_USAGE_DECRYPT     = 1 << 2, ///< Key Usage: AES ECB.
+    OT_CRYPTO_KEY_USAGE_SIGN_HASH   = 1 << 3, ///< Key Usage: Sign Hash.
+    OT_CRYPTO_KEY_USAGE_VERIFY_HASH = 1 << 4, ///< Key Usage: Verify Hash.
 };
 
 /**
@@ -649,6 +652,85 @@ otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
 otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
                                 const otPlatCryptoSha256Hash     *aHash,
                                 const otPlatCryptoEcdsaSignature *aSignature);
+
+/**
+ * Calculate the ECDSA signature for a hashed message using the Key reference passed.
+ *
+ * This method uses the deterministic digital signature generation procedure from RFC 6979.
+ *
+ * @param[in]  aKeyRef            Key Reference to the slot where the key-pair is stored.
+ * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature calculation
+ *                                is stored.
+ * @param[out] aSignature         A pointer to an ECDSA signature structure to output the calculated signature.
+ *
+ * @retval OT_ERROR_NONE          The signature was calculated successfully, @p aSignature was updated.
+ * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature calculation.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ *
+ */
+otError otPlatCryptoEcdsaSignUsingKeyRef(otCryptoKeyRef                aKeyRef,
+                                         const otPlatCryptoSha256Hash *aHash,
+                                         otPlatCryptoEcdsaSignature   *aSignature);
+
+/**
+ * Get the associated public key from the key reference passed.
+ *
+ * The public key is stored differently depending on the crypto backend library being used
+ * (OPENTHREAD_CONFIG_CRYPTO_LIB).
+ *
+ * This API must make sure to return the public key as a byte sequence representation of an
+ * uncompressed curve point (RFC 6605 - sec 4)
+ *
+ * @param[in]  aKeyRef            Key Reference to the slot where the key-pair is stored.
+ * @param[out] aPublicKey         A pointer to an ECDSA public key structure to store the public key.
+ *
+ * @retval OT_ERROR_NONE          Public key was retrieved successfully, and @p aBuffer is updated.
+ * @retval OT_ERROR_PARSE         The key-pair DER format could not be parsed (invalid format).
+ * @retval OT_ERROR_INVALID_ARGS  The @p aContext is NULL.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ *
+ */
+otError otPlatCryptoEcdsaExportPublicKey(otCryptoKeyRef aKeyRef, otPlatCryptoEcdsaPublicKey *aPublicKey);
+
+/**
+ * Generate and import a new ECDSA key-pair at reference passed.
+ *
+ * @param[in]  aKeyRef            Key Reference to the slot where the key-pair is stored.
+ *
+ * @retval OT_ERROR_NONE          A new key-pair was generated successfully.
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for key generation.
+ * @retval OT_ERROR_NOT_CAPABLE   Feature not supported.
+ * @retval OT_ERROR_FAILED        Failed to generate key-pair.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ *
+ */
+otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef);
+
+/**
+ * Use the keyref to verify the ECDSA signature of a hashed message.
+ *
+ * @param[in]  aKeyRef            Key Reference to the slot where the key-pair is stored.
+ * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature verification
+ *                                is stored.
+ * @param[in]  aSignature         A pointer to an ECDSA signature structure where the signature value to be verified is
+ *                                stored.
+ *
+ * @retval OT_ERROR_NONE          The signature was verified successfully.
+ * @retval OT_ERROR_SECURITY      The signature is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  The key or hash is invalid.
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for signature verification.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ *
+ */
+otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKeyRef,
+                                           const otPlatCryptoSha256Hash     *aHash,
+                                           const otPlatCryptoEcdsaSignature *aSignature);
 
 /**
  * Perform PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).

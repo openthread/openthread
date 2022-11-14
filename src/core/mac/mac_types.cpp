@@ -299,7 +299,7 @@ void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 #endif
 }
 
-void KeyMaterial::ExtractKey(Key &aKey)
+void KeyMaterial::ExtractKey(Key &aKey) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     aKey.Clear();

@@ -662,6 +662,53 @@ exit:
 
 #endif // #if !OPENTHREAD_RADIO
 
+#elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+
+#if !OPENTHREAD_RADIO
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+
+OT_TOOL_WEAK otError otPlatCryptoEcdsaGenerateKey(otPlatCryptoEcdsaKeyPair *aKeyPair)
+{
+    OT_UNUSED_VARIABLE(aKeyPair);
+
+    return OT_ERROR_NOT_CAPABLE;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair,
+                                                   otPlatCryptoEcdsaPublicKey     *aPublicKey)
+{
+    OT_UNUSED_VARIABLE(aKeyPair);
+    OT_UNUSED_VARIABLE(aPublicKey);
+
+    return OT_ERROR_NOT_CAPABLE;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
+                                           const otPlatCryptoSha256Hash   *aHash,
+                                           otPlatCryptoEcdsaSignature     *aSignature)
+{
+    OT_UNUSED_VARIABLE(aKeyPair);
+    OT_UNUSED_VARIABLE(aHash);
+    OT_UNUSED_VARIABLE(aSignature);
+
+    return OT_ERROR_NOT_CAPABLE;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
+                                             const otPlatCryptoSha256Hash     *aHash,
+                                             const otPlatCryptoEcdsaSignature *aSignature)
+
+{
+    OT_UNUSED_VARIABLE(aPublicKey);
+    OT_UNUSED_VARIABLE(aHash);
+    OT_UNUSED_VARIABLE(aSignature);
+
+    return OT_ERROR_NOT_CAPABLE;
+}
+#endif // #if OPENTHREAD_CONFIG_ECDSA_ENABLE
+
+#endif // #if !OPENTHREAD_RADIO
+
 #endif // #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 //---------------------------------------------------------------------------------------------------------------------

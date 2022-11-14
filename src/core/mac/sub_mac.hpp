@@ -478,6 +478,17 @@ public:
     const KeyMaterial &GetNextMacKey(void) const { return mNextKey; }
 
     /**
+     * This method clears the stored MAC keys.
+     *
+     */
+    void ClearMacKeys(void)
+    {
+        mPrevKey.Clear();
+        mCurrKey.Clear();
+        mNextKey.Clear();
+    }
+
+    /**
      * This method returns the current MAC frame counter value.
      *
      * @returns The current MAC frame counter value.
