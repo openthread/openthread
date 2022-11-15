@@ -313,10 +313,10 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        rm -f '/usr/local/bin/2to3'
         brew update
-        brew install automake m4 ninja
-        [ ${{ matrix.CC }} != clang ] || brew install llvm
+        brew install automake m4
+        wget --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
+        unzip ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |
         export PATH=$(brew --prefix m4)/bin:$PATH
