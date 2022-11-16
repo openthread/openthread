@@ -522,7 +522,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleNotification(SpinelIn
 
     case SPINEL_CMD_PROP_VALUE_INSERTED:
     case SPINEL_CMD_PROP_VALUE_REMOVED:
-        otLogInfoPlat("Ignored command %d", cmd);
+        otLogInfoPlat("Ignored command %lu", ToUlong(cmd));
         break;
 
     default:
@@ -1677,7 +1677,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::WaitResponse(void)
 {
     uint64_t end = otPlatTimeGet() + kMaxWaitTime * US_PER_MS;
 
-    otLogDebgPlat("Wait response: tid=%u key=%u", mWaitingTid, mWaitingKey);
+    otLogDebgPlat("Wait response: tid=%u key=%lu", mWaitingTid, ToUlong(mWaitingKey));
 
     do
     {
