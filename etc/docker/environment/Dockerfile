@@ -1,5 +1,5 @@
 # Ubuntu image with tools required to build OpenThread
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG en_US.UTF-8
@@ -9,6 +9,7 @@ RUN set -x \
     && apt-get install -y locales \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
     && apt-get --no-install-recommends install -fy \
+        bzip2 \
         git \
         ninja-build \
         python3 \
