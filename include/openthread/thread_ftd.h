@@ -356,6 +356,29 @@ uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
+ * Get the MLE_CHILD_ROUTER_LINKS parameter used in the REED role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The MLE_CHILD_ROUTER_LINKS value.
+ *
+ * @sa otThreadSetChildRouterLinks
+ *
+ */
+uint8_t otThreadGetChildRouterLinks(otInstance *aInstance);
+
+/**
+ * Set the MLE_CHILD_ROUTER_LINKS parameter used in the REED role.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aChildRouterLinks The MLE_CHILD_ROUTER_LINKS value.
+ *
+ * @sa otThreadGetChildRouterLinks
+ *
+ */
+void otThreadSetChildRouterLinks(otInstance *aInstance, uint8_t aChildRouterLinks);
+
+/**
  * Release a Router ID that has been allocated by the device in the Leader role.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with

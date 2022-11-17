@@ -6144,6 +6144,12 @@ template <> otError Interpreter::Process<Cmd("routerupgradethreshold")>(Arg aArg
 {
     return ProcessGetSet(aArgs, otThreadGetRouterUpgradeThreshold, otThreadSetRouterUpgradeThreshold);
 }
+
+template <> otError Interpreter::Process<Cmd("childrouterlinks")>(Arg aArgs[])
+{
+    return ProcessGetSet(aArgs, otThreadGetChildRouterLinks, otThreadSetChildRouterLinks);
+}
+
 #endif // OPENTHREAD_FTD
 
 template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])

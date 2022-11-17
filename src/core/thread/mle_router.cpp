@@ -85,6 +85,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionIdTimeout(0)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
+    , mChildRouterLinks(OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS)
     , mLinkRequestDelay(0)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -1283,7 +1284,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
             VerifyOrExit(router != nullptr);
 
             if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
-                (mRouterTable.GetNeighborCount() < kChildRouterLinks))
+                (mRouterTable.GetNeighborCount() < mChildRouterLinks))
             {
                 router->SetExtAddress(extAddr);
                 router->GetLinkInfo().Clear();
