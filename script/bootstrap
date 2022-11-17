@@ -46,8 +46,8 @@ install_packages_pretty_format()
     # add mdv for local size report
     python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
 
-    # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
-    command -v shfmt || brew install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
+    # add shfmt for shell pretty
+    command -v shfmt || sudo apt-get install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
 }
 
 install_packages_apt()
