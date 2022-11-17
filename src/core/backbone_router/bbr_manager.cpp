@@ -664,11 +664,8 @@ Error Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
 
     SuccessOrExit(error = Tlv::Append<ThreadLastTransactionTimeTlv>(*message, aTimeSinceLastTransaction));
 
-    {
-        const MeshCoP::NameData nameData = Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData();
-
-        SuccessOrExit(error = Tlv::Append<ThreadNetworkNameTlv>(*message, nameData.GetBuffer(), nameData.GetLength()));
-    }
+    SuccessOrExit(error = Tlv::Append<ThreadNetworkNameTlv>(
+                      *message, Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsCString()));
 
     if (aSrcRloc16 != Mac::kShortAddrInvalid)
     {

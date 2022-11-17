@@ -229,6 +229,25 @@ public:
     }
 
     /**
+     * This static method reads a simple TLV with a UTF-8 string value in a message at a given offset.
+     *
+     * @tparam      StringTlvType   The simple TLV type to read (must be a sub-class of `StringTlvInfo`).
+     *
+     * @param[in]   aMessage        The message to read from.
+     * @param[in]   aOffset         The offset into the message pointing to the start of the TLV.
+     * @param[out]  aValue          A reference to the string buffer to output the read value.
+     *
+     * @retval kErrorNone        Successfully read the TLV and updated the @p aValue.
+     * @retval kErrorParse       The TLV was not well-formed and could not be parsed.
+     *
+     */
+    template <typename StringTlvType>
+    static Error Read(const Message &aMessage, uint16_t aOffset, typename StringTlvType::StringType &aValue)
+    {
+        return ReadStringTlv(aMessage, aOffset, StringTlvType::kMaxStringLength, aValue);
+    }
+
+    /**
      * This static method searches for and reads a requested TLV out of a given message.
      *
      * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
@@ -370,6 +389,32 @@ public:
     }
 
     /**
+     * This static method searches for a simple TLV with a UTF-8 string value in a message, and then reads its value
+     * into a given string buffer.
+     *
+     * If the TLV length is longer than maximum string length specified by `StringTlvType::kMaxStringLength` then
+     * only up to maximum length is read and returned. In this case `kErrorNone` is returned.
+     *
+     * The returned string in @p aValue is always null terminated.`StringTlvType::StringType` MUST have at least
+     * `kMaxStringLength + 1` chars.
+     *
+     * @tparam       StringTlvType  The simple TLV type to find (must be a sub-class of `StringTlvInfo`)
+     *
+     * @param[in]    aMessage        A reference to the message.
+     * @param[out]   aValue          A reference to a string buffer to output the TLV's value.
+     *
+     * @retval kErrorNone         The TLV was found and read successfully. @p aValue is updated.
+     * @retval kErrorNotFound     Could not find the TLV with Type @p aType.
+     * @retval kErrorParse        TLV was found but it was not well-formed and could not be parsed.
+     *
+     */
+    template <typename StringTlvType>
+    static Error Find(const Message &aMessage, typename StringTlvType::StringType &aValue)
+    {
+        return FindStringTlv(aMessage, StringTlvType::kType, StringTlvType::kMaxStringLength, aValue);
+    }
+
+    /**
      * This static method appends a TLV with a given type and value to a message.
      *
      * On success this method grows the message by the size of the TLV.
@@ -428,13 +473,41 @@ public:
         return AppendUintTlv(aMessage, UintTlvType::kType, aValue);
     }
 
+    /**
+     * This static method appends a simple TLV with a single UTF-8 string value to a message.
+     *
+     * On success this method grows the message by the size of the TLV.
+     *
+     * If the passed in @p aValue string length is longer than the maximum allowed length for the TLV as specified by
+     * `StringTlvType::kMaxStringLength`, the first maximum length chars are appended.
+     *
+     * The @p aValue can be `nullptr` in which case it is treated as an empty string.
+     *
+     * @tparam     StringTlvType  The simple TLV type to append (must be a sub-class of `StringTlvInfo`)
+     *
+     * @param[in]  aMessage       A reference to the message to append to.
+     * @param[in]  aValue         A pointer to a C string to append as TLV's value.
+     *
+     * @retval kErrorNone     Successfully appended the TLV to the message.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     *
+     */
+    template <typename StringTlvType> static Error Append(Message &aMessage, const char *aValue)
+    {
+        return AppendStringTlv(aMessage, StringTlvType::kType, StringTlvType::kMaxStringLength, aValue);
+    }
+
 protected:
     static const uint8_t kExtendedLength = 255; // Extended Length value.
 
 private:
+    static Error ReadTlv(const Message &aMessage, uint16_t aOffset, uint16_t &aLength, uint16_t &aValueOffset);
     static Error Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uint16_t *aSize, bool *aIsExtendedTlv);
     static Error FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
     static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
+    static Error ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue);
+    static Error FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue);
+    static Error AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, const char *aValue);
     template <typename UintType> static Error ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue);
     template <typename UintType> static Error FindUintTlv(const Message &aMessage, uint8_t aType, UintType &aValue);
     template <typename UintType> static Error AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue);
@@ -583,6 +656,24 @@ public:
     static_assert(!TypeTraits::IsSame<TlvValueType, int32_t>::kValue, "SimpleTlv must not use int value type");
 
     typedef TlvValueType ValueType; ///< The TLV Value type.
+};
+
+/**
+ * This class defines constants and types for a simple TLV with a UTF-8 string value.
+ *
+ * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<StringTlvType>()`,
+ * and the related `Tlv::Find<StringTlvType>()` and `Tlv::Read<StringTlvType>()`.
+ *
+ * @tparam kTlvTypeValue        The TLV Type value.
+ * @tparam kTlvMaxValueLength   The maximum allowed string length (as TLV value).
+ *
+ */
+template <uint8_t kTlvTypeValue, uint8_t kTlvMaxValueLength> class StringTlvInfo : public TlvInfo<kTlvTypeValue>
+{
+public:
+    static constexpr uint8_t kMaxStringLength = kTlvMaxValueLength; ///< Maximum string length.
+
+    typedef char StringType[kMaxStringLength + 1]; ///< String buffer for TLV value.
 };
 
 } // namespace ot

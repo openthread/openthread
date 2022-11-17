@@ -1033,22 +1033,27 @@ void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Message &aMessage, const 
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    StateTlv::State    state = StateTlv::kAccept;
-    ProvisioningUrlTlv provisioningUrl;
+    StateTlv::State                state = StateTlv::kAccept;
+    ProvisioningUrlTlv::StringType provisioningUrl;
 
     VerifyOrExit(mState == kStateActive);
 
     LogInfo("received joiner finalize");
 
-    if (Tlv::FindTlv(aMessage, provisioningUrl) == kErrorNone)
+    switch (Tlv::Find<ProvisioningUrlTlv>(aMessage, provisioningUrl))
     {
-        uint8_t len = static_cast<uint8_t>(StringLength(mProvisioningUrl, sizeof(mProvisioningUrl)));
-
-        if ((provisioningUrl.GetProvisioningUrlLength() != len) ||
-            (memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl, len) != 0))
+    case kErrorNone:
+        if (!StringMatch(provisioningUrl, mProvisioningUrl))
         {
             state = StateTlv::kReject;
         }
+        break;
+
+    case kErrorNotFound:
+        break;
+
+    default:
+        ExitNow();
     }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
