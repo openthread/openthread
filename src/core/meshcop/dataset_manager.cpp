@@ -322,13 +322,13 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::M
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    Error    error;
-    StateTlv stateTlv;
+    Error   error;
+    uint8_t state;
 
     SuccessOrExit(error = aError);
-    VerifyOrExit(Tlv::FindTlv(*aMessage, stateTlv) == kErrorNone, error = kErrorParse);
+    VerifyOrExit(Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone, error = kErrorParse);
 
-    switch (stateTlv.GetState())
+    switch (state)
     {
     case StateTlv::kReject:
         error = kErrorRejected;
