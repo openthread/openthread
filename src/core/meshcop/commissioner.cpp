@@ -1045,7 +1045,7 @@ void Commissioner::HandleTmf<kUriJoinerFinalize>(Coap::Message &aMessage, const 
         uint8_t len = static_cast<uint8_t>(StringLength(mProvisioningUrl, sizeof(mProvisioningUrl)));
 
         if ((provisioningUrl.GetProvisioningUrlLength() != len) ||
-            !memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl, len))
+            (memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl, len) != 0))
         {
             state = StateTlv::kReject;
         }
