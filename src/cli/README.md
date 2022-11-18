@@ -34,6 +34,7 @@ Done
 - [childtimeout](#childtimeout)
 - [coap](README_COAP.md)
 - [coaps](README_COAPS.md)
+- [coex](#coex)
 - [commissioner](README_COMMISSIONER.md)
 - [contextreusedelay](#contextreusedelay)
 - [counters](#counters)
@@ -806,6 +807,72 @@ Set the Thread Child Timeout value.
 
 ```bash
 > childtimeout 300
+Done
+```
+
+### coex
+
+Get the coex status.
+
+`OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE` is required.
+
+```bash
+> coex
+Enabled
+Done
+```
+
+### coex disable
+
+Disable coex.
+
+`OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE` is required.
+
+```bash
+> coex disable
+Done
+```
+
+### coex enable
+
+Enable coex.
+
+`OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE` is required.
+
+```bash
+> coex enable
+Done
+```
+
+### coex metrics
+
+Show coex metrics.
+
+`OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE` is required.
+
+```bash
+> coex metrics
+Stopped: false
+Grant Glitch: 0
+Transmit metrics
+    Request: 0
+    Grant Immediate: 0
+    Grant Wait: 0
+    Grant Wait Activated: 0
+    Grant Wait Timeout: 0
+    Grant Deactivated During Request: 0
+    Delayed Grant: 0
+    Average Request To Grant Time: 0
+Receive metrics
+    Request: 0
+    Grant Immediate: 0
+    Grant Wait: 0
+    Grant Wait Activated: 0
+    Grant Wait Timeout: 0
+    Grant Deactivated During Request: 0
+    Delayed Grant: 0
+    Average Request To Grant Time: 0
+    Grant None: 0
 Done
 ```
 
