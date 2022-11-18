@@ -292,12 +292,12 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 {
     Error                         error    = kErrorNone;
     const ThreadLinkInfo *        linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
-    Tlv                           tlv;
     MeshCoP::Tlv                  meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::NetworkNameTlv       networkName;
     ScanResult                    result;
     uint16_t                      offset;
+    uint16_t                      length;
     uint16_t                      end;
     bool                          didCheckSteeringData = false;
 
@@ -306,11 +306,8 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
     VerifyOrExit(mState == kStateScanning, error = kErrorDrop);
 
     // Find MLE Discovery TLV
-    VerifyOrExit(Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kDiscovery, offset) == kErrorNone, error = kErrorParse);
-    IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
-
-    offset += sizeof(tlv);
-    end = offset + tlv.GetLength();
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kDiscovery, offset, length));
+    end = offset + length;
 
     memset(&result, 0, sizeof(result));
     result.mDiscover = true;

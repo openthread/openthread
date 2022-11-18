@@ -668,7 +668,7 @@ exit:
 Error ActiveDatasetManager::Save(const Timestamp &aTimestamp,
                                  const Message &  aMessage,
                                  uint16_t         aOffset,
-                                 uint8_t          aLength)
+                                 uint16_t         aLength)
 {
     Error   error = kErrorNone;
     Dataset dataset;
@@ -749,7 +749,7 @@ exit:
 Error PendingDatasetManager::Save(const Timestamp &aTimestamp,
                                   const Message &  aMessage,
                                   uint16_t         aOffset,
-                                  uint8_t          aLength)
+                                  uint16_t         aLength)
 {
     Error   error = kErrorNone;
     Dataset dataset;

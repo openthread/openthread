@@ -2104,17 +2104,15 @@ exit:
 }
 #endif
 
-Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild)
+Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild)
 {
     Error                    error = kErrorNone;
     AddressRegistrationEntry entry;
     Ip6::Address             address;
     Lowpan::Context          context;
-    Tlv                      tlv;
     uint8_t                  registeredCount = 0;
     uint8_t                  storedCount     = 0;
-    uint16_t                 offset          = 0;
-    uint16_t                 end             = 0;
+    uint16_t                 end             = aOffset + aLength;
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     Ip6::Address        oldDua;
     const Ip6::Address *oldDuaPtr = nullptr;
@@ -2125,12 +2123,6 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
     Ip6::Address oldMlrRegisteredAddresses[OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1];
     uint16_t     oldMlrRegisteredAddressNum = 0;
 #endif
-
-    SuccessOrExit(error = aMessage.Read(aOffset, tlv));
-    VerifyOrExit(tlv.GetLength() <= (aMessage.GetLength() - aOffset - sizeof(tlv)), error = kErrorParse);
-
-    offset = aOffset + sizeof(tlv);
-    end    = offset + tlv.GetLength();
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     if ((oldDuaPtr = aChild.GetDomainUnicastAddress()) != nullptr)
@@ -2158,18 +2150,18 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
 
     aChild.ClearIp6Addresses();
 
-    while (offset < end)
+    while (aOffset < end)
     {
         uint8_t len;
 
         // read out the control field
-        SuccessOrExit(error = aMessage.Read(offset, &entry, sizeof(uint8_t)));
+        SuccessOrExit(error = aMessage.Read(aOffset, &entry, sizeof(uint8_t)));
 
         len = entry.GetLength();
 
-        SuccessOrExit(error = aMessage.Read(offset, &entry, len));
+        SuccessOrExit(error = aMessage.Read(aOffset, &entry, len));
 
-        offset += len;
+        aOffset += len;
         registeredCount++;
 
         if (entry.IsCompressed())
@@ -2317,7 +2309,6 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     Child *            child;
     Router *           router;
     uint8_t            numTlvs;
-    uint16_t           addressRegistrationOffset = 0;
 
     Log(kMessageReceive, kTypeChildIdRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2403,9 +2394,11 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 
     if (!mode.IsFullThreadDevice())
     {
-        SuccessOrExit(error =
-                          Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, addressRegistrationOffset));
-        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, addressRegistrationOffset, *child));
+        uint16_t offset;
+        uint16_t length;
+
+        SuccessOrExit(error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, offset, length));
+        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, offset, length, *child));
     }
 
     // Remove from router table
@@ -2492,8 +2485,9 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     DeviceMode      oldMode;
     TlvList         requestedTlvList;
     TlvList         tlvList;
-    uint16_t        addressRegistrationOffset = 0;
-    bool            childDidChange            = false;
+    uint16_t        addrOffset;
+    uint16_t        addrLength;
+    bool            childDidChange = false;
 
     Log(kMessageReceive, kTypeChildUpdateRequestOfChild, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2555,9 +2549,9 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     }
 
     // IPv6 Address TLV
-    if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == kErrorNone)
+    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, addrOffset, addrLength) == kErrorNone)
     {
-        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, addressRegistrationOffset, *child));
+        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, addrOffset, addrLength, *child));
         tlvList.Add(Tlv::kAddressRegistration);
     }
 
@@ -2695,7 +2689,8 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     uint32_t   mleFrameCounter;
     LeaderData leaderData;
     Child *    child;
-    uint16_t   addressRegistrationOffset = 0;
+    uint16_t   addrOffset;
+    uint16_t   addrLength;
 
     if ((aRxInfo.mNeighbor == nullptr) || IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()) ||
         !Get<ChildTable>().Contains(*aRxInfo.mNeighbor))
@@ -2792,9 +2787,9 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     }
 
     // IPv6 Address
-    if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == kErrorNone)
+    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, addrOffset, addrLength) == kErrorNone)
     {
-        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, addressRegistrationOffset, *child));
+        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, addrOffset, addrLength, *child));
     }
 
     // Leader Data
@@ -2953,11 +2948,11 @@ void MleRouter::SetSteeringData(const Mac::ExtAddress *aExtAddress)
 void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
 {
     Error                        error = kErrorNone;
-    Tlv                          tlv;
     MeshCoP::Tlv                 meshcopTlv;
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
     MeshCoP::ExtendedPanId       extPanId;
     uint16_t                     offset;
+    uint16_t                     length;
     uint16_t                     end;
 
     Log(kMessageReceive, kTypeDiscoveryRequest, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -2967,12 +2962,8 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
     // only Routers and REEDs respond
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
 
-    // find MLE Discovery TLV
-    VerifyOrExit(Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kDiscovery, offset) == kErrorNone, error = kErrorParse);
-    IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
-
-    offset += sizeof(tlv);
-    end = offset + sizeof(tlv) + tlv.GetLength();
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kDiscovery, offset, length));
+    end = offset + length;
 
     while (offset < end)
     {

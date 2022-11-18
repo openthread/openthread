@@ -2838,13 +2838,15 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     MeshCoP::Timestamp        activeTimestamp;
     MeshCoP::Timestamp        pendingTimestamp;
     const MeshCoP::Timestamp *timestamp;
-    bool                      hasActiveTimestamp   = false;
-    bool                      hasPendingTimestamp  = false;
-    uint16_t                  networkDataOffset    = 0;
+    bool                      hasActiveTimestamp  = false;
+    bool                      hasPendingTimestamp = false;
+    uint16_t                  networkDataOffset;
+    uint16_t                  networkDataLength;
     uint16_t                  activeDatasetOffset  = 0;
+    uint16_t                  activeDatasetLength  = 0;
     uint16_t                  pendingDatasetOffset = 0;
+    uint16_t                  pendingDatasetLength = 0;
     bool                      dataRequest          = false;
-    Tlv                       tlv;
 
     // Leader Data
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
@@ -2878,7 +2880,8 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
         if (!IsLeader() && (MeshCoP::Timestamp::Compare(&activeTimestamp, timestamp) != 0) &&
-            (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kActiveDataset, activeDatasetOffset) != kErrorNone))
+            (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kActiveDataset, activeDatasetOffset, activeDatasetLength) !=
+             kErrorNone))
         {
             ExitNow(dataRequest = true);
         }
@@ -2903,7 +2906,8 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
         if (!IsLeader() && (MeshCoP::Timestamp::Compare(&pendingTimestamp, timestamp) != 0) &&
-            (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kPendingDataset, pendingDatasetOffset) != kErrorNone))
+            (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kPendingDataset, pendingDatasetOffset,
+                                     pendingDatasetLength) != kErrorNone))
         {
             ExitNow(dataRequest = true);
         }
@@ -2917,11 +2921,12 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
-    if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset) == kErrorNone)
+    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset, networkDataLength) ==
+        kErrorNone)
     {
-        error = Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
-                                                          leaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                          GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset);
+        error = Get<NetworkData::Leader>().SetNetworkData(
+            leaderData.GetDataVersion(NetworkData::kFullSet), leaderData.GetDataVersion(NetworkData::kStableSubset),
+            GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset, networkDataLength);
         SuccessOrExit(error);
     }
     else
@@ -2942,9 +2947,8 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
         {
             if (activeDatasetOffset > 0)
             {
-                IgnoreError(aRxInfo.mMessage.Read(activeDatasetOffset, tlv));
-                IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Save(
-                    activeTimestamp, aRxInfo.mMessage, activeDatasetOffset + sizeof(tlv), tlv.GetLength()));
+                IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Save(activeTimestamp, aRxInfo.mMessage,
+                                                                      activeDatasetOffset, activeDatasetLength));
             }
         }
 
@@ -2953,9 +2957,8 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
         {
             if (pendingDatasetOffset > 0)
             {
-                IgnoreError(aRxInfo.mMessage.Read(pendingDatasetOffset, tlv));
-                IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(
-                    pendingTimestamp, aRxInfo.mMessage, pendingDatasetOffset + sizeof(tlv), tlv.GetLength()));
+                IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(pendingTimestamp, aRxInfo.mMessage,
+                                                                       pendingDatasetOffset, pendingDatasetLength));
             }
         }
     }
@@ -3285,9 +3288,10 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     uint16_t           sourceAddress;
     uint16_t           shortAddress;
     MeshCoP::Timestamp timestamp;
-    Tlv                tlv;
     uint16_t           networkDataOffset;
+    uint16_t           networkDataLength;
     uint16_t           offset;
+    uint16_t           length;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -3306,18 +3310,18 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
     // Network Data
-    SuccessOrExit(error = Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset));
+    SuccessOrExit(
+        error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset, networkDataLength));
 
     // Active Timestamp
     switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
         // Active Dataset
-        if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kActiveDataset, offset) == kErrorNone)
+        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kActiveDataset, offset, length) == kErrorNone)
         {
-            IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
-            SuccessOrExit(error = Get<MeshCoP::ActiveDatasetManager>().Save(timestamp, aRxInfo.mMessage,
-                                                                            offset + sizeof(tlv), tlv.GetLength()));
+            SuccessOrExit(error =
+                              Get<MeshCoP::ActiveDatasetManager>().Save(timestamp, aRxInfo.mMessage, offset, length));
         }
         break;
 
@@ -3339,11 +3343,9 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     {
     case kErrorNone:
         // Pending Dataset
-        if (Tlv::FindTlvOffset(aRxInfo.mMessage, Tlv::kPendingDataset, offset) == kErrorNone)
+        if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kPendingDataset, offset, length) == kErrorNone)
         {
-            IgnoreError(aRxInfo.mMessage.Read(offset, tlv));
-            IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(timestamp, aRxInfo.mMessage, offset + sizeof(tlv),
-                                                                   tlv.GetLength()));
+            IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(timestamp, aRxInfo.mMessage, offset, length));
         }
         break;
 
@@ -3392,9 +3394,9 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 
     mParent.SetRloc16(sourceAddress);
 
-    IgnoreError(Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
-                                                          leaderData.GetDataVersion(NetworkData::kStableSubset),
-                                                          GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset));
+    IgnoreError(Get<NetworkData::Leader>().SetNetworkData(
+        leaderData.GetDataVersion(NetworkData::kFullSet), leaderData.GetDataVersion(NetworkData::kStableSubset),
+        GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset, networkDataLength));
 
     SetStateChild(shortAddress);
 

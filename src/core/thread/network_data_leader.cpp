@@ -389,18 +389,15 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
                                  uint8_t        aStableVersion,
                                  Type           aType,
                                  const Message &aMessage,
-                                 uint16_t       aMessageOffset)
+                                 uint16_t       aOffset,
+                                 uint16_t       aLength)
 {
-    Error    error = kErrorNone;
-    Mle::Tlv tlv;
-    uint16_t length;
+    Error error = kErrorNone;
 
-    SuccessOrExit(error = aMessage.Read(aMessageOffset, tlv));
+    VerifyOrExit(aLength <= kMaxSize, error = kErrorParse);
+    SuccessOrExit(error = aMessage.Read(aOffset, GetBytes(), aLength));
 
-    length = aMessage.ReadBytes(aMessageOffset + sizeof(tlv), GetBytes(), tlv.GetLength());
-    VerifyOrExit(length == tlv.GetLength(), error = kErrorParse);
-
-    SetLength(tlv.GetLength());
+    SetLength(static_cast<uint8_t>(aLength));
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 

@@ -629,7 +629,7 @@ private:
     void  SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
-    Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild);
+    Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild);
     void  UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId);
     bool  UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, bool &aResetAdvInterval);
     bool  HasNeighborWithGoodLinkQuality(void) const;
