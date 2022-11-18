@@ -2497,6 +2497,12 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
      * Inbound Multicast: Packets 0 Bytes 0
      * Outbound Unicast: Packets 2 Bytes 160
      * Outbound Multicast: Packets 0 Bytes 0
+     * RA Rx: 4
+     * RA TxSuccess: 2
+     * RA TxFailed: 0
+     * RS Rx: 0
+     * RS TxSuccess: 2
+     * RS TxFailed: 0
      * Done
      * @endcode
      * @par api_copy
@@ -2531,6 +2537,13 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                              Uint64ToString((brCounters->*counter.mPacketsAndBytes).mBytes, uint64StringBuffer));
                 OutputNewLine();
             }
+
+            OutputLine("RA Rx: %u", brCounters->mRaRx);
+            OutputLine("RA TxSuccess: %u", brCounters->mRaTxSuccess);
+            OutputLine("RA TxFailed: %u", brCounters->mRaTxFailure);
+            OutputLine("RS Rx: %u", brCounters->mRsRx);
+            OutputLine("RS TxSuccess: %u", brCounters->mRsTxSuccess);
+            OutputLine("RS TxFailed: %u", brCounters->mRsTxFailure);
         }
         /**
          * @cli counters br reset

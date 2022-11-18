@@ -350,6 +350,14 @@ public:
     const otBorderRoutingCounters &GetBorderRoutingCounters(void) const { return mBorderRoutingCounters; }
 
     /**
+     * This method returns a reference to the Border Routing counters.
+     *
+     * @returns A reference to the Border Routing counters.
+     *
+     */
+    otBorderRoutingCounters &GetBorderRoutingCounters(void) { return mBorderRoutingCounters; }
+
+    /**
      * This method resets the Border Routing counters.
      *
      */

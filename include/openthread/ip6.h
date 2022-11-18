@@ -871,6 +871,12 @@ typedef struct otBorderRoutingCounters
     otPacketsAndBytes mInboundMulticast;  ///< The counters for inbound multicast.
     otPacketsAndBytes mOutboundUnicast;   ///< The counters for outbound unicast.
     otPacketsAndBytes mOutboundMulticast; ///< The counters for outbound multicast.
+    uint32_t          mRaRx;              ///< The number of received RA packets.
+    uint32_t          mRaTxSuccess;       ///< The number of RA packets successfully transmitted.
+    uint32_t          mRaTxFailure;       ///< The number of RA packets failed to transmit.
+    uint32_t          mRsRx;              ///< The number of received RS packets.
+    uint32_t          mRsTxSuccess;       ///< The number of RS packets successfully transmitted.
+    uint32_t          mRsTxFailure;       ///< The number of RS packets failed to transmit.
 } otBorderRoutingCounters;
 
 /**

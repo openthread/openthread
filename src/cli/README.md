@@ -979,6 +979,12 @@ Inbound Unicast: Packets 4 Bytes 320
 Inbound Multicast: Packets 0 Bytes 0
 Outbound Unicast: Packets 2 Bytes 160
 Outbound Multicast: Packets 0 Bytes 0
+RA Rx: 4
+RA TxSuccess: 2
+RA TxFailed: 0
+RS Rx: 0
+RS TxSuccess: 2
+RS TxFailed: 0
 Done
 ```
 
