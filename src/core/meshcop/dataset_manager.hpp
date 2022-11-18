@@ -428,7 +428,7 @@ public:
      * @retval kErrorParse    Could not parse the Dataset from @p aMessage.
      *
      */
-    Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method sets the Operational Dataset in non-volatile memory.
@@ -562,7 +562,7 @@ public:
      * @param[in]  aLength     The length of the Operational Dataset.
      *
      */
-    Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    Error Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method saves the Operational Dataset in non-volatile memory.

@@ -143,23 +143,25 @@ public:
     Error RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint16_t &aRloc16) const;
 
     /**
-     * This method is used by non-Leader devices to set newly received Network Data from the Leader.
+     * This method is used by non-Leader devices to set Network Data by reading it from a message from Leader.
      *
      * @param[in]  aVersion        The Version value.
      * @param[in]  aStableVersion  The Stable Version value.
      * @param[in]  aType           The Network Data type to set, the full set or stable subset.
-     * @param[in]  aMessage        A reference to the MLE message.
-     * @param[in]  aMessageOffset  The offset in @p aMessage for the Network Data TLV.
+     * @param[in]  aMessage        A reference to the message.
+     * @param[in]  aOffset         The offset in @p aMessage pointing to start of Network Data.
+     * @param[in]  aLength         The length of Network Data.
      *
      * @retval kErrorNone   Successfully set the network data.
-     * @retval kErrorParse  Network Data TLV in @p aMessage is not valid.
+     * @retval kErrorParse  Network Data in @p aMessage is not valid.
      *
      */
     Error SetNetworkData(uint8_t        aVersion,
                          uint8_t        aStableVersion,
                          Type           aType,
                          const Message &aMessage,
-                         uint16_t       aMessageOffset);
+                         uint16_t       aOffset,
+                         uint16_t       aLength);
 
     /**
      * This method returns a pointer to the Commissioning Data.
