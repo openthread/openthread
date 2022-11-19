@@ -434,11 +434,7 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
                                            const char *aVendorData)
 {
     Error                 error = kErrorNone;
-    VendorNameTlv         vendorNameTlv;
-    VendorModelTlv        vendorModelTlv;
-    VendorSwVersionTlv    vendorSwVersionTlv;
     VendorStackVersionTlv vendorStackVersionTlv;
-    ProvisioningUrlTlv    provisioningUrlTlv;
 
     mFinalizeMessage = Get<Tmf::SecureAgent>().NewPriorityConfirmablePostMessage(kUriJoinerFinalize);
     VerifyOrExit(mFinalizeMessage != nullptr, error = kErrorNoBufs);
@@ -447,17 +443,9 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*mFinalizeMessage, StateTlv::kAccept));
 
-    vendorNameTlv.Init();
-    vendorNameTlv.SetVendorName(aVendorName);
-    SuccessOrExit(error = vendorNameTlv.AppendTo(*mFinalizeMessage));
-
-    vendorModelTlv.Init();
-    vendorModelTlv.SetVendorModel(aVendorModel);
-    SuccessOrExit(error = vendorModelTlv.AppendTo(*mFinalizeMessage));
-
-    vendorSwVersionTlv.Init();
-    vendorSwVersionTlv.SetVendorSwVersion(aVendorSwVersion);
-    SuccessOrExit(error = vendorSwVersionTlv.AppendTo(*mFinalizeMessage));
+    SuccessOrExit(error = Tlv::Append<VendorNameTlv>(*mFinalizeMessage, aVendorName));
+    SuccessOrExit(error = Tlv::Append<VendorModelTlv>(*mFinalizeMessage, aVendorModel));
+    SuccessOrExit(error = Tlv::Append<VendorSwVersionTlv>(*mFinalizeMessage, aVendorSwVersion));
 
     vendorStackVersionTlv.Init();
     vendorStackVersionTlv.SetOui(OPENTHREAD_CONFIG_STACK_VENDOR_OUI);
@@ -468,18 +456,12 @@ Error Joiner::PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
 
     if (aVendorData != nullptr)
     {
-        VendorDataTlv vendorDataTlv;
-        vendorDataTlv.Init();
-        vendorDataTlv.SetVendorData(aVendorData);
-        SuccessOrExit(error = vendorDataTlv.AppendTo(*mFinalizeMessage));
+        SuccessOrExit(error = Tlv::Append<VendorDataTlv>(*mFinalizeMessage, aVendorData));
     }
 
-    provisioningUrlTlv.Init();
-    provisioningUrlTlv.SetProvisioningUrl(aProvisioningUrl);
-
-    if (provisioningUrlTlv.GetLength() > 0)
+    if (aProvisioningUrl != nullptr)
     {
-        SuccessOrExit(error = provisioningUrlTlv.AppendTo(*mFinalizeMessage));
+        SuccessOrExit(error = Tlv::Append<ProvisioningUrlTlv>(*mFinalizeMessage, aProvisioningUrl));
     }
 
 exit:

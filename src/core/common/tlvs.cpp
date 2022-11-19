@@ -176,6 +176,23 @@ exit:
     return error;
 }
 
+Error Tlv::ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue)
+{
+    Error    error = kErrorNone;
+    uint16_t valueOffset;
+    uint16_t length;
+
+    SuccessOrExit(error = ReadTlv(aMessage, aOffset, length, valueOffset));
+
+    length = Min(length, static_cast<uint16_t>(aMaxStringLength));
+
+    aMessage.ReadBytes(valueOffset, aValue, length);
+    aValue[length + 1] = '\0';
+
+exit:
+    return error;
+}
+
 template <typename UintType> Error Tlv::ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue)
 {
     Error error;
@@ -192,36 +209,59 @@ template Error Tlv::ReadUintTlv<uint8_t>(const Message &aMessage, uint16_t aOffs
 template Error Tlv::ReadUintTlv<uint16_t>(const Message &aMessage, uint16_t aOffset, uint16_t &aValue);
 template Error Tlv::ReadUintTlv<uint32_t>(const Message &aMessage, uint16_t aOffset, uint32_t &aValue);
 
-Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
+Error Tlv::ReadTlv(const Message &aMessage, uint16_t aOffset, uint16_t &aLength, uint16_t &aValueOffset)
 {
-    Error    error = kErrorNone;
+    Error    error;
     Tlv      tlv;
-    uint16_t valueOffset;
-    uint16_t length;
     uint32_t size;
 
     SuccessOrExit(error = aMessage.Read(aOffset, tlv));
 
     if (!tlv.IsExtended())
     {
-        valueOffset = aOffset + sizeof(Tlv);
-        length      = tlv.GetLength();
-        size        = sizeof(Tlv) + length;
+        aValueOffset = aOffset + sizeof(Tlv);
+        aLength      = tlv.GetLength();
+        size         = sizeof(Tlv) + aLength;
     }
     else
     {
         ExtendedTlv extTlv;
 
         SuccessOrExit(error = aMessage.Read(aOffset, extTlv));
-        valueOffset = aOffset + sizeof(ExtendedTlv);
-        length      = extTlv.GetLength();
-        size        = sizeof(ExtendedTlv) + length;
+        aValueOffset = aOffset + sizeof(ExtendedTlv);
+        aLength      = extTlv.GetLength();
+        size         = sizeof(ExtendedTlv) + aLength;
     }
 
-    VerifyOrExit(length >= aMinLength, error = kErrorParse);
     VerifyOrExit(aOffset + size <= aMessage.GetLength(), error = kErrorParse);
 
+exit:
+    return error;
+}
+
+Error Tlv::ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
+{
+    Error    error;
+    uint16_t valueOffset;
+    uint16_t length;
+
+    SuccessOrExit(error = ReadTlv(aMessage, aOffset, length, valueOffset));
+
+    VerifyOrExit(length >= aMinLength, error = kErrorParse);
+
     aMessage.ReadBytes(valueOffset, aValue, aMinLength);
+
+exit:
+    return error;
+}
+
+Error Tlv::FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue)
+{
+    Error    error = kErrorNone;
+    uint16_t offset;
+
+    SuccessOrExit(error = FindTlvOffset(aMessage, aType, offset));
+    error = ReadStringTlv(aMessage, offset, aMaxStringLength, aValue);
 
 exit:
     return error;
@@ -256,6 +296,13 @@ Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t
 
 exit:
     return error;
+}
+
+Error Tlv::AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, const char *aValue)
+{
+    uint16_t length = (aValue == nullptr) ? 0 : StringLength(aValue, aMaxStringLength);
+
+    return AppendTlv(aMessage, aType, aValue, static_cast<uint8_t>(length));
 }
 
 template <typename UintType> Error Tlv::AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue)
