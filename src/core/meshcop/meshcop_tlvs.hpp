@@ -1734,32 +1734,19 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements UDP Encapsulation TLV generation and parsing.
+ * This class defines UDP Encapsulation TLV types and constants.
+ *
+ */
+typedef TlvInfo<MeshCoP::Tlv::kUdpEncapsulation> UdpEncapsulationTlv;
+
+/**
+ * This class represents UDP Encapsulation TLV value header (source and destination ports).
  *
  */
 OT_TOOL_PACKED_BEGIN
-class UdpEncapsulationTlv : public ExtendedTlv, public TlvInfo<MeshCoP::Tlv::kUdpEncapsulation>
+class UdpEncapsulationTlvHeader
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(MeshCoP::Tlv::kUdpEncapsulation);
-        SetLength(sizeof(*this) - sizeof(ExtendedTlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ExtendedTlv); }
-
     /**
      * This method returns the source port.
      *
@@ -1792,25 +1779,10 @@ public:
      */
     void SetDestinationPort(uint16_t aDestinationPort) { mDestinationPort = HostSwap16(aDestinationPort); }
 
-    /**
-     * This method returns the calculated UDP length.
-     *
-     * @returns The calculated UDP length.
-     *
-     */
-    uint16_t GetUdpLength(void) const { return GetLength() - sizeof(mSourcePort) - sizeof(mDestinationPort); }
-
-    /**
-     * This method updates the UDP length.
-     *
-     * @param[in]   aLength     The length of UDP payload in bytes.
-     *
-     */
-    void SetUdpLength(uint16_t aLength) { SetLength(sizeof(mSourcePort) + sizeof(mDestinationPort) + aLength); }
-
 private:
     uint16_t mSourcePort;
     uint16_t mDestinationPort;
+    // Followed by the UDP Payload.
 } OT_TOOL_PACKED_END;
 
 /**
