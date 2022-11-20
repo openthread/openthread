@@ -707,13 +707,14 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 }
 
 #if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
-otError otPlatRadioAddCalibratedPower(otInstance *             aInstance,
-                                      uint8_t                  aChannel,
-                                      int16_t                  aActualPower,
-                                      const otRawPowerSetting *aSetting)
+otError otPlatRadioAddCalibratedPower(otInstance *   aInstance,
+                                      uint8_t        aChannel,
+                                      int16_t        aActualPower,
+                                      const uint8_t *aRawPowerSetting,
+                                      uint16_t       aRawPowerSettingLength)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.AddCalibratedPower(aChannel, aActualPower, aSetting);
+    return sRadioSpinel.AddCalibratedPower(aChannel, aActualPower, aRawPowerSetting, aRawPowerSettingLength);
 }
 
 otError otPlatRadioClearCalibratedPowers(otInstance *aInstance)

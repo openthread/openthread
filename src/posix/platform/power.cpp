@@ -76,9 +76,9 @@ TargetPower::InfoString TargetPower::ToString(void) const
 otError RawPowerSetting::Set(const char *aRawPowerSetting)
 {
     otError  error;
-    uint16_t length = sizeof(m8);
+    uint16_t length = sizeof(mData);
 
-    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseAsHexString(aRawPowerSetting, length, m8));
+    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseAsHexString(aRawPowerSetting, length, mData));
     mLength = static_cast<uint8_t>(length);
 
 exit:
@@ -89,7 +89,7 @@ RawPowerSetting::InfoString RawPowerSetting::ToString(void) const
 {
     InfoString string;
 
-    string.AppendHexBytes(m8, mLength);
+    string.AppendHexBytes(mData, mLength);
 
     return string;
 }

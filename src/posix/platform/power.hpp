@@ -149,10 +149,11 @@ private:
     int16_t mTargetPower;
 };
 
-class RawPowerSetting : public otRawPowerSetting
+class RawPowerSetting
 {
 public:
-    static constexpr uint16_t       kInfoStringSize = 65; ///< Recommended buffer size to use with `ToString()`.
+    // Recommended buffer size to use with `ToString()`.
+    static constexpr uint16_t       kInfoStringSize = OPENTHREAD_PLATFORM_CONFIG_RAW_POWER_SETTING_SIZE * 2 + 1;
     typedef String<kInfoStringSize> InfoString;
 
     /**
@@ -173,6 +174,15 @@ public:
      *
      */
     InfoString ToString(void) const;
+
+    const uint8_t *GetData(void) const { return mData; }
+    uint16_t       GetLength(void) const { return mLength; }
+
+private:
+    static constexpr uint16_t kMaxRawPowerSettingSize = OPENTHREAD_PLATFORM_CONFIG_RAW_POWER_SETTING_SIZE;
+
+    uint8_t  mData[kMaxRawPowerSettingSize];
+    uint16_t mLength;
 };
 
 class CalibratedPower

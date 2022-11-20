@@ -60,6 +60,7 @@
 #include "mac/link_raw.hpp"
 #include "radio/radio.hpp"
 #include "utils/otns.hpp"
+#include "utils/power_calibration.hpp"
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "backbone_router/backbone_tmf.hpp"
@@ -618,6 +619,9 @@ private:
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     FactoryDiags::Diags mDiags;
 #endif
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+    Utils::PowerCalibration mPowerCalibration;
+#endif
 
     bool mIsInitialized;
 
@@ -958,6 +962,13 @@ template <> inline Extension::ExtensionBase &Instance::Get(void) { return mExten
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 template <> inline FactoryDiags::Diags &Instance::Get(void) { return mDiags; }
+#endif
+
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+template <> inline Utils::PowerCalibration &Instance::Get(void)
+{
+    return mPowerCalibration;
+}
 #endif
 
 /**

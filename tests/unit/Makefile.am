@@ -146,6 +146,7 @@ check_PROGRAMS                                                     += \
     ot-test-netif                                                     \
     ot-test-network-data                                              \
     ot-test-network-name                                              \
+    ot-test-power-calibration                                         \
     ot-test-pool                                                      \
     ot-test-priority-queue                                            \
     ot-test-pskc                                                      \
@@ -343,6 +344,10 @@ ot_test_network_data_SOURCES        = $(COMMON_SOURCES) test_network_data.cpp
 ot_test_pool_LDADD                  = $(COMMON_LDADD)
 ot_test_pool_LIBTOOLFLAGS           = $(COMMON_LIBTOOLFLAGS)
 ot_test_pool_SOURCES                = $(COMMON_SOURCES) test_pool.cpp
+
+ot_test_power_calibration_LDADD        = $(COMMON_LDADD)
+ot_test_power_calibration_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)
+ot_test_power_calibration_SOURCES      = $(COMMON_SOURCES) test_power_calibration.cpp
 
 ot_test_priority_queue_LDADD        = $(COMMON_LDADD)
 ot_test_priority_queue_LIBTOOLFLAGS = $(COMMON_LIBTOOLFLAGS)

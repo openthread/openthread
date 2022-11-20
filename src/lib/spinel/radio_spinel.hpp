@@ -890,9 +890,10 @@ public:
     /**
      * Add a calibrated power of the specificed channel to the power calibration table.
      *
-     * @param[in] aChannel          The radio channel.
-     * @param[in] aActualPower      The actual power in 0.01dBm.
-     * @param[in] aRawPowerSetting  A pointer to the raw power setting.
+     * @param[in] aChannel                The radio channel.
+     * @param[in] aActualPower            The actual power in 0.01dBm.
+     * @param[in] aRawPowerSetting        A pointer to the raw power setting byte array.
+     * @param[in] aRawPowerSettingLength  The length of the @p aRawPowerSetting.
      *
      * @retval  OT_ERROR_NONE              Successfully added the calibrated power to the power calibration table.
      * @retval  OT_ERROR_NO_BUFS           No available entry in the power calibration table.
@@ -902,7 +903,10 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
      *
      */
-    otError AddCalibratedPower(uint8_t aChannel, int16_t aActualPower, const otRawPowerSetting *aRawPowerSetting);
+    otError AddCalibratedPower(uint8_t        aChannel,
+                               int16_t        aActualPower,
+                               const uint8_t *aRawPowerSetting,
+                               uint16_t       aRawPowerSettingLength);
 
     /**
      * Clear all calibrated powers from the power calibration table.

@@ -812,6 +812,27 @@ target_link_libraries(ot-test-pool
 
 add_test(NAME ot-test-pool COMMAND ot-test-pool)
 
+add_executable(ot-test-power-calibration
+    test_power_calibration.cpp
+)
+
+target_include_directories(ot-test-power-calibration
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-power-calibration
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-power-calibration
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-power-calibration COMMAND ot-test-power-calibration)
+
 add_executable(ot-test-priority-queue
     test_priority_queue.cpp
 )
@@ -1022,27 +1043,3 @@ target_link_libraries(ot-test-tlv
 )
 
 add_test(NAME ot-test-tlv COMMAND ot-test-tlv)
-
-add_executable(ot-test-platform-utils-power-calibration
-    test_platform_utils_power_calibration.cpp
-)
-
-target_include_directories(ot-test-platform-utils-power-calibration
-    PRIVATE
-        ${COMMON_INCLUDES}
-        ${PROJECT_SOURCE_DIR}/examples/platforms
-)
-
-target_compile_options(ot-test-platform-utils-power-calibration
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-        -DOPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE=1
-)
-
-target_link_libraries(ot-test-platform-utils-power-calibration
-    PRIVATE
-        ${COMMON_LIBS}
-        $<TARGET_OBJECTS:openthread-platform-utils>
-)
-
-add_test(NAME ot-test-platform-utils-power-calibration COMMAND ot-test-platform-utils-power-calibration)

@@ -1944,18 +1944,21 @@ enum
      */
     SPINEL_PROP_RADIO_COEX_ENABLE = SPINEL_PROP_PHY_EXT__BEGIN + 13,
 
-    /// Calibrated power
-    /** Format: `t(CsU)`
+    /// Calibrated Power Table
+    /** Format: `A(Csd)` - Insert/Set
+     *
+     *  The `Insert` command on the property inserts a calibration power entry to the calibrated power table.
+     *  The `Set` command on the property with empty payload clears the calibrated power table.
      *
      * Structure Parameters:
      *  `C`: Channel.
      *  `s`: Actual power in 0.01 dBm.
-     *  `U`: Raw power setting.
+     *  `d`: Raw power setting.
      */
     SPINEL_PROP_RADIO_CALIBRATED_POWER = SPINEL_PROP_PHY_EXT__BEGIN + 14,
 
     /// Target power for a channel
-    /** Format: `t(Cs)`
+    /** Format: `t(Cs)` - Write only
      *
      * Structure Parameters:
      *  `C`: Channel.

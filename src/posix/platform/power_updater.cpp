@@ -106,7 +106,8 @@ void PowerUpdater::UpdateCalibratedPower(void)
         for (uint8_t ch = calibratedPower.GetChannelStart(); ch < calibratedPower.GetChannelEnd(); ch++)
         {
             SuccessOrExit(otPlatRadioAddCalibratedPower(gInstance, ch, calibratedPower.GetActualPower(),
-                                                        &calibratedPower.GetRawPowerSetting()));
+                                                        calibratedPower.GetRawPowerSetting().GetData(),
+                                                        calibratedPower.GetRawPowerSetting().GetLength()));
         }
     }
 

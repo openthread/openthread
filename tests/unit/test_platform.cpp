@@ -445,20 +445,4 @@ OT_TOOL_WEAK void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDs
 
 #endif // #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
-OT_TOOL_WEAK int SEGGER_RTT_SetFlagsUpBuffer(unsigned BufferIndex, unsigned Flags)
-{
-    OT_UNUSED_VARIABLE(BufferIndex);
-    OT_UNUSED_VARIABLE(Flags);
-
-    return 0;
-}
-
-OT_TOOL_WEAK unsigned SEGGER_RTT_WriteNoLock(unsigned BufferIndex, const void *pBuffer, unsigned NumBytes)
-{
-    OT_UNUSED_VARIABLE(BufferIndex);
-    OT_UNUSED_VARIABLE(pBuffer);
-    OT_UNUSED_VARIABLE(NumBytes);
-
-    return 0;
-}
 } // extern "C"

@@ -393,27 +393,6 @@ typedef struct otLinkMetrics
     bool mReserved : 1;   ///< Reserved, this is for reference device.
 } otLinkMetrics;
 
-#define OT_POWER_SETTING_MAX_SIZE 32 ///< The max size of the raw power setting in bytes
-
-/**
- * @struct otRawPowerSetting
- *
- * This structure represents the raw power setting. The raw power setting is an opaque array. OpenThread doesn't
- * define the format of the raw power setting. The format is radio hardware related and it should be defined by
- * the developers in the platform radio driver.
- *
- * For example, if the radio hardware contains both the radio chip and the FEM chip, the raw power settings can be
- * a combination of the radio power register and the FEM gain value.
- *
- */
-OT_TOOL_PACKED_BEGIN
-struct otRawPowerSetting
-{
-    uint8_t m8[OT_POWER_SETTING_MAX_SIZE];
-    uint8_t mLength;
-} OT_TOOL_PACKED_END;
-typedef struct otRawPowerSetting otRawPowerSetting;
-
 /**
  * @}
  *
@@ -1168,28 +1147,39 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
 /**
  * Add a calibrated power of the specificed channel to the power calibration table.
  *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
+ *
  * The `aActualPower` is the actual measured output power when the paratemrers of the radio hardware modules
  * are set to the `aRawPowerSetting`.
  *
- * @param[in] aInstance         The OpenThread instance structure.
- * @param[in] aChannel          The radio channel.
- * @param[in] aActualPower      The actual power in 0.01dBm.
- * @param[in] aRawPowerSetting  A pointer to the raw power setting.
+ * The raw power setting is an opaque byte array. OpenThread doesn't define the format of the raw power setting.
+ * Its format is radio hardware related and it should be defined by the developers in the platform radio driver.
+ * For example, if the radio hardware contains both the radio chip and the FEM chip, the raw power setting can be
+ * a combination of the radio power register and the FEM gain value.
  *
- * @retval OT_ERROR_NONE             Successfully added the calibrated power to the power calibration table.
+ * @param[in] aInstance               The OpenThread instance structure.
+ * @param[in] aChannel                The radio channel.
+ * @param[in] aActualPower            The actual power in 0.01dBm.
+ * @param[in] aRawPowerSetting        A pointer to the raw power setting byte array.
+ * @param[in] aRawPowerSettingLength  The length of the @p aRawPowerSetting.
+ *
+ * @retval OT_ERROR_NONE             Successfully added the calibrated power to the power calibration tabl.
  * @retval OT_ERROR_NO_BUFS          No available entry in the power calibration table.
  * @retval OT_ERROR_INVALID_ARGS     The @p aChannel, @aActualPower or @p aRawPowerSetting is invalid or the
  *                                   @ aActualPower already exists in the power calibration table;
  * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
  *
  */
-otError otPlatRadioAddCalibratedPower(otInstance *             aInstance,
-                                      uint8_t                  aChannel,
-                                      int16_t                  aActualPower,
-                                      const otRawPowerSetting *aRawPowerSetting);
+otError otPlatRadioAddCalibratedPower(otInstance *   aInstance,
+                                      uint8_t        aChannel,
+                                      int16_t        aActualPower,
+                                      const uint8_t *aRawPowerSetting,
+                                      uint16_t       aRawPowerSettingLength);
 
 /**
  * Clear all calibrated powers from the power calibration table.
+ *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  *
@@ -1202,21 +1192,50 @@ otError otPlatRadioClearCalibratedPowers(otInstance *aInstance);
 /**
  * Set the target power for the given channel.
  *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
+ *       If this API is implemented, the function `otPlatRadioSetTransmitPower()` should be disabled.
+ *
  * The radio driver should set the actual output power to be less than or equal to the target power and as close
  * as possible to the target power.
- *
- * @note If this feature is enabled, the function `otPlatRadioSetTransmitPower()` should be disabled.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aChannel      The radio channel.
  * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel.
  *
  * @retval  OT_ERROR_NONE             Successfully set the target power.
- * @retval  OT_ERROR_INVALID_ARGS     The @p aChannel or @p aTargetPower is invalid..
+ * @retval  OT_ERROR_INVALID_ARGS     The @p aChannel or @p aTargetPower is invalid.
  * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented
  *
  */
 otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower);
+
+/**
+ * Get the raw power setting for the given channel.
+ *
+ * @note OpenThread `src/core/utils` implements a default implementation of the API `otPlatRadioAddCalibratedPower()`,
+ *       `otPlatRadioClearCalibratedPowers()` and `otPlatRadioSetChannelTargetPower()`. This API is provided by
+ *       the default implementation to get the raw power setting for the given channel. If the platform doesn't
+ *       use the default implementation, it can ignore this API.
+ *
+ * Platform radio layer should parse the raw power setting based on the radio layer defined format and set the
+ * parameters of each radio hardware module.
+ *
+ * @param[in]      aInstance               The OpenThread instance structure.
+ * @param[in]      aChannel                The radio channel.
+ * @param[out]     aRawPowerSetting        A pointer to the raw power setting byte array.
+ * @param[in,out]  aRawPowerSettingLength  On input, a pointer to the size of @p aRawPowerSetting.
+ *                                         On output, a pointer to the length of the raw power setting data.
+ *
+ * @retval  OT_ERROR_NONE          Successfully got the target power.
+ * @retval  OT_ERROR_INVALID_ARGS  The @p aChannel is invalid, @p aRawPowerSetting or @p aRawPowerSettingLength is NULL
+ *                                 or @aRawPowerSettingLength is too short.
+ * @retval  OT_ERROR_NOT_FOUND     The raw power setting for the @p aChannel was not found.
+ *
+ */
+extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
+                                             uint8_t     aChannel,
+                                             uint8_t *   aRawPowerSetting,
+                                             uint16_t *  aRawPowerSettingLength);
 
 /**
  * @}

@@ -32,7 +32,6 @@ add_library(openthread-platform-utils OBJECT
     logging_rtt.c
     mac_frame.cpp
     otns_utils.cpp
-    power_calibration.cpp
     settings_ram.c
     soft_source_match_table.c
 )
