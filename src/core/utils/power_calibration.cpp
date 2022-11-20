@@ -28,7 +28,7 @@
 
 #include "power_calibration.hpp"
 
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
@@ -166,7 +166,7 @@ Error PowerCalibration::GetRawPowerSetting(uint8_t   aChannel,
 exit:
     if (error == kErrorNone)
     {
-        mCalibratedPower->GetRawPowerSetting(aRawPowerSetting, aRawPowerSettingLength);
+        error = mCalibratedPower->GetRawPowerSetting(aRawPowerSetting, aRawPowerSettingLength);
     }
 
     return error;
@@ -220,4 +220,4 @@ otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
     return AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetRawPowerSetting(aChannel, aRawPowerSetting,
                                                                                    aRawPowerSettingLength);
 }
-#endif // OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#endif // OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE

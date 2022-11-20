@@ -237,7 +237,7 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiags(*this)
 #endif
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
     , mPowerCalibration(*this)
 #endif
     , mIsInitialized(false)

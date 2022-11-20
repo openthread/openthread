@@ -187,6 +187,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
+ *
+ * Define to 1 to enable the default implementation of the power calibration radio platform APIs.
+ *
+ */
+#ifndef OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
+#define OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_PLATFORM_CONFIG_RAW_POWER_SETTING_SIZE
  *
  * The size of the raw power setting byte array.

@@ -619,7 +619,7 @@ private:
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     FactoryDiags::Diags mDiags;
 #endif
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
     Utils::PowerCalibration mPowerCalibration;
 #endif
 
@@ -964,7 +964,7 @@ template <> inline Extension::ExtensionBase &Instance::Get(void) { return mExten
 template <> inline FactoryDiags::Diags &Instance::Get(void) { return mDiags; }
 #endif
 
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
 template <> inline Utils::PowerCalibration &Instance::Get(void)
 {
     return mPowerCalibration;
