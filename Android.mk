@@ -373,6 +373,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/utils/otns.cpp                                         \
     src/core/utils/parse_cmdline.cpp                                \
     src/core/utils/ping_sender.cpp                                  \
+    src/core/utils/power_calibration.cpp                            \
     src/core/utils/slaac_address.cpp                                \
     src/core/utils/srp_client_buffers.cpp                           \
     src/lib/hdlc/hdlc.cpp                                           \

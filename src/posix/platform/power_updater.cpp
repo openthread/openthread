@@ -56,7 +56,7 @@ otError PowerUpdater::SetRegion(uint16_t aRegionCode)
 
         for (uint8_t ch = targetPower.GetChannelStart(); ch <= targetPower.GetChannelEnd(); ch++)
         {
-            SuccessOrExit(otPlatRadioSetChannelTargetPower(gInstance, ch, targetPower.GetTargetPower()));
+            SuccessOrExit(error = otPlatRadioSetChannelTargetPower(gInstance, ch, targetPower.GetTargetPower()));
         }
     }
 
@@ -98,12 +98,13 @@ void PowerUpdater::UpdateCalibratedPower(void)
         calibrationFile = &mProductConfigFile;
     }
 
+    iterator = 0;
     while (calibrationFile->Get(kKeyCalibratedPower, iterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
         SuccessOrExit(calibratedPower.FromString(value));
         otLogInfoPlat("Update calibrated power: %s\r\n", calibratedPower.ToString().AsCString());
 
-        for (uint8_t ch = calibratedPower.GetChannelStart(); ch < calibratedPower.GetChannelEnd(); ch++)
+        for (uint8_t ch = calibratedPower.GetChannelStart(); ch <= calibratedPower.GetChannelEnd(); ch++)
         {
             SuccessOrExit(otPlatRadioAddCalibratedPower(gInstance, ch, calibratedPower.GetActualPower(),
                                                         calibratedPower.GetRawPowerSetting().GetData(),

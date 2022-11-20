@@ -44,9 +44,9 @@ PowerCalibration::PowerCalibration(Instance &aInstance)
 {
     memset(mNumCalibratedPowers, 0, sizeof(mNumCalibratedPowers));
 
-    for (uint16_t i = 0; i < kNumChannels; i++)
+    for (int16_t &targetPower : mTargetPowerTable)
     {
-        mTargetPowerTable[i] = CalibratedPower::kInvalidPower;
+        targetPower = CalibratedPower::kInvalidPower;
     }
 }
 

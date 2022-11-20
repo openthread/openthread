@@ -329,8 +329,8 @@ SOURCES_COMMON                                  = \
     utils/jam_detector.cpp                        \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
-    utils/power_calibration.cpp                   \
     utils/ping_sender.cpp                         \
+    utils/power_calibration.cpp                   \
     utils/slaac_address.cpp                       \
     utils/srp_client_buffers.cpp                  \
     $(NULL)
@@ -650,8 +650,8 @@ HEADERS_COMMON                                  = \
     utils/jam_detector.hpp                        \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
-    utils/power_calibration.hpp                   \
     utils/ping_sender.hpp                         \
+    utils/power_calibration.hpp                   \
     utils/slaac_address.hpp                       \
     utils/srp_client_buffers.hpp                  \
     $(NULL)
