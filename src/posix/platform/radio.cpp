@@ -35,6 +35,8 @@
 
 #include <string.h>
 
+#include <openthread/logging.h>
+
 #include "common/code_utils.hpp"
 #include "common/new.hpp"
 #include "lib/spinel/radio_spinel.hpp"
@@ -151,10 +153,15 @@ void Radio::Init(void)
         {
             power = static_cast<int8_t>(strtol(str, nullptr, 0));
             error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
-            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_FOUND)
+            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_IMPLEMENTED)
             {
                 DieNow(OT_ERROR_FAILED);
             }
+            else if (error == OT_ERROR_NOT_IMPLEMENTED)
+            {
+                otLogWarnPlat("The RCP doesn't support setting the max transmit power");
+            }
+
             ++channel;
         }
 
@@ -162,10 +169,15 @@ void Radio::Init(void)
         while (channel <= ot::Radio::kChannelMax)
         {
             error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
-            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_FOUND)
+            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_IMPLEMENTED)
             {
                 DieNow(OT_ERROR_FAILED);
             }
+            else if (error == OT_ERROR_NOT_IMPLEMENTED)
+            {
+                otLogWarnPlat("The RCP doesn't support setting the max transmit power");
+            }
+
             ++channel;
         }
 

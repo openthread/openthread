@@ -321,11 +321,51 @@
  *
  *   - SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION specifies the minimum spinel
  *     RCP API Version which is supported by the host-side implementation.
+ *     To reduce the backward compatibility issues, this number should be kept
+ *     as constant as possible.
  *
  *   - On start, host implementation queries the RCP API version and accepts
  *     any version number from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION up to
  *     and including SPINEL_RCP_API_VERSION.
  *
+ *   Host and RCP compatibility guideline:
+ *
+ *   - New host spinel layer should work with an older RCP firmware, i.e., host
+ *     implementation should remain backward compatible.
+ *
+ *   - Existing fields in the format of an already implemented spinel
+ *     property or command must not change.
+ *
+ *   - New fields must be appended to the end of the existing spinel format.
+ *     *  New fields for new features:
+ *          Adding a new capability flag to the otRadioCaps to indicate the new
+ *          fields. The host parses the spinel format based on the pre-fetched
+ *          otRadioCaps. The host should be able to enable/disable the feature
+ *          in runtime based on the otRadioCaps. Refer to PR4919 and PR5139.
+ *     *  New fields for changing existing implementations:
+ *          This case should be avoided as much as possible. It will cause the
+ *          compatibility issue.
+ *
+ *   - Deprecated fields must not be removed from the spinel format and they
+ *     must be set to a suitable default value.
+ *
+ *   - Adding new spinel properties.
+ *     * If the old version RCP doesn't support the new spinel property, it
+ *       must return the spinel error SPINEL_STATUS_PROP_NOT_FOUND.
+ *
+ *     * If the host can handle the new spinel property by processing the error
+ *       SPINEL_STATUS_PROP_NOT_FOUND, the API of the new spinel property must
+ *       return OT_ERROR_NOT_IMPLEMENTED or default value.
+ *
+ *     * If the host can't handle the new spinel property by processing the
+ *       error SPINEL_STATUS_PROP_NOT_FOUND, a new capability flag must be
+ *       added to the otRadioCaps to indicate whether RCP supports the new
+ *       spinel property. The host must handle the new spinel property by
+ *       processing the new capability flag.
+ *
+ *   - If none of the above methods make the new functions work, increasing the
+ *     SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION. This case should be avoided
+ *     as much as possible.
  * ---------------------------------------------------------------------------
  */
 
