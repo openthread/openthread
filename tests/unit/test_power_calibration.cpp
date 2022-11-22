@@ -31,15 +31,16 @@
 #include "test_platform.h"
 #include "test_util.h"
 
-namespace ot {
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 
+namespace ot {
 void TestPowerCalibration(void)
 {
     otInstance *instance;
     uint8_t     rawPowerSetting[2];
     uint16_t    rawPowerSettingLength;
 
-    struct CalibratedPower
+    struct CalibratedPowerEntry
     {
         uint8_t  mChannel;
         int16_t  mActualPower;
@@ -47,7 +48,7 @@ void TestPowerCalibration(void)
         uint16_t mRawPowerSettingLength;
     };
 
-    constexpr CalibratedPower kCalibratedPowerTable[] = {
+    constexpr CalibratedPowerEntry kCalibratedPowerTable[] = {
         {11, 15000, {0x02}, 1},
         {11, 5000, {0x00}, 1},
         {11, 10000, {0x01}, 1},
@@ -56,7 +57,7 @@ void TestPowerCalibration(void)
     instance = static_cast<otInstance *>(testInitInstance());
     VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
 
-    for (const CalibratedPower &calibratedPower : kCalibratedPowerTable)
+    for (const CalibratedPowerEntry &calibratedPower : kCalibratedPowerTable)
     {
         SuccessOrQuit(otPlatRadioAddCalibratedPower(instance, calibratedPower.mChannel, calibratedPower.mActualPower,
                                                     calibratedPower.mRawPowerSetting,
@@ -64,51 +65,56 @@ void TestPowerCalibration(void)
     }
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 4999));
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     VerifyOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength) ==
                  OT_ERROR_NOT_FOUND);
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 5000));
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
     VerifyOrQuit(rawPowerSettingLength == 1);
     VerifyOrQuit(rawPowerSetting[0] == 0x00);
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 9999));
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
     VerifyOrQuit(rawPowerSettingLength == 1);
     VerifyOrQuit(rawPowerSetting[0] == 0x00);
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 10000));
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
     VerifyOrQuit(rawPowerSettingLength == 1);
     VerifyOrQuit(rawPowerSetting[0] == 0x01);
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 14999));
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
     VerifyOrQuit(rawPowerSettingLength == 1);
     VerifyOrQuit(rawPowerSetting[0] == 0x01);
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 15000));
-    VerifyOrQuit(rawPowerSettingLength == 1);
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
     VerifyOrQuit(rawPowerSettingLength == 1);
     VerifyOrQuit(rawPowerSetting[0] == 0x02);
 
-    rawPowerSettingLength = 2;
+    SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 15001));
+    rawPowerSettingLength = sizeof(rawPowerSetting);
+    SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
+    VerifyOrQuit(rawPowerSettingLength == 1);
+    VerifyOrQuit(rawPowerSetting[0] == 0x02);
+
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     VerifyOrQuit(otPlatRadioGetRawPowerSetting(instance, 12, rawPowerSetting, &rawPowerSettingLength) ==
                  OT_ERROR_NOT_FOUND);
 
     SuccessOrQuit(otPlatRadioClearCalibratedPowers(instance));
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     VerifyOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength) ==
                  OT_ERROR_NOT_FOUND);
 
-    for (const CalibratedPower &calibratedPower : kCalibratedPowerTable)
+    for (const CalibratedPowerEntry &calibratedPower : kCalibratedPowerTable)
     {
         SuccessOrQuit(otPlatRadioAddCalibratedPower(instance, calibratedPower.mChannel, calibratedPower.mActualPower,
                                                     calibratedPower.mRawPowerSetting,
@@ -116,7 +122,7 @@ void TestPowerCalibration(void)
     }
 
     SuccessOrQuit(otPlatRadioSetChannelTargetPower(instance, 11, 15000));
-    rawPowerSettingLength = 2;
+    rawPowerSettingLength = sizeof(rawPowerSetting);
     SuccessOrQuit(otPlatRadioGetRawPowerSetting(instance, 11, rawPowerSetting, &rawPowerSettingLength));
     VerifyOrQuit(rawPowerSettingLength == 1);
     VerifyOrQuit(rawPowerSetting[0] == 0x02);
@@ -130,9 +136,15 @@ void TestPowerCalibration(void)
 }
 } // namespace ot
 
+#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+
 int main(void)
 {
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
     ot::TestPowerCalibration();
     printf("All tests passed\n");
+#else  // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+    printf("Power calibration is not enabled\n");
+#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
     return 0;
 }

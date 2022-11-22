@@ -23,7 +23,6 @@ Show the target power table.
 | FCC      | 25      | 26      | 1600                 |
 | ETSI     | 11      | 26      | 1000                 |
 Done
-Done
 ```
 
 #### powercalibrationtable

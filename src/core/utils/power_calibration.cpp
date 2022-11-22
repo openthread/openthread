@@ -28,7 +28,7 @@
 
 #include "power_calibration.hpp"
 
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
@@ -40,38 +40,36 @@ PowerCalibration::PowerCalibration(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mPowerUpdated(false)
     , mChannel(0)
-    , mCalibratedPower(nullptr)
+    , mCalibratedPowerIndex(kInvalidIndex)
 {
-    memset(mNumCalibratedPowers, 0, sizeof(mNumCalibratedPowers));
-
     for (int16_t &targetPower : mTargetPowerTable)
     {
-        targetPower = CalibratedPower::kInvalidPower;
+        targetPower = kInvalidPower;
     }
 }
 
-void PowerCalibration::CalibratedPower::Init(int16_t        aActualPower,
-                                             const uint8_t *aRawPowerSetting,
-                                             uint16_t       aRawPowerSettingLength)
+void PowerCalibration::CalibratedPowerEntry::Init(int16_t        aActualPower,
+                                                  const uint8_t *aRawPowerSetting,
+                                                  uint16_t       aRawPowerSettingLength)
 {
     AssertPointerIsNotNull(aRawPowerSetting);
     OT_ASSERT(aRawPowerSettingLength <= kMaxRawPowerSettingSize);
 
-    mActualPower           = aActualPower;
-    mRawPowerSettingLength = aRawPowerSettingLength;
-    memcpy(mRawPowerSetting, aRawPowerSetting, aRawPowerSettingLength);
+    mActualPower = aActualPower;
+    mLength      = aRawPowerSettingLength;
+    memcpy(mSettings, aRawPowerSetting, aRawPowerSettingLength);
 }
 
-Error PowerCalibration::CalibratedPower::GetRawPowerSetting(uint8_t *aRawPowerSetting, uint16_t *aRawPowerSettingLength)
+Error PowerCalibration::CalibratedPowerEntry::GetRawPowerSetting(uint8_t * aRawPowerSetting,
+                                                                 uint16_t *aRawPowerSettingLength)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aRawPowerSetting != nullptr && aRawPowerSettingLength != nullptr &&
-                     *aRawPowerSettingLength >= mRawPowerSettingLength,
+    VerifyOrExit(aRawPowerSetting != nullptr && aRawPowerSettingLength != nullptr && *aRawPowerSettingLength >= mLength,
                  error = kErrorInvalidArgs);
 
-    memcpy(aRawPowerSetting, mRawPowerSetting, mRawPowerSettingLength);
-    *aRawPowerSettingLength = mRawPowerSettingLength;
+    memcpy(aRawPowerSetting, mSettings, mLength);
+    *aRawPowerSettingLength = mLength;
 
 exit:
     return error;
@@ -82,32 +80,21 @@ Error PowerCalibration::AddCalibratedPower(uint8_t        aChannel,
                                            const uint8_t *aRawPowerSetting,
                                            uint16_t       aRawPowerSettingLength)
 {
-    Error            error = kErrorNone;
-    CalibratedPower *calibratedPowers;
-    uint8_t          numCalibratedPowers;
-    uint8_t          chIndex;
-    int16_t          i = 0;
+    Error                error = kErrorNone;
+    CalibratedPowerEntry entry;
+    uint8_t              chIndex;
 
     VerifyOrExit(IsChannelValid(aChannel) && aRawPowerSetting != nullptr &&
-                     aRawPowerSettingLength <= CalibratedPower::kMaxRawPowerSettingSize,
+                     aRawPowerSettingLength <= CalibratedPowerEntry::kMaxRawPowerSettingSize,
                  error = kErrorInvalidArgs);
 
-    chIndex             = aChannel - Radio::kChannelMin;
-    calibratedPowers    = &mCalibrationPowerTable[chIndex][0];
-    numCalibratedPowers = mNumCalibratedPowers[chIndex];
+    chIndex = aChannel - Radio::kChannelMin;
+    VerifyOrExit(!mCalibratedPowerTables[chIndex].ContainsMatching(aActualPower), error = kErrorInvalidArgs);
+    VerifyOrExit(!mCalibratedPowerTables[chIndex].IsFull(), error = kErrorNoBufs);
 
-    VerifyOrExit(numCalibratedPowers < kMaxNumCalibratedPowers, error = kErrorNoBufs);
-    VerifyOrExit(!FindCalibratedPower(calibratedPowers, numCalibratedPowers, aActualPower), error = kErrorInvalidArgs);
-
-    // Insert the calibrated power in order from small to large.
-    for (i = numCalibratedPowers; (i > 0) && (aActualPower < calibratedPowers[i - 1].GetActualPower()); i--)
-    {
-        calibratedPowers[i] = calibratedPowers[i - 1];
-    }
-
-    calibratedPowers[i].Init(aActualPower, aRawPowerSetting, aRawPowerSettingLength);
+    entry.Init(aActualPower, aRawPowerSetting, aRawPowerSettingLength);
+    SuccessOrExit(error = mCalibratedPowerTables[chIndex].PushBack(entry));
     mPowerUpdated = true;
-    mNumCalibratedPowers[chIndex]++;
 
 exit:
     return error;
@@ -115,7 +102,11 @@ exit:
 
 void PowerCalibration::ClearCalibratedPowers(void)
 {
-    memset(mNumCalibratedPowers, 0, sizeof(mNumCalibratedPowers));
+    for (CalibratedPowerTable &table : mCalibratedPowerTables)
+    {
+        table.Clear();
+    }
+
     mPowerUpdated = true;
 }
 
@@ -135,56 +126,45 @@ Error PowerCalibration::GetRawPowerSetting(uint8_t   aChannel,
                                            uint8_t * aRawPowerSetting,
                                            uint16_t *aRawPowerSettingLength)
 {
-    Error            error = kErrorNone;
-    uint8_t          chIndex;
-    uint8_t          numCalibratedPowers;
-    int16_t          i;
-    int16_t          targetPower;
-    CalibratedPower *calibratedPowers;
+    Error   error = kErrorNone;
+    uint8_t chIndex;
+    uint8_t powerIndex = kInvalidIndex;
+    int16_t foundPower = kInvalidPower;
+    int16_t targetPower;
+    int16_t actualPower;
 
-    VerifyOrExit(IsChannelValid(aChannel) && (aRawPowerSetting != nullptr), error = kErrorInvalidArgs);
+    VerifyOrExit(IsChannelValid(aChannel), error = kErrorInvalidArgs);
     VerifyOrExit((mChannel != aChannel) || mPowerUpdated);
 
-    chIndex             = aChannel - Radio::kChannelMin;
-    targetPower         = mTargetPowerTable[chIndex];
-    calibratedPowers    = &mCalibrationPowerTable[chIndex][0];
-    numCalibratedPowers = mNumCalibratedPowers[chIndex];
+    chIndex     = aChannel - Radio::kChannelMin;
+    targetPower = mTargetPowerTable[chIndex];
+    VerifyOrExit(targetPower != kInvalidPower, error = kErrorNotFound);
 
-    VerifyOrExit(targetPower != CalibratedPower::kInvalidPower, error = kErrorNotFound);
-    VerifyOrExit(numCalibratedPowers > 0, error = kErrorNotFound);
+    for (uint8_t i = 0; i < mCalibratedPowerTables[chIndex].GetLength(); i++)
+    {
+        actualPower = mCalibratedPowerTables[chIndex][i].GetActualPower();
 
-    for (i = numCalibratedPowers - 1; (i >= 0) && (targetPower < calibratedPowers[i].GetActualPower()); i--)
-        ;
+        if ((actualPower <= targetPower) && ((foundPower == kInvalidPower) || (foundPower <= actualPower)))
+        {
+            foundPower = actualPower;
+            powerIndex = i;
+        }
+    }
 
-    VerifyOrExit(i >= 0, error = kErrorNotFound);
+    VerifyOrExit(powerIndex != kInvalidIndex, error = kErrorNotFound);
 
-    mCalibratedPower = &calibratedPowers[i];
-
-    mChannel      = aChannel;
-    mPowerUpdated = false;
+    mCalibratedPowerIndex = powerIndex;
+    mChannel              = aChannel;
+    mPowerUpdated         = false;
 
 exit:
     if (error == kErrorNone)
     {
-        error = mCalibratedPower->GetRawPowerSetting(aRawPowerSetting, aRawPowerSettingLength);
+        error = mCalibratedPowerTables[mChannel - Radio::kChannelMin][mCalibratedPowerIndex].GetRawPowerSetting(
+            aRawPowerSetting, aRawPowerSettingLength);
     }
 
     return error;
-}
-
-bool PowerCalibration::FindCalibratedPower(CalibratedPower *aCalibratedPowers,
-                                           uint8_t          aNumCalibratedPowers,
-                                           int16_t          aActualPower)
-{
-    bool ret = false;
-
-    for (uint8_t i = 0; i < aNumCalibratedPowers; i++)
-    {
-        VerifyOrExit(aCalibratedPowers[i].GetActualPower() != aActualPower, ret = true);
-    }
-
-exit:
-    return ret;
 }
 } // namespace Utils
 } // namespace ot
@@ -217,7 +197,12 @@ otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                       uint8_t *   aRawPowerSetting,
                                       uint16_t *  aRawPowerSettingLength)
 {
-    return AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetRawPowerSetting(aChannel, aRawPowerSetting,
-                                                                                   aRawPowerSettingLength);
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aRawPowerSetting != nullptr && aRawPowerSettingLength != nullptr, error = OT_ERROR_INVALID_ARGS);
+    error = AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetRawPowerSetting(aChannel, aRawPowerSetting,
+                                                                                    aRawPowerSettingLength);
+exit:
+    return error;
 }
-#endif // OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
+#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE

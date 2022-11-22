@@ -37,10 +37,12 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 
 #include <openthread/platform/radio.h>
 
+#include "common/array.hpp"
+#include "common/numeric_limits.hpp"
 #include "radio/radio.hpp"
 
 namespace ot {
@@ -115,46 +117,51 @@ public:
     Error GetRawPowerSetting(uint8_t aChannel, uint8_t *aRawPowerSetting, uint16_t *aRawPowerSettingLength);
 
 private:
-    class CalibratedPower
+    class CalibratedPowerEntry
     {
     public:
-        static constexpr uint16_t kInvalidPower           = INT16_MAX;
-        static constexpr uint16_t kMaxRawPowerSettingSize = OPENTHREAD_PLATFORM_CONFIG_RAW_POWER_SETTING_SIZE;
+        static constexpr uint16_t kMaxRawPowerSettingSize = OPENTHREAD_CONFIG_RAW_POWER_SETTING_SIZE;
 
-        CalibratedPower()
+        CalibratedPowerEntry(void)
             : mActualPower(kInvalidPower)
-            , mRawPowerSettingLength(0)
+            , mLength(0)
         {
         }
 
         void    Init(int16_t aActualPower, const uint8_t *aRawPowerSetting, uint16_t aRawPowerSettingLength);
         Error   GetRawPowerSetting(uint8_t *aRawPowerSetting, uint16_t *aRawPowerSettingLength);
         int16_t GetActualPower(void) const { return mActualPower; }
+        bool    Matches(int16_t aActualPower) const { return aActualPower == mActualPower; }
 
     private:
         int16_t  mActualPower;
-        uint8_t  mRawPowerSetting[kMaxRawPowerSettingSize];
-        uint16_t mRawPowerSettingLength;
+        uint8_t  mSettings[kMaxRawPowerSettingSize];
+        uint16_t mLength;
     };
 
-    bool FindCalibratedPower(CalibratedPower *aCalibratedPowers, uint8_t aNumCalibratedPowers, int16_t aActualPower);
     bool IsChannelValid(uint8_t aChannel) const
     {
         return ((aChannel >= Radio::kChannelMin) && (aChannel <= Radio::kChannelMax));
     }
 
+    static constexpr uint8_t  kInvalidIndex           = NumericLimits<uint8_t>::kMax;
+    static constexpr uint16_t kInvalidPower           = NumericLimits<int16_t>::kMax;
+    static constexpr uint16_t kMaxNumCalibratedPowers = OPENTHREAD_CONFIG_NUM_CALIBRATED_POWER_ENTRIES;
     static constexpr uint16_t kNumChannels            = Radio::kChannelMax - Radio::kChannelMin + 1;
-    static constexpr uint16_t kMaxNumCalibratedPowers = OPENTHREAD_PLATFORM_CONFIG_NUM_CALIBRATION_POWER_ENTRIES;
 
-    bool             mPowerUpdated;
-    uint8_t          mChannel;
-    int16_t          mTargetPowerTable[kNumChannels];
-    uint8_t          mNumCalibratedPowers[kNumChannels];
-    CalibratedPower  mCalibrationPowerTable[kNumChannels][kMaxNumCalibratedPowers];
-    CalibratedPower *mCalibratedPower;
+    static_assert(kMaxNumCalibratedPowers < NumericLimits<uint8_t>::kMax,
+                  "kMaxNumCalibratedPowers is larger than or equal to max");
+
+    typedef Array<CalibratedPowerEntry, kMaxNumCalibratedPowers> CalibratedPowerTable;
+
+    bool                 mPowerUpdated;
+    uint8_t              mChannel;
+    int16_t              mTargetPowerTable[kNumChannels];
+    uint8_t              mCalibratedPowerIndex;
+    CalibratedPowerTable mCalibratedPowerTables[kNumChannels];
 };
 } // namespace Utils
 } // namespace ot
 
-#endif // OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
+#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 #endif // POWER_CALIBRATION_HPP_

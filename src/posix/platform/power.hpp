@@ -153,7 +153,7 @@ class RawPowerSetting
 {
 public:
     // Recommended buffer size to use with `ToString()`.
-    static constexpr uint16_t       kInfoStringSize = OPENTHREAD_PLATFORM_CONFIG_RAW_POWER_SETTING_SIZE * 2 + 1;
+    static constexpr uint16_t       kInfoStringSize = OPENTHREAD_CONFIG_RAW_POWER_SETTING_SIZE * 2 + 1;
     typedef String<kInfoStringSize> InfoString;
 
     /**
@@ -179,7 +179,7 @@ public:
     uint16_t       GetLength(void) const { return mLength; }
 
 private:
-    static constexpr uint16_t kMaxRawPowerSettingSize = OPENTHREAD_PLATFORM_CONFIG_RAW_POWER_SETTING_SIZE;
+    static constexpr uint16_t kMaxRawPowerSettingSize = OPENTHREAD_CONFIG_RAW_POWER_SETTING_SIZE;
 
     uint8_t  mData[kMaxRawPowerSettingSize];
     uint16_t mLength;

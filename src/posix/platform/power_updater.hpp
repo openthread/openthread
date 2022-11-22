@@ -48,13 +48,13 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class updates the power tables to the RCP.
+ * This class updates the target power table and calibrated powe table to the RCP.
  *
  */
 class PowerUpdater
 {
 public:
-    PowerUpdater()
+    PowerUpdater(void)
         : mFactoryConfigFile(kFactoryConfigFile)
         , mProductConfigFile(kProductConfigFile)
         , mRegionCode(0)

@@ -516,6 +516,7 @@ HEADERS_COMMON                                  = \
     config/parent_search.h                        \
     config/ping_sender.h                          \
     config/platform.h                             \
+    config/power_calibration.h                    \
     config/radio_link.h                           \
     config/sntp_client.h                          \
     config/srp_client.h                           \

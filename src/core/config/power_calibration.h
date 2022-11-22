@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,61 +26,43 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-
 /**
- * This header file defines the OpenThread core configuration for toranj with simulation platform.
+ * @file
+ *   This file includes compile-time configurations for power calibration module.
  *
  */
 
-// Include the common configuration for all platforms.
-#include "openthread-core-toranj-config.h"
+#ifndef CONFIG_POWER_CALIBRATION_H_
+#define CONFIG_POWER_CALIBRATION_H_
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
+ * @def OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
  *
- * The platform-specific string to insert into the OpenThread version string.
+ * Define to 1 to enable the default implementation of the power calibration module.
  *
  */
-#if OPENTHREAD_RADIO
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
-#else
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
+#ifndef OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#define OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE 0
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+ * @def OPENTHREAD_CONFIG_RAW_POWER_SETTING_SIZE
  *
- * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
- *
- * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
+ * The size of the raw power setting byte array.
  *
  */
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+#ifndef OPENTHREAD_CONFIG_RAW_POWER_SETTING_SIZE
+#define OPENTHREAD_CONFIG_RAW_POWER_SETTING_SIZE 16
+#endif
 
 /**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
+ * @def OPENTHREAD_CONFIG_NUM_CALIBRATED_POWER_ENTRIES
  *
- * Selects if, and where the LOG output goes to.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-
-/**
- * @def OPENTHREAD_CONFIG_DNS_DSO_ENABLE
- *
- * Define to 1 to enable DSO support.
+ * The number of the calibrated power entries for each channel.
  *
  */
-#define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 1
+#ifndef OPENTHREAD_CONFIG_NUM_CALIBRATED_POWER_ENTRIES
+#define OPENTHREAD_CONFIG_NUM_CALIBRATED_POWER_ENTRIES 6
+#endif
 
-/**
- * @def OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
- *
- * Enable the external heap.
- *
- */
-#define OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE 1
-
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */
+#endif // CONFIG_POWER_CALIBRATION_H_

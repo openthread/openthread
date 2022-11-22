@@ -276,13 +276,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
+ * @def OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
  *
- * Define to 1 to enable the default implementation of the power calibration radio platform APIs.
+ * Define to 1 to enable the default implementation of the power calibration module.
  *
  */
-#ifndef OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE
-#define OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_PLATFORM_API_ENABLE 1
+#ifndef OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#define OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE 1
 #endif
 
 #endif // OPENTHREAD_CORE_SIMULATION_CONFIG_H_
