@@ -1001,3 +1001,24 @@ target_link_libraries(ot-test-timer
 )
 
 add_test(NAME ot-test-timer COMMAND ot-test-timer)
+
+add_executable(ot-test-tlv
+    test_tlv.cpp
+)
+
+target_include_directories(ot-test-tlv
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-tlv
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-tlv
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-tlv COMMAND ot-test-tlv)

@@ -501,8 +501,18 @@ protected:
     static const uint8_t kExtendedLength = 255; // Extended Length value.
 
 private:
-    static Error ReadTlv(const Message &aMessage, uint16_t aOffset, uint16_t &aLength, uint16_t &aValueOffset);
-    static Error Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uint16_t *aSize, bool *aIsExtendedTlv);
+    struct ParsedInfo
+    {
+        Error ParseFrom(const Message &aMessage, uint16_t aOffset);
+        Error FindIn(const Message &aMessage, uint8_t aType);
+
+        uint8_t  mType;
+        uint16_t mLength;
+        uint16_t mOffset;
+        uint16_t mValueOffset;
+        uint16_t mSize;
+    };
+
     static Error FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
     static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
     static Error ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue);

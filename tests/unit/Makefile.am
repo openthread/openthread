@@ -155,6 +155,7 @@ check_PROGRAMS                                                     += \
     ot-test-srp-server                                                \
     ot-test-string                                                    \
     ot-test-timer                                                     \
+    ot-test-tlv                                                       \
     $(NULL)
 
 if OPENTHREAD_ENABLE_NCP
@@ -386,6 +387,10 @@ ot_test_spinel_encoder_SOURCES      = $(COMMON_SOURCES) test_spinel_encoder.cpp
 ot_test_timer_LDADD                 = $(COMMON_LDADD)
 ot_test_timer_LIBTOOLFLAGS          = $(COMMON_LIBTOOLFLAGS)
 ot_test_timer_SOURCES               = $(COMMON_SOURCES) test_timer.cpp
+
+ot_test_tlv_LDADD                   = $(COMMON_LDADD)
+ot_test_tlv_LIBTOOLFLAGS            = $(COMMON_LIBTOOLFLAGS)
+ot_test_tlv_SOURCES                 = $(COMMON_SOURCES) test_tlv.cpp
 
 ot_test_toolchain_LDADD             = $(NULL)
 ot_test_toolchain_SOURCES           = test_toolchain.cpp test_toolchain_c.c
