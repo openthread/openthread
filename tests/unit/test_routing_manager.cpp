@@ -319,8 +319,12 @@ void AdvanceTime(uint32_t aDuration)
 
 void ValidateRouterAdvert(const Icmp6Packet &aPacket)
 {
-    Ip6::Nd::RouterAdvertMessage raMsg(aPacket);
-    bool                         sawExpectedPio = false;
+    constexpr uint8_t kMaxPrefixes = 16;
+
+    Ip6::Nd::RouterAdvertMessage     raMsg(aPacket);
+    bool                             sawExpectedPio = false;
+    Array<Ip6::Prefix, kMaxPrefixes> pioPrefixes;
+    Array<Ip6::Prefix, kMaxPrefixes> rioPrefixes;
 
     VerifyOrQuit(raMsg.IsValid());
 
@@ -338,6 +342,9 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
 
             VerifyOrQuit(pio.IsValid());
             pio.GetPrefix(prefix);
+
+            VerifyOrQuit(!pioPrefixes.Contains(prefix), "Duplicate PIO prefix in RA");
+            SuccessOrQuit(pioPrefixes.PushBack(prefix));
 
             SuccessOrQuit(otBorderRoutingGetOnLinkPrefix(sInstance, &localOnLink));
 
@@ -380,6 +387,9 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
 
             VerifyOrQuit(rio.IsValid());
             rio.GetPrefix(prefix);
+
+            VerifyOrQuit(!rioPrefixes.Contains(prefix), "Duplicate RIO prefix in RA");
+            SuccessOrQuit(rioPrefixes.PushBack(prefix));
 
             for (RioPrefix &rioPrefix : sExpectedRios)
             {
@@ -2537,6 +2547,76 @@ void TestSavedOnLinkPrefixes(void)
     VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable the instance and re-enable it.
+
+    Log("Disabling and re-enabling OT Instance");
+
+    testFreeInstance(sInstance);
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager.
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data to include the local OMR and on-link prefix.
+
+    VerifyOmrPrefixInNetData(localOmr);
+    VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send RA from router A advertising an on-link prefix.
+
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, kValidLitime, kPreferredLifetime)});
+
+    sRaValidated = false;
+    sExpectedPio = kPioDeprecatingLocalOnLink;
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sDeprecatingPrefixes.GetLength() == 0);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable the instance and re-enable it.
+
+    Log("Disabling and re-enabling OT Instance");
+
+    testFreeInstance(sInstance);
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager.
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check Network Data to include the local OMR and on-link prefix.
+
+    VerifyOmrPrefixInNetData(localOmr);
+    VerifyExternalRoutesInNetData({ExternalRoute(localOnLink, NetworkData::kRoutePreferenceMedium)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     Log("Changing ext PAN ID");
 
     oldLocalOnLink = localOnLink;
