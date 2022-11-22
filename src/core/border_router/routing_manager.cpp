@@ -758,12 +758,14 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         if (error == kErrorNone)
         {
             mRaInfo.mLastTxTime = TimerMilli::GetNow();
+            Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxSuccess++;
             LogInfo("Sent Router Advertisement on %s", mInfraIf.ToString().AsCString());
             DumpDebg("[BR-CERT] direction=send | type=RA |", raMsg.GetAsPacket().GetBytes(),
                      raMsg.GetAsPacket().GetLength());
         }
         else
         {
+            Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
             LogWarn("Failed to send Router Advertisement on %s: %s", mInfraIf.ToString().AsCString(),
                     ErrorToString(error));
         }
@@ -901,6 +903,7 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     OT_UNUSED_VARIABLE(aPacket);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
+    Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsRx++;
     LogInfo("Received Router Solicitation from %s on %s", aSrcAddress.ToString().AsCString(),
             mInfraIf.ToString().AsCString());
 
@@ -928,6 +931,7 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
 
     VerifyOrExit(routerAdvMessage.IsValid());
 
+    Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaRx++;
     LogInfo("Received Router Advertisement from %s on %s", aSrcAddress.ToString().AsCString(),
             mInfraIf.ToString().AsCString());
     DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
@@ -2882,11 +2886,22 @@ Error RoutingManager::RsSender::SendRs(void)
     Ip6::Address                  destAddress;
     Ip6::Nd::RouterSolicitMessage routerSolicit;
     InfraIf::Icmp6Packet          packet;
+    Error                         error;
 
     packet.InitFrom(routerSolicit);
     destAddress.SetToLinkLocalAllRoutersMulticast();
 
-    return Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
+    error = Get<RoutingManager>().mInfraIf.Send(packet, destAddress);
+
+    if (error == kErrorNone)
+    {
+        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxSuccess++;
+    }
+    else
+    {
+        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsTxFailure++;
+    }
+    return error;
 }
 
 void RoutingManager::RsSender::HandleTimer(void)

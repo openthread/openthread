@@ -83,6 +83,9 @@ Ip6::Ip6(Instance &aInstance)
     , mTcp(aInstance)
 #endif
 {
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    ResetBorderRoutingCounters();
+#endif
 }
 
 Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
