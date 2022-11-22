@@ -291,7 +291,7 @@ Error RouterTable::Release(uint8_t aRouterId)
 
     for (router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
     {
-        if (router->GetNextHop() == rloc16)
+        if (router->GetNextHop() == aRouterId)
         {
             router->SetNextHop(Mle::kInvalidRouterId);
             router->SetCost(0);
