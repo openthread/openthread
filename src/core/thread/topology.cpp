@@ -81,6 +81,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mRxOnWhenIdle     = aNeighbor.IsRxOnWhenIdle();
     mFullThreadDevice = aNeighbor.IsFullThreadDevice();
     mFullNetworkData  = (aNeighbor.GetNetworkDataType() == NetworkData::kFullSet);
+    mVersion          = aNeighbor.GetVersion();
 }
 
 void Neighbor::Init(Instance &aInstance)
