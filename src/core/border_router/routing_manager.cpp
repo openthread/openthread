@@ -2122,6 +2122,7 @@ void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
 {
     const MeshCoP::ExtendedPanId &extPanId = Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
     OldPrefix *                   entry;
+    Ip6::Prefix                   oldLocalPrefix = mLocalPrefix;
 
     // Global ID: 40 most significant bits of Extended PAN ID
     // Subnet ID: 16 least significant bits of Extended PAN ID
@@ -2131,6 +2132,11 @@ void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
     memcpy(mLocalPrefix.mPrefix.mFields.m8 + 6, extPanId.m8 + 6, 2);
 
     mLocalPrefix.SetLength(kOnLinkPrefixLength);
+
+    // We ensure that the local prefix did change, since not all the
+    // bytes in Extended PAN ID are used in derivation of the local prefix.
+
+    VerifyOrExit(mLocalPrefix != oldLocalPrefix);
 
     LogNote("Local on-link prefix: %s", mLocalPrefix.ToString().AsCString());
 
@@ -2149,6 +2155,9 @@ void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
     {
         mState = kIdle;
     }
+
+exit:
+    return;
 }
 
 void RoutingManager::OnLinkPrefixManager::Start(void)
@@ -2462,6 +2471,8 @@ void RoutingManager::OnLinkPrefixManager::HandleExtPanIdChange(void)
 
     GenerateLocalPrefix();
 
+    VerifyOrExit(oldPrefix != mLocalPrefix);
+
     switch (oldState)
     {
     case kIdle:
@@ -2481,6 +2492,9 @@ void RoutingManager::OnLinkPrefixManager::HandleExtPanIdChange(void)
     {
         Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
     }
+
+exit:
+    return;
 }
 
 void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime)

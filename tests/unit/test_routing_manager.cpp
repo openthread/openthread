@@ -829,7 +829,7 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
     VerifyOrQuit(routePrefixCount == aNumRoutePrefixes);
 }
 
-void InitTest(void)
+void InitTest(bool aEnablBorderRouting = false)
 {
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize OT instance.
@@ -843,13 +843,14 @@ void InitTest(void)
     SuccessOrQuit(sInfraIfAddress.FromString(kInfraIfAddress));
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Initialize Border Router and start Thread operation.
+    // Initialize and start Border Router and Thread operation.
 
     SuccessOrQuit(otBorderRoutingInit(sInstance, kInfraIfIndex, /* aInfraIfIsRunning */ true));
 
     SuccessOrQuit(otLinkSetPanId(sInstance, 0x1234));
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+    SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, aEnablBorderRouting));
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Ensure device starts as leader.
@@ -2514,17 +2515,15 @@ void TestSavedOnLinkPrefixes(void)
     Log("--------------------------------------------------------------------------------------------");
     Log("TestSavedOnLinkPrefixes");
 
-    InitTest();
+    InitTest(/* aEnablBorderRouting */ true);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Start Routing Manager. Check emitted RS and RA messages.
+    // Check emitted RS and RA messages.
 
     sRsEmitted   = false;
     sRaValidated = false;
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
-
-    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
@@ -2553,10 +2552,7 @@ void TestSavedOnLinkPrefixes(void)
 
     testFreeInstance(sInstance);
 
-    InitTest();
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Start Routing Manager.
+    InitTest(/* aEnablBorderRouting */ true);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
@@ -2594,12 +2590,7 @@ void TestSavedOnLinkPrefixes(void)
 
     testFreeInstance(sInstance);
 
-    InitTest();
-
-    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Start Routing Manager.
-
-    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+    InitTest(/* aEnablBorderRouting */ true);
 
     sExpectedPio = kPioAdvertisingLocalOnLink;
 
