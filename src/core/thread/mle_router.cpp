@@ -663,7 +663,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
 
             aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
-            neighbor = mRouterTable.GetRouter(RouterIdFromRloc16(sourceAddress));
+            neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
             VerifyOrExit(neighbor != nullptr, error = kErrorParse);
             VerifyOrExit(!neighbor->IsStateLinkRequest(), error = kErrorAlready);
 
@@ -860,7 +860,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     VerifyOrExit(IsActiveRouter(sourceAddress), error = kErrorParse);
 
     routerId      = RouterIdFromRloc16(sourceAddress);
-    router        = mRouterTable.GetRouter(routerId);
+    router        = mRouterTable.FindRouterById(routerId);
     neighborState = (router != nullptr) ? router->GetState() : Neighbor::kStateInvalid;
 
     // Response
@@ -927,7 +927,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         // Route
         mRouterTable.Clear();
         SuccessOrExit(error = ProcessRouteTlv(aRxInfo));
-        router = mRouterTable.GetRouter(routerId);
+        router = mRouterTable.FindRouterById(routerId);
         VerifyOrExit(router != nullptr);
 
         if (mLeaderData.GetLeaderRouterId() == RouterIdFromRloc16(GetRloc16()))
@@ -972,7 +972,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         case kErrorNone:
             UpdateRoutes(routeTlv, routerId);
             // Need to update router after ProcessRouteTlv
-            router = mRouterTable.GetRouter(routerId);
+            router = mRouterTable.FindRouterById(routerId);
             OT_ASSERT(router != nullptr);
             break;
 
@@ -1074,7 +1074,7 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
     uint8_t rval = kMaxRouteCost;
     Router *router;
 
-    router = mRouterTable.GetRouter(aRouterId);
+    router = mRouterTable.FindRouterById(aRouterId);
 
     // `nullptr` aRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
     VerifyOrExit(router != nullptr);
@@ -1141,7 +1141,7 @@ Error MleRouter::ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv)
 
     if (neighborRloc16 != Mac::kShortAddrInvalid)
     {
-        aRxInfo.mNeighbor = Get<RouterTable>().GetNeighbor(neighborRloc16);
+        aRxInfo.mNeighbor = Get<NeighborTable>().FindNeighbor(neighborRloc16);
     }
 
 exit:
@@ -1315,7 +1315,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
             }
             else
             {
-                router = mRouterTable.GetRouter(routerId);
+                router = mRouterTable.FindRouterById(routerId);
 
                 if (router != nullptr && router->IsStateValid())
                 {
@@ -1402,7 +1402,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         else
         {
             // MLE Advertisement not from parent, but from some other neighboring router
-            router = mRouterTable.GetRouter(routerId);
+            router = mRouterTable.FindRouterById(routerId);
             VerifyOrExit(router != nullptr);
 
             if (IsFullThreadDevice() && !router->IsStateValid() && !router->IsStateLinkRequest() &&
@@ -1430,7 +1430,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
             IgnoreError(SendLinkRequest(nullptr));
         }
 
-        router = mRouterTable.GetRouter(routerId);
+        router = mRouterTable.FindRouterById(routerId);
         VerifyOrExit(router != nullptr);
 
         // check current active router number
@@ -1458,7 +1458,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         OT_FALL_THROUGH;
 
     case kRoleLeader:
-        router = mRouterTable.GetRouter(routerId);
+        router = mRouterTable.FindRouterById(routerId);
         VerifyOrExit(router != nullptr);
 
         // Send unicast link request if no link to router and no unicast/multicast link request in progress
@@ -1497,7 +1497,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     bool    resetAdvInterval = false;
     bool    changed          = false;
 
-    neighbor = mRouterTable.GetRouter(aRouterId);
+    neighbor = mRouterTable.FindRouterById(aRouterId);
     VerifyOrExit(neighbor != nullptr);
 
     // update link quality out to neighbor
@@ -1508,7 +1508,6 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
     {
         Router *router;
         Router *nextHop;
-        uint8_t oldNextHop;
         uint8_t cost;
 
         if (!aRoute.IsRouterIdSet(routerId))
@@ -1516,7 +1515,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
             continue;
         }
 
-        router = mRouterTable.GetRouter(routerId);
+        router = mRouterTable.FindRouterById(routerId);
 
         if (router == nullptr || router->GetRloc16() == GetRloc16() || router == neighbor)
         {
@@ -1524,8 +1523,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
             continue;
         }
 
-        oldNextHop = router->GetNextHop();
-        nextHop    = mRouterTable.GetRouter(oldNextHop);
+        nextHop = mRouterTable.FindNextHopOf(*router);
 
         cost = aRoute.GetRouteCost(routeCount);
 
@@ -1624,7 +1622,7 @@ bool MleRouter::UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, 
     oldLinkCost = mRouterTable.GetLinkCost(aNeighbor);
 
     aNeighbor.SetLinkQualityOut(linkQuality);
-    nextHop = mRouterTable.GetRouter(aNeighbor.GetNextHop());
+    nextHop = mRouterTable.FindNextHopOf(aNeighbor);
 
     // reset MLE advertisement timer if neighbor route cost changed to or from infinite
     if (nextHop == nullptr && (oldLinkCost >= kMaxRouteCost) != (mRouterTable.GetLinkCost(aNeighbor) >= kMaxRouteCost))
@@ -1995,8 +1993,8 @@ void MleRouter::HandleTimeTick(void)
 
         if (IsLeader())
         {
-            if (mRouterTable.GetRouter(router.GetNextHop()) == nullptr &&
-                mRouterTable.GetLinkCost(router) >= kMaxRouteCost && age >= Time::SecToMsec(kMaxLeaderToRouterTimeout))
+            if (mRouterTable.FindNextHopOf(router) == nullptr && mRouterTable.GetLinkCost(router) >= kMaxRouteCost &&
+                age >= Time::SecToMsec(kMaxLeaderToRouterTimeout))
             {
                 LogInfo("Router ID timeout expired (no route)");
                 IgnoreError(mRouterTable.Release(router.GetRouterId()));
@@ -2402,7 +2400,8 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     }
 
     // Remove from router table
-    router = mRouterTable.GetRouter(extAddr);
+    router = mRouterTable.FindRouter(extAddr);
+
     if (router != nullptr)
     {
         // The `router` here can be invalid
@@ -3549,7 +3548,7 @@ uint16_t MleRouter::GetNextHop(uint16_t aDestination)
         ExitNow(rval = aDestination);
     }
 
-    router = mRouterTable.GetRouter(destinationId);
+    router = mRouterTable.FindRouterById(destinationId);
     VerifyOrExit(router != nullptr);
 
     linkCost  = GetLinkCost(destinationId);
@@ -3557,7 +3556,7 @@ uint16_t MleRouter::GetNextHop(uint16_t aDestination)
 
     if ((routeCost + GetLinkCost(router->GetNextHop())) < linkCost)
     {
-        nextHop = mRouterTable.GetRouter(router->GetNextHop());
+        nextHop = mRouterTable.FindNextHopOf(*router);
         VerifyOrExit(nextHop != nullptr && !nextHop->IsStateInvalid());
 
         rval = Rloc16FromRouterId(router->GetNextHop());
@@ -3575,10 +3574,10 @@ uint8_t MleRouter::GetCost(uint16_t aRloc16)
 {
     uint8_t routerId = RouterIdFromRloc16(aRloc16);
     uint8_t cost     = GetLinkCost(routerId);
-    Router *router   = mRouterTable.GetRouter(routerId);
+    Router *router   = mRouterTable.FindRouterById(routerId);
     uint8_t routeCost;
 
-    VerifyOrExit(router != nullptr && mRouterTable.GetRouter(router->GetNextHop()) != nullptr);
+    VerifyOrExit(router != nullptr && mRouterTable.FindNextHopOf(*router) != nullptr);
 
     routeCost = GetRouteCost(aRloc16) + GetLinkCost(router->GetNextHop());
 
@@ -3596,8 +3595,8 @@ uint8_t MleRouter::GetRouteCost(uint16_t aRloc16) const
     uint8_t       rval = kMaxRouteCost;
     const Router *router;
 
-    router = mRouterTable.GetRouter(RouterIdFromRloc16(aRloc16));
-    VerifyOrExit(router != nullptr && mRouterTable.GetRouter(router->GetNextHop()) != nullptr);
+    router = mRouterTable.FindRouterByRloc16(aRloc16);
+    VerifyOrExit(router != nullptr && mRouterTable.FindNextHopOf(*router) != nullptr);
 
     rval = router->GetCost();
 
@@ -3633,7 +3632,7 @@ void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
     }
 
     // loop exists
-    router = mRouterTable.GetRouter(RouterIdFromRloc16(aDestRloc16));
+    router = mRouterTable.FindRouterByRloc16(aDestRloc16);
     VerifyOrExit(router != nullptr);
 
     // invalidate next hop
@@ -3810,13 +3809,13 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     mRouterTable.Clear();
     mRouterTable.UpdateRouterIdSet(routerMaskTlv.GetIdSequence(), routerMaskTlv.GetAssignedRouterIdMask());
 
-    router = mRouterTable.GetRouter(routerId);
+    router = mRouterTable.FindRouterById(routerId);
     VerifyOrExit(router != nullptr);
 
     router->SetExtAddress(Get<Mac::Mac>().GetExtAddress());
     router->SetCost(0);
 
-    router = mRouterTable.GetRouter(mParent.GetRouterId());
+    router = mRouterTable.FindRouterById(mParent.GetRouterId());
     VerifyOrExit(router != nullptr);
 
     // Keep link to the parent in order to respond to Parent Requests before new link is established.
@@ -3905,7 +3904,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
 #endif
 
     // Check if allocation already exists
-    router = mRouterTable.GetRouter(extAddress);
+    router = mRouterTable.FindRouter(extAddress);
 
     if (router != nullptr)
     {
@@ -4015,7 +4014,7 @@ template <> void MleRouter::HandleTmf<kUriAddressRelease>(Coap::Message &aMessag
     SuccessOrExit(Tlv::Find<ThreadExtMacAddressTlv>(aMessage, extAddress));
 
     routerId = RouterIdFromRloc16(rloc16);
-    router   = mRouterTable.GetRouter(routerId);
+    router   = mRouterTable.FindRouterById(routerId);
 
     VerifyOrExit((router != nullptr) && (router->GetExtAddress() == extAddress));
 
@@ -4221,7 +4220,7 @@ void MleRouter::FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor)
             uint8_t routeCost;
 
             linkCost = mRouterTable.GetLinkCost(router);
-            nextHop  = mRouterTable.GetRouter(router.GetNextHop());
+            nextHop  = mRouterTable.FindNextHopOf(router);
 
             if (nextHop == nullptr)
             {
