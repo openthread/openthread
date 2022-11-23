@@ -343,7 +343,7 @@ Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
             RouteTlv tlv;
 
             tlv.Init();
-            Get<Mle::MleRouter>().FillRouteTlv(tlv);
+            Get<RouterTable>().FillRouteTlv(tlv);
             SuccessOrExit(error = tlv.AppendTo(aResponse));
             break;
         }

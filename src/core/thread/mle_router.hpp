@@ -420,14 +420,6 @@ public:
     void FillConnectivityTlv(ConnectivityTlv &aTlv);
 
     /**
-     * This method fills an RouteTlv.
-     *
-     * @param[out]  aTlv  A reference to the tlv to be filled.
-     *
-     */
-    void FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor = nullptr);
-
-    /**
      * This method generates an MLE Child Update Request message to be sent to the parent.
      *
      * @retval kErrorNone     Successfully generated an MLE Child Update Request message.
