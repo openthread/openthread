@@ -104,29 +104,31 @@ public:
     void ClearNeighbors(void);
 
     /**
-     * This method allocates a router with a random router id.
+     * This method allocates a router with a random Router ID.
      *
-     * @returns A pointer to the allocated router or `nullptr` if a router ID is not available.
+     * @returns A pointer to the allocated router or `nullptr` if a Router ID is not available.
      *
      */
     Router *Allocate(void);
 
     /**
-     * This method allocates a router with a specified router id.
+     * This method allocates a router with a specified Router ID.
      *
-     * @returns A pointer to the allocated router or `nullptr` if the router id could not be allocated.
+     * @param[in] aRouterId   The Router ID to try to allocate.
+     *
+     * @returns A pointer to the allocated router or `nullptr` if the ID @p aRouterId could not be allocated.
      *
      */
     Router *Allocate(uint8_t aRouterId);
 
     /**
-     * This method releases a router id.
+     * This method releases a Router ID.
      *
-     * @param[in]  aRouterId  The router id.
+     * @param[in]  aRouterId  The Router ID.
      *
-     * @retval kErrorNone          Successfully released the router id.
+     * @retval kErrorNone          Successfully released the Router ID @p aRouterId.
      * @retval kErrorInvalidState  The device is not currently operating as a leader.
-     * @retval kErrorNotFound      The router id is not currently allocated.
+     * @retval kErrorNotFound      The Router ID @p aRouterId is not currently allocated.
      *
      */
     Error Release(uint8_t aRouterId);
@@ -156,9 +158,9 @@ public:
     Router *GetLeader(void);
 
     /**
-     * This method returns the time in seconds since the last Router ID Sequence update.
+     * This method returns the leader's age in seconds, i.e., seconds since the last Router ID Sequence update.
      *
-     * @returns The time in seconds since the last Router ID Sequence update.
+     * @returns The leader's age.
      *
      */
     uint32_t GetLeaderAge(void) const;
@@ -166,81 +168,91 @@ public:
     /**
      * This method returns the link cost for a neighboring router.
      *
-     * @param[in]  aRouter  A reference to the router.
+     * @param[in]  aRouter   A router.
      *
-     * @returns The link cost.
+     * @returns The link cost to @p aRouter.
      *
      */
-    uint8_t GetLinkCost(Router &aRouter);
+    uint8_t GetLinkCost(const Router &aRouter) const;
 
     /**
-     * This method returns the neighbor for a given RLOC16.
+     * This method finds the router for a given Router ID.
      *
-     * @param[in]  aRloc16  The RLOC16 value.
+     * @param[in]  aRouterId  The Router ID to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
-    Router *GetNeighbor(uint16_t aRloc16);
+    Router *FindRouterById(uint8_t aRouterId) { return AsNonConst(AsConst(this)->FindRouterById(aRouterId)); }
 
     /**
-     * This method returns the neighbor for a given IEEE Extended Address.
+     * This method finds the router for a given Router ID.
      *
-     * @param[in]  aExtAddress  A reference to the IEEE Extended Address.
+     * @param[in]  aRouterId  The Router ID to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
-    Router *GetNeighbor(const Mac::ExtAddress &aExtAddress);
+    const Router *FindRouterById(uint8_t aRouterId) const;
 
     /**
-     * This method returns the neighbor for a given MAC address.
+     * This method finds the router for a given RLOC16.
      *
-     * @param[in]  aMacAddress  A MAC address
+     * @param[in]  aRloc16  The RLOC16 to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
-    Router *GetNeighbor(const Mac::Address &aMacAddress);
+    Router *FindRouterByRloc16(uint16_t aRloc16) { return AsNonConst(AsConst(this)->FindRouterByRloc16(aRloc16)); }
 
     /**
-     * This method returns the router for a given router id.
+     * This method finds the router for a given RLOC16.
      *
-     * @param[in]  aRouterId  The router id.
+     * @param[in]  aRloc16  The RLOC16 to search for.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
-    Router *GetRouter(uint8_t aRouterId) { return AsNonConst(AsConst(this)->GetRouter(aRouterId)); }
+    const Router *FindRouterByRloc16(uint16_t aRloc16) const;
 
     /**
-     * This method returns the router for a given router id.
+     * This method finds the router that is the next hop of a given router.
      *
-     * @param[in]  aRouterId  The router id.
+     * @param[in]  aRouter  The router to find next hop of.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
-    const Router *GetRouter(uint8_t aRouterId) const;
+    Router *FindNextHopOf(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopOf(aRouter)); }
 
     /**
-     * This method returns the router for a given IEEE Extended Address.
+     * This method finds the router that is the next hop of a given router.
      *
-     * @param[in]  aExtAddress  A reference to the IEEE Extended Address.
+     * @param[in]  aRouter  The router to find next hop of.
      *
      * @returns A pointer to the router or `nullptr` if the router could not be found.
      *
      */
-    Router *GetRouter(const Mac::ExtAddress &aExtAddress);
+    const Router *FindNextHopOf(const Router &aRouter) const;
 
     /**
-     * This method returns if the router table contains a given `Neighbor` instance.
+     * This method find the router for a given MAC Extended Address.
+     *
+     * @param[in]  aExtAddress  A reference to the MAC Extended Address.
+     *
+     * @returns A pointer to the router or `nullptr` if the router could not be found.
+     *
+     */
+    Router *FindRouter(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * This method indicates whether the router table contains a given `Neighbor` instance.
      *
      * @param[in]  aNeighbor  A reference to a `Neighbor`.
      *
      * @retval TRUE  if @p aNeighbor is a `Router` in the router table.
      * @retval FALSE if @p aNeighbor is not a `Router` in the router table
-     *               (i.e. mParent, mParentCandidate, a `Child` of the child table).
+     *               (i.e. it can be the parent or parent candidate, or a `Child` of the child table).
      *
      */
     bool Contains(const Neighbor &aNeighbor) const
@@ -287,19 +299,21 @@ public:
     uint8_t GetNeighborCount(void) const;
 
     /**
-     * This method indicates whether or not @p aRouterId is allocated.
+     * This method indicates whether or not a Router ID is allocated.
      *
-     * @retval TRUE if @p aRouterId is allocated.
+     * @param[in] aRouterId  The Router ID.
+     *
+     * @retval TRUE  if @p aRouterId is allocated.
      * @retval FALSE if @p aRouterId is not allocated.
      *
      */
     bool IsAllocated(uint8_t aRouterId) const;
 
     /**
-     * This method updates the Router ID allocation.
+     * This method updates the Router ID allocation set.
      *
-     * @param[in]  aRouterIdSequence  The Router Id Sequence.
-     * @param[in]  aRouterIdSet       A reference to the Router Id Set.
+     * @param[in]  aRouterIdSequence  The Router ID Sequence.
+     * @param[in]  aRouterIdSet       The Router ID Set.
      *
      */
     void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
@@ -365,6 +379,9 @@ private:
     Router *      GetFirstEntry(void) { return AsNonConst(AsConst(this)->GetFirstEntry()); }
     Router *      GetNextEntry(Router *aRouter) { return AsNonConst(AsConst(this)->GetNextEntry(aRouter)); }
 
+    Router *      FindNeighbor(uint16_t aRloc16);
+    Router *      FindNeighbor(const Mac::ExtAddress &aExtAddress);
+    Router *      FindNeighbor(const Mac::Address &aMacAddress);
     const Router *FindRouter(const Router::AddressMatcher &aMatcher) const;
     Router *      FindRouter(const Router::AddressMatcher &aMatcher)
     {

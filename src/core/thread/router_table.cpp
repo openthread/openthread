@@ -253,7 +253,7 @@ Router *RouterTable::Allocate(uint8_t aRouterId)
     mAllocatedRouterIds.Add(aRouterId);
     UpdateAllocation();
 
-    rval = GetRouter(aRouterId);
+    rval = FindRouterById(aRouterId);
     rval->SetLastHeard(TimerMilli::GetNow());
 
     mRouterIdSequence++;
@@ -277,7 +277,7 @@ Error RouterTable::Release(uint8_t aRouterId)
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), error = kErrorInvalidState);
     VerifyOrExit(IsAllocated(aRouterId), error = kErrorNotFound);
 
-    router = GetNeighbor(rloc16);
+    router = FindNeighbor(rloc16);
 
     if (router != nullptr)
     {
@@ -357,7 +357,7 @@ const Router *RouterTable::FindRouter(const Router::AddressMatcher &aMatcher) co
     return router;
 }
 
-Router *RouterTable::GetNeighbor(uint16_t aRloc16)
+Router *RouterTable::FindNeighbor(uint16_t aRloc16)
 {
     Router *router = nullptr;
 
@@ -368,17 +368,17 @@ exit:
     return router;
 }
 
-Router *RouterTable::GetNeighbor(const Mac::ExtAddress &aExtAddress)
+Router *RouterTable::FindNeighbor(const Mac::ExtAddress &aExtAddress)
 {
     return FindRouter(Router::AddressMatcher(aExtAddress, Router::kInStateValid));
 }
 
-Router *RouterTable::GetNeighbor(const Mac::Address &aMacAddress)
+Router *RouterTable::FindNeighbor(const Mac::Address &aMacAddress)
 {
     return FindRouter(Router::AddressMatcher(aMacAddress, Router::kInStateValid));
 }
 
-const Router *RouterTable::GetRouter(uint8_t aRouterId) const
+const Router *RouterTable::FindRouterById(uint8_t aRouterId) const
 {
     const Router *router = nullptr;
     uint16_t      rloc16;
@@ -393,7 +393,17 @@ exit:
     return router;
 }
 
-Router *RouterTable::GetRouter(const Mac::ExtAddress &aExtAddress)
+const Router *RouterTable::FindRouterByRloc16(uint16_t aRloc16) const
+{
+    return FindRouterById(Mle::RouterIdFromRloc16(aRloc16));
+}
+
+const Router *RouterTable::FindNextHopOf(const Router &aRouter) const
+{
+    return FindRouterById(aRouter.GetNextHop());
+}
+
+Router *RouterTable::FindRouter(const Mac::ExtAddress &aExtAddress)
 {
     return FindRouter(Router::AddressMatcher(aExtAddress, Router::kInStateAny));
 }
@@ -415,7 +425,7 @@ Error RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)
         VerifyOrExit(routerId <= Mle::kMaxRouterId, error = kErrorInvalidArgs);
     }
 
-    router = GetRouter(routerId);
+    router = FindRouterById(routerId);
     VerifyOrExit(router != nullptr, error = kErrorNotFound);
 
     aRouterInfo.SetFrom(*router);
@@ -426,7 +436,7 @@ exit:
 
 Router *RouterTable::GetLeader(void)
 {
-    return GetRouter(Get<Mle::MleRouter>().GetLeaderId());
+    return FindRouterById(Get<Mle::MleRouter>().GetLeaderId());
 }
 
 uint32_t RouterTable::GetLeaderAge(void) const
@@ -449,7 +459,7 @@ uint8_t RouterTable::GetNeighborCount(void) const
     return count;
 }
 
-uint8_t RouterTable::GetLinkCost(Router &aRouter)
+uint8_t RouterTable::GetLinkCost(const Router &aRouter) const
 {
     uint8_t rval = Mle::kMaxRouteCost;
 
@@ -473,7 +483,7 @@ void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::Router
         // If was allocated but removed in new Router Id Set
         if (IsAllocated(routerId) && !aRouterIdSet.Contains(routerId))
         {
-            Router *router = GetRouter(routerId);
+            Router *router = FindRouterForId(routerId);
 
             OT_ASSERT(router != nullptr);
             router->SetNextHop(Mle::kInvalidRouterId);

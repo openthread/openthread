@@ -172,7 +172,7 @@ Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::Address &aMacAddres
     Neighbor *neighbor = nullptr;
 
     VerifyOrExit(Get<Mle::Mle>().IsChild());
-    neighbor = Get<RouterTable>().GetNeighbor(aMacAddress);
+    neighbor = Get<RouterTable>().FindNeighbor(aMacAddress);
 
 exit:
     return neighbor;
@@ -213,7 +213,7 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
 
     for (index = -aIterator; index <= Mle::kMaxRouterId; index++)
     {
-        Router *router = Get<RouterTable>().GetRouter(static_cast<uint8_t>(index));
+        Router *router = Get<RouterTable>().FindRouterById(static_cast<uint8_t>(index));
 
         if (router != nullptr && router->IsStateValid())
         {
