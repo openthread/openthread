@@ -1406,7 +1406,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
             VerifyOrExit(router != nullptr);
 
             if (IsFullThreadDevice() && !router->IsStateValid() && !router->IsStateLinkRequest() &&
-                (mRouterTable.GetActiveLinkCount() < OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS))
+                (mRouterTable.GetNeighborCount() < OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS))
             {
                 router->SetExtAddress(extAddr);
                 router->GetLinkInfo().Clear();

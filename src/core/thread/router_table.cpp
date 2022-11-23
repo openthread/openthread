@@ -342,21 +342,6 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
     }
 }
 
-uint8_t RouterTable::GetActiveLinkCount(void) const
-{
-    uint8_t activeLinks = 0;
-
-    for (const Router *router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
-    {
-        if (router->IsStateValid())
-        {
-            activeLinks++;
-        }
-    }
-
-    return activeLinks;
-}
-
 const Router *RouterTable::FindRouter(const Router::AddressMatcher &aMatcher) const
 {
     const Router *router;
