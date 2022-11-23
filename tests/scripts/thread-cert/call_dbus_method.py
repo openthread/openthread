@@ -34,7 +34,7 @@ import sys
 def main():
     args = sys.argv[1:]
     bus = dbus.SystemBus()
-    interface, method_name, arguments = args[0], args[1], args[2:]
+    interface, method_name, arguments = args[0], args[1], json.loads(args[2])
     obj = bus.get_object('io.openthread.BorderRouter.wpan0', '/io/openthread/BorderRouter/wpan0')
     iface = dbus.Interface(obj, interface)
     method = getattr(iface, method_name)
