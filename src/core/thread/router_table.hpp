@@ -148,14 +148,6 @@ public:
     uint8_t GetActiveRouterCount(void) const { return mActiveRouterCount; }
 
     /**
-     * This method returns the number of active links with neighboring routers.
-     *
-     * @returns The number of active links with neighboring routers.
-     *
-     */
-    uint8_t GetActiveLinkCount(void) const;
-
-    /**
      * This method returns the leader in the Thread network.
      *
      * @returns A pointer to the Leader in the Thread network.
