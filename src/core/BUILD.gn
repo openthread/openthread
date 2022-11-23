@@ -747,6 +747,7 @@ openthread_radio_sources = [
   "radio/radio_platform.cpp",
   "thread/link_quality.cpp",
   "utils/parse_cmdline.cpp",
+  "utils/power_calibration.cpp",
 ]
 
 header_pattern = [
@@ -793,6 +794,7 @@ source_set("libopenthread_core_config") {
     "config/parent_search.h",
     "config/ping_sender.h",
     "config/platform.h",
+    "config/power_calibration.h",
     "config/radio_link.h",
     "config/sntp_client.h",
     "config/srp_client.h",
