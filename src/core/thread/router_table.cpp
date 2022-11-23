@@ -483,7 +483,7 @@ void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::Router
         // If was allocated but removed in new Router Id Set
         if (IsAllocated(routerId) && !aRouterIdSet.Contains(routerId))
         {
-            Router *router = FindRouterForId(routerId);
+            Router *router = FindRouterById(routerId);
 
             OT_ASSERT(router != nullptr);
             router->SetNextHop(Mle::kInvalidRouterId);
@@ -499,6 +499,104 @@ void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::Router
 
 exit:
     return;
+}
+
+void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor) const
+{
+    uint8_t          routerIdSequence = mRouterIdSequence;
+    Mle::RouterIdSet routerIdSet      = mAllocatedRouterIds;
+    uint8_t          routerCount;
+
+    if ((aNeighbor != nullptr) && Mle::IsActiveRouter(aNeighbor->GetRloc16()))
+    {
+        // Sending a Link Accept message that may require truncation
+        // of Route64 TLV.
+
+        routerCount = mActiveRouterCount;
+
+        if (routerCount > Mle::kLinkAcceptMaxRouters)
+        {
+            for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+            {
+                if (routerCount <= Mle::kLinkAcceptMaxRouters)
+                {
+                    break;
+                }
+
+                if ((routerId == Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16())) ||
+                    (routerId == aNeighbor->GetRouterId()) || (routerId == Get<Mle::Mle>().GetLeaderId()))
+                {
+                    // Route64 TLV must contain this device and the
+                    // neighboring router to ensure that at least this
+                    // link can be established.
+                    continue;
+                }
+
+                if (routerIdSet.Contains(routerId))
+                {
+                    routerIdSet.Remove(routerId);
+                    routerCount--;
+                }
+            }
+
+            // Ensure that the neighbor will process the current
+            // Route64 TLV in a subsequent message exchange
+            routerIdSequence -= Mle::kLinkAcceptSequenceRollback;
+        }
+    }
+
+    aRouteTlv.SetRouterIdSequence(routerIdSequence);
+    aRouteTlv.SetRouterIdMask(routerIdSet);
+
+    routerCount = 0;
+
+    for (const Router *router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
+    {
+        if (!routerIdSet.Contains(router->GetRouterId()))
+        {
+            continue;
+        }
+
+        if (router->GetRloc16() == Get<Mle::Mle>().GetRloc16())
+        {
+            aRouteTlv.SetLinkQualityIn(routerCount, kLinkQuality0);
+            aRouteTlv.SetLinkQualityOut(routerCount, kLinkQuality0);
+            aRouteTlv.SetRouteCost(routerCount, 1);
+        }
+        else
+        {
+            const Router *nextHop  = FindNextHopOf(*router);
+            uint8_t       linkCost = GetLinkCost(*router);
+            uint8_t       routeCost;
+
+            if (nextHop == nullptr)
+            {
+                routeCost = linkCost;
+            }
+            else
+            {
+                routeCost = router->GetCost() + GetLinkCost(*nextHop);
+
+                if (linkCost < routeCost)
+                {
+                    routeCost = linkCost;
+                }
+            }
+
+            if (routeCost >= Mle::kMaxRouteCost)
+            {
+                routeCost = 0;
+            }
+
+            aRouteTlv.SetRouteCost(routerCount, routeCost);
+            aRouteTlv.SetLinkQualityOut(routerCount, router->GetLinkQualityOut());
+            aRouteTlv.SetLinkQualityIn(routerCount, router->GetLinkQualityIn());
+        }
+
+        routerCount++;
+    }
+
+    aRouteTlv.SetRouteDataLength(routerCount);
 }
 
 void RouterTable::HandleTimeTick(void)

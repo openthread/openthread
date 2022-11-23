@@ -4937,7 +4937,7 @@ Error Mle::TxMessage::AppendRouteTlv(Neighbor *aNeighbor)
     RouteTlv tlv;
 
     tlv.Init();
-    Get<MleRouter>().FillRouteTlv(tlv, aNeighbor);
+    Get<RouterTable>().FillRouteTlv(tlv, aNeighbor);
 
     return tlv.AppendTo(*this);
 }

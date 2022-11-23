@@ -39,6 +39,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
+#include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/topology.hpp"
@@ -325,6 +326,19 @@ public:
      *
      */
     const Mle::RouterIdSet &GetRouterIdSet(void) const { return mAllocatedRouterIds; }
+
+    /**
+     * This method fills a Route TLV.
+     *
+     * When @p aNeighbor is not `nullptr`, we limit the number of router entries to `Mle::kLinkAcceptMaxRouters` when
+     * populating `aRouteTlv`, so that the TLV can be appended in a Link Accept message. In this case, we ensure to
+     * include router entries associated with @p aNeighbor, leader, and this device itself.
+     *
+     * @param[out] aRouteTlv    A Route TLV to be filled.
+     * @param[in]  aNeighbor    A pointer to the receiver (in case TLV is for a Link Accept message).
+     *
+     */
+    void FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor = nullptr) const;
 
     /**
      * This method updates the router table and must be called with a one second period.
