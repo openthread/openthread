@@ -99,6 +99,7 @@ typedef struct
     int8_t       mLastRssi;             ///< Last observed RSSI
     uint16_t     mFrameErrorRate;       ///< Frame error rate (0xffff->100%). Requires error tracking feature.
     uint16_t     mMessageErrorRate;     ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
+    uint16_t     mVersion;              ///< Thread version of the neighbor
     bool         mRxOnWhenIdle : 1;     ///< rx-on-when-idle
     bool         mFullThreadDevice : 1; ///< Full Thread Device
     bool         mFullNetworkData : 1;  ///< Full Network Data
