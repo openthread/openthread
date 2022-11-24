@@ -4984,8 +4984,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
                 OutputFormat("|%1d", neighborInfo.mFullNetworkData);
                 OutputFormat("| ");
                 OutputExtAddress(neighborInfo.mExtAddress);
-                OutputFormat(" | %7d |", neighborInfo.mVersion);
-                OutputNewLine();
+                OutputLine(" | %7d |", neighborInfo.mVersion);
             }
             else
             {
