@@ -33,6 +33,7 @@
 
 #include "cli.hpp"
 
+#include <cinttypes>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +44,7 @@
 #include <openthread/link.h>
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
+#include <openthread/random_noncrypto.h>
 #include <openthread/thread.h>
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
@@ -5793,6 +5795,14 @@ exit:
 }
 #endif
 
+template <> otError Interpreter::Process<Cmd("randombootid")>(Arg aArgs[])
+{
+    static const uint32_t bootid = otRandomNonCryptoGetUint32();
+    OT_UNUSED_VARIABLE(aArgs);
+    OutputLine("%08" PRIx32, bootid);
+    return OT_ERROR_NONE;
+}
+
 template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
 {
     otError     error   = OT_ERROR_NONE;
@@ -7339,6 +7349,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         CmdEntry("radiofilter"),
 #endif
+        CmdEntry("randombootid"),
         CmdEntry("rcp"),
         CmdEntry("region"),
 #if OPENTHREAD_FTD
