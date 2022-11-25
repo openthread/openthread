@@ -2413,12 +2413,12 @@ template <> otError Interpreter::Process<Cmd("coex")>(Arg aArgs[])
         SuccessOrExit(error = otPlatRadioGetCoexMetrics(GetInstancePtr(), &metrics));
 
         OutputLine("Stopped: %s", metrics.mStopped ? "true" : "false");
-        OutputLine("Grant Glitch: %u", metrics.mNumGrantGlitch);
+        OutputLine("Grant Glitch: %lu", ToUlong(metrics.mNumGrantGlitch));
         OutputLine("Transmit metrics");
 
         for (const RadioCoexMetricName &metric : kTxMetricNames)
         {
-            OutputLine(kIndentSize, "%s: %u", metric.mName, metrics.*metric.mValuePtr);
+            OutputLine(kIndentSize, "%s: %lu", metric.mName, ToUlong(metrics.*metric.mValuePtr));
         }
 
         OutputLine("Receive metrics");
