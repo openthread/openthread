@@ -5463,6 +5463,13 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+       //
+template <> otError Interpreter::Process<Cmd("platform")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    OutputLine("%s", OPENTHREAD_CONFIG_PLATFORM_INFO);
+    return OT_ERROR_NONE;
+}
 
 template <> otError Interpreter::Process<Cmd("pollperiod")>(Arg aArgs[])
 {
@@ -7322,6 +7329,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
         CmdEntry("ping"),
 #endif
+        CmdEntry("platform"),
         CmdEntry("pollperiod"),
 #if OPENTHREAD_FTD
         CmdEntry("preferrouterid"),
