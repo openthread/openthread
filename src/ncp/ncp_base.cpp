@@ -2566,7 +2566,7 @@ exit:
 }
 #endif
 
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_CHAN_TARGET_POWER>(void)
 {
     otError error;
@@ -2602,7 +2602,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_CALIBRATED_POWE
 {
     return otPlatRadioClearCalibratedPowers(mInstance);
 }
-#endif // OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 
 } // namespace Ncp
 } // namespace ot

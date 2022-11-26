@@ -34,6 +34,7 @@
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 
 namespace ot {
+
 void TestPowerCalibration(void)
 {
     otInstance *instance;

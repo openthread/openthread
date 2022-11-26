@@ -36,6 +36,7 @@
 
 namespace ot {
 namespace Utils {
+
 PowerCalibration::PowerCalibration(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mPowerUpdated(false)

@@ -2516,7 +2516,7 @@ uint8_t RadioSpinel<InterfaceType, ProcessContextType>::GetCslUncertainty(void)
 }
 #endif
 
-#if OPENTHREAD_PLATFORM_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::AddCalibratedPower(uint8_t        aChannel,
                                                                            int16_t        aActualPower,
@@ -3146,7 +3146,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
                               ", ch:%u, actualPower:%d, rawPowerSetting:", channel, actualPower);
             for (uint16_t i = 0; i < rawPowerSettingLength; i++)
             {
-                start += Snprintf(start, static_cast<uint32_t>(end - start), "%02x ", rawPowerSetting[i]);
+                start += Snprintf(start, static_cast<uint32_t>(end - start), "%02x", rawPowerSetting[i]);
             }
         }
     }
