@@ -140,7 +140,6 @@ LOCAL_CFLAGS                                                                := \
 
 LOCAL_EXPORT_CFLAGS                                        := \
     $(OPENTHREAD_PUBLIC_CFLAGS)                               \
-    $(OPENTHREAD_PROJECT_CFLAGS)                              \
     $(NULL)
 
 LOCAL_EXPORT_C_INCLUDE_DIRS     := \
@@ -603,7 +602,6 @@ LOCAL_C_INCLUDES                                         := \
     $(NULL)
 
 LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
     $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
