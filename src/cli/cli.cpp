@@ -5463,7 +5463,7 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-       //
+
 template <> otError Interpreter::Process<Cmd("platform")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
