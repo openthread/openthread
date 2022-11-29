@@ -63,7 +63,7 @@ static ot::Spinel::RadioSpinel<ot::Posix::VendorInterface, RadioProcessContext> 
     "OT_POSIX_RCP_BUS_VENDOR!"
 #endif
 
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 #include "power_updater.hpp"
 static ot::Posix::PowerUpdater sPowerUpdater;
 #endif
@@ -706,7 +706,7 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
     return sRadioSpinel.SetChannelMaxTransmitPower(aChannel, aMaxPower);
 }
 
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 otError otPlatRadioAddCalibratedPower(otInstance *   aInstance,
                                       uint8_t        aChannel,
                                       int16_t        aActualPower,
@@ -733,7 +733,7 @@ otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel
 otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     return sPowerUpdater.SetRegion(aRegionCode);
 #else
     return sRadioSpinel.SetRadioRegion(aRegionCode);
@@ -743,7 +743,7 @@ otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     return sPowerUpdater.GetRegion(aRegionCode);
 #else
     return sRadioSpinel.GetRadioRegion(aRegionCode);

@@ -32,7 +32,7 @@
 #include <openthread/platform/radio.h>
 #include "lib/platform/exit_code.h"
 
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 
 namespace ot {
 namespace Posix {
@@ -166,4 +166,4 @@ otError PowerUpdater::GetNextTargetPower(const Power::Domain &aDomain, int &aIte
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE

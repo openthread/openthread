@@ -886,7 +886,7 @@ public:
      */
     const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return &mRadioSpinelMetrics; }
 
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
     /**
      * Add a calibrated power of the specificed channel to the power calibration table.
      *

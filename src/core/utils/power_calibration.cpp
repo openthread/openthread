@@ -28,7 +28,7 @@
 
 #include "power_calibration.hpp"
 
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
@@ -206,4 +206,4 @@ otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE

@@ -31,7 +31,7 @@
 
 #include "openthread-posix-config.h"
 
-#if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 
 #include <stdio.h>
 #include <string.h>
@@ -115,5 +115,5 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 #endif // POSIX_PLATFORM_POWER_UPDATER_HPP_
