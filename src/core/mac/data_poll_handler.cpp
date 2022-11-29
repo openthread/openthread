@@ -240,6 +240,9 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
     {
     case kErrorNone:
         aChild.ResetIndirectTxAttempts();
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        aChild.ResetCslTxAttempts();
+#endif
         aChild.SetFrameReplacePending(false);
         break;
 
