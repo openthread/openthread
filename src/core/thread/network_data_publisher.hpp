@@ -308,7 +308,7 @@ private:
         static constexpr uint32_t kExtraDelayToRemovePeferred =
             OPENTHREAD_CONFIG_NETDATA_PUBLISHER_EXTRA_DELAY_TIME_TO_REMOVE_PREFERRED;
 
-        static constexpr uint16_t kInfoStringSize = 50;
+        static constexpr uint16_t kInfoStringSize = 60;
 
         typedef String<kInfoStringSize> InfoString;
 
