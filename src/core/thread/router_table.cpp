@@ -559,9 +559,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
         if (router->GetRloc16() == Get<Mle::Mle>().GetRloc16())
         {
-            aRouteTlv.SetLinkQualityIn(routerCount, kLinkQuality0);
-            aRouteTlv.SetLinkQualityOut(routerCount, kLinkQuality0);
-            aRouteTlv.SetRouteCost(routerCount, 1);
+            aRouteTlv.SetRouteData(routerCount, kLinkQuality0, kLinkQuality0, 1);
         }
         else
         {
@@ -588,9 +586,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
                 routeCost = 0;
             }
 
-            aRouteTlv.SetRouteCost(routerCount, routeCost);
-            aRouteTlv.SetLinkQualityOut(routerCount, router->GetLinkQualityOut());
-            aRouteTlv.SetLinkQualityIn(routerCount, router->GetLinkQualityIn());
+            aRouteTlv.SetRouteData(routerCount, router->GetLinkQualityIn(), router->GetLinkQualityOut(), routeCost);
         }
 
         routerCount++;

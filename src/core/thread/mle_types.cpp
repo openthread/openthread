@@ -64,6 +64,18 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
     return string;
 }
 
+uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
+{
+    uint8_t count = 0;
+
+    for (uint8_t byte : mRouterIdSet)
+    {
+        count += CountBitsInMask(byte);
+    }
+
+    return count;
+}
+
 const char *RoleToString(DeviceRole aRole)
 {
     static const char *const kRoleStrings[] = {

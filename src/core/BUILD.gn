@@ -639,6 +639,7 @@ openthread_core_files = [
   "thread/mle.hpp",
   "thread/mle_router.cpp",
   "thread/mle_router.hpp",
+  "thread/mle_tlvs.cpp",
   "thread/mle_tlvs.hpp",
   "thread/mle_types.cpp",
   "thread/mle_types.hpp",

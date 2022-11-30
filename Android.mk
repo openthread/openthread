@@ -342,6 +342,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/thread/mesh_forwarder_mtd.cpp                          \
     src/core/thread/mle.cpp                                         \
     src/core/thread/mle_router.cpp                                  \
+    src/core/thread/mle_tlvs.cpp                                    \
     src/core/thread/mle_types.cpp                                   \
     src/core/thread/mlr_manager.cpp                                 \
     src/core/thread/neighbor_table.cpp                              \
