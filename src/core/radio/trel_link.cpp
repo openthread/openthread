@@ -265,7 +265,7 @@ void Link::HandleTimer(void)
         HandleTimer(child);
     }
 
-    for (Router &router : Get<RouterTable>().Iterate())
+    for (Router &router : Get<RouterTable>())
     {
         HandleTimer(router);
     }
