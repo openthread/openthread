@@ -1145,12 +1145,12 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
                                           const otExtAddress *aExtAddress);
 
 /**
- * Add a calibrated power of the specificed channel to the power calibration table.
+ * Add a calibrated power of the specified channel to the power calibration table.
  *
  * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
  *
- * The `aActualPower` is the actual measured output power when the paratemrers of the radio hardware modules
- * are set to the `aRawPowerSetting`.
+ * The @p aActualPower is the actual measured output power when the parameters of the radio hardware modules
+ * are set to the @p aRawPowerSetting.
  *
  * The raw power setting is an opaque byte array. OpenThread doesn't define the format of the raw power setting.
  * Its format is radio hardware related and it should be defined by the developers in the platform radio driver.
@@ -1163,10 +1163,10 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
  * @param[in] aRawPowerSetting        A pointer to the raw power setting byte array.
  * @param[in] aRawPowerSettingLength  The length of the @p aRawPowerSetting.
  *
- * @retval OT_ERROR_NONE             Successfully added the calibrated power to the power calibration tabl.
+ * @retval OT_ERROR_NONE             Successfully added the calibrated power to the power calibration table.
  * @retval OT_ERROR_NO_BUFS          No available entry in the power calibration table.
- * @retval OT_ERROR_INVALID_ARGS     The @p aChannel, @aActualPower or @p aRawPowerSetting is invalid or the
- *                                   @ aActualPower already exists in the power calibration table;
+ * @retval OT_ERROR_INVALID_ARGS     The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid or the
+ *                                   @ aActualPower already exists in the power calibration table.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
  *
  */
@@ -1183,7 +1183,7 @@ otError otPlatRadioAddCalibratedPower(otInstance *   aInstance,
  *
  * @param[in]  aInstance   The OpenThread instance structure.
  *
- * @retval OT_ERROR_NONE             Successfully cleared all calibrated powesr from the power calibration table.
+ * @retval OT_ERROR_NONE             Successfully cleared all calibrated powers from the power calibration table.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
  *
  */
@@ -1204,7 +1204,7 @@ otError otPlatRadioClearCalibratedPowers(otInstance *aInstance);
  *
  * @retval  OT_ERROR_NONE             Successfully set the target power.
  * @retval  OT_ERROR_INVALID_ARGS     The @p aChannel or @p aTargetPower is invalid.
- * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented
+ * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented.
  *
  */
 otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower);

@@ -897,7 +897,7 @@ public:
      *
      * @retval  OT_ERROR_NONE              Successfully added the calibrated power to the power calibration table.
      * @retval  OT_ERROR_NO_BUFS           No available entry in the power calibration table.
-     * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel, @aActualPower or @p aRawPowerSetting is invalid.
+     * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid.
      * @retval  OT_ERROR_NOT_IMPLEMENTED   This feature is not implemented.
      * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
@@ -911,7 +911,7 @@ public:
     /**
      * Clear all calibrated powers from the power calibration table.
      *
-     * @retval  OT_ERROR_NONE              Successfully cleared all calibrated powesr from the power calibration table.
+     * @retval  OT_ERROR_NONE              Successfully cleared all calibrated powers from the power calibration table.
      * @retval  OT_ERROR_NOT_IMPLEMENTED   This feature is not implemented.
      * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
@@ -927,7 +927,7 @@ public:
      *
      * @retval  OT_ERROR_NONE              Successfully set the target power.
      * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel or @p aTargetPower is invalid..
-     * @retval  OT_ERROR_NOT_IMPLEMENTED   The feature is not implemented
+     * @retval  OT_ERROR_NOT_IMPLEMENTED   The feature is not implemented.
      * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
      *

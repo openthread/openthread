@@ -66,8 +66,9 @@ Error PowerCalibration::CalibratedPowerEntry::GetRawPowerSetting(uint8_t * aRawP
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aRawPowerSetting != nullptr && aRawPowerSettingLength != nullptr && *aRawPowerSettingLength >= mLength,
-                 error = kErrorInvalidArgs);
+    AssertPointerIsNotNull(aRawPowerSetting);
+    AssertPointerIsNotNull(aRawPowerSettingLength);
+    VerifyOrExit(*aRawPowerSettingLength >= mLength, error = kErrorInvalidArgs);
 
     memcpy(aRawPowerSetting, mSettings, mLength);
     *aRawPowerSettingLength = mLength;
@@ -85,8 +86,8 @@ Error PowerCalibration::AddCalibratedPower(uint8_t        aChannel,
     CalibratedPowerEntry entry;
     uint8_t              chIndex;
 
-    VerifyOrExit(IsChannelValid(aChannel) && aRawPowerSetting != nullptr &&
-                     aRawPowerSettingLength <= CalibratedPowerEntry::kMaxRawPowerSettingSize,
+    AssertPointerIsNotNull(aRawPowerSetting);
+    VerifyOrExit(IsChannelValid(aChannel) && aRawPowerSettingLength <= CalibratedPowerEntry::kMaxRawPowerSettingSize,
                  error = kErrorInvalidArgs);
 
     chIndex = aChannel - Radio::kChannelMin;
@@ -198,12 +199,10 @@ otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                       uint8_t *   aRawPowerSetting,
                                       uint16_t *  aRawPowerSettingLength)
 {
-    otError error = OT_ERROR_NONE;
+    AssertPointerIsNotNull(aRawPowerSetting);
+    AssertPointerIsNotNull(aRawPowerSettingLength);
 
-    VerifyOrExit(aRawPowerSetting != nullptr && aRawPowerSettingLength != nullptr, error = OT_ERROR_INVALID_ARGS);
-    error = AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetRawPowerSetting(aChannel, aRawPowerSetting,
-                                                                                    aRawPowerSettingLength);
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetRawPowerSetting(aChannel, aRawPowerSetting,
+                                                                                   aRawPowerSettingLength);
 }
 #endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE

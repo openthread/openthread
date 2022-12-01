@@ -6,24 +6,9 @@ The ot-fct is used to store the power calibration table into the factory configu
 
 ## Command List
 
-- [targetpowertable](#targetpowertable)
 - [powercalibrationtable](#powercalibrationtable)
 - [regiondomaintable](#regiondomaintable)
-
-#### targetpowertable
-
-Show the target power table.
-
-```bash
-> targetpowertable
-|  Domain  | ChStart |  ChEnd  | TargetPower(0.01dBm) |
-+----------+---------+---------+----------------------+
-| FCC      | 11      | 14      | 1700                 |
-| FCC      | 15      | 24      | 2000                 |
-| FCC      | 25      | 26      | 1600                 |
-| ETSI     | 11      | 26      | 1000                 |
-Done
-```
+- [targetpowertable](#targetpowertable)
 
 #### powercalibrationtable
 
@@ -71,5 +56,20 @@ Show the region and regulatory domain mapping table.
 > regiondomaintable
 FCC,AU,CA,CL,CO,IN,MX,PE,TW,US
 ETSI,WW
+Done
+```
+
+#### targetpowertable
+
+Show the target power table.
+
+```bash
+> targetpowertable
+|  Domain  | ChStart |  ChEnd  | TargetPower(0.01dBm) |
++----------+---------+---------+----------------------+
+| FCC      | 11      | 14      | 1700                 |
+| FCC      | 15      | 24      | 2000                 |
+| FCC      | 25      | 26      | 1600                 |
+| ETSI     | 11      | 26      | 1000                 |
 Done
 ```

@@ -69,10 +69,10 @@ public:
      * @param[in] aRawPowerSetting        A pointer to the raw power setting byte array.
      * @param[in] aRawPowerSettingLength  The length of the @p aRawPowerSetting.
      *
-     * @retval kErrorNone         Successfully added the calibrated power to the power calibration tabl.
+     * @retval kErrorNone         Successfully added the calibrated power to the power calibration table.
      * @retval kErrorNoBufs       No available entry in the power calibration table.
-     * @retval kErrorInvalidArgs  The @p aChannel, @aActualPower or @p aRawPowerSetting is invalid or the
-     *                            @ aActualPower already exists in the power calibration table;
+     * @retval kErrorInvalidArgs  The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid or the
+     *                            @ aActualPower already exists in the power calibration table.
      *
      */
     Error AddCalibratedPower(uint8_t        aChannel,
@@ -120,7 +120,7 @@ private:
     class CalibratedPowerEntry
     {
     public:
-        static constexpr uint16_t kMaxRawPowerSettingSize = OPENTHREAD_CONFIG_RAW_POWER_SETTING_SIZE;
+        static constexpr uint16_t kMaxRawPowerSettingSize = OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE;
 
         CalibratedPowerEntry(void)
             : mActualPower(kInvalidPower)
@@ -144,10 +144,11 @@ private:
         return ((aChannel >= Radio::kChannelMin) && (aChannel <= Radio::kChannelMax));
     }
 
-    static constexpr uint8_t  kInvalidIndex           = NumericLimits<uint8_t>::kMax;
-    static constexpr uint16_t kInvalidPower           = NumericLimits<int16_t>::kMax;
-    static constexpr uint16_t kMaxNumCalibratedPowers = OPENTHREAD_CONFIG_NUM_CALIBRATED_POWER_ENTRIES;
-    static constexpr uint16_t kNumChannels            = Radio::kChannelMax - Radio::kChannelMin + 1;
+    static constexpr uint8_t  kInvalidIndex = NumericLimits<uint8_t>::kMax;
+    static constexpr uint16_t kInvalidPower = NumericLimits<int16_t>::kMax;
+    static constexpr uint16_t kMaxNumCalibratedPowers =
+        OPENTHREAD_CONFIG_POWER_CALIBRATION_NUM_CALIBRATED_POWER_ENTRIES;
+    static constexpr uint16_t kNumChannels = Radio::kChannelMax - Radio::kChannelMin + 1;
 
     static_assert(kMaxNumCalibratedPowers < NumericLimits<uint8_t>::kMax,
                   "kMaxNumCalibratedPowers is larger than or equal to max");

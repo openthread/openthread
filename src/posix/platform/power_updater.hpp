@@ -80,7 +80,7 @@ public:
      *
      * The radio region format is the 2-bytes ascii representation of the
      * ISO 3166 alpha-2 code.
-
+     *
      * @param[out] aRegionCode  The radio region.
      *
      * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
