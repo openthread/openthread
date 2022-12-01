@@ -622,8 +622,8 @@ private:
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild);
-    void  UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId);
-    bool  UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, bool &aResetAdvInterval);
+    void  UpdateRoutes(const RouteTlv &aRouteTlv, uint8_t aRouterId);
+    bool  UpdateLinkQualityOut(const RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval);
     bool  HasNeighborWithGoodLinkQuality(void) const;
 
     static void HandleAddressSolicitResponse(void *               aContext,
@@ -642,7 +642,7 @@ private:
     bool HasChildren(void);
     void RemoveChildren(void);
     bool HasMinDowngradeNeighborRouters(void);
-    bool HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
+    bool HasOneNeighborWithComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aRouterId);
     bool HasSmallNumberOfChildren(void);
 
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);

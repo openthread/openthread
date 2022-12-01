@@ -2168,7 +2168,7 @@ void Mle::SendAnnounce(uint8_t aChannel, AnnounceMode aMode)
 void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode)
 {
     Error              error = kErrorNone;
-    ChannelTlv         channel;
+    ChannelTlv         channelTlv;
     MeshCoP::Timestamp activeTimestamp;
     TxMessage *        message = nullptr;
 
@@ -2177,10 +2177,10 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     message->SetLinkSecurityEnabled(true);
     message->SetChannel(aChannel);
 
-    channel.Init();
-    channel.SetChannelPage(0);
-    channel.SetChannel(Get<Mac::Mac>().GetPanChannel());
-    SuccessOrExit(error = channel.AppendTo(*message));
+    channelTlv.Init();
+    channelTlv.SetChannelPage(0);
+    channelTlv.SetChannel(Get<Mac::Mac>().GetPanChannel());
+    SuccessOrExit(error = channelTlv.AppendTo(*message));
 
     switch (aMode)
     {
@@ -3077,13 +3077,13 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     uint8_t               linkMarginFromTlv;
     uint8_t               linkMargin;
     LinkQuality           linkQuality;
-    ConnectivityTlv       connectivity;
+    ConnectivityTlv       connectivityTlv;
     uint32_t              linkFrameCounter;
     uint32_t              mleFrameCounter;
     Mac::ExtAddress       extAddress;
     Mac::CslAccuracy      cslAccuracy;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    TimeParameterTlv timeParameter;
+    TimeParameterTlv timeParameterTlv;
 #endif
 
     // Source Address
@@ -3122,8 +3122,8 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     linkQuality = LinkQualityForLinkMargin(linkMargin);
 
     // Connectivity
-    SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, connectivity));
-    VerifyOrExit(connectivity.IsValid(), error = kErrorParse);
+    SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, connectivityTlv));
+    VerifyOrExit(connectivityTlv.IsValid(), error = kErrorParse);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // CSL Accuracy
@@ -3149,10 +3149,10 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         parentinfo.mExtAddr      = extAddress;
         parentinfo.mRloc16       = sourceAddress;
         parentinfo.mRssi         = linkInfo->GetRss();
-        parentinfo.mPriority     = connectivity.GetParentPriority();
-        parentinfo.mLinkQuality3 = connectivity.GetLinkQuality3();
-        parentinfo.mLinkQuality2 = connectivity.GetLinkQuality2();
-        parentinfo.mLinkQuality1 = connectivity.GetLinkQuality1();
+        parentinfo.mPriority     = connectivityTlv.GetParentPriority();
+        parentinfo.mLinkQuality3 = connectivityTlv.GetLinkQuality3();
+        parentinfo.mLinkQuality2 = connectivityTlv.GetLinkQuality2();
+        parentinfo.mLinkQuality1 = connectivityTlv.GetLinkQuality1();
         parentinfo.mIsAttached   = IsAttached();
 
         mParentResponseCb(&parentinfo, mParentResponseCbContext);
@@ -3164,9 +3164,9 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     if (IsFullThreadDevice() && !IsDetached())
     {
         bool isPartitionIdSame = (leaderData.GetPartitionId() == mLeaderData.GetPartitionId());
-        bool isIdSequenceSame  = (connectivity.GetIdSequence() == Get<RouterTable>().GetRouterIdSequence());
+        bool isIdSequenceSame  = (connectivityTlv.GetIdSequence() == Get<RouterTable>().GetRouterIdSequence());
         bool isIdSequenceGreater =
-            SerialNumber::IsGreater(connectivity.GetIdSequence(), Get<RouterTable>().GetRouterIdSequence());
+            SerialNumber::IsGreater(connectivityTlv.GetIdSequence(), Get<RouterTable>().GetRouterIdSequence());
 
         switch (mAttachMode)
         {
@@ -3187,7 +3187,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         case kBetterPartition:
             VerifyOrExit(!isPartitionIdSame);
 
-            VerifyOrExit(MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+            VerifyOrExit(MleRouter::ComparePartitions(connectivityTlv.GetActiveRouters() <= 1, leaderData,
                                                       Get<MleRouter>().IsSingleton(), mLeaderData) > 0);
             break;
         }
@@ -3206,7 +3206,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
-            compare = MleRouter::ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+            compare = MleRouter::ComparePartitions(connectivityTlv.GetActiveRouters() <= 1, leaderData,
                                                    mParentCandidate.mIsSingleton, mParentCandidate.mLeaderData);
         }
 
@@ -3217,7 +3217,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         // only consider better parents if the partitions are the same
         if (compare == 0)
         {
-            VerifyOrExit(IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivity, version, cslAccuracy));
+            VerifyOrExit(IsBetterParent(sourceAddress, linkQuality, linkMargin, connectivityTlv, version, cslAccuracy));
         }
     }
 
@@ -3227,12 +3227,12 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Time Parameter
-    if (Tlv::FindTlv(aRxInfo.mMessage, timeParameter) == kErrorNone)
+    if (Tlv::FindTlv(aRxInfo.mMessage, timeParameterTlv) == kErrorNone)
     {
-        VerifyOrExit(timeParameter.IsValid());
+        VerifyOrExit(timeParameterTlv.IsValid());
 
-        Get<TimeSync>().SetTimeSyncPeriod(timeParameter.GetTimeSyncPeriod());
-        Get<TimeSync>().SetXtalThreshold(timeParameter.GetXtalThreshold());
+        Get<TimeSync>().SetTimeSyncPeriod(timeParameterTlv.GetTimeSyncPeriod());
+        Get<TimeSync>().SetXtalThreshold(timeParameterTlv.GetXtalThreshold());
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
@@ -3262,19 +3262,19 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);
-    mParentCandidate.SetLeaderCost(connectivity.GetLeaderCost());
+    mParentCandidate.SetLeaderCost(connectivityTlv.GetLeaderCost());
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mParentCandidate.SetCslAccuracy(cslAccuracy);
 #endif
 
-    mParentCandidate.mPriority         = connectivity.GetParentPriority();
-    mParentCandidate.mLinkQuality3     = connectivity.GetLinkQuality3();
-    mParentCandidate.mLinkQuality2     = connectivity.GetLinkQuality2();
-    mParentCandidate.mLinkQuality1     = connectivity.GetLinkQuality1();
-    mParentCandidate.mSedBufferSize    = connectivity.GetSedBufferSize();
-    mParentCandidate.mSedDatagramCount = connectivity.GetSedDatagramCount();
+    mParentCandidate.mPriority         = connectivityTlv.GetParentPriority();
+    mParentCandidate.mLinkQuality3     = connectivityTlv.GetLinkQuality3();
+    mParentCandidate.mLinkQuality2     = connectivityTlv.GetLinkQuality2();
+    mParentCandidate.mLinkQuality1     = connectivityTlv.GetLinkQuality1();
+    mParentCandidate.mSedBufferSize    = connectivityTlv.GetSedBufferSize();
+    mParentCandidate.mSedDatagramCount = connectivityTlv.GetSedDatagramCount();
     mParentCandidate.mLeaderData       = leaderData;
-    mParentCandidate.mIsSingleton      = connectivity.GetActiveRouters() <= 1;
+    mParentCandidate.mIsSingleton      = connectivityTlv.GetActiveRouters() <= 1;
     mParentCandidate.mLinkMargin       = linkMargin;
 
 exit:
@@ -4812,13 +4812,13 @@ Error Mle::TxMessage::AppendCslTimeoutTlv(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 Error Mle::TxMessage::AppendCslClockAccuracyTlv(void)
 {
-    CslClockAccuracyTlv cslClockAccuracy;
+    CslClockAccuracyTlv cslClockAccuracyTlv;
 
-    cslClockAccuracy.Init();
-    cslClockAccuracy.SetCslClockAccuracy(Get<Radio>().GetCslAccuracy());
-    cslClockAccuracy.SetCslUncertainty(Get<Radio>().GetCslUncertainty());
+    cslClockAccuracyTlv.Init();
+    cslClockAccuracyTlv.SetCslClockAccuracy(Get<Radio>().GetCslAccuracy());
+    cslClockAccuracyTlv.SetCslUncertainty(Get<Radio>().GetCslUncertainty());
 
-    return Append(cslClockAccuracy);
+    return Append(cslClockAccuracyTlv);
 }
 #endif
 
