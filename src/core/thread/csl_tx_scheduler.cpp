@@ -134,7 +134,7 @@ void CslTxScheduler::RescheduleCslTx(void)
             continue;
         }
 
-        delay = GetNextCslTransmissionDelay(child, cslTxDelay);
+        delay = GetNextCslTransmissionDelay(child, cslTxDelay, mCslFrameRequestAheadUs);
 
         if (delay < minDelayTime)
         {
@@ -151,18 +151,23 @@ void CslTxScheduler::RescheduleCslTx(void)
     mCslTxChild = bestChild;
 }
 
-uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx) const
+uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
+                                                     uint32_t &   aDelayFromLastRx,
+                                                     uint32_t     aAheadUs) const
 {
     uint64_t radioNow      = otPlatRadioGetNow(&GetInstance());
     uint32_t periodInUs    = aChild.GetCslPeriod() * kUsPerTenSymbols;
     uint64_t firstTxWindow = aChild.GetLastRxTimestamp() + aChild.GetCslPhase() * kUsPerTenSymbols;
     uint64_t nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
 
-    while (nextTxWindow < radioNow + mCslFrameRequestAheadUs) nextTxWindow += periodInUs;
+    while (nextTxWindow < radioNow + aAheadUs)
+    {
+        nextTxWindow += periodInUs;
+    }
 
     aDelayFromLastRx = static_cast<uint32_t>(nextTxWindow - aChild.GetLastRxTimestamp());
 
-    return static_cast<uint32_t>(nextTxWindow - radioNow - mCslFrameRequestAheadUs);
+    return static_cast<uint32_t>(nextTxWindow - radioNow - aAheadUs);
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -171,6 +176,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame = nullptr;
     uint32_t      txDelay;
+    uint32_t      delay;
 
     VerifyOrExit(mCslTxChild != nullptr);
 
@@ -207,7 +213,25 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame->SetChannel(mCslTxChild->GetCslChannel() == 0 ? Get<Mac::Mac>().GetPanChannel()
                                                         : mCslTxChild->GetCslChannel());
 
-    GetNextCslTransmissionDelay(*mCslTxChild, txDelay);
+    delay = GetNextCslTransmissionDelay(*mCslTxChild, txDelay, /* aAheadUs */ 0);
+
+    // We make sure that delay is less than `mCslFrameRequestAheadUs`
+    // plus some guard time. Note that we used `mCslFrameRequestAheadUs`
+    // in `RescheduleCslTx()` when determining the next CSL delay to
+    // schedule CSL tx with `Mac` but here we calculate the delay with
+    // zero `aAheadUs`. All the timings are in usec but when passing
+    // delay to `Mac` we divide by `1000` (to covert to msec) which
+    // can round the value down and cause `Mac` to start operation a
+    // bit (some usec) earlier. This is covered by adding the guard
+    // time `kFramePreparationGuardInterval`.
+    //
+    // In general this check handles the case where `Mac` is busy with
+    // other operations and therefore late to start the CSL tx operation
+    // and by the time `HandleFrameRequest()` is invoked, we miss the
+    // current CSL window and move to the next window.
+
+    VerifyOrExit(delay <= mCslFrameRequestAheadUs + kFramePreparationGuardInterval, frame = nullptr);
+
     frame->SetTxDelay(txDelay);
     frame->SetTxDelayBaseTime(
         static_cast<uint32_t>(mCslTxChild->GetLastRxTimestamp())); // Only LSB part of the time is required.
