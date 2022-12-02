@@ -147,6 +147,7 @@ After the device successfully attaches to a Thread network, the device will retr
 - [show](#show)
 - [steeringdata](#steeringdata-check-eui64discerner)
 - [unpublish](#unpublish)
+- [version](#version)
 
 ## Command Details
 
@@ -164,6 +165,7 @@ register
 show
 steeringdata
 unpublish
+version
 Done
 ```
 
@@ -323,5 +325,15 @@ Unpublishes a previously published on-mesh prefix or external route entry.
 
 ```bash
 > netdata unpublish fd00:1234:5678::/64
+Done
+```
+
+### version
+
+Gets the Network Data Version and Stable Version.
+
+```bash
+> netdata version
+version:42, stable:105
 Done
 ```

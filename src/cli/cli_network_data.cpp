@@ -661,6 +661,25 @@ exit:
     return error;
 }
 
+/**
+ * @cli netdata version
+ * @code
+ * netdata version
+ * version:42, stable:105
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otNetDataGetVersion
+ */
+template <> otError NetworkData::Process<Cmd("version")>(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+    OutputLine("version:%u, stable:%u", otNetDataGetVersion(GetInstancePtr()),
+               otNetDataGetStableVersion(GetInstancePtr()));
+
+    return OT_ERROR_NONE;
+}
+
 otError NetworkData::Process(Arg aArgs[])
 {
 #define CmdEntry(aCommandString)                                   \
@@ -680,6 +699,7 @@ otError NetworkData::Process(Arg aArgs[])
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
         CmdEntry("unpublish"),
 #endif
+        CmdEntry("version"),
     };
 
 #undef CmdEntry
