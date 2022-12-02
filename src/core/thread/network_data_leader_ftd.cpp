@@ -712,11 +712,10 @@ void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkDa
         }
     }
 
-    IncrementVersions(flags);
-
     DumpDebg("Register", GetBytes(), GetLength());
 
 exit:
+    IncrementVersions(flags);
 
     if (error != kErrorNone)
     {
