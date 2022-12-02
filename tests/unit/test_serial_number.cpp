@@ -131,6 +131,24 @@ void TestNumUtils(void)
     VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(9, 10) == 1);
     VerifyOrQuit(DivideAndRoundToClosest<uint8_t>(10, 10) == 1);
 
+    VerifyOrQuit(CountBitsInMask<uint8_t>(0) == 0);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(1) == 1);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(2) == 1);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(3) == 2);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(4) == 1);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(7) == 3);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(11) == 3);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(15) == 4);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(0x11) == 2);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(0xef) == 7);
+    VerifyOrQuit(CountBitsInMask<uint8_t>(0xff) == 8);
+
+    VerifyOrQuit(CountBitsInMask<uint16_t>(0) == 0);
+    VerifyOrQuit(CountBitsInMask<uint16_t>(0xff00) == 8);
+    VerifyOrQuit(CountBitsInMask<uint16_t>(0xff) == 8);
+    VerifyOrQuit(CountBitsInMask<uint16_t>(0xaa55) == 8);
+    VerifyOrQuit(CountBitsInMask<uint16_t>(0xffff) == 16);
+
     printf("TestNumUtils() passed\n");
 }
 

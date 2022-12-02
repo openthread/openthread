@@ -299,6 +299,7 @@ SOURCES_COMMON                                  = \
     thread/mesh_forwarder_mtd.cpp                 \
     thread/mle.cpp                                \
     thread/mle_router.cpp                         \
+    thread/mle_tlvs.cpp                           \
     thread/mle_types.cpp                          \
     thread/mlr_manager.cpp                        \
     thread/neighbor_table.cpp                     \

@@ -540,7 +540,7 @@ public:
      * @retval FALSE  If the Router ID bit is not set.
      *
      */
-    bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & (0x80 >> (aRouterId % 8))) != 0; }
+    bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & MaskFor(aRouterId)) != 0; }
 
     /**
      * This method sets a given Router ID.
@@ -548,7 +548,7 @@ public:
      * @param[in]  aRouterId  The Router ID to set.
      *
      */
-    void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= 0x80 >> (aRouterId % 8); }
+    void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= MaskFor(aRouterId); }
 
     /**
      * This method removes a given Router ID.
@@ -556,9 +556,19 @@ public:
      * @param[in]  aRouterId  The Router ID to remove.
      *
      */
-    void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~(0x80 >> (aRouterId % 8)); }
+    void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~MaskFor(aRouterId); }
+
+    /**
+     * This method calculates the number of allocated Router IDs in the set.
+     *
+     * @returns The number of allocated Router IDs in the set.
+     *
+     */
+    uint8_t GetNumberOfAllocatedIds(void) const;
 
 private:
+    static uint8_t MaskFor(uint8_t aRouterId) { return (0x80 >> (aRouterId % 8)); }
+
     uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
 } OT_TOOL_PACKED_END;
 

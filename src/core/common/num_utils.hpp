@@ -200,6 +200,33 @@ inline unsigned long ToUlong(uint32_t aUint32)
     return static_cast<unsigned long>(aUint32);
 }
 
+/**
+ * This function counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.
+ *
+ * @tparam UintType   The unsigned int type (MUST be `uint8_t`, uint16_t`, uint32_t`, or `uint64_t`).
+ *
+ * @param[in] aMask   A bit mask.
+ *
+ * @returns The number of `1` bits in @p aMask.
+ *
+ */
+template <typename UintType> uint8_t CountBitsInMask(UintType aMask)
+{
+    static_assert(TypeTraits::IsSame<UintType, uint8_t>::kValue || TypeTraits::IsSame<UintType, uint16_t>::kValue ||
+                      TypeTraits::IsSame<UintType, uint32_t>::kValue || TypeTraits::IsSame<UintType, uint64_t>::kValue,
+                  "UintType must be `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t`");
+
+    uint8_t count = 0;
+
+    while (aMask != 0)
+    {
+        aMask &= aMask - 1;
+        count++;
+    }
+
+    return count;
+}
+
 } // namespace ot
 
 #endif // NUM_UTILS_HPP_
