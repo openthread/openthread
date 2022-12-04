@@ -46,7 +46,6 @@ namespace Ip6 {
 
 Mpl::Mpl(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mSeedSetTimer(aInstance)
     , mSequence(0)
 #if OPENTHREAD_FTD
     , mRetransmissionTimer(aInstance)
@@ -252,19 +251,16 @@ Error Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
     insert->mSequence = aSequence;
     insert->mLifetime = kSeedEntryLifetime;
 
-    if (!mSeedSetTimer.IsRunning())
-    {
-        mSeedSetTimer.Start(kSeedEntryLifetimeDt);
-    }
+    Get<TimeTicker>().RegisterReceiver(TimeTicker::kIp6Mpl);
 
 exit:
     return error;
 }
 
-void Mpl::HandleSeedSetTimer(void)
+void Mpl::HandleTimeTick(void)
 {
-    bool startTimer = false;
-    int  j          = 0;
+    bool continueRxingTicks = false;
+    int  j                  = 0;
 
     for (int i = 0; i < kNumSeedEntries && mSeedSet[i].mLifetime; i++)
     {
@@ -272,8 +268,8 @@ void Mpl::HandleSeedSetTimer(void)
 
         if (mSeedSet[i].mLifetime > 0)
         {
-            mSeedSet[j++] = mSeedSet[i];
-            startTimer    = true;
+            mSeedSet[j++]      = mSeedSet[i];
+            continueRxingTicks = true;
         }
     }
 
@@ -282,9 +278,9 @@ void Mpl::HandleSeedSetTimer(void)
         mSeedSet[j].mLifetime = 0;
     }
 
-    if (startTimer)
+    if (!continueRxingTicks)
     {
-        mSeedSetTimer.Start(kSeedEntryLifetimeDt);
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kIp6Mpl);
     }
 }
 
