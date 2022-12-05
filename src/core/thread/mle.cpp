@@ -824,30 +824,27 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
     IgnoreError(Store());
 
-    switch (mRole)
-    {
-    case kRoleDisabled:
-        break;
+    // We need to re-attach on switching between MTD/FTD modes
+    // and also on switching from rx-on to sleepy (rx-off) mode.
 
-    case kRoleDetached:
+    if (IsAttached() && ((oldMode.IsFullThreadDevice() != mDeviceMode.IsFullThreadDevice()) ||
+                         (oldMode.IsRxOnWhenIdle() && !mDeviceMode.IsRxOnWhenIdle())))
+    {
+        mAttachCounter = 0;
+        IgnoreError(BecomeDetached());
+        ExitNow();
+    }
+
+    if (IsDetached())
+    {
         mAttachCounter = 0;
         SetStateDetached();
         Attach(kAnyPartition);
-        break;
-
-    case kRoleChild:
+    }
+    else if (IsChild())
+    {
         SetStateChild(GetRloc16());
         IgnoreError(SendChildUpdateRequest());
-        break;
-
-    case kRoleRouter:
-    case kRoleLeader:
-        if (oldMode.IsFullThreadDevice() && !mDeviceMode.IsFullThreadDevice())
-        {
-            IgnoreError(BecomeDetached());
-        }
-
-        break;
     }
 
 exit:
