@@ -39,11 +39,10 @@ import socket
 import select
 
 # Test description:
-#   This test verifies the advertisement of local NAT64 prefix in Thread network
+#   This test verifies publishing the local NAT64 prefix in Thread network
 #   when no NAT64 prefix found on infrastructure interface.
-#
-#   TODO: add checks for outbound connectivity from Thread device to IPv4 host
-#         after OTBR change is ready.
+#   It also verifies the outbound connectivity from a Thread device to
+#   an IPv4 host address.
 #
 # Topology:
 #    ----------------(eth)--------------------
@@ -116,8 +115,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         host.start(start_radvd=False)
         self.simulator.go(5)
 
+        # NAT64 is enabled by default when starting BR.
         br.start()
-        br.enable_nat64()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         br.bash("service bind9 stop")
         self.simulator.go(330)

@@ -34,11 +34,8 @@ import thread_cert
 import enum
 
 # Test description:
-#   This test verifies that a single NAT64 prefix is advertised when there are
+#   This test verifies that a single NAT64 prefix is published when there are
 #   multiple Border Routers in the same Thread and infrastructure network.
-#
-#   TODO: add checks for outbound connectivity from Thread device to IPv4 host
-#         after OTBR change is ready.
 #
 # Topology:
 #    ----------------(eth)--------------------------
@@ -110,8 +107,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         host.start(start_radvd=False)
         self.simulator.go(5)
 
+        # NAT64 is enabled by default when starting BR1.
         br1.start()
-        br1.nat64_set_enabled(True)
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         br1.bash("service bind9 stop")
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
@@ -125,8 +122,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         # Case 1. BR2 with an infrastructure prefix joins the network later and
         #         it will add the infrastructure nat64 prefix to Network Data.
         #
+        # NAT64 is enabled by default when starting BR2.
         br2.start()
-        br2.nat64_set_enabled(True)
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
