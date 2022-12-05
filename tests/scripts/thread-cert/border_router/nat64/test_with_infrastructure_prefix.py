@@ -32,7 +32,7 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies the advertisement of infrastructure NAT64 prefix in Thread network.
+#   This test verifies publishing infrastructure NAT64 prefix in Thread network.
 #
 #
 # Topology:
@@ -74,8 +74,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br = self.nodes[BR]
         router = self.nodes[ROUTER]
 
+        # NAT64 is enabled by default when starting BR.
         br.start()
-        br.enable_nat64()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
 
