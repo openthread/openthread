@@ -191,6 +191,8 @@ Error Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
             if (aSequence == mSeedSet[i].mSequence)
             {
                 // already received, drop message
+
+                mSeedSet[i].mLifetime = kSeedEntryLifetime;
                 ExitNow(error = kErrorDrop);
             }
             else if (insert == nullptr && SerialNumber::IsLess(aSequence, mSeedSet[i].mSequence))
