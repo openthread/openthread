@@ -215,6 +215,25 @@ public:
     };
 
     /**
+     * Int64 string buffer can share the same buffer type as uint64.
+     *
+     * Note: `-9223372036854775808` (`INT64_MIN`) contains exactly 20 bytes.
+     *
+     */
+    typedef Uint64StringBuffer Int64StringBuffer;
+
+    /**
+     * This static method converts a `int64_t` value to a decimal format string.
+     *
+     * @param[in] aInt64  The `int64_t` value to convert.
+     * @param[in] aBuffer  A buffer to allocate the string from.
+     *
+     * @returns A pointer to the start of the string (null-terminated) representation of @p aInt64.
+     *
+     */
+    static const char *Int64ToString(int64_t aInt64, Int64StringBuffer &aBuffer);
+
+    /**
      * This static method converts a `uint64_t` value to a decimal format string.
      *
      * @param[in] aUint64  The `uint64_t` value to convert.
@@ -340,6 +359,22 @@ public:
      *
      */
     void OutputExtAddressLine(const otExtAddress &aExtAddress) { OutputBytesLine(aExtAddress.m8); }
+
+    /**
+     * This method outputs a `int64_t` value in decimal format.
+     *
+     * @param[in] aInt64   The `int64_t` value to output.
+     *
+     */
+    void OutputInt64(int64_t aInt64);
+
+    /**
+     * This method outputs a `int64_t` value in decimal format and at the end it also outputs newline "\r\n".
+     *
+     * @param[in] aInt64   The `int64_t` value to output.
+     *
+     */
+    void OutputInt64Line(int64_t aInt64);
 
     /**
      * This method outputs a `uint64_t` value in decimal format.

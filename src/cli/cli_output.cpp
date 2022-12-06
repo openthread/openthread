@@ -122,6 +122,47 @@ void Output::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
     }
 }
 
+const char *Output::Int64ToString(int64_t aInt64, Int64StringBuffer &aBuffer)
+{
+    char *   cur        = &aBuffer.mChars[ot::Cli::Output::Int64StringBuffer::kSize - 1];
+    bool     isNegative = (aInt64 < 0);
+    uint64_t absValue   = static_cast<uint64_t>(isNegative ? -aInt64 : aInt64);
+
+    *cur = '\0';
+
+    if (absValue == 0)
+    {
+        *(--cur) = '0';
+    }
+    else
+    {
+        for (; absValue != 0; absValue /= 10)
+        {
+            *(--cur) = static_cast<char>('0' + static_cast<uint8_t>(absValue % 10));
+        }
+
+        if (isNegative)
+        {
+            *(--cur) = '-';
+        }
+    }
+
+    return cur;
+}
+
+void Output::OutputInt64(int64_t aInt64)
+{
+    Int64StringBuffer buffer;
+
+    OutputFormat("%s", Int64ToString(aInt64, buffer));
+}
+
+void Output::OutputInt64Line(int64_t aInt64)
+{
+    OutputInt64(aInt64);
+    OutputNewLine();
+}
+
 void Output::OutputBytesLine(const uint8_t *aBytes, uint16_t aLength)
 {
     OutputBytes(aBytes, aLength);

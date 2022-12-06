@@ -94,10 +94,10 @@ typedef struct otIp4Cidr
  */
 typedef struct otNat64Counters
 {
-    uint64_t m4To6Packets; ///< Number of packets translated from IPv4 to IPv6.
-    uint64_t m4To6Bytes;   ///< Sum of size of packets translated from IPv4 to IPv6.
-    uint64_t m6To4Packets; ///< Number of packets translated from IPv6 to IPv4.
-    uint64_t m6To4Bytes;   ///< Sum of size of packets translated from IPv6 to IPv4.
+    int64_t m4To6Packets; ///< Number of packets translated from IPv4 to IPv6.
+    int64_t m4To6Bytes;   ///< Sum of size of packets translated from IPv4 to IPv6.
+    int64_t m6To4Packets; ///< Number of packets translated from IPv6 to IPv4.
+    int64_t m6To4Bytes;   ///< Sum of size of packets translated from IPv6 to IPv4.
 } otNat64Counters;
 
 /**
@@ -132,8 +132,8 @@ typedef enum otNat64DropReason
  */
 typedef struct otNat64ErrorCounters
 {
-    uint64_t mCount4To6[OT_NAT64_DROP_REASON_COUNT]; ///< Errors translating IPv4 packets.
-    uint64_t mCount6To4[OT_NAT64_DROP_REASON_COUNT]; ///< Errors translating IPv6 packets.
+    int64_t mCount4To6[OT_NAT64_DROP_REASON_COUNT]; ///< Errors translating IPv4 packets.
+    int64_t mCount6To4[OT_NAT64_DROP_REASON_COUNT]; ///< Errors translating IPv6 packets.
 } otNat64ErrorCounters;
 
 /**
@@ -173,7 +173,7 @@ typedef struct otNat64AddressMapping
 
     otIp4Address mIp4;             ///< The IPv4 address of the mapping.
     otIp6Address mIp6;             ///< The IPv6 address of the mapping.
-    uint32_t     mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
+    int64_t      mRemainingTimeMs; ///< Remaining time before expiry in milliseconds.
 
     otNat64ProtocolCounters mCounters;
 } otNat64AddressMapping;
