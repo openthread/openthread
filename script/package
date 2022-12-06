@@ -32,7 +32,8 @@
 
 set -euo pipefail
 
-readonly OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
+OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
+readonly OT_BUILDDIR
 
 main()
 {

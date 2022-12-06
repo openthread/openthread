@@ -29,8 +29,11 @@
 
 set -euxo pipefail
 
-readonly OT_TMP_DIR=/tmp/ot-arm-build-cmake
-readonly OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
+OT_TMP_DIR=/tmp/ot-arm-build-cmake
+readonly OT_TMP_DIR
+
+OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
+readonly OT_SHA_NEW
 
 build_nrf52840()
 {

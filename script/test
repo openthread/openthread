@@ -32,28 +32,62 @@
 
 set -euo pipefail
 
-readonly OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
-readonly OT_SRCDIR="${PWD}"
+OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
+readonly OT_BUILDDIR
 
-readonly OT_COLOR_PASS='\033[0;32m'
-readonly OT_COLOR_FAIL='\033[0;31m'
-readonly OT_COLOR_SKIP='\033[0;33m'
-readonly OT_COLOR_NONE='\033[0m'
+OT_SRCDIR="${PWD}"
+readonly OT_SRCDIR
 
-readonly OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
-readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
-readonly THREAD_VERSION="${THREAD_VERSION:-1.3}"
-readonly INTER_OP="${INTER_OP:-0}"
-readonly VERBOSE="${VERBOSE:-0}"
-readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
-readonly NAT64="${NAT64:-0}"
-readonly NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
-readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
+OT_COLOR_PASS='\033[0;32m'
+readonly OT_COLOR_PASS
 
-readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
-readonly FULL_LOGS=${FULL_LOGS:-0}
-readonly TREL=${TREL:-0}
-readonly LOCAL_OTBR_DIR=${LOCAL_OTBR_DIR:-""}
+OT_COLOR_FAIL='\033[0;31m'
+readonly OT_COLOR_FAIL
+
+OT_COLOR_SKIP='\033[0;33m'
+readonly OT_COLOR_SKIP
+
+OT_COLOR_NONE='\033[0m'
+readonly OT_COLOR_NONE
+
+OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
+readonly OT_NODE_TYPE
+
+OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
+readonly OT_NATIVE_IP
+
+THREAD_VERSION="${THREAD_VERSION:-1.3}"
+readonly THREAD_VERSION
+
+INTER_OP="${INTER_OP:-0}"
+readonly INTER_OP
+
+VERBOSE="${VERBOSE:-0}"
+readonly VERBOSE
+
+BORDER_ROUTING="${BORDER_ROUTING:-1}"
+readonly BORDER_ROUTING
+
+NAT64="${NAT64:-0}"
+readonly NAT64
+
+NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
+readonly NAT64_SERVICE
+
+INTER_OP_BBR="${INTER_OP_BBR:-1}"
+readonly INTER_OP_BBR
+
+OT_COREDUMP_DIR="${PWD}/ot-core-dump"
+readonly OT_COREDUMP_DIR
+
+FULL_LOGS=${FULL_LOGS:-0}
+readonly FULL_LOGS
+
+TREL=${TREL:-0}
+readonly TREL
+
+LOCAL_OTBR_DIR=${LOCAL_OTBR_DIR:-""}
+readonly LOCAL_OTBR_DIR
 
 build_simulation()
 {

@@ -29,7 +29,8 @@
 
 set -euxo pipefail
 
-readonly OT_BUILDDIR="$(pwd)/build"
+OT_BUILDDIR="$(pwd)/build"
+readonly OT_BUILDDIR
 
 reset_source()
 {
