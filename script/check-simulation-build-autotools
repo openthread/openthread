@@ -29,7 +29,8 @@
 
 set -euxo pipefail
 
-readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
+OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
+readonly OT_BUILD_JOBS
 
 reset_source()
 {

@@ -29,9 +29,10 @@
 
 set -euxo pipefail
 
-readonly OT_SRCDIR="$(pwd)"
+OT_SRCDIR="$(pwd)"
+readonly OT_SRCDIR
 
-readonly OT_BUILD_OPTIONS=(
+OT_BUILD_OPTIONS=(
     "-DOT_ANYCAST_LOCATOR=ON"
     "-DOT_BUILD_EXECUTABLES=OFF"
     "-DOT_BORDER_AGENT=ON"
@@ -75,13 +76,15 @@ readonly OT_BUILD_OPTIONS=(
     "-DOT_SRP_CLIENT=ON"
     "-DOT_SRP_SERVER=ON"
 )
+readonly OT_BUILD_OPTIONS
 
-readonly OT_CFLAGS=(
+OT_CFLAGS=(
     "-DMBEDTLS_DEBUG_C"
     "-I$(pwd)/third_party/mbedtls"
     "-I$(pwd)/third_party/mbedtls/repo/include"
     '-DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"'
 )
+readonly OT_CFLAGS
 
 main()
 {
