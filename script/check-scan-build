@@ -88,8 +88,8 @@ main()
     mkdir -p build
     cd build
 
-    scan-build-9 cmake -GNinja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DOT_COMPILE_WARNING_AS_ERROR=ON -DCMAKE_C_FLAGS="${OT_CFLAGS[*]}" -DCMAKE_CXX_FLAGS="${OT_CFLAGS[*]}" "${OT_BUILD_OPTIONS[@]}" "${OT_SRCDIR}"
-    scan-build-9 --status-bugs -analyze-headers -v ninja
+    scan-build-14 cmake -GNinja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DOT_COMPILE_WARNING_AS_ERROR=ON -DCMAKE_C_FLAGS="${OT_CFLAGS[*]}" -DCMAKE_CXX_FLAGS="${OT_CFLAGS[*]}" "${OT_BUILD_OPTIONS[@]}" "${OT_SRCDIR}"
+    scan-build-14 --status-bugs -analyze-headers -v ninja
 
     cd "${OT_SRCDIR}"
 }
