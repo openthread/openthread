@@ -38,7 +38,7 @@ install_packages_pretty_format()
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format and clang-tidy for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-9 || echo 'WARNING: could not install clang-format-14 and clang-tidy-9, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+    sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 || echo 'WARNING: could not install clang-format-14 and clang-tidy-14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
 
     # add yapf for pretty
     python3 -m pip install yapf==0.31.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
