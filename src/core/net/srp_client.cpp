@@ -1356,7 +1356,7 @@ exit:
     return error;
 }
 
-Error Client::AppendUpdateLeaseOptRecord(Message &aMessage)
+Error Client::AppendUpdateLeaseOptRecord(Message &aMessage) const
 {
     Error            error;
     Dns::OptRecord   optRecord;

@@ -307,7 +307,7 @@ private:
         const Header           &GetResponseHeader(void) const { return mResponseHeader; }
         Header                 &GetResponseHeader(void) { return mResponseHeader; }
         const Message          &GetResponseMessage(void) const { return *mResponseMessage; }
-        Message                &GetResponseMessage(void) { return *mResponseMessage; }
+        Message                &GetResponseMessage(void) { return const_cast<Message &>(*mResponseMessage); }
         TimeMilli               GetStartTime(void) const { return mStartTime; }
         NameCompressInfo       &GetNameCompressInfo(void) { return mCompressInfo; };
         void                    Finalize(Header::Response aResponseMessage, Ip6::Udp::Socket &aSocket);

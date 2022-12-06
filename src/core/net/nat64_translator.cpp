@@ -274,7 +274,7 @@ exit:
     return res;
 }
 
-Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void)
+Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void) const
 {
     InfoString string;
 
