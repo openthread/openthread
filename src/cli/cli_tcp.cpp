@@ -423,16 +423,16 @@ void TcpExample::HandleTcpDisconnectedCallback(otTcpEndpoint *aEndpoint, otTcpDi
     static_cast<TcpExample *>(otTcpEndpointGetContext(aEndpoint))->HandleTcpDisconnected(aEndpoint, aReason);
 }
 
-otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReadyCallback(otTcpListener *   aListener,
+otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReadyCallback(otTcpListener    *aListener,
                                                                        const otSockAddr *aPeer,
-                                                                       otTcpEndpoint **  aAcceptInto)
+                                                                       otTcpEndpoint   **aAcceptInto)
 {
     return static_cast<TcpExample *>(otTcpListenerGetContext(aListener))
         ->HandleTcpAcceptReady(aListener, aPeer, aAcceptInto);
 }
 
-void TcpExample::HandleTcpAcceptDoneCallback(otTcpListener *   aListener,
-                                             otTcpEndpoint *   aEndpoint,
+void TcpExample::HandleTcpAcceptDoneCallback(otTcpListener    *aListener,
+                                             otTcpEndpoint    *aEndpoint,
                                              const otSockAddr *aPeer)
 {
     static_cast<TcpExample *>(otTcpListenerGetContext(aListener))->HandleTcpAcceptDone(aListener, aEndpoint, aPeer);
@@ -567,9 +567,9 @@ void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnect
     otTcpCircularSendBufferForceDiscardAll(&mSendBuffer);
 }
 
-otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener *   aListener,
+otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener    *aListener,
                                                                const otSockAddr *aPeer,
-                                                               otTcpEndpoint **  aAcceptInto)
+                                                               otTcpEndpoint   **aAcceptInto)
 {
     otTcpIncomingConnectionAction action;
 
@@ -610,9 +610,9 @@ otError TcpExample::ContinueBenchmarkCircularSend(void)
     {
         size_t   toSendThisIteration = OT_MIN(mBenchmarkBytesUnsent, sBenchmarkDataLength);
         uint32_t flag                = (toSendThisIteration < freeSpace && toSendThisIteration < mBenchmarkBytesUnsent)
-                            ? OT_TCP_CIRCULAR_SEND_BUFFER_WRITE_MORE_TO_COME
-                            : 0;
-        size_t written;
+                                           ? OT_TCP_CIRCULAR_SEND_BUFFER_WRITE_MORE_TO_COME
+                                           : 0;
+        size_t   written;
 
         SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, sBenchmarkData,
                                                            toSendThisIteration, &written, flag));

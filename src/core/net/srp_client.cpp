@@ -1686,7 +1686,7 @@ Error Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const 
     while (len > 0)
     {
         Dns::LeaseOption leaseOption;
-        Dns::Option &    option = leaseOption;
+        Dns::Option     &option = leaseOption;
         uint16_t         size;
 
         SuccessOrExit(error = aMessage.Read(aOffset, option));

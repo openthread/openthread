@@ -61,8 +61,8 @@ public:
      *
      */
     HdlcInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                  void *                                        aCallbackContext,
-                  Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+                  void                                         *aCallbackContext,
+                  Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -146,7 +146,10 @@ public:
      * @param[in] aEvent   The data event.
      *
      */
-    void Process(const VirtualTimeEvent &aEvent) { Decode(aEvent.mData, aEvent.mDataLength); }
+    void Process(const VirtualTimeEvent &aEvent)
+    {
+        Decode(aEvent.mData, aEvent.mDataLength);
+    }
 #endif
 
     /**
@@ -155,7 +158,10 @@ public:
      * @returns   Bus speed in bits/second.
      *
      */
-    uint32_t GetBusSpeed(void) const { return mBaudRate; }
+    uint32_t GetBusSpeed(void) const
+    {
+        return mBaudRate;
+    }
 
     /**
      * This method is called when RCP failure detected and resets internal states of the interface.
@@ -175,7 +181,10 @@ public:
      * @returns The RCP interface metrics.
      *
      */
-    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
+    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const
+    {
+        return &mInterfaceMetrics;
+    }
 
 private:
     /**
@@ -258,8 +267,8 @@ private:
     };
 
     Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                        mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
+    void                                         *mReceiveFrameContext;
+    Spinel::SpinelInterface::RxFrameBuffer       &mReceiveFrameBuffer;
 
     int             mSockFd;
     uint32_t        mBaudRate;

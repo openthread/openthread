@@ -739,11 +739,11 @@ exit:
     return error;
 }
 
-Error ResourceRecord::FindRecord(const Message & aMessage,
-                                 uint16_t &      aOffset,
+Error ResourceRecord::FindRecord(const Message  &aMessage,
+                                 uint16_t       &aOffset,
                                  uint16_t        aNumRecords,
                                  uint16_t        aIndex,
-                                 const Name &    aName,
+                                 const Name     &aName,
                                  uint16_t        aType,
                                  ResourceRecord &aRecord,
                                  uint16_t        aMinRecordSize)
@@ -798,8 +798,8 @@ exit:
     return error;
 }
 
-Error ResourceRecord::ReadRecord(const Message & aMessage,
-                                 uint16_t &      aOffset,
+Error ResourceRecord::ReadRecord(const Message  &aMessage,
+                                 uint16_t       &aOffset,
                                  uint16_t        aType,
                                  ResourceRecord &aRecord,
                                  uint16_t        aMinRecordSize)
@@ -832,9 +832,9 @@ exit:
 }
 
 Error ResourceRecord::ReadName(const Message &aMessage,
-                               uint16_t &     aOffset,
+                               uint16_t      &aOffset,
                                uint16_t       aStartOffset,
-                               char *         aNameBuffer,
+                               char          *aNameBuffer,
                                uint16_t       aNameBufferSize,
                                bool           aSkipRecord) const
 {
@@ -922,7 +922,7 @@ Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
     uint8_t     length;
     uint8_t     index;
     const char *cur;
-    char *      keyBuffer = GetKeyBuffer();
+    char       *keyBuffer = GetKeyBuffer();
 
     static_assert(sizeof(mChar) == TxtEntry::kMaxKeyLength + 1, "KeyBuffer cannot fit the max key length");
 
@@ -1104,10 +1104,10 @@ bool LeaseOption::IsValid(void) const
 }
 
 Error PtrRecord::ReadPtrName(const Message &aMessage,
-                             uint16_t &     aOffset,
-                             char *         aLabelBuffer,
+                             uint16_t      &aOffset,
+                             char          *aLabelBuffer,
                              uint8_t        aLabelBufferSize,
-                             char *         aNameBuffer,
+                             char          *aNameBuffer,
                              uint16_t       aNameBufferSize) const
 {
     Error    error       = kErrorNone;
@@ -1133,9 +1133,9 @@ exit:
 }
 
 Error TxtRecord::ReadTxtData(const Message &aMessage,
-                             uint16_t &     aOffset,
-                             uint8_t *      aTxtBuffer,
-                             uint16_t &     aTxtBufferSize) const
+                             uint16_t      &aOffset,
+                             uint8_t       *aTxtBuffer,
+                             uint16_t      &aTxtBufferSize) const
 {
     Error error = kErrorNone;
 

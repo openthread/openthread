@@ -124,7 +124,7 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
 
         for (uint16_t listIndex = 0; listIndex < aChildListLength; listIndex++)
         {
-            Child *      child;
+            Child       *child;
             Mac::Address address;
 
             if (!StateMatchesFilter(aChildList[listIndex].mState, filter))
@@ -164,8 +164,8 @@ void VerifyChildTableContent(ChildTable &aTable, uint16_t aChildListLength, cons
 
             for (; !iter.IsDone(); iter++)
             {
-                Child *  child    = iter.GetChild();
-                Child &  childRef = *iter;
+                Child   *child    = iter.GetChild();
+                Child   &childRef = *iter;
                 bool     didFind  = false;
                 uint16_t childIndex;
 

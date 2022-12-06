@@ -63,7 +63,7 @@ HistoryTracker::HistoryTracker(Instance &aInstance)
 
 void HistoryTracker::RecordNetworkInfo(void)
 {
-    NetworkInfo *   entry = mNetInfoHistory.AddNewEntry();
+    NetworkInfo    *entry = mNetInfoHistory.AddNewEntry();
     Mle::DeviceMode mode;
 
     VerifyOrExit(entry != nullptr);
@@ -469,9 +469,9 @@ uint16_t HistoryTracker::List::Add(uint16_t aMaxSize, Timestamp aTimestamps[])
 
 Error HistoryTracker::List::Iterate(uint16_t        aMaxSize,
                                     const Timestamp aTimestamps[],
-                                    Iterator &      aIterator,
-                                    uint16_t &      aListIndex,
-                                    uint32_t &      aEntryAge) const
+                                    Iterator       &aIterator,
+                                    uint16_t       &aListIndex,
+                                    uint32_t       &aEntryAge) const
 {
     Error error = kErrorNone;
 

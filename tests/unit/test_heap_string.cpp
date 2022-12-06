@@ -86,7 +86,7 @@ void TestHeapString(void)
 {
     Heap::String str1;
     Heap::String str2;
-    const char * oldBuffer;
+    const char  *oldBuffer;
 
     printf("====================================================================================\n");
     printf("TestHeapString\n\n");
@@ -199,9 +199,9 @@ template <uint16_t kLength> void VerifyData(const Heap::Data &aData, const uint8
 
 void TestHeapData(void)
 {
-    Instance *     instance;
-    MessagePool *  messagePool;
-    Message *      message;
+    Instance      *instance;
+    MessagePool   *messagePool;
+    Message       *message;
     Heap::Data     data;
     uint16_t       offset;
     const uint8_t *oldBuffer;

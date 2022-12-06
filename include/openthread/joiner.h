@@ -112,15 +112,15 @@ typedef void (*otJoinerCallback)(otError aError, void *aContext);
  * @retval OT_ERROR_INVALID_STATE     The IPv6 stack is not enabled or Thread stack is fully enabled.
  *
  */
-otError otJoinerStart(otInstance *     aInstance,
-                      const char *     aPskd,
-                      const char *     aProvisioningUrl,
-                      const char *     aVendorName,
-                      const char *     aVendorModel,
-                      const char *     aVendorSwVersion,
-                      const char *     aVendorData,
+otError otJoinerStart(otInstance      *aInstance,
+                      const char      *aPskd,
+                      const char      *aProvisioningUrl,
+                      const char      *aVendorName,
+                      const char      *aVendorModel,
+                      const char      *aVendorSwVersion,
+                      const char      *aVendorData,
                       otJoinerCallback aCallback,
-                      void *           aContext);
+                      void            *aContext);
 
 /**
  * Disables the Thread Joiner role.

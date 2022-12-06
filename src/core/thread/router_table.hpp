@@ -371,7 +371,9 @@ public:
      */
     void LogRouteTable(void);
 #else
-    void LogRouteTable(void) {}
+    void LogRouteTable(void)
+    {
+    }
 #endif
 
 private:
@@ -390,14 +392,20 @@ private:
     void          UpdateAllocation(void);
     const Router *GetFirstEntry(void) const;
     const Router *GetNextEntry(const Router *aRouter) const;
-    Router *      GetFirstEntry(void) { return AsNonConst(AsConst(this)->GetFirstEntry()); }
-    Router *      GetNextEntry(Router *aRouter) { return AsNonConst(AsConst(this)->GetNextEntry(aRouter)); }
+    Router       *GetFirstEntry(void)
+    {
+        return AsNonConst(AsConst(this)->GetFirstEntry());
+    }
+    Router *GetNextEntry(Router *aRouter)
+    {
+        return AsNonConst(AsConst(this)->GetNextEntry(aRouter));
+    }
 
-    Router *      FindNeighbor(uint16_t aRloc16);
-    Router *      FindNeighbor(const Mac::ExtAddress &aExtAddress);
-    Router *      FindNeighbor(const Mac::Address &aMacAddress);
+    Router       *FindNeighbor(uint16_t aRloc16);
+    Router       *FindNeighbor(const Mac::ExtAddress &aExtAddress);
+    Router       *FindNeighbor(const Mac::Address &aMacAddress);
     const Router *FindRouter(const Router::AddressMatcher &aMatcher) const;
-    Router *      FindRouter(const Router::AddressMatcher &aMatcher)
+    Router       *FindRouter(const Router::AddressMatcher &aMatcher)
     {
         return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }

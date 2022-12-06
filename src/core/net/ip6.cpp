@@ -112,7 +112,7 @@ exit:
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength)
 {
-    Message *         message = nullptr;
+    Message          *message = nullptr;
     Message::Priority priority;
 
     SuccessOrExit(GetDatagramPriority(aData, aDataLength, priority));
@@ -624,7 +624,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
     Error          error = kErrorNone;
     Header         header;
     FragmentHeader fragmentHeader;
-    Message *      fragment        = nullptr;
+    Message       *fragment        = nullptr;
     uint16_t       fragmentCnt     = 0;
     uint16_t       payloadFragment = 0;
     uint16_t       offset          = 0;
@@ -702,7 +702,7 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
     Error          error = kErrorNone;
     Header         header, headerBuffer;
     FragmentHeader fragmentHeader;
-    Message *      message         = nullptr;
+    Message       *message         = nullptr;
     uint16_t       offset          = 0;
     uint16_t       payloadFragment = 0;
     int            assertValue     = 0;
@@ -895,12 +895,12 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
 
-Error Ip6::HandleExtensionHeaders(Message &     aMessage,
+Error Ip6::HandleExtensionHeaders(Message      &aMessage,
                                   MessageOrigin aOrigin,
-                                  MessageInfo & aMessageInfo,
-                                  Header &      aHeader,
-                                  uint8_t &     aNextHeader,
-                                  bool &        aReceive)
+                                  MessageInfo  &aMessageInfo,
+                                  Header       &aHeader,
+                                  uint8_t      &aNextHeader,
+                                  bool         &aReceive)
 {
     Error           error      = kErrorNone;
     bool            isOutbound = (aOrigin != kFromThreadNetif);
@@ -944,9 +944,9 @@ exit:
     return error;
 }
 
-Error Ip6::HandlePayload(Header &           aIp6Header,
-                         Message &          aMessage,
-                         MessageInfo &      aMessageInfo,
+Error Ip6::HandlePayload(Header            &aIp6Header,
+                         Message           &aMessage,
+                         MessageInfo       &aMessageInfo,
                          uint8_t            aIpProto,
                          Message::Ownership aMessageOwnership)
 {
@@ -1013,7 +1013,7 @@ exit:
     return error;
 }
 
-Error Ip6::ProcessReceiveCallback(Message &          aMessage,
+Error Ip6::ProcessReceiveCallback(Message           &aMessage,
                                   MessageOrigin      aOrigin,
                                   const MessageInfo &aMessageInfo,
                                   uint8_t            aIpProto,
@@ -1272,7 +1272,7 @@ start:
             }
         }
         error             = HandlePayload(header, aMessage, messageInfo, nextHeader,
-                              (forwardThread || forwardHost ? Message::kCopyToUse : Message::kTakeCustody));
+                                          (forwardThread || forwardHost ? Message::kCopyToUse : Message::kTakeCustody));
         shouldFreeMessage = forwardThread || forwardHost;
     }
 
@@ -1382,7 +1382,7 @@ bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, MessageOrigin a
 
 const Netif::UnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 {
-    Address *                    destination                 = &aMessageInfo.GetPeerAddr();
+    Address                     *destination                 = &aMessageInfo.GetPeerAddr();
     uint8_t                      destinationScope            = destination->GetScope();
     const bool                   destinationIsRoutingLocator = Get<Mle::Mle>().IsRoutingLocator(*destination);
     const Netif::UnicastAddress *rvalAddr                    = nullptr;

@@ -250,7 +250,7 @@ OT_TOOL_WEAK otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
 #if __SANITIZE_ADDRESS__ == 0
     {
-        FILE * file = nullptr;
+        FILE  *file = nullptr;
         size_t readLength;
 
         file = fopen("/dev/urandom", "rb");
@@ -512,12 +512,12 @@ OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t)
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
-otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
+otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                               otCryptoKeyType      aKeyType,
                               otCryptoKeyAlgorithm aKeyAlgorithm,
                               int                  aKeyUsage,
                               otCryptoKeyStorage   aKeyPersistence,
-                              const uint8_t *      aKey,
+                              const uint8_t       *aKey,
                               size_t               aKeyLen)
 {
     OT_UNUSED_VARIABLE(aKeyRef);

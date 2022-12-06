@@ -86,16 +86,16 @@ void MulticastRoutingManager::TearDown(void)
     Mainloop::Manager::Get().Remove(*this);
 }
 
-void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void *                                 aContext,
+void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void                                  *aContext,
                                                                    otBackboneRouterMulticastListenerEvent aEvent,
-                                                                   const otIp6Address *                   aAddress)
+                                                                   const otIp6Address                    *aAddress)
 {
     static_cast<MulticastRoutingManager *>(aContext)->HandleBackboneMulticastListenerEvent(
         aEvent, static_cast<const Ip6::Address &>(*aAddress));
 }
 
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
-                                                                   const Ip6::Address &                   aAddress)
+                                                                   const Ip6::Address                    &aAddress)
 {
     switch (aEvent)
     {
@@ -543,8 +543,8 @@ void MulticastRoutingManager::MulticastForwardingCache::SetValidPktCnt(unsigned 
     mLastUseTime = otPlatTimeGet();
 }
 
-void MulticastRoutingManager::SaveMulticastForwardingCache(const Ip6::Address &              aSrcAddr,
-                                                           const Ip6::Address &              aGroupAddr,
+void MulticastRoutingManager::SaveMulticastForwardingCache(const Ip6::Address               &aSrcAddr,
+                                                           const Ip6::Address               &aGroupAddr,
                                                            MulticastRoutingManager::MifIndex aIif,
                                                            MulticastRoutingManager::MifIndex aOif)
 {

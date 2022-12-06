@@ -151,7 +151,7 @@ OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(otCryptoContext *aContext)
 {
     Error                    error  = kErrorNone;
     const mbedtls_md_info_t *mdInfo = nullptr;
-    mbedtls_md_context_t *   context;
+    mbedtls_md_context_t    *context;
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_md_context_t), error = kErrorFailed);
@@ -243,9 +243,9 @@ exit:
 }
 
 OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
-                                            const uint8_t *  aInfo,
+                                            const uint8_t   *aInfo,
                                             uint16_t         aInfoLength,
-                                            uint8_t *        aOutputKey,
+                                            uint8_t         *aOutputKey,
                                             uint16_t         aOutputKeyLength)
 {
     Error             error = kErrorNone;
@@ -302,8 +302,8 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext *  aContext,
-                                             const uint8_t *    aSalt,
+OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
+                                             const uint8_t     *aSalt,
                                              uint16_t           aSaltLength,
                                              const otCryptoKey *aInputKey)
 {
@@ -518,7 +518,7 @@ exit:
 }
 
 OT_TOOL_WEAK otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair,
-                                                   otPlatCryptoEcdsaPublicKey *    aPublicKey)
+                                                   otPlatCryptoEcdsaPublicKey     *aPublicKey)
 {
     Error                error = kErrorNone;
     mbedtls_pk_context   pk;
@@ -554,12 +554,12 @@ exit:
 }
 
 OT_TOOL_WEAK otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
-                                           const otPlatCryptoSha256Hash *  aHash,
-                                           otPlatCryptoEcdsaSignature *    aSignature)
+                                           const otPlatCryptoSha256Hash   *aHash,
+                                           otPlatCryptoEcdsaSignature     *aSignature)
 {
     Error                 error = kErrorNone;
     mbedtls_pk_context    pk;
-    mbedtls_ecp_keypair * keypair;
+    mbedtls_ecp_keypair  *keypair;
     mbedtls_ecdsa_context ecdsa;
     mbedtls_mpi           r;
     mbedtls_mpi           s;
@@ -613,7 +613,7 @@ exit:
 }
 
 OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
-                                             const otPlatCryptoSha256Hash *    aHash,
+                                             const otPlatCryptoSha256Hash     *aHash,
                                              const otPlatCryptoEcdsaSignature *aSignature)
 {
     Error                 error = kErrorNone;

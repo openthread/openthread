@@ -385,16 +385,16 @@ const char *Commissioner::StateToString(otCommissionerState aState)
 }
 
 void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
-                                     const otJoinerInfo *      aJoinerInfo,
-                                     const otExtAddress *      aJoinerId,
-                                     void *                    aContext)
+                                     const otJoinerInfo       *aJoinerInfo,
+                                     const otExtAddress       *aJoinerId,
+                                     void                     *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleJoinerEvent(aEvent, aJoinerInfo, aJoinerId);
 }
 
 void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
-                                     const otJoinerInfo *      aJoinerInfo,
-                                     const otExtAddress *      aJoinerId)
+                                     const otJoinerInfo       *aJoinerInfo,
+                                     const otExtAddress       *aJoinerId)
 {
     static const char *const kEventStrings[] = {
         "start",    // (0) OT_COMMISSIONER_JOINER_START
@@ -476,7 +476,7 @@ exit:
 void Commissioner::HandleEnergyReport(uint32_t       aChannelMask,
                                       const uint8_t *aEnergyList,
                                       uint8_t        aEnergyListLength,
-                                      void *         aContext)
+                                      void          *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleEnergyReport(aChannelMask, aEnergyList, aEnergyListLength);
 }

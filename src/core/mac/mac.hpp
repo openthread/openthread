@@ -239,7 +239,10 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
      *
      */
-    const ExtAddress &GetExtAddress(void) const { return mLinks.GetExtAddress(); }
+    const ExtAddress &GetExtAddress(void) const
+    {
+        return mLinks.GetExtAddress();
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Extended Address.
@@ -247,7 +250,10 @@ public:
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      *
      */
-    void SetExtAddress(const ExtAddress &aExtAddress) { mLinks.SetExtAddress(aExtAddress); }
+    void SetExtAddress(const ExtAddress &aExtAddress)
+    {
+        mLinks.SetExtAddress(aExtAddress);
+    }
 
     /**
      * This method returns the IEEE 802.15.4 Short Address.
@@ -255,7 +261,10 @@ public:
      * @returns The IEEE 802.15.4 Short Address.
      *
      */
-    ShortAddress GetShortAddress(void) const { return mLinks.GetShortAddress(); }
+    ShortAddress GetShortAddress(void) const
+    {
+        return mLinks.GetShortAddress();
+    }
 
     /**
      * This method sets the IEEE 802.15.4 Short Address.
@@ -263,7 +272,10 @@ public:
      * @param[in]  aShortAddress  The IEEE 802.15.4 Short Address.
      *
      */
-    void SetShortAddress(ShortAddress aShortAddress) { mLinks.SetShortAddress(aShortAddress); }
+    void SetShortAddress(ShortAddress aShortAddress)
+    {
+        mLinks.SetShortAddress(aShortAddress);
+    }
 
     /**
      * This method returns the IEEE 802.15.4 PAN Channel.
@@ -271,7 +283,10 @@ public:
      * @returns The IEEE 802.15.4 PAN Channel.
      *
      */
-    uint8_t GetPanChannel(void) const { return mPanChannel; }
+    uint8_t GetPanChannel(void) const
+    {
+        return mPanChannel;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 PAN Channel.
@@ -312,7 +327,10 @@ public:
      * @returns The supported channel mask.
      *
      */
-    const ChannelMask &GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
+    const ChannelMask &GetSupportedChannelMask(void) const
+    {
+        return mSupportedChannelMask;
+    }
 
     /**
      * This method sets the supported channel mask
@@ -328,7 +346,10 @@ public:
      * @returns The IEEE 802.15.4 PAN ID.
      *
      */
-    PanId GetPanId(void) const { return mPanId; }
+    PanId GetPanId(void) const
+    {
+        return mPanId;
+    }
 
     /**
      * This method sets the IEEE 802.15.4 PAN ID.
@@ -344,7 +365,10 @@ public:
      * @returns The maximum number of retries during direct transmission.
      *
      */
-    uint8_t GetMaxFrameRetriesDirect(void) const { return mMaxFrameRetriesDirect; }
+    uint8_t GetMaxFrameRetriesDirect(void) const
+    {
+        return mMaxFrameRetriesDirect;
+    }
 
     /**
      * This method sets the maximum number of frame retries during direct transmission.
@@ -352,7 +376,10 @@ public:
      * @param[in]  aMaxFrameRetriesDirect  The maximum number of retries during direct transmission.
      *
      */
-    void SetMaxFrameRetriesDirect(uint8_t aMaxFrameRetriesDirect) { mMaxFrameRetriesDirect = aMaxFrameRetriesDirect; }
+    void SetMaxFrameRetriesDirect(uint8_t aMaxFrameRetriesDirect)
+    {
+        mMaxFrameRetriesDirect = aMaxFrameRetriesDirect;
+    }
 
 #if OPENTHREAD_FTD
     /**
@@ -361,7 +388,10 @@ public:
      * @returns The maximum number of retries during indirect transmission.
      *
      */
-    uint8_t GetMaxFrameRetriesIndirect(void) const { return mMaxFrameRetriesIndirect; }
+    uint8_t GetMaxFrameRetriesIndirect(void) const
+    {
+        return mMaxFrameRetriesIndirect;
+    }
 
     /**
      * This method sets the maximum number of frame retries during indirect transmission.
@@ -434,13 +464,19 @@ public:
      * This method returns if an active scan is in progress.
      *
      */
-    bool IsActiveScanInProgress(void) const { return IsActiveOrPending(kOperationActiveScan); }
+    bool IsActiveScanInProgress(void) const
+    {
+        return IsActiveOrPending(kOperationActiveScan);
+    }
 
     /**
      * This method returns if an energy scan is in progress.
      *
      */
-    bool IsEnergyScanInProgress(void) const { return IsActiveOrPending(kOperationEnergyScan); }
+    bool IsEnergyScanInProgress(void) const
+    {
+        return IsActiveOrPending(kOperationEnergyScan);
+    }
 
 #if OPENTHREAD_FTD
     /**
@@ -449,7 +485,10 @@ public:
      * @returns TRUE if in middle of an indirect transmission, FALSE otherwise.
      *
      */
-    bool IsPerformingIndirectTransmit(void) const { return (mOperation == kOperationTransmitDataIndirect); }
+    bool IsPerformingIndirectTransmit(void) const
+    {
+        return (mOperation == kOperationTransmitDataIndirect);
+    }
 #endif
 
     /**
@@ -482,7 +521,10 @@ public:
      * @retval false  Promiscuous mode is not enabled.
      *
      */
-    bool IsPromiscuous(void) const { return mPromiscuous; }
+    bool IsPromiscuous(void) const
+    {
+        return mPromiscuous;
+    }
 
     /**
      * This method enables or disables the link layer promiscuous mode.
@@ -498,7 +540,10 @@ public:
      * This method resets mac counters
      *
      */
-    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
+    void ResetCounters(void)
+    {
+        memset(&mCounters, 0, sizeof(mCounters));
+    }
 
     /**
      * This method returns the MAC counter.
@@ -506,7 +551,10 @@ public:
      * @returns A reference to the MAC counter.
      *
      */
-    otMacCounters &GetCounters(void) { return mCounters; }
+    otMacCounters &GetCounters(void)
+    {
+        return mCounters;
+    }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
     /**
@@ -546,7 +594,10 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) const { return mLinks.GetNoiseFloor(); }
+    int8_t GetNoiseFloor(void) const
+    {
+        return mLinks.GetNoiseFloor();
+    }
 
     /**
      * This method computes the link margin for a given a received signal strength value using noise floor.
@@ -567,7 +618,10 @@ public:
      * @returns The CCA failure rate with maximum value `0xffff` corresponding to 100% failure rate.
      *
      */
-    uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
+    uint16_t GetCcaFailureRate(void) const
+    {
+        return mCcaSuccessRateTracker.GetFailureRate();
+    }
 
     /**
      * This method Starts/Stops the Link layer. It may only be used when the Netif Interface is down.
@@ -575,7 +629,10 @@ public:
      * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
      *
      */
-    void SetEnabled(bool aEnable) { mEnabled = aEnable; }
+    void SetEnabled(bool aEnable)
+    {
+        mEnabled = aEnable;
+    }
 
     /**
      * This method indicates whether or not the link layer is enabled.
@@ -584,7 +641,10 @@ public:
      * @retval false  Link layer is not enabled.
      *
      */
-    bool IsEnabled(void) const { return mEnabled; }
+    bool IsEnabled(void) const
+    {
+        return mEnabled;
+    }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -593,7 +653,10 @@ public:
      * @returns CSL channel.
      *
      */
-    uint8_t GetCslChannel(void) const { return mCslChannel; }
+    uint8_t GetCslChannel(void) const
+    {
+        return mCslChannel;
+    }
 
     /**
      * This method sets the CSL channel.
@@ -615,7 +678,10 @@ public:
      * @returns CSL period in units of 10 symbols.
      *
      */
-    uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+    uint16_t GetCslPeriod(void) const
+    {
+        return mCslPeriod;
+    }
 
     /**
      * This method sets the CSL period.
@@ -658,7 +724,10 @@ public:
      * @returns The parent CSL accuracy.
      *
      */
-    const CslAccuracy &GetCslParentAccuracy(void) const { return mLinks.GetSubMac().GetCslParentAccuracy(); }
+    const CslAccuracy &GetCslParentAccuracy(void) const
+    {
+        return mLinks.GetSubMac().GetCslParentAccuracy();
+    }
 
     /**
      * This method sets parent CSL accuracy.
@@ -693,7 +762,10 @@ public:
      * @retval FALSE  If the radio filter is disabled.
      *
      */
-    bool IsRadioFilterEnabled(void) const { return mLinks.GetSubMac().IsRadioFilterEnabled(); }
+    bool IsRadioFilterEnabled(void) const
+    {
+        return mLinks.GetSubMac().IsRadioFilterEnabled();
+    }
 #endif
 
 private:
@@ -745,11 +817,20 @@ private:
     Error ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
 #endif
 
-    void     UpdateIdleMode(void);
-    bool     IsPending(Operation aOperation) const { return mPendingOperations & (1U << aOperation); }
-    bool     IsActiveOrPending(Operation aOperation) const;
-    void     SetPending(Operation aOperation) { mPendingOperations |= (1U << aOperation); }
-    void     ClearPending(Operation aOperation) { mPendingOperations &= ~(1U << aOperation); }
+    void UpdateIdleMode(void);
+    bool IsPending(Operation aOperation) const
+    {
+        return mPendingOperations & (1U << aOperation);
+    }
+    bool IsActiveOrPending(Operation aOperation) const;
+    void SetPending(Operation aOperation)
+    {
+        mPendingOperations |= (1U << aOperation);
+    }
+    void ClearPending(Operation aOperation)
+    {
+        mPendingOperations &= ~(1U << aOperation);
+    }
     void     StartOperation(Operation aOperation);
     void     FinishOperation(void);
     void     PerformNextOperation(void);

@@ -64,11 +64,11 @@ NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
 {
 }
 
-Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDestination,
+Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address            &aDestination,
                                            const uint8_t                  aTlvTypes[],
                                            uint8_t                        aCount,
                                            otReceiveDiagnosticGetCallback aCallback,
-                                           void *                         aCallbackContext)
+                                           void                          *aCallbackContext)
 {
     Error error;
 
@@ -89,7 +89,7 @@ Error NetworkDiagnostic::SendDiagnosticCommand(CommandType         aCommandType,
                                                uint8_t             aCount)
 {
     Error                 error;
-    Coap::Message *       message = nullptr;
+    Coap::Message        *message = nullptr;
     Tmf::MessageInfo      messageInfo(GetInstance());
     Coap::ResponseHandler handler = nullptr;
 
@@ -138,8 +138,8 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(void *               aContext,
-                                                    otMessage *          aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetResponse(void                *aContext,
+                                                    otMessage           *aMessage,
                                                     const otMessageInfo *aMessageInfo,
                                                     Error                aResult)
 {
@@ -147,7 +147,7 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(void *               aContex
                                                                             AsCoreTypePtr(aMessageInfo), aResult);
 }
 
-void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message *         aMessage,
+void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message          *aMessage,
                                                     const Ip6::MessageInfo *aMessageInfo,
                                                     Error                   aResult)
 {
@@ -166,7 +166,7 @@ exit:
 }
 
 template <>
-void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message &         aMessage,
+void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message          &aMessage,
                                                            const Ip6::MessageInfo &aMessageInfo)
 {
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
@@ -291,8 +291,8 @@ void NetworkDiagnostic::FillMacCountersTlv(MacCountersTlv &aMacCountersTlv)
     aMacCountersTlv.SetIfOutDiscards(macCounters.mTxErrBusyChannel);
 }
 
-Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
-                                           Message &             aResponse,
+Error NetworkDiagnostic::FillRequestedTlvs(const Message        &aRequest,
+                                           Message              &aResponse,
                                            NetworkDiagnosticTlv &aNetworkDiagnosticTlv)
 {
     Error    error  = kErrorNone;
@@ -460,7 +460,7 @@ template <>
 void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                error   = kErrorNone;
-    Coap::Message *      message = nullptr;
+    Coap::Message       *message = nullptr;
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Tmf::MessageInfo     messageInfo(GetInstance());
 
@@ -506,11 +506,11 @@ exit:
 }
 
 template <>
-void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message &         aMessage,
+void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message          &aMessage,
                                                             const Ip6::MessageInfo &aMessageInfo)
 {
     Error                error   = kErrorNone;
-    Coap::Message *      message = nullptr;
+    Coap::Message       *message = nullptr;
     NetworkDiagnosticTlv networkDiagnosticTlv;
     Ip6::MessageInfo     messageInfo(aMessageInfo);
 
@@ -726,7 +726,7 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage, Iterator 
         {
             uint16_t      addrListLength = GetArrayLength(aTlvInfo.mData.mIp6AddrList.mList);
             Ip6::Address *addrEntry      = AsCoreTypePtr(&aTlvInfo.mData.mIp6AddrList.mList[0]);
-            uint8_t &     addrCount      = aTlvInfo.mData.mIp6AddrList.mCount;
+            uint8_t      &addrCount      = aTlvInfo.mData.mIp6AddrList.mCount;
 
             VerifyOrExit((tlvLength % Ip6::Address::kSize) == 0, error = kErrorParse);
 
@@ -770,7 +770,7 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage, Iterator 
         {
             uint16_t   childInfoLength = GetArrayLength(aTlvInfo.mData.mChildTable.mTable);
             ChildInfo *childInfo       = &aTlvInfo.mData.mChildTable.mTable[0];
-            uint8_t &  childCount      = aTlvInfo.mData.mChildTable.mCount;
+            uint8_t   &childCount      = aTlvInfo.mData.mChildTable.mCount;
 
             VerifyOrExit((tlvLength % sizeof(ChildTableEntry)) == 0, error = kErrorParse);
 

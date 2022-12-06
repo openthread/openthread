@@ -143,7 +143,7 @@ void Radio::Init(void)
     if (maxPowerTable != nullptr)
     {
         constexpr int8_t kPowerDefault = 30; // Default power 1 watt (30 dBm).
-        const char *     str           = nullptr;
+        const char      *str           = nullptr;
         uint8_t          channel       = ot::Radio::kChannelMin;
         int8_t           power         = kPowerDefault;
         otError          error;
@@ -505,8 +505,8 @@ exit:
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 otError otPlatDiagProcess(otInstance *aInstance,
                           uint8_t     aArgsLength,
-                          char *      aArgs[],
-                          char *      aOutput,
+                          char       *aArgs[],
+                          char       *aOutput,
                           size_t      aOutputMaxLen)
 {
     // deliver the platform specific diags commands to radio only ncp.
@@ -576,7 +576,7 @@ otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue)
     otError error;
     char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
-    char *  str;
+    char   *str;
 
     snprintf(cmd, sizeof(cmd), "gpio get %d", aGpio);
     SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, output, sizeof(output)));
@@ -604,7 +604,7 @@ otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode)
     otError error;
     char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
-    char *  str;
+    char   *str;
 
     snprintf(cmd, sizeof(cmd), "gpio mode %d", aGpio);
     SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, output, sizeof(output)));
@@ -658,7 +658,7 @@ otRadioState otPlatRadioGetState(otInstance *aInstance)
     return sRadioSpinel.GetState();
 }
 
-void otPlatRadioSetMacKey(otInstance *            aInstance,
+void otPlatRadioSetMacKey(otInstance             *aInstance,
                           uint8_t                 aKeyIdMode,
                           uint8_t                 aKeyId,
                           const otMacKeyMaterial *aPrevKey,
@@ -726,10 +726,10 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
                                           otLinkMetrics        aLinkMetrics,
                                           const otShortAddress aShortAddress,
-                                          const otExtAddress * aExtAddress)
+                                          const otExtAddress  *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 

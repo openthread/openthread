@@ -87,8 +87,8 @@ void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, 
     AsCoreType(aInstance).Get<Ip6::Udp>().SetUdpForwarder(aForwarder, aContext);
 }
 
-void otUdpForwardReceive(otInstance *        aInstance,
-                         otMessage *         aMessage,
+void otUdpForwardReceive(otInstance         *aInstance,
+                         otMessage          *aMessage,
                          uint16_t            aPeerPort,
                          const otIp6Address *aPeerAddr,
                          uint16_t            aSockPort)

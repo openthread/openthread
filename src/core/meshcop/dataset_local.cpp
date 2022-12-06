@@ -237,7 +237,7 @@ void DatasetLocal::MoveKeysToSecureStorage(Dataset &aDataset) const
     KeyRef         networkKeyRef = IsActive() ? kActiveDatasetNetworkKeyRef : kPendingDatasetNetworkKeyRef;
     KeyRef         pskcRef       = IsActive() ? kActiveDatasetPskcRef : kPendingDatasetPskcRef;
     NetworkKeyTlv *networkKeyTlv = aDataset.GetTlv<NetworkKeyTlv>();
-    PskcTlv *      pskcTlv       = aDataset.GetTlv<PskcTlv>();
+    PskcTlv       *pskcTlv       = aDataset.GetTlv<PskcTlv>();
 
     if (networkKeyTlv != nullptr)
     {
@@ -269,7 +269,7 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
     KeyRef         networkKeyRef = IsActive() ? kActiveDatasetNetworkKeyRef : kPendingDatasetNetworkKeyRef;
     KeyRef         pskcRef       = IsActive() ? kActiveDatasetPskcRef : kPendingDatasetPskcRef;
     NetworkKeyTlv *networkKeyTlv = aDataset.GetTlv<NetworkKeyTlv>();
-    PskcTlv *      pskcTlv       = aDataset.GetTlv<PskcTlv>();
+    PskcTlv       *pskcTlv       = aDataset.GetTlv<PskcTlv>();
     bool           moveKeys      = false;
     size_t         keyLen;
     Error          error;

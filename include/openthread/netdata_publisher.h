@@ -91,8 +91,8 @@ typedef void (*otNetDataDnsSrpServicePublisherCallback)(otNetDataPublisherEvent 
  *
  */
 typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
-                                                 const otIp6Prefix *     aPrefix,
-                                                 void *                  aContext);
+                                                 const otIp6Prefix      *aPrefix,
+                                                 void                   *aContext);
 
 /**
  * This function requests "DNS/SRP Service Anycast Address" to be published in the Thread Network Data.
@@ -170,9 +170,9 @@ bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance);
  * @param[in] aContext         A pointer to application-specific context (used when @p aCallback is invoked).
  *
  */
-void otNetDataSetDnsSrpServicePublisherCallback(otInstance *                            aInstance,
+void otNetDataSetDnsSrpServicePublisherCallback(otInstance                             *aInstance,
                                                 otNetDataDnsSrpServicePublisherCallback aCallback,
-                                                void *                                  aContext);
+                                                void                                   *aContext);
 
 /**
  * Unpublishes any previously added DNS/SRP (Anycast or Unicast) Service entry from the Thread Network
@@ -265,9 +265,9 @@ bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix);
  * @param[in] aContext         A pointer to application-specific context (used when @p aCallback is invoked).
  *
  */
-void otNetDataSetPrefixPublisherCallback(otInstance *                     aInstance,
+void otNetDataSetPrefixPublisherCallback(otInstance                      *aInstance,
                                          otNetDataPrefixPublisherCallback aCallback,
-                                         void *                           aContext);
+                                         void                            *aContext);
 
 /**
  * Unpublishes a previously published On-Mesh or External Route Prefix.

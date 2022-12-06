@@ -113,9 +113,15 @@ public:
      *
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Instance &GetInstance(void) const { return *mInstance; }
+    Instance &GetInstance(void) const
+    {
+        return *mInstance;
+    }
 #else
-    Instance &GetInstance(void) const { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
+    Instance &GetInstance(void) const
+    {
+        return *reinterpret_cast<Instance *>(&gInstanceRaw);
+    }
 #endif
 
 protected:

@@ -174,7 +174,10 @@ public:
      * @returns The tag length in bytes.
      *
      */
-    uint8_t GetTagLength(void) const { return mTagLength; }
+    uint8_t GetTagLength(void) const
+    {
+        return mTagLength;
+    }
 
     /**
      * This method generates the tag.
@@ -196,7 +199,7 @@ public:
     static void GenerateNonce(const Mac::ExtAddress &aAddress,
                               uint32_t               aFrameCounter,
                               uint8_t                aSecurityLevel,
-                              uint8_t *              aNonce);
+                              uint8_t               *aNonce);
 
 private:
     AesEcb   mEcb;

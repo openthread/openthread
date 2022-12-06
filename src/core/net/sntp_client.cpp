@@ -128,8 +128,8 @@ Error Client::Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, v
 {
     Error                   error;
     QueryMetadata           queryMetadata(aHandler, aContext);
-    Message *               message     = nullptr;
-    Message *               messageCopy = nullptr;
+    Message                *message     = nullptr;
+    Message                *messageCopy = nullptr;
     Header                  header;
     const Ip6::MessageInfo *messageInfo;
 
@@ -256,7 +256,7 @@ Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &
     return matchedMessage;
 }
 
-void Client::FinalizeSntpTransaction(Message &            aQuery,
+void Client::FinalizeSntpTransaction(Message             &aQuery,
                                      const QueryMetadata &aQueryMetadata,
                                      uint64_t             aTime,
                                      Error                aResult)
@@ -326,7 +326,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     Error         error = kErrorNone;
     Header        responseHeader;
     QueryMetadata queryMetadata;
-    Message *     message  = nullptr;
+    Message      *message  = nullptr;
     uint64_t      unixTime = 0;
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));

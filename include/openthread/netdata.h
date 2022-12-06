@@ -148,9 +148,9 @@ otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
+otError otNetDataGetNextOnMeshPrefix(otInstance            *aInstance,
                                      otNetworkDataIterator *aIterator,
-                                     otBorderRouterConfig * aConfig);
+                                     otBorderRouterConfig  *aConfig);
 
 /**
  * This function gets the next external route in the partition's Network Data.
@@ -227,7 +227,7 @@ struct otJoinerDiscerner;
  * @retval OT_ERROR_NOT_FOUND     @p aDiscerner is not included in the steering data.
  *
  */
-otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance *                    aInstance,
+otError otNetDataSteeringDataCheckJoinerWithDiscerner(otInstance                     *aInstance,
                                                       const struct otJoinerDiscerner *aDiscerner);
 
 /**

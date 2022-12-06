@@ -1015,7 +1015,10 @@ public:
      * @returns A ChildInfoIteratorBuilder instance.
      *
      */
-    ChildInfoIteratorBuilder IterateChildInfo(void) { return ChildInfoIteratorBuilder(GetInstance()); }
+    ChildInfoIteratorBuilder IterateChildInfo(void)
+    {
+        return ChildInfoIteratorBuilder(GetInstance());
+    }
 
     /**
      * This class defines an iterator to access all Child Info entries in the settings.
@@ -1090,7 +1093,7 @@ public:
          * @returns A reference to the `ChildInfo` entry currently pointed by the iterator.
          *
          */
-        const ChildInfo &operator*(void)const { return mChildInfo; }
+        const ChildInfo &operator*(void) const { return mChildInfo; }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two iterator instances are equal.

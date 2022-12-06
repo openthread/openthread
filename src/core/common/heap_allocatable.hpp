@@ -70,7 +70,7 @@ public:
      * @returns A pointer to the newly allocated instance or `nullptr` if it fails to allocate.
      *
      */
-    template <typename... Args> static Type *Allocate(Args &&... aArgs)
+    template <typename... Args> static Type *Allocate(Args &&...aArgs)
     {
         void *buf = Heap::CAlloc(1, sizeof(Type));
 
@@ -89,7 +89,7 @@ public:
      * @returns A pointer to the newly allocated instance or `nullptr` if it fails to allocate or initialize.
      *
      */
-    template <typename... Args> static Type *AllocateAndInit(Args &&... aArgs)
+    template <typename... Args> static Type *AllocateAndInit(Args &&...aArgs)
     {
         void *buf    = Heap::CAlloc(1, sizeof(Type));
         Type *object = nullptr;

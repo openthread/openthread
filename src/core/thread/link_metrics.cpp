@@ -94,11 +94,11 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDestination,
                                                         uint8_t             aSeriesId,
-                                                        const SeriesFlags & aSeriesFlags,
-                                                        const Metrics *     aMetrics)
+                                                        const SeriesFlags  &aSeriesFlags,
+                                                        const Metrics      *aMetrics)
 {
     Error               error;
-    Neighbor *          neighbor;
+    Neighbor           *neighbor;
     uint8_t             typeIdCount = 0;
     FwdProbingRegSubTlv fwdProbingSubTlv;
 
@@ -126,10 +126,10 @@ exit:
 
 Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination,
                                                 const EnhAckFlags   aEnhAckFlags,
-                                                const Metrics *     aMetrics)
+                                                const Metrics      *aMetrics)
 {
     Error              error;
-    Neighbor *         neighbor;
+    Neighbor          *neighbor;
     uint8_t            typeIdCount = 0;
     EnhAckConfigSubTlv enhAckConfigSubTlv;
 
@@ -396,7 +396,7 @@ exit:
     return error;
 }
 
-void LinkMetrics::HandleReport(const Message &     aMessage,
+void LinkMetrics::HandleReport(const Message      &aMessage,
                                uint16_t            aOffset,
                                uint16_t            aLength,
                                const Ip6::Address &aAddress)
@@ -595,7 +595,7 @@ exit:
 Status LinkMetrics::ConfigureForwardTrackingSeries(uint8_t        aSeriesId,
                                                    uint8_t        aSeriesFlagsMask,
                                                    const Metrics &aMetrics,
-                                                   Neighbor &     aNeighbor)
+                                                   Neighbor      &aNeighbor)
 {
     Status status = kStatusSuccess;
 
@@ -686,7 +686,7 @@ exit:
 Error LinkMetrics::ReadTypeIdsFromMessage(const Message &aMessage,
                                           uint16_t       aStartOffset,
                                           uint16_t       aEndOffset,
-                                          Metrics &      aMetrics)
+                                          Metrics       &aMetrics)
 {
     Error error = kErrorNone;
 

@@ -153,7 +153,10 @@ public:
      * @returns  Whether the interpreter is initialized.
      *
      */
-    static bool IsInitialized(void) { return sInterpreter != nullptr; }
+    static bool IsInitialized(void)
+    {
+        return sInterpreter != nullptr;
+    }
 
     /**
      * This method interprets a CLI command.
@@ -251,10 +254,10 @@ public:
      * @retval OT_ERROR_INVALID_STATE No valid NAT64 prefix in the network data.
      *
      */
-    static otError ParseToIp6Address(otInstance *  aInstance,
-                                     const Arg &   aArg,
+    static otError ParseToIp6Address(otInstance   *aInstance,
+                                     const Arg    &aArg,
                                      otIp6Address &aAddress,
-                                     bool &        aSynthesized);
+                                     bool         &aSynthesized);
 
 protected:
     static Interpreter *sInterpreter;
@@ -392,14 +395,14 @@ private:
     otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, const Arg &aFlags);
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
-    static void HandleLocateResult(void *              aContext,
+    static void HandleLocateResult(void               *aContext,
                                    otError             aError,
                                    const otIp6Address *aMeshLocalAddress,
                                    uint16_t            aRloc16);
     void        HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16);
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    static void HandleMlrRegResult(void *              aContext,
+    static void HandleMlrRegResult(void               *aContext,
                                    otError             aError,
                                    uint8_t             aMlrStatus,
                                    const otIp6Address *aFailedAddresses,
@@ -432,9 +435,9 @@ private:
 #if OPENTHREAD_FTD || (OPENTHREAD_MTD && OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE)
     void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *aMessageInfo);
     static void HandleDiagnosticGetResponse(otError              aError,
-                                            otMessage *          aMessage,
+                                            otMessage           *aMessage,
                                             const otMessageInfo *aMessageInfo,
-                                            void *               aContext);
+                                            void                *aContext);
 
     void OutputMode(uint8_t aIndentSize, const otLinkModeConfig &aMode);
     void OutputConnectivity(uint8_t aIndentSize, const otNetworkDiagConnectivity &aConnectivity);
@@ -475,12 +478,12 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues);
 
-    static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
+    static void HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                         const otLinkMetricsValues *aMetricsValues,
                                         uint8_t                    aStatus,
-                                        void *                     aContext);
+                                        void                      *aContext);
 
-    void HandleLinkMetricsReport(const otIp6Address *       aAddress,
+    void HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                  const otLinkMetricsValues *aMetricsValues,
                                  uint8_t                    aStatus);
 
@@ -489,12 +492,12 @@ private:
     void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus);
 
     static void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
-                                                 const otExtAddress *       aExtAddress,
+                                                 const otExtAddress        *aExtAddress,
                                                  const otLinkMetricsValues *aMetricsValues,
-                                                 void *                     aContext);
+                                                 void                      *aContext);
 
     void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
-                                          const otExtAddress *       aExtAddress,
+                                          const otExtAddress        *aExtAddress,
                                           const otLinkMetricsValues *aMetricsValues);
 
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
@@ -518,7 +521,7 @@ private:
 
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
-    void *              mUserCommandsContext;
+    void               *mUserCommandsContext;
     bool                mCommandIsPending;
 
     TimerMilliContext mTimer;

@@ -150,9 +150,9 @@ public:
      * @retval kErrorNoBufs  Could not grow @p aMessage to write the parsed IPv6 header.
      *
      */
-    Error Decompress(Message &             aMessage,
+    Error Decompress(Message              &aMessage,
                      const Mac::Addresses &aMacAddrs,
-                     FrameData &           aFrameData,
+                     FrameData            &aFrameData,
                      uint16_t              aDatagramLength);
 
     /**
@@ -169,10 +169,10 @@ public:
      * @retval kErrorParse   Failed to parse the lowpan header.
      *
      */
-    Error DecompressBaseHeader(Ip6::Header &         aIp6Header,
-                               bool &                aCompressedNextHeader,
+    Error DecompressBaseHeader(Ip6::Header          &aIp6Header,
+                               bool                 &aCompressedNextHeader,
                                const Mac::Addresses &aMacAddrs,
-                               FrameData &           aFrameData);
+                               FrameData            &aFrameData);
 
     /**
      * This method decompresses a LOWPAN_NHC UDP header.
@@ -264,22 +264,22 @@ private:
 
     void  FindContextForId(uint8_t aContextId, Context &aContext) const;
     void  FindContextToCompressAddress(const Ip6::Address &aIp6Address, Context &aContext) const;
-    Error Compress(Message &             aMessage,
+    Error Compress(Message              &aMessage,
                    const Mac::Addresses &aMacAddrs,
-                   FrameBuilder &        aFrameBuilder,
-                   uint8_t &             aHeaderDepth);
+                   FrameBuilder         &aFrameBuilder,
+                   uint8_t              &aHeaderDepth);
 
     Error CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBuilder, uint8_t &aNextHeader);
     Error CompressSourceIid(const Mac::Address &aMacAddr,
                             const Ip6::Address &aIpAddr,
-                            const Context &     aContext,
-                            uint16_t &          aHcCtl,
-                            FrameBuilder &      aFrameBuilder);
+                            const Context      &aContext,
+                            uint16_t           &aHcCtl,
+                            FrameBuilder       &aFrameBuilder);
     Error CompressDestinationIid(const Mac::Address &aMacAddr,
                                  const Ip6::Address &aIpAddr,
-                                 const Context &     aContext,
-                                 uint16_t &          aHcCtl,
-                                 FrameBuilder &      aFrameBuilder);
+                                 const Context      &aContext,
+                                 uint16_t           &aHcCtl,
+                                 FrameBuilder       &aFrameBuilder);
     Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, FrameBuilder &aFrameBuilder);
     Error CompressUdp(Message &aMessage, FrameBuilder &aFrameBuilder);
 

@@ -50,7 +50,7 @@ void GenerateKey(const uint8_t *aPassword,
                  uint16_t       aSaltLen,
                  uint32_t       aIterationCounter,
                  uint16_t       aKeyLen,
-                 uint8_t *      aKey)
+                 uint8_t       *aKey)
 {
     const size_t kBlockSize = MBEDTLS_CIPHER_BLKSIZE_MAX;
     uint8_t      prfInput[kMaxSaltLength + 4]; // Salt || INT(), for U1 calculation
@@ -58,7 +58,7 @@ void GenerateKey(const uint8_t *aPassword,
     long         prfTwo[kBlockSize / sizeof(long)];
     long         keyBlock[kBlockSize / sizeof(long)];
     uint32_t     blockCounter = 0;
-    uint8_t *    key          = aKey;
+    uint8_t     *key          = aKey;
     uint16_t     keyLen       = aKeyLen;
     uint16_t     useLen       = 0;
 

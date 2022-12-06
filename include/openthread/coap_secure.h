@@ -108,7 +108,7 @@ void otCoapSecureStop(otInstance *aInstance);
  * @param[in]  aPskIdLength  The PSK Identity Length.
  *
  */
-void otCoapSecureSetPsk(otInstance *   aInstance,
+void otCoapSecureSetPsk(otInstance    *aInstance,
                         const uint8_t *aPsk,
                         uint16_t       aPskLength,
                         const uint8_t *aPskIdentity,
@@ -130,9 +130,9 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
  * @retval OT_ERROR_NO_BUFS         Can't allocate memory for certificate.
  *
  */
-otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
+otError otCoapSecureGetPeerCertificateBase64(otInstance    *aInstance,
                                              unsigned char *aPeerCert,
-                                             size_t *       aCertLength,
+                                             size_t        *aCertLength,
                                              size_t         aCertBufferSize);
 
 /**
@@ -160,7 +160,7 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
  * @param[in]  aPrivateKeyLength  The length of the private key.
  *
  */
-void otCoapSecureSetCertificate(otInstance *   aInstance,
+void otCoapSecureSetCertificate(otInstance    *aInstance,
                                 const uint8_t *aX509Cert,
                                 uint32_t       aX509Length,
                                 const uint8_t *aPrivateKey,
@@ -179,7 +179,7 @@ void otCoapSecureSetCertificate(otInstance *   aInstance,
  * @param[in]  aX509CaCertChainLength   The length of chain.
  *
  */
-void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
+void otCoapSecureSetCaCertificateChain(otInstance    *aInstance,
                                        const uint8_t *aX509CaCertificateChain,
                                        uint32_t       aX509CaCertChainLength);
 
@@ -195,10 +195,10 @@ void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
  * @retval OT_ERROR_NONE  Successfully started DTLS connection.
  *
  */
-otError otCoapSecureConnect(otInstance *                    aInstance,
-                            const otSockAddr *              aSockAddr,
+otError otCoapSecureConnect(otInstance                     *aInstance,
+                            const otSockAddr               *aSockAddr,
                             otHandleCoapSecureClientConnect aHandler,
-                            void *                          aContext);
+                            void                           *aContext);
 
 /**
  * This method stops the DTLS connection.
@@ -252,10 +252,10 @@ bool otCoapSecureIsConnectionActive(otInstance *aInstance);
  * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
  *
  */
-otError otCoapSecureSendRequestBlockWise(otInstance *                aInstance,
-                                         otMessage *                 aMessage,
+otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
+                                         otMessage                  *aMessage,
                                          otCoapResponseHandler       aHandler,
-                                         void *                      aContext,
+                                         void                       *aContext,
                                          otCoapBlockwiseTransmitHook aTransmitHook,
                                          otCoapBlockwiseReceiveHook  aReceiveHook);
 
@@ -276,10 +276,10 @@ otError otCoapSecureSendRequestBlockWise(otInstance *                aInstance,
  * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
  *
  */
-otError otCoapSecureSendRequest(otInstance *          aInstance,
-                                otMessage *           aMessage,
+otError otCoapSecureSendRequest(otInstance           *aInstance,
+                                otMessage            *aMessage,
                                 otCoapResponseHandler aHandler,
-                                void *                aContext);
+                                void                 *aContext);
 
 /**
  * This function adds a resource to the CoAP Secure server.
@@ -336,9 +336,9 @@ void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler a
  * @param[in]  aContext      A pointer to arbitrary context information. May be NULL if not used.
  *
  */
-void otCoapSecureSetClientConnectedCallback(otInstance *                    aInstance,
+void otCoapSecureSetClientConnectedCallback(otInstance                     *aInstance,
                                             otHandleCoapSecureClientConnect aHandler,
-                                            void *                          aContext);
+                                            void                           *aContext);
 
 /**
  * This function sends a CoAP response block-wise from the CoAP Secure server.
@@ -356,10 +356,10 @@ void otCoapSecureSetClientConnectedCallback(otInstance *                    aIns
  * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
  *
  */
-otError otCoapSecureSendResponseBlockWise(otInstance *                aInstance,
-                                          otMessage *                 aMessage,
-                                          const otMessageInfo *       aMessageInfo,
-                                          void *                      aContext,
+otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
+                                          otMessage                  *aMessage,
+                                          const otMessageInfo        *aMessageInfo,
+                                          void                       *aContext,
                                           otCoapBlockwiseTransmitHook aTransmitHook);
 
 /**

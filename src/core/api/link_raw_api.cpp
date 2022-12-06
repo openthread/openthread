@@ -119,7 +119,7 @@ otRadioCaps otLinkRawGetCaps(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetCaps();
 }
 
-otError otLinkRawEnergyScan(otInstance *            aInstance,
+otError otLinkRawEnergyScan(otInstance             *aInstance,
                             uint8_t                 aScanChannel,
                             uint16_t                aScanDuration,
                             otLinkRawEnergyScanDone aCallback)
@@ -157,7 +157,7 @@ otError otLinkRawSrcMatchAddExtEntry(otInstance *aInstance, const otExtAddress *
 {
     Mac::ExtAddress address;
     Error           error    = kErrorNone;
-    Instance &      instance = AsCoreType(aInstance);
+    Instance       &instance = AsCoreType(aInstance);
 
     AssertPointerIsNotNull(aExtAddress);
 
@@ -186,7 +186,7 @@ otError otLinkRawSrcMatchClearExtEntry(otInstance *aInstance, const otExtAddress
 {
     Mac::ExtAddress address;
     Error           error    = kErrorNone;
-    Instance &      instance = AsCoreType(aInstance);
+    Instance       &instance = AsCoreType(aInstance);
 
     AssertPointerIsNotNull(aExtAddress);
 
@@ -225,7 +225,7 @@ exit:
     return error;
 }
 
-otError otLinkRawSetMacKey(otInstance *    aInstance,
+otError otLinkRawSetMacKey(otInstance     *aInstance,
                            uint8_t         aKeyIdMode,
                            uint8_t         aKeyId,
                            const otMacKey *aPrevKey,

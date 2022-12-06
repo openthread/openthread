@@ -208,7 +208,7 @@ const char *Interpreter::LinkModeToString(const otLinkModeConfig &aLinkMode, cha
 template <> otError Interpreter::Process<Cmd("diag")>(Arg aArgs[])
 {
     otError error;
-    char *  args[kMaxArgs];
+    char   *args[kMaxArgs];
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
 
     // all diagnostics related features are processed within diagnostics module
@@ -340,7 +340,7 @@ otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
 otError Interpreter::ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner)
 {
     otError error;
-    char *  separator;
+    char   *separator;
 
     VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
@@ -362,7 +362,7 @@ exit:
 otError Interpreter::ParsePingInterval(const Arg &aArg, uint32_t &aInterval)
 {
     otError        error    = OT_ERROR_NONE;
-    const char *   string   = aArg.GetCString();
+    const char    *string   = aArg.GetCString();
     const uint32_t msFactor = 1000;
     uint32_t       factor   = msFactor;
 
@@ -457,10 +457,10 @@ const char *Interpreter::PreferenceToString(signed int aPreference)
     return str;
 }
 
-otError Interpreter::ParseToIp6Address(otInstance *  aInstance,
-                                       const Arg &   aArg,
+otError Interpreter::ParseToIp6Address(otInstance   *aInstance,
+                                       const Arg    &aArg,
                                        otIp6Address &aAddress,
-                                       bool &        aSynthesized)
+                                       bool         &aSynthesized)
 {
     Error error = kErrorNone;
 
@@ -959,7 +959,7 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         };
         static const uint8_t     kNat64CounterTableHeaderColumns[] = {15, 25, 25};
         static const char *const kNat64CounterTableSubHeader[]     = {
-            "Protocol", "Pkts", "Bytes", "Pkts", "Bytes",
+                "Protocol", "Pkts", "Bytes", "Pkts", "Bytes",
         };
         static const uint8_t kNat64CounterTableSubHeaderColumns[] = {
             15, 10, 14, 10, 14,
@@ -1574,7 +1574,7 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
     struct BufferInfoName
     {
         const otMessageQueueInfo otBufferInfo::*mQueuePtr;
-        const char *                            mName;
+        const char                             *mName;
     };
 
     static const BufferInfoName kBufferInfoNames[] = {
@@ -2384,7 +2384,7 @@ template <> otError Interpreter::Process<Cmd("coex")>(Arg aArgs[])
         struct RadioCoexMetricName
         {
             const uint32_t otRadioCoexMetrics::*mValuePtr;
-            const char *                        mName;
+            const char                         *mName;
         };
 
         static const RadioCoexMetricName kTxMetricNames[] = {
@@ -2517,7 +2517,7 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             struct BrCounterName
             {
                 const otPacketsAndBytes otBorderRoutingCounters::*mPacketsAndBytes;
-                const char *                                      mName;
+                const char                                       *mName;
             };
 
             static const BrCounterName kCounterNames[] = {
@@ -2614,7 +2614,7 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             struct MacCounterName
             {
                 const uint32_t otMacCounters::*mValuePtr;
-                const char *                   mName;
+                const char                    *mName;
             };
 
             static const MacCounterName kTxCounterNames[] = {
@@ -2716,7 +2716,7 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             struct MleCounterName
             {
                 const uint16_t otMleCounters::*mValuePtr;
-                const char *                   mName;
+                const char                    *mName;
             };
 
             static const MleCounterName kCounterNames[] = {
@@ -2742,7 +2742,7 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 struct MleTimeCounterName
                 {
                     const uint64_t otMleCounters::*mValuePtr;
-                    const char *                   mName;
+                    const char                    *mName;
                 };
 
                 static const MleTimeCounterName kTimeCounterNames[] = {
@@ -2802,7 +2802,7 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
             struct IpCounterName
             {
                 const uint32_t otIpCounters::*mValuePtr;
-                const char *                  mName;
+                const char                   *mName;
             };
 
             static const IpCounterName kCounterNames[] = {
@@ -4163,10 +4163,10 @@ template <> otError Interpreter::Process<Cmd("leaderweight")>(Arg aArgs[])
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
+void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
                                           uint8_t                    aStatus,
-                                          void *                     aContext)
+                                          void                      *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues, aStatus);
 }
@@ -4196,7 +4196,7 @@ void Interpreter::PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValue
     }
 }
 
-void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
+void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
                                           uint8_t                    aStatus)
 {
@@ -4233,15 +4233,15 @@ void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, ui
 }
 
 void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
-                                                   const otExtAddress *       aExtAddress,
+                                                   const otExtAddress        *aExtAddress,
                                                    const otLinkMetricsValues *aMetricsValues,
-                                                   void *                     aContext)
+                                                   void                      *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsEnhAckProbingIe(aShortAddress, aExtAddress, aMetricsValues);
 }
 
 void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
-                                                   const otExtAddress *       aExtAddress,
+                                                   const otExtAddress        *aExtAddress,
                                                    const otLinkMetricsValues *aMetricsValues)
 {
     OutputFormat("Received Link Metrics data in Enh Ack from neighbor, short address:0x%02x , extended address:",
@@ -4525,7 +4525,7 @@ otError Interpreter::ProcessLinkMetricsMgmt(Arg aArgs[])
     {
         otLinkMetricsEnhAckFlags enhAckFlags;
         otLinkMetrics            linkMetrics;
-        otLinkMetrics *          pLinkMetrics = &linkMetrics;
+        otLinkMetrics           *pLinkMetrics = &linkMetrics;
 
         /**
          * @cli linkmetrics mgmt enhanced-ack clear
@@ -4630,7 +4630,7 @@ exit:
     return error;
 }
 
-void Interpreter::HandleLocateResult(void *              aContext,
+void Interpreter::HandleLocateResult(void               *aContext,
                                      otError             aError,
                                      const otIp6Address *aMeshLocalAddress,
                                      uint16_t            aRloc16)
@@ -4786,7 +4786,7 @@ exit:
     return error;
 }
 
-void Interpreter::HandleMlrRegResult(void *              aContext,
+void Interpreter::HandleMlrRegResult(void               *aContext,
                                      otError             aError,
                                      uint8_t             aMlrStatus,
                                      const otIp6Address *aFailedAddresses,
@@ -6841,7 +6841,7 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
     {
         uint16_t           index = 0;
         otTrelPeerIterator iterator;
-        const otTrelPeer * peer;
+        const otTrelPeer  *peer;
         bool               isTable = true;
 
         if (aArgs[1] == "list")
@@ -6936,16 +6936,16 @@ exit:
 }
 
 void Interpreter::HandleDiagnosticGetResponse(otError              aError,
-                                              otMessage *          aMessage,
+                                              otMessage           *aMessage,
                                               const otMessageInfo *aMessageInfo,
-                                              void *               aContext)
+                                              void                *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleDiagnosticGetResponse(
         aError, aMessage, static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
-                                              const otMessage *       aMessage,
+                                              const otMessage        *aMessage,
                                               const Ip6::MessageInfo *aMessageInfo)
 {
     uint8_t               buf[16];

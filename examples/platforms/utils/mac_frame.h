@@ -221,9 +221,9 @@ void otMacFrameGenerateImmAck(const otRadioFrame *aFrame, bool aIsFramePending, 
  */
 otError otMacFrameGenerateEnhAck(const otRadioFrame *aFrame,
                                  bool                aIsFramePending,
-                                 const uint8_t *     aIeData,
+                                 const uint8_t      *aIeData,
                                  uint8_t             aIeLength,
-                                 otRadioFrame *      aAckFrame);
+                                 otRadioFrame       *aAckFrame);
 
 /**
  * Set CSL IE content into the frame.

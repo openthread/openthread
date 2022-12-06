@@ -136,13 +136,19 @@ public:
      * @retval kErrorInvalidState   IPv6 interface is down or device is in raw-link mode.
      *
      */
-    Error Start(void) { return Start(kNormalAttach); }
+    Error Start(void)
+    {
+        return Start(kNormalAttach);
+    }
 
     /**
      * This method stops the MLE protocol operation.
      *
      */
-    void Stop(void) { Stop(kUpdateNetworkDatasets); }
+    void Stop(void)
+    {
+        Stop(kUpdateNetworkDatasets);
+    }
 
     /**
      * This method restores network information from non-volatile memory (if any).
@@ -165,7 +171,10 @@ public:
      * @param[in]  aChannel        The channel to use when transmitting.
      *
      */
-    void SendAnnounce(uint8_t aChannel) { SendAnnounce(aChannel, kNormalAnnounce); }
+    void SendAnnounce(uint8_t aChannel)
+    {
+        SendAnnounce(aChannel, kNormalAnnounce);
+    }
 
     /**
      * This method causes the Thread interface to detach from the Thread network.
@@ -220,7 +229,10 @@ public:
      * @retval FALSE  Device is not in middle of attach process.
      *
      */
-    bool IsAttaching(void) const { return (mAttachState != kAttachStateIdle); }
+    bool IsAttaching(void) const
+    {
+        return (mAttachState != kAttachStateIdle);
+    }
 
     /**
      * This method returns the current Thread device role.
@@ -228,7 +240,10 @@ public:
      * @returns The current Thread device role.
      *
      */
-    DeviceRole GetRole(void) const { return mRole; }
+    DeviceRole GetRole(void) const
+    {
+        return mRole;
+    }
 
     /**
      * This method indicates whether device role is disabled.
@@ -237,7 +252,10 @@ public:
      * @retval FALSE  Device role is not disabled.
      *
      */
-    bool IsDisabled(void) const { return (mRole == kRoleDisabled); }
+    bool IsDisabled(void) const
+    {
+        return (mRole == kRoleDisabled);
+    }
 
     /**
      * This method indicates whether device role is detached.
@@ -246,7 +264,10 @@ public:
      * @retval FALSE  Device role is not detached.
      *
      */
-    bool IsDetached(void) const { return (mRole == kRoleDetached); }
+    bool IsDetached(void) const
+    {
+        return (mRole == kRoleDetached);
+    }
 
     /**
      * This method indicates whether device role is child.
@@ -255,7 +276,10 @@ public:
      * @retval FALSE  Device role is not child.
      *
      */
-    bool IsChild(void) const { return (mRole == kRoleChild); }
+    bool IsChild(void) const
+    {
+        return (mRole == kRoleChild);
+    }
 
     /**
      * This method indicates whether device role is router.
@@ -264,7 +288,10 @@ public:
      * @retval FALSE  Device role is not router.
      *
      */
-    bool IsRouter(void) const { return (mRole == kRoleRouter); }
+    bool IsRouter(void) const
+    {
+        return (mRole == kRoleRouter);
+    }
 
     /**
      * This method indicates whether device role is leader.
@@ -273,7 +300,10 @@ public:
      * @retval FALSE  Device role is not leader.
      *
      */
-    bool IsLeader(void) const { return (mRole == kRoleLeader); }
+    bool IsLeader(void) const
+    {
+        return (mRole == kRoleLeader);
+    }
 
     /**
      * This method indicates whether device role is either router or leader.
@@ -290,7 +320,10 @@ public:
      * @returns The Device Mode as reported in the Mode TLV.
      *
      */
-    DeviceMode GetDeviceMode(void) const { return mDeviceMode; }
+    DeviceMode GetDeviceMode(void) const
+    {
+        return mDeviceMode;
+    }
 
     /**
      * This method sets the Device Mode as reported in the Mode TLV.
@@ -309,7 +342,10 @@ public:
      * @returns TRUE if rx-on-when-idle, FALSE otherwise.
      *
      */
-    bool IsRxOnWhenIdle(void) const { return mDeviceMode.IsRxOnWhenIdle(); }
+    bool IsRxOnWhenIdle(void) const
+    {
+        return mDeviceMode.IsRxOnWhenIdle();
+    }
 
     /**
      * This method indicates whether or not the device is a Full Thread Device.
@@ -317,7 +353,10 @@ public:
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
      */
-    bool IsFullThreadDevice(void) const { return mDeviceMode.IsFullThreadDevice(); }
+    bool IsFullThreadDevice(void) const
+    {
+        return mDeviceMode.IsFullThreadDevice();
+    }
 
     /**
      * This method indicates whether or not the device is a Minimal End Device.
@@ -325,7 +364,10 @@ public:
      * @returns TRUE if the device is a Minimal End Device, FALSE otherwise.
      *
      */
-    bool IsMinimalEndDevice(void) const { return mDeviceMode.IsMinimalEndDevice(); }
+    bool IsMinimalEndDevice(void) const
+    {
+        return mDeviceMode.IsMinimalEndDevice();
+    }
 
     /**
      * This method gets the Network Data type (full set or stable subset) that this device requests.
@@ -333,7 +375,10 @@ public:
      * @returns The Network Data type requested by this device.
      *
      */
-    NetworkData::Type GetNetworkDataType(void) const { return mDeviceMode.GetNetworkDataType(); }
+    NetworkData::Type GetNetworkDataType(void) const
+    {
+        return mDeviceMode.GetNetworkDataType();
+    }
 
     /**
      * This method returns a pointer to the Mesh Local Prefix.
@@ -341,7 +386,10 @@ public:
      * @returns A reference to the Mesh Local Prefix.
      *
      */
-    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocal16.GetAddress().GetPrefix(); }
+    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const
+    {
+        return mMeshLocal16.GetAddress().GetPrefix();
+    }
 
     /**
      * This method sets the Mesh Local Prefix.
@@ -380,7 +428,10 @@ public:
      * @returns A reference to the Thread link local address.
      *
      */
-    const Ip6::Address &GetLinkLocalAddress(void) const { return mLinkLocal64.GetAddress(); }
+    const Ip6::Address &GetLinkLocalAddress(void) const
+    {
+        return mLinkLocal64.GetAddress();
+    }
 
     /**
      * This method updates the link local address.
@@ -396,7 +447,10 @@ public:
      * @returns A reference to the link-local all Thread nodes multicast address.
      *
      */
-    const Ip6::Address &GetLinkLocalAllThreadNodesAddress(void) const { return mLinkLocalAllThreadNodes.GetAddress(); }
+    const Ip6::Address &GetLinkLocalAllThreadNodesAddress(void) const
+    {
+        return mLinkLocalAllThreadNodes.GetAddress();
+    }
 
     /**
      * This method returns a reference to the realm-local all Thread nodes multicast address.
@@ -415,7 +469,10 @@ public:
      * @returns A reference to the parent.
      *
      */
-    Parent &GetParent(void) { return mParent; }
+    Parent &GetParent(void)
+    {
+        return mParent;
+    }
 
     /**
      * The method retrieves information about the parent.
@@ -434,7 +491,10 @@ public:
      * The parent candidate is valid when attempting to attach to a new parent.
      *
      */
-    Parent &GetParentCandidate(void) { return mParentCandidate; }
+    Parent &GetParentCandidate(void)
+    {
+        return mParentCandidate;
+    }
 
     /**
      * This method starts the process for child to search for a better parent while staying attached to its current
@@ -479,7 +539,10 @@ public:
      * @returns The MLE Timeout value in seconds.
      *
      */
-    uint32_t GetTimeout(void) const { return mTimeout; }
+    uint32_t GetTimeout(void) const
+    {
+        return mTimeout;
+    }
 
     /**
      * This method sets the MLE Timeout value.
@@ -503,7 +566,10 @@ public:
      * @returns A reference to the RLOC assigned to the Thread interface.
      *
      */
-    const Ip6::Address &GetMeshLocal16(void) const { return mMeshLocal16.GetAddress(); }
+    const Ip6::Address &GetMeshLocal16(void) const
+    {
+        return mMeshLocal16.GetAddress();
+    }
 
     /**
      * This method returns a reference to the ML-EID assigned to the Thread interface.
@@ -511,7 +577,10 @@ public:
      * @returns A reference to the ML-EID assigned to the Thread interface.
      *
      */
-    const Ip6::Address &GetMeshLocal64(void) const { return mMeshLocal64.GetAddress(); }
+    const Ip6::Address &GetMeshLocal64(void) const
+    {
+        return mMeshLocal64.GetAddress();
+    }
 
     /**
      * This method returns the Router ID of the Leader.
@@ -519,7 +588,10 @@ public:
      * @returns The Router ID of the Leader.
      *
      */
-    uint8_t GetLeaderId(void) const { return mLeaderData.GetLeaderRouterId(); }
+    uint8_t GetLeaderId(void) const
+    {
+        return mLeaderData.GetLeaderRouterId();
+    }
 
     /**
      * This method retrieves the Leader's RLOC.
@@ -541,7 +613,10 @@ public:
      * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    Error GetLeaderAloc(Ip6::Address &aAddress) const { return GetLocatorAddress(aAddress, kAloc16Leader); }
+    Error GetLeaderAloc(Ip6::Address &aAddress) const
+    {
+        return GetLocatorAddress(aAddress, kAloc16Leader);
+    }
 
     /**
      * This method computes the Commissioner's ALOC.
@@ -584,7 +659,10 @@ public:
      * @returns A reference to the send queue.
      *
      */
-    const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
+    const MessageQueue &GetMessageQueue(void) const
+    {
+        return mDelayedResponses;
+    }
 
     /**
      * This method frees multicast MLE Data Response from Delayed Message Queue if any.
@@ -610,7 +688,10 @@ public:
      * This method resets the MLE counters.
      *
      */
-    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
+    void ResetCounters(void)
+    {
+        memset(&mCounters, 0, sizeof(mCounters));
+    }
 
     /**
      * This function registers the client callback that is called when processing an MLE Parent Response message.
@@ -657,7 +738,10 @@ public:
      * @retval false No valid network information was found.
      *
      */
-    bool HasRestored(void) const { return mHasRestored; }
+    bool HasRestored(void) const
+    {
+        return mHasRestored;
+    }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -666,7 +750,10 @@ public:
      * @returns CSL timeout
      *
      */
-    uint32_t GetCslTimeout(void) const { return mCslTimeout; }
+    uint32_t GetCslTimeout(void) const
+    {
+        return mCslTimeout;
+    }
 
     /**
      * This method sets the CSL timeout.
@@ -1383,11 +1470,11 @@ protected:
         {
         }
 
-        RxMessage &             mMessage;      ///< The MLE message.
+        RxMessage              &mMessage;      ///< The MLE message.
         const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
         uint32_t                mFrameCounter; ///< The frame counter from aux security header.
         uint32_t                mKeySequence;  ///< The key sequence from aux security header.
-        Neighbor *              mNeighbor;     ///< Neighbor from which message was received (can be `nullptr`).
+        Neighbor               *mNeighbor;     ///< Neighbor from which message was received (can be `nullptr`).
         Class                   mClass;        ///< The message class (authoritative, peer, or unknown).
     };
 
@@ -1429,7 +1516,10 @@ protected:
      * This method clears the parent candidate.
      *
      */
-    void ClearParentCandidate(void) { mParentCandidate.Clear(); }
+    void ClearParentCandidate(void)
+    {
+        mParentCandidate.Clear();
+    }
 
     /**
      * This method checks if the destination is reachable.
@@ -1467,8 +1557,8 @@ protected:
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
      *
      */
-    Error SendDataRequest(const Ip6::Address &                       aDestination,
-                          const uint8_t *                            aTlvs,
+    Error SendDataRequest(const Ip6::Address                        &aDestination,
+                          const uint8_t                             *aTlvs,
                           uint8_t                                    aTlvsLength,
                           uint16_t                                   aDelay,
                           const LinkMetrics::LinkMetrics::QueryInfo &aQueryInfo)
@@ -1571,8 +1661,12 @@ protected:
      */
     static void Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress, uint16_t aRloc);
 #else
-    static void Log(MessageAction, MessageType, const Ip6::Address &) {}
-    static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t) {}
+    static void Log(MessageAction, MessageType, const Ip6::Address &)
+    {
+    }
+    static void Log(MessageAction, MessageType, const Ip6::Address &, uint16_t)
+    {
+    }
 #endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
@@ -1600,8 +1694,12 @@ protected:
      */
     static void LogSendError(MessageType aType, Error aError);
 #else
-    static void LogProcessError(MessageType, Error) {}
-    static void LogSendError(MessageType, Error) {}
+    static void LogProcessError(MessageType, Error)
+    {
+    }
+    static void LogSendError(MessageType, Error)
+    {
+    }
 #endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_WARN)
 
     /**
@@ -1620,7 +1718,10 @@ protected:
      * @retval true if attaching/attached on the announced parameters, false otherwise.
      *
      */
-    bool IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
+    bool IsAnnounceAttach(void) const
+    {
+        return mAlternatePanId != Mac::kPanIdBroadcast;
+    }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     /**
@@ -1854,7 +1955,10 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    void HandleParentSearchTimer(void) { mParentSearch.HandleTimer(); }
+    void HandleParentSearchTimer(void)
+    {
+        mParentSearch.HandleTimer();
+    }
 
     class ParentSearch : public InstanceLocator
     {
@@ -1901,12 +2005,15 @@ private:
     void        ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
-    bool        IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
-    Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
+    bool        IsDetachingGracefully(void)
+    {
+        return mDetachGracefullyTimer.IsRunning();
+    }
+    Error SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    Error SendDataRequest(const Ip6::Address &                       aDestination,
-                          const uint8_t *                            aTlvs,
+    Error SendDataRequest(const Ip6::Address                        &aDestination,
+                          const uint8_t                             *aTlvs,
                           uint8_t                                    aTlvsLength,
                           uint16_t                                   aDelay,
                           const LinkMetrics::LinkMetrics::QueryInfo *aQueryInfo = nullptr);
@@ -1915,8 +2022,8 @@ private:
 #endif
 
 #if OPENTHREAD_FTD
-    static void HandleDetachGracefullyAddressReleaseResponse(void *               aContext,
-                                                             otMessage *          aMessage,
+    static void HandleDetachGracefullyAddressReleaseResponse(void                *aContext,
+                                                             otMessage           *aMessage,
                                                              const otMessageInfo *aMessageInfo,
                                                              Error                aResult);
     void        HandleDetachGracefullyAddressReleaseResponse(void);
@@ -1962,16 +2069,16 @@ private:
     bool IsBetterParent(uint16_t                aRloc16,
                         LinkQuality             aLinkQuality,
                         uint8_t                 aLinkMargin,
-                        const ConnectivityTlv & aConnectivityTlv,
+                        const ConnectivityTlv  &aConnectivityTlv,
                         uint16_t                aVersion,
                         const Mac::CslAccuracy &aCslAccuracy);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
 
     Error ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
-                                 Message &               aMessage,
+                                 Message                &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo,
                                  uint16_t                aCmdOffset,
-                                 const SecurityHeader &  aHeader);
+                                 const SecurityHeader   &aHeader);
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
@@ -2047,10 +2154,10 @@ private:
 
     DetachGracefullyTimer      mDetachGracefullyTimer;
     otDetachGracefullyCallback mDetachGracefullyCallback;
-    void *                     mDetachGracefullyContext;
+    void                      *mDetachGracefullyContext;
 
     otThreadParentResponseCallback mParentResponseCb;
-    void *                         mParentResponseCbContext;
+    void                          *mParentResponseCbContext;
 };
 
 } // namespace Mle

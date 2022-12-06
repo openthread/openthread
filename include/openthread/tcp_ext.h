@@ -150,11 +150,11 @@ enum
  * @returns OT_ERROR_NONE    Successfully copied data into the send buffer and sent it on the TCP endpoint.
  * @returns OT_ERROR_FAILED  Failed to send out data on the TCP endpoint.
  */
-otError otTcpCircularSendBufferWrite(otTcpEndpoint *          aEndpoint,
+otError otTcpCircularSendBufferWrite(otTcpEndpoint           *aEndpoint,
                                      otTcpCircularSendBuffer *aSendBuffer,
-                                     const void *             aData,
+                                     const void              *aData,
                                      size_t                   aLength,
-                                     size_t *                 aWritten,
+                                     size_t                  *aWritten,
                                      uint32_t                 aFlags);
 
 /**

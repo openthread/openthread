@@ -94,7 +94,7 @@ static void PrintUsage(const char *aProgramName, int aExitCode)
 
 void otSysInit(int aArgCount, char *aArgVector[])
 {
-    char *   endptr;
+    char    *endptr;
     uint32_t speedUpFactor = 1;
 
     static const struct option long_options[] = {

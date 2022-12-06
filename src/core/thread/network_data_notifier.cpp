@@ -187,7 +187,7 @@ exit:
 Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkData *aNetworkData)
 {
     Error            error = kErrorNone;
-    Coap::Message *  message;
+    Coap::Message   *message;
     Tmf::MessageInfo messageInfo(GetInstance());
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriServerData);

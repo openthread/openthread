@@ -429,9 +429,9 @@ otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseC
  *
  */
 typedef void (*otSrpServerServiceUpdateHandler)(otSrpServerServiceUpdateId aId,
-                                                const otSrpServerHost *    aHost,
+                                                const otSrpServerHost     *aHost,
                                                 uint32_t                   aTimeout,
-                                                void *                     aContext);
+                                                void                      *aContext);
 
 /**
  * This function sets the SRP service updates handler on SRP server.
@@ -442,9 +442,9 @@ typedef void (*otSrpServerServiceUpdateHandler)(otSrpServerServiceUpdateId aId,
  *                              May be NULL if not used.
  *
  */
-void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstance,
+void otSrpServerSetServiceUpdateHandler(otInstance                     *aInstance,
                                         otSrpServerServiceUpdateHandler aServiceHandler,
-                                        void *                          aContext);
+                                        void                           *aContext);
 
 /**
  * This function reports the result of processing a SRP update to the SRP server.
@@ -537,7 +537,7 @@ void otSrpServerHostGetLeaseInfo(const otSrpServerHost *aHost, otSrpServerLeaseI
  * @returns  A pointer to the next service or NULL if there is no more services.
  *
  */
-const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost *   aHost,
+const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost    *aHost,
                                                         const otSrpServerService *aService);
 
 /**
@@ -572,11 +572,11 @@ const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost * 
  * @returns  A pointer to the next matching service or NULL if no matching service could be found.
  *
  */
-const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost *   aHost,
+const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost    *aHost,
                                                          const otSrpServerService *aPrevService,
                                                          otSrpServerServiceFlags   aFlags,
-                                                         const char *              aServiceName,
-                                                         const char *              aInstanceName);
+                                                         const char               *aServiceName,
+                                                         const char               *aInstanceName);
 
 /**
  * This function indicates whether or not the SRP service has been deleted.

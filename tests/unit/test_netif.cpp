@@ -89,7 +89,7 @@ void TestNetifMulticastAddresses(void)
 {
     const uint8_t kMaxAddresses = 8;
 
-    Instance *   instance = testInitInstance();
+    Instance    *instance = testInitInstance();
     TestNetif    netif(*instance);
     Ip6::Address addresses[kMaxAddresses];
 

@@ -103,7 +103,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
 {
     Error             error = kErrorNone;
     MessageInfo       messageInfoLocal;
-    Message *         message = nullptr;
+    Message          *message = nullptr;
     Header            icmp6Header;
     Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
 
@@ -186,7 +186,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
 {
     Error       error = kErrorNone;
     Header      icmp6Header;
-    Message *   replyMessage = nullptr;
+    Message    *replyMessage = nullptr;
     MessageInfo replyMessageInfo;
     uint16_t    payloadLength;
 

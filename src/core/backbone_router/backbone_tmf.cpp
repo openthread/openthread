@@ -61,16 +61,16 @@ exit:
     return error;
 }
 
-bool BackboneTmfAgent::HandleResource(CoapBase &              aCoapBase,
-                                      const char *            aUriPath,
-                                      ot::Coap::Message &     aMessage,
+bool BackboneTmfAgent::HandleResource(CoapBase               &aCoapBase,
+                                      const char             *aUriPath,
+                                      ot::Coap::Message      &aMessage,
                                       const Ip6::MessageInfo &aMessageInfo)
 {
     return static_cast<BackboneTmfAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
 }
 
-bool BackboneTmfAgent::HandleResource(const char *            aUriPath,
-                                      ot::Coap::Message &     aMessage,
+bool BackboneTmfAgent::HandleResource(const char             *aUriPath,
+                                      ot::Coap::Message      &aMessage,
                                       const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessage);

@@ -184,7 +184,7 @@ exit:
 Error ChildTable::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
 {
     Error    error = kErrorNone;
-    Child *  child;
+    Child   *child;
     uint16_t rloc16;
 
     if ((aChildId & ~Mle::kMaxChildId) != 0)

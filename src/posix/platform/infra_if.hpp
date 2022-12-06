@@ -127,7 +127,7 @@ public:
      */
     otError SendIcmp6Nd(uint32_t            aInfraIfIndex,
                         const otIp6Address &aDestAddress,
-                        const uint8_t *     aBuffer,
+                        const uint8_t      *aBuffer,
                         uint16_t            aBufferLength);
 
     /**

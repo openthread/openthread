@@ -124,7 +124,7 @@ public:
      * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
      *
      */
-    Neighbor *FindParent(const Mac::Address &  aMacAddress,
+    Neighbor *FindParent(const Mac::Address   &aMacAddress,
                          Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
@@ -160,7 +160,7 @@ public:
      * @returns A pointer to the `Neighbor` corresponding to @p aMacAddress, `nullptr` otherwise.
      *
      */
-    Neighbor *FindNeighbor(const Mac::Address &  aMacAddress,
+    Neighbor *FindNeighbor(const Mac::Address   &aMacAddress,
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
 #if OPENTHREAD_FTD
@@ -174,7 +174,7 @@ public:
      * @returns A pointer to the `Neighbor` corresponding to @p aIp6Address, `nullptr` otherwise.
      *
      */
-    Neighbor *FindNeighbor(const Ip6::Address &  aIp6Address,
+    Neighbor *FindNeighbor(const Ip6::Address   &aIp6Address,
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
@@ -213,7 +213,10 @@ public:
      * @param[in] aCallback    A pointer to callback handler function.
      *
      */
-    void RegisterCallback(Callback aCallback) { mCallback = aCallback; }
+    void RegisterCallback(Callback aCallback)
+    {
+        mCallback = aCallback;
+    }
 
     /**
      * This method signals a "neighbor table changed" event.

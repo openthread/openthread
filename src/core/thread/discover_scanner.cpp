@@ -64,12 +64,12 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
                                 uint16_t                aPanId,
                                 bool                    aJoiner,
                                 bool                    aEnableFiltering,
-                                const FilterIndexes *   aFilterIndexes,
+                                const FilterIndexes    *aFilterIndexes,
                                 Handler                 aCallback,
-                                void *                  aContext)
+                                void                   *aContext)
 {
     Error                           error   = kErrorNone;
-    Mle::TxMessage *                message = nullptr;
+    Mle::TxMessage                 *message = nullptr;
     Tlv                             tlv;
     Ip6::Address                    destination;
     MeshCoP::DiscoveryRequestTlv    discoveryRequest;
@@ -291,7 +291,7 @@ exit:
 void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 {
     Error                         error    = kErrorNone;
-    const ThreadLinkInfo *        linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
+    const ThreadLinkInfo         *linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
     MeshCoP::Tlv                  meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::NetworkNameTlv       networkName;

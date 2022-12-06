@@ -763,7 +763,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSION
     bool                withDiscerner = false;
     const otExtAddress *eui64;
     uint32_t            timeout;
-    const char *        psk;
+    const char         *psk;
 
     SuccessOrExit(error = mDecoder.OpenStruct());
 
@@ -912,7 +912,7 @@ exit:
 void NcpBase::HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
                                                   const uint8_t *aEnergyData,
                                                   uint8_t        aLength,
-                                                  void *         aContext)
+                                                  void          *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleCommissionerEnergyReport(aChannelMask, aEnergyData, aLength);
 }
@@ -997,7 +997,7 @@ exit:
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET>(void)
 {
     otError                error = OT_ERROR_NONE;
-    const uint8_t *        tlvs;
+    const uint8_t         *tlvs;
     uint16_t               length;
     otCommissioningDataset dataset;
 
@@ -1014,8 +1014,8 @@ exit:
 otError NcpBase::HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC(uint8_t aHeader)
 {
     otError        error = OT_ERROR_NONE;
-    const char *   passPhrase;
-    const char *   networkName;
+    const char    *passPhrase;
+    const char    *networkName;
     const uint8_t *extPanIdData;
     uint16_t       length;
     otPskc         pskc;
@@ -1072,7 +1072,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 {
     otError             error         = OT_ERROR_NONE;
     const otExtAddress *eui64         = nullptr;
-    const char *        pskd          = nullptr;
+    const char         *pskd          = nullptr;
     uint32_t            joinerTimeout = 0;
 
     SuccessOrExit(error = mDecoder.ReadUtf8(pskd));

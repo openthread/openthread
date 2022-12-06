@@ -127,7 +127,7 @@ void Link::BeginTransmit(void)
     Mac::PanId    destPanId;
     Header::Type  type;
     Packet        txPacket;
-    Neighbor *    neighbor   = nullptr;
+    Neighbor     *neighbor   = nullptr;
     Mac::RxFrame *ackFrame   = nullptr;
     bool          isDisovery = false;
 
@@ -391,7 +391,7 @@ void Link::HandleAck(Packet &aAckPacket)
 {
     Error        ackError;
     Mac::Address srcAddress;
-    Neighbor *   neighbor;
+    Neighbor    *neighbor;
     uint32_t     ackNumber;
 
     LogDebg("HandleAck() [%s]", aAckPacket.GetHeader().ToString().AsCString());

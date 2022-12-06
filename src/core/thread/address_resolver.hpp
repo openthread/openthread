@@ -84,7 +84,7 @@ public:
         static constexpr uint8_t kListIndex  = 0;
         static constexpr uint8_t kEntryIndex = 1;
 
-        const CacheEntry *    GetEntry(void) const { return static_cast<const CacheEntry *>(mData[kEntryIndex]); }
+        const CacheEntry     *GetEntry(void) const { return static_cast<const CacheEntry *>(mData[kEntryIndex]); }
         void                  SetEntry(const CacheEntry *aEntry) { mData[kEntryIndex] = aEntry; }
         const CacheEntryList *GetList(void) const { return static_cast<const CacheEntryList *>(mData[kListIndex]); }
         void                  SetList(const CacheEntryList *aList) { mData[kListIndex] = aList; }
@@ -215,10 +215,10 @@ public:
      * @param[in]  aDestination             The destination to send the ADDR_NTF.ans message.
      *
      */
-    void SendAddressQueryResponse(const Ip6::Address &            aTarget,
+    void SendAddressQueryResponse(const Ip6::Address             &aTarget,
                                   const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                  const uint32_t *                aLastTransactionTimeTlv,
-                                  const Ip6::Address &            aDestination);
+                                  const uint32_t                 *aLastTransactionTimeTlv,
+                                  const Ip6::Address             &aDestination);
 
     /**
      * This method sends an Address Error Notification (ADDR_ERR.ntf) message.
@@ -228,9 +228,9 @@ public:
      * @param aDestination   The destination to send the ADDR_ERR.ntf message.
      *
      */
-    void SendAddressError(const Ip6::Address &            aTarget,
+    void SendAddressError(const Ip6::Address             &aTarget,
                           const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                          const Ip6::Address *            aDestination);
+                          const Ip6::Address             *aDestination);
 
 private:
     static constexpr uint16_t kCacheEntries                  = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES;
@@ -247,7 +247,7 @@ private:
     public:
         void Init(Instance &aInstance);
 
-        CacheEntry *      GetNext(void);
+        CacheEntry       *GetNext(void);
         const CacheEntry *GetNext(void) const;
         void              SetNext(CacheEntry *aEntry);
 
@@ -329,7 +329,10 @@ private:
         kReasonRemovingEid,
     };
 
-    CacheEntryPool &GetCacheEntryPool(void) { return mCacheEntryPool; }
+    CacheEntryPool &GetCacheEntryPool(void)
+    {
+        return mCacheEntryPool;
+    }
 
     Error       Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery);
     void        Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId);
@@ -351,19 +354,19 @@ private:
 
 #if OPENTHREAD_FTD
 
-    static void HandleIcmpReceive(void *               aContext,
-                                  otMessage *          aMessage,
+    static void HandleIcmpReceive(void                *aContext,
+                                  otMessage           *aMessage,
                                   const otMessageInfo *aMessageInfo,
                                   const otIcmp6Header *aIcmpHeader);
-    void        HandleIcmpReceive(Message &                aMessage,
-                                  const Ip6::MessageInfo & aMessageInfo,
+    void        HandleIcmpReceive(Message                 &aMessage,
+                                  const Ip6::MessageInfo  &aMessageInfo,
                                   const Ip6::Icmp::Header &aIcmpHeader);
 
     void        HandleTimeTick(void);
     void        LogCacheEntryChange(EntryChange       aChange,
                                     Reason            aReason,
                                     const CacheEntry &aEntry,
-                                    CacheEntryList *  aList = nullptr);
+                                    CacheEntryList   *aList = nullptr);
     const char *ListToString(const CacheEntryList *aList) const;
 
     static AddressResolver::CacheEntry *GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList);

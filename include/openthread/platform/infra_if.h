@@ -87,7 +87,7 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
  */
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
-                                 const uint8_t *     aBuffer,
+                                 const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength);
 
 /**
@@ -106,10 +106,10 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
  *        address and the IP Hop Limit MUST be 255.
  *
  */
-extern void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
+extern void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
                                      uint32_t            aInfraIfIndex,
                                      const otIp6Address *aSrcAddress,
-                                     const uint8_t *     aBuffer,
+                                     const uint8_t      *aBuffer,
                                      uint16_t            aBufferLength);
 
 /**
@@ -158,7 +158,7 @@ otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex);
  * @param[in]  aIp6Prefix     A pointer to NAT64 prefix.
  *
  */
-extern void otPlatInfraIfDiscoverNat64PrefixDone(otInstance *       aInstance,
+extern void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
                                                  uint32_t           aInfraIfIndex,
                                                  const otIp6Prefix *aIp6Prefix);
 

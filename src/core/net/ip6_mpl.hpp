@@ -231,7 +231,10 @@ public:
      * @returns A reference to the buffered message set.
      *
      */
-    const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
+    const MessageQueue &GetBufferedMessageSet(void) const
+    {
+        return mBufferedMessageSet;
+    }
 #endif
 
 private:

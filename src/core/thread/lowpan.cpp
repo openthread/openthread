@@ -98,9 +98,9 @@ exit:
 
 Error Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
                                 const Ip6::Address &aIpAddr,
-                                const Context &     aContext,
-                                uint16_t &          aHcCtl,
-                                FrameBuilder &      aFrameBuilder)
+                                const Context      &aContext,
+                                uint16_t           &aHcCtl,
+                                FrameBuilder       &aFrameBuilder)
 {
     Error                    error = kErrorNone;
     Ip6::InterfaceIdentifier iid;
@@ -127,9 +127,9 @@ Error Lowpan::CompressSourceIid(const Mac::Address &aMacAddr,
 
 Error Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr,
                                      const Ip6::Address &aIpAddr,
-                                     const Context &     aContext,
-                                     uint16_t &          aHcCtl,
-                                     FrameBuilder &      aFrameBuilder)
+                                     const Context      &aContext,
+                                     uint16_t           &aHcCtl,
+                                     FrameBuilder       &aFrameBuilder)
 {
     Error                    error = kErrorNone;
     Ip6::InterfaceIdentifier iid;
@@ -235,17 +235,17 @@ exit:
     return error;
 }
 
-Error Lowpan::Compress(Message &             aMessage,
+Error Lowpan::Compress(Message              &aMessage,
                        const Mac::Addresses &aMacAddrs,
-                       FrameBuilder &        aFrameBuilder,
-                       uint8_t &             aHeaderDepth)
+                       FrameBuilder         &aFrameBuilder,
+                       uint8_t              &aHeaderDepth)
 {
     Error       error       = kErrorNone;
     uint16_t    startOffset = aMessage.GetOffset();
     uint16_t    hcCtl       = kHcDispatch;
     uint16_t    hcCtlOffset = 0;
     Ip6::Header ip6Header;
-    uint8_t *   ip6HeaderBytes = reinterpret_cast<uint8_t *>(&ip6Header);
+    uint8_t    *ip6HeaderBytes = reinterpret_cast<uint8_t *>(&ip6Header);
     Context     srcContext, dstContext;
     uint8_t     nextHeader;
     uint8_t     ecn;
@@ -609,10 +609,10 @@ exit:
     return error;
 }
 
-Error Lowpan::DecompressBaseHeader(Ip6::Header &         aIp6Header,
-                                   bool &                aCompressedNextHeader,
+Error Lowpan::DecompressBaseHeader(Ip6::Header          &aIp6Header,
+                                   bool                 &aCompressedNextHeader,
                                    const Mac::Addresses &aMacAddrs,
-                                   FrameData &           aFrameData)
+                                   FrameData            &aFrameData)
 {
     Error    error = kErrorParse;
     uint16_t hcCtl;
@@ -995,9 +995,9 @@ exit:
     return error;
 }
 
-Error Lowpan::Decompress(Message &             aMessage,
+Error Lowpan::Decompress(Message              &aMessage,
                          const Mac::Addresses &aMacAddrs,
-                         FrameData &           aFrameData,
+                         FrameData            &aFrameData,
                          uint16_t              aDatagramLength)
 {
     Error       error = kErrorParse;

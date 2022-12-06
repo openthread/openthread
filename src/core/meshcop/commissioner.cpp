@@ -212,7 +212,7 @@ Commissioner::Joiner *Commissioner::FindJoinerEntry(const JoinerDiscerner &aDisc
 
 Commissioner::Joiner *Commissioner::FindBestMatchingJoinerEntry(const Mac::ExtAddress &aReceivedJoinerId)
 {
-    Joiner *        best = nullptr;
+    Joiner         *best = nullptr;
     Mac::ExtAddress joinerId;
 
     // Prefer a full Joiner ID match, if not found use the entry
@@ -437,7 +437,7 @@ void Commissioner::ClearJoiners(void)
 
 Error Commissioner::AddJoiner(const Mac::ExtAddress *aEui64,
                               const JoinerDiscerner *aDiscerner,
-                              const char *           aPskd,
+                              const char            *aPskd,
                               uint32_t               aTimeout)
 {
     Error   error = kErrorNone;
@@ -683,7 +683,7 @@ void Commissioner::UpdateJoinerExpirationTimer(void)
 Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength)
 {
     Error            error = kErrorNone;
-    Coap::Message *  message;
+    Coap::Message   *message;
     Tmf::MessageInfo messageInfo(GetInstance());
     Tlv              tlv;
 
@@ -709,8 +709,8 @@ exit:
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerGetResponse(void *               aContext,
-                                                     otMessage *          aMessage,
+void Commissioner::HandleMgmtCommissionerGetResponse(void                *aContext,
+                                                     otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
                                                      Error                aResult)
 {
@@ -718,7 +718,7 @@ void Commissioner::HandleMgmtCommissionerGetResponse(void *               aConte
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMessage,
+void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message          *aMessage,
                                                      const Ip6::MessageInfo *aMessageInfo,
                                                      Error                   aResult)
 {
@@ -734,7 +734,7 @@ exit:
 Error Commissioner::SendMgmtCommissionerSetRequest(const Dataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     Error            error = kErrorNone;
-    Coap::Message *  message;
+    Coap::Message   *message;
     Tmf::MessageInfo messageInfo(GetInstance());
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriCommissionerSet);
@@ -778,8 +778,8 @@ exit:
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerSetResponse(void *               aContext,
-                                                     otMessage *          aMessage,
+void Commissioner::HandleMgmtCommissionerSetResponse(void                *aContext,
+                                                     otMessage           *aMessage,
                                                      const otMessageInfo *aMessageInfo,
                                                      Error                aResult)
 {
@@ -787,7 +787,7 @@ void Commissioner::HandleMgmtCommissionerSetResponse(void *               aConte
                                                                              AsCoreTypePtr(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMessage,
+void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message          *aMessage,
                                                      const Ip6::MessageInfo *aMessageInfo,
                                                      Error                   aResult)
 {
@@ -803,7 +803,7 @@ exit:
 Error Commissioner::SendPetition(void)
 {
     Error             error   = kErrorNone;
-    Coap::Message *   message = nullptr;
+    Coap::Message    *message = nullptr;
     Tmf::MessageInfo  messageInfo(GetInstance());
     CommissionerIdTlv commissionerIdTlv;
 
@@ -827,8 +827,8 @@ exit:
     return error;
 }
 
-void Commissioner::HandleLeaderPetitionResponse(void *               aContext,
-                                                otMessage *          aMessage,
+void Commissioner::HandleLeaderPetitionResponse(void                *aContext,
+                                                otMessage           *aMessage,
                                                 const otMessageInfo *aMessageInfo,
                                                 Error                aResult)
 {
@@ -836,7 +836,7 @@ void Commissioner::HandleLeaderPetitionResponse(void *               aContext,
                                                                         AsCoreTypePtr(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage,
+void Commissioner::HandleLeaderPetitionResponse(Coap::Message          *aMessage,
                                                 const Ip6::MessageInfo *aMessageInfo,
                                                 Error                   aResult)
 {
@@ -895,7 +895,7 @@ void Commissioner::SendKeepAlive(void)
 void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
     Error            error   = kErrorNone;
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderKeepAlive);
@@ -917,8 +917,8 @@ exit:
     LogError("send keep alive", error);
 }
 
-void Commissioner::HandleLeaderKeepAliveResponse(void *               aContext,
-                                                 otMessage *          aMessage,
+void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,
+                                                 otMessage           *aMessage,
                                                  const otMessageInfo *aMessageInfo,
                                                  Error                aResult)
 {
@@ -926,7 +926,7 @@ void Commissioner::HandleLeaderKeepAliveResponse(void *               aContext,
                                                                          AsCoreTypePtr(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessage,
+void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message          *aMessage,
                                                  const Ip6::MessageInfo *aMessageInfo,
                                                  Error                   aResult)
 {
@@ -975,7 +975,7 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     if (!Get<Tmf::SecureAgent>().IsConnectionActive())
     {
         Mac::ExtAddress receivedId;
-        Joiner *        joiner;
+        Joiner         *joiner;
 
         mJoinerIid = joinerIid;
         mJoinerIid.ConvertToExtAddress(receivedId);
@@ -1076,7 +1076,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, State
 {
     Error            error = kErrorNone;
     Ip6::MessageInfo joinerMessageInfo;
-    Coap::Message *  message;
+    Coap::Message   *message;
 
     message = Get<Tmf::SecureAgent>().NewPriorityResponseMessage(aRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -1125,7 +1125,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 
     Error            error = kErrorNone;
     ExtendedTlv      tlv;
-    Coap::Message *  message;
+    Coap::Message   *message;
     uint16_t         offset;
     Tmf::MessageInfo messageInfo(GetInstance());
     Kek              kek;

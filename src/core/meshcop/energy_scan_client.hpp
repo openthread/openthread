@@ -82,15 +82,15 @@ public:
                     uint8_t                            aCount,
                     uint16_t                           aPeriod,
                     uint16_t                           aScanDuration,
-                    const Ip6::Address &               aAddress,
+                    const Ip6::Address                &aAddress,
                     otCommissionerEnergyReportCallback aCallback,
-                    void *                             aContext);
+                    void                              *aContext);
 
 private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerEnergyReportCallback mCallback;
-    void *                             mContext;
+    void                              *mContext;
 };
 
 DeclareTmfHandler(EnergyScanClient, kUriEnergyReport);

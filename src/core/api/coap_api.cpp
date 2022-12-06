@@ -55,7 +55,7 @@ void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
 
 otError otCoapMessageInitResponse(otMessage *aResponse, const otMessage *aRequest, otCoapType aType, otCoapCode aCode)
 {
-    Coap::Message &      response = AsCoapMessage(aResponse);
+    Coap::Message       &response = AsCoapMessage(aResponse);
     const Coap::Message &request  = AsCoapMessage(aRequest);
 
     response.Init(MapEnum(aType), MapEnum(aCode));
@@ -217,12 +217,12 @@ otError otCoapOptionIteratorGetOptionValue(otCoapOptionIterator *aIterator, void
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError otCoapSendRequestBlockWiseWithParameters(otInstance *                aInstance,
-                                                 otMessage *                 aMessage,
-                                                 const otMessageInfo *       aMessageInfo,
+otError otCoapSendRequestBlockWiseWithParameters(otInstance                 *aInstance,
+                                                 otMessage                  *aMessage,
+                                                 const otMessageInfo        *aMessageInfo,
                                                  otCoapResponseHandler       aHandler,
-                                                 void *                      aContext,
-                                                 const otCoapTxParameters *  aTxParameters,
+                                                 void                       *aContext,
+                                                 const otCoapTxParameters   *aTxParameters,
                                                  otCoapBlockwiseTransmitHook aTransmitHook,
                                                  otCoapBlockwiseReceiveHook  aReceiveHook)
 {
@@ -243,11 +243,11 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-otError otCoapSendRequestWithParameters(otInstance *              aInstance,
-                                        otMessage *               aMessage,
-                                        const otMessageInfo *     aMessageInfo,
+otError otCoapSendRequestWithParameters(otInstance               *aInstance,
+                                        otMessage                *aMessage,
+                                        const otMessageInfo      *aMessageInfo,
                                         otCoapResponseHandler     aHandler,
-                                        void *                    aContext,
+                                        void                     *aContext,
                                         const otCoapTxParameters *aTxParameters)
 {
     Error error;
@@ -304,11 +304,11 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError otCoapSendResponseBlockWiseWithParameters(otInstance *                aInstance,
-                                                  otMessage *                 aMessage,
-                                                  const otMessageInfo *       aMessageInfo,
-                                                  const otCoapTxParameters *  aTxParameters,
-                                                  void *                      aContext,
+otError otCoapSendResponseBlockWiseWithParameters(otInstance                 *aInstance,
+                                                  otMessage                  *aMessage,
+                                                  const otMessageInfo        *aMessageInfo,
+                                                  const otCoapTxParameters   *aTxParameters,
+                                                  void                       *aContext,
                                                   otCoapBlockwiseTransmitHook aTransmitHook)
 {
     return AsCoreType(aInstance).GetApplicationCoap().SendMessage(AsCoapMessage(aMessage), AsCoreType(aMessageInfo),
@@ -317,9 +317,9 @@ otError otCoapSendResponseBlockWiseWithParameters(otInstance *                aI
 }
 #endif
 
-otError otCoapSendResponseWithParameters(otInstance *              aInstance,
-                                         otMessage *               aMessage,
-                                         const otMessageInfo *     aMessageInfo,
+otError otCoapSendResponseWithParameters(otInstance               *aInstance,
+                                         otMessage                *aMessage,
+                                         const otMessageInfo      *aMessageInfo,
                                          const otCoapTxParameters *aTxParameters)
 {
     return AsCoreType(aInstance).GetApplicationCoap().SendMessage(

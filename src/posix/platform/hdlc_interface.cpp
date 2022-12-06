@@ -125,8 +125,8 @@ namespace ot {
 namespace Posix {
 
 HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                             void *                                aCallbackContext,
-                             SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                             void                                 *aCallbackContext,
+                             SpinelInterface::RxFrameBuffer       &aFrameBuffer)
     : mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
     , mReceiveFrameBuffer(aFrameBuffer)
@@ -437,7 +437,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
     if (isatty(fd))
     {
         struct termios tios;
-        const char *   value;
+        const char    *value;
         speed_t        speed;
 
         int      stopBit  = 1;
@@ -630,7 +630,7 @@ int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
     if (0 == pid)
     {
         constexpr int kMaxArguments = 32;
-        char *        argv[kMaxArguments + 1];
+        char         *argv[kMaxArguments + 1];
         size_t        index = 0;
 
         argv[index++] = const_cast<char *>(aRadioUrl.GetPath());

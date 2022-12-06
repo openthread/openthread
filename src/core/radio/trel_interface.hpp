@@ -134,7 +134,7 @@ public:
         {
         public:
             bool                 IsRemoved(void) const { return mRemoved; }
-            const uint8_t *      GetTxtData(void) const { return mTxtData; }
+            const uint8_t       *GetTxtData(void) const { return mTxtData; }
             uint16_t             GetTxtLength(void) const { return mTxtLength; }
             const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
         };
@@ -243,8 +243,8 @@ private:
     void HandleDiscoveredPeerInfo(const Peer::Info &aInfo);
 
     void  RegisterService(void);
-    Error ParsePeerInfoTxtData(const Peer::Info &      aInfo,
-                               Mac::ExtAddress &       aExtAddress,
+    Error ParsePeerInfoTxtData(const Peer::Info       &aInfo,
+                               Mac::ExtAddress        &aExtAddress,
                                MeshCoP::ExtendedPanId &aExtPanId) const;
     Peer *GetNewPeerEntry(void);
     void  RemovePeerEntry(Peer &aEntry);

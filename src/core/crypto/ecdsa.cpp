@@ -51,8 +51,8 @@ namespace ot {
 namespace Crypto {
 namespace Ecdsa {
 
-Error Sign(uint8_t *      aOutput,
-           uint16_t &     aOutputLength,
+Error Sign(uint8_t       *aOutput,
+           uint16_t      &aOutputLength,
            const uint8_t *aInputHash,
            uint16_t       aInputHashLength,
            const uint8_t *aPrivateKey,
@@ -61,7 +61,7 @@ Error Sign(uint8_t *      aOutput,
     Error                 error = kErrorNone;
     mbedtls_ecdsa_context ctx;
     mbedtls_pk_context    pkCtx;
-    mbedtls_ecp_keypair * keypair;
+    mbedtls_ecp_keypair  *keypair;
     mbedtls_mpi           rMpi;
     mbedtls_mpi           sMpi;
 

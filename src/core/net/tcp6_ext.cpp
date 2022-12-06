@@ -55,9 +55,9 @@ void TcpCircularSendBuffer::Initialize(void *aDataBuffer, size_t aCapacity)
 }
 
 Error TcpCircularSendBuffer::Write(Tcp::Endpoint &aEndpoint,
-                                   const void *   aData,
+                                   const void    *aData,
                                    size_t         aLength,
-                                   size_t &       aWritten,
+                                   size_t        &aWritten,
                                    uint32_t       aFlags)
 {
     Error    error     = kErrorNone;

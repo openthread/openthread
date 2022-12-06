@@ -64,14 +64,14 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
                                   uint8_t                            aCount,
                                   uint16_t                           aPeriod,
                                   uint16_t                           aScanDuration,
-                                  const Ip6::Address &               aAddress,
+                                  const Ip6::Address                &aAddress,
                                   otCommissionerEnergyReportCallback aCallback,
-                                  void *                             aContext)
+                                  void                              *aContext)
 {
     Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     Tmf::MessageInfo        messageInfo(GetInstance());
-    Coap::Message *         message = nullptr;
+    Coap::Message          *message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);

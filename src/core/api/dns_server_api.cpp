@@ -41,16 +41,16 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
-void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
+void otDnssdQuerySetCallbacks(otInstance                     *aInstance,
                               otDnssdQuerySubscribeCallback   aSubscribe,
                               otDnssdQueryUnsubscribeCallback aUnsubscribe,
-                              void *                          aContext)
+                              void                           *aContext)
 {
     AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().SetQueryCallbacks(aSubscribe, aUnsubscribe, aContext);
 }
 
-void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aInstance,
-                                                 const char *                aServiceFullName,
+void otDnssdQueryHandleDiscoveredServiceInstance(otInstance                 *aInstance,
+                                                 const char                 *aServiceFullName,
                                                  otDnssdServiceInstanceInfo *aInstanceInfo)
 {
     AssertPointerIsNotNull(aServiceFullName);

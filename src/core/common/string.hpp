@@ -350,7 +350,7 @@ public:
     void ConvertToUppercase(void) { StringConvertToUppercase(mBuffer); }
 
 private:
-    char *         mBuffer;
+    char          *mBuffer;
     uint16_t       mLength;
     const uint16_t mSize;
 };

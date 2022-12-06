@@ -61,9 +61,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance * instance = nullptr;
+    otInstance  *instance = nullptr;
     otRadioFrame frame;
-    uint8_t *    buf = nullptr;
+    uint8_t     *buf = nullptr;
 
     VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
 

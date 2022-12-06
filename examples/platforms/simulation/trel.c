@@ -366,8 +366,8 @@ void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint
 #endif
 }
 
-void otPlatTrelSend(otInstance *      aInstance,
-                    const uint8_t *   aUdpPayload,
+void otPlatTrelSend(otInstance       *aInstance,
+                    const uint8_t    *aUdpPayload,
                     uint16_t          aUdpPayloadLen,
                     const otSockAddr *aDestSockAddr)
 {

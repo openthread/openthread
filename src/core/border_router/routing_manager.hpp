@@ -230,7 +230,10 @@ public:
      * @retval  kStateActive     The Border router is publishing a NAT64 prefix.
      *
      */
-    Nat64::State GetNat64PrefixManagerState(void) const { return mNat64PrefixManager.GetState(); }
+    Nat64::State GetNat64PrefixManagerState(void) const
+    {
+        return mNat64PrefixManager.GetState();
+    }
 
     /**
      * Enable or disable NAT64 orefix publishing.
@@ -272,7 +275,10 @@ public:
      * @param[in]  aPrefix  The discovered NAT64 prefix on `InfraIf`.
      *
      */
-    void HandleDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix) { mNat64PrefixManager.HandleDiscoverDone(aPrefix); }
+    void HandleDiscoverNat64PrefixDone(const Ip6::Prefix &aPrefix)
+    {
+        mNat64PrefixManager.HandleDiscoverDone(aPrefix);
+    }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
@@ -291,7 +297,10 @@ public:
      * This method handles infrastructure interface state changes.
      *
      */
-    void HandleInfraIfStateChanged(void) { EvaluateState(); }
+    void HandleInfraIfStateChanged(void)
+    {
+        EvaluateState();
+    }
 
     /**
      * This method checks whether the on-mesh prefix configuration is a valid OMR prefix.
@@ -363,7 +372,10 @@ public:
      * @retval FALSE The RoutingManager is not running.
      *
      */
-    bool IsRunning(void) const { return mIsRunning; }
+    bool IsRunning(void) const
+    {
+        return mIsRunning;
+    }
 
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
@@ -421,8 +433,14 @@ private:
     };
 
     void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
-    void HandleDiscoveredPrefixTableEntryTimer(void) { mDiscoveredPrefixTable.HandleEntryTimer(); }
-    void HandleDiscoveredPrefixTableRouterTimer(void) { mDiscoveredPrefixTable.HandleRouterTimer(); }
+    void HandleDiscoveredPrefixTableEntryTimer(void)
+    {
+        mDiscoveredPrefixTable.HandleEntryTimer();
+    }
+    void HandleDiscoveredPrefixTableRouterTimer(void)
+    {
+        mDiscoveredPrefixTable.HandleRouterTimer();
+    }
 
     class DiscoveredPrefixTable : public InstanceLocator
     {
@@ -448,9 +466,9 @@ private:
         explicit DiscoveredPrefixTable(Instance &aInstance);
 
         void ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
-                                        const Ip6::Address &                aSrcAddress);
+                                        const Ip6::Address                 &aSrcAddress);
         void ProcessNeighborAdvertMessage(const Ip6::Nd::NeighborAdvertMessage &aNaMessage,
-                                          const Ip6::Address &                  aSrcAddress);
+                                          const Ip6::Address                   &aSrcAddress);
 
         void SetAllowDefaultRouteInNetData(bool aAllow);
 
@@ -518,7 +536,7 @@ private:
             Type               GetType(void) const { return mType; }
             bool               IsOnLinkPrefix(void) const { return (mType == kTypeOnLink); }
             const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
-            const TimeMilli &  GetLastUpdateTime(void) const { return mLastUpdateTime; }
+            const TimeMilli   &GetLastUpdateTime(void) const { return mLastUpdateTime; }
             uint32_t           GetValidLifetime(void) const { return mValidLifetime; }
             void               ClearValidLifetime(void) { mValidLifetime = 0; }
             TimeMilli          GetExpireTime(void) const;
@@ -540,7 +558,7 @@ private:
         private:
             static uint32_t CalculateExpireDelay(uint32_t aValidLifetime);
 
-            Entry *     mNext;
+            Entry      *mNext;
             Ip6::Prefix mPrefix;
             Type        mType;
             TimeMilli   mLastUpdateTime;
@@ -584,7 +602,7 @@ private:
         public:
             const Router *GetRouter(void) const { return static_cast<const Router *>(mPtr1); }
             void          SetRouter(const Router *aRouter) { mPtr1 = aRouter; }
-            const Entry * GetEntry(void) const { return static_cast<const Entry *>(mPtr2); }
+            const Entry  *GetEntry(void) const { return static_cast<const Entry *>(mPtr2); }
             void          SetEntry(const Entry *aEntry) { mPtr2 = aEntry; }
             TimeMilli     GetInitTime(void) const { return TimeMilli(mData32); }
             void          SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
@@ -597,7 +615,7 @@ private:
         void         RemovePrefix(const Entry::Matcher &aMatcher);
         void         RemoveOrDeprecateEntriesFromInactiveRouters(void);
         void         RemoveRoutersWithNoEntries(void);
-        Entry *      AllocateEntry(void) { return mEntryPool.Allocate(); }
+        Entry       *AllocateEntry(void) { return mEntryPool.Allocate(); }
         void         FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
         void         FreeEntries(LinkedList<Entry> &aEntries);
         void         UpdateNetworkDataOnChangeTo(Entry &aEntry);
@@ -656,7 +674,10 @@ private:
         bool        mIsAddedInNetData;
     };
 
-    void HandleOnLinkPrefixManagerTimer(void) { mOnLinkPrefixManager.HandleTimer(); }
+    void HandleOnLinkPrefixManagerTimer(void)
+    {
+        mOnLinkPrefixManager.HandleTimer();
+    }
 
     class OnLinkPrefixManager : public InstanceLocator
     {
@@ -727,7 +748,10 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    void HandleNat64PrefixManagerTimer(void) { mNat64PrefixManager.HandleTimer(); }
+    void HandleNat64PrefixManagerTimer(void)
+    {
+        mNat64PrefixManager.HandleTimer();
+    }
 
     class Nat64PrefixManager : public InstanceLocator
     {
@@ -796,7 +820,10 @@ private:
         TimeMilli                            mLastTxTime;
     };
 
-    void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
+    void HandleRsSenderTimer(void)
+    {
+        mRsSender.HandleTimer();
+    }
 
     class RsSender : public InstanceLocator
     {
@@ -832,12 +859,18 @@ private:
         TimeMilli mStartTime;
     };
 
-    void  EvaluateState(void);
-    void  Start(void);
-    void  Stop(void);
-    void  HandleNotifierEvents(Events aEvents);
-    bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
-    bool  IsEnabled(void) const { return mIsEnabled; }
+    void EvaluateState(void);
+    void Start(void);
+    void Stop(void);
+    void HandleNotifierEvents(Events aEvents);
+    bool IsInitialized(void) const
+    {
+        return mInfraIf.IsInitialized();
+    }
+    bool IsEnabled(void) const
+    {
+        return mIsEnabled;
+    }
     Error LoadOrGenerateRandomBrUlaPrefix(void);
 
     void EvaluateRoutingPolicy(void);

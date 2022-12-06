@@ -88,10 +88,10 @@ typedef void (*otDatasetUpdaterCallback)(otError aError, void *aContext);
  * @retval OT_ERROR_NO_BUFS        Could not allocated buffer to save Dataset.
  *
  */
-otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
+otError otDatasetUpdaterRequestUpdate(otInstance                 *aInstance,
                                       const otOperationalDataset *aDataset,
                                       otDatasetUpdaterCallback    aCallback,
-                                      void *                      aContext);
+                                      void                       *aContext);
 
 /**
  * This function cancels an ongoing (if any) Operational Dataset update request.

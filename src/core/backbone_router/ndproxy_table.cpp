@@ -155,7 +155,7 @@ void NdProxyTable::Clear(void)
 Error NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
                              const Ip6::InterfaceIdentifier &aMeshLocalIid,
                              uint16_t                        aRloc16,
-                             const uint32_t *                aTimeSinceLastTransaction)
+                             const uint32_t                 *aTimeSinceLastTransaction)
 {
     Error    error                    = kErrorNone;
     NdProxy *proxy                    = FindByAddressIid(aAddressIid);

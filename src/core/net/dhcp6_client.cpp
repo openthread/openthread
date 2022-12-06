@@ -263,7 +263,7 @@ exit:
 void Client::Solicit(uint16_t aRloc16)
 {
     Error            error = kErrorNone;
-    Message *        message;
+    Message         *message;
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = kErrorNoBufs);

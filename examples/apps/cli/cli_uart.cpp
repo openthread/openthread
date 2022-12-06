@@ -137,7 +137,7 @@ static void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
     static const char sEraseString[] = {'\b', ' ', '\b'};
     static const char CRNL[]         = {'\r', '\n'};
     static uint8_t    sLastChar      = '\0';
-    const uint8_t *   end;
+    const uint8_t    *end;
 
     end = aBuf + aBufLength;
 

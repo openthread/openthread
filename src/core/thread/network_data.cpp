@@ -425,7 +425,7 @@ void MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
             case NetworkDataTlv::kTypeBorderRouter:
             {
                 BorderRouterTlv *borderRouter = As<BorderRouterTlv>(cur);
-                ContextTlv *     context      = aPrefix.FindSubTlv<ContextTlv>();
+                ContextTlv      *context      = aPrefix.FindSubTlv<ContextTlv>();
 
                 // Replace p_border_router_16
                 for (BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
@@ -540,7 +540,7 @@ const ServiceTlv *NetworkData::FindService(uint32_t           aEnterpriseNumber,
     return serviceTlv;
 }
 
-const ServiceTlv *NetworkData::FindNextService(const ServiceTlv * aPrevServiceTlv,
+const ServiceTlv *NetworkData::FindNextService(const ServiceTlv  *aPrevServiceTlv,
                                                uint32_t           aEnterpriseNumber,
                                                const ServiceData &aServiceData,
                                                ServiceMatchMode   aServiceMatchMode) const
@@ -562,14 +562,14 @@ const ServiceTlv *NetworkData::FindNextService(const ServiceTlv * aPrevServiceTl
     return NetworkData(GetInstance(), tlvs, length).FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode);
 }
 
-const ServiceTlv *NetworkData::FindNextThreadService(const ServiceTlv * aPrevServiceTlv,
+const ServiceTlv *NetworkData::FindNextThreadService(const ServiceTlv  *aPrevServiceTlv,
                                                      const ServiceData &aServiceData,
                                                      ServiceMatchMode   aServiceMatchMode) const
 {
     return FindNextService(aPrevServiceTlv, ServiceTlv::kThreadEnterpriseNumber, aServiceData, aServiceMatchMode);
 }
 
-bool NetworkData::MatchService(const ServiceTlv & aServiceTlv,
+bool NetworkData::MatchService(const ServiceTlv  &aServiceTlv,
                                uint32_t           aEnterpriseNumber,
                                const ServiceData &aServiceData,
                                ServiceMatchMode   aServiceMatchMode)
@@ -728,7 +728,7 @@ Error NetworkData::FindBorderRouters(RoleFilter aRoleFilter, uint16_t aRlocs[], 
 
     private:
         RoleFilter mRoleFilter;
-        uint16_t * mRlocs;
+        uint16_t  *mRlocs;
         uint8_t    mLength;
         uint8_t    mMaxLength;
     };

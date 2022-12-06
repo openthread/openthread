@@ -145,7 +145,10 @@ public:
      * This method enables indirect transmissions.
      *
      */
-    void Start(void) { mEnabled = true; }
+    void Start(void)
+    {
+        mEnabled = true;
+    }
 
     /**
      * This method disables indirect transmission.

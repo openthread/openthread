@@ -310,7 +310,7 @@ private:
     struct ExternalCallback
     {
         otStateChangedCallback mHandler;
-        void *                 mContext;
+        void                  *mContext;
     };
 
     void EmitEvents(void);

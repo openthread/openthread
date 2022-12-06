@@ -280,7 +280,7 @@ void AesCcm::Finalize(void *aTag)
 void AesCcm::GenerateNonce(const Mac::ExtAddress &aAddress,
                            uint32_t               aFrameCounter,
                            uint8_t                aSecurityLevel,
-                           uint8_t *              aNonce)
+                           uint8_t               *aNonce)
 {
     memcpy(aNonce, aAddress.m8, sizeof(Mac::ExtAddress));
     aNonce += sizeof(Mac::ExtAddress);

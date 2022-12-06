@@ -90,12 +90,12 @@ void TestDecoder(void)
     int64_t                  i64;
     unsigned int             u_1, u_2, u_3, u_4;
     const spinel_ipv6addr_t *ip6Addr;
-    const spinel_eui48_t *   eui48;
-    const spinel_eui64_t *   eui64;
-    const char *             utf_1;
-    const char *             utf_2;
-    const uint8_t *          dataPtr_1;
-    const uint8_t *          dataPtr_2;
+    const spinel_eui48_t    *eui48;
+    const spinel_eui64_t    *eui64;
+    const char              *utf_1;
+    const char              *utf_2;
+    const uint8_t           *dataPtr_1;
+    const uint8_t           *dataPtr_2;
     uint16_t                 dataLen_1;
     uint16_t                 dataLen_2;
 
