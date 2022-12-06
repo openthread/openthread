@@ -130,9 +130,6 @@ Mle::Mle(Instance &aInstance)
     mMeshLocal16.GetAddress().GetIid().SetToLocator(0);
     mMeshLocal16.mRloc = true;
 
-    // Store RLOC address reference in MPL module.
-    Get<Ip6::Mpl>().SetMatchingAddress(mMeshLocal16.GetAddress());
-
     mLinkLocalAllThreadNodes.Clear();
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
@@ -701,9 +698,6 @@ void Mle::SetStateDetached(void)
     Get<MleRouter>().HandleDetachStart();
 #endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
-#if OPENTHREAD_FTD
-    Get<Ip6::Mpl>().SetTimerExpirations(0);
-#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Get<Mac::Mac>().UpdateCsl();
 #endif
@@ -734,9 +728,6 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #endif
 
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
-#if OPENTHREAD_FTD
-    Get<Ip6::Mpl>().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
-#endif
 
     // send announce after attached if needed
     InformPreviousChannel();
@@ -992,7 +983,6 @@ void Mle::SetRloc16(uint16_t aRloc16)
     }
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
-    Get<Ip6::Mpl>().SetSeedId(aRloc16);
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {

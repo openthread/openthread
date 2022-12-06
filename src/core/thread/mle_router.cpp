@@ -381,7 +381,6 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
     Get<Ip6::Ip6>().SetForwardingEnabled(true);
-    Get<Ip6::Mpl>().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     Get<Mac::Mac>().SetBeaconEnabled(true);
 
     // remove children that do not have matching RLOC16
@@ -422,7 +421,6 @@ void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
     Get<MeshCoP::ActiveDatasetManager>().StartLeader();
     Get<MeshCoP::PendingDatasetManager>().StartLeader();
     Get<Ip6::Ip6>().SetForwardingEnabled(true);
-    Get<Ip6::Mpl>().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     Get<Mac::Mac>().SetBeaconEnabled(true);
     Get<AddressResolver>().Clear();
 
