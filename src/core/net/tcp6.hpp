@@ -681,7 +681,7 @@ private:
     void ProcessSignals(Endpoint             &aEndpoint,
                         otLinkedBuffer       *aPriorHead,
                         size_t                aPriorBacklog,
-                        struct tcplp_signals &aSignals);
+                        struct tcplp_signals &aSignals) const;
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);

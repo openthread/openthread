@@ -1255,7 +1255,7 @@ public:
      * @returns TRUE if the resources records matches @p aType and @p aClass, FALSE otherwise.
      *
      */
-    bool Matches(uint16_t aType, uint16_t aClass = kClassInternet)
+    bool Matches(uint16_t aType, uint16_t aClass = kClassInternet) const
     {
         return (mType == HostSwap16(aType)) && (mClass == HostSwap16(aClass));
     }

@@ -1044,7 +1044,7 @@ private:
     Error        AppendDeleteAllRrsets(Message &aMessage) const;
     Error        AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress = false) const;
     Error        AppendAaaaRecord(const Ip6::Address &aAddress, Message &aMessage, Info &aInfo) const;
-    Error        AppendUpdateLeaseOptRecord(Message &aMessage);
+    Error        AppendUpdateLeaseOptRecord(Message &aMessage) const;
     Error        AppendSignature(Message &aMessage, Info &aInfo);
     void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
     static void  HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

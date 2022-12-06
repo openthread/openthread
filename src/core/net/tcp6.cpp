@@ -694,7 +694,7 @@ exit:
 void Tcp::ProcessSignals(Endpoint             &aEndpoint,
                          otLinkedBuffer       *aPriorHead,
                          size_t                aPriorBacklog,
-                         struct tcplp_signals &aSignals)
+                         struct tcplp_signals &aSignals) const
 {
     VerifyOrExit(IsInitialized(aEndpoint) && !aEndpoint.IsClosed());
     if (aSignals.conn_established && aEndpoint.mEstablishedCallback != nullptr)

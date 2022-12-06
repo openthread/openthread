@@ -771,7 +771,7 @@ public:
      * @returns CSL metric.
      *
      */
-    uint64_t CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy);
+    uint64_t CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const;
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

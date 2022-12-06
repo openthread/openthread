@@ -331,7 +331,7 @@ private:
         typedef String<Ip6::Address::kInfoStringSize + Ip4::Address::kAddressStringSize + 4> InfoString;
 
         void       Touch(TimeMilli aNow) { mExpiry = aNow + kAddressMappingIdleTimeoutMsec; }
-        InfoString ToString(void);
+        InfoString ToString(void) const;
         void       CopyTo(otNat64AddressMapping &aMapping, TimeMilli aNow) const;
 
         uint64_t mId; // The unique id for a mapping session.

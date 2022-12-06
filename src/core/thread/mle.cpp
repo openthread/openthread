@@ -4287,7 +4287,7 @@ void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCa
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy)
+uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 {
     // This function calculates the overall time that device will operate
     // on battery by summing sequence of "ON quants" over a period of time.

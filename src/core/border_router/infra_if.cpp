@@ -80,14 +80,14 @@ void InfraIf::Deinit(void)
     LogInfo("Deinit");
 }
 
-bool InfraIf::HasAddress(const Ip6::Address &aAddress)
+bool InfraIf::HasAddress(const Ip6::Address &aAddress) const
 {
     OT_ASSERT(mInitialized);
 
     return otPlatInfraIfHasAddress(mIfIndex, &aAddress);
 }
 
-Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination)
+Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const
 {
     OT_ASSERT(mInitialized);
 
@@ -112,7 +112,7 @@ exit:
     }
 }
 
-Error InfraIf::DiscoverNat64Prefix(void)
+Error InfraIf::DiscoverNat64Prefix(void) const
 {
     OT_ASSERT(mInitialized);
 
