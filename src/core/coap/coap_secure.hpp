@@ -278,7 +278,10 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
      *
      */
-    void SetSslAuthMode(bool aVerifyPeerCertificate) { mDtls.SetSslAuthMode(aVerifyPeerCertificate); }
+    void SetSslAuthMode(bool aVerifyPeerCertificate)
+    {
+        mDtls.SetSslAuthMode(aVerifyPeerCertificate);
+    }
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
@@ -301,9 +304,9 @@ public:
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    Error SendMessage(Message &                   aMessage,
+    Error SendMessage(Message                    &aMessage,
                       ResponseHandler             aHandler      = nullptr,
-                      void *                      aContext      = nullptr,
+                      void                       *aContext      = nullptr,
                       otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
                       otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 
@@ -326,10 +329,10 @@ public:
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    Error SendMessage(Message &                   aMessage,
-                      const Ip6::MessageInfo &    aMessageInfo,
+    Error SendMessage(Message                    &aMessage,
+                      const Ip6::MessageInfo     &aMessageInfo,
                       ResponseHandler             aHandler      = nullptr,
-                      void *                      aContext      = nullptr,
+                      void                       *aContext      = nullptr,
                       otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
                       otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -368,10 +371,10 @@ public:
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    Error SendMessage(Message &               aMessage,
+    Error SendMessage(Message                &aMessage,
                       const Ip6::MessageInfo &aMessageInfo,
                       ResponseHandler         aHandler = nullptr,
-                      void *                  aContext = nullptr);
+                      void                   *aContext = nullptr);
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
@@ -392,7 +395,10 @@ public:
      * @return DTLS session's message info.
      *
      */
-    const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
+    const Ip6::MessageInfo &GetMessageInfo(void) const
+    {
+        return mDtls.GetMessageInfo();
+    }
 
 private:
     static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -412,7 +418,7 @@ private:
 
     MeshCoP::Dtls     mDtls;
     ConnectedCallback mConnectedCallback;
-    void *            mConnectedContext;
+    void             *mConnectedContext;
     ot::MessageQueue  mTransmitQueue;
     TaskletContext    mTransmitTask;
 };

@@ -169,7 +169,7 @@ exit:
 
 void Netif::UnsubscribeAllNodesMulticast(void)
 {
-    MulticastAddress *      prev;
+    MulticastAddress       *prev;
     const MulticastAddress &linkLocalAllNodesAddress = AsCoreType(&AsNonConst(kLinkLocalAllNodesMulticastAddress));
 
     // The tail of multicast address linked list contains the

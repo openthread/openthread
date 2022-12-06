@@ -209,7 +209,7 @@ public:
      */
     bool IsClean(void) const
     {
-        Heap &       self  = *AsNonConst(this);
+        Heap        &self  = *AsNonConst(this);
         const Block &super = self.BlockSuper();
         const Block &first = self.BlockRight(super);
         return super.GetNext() == self.BlockOffset(first) && first.GetSize() == kFirstBlockSize;
@@ -250,7 +250,10 @@ private:
      * @returns A reference to the block.
      *
      */
-    Block &BlockAt(uint16_t aOffset) { return *reinterpret_cast<Block *>(&mMemory.m16[aOffset / 2]); }
+    Block &BlockAt(uint16_t aOffset)
+    {
+        return *reinterpret_cast<Block *>(&mMemory.m16[aOffset / 2]);
+    }
 
     /**
      * This method returns the block of @p aPointer.
@@ -273,7 +276,10 @@ private:
      * @returns Reference to the super block.
      *
      */
-    Block &BlockSuper(void) { return BlockAt(kSuperBlockOffset); }
+    Block &BlockSuper(void)
+    {
+        return BlockAt(kSuperBlockOffset);
+    }
 
     /**
      * This method returns the free block after @p aBlock in the free block list.
@@ -283,7 +289,10 @@ private:
      * @returns Reference to the free block after this block.
      *
      */
-    Block &BlockNext(const Block &aBlock) { return BlockAt(aBlock.GetNext()); }
+    Block &BlockNext(const Block &aBlock)
+    {
+        return BlockAt(aBlock.GetNext());
+    }
 
     /**
      * This method returns the block on the right side of @p aBlock.
@@ -293,7 +302,10 @@ private:
      * @returns Reference to the block on the right side.
      *
      */
-    Block &BlockRight(const Block &aBlock) { return BlockAt(BlockOffset(aBlock) + sizeof(Block) + aBlock.GetSize()); }
+    Block &BlockRight(const Block &aBlock)
+    {
+        return BlockAt(BlockOffset(aBlock) + sizeof(Block) + aBlock.GetSize());
+    }
 
     /**
      * This method returns the free block before @p aBlock in the free block list.
@@ -309,7 +321,10 @@ private:
      * @param[in]   aBlock  A reference to the block.
      *
      */
-    bool IsLeftFree(const Block &aBlock) { return (BlockOffset(aBlock) != kFirstBlockOffset && aBlock.IsLeftFree()); }
+    bool IsLeftFree(const Block &aBlock)
+    {
+        return (BlockOffset(aBlock) != kFirstBlockOffset && aBlock.IsLeftFree());
+    }
 
     /**
      * This method returns the offset of @p aBlock.

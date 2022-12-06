@@ -119,9 +119,9 @@ otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseC
     return AsCoreType(aInstance).Get<Srp::Server>().SetLeaseConfig(AsCoreType(aLeaseConfig));
 }
 
-void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstance,
+void otSrpServerSetServiceUpdateHandler(otInstance                     *aInstance,
                                         otSrpServerServiceUpdateHandler aServiceHandler,
-                                        void *                          aContext)
+                                        void                           *aContext)
 {
     AsCoreType(aInstance).Get<Srp::Server>().SetServiceHandler(aServiceHandler, aContext);
 }
@@ -166,17 +166,17 @@ uint32_t otSrpServerHostGetKeyLease(const otSrpServerHost *aHost)
     return AsCoreType(aHost).GetKeyLease();
 }
 
-const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost *   aHost,
+const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost    *aHost,
                                                         const otSrpServerService *aService)
 {
     return AsCoreType(aHost).FindNextService(AsCoreTypePtr(aService), Srp::Server::kFlagsBaseTypeServiceOnly);
 }
 
-const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost *   aHost,
+const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost    *aHost,
                                                          const otSrpServerService *aPrevService,
                                                          otSrpServerServiceFlags   aFlags,
-                                                         const char *              aServiceName,
-                                                         const char *              aInstanceName)
+                                                         const char               *aServiceName,
+                                                         const char               *aInstanceName)
 {
     return AsCoreType(aHost).FindNextService(AsCoreTypePtr(aPrevService), aFlags, aServiceName, aInstanceName);
 }

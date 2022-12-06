@@ -138,7 +138,10 @@ public:
      * @returns The Time Sync Sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
+    uint8_t GetTimeSyncSeq(void) const
+    {
+        return mTimeSyncSeq;
+    }
 
     /**
      * This method returns the time offset to the Thread network time (in microseconds).
@@ -146,7 +149,10 @@ public:
      * @returns The time offset to the Thread network time (in microseconds).
      *
      */
-    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
+    int64_t GetNetworkTimeOffset(void) const
+    {
+        return mNetworkTimeOffset;
+    }
 #endif
 
     /**
@@ -287,7 +293,10 @@ public:
      * @returns  A reference to the send queue.
      *
      */
-    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
+    const PriorityQueue &GetSendQueue(void) const
+    {
+        return mSendQueue;
+    }
 
     /**
      * This method returns a reference to the reassembly queue.
@@ -295,7 +304,10 @@ public:
      * @returns  A reference to the reassembly queue.
      *
      */
-    const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
+    const MessageQueue &GetReassemblyQueue(void) const
+    {
+        return mReassemblyList;
+    }
 
     /**
      * This method returns a reference to the IP level counters.
@@ -303,13 +315,19 @@ public:
      * @returns A reference to the IP level counters.
      *
      */
-    const otIpCounters &GetCounters(void) const { return mIpCounters; }
+    const otIpCounters &GetCounters(void) const
+    {
+        return mIpCounters;
+    }
 
     /**
      * This method resets the IP level counters.
      *
      */
-    void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
+    void ResetCounters(void)
+    {
+        memset(&mIpCounters, 0, sizeof(mIpCounters));
+    }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
@@ -382,10 +400,22 @@ private:
                 kReassemblyTimeout;
 #endif
 
-            Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
-            bool              IsExpired(void) const { return (mLifetime == 0); }
-            void              DecrementLifetime(void) { mLifetime--; }
-            void              ResetLifetime(void) { mLifetime = kLifetime; }
+            Message::Priority GetPriority(void) const
+            {
+                return static_cast<Message::Priority>(mPriority);
+            }
+            bool IsExpired(void) const
+            {
+                return (mLifetime == 0);
+            }
+            void DecrementLifetime(void)
+            {
+                mLifetime--;
+            }
+            void ResetLifetime(void)
+            {
+                mLifetime = kLifetime;
+            }
 
             bool Matches(uint16_t aSrcRloc16, uint16_t aTag) const
             {
@@ -393,8 +423,14 @@ private:
             }
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-            bool ShouldDrop(void) const { return mShouldDrop; }
-            void MarkToDrop(void) { mShouldDrop = true; }
+            bool ShouldDrop(void) const
+            {
+                return mShouldDrop;
+            }
+            void MarkToDrop(void)
+            {
+                mShouldDrop = true;
+            }
 #endif
 
         private:
@@ -429,18 +465,18 @@ private:
     void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
     Error    CheckReachability(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
     void     UpdateRoutes(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
-    Error    FrameToMessage(const FrameData &     aFrameData,
+    Error    FrameToMessage(const FrameData      &aFrameData,
                             uint16_t              aDatagramSize,
                             const Mac::Addresses &aMacAddrs,
-                            Message *&            aMessage);
+                            Message             *&aMessage);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
     void     HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo);
     void     HandleFragment(FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
     void HandleLowpanHC(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
-    uint16_t PrepareDataFrame(Mac::TxFrame &        aFrame,
-                              Message &             aMessage,
+    uint16_t PrepareDataFrame(Mac::TxFrame         &aFrame,
+                              Message              &aMessage,
                               const Mac::Addresses &aMacAddrs,
                               bool                  aAddMeshHeader = false,
                               uint16_t              aMeshSource    = 0xffff,
@@ -475,7 +511,7 @@ private:
 
     void          HandleReceivedFrame(Mac::RxFrame &aFrame);
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &      aFrame,
+    Neighbor     *UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
                                             Error               aError,
                                             const Mac::Address &aMacDest,
                                             bool                aIsDataPoll = false);
@@ -493,10 +529,10 @@ private:
     Error GetFramePriority(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, Message::Priority &aPriority);
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
-                              Message::Priority &     aPriority);
-    void  GetForwardFramePriority(const FrameData &     aFrameData,
+                              Message::Priority      &aPriority);
+    void  GetForwardFramePriority(const FrameData      &aFrameData,
                                   const Mac::Addresses &aMeshAddrs,
-                                  Message::Priority &   aPriority);
+                                  Message::Priority    &aPriority);
 
     bool     CalcIePresent(const Message *aMessage);
     uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
@@ -504,7 +540,10 @@ private:
     void AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame);
 #endif
 
-    void PauseMessageTransmissions(void) { mTxPaused = true; }
+    void PauseMessageTransmissions(void)
+    {
+        mTxPaused = true;
+    }
     void ResumeMessageTransmissions(void);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
@@ -512,13 +551,13 @@ private:
 #endif
 
     void LogMessage(MessageAction       aAction,
-                    const Message &     aMessage,
+                    const Message      &aMessage,
                     Error               aError   = kErrorNone,
                     const Mac::Address *aAddress = nullptr);
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,
-                              const Mac::Addresses &        aMacAddrs,
+                              const Mac::Addresses         &aMacAddrs,
                               const Lowpan::FragmentHeader &aFragmentHeader,
                               bool                          aIsSecure);
     void LogLowpanHcFrameDrop(Error aError, uint16_t aFrameLength, const Mac::Addresses &aMacAddrs, bool aIsSecure);
@@ -529,25 +568,25 @@ private:
 
 #if OPENTHREAD_FTD
     Error LogMeshFragmentHeader(MessageAction       aAction,
-                                const Message &     aMessage,
+                                const Message      &aMessage,
                                 const Mac::Address *aMacAddress,
                                 Error               aError,
-                                uint16_t &          aOffset,
-                                Mac::Addresses &    aMeshAddrs,
+                                uint16_t           &aOffset,
+                                Mac::Addresses     &aMeshAddrs,
                                 LogLevel            aLogLevel);
-    void  LogMeshIpHeader(const Message &       aMessage,
+    void  LogMeshIpHeader(const Message        &aMessage,
                           uint16_t              aOffset,
                           const Mac::Addresses &aMeshAddrs,
                           LogLevel              aLogLevel);
     void  LogMeshMessage(MessageAction       aAction,
-                         const Message &     aMessage,
+                         const Message      &aMessage,
                          const Mac::Address *aAddress,
                          Error               aError,
                          LogLevel            aLogLevel);
 #endif
     void LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel);
     void LogIp6Message(MessageAction       aAction,
-                       const Message &     aMessage,
+                       const Message      &aMessage,
                        const Mac::Address *aAddress,
                        Error               aError,
                        LogLevel            aLogLevel);

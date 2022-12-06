@@ -756,9 +756,9 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 
-void Dtls::HandleMbedtlsExportKeys(void *                      aContext,
+void Dtls::HandleMbedtlsExportKeys(void                       *aContext,
                                    mbedtls_ssl_key_export_type aType,
-                                   const unsigned char *       aMasterSecret,
+                                   const unsigned char        *aMasterSecret,
                                    size_t                      aMasterSecretLen,
                                    const unsigned char         aClientRandom[32],
                                    const unsigned char         aServerRandom[32],
@@ -769,7 +769,7 @@ void Dtls::HandleMbedtlsExportKeys(void *                      aContext,
 }
 
 void Dtls::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
-                                   const unsigned char *       aMasterSecret,
+                                   const unsigned char        *aMasterSecret,
                                    size_t                      aMasterSecretLen,
                                    const unsigned char         aClientRandom[32],
                                    const unsigned char         aServerRandom[32],
@@ -803,7 +803,7 @@ exit:
 
 #else
 
-int Dtls::HandleMbedtlsExportKeys(void *               aContext,
+int Dtls::HandleMbedtlsExportKeys(void                *aContext,
                                   const unsigned char *aMasterSecret,
                                   const unsigned char *aKeyBlock,
                                   size_t               aMacLength,

@@ -241,8 +241,8 @@ void platformUartProcess(void)
     ssize_t       rval;
     const int     error_flags = POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd[]    = {
-        {s_in_fd, POLLIN | error_flags, 0},
-        {s_out_fd, POLLOUT | error_flags, 0},
+           {s_in_fd, POLLIN | error_flags, 0},
+           {s_out_fd, POLLOUT | error_flags, 0},
     };
 
     errno = 0;

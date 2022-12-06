@@ -119,7 +119,10 @@ public:
      * @returns The Multicast Listeners Table.
      *
      */
-    MulticastListenersTable &GetMulticastListenersTable(void) { return mMulticastListenersTable; }
+    MulticastListenersTable &GetMulticastListenersTable(void)
+    {
+        return mMulticastListenersTable;
+    }
 #endif
 
     /**
@@ -140,7 +143,10 @@ public:
      * @returns A reference to the Backbone TMF agent.
      *
      */
-    BackboneTmfAgent &GetBackboneTmfAgent(void) { return mBackboneTmfAgent; }
+    BackboneTmfAgent &GetBackboneTmfAgent(void)
+    {
+        return mBackboneTmfAgent;
+    }
 
     /**
      * This method sends BB.qry on the Backbone link.
@@ -167,7 +173,7 @@ public:
      * @retval kErrorNoBufs        If insufficient message buffers available.
      *
      */
-    Error SendProactiveBackboneNotification(const Ip6::Address &            aDua,
+    Error SendProactiveBackboneNotification(const Ip6::Address             &aDua,
                                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                             uint32_t                        aTimeSinceLastTransaction);
 
@@ -179,10 +185,10 @@ private:
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     void HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void SendMulticastListenerRegistrationResponse(const Coap::Message &      aMessage,
-                                                   const Ip6::MessageInfo &   aMessageInfo,
+    void SendMulticastListenerRegistrationResponse(const Coap::Message       &aMessage,
+                                                   const Ip6::MessageInfo    &aMessageInfo,
                                                    ThreadStatusTlv::MlrStatus aStatus,
-                                                   Ip6::Address *             aFailedAddresses,
+                                                   Ip6::Address              *aFailedAddresses,
                                                    uint8_t                    aFailedAddressNum);
     void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
                                                    uint8_t             aAddressNum,
@@ -191,26 +197,26 @@ private:
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     void  HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
-                             const Ip6::Address &         aDua,
+    Error SendBackboneAnswer(const Ip6::MessageInfo      &aQueryMessageInfo,
+                             const Ip6::Address          &aDua,
                              uint16_t                     aSrcRloc16,
                              const NdProxyTable::NdProxy &aNdProxy);
-    Error SendBackboneAnswer(const Ip6::Address &            aDstAddr,
-                             const Ip6::Address &            aDua,
+    Error SendBackboneAnswer(const Ip6::Address             &aDstAddr,
+                             const Ip6::Address             &aDua,
                              const Ip6::InterfaceIdentifier &aMeshLocalIid,
                              uint32_t                        aTimeSinceLastTransaction,
                              uint16_t                        aSrcRloc16);
     void  HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid);
-    void  HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
+    void  HandleExtendedBackboneAnswer(const Ip6::Address             &aDua,
                                        const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                        uint32_t                        aTimeSinceLastTransaction,
                                        uint16_t                        aSrcRloc16);
-    void  HandleProactiveBackboneNotification(const Ip6::Address &            aDua,
+    void  HandleProactiveBackboneNotification(const Ip6::Address             &aDua,
                                               const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                               uint32_t                        aTimeSinceLastTransaction);
-    void  SendDuaRegistrationResponse(const Coap::Message &      aMessage,
-                                      const Ip6::MessageInfo &   aMessageInfo,
-                                      const Ip6::Address &       aTarget,
+    void  SendDuaRegistrationResponse(const Coap::Message       &aMessage,
+                                      const Ip6::MessageInfo    &aMessageInfo,
+                                      const Ip6::Address        &aTarget,
                                       ThreadStatusTlv::DuaStatus aStatus);
 #endif
     void HandleNotifierEvents(Events aEvents);

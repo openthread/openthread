@@ -173,7 +173,7 @@ exit:
 
 void Interface::HandleDiscoveredPeerInfo(const Peer::Info &aInfo)
 {
-    Peer *                 entry;
+    Peer                  *entry;
     Mac::ExtAddress        extAddress;
     MeshCoP::ExtendedPanId extPanId;
     bool                   isNew = false;
@@ -234,8 +234,8 @@ exit:
     return;
 }
 
-Error Interface::ParsePeerInfoTxtData(const Peer::Info &      aInfo,
-                                      Mac::ExtAddress &       aExtAddress,
+Error Interface::ParsePeerInfoTxtData(const Peer::Info       &aInfo,
+                                      Mac::ExtAddress        &aExtAddress,
                                       MeshCoP::ExtendedPanId &aExtPanId) const
 {
     Error                   error;

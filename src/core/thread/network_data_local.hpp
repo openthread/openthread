@@ -98,7 +98,10 @@ public:
      * @retval kErrorNotFound   Could not find the Border Router entry.
      *
      */
-    Error RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix) { return RemovePrefix(aPrefix); }
+    Error RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix)
+    {
+        return RemovePrefix(aPrefix);
+    }
 
     /**
      * This method indicates whether or not the Thread Network Data contains a given on mesh prefix.
@@ -132,7 +135,10 @@ public:
      * @retval kErrorNotFound   Could not find the Border Router entry.
      *
      */
-    Error RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix) { return RemovePrefix(aPrefix); }
+    Error RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix)
+    {
+        return RemovePrefix(aPrefix);
+    }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -151,7 +157,7 @@ public:
     Error AddService(uint32_t           aEnterpriseNumber,
                      const ServiceData &aServiceData,
                      bool               aServerStable,
-                     const ServerData & aServerData);
+                     const ServerData  &aServerData);
 
     /**
      * This method removes a Service entry from the Thread Network local data.

@@ -182,8 +182,12 @@ private:
     static const char *StateToString(State aState);
     static const char *DomainPrefixStateToString(DomainPrefixState aState);
 #else
-    void LogBackboneRouterPrimary(State, const BackboneRouterConfig &) const {}
-    void LogDomainPrefix(DomainPrefixState, const Ip6::Prefix &) const {}
+    void LogBackboneRouterPrimary(State, const BackboneRouterConfig &) const
+    {
+    }
+    void LogDomainPrefix(DomainPrefixState, const Ip6::Prefix &) const
+    {
+    }
 #endif
 
     BackboneRouterConfig mConfig;       ///< Primary Backbone Router information.

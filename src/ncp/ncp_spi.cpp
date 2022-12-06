@@ -64,7 +64,7 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
 extern "C" void otNcpSpiInit(otInstance *aInstance)
 {
-    NcpSpi *  ncpSpi   = nullptr;
+    NcpSpi   *ncpSpi   = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpSpi = new (&sNcpRaw) NcpSpi(instance);
@@ -114,7 +114,7 @@ NcpSpi::NcpSpi(Instance *aInstance)
                                                  /* aRequestTransactionFlag */ true));
 }
 
-bool NcpSpi::SpiTransactionComplete(void *   aContext,
+bool NcpSpi::SpiTransactionComplete(void    *aContext,
                                     uint8_t *aOutputBuf,
                                     uint16_t aOutputLen,
                                     uint8_t *aInputBuf,
@@ -242,10 +242,10 @@ void NcpSpi::SpiTransactionProcess(void)
     }
 }
 
-void NcpSpi::HandleFrameAddedToTxBuffer(void *                   aContext,
+void NcpSpi::HandleFrameAddedToTxBuffer(void                    *aContext,
                                         Spinel::Buffer::FrameTag aTag,
                                         Spinel::Buffer::Priority aPriority,
-                                        Spinel::Buffer *         aBuffer)
+                                        Spinel::Buffer          *aBuffer)
 {
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);

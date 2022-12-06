@@ -121,7 +121,10 @@ public:
      * @returns A reference to the Domain Unicast Address.
      *
      */
-    const Ip6::Address &GetDomainUnicastAddress(void) const { return mDomainUnicastAddress.GetAddress(); }
+    const Ip6::Address &GetDomainUnicastAddress(void) const
+    {
+        return mDomainUnicastAddress.GetAddress();
+    }
 
     /**
      * This method sets the Interface Identifier manually specified for the Thread Domain Unicast Address.
@@ -148,7 +151,10 @@ public:
      * @retval false If there is no Interface Identifier manually specified.
      *
      */
-    bool IsFixedDuaInterfaceIdentifierSet(void) { return !mFixedDuaInterfaceIdentifier.IsUnspecified(); }
+    bool IsFixedDuaInterfaceIdentifierSet(void)
+    {
+        return !mFixedDuaInterfaceIdentifier.IsUnspecified();
+    }
 
     /**
      * This method gets the Interface Identifier for the Thread Domain Unicast Address if manually specified.
@@ -156,7 +162,10 @@ public:
      * @returns A reference to the Interface Identifier.
      *
      */
-    const Ip6::InterfaceIdentifier &GetFixedDuaInterfaceIdentifier(void) const { return mFixedDuaInterfaceIdentifier; }
+    const Ip6::InterfaceIdentifier &GetFixedDuaInterfaceIdentifier(void) const
+    {
+        return mFixedDuaInterfaceIdentifier;
+    }
 
     /*
      * This method restores duplicate address detection information from non-volatile memory.
@@ -198,8 +207,8 @@ private:
 
     void UpdateTimeTickerRegistration(void);
 
-    static void HandleDuaResponse(void *               aContext,
-                                  otMessage *          aMessage,
+    static void HandleDuaResponse(void                *aContext,
+                                  otMessage           *aMessage,
                                   const otMessageInfo *aMessageInfo,
                                   Error                aResult);
     void        HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);

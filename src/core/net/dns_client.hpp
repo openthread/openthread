@@ -164,7 +164,10 @@ public:
          * @returns The timeout interval in msec.
          *
          */
-        uint32_t GetResponseTimeout(void) const { return mResponseTimeout; }
+        uint32_t GetResponseTimeout(void) const
+        {
+            return mResponseTimeout;
+        }
 
         /**
          * This method gets the maximum number of query transmit attempts before reporting failure.
@@ -172,7 +175,10 @@ public:
          * @returns The maximum number of query transmit attempts.
          *
          */
-        uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
+        uint8_t GetMaxTxAttempts(void) const
+        {
+            return mMaxTxAttempts;
+        }
 
         /**
          * This method gets the recursion flag indicating whether the server can resolve the query recursively or not.
@@ -180,7 +186,10 @@ public:
          * @returns The recursion flag.
          *
          */
-        RecursionFlag GetRecursionFlag(void) const { return static_cast<RecursionFlag>(mRecursionFlag); }
+        RecursionFlag GetRecursionFlag(void) const
+        {
+            return static_cast<RecursionFlag>(mRecursionFlag);
+        }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         /**
@@ -189,7 +198,10 @@ public:
          * @returns The NAT64 mode.
          *
          */
-        Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
+        Nat64Mode GetNat64Mode(void) const
+        {
+            return static_cast<Nat64Mode>(mNat64Mode);
+        }
 #endif
 
     private:
@@ -211,13 +223,28 @@ public:
 
         explicit QueryConfig(InitMode aMode);
 
-        Ip6::SockAddr &GetServerSockAddr(void) { return AsCoreType(&mServerSockAddr); }
+        Ip6::SockAddr &GetServerSockAddr(void)
+        {
+            return AsCoreType(&mServerSockAddr);
+        }
 
-        void SetResponseTimeout(uint32_t aResponseTimeout) { mResponseTimeout = aResponseTimeout; }
-        void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
-        void SetRecursionFlag(RecursionFlag aFlag) { mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag); }
+        void SetResponseTimeout(uint32_t aResponseTimeout)
+        {
+            mResponseTimeout = aResponseTimeout;
+        }
+        void SetMaxTxAttempts(uint8_t aMaxTxAttempts)
+        {
+            mMaxTxAttempts = aMaxTxAttempts;
+        }
+        void SetRecursionFlag(RecursionFlag aFlag)
+        {
+            mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag);
+        }
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-        void SetNat64Mode(Nat64Mode aMode) { mNat64Mode = static_cast<otDnsNat64Mode>(aMode); }
+        void SetNat64Mode(Nat64Mode aMode)
+        {
+            mNat64Mode = static_cast<otDnsNat64Mode>(aMode);
+        }
 #endif
 
         void SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig);
@@ -257,10 +284,10 @@ public:
         void  SelectSection(Section aSection, uint16_t &aOffset, uint16_t &aNumRecord) const;
         Error CheckForHostNameAlias(Section aSection, Name &aHostName) const;
         Error FindHostAddress(Section       aSection,
-                              const Name &  aHostName,
+                              const Name   &aHostName,
                               uint16_t      aIndex,
                               Ip6::Address &aAddress,
-                              uint32_t &    aTtl) const;
+                              uint32_t     &aTtl) const;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         Error FindARecord(Section aSection, const Name &aHostName, uint16_t aIndex, ARecord &aARecord) const;
 #endif
@@ -269,8 +296,8 @@ public:
         Error FindServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
 #endif
 
-        Instance *     mInstance;              // The OpenThread instance.
-        Query *        mQuery;                 // The associated query.
+        Instance      *mInstance;              // The OpenThread instance.
+        Query         *mQuery;                 // The associated query.
         const Message *mMessage;               // The response message.
         uint16_t       mAnswerOffset;          // Answer section offset in `mMessage`.
         uint16_t       mAnswerRecordCount;     // Number of records in answer section.
@@ -486,9 +513,9 @@ public:
          * @retval kErrorNoBufs  Either the label or name does not fit in the given buffers.
          *
          */
-        Error GetServiceName(char *   aLabelBuffer,
+        Error GetServiceName(char    *aLabelBuffer,
                              uint8_t  aLabelBufferSize,
-                             char *   aNameBuffer,
+                             char    *aNameBuffer,
                              uint16_t aNameBufferSize) const;
 
         /**
@@ -566,7 +593,10 @@ public:
      * @returns The current default query config.
      *
      */
-    const QueryConfig &GetDefaultConfig(void) const { return mDefaultConfig; }
+    const QueryConfig &GetDefaultConfig(void) const
+    {
+        return mDefaultConfig;
+    }
 
     /**
      * This method sets the default query config.
@@ -604,9 +634,9 @@ public:
      * @retval kErrorInvalidState   Cannot send query since Thread interface is not up.
      *
      */
-    Error ResolveAddress(const char *       aHostName,
+    Error ResolveAddress(const char        *aHostName,
                          AddressCallback    aCallback,
-                         void *             aContext,
+                         void              *aContext,
                          const QueryConfig *aConfig = nullptr);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -631,9 +661,9 @@ public:
      * @retval kErrorInvalidState   Cannot send query since Thread interface is not up, or there is no NAT64 prefix.
      *
      */
-    Error ResolveIp4Address(const char *       aHostName,
+    Error ResolveIp4Address(const char        *aHostName,
                             AddressCallback    aCallback,
-                            void *             aContext,
+                            void              *aContext,
                             const QueryConfig *aConfig = nullptr);
 #endif
 
@@ -655,9 +685,9 @@ public:
      * @retval kErrorNoBufs     Insufficient buffer to prepare and send query.
      *
      */
-    Error Browse(const char *       aServiceName,
+    Error Browse(const char        *aServiceName,
                  BrowseCallback     aCallback,
-                 void *             aContext,
+                 void              *aContext,
                  const QueryConfig *aConfig = nullptr);
 
     /**
@@ -678,11 +708,11 @@ public:
      * @retval kErrorInvalidArgs  @p aInstanceLabel is `nullptr`.
      *
      */
-    Error ResolveService(const char *         aInstanceLabel,
-                         const char *         aServiceName,
+    Error ResolveService(const char          *aInstanceLabel,
+                         const char          *aServiceName,
                          otDnsServiceCallback aCallback,
-                         void *               aContext,
-                         const QueryConfig *  aConfig = nullptr);
+                         void                *aContext,
+                         const QueryConfig   *aConfig = nullptr);
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
@@ -717,7 +747,7 @@ private:
         QueryType   mQueryType;
         uint16_t    mMessageId;
         Callback    mCallback;
-        void *      mCallbackContext;
+        void       *mCallbackContext;
         TimeMilli   mRetransmissionTime;
         QueryConfig mConfig;
         uint8_t     mTransmissionCount;
@@ -726,20 +756,23 @@ private:
 
     static constexpr uint16_t kNameOffsetInQuery = sizeof(QueryInfo);
 
-    Error       StartQuery(QueryInfo &        aInfo,
-                           const QueryConfig *aConfig,
-                           const char *       aLabel,
-                           const char *       aName,
-                           void *             aContext);
-    Error       AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
-    void        FreeQuery(Query &aQuery);
-    void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
+    Error StartQuery(QueryInfo         &aInfo,
+                     const QueryConfig *aConfig,
+                     const char        *aLabel,
+                     const char        *aName,
+                     void              *aContext);
+    Error AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
+    void  FreeQuery(Query &aQuery);
+    void  UpdateQuery(Query &aQuery, const QueryInfo &aInfo)
+    {
+        aQuery.Write(0, aInfo);
+    }
     void        SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
     void        FinalizeQuery(Query &aQuery, Error aError);
     void        FinalizeQuery(Response &Response, QueryType aType, Error aError);
     static void GetCallback(const Query &aQuery, Callback &aCallback, void *&aContext);
     Error       AppendNameFromQuery(const Query &aQuery, Message &aMessage);
-    Query *     FindQueryById(uint16_t aMessageId);
+    Query      *FindQueryById(uint16_t aMessageId);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMsgInfo);
     void        ProcessResponse(const Message &aMessage);
     Error       ParseResponse(Response &aResponse, QueryType &aType, Error &aResponseError);

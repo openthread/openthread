@@ -300,9 +300,9 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
                                                          kAnyServiceName, kAnyInstanceName)) != nullptr)
         {
             bool                      isDeleted    = otSrpServerServiceIsDeleted(service);
-            const char *              instanceName = otSrpServerServiceGetInstanceName(service);
+            const char               *instanceName = otSrpServerServiceGetInstanceName(service);
             const otSrpServerService *subService   = nullptr;
-            const uint8_t *           txtData;
+            const uint8_t            *txtData;
             uint16_t                  txtDataLength;
             bool                      hasSubType = false;
             otSrpServerLeaseInfo      leaseInfo;

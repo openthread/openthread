@@ -42,12 +42,12 @@
 
 using namespace ot;
 
-otError otLinkMetricsQuery(otInstance *                aInstance,
-                           const otIp6Address *        aDestination,
+otError otLinkMetricsQuery(otInstance                 *aInstance,
+                           const otIp6Address         *aDestination,
                            uint8_t                     aSeriesId,
-                           const otLinkMetrics *       aLinkMetricsFlags,
+                           const otLinkMetrics        *aLinkMetricsFlags,
                            otLinkMetricsReportCallback aCallback,
-                           void *                      aCallbackContext)
+                           void                       *aCallbackContext)
 {
     AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>().SetReportCallback(aCallback, aCallbackContext);
 
@@ -55,13 +55,13 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
                                                                        AsCoreTypePtr(aLinkMetricsFlags));
 }
 
-otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
-                                                 const otIp6Address *              aDestination,
+otError otLinkMetricsConfigForwardTrackingSeries(otInstance                       *aInstance,
+                                                 const otIp6Address               *aDestination,
                                                  uint8_t                           aSeriesId,
                                                  const otLinkMetricsSeriesFlags    aSeriesFlags,
-                                                 const otLinkMetrics *             aLinkMetricsFlags,
+                                                 const otLinkMetrics              *aLinkMetricsFlags,
                                                  otLinkMetricsMgmtResponseCallback aCallback,
-                                                 void *                            aCallbackContext)
+                                                 void                             *aCallbackContext)
 {
     LinkMetrics::LinkMetrics &linkMetrics = AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>();
 
@@ -72,14 +72,14 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-otError otLinkMetricsConfigEnhAckProbing(otInstance *                               aInstance,
-                                         const otIp6Address *                       aDestination,
+otError otLinkMetricsConfigEnhAckProbing(otInstance                                *aInstance,
+                                         const otIp6Address                        *aDestination,
                                          otLinkMetricsEnhAckFlags                   aEnhAckFlags,
-                                         const otLinkMetrics *                      aLinkMetricsFlags,
+                                         const otLinkMetrics                       *aLinkMetricsFlags,
                                          otLinkMetricsMgmtResponseCallback          aCallback,
-                                         void *                                     aCallbackContext,
+                                         void                                      *aCallbackContext,
                                          otLinkMetricsEnhAckProbingIeReportCallback aEnhAckCallback,
-                                         void *                                     aEnhAckCallbackContext)
+                                         void                                      *aEnhAckCallbackContext)
 {
     LinkMetrics::LinkMetrics &linkMetrics = AsCoreType(aInstance).Get<LinkMetrics::LinkMetrics>();
 
@@ -90,7 +90,7 @@ otError otLinkMetricsConfigEnhAckProbing(otInstance *                           
                                                     AsCoreTypePtr(aLinkMetricsFlags));
 }
 
-otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
+otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
                                    const otIp6Address *aDestination,
                                    uint8_t             aSeriesId,
                                    uint8_t             aLength)

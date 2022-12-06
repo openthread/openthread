@@ -83,7 +83,7 @@ Error Manager::RemoveService(const void *aServiceData, uint8_t aServiceDataLengt
 Error Manager::GetServiceId(const void *aServiceData,
                             uint8_t     aServiceDataLength,
                             bool        aServerStable,
-                            uint8_t &   aServiceId) const
+                            uint8_t    &aServiceId) const
 {
     ServiceData serviceData;
 
@@ -96,9 +96,9 @@ Error Manager::GetServiceId(const void *aServiceData,
 
 void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const
 {
-    const ServerTlv *                 rvalServerTlv  = nullptr;
+    const ServerTlv                  *rvalServerTlv  = nullptr;
     const BackboneRouter::ServerData *rvalServerData = nullptr;
-    const ServiceTlv *                serviceTlv     = nullptr;
+    const ServiceTlv                 *serviceTlv     = nullptr;
     ServiceData                       serviceData;
 
     serviceData.Init(&BackboneRouter::kServiceData, BackboneRouter::kServiceDataMinSize);
@@ -146,9 +146,9 @@ exit:
     return;
 }
 
-bool Manager::IsBackboneRouterPreferredTo(const ServerTlv &                 aServerTlv,
+bool Manager::IsBackboneRouterPreferredTo(const ServerTlv                  &aServerTlv,
                                           const BackboneRouter::ServerData &aServerData,
-                                          const ServerTlv &                 aOtherServerTlv,
+                                          const ServerTlv                  &aOtherServerTlv,
                                           const BackboneRouter::ServerData &aOtherServerData) const
 {
     bool     isPreferred;

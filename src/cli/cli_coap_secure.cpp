@@ -694,7 +694,7 @@ exit:
 #endif // CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError CoapSecure::BlockwiseReceiveHook(void *         aContext,
+otError CoapSecure::BlockwiseReceiveHook(void          *aContext,
                                          const uint8_t *aBlock,
                                          uint32_t       aPosition,
                                          uint16_t       aBlockLength,
@@ -724,11 +724,11 @@ otError CoapSecure::BlockwiseReceiveHook(const uint8_t *aBlock,
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::BlockwiseTransmitHook(void *    aContext,
-                                          uint8_t * aBlock,
+otError CoapSecure::BlockwiseTransmitHook(void     *aContext,
+                                          uint8_t  *aBlock,
                                           uint32_t  aPosition,
                                           uint16_t *aBlockLength,
-                                          bool *    aMore)
+                                          bool     *aMore)
 {
     return static_cast<CoapSecure *>(aContext)->BlockwiseTransmitHook(aBlock, aPosition, aBlockLength, aMore);
 }

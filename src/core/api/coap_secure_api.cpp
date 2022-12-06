@@ -51,7 +51,7 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
 }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-void otCoapSecureSetCertificate(otInstance *   aInstance,
+void otCoapSecureSetCertificate(otInstance    *aInstance,
                                 const uint8_t *aX509Cert,
                                 uint32_t       aX509Length,
                                 const uint8_t *aPrivateKey,
@@ -61,7 +61,7 @@ void otCoapSecureSetCertificate(otInstance *   aInstance,
                                                                     aPrivateKeyLength);
 }
 
-void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
+void otCoapSecureSetCaCertificateChain(otInstance    *aInstance,
                                        const uint8_t *aX509CaCertificateChain,
                                        uint32_t       aX509CaCertChainLength)
 {
@@ -71,7 +71,7 @@ void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-void otCoapSecureSetPsk(otInstance *   aInstance,
+void otCoapSecureSetPsk(otInstance    *aInstance,
                         const uint8_t *aPsk,
                         uint16_t       aPskLength,
                         const uint8_t *aPskIdentity,
@@ -85,9 +85,9 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
-otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
+otError otCoapSecureGetPeerCertificateBase64(otInstance    *aInstance,
                                              unsigned char *aPeerCert,
-                                             size_t *       aCertLength,
+                                             size_t        *aCertLength,
                                              size_t         aCertBufferSize)
 {
     AssertPointerIsNotNull(aPeerCert);
@@ -102,10 +102,10 @@ void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertifica
     AsCoreType(aInstance).GetApplicationCoapSecure().SetSslAuthMode(aVerifyPeerCertificate);
 }
 
-otError otCoapSecureConnect(otInstance *                    aInstance,
-                            const otSockAddr *              aSockAddr,
+otError otCoapSecureConnect(otInstance                     *aInstance,
+                            const otSockAddr               *aSockAddr,
                             otHandleCoapSecureClientConnect aHandler,
-                            void *                          aContext)
+                            void                           *aContext)
 {
     return AsCoreType(aInstance).GetApplicationCoapSecure().Connect(AsCoreType(aSockAddr), aHandler, aContext);
 }
@@ -131,10 +131,10 @@ void otCoapSecureStop(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError otCoapSecureSendRequestBlockWise(otInstance *                aInstance,
-                                         otMessage *                 aMessage,
+otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,
+                                         otMessage                  *aMessage,
                                          otCoapResponseHandler       aHandler,
-                                         void *                      aContext,
+                                         void                       *aContext,
                                          otCoapBlockwiseTransmitHook aTransmitHook,
                                          otCoapBlockwiseReceiveHook  aReceiveHook)
 {
@@ -143,10 +143,10 @@ otError otCoapSecureSendRequestBlockWise(otInstance *                aInstance,
 }
 #endif
 
-otError otCoapSecureSendRequest(otInstance *          aInstance,
-                                otMessage *           aMessage,
+otError otCoapSecureSendRequest(otInstance           *aInstance,
+                                otMessage            *aMessage,
                                 otCoapResponseHandler aHandler,
-                                void *                aContext)
+                                void                 *aContext)
 {
     return AsCoreType(aInstance).GetApplicationCoapSecure().SendMessage(AsCoapMessage(aMessage), aHandler, aContext);
 }
@@ -173,9 +173,9 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
     AsCoreType(aInstance).GetApplicationCoapSecure().RemoveResource(AsCoreType(aResource));
 }
 
-void otCoapSecureSetClientConnectedCallback(otInstance *                    aInstance,
+void otCoapSecureSetClientConnectedCallback(otInstance                     *aInstance,
                                             otHandleCoapSecureClientConnect aHandler,
-                                            void *                          aContext)
+                                            void                           *aContext)
 {
     AsCoreType(aInstance).GetApplicationCoapSecure().SetClientConnectedCallback(aHandler, aContext);
 }
@@ -186,10 +186,10 @@ void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler a
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError otCoapSecureSendResponseBlockWise(otInstance *                aInstance,
-                                          otMessage *                 aMessage,
-                                          const otMessageInfo *       aMessageInfo,
-                                          void *                      aContext,
+otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
+                                          otMessage                  *aMessage,
+                                          const otMessageInfo        *aMessageInfo,
+                                          void                       *aContext,
                                           otCoapBlockwiseTransmitHook aTransmitHook)
 {
     return AsCoreType(aInstance).GetApplicationCoapSecure().SendMessage(

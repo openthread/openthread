@@ -91,7 +91,7 @@ template <size_t N>
 void TestCase6To4(const char *aTestName,
                   const uint8_t (&aIp6Message)[N],
                   Nat64::Translator::Result aResult,
-                  const uint8_t *           aOutMessage,
+                  const uint8_t            *aOutMessage,
                   size_t                    aOutMessageLen)
 {
     Message *msg = sInstance->Get<Ip6::Ip6>().NewMessage(0);
@@ -118,7 +118,7 @@ template <size_t N>
 void TestCase4To6(const char *aTestName,
                   const uint8_t (&aIp4Message)[N],
                   Nat64::Translator::Result aResult,
-                  const uint8_t *           aOutMessage,
+                  const uint8_t            *aOutMessage,
                   size_t                    aOutMessageLen)
 {
     Message *msg = sInstance->Get<Ip6::Ip6>().NewMessage(0);

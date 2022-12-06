@@ -365,7 +365,10 @@ public:
      * @returns A reference to the transmit buffer.
      *
      */
-    otRadioFrame &GetTransmitFrame(void) { return mTxRadioFrame; }
+    otRadioFrame &GetTransmitFrame(void)
+    {
+        return mTxRadioFrame;
+    }
 
     /**
      * This method enables or disables source address match feature.
@@ -528,7 +531,10 @@ public:
      * @returns TRUE if the radio is enabled, FALSE otherwise.
      *
      */
-    bool IsEnabled(void) const { return mState != kStateDisabled; }
+    bool IsEnabled(void) const
+    {
+        return mState != kStateDisabled;
+    }
 
     /**
      * This method indicates whether there is a pending transmission.
@@ -537,7 +543,10 @@ public:
      * @retval FALSE There is no pending transmission.
      *
      */
-    bool IsTransmitting(void) const { return mState == kStateTransmitting; }
+    bool IsTransmitting(void) const
+    {
+        return mState == kStateTransmitting;
+    }
 
     /**
      * This method indicates whether a transmit has just finished.
@@ -546,7 +555,10 @@ public:
      * @retval FALSE The transmission is not done.
      *
      */
-    bool IsTransmitDone(void) const { return mState == kStateTransmitDone; }
+    bool IsTransmitDone(void) const
+    {
+        return mState == kStateTransmitDone;
+    }
 
     /**
      * This method returns the timeout timepoint for the pending transmission.
@@ -554,7 +566,10 @@ public:
      * @returns The timeout timepoint for the pending transmission.
      *
      */
-    uint64_t GetTxRadioEndUs(void) const { return mTxRadioEndUs; }
+    uint64_t GetTxRadioEndUs(void) const
+    {
+        return mTxRadioEndUs;
+    }
 
     /**
      * This method processes any pending the I/O data.
@@ -570,7 +585,10 @@ public:
      * @returns The underlying spinel interface.
      *
      */
-    InterfaceType &GetSpinelInterface(void) { return mSpinelInterface; }
+    InterfaceType &GetSpinelInterface(void)
+    {
+        return mSpinelInterface;
+    }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     /**
@@ -579,7 +597,10 @@ public:
      * @param[in]  aMode  TRUE to enable diagnostics mode, FALSE otherwise.
      *
      */
-    void SetDiagEnabled(bool aMode) { mDiagMode = aMode; }
+    void SetDiagEnabled(bool aMode)
+    {
+        mDiagMode = aMode;
+    }
 
     /**
      * This method indicates whether or not factory diagnostics mode is enabled.
@@ -587,7 +608,10 @@ public:
      * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
      *
      */
-    bool IsDiagEnabled(void) const { return mDiagMode; }
+    bool IsDiagEnabled(void) const
+    {
+        return mDiagMode;
+    }
 
     /**
      * This method processes platform diagnostics commands.
@@ -699,7 +723,7 @@ public:
      */
     otError ConfigureEnhAckProbing(otLinkMetrics        aLinkMetrics,
                                    const otShortAddress aShortAddress,
-                                   const otExtAddress & aExtAddress);
+                                   const otExtAddress  &aExtAddress);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -742,7 +766,10 @@ public:
      * @returns Whether there is pending frame in the buffer.
      *
      */
-    bool HasPendingFrame(void) const { return mRxFrameBuffer.HasSavedFrame(); }
+    bool HasPendingFrame(void) const
+    {
+        return mRxFrameBuffer.HasSavedFrame();
+    }
 
     /**
      * This method gets dataset from NCP radio and saves it.
@@ -761,7 +788,10 @@ public:
      * @returns The timepoint to start the recalculation of RCP time offset.
      *
      */
-    uint64_t GetNextRadioTimeRecalcStart(void) const { return mRadioTimeRecalcStart; }
+    uint64_t GetNextRadioTimeRecalcStart(void) const
+    {
+        return mRadioTimeRecalcStart;
+    }
 
     /**
      * This method gets the current estimated time on RCP.
@@ -820,9 +850,9 @@ public:
      *
      */
     otError GetWithParam(spinel_prop_key_t aKey,
-                         const uint8_t *   aParam,
+                         const uint8_t    *aParam,
                          spinel_size_t     aParamSize,
-                         const char *      aFormat,
+                         const char       *aFormat,
                          ...);
 
     /**
@@ -884,7 +914,10 @@ public:
      * @returns The radio Spinel metrics.
      *
      */
-    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return &mRadioSpinelMetrics; }
+    const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const
+    {
+        return &mRadioSpinelMetrics;
+    }
 
 private:
     enum
@@ -926,30 +959,33 @@ private:
     void ProcessFrameQueue(void);
 
     spinel_tid_t GetNextTid(void);
-    void         FreeTid(spinel_tid_t tid) { mCmdTidsInUse &= ~(1 << tid); }
+    void         FreeTid(spinel_tid_t tid)
+    {
+        mCmdTidsInUse &= ~(1 << tid);
+    }
 
     otError RequestV(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, va_list aArgs);
     otError Request(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, ...);
-    otError RequestWithPropertyFormat(const char *      aPropertyFormat,
+    otError RequestWithPropertyFormat(const char       *aPropertyFormat,
                                       uint32_t          aCommand,
                                       spinel_prop_key_t aKey,
-                                      const char *      aFormat,
+                                      const char       *aFormat,
                                       ...);
-    otError RequestWithPropertyFormatV(const char *      aPropertyFormat,
+    otError RequestWithPropertyFormatV(const char       *aPropertyFormat,
                                        uint32_t          aCommand,
                                        spinel_prop_key_t aKey,
-                                       const char *      aFormat,
+                                       const char       *aFormat,
                                        va_list           aArgs);
     otError RequestWithExpectedCommandV(uint32_t          aExpectedCommand,
                                         uint32_t          aCommand,
                                         spinel_prop_key_t aKey,
-                                        const char *      aFormat,
+                                        const char       *aFormat,
                                         va_list           aArgs);
     otError WaitResponse(void);
     otError SendCommand(uint32_t          aCommand,
                         spinel_prop_key_t aKey,
                         spinel_tid_t      aTid,
-                        const char *      aFormat,
+                        const char       *aFormat,
                         va_list           aArgs);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
     otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
@@ -1010,7 +1046,7 @@ private:
     spinel_tid_t      mTxRadioTid;      ///< The transaction id used to send a radio frame.
     spinel_tid_t      mWaitingTid;      ///< The transaction id of current transaction.
     spinel_prop_key_t mWaitingKey;      ///< The property key of current transaction.
-    const char *      mPropertyFormat;  ///< The spinel property format of current transaction.
+    const char       *mPropertyFormat;  ///< The spinel property format of current transaction.
     va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
@@ -1073,7 +1109,7 @@ private:
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;
-    char * mDiagOutput;
+    char  *mDiagOutput;
     size_t mDiagOutputMaxLen;
 #endif
 

@@ -81,10 +81,10 @@ void otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *
     }
 }
 
-otError otDnsClientResolveAddress(otInstance *            aInstance,
-                                  const char *            aHostName,
+otError otDnsClientResolveAddress(otInstance             *aInstance,
+                                  const char             *aHostName,
                                   otDnsAddressCallback    aCallback,
-                                  void *                  aContext,
+                                  void                   *aContext,
                                   const otDnsQueryConfig *aConfig)
 {
     AssertPointerIsNotNull(aHostName);
@@ -94,10 +94,10 @@ otError otDnsClientResolveAddress(otInstance *            aInstance,
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-otError otDnsClientResolveIp4Address(otInstance *            aInstance,
-                                     const char *            aHostName,
+otError otDnsClientResolveIp4Address(otInstance             *aInstance,
+                                     const char             *aHostName,
                                      otDnsAddressCallback    aCallback,
-                                     void *                  aContext,
+                                     void                   *aContext,
                                      const otDnsQueryConfig *aConfig)
 {
     AssertPointerIsNotNull(aHostName);
@@ -108,7 +108,7 @@ otError otDnsClientResolveIp4Address(otInstance *            aInstance,
 #endif
 
 otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
-                                        char *                      aNameBuffer,
+                                        char                       *aNameBuffer,
                                         uint16_t                    aNameBufferSize)
 {
     AssertPointerIsNotNull(aNameBuffer);
@@ -118,8 +118,8 @@ otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
 
 otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,
                                        uint16_t                    aIndex,
-                                       otIp6Address *              aAddress,
-                                       uint32_t *                  aTtl)
+                                       otIp6Address               *aAddress,
+                                       uint32_t                   *aTtl)
 {
     uint32_t ttl;
 
@@ -128,10 +128,10 @@ otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
-otError otDnsClientBrowse(otInstance *            aInstance,
-                          const char *            aServiceName,
+otError otDnsClientBrowse(otInstance             *aInstance,
+                          const char             *aServiceName,
                           otDnsBrowseCallback     aCallback,
-                          void *                  aContext,
+                          void                   *aContext,
                           const otDnsQueryConfig *aConfig)
 {
     AssertPointerIsNotNull(aServiceName);
@@ -140,7 +140,7 @@ otError otDnsClientBrowse(otInstance *            aInstance,
 }
 
 otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
-                                          char *                     aNameBuffer,
+                                          char                      *aNameBuffer,
                                           uint16_t                   aNameBufferSize)
 {
     AssertPointerIsNotNull(aNameBuffer);
@@ -150,7 +150,7 @@ otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
 
 otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aResponse,
                                               uint16_t                   aIndex,
-                                              char *                     aLabelBuffer,
+                                              char                      *aLabelBuffer,
                                               uint8_t                    aLabelBufferSize)
 {
     AssertPointerIsNotNull(aLabelBuffer);
@@ -159,8 +159,8 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
 }
 
 otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
-                                          const char *               aInstanceLabel,
-                                          otDnsServiceInfo *         aServiceInfo)
+                                          const char                *aInstanceLabel,
+                                          otDnsServiceInfo          *aServiceInfo)
 {
     AssertPointerIsNotNull(aInstanceLabel);
 
@@ -168,10 +168,10 @@ otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
 }
 
 otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
-                                          const char *               aHostName,
+                                          const char                *aHostName,
                                           uint16_t                   aIndex,
-                                          otIp6Address *             aAddress,
-                                          uint32_t *                 aTtl)
+                                          otIp6Address              *aAddress,
+                                          uint32_t                  *aTtl)
 {
     uint32_t ttl;
 
@@ -180,11 +180,11 @@ otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
     return AsCoreType(aResponse).GetHostAddress(aHostName, aIndex, AsCoreType(aAddress), aTtl != nullptr ? *aTtl : ttl);
 }
 
-otError otDnsClientResolveService(otInstance *            aInstance,
-                                  const char *            aInstanceLabel,
-                                  const char *            aServiceName,
+otError otDnsClientResolveService(otInstance             *aInstance,
+                                  const char             *aInstanceLabel,
+                                  const char             *aServiceName,
                                   otDnsServiceCallback    aCallback,
-                                  void *                  aContext,
+                                  void                   *aContext,
                                   const otDnsQueryConfig *aConfig)
 {
     AssertPointerIsNotNull(aInstanceLabel);
@@ -195,9 +195,9 @@ otError otDnsClientResolveService(otInstance *            aInstance,
 }
 
 otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse,
-                                           char *                      aLabelBuffer,
+                                           char                       *aLabelBuffer,
                                            uint8_t                     aLabelBufferSize,
-                                           char *                      aNameBuffer,
+                                           char                       *aNameBuffer,
                                            uint16_t                    aNameBufferSize)
 {
     AssertPointerIsNotNull(aLabelBuffer);
@@ -212,10 +212,10 @@ otError otDnsServiceResponseGetServiceInfo(const otDnsServiceResponse *aResponse
 }
 
 otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse,
-                                           const char *                aHostName,
+                                           const char                 *aHostName,
                                            uint16_t                    aIndex,
-                                           otIp6Address *              aAddress,
-                                           uint32_t *                  aTtl)
+                                           otIp6Address               *aAddress,
+                                           uint32_t                   *aTtl)
 {
     uint32_t ttl;
 

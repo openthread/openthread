@@ -139,9 +139,9 @@ public:
      *
      */
     Error GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
-                      uint8_t *                   aNetworkId       = nullptr,
+                      uint8_t                    *aNetworkId       = nullptr,
                       uint8_t                     aNetworkIdLength = 0,
-                      uint8_t *                   aDadCounter      = nullptr) const;
+                      uint8_t                    *aDadCounter      = nullptr) const;
 
 private:
     static constexpr uint16_t kMaxIidCreationAttempts = 256; // Maximum number of attempts when generating IID.
@@ -163,7 +163,7 @@ private:
     void        GetIidSecretKey(IidSecretKey &aKey) const;
     void        HandleNotifierEvents(Events aEvents);
     static bool DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
-                                         const Ip6::Netif::UnicastAddress &     aAddr);
+                                         const Ip6::Netif::UnicastAddress      &aAddr);
 
     bool                       mEnabled;
     otIp6SlaacPrefixFilter     mFilter;

@@ -40,8 +40,8 @@ namespace ot {
 
 void TestTlv(void)
 {
-    Instance *  instance = testInitInstance();
-    Message *   message;
+    Instance   *instance = testInitInstance();
+    Message    *message;
     Tlv         tlv;
     ExtendedTlv extTlv;
     uint16_t    offset;

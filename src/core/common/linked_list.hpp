@@ -458,10 +458,10 @@ public:
      *
      */
     template <typename Indicator>
-    const Type *FindMatching(const Type *     aBegin,
-                             const Type *     aEnd,
+    const Type *FindMatching(const Type      *aBegin,
+                             const Type      *aEnd,
                              const Indicator &aIndicator,
-                             const Type *&    aPrevEntry) const
+                             const Type     *&aPrevEntry) const
     {
         const Type *entry;
 

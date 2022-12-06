@@ -48,9 +48,9 @@ void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator)
     AsCoreType(aIterator).Init();
 }
 
-const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInstance *              aInstance,
+const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInstance               *aInstance,
                                                                          otHistoryTrackerIterator *aIterator,
-                                                                         uint32_t *                aEntryAge)
+                                                                         uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 
@@ -58,9 +58,9 @@ const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInsta
 }
 
 const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressHistory(
-    otInstance *              aInstance,
+    otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
-    uint32_t *                aEntryAge)
+    uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 
@@ -69,9 +69,9 @@ const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressH
 }
 
 const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddressHistory(
-    otInstance *              aInstance,
+    otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
-    uint32_t *                aEntryAge)
+    uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 
@@ -79,36 +79,36 @@ const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddr
                                                                                              *aEntryAge);
 }
 
-const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance *              aInstance,
+const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance               *aInstance,
                                                                     otHistoryTrackerIterator *aIterator,
-                                                                    uint32_t *                aEntryAge)
+                                                                    uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateRxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
-const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *              aInstance,
+const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance               *aInstance,
                                                                     otHistoryTrackerIterator *aIterator,
-                                                                    uint32_t *                aEntryAge)
+                                                                    uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateTxHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
-const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance *              aInstance,
+const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance               *aInstance,
                                                                            otHistoryTrackerIterator *aIterator,
-                                                                           uint32_t *                aEntryAge)
+                                                                           uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNeighborHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
-const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHistory(otInstance *              aInstance,
+const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHistory(otInstance               *aInstance,
                                                                                    otHistoryTrackerIterator *aIterator,
-                                                                                   uint32_t *                aEntryAge)
+                                                                                   uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 
@@ -117,9 +117,9 @@ const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHisto
 }
 
 const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHistory(
-    otInstance *              aInstance,
+    otInstance               *aInstance,
     otHistoryTrackerIterator *aIterator,
-    uint32_t *                aEntryAge)
+    uint32_t                 *aEntryAge)
 {
     AssertPointerIsNotNull(aEntryAge);
 

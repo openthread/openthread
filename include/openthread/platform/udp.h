@@ -125,7 +125,7 @@ otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMess
  * @retval  OT_ERROR_FAILED Failed to join the multicast group.
  *
  */
-otError otPlatUdpJoinMulticastGroup(otUdpSocket *       aUdpSocket,
+otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
                                     otNetifIdentifier   aNetifIdentifier,
                                     const otIp6Address *aAddress);
 
@@ -142,7 +142,7 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket *       aUdpSocket,
  * @retval  OT_ERROR_FAILED Failed to leave the multicast group.
  *
  */
-otError otPlatUdpLeaveMulticastGroup(otUdpSocket *       aUdpSocket,
+otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
                                      otNetifIdentifier   aNetifIdentifier,
                                      const otIp6Address *aAddress);
 

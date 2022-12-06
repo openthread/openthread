@@ -176,10 +176,10 @@ exit:
 }
 
 Error Client::Response::FindHostAddress(Section       aSection,
-                                        const Name &  aHostName,
+                                        const Name   &aHostName,
                                         uint16_t      aIndex,
                                         Ip6::Address &aAddress,
-                                        uint32_t &    aTtl) const
+                                        uint32_t     &aTtl) const
 {
     Error      error;
     uint16_t   offset;
@@ -401,10 +401,10 @@ exit:
     return error;
 }
 
-Error Client::BrowseResponse::GetHostAddress(const char *  aHostName,
+Error Client::BrowseResponse::GetHostAddress(const char   *aHostName,
                                              uint16_t      aIndex,
                                              Ip6::Address &aAddress,
-                                             uint32_t &    aTtl) const
+                                             uint32_t     &aTtl) const
 {
     return FindHostAddress(kAdditionalDataSection, Name(aHostName), aIndex, aAddress, aTtl);
 }
@@ -468,9 +468,9 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // Client::ServiceResponse
 
-Error Client::ServiceResponse::GetServiceName(char *   aLabelBuffer,
+Error Client::ServiceResponse::GetServiceName(char    *aLabelBuffer,
                                               uint8_t  aLabelBufferSize,
-                                              char *   aNameBuffer,
+                                              char    *aNameBuffer,
                                               uint16_t aNameBufferSize) const
 {
     Error    error;
@@ -493,10 +493,10 @@ Error Client::ServiceResponse::GetServiceInfo(ServiceInfo &aServiceInfo) const
     return FindServiceInfo(kAnswerSection, Name(*mQuery, kNameOffsetInQuery), aServiceInfo);
 }
 
-Error Client::ServiceResponse::GetHostAddress(const char *  aHostName,
+Error Client::ServiceResponse::GetHostAddress(const char   *aHostName,
                                               uint16_t      aIndex,
                                               Ip6::Address &aAddress,
-                                              uint32_t &    aTtl) const
+                                              uint32_t     &aTtl) const
 {
     return FindHostAddress(kAdditionalDataSection, Name(aHostName), aIndex, aAddress, aTtl);
 }
@@ -617,9 +617,9 @@ void Client::UpdateDefaultConfigAddress(void)
 }
 #endif
 
-Error Client::ResolveAddress(const char *       aHostName,
+Error Client::ResolveAddress(const char        *aHostName,
                              AddressCallback    aCallback,
-                             void *             aContext,
+                             void              *aContext,
                              const QueryConfig *aConfig)
 {
     QueryInfo info;
@@ -632,9 +632,9 @@ Error Client::ResolveAddress(const char *       aHostName,
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-Error Client::ResolveIp4Address(const char *       aHostName,
+Error Client::ResolveIp4Address(const char        *aHostName,
                                 AddressCallback    aCallback,
-                                void *             aContext,
+                                void              *aContext,
                                 const QueryConfig *aConfig)
 {
     QueryInfo info;
@@ -660,10 +660,10 @@ Error Client::Browse(const char *aServiceName, BrowseCallback aCallback, void *a
     return StartQuery(info, aConfig, nullptr, aServiceName, aContext);
 }
 
-Error Client::ResolveService(const char *       aInstanceLabel,
-                             const char *       aServiceName,
+Error Client::ResolveService(const char        *aInstanceLabel,
+                             const char        *aServiceName,
                              ServiceCallback    aCallback,
-                             void *             aContext,
+                             void              *aContext,
                              const QueryConfig *aConfig)
 {
     QueryInfo info;
@@ -683,11 +683,11 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
-Error Client::StartQuery(QueryInfo &        aInfo,
+Error Client::StartQuery(QueryInfo         &aInfo,
                          const QueryConfig *aConfig,
-                         const char *       aLabel,
-                         const char *       aName,
-                         void *             aContext)
+                         const char        *aLabel,
+                         const char        *aName,
+                         void              *aContext)
 {
     // This method assumes that `mQueryType` and `mCallback` to be
     // already set by caller on `aInfo`. The `aLabel` can be `nullptr`
@@ -774,7 +774,7 @@ void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
     // is handled by caller).
 
     Error            error   = kErrorNone;
-    Message *        message = nullptr;
+    Message         *message = nullptr;
     Header           header;
     Ip6::MessageInfo messageInfo;
 
@@ -871,7 +871,7 @@ void Client::FinalizeQuery(Query &aQuery, Error aError)
 void Client::FinalizeQuery(Response &aResponse, QueryType aType, Error aError)
 {
     Callback callback;
-    void *   context;
+    void    *context;
 
     GetCallback(*aResponse.mQuery, callback, context);
 
@@ -919,7 +919,7 @@ void Client::GetCallback(const Query &aQuery, Callback &aCallback, void *&aConte
 
 Client::Query *Client::FindQueryById(uint16_t aMessageId)
 {
-    Query *   matchedQuery = nullptr;
+    Query    *matchedQuery = nullptr;
     QueryInfo info;
 
     for (Query &query : mQueries)

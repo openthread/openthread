@@ -203,10 +203,10 @@ typedef void (*otDnsAddressCallback)(otError aError, const otDnsAddressResponse 
  * @retval OT_ERROR_INVALID_STATE Cannot send query since Thread interface is not up.
  *
  */
-otError otDnsClientResolveAddress(otInstance *            aInstance,
-                                  const char *            aHostName,
+otError otDnsClientResolveAddress(otInstance             *aInstance,
+                                  const char             *aHostName,
                                   otDnsAddressCallback    aCallback,
-                                  void *                  aContext,
+                                  void                   *aContext,
                                   const otDnsQueryConfig *aConfig);
 
 /**
@@ -233,10 +233,10 @@ otError otDnsClientResolveAddress(otInstance *            aInstance,
  * @retval OT_ERROR_INVALID_STATE Cannot send query since Thread interface is not up.
  *
  */
-otError otDnsClientResolveIp4Address(otInstance *            aInstance,
-                                     const char *            aHostName,
+otError otDnsClientResolveIp4Address(otInstance             *aInstance,
+                                     const char             *aHostName,
                                      otDnsAddressCallback    aCallback,
-                                     void *                  aContext,
+                                     void                   *aContext,
                                      const otDnsQueryConfig *aConfig);
 
 /**
@@ -253,7 +253,7 @@ otError otDnsClientResolveIp4Address(otInstance *            aInstance,
  *
  */
 otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
-                                        char *                      aNameBuffer,
+                                        char                       *aNameBuffer,
                                         uint16_t                    aNameBufferSize);
 
 /**
@@ -279,8 +279,8 @@ otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
  */
 otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,
                                        uint16_t                    aIndex,
-                                       otIp6Address *              aAddress,
-                                       uint32_t *                  aTtl);
+                                       otIp6Address               *aAddress,
+                                       uint32_t                   *aTtl);
 
 /**
  * This type is an opaque representation of a response to a browse (service instance enumeration) DNS query.
@@ -318,11 +318,11 @@ typedef struct otDnsServiceInfo
     uint16_t     mPort;               ///< Service port number.
     uint16_t     mPriority;           ///< Service priority.
     uint16_t     mWeight;             ///< Service weight.
-    char *       mHostNameBuffer;     ///< Buffer to output the service host name (can be NULL if not needed).
+    char        *mHostNameBuffer;     ///< Buffer to output the service host name (can be NULL if not needed).
     uint16_t     mHostNameBufferSize; ///< Size of `mHostNameBuffer`.
     otIp6Address mHostAddress;        ///< The host IPv6 address. Set to all zero if not available.
     uint32_t     mHostAddressTtl;     ///< The host address TTL.
-    uint8_t *    mTxtData;            ///< Buffer to output TXT data (can be NULL if not needed).
+    uint8_t     *mTxtData;            ///< Buffer to output TXT data (can be NULL if not needed).
     uint16_t     mTxtDataSize;        ///< On input, size of `mTxtData` buffer. On output number bytes written.
     bool         mTxtDataTruncated;   ///< Indicates if TXT data could not fit in `mTxtDataSize` and was truncated.
     uint32_t     mTxtDataTtl;         ///< The TXT data TTL.
@@ -347,10 +347,10 @@ typedef struct otDnsServiceInfo
  * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
  *
  */
-otError otDnsClientBrowse(otInstance *            aInstance,
-                          const char *            aServiceName,
+otError otDnsClientBrowse(otInstance             *aInstance,
+                          const char             *aServiceName,
                           otDnsBrowseCallback     aCallback,
-                          void *                  aContext,
+                          void                   *aContext,
                           const otDnsQueryConfig *aConfig);
 
 /**
@@ -367,7 +367,7 @@ otError otDnsClientBrowse(otInstance *            aInstance,
  *
  */
 otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
-                                          char *                     aNameBuffer,
+                                          char                      *aNameBuffer,
                                           uint16_t                   aNameBufferSize);
 
 /**
@@ -394,7 +394,7 @@ otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
  */
 otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aResponse,
                                               uint16_t                   aIndex,
-                                              char *                     aLabelBuffer,
+                                              char                      *aLabelBuffer,
                                               uint8_t                    aLabelBufferSize);
 
 /**
@@ -425,8 +425,8 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
  *
  */
 otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
-                                          const char *               aInstanceLabel,
-                                          otDnsServiceInfo *         aServiceInfo);
+                                          const char                *aInstanceLabel,
+                                          otDnsServiceInfo          *aServiceInfo);
 
 /**
  * This function gets the host IPv6 address from a DNS browse (service instance enumeration) response.
@@ -450,10 +450,10 @@ otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
  *
  */
 otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
-                                          const char *               aHostName,
+                                          const char                *aHostName,
                                           uint16_t                   aIndex,
-                                          otIp6Address *             aAddress,
-                                          uint32_t *                 aTtl);
+                                          otIp6Address              *aAddress,
+                                          uint32_t                  *aTtl);
 
 /**
  * This type is an opaque representation of a response to a service instance resolution DNS query.
@@ -502,11 +502,11 @@ typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse 
  * @retval OT_ERROR_INVALID_ARGS  @p aInstanceLabel is NULL.
  *
  */
-otError otDnsClientResolveService(otInstance *            aInstance,
-                                  const char *            aInstanceLabel,
-                                  const char *            aServiceName,
+otError otDnsClientResolveService(otInstance             *aInstance,
+                                  const char             *aInstanceLabel,
+                                  const char             *aServiceName,
                                   otDnsServiceCallback    aCallback,
-                                  void *                  aContext,
+                                  void                   *aContext,
                                   const otDnsQueryConfig *aConfig);
 
 /**
@@ -526,9 +526,9 @@ otError otDnsClientResolveService(otInstance *            aInstance,
  *
  */
 otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse,
-                                           char *                      aLabelBuffer,
+                                           char                       *aLabelBuffer,
                                            uint8_t                     aLabelBufferSize,
-                                           char *                      aNameBuffer,
+                                           char                       *aNameBuffer,
                                            uint16_t                    aNameBufferSize);
 
 /**
@@ -577,10 +577,10 @@ otError otDnsServiceResponseGetServiceInfo(const otDnsServiceResponse *aResponse
  *
  */
 otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse,
-                                           const char *                aHostName,
+                                           const char                 *aHostName,
                                            uint16_t                    aIndex,
-                                           otIp6Address *              aAddress,
-                                           uint32_t *                  aTtl);
+                                           otIp6Address               *aAddress,
+                                           uint32_t                   *aTtl);
 
 /**
  * @}

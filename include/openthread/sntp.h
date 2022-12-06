@@ -93,10 +93,10 @@ typedef void (*otSntpResponseHandler)(void *aContext, uint64_t aTime, otError aR
  * @param[in]  aContext    A pointer to arbitrary context information.
  *
  */
-otError otSntpClientQuery(otInstance *          aInstance,
-                          const otSntpQuery *   aQuery,
+otError otSntpClientQuery(otInstance           *aInstance,
+                          const otSntpQuery    *aQuery,
                           otSntpResponseHandler aHandler,
-                          void *                aContext);
+                          void                 *aContext);
 
 /**
  * This function sets the unix era number.

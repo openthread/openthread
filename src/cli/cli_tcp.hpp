@@ -88,11 +88,11 @@ private:
                                                   bool           aEndOfStream,
                                                   size_t         aBytesRemaining);
     static void HandleTcpDisconnectedCallback(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
-    static otTcpIncomingConnectionAction HandleTcpAcceptReadyCallback(otTcpListener *   aListener,
+    static otTcpIncomingConnectionAction HandleTcpAcceptReadyCallback(otTcpListener    *aListener,
                                                                       const otSockAddr *aPeer,
-                                                                      otTcpEndpoint **  aAcceptInto);
-    static void                          HandleTcpAcceptDoneCallback(otTcpListener *   aListener,
-                                                                     otTcpEndpoint *   aEndpoint,
+                                                                      otTcpEndpoint   **aAcceptInto);
+    static void                          HandleTcpAcceptDoneCallback(otTcpListener    *aListener,
+                                                                     otTcpEndpoint    *aEndpoint,
                                                                      const otSockAddr *aPeer);
 
     void HandleTcpEstablished(otTcpEndpoint *aEndpoint);
@@ -103,9 +103,9 @@ private:
                                    bool           aEndOfStream,
                                    size_t         aBytesRemaining);
     void HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
-    otTcpIncomingConnectionAction HandleTcpAcceptReady(otTcpListener *   aListener,
+    otTcpIncomingConnectionAction HandleTcpAcceptReady(otTcpListener    *aListener,
                                                        const otSockAddr *aPeer,
-                                                       otTcpEndpoint **  aAcceptInto);
+                                                       otTcpEndpoint   **aAcceptInto);
     void HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer);
 
     otTcpEndpoint mEndpoint;
@@ -127,7 +127,7 @@ private:
     uint32_t  mBenchmarkBytesUnsent;
     TimeMilli mBenchmarkStart;
 
-    static constexpr const char * sBenchmarkData       = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    static constexpr const char  *sBenchmarkData       = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     static constexpr const size_t sBenchmarkDataLength = 52;
 };
 

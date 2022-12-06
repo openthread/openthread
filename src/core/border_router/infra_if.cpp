@@ -167,10 +167,10 @@ InfraIf::InfoString InfraIf::ToString(void) const
 
 //---------------------------------------------------------------------------------------------------------------------
 
-extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
+extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
                                          uint32_t            aInfraIfIndex,
                                          const otIp6Address *aSrcAddress,
-                                         const uint8_t *     aBuffer,
+                                         const uint8_t      *aBuffer,
                                          uint16_t            aBufferLength)
 {
     InfraIf::Icmp6Packet packet;
@@ -184,7 +184,7 @@ extern "C" otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aIn
     return AsCoreType(aInstance).Get<InfraIf>().HandleStateChanged(aInfraIfIndex, aIsRunning);
 }
 
-extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance *       aInstance,
+extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
                                                      uint32_t           aInfraIfIndex,
                                                      const otIp6Prefix *aIp6Prefix)
 {

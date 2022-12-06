@@ -106,7 +106,7 @@ void TestNetworkDataIterator(void)
 {
     static constexpr uint8_t kMaxRlocsArray = 10;
 
-    ot::Instance *      instance;
+    ot::Instance       *instance;
     Iterator            iter = kIteratorInit;
     ExternalRouteConfig rconfig;
     OnMeshPrefixConfig  pconfig;
@@ -639,7 +639,7 @@ void TestNetworkDataDsnSrpServices(void)
 
         struct UnicastEntry
         {
-            const char *                   mAddress;
+            const char                    *mAddress;
             uint16_t                       mPort;
             Service::DnsSrpUnicast::Origin mOrigin;
             uint16_t                       mRloc16;
@@ -681,7 +681,7 @@ void TestNetworkDataDsnSrpServices(void)
 
         const uint8_t kPreferredAnycastEntryIndex = 2;
 
-        Service::Manager &           manager = instance->Get<Service::Manager>();
+        Service::Manager            &manager = instance->Get<Service::Manager>();
         Service::Manager::Iterator   iterator;
         Service::DnsSrpAnycast::Info anycastInfo;
         Service::DnsSrpUnicast::Info unicastInfo;

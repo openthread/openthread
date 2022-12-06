@@ -70,8 +70,8 @@ extern "C" {
  */
 otError otDiagProcessCmd(otInstance *aInstance,
                          uint8_t     aArgsLength,
-                         char *      aArgs[],
-                         char *      aOutput,
+                         char       *aArgs[],
+                         char       *aOutput,
                          size_t      aOutputMaxLen);
 
 /**

@@ -130,7 +130,7 @@ void JoinerRouter::HandleUdpReceive(void *aContext, otMessage *aMessage, const o
 void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error            error;
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     ExtendedTlv      tlv;
     uint16_t         borderAgentRloc;
@@ -174,7 +174,7 @@ template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Message &aMessage, c
     Kek                      kek;
     uint16_t                 offset;
     uint16_t                 length;
-    Message *                message = nullptr;
+    Message                 *message = nullptr;
     Message::Settings        settings(Message::kNoLinkSecurity, Message::kPriorityNet);
     Ip6::MessageInfo         messageInfo;
 
@@ -211,7 +211,7 @@ exit:
 void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek)
 {
     Error                 error   = kErrorNone;
-    Message *             message = Get<MessagePool>().Allocate(Message::kTypeOther);
+    Message              *message = Get<MessagePool>().Allocate(Message::kTypeOther);
     JoinerEntrustMetadata metadata;
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -243,7 +243,7 @@ void JoinerRouter::HandleTimer(void)
 void JoinerRouter::SendDelayedJoinerEntrust(void)
 {
     JoinerEntrustMetadata metadata;
-    Message *             message = mDelayedJoinEnts.GetHead();
+    Message              *message = mDelayedJoinEnts.GetHead();
 
     VerifyOrExit(message != nullptr);
     VerifyOrExit(!mTimer.IsRunning());
@@ -298,7 +298,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     Coap::Message *message = nullptr;
     Dataset        dataset;
     NetworkNameTlv networkName;
-    const Tlv *    tlv;
+    const Tlv     *tlv;
     NetworkKey     networkKey;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriJoinerEntrust);
@@ -368,8 +368,8 @@ exit:
     return message;
 }
 
-void JoinerRouter::HandleJoinerEntrustResponse(void *               aContext,
-                                               otMessage *          aMessage,
+void JoinerRouter::HandleJoinerEntrustResponse(void                *aContext,
+                                               otMessage           *aMessage,
                                                const otMessageInfo *aMessageInfo,
                                                Error                aResult)
 {
@@ -377,7 +377,7 @@ void JoinerRouter::HandleJoinerEntrustResponse(void *               aContext,
                                                                        AsCoreTypePtr(aMessageInfo), aResult);
 }
 
-void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message *         aMessage,
+void JoinerRouter::HandleJoinerEntrustResponse(Coap::Message          *aMessage,
                                                const Ip6::MessageInfo *aMessageInfo,
                                                Error                   aResult)
 {

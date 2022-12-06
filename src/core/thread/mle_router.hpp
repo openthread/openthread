@@ -166,7 +166,10 @@ public:
      * @returns The preferred Partition Id value.
      *
      */
-    uint32_t GetPreferredLeaderPartitionId(void) const { return mPreferredLeaderPartitionId; }
+    uint32_t GetPreferredLeaderPartitionId(void) const
+    {
+        return mPreferredLeaderPartitionId;
+    }
 
     /**
      * This method sets the preferred Partition Id when operating in the Leader role for certification testing.
@@ -174,7 +177,10 @@ public:
      * @param[in]  aPartitionId  The preferred Leader Partition Id.
      *
      */
-    void SetPreferredLeaderPartitionId(uint32_t aPartitionId) { mPreferredLeaderPartitionId = aPartitionId; }
+    void SetPreferredLeaderPartitionId(uint32_t aPartitionId)
+    {
+        mPreferredLeaderPartitionId = aPartitionId;
+    }
 #endif
 
     /**
@@ -195,7 +201,10 @@ public:
      * This method gets the Partition Id which the device joined successfully once.
      *
      */
-    uint32_t GetPreviousPartitionId(void) const { return mPreviousPartitionId; }
+    uint32_t GetPreviousPartitionId(void) const
+    {
+        return mPreviousPartitionId;
+    }
 
     /**
      * This method sets the Partition Id which the device joins successfully.
@@ -203,7 +212,10 @@ public:
      * @param[in]  aPartitionId   The Partition Id.
      *
      */
-    void SetPreviousPartitionId(uint32_t aPartitionId) { mPreviousPartitionId = aPartitionId; }
+    void SetPreviousPartitionId(uint32_t aPartitionId)
+    {
+        mPreviousPartitionId = aPartitionId;
+    }
 
     /**
      * This method sets the Router Id.
@@ -229,7 +241,10 @@ public:
      * @returns The NETWORK_ID_TIMEOUT value.
      *
      */
-    uint8_t GetNetworkIdTimeout(void) const { return mNetworkIdTimeout; }
+    uint8_t GetNetworkIdTimeout(void) const
+    {
+        return mNetworkIdTimeout;
+    }
 
     /**
      * This method sets the NETWORK_ID_TIMEOUT value.
@@ -237,7 +252,10 @@ public:
      * @param[in]  aTimeout  The NETWORK_ID_TIMEOUT value.
      *
      */
-    void SetNetworkIdTimeout(uint8_t aTimeout) { mNetworkIdTimeout = aTimeout; }
+    void SetNetworkIdTimeout(uint8_t aTimeout)
+    {
+        mNetworkIdTimeout = aTimeout;
+    }
 
     /**
      * This method returns the route cost to a RLOC16.
@@ -275,7 +293,10 @@ public:
      * @returns The ROUTER_SELECTION_JITTER value.
      *
      */
-    uint8_t GetRouterSelectionJitter(void) const { return mRouterSelectionJitter; }
+    uint8_t GetRouterSelectionJitter(void) const
+    {
+        return mRouterSelectionJitter;
+    }
 
     /**
      * This method sets the ROUTER_SELECTION_JITTER value.
@@ -291,7 +312,10 @@ public:
      * @returns The current router selection jitter timeout value.
      *
      */
-    uint8_t GetRouterSelectionJitterTimeout(void) const { return mRouterSelectionJitterTimeout; }
+    uint8_t GetRouterSelectionJitterTimeout(void) const
+    {
+        return mRouterSelectionJitterTimeout;
+    }
 
     /**
      * This method returns the ROUTER_UPGRADE_THRESHOLD value.
@@ -299,7 +323,10 @@ public:
      * @returns The ROUTER_UPGRADE_THRESHOLD value.
      *
      */
-    uint8_t GetRouterUpgradeThreshold(void) const { return mRouterUpgradeThreshold; }
+    uint8_t GetRouterUpgradeThreshold(void) const
+    {
+        return mRouterUpgradeThreshold;
+    }
 
     /**
      * This method sets the ROUTER_UPGRADE_THRESHOLD value.
@@ -307,7 +334,10 @@ public:
      * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
      *
      */
-    void SetRouterUpgradeThreshold(uint8_t aThreshold) { mRouterUpgradeThreshold = aThreshold; }
+    void SetRouterUpgradeThreshold(uint8_t aThreshold)
+    {
+        mRouterUpgradeThreshold = aThreshold;
+    }
 
     /**
      * This method returns the ROUTER_DOWNGRADE_THRESHOLD value.
@@ -315,7 +345,10 @@ public:
      * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
      *
      */
-    uint8_t GetRouterDowngradeThreshold(void) const { return mRouterDowngradeThreshold; }
+    uint8_t GetRouterDowngradeThreshold(void) const
+    {
+        return mRouterDowngradeThreshold;
+    }
 
     /**
      * This method sets the ROUTER_DOWNGRADE_THRESHOLD value.
@@ -323,7 +356,10 @@ public:
      * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
      *
      */
-    void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
+    void SetRouterDowngradeThreshold(uint8_t aThreshold)
+    {
+        mRouterDowngradeThreshold = aThreshold;
+    }
 
     /**
      * This method returns if the REED is expected to become Router soon.
@@ -409,7 +445,10 @@ public:
      * @retval FALSE  If @p aRouterId is not a valid Router ID.
      *
      */
-    static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
+    static bool IsRouterIdValid(uint8_t aRouterId)
+    {
+        return aRouterId <= kMaxRouterId;
+    }
 
     /**
      * This method fills an ConnectivityTlv.
@@ -426,7 +465,10 @@ public:
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Child Update Request message.
      *
      */
-    Error SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
+    Error SendChildUpdateRequest(void)
+    {
+        return Mle::SendChildUpdateRequest();
+    }
 
     Error SendLinkRequest(Neighbor *aNeighbor);
 
@@ -449,7 +491,10 @@ public:
      * @returns The assigned parent priority value, -2 means not assigned.
      *
      */
-    int8_t GetAssignParentPriority(void) const { return mParentPriority; }
+    int8_t GetAssignParentPriority(void) const
+    {
+        return mParentPriority;
+    }
 
     /**
      * This method sets the parent priority.
@@ -521,7 +566,10 @@ public:
      * @param[in]  aDelay  The delay before registering Backbone Router service.
      *
      */
-    void SetBackboneRouterRegistrationDelay(uint8_t aDelay) { mBackboneRouterRegistrationDelay = aDelay; }
+    void SetBackboneRouterRegistrationDelay(uint8_t aDelay)
+    {
+        mBackboneRouterRegistrationDelay = aDelay;
+    }
 #endif
 
     /**
@@ -552,7 +600,10 @@ public:
      * @param[in]  aEnabled  TRUE if the device was commissioned using CCM, FALSE otherwise.
      *
      */
-    void SetCcmEnabled(bool aEnabled) { mCcmEnabled = aEnabled; }
+    void SetCcmEnabled(bool aEnabled)
+    {
+        mCcmEnabled = aEnabled;
+    }
 
     /**
      * This function sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
@@ -560,7 +611,10 @@ public:
      * @param[in]  aEnabled  TRUE to enable Security Policy TLV version-threshold for routing, FALSE otherwise.
      *
      */
-    void SetThreadVersionCheckEnabled(bool aEnabled) { mThreadVersionCheckEnabled = aEnabled; }
+    void SetThreadVersionCheckEnabled(bool aEnabled)
+    {
+        mThreadVersionCheckEnabled = aEnabled;
+    }
 #endif
 
 private:
@@ -595,27 +649,27 @@ private:
     Error ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv);
     void  StopAdvertiseTrickleTimer(void);
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
-    void  SendAddressSolicitResponse(const Coap::Message &   aRequest,
+    void  SendAddressSolicitResponse(const Coap::Message    &aRequest,
                                      ThreadStatusTlv::Status aResponseStatus,
-                                     const Router *          aRouter,
+                                     const Router           *aRouter,
                                      const Ip6::MessageInfo &aMessageInfo);
     void  SendAddressRelease(void);
     void  SendAdvertisement(void);
     Error SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
-                         Neighbor *              aNeighbor,
-                         const TlvList &         aRequestedTlvList,
-                         const Challenge &       aChallenge);
+                         Neighbor               *aNeighbor,
+                         const TlvList          &aRequestedTlvList,
+                         const Challenge        &aChallenge);
     void  SendParentResponse(Child *aChild, const Challenge &aChallenge, bool aRoutersOnlyRequest);
     Error SendChildIdResponse(Child &aChild);
     Error SendChildUpdateRequest(Child &aChild);
-    void  SendChildUpdateResponse(Child *                 aChild,
+    void  SendChildUpdateResponse(Child                  *aChild,
                                   const Ip6::MessageInfo &aMessageInfo,
-                                  const TlvList &         aTlvList,
-                                  const Challenge &       aChallenge);
+                                  const TlvList          &aTlvList,
+                                  const Challenge        &aChallenge);
     void  SendDataResponse(const Ip6::Address &aDestination,
-                           const TlvList &     aTlvList,
+                           const TlvList      &aTlvList,
                            uint16_t            aDelay,
-                           const Message *     aRequestMessage = nullptr);
+                           const Message      *aRequestMessage = nullptr);
     Error SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
     void  SetStateRouter(uint16_t aRloc16);
     void  SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
@@ -626,8 +680,8 @@ private:
     bool  UpdateLinkQualityOut(const RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval);
     bool  HasNeighborWithGoodLinkQuality(void) const;
 
-    static void HandleAddressSolicitResponse(void *               aContext,
-                                             otMessage *          aMessage,
+    static void HandleAddressSolicitResponse(void                *aContext,
+                                             otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult);
     void HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
@@ -697,7 +751,7 @@ private:
 #endif
 
     otThreadDiscoveryRequestCallback mDiscoveryRequestCallback;
-    void *                           mDiscoveryRequestCallbackContext;
+    void                            *mDiscoveryRequestCallbackContext;
 };
 
 DeclareTmfHandler(MleRouter, kUriAddressSolicit);

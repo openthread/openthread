@@ -402,7 +402,7 @@ Error Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
 {
     Error    error          = kErrorNone;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
-    Tlv *    old            = GetTlv(aType);
+    Tlv     *old            = GetTlv(aType);
     Tlv      tlv;
 
     if (old != nullptr)
@@ -523,7 +523,7 @@ void Dataset::RemoveTlv(Tlv *aTlv)
 
 Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdated) const
 {
-    Mac::Mac &  mac        = aInstance.Get<Mac::Mac>();
+    Mac::Mac   &mac        = aInstance.Get<Mac::Mac>();
     KeyManager &keyManager = aInstance.Get<KeyManager>();
     Error       error      = kErrorNone;
 

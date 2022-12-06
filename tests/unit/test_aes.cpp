@@ -55,7 +55,7 @@ void TestMacBeaconFrame(void)
                            0xAC, 0x02, 0x05, 0x00, 0x00, 0x00, 0x55, 0xCF, 0x00, 0x00, 0x51, 0x52,
                            0x53, 0x54, 0x22, 0x3B, 0xC1, 0xEC, 0x84, 0x1A, 0xB5, 0x53};
 
-    otInstance *       instance = testInitInstance();
+    otInstance        *instance = testInitInstance();
     ot::Crypto::AesCcm aesCcm;
     uint32_t           headerLength  = sizeof(test) - 8;
     uint32_t           payloadLength = 0;
@@ -122,8 +122,8 @@ void TestMacCommandFrame(void)
 
     uint8_t tag[kTagLength];
 
-    ot::Instance *     instance = testInitInstance();
-    ot::Message *      message;
+    ot::Instance      *instance = testInitInstance();
+    ot::Message       *message;
     ot::Crypto::AesCcm aesCcm;
 
     VerifyOrQuit(instance != nullptr);
@@ -195,9 +195,9 @@ void TestInPlaceAesCcmProcessing(void)
     uint8_t header[kHeaderLength];
 
     ot::Crypto::AesCcm aesCcm;
-    ot::Instance *     instance = testInitInstance();
-    ot::Message *      message;
-    ot::Message *      messageClone;
+    ot::Instance      *instance = testInitInstance();
+    ot::Message       *message;
+    ot::Message       *messageClone;
 
     VerifyOrQuit(instance != nullptr);
 

@@ -145,11 +145,11 @@ public:
      * @retval kErrorBusy    A previous request is ongoing.
      *
      */
-    Error SendSetRequest(const Dataset::Info &    aDatasetInfo,
-                         const uint8_t *          aTlvs,
+    Error SendSetRequest(const Dataset::Info     &aDatasetInfo,
+                         const uint8_t           *aTlvs,
                          uint8_t                  aLength,
                          otDatasetMgmtSetCallback aCallback,
-                         void *                   aContext);
+                         void                    *aContext);
 
     /**
      * This method sends a MGMT_GET request.
@@ -164,9 +164,9 @@ public:
      *
      */
     Error SendGetRequest(const Dataset::Components &aDatasetComponents,
-                         const uint8_t *            aTlvTypes,
+                         const uint8_t             *aTlvTypes,
                          uint8_t                    aLength,
-                         const otIp6Address *       aAddress) const;
+                         const otIp6Address        *aAddress) const;
 #if OPENTHREAD_FTD
     /**
      * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
@@ -221,7 +221,10 @@ protected:
      * @returns The Operational Dataset type.
      *
      */
-    Dataset::Type GetType(void) const { return mLocal.GetType(); }
+    Dataset::Type GetType(void) const
+    {
+        return mLocal.GetType();
+    }
 
     /**
      * This method clears the Operational Dataset.
@@ -332,21 +335,27 @@ protected:
     bool         mTimestampValid : 1;
 
 private:
-    static void HandleMgmtSetResponse(void *               aContext,
-                                      otMessage *          aMessage,
+    static void HandleMgmtSetResponse(void                *aContext,
+                                      otMessage           *aMessage,
                                       const otMessageInfo *aMessageInfo,
                                       Error                aError);
     void        HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
 
-    bool  IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
-    bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
+    bool IsActiveDataset(void) const
+    {
+        return GetType() == Dataset::kActive;
+    }
+    bool IsPendingDataset(void) const
+    {
+        return GetType() == Dataset::kPending;
+    }
     void  SignalDatasetChange(void) const;
     void  HandleDatasetUpdated(void);
     Error AppendDatasetToMessage(const Dataset::Info &aDatasetInfo, Message &aMessage) const;
     void  SendSet(void);
-    void  SendGetResponse(const Coap::Message &   aRequest,
+    void  SendGetResponse(const Coap::Message    &aRequest,
                           const Ip6::MessageInfo &aMessageInfo,
-                          uint8_t *               aTlvs,
+                          uint8_t                *aTlvs,
                           uint8_t                 aLength) const;
 
 #if OPENTHREAD_FTD
@@ -360,7 +369,7 @@ private:
     TimerMilli mTimer;
 
     otDatasetMgmtSetCallback mMgmtSetCallback;
-    void *                   mMgmtSetCallbackContext;
+    void                    *mMgmtSetCallbackContext;
 };
 
 class ActiveDatasetManager : public DatasetManager, private NonCopyable
@@ -463,7 +472,10 @@ public:
      * @retval kErrorFailed  Failed to generate random values for new parameters.
      *
      */
-    Error CreateNewNetwork(Dataset::Info &aDatasetInfo) { return aDatasetInfo.GenerateRandom(GetInstance()); }
+    Error CreateNewNetwork(Dataset::Info &aDatasetInfo)
+    {
+        return aDatasetInfo.GenerateRandom(GetInstance());
+    }
 
     /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.
@@ -486,7 +498,10 @@ private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void) { DatasetManager::HandleTimer(); }
+    void        HandleTimer(void)
+    {
+        DatasetManager::HandleTimer();
+    }
 };
 
 DeclareTmfHandler(ActiveDatasetManager, kUriActiveGet);
@@ -596,7 +611,10 @@ private:
     void StartDelayTimer(void);
 
     static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void) { DatasetManager::HandleTimer(); }
+    void        HandleTimer(void)
+    {
+        DatasetManager::HandleTimer();
+    }
 
     void                     HandleDelayTimer(void);
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

@@ -230,9 +230,9 @@ static UpdateHandlerMode sUpdateHandlerMode       = kAccept;
 static bool              sProcessedUpdateCallback = false;
 
 void HandleSrpServerUpdate(otSrpServerServiceUpdateId aId,
-                           const otSrpServerHost *    aHost,
+                           const otSrpServerHost     *aHost,
                            uint32_t                   aTimeout,
-                           void *                     aContext)
+                           void                      *aContext)
 {
     Log("HandleSrpServerUpdate() called with %u, timeout:%u", aId, aTimeout);
 
@@ -259,9 +259,9 @@ static Error sLastClientCallbackError = kErrorNone;
 
 void HandleSrpClientCallback(otError                    aError,
                              const otSrpClientHostInfo *aHostInfo,
-                             const otSrpClientService * aServices,
-                             const otSrpClientService * aRemovedServices,
-                             void *                     aContext)
+                             const otSrpClientService  *aServices,
+                             const otSrpClientService  *aRemovedServices,
+                             void                      *aContext)
 {
     Log("HandleSrpClientCallback() called with error %s", ErrorToString(aError));
 
@@ -284,7 +284,7 @@ void PrepareService1(Srp::Client::Service &aService)
     static const char          kSub1[]          = "_sub1";
     static const char          kSub2[]          = "_V1234567";
     static const char          kSub3[]          = "_XYZWS";
-    static const char *        kSubLabels[]     = {kSub1, kSub2, kSub3, nullptr};
+    static const char         *kSubLabels[]     = {kSub1, kSub2, kSub3, nullptr};
     static const char          kTxtKey1[]       = "ABCD";
     static const uint8_t       kTxtValue1[]     = {'a', '0'};
     static const char          kTxtKey2[]       = "Z0";
@@ -292,9 +292,9 @@ void PrepareService1(Srp::Client::Service &aService)
     static const char          kTxtKey3[]       = "D";
     static const uint8_t       kTxtValue3[]     = {0};
     static const otDnsTxtEntry kTxtEntries[]    = {
-        {kTxtKey1, kTxtValue1, sizeof(kTxtValue1)},
-        {kTxtKey2, kTxtValue2, sizeof(kTxtValue2)},
-        {kTxtKey3, kTxtValue3, sizeof(kTxtValue3)},
+           {kTxtKey1, kTxtValue1, sizeof(kTxtValue1)},
+           {kTxtKey2, kTxtValue2, sizeof(kTxtValue2)},
+           {kTxtKey3, kTxtValue3, sizeof(kTxtValue3)},
     };
 
     aService.mName          = kServiceName;
@@ -330,7 +330,7 @@ void ValidateHost(Srp::Server &aServer, const char *aHostName)
     // registered on SRP server.
 
     const Srp::Server::Host *host;
-    const char *             name;
+    const char              *name;
 
     Log("ValidateHost()");
 
@@ -351,8 +351,8 @@ void ValidateHost(Srp::Server &aServer, const char *aHostName)
 
 void TestSrpServerBase(void)
 {
-    Srp::Server *        srpServer;
-    Srp::Client *        srpClient;
+    Srp::Server         *srpServer;
+    Srp::Client         *srpClient;
     Srp::Client::Service service1;
     Srp::Client::Service service2;
     uint16_t             heapAllocations;
@@ -476,8 +476,8 @@ void TestSrpServerBase(void)
 
 void TestSrpServerReject(void)
 {
-    Srp::Server *        srpServer;
-    Srp::Client *        srpClient;
+    Srp::Server         *srpServer;
+    Srp::Client         *srpClient;
     Srp::Client::Service service1;
     Srp::Client::Service service2;
     uint16_t             heapAllocations;
@@ -588,8 +588,8 @@ void TestSrpServerReject(void)
 
 void TestSrpServerIgnore(void)
 {
-    Srp::Server *        srpServer;
-    Srp::Client *        srpClient;
+    Srp::Server         *srpServer;
+    Srp::Client         *srpClient;
     Srp::Client::Service service1;
     Srp::Client::Service service2;
     uint16_t             heapAllocations;

@@ -1023,7 +1023,7 @@ exit:
 void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
     uint8_t *cur = GetHeaderIe(CslIe::kHeaderIeId);
-    CslIe *  csl;
+    CslIe   *csl;
 
     VerifyOrExit(cur != nullptr);
 
@@ -1049,7 +1049,7 @@ void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const
 {
-    const TimeIe * timeIe = nullptr;
+    const TimeIe  *timeIe = nullptr;
     const uint8_t *cur    = nullptr;
 
     cur = GetHeaderIe(VendorIeHeader::kHeaderIeId);
@@ -1136,7 +1136,7 @@ template Error Frame::AppendHeaderIeAt<Termination2Ie>(uint8_t &aIndex);
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 {
-    uint8_t *      psduBuffer   = mPsdu;
+    uint8_t       *psduBuffer   = mPsdu;
     otRadioIeInfo *ieInfoBuffer = mInfo.mTxInfo.mIeInfo;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     uint8_t radioType = mRadioType;

@@ -270,7 +270,7 @@ Error RouterTable::Release(uint8_t aRouterId)
 {
     Error    error  = kErrorNone;
     uint16_t rloc16 = Mle::Rloc16FromRouterId(aRouterId);
-    Router * router;
+    Router  *router;
 
     OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
 

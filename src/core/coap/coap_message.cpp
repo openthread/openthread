@@ -225,7 +225,7 @@ exit:
 
 Error Message::ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const
 {
-    char *           curUriPath = aUriPath;
+    char            *curUriPath = aUriPath;
     Error            error      = kErrorNone;
     Option::Iterator iterator;
 

@@ -112,15 +112,15 @@ typedef void otDnssdQuery;
  */
 typedef struct otDnssdServiceInstanceInfo
 {
-    const char *        mFullName;   ///< Full instance name (e.g. "OpenThread._ipps._tcp.default.service.arpa.").
-    const char *        mHostName;   ///< Host name (e.g. "ot-host.default.service.arpa.").
+    const char         *mFullName;   ///< Full instance name (e.g. "OpenThread._ipps._tcp.default.service.arpa.").
+    const char         *mHostName;   ///< Host name (e.g. "ot-host.default.service.arpa.").
     uint8_t             mAddressNum; ///< Number of host IPv6 addresses.
     const otIp6Address *mAddresses;  ///< Host IPv6 addresses.
     uint16_t            mPort;       ///< Service port.
     uint16_t            mPriority;   ///< Service priority.
     uint16_t            mWeight;     ///< Service weight.
     uint16_t            mTxtLength;  ///< Service TXT RDATA length.
-    const uint8_t *     mTxtData;    ///< Service TXT RDATA.
+    const uint8_t      *mTxtData;    ///< Service TXT RDATA.
     uint32_t            mTtl;        ///< Service TTL (in seconds).
 } otDnssdServiceInstanceInfo;
 
@@ -177,10 +177,10 @@ typedef struct otDnssdCounters
  * @param[in] aContext      A pointer to the application-specific context.
  *
  */
-void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
+void otDnssdQuerySetCallbacks(otInstance                     *aInstance,
                               otDnssdQuerySubscribeCallback   aSubscribe,
                               otDnssdQueryUnsubscribeCallback aUnsubscribe,
-                              void *                          aContext);
+                              void                           *aContext);
 
 /**
  * This function notifies a discovered service instance.
@@ -195,8 +195,8 @@ void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
  * @param[in] aInstanceInfo     A pointer to the discovered service instance information.
  *
  */
-void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aInstance,
-                                                 const char *                aServiceFullName,
+void otDnssdQueryHandleDiscoveredServiceInstance(otInstance                 *aInstance,
+                                                 const char                 *aServiceFullName,
                                                  otDnssdServiceInstanceInfo *aInstanceInfo);
 /**
  * This function notifies a discovered host.

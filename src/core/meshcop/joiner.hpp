@@ -102,14 +102,14 @@ public:
      * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is fully enabled.
      *
      */
-    Error Start(const char *     aPskd,
-                const char *     aProvisioningUrl,
-                const char *     aVendorName,
-                const char *     aVendorModel,
-                const char *     aVendorSwVersion,
-                const char *     aVendorData,
+    Error Start(const char      *aPskd,
+                const char      *aProvisioningUrl,
+                const char      *aVendorName,
+                const char      *aVendorModel,
+                const char      *aVendorSwVersion,
+                const char      *aVendorData,
                 otJoinerCallback aCallback,
-                void *           aContext);
+                void            *aContext);
 
     /**
      * This method stops the Joiner service.
@@ -201,8 +201,8 @@ private:
     static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
     void        HandleSecureCoapClientConnect(bool aConnected);
 
-    static void HandleJoinerFinalizeResponse(void *               aContext,
-                                             otMessage *          aMessage,
+    static void HandleJoinerFinalizeResponse(void                *aContext,
+                                             otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult);
     void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
@@ -240,7 +240,7 @@ private:
     State mState;
 
     otJoinerCallback mCallback;
-    void *           mContext;
+    void            *mContext;
 
     JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES];
     uint16_t     mJoinerRouterIndex;

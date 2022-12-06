@@ -106,8 +106,8 @@ private:
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    static void HandleNotificationResponse(void *               aContext,
-                                           otMessage *          aMessage,
+    static void HandleNotificationResponse(void                *aContext,
+                                           otMessage           *aMessage,
                                            const otMessageInfo *aMessageInfo,
                                            otError              aError);
     void        HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
@@ -118,7 +118,7 @@ private:
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-    static otError BlockwiseReceiveHook(void *         aContext,
+    static otError BlockwiseReceiveHook(void          *aContext,
                                         const uint8_t *aBlock,
                                         uint32_t       aPosition,
                                         uint16_t       aBlockLength,
@@ -129,11 +129,11 @@ private:
                                         uint16_t       aBlockLength,
                                         bool           aMore,
                                         uint32_t       aTotalLength);
-    static otError BlockwiseTransmitHook(void *    aContext,
-                                         uint8_t * aBlock,
+    static otError BlockwiseTransmitHook(void     *aContext,
+                                         uint8_t  *aBlock,
                                          uint32_t  aPosition,
                                          uint16_t *aBlockLength,
-                                         bool *    aMore);
+                                         bool     *aMore);
     otError        BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore);
 #endif
 

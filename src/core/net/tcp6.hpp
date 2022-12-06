@@ -400,9 +400,9 @@ public:
         size_t GetInFlightBytes(void) const;
         size_t GetBacklogBytes(void) const;
 
-        Address &      GetLocalIp6Address(void);
+        Address       &GetLocalIp6Address(void);
         const Address &GetLocalIp6Address(void) const;
-        Address &      GetForeignIp6Address(void);
+        Address       &GetForeignIp6Address(void);
         const Address &GetForeignIp6Address(void) const;
         bool           Matches(const MessageInfo &aMessageInfo) const;
     };
@@ -529,7 +529,7 @@ public:
         bool IsClosed(void) const;
 
     private:
-        Address &      GetLocalIp6Address(void);
+        Address       &GetLocalIp6Address(void);
         const Address &GetLocalIp6Address(void) const;
         bool           Matches(const MessageInfo &aMessageInfo) const;
     };
@@ -678,8 +678,8 @@ private:
     static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
     static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
 
-    void ProcessSignals(Endpoint &            aEndpoint,
-                        otLinkedBuffer *      aPriorHead,
+    void ProcessSignals(Endpoint             &aEndpoint,
+                        otLinkedBuffer       *aPriorHead,
                         size_t                aPriorBacklog,
                         struct tcplp_signals &aSignals);
 

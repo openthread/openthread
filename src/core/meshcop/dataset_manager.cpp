@@ -254,7 +254,7 @@ void DatasetManager::HandleTimer(void)
 void DatasetManager::SendSet(void)
 {
     Error            error;
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     Dataset          dataset;
 
@@ -309,8 +309,8 @@ exit:
     }
 }
 
-void DatasetManager::HandleMgmtSetResponse(void *               aContext,
-                                           otMessage *          aMessage,
+void DatasetManager::HandleMgmtSetResponse(void                *aContext,
+                                           otMessage           *aMessage,
                                            const otMessageInfo *aMessageInfo,
                                            Error                aError)
 {
@@ -349,7 +349,7 @@ exit:
     if (mMgmtSetCallback != nullptr)
     {
         otDatasetMgmtSetCallback callback = mMgmtSetCallback;
-        void *                   context  = mMgmtSetCallbackContext;
+        void                    *context  = mMgmtSetCallbackContext;
 
         mMgmtSetCallback        = nullptr;
         mMgmtSetCallbackContext = nullptr;
@@ -405,9 +405,9 @@ exit:
     SendGetResponse(aMessage, aMessageInfo, tlvs, length);
 }
 
-void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
+void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
-                                     uint8_t *               aTlvs,
+                                     uint8_t                *aTlvs,
                                      uint8_t                 aLength) const
 {
     Error          error = kErrorNone;
@@ -468,14 +468,14 @@ exit:
     return error;
 }
 
-Error DatasetManager::SendSetRequest(const Dataset::Info &    aDatasetInfo,
-                                     const uint8_t *          aTlvs,
+Error DatasetManager::SendSetRequest(const Dataset::Info     &aDatasetInfo,
+                                     const uint8_t           *aTlvs,
                                      uint8_t                  aLength,
                                      otDatasetMgmtSetCallback aCallback,
-                                     void *                   aContext)
+                                     void                    *aContext)
 {
     Error            error   = kErrorNone;
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
@@ -531,12 +531,12 @@ exit:
 }
 
 Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponents,
-                                     const uint8_t *            aTlvTypes,
+                                     const uint8_t             *aTlvTypes,
                                      uint8_t                    aLength,
-                                     const otIp6Address *       aAddress) const
+                                     const otIp6Address        *aAddress) const
 {
     Error            error = kErrorNone;
-    Coap::Message *  message;
+    Coap::Message   *message;
     Tmf::MessageInfo messageInfo(GetInstance());
     Tlv              tlv;
     uint8_t          datasetTlvs[kMaxDatasetTlvs];
@@ -666,7 +666,7 @@ exit:
 }
 
 Error ActiveDatasetManager::Save(const Timestamp &aTimestamp,
-                                 const Message &  aMessage,
+                                 const Message   &aMessage,
                                  uint16_t         aOffset,
                                  uint16_t         aLength)
 {
@@ -747,7 +747,7 @@ exit:
 }
 
 Error PendingDatasetManager::Save(const Timestamp &aTimestamp,
-                                  const Message &  aMessage,
+                                  const Message   &aMessage,
                                   uint16_t         aOffset,
                                   uint16_t         aLength)
 {

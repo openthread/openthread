@@ -263,7 +263,7 @@ public:
     Error GetServiceId(uint32_t           aEnterpriseNumber,
                        const ServiceData &aServiceData,
                        bool               aServerStable,
-                       uint8_t &          aServiceId) const;
+                       uint8_t           &aServiceId) const;
 
     /**
      * This methods gets the preferred NAT64 prefix from network data.

@@ -100,7 +100,10 @@ public:
      * @returns The time synchronization sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
+    uint8_t GetTimeSyncSeq(void) const
+    {
+        return mTimeSyncSeq;
+    }
 
     /**
      * This method gets the time offset to the Thread network time.
@@ -108,7 +111,10 @@ public:
      * @returns The time offset to the Thread network time, in microseconds.
      *
      */
-    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
+    int64_t GetNetworkTimeOffset(void) const
+    {
+        return mNetworkTimeOffset;
+    }
 
     /**
      * Set the time synchronization period.
@@ -116,7 +122,10 @@ public:
      * @param[in] aTimeSyncPeriod   The time synchronization period, in seconds.
      *
      */
-    void SetTimeSyncPeriod(uint16_t aTimeSyncPeriod) { mTimeSyncPeriod = aTimeSyncPeriod; }
+    void SetTimeSyncPeriod(uint16_t aTimeSyncPeriod)
+    {
+        mTimeSyncPeriod = aTimeSyncPeriod;
+    }
 
     /**
      * Get the time synchronization period.
@@ -124,7 +133,10 @@ public:
      * @returns The time synchronization period, in seconds.
      *
      */
-    uint16_t GetTimeSyncPeriod(void) const { return mTimeSyncPeriod; }
+    uint16_t GetTimeSyncPeriod(void) const
+    {
+        return mTimeSyncPeriod;
+    }
 
     /**
      * Set the time synchronization XTAL accuracy threshold for Router.
@@ -132,7 +144,10 @@ public:
      * @param[in] aXtalThreshold   The XTAL accuracy threshold for Router, in PPM.
      *
      */
-    void SetXtalThreshold(uint16_t aXtalThreshold) { mXtalThreshold = aXtalThreshold; }
+    void SetXtalThreshold(uint16_t aXtalThreshold)
+    {
+        mXtalThreshold = aXtalThreshold;
+    }
 
     /**
      * Get the time synchronization XTAL accuracy threshold for Router.
@@ -140,7 +155,10 @@ public:
      * @returns The XTAL accuracy threshold for Router, in PPM.
      *
      */
-    uint16_t GetXtalThreshold(void) const { return mXtalThreshold; }
+    uint16_t GetXtalThreshold(void) const
+    {
+        return mXtalThreshold;
+    }
 
     /**
      * Set the time sync callback to be notified of a network time update.
@@ -204,7 +222,7 @@ private:
     int64_t   mNetworkTimeOffset;    ///< The time offset to the Thread Network time
     otNetworkTimeSyncCallbackFn
                         mTimeSyncCallback; ///< The callback to be called when time sync is handled or status updated.
-    void *              mTimeSyncCallbackContext; ///< The context to be passed to callback.
+    void               *mTimeSyncCallbackContext; ///< The context to be passed to callback.
     SyncTimer           mTimer;                   ///< Timer for checking if a resync is required.
     otNetworkTimeStatus mCurrentStatus;           ///< Current network time status.
 };

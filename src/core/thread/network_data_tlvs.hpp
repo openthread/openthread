@@ -1561,7 +1561,7 @@ public:
 
 private:
     const uint8_t *GetServerData(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
-    uint8_t *      GetServerData(void) { return AsNonConst(AsConst(this)->GetServerData()); }
+    uint8_t       *GetServerData(void) { return AsNonConst(AsConst(this)->GetServerData()); }
 
     uint16_t mServer16;
 } OT_TOOL_PACKED_END;

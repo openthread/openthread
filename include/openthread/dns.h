@@ -89,7 +89,7 @@ typedef struct otDnsTxtEntry
      * DNS message.
      *
      */
-    const char *   mKey;
+    const char    *mKey;
     const uint8_t *mValue;       ///< The TXT record value or already encoded TXT-DATA (depending on `mKey`).
     uint16_t       mValueLength; ///< Number of bytes in `mValue` buffer.
 } otDnsTxtEntry;

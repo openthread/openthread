@@ -51,7 +51,7 @@ DataPollHandler::Callbacks::Callbacks(Instance &aInstance)
 
 inline Error DataPollHandler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
                                                               FrameContext &aContext,
-                                                              Child &       aChild)
+                                                              Child        &aChild)
 {
     return Get<IndirectSender>().PrepareFrameForChild(aFrame, aContext, aChild);
 }
@@ -59,7 +59,7 @@ inline Error DataPollHandler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFra
 inline void DataPollHandler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                                                const FrameContext &aContext,
                                                                Error               aError,
-                                                               Child &             aChild)
+                                                               Child              &aChild)
 {
     Get<IndirectSender>().HandleSentFrameToChild(aFrame, aContext, aError, aChild);
 }
@@ -128,7 +128,7 @@ void DataPollHandler::RequestFrameChange(FrameChange aChange, Child &aChild)
 void DataPollHandler::HandleDataPoll(Mac::RxFrame &aFrame)
 {
     Mac::Address macSource;
-    Child *      child;
+    Child       *child;
     uint16_t     indirectMsgCount;
 
     VerifyOrExit(aFrame.GetSecurityEnabled());

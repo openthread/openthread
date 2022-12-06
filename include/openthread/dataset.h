@@ -479,11 +479,11 @@ otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatase
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-otError otDatasetSendMgmtActiveGet(otInstance *                          aInstance,
+otError otDatasetSendMgmtActiveGet(otInstance                           *aInstance,
                                    const otOperationalDatasetComponents *aDatasetComponents,
-                                   const uint8_t *                       aTlvTypes,
+                                   const uint8_t                        *aTlvTypes,
                                    uint8_t                               aLength,
-                                   const otIp6Address *                  aAddress);
+                                   const otIp6Address                   *aAddress);
 
 /**
  * Sends MGMT_ACTIVE_SET.
@@ -500,12 +500,12 @@ otError otDatasetSendMgmtActiveGet(otInstance *                          aInstan
  * @retval OT_ERROR_BUSY          A previous request is ongoing.
  *
  */
-otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
+otError otDatasetSendMgmtActiveSet(otInstance                 *aInstance,
                                    const otOperationalDataset *aDataset,
-                                   const uint8_t *             aTlvs,
+                                   const uint8_t              *aTlvs,
                                    uint8_t                     aLength,
                                    otDatasetMgmtSetCallback    aCallback,
-                                   void *                      aContext);
+                                   void                       *aContext);
 
 /**
  * Sends MGMT_PENDING_GET.
@@ -520,11 +520,11 @@ otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
  *
  */
-otError otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
+otError otDatasetSendMgmtPendingGet(otInstance                           *aInstance,
                                     const otOperationalDatasetComponents *aDatasetComponents,
-                                    const uint8_t *                       aTlvTypes,
+                                    const uint8_t                        *aTlvTypes,
                                     uint8_t                               aLength,
-                                    const otIp6Address *                  aAddress);
+                                    const otIp6Address                   *aAddress);
 
 /**
  * Sends MGMT_PENDING_SET.
@@ -541,12 +541,12 @@ otError otDatasetSendMgmtPendingGet(otInstance *                          aInsta
  * @retval OT_ERROR_BUSY          A previous request is ongoing.
  *
  */
-otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
+otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,
                                     const otOperationalDataset *aDataset,
-                                    const uint8_t *             aTlvs,
+                                    const uint8_t              *aTlvs,
                                     uint8_t                     aLength,
                                     otDatasetMgmtSetCallback    aCallback,
-                                    void *                      aContext);
+                                    void                       *aContext);
 
 /**
  * This function generates PSKc from a given pass-phrase, network name, and extended PAN ID.
@@ -562,10 +562,10 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
  * @retval OT_ERROR_INVALID_ARGS  If any of the input arguments is invalid.
  *
  */
-otError otDatasetGeneratePskc(const char *           aPassPhrase,
-                              const otNetworkName *  aNetworkName,
+otError otDatasetGeneratePskc(const char            *aPassPhrase,
+                              const otNetworkName   *aNetworkName,
                               const otExtendedPanId *aExtPanId,
-                              otPskc *               aPskc);
+                              otPskc                *aPskc);
 
 /**
  * Sets an `otNetworkName` instance from a given null terminated C string.

@@ -106,11 +106,11 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    Error SendDiagnosticGet(const Ip6::Address &           aDestination,
+    Error SendDiagnosticGet(const Ip6::Address            &aDestination,
                             const uint8_t                  aTlvTypes[],
                             uint8_t                        aCount,
                             otReceiveDiagnosticGetCallback aCallback,
-                            void *                         aCallbackContext);
+                            void                          *aCallbackContext);
 
     /**
      * This method sends Diagnostic Reset request.
@@ -155,8 +155,8 @@ private:
     void  FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
     Error FillRequestedTlvs(const Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
-    static void HandleDiagnosticGetResponse(void *               aContext,
-                                            otMessage *          aMessage,
+    static void HandleDiagnosticGetResponse(void                *aContext,
+                                            otMessage           *aMessage,
                                             const otMessageInfo *aMessageInfo,
                                             Error                aResult);
     void HandleDiagnosticGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
@@ -164,7 +164,7 @@ private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
-    void *                         mReceiveDiagnosticGetCallbackContext;
+    void                          *mReceiveDiagnosticGetCallbackContext;
 };
 
 DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetRequest);

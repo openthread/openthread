@@ -55,7 +55,7 @@ AnycastLocator::AnycastLocator(Instance &aInstance)
 Error AnycastLocator::Locate(const Ip6::Address &aAnycastAddress, Callback aCallback, void *aContext)
 {
     Error            error   = kErrorNone;
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
 
     VerifyOrExit((aCallback != nullptr) && Get<Mle::Mle>().IsAnycastLocator(aAnycastAddress),
@@ -81,8 +81,8 @@ exit:
     return error;
 }
 
-void AnycastLocator::HandleResponse(void *               aContext,
-                                    otMessage *          aMessage,
+void AnycastLocator::HandleResponse(void                *aContext,
+                                    otMessage           *aMessage,
                                     const otMessageInfo *aMessageInfo,
                                     Error                aError)
 {

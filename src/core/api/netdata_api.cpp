@@ -49,9 +49,9 @@ otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_
         aStable ? NetworkData::kStableSubset : NetworkData::kFullSet, aData, *aDataLength);
 }
 
-otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
+otError otNetDataGetNextOnMeshPrefix(otInstance            *aInstance,
                                      otNetworkDataIterator *aIterator,
-                                     otBorderRouterConfig * aConfig)
+                                     otBorderRouterConfig  *aConfig)
 {
     AssertPointerIsNotNull(aIterator);
 

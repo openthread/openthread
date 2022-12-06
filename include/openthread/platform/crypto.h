@@ -126,7 +126,7 @@ typedef struct otCryptoKey
  */
 typedef struct otCryptoContext
 {
-    void *   mContext;     ///< Pointer to the context.
+    void    *mContext;     ///< Pointer to the context.
     uint16_t mContextSize; ///< The length of the context in bytes.
 } otCryptoContext;
 
@@ -249,12 +249,12 @@ void otPlatCryptoInit(void);
  *       This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *
  */
-otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
+otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                               otCryptoKeyType      aKeyType,
                               otCryptoKeyAlgorithm aKeyAlgorithm,
                               int                  aKeyUsage,
                               otCryptoKeyStorage   aKeyPersistence,
-                              const uint8_t *      aKey,
+                              const uint8_t       *aKey,
                               size_t               aKeyLen);
 
 /**
@@ -453,9 +453,9 @@ otError otPlatCryptoHkdfInit(otCryptoContext *aContext);
  *
  */
 otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
-                               const uint8_t *  aInfo,
+                               const uint8_t   *aInfo,
                                uint16_t         aInfoLength,
-                               uint8_t *        aOutputKey,
+                               uint8_t         *aOutputKey,
                                uint16_t         aOutputKeyLength);
 
 /**
@@ -470,8 +470,8 @@ otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
  * @retval OT_ERROR_FAILED        HKDF Extract failed.
  *
  */
-otError otPlatCryptoHkdfExtract(otCryptoContext *  aContext,
-                                const uint8_t *    aSalt,
+otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
+                                const uint8_t     *aSalt,
                                 uint16_t           aSaltLength,
                                 const otCryptoKey *aInputKey);
 
@@ -621,8 +621,8 @@ otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair, 
  *
  */
 otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
-                              const otPlatCryptoSha256Hash *  aHash,
-                              otPlatCryptoEcdsaSignature *    aSignature);
+                              const otPlatCryptoSha256Hash   *aHash,
+                              otPlatCryptoEcdsaSignature     *aSignature);
 
 /**
  * Use the key from the input context to verify the ECDSA signature of a hashed message.
@@ -641,7 +641,7 @@ otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
  *
  */
 otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
-                                const otPlatCryptoSha256Hash *    aHash,
+                                const otPlatCryptoSha256Hash     *aHash,
                                 const otPlatCryptoEcdsaSignature *aSignature);
 
 /**

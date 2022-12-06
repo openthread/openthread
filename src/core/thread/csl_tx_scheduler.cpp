@@ -46,7 +46,7 @@ CslTxScheduler::Callbacks::Callbacks(Instance &aInstance)
 
 inline Error CslTxScheduler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
                                                              FrameContext &aContext,
-                                                             Child &       aChild)
+                                                             Child        &aChild)
 {
     return Get<IndirectSender>().PrepareFrameForChild(aFrame, aContext, aChild);
 }
@@ -54,7 +54,7 @@ inline Error CslTxScheduler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFram
 inline void CslTxScheduler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                                               const FrameContext &aContext,
                                                               Error               aError,
-                                                              Child &             aChild)
+                                                              Child              &aChild)
 {
     Get<IndirectSender>().HandleSentFrameToChild(aFrame, aContext, aError, aChild);
 }
@@ -122,7 +122,7 @@ void CslTxScheduler::Clear(void)
 void CslTxScheduler::RescheduleCslTx(void)
 {
     uint32_t minDelayTime = Time::kMaxDuration;
-    Child *  bestChild    = nullptr;
+    Child   *bestChild    = nullptr;
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
     {
@@ -152,7 +152,7 @@ void CslTxScheduler::RescheduleCslTx(void)
 }
 
 uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
-                                                     uint32_t &   aDelayFromLastRx,
+                                                     uint32_t    &aDelayFromLastRx,
                                                      uint32_t     aAheadUs) const
 {
     uint64_t radioNow      = otPlatRadioGetNow(&GetInstance());

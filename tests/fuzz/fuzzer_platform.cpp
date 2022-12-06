@@ -498,8 +498,8 @@ void otPlatSettingsWipe(otInstance *aInstance)
 
 otError otPlatDiagProcess(otInstance *aInstance,
                           uint8_t     aArgsLength,
-                          char *      aArgs[],
-                          char *      aOutput,
+                          char       *aArgs[],
+                          char       *aOutput,
                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aInstance);

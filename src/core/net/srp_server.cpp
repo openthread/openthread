@@ -443,13 +443,13 @@ void Server::CommitSrpUpdate(Error aError, UpdateMetadata &aUpdateMetadata)
 }
 
 void Server::CommitSrpUpdate(Error                    aError,
-                             Host &                   aHost,
+                             Host                    &aHost,
                              const Dns::UpdateHeader &aDnsHeader,
-                             const Ip6::MessageInfo * aMessageInfo,
-                             const TtlConfig &        aTtlConfig,
-                             const LeaseConfig &      aLeaseConfig)
+                             const Ip6::MessageInfo  *aMessageInfo,
+                             const TtlConfig         &aTtlConfig,
+                             const LeaseConfig       &aLeaseConfig)
 {
-    Host *   existingHost;
+    Host    *existingHost;
     uint32_t hostLease;
     uint32_t hostKeyLease;
     uint32_t grantedLease;
@@ -828,8 +828,8 @@ exit:
     return error;
 }
 
-Error Server::ProcessHostDescriptionInstruction(Host &                 aHost,
-                                                const Message &        aMessage,
+Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
+                                                const Message         &aMessage,
                                                 const MessageMetadata &aMetadata) const
 {
     Error    error;
@@ -914,8 +914,8 @@ exit:
     return error;
 }
 
-Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
-                                                  const Message &        aMessage,
+Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
+                                                  const Message         &aMessage,
                                                   const MessageMetadata &aMetadata) const
 {
     Error    error  = kErrorNone;
@@ -926,8 +926,8 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
         char           serviceName[Dns::Name::kMaxNameSize];
         char           instanceName[Dns::Name::kMaxNameSize];
         Dns::PtrRecord ptrRecord;
-        const char *   subServiceName;
-        Service *      service;
+        const char    *subServiceName;
+        Service       *service;
         bool           isSubType;
 
         SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, serviceName, sizeof(serviceName)));
@@ -992,8 +992,8 @@ exit:
     return error;
 }
 
-Error Server::ProcessServiceDescriptionInstructions(Host &           aHost,
-                                                    const Message &  aMessage,
+Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
+                                                    const Message   &aMessage,
                                                     MessageMetadata &aMetadata) const
 {
     Error    error  = kErrorNone;
@@ -1183,12 +1183,12 @@ exit:
 }
 
 Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
-                              const Message &               aMessage,
+                              const Message                &aMessage,
                               Dns::UpdateHeader             aDnsHeader,
                               uint16_t                      aSigOffset,
                               uint16_t                      aSigRdataOffset,
                               uint16_t                      aSigRdataLength,
-                              const char *                  aSignerName) const
+                              const char                   *aSignerName) const
 {
     Error                          error;
     uint16_t                       offset = aMessage.GetOffset();
@@ -1196,7 +1196,7 @@ Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
     Crypto::Sha256                 sha256;
     Crypto::Sha256::Hash           hash;
     Crypto::Ecdsa::P256::Signature signature;
-    Message *                      signerNameMessage = nullptr;
+    Message                       *signerNameMessage = nullptr;
 
     VerifyOrExit(aSigRdataLength >= Crypto::Ecdsa::P256::Signature::kSize, error = kErrorInvalidArgs);
 
@@ -1396,12 +1396,12 @@ exit:
     return;
 }
 
-void Server::SendResponse(const Dns::UpdateHeader &   aHeader,
+void Server::SendResponse(const Dns::UpdateHeader    &aHeader,
                           Dns::UpdateHeader::Response aResponseCode,
-                          const Ip6::MessageInfo &    aMessageInfo)
+                          const Ip6::MessageInfo     &aMessageInfo)
 {
     Error             error;
-    Message *         response = nullptr;
+    Message          *response = nullptr;
     Dns::UpdateHeader header;
 
     response = GetSocket().NewMessage(0);
@@ -1437,10 +1437,10 @@ exit:
 void Server::SendResponse(const Dns::UpdateHeader &aHeader,
                           uint32_t                 aLease,
                           uint32_t                 aKeyLease,
-                          const Ip6::MessageInfo & aMessageInfo)
+                          const Ip6::MessageInfo  &aMessageInfo)
 {
     Error             error;
-    Message *         response = nullptr;
+    Message          *response = nullptr;
     Dns::UpdateHeader header;
     Dns::OptRecord    optRecord;
     Dns::LeaseOption  leaseOption;
@@ -1503,10 +1503,10 @@ Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessage
     return ProcessMessage(aMessage, TimerMilli::GetNow(), mTtlConfig, mLeaseConfig, &aMessageInfo);
 }
 
-Error Server::ProcessMessage(Message &               aMessage,
+Error Server::ProcessMessage(Message                &aMessage,
                              TimeMilli               aRxTime,
-                             const TtlConfig &       aTtlConfig,
-                             const LeaseConfig &     aLeaseConfig,
+                             const TtlConfig        &aTtlConfig,
+                             const LeaseConfig      &aLeaseConfig,
                              const Ip6::MessageInfo *aMessageInfo)
 {
     Error           error;
@@ -1534,7 +1534,7 @@ void Server::HandleLeaseTimer(void)
 {
     TimeMilli now                = TimerMilli::GetNow();
     TimeMilli earliestExpireTime = now.GetDistantFuture();
-    Host *    nextHost;
+    Host     *nextHost;
 
     for (Host *host = mHosts.GetHead(); host != nullptr; host = nextHost)
     {
@@ -2015,8 +2015,8 @@ exit:
 
 const Server::Service *Server::Host::FindNextService(const Service *aPrevService,
                                                      Service::Flags aFlags,
-                                                     const char *   aServiceName,
-                                                     const char *   aInstanceName) const
+                                                     const char    *aServiceName,
+                                                     const char    *aInstanceName) const
 {
     const Service *service = (aPrevService == nullptr) ? GetServices().GetHead() : aPrevService->GetNext();
 
@@ -2048,7 +2048,7 @@ Server::Service *Server::Host::AddNewService(const char *aServiceName,
                                              bool        aIsSubType,
                                              TimeMilli   aUpdateTime)
 {
-    Service *                       service = nullptr;
+    Service                        *service = nullptr;
     RetainPtr<Service::Description> desc(FindServiceDescription(aInstanceName));
 
     if (desc == nullptr)

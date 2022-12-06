@@ -140,7 +140,7 @@ protected:
 
     Handler mHandler;
     Time    mFireTime;
-    Timer * mNext;
+    Timer  *mNext;
 };
 
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance);

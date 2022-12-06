@@ -387,7 +387,7 @@ Error MeshForwarder::UpdateMeshRoute(Message &aMessage)
 {
     Error              error = kErrorNone;
     Lowpan::MeshHeader meshHeader;
-    Neighbor *         neighbor;
+    Neighbor          *neighbor;
     uint16_t           nextHop;
 
     IgnoreError(meshHeader.ParseFrom(aMessage));
@@ -554,7 +554,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
     Error           error = kErrorNone;
-    Neighbor *      neighbor;
+    Neighbor       *neighbor;
 
     if (aMessage.GetOffset() > 0)
     {
@@ -647,7 +647,7 @@ void MeshForwarder::SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac
 {
     Error        error;
     Ip6::Headers ip6Headers;
-    Child *      child;
+    Child       *child;
 
     VerifyOrExit(aMacAddrs.mSource.IsShort() && aMacAddrs.mDestination.IsShort());
 
@@ -708,7 +708,7 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::
 void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo)
 {
     Error              error   = kErrorNone;
-    Message *          message = nullptr;
+    Message           *message = nullptr;
     Mac::Addresses     meshAddrs;
     Lowpan::MeshHeader meshHeader;
 
@@ -790,7 +790,7 @@ exit:
 void MeshForwarder::UpdateRoutes(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs)
 {
     Ip6::Headers ip6Headers;
-    Neighbor *   neighbor;
+    Neighbor    *neighbor;
 
     VerifyOrExit(!aMeshAddrs.mDestination.IsBroadcast() && aMeshAddrs.mSource.IsShort());
 
@@ -920,7 +920,7 @@ MeshForwarder::FragmentPriorityList::Entry *MeshForwarder::FragmentPriorityList:
 
 Error MeshForwarder::GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                                          uint16_t                aSrcRloc16,
-                                         Message::Priority &     aPriority)
+                                         Message::Priority      &aPriority)
 {
     Error                        error = kErrorNone;
     FragmentPriorityList::Entry *entry;
@@ -933,9 +933,9 @@ exit:
     return error;
 }
 
-void MeshForwarder::GetForwardFramePriority(const FrameData &     aFrameData,
+void MeshForwarder::GetForwardFramePriority(const FrameData      &aFrameData,
                                             const Mac::Addresses &aMeshAddrs,
-                                            Message::Priority &   aPriority)
+                                            Message::Priority    &aPriority)
 {
     Error                  error      = kErrorNone;
     FrameData              frameData  = aFrameData;
@@ -974,11 +974,11 @@ exit:
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
 Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
-                                           const Message &     aMessage,
+                                           const Message      &aMessage,
                                            const Mac::Address *aMacAddress,
                                            Error               aError,
-                                           uint16_t &          aOffset,
-                                           Mac::Addresses &    aMeshAddrs,
+                                           uint16_t           &aOffset,
+                                           Mac::Addresses     &aMeshAddrs,
                                            LogLevel            aLogLevel)
 {
     Error                  error             = kErrorFailed;
@@ -988,7 +988,7 @@ Error MeshForwarder::LogMeshFragmentHeader(MessageAction       aAction,
     Lowpan::FragmentHeader fragmentHeader;
     uint16_t               headerLength;
     bool                   shouldLogRadio = false;
-    const char *           radioString    = "";
+    const char            *radioString    = "";
 
     SuccessOrExit(meshHeader.ParseFrom(aMessage, headerLength));
 
@@ -1035,7 +1035,7 @@ exit:
     return error;
 }
 
-void MeshForwarder::LogMeshIpHeader(const Message &       aMessage,
+void MeshForwarder::LogMeshIpHeader(const Message        &aMessage,
                                     uint16_t              aOffset,
                                     const Mac::Addresses &aMeshAddrs,
                                     LogLevel              aLogLevel)
@@ -1054,7 +1054,7 @@ exit:
 }
 
 void MeshForwarder::LogMeshMessage(MessageAction       aAction,
-                                   const Message &     aMessage,
+                                   const Message      &aMessage,
                                    const Mac::Address *aMacAddress,
                                    Error               aError,
                                    LogLevel            aLogLevel)

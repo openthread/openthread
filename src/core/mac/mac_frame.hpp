@@ -903,7 +903,10 @@ public:
      * @returns A pointer to the Time IE, `nullptr` if not found.
      *
      */
-    TimeIe *GetTimeIe(void) { return AsNonConst(AsConst(this)->GetTimeIe()); }
+    TimeIe *GetTimeIe(void)
+    {
+        return AsNonConst(AsConst(this)->GetTimeIe());
+    }
 
     /**
      * This method returns a pointer to the vendor specific Time IE.
@@ -941,7 +944,10 @@ public:
      * @returns A pointer to the Header IE, `nullptr` if not found.
      *
      */
-    uint8_t *GetHeaderIe(uint8_t aIeId) { return AsNonConst(AsConst(this)->GetHeaderIe(aIeId)); }
+    uint8_t *GetHeaderIe(uint8_t aIeId)
+    {
+        return AsNonConst(AsConst(this)->GetHeaderIe(aIeId));
+    }
 
     /**
      * This method returns a pointer to the Header IE.
@@ -963,7 +969,10 @@ public:
      * @returns A pointer to the Thread IE, `nullptr` if not found.
      *
      */
-    uint8_t *GetThreadIe(uint8_t aSubType) { return AsNonConst(AsConst(this)->GetThreadIe(aSubType)); }
+    uint8_t *GetThreadIe(uint8_t aSubType)
+    {
+        return AsNonConst(AsConst(this)->GetThreadIe(aSubType));
+    }
 
     /**
      * This method returns a pointer to a specific Thread IE.
@@ -1008,7 +1017,10 @@ public:
      * @returns Frame's radio link type.
      *
      */
-    RadioType GetRadioType(void) const { return static_cast<RadioType>(mRadioType); }
+    RadioType GetRadioType(void) const
+    {
+        return static_cast<RadioType>(mRadioType);
+    }
 
     /**
      * This method sets the radio link type of the frame.
@@ -1016,7 +1028,10 @@ public:
      * @param[in] aRadioType  A radio link type.
      *
      */
-    void SetRadioType(RadioType aRadioType) { mRadioType = static_cast<uint8_t>(aRadioType); }
+    void SetRadioType(RadioType aRadioType)
+    {
+        mRadioType = static_cast<uint8_t>(aRadioType);
+    }
 #endif
 
     /**
@@ -1088,11 +1103,20 @@ protected:
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 
-    static bool IsDstAddrPresent(uint16_t aFcf) { return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone; }
+    static bool IsDstAddrPresent(uint16_t aFcf)
+    {
+        return (aFcf & kFcfDstAddrMask) != kFcfDstAddrNone;
+    }
     static bool IsDstPanIdPresent(uint16_t aFcf);
-    static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
+    static bool IsSrcAddrPresent(uint16_t aFcf)
+    {
+        return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone;
+    }
     static bool IsSrcPanIdPresent(uint16_t aFcf);
-    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
+    static bool IsVersion2015(uint16_t aFcf)
+    {
+        return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015;
+    }
 
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
@@ -1188,7 +1212,10 @@ public:
      * @returns  The time sync sequence.
      *
      */
-    uint8_t ReadTimeSyncSeq(void) const { return GetTimeIe()->GetSequence(); }
+    uint8_t ReadTimeSyncSeq(void) const
+    {
+        return GetTimeIe()->GetSequence();
+    }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 };
 
@@ -1360,7 +1387,10 @@ public:
      * @param[in]  aOffset  The Time IE offset, 0 means no Time IE.
      *
      */
-    void SetTimeIeOffset(uint8_t aOffset) { mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset; }
+    void SetTimeIeOffset(uint8_t aOffset)
+    {
+        mInfo.mTxInfo.mIeInfo->mTimeIeOffset = aOffset;
+    }
 
     /**
      * This method gets the Time IE offset.
@@ -1368,7 +1398,10 @@ public:
      * @returns The Time IE offset, 0 means no Time IE.
      *
      */
-    uint8_t GetTimeIeOffset(void) const { return mInfo.mTxInfo.mIeInfo->mTimeIeOffset; }
+    uint8_t GetTimeIeOffset(void) const
+    {
+        return mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
+    }
 
     /**
      * This method sets the offset to network time.
@@ -1387,7 +1420,10 @@ public:
      * @param[in]  aTimeSyncSeq  The time sync sequence.
      *
      */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq; }
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq)
+    {
+        mInfo.mTxInfo.mIeInfo->mTimeSyncSeq = aTimeSyncSeq;
+    }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     /**
@@ -1420,7 +1456,10 @@ public:
      * @param[in]    aTxDelay    The delay time for the TX frame.
      *
      */
-    void SetTxDelay(uint32_t aTxDelay) { mInfo.mTxInfo.mTxDelay = aTxDelay; }
+    void SetTxDelay(uint32_t aTxDelay)
+    {
+        mInfo.mTxInfo.mTxDelay = aTxDelay;
+    }
 
     /**
      * Set TX delay base time field for the frame.
@@ -1428,7 +1467,10 @@ public:
      * @param[in]    aTxDelayBaseTime    The delay base time for the TX frame.
      *
      */
-    void SetTxDelayBaseTime(uint32_t aTxDelayBaseTime) { mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime; }
+    void SetTxDelayBaseTime(uint32_t aTxDelayBaseTime)
+    {
+        mInfo.mTxInfo.mTxDelayBaseTime = aTxDelayBaseTime;
+    }
 #endif
 };
 
@@ -1589,7 +1631,10 @@ public:
      * @returns The Network Name field as `NameData`.
      *
      */
-    MeshCoP::NameData GetNetworkName(void) const { return MeshCoP::NameData(mNetworkName, sizeof(mNetworkName)); }
+    MeshCoP::NameData GetNetworkName(void) const
+    {
+        return MeshCoP::NameData(mNetworkName, sizeof(mNetworkName));
+    }
 
     /**
      * This method sets the Network Name field.
@@ -1597,7 +1642,10 @@ public:
      * @param[in]  aNameData  The Network Name (as a `NameData`).
      *
      */
-    void SetNetworkName(const MeshCoP::NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
+    void SetNetworkName(const MeshCoP::NameData &aNameData)
+    {
+        aNameData.CopyTo(mNetworkName, sizeof(mNetworkName));
+    }
 
     /**
      * This method returns the Extended PAN ID field.
@@ -1605,7 +1653,10 @@ public:
      * @returns The Extended PAN ID field.
      *
      */
-    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+    const otExtendedPanId &GetExtendedPanId(void) const
+    {
+        return mExtendedPanId;
+    }
 
     /**
      * This method sets the Extended PAN ID field.
@@ -1613,7 +1664,10 @@ public:
      * @param[in]  aExtPanId  An Extended PAN ID.
      *
      */
-    void SetExtendedPanId(const otExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
+    void SetExtendedPanId(const otExtendedPanId &aExtPanId)
+    {
+        mExtendedPanId = aExtPanId;
+    }
 
 private:
     uint8_t         mProtocolId;

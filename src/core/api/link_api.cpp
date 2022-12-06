@@ -367,11 +367,11 @@ void otLinkResetCounters(otInstance *aInstance)
     AsCoreType(aInstance).Get<Mac::Mac>().ResetCounters();
 }
 
-otError otLinkActiveScan(otInstance *             aInstance,
+otError otLinkActiveScan(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aScanDuration,
                          otHandleActiveScanResult aCallback,
-                         void *                   aCallbackContext)
+                         void                    *aCallbackContext)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().ActiveScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }
@@ -381,11 +381,11 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mac::Mac>().IsActiveScanInProgress();
 }
 
-otError otLinkEnergyScan(otInstance *             aInstance,
+otError otLinkEnergyScan(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aScanDuration,
                          otHandleEnergyScanResult aCallback,
-                         void *                   aCallbackContext)
+                         void                    *aCallbackContext)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().EnergyScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }

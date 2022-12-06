@@ -63,9 +63,9 @@ Heap::Heap(void)
 
 void *Heap::CAlloc(size_t aCount, size_t aSize)
 {
-    void *   ret  = nullptr;
-    Block *  prev = nullptr;
-    Block *  curr = nullptr;
+    void    *ret  = nullptr;
+    Block   *prev = nullptr;
+    Block   *curr = nullptr;
     uint16_t size = static_cast<uint16_t>(aCount * aSize);
 
     VerifyOrExit(size);

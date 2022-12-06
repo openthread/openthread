@@ -1042,7 +1042,7 @@ private:
     {
     }
 
-    const char *   mString;  // String containing the name or `nullptr` if name is not from string.
+    const char    *mString;  // String containing the name or `nullptr` if name is not from string.
     const Message *mMessage; // Message containing the encoded name, or `nullptr` if `Name` is not from message.
     uint16_t       mOffset;  // Offset in `mMessage` to the start of name (used when name is from `mMessage`).
 };
@@ -1119,7 +1119,7 @@ public:
         uint16_t    GetTxtDataPosition(void) const { return mData[kIndexTxtPosition]; }
         void        SetTxtDataPosition(uint16_t aValue) { mData[kIndexTxtPosition] = aValue; }
         void        IncreaseTxtDataPosition(uint16_t aIncrement) { mData[kIndexTxtPosition] += aIncrement; }
-        char *      GetKeyBuffer(void) { return mChar; }
+        char       *GetKeyBuffer(void) { return mChar; }
         const char *GetTxtDataEnd(void) const { return GetTxtData() + GetTxtDataLength(); }
     };
 
@@ -1405,11 +1405,11 @@ public:
      */
     template <class RecordType>
     static Error FindRecord(const Message &aMessage,
-                            uint16_t &     aOffset,
+                            uint16_t      &aOffset,
                             uint16_t       aNumRecords,
                             uint16_t       aIndex,
-                            const Name &   aName,
-                            RecordType &   aRecord)
+                            const Name    &aName,
+                            RecordType    &aRecord)
     {
         return FindRecord(aMessage, aOffset, aNumRecords, aIndex, aName, RecordType::kType, aRecord,
                           sizeof(RecordType));
@@ -1456,9 +1456,9 @@ public:
 
 protected:
     Error ReadName(const Message &aMessage,
-                   uint16_t &     aOffset,
+                   uint16_t      &aOffset,
                    uint16_t       aStartOffset,
-                   char *         aNameBuffer,
+                   char          *aNameBuffer,
                    uint16_t       aNameBufferSize,
                    bool           aSkipRecord) const;
     Error SkipRecord(const Message &aMessage, uint16_t &aOffset) const;
@@ -1466,17 +1466,17 @@ protected:
 private:
     static constexpr uint16_t kType = kTypeAny; // This is intended for used by `ReadRecord<RecordType>()` only.
 
-    static Error FindRecord(const Message & aMessage,
-                            uint16_t &      aOffset,
+    static Error FindRecord(const Message  &aMessage,
+                            uint16_t       &aOffset,
                             uint16_t        aNumRecords,
                             uint16_t        aIndex,
-                            const Name &    aName,
+                            const Name     &aName,
                             uint16_t        aType,
                             ResourceRecord &aRecord,
                             uint16_t        aMinRecordSize);
 
-    static Error ReadRecord(const Message & aMessage,
-                            uint16_t &      aOffset,
+    static Error ReadRecord(const Message  &aMessage,
+                            uint16_t       &aOffset,
                             uint16_t        aType,
                             ResourceRecord &aRecord,
                             uint16_t        aMinRecordSize);
@@ -1574,8 +1574,8 @@ public:
      *
      */
     Error ReadCanonicalName(const Message &aMessage,
-                            uint16_t &     aOffset,
-                            char *         aNameBuffer,
+                            uint16_t      &aOffset,
+                            char          *aNameBuffer,
                             uint16_t       aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(CnameRecord),
@@ -1661,10 +1661,10 @@ public:
      *
      */
     Error ReadPtrName(const Message &aMessage,
-                      uint16_t &     aOffset,
-                      char *         aLabelBuffer,
+                      uint16_t      &aOffset,
+                      char          *aLabelBuffer,
                       uint8_t        aLabelBufferSize,
-                      char *         aNameBuffer,
+                      char          *aNameBuffer,
                       uint16_t       aNameBufferSize) const;
 
 } OT_TOOL_PACKED_END;
@@ -1866,8 +1866,8 @@ public:
      *
      */
     Error ReadTargetHostName(const Message &aMessage,
-                             uint16_t &     aOffset,
-                             char *         aNameBuffer,
+                             uint16_t      &aOffset,
+                             char          *aNameBuffer,
                              uint16_t       aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(SrvRecord), aNameBuffer,

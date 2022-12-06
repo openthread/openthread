@@ -172,7 +172,7 @@ exit:
 Error Tcp::Endpoint::Connect(const SockAddr &aSockName, uint32_t aFlags)
 {
     Error               error = kErrorNone;
-    struct tcpcb &      tp    = GetTcb();
+    struct tcpcb       &tp    = GetTcb();
     struct sockaddr_in6 sin6p;
 
     OT_UNUSED_VARIABLE(aFlags);
@@ -630,7 +630,7 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     uint8_t  headerSize;
 
     struct ip6_hdr *ip6Header;
-    struct tcphdr * tcpHeader;
+    struct tcphdr  *tcpHeader;
 
     Endpoint *endpoint;
     Endpoint *endpointPrev;
@@ -660,7 +660,7 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     {
         struct tcplp_signals sig;
         int                  nextAction;
-        struct tcpcb *       tp = &endpoint->GetTcb();
+        struct tcpcb        *tp = &endpoint->GetTcb();
 
         otLinkedBuffer *priorHead    = lbuf_head(&tp->sendbuf);
         size_t          priorBacklog = endpoint->GetSendBufferBytes() - endpoint->GetInFlightBytes();
@@ -691,8 +691,8 @@ exit:
     return error;
 }
 
-void Tcp::ProcessSignals(Endpoint &            aEndpoint,
-                         otLinkedBuffer *      aPriorHead,
+void Tcp::ProcessSignals(Endpoint             &aEndpoint,
+                         otLinkedBuffer       *aPriorHead,
                          size_t                aPriorBacklog,
                          struct tcplp_signals &aSignals)
 {
@@ -944,7 +944,7 @@ extern "C" {
 otMessage *tcplp_sys_new_message(otInstance *aInstance)
 {
     Instance &instance = AsCoreType(aInstance);
-    Message * message  = instance.Get<ot::Ip6::Ip6>().NewMessage(0);
+    Message  *message  = instance.Get<ot::Ip6::Ip6>().NewMessage(0);
 
     if (message)
     {
@@ -963,8 +963,8 @@ void tcplp_sys_free_message(otInstance *aInstance, otMessage *aMessage)
 
 void tcplp_sys_send_message(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo)
 {
-    Instance &   instance = AsCoreType(aInstance);
-    Message &    message  = AsCoreType(aMessage);
+    Instance    &instance = AsCoreType(aInstance);
+    Message     &message  = AsCoreType(aMessage);
     MessageInfo &info     = AsCoreType(aMessageInfo);
 
     LogDebg("Sending TCP segment: payload_size = %d", static_cast<int>(message.GetLength()));
@@ -996,11 +996,11 @@ void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag)
 
 struct tcpcb *tcplp_sys_accept_ready(struct tcpcb_listen *aTcbListen, struct in6_addr *aAddr, uint16_t aPort)
 {
-    Tcp::Listener &               listener = Tcp::Listener::FromTcbListen(*aTcbListen);
-    Tcp &                         tcp      = listener.Get<Tcp>();
-    struct tcpcb *                rv       = (struct tcpcb *)-1;
+    Tcp::Listener                &listener = Tcp::Listener::FromTcbListen(*aTcbListen);
+    Tcp                          &tcp      = listener.Get<Tcp>();
+    struct tcpcb                 *rv       = (struct tcpcb *)-1;
     otSockAddr                    addr;
-    otTcpEndpoint *               endpointPtr;
+    otTcpEndpoint                *endpointPtr;
     otTcpIncomingConnectionAction action;
 
     VerifyOrExit(listener.mAcceptReadyCallback != nullptr);
@@ -1042,13 +1042,13 @@ exit:
 }
 
 bool tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
-                                   struct tcpcb *       aAccepted,
-                                   struct in6_addr *    aAddr,
+                                   struct tcpcb        *aAccepted,
+                                   struct in6_addr     *aAddr,
                                    uint16_t             aPort)
 {
     Tcp::Listener &listener = Tcp::Listener::FromTcbListen(*aTcbListen);
     Tcp::Endpoint &endpoint = Tcp::Endpoint::FromTcb(*aAccepted);
-    Tcp &          tcp      = endpoint.Get<Tcp>();
+    Tcp           &tcp      = endpoint.Get<Tcp>();
     bool           accepted = true;
 
     if (listener.mAcceptDoneCallback != nullptr)
@@ -1132,9 +1132,9 @@ void tcplp_sys_panic(const char *aFormat, ...)
     OT_ASSERT(false);
 }
 
-bool tcplp_sys_autobind(otInstance *      aInstance,
+bool tcplp_sys_autobind(otInstance       *aInstance,
                         const otSockAddr *aPeer,
-                        otSockAddr *      aToBind,
+                        otSockAddr       *aToBind,
                         bool              aBindAddress,
                         bool              aBindPort)
 {

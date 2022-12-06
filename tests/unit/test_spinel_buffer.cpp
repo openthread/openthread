@@ -58,7 +58,7 @@ static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 static const uint8_t sHexText[]        = "0123456789abcdef";
 
 static ot::Instance *sInstance;
-static MessagePool * sMessagePool;
+static MessagePool  *sMessagePool;
 
 struct CallbackContext
 {
@@ -126,10 +126,10 @@ void VerifyAndRemoveTagFromHistory(Spinel::Buffer::FrameTag aTag, Spinel::Buffer
     }
 }
 
-void FrameAddedCallback(void *                   aContext,
+void FrameAddedCallback(void                    *aContext,
                         Spinel::Buffer::FrameTag aTag,
                         Spinel::Buffer::Priority aPriority,
-                        Spinel::Buffer *         aNcpBuffer)
+                        Spinel::Buffer          *aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
@@ -143,10 +143,10 @@ void FrameAddedCallback(void *                   aContext,
     callbackContext->mFrameAddedCount++;
 }
 
-void FrameRemovedCallback(void *                   aContext,
+void FrameRemovedCallback(void                    *aContext,
                           Spinel::Buffer::FrameTag aTag,
                           Spinel::Buffer::Priority aPriority,
-                          Spinel::Buffer *         aNcpBuffer)
+                          Spinel::Buffer          *aNcpBuffer)
 {
     CallbackContext *callbackContext = reinterpret_cast<CallbackContext *>(aContext);
 
@@ -173,7 +173,7 @@ void ReadAndVerifyContent(Spinel::Buffer &aNcpBuffer, const uint8_t *aContentBuf
 
 void WriteTestFrame1(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPriority)
 {
-    Message *       message;
+    Message        *message;
     CallbackContext oldContext;
 
     message = sMessagePool->Allocate(Message::kTypeIp6);
@@ -216,8 +216,8 @@ void VerifyAndRemoveFrame1(Spinel::Buffer &aNcpBuffer)
 
 void WriteTestFrame2(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPriority)
 {
-    Message *       message1;
-    Message *       message2;
+    Message        *message1;
+    Message        *message2;
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool->Allocate(Message::kTypeIp6);
@@ -262,7 +262,7 @@ void VerifyAndRemoveFrame2(Spinel::Buffer &aNcpBuffer)
 
 void WriteTestFrame3(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPriority)
 {
-    Message *       message1;
+    Message        *message1;
     CallbackContext oldContext = sContext;
 
     message1 = sMessagePool->Allocate(Message::kTypeIp6);
@@ -335,7 +335,7 @@ void TestBuffer(void)
     uint8_t        buffer[kTestBufferSize];
     Spinel::Buffer ncpBuffer(buffer, kTestBufferSize);
 
-    Message *                     message;
+    Message                      *message;
     uint8_t                       readBuffer[16];
     uint16_t                      readLen, readOffset;
     Spinel::Buffer::WritePosition pos1, pos2;

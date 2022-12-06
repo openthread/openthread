@@ -402,10 +402,10 @@ exit:
     mDisableStreamWrite = false;
 }
 
-void NcpBase::HandleFrameRemovedFromNcpBuffer(void *                   aContext,
+void NcpBase::HandleFrameRemovedFromNcpBuffer(void                    *aContext,
                                               Spinel::Buffer::FrameTag aFrameTag,
                                               Spinel::Buffer::Priority aPriority,
-                                              Spinel::Buffer *         aNcpBuffer)
+                                              Spinel::Buffer          *aNcpBuffer)
 {
     OT_UNUSED_VARIABLE(aNcpBuffer);
     OT_UNUSED_VARIABLE(aPriority);
@@ -1058,7 +1058,7 @@ otError NcpBase::HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_
     otError         error           = OT_ERROR_NONE;
     PropertyHandler handler         = nullptr;
     unsigned int    responseCommand = 0;
-    const uint8_t * valuePtr;
+    const uint8_t  *valuePtr;
     uint16_t        valueLen;
 
     switch (aCommand)
@@ -1181,7 +1181,7 @@ exit:
 otError NcpBase::WritePropertyValueInsertedRemovedFrame(uint8_t           aHeader,
                                                         unsigned int      aResponseCommand,
                                                         spinel_prop_key_t aPropKey,
-                                                        const uint8_t *   aValuePtr,
+                                                        const uint8_t    *aValuePtr,
                                                         uint16_t          aValueLen)
 {
     otError error = OT_ERROR_NONE;

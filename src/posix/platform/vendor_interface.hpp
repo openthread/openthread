@@ -62,8 +62,8 @@ public:
      *
      */
     VendorInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                    void *                                        aCallbackContext,
-                    Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+                    void                                         *aCallbackContext,
+                    Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.

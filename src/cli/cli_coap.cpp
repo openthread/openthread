@@ -75,7 +75,7 @@ Coap::Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer)
 otError Coap::CancelResourceSubscription(void)
 {
     otError       error   = OT_ERROR_NONE;
-    otMessage *   message = nullptr;
+    otMessage    *message = nullptr;
     otMessageInfo messageInfo;
 
     memset(&messageInfo, 0, sizeof(messageInfo));
@@ -192,7 +192,7 @@ exit:
 template <> otError Coap::Process<Cmd("set")>(Arg aArgs[])
 {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otMessage *   notificationMessage = nullptr;
+    otMessage    *notificationMessage = nullptr;
     otMessageInfo messageInfo;
 #endif
     otError error = OT_ERROR_NONE;
@@ -273,7 +273,7 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
 template <> otError Coap::Process<Cmd("parameters")>(Arg aArgs[])
 {
     otError             error = OT_ERROR_NONE;
-    bool *              defaultTxParameters;
+    bool               *defaultTxParameters;
     otCoapTxParameters *txParameters;
 
     if (aArgs[0] == "request")
@@ -362,7 +362,7 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
 #endif
 {
     otError       error   = OT_ERROR_NONE;
-    otMessage *   message = nullptr;
+    otMessage    *message = nullptr;
     otMessageInfo messageInfo;
     uint16_t      payloadLength = 0;
 
@@ -800,8 +800,8 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-void Coap::HandleNotificationResponse(void *               aContext,
-                                      otMessage *          aMessage,
+void Coap::HandleNotificationResponse(void                *aContext,
+                                      otMessage           *aMessage,
                                       const otMessageInfo *aMessageInfo,
                                       otError              aError)
 {
@@ -874,7 +874,7 @@ void Coap::HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError Coap::BlockwiseReceiveHook(void *         aContext,
+otError Coap::BlockwiseReceiveHook(void          *aContext,
                                    const uint8_t *aBlock,
                                    uint32_t       aPosition,
                                    uint16_t       aBlockLength,
@@ -903,11 +903,11 @@ otError Coap::BlockwiseReceiveHook(const uint8_t *aBlock,
     return OT_ERROR_NONE;
 }
 
-otError Coap::BlockwiseTransmitHook(void *    aContext,
-                                    uint8_t * aBlock,
+otError Coap::BlockwiseTransmitHook(void     *aContext,
+                                    uint8_t  *aBlock,
                                     uint32_t  aPosition,
                                     uint16_t *aBlockLength,
-                                    bool *    aMore)
+                                    bool     *aMore)
 {
     return static_cast<Coap *>(aContext)->BlockwiseTransmitHook(aBlock, aPosition, aBlockLength, aMore);
 }

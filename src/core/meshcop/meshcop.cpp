@@ -317,10 +317,10 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-Error GeneratePskc(const char *         aPassPhrase,
-                   const NetworkName &  aNetworkName,
+Error GeneratePskc(const char          *aPassPhrase,
+                   const NetworkName   &aNetworkName,
                    const ExtendedPanId &aExtPanId,
-                   Pskc &               aPskc)
+                   Pskc                &aPskc)
 {
     Error      error        = kErrorNone;
     const char saltPrefix[] = "Thread";

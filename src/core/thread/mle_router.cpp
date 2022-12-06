@@ -221,7 +221,7 @@ exit:
 Error MleRouter::BecomeLeader(void)
 {
     Error    error = kErrorNone;
-    Router * router;
+    Router  *router;
     uint32_t partitionId;
     uint8_t  leaderId;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -254,7 +254,7 @@ Error MleRouter::BecomeLeader(void)
     }
 #else
     leaderId    = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId
-                                                  : Random::NonCrypto::GetUint8InRange(0, kMaxRouterId + 1);
+                                                     : Random::NonCrypto::GetUint8InRange(0, kMaxRouterId + 1);
 #endif
 
     SetLeaderData(partitionId, mLeaderWeight, leaderId);
@@ -480,7 +480,7 @@ void MleRouter::SendAdvertisement(void)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage *  message = nullptr;
+    TxMessage   *message = nullptr;
 
     // Suppress MLE Advertisements when trying to attach to a better partition.
     //
@@ -536,7 +536,7 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     static const uint8_t kValidNeighborTlvs[] = {Tlv::kLinkMargin, Tlv::kRoute};
 
     Error        error   = kErrorNone;
-    TxMessage *  message = nullptr;
+    TxMessage   *message = nullptr;
     Ip6::Address destination;
 
     VerifyOrExit(mLinkRequestDelay == 0 && mChallengeTimeout == 0);
@@ -619,7 +619,7 @@ exit:
 void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
 {
     Error      error    = kErrorNone;
-    Neighbor * neighbor = nullptr;
+    Neighbor  *neighbor = nullptr;
     Challenge  challenge;
     uint16_t   version;
     LeaderData leaderData;
@@ -727,9 +727,9 @@ exit:
 }
 
 Error MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
-                                Neighbor *              aNeighbor,
-                                const TlvList &         aRequestedTlvList,
-                                const Challenge &       aChallenge)
+                                Neighbor               *aNeighbor,
+                                const TlvList          &aRequestedTlvList,
+                                const Challenge        &aChallenge)
 {
     static const uint8_t kRouterTlvs[] = {Tlv::kLinkMargin};
 
@@ -835,7 +835,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     static const uint8_t kDataRequestTlvs[] = {Tlv::kNetworkData};
 
     Error           error = kErrorNone;
-    Router *        router;
+    Router         *router;
     Neighbor::State neighborState;
     Mac::ExtAddress extAddr;
     uint16_t        version;
@@ -1217,7 +1217,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
     LeaderData            leaderData;
     RouteTlv              routeTlv;
     uint32_t              partitionId;
-    Router *              router;
+    Router               *router;
     uint8_t               routerId;
     uint8_t               routerCount;
 
@@ -1603,7 +1603,7 @@ bool MleRouter::UpdateLinkQualityOut(const RouteTlv &aRouteTlv, Router &aNeighbo
     uint8_t     myRouterId;
     uint8_t     myRouteCount;
     uint8_t     oldLinkCost;
-    Router *    nextHop;
+    Router     *nextHop;
 
     myRouterId = RouterIdFromRloc16(GetRloc16());
     VerifyOrExit(aRouteTlv.IsRouterIdSet(myRouterId));
@@ -1640,8 +1640,8 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     uint16_t        version;
     uint8_t         scanMask;
     Challenge       challenge;
-    Router *        leader;
-    Child *         child;
+    Router         *leader;
+    Child          *child;
     uint8_t         modeBitmask;
     DeviceMode      mode;
 
@@ -2019,7 +2019,7 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage *  message;
+    TxMessage   *message;
     uint16_t     delay;
 
     VerifyOrExit((message = NewMleMessage(kCommandParentResponse)) != nullptr, error = kErrorNoBufs);
@@ -2302,8 +2302,8 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     MeshCoP::Timestamp timestamp;
     bool               needsActiveDatasetTlv;
     bool               needsPendingDatasetTlv;
-    Child *            child;
-    Router *           router;
+    Child             *child;
+    Router            *router;
     uint8_t            numTlvs;
 
     Log(kMessageReceive, kTypeChildIdRequest, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -2478,7 +2478,7 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     Challenge       challenge;
     LeaderData      leaderData;
     uint32_t        timeout;
-    Child *         child;
+    Child          *child;
     DeviceMode      oldMode;
     TlvList         requestedTlvList;
     TlvList         tlvList;
@@ -2685,7 +2685,7 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     uint32_t   linkFrameCounter;
     uint32_t   mleFrameCounter;
     LeaderData leaderData;
-    Child *    child;
+    Child     *child;
     uint16_t   addrOffset;
     uint16_t   addrLength;
 
@@ -3023,7 +3023,7 @@ exit:
 Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage)
 {
     Error                         error = kErrorNone;
-    TxMessage *                   message;
+    TxMessage                    *message;
     uint16_t                      startOffset;
     Tlv                           tlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponseTlv;
@@ -3121,7 +3121,7 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage *  message;
+    TxMessage   *message;
 
     VerifyOrExit((message = NewMleMessage(kCommandChildIdResponse)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendSourceAddressTlv());
@@ -3213,7 +3213,7 @@ Error MleRouter::SendChildUpdateRequest(Child &aChild)
 
     Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage *  message = nullptr;
+    TxMessage   *message = nullptr;
 
     if (!aChild.IsRxOnWhenIdle())
     {
@@ -3267,10 +3267,10 @@ exit:
     return error;
 }
 
-void MleRouter::SendChildUpdateResponse(Child *                 aChild,
+void MleRouter::SendChildUpdateResponse(Child                  *aChild,
                                         const Ip6::MessageInfo &aMessageInfo,
-                                        const TlvList &         aTlvList,
-                                        const Challenge &       aChallenge)
+                                        const TlvList          &aTlvList,
+                                        const Challenge        &aChallenge)
 {
     Error      error = kErrorNone;
     TxMessage *message;
@@ -3362,15 +3362,15 @@ exit:
 }
 
 void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
-                                 const TlvList &     aTlvList,
+                                 const TlvList      &aTlvList,
                                  uint16_t            aDelay,
-                                 const Message *     aRequestMessage)
+                                 const Message      *aRequestMessage)
 {
     OT_UNUSED_VARIABLE(aRequestMessage);
 
     Error      error   = kErrorNone;
     TxMessage *message = nullptr;
-    Neighbor * neighbor;
+    Neighbor  *neighbor;
 
     if (mRetrieveNewNetworkData)
     {
@@ -3689,7 +3689,7 @@ Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 {
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
 
     VerifyOrExit(!mAddressSolicitPending);
 
@@ -3725,7 +3725,7 @@ void MleRouter::SendAddressRelease(void)
 {
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message *  message;
+    Coap::Message   *message;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriAddressRelease);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -3744,8 +3744,8 @@ exit:
     LogSendError(kTypeAddressRelease, error);
 }
 
-void MleRouter::HandleAddressSolicitResponse(void *               aContext,
-                                             otMessage *          aMessage,
+void MleRouter::HandleAddressSolicitResponse(void                *aContext,
+                                             otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult)
 {
@@ -3753,7 +3753,7 @@ void MleRouter::HandleAddressSolicitResponse(void *               aContext,
                                                                      AsCoreTypePtr(aMessageInfo), aResult);
 }
 
-void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
+void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
                                              const Ip6::MessageInfo *aMessageInfo,
                                              Error                   aResult)
 {
@@ -3761,8 +3761,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
     uint16_t            rloc16;
     ThreadRouterMaskTlv routerMaskTlv;
     uint8_t             routerId;
-    Router *            router;
-    Router *            leader;
+    Router             *router;
+    Router             *leader;
     bool                isRouterIdAllocated;
 
     mAddressSolicitPending = false;
@@ -3867,7 +3867,7 @@ template <> void MleRouter::HandleTmf<kUriAddressSolicit>(Coap::Message &aMessag
 {
     Error                   error          = kErrorNone;
     ThreadStatusTlv::Status responseStatus = ThreadStatusTlv::kNoAddressAvailable;
-    Router *                router         = nullptr;
+    Router                 *router         = nullptr;
     Mac::ExtAddress         extAddress;
     uint16_t                rloc16;
     uint8_t                 status;
@@ -3962,9 +3962,9 @@ exit:
     }
 }
 
-void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
+void MleRouter::SendAddressSolicitResponse(const Coap::Message    &aRequest,
                                            ThreadStatusTlv::Status aResponseStatus,
-                                           const Router *          aRouter,
+                                           const Router           *aRouter,
                                            const Ip6::MessageInfo &aMessageInfo)
 {
     Coap::Message *message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
@@ -4000,7 +4000,7 @@ template <> void MleRouter::HandleTmf<kUriAddressRelease>(Coap::Message &aMessag
     uint16_t        rloc16;
     Mac::ExtAddress extAddress;
     uint8_t         routerId;
-    Router *        router;
+    Router         *router;
 
     VerifyOrExit(mRole == kRoleLeader);
 
@@ -4321,7 +4321,7 @@ Error MleRouter::SendTimeSync(void)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage *  message = nullptr;
+    TxMessage   *message = nullptr;
 
     VerifyOrExit((message = NewMleMessage(kCommandTimeSync)) != nullptr, error = kErrorNoBufs);
 

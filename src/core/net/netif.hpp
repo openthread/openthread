@@ -305,7 +305,7 @@ public:
                 Iterator end(void) { return Iterator(mNetif, Iterator::kEndIterator); }
 
             private:
-                const Netif &       mNetif;
+                const Netif        &mNetif;
                 Address::TypeFilter mFilter;
             };
 
@@ -322,7 +322,7 @@ public:
             void AdvanceFrom(const MulticastAddress *aAddr);
             void Advance(void) { AdvanceFrom(mItem->GetNext()); }
 
-            const Netif &       mNetif;
+            const Netif        &mNetif;
             Address::TypeFilter mFilter;
         };
 
@@ -333,7 +333,10 @@ public:
          * @returns The current Multicast Listener Registration state.
          *
          */
-        MlrState GetMlrState(void) const { return mMlrState; }
+        MlrState GetMlrState(void) const
+        {
+            return mMlrState;
+        }
 
         /**
          * This method sets the Multicast Listener Registration (MLR) state.
@@ -341,11 +344,17 @@ public:
          * @param[in] aState  The new Multicast Listener Registration state.
          *
          */
-        void SetMlrState(MlrState aState) { mMlrState = aState; }
+        void SetMlrState(MlrState aState)
+        {
+            mMlrState = aState;
+        }
 #endif
 
     private:
-        ExternalMulticastAddress *GetNext(void) { return static_cast<ExternalMulticastAddress *>(AsNonConst(mNext)); }
+        ExternalMulticastAddress *GetNext(void)
+        {
+            return static_cast<ExternalMulticastAddress *>(AsNonConst(mNext));
+        }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
         MlrState mMlrState;
@@ -375,7 +384,10 @@ public:
      * @returns The linked list of unicast addresses.
      *
      */
-    const LinkedList<UnicastAddress> &GetUnicastAddresses(void) const { return mUnicastAddresses; }
+    const LinkedList<UnicastAddress> &GetUnicastAddresses(void) const
+    {
+        return mUnicastAddresses;
+    }
 
     /**
      * This method adds a unicast address to the network interface.
@@ -423,7 +435,10 @@ public:
      * @retval FALSE  If @p aAddress is not assigned to the network interface.
      *
      */
-    bool HasUnicastAddress(const UnicastAddress &aAddress) const { return mUnicastAddresses.Contains(aAddress); }
+    bool HasUnicastAddress(const UnicastAddress &aAddress) const
+    {
+        return mUnicastAddresses.Contains(aAddress);
+    }
 
     /**
      * This method indicates whether a unicast address is an external or internal address.
@@ -502,7 +517,10 @@ public:
      * @returns The linked list of multicast addresses.
      *
      */
-    const LinkedList<MulticastAddress> &GetMulticastAddresses(void) const { return mMulticastAddresses; }
+    const LinkedList<MulticastAddress> &GetMulticastAddresses(void) const
+    {
+        return mMulticastAddresses;
+    }
 
     /**
      * This method indicates whether a multicast address is an external or internal address.
@@ -581,7 +599,10 @@ public:
      * @retval FALSE  If the multicast promiscuous mode is disabled.
      *
      */
-    bool IsMulticastPromiscuousEnabled(void) const { return mMulticastPromiscuous; }
+    bool IsMulticastPromiscuousEnabled(void) const
+    {
+        return mMulticastPromiscuous;
+    }
 
     /**
      * This method enables multicast promiscuous mode on the network interface.
@@ -589,7 +610,10 @@ public:
      * @param[in]  aEnabled  TRUE if Multicast Promiscuous mode is enabled, FALSE otherwise.
      *
      */
-    void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
+    void SetMulticastPromiscuous(bool aEnabled)
+    {
+        mMulticastPromiscuous = aEnabled;
+    }
 
     /**
      * This method enables range-based `for` loop iteration over external multicast addresses on the Netif that matches
@@ -624,7 +648,10 @@ public:
      * @retval FALSE The network interface is not subscribed to any external multicast address.
      *
      */
-    bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddress::Iterator(*this).IsDone(); }
+    bool HasAnyExternalMulticastAddress(void) const
+    {
+        return !ExternalMulticastAddress::Iterator(*this).IsDone();
+    }
 
 protected:
     /**
@@ -649,7 +676,7 @@ private:
     bool                         mMulticastPromiscuous;
 
     otIp6AddressCallback mAddressCallback;
-    void *               mAddressCallbackContext;
+    void                *mAddressCallbackContext;
 
     Pool<UnicastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS>           mExtUnicastAddressPool;
     Pool<ExternalMulticastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS> mExtMulticastAddressPool;

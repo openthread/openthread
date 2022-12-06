@@ -168,7 +168,7 @@ void Timer::Scheduler::SetAlarm(const AlarmApi &aAlarmApi)
     }
     else
     {
-        Timer *  timer = mTimerList.GetHead();
+        Timer   *timer = mTimerList.GetHead();
         Time     now(aAlarmApi.AlarmGetNow());
         uint32_t remaining;
 

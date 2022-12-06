@@ -82,7 +82,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
 {
     struct Node
     {
-        Node * mNext;
+        Node  *mNext;
         size_t mSize;
     };
 
@@ -93,7 +93,7 @@ void TestAllocateRandomly(size_t aSizeLimit, unsigned int aSeed)
     srand(aSeed);
 
     const size_t totalSize = heap.GetFreeSize();
-    Node *       last      = &head;
+    Node        *last      = &head;
 
     do
     {

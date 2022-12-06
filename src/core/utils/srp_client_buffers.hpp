@@ -171,7 +171,7 @@ public:
         }
 
     private:
-        ServiceEntry *      GetNext(void) { return reinterpret_cast<ServiceEntry *>(mService.mNext); }
+        ServiceEntry       *GetNext(void) { return reinterpret_cast<ServiceEntry *>(mService.mNext); }
         const ServiceEntry *GetNext(void) const { return reinterpret_cast<const ServiceEntry *>(mService.mNext); }
         void SetNext(ServiceEntry *aEntry) { mService.mNext = reinterpret_cast<Srp::Client::Service *>(aEntry); }
 

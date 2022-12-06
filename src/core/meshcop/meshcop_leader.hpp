@@ -117,11 +117,11 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void SendPetitionResponse(const Coap::Message &   aRequest,
+    void SendPetitionResponse(const Coap::Message    &aRequest,
                               const Ip6::MessageInfo &aMessageInfo,
                               StateTlv::State         aState);
 
-    void SendKeepAliveResponse(const Coap::Message &   aRequest,
+    void SendKeepAliveResponse(const Coap::Message    &aRequest,
                                const Ip6::MessageInfo &aMessageInfo,
                                StateTlv::State         aState);
 

@@ -414,8 +414,8 @@ void DuaManager::UpdateTimeTickerRegistration(void)
 void DuaManager::PerformNextRegistration(void)
 {
     Error            error   = kErrorNone;
-    Mle::MleRouter & mle     = Get<Mle::MleRouter>();
-    Coap::Message *  message = nullptr;
+    Mle::MleRouter  &mle     = Get<Mle::MleRouter>();
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     Ip6::Address     dua;
 
@@ -465,7 +465,7 @@ void DuaManager::PerformNextRegistration(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         uint32_t            lastTransactionTime;
         const Ip6::Address *duaPtr = nullptr;
-        Child *             child  = nullptr;
+        Child              *child  = nullptr;
 
         OT_ASSERT(mChildIndexDuaRegistering == Mle::kMaxChildren);
 
@@ -535,8 +535,8 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-void DuaManager::HandleDuaResponse(void *               aContext,
-                                   otMessage *          aMessage,
+void DuaManager::HandleDuaResponse(void                *aContext,
+                                   otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
                                    Error                aResult)
 {
@@ -651,7 +651,7 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     {
-        Child *  child = nullptr;
+        Child   *child = nullptr;
         uint16_t childIndex;
 
         for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
@@ -707,11 +707,11 @@ exit:
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
+void DuaManager::SendAddressNotification(Ip6::Address              &aAddress,
                                          ThreadStatusTlv::DuaStatus aStatus,
-                                         const Child &              aChild)
+                                         const Child               &aChild)
 {
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     Error            error;
 

@@ -147,7 +147,7 @@ void MulticastListenersTable::Expire(void)
     CheckInvariants();
 }
 
-void MulticastListenersTable::LogMulticastListenersTable(const char *        aAction,
+void MulticastListenersTable::LogMulticastListenersTable(const char         *aAction,
                                                          const Ip6::Address &aAddress,
                                                          TimeMilli           aExpireTime,
                                                          Error               aError)
@@ -291,7 +291,7 @@ void MulticastListenersTable::SetCallback(otBackboneRouterMulticastListenerCallb
 }
 
 Error MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
-                                       otBackboneRouterMulticastListenerInfo &    aListenerInfo)
+                                       otBackboneRouterMulticastListenerInfo     &aListenerInfo)
 {
     Error     error = kErrorNone;
     TimeMilli now;

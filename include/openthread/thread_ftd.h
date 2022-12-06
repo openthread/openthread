@@ -498,10 +498,10 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex,
  * @sa otThreadGetChildInfoByIndex
  *
  */
-otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
+otError otThreadGetChildNextIp6Address(otInstance                *aInstance,
                                        uint16_t                   aChildIndex,
                                        otChildIp6AddressIterator *aIterator,
-                                       otIp6Address *             aAddress);
+                                       otIp6Address              *aAddress);
 
 /**
  * Get the current Router ID Sequence.

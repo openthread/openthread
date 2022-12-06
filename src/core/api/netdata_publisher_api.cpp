@@ -64,9 +64,9 @@ bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance)
     return AsCoreType(aInstance).Get<NetworkData::Publisher>().IsDnsSrpServiceAdded();
 }
 
-void otNetDataSetDnsSrpServicePublisherCallback(otInstance *                            aInstance,
+void otNetDataSetDnsSrpServicePublisherCallback(otInstance                             *aInstance,
                                                 otNetDataDnsSrpServicePublisherCallback aCallback,
-                                                void *                                  aContext)
+                                                void                                   *aContext)
 {
     AsCoreType(aInstance).Get<NetworkData::Publisher>().SetDnsSrpServiceCallback(aCallback, aContext);
 }
@@ -97,9 +97,9 @@ bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix)
     return AsCoreType(aInstance).Get<NetworkData::Publisher>().IsPrefixAdded(AsCoreType(aPrefix));
 }
 
-void otNetDataSetPrefixPublisherCallback(otInstance *                     aInstance,
+void otNetDataSetPrefixPublisherCallback(otInstance                      *aInstance,
                                          otNetDataPrefixPublisherCallback aCallback,
-                                         void *                           aContext)
+                                         void                            *aContext)
 {
     return AsCoreType(aInstance).Get<NetworkData::Publisher>().SetPrefixCallback(aCallback, aContext);
 }

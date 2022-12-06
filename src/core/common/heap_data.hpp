@@ -178,7 +178,7 @@ public:
      */
     void Free(void);
 
-    Data(const Data &) = delete;
+    Data(const Data &)            = delete;
     Data &operator=(const Data &) = delete;
 
 private:

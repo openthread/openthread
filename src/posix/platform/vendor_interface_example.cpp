@@ -50,8 +50,8 @@ class VendorInterfaceImpl
 {
 public:
     explicit VendorInterfaceImpl(SpinelInterface::ReceiveFrameCallback aCallback,
-                                 void *                                aCallbackContext,
-                                 SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                                 void                                 *aCallbackContext,
+                                 SpinelInterface::RxFrameBuffer       &aFrameBuffer)
         : mReceiveFrameCallback(aCallback)
         , mReceiveFrameContext(aCallbackContext)
         , mRxFrameBuffer(aFrameBuffer)
@@ -65,8 +65,8 @@ public:
 
 private:
     SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                mReceiveFrameContext;
-    SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
+    void                                 *mReceiveFrameContext;
+    SpinelInterface::RxFrameBuffer       &mRxFrameBuffer;
 };
 
 // ----------------------------------------------------------------------------
@@ -76,8 +76,8 @@ private:
 static OT_DEFINE_ALIGNED_VAR(sVendorInterfaceImplRaw, sizeof(VendorInterfaceImpl), uint64_t);
 
 VendorInterface::VendorInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                                 void *                                aCallbackContext,
-                                 SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                                 void                                 *aCallbackContext,
+                                 SpinelInterface::RxFrameBuffer       &aFrameBuffer)
 {
     new (&sVendorInterfaceImplRaw) VendorInterfaceImpl(aCallback, aCallbackContext, aFrameBuffer);
     OT_UNUSED_VARIABLE(sVendorInterfaceImplRaw);

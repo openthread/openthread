@@ -126,14 +126,14 @@ exit:
     return;
 }
 
-Error Joiner::Start(const char *     aPskd,
-                    const char *     aProvisioningUrl,
-                    const char *     aVendorName,
-                    const char *     aVendorModel,
-                    const char *     aVendorSwVersion,
-                    const char *     aVendorData,
+Error Joiner::Start(const char      *aPskd,
+                    const char      *aProvisioningUrl,
+                    const char      *aVendorName,
+                    const char      *aVendorModel,
+                    const char      *aVendorSwVersion,
+                    const char      *aVendorData,
                     otJoinerCallback aCallback,
-                    void *           aContext)
+                    void            *aContext)
 {
     Error                        error;
     JoinerPskd                   joinerPskd;
@@ -501,8 +501,8 @@ exit:
     return;
 }
 
-void Joiner::HandleJoinerFinalizeResponse(void *               aContext,
-                                          otMessage *          aMessage,
+void Joiner::HandleJoinerFinalizeResponse(void                *aContext,
+                                          otMessage           *aMessage,
                                           const otMessageInfo *aMessageInfo,
                                           Error                aResult)
 {
@@ -570,7 +570,7 @@ exit:
 void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo)
 {
     Error            error = kErrorNone;
-    Coap::Message *  message;
+    Coap::Message   *message;
     Ip6::MessageInfo responseInfo(aRequestInfo);
 
     message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);

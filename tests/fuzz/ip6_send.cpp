@@ -61,8 +61,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance *      instance = nullptr;
-    otMessage *       message  = nullptr;
+    otInstance       *instance = nullptr;
+    otMessage        *message  = nullptr;
     otError           error    = OT_ERROR_NONE;
     otMessageSettings settings;
 

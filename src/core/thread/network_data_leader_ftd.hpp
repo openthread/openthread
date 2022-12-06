@@ -234,29 +234,29 @@ private:
     void RemoveRloc(uint16_t           aRloc16,
                     MatchMode          aMatchMode,
                     const NetworkData &aExcludeNetworkData,
-                    ChangedFlags &     aChangedFlags);
-    void RemoveRlocInPrefix(PrefixTlv &      aPrefix,
+                    ChangedFlags      &aChangedFlags);
+    void RemoveRlocInPrefix(PrefixTlv       &aPrefix,
                             uint16_t         aRloc16,
                             MatchMode        aMatchMode,
                             const PrefixTlv *aExcludePrefix,
-                            ChangedFlags &   aChangedFlags);
-    void RemoveRlocInService(ServiceTlv &      aService,
+                            ChangedFlags    &aChangedFlags);
+    void RemoveRlocInService(ServiceTlv       &aService,
                              uint16_t          aRloc16,
                              MatchMode         aMatchMode,
                              const ServiceTlv *aExcludeService,
-                             ChangedFlags &    aChangedFlags);
-    void RemoveRlocInHasRoute(PrefixTlv &      aPrefix,
-                              HasRouteTlv &    aHasRoute,
+                             ChangedFlags     &aChangedFlags);
+    void RemoveRlocInHasRoute(PrefixTlv       &aPrefix,
+                              HasRouteTlv     &aHasRoute,
                               uint16_t         aRloc16,
                               MatchMode        aMatchMode,
                               const PrefixTlv *aExcludePrefix,
-                              ChangedFlags &   aChangedFlags);
-    void RemoveRlocInBorderRouter(PrefixTlv &      aPrefix,
+                              ChangedFlags    &aChangedFlags);
+    void RemoveRlocInBorderRouter(PrefixTlv       &aPrefix,
                                   BorderRouterTlv &aBorderRouter,
                                   uint16_t         aRloc16,
                                   MatchMode        aMatchMode,
                                   const PrefixTlv *aExcludePrefix,
-                                  ChangedFlags &   aChangedFlags);
+                                  ChangedFlags    &aChangedFlags);
 
     static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
 
@@ -274,11 +274,11 @@ private:
     UpdateStatus UpdateService(ServiceTlv &aService);
     UpdateStatus UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs);
 
-    void SendCommissioningGetResponse(const Coap::Message &   aRequest,
+    void SendCommissioningGetResponse(const Coap::Message    &aRequest,
                                       uint16_t                aLength,
                                       const Ip6::MessageInfo &aMessageInfo);
-    void SendCommissioningSetResponse(const Coap::Message &    aRequest,
-                                      const Ip6::MessageInfo & aMessageInfo,
+    void SendCommissioningSetResponse(const Coap::Message     &aRequest,
+                                      const Ip6::MessageInfo  &aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);

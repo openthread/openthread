@@ -229,7 +229,7 @@ typedef struct otMessageInfo
     otIp6Address mPeerAddr; ///< The peer IPv6 address.
     uint16_t     mSockPort; ///< The local transport-layer port.
     uint16_t     mPeerPort; ///< The peer transport-layer port.
-    const void * mLinkInfo; ///< A pointer to link-specific information.
+    const void  *mLinkInfo; ///< A pointer to link-specific information.
     uint8_t      mHopLimit; ///< The IPv6 Hop Limit value. Only applies if `mAllowZeroHopLimit` is FALSE.
                             ///< If `0`, IPv6 Hop Limit is default value `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT`.
                             ///< Otherwise, specifies the IPv6 Hop Limit.
@@ -414,8 +414,8 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
  * @sa otMessageFree
  *
  */
-otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
-                                     const uint8_t *          aData,
+otMessage *otIp6NewMessageFromBuffer(otInstance              *aInstance,
+                                     const uint8_t           *aData,
                                      uint16_t                 aDataLength,
                                      const otMessageSettings *aSettings);
 
@@ -786,7 +786,7 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
  * @sa otIp6RegisterMulticastListeners
  *
  */
-typedef void (*otIp6RegisterMulticastListenersCallback)(void *              aContext,
+typedef void (*otIp6RegisterMulticastListenersCallback)(void               *aContext,
                                                         otError             aError,
                                                         uint8_t             aMlrStatus,
                                                         const otIp6Address *aFailedAddresses,
@@ -820,12 +820,12 @@ typedef void (*otIp6RegisterMulticastListenersCallback)(void *              aCon
  * @sa otIp6RegisterMulticastListenersCallback
  *
  */
-otError otIp6RegisterMulticastListeners(otInstance *                            aInstance,
-                                        const otIp6Address *                    aAddresses,
+otError otIp6RegisterMulticastListeners(otInstance                             *aInstance,
+                                        const otIp6Address                     *aAddresses,
                                         uint8_t                                 aAddressNum,
-                                        const uint32_t *                        aTimeout,
+                                        const uint32_t                         *aTimeout,
                                         otIp6RegisterMulticastListenersCallback aCallback,
-                                        void *                                  aContext);
+                                        void                                   *aContext);
 
 /**
  * This function sets the Mesh Local IID (for test purpose).
