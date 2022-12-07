@@ -39,6 +39,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -185,6 +186,8 @@ private:
  */
 class Mpl : public InstanceLocator, private NonCopyable
 {
+    friend class ot::TimeTicker;
+
 public:
     /**
      * This constructor initializes the MPL object.
@@ -244,14 +247,11 @@ private:
         uint8_t  mLifetime;
     };
 
-    void  HandleSeedSetTimer(void);
+    void  HandleTimeTick(void);
     Error UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
 
-    using SeedSetTimer = TimerMilliIn<Mpl, &Mpl::HandleSeedSetTimer>;
-
-    SeedEntry    mSeedSet[kNumSeedEntries];
-    SeedSetTimer mSeedSetTimer;
-    uint8_t      mSequence;
+    SeedEntry mSeedSet[kNumSeedEntries];
+    uint8_t   mSequence;
 
 #if OPENTHREAD_FTD
     static constexpr uint8_t kChildTimerExpirations  = 0; // MPL retransmissions for Children.
