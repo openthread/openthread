@@ -31,6 +31,7 @@
  */
 
 #include "infra_if.hpp"
+#include "common/num_utils.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
@@ -160,7 +161,7 @@ InfraIf::InfoString InfraIf::ToString(void) const
 {
     InfoString string;
 
-    string.Append("infra netif %u", mIfIndex);
+    string.Append("infra netif %lu", ToUlong(mIfIndex));
     return string;
 }
 

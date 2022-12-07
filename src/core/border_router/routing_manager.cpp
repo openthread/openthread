@@ -2097,7 +2097,7 @@ void RoutingManager::OnLinkPrefixManager::Init(void)
         entry->mPrefix     = savedPrefix.GetPrefix();
         entry->mExpireTime = now + Time::SecToMsec(lifetime);
 
-        LogInfo("Restored old prefix %s, lifetime:%u", entry->mPrefix.ToString().AsCString(), lifetime);
+        LogInfo("Restored old prefix %s, lifetime:%lu", entry->mPrefix.ToString().AsCString(), ToUlong(lifetime));
 
         mTimer.FireAtIfEarlier(entry->mExpireTime);
     }

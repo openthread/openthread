@@ -44,6 +44,7 @@
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
 #include <openthread/thread.h>
+#include "common/num_utils.hpp"
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
 #endif
@@ -710,12 +711,13 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
             char string[OT_IP6_PREFIX_STRING_SIZE];
 
             otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
-            OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%u, lifetime:%u, ", string, entry.mIsOnLink ? "yes" : "no",
-                         entry.mMsecSinceLastUpdate, entry.mValidLifetime);
+            OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%lu, lifetime:%lu, ", string,
+                         entry.mIsOnLink ? "yes" : "no", ToUlong(entry.mMsecSinceLastUpdate),
+                         ToUlong(entry.mValidLifetime));
 
             if (entry.mIsOnLink)
             {
-                OutputFormat("preferred:%u, ", entry.mPreferredLifetime);
+                OutputFormat("preferred:%lu, ", ToUlong(entry.mPreferredLifetime));
             }
             else
             {
@@ -2538,12 +2540,12 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
                 OutputNewLine();
             }
 
-            OutputLine("RA Rx: %u", brCounters->mRaRx);
-            OutputLine("RA TxSuccess: %u", brCounters->mRaTxSuccess);
-            OutputLine("RA TxFailed: %u", brCounters->mRaTxFailure);
-            OutputLine("RS Rx: %u", brCounters->mRsRx);
-            OutputLine("RS TxSuccess: %u", brCounters->mRsTxSuccess);
-            OutputLine("RS TxFailed: %u", brCounters->mRsTxFailure);
+            OutputLine("RA Rx: %lu", ToUlong(brCounters->mRaRx));
+            OutputLine("RA TxSuccess: %lu", ToUlong(brCounters->mRaTxSuccess));
+            OutputLine("RA TxFailed: %lu", ToUlong(brCounters->mRaTxFailure));
+            OutputLine("RS Rx: %lu", ToUlong(brCounters->mRsRx));
+            OutputLine("RS TxSuccess: %lu", ToUlong(brCounters->mRsTxSuccess));
+            OutputLine("RS TxFailed: %lu", ToUlong(brCounters->mRsTxFailure));
         }
         /**
          * @cli counters br reset
