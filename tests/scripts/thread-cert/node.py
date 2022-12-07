@@ -382,9 +382,15 @@ class OtbrDocker:
             'inbound_unicast': counters[0],
             'inbound_multicast': counters[1],
             'outbound_unicast': counters[2],
-            'outbound_multicast': counters[3]
+            'outbound_multicast': counters[3],
+            'ra_rx': counters[4],
+            'ra_tx_success': counters[5],
+            'ra_tx_failure': counters[6],
+            'rs_rx': counters[7],
+            'rs_tx_success': counters[8],
+            'rs_tx_failure': counters[9],
         }
-        logging.info(f'counters =  {counters} ')
+        logging.info(f'border routing counters: {counters}')
         return counters
 
     def _process_traffic_counters(self, counter):
@@ -469,7 +475,9 @@ class OtbrDocker:
                     assert (key in new_counters)
                     value = [new_counters[key][0] - old_counters[key][0], new_counters[key][1] - old_counters[key][1]]
                     delta_counters[key] = value
-        delta_counters = {key: value for key, value in delta_counters.items() if value[0] and value[1]}
+        delta_counters = {
+            key: value for key, value in delta_counters.items() if not isinstance(value, int) and value[0] and value[1]
+        }
 
         return delta_counters
 
