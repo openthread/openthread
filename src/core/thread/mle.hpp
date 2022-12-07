@@ -495,7 +495,7 @@ public:
      * @returns The RLOC16 assigned to the Thread interface.
      *
      */
-    uint16_t GetRloc16(void) const;
+    uint16_t GetRloc16(void) const { return mRloc16; }
 
     /**
      * This method returns a reference to the RLOC assigned to the Thread interface.
@@ -2018,6 +2018,7 @@ private:
     uint32_t mCslTimeout;
 #endif
 
+    uint16_t mRloc16;
     uint16_t mPreviousParentRloc;
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
