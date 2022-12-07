@@ -91,6 +91,7 @@ Mle::Mle(Instance &aInstance)
     , mAddressRegistrationMode(kAppendAllAddresses)
     , mHasRestored(false)
     , mReceivedResponseFromParent(false)
+    , mInitiallyAttachedAsSleepy(false)
     , mSocket(aInstance)
     , mTimeout(kMleEndDeviceTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -327,6 +328,17 @@ void Mle::SetRole(DeviceRole aRole)
     if (!IsChild() && oldRole != kRoleDisabled)
     {
         mParent.SetState(Neighbor::kStateInvalid);
+    }
+
+    if ((oldRole == kRoleDetached) && IsChild())
+    {
+        // On transition from detached to child, we remember whether we
+        // attached as sleepy or not. This is then used to determine
+        // whether or not we need to re-attach on mode changes between
+        // rx-on and sleepy (rx-off). If we initially attach as sleepy,
+        // then rx-on/off mode changes are allowed without re-attach.
+
+        mInitiallyAttachedAsSleepy = !GetDeviceMode().IsRxOnWhenIdle();
     }
 
 exit:
@@ -682,10 +694,11 @@ void Mle::SetStateDetached(void)
     SetAttachState(kAttachStateIdle);
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    mChildUpdateRequestState = kChildUpdateRequestNone;
-    mChildUpdateAttempts     = 0;
-    mDataRequestState        = kDataRequestNone;
-    mDataRequestAttempts     = 0;
+    mChildUpdateRequestState   = kChildUpdateRequestNone;
+    mChildUpdateAttempts       = 0;
+    mDataRequestState          = kDataRequestNone;
+    mDataRequestAttempts       = 0;
+    mInitiallyAttachedAsSleepy = false;
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
@@ -809,15 +822,34 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
     IgnoreError(Store());
 
-    // We need to re-attach on switching between MTD/FTD modes
-    // and also on switching from rx-on to sleepy (rx-off) mode.
-
-    if (IsAttached() && ((oldMode.IsFullThreadDevice() != mDeviceMode.IsFullThreadDevice()) ||
-                         (oldMode.IsRxOnWhenIdle() && !mDeviceMode.IsRxOnWhenIdle())))
+    if (IsAttached())
     {
-        mAttachCounter = 0;
-        IgnoreError(BecomeDetached());
-        ExitNow();
+        bool shouldReattach = false;
+
+        // We need to re-attach when switching between MTD/FTD modes.
+
+        if (oldMode.IsFullThreadDevice() != mDeviceMode.IsFullThreadDevice())
+        {
+            shouldReattach = true;
+        }
+
+        // If we initially attached as sleepy we allow mode changes
+        // between rx-on/off without a re-attach (we send "Child Update
+        // Request" to update the parent). But if we initially attached
+        // as rx-on, we require a re-attach on switching from rx-on to
+        // sleepy (rx-off) mode.
+
+        if (!mInitiallyAttachedAsSleepy && oldMode.IsRxOnWhenIdle() && !mDeviceMode.IsRxOnWhenIdle())
+        {
+            shouldReattach = true;
+        }
+
+        if (shouldReattach)
+        {
+            mAttachCounter = 0;
+            IgnoreError(BecomeDetached());
+            ExitNow();
+        }
     }
 
     if (IsDetached())
