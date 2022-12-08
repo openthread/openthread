@@ -2061,6 +2061,19 @@ Get the NAT64 translator packet and error counters.
 Done
 ```
 
+### neighbor linkquality
+
+Print link quality info for all neighbors.
+
+```bash
+> neighbor linkquality
+| RLOC16 | Extended MAC     | Frame Error | Msg Error | Avg RSS | Last RSS | Age   |
++--------+------------------+-------------+-----------+---------+----------+-------+
+| 0xe800 | 9e2fa4e1b84f92db |      0.00 % |    0.00 % |     -46 |      -48 |     1 |
+| 0xc001 | 0ad7ed6beaa6016d |      4.67 % |    0.08 % |     -68 |      -72 |    10 |
+Done
+```
+
 ### neighbor list
 
 List RLOC16 of neighbors.
