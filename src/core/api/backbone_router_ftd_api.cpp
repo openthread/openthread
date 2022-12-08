@@ -87,23 +87,23 @@ otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterCon
     return AsCoreType(aInstance).Get<BackboneRouter::Local>().GetDomainPrefix(AsCoreType(aConfig));
 }
 
-void otBackboneRouterSetDomainPrefixCallback(otInstance *                         aInstance,
+void otBackboneRouterSetDomainPrefixCallback(otInstance                          *aInstance,
                                              otBackboneRouterDomainPrefixCallback aCallback,
-                                             void *                               aContext)
+                                             void                                *aContext)
 {
     return AsCoreType(aInstance).Get<BackboneRouter::Local>().SetDomainPrefixCallback(aCallback, aContext);
 }
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-void otBackboneRouterSetNdProxyCallback(otInstance *                    aInstance,
+void otBackboneRouterSetNdProxyCallback(otInstance                     *aInstance,
                                         otBackboneRouterNdProxyCallback aCallback,
-                                        void *                          aContext)
+                                        void                           *aContext)
 {
     AsCoreType(aInstance).Get<BackboneRouter::NdProxyTable>().SetCallback(aCallback, aContext);
 }
 
-otError otBackboneRouterGetNdProxyInfo(otInstance *                 aInstance,
-                                       const otIp6Address *         aDua,
+otError otBackboneRouterGetNdProxyInfo(otInstance                  *aInstance,
+                                       const otIp6Address          *aDua,
                                        otBackboneRouterNdProxyInfo *aNdProxyInfo)
 {
     AssertPointerIsNotNull(aNdProxyInfo);
@@ -114,15 +114,15 @@ otError otBackboneRouterGetNdProxyInfo(otInstance *                 aInstance,
 #endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-void otBackboneRouterSetMulticastListenerCallback(otInstance *                              aInstance,
+void otBackboneRouterSetMulticastListenerCallback(otInstance                               *aInstance,
                                                   otBackboneRouterMulticastListenerCallback aCallback,
-                                                  void *                                    aContext)
+                                                  void                                     *aContext)
 {
     AsCoreType(aInstance).Get<BackboneRouter::MulticastListenersTable>().SetCallback(aCallback, aContext);
 }
 
-otError otBackboneRouterMulticastListenerGetNext(otInstance *                           aInstance,
-                                                 otChildIp6AddressIterator *            aIterator,
+otError otBackboneRouterMulticastListenerGetNext(otInstance                            *aInstance,
+                                                 otChildIp6AddressIterator             *aIterator,
                                                  otBackboneRouterMulticastListenerInfo *aListenerInfo)
 {
     AssertPointerIsNotNull(aIterator);
@@ -134,7 +134,7 @@ otError otBackboneRouterMulticastListenerGetNext(otInstance *                   
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *                    aInstance,
+void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance                     *aInstance,
                                                        const otIp6InterfaceIdentifier *aMlIid,
                                                        uint8_t                         aStatus)
 {

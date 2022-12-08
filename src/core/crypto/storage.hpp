@@ -133,7 +133,7 @@ inline bool IsKeyRefValid(KeyRef aKeyRef)
  * @retval kErrorInvalidArgs   @p aKey was set to `nullptr`.
  *
  */
-inline Error ImportKey(KeyRef &       aKeyRef,
+inline Error ImportKey(KeyRef        &aKeyRef,
                        KeyType        aKeyType,
                        KeyAlgorithm   aKeyAlgorithm,
                        int            aKeyUsage,
@@ -250,7 +250,10 @@ public:
      * @retval FALSE The `Key` represents a literal key.
      *
      */
-    bool IsKeyRef(void) const { return (mKey == nullptr); }
+    bool IsKeyRef(void) const
+    {
+        return (mKey == nullptr);
+    }
 
     /**
      * This method gets the `KeyRef`.
@@ -260,7 +263,10 @@ public:
      * @returns The `KeyRef` associated with `Key`.
      *
      */
-    Storage::KeyRef GetKeyRef(void) const { return mKeyRef; }
+    Storage::KeyRef GetKeyRef(void) const
+    {
+        return mKeyRef;
+    }
 
     /**
      * This method sets the `Key` as a `KeyRef`.

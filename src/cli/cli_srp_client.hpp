@@ -92,13 +92,13 @@ private:
 
     static void HandleCallback(otError                    aError,
                                const otSrpClientHostInfo *aHostInfo,
-                               const otSrpClientService * aServices,
-                               const otSrpClientService * aRemovedServices,
-                               void *                     aContext);
+                               const otSrpClientService  *aServices,
+                               const otSrpClientService  *aRemovedServices,
+                               void                      *aContext);
     void        HandleCallback(otError                    aError,
                                const otSrpClientHostInfo *aHostInfo,
-                               const otSrpClientService * aServices,
-                               const otSrpClientService * aRemovedServices);
+                               const otSrpClientService  *aServices,
+                               const otSrpClientService  *aRemovedServices);
 
     bool mCallbackEnabled;
 };

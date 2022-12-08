@@ -72,6 +72,7 @@ public:
         kDuaManager,             ///< `DuaManager`
         kMlrManager,             ///< `MlrManager`
         kNetworkDataNotifier,    ///< `NetworkData::Notifier`
+        kIp6Mpl,                 ///< `Ip6::Mpl`
 
         kNumReceivers, ///< Number of receivers.
     };

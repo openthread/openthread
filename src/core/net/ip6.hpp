@@ -227,9 +227,9 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error HandleDatagram(Message &     aMessage,
+    Error HandleDatagram(Message      &aMessage,
                          MessageOrigin aOrigin,
-                         const void *  aLinkMessageInfo = nullptr,
+                         const void   *aLinkMessageInfo = nullptr,
                          bool          aIsReassembled   = false);
 
     /**
@@ -272,7 +272,10 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    bool IsReceiveIp6FilterEnabled(void) const { return mIsReceiveIp6FilterEnabled; }
+    bool IsReceiveIp6FilterEnabled(void) const
+    {
+        return mIsReceiveIp6FilterEnabled;
+    }
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -284,7 +287,10 @@ public:
      * @sa IsReceiveIp6FilterEnabled
      *
      */
-    void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
+    void SetReceiveIp6FilterEnabled(bool aEnabled)
+    {
+        mIsReceiveIp6FilterEnabled = aEnabled;
+    }
 
     /**
      * This method indicates whether or not IPv6 forwarding is enabled.
@@ -292,7 +298,10 @@ public:
      * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
      *
      */
-    bool IsForwardingEnabled(void) const { return mForwardingEnabled; }
+    bool IsForwardingEnabled(void) const
+    {
+        return mForwardingEnabled;
+    }
 
     /**
      * This method enables/disables IPv6 forwarding.
@@ -300,7 +309,10 @@ public:
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
      *
      */
-    void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
+    void SetForwardingEnabled(bool aEnable)
+    {
+        mForwardingEnabled = aEnable;
+    }
 
     /**
      * This method perform default source address selection.
@@ -318,7 +330,10 @@ public:
      * @returns A reference to the send queue.
      *
      */
-    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
+    const PriorityQueue &GetSendQueue(void) const
+    {
+        return mSendQueue;
+    }
 
     /**
      * This static method converts an IP protocol number to a string.
@@ -347,7 +362,10 @@ public:
      * @returns A reference to the Border Routing counters.
      *
      */
-    const otBorderRoutingCounters &GetBorderRoutingCounters(void) const { return mBorderRoutingCounters; }
+    const otBorderRoutingCounters &GetBorderRoutingCounters(void) const
+    {
+        return mBorderRoutingCounters;
+    }
 
     /**
      * This method returns a reference to the Border Routing counters.
@@ -355,13 +373,19 @@ public:
      * @returns A reference to the Border Routing counters.
      *
      */
-    otBorderRoutingCounters &GetBorderRoutingCounters(void) { return mBorderRoutingCounters; }
+    otBorderRoutingCounters &GetBorderRoutingCounters(void)
+    {
+        return mBorderRoutingCounters;
+    }
 
     /**
      * This method resets the Border Routing counters.
      *
      */
-    void ResetBorderRoutingCounters(void) { memset(&mBorderRoutingCounters, 0, sizeof(mBorderRoutingCounters)); }
+    void ResetBorderRoutingCounters(void)
+    {
+        memset(&mBorderRoutingCounters, 0, sizeof(mBorderRoutingCounters));
+    }
 #endif
 
 private:
@@ -376,18 +400,18 @@ private:
     static Error   GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
 
     void  EnqueueDatagram(Message &aMessage);
-    Error ProcessReceiveCallback(Message &          aMessage,
+    Error ProcessReceiveCallback(Message           &aMessage,
                                  MessageOrigin      aOrigin,
                                  const MessageInfo &aMessageInfo,
                                  uint8_t            aIpProto,
                                  bool               aAllowReceiveFilter,
                                  Message::Ownership aMessageOwnership);
-    Error HandleExtensionHeaders(Message &     aMessage,
+    Error HandleExtensionHeaders(Message      &aMessage,
                                  MessageOrigin aOrigin,
-                                 MessageInfo & aMessageInfo,
-                                 Header &      aHeader,
-                                 uint8_t &     aNextHeader,
-                                 bool &        aReceive);
+                                 MessageInfo  &aMessageInfo,
+                                 Header       &aHeader,
+                                 uint8_t      &aNextHeader,
+                                 bool         &aReceive);
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
     Error HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
@@ -401,9 +425,9 @@ private:
     Error InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     Error RemoveMplOption(Message &aMessage);
     Error HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
-    Error HandlePayload(Header &           aIp6Header,
-                        Message &          aMessage,
-                        MessageInfo &      aMessageInfo,
+    Error HandlePayload(Header            &aIp6Header,
+                        Message           &aMessage,
+                        MessageInfo       &aMessageInfo,
                         uint8_t            aIpProto,
                         Message::Ownership aMessageOwnership);
     bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, MessageOrigin aOrigin) const;
@@ -417,11 +441,11 @@ private:
     bool                 mForwardingEnabled;
     bool                 mIsReceiveIp6FilterEnabled;
     otIp6ReceiveCallback mReceiveIp6DatagramCallback;
-    void *               mReceiveIp6DatagramCallbackContext;
+    void                *mReceiveIp6DatagramCallbackContext;
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     otNat64ReceiveIp4Callback mReceiveIp4DatagramCallback;
-    void *                    mReceiveIp4DatagramCallbackContext;
+    void                     *mReceiveIp4DatagramCallbackContext;
 #endif
 
     PriorityQueue mSendQueue;

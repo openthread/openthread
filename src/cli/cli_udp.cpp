@@ -123,7 +123,7 @@ exit:
 template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
 {
     otError           error   = OT_ERROR_NONE;
-    otMessage *       message = nullptr;
+    otMessage        *message = nullptr;
     otMessageInfo     messageInfo;
     otMessageSettings messageSettings = {mLinkSecurityEnabled, OT_MESSAGE_PRIORITY_NORMAL};
 

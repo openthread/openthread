@@ -562,8 +562,8 @@ public:
     // loop iteration over the array elements and should not be used
     // directly.
 
-    Type *      begin(void) { return &mElements[0]; }
-    Type *      end(void) { return &mElements[mLength]; }
+    Type       *begin(void) { return &mElements[0]; }
+    Type       *end(void) { return &mElements[mLength]; }
     const Type *begin(void) const { return &mElements[0]; }
     const Type *end(void) const { return &mElements[mLength]; }
 

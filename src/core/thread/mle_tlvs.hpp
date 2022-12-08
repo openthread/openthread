@@ -1273,7 +1273,7 @@ public:
      * @returns The CSL Clock Accuracy value.
      *
      */
-    uint8_t GetCslClockAccuracy(void) { return mCslClockAccuracy; }
+    uint8_t GetCslClockAccuracy(void) const { return mCslClockAccuracy; }
 
     /**
      * This method sets the CSL Clock Accuracy value.
@@ -1289,7 +1289,7 @@ public:
      * @returns The Clock Accuracy value.
      *
      */
-    uint8_t GetCslUncertainty(void) { return mCslUncertainty; }
+    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
 
     /**
      * This method sets the CSL Uncertainty value.

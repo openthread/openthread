@@ -85,6 +85,7 @@ Done
 - [parentpriority](#parentpriority)
 - [partitionid](#partitionid)
 - [ping](#ping-async--i-source-ipaddr-size-count-interval-hoplimit-timeout)
+- [platform](#platform)
 - [pollperiod](#pollperiod-pollperiod)
 - [preferrouterid](#preferrouterid-routerid)
 - [prefix](#prefix)
@@ -2333,6 +2334,16 @@ Stop sending ICMPv6 Echo Requests.
 
 ```bash
 > ping stop
+Done
+```
+
+### platform
+
+Print the current platform
+
+```bash
+> platform
+NRF52840
 Done
 ```
 

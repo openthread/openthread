@@ -126,9 +126,9 @@ private:
     using UpdaterTimer = TimerMilliIn<DatasetUpdater, &DatasetUpdater::HandleTimer>;
 
     Callback     mCallback;
-    void *       mCallbackContext;
+    void        *mCallbackContext;
     UpdaterTimer mTimer;
-    Message *    mDataset;
+    Message     *mDataset;
 };
 
 } // namespace MeshCoP

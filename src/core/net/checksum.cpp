@@ -93,7 +93,7 @@ void Checksum::WriteToMessage(uint16_t aOffset, Message &aMessage) const
 void Checksum::Calculate(const Ip6::Address &aSource,
                          const Ip6::Address &aDestination,
                          uint8_t             aIpProto,
-                         const Message &     aMessage)
+                         const Message      &aMessage)
 {
     Message::Chunk chunk;
     uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
@@ -119,7 +119,7 @@ void Checksum::Calculate(const Ip6::Address &aSource,
 void Checksum::Calculate(const Ip4::Address &aSource,
                          const Ip4::Address &aDestination,
                          uint8_t             aIpProto,
-                         const Message &     aMessage)
+                         const Message      &aMessage)
 {
     Message::Chunk chunk;
     uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
@@ -154,7 +154,7 @@ Error Checksum::VerifyMessageChecksum(const Message &aMessage, const Ip6::Messag
     return (checksum.GetValue() == kValidRxChecksum) ? kErrorNone : kErrorDrop;
 }
 
-void Checksum::UpdateMessageChecksum(Message &           aMessage,
+void Checksum::UpdateMessageChecksum(Message            &aMessage,
                                      const Ip6::Address &aSource,
                                      const Ip6::Address &aDestination,
                                      uint8_t             aIpProto)
@@ -189,7 +189,7 @@ exit:
     return;
 }
 
-void Checksum::UpdateMessageChecksum(Message &           aMessage,
+void Checksum::UpdateMessageChecksum(Message            &aMessage,
                                      const Ip4::Address &aSource,
                                      const Ip4::Address &aDestination,
                                      uint8_t             aIpProto)

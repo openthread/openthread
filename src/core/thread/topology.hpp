@@ -440,7 +440,10 @@ public:
      * @returns The link ACK frame counter value.
      *
      */
-    uint32_t GetLinkAckFrameCounter(void) const { return mValidPending.mValid.mLinkAckFrameCounter; }
+    uint32_t GetLinkAckFrameCounter(void) const
+    {
+        return mValidPending.mValid.mLinkAckFrameCounter;
+    }
 #endif
 
     /**
@@ -464,7 +467,10 @@ public:
      * @returns The MLE frame counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const { return mValidPending.mValid.mMleFrameCounter; }
+    uint32_t GetMleFrameCounter(void) const
+    {
+        return mValidPending.mValid.mMleFrameCounter;
+    }
 
     /**
      * This method sets the MLE frame counter value.
@@ -472,7 +478,10 @@ public:
      * @param[in]  aFrameCounter  The MLE frame counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mMleFrameCounter = aFrameCounter; }
+    void SetMleFrameCounter(uint32_t aFrameCounter)
+    {
+        mValidPending.mValid.mMleFrameCounter = aFrameCounter;
+    }
 
     /**
      * This method gets the RLOC16 value.
@@ -480,7 +489,10 @@ public:
      * @returns The RLOC16 value.
      *
      */
-    uint16_t GetRloc16(void) const { return mRloc16; }
+    uint16_t GetRloc16(void) const
+    {
+        return mRloc16;
+    }
 
     /**
      * This method gets the Router ID value.
@@ -488,7 +500,10 @@ public:
      * @returns The Router ID value.
      *
      */
-    uint8_t GetRouterId(void) const { return mRloc16 >> Mle::kRouterIdOffset; }
+    uint8_t GetRouterId(void) const
+    {
+        return mRloc16 >> Mle::kRouterIdOffset;
+    }
 
     /**
      * This method sets the RLOC16 value.
@@ -496,7 +511,10 @@ public:
      * @param[in]  aRloc16  The RLOC16 value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mRloc16 = aRloc16; }
+    void SetRloc16(uint16_t aRloc16)
+    {
+        mRloc16 = aRloc16;
+    }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     /**
@@ -506,7 +524,10 @@ public:
      * multi-radio feature is enabled.
      *
      */
-    void ClearLastRxFragmentTag(void) { mLastRxFragmentTag = 0; }
+    void ClearLastRxFragmentTag(void)
+    {
+        mLastRxFragmentTag = 0;
+    }
 
     /**
      * This method gets the last received fragment tag.
@@ -516,7 +537,10 @@ public:
      * @returns The last received fragment tag.
      *
      */
-    uint16_t GetLastRxFragmentTag(void) const { return mLastRxFragmentTag; }
+    uint16_t GetLastRxFragmentTag(void) const
+    {
+        return mLastRxFragmentTag;
+    }
 
     /**
      * This method set the last received fragment tag.
@@ -548,7 +572,10 @@ public:
      * before @p aTag.
      *
      */
-    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return SerialNumber::IsGreater(mLastRxFragmentTag, aTag); }
+    bool IsLastRxFragmentTagAfter(uint16_t aTag) const
+    {
+        return SerialNumber::IsGreater(mLastRxFragmentTag, aTag);
+    }
 
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
@@ -558,7 +585,10 @@ public:
      * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == kThreadVersion1p1; }
+    bool IsThreadVersion1p1(void) const
+    {
+        return mState != kStateInvalid && mVersion == kThreadVersion1p1;
+    }
 
     /**
      * This method indicates whether or not neighbor is Thread 1.2 or higher..
@@ -566,7 +596,10 @@ public:
      * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= kThreadVersion1p2; }
+    bool IsThreadVersion1p2OrHigher(void) const
+    {
+        return mState != kStateInvalid && mVersion >= kThreadVersion1p2;
+    }
 
     /**
      * This method indicates whether Thread version supports CSL.
@@ -574,7 +607,10 @@ public:
      * @returns TRUE if CSL is supported, FALSE otherwise.
      *
      */
-    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2OrHigher() && !IsRxOnWhenIdle(); }
+    bool IsThreadVersionCslCapable(void) const
+    {
+        return IsThreadVersion1p2OrHigher() && !IsRxOnWhenIdle();
+    }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
@@ -591,7 +627,10 @@ public:
      * This method gets the device MLE version.
      *
      */
-    uint16_t GetVersion(void) const { return mVersion; }
+    uint16_t GetVersion(void) const
+    {
+        return mVersion;
+    }
 
     /**
      * This method sets the device MLE version.
@@ -599,7 +638,10 @@ public:
      * @param[in]  aVersion  The device MLE version.
      *
      */
-    void SetVersion(uint16_t aVersion) { mVersion = aVersion; }
+    void SetVersion(uint16_t aVersion)
+    {
+        mVersion = aVersion;
+    }
 
     /**
      * This method gets the number of consecutive link failures.
@@ -607,19 +649,28 @@ public:
      * @returns The number of consecutive link failures.
      *
      */
-    uint8_t GetLinkFailures(void) const { return mLinkFailures; }
+    uint8_t GetLinkFailures(void) const
+    {
+        return mLinkFailures;
+    }
 
     /**
      * This method increments the number of consecutive link failures.
      *
      */
-    void IncrementLinkFailures(void) { mLinkFailures++; }
+    void IncrementLinkFailures(void)
+    {
+        mLinkFailures++;
+    }
 
     /**
      * This method resets the number of consecutive link failures to zero.
      *
      */
-    void ResetLinkFailures(void) { mLinkFailures = 0; }
+    void ResetLinkFailures(void)
+    {
+        mLinkFailures = 0;
+    }
 
     /**
      * This method returns the LinkQualityInfo object.
@@ -627,7 +678,10 @@ public:
      * @returns The LinkQualityInfo object.
      *
      */
-    LinkQualityInfo &GetLinkInfo(void) { return mLinkInfo; }
+    LinkQualityInfo &GetLinkInfo(void)
+    {
+        return mLinkInfo;
+    }
 
     /**
      * This method returns the LinkQualityInfo object.
@@ -635,7 +689,10 @@ public:
      * @returns The LinkQualityInfo object.
      *
      */
-    const LinkQualityInfo &GetLinkInfo(void) const { return mLinkInfo; }
+    const LinkQualityInfo &GetLinkInfo(void) const
+    {
+        return mLinkInfo;
+    }
 
     /**
      * This method gets the link quality in value.
@@ -643,7 +700,10 @@ public:
      * @returns The link quality in value.
      *
      */
-    LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQuality(); }
+    LinkQuality GetLinkQualityIn(void) const
+    {
+        return GetLinkInfo().GetLinkQuality();
+    }
 
     /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
@@ -657,7 +717,10 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
+    const uint8_t *GetChallenge(void) const
+    {
+        return mValidPending.mPending.mChallenge;
+    }
 
     /**
      * This method returns the size (bytes) of the challenge value for MLE Link Request/Response exchanges.
@@ -665,7 +728,10 @@ public:
      * @returns The size (bytes) of the challenge value for MLE Link Request/Response exchanges.
      *
      */
-    uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
+    uint8_t GetChallengeSize(void) const
+    {
+        return sizeof(mValidPending.mPending.mChallenge);
+    }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -674,7 +740,10 @@ public:
      * @returns TRUE if time sync feature is enabled, FALSE otherwise.
      *
      */
-    bool IsTimeSyncEnabled(void) const { return mTimeSyncEnabled; }
+    bool IsTimeSyncEnabled(void) const
+    {
+        return mTimeSyncEnabled;
+    }
 
     /**
      * This method sets whether or not time sync feature is enabled.
@@ -682,7 +751,10 @@ public:
      * @param[in]  aEnable    TRUE if time sync feature is enabled, FALSE otherwise.
      *
      */
-    void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
+    void SetTimeSyncEnabled(bool aEnabled)
+    {
+        mTimeSyncEnabled = aEnabled;
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -740,7 +812,10 @@ public:
      * @returns Enh-ACK Probing metrics configured.
      *
      */
-    const LinkMetrics::Metrics &GetEnhAckProbingMetrics(void) const { return mEnhAckProbingMetrics; }
+    const LinkMetrics::Metrics &GetEnhAckProbingMetrics(void) const
+    {
+        return mEnhAckProbingMetrics;
+    }
 
     /**
      * This method sets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
@@ -979,7 +1054,7 @@ public:
          * @returns A reference to the `Ip6::Address` entry currently pointed by the iterator.
          *
          */
-        const Ip6::Address &operator*(void)const { return *GetAddress(); }
+        const Ip6::Address &operator*(void) const { return *GetAddress(); }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two `Iterator` instances are equal.
@@ -1010,7 +1085,7 @@ public:
 
         void Update(void);
 
-        const Child &            mChild;
+        const Child             &mChild;
         Ip6::Address::TypeFilter mFilter;
         Index                    mIndex;
         Ip6::Address             mMeshLocalAddress;
@@ -1137,7 +1212,10 @@ public:
      * @returns The child timeout.
      *
      */
-    uint32_t GetTimeout(void) const { return mTimeout; }
+    uint32_t GetTimeout(void) const
+    {
+        return mTimeout;
+    }
 
     /**
      * This method sets the child timeout.
@@ -1145,7 +1223,10 @@ public:
      * @param[in]  aTimeout  The child timeout.
      *
      */
-    void SetTimeout(uint32_t aTimeout) { mTimeout = aTimeout; }
+    void SetTimeout(uint32_t aTimeout)
+    {
+        mTimeout = aTimeout;
+    }
 
     /**
      * This method gets the network data version.
@@ -1153,7 +1234,10 @@ public:
      * @returns The network data version.
      *
      */
-    uint8_t GetNetworkDataVersion(void) const { return mNetworkDataVersion; }
+    uint8_t GetNetworkDataVersion(void) const
+    {
+        return mNetworkDataVersion;
+    }
 
     /**
      * This method sets the network data version.
@@ -1161,7 +1245,10 @@ public:
      * @param[in]  aVersion  The network data version.
      *
      */
-    void SetNetworkDataVersion(uint8_t aVersion) { mNetworkDataVersion = aVersion; }
+    void SetNetworkDataVersion(uint8_t aVersion)
+    {
+        mNetworkDataVersion = aVersion;
+    }
 
     /**
      * This method generates a new challenge value to use during a child attach.
@@ -1175,7 +1262,10 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mAttachChallenge; }
+    const uint8_t *GetChallenge(void) const
+    {
+        return mAttachChallenge;
+    }
 
     /**
      * This method gets the challenge size (bytes) used during attach.
@@ -1183,13 +1273,19 @@ public:
      * @returns The challenge size (bytes).
      *
      */
-    uint8_t GetChallengeSize(void) const { return sizeof(mAttachChallenge); }
+    uint8_t GetChallengeSize(void) const
+    {
+        return sizeof(mAttachChallenge);
+    }
 
     /**
      * This method clears the requested TLV list.
      *
      */
-    void ClearRequestTlvs(void) { memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs)); }
+    void ClearRequestTlvs(void)
+    {
+        memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs));
+    }
 
     /**
      * This method returns the requested TLV at index @p aIndex.
@@ -1199,7 +1295,10 @@ public:
      * @returns The requested TLV at index @p aIndex.
      *
      */
-    uint8_t GetRequestTlv(uint8_t aIndex) const { return mRequestTlvs[aIndex]; }
+    uint8_t GetRequestTlv(uint8_t aIndex) const
+    {
+        return mRequestTlvs[aIndex];
+    }
 
     /**
      * This method sets the requested TLV at index @p aIndex.
@@ -1208,7 +1307,10 @@ public:
      * @param[in]  aType   The TLV type.
      *
      */
-    void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
+    void SetRequestTlv(uint8_t aIndex, uint8_t aType)
+    {
+        mRequestTlvs[aIndex] = aType;
+    }
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
@@ -1216,7 +1318,10 @@ public:
      * This method increments the number of seconds since last supervision of the child.
      *
      */
-    void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
+    void IncrementSecondsSinceLastSupervision(void)
+    {
+        mSecondsSinceSupervision++;
+    }
 
     /**
      * This method returns the number of seconds since last supervision of the child (last message to the child)
@@ -1224,13 +1329,19 @@ public:
      * @returns Number of seconds since last supervision of the child.
      *
      */
-    uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
+    uint16_t GetSecondsSinceLastSupervision(void) const
+    {
+        return mSecondsSinceSupervision;
+    }
 
     /**
      * This method resets the number of seconds since last supervision of the child to zero.
      *
      */
-    void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
+    void ResetSecondsSinceLastSupervision(void)
+    {
+        mSecondsSinceSupervision = 0;
+    }
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
@@ -1276,7 +1387,10 @@ public:
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
      *
      */
-    bool HasAnyMlrRegisteredAddress(void) const { return mMlrRegisteredMask.HasAny(); }
+    bool HasAnyMlrRegisteredAddress(void) const
+    {
+        return mMlrRegisteredMask.HasAny();
+    }
 
     /**
      * This method returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
@@ -1285,7 +1399,10 @@ public:
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
      *
      */
-    bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
+    bool HasAnyMlrToRegisterAddress(void) const
+    {
+        return mMlrToRegisterMask.HasAny();
+    }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
@@ -1310,7 +1427,7 @@ private:
         AddressIterator end(void) { return AddressIterator(mChild, AddressIterator::kEndIterator); }
 
     private:
-        const Child &            mChild;
+        const Child             &mChild;
         Ip6::Address::TypeFilter mFilter;
     };
 
@@ -1493,7 +1610,10 @@ public:
      * @returns The route cost from parent to leader
      *
      */
-    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
+    uint8_t GetLeaderCost(void) const
+    {
+        return mLeaderCost;
+    }
 
     /**
      * This method sets route cost from parent to leader.
@@ -1501,7 +1621,10 @@ public:
      * @param[in] aLaderConst  The route cost.
      *
      */
-    void SetLeaderCost(uint8_t aLeaderCost) { mLeaderCost = aLeaderCost; }
+    void SetLeaderCost(uint8_t aLeaderCost)
+    {
+        mLeaderCost = aLeaderCost;
+    }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -1510,7 +1633,10 @@ public:
      * @returns The CSL accuracy.
      *
      */
-    const Mac::CslAccuracy &GetCslAccuracy(void) const { return mCslAccuracy; }
+    const Mac::CslAccuracy &GetCslAccuracy(void) const
+    {
+        return mCslAccuracy;
+    }
 
     /**
      * This method sets CSL accuracy.
@@ -1518,7 +1644,10 @@ public:
      * @param[in] aCslAccuracy  The CSL accuracy.
      *
      */
-    void SetCslAccuracy(const Mac::CslAccuracy &aCslAccuracy) { mCslAccuracy = aCslAccuracy; }
+    void SetCslAccuracy(const Mac::CslAccuracy &aCslAccuracy)
+    {
+        mCslAccuracy = aCslAccuracy;
+    }
 #endif
 
 private:

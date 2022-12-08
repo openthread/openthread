@@ -465,7 +465,7 @@ protected:
      * @returns A pointer to the next matching Service TLV if one is found or `nullptr` if it cannot be found.
      *
      */
-    const ServiceTlv *FindNextService(const ServiceTlv * aPrevServiceTlv,
+    const ServiceTlv *FindNextService(const ServiceTlv  *aPrevServiceTlv,
                                       uint32_t           aEnterpriseNumber,
                                       const ServiceData &aServiceData,
                                       ServiceMatchMode   aServiceMatchMode) const;
@@ -484,7 +484,7 @@ protected:
      * @returns A pointer to the next matching Thread Service TLV if one is found or `nullptr` if it cannot be found.
      *
      */
-    const ServiceTlv *FindNextThreadService(const ServiceTlv * aPrevServiceTlv,
+    const ServiceTlv *FindNextThreadService(const ServiceTlv  *aPrevServiceTlv,
                                             const ServiceData &aServiceData,
                                             ServiceMatchMode   aServiceMatchMode) const;
 
@@ -554,14 +554,14 @@ private:
 
     struct Config
     {
-        OnMeshPrefixConfig * mOnMeshPrefix;
+        OnMeshPrefixConfig  *mOnMeshPrefix;
         ExternalRouteConfig *mExternalRoute;
-        ServiceConfig *      mService;
+        ServiceConfig       *mService;
     };
 
     Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 
-    static bool MatchService(const ServiceTlv & aServiceTlv,
+    static bool MatchService(const ServiceTlv  &aServiceTlv,
                              uint32_t           aEnterpriseNumber,
                              const ServiceData &aServiceData,
                              ServiceMatchMode   aServiceMatchMode);

@@ -31,6 +31,7 @@
  */
 
 #include "infra_if.hpp"
+#include "common/num_utils.hpp"
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
@@ -79,14 +80,14 @@ void InfraIf::Deinit(void)
     LogInfo("Deinit");
 }
 
-bool InfraIf::HasAddress(const Ip6::Address &aAddress)
+bool InfraIf::HasAddress(const Ip6::Address &aAddress) const
 {
     OT_ASSERT(mInitialized);
 
     return otPlatInfraIfHasAddress(mIfIndex, &aAddress);
 }
 
-Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination)
+Error InfraIf::Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const
 {
     OT_ASSERT(mInitialized);
 
@@ -111,7 +112,7 @@ exit:
     }
 }
 
-Error InfraIf::DiscoverNat64Prefix(void)
+Error InfraIf::DiscoverNat64Prefix(void) const
 {
     OT_ASSERT(mInitialized);
 
@@ -160,16 +161,16 @@ InfraIf::InfoString InfraIf::ToString(void) const
 {
     InfoString string;
 
-    string.Append("infra netif %u", mIfIndex);
+    string.Append("infra netif %lu", ToUlong(mIfIndex));
     return string;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 
-extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
+extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance         *aInstance,
                                          uint32_t            aInfraIfIndex,
                                          const otIp6Address *aSrcAddress,
-                                         const uint8_t *     aBuffer,
+                                         const uint8_t      *aBuffer,
                                          uint16_t            aBufferLength)
 {
     InfraIf::Icmp6Packet packet;
@@ -183,7 +184,7 @@ extern "C" otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aIn
     return AsCoreType(aInstance).Get<InfraIf>().HandleStateChanged(aInfraIfIndex, aIsRunning);
 }
 
-extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance *       aInstance,
+extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstance,
                                                      uint32_t           aInfraIfIndex,
                                                      const otIp6Prefix *aIp6Prefix)
 {

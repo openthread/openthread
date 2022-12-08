@@ -94,7 +94,7 @@ exit:
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
-                                 const uint8_t *     aBuffer,
+                                 const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
     return ot::Posix::InfraNetif::Get().SendIcmp6Nd(aInfraIfIndex, *aDestAddress, aBuffer, aBufferLength);
@@ -194,7 +194,7 @@ int CreateNetLinkSocket(void)
 
 otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
                                 const otIp6Address &aDestAddress,
-                                const uint8_t *     aBuffer,
+                                const uint8_t      *aBuffer,
                                 uint16_t            aBufferLength)
 {
     otError error = OT_ERROR_NONE;
@@ -205,7 +205,7 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
     int                 hopLimit = 255;
     uint8_t             cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo)) + CMSG_SPACE(sizeof(hopLimit))];
     struct msghdr       msgHeader;
-    struct cmsghdr *    cmsgPointer;
+    struct cmsghdr     *cmsgPointer;
     ssize_t             rval;
     struct sockaddr_in6 dest;
 
@@ -538,7 +538,7 @@ const uint8_t      InfraNetif::kValidNat64PrefixLength[]  = {96, 64, 56, 48, 40,
 
 void InfraNetif::DiscoverNat64PrefixDone(union sigval sv)
 {
-    struct gaicb *   req = (struct gaicb *)sv.sival_ptr;
+    struct gaicb    *req = (struct gaicb *)sv.sival_ptr;
     struct addrinfo *res = (struct addrinfo *)req->ar_result;
 
     otIp6Prefix prefix = {};
@@ -616,7 +616,7 @@ otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
     otError          error = OT_ERROR_NONE;
     struct addrinfo *hints = nullptr;
-    struct gaicb *   reqs[1];
+    struct gaicb    *reqs[1];
     struct sigevent  sig;
     int              status;
 

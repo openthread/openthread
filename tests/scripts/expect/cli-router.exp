@@ -52,6 +52,7 @@ expect_line "Done"
 switch_node 2
 send "mode rdn\n"
 expect_line "Done"
+sleep 5
 send "state router\n"
 expect_line "Done"
 wait_for "router list" $router_id

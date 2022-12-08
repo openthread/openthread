@@ -55,7 +55,7 @@ static uint16_t sPortOffset = 0;  ///< Port offset for simulation.
 void virtualTimeInit(uint16_t aNodeId)
 {
     struct sockaddr_in sockaddr;
-    char *             offset;
+    char              *offset;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
@@ -159,10 +159,10 @@ void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength
     virtualTimeSendEvent(&event, offsetof(struct VirtualTimeEvent, mData) + event.mDataLength);
 }
 
-void virtualTimeUpdateFdSet(fd_set *        aReadFdSet,
-                            fd_set *        aWriteFdSet,
-                            fd_set *        aErrorFdSet,
-                            int *           aMaxFd,
+void virtualTimeUpdateFdSet(fd_set         *aReadFdSet,
+                            fd_set         *aWriteFdSet,
+                            fd_set         *aErrorFdSet,
+                            int            *aMaxFd,
                             struct timeval *aTimeout)
 {
     OT_UNUSED_VARIABLE(aWriteFdSet);
@@ -176,7 +176,7 @@ void virtualTimeUpdateFdSet(fd_set *        aReadFdSet,
     }
 }
 
-void virtualTimeProcess(otInstance *  aInstance,
+void virtualTimeProcess(otInstance   *aInstance,
                         const fd_set *aReadFdSet,
                         const fd_set *aWriteFdSet,
                         const fd_set *aErrorFdSet)

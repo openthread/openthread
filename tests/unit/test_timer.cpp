@@ -150,7 +150,7 @@ template <typename TimerType> int TestOneTimer(void)
 {
     const uint32_t       kTimeT0        = 1000;
     const uint32_t       kTimerInterval = 10;
-    ot::Instance *       instance       = testInitInstance();
+    ot::Instance        *instance       = testInitInstance();
     TestTimer<TimerType> timer(*instance);
 
     // Test one Timer basic operation.
@@ -276,7 +276,7 @@ template <typename TimerType> int TestTwoTimers(void)
 {
     const uint32_t       kTimeT0        = 1000;
     const uint32_t       kTimerInterval = 10;
-    ot::Instance *       instance       = testInitInstance();
+    ot::Instance        *instance       = testInitInstance();
     TestTimer<TimerType> timer1(*instance);
     TestTimer<TimerType> timer2(*instance);
 

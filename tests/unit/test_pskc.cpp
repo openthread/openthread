@@ -39,10 +39,10 @@ void TestMinimumPassphrase(void)
 {
     ot::Pskc              pskc;
     const uint8_t         expectedPskc[] = {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
-                                    0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
+                                            0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
     const otExtendedPanId xpanid         = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
     const char            passphrase[]   = "123456";
-    otInstance *          instance       = testInitInstance();
+    otInstance           *instance       = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
                                             *reinterpret_cast<const ot::MeshCoP::NetworkName *>("OpenThread"),
                                             static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
@@ -54,24 +54,24 @@ void TestMaximumPassphrase(void)
 {
     ot::Pskc              pskc;
     const uint8_t         expectedPskc[] = {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
-                                    0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9};
+                                            0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9};
     const otExtendedPanId xpanid         = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
     const char            passphrase[]   = "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "1234567812345678"
-                              "123456781234567";
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "1234567812345678"
+                                           "123456781234567";
 
     otInstance *instance = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
@@ -85,7 +85,7 @@ void TestExampleInSpec(void)
 {
     ot::Pskc              pskc;
     const uint8_t         expectedPskc[] = {0xc3, 0xf5, 0x93, 0x68, 0x44, 0x5a, 0x1b, 0x61,
-                                    0x06, 0xbe, 0x42, 0x0a, 0x70, 0x6d, 0x4c, 0xc9};
+                                            0x06, 0xbe, 0x42, 0x0a, 0x70, 0x6d, 0x4c, 0xc9};
     const otExtendedPanId xpanid         = {{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}};
     const char            passphrase[]   = "12SECRETPASSWORD34";
 

@@ -211,7 +211,10 @@ public:
      * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
      *
      */
-    bool IsInitialized(void) const { return mIsInitialized; }
+    bool IsInitialized(void) const
+    {
+        return mIsInitialized;
+    }
 
     /**
      * This method triggers a platform reset.
@@ -300,7 +303,10 @@ public:
      * @returns A reference to the application COAP object.
      *
      */
-    Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
+    Coap::Coap &GetApplicationCoap(void)
+    {
+        return mApplicationCoap;
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
@@ -310,7 +316,10 @@ public:
      * @returns A reference to the application COAP Secure object.
      *
      */
-    Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
+    Coap::CoapSecure &GetApplicationCoapSecure(void)
+    {
+        return mApplicationCoapSecure;
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -325,7 +334,10 @@ public:
      * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
      *
      */
-    static void SetDnsNameCompressionEnabled(bool aEnabled) { sDnsNameCompressionEnabled = aEnabled; }
+    static void SetDnsNameCompressionEnabled(bool aEnabled)
+    {
+        sDnsNameCompressionEnabled = aEnabled;
+    }
 
     /**
      * This method indicates whether the "DNS name compression" mode is enabled or not.
@@ -333,7 +345,10 @@ public:
      * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
      *
      */
-    static bool IsDnsNameCompressionEnabled(void) { return sDnsNameCompressionEnabled; }
+    static bool IsDnsNameCompressionEnabled(void)
+    {
+        return sDnsNameCompressionEnabled;
+    }
 #endif
 
     /**

@@ -42,8 +42,8 @@
 
 using namespace ot;
 
-otError otTcpEndpointInitialize(otInstance *                       aInstance,
-                                otTcpEndpoint *                    aEndpoint,
+otError otTcpEndpointInitialize(otInstance                        *aInstance,
+                                otTcpEndpoint                     *aEndpoint,
                                 const otTcpEndpointInitializeArgs *aArgs)
 {
     return AsCoreType(aEndpoint).Initialize(AsCoreType(aInstance), *aArgs);
@@ -119,8 +119,8 @@ otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint)
     return AsCoreType(aEndpoint).Deinitialize();
 }
 
-otError otTcpListenerInitialize(otInstance *                       aInstance,
-                                otTcpListener *                    aListener,
+otError otTcpListenerInitialize(otInstance                        *aInstance,
+                                otTcpListener                     *aListener,
                                 const otTcpListenerInitializeArgs *aArgs)
 {
     return AsCoreType(aListener).Initialize(AsCoreType(aInstance), *aArgs);

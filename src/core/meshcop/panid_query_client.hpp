@@ -77,15 +77,15 @@ public:
      */
     Error SendQuery(uint16_t                            aPanId,
                     uint32_t                            aChannelMask,
-                    const Ip6::Address &                aAddress,
+                    const Ip6::Address                 &aAddress,
                     otCommissionerPanIdConflictCallback aCallback,
-                    void *                              aContext);
+                    void                               *aContext);
 
 private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     otCommissionerPanIdConflictCallback mCallback;
-    void *                              mContext;
+    void                               *mContext;
 };
 
 DeclareTmfHandler(PanIdQueryClient, kUriPanIdConflict);

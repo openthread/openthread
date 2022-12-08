@@ -65,10 +65,12 @@ set -euxo pipefail
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 OT_SRCDIR="$(cd "$(dirname "$0")"/.. && pwd)"
-
 readonly OT_SRCDIR
-readonly OT_PLATFORMS=(simulation posix)
-readonly OT_POSIX_SIM_COMMON_OPTIONS=(
+
+OT_PLATFORMS=(simulation posix)
+readonly OT_PLATFORMS
+
+OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_ANYCAST_LOCATOR=ON"
     "-DOT_BORDER_AGENT=ON"
     "-DOT_BORDER_ROUTER=ON"
@@ -106,6 +108,7 @@ readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_RCP_RESTORATION_MAX_COUNT=2"
     "-DOT_UPTIME=ON"
 )
+readonly OT_POSIX_SIM_COMMON_OPTIONS
 
 die()
 {

@@ -638,7 +638,7 @@ public:
      */
     Error ConfigureEnhAckProbing(otLinkMetrics            aLinkMetrics,
                                  const Mac::ShortAddress &aShortAddress,
-                                 const Mac::ExtAddress &  aExtAddress)
+                                 const Mac::ExtAddress   &aExtAddress)
     {
         return otPlatRadioConfigureEnhAckProbing(GetInstancePtr(), aLinkMetrics, aShortAddress, &aExtAddress);
     }
@@ -658,7 +658,10 @@ public:
     }
 
 private:
-    otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
+    otInstance *GetInstancePtr(void) const
+    {
+        return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance());
+    }
 
     Callbacks mCallbacks;
 };

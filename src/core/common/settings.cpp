@@ -37,6 +37,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/num_utils.hpp"
 #include "meshcop/dataset.hpp"
 #include "thread/mle.hpp"
 
@@ -381,8 +382,8 @@ void Settings::BrOnLinkPrefix::Log(const char *aActionText) const
 {
     OT_UNUSED_VARIABLE(aActionText);
 
-    LogInfo("%s %s entry {prefix:%s,lifetime:%u}", aActionText, KeyToString(kKeyBrOnLinkPrefixes),
-            GetPrefix().ToString().AsCString(), GetLifetime());
+    LogInfo("%s %s entry {prefix:%s,lifetime:%lu}", aActionText, KeyToString(kKeyBrOnLinkPrefixes),
+            GetPrefix().ToString().AsCString(), ToUlong(GetLifetime()));
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

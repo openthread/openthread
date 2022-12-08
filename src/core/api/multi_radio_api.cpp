@@ -44,8 +44,8 @@
 
 using namespace ot;
 
-otError otMultiRadioGetNeighborInfo(otInstance *              aInstance,
-                                    const otExtAddress *      aExtAddress,
+otError otMultiRadioGetNeighborInfo(otInstance               *aInstance,
+                                    const otExtAddress       *aExtAddress,
                                     otMultiRadioNeighborInfo *aNeighborInfo)
 {
     Error     error = kErrorNone;

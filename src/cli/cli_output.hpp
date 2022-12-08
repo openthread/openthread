@@ -90,9 +90,14 @@ public:
     OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
+    void SetEmittingCommandOutput(bool aEmittingOutput)
+    {
+        mEmittingCommandOutput = aEmittingOutput;
+    }
 #else
-    void SetEmittingCommandOutput(bool) {}
+    void SetEmittingCommandOutput(bool)
+    {
+    }
 #endif
 
 private:
@@ -101,7 +106,7 @@ private:
     void OutputV(const char *aFormat, va_list aArguments);
 
     otCliOutputCallback mCallback;
-    void *              mCallbackContext;
+    void               *mCallbackContext;
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     char     mOutputString[kInputOutputLogStringSize];
     uint16_t mOutputLength;
@@ -507,7 +512,9 @@ protected:
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void LogInput(const Arg *aArgs);
 #else
-    void LogInput(const Arg *) {}
+    void LogInput(const Arg *)
+    {
+    }
 #endif
 
 private:
@@ -516,7 +523,7 @@ private:
     void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
     void OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[]);
 
-    otInstance *       mInstance;
+    otInstance        *mInstance;
     OutputImplementer &mImplementer;
 };
 

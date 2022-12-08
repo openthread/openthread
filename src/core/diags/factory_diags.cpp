@@ -51,8 +51,8 @@
 OT_TOOL_WEAK
 otError otPlatDiagProcess(otInstance *aInstance,
                           uint8_t     aArgsLength,
-                          char *      aArgs[],
-                          char *      aOutput,
+                          char       *aArgs[],
+                          char       *aOutput,
                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aArgsLength);
@@ -644,7 +644,7 @@ Error Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLe
 
     Error   error = kErrorNone;
     char    buffer[kMaxCommandBuffer];
-    char *  args[kMaxArgs];
+    char   *args[kMaxArgs];
     uint8_t argCount = 0;
 
     VerifyOrExit(StringLength(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = kErrorNoBufs);

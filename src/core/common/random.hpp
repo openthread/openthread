@@ -84,7 +84,10 @@ public:
      * @retval kErrorNone    Successfully filled buffer with random values.
      *
      */
-    static Error CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return otPlatCryptoRandomGet(aBuffer, aSize); }
+    static Error CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize)
+    {
+        return otPlatCryptoRandomGet(aBuffer, aSize);
+    }
 #endif
 
 private:

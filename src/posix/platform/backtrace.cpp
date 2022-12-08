@@ -74,8 +74,8 @@ static void demangleSymbol(int aIndex, const char *aSymbol)
     int                status;
     char               program[kMaxNameSize + 1];
     char               mangledName[kMaxNameSize + 1];
-    char *             demangledName = nullptr;
-    char *             functionName  = nullptr;
+    char              *demangledName = nullptr;
+    char              *functionName  = nullptr;
     unsigned int       offset        = 0;
     unsigned int       address       = 0;
 
@@ -113,8 +113,8 @@ exit:
 static void dumpStack(void)
 {
     constexpr uint8_t kMaxDepth = 50;
-    void *            stack[kMaxDepth];
-    char **           symbols;
+    void             *stack[kMaxDepth];
+    char            **symbols;
     int               depth;
 
     depth   = backtrace(stack, kMaxDepth);

@@ -112,7 +112,7 @@ exit:
     SendPetitionResponse(aMessage, aMessageInfo, state);
 }
 
-void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
+void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   StateTlv::State         aState)
 {
@@ -188,7 +188,7 @@ exit:
     return;
 }
 
-void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
+void Leader::SendKeepAliveResponse(const Coap::Message    &aRequest,
                                    const Ip6::MessageInfo &aMessageInfo,
                                    StateTlv::State         aState)
 {
@@ -213,7 +213,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message *  message;
+    Coap::Message   *message;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDatasetChanged);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);

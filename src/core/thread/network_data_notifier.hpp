@@ -117,8 +117,8 @@ private:
 
     void        HandleNotifierEvents(Events aEvents);
     void        HandleTimer(void);
-    static void HandleCoapResponse(void *               aContext,
-                                   otMessage *          aMessage,
+    static void HandleCoapResponse(void                *aContext,
+                                   otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
                                    Error                aResult);
     void        HandleCoapResponse(Error aResult);

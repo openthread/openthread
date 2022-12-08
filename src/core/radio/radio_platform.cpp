@@ -47,7 +47,7 @@ using namespace ot;
 
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
-    Instance &    instance = AsCoreType(aInstance);
+    Instance     &instance = AsCoreType(aInstance);
     Mac::RxFrame *rxFrame  = static_cast<Mac::RxFrame *>(aFrame);
 
     VerifyOrExit(instance.IsInitialized());
@@ -67,7 +67,7 @@ exit:
 
 extern "C" void otPlatRadioTxStarted(otInstance *aInstance, otRadioFrame *aFrame)
 {
-    Instance &    instance = AsCoreType(aInstance);
+    Instance     &instance = AsCoreType(aInstance);
     Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
 
     VerifyOrExit(instance.IsInitialized());
@@ -84,7 +84,7 @@ exit:
 
 extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
-    Instance &    instance = AsCoreType(aInstance);
+    Instance     &instance = AsCoreType(aInstance);
     Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
     Mac::RxFrame *ackFrame = static_cast<Mac::RxFrame *>(aAckFrame);
 
@@ -201,7 +201,7 @@ OT_TOOL_WEAK otRadioState otPlatRadioGetState(otInstance *aInstance)
     return OT_RADIO_STATE_INVALID;
 }
 
-OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance *            aInstance,
+OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance             *aInstance,
                                        uint8_t                 aKeyIdMode,
                                        uint8_t                 aKeyId,
                                        const otMacKeyMaterial *aPrevKey,

@@ -89,7 +89,7 @@ Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
 {
     Error   error = kErrorNone;
     uint8_t index = 0;
-    char *  cmd;
+    char   *cmd;
 
     for (cmd = aCommandString; *cmd; cmd++)
     {

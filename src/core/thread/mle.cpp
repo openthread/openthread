@@ -130,9 +130,6 @@ Mle::Mle(Instance &aInstance)
     mMeshLocal16.GetAddress().GetIid().SetToLocator(0);
     mMeshLocal16.mRloc = true;
 
-    // Store RLOC address reference in MPL module.
-    Get<Ip6::Mpl>().SetMatchingAddress(mMeshLocal16.GetAddress());
-
     mLinkLocalAllThreadNodes.Clear();
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
@@ -255,7 +252,7 @@ exit:
     if (mDetachGracefullyCallback != nullptr)
     {
         otDetachGracefullyCallback callback = mDetachGracefullyCallback;
-        void *                     context  = mDetachGracefullyContext;
+        void                      *context  = mDetachGracefullyContext;
 
         mDetachGracefullyCallback = nullptr;
         mDetachGracefullyContext  = nullptr;
@@ -701,9 +698,6 @@ void Mle::SetStateDetached(void)
     Get<MleRouter>().HandleDetachStart();
 #endif
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
-#if OPENTHREAD_FTD
-    Get<Ip6::Mpl>().SetTimerExpirations(0);
-#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Get<Mac::Mac>().UpdateCsl();
 #endif
@@ -734,9 +728,6 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #endif
 
     Get<Ip6::Ip6>().SetForwardingEnabled(false);
-#if OPENTHREAD_FTD
-    Get<Ip6::Mpl>().SetTimerExpirations(kMplChildDataMessageTimerExpirations);
-#endif
 
     // send announce after attached if needed
     InformPreviousChannel();
@@ -824,30 +815,27 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
     IgnoreError(Store());
 
-    switch (mRole)
-    {
-    case kRoleDisabled:
-        break;
+    // We need to re-attach on switching between MTD/FTD modes
+    // and also on switching from rx-on to sleepy (rx-off) mode.
 
-    case kRoleDetached:
+    if (IsAttached() && ((oldMode.IsFullThreadDevice() != mDeviceMode.IsFullThreadDevice()) ||
+                         (oldMode.IsRxOnWhenIdle() && !mDeviceMode.IsRxOnWhenIdle())))
+    {
+        mAttachCounter = 0;
+        IgnoreError(BecomeDetached());
+        ExitNow();
+    }
+
+    if (IsDetached())
+    {
         mAttachCounter = 0;
         SetStateDetached();
         Attach(kAnyPartition);
-        break;
-
-    case kRoleChild:
+    }
+    else if (IsChild())
+    {
         SetStateChild(GetRloc16());
         IgnoreError(SendChildUpdateRequest());
-        break;
-
-    case kRoleRouter:
-    case kRoleLeader:
-        if (oldMode.IsFullThreadDevice() && !mDeviceMode.IsFullThreadDevice())
-        {
-            IgnoreError(BecomeDetached());
-        }
-
-        break;
     }
 
 exit:
@@ -992,7 +980,6 @@ void Mle::SetRloc16(uint16_t aRloc16)
     }
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
-    Get<Ip6::Mpl>().SetSeedId(aRloc16);
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
@@ -1702,7 +1689,7 @@ void Mle::RemoveDelayedMessage(Message::SubType aSubType, MessageType aMessageTy
 void Mle::SendParentRequest(ParentRequestType aType)
 {
     Error        error = kErrorNone;
-    TxMessage *  message;
+    TxMessage   *message;
     uint8_t      scanMask = 0;
     Ip6::Address destination;
 
@@ -1761,7 +1748,7 @@ Error Mle::SendChildIdRequest(void)
 
     Error        error   = kErrorNone;
     uint8_t      tlvsLen = sizeof(kTlvs);
-    TxMessage *  message = nullptr;
+    TxMessage   *message = nullptr;
     Ip6::Address destination;
 
     if (mParent.GetExtAddress() == mParentCandidate.GetExtAddress())
@@ -1823,8 +1810,8 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-Error Mle::SendDataRequest(const Ip6::Address &                       aDestination,
-                           const uint8_t *                            aTlvs,
+Error Mle::SendDataRequest(const Ip6::Address                        &aDestination,
+                           const uint8_t                             *aTlvs,
                            uint8_t                                    aTlvsLength,
                            uint16_t                                   aDelay,
                            const LinkMetrics::LinkMetrics::QueryInfo *aQueryInfo)
@@ -2005,7 +1992,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
 {
     Error                   error = kErrorNone;
     Ip6::Address            destination;
-    TxMessage *             message = nullptr;
+    TxMessage              *message = nullptr;
     AddressRegistrationMode mode    = kAppendAllAddresses;
 
     if (!mParent.IsStateValidOrRestoring())
@@ -2085,7 +2072,7 @@ Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aCh
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
-    TxMessage *  message;
+    TxMessage   *message;
     bool         checkAddress = false;
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateResponse)) != nullptr, error = kErrorNoBufs);
@@ -2170,7 +2157,7 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     Error              error = kErrorNone;
     ChannelTlv         channelTlv;
     MeshCoP::Timestamp activeTimestamp;
-    TxMessage *        message = nullptr;
+    TxMessage         *message = nullptr;
 
     VerifyOrExit(Get<Mac::Mac>().GetSupportedChannelMask().ContainsChannel(aChannel), error = kErrorInvalidArgs);
     VerifyOrExit((message = NewMleMessage(kCommandAnnounce)) != nullptr, error = kErrorNoBufs);
@@ -2280,10 +2267,10 @@ exit:
 #endif
 
 Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
-                                  Message &               aMessage,
+                                  Message                &aMessage,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   uint16_t                aCmdOffset,
-                                  const SecurityHeader &  aHeader)
+                                  const SecurityHeader   &aHeader)
 {
     // This method performs MLE message security. Based on `aMode` it
     // can be used to encrypt and append tag to `aMessage` or to
@@ -2386,7 +2373,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint32_t        frameCounter;
     Mac::ExtAddress extAddr;
     uint8_t         command;
-    Neighbor *      neighbor;
+    Neighbor       *neighbor;
 
     LogDebg("Receive MLE message");
 
@@ -3006,7 +2993,7 @@ exit:
 bool Mle::IsBetterParent(uint16_t                aRloc16,
                          LinkQuality             aLinkQuality,
                          uint8_t                 aLinkMargin,
-                         const ConnectivityTlv & aConnectivityTlv,
+                         const ConnectivityTlv  &aConnectivityTlv,
                          uint16_t                aVersion,
                          const Mac::CslAccuracy &aCslAccuracy)
 {
@@ -3873,7 +3860,7 @@ Error Mle::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
 void Mle::InformPreviousParent(void)
 {
     Error            error   = kErrorNone;
-    Message *        message = nullptr;
+    Message         *message = nullptr;
     Ip6::MessageInfo messageInfo;
 
     VerifyOrExit((message = Get<Ip6::Ip6>().NewMessage(0)) != nullptr, error = kErrorNoBufs);
@@ -4300,7 +4287,7 @@ void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCa
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy)
+uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 {
     // This function calculates the overall time that device will operate
     // on battery by summing sequence of "ON quants" over a period of time.
@@ -4428,7 +4415,7 @@ void Mle::DelayedResponseMetadata::RemoveFrom(Message &aMessage) const
 Mle::TxMessage *Mle::NewMleMessage(Command aCommand)
 {
     Error             error = kErrorNone;
-    TxMessage *       message;
+    TxMessage        *message;
     Message::Settings settings(Message::kNoLinkSecurity, Message::kPriorityNet);
     Message::SubType  subType;
     uint8_t           securitySuite;

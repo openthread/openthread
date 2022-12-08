@@ -265,8 +265,12 @@ private:
     void LogBackboneRouterService(const char *aAction, Error aError);
     void LogDomainPrefix(const char *aAction, Error aError);
 #else
-    void LogBackboneRouterService(const char *, Error) {}
-    void LogDomainPrefix(const char *, Error) {}
+    void LogBackboneRouterService(const char *, Error)
+    {
+    }
+    void LogDomainPrefix(const char *, Error)
+    {
+    }
 #endif
 
     BackboneRouterState mState;
@@ -286,7 +290,7 @@ private:
     Ip6::Address                         mAllNetworkBackboneRouters;
     Ip6::Address                         mAllDomainBackboneRouters;
     otBackboneRouterDomainPrefixCallback mDomainPrefixCallback;
-    void *                               mDomainPrefixCallbackContext;
+    void                                *mDomainPrefixCallbackContext;
 };
 
 } // namespace BackboneRouter

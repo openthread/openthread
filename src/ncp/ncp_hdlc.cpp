@@ -66,7 +66,7 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpHdlc), uint64_t);
 
 extern "C" void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSendCallback)
 {
-    NcpHdlc * ncpHdlc  = nullptr;
+    NcpHdlc  *ncpHdlc  = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpHdlc = new (&sNcpRaw) NcpHdlc(instance, aSendCallback);
@@ -95,10 +95,10 @@ NcpHdlc::NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback)
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 }
 
-void NcpHdlc::HandleFrameAddedToNcpBuffer(void *                   aContext,
+void NcpHdlc::HandleFrameAddedToNcpBuffer(void                    *aContext,
                                           Spinel::Buffer::FrameTag aTag,
                                           Spinel::Buffer::Priority aPriority,
-                                          Spinel::Buffer *         aBuffer)
+                                          Spinel::Buffer          *aBuffer)
 {
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);

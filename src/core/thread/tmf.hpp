@@ -185,9 +185,9 @@ public:
 private:
     template <Uri kUri> void HandleTmf(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static bool HandleResource(CoapBase &              aCoapBase,
-                               const char *            aUriPath,
-                               Message &               aMessage,
+    static bool HandleResource(CoapBase               &aCoapBase,
+                               const char             *aUriPath,
+                               Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -212,9 +212,9 @@ public:
     explicit SecureAgent(Instance &aInstance);
 
 private:
-    static bool HandleResource(CoapBase &              aCoapBase,
-                               const char *            aUriPath,
-                               Message &               aMessage,
+    static bool HandleResource(CoapBase               &aCoapBase,
+                               const char             *aUriPath,
+                               Message                &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     bool        HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 };

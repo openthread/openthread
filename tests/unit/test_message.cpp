@@ -46,10 +46,10 @@ void TestMessage(void)
         kLengthStep = 21,
     };
 
-    Instance *   instance;
+    Instance    *instance;
     MessagePool *messagePool;
-    Message *    message;
-    Message *    message2;
+    Message     *message;
+    Message     *message2;
     uint8_t      writeBuffer[kMaxSize];
     uint8_t      readBuffer[kMaxSize];
     uint8_t      zeroBuffer[kMaxSize];
@@ -246,8 +246,8 @@ void TestAppender(void)
 
     static constexpr uint16_t kMaxBufferSize = sizeof(kData1) * 2 + sizeof(kData2);
 
-    Instance *              instance;
-    Message *               message;
+    Instance               *instance;
+    Message                *message;
     uint8_t                 buffer[kMaxBufferSize];
     uint8_t                 zeroBuffer[kMaxBufferSize];
     Appender                bufAppender(buffer, sizeof(buffer));

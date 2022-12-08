@@ -223,7 +223,7 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
-                                 const uint8_t *     aBuffer,
+                                 const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
     Icmp6Packet packet;
@@ -656,9 +656,9 @@ struct DefaultRoute
 };
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress,
-                      const Pio *         aPios,
+                      const Pio          *aPios,
                       uint16_t            aNumPios,
-                      const Rio *         aRios,
+                      const Rio          *aRios,
                       uint16_t            aNumRios,
                       const DefaultRoute &aDefaultRoute)
 {
@@ -720,7 +720,7 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress, const DefaultRoute &aD
 
 struct OnLinkPrefix : public Pio
 {
-    OnLinkPrefix(const Ip6::Prefix & aPrefix,
+    OnLinkPrefix(const Ip6::Prefix  &aPrefix,
                  uint32_t            aValidLifetime,
                  uint32_t            aPreferredLifetime,
                  const Ip6::Address &aRouterAddress)
@@ -734,7 +734,7 @@ struct OnLinkPrefix : public Pio
 
 struct RoutePrefix : public Rio
 {
-    RoutePrefix(const Ip6::Prefix & aPrefix,
+    RoutePrefix(const Ip6::Prefix  &aPrefix,
                 uint32_t            aValidLifetime,
                 RoutePreference     aPreference,
                 const Ip6::Address &aRouterAddress)
@@ -760,7 +760,7 @@ template <uint16_t kNumOnLinkPrefixes> void VerifyPrefixTable(const OnLinkPrefix
 
 void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
                        uint16_t            aNumOnLinkPrefixes,
-                       const RoutePrefix * aRoutePrefixes,
+                       const RoutePrefix  *aRoutePrefixes,
                        uint16_t            aNumRoutePrefixes)
 {
     BorderRouter::RoutingManager::PrefixTableIterator iter;

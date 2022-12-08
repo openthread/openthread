@@ -1166,7 +1166,7 @@ RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance
 }
 
 void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
-                                                                       const Ip6::Address &                aSrcAddress)
+                                                                       const Ip6::Address                 &aSrcAddress)
 {
     // Process a received RA message and update the prefix table.
 
@@ -1220,9 +1220,9 @@ exit:
 }
 
 void RoutingManager::DiscoveredPrefixTable::ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader,
-                                                                Router &                                    aRouter)
+                                                                Router                                     &aRouter)
 {
-    Entry *     entry;
+    Entry      *entry;
     Ip6::Prefix prefix;
 
     prefix.Clear();
@@ -1258,10 +1258,10 @@ exit:
 }
 
 void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio,
-                                                                    Router &                         aRouter)
+                                                                    Router                          &aRouter)
 {
     Ip6::Prefix prefix;
-    Entry *     entry;
+    Entry      *entry;
 
     VerifyOrExit(aPio.IsValid());
     aPio.GetPrefix(prefix);
@@ -1305,10 +1305,10 @@ exit:
 }
 
 void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio,
-                                                                   Router &                        aRouter)
+                                                                   Router                         &aRouter)
 {
     Ip6::Prefix prefix;
-    Entry *     entry;
+    Entry      *entry;
 
     VerifyOrExit(aRio.IsValid());
     aRio.GetPrefix(prefix);
@@ -1689,7 +1689,7 @@ void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void)
 
 void RoutingManager::DiscoveredPrefixTable::ProcessNeighborAdvertMessage(
     const Ip6::Nd::NeighborAdvertMessage &aNaMessage,
-    const Ip6::Address &                  aSrcAddress)
+    const Ip6::Address                   &aSrcAddress)
 {
     Router *router = mRouters.FindMatching(aSrcAddress);
 
@@ -1782,7 +1782,7 @@ void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aI
 }
 
 Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &aIterator,
-                                                          PrefixTableEntry &   aEntry) const
+                                                          PrefixTableEntry    &aEntry) const
 {
     Error     error    = kErrorNone;
     Iterator &iterator = static_cast<Iterator &>(aIterator);
@@ -2097,7 +2097,7 @@ void RoutingManager::OnLinkPrefixManager::Init(void)
         entry->mPrefix     = savedPrefix.GetPrefix();
         entry->mExpireTime = now + Time::SecToMsec(lifetime);
 
-        LogInfo("Restored old prefix %s, lifetime:%u", entry->mPrefix.ToString().AsCString(), lifetime);
+        LogInfo("Restored old prefix %s, lifetime:%lu", entry->mPrefix.ToString().AsCString(), ToUlong(lifetime));
 
         mTimer.FireAtIfEarlier(entry->mExpireTime);
     }
@@ -2121,7 +2121,7 @@ void RoutingManager::OnLinkPrefixManager::Init(void)
 void RoutingManager::OnLinkPrefixManager::GenerateLocalPrefix(void)
 {
     const MeshCoP::ExtendedPanId &extPanId = Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId();
-    OldPrefix *                   entry;
+    OldPrefix                    *entry;
     Ip6::Prefix                   oldLocalPrefix = mLocalPrefix;
 
     // Global ID: 40 most significant bits of Extended PAN ID
@@ -2499,7 +2499,7 @@ exit:
 
 void RoutingManager::OnLinkPrefixManager::DeprecateOldPrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime)
 {
-    OldPrefix * entry = nullptr;
+    OldPrefix  *entry = nullptr;
     Ip6::Prefix removedPrefix;
 
     removedPrefix.Clear();

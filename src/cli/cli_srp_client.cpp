@@ -129,7 +129,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
         {
             uint16_t len;
             uint16_t size;
-            char *   hostName;
+            char    *hostName;
 
             VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
             hostName = otSrpClientBuffersGetHostNameString(GetInstancePtr(), &size);
@@ -359,9 +359,9 @@ otError SrpClient::ProcessServiceAdd(Arg aArgs[])
 
     otSrpClientBuffersServiceEntry *entry = nullptr;
     uint16_t                        size;
-    char *                          string;
+    char                           *string;
     otError                         error;
-    char *                          label;
+    char                           *label;
 
     entry = otSrpClientBuffersAllocateService(GetInstancePtr());
 
@@ -562,17 +562,17 @@ template <> otError SrpClient::Process<Cmd("ttl")>(Arg aArgs[])
 
 void SrpClient::HandleCallback(otError                    aError,
                                const otSrpClientHostInfo *aHostInfo,
-                               const otSrpClientService * aServices,
-                               const otSrpClientService * aRemovedServices,
-                               void *                     aContext)
+                               const otSrpClientService  *aServices,
+                               const otSrpClientService  *aRemovedServices,
+                               void                      *aContext)
 {
     static_cast<SrpClient *>(aContext)->HandleCallback(aError, aHostInfo, aServices, aRemovedServices);
 }
 
 void SrpClient::HandleCallback(otError                    aError,
                                const otSrpClientHostInfo *aHostInfo,
-                               const otSrpClientService * aServices,
-                               const otSrpClientService * aRemovedServices)
+                               const otSrpClientService  *aServices,
+                               const otSrpClientService  *aRemovedServices)
 {
     otSrpClientService *next;
 

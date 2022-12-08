@@ -88,17 +88,17 @@ private:
     void        HandleStateChanged(otCommissionerState aState);
 
     static void HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
-                                  const otJoinerInfo *      aJoinerInfo,
-                                  const otExtAddress *      aJoinerId,
-                                  void *                    aContext);
+                                  const otJoinerInfo       *aJoinerInfo,
+                                  const otExtAddress       *aJoinerId,
+                                  void                     *aContext);
     void        HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
-                                  const otJoinerInfo *      aJoinerInfo,
-                                  const otExtAddress *      aJoinerId);
+                                  const otJoinerInfo       *aJoinerInfo,
+                                  const otExtAddress       *aJoinerId);
 
     static void HandleEnergyReport(uint32_t       aChannelMask,
                                    const uint8_t *aEnergyList,
                                    uint8_t        aEnergyListLength,
-                                   void *         aContext);
+                                   void          *aContext);
     void        HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
 
     static void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);

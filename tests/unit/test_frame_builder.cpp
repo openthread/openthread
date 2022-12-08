@@ -43,8 +43,8 @@ void TestFrameBuilder(void)
 
     static constexpr uint16_t kMaxBufferSize = sizeof(kData1) * 2 + sizeof(kData2);
 
-    Instance *   instance;
-    Message *    message;
+    Instance    *instance;
+    Message     *message;
     uint16_t     offset;
     uint8_t      buffer[kMaxBufferSize];
     uint8_t      zeroBuffer[kMaxBufferSize];

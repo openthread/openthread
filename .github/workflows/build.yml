@@ -43,7 +43,7 @@ concurrency:
 jobs:
 
   pretty:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
       with:
@@ -51,7 +51,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 shellcheck
+        sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 shellcheck
         python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
     - name: Check
@@ -112,7 +112,7 @@ jobs:
         script/test package
 
   scan-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
       with:
@@ -120,7 +120,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-tools-9 ninja-build
+        sudo apt-get --no-install-recommends install -y clang-tools-14 ninja-build
     - name: Run
       run: |
         script/check-scan-build

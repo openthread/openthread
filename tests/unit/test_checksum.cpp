@@ -73,7 +73,7 @@ uint16_t CalculateChecksum(const void *aBuffer, uint16_t aLength)
 uint16_t CalculateChecksum(const Ip6::Address &aSource,
                            const Ip6::Address &aDestination,
                            uint8_t             aIpProto,
-                           const Message &     aMessage)
+                           const Message      &aMessage)
 {
     // This method calculates the checksum over an IPv6 message.
     constexpr uint16_t kMaxPayload = 1024;
@@ -112,7 +112,7 @@ uint16_t CalculateChecksum(const Ip6::Address &aSource,
 uint16_t CalculateChecksum(const Ip4::Address &aSource,
                            const Ip4::Address &aDestination,
                            uint8_t             aIpProto,
-                           const Message &     aMessage)
+                           const Message      &aMessage)
 {
     // This method calculates the checksum over an IPv4 message.
     constexpr uint16_t kMaxPayload = 1024;
@@ -181,7 +181,7 @@ void TestUdpMessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message *        message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Udp::Header));
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Udp::Header));
         Ip6::Udp::Header udpHeader;
         Ip6::MessageInfo messageInfo;
 
@@ -249,7 +249,7 @@ void TestIcmp6MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message *         message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Icmp::Header));
+        Message          *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip6::Icmp::Header));
         Ip6::Icmp::Header icmp6Header;
         Ip6::MessageInfo  messageInfo;
 
@@ -324,7 +324,7 @@ void TestTcp4MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message *        message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Tcp::Header));
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Tcp::Header));
         Ip4::Tcp::Header tcpHeader;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
@@ -379,7 +379,7 @@ void TestUdp4MessageChecksum(void)
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
-        Message *        message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Udp::Header));
+        Message         *message = instance->Get<Ip6::Ip6>().NewMessage(sizeof(Ip4::Udp::Header));
         Ip4::Udp::Header udpHeader;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
@@ -418,13 +418,13 @@ void TestUdp4MessageChecksum(void)
 void TestIcmp4MessageChecksum(void)
 {
     // A captured ICMP echo request (ping) message. Checksum field is set to zero.
-    const uint8_t kExampleIcmpMessage[] = "\x08\x00\x00\x00\x67\x2e\x00\x00\x62\xaf\xf1\x61\x00\x04\xfc\x24"
-                                          "\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17"
-                                          "\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23\x24\x25\x26\x27"
-                                          "\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37";
-    uint16_t  kChecksumForExampleMessage = 0x5594;
-    Instance *instance                   = static_cast<Instance *>(testInitInstance());
-    Message * message                    = instance->Get<Ip6::Ip6>().NewMessage(sizeof(kExampleIcmpMessage));
+    const uint8_t kExampleIcmpMessage[]      = "\x08\x00\x00\x00\x67\x2e\x00\x00\x62\xaf\xf1\x61\x00\x04\xfc\x24"
+                                               "\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17"
+                                               "\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23\x24\x25\x26\x27"
+                                               "\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37";
+    uint16_t      kChecksumForExampleMessage = 0x5594;
+    Instance     *instance                   = static_cast<Instance *>(testInitInstance());
+    Message      *message                    = instance->Get<Ip6::Ip6>().NewMessage(sizeof(kExampleIcmpMessage));
 
     Ip4::Address source;
     Ip4::Address dest;

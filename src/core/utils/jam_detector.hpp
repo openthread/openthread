@@ -195,7 +195,7 @@ private:
     using SampleTimer = TimerMilliIn<JamDetector, &JamDetector::HandleTimer>;
 
     Handler     mHandler;                  // Handler/callback to inform about jamming state
-    void *      mContext;                  // Context for handler/callback
+    void       *mContext;                  // Context for handler/callback
     SampleTimer mTimer;                    // RSSI sample timer
     uint64_t    mHistoryBitmap;            // History bitmap, each bit correspond to 1 sec interval
     TimeMilli   mCurSecondStartTime;       // Start time for current 1 sec interval

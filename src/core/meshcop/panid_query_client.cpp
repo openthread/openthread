@@ -60,14 +60,14 @@ PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
 
 Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
                                   uint32_t                            aChannelMask,
-                                  const Ip6::Address &                aAddress,
+                                  const Ip6::Address                 &aAddress,
                                   otCommissionerPanIdConflictCallback aCallback,
-                                  void *                              aContext)
+                                  void                               *aContext)
 {
     Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     Tmf::MessageInfo        messageInfo(GetInstance());
-    Coap::Message *         message = nullptr;
+    Coap::Message          *message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);

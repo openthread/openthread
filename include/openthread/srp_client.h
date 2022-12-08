@@ -74,8 +74,8 @@ typedef enum
  */
 typedef struct otSrpClientHostInfo
 {
-    const char *         mName;         ///< Host name (label) string (NULL if not yet set).
-    const otIp6Address * mAddresses;    ///< Array of host IPv6 addresses (NULL if not set or auto address is enabled).
+    const char          *mName;         ///< Host name (label) string (NULL if not yet set).
+    const otIp6Address  *mAddresses;    ///< Array of host IPv6 addresses (NULL if not set or auto address is enabled).
     uint8_t              mNumAddresses; ///< Number of IPv6 addresses in `mAddresses` array.
     bool                 mAutoAddress;  ///< Indicates whether auto address mode is enabled or not.
     otSrpClientItemState mState;        ///< Host info state.
@@ -103,10 +103,10 @@ typedef struct otSrpClientHostInfo
  */
 typedef struct otSrpClientService
 {
-    const char *               mName;          ///< The service labels (e.g., "_mt._udp", not the full domain name).
-    const char *               mInstanceName;  ///< The service instance name label (not the full name).
-    const char *const *        mSubTypeLabels; ///< Array of sub-type labels (must end with `NULL` or can be `NULL`).
-    const otDnsTxtEntry *      mTxtEntries;    ///< Array of TXT entries (`mNumTxtEntries` gives num of entries).
+    const char                *mName;          ///< The service labels (e.g., "_mt._udp", not the full domain name).
+    const char                *mInstanceName;  ///< The service instance name label (not the full name).
+    const char *const         *mSubTypeLabels; ///< Array of sub-type labels (must end with `NULL` or can be `NULL`).
+    const otDnsTxtEntry       *mTxtEntries;    ///< Array of TXT entries (`mNumTxtEntries` gives num of entries).
     uint16_t                   mPort;          ///< The service port number.
     uint16_t                   mPriority;      ///< The service priority.
     uint16_t                   mWeight;        ///< The service weight.
@@ -175,9 +175,9 @@ typedef struct otSrpClientService
  */
 typedef void (*otSrpClientCallback)(otError                    aError,
                                     const otSrpClientHostInfo *aHostInfo,
-                                    const otSrpClientService * aServices,
-                                    const otSrpClientService * aRemovedServices,
-                                    void *                     aContext);
+                                    const otSrpClientService  *aServices,
+                                    const otSrpClientService  *aRemovedServices,
+                                    void                      *aContext);
 
 /**
  * This function pointer type defines the callback used by SRP client to notify user when it is auto-started or stopped.

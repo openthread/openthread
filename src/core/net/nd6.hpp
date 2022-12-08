@@ -156,7 +156,7 @@ private:
     private:
         static const Option *Next(const Option *aOption);
         void                 Advance(void);
-        const Option *       Validate(const Option *aOption) const;
+        const Option        *Validate(const Option *aOption) const;
 
         const Option *mOption;
         const Option *mEnd;
@@ -446,7 +446,7 @@ private:
     static constexpr uint8_t kPreferenceOffset = 3;
     static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
 
-    uint8_t *      GetPrefixBytes(void) { return AsNonConst(AsConst(this)->GetPrefixBytes()); }
+    uint8_t       *GetPrefixBytes(void) { return AsNonConst(AsConst(this)->GetPrefixBytes()); }
     const uint8_t *GetPrefixBytes(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
 
     uint8_t  mPrefixLength;  // The prefix length in bits.
@@ -669,7 +669,7 @@ public:
 private:
     const uint8_t *GetOptionStart(void) const { return (mData.GetBytes() + sizeof(Header)); }
     const uint8_t *GetDataEnd(void) const { return mData.GetBytes() + mData.GetLength(); }
-    Option *       AppendOption(uint16_t aOptionSize);
+    Option        *AppendOption(uint16_t aOptionSize);
 
     Data<kWithUint16Length> mData;
     uint16_t                mMaxLength;

@@ -209,10 +209,10 @@ private:
     Error    ProcessIaAddress(Message &aMessage, uint16_t aOffset);
     Error    ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
 
-    Error SendReply(const Ip6::Address & aDst,
+    Error SendReply(const Ip6::Address  &aDst,
                     const TransactionId &aTransactionId,
-                    ClientIdentifier &   aClientId,
-                    IaNa &               aIaNa);
+                    ClientIdentifier    &aClientId,
+                    IaNa                &aIaNa);
 
     Ip6::Udp::Socket mSocket;
 

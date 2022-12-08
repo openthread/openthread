@@ -98,7 +98,7 @@ Translator::Result Translator::TranslateFromIp6(Message &aMessage)
     ErrorCounters::Reason dropReason = ErrorCounters::kUnknown;
     Ip6::Header           ip6Header;
     Ip4::Header           ip4Header;
-    AddressMapping *      mapping = nullptr;
+    AddressMapping       *mapping = nullptr;
 
     if (mIp4Cidr.mLength == 0 || !mNat64Prefix.IsValidNat64())
     {
@@ -185,7 +185,7 @@ Translator::Result Translator::TranslateToIp6(Message &aMessage)
     ErrorCounters::Reason dropReason = ErrorCounters::kUnknown;
     Ip6::Header           ip6Header;
     Ip4::Header           ip4Header;
-    AddressMapping *      mapping = nullptr;
+    AddressMapping       *mapping = nullptr;
 
     // Ip6::Header::ParseFrom may return an error value when the incoming message is an IPv4 datagram.
     // If the message is already an IPv6 datagram, forward it directly.
@@ -274,7 +274,7 @@ exit:
     return res;
 }
 
-Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void)
+Translator::AddressMapping::InfoString Translator::AddressMapping::ToString(void) const
 {
     InfoString string;
 

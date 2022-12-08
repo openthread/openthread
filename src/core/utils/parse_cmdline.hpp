@@ -524,7 +524,10 @@ public:
      * @retval kErrorInvalidArgs  The argument is empty or does not contain a valid IPv6 prefix.
      *
      */
-    otError ParseAsIp6Prefix(otIp6Prefix &aPrefix) const { return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix); }
+    otError ParseAsIp6Prefix(otIp6Prefix &aPrefix) const
+    {
+        return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix);
+    }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

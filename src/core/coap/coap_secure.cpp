@@ -110,9 +110,9 @@ void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-Error CoapSecure::SendMessage(Message &                   aMessage,
+Error CoapSecure::SendMessage(Message                    &aMessage,
                               ResponseHandler             aHandler,
-                              void *                      aContext,
+                              void                       *aContext,
                               otCoapBlockwiseTransmitHook aTransmitHook,
                               otCoapBlockwiseReceiveHook  aReceiveHook)
 {
@@ -127,10 +127,10 @@ exit:
     return error;
 }
 
-Error CoapSecure::SendMessage(Message &                   aMessage,
-                              const Ip6::MessageInfo &    aMessageInfo,
+Error CoapSecure::SendMessage(Message                    &aMessage,
+                              const Ip6::MessageInfo     &aMessageInfo,
                               ResponseHandler             aHandler,
-                              void *                      aContext,
+                              void                       *aContext,
                               otCoapBlockwiseTransmitHook aTransmitHook,
                               otCoapBlockwiseReceiveHook  aReceiveHook)
 {
@@ -150,10 +150,10 @@ exit:
     return error;
 }
 
-Error CoapSecure::SendMessage(Message &               aMessage,
+Error CoapSecure::SendMessage(Message                &aMessage,
                               const Ip6::MessageInfo &aMessageInfo,
                               ResponseHandler         aHandler,
-                              void *                  aContext)
+                              void                   *aContext)
 {
     return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }

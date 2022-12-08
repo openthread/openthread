@@ -256,7 +256,7 @@ public:
      * @returns The Forward Series Flags mask.
      *
      */
-    uint8_t GetSeriesFlagsMask(void) { return mSeriesFlagsMask; }
+    uint8_t GetSeriesFlagsMask(void) const { return mSeriesFlagsMask; }
 
     /**
      * This method sets the Forward Series Flags bit-mask

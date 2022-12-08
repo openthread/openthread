@@ -48,11 +48,11 @@ void otTcpCircularSendBufferInitialize(otTcpCircularSendBuffer *aSendBuffer, voi
     AsCoreType(aSendBuffer).Initialize(aDataBuffer, aCapacity);
 }
 
-otError otTcpCircularSendBufferWrite(otTcpEndpoint *          aEndpoint,
+otError otTcpCircularSendBufferWrite(otTcpEndpoint           *aEndpoint,
                                      otTcpCircularSendBuffer *aSendBuffer,
-                                     const void *             aData,
+                                     const void              *aData,
                                      size_t                   aLength,
-                                     size_t *                 aWritten,
+                                     size_t                  *aWritten,
                                      uint32_t                 aFlags)
 {
     AssertPointerIsNotNull(aWritten);

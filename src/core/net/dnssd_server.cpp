@@ -142,7 +142,7 @@ exit:
 void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error            error           = kErrorNone;
-    Message *        responseMessage = nullptr;
+    Message         *responseMessage = nullptr;
     Header           responseHeader;
     NameCompressInfo compressInfo(kDefaultDomainName);
     Header::Response response                = Header::kResponseSuccess;
@@ -199,9 +199,9 @@ exit:
 
 void Server::SendResponse(Header                  aHeader,
                           Header::Response        aResponseCode,
-                          Message &               aMessage,
+                          Message                &aMessage,
                           const Ip6::MessageInfo &aMessageInfo,
-                          Ip6::Udp::Socket &      aSocket)
+                          Ip6::Udp::Socket       &aSocket)
 {
     Error error;
 
@@ -233,10 +233,10 @@ void Server::SendResponse(Header                  aHeader,
     UpdateResponseCounters(aResponseCode);
 }
 
-Header::Response Server::AddQuestions(const Header &    aRequestHeader,
-                                      const Message &   aRequestMessage,
-                                      Header &          aResponseHeader,
-                                      Message &         aResponseMessage,
+Header::Response Server::AddQuestions(const Header     &aRequestHeader,
+                                      const Message    &aRequestMessage,
+                                      Header           &aResponseHeader,
+                                      Message          &aResponseMessage,
                                       NameCompressInfo &aCompressInfo)
 {
     Question         question;
@@ -294,9 +294,9 @@ exit:
     return response;
 }
 
-Error Server::AppendQuestion(const char *      aName,
-                             const Question &  aQuestion,
-                             Message &         aMessage,
+Error Server::AppendQuestion(const char       *aName,
+                             const Question   &aQuestion,
+                             Message          &aMessage,
                              NameCompressInfo &aCompressInfo)
 {
     Error error = kErrorNone;
@@ -323,9 +323,9 @@ exit:
     return error;
 }
 
-Error Server::AppendPtrRecord(Message &         aMessage,
-                              const char *      aServiceName,
-                              const char *      aInstanceName,
+Error Server::AppendPtrRecord(Message          &aMessage,
+                              const char       *aServiceName,
+                              const char       *aInstanceName,
                               uint32_t          aTtl,
                               NameCompressInfo &aCompressInfo)
 {
@@ -350,9 +350,9 @@ exit:
     return error;
 }
 
-Error Server::AppendSrvRecord(Message &         aMessage,
-                              const char *      aInstanceName,
-                              const char *      aHostName,
+Error Server::AppendSrvRecord(Message          &aMessage,
+                              const char       *aInstanceName,
+                              const char       *aHostName,
                               uint32_t          aTtl,
                               uint16_t          aPriority,
                               uint16_t          aWeight,
@@ -383,11 +383,11 @@ exit:
     return error;
 }
 
-Error Server::AppendAaaaRecord(Message &           aMessage,
-                               const char *        aHostName,
+Error Server::AppendAaaaRecord(Message            &aMessage,
+                               const char         *aHostName,
                                const Ip6::Address &aAddress,
                                uint32_t            aTtl,
-                               NameCompressInfo &  aCompressInfo)
+                               NameCompressInfo   &aCompressInfo)
 {
     AaaaRecord aaaaRecord;
     Error      error;
@@ -496,9 +496,9 @@ exit:
     return error;
 }
 
-Error Server::AppendTxtRecord(Message &         aMessage,
-                              const char *      aInstanceName,
-                              const void *      aTxtData,
+Error Server::AppendTxtRecord(Message          &aMessage,
+                              const char       *aInstanceName,
+                              const void       *aTxtData,
                               uint16_t          aTxtLength,
                               uint32_t          aTtl,
                               NameCompressInfo &aCompressInfo)
@@ -658,8 +658,8 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-Header::Response Server::ResolveBySrp(Header &                  aResponseHeader,
-                                      Message &                 aResponseMessage,
+Header::Response Server::ResolveBySrp(Header                   &aResponseHeader,
+                                      Message                  &aResponseMessage,
                                       Server::NameCompressInfo &aCompressInfo)
 {
     Question         question;
@@ -703,10 +703,10 @@ exit:
     return response;
 }
 
-Header::Response Server::ResolveQuestionBySrp(const char *      aName,
-                                              const Question &  aQuestion,
-                                              Header &          aResponseHeader,
-                                              Message &         aResponseMessage,
+Header::Response Server::ResolveQuestionBySrp(const char       *aName,
+                                              const Question   &aQuestion,
+                                              Header           &aResponseHeader,
+                                              Message          &aResponseMessage,
                                               NameCompressInfo &aCompressInfo,
                                               bool              aAdditional)
 {
@@ -807,16 +807,16 @@ const Srp::Server::Host *Server::GetNextSrpHost(const Srp::Server::Host *aHost)
     return host;
 }
 
-const Srp::Server::Service *Server::GetNextSrpService(const Srp::Server::Host &   aHost,
+const Srp::Server::Service *Server::GetNextSrpService(const Srp::Server::Host    &aHost,
                                                       const Srp::Server::Service *aService)
 {
     return aHost.FindNextService(aService, Srp::Server::kFlagsAnyTypeActiveService);
 }
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
-Error Server::ResolveByQueryCallbacks(Header &                aResponseHeader,
-                                      Message &               aResponseMessage,
-                                      NameCompressInfo &      aCompressInfo,
+Error Server::ResolveByQueryCallbacks(Header                 &aResponseHeader,
+                                      Message                &aResponseMessage,
+                                      NameCompressInfo       &aCompressInfo,
                                       const Ip6::MessageInfo &aMessageInfo)
 {
     QueryTransaction *query = nullptr;
@@ -839,8 +839,8 @@ exit:
     return error;
 }
 
-Server::QueryTransaction *Server::NewQuery(const Header &          aResponseHeader,
-                                           Message &               aResponseMessage,
+Server::QueryTransaction *Server::NewQuery(const Header           &aResponseHeader,
+                                           Message                &aResponseMessage,
                                            const NameCompressInfo &aCompressInfo,
                                            const Ip6::MessageInfo &aMessageInfo)
 {
@@ -866,8 +866,8 @@ exit:
     return newQuery;
 }
 
-bool Server::CanAnswerQuery(const QueryTransaction &          aQuery,
-                            const char *                      aServiceFullName,
+bool Server::CanAnswerQuery(const QueryTransaction           &aQuery,
+                            const char                       *aServiceFullName,
                             const otDnssdServiceInstanceInfo &aInstanceInfo)
 {
     char         name[Name::kMaxNameSize];
@@ -900,12 +900,12 @@ bool Server::CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *
     return (sdType == kDnsQueryResolveHost) && StringMatch(name, aHostFullName, kStringCaseInsensitiveMatch);
 }
 
-void Server::AnswerQuery(QueryTransaction &                aQuery,
-                         const char *                      aServiceFullName,
+void Server::AnswerQuery(QueryTransaction                 &aQuery,
+                         const char                       *aServiceFullName,
                          const otDnssdServiceInstanceInfo &aInstanceInfo)
 {
-    Header &          responseHeader  = aQuery.GetResponseHeader();
-    Message &         responseMessage = aQuery.GetResponseMessage();
+    Header           &responseHeader  = aQuery.GetResponseHeader();
+    Message          &responseMessage = aQuery.GetResponseMessage();
     Error             error           = kErrorNone;
     NameCompressInfo &compressInfo    = aQuery.GetNameCompressInfo();
 
@@ -960,8 +960,8 @@ exit:
 
 void Server::AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo)
 {
-    Header &          responseHeader  = aQuery.GetResponseHeader();
-    Message &         responseMessage = aQuery.GetResponseMessage();
+    Header           &responseHeader  = aQuery.GetResponseHeader();
+    Message          &responseMessage = aQuery.GetResponseMessage();
     Error             error           = kErrorNone;
     NameCompressInfo &compressInfo    = aQuery.GetNameCompressInfo();
 
@@ -987,7 +987,7 @@ exit:
 
 void Server::SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
                                otDnssdQueryUnsubscribeCallback aUnsubscribe,
-                               void *                          aContext)
+                               void                           *aContext)
 {
     OT_ASSERT((aSubscribe == nullptr) == (aUnsubscribe == nullptr));
 
@@ -996,7 +996,7 @@ void Server::SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
     mQueryCallbackContext = aContext;
 }
 
-void Server::HandleDiscoveredServiceInstance(const char *                      aServiceFullName,
+void Server::HandleDiscoveredServiceInstance(const char                       *aServiceFullName,
                                              const otDnssdServiceInstanceInfo &aInstanceInfo)
 {
     OT_ASSERT(StringEndsWith(aServiceFullName, Name::kLabelSeperatorChar));
@@ -1056,7 +1056,7 @@ Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, cha
     return GetQueryTypeAndName(query->GetResponseHeader(), query->GetResponseMessage(), aName);
 }
 
-Server::DnsQueryType Server::GetQueryTypeAndName(const Header & aHeader,
+Server::DnsQueryType Server::GetQueryTypeAndName(const Header  &aHeader,
                                                  const Message &aMessage,
                                                  char (&aName)[Name::kMaxNameSize])
 {
@@ -1197,11 +1197,11 @@ void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseC
     aQuery.Finalize(aResponseCode, mSocket);
 }
 
-void Server::QueryTransaction::Init(const Header &          aResponseHeader,
-                                    Message &               aResponseMessage,
+void Server::QueryTransaction::Init(const Header           &aResponseHeader,
+                                    Message                &aResponseMessage,
                                     const NameCompressInfo &aCompressInfo,
                                     const Ip6::MessageInfo &aMessageInfo,
-                                    Instance &              aInstance)
+                                    Instance               &aInstance)
 {
     OT_ASSERT(mResponseMessage == nullptr);
 

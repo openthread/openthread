@@ -70,7 +70,7 @@ void GenerateKey(const uint8_t *aPassword,
                  uint16_t       aSaltLen,
                  uint32_t       aIterationCounter,
                  uint16_t       aKeyLen,
-                 uint8_t *      aKey);
+                 uint8_t       *aKey);
 
 /**
  * @}

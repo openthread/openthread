@@ -124,6 +124,11 @@ void TimeTicker::HandleTimer(void)
         Get<MlrManager>().HandleTimeTick();
     }
 #endif
+
+    if (mReceivers & Mask(kIp6Mpl))
+    {
+        Get<Ip6::Mpl>().HandleTimeTick();
+    }
 }
 
 } // namespace ot

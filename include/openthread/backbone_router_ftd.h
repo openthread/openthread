@@ -207,7 +207,7 @@ otError otBackboneRouterGetDomainPrefix(otInstance *aInstance, otBorderRouterCon
  *
  *
  */
-void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance *                    aInstance,
+void otBackboneRouterConfigNextDuaRegistrationResponse(otInstance                     *aInstance,
                                                        const otIp6InterfaceIdentifier *aMlIid,
                                                        uint8_t                         aStatus);
 
@@ -242,9 +242,9 @@ typedef enum
  * @param[in] aAddress  The IPv6 multicast address of the Multicast Listener.
  *
  */
-typedef void (*otBackboneRouterMulticastListenerCallback)(void *                                 aContext,
+typedef void (*otBackboneRouterMulticastListenerCallback)(void                                  *aContext,
                                                           otBackboneRouterMulticastListenerEvent aEvent,
-                                                          const otIp6Address *                   aAddress);
+                                                          const otIp6Address                    *aAddress);
 
 /**
  * This method sets the Backbone Router Multicast Listener callback.
@@ -254,9 +254,9 @@ typedef void (*otBackboneRouterMulticastListenerCallback)(void *                
  * @param[in] aContext   A user context pointer.
  *
  */
-void otBackboneRouterSetMulticastListenerCallback(otInstance *                              aInstance,
+void otBackboneRouterSetMulticastListenerCallback(otInstance                               *aInstance,
                                                   otBackboneRouterMulticastListenerCallback aCallback,
-                                                  void *                                    aContext);
+                                                  void                                     *aContext);
 
 /**
  * Clears the Multicast Listeners.
@@ -329,9 +329,9 @@ typedef struct otBackboneRouterMulticastListenerInfo
  * @sa otBackboneRouterMulticastListenerAdd
  *
  */
-otError otBackboneRouterMulticastListenerGetNext(otInstance *                               aInstance,
+otError otBackboneRouterMulticastListenerGetNext(otInstance                                *aInstance,
                                                  otBackboneRouterMulticastListenerIterator *aIterator,
-                                                 otBackboneRouterMulticastListenerInfo *    aListenerInfo);
+                                                 otBackboneRouterMulticastListenerInfo     *aListenerInfo);
 
 /**
  * Represents the ND Proxy events.
@@ -354,9 +354,9 @@ typedef enum
  *                      `OT_BACKBONE_ROUTER_NDPROXY_CLEARED`.
  *
  */
-typedef void (*otBackboneRouterNdProxyCallback)(void *                       aContext,
+typedef void (*otBackboneRouterNdProxyCallback)(void                        *aContext,
                                                 otBackboneRouterNdProxyEvent aEvent,
-                                                const otIp6Address *         aDua);
+                                                const otIp6Address          *aDua);
 
 /**
  * This method sets the Backbone Router ND Proxy callback.
@@ -366,9 +366,9 @@ typedef void (*otBackboneRouterNdProxyCallback)(void *                       aCo
  * @param[in] aContext   A user context pointer.
  *
  */
-void otBackboneRouterSetNdProxyCallback(otInstance *                    aInstance,
+void otBackboneRouterSetNdProxyCallback(otInstance                     *aInstance,
                                         otBackboneRouterNdProxyCallback aCallback,
-                                        void *                          aContext);
+                                        void                           *aContext);
 
 /**
  * Represents the Backbone Router ND Proxy info.
@@ -392,8 +392,8 @@ typedef struct otBackboneRouterNdProxyInfo
  * @retval OT_ERROR_NOT_FOUND  Failed to find the Domain Unicast Address in the ND Proxy table.
  *
  */
-otError otBackboneRouterGetNdProxyInfo(otInstance *                 aInstance,
-                                       const otIp6Address *         aDua,
+otError otBackboneRouterGetNdProxyInfo(otInstance                  *aInstance,
+                                       const otIp6Address          *aDua,
                                        otBackboneRouterNdProxyInfo *aNdProxyInfo);
 
 /**
@@ -415,9 +415,9 @@ typedef enum
  * @param[in] aDomainPrefix  The new Domain Prefix if added or changed, nullptr otherwise.
  *
  */
-typedef void (*otBackboneRouterDomainPrefixCallback)(void *                            aContext,
+typedef void (*otBackboneRouterDomainPrefixCallback)(void                             *aContext,
                                                      otBackboneRouterDomainPrefixEvent aEvent,
-                                                     const otIp6Prefix *               aDomainPrefix);
+                                                     const otIp6Prefix                *aDomainPrefix);
 /**
  * This method sets the Backbone Router Domain Prefix callback.
  *
@@ -426,9 +426,9 @@ typedef void (*otBackboneRouterDomainPrefixCallback)(void *                     
  * @param[in] aContext   A user context pointer.
  *
  */
-void otBackboneRouterSetDomainPrefixCallback(otInstance *                         aInstance,
+void otBackboneRouterSetDomainPrefixCallback(otInstance                          *aInstance,
                                              otBackboneRouterDomainPrefixCallback aCallback,
-                                             void *                               aContext);
+                                             void                                *aContext);
 
 /**
  * @}

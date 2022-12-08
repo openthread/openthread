@@ -407,7 +407,7 @@ public:
 
             Description *mNext;
             Heap::String mInstanceName;
-            Host *       mHost;
+            Host        *mHost;
             Heap::Data   mTxtData;
             uint16_t     mPriority;
             uint16_t     mWeight;
@@ -435,7 +435,7 @@ public:
 
         Heap::String           mServiceName;
         RetainPtr<Description> mDescription;
-        Service *              mNext;
+        Service               *mNext;
         TimeMilli              mUpdateTime;
         bool                   mIsDeleted : 1;
         bool                   mIsSubType : 1;
@@ -570,8 +570,8 @@ public:
          */
         const Service *FindNextService(const Service *aPrevService,
                                        Service::Flags aFlags        = kFlagsAnyService,
-                                       const char *   aServiceName  = nullptr,
-                                       const char *   aInstanceName = nullptr) const;
+                                       const char    *aServiceName  = nullptr,
+                                       const char    *aInstanceName = nullptr) const;
 
         /**
          * This method tells whether the host matches a given full name.
@@ -595,7 +595,7 @@ public:
         Error ProcessTtl(uint32_t aTtl);
 
         LinkedList<Service> &GetServices(void) { return mServices; }
-        Service *            AddNewService(const char *aServiceName,
+        Service             *AddNewService(const char *aServiceName,
                                            const char *aInstanceName,
                                            bool        aIsSubType,
                                            TimeMilli   aUpdateTime);
@@ -608,12 +608,12 @@ public:
         bool                 HasServiceInstance(const char *aInstanceName) const;
         RetainPtr<Service::Description>       FindServiceDescription(const char *aInstanceName);
         const RetainPtr<Service::Description> FindServiceDescription(const char *aInstanceName) const;
-        Service *                             FindService(const char *aServiceName, const char *aInstanceName);
-        const Service *                       FindService(const char *aServiceName, const char *aInstanceName) const;
-        Service *                             FindBaseService(const char *aInstanceName);
-        const Service *                       FindBaseService(const char *aInstanceName) const;
+        Service                              *FindService(const char *aServiceName, const char *aInstanceName);
+        const Service                        *FindService(const char *aServiceName, const char *aInstanceName) const;
+        Service                              *FindBaseService(const char *aInstanceName);
+        const Service                        *FindBaseService(const char *aInstanceName) const;
 
-        Host *                    mNext;
+        Host                     *mNext;
         Heap::String              mFullName;
         Heap::Array<Ip6::Address> mAddresses;
 
@@ -729,7 +729,10 @@ public:
      * @returns A pointer to the dot-joined domain string.
      *
      */
-    const char *GetDomain(void) const { return mDomain.AsCString(); }
+    const char *GetDomain(void) const
+    {
+        return mDomain.AsCString();
+    }
 
     /**
      * This method sets the domain on the SRP server.
@@ -753,7 +756,10 @@ public:
      * @returns The SRP server's address mode.
      *
      */
-    AddressMode GetAddressMode(void) const { return mAddressMode; }
+    AddressMode GetAddressMode(void) const
+    {
+        return mAddressMode;
+    }
 
     /**
      * This method sets the address mode to be used by the SRP server.
@@ -774,7 +780,10 @@ public:
      * @returns The anycast sequence number.
      *
      */
-    uint8_t GetAnycastModeSequenceNumber(void) const { return mAnycastSequenceNumber; }
+    uint8_t GetAnycastModeSequenceNumber(void) const
+    {
+        return mAnycastSequenceNumber;
+    }
 
     /**
      * This method sets the sequence number used with anycast address mode.
@@ -793,7 +802,10 @@ public:
      * @returns  The state of the server.
      *
      */
-    State GetState(void) const { return mState; }
+    State GetState(void) const
+    {
+        return mState;
+    }
 
     /**
      * This method tells the port the SRP server is listening to.
@@ -801,7 +813,10 @@ public:
      * @returns  The port of the server or 0 if the SRP server is not running.
      *
      */
-    uint16_t GetPort(void) const { return (mState == kStateRunning) ? mPort : 0; }
+    uint16_t GetPort(void) const
+    {
+        return (mState == kStateRunning) ? mPort : 0;
+    }
 
     /**
      * This method enables/disables the SRP server.
@@ -837,7 +852,10 @@ public:
      * @retval FALSE  The auto-enable mode is disabled.
      *
      */
-    bool IsAutoEnableMode(void) const { return mAutoEnable; }
+    bool IsAutoEnableMode(void) const
+    {
+        return mAutoEnable;
+    }
 #endif
 
     /**
@@ -846,7 +864,10 @@ public:
      * @param[out]  aTtlConfig  A reference to the `TtlConfig` instance.
      *
      */
-    void GetTtlConfig(TtlConfig &aTtlConfig) const { aTtlConfig = mTtlConfig; }
+    void GetTtlConfig(TtlConfig &aTtlConfig) const
+    {
+        aTtlConfig = mTtlConfig;
+    }
 
     /**
      * This method sets the TTL configuration.
@@ -865,7 +886,10 @@ public:
      * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      */
-    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const { aLeaseConfig = mLeaseConfig; }
+    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const
+    {
+        aLeaseConfig = mLeaseConfig;
+    }
 
     /**
      * This method sets the LEASE and KEY-LEASE configurations.
@@ -898,7 +922,10 @@ public:
      * @returns  A pointer to the response counters of the SRP server.
      *
      */
-    const otSrpServerResponseCounters *GetResponseCounters(void) const { return &mResponseCounters; }
+    const otSrpServerResponseCounters *GetResponseCounters(void) const
+    {
+        return &mResponseCounters;
+    }
 
     /**
      * This method receives the service update result from service handler set by
@@ -955,23 +982,23 @@ private:
         TimeMilli                GetExpireTime(void) const { return mExpireTime; }
         const Dns::UpdateHeader &GetDnsHeader(void) const { return mDnsHeader; }
         ServiceUpdateId          GetId(void) const { return mId; }
-        const TtlConfig &        GetTtlConfig(void) const { return mTtlConfig; }
-        const LeaseConfig &      GetLeaseConfig(void) const { return mLeaseConfig; }
-        Host &                   GetHost(void) { return mHost; }
-        const Ip6::MessageInfo & GetMessageInfo(void) const { return mMessageInfo; }
+        const TtlConfig         &GetTtlConfig(void) const { return mTtlConfig; }
+        const LeaseConfig       &GetLeaseConfig(void) const { return mLeaseConfig; }
+        Host                    &GetHost(void) { return mHost; }
+        const Ip6::MessageInfo  &GetMessageInfo(void) const { return mMessageInfo; }
         bool                     IsDirectRxFromClient(void) const { return mIsDirectRxFromClient; }
         bool                     Matches(ServiceUpdateId aId) const { return mId == aId; }
 
     private:
         UpdateMetadata(Instance &aInstance, Host &aHost, const MessageMetadata &aMessageMetadata);
 
-        UpdateMetadata *  mNext;
+        UpdateMetadata   *mNext;
         TimeMilli         mExpireTime;
         Dns::UpdateHeader mDnsHeader;
         ServiceUpdateId   mId;          // The ID of this service update transaction.
         TtlConfig         mTtlConfig;   // TTL config to use when processing the message.
         LeaseConfig       mLeaseConfig; // Lease config to use when processing the message.
-        Host &            mHost;        // The `UpdateMetadata` has no ownership of this host.
+        Host             &mHost;        // The `UpdateMetadata` has no ownership of this host.
         Ip6::MessageInfo  mMessageInfo; // Valid when `mIsDirectRxFromClient` is true.
         bool              mIsDirectRxFromClient;
     };
@@ -991,40 +1018,43 @@ private:
 
     void HandleNetDataPublisherEvent(NetworkData::Publisher::Event aEvent);
 
-    ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
+    ServiceUpdateId AllocateId(void)
+    {
+        return mServiceUpdateId++;
+    }
 
     void  InformUpdateHandlerOrCommit(Error aError, Host &aHost, const MessageMetadata &aMetadata);
     void  CommitSrpUpdate(Error aError, Host &aHost, const MessageMetadata &aMessageMetadata);
     void  CommitSrpUpdate(Error aError, UpdateMetadata &aUpdateMetadata);
     void  CommitSrpUpdate(Error                    aError,
-                          Host &                   aHost,
+                          Host                    &aHost,
                           const Dns::UpdateHeader &aDnsHeader,
-                          const Ip6::MessageInfo * aMessageInfo,
-                          const TtlConfig &        aTtlConfig,
-                          const LeaseConfig &      aLeaseConfig);
+                          const Ip6::MessageInfo  *aMessageInfo,
+                          const TtlConfig         &aTtlConfig,
+                          const LeaseConfig       &aLeaseConfig);
     Error ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error ProcessMessage(Message &               aMessage,
+    Error ProcessMessage(Message                &aMessage,
                          TimeMilli               aRxTime,
-                         const TtlConfig &       aTtlConfig,
-                         const LeaseConfig &     aLeaseConfig,
+                         const TtlConfig        &aTtlConfig,
+                         const LeaseConfig      &aLeaseConfig,
                          const Ip6::MessageInfo *aMessageInfo);
     void  ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata);
     Error ProcessUpdateSection(Host &aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
     Error ProcessAdditionalSection(Host *aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
     Error VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
-                          const Message &               aMessage,
+                          const Message                &aMessage,
                           Dns::UpdateHeader             aDnsHeader,
                           uint16_t                      aSigOffset,
                           uint16_t                      aSigRdataOffset,
                           uint16_t                      aSigRdataLength,
-                          const char *                  aSignerName) const;
+                          const char                   *aSignerName) const;
     Error ValidateServiceSubTypes(Host &aHost, const MessageMetadata &aMetadata);
     Error ProcessZoneSection(const Message &aMessage, MessageMetadata &aMetadata) const;
-    Error ProcessHostDescriptionInstruction(Host &                 aHost,
-                                            const Message &        aMessage,
+    Error ProcessHostDescriptionInstruction(Host                  &aHost,
+                                            const Message         &aMessage,
                                             const MessageMetadata &aMetadata) const;
-    Error ProcessServiceDiscoveryInstructions(Host &                 aHost,
-                                              const Message &        aMessage,
+    Error ProcessServiceDiscoveryInstructions(Host                  &aHost,
+                                              const Message         &aMessage,
                                               const MessageMetadata &aMetadata) const;
     Error ProcessServiceDescriptionInstructions(Host &aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
 
@@ -1034,13 +1064,13 @@ private:
     void        AddHost(Host &aHost);
     void        RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
     bool        HasNameConflictsWith(Host &aHost) const;
-    void        SendResponse(const Dns::UpdateHeader &   aHeader,
+    void        SendResponse(const Dns::UpdateHeader    &aHeader,
                              Dns::UpdateHeader::Response aResponseCode,
-                             const Ip6::MessageInfo &    aMessageInfo);
+                             const Ip6::MessageInfo     &aMessageInfo);
     void        SendResponse(const Dns::UpdateHeader &aHeader,
                              uint32_t                 aLease,
                              uint32_t                 aKeyLease,
-                             const Ip6::MessageInfo & aMessageInfo);
+                             const Ip6::MessageInfo  &aMessageInfo);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        HandleLeaseTimer(void);
@@ -1049,7 +1079,7 @@ private:
 
     void                  HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError);
     const UpdateMetadata *FindOutstandingUpdate(const MessageMetadata &aMessageMetadata) const;
-    static const char *   AddressModeToString(AddressMode aMode);
+    static const char    *AddressModeToString(AddressMode aMode);
 
     void UpdateResponseCounters(Dns::Header::Response aResponseCode);
 
@@ -1058,7 +1088,7 @@ private:
 
     Ip6::Udp::Socket                mSocket;
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
-    void *                          mServiceUpdateHandlerContext;
+    void                           *mServiceUpdateHandlerContext;
 
     Heap::String mDomain;
 

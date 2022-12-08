@@ -136,8 +136,8 @@ public:
      */
     Error SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDestination,
                                                uint8_t             aSeriesId,
-                                               const SeriesFlags & aSeriesFlags,
-                                               const Metrics *     aMetrics);
+                                               const SeriesFlags  &aSeriesFlags,
+                                               const Metrics      *aMetrics);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     /**
@@ -157,7 +157,7 @@ public:
      */
     Error SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination,
                                        EnhAckFlags         aEnhAckFlags,
-                                       const Metrics *     aMetrics);
+                                       const Metrics      *aMetrics);
 
     /**
      * This method sends an MLE Link Probe message.
@@ -303,7 +303,7 @@ private:
     Status ConfigureForwardTrackingSeries(uint8_t        aSeriesId,
                                           uint8_t        aSeriesFlags,
                                           const Metrics &aMetrics,
-                                          Neighbor &     aNeighbor);
+                                          Neighbor      &aNeighbor);
 
     Status ConfigureEnhAckProbing(EnhAckFlags aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor);
 
@@ -312,7 +312,7 @@ private:
     static Error ReadTypeIdsFromMessage(const Message &aMessage,
                                         uint16_t       aStartOffset,
                                         uint16_t       aEndOffset,
-                                        Metrics &      aMetrics);
+                                        Metrics       &aMetrics);
     static Error AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues);
 
     static uint8_t ScaleLinkMarginToRawValue(uint8_t aLinkMargin);
@@ -321,11 +321,11 @@ private:
     static int8_t  ScaleRawValueToRssi(uint8_t aRawValue);
 
     ReportCallback                mReportCallback;
-    void *                        mReportCallbackContext;
+    void                         *mReportCallbackContext;
     MgmtResponseCallback          mMgmtResponseCallback;
-    void *                        mMgmtResponseCallbackContext;
+    void                         *mMgmtResponseCallbackContext;
     EnhAckProbingIeReportCallback mEnhAckProbingIeReportCallback;
-    void *                        mEnhAckProbingIeReportCallbackContext;
+    void                         *mEnhAckProbingIeReportCallbackContext;
 
     Pool<SeriesInfo, kMaxSeriesSupported> mSeriesInfoPool;
 };

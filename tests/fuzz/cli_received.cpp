@@ -73,7 +73,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     const otPanId panId = 0xdead;
 
     otInstance *instance = nullptr;
-    uint8_t *   buf      = nullptr;
+    uint8_t    *buf      = nullptr;
 
     VerifyOrExit(size <= 65536);
 

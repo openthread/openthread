@@ -97,8 +97,8 @@ void otPosixSecureSettingsDeinit(otInstance *aInstance);
 otError otPosixSecureSettingsGet(otInstance *aInstance,
                                  uint16_t    aKey,
                                  int         aIndex,
-                                 uint8_t *   aValue,
-                                 uint16_t *  aValueLength);
+                                 uint8_t    *aValue,
+                                 uint16_t   *aValueLength);
 
 /**
  * This function sets or replaces the value of a setting identified by aKey. If there was more than one value

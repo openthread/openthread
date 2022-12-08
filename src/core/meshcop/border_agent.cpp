@@ -56,7 +56,7 @@ namespace {
 constexpr uint16_t kBorderAgentUdpPort = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT; ///< UDP port of border agent service.
 }
 
-void BorderAgent::ForwardContext::Init(Instance &           aInstance,
+void BorderAgent::ForwardContext::Init(Instance            &aInstance,
                                        const Coap::Message &aMessage,
                                        bool                 aPetition,
                                        bool                 aSeparate)
@@ -155,8 +155,8 @@ exit:
     LogError("send error CoAP message", error);
 }
 
-void BorderAgent::HandleCoapResponse(void *               aContext,
-                                     otMessage *          aMessage,
+void BorderAgent::HandleCoapResponse(void                *aContext,
+                                     otMessage           *aMessage,
                                      const otMessageInfo *aMessageInfo,
                                      Error                aResult)
 {
@@ -255,7 +255,7 @@ template <> void BorderAgent::HandleTmf<kUriProxyTx>(Coap::Message &aMessage, co
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Error                     error   = kErrorNone;
-    Message *                 message = nullptr;
+    Message                  *message = nullptr;
     Ip6::MessageInfo          messageInfo;
     uint16_t                  offset;
     uint16_t                  length;
@@ -441,7 +441,7 @@ template <> void BorderAgent::HandleTmf<kUriRelayTx>(Coap::Message &aMessage, co
 
     Error            error = kErrorNone;
     uint16_t         joinerRouterRloc;
-    Coap::Message *  message = nullptr;
+    Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     uint16_t         offset = 0;
 
@@ -473,9 +473,9 @@ exit:
 Error BorderAgent::ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri)
 {
     Error            error          = kErrorNone;
-    ForwardContext * forwardContext = nullptr;
+    ForwardContext  *forwardContext = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message *  message  = nullptr;
+    Coap::Message   *message  = nullptr;
     uint16_t         offset   = 0;
     bool             petition = false;
     bool             separate = false;

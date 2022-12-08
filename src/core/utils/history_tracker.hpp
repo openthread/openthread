@@ -315,9 +315,9 @@ private:
         uint16_t MapEntryNumberToListIndex(uint16_t aEntryNumber, uint16_t aMaxSize) const;
         Error    Iterate(uint16_t        aMaxSize,
                          const Timestamp aTimestamps[],
-                         Iterator &      aIterator,
-                         uint16_t &      aListIndex,
-                         uint32_t &      aEntryAge) const;
+                         Iterator       &aIterator,
+                         uint16_t       &aListIndex,
+                         uint32_t       &aEntryAge) const;
 
     private:
         uint16_t mStartIndex;
@@ -356,7 +356,7 @@ private:
     public:
         void         Clear(void) {}
         uint16_t     GetSize(void) const { return 0; }
-        Entry *      AddNewEntry(void) { return nullptr; }
+        Entry       *AddNewEntry(void) { return nullptr; }
         void         AddNewEntry(const Entry &) {}
         const Entry *Iterate(Iterator &, uint32_t &) const { return nullptr; }
         void         RemoveAgedEntries(void) {}

@@ -471,7 +471,10 @@ public:
      * @returns If the UDP socket is open.
      *
      */
-    bool IsOpen(const SocketHandle &aSocket) const { return mSockets.Contains(aSocket); }
+    bool IsOpen(const SocketHandle &aSocket) const
+    {
+        return mSockets.Contains(aSocket);
+    }
 
     /**
      * This method binds a UDP socket.
@@ -583,7 +586,10 @@ public:
      * @returns A pointer to the head of UDP Socket linked list.
      *
      */
-    SocketHandle *GetUdpSockets(void) { return mSockets.GetHead(); }
+    SocketHandle *GetUdpSockets(void)
+    {
+        return mSockets.GetHead();
+    }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     /**
@@ -652,7 +658,7 @@ private:
     SocketHandle *mPrevBackboneSockets;
 #endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
-    void *         mUdpForwarderContext;
+    void          *mUdpForwarderContext;
     otUdpForwarder mUdpForwarder;
 #endif
 };

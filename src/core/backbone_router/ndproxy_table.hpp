@@ -156,7 +156,7 @@ public:
     Error Register(const Ip6::InterfaceIdentifier &aAddressIid,
                    const Ip6::InterfaceIdentifier &aMeshLocalIid,
                    uint16_t                        aRloc16,
-                   const uint32_t *                aTimeSinceLastTransaction);
+                   const uint32_t                 *aTimeSinceLastTransaction);
 
     /**
      * This method checks if a given IPv6 address IID was registered.
@@ -285,16 +285,16 @@ private:
     IteratorBuilder Iterate(Filter aFilter) { return IteratorBuilder(GetInstance(), aFilter); }
     void            Clear(void);
     static bool     MatchesFilter(const NdProxy &aProxy, Filter aFilter);
-    NdProxy *       FindByAddressIid(const Ip6::InterfaceIdentifier &aAddressIid);
-    NdProxy *       FindByMeshLocalIid(const Ip6::InterfaceIdentifier &aMeshLocalIid);
-    NdProxy *       FindInvalid(void);
+    NdProxy        *FindByAddressIid(const Ip6::InterfaceIdentifier &aAddressIid);
+    NdProxy        *FindByMeshLocalIid(const Ip6::InterfaceIdentifier &aMeshLocalIid);
+    NdProxy        *FindInvalid(void);
     Ip6::Address    GetDua(NdProxy &aNdProxy);
     void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy, bool aIsRenew);
     void TriggerCallback(otBackboneRouterNdProxyEvent aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
 
     NdProxy                         mProxies[kMaxNdProxyNum];
     otBackboneRouterNdProxyCallback mCallback;
-    void *                          mCallbackContext;
+    void                           *mCallbackContext;
     bool                            mIsAnyDadInProcess : 1;
 };
 

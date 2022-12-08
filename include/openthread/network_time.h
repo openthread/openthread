@@ -145,9 +145,9 @@ uint16_t otNetworkTimeGetXtalThreshold(otInstance *aInstance);
  * @param[in] aCallbackContext The context to be passed to the callback function upon invocation
  *
  */
-void otNetworkTimeSyncSetCallback(otInstance *                aInstance,
+void otNetworkTimeSyncSetCallback(otInstance                 *aInstance,
                                   otNetworkTimeSyncCallbackFn aCallbackFn,
-                                  void *                      aCallbackContext);
+                                  void                       *aCallbackContext);
 
 /**
  * @}

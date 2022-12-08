@@ -188,9 +188,6 @@ constexpr uint8_t kLinkQuality2LinkCost = 2;             ///< Link Cost for Link
 constexpr uint8_t kLinkQuality1LinkCost = 4;             ///< Link Cost for Link Quality 1
 constexpr uint8_t kLinkQuality0LinkCost = kMaxRouteCost; ///< Link Cost for Link Quality 0
 
-constexpr uint8_t kMplChildDataMessageTimerExpirations  = 0; ///< Number of MPL retransmissions for Children.
-constexpr uint8_t kMplRouterDataMessageTimerExpirations = 2; ///< Number of MPL retransmissions for Routers.
-
 /**
  * This type represents a Thread device role.
  *

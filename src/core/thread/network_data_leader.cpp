@@ -66,7 +66,7 @@ void LeaderBase::Reset(void)
 Error LeaderBase::GetServiceId(uint32_t           aEnterpriseNumber,
                                const ServiceData &aServiceData,
                                bool               aServerStable,
-                               uint8_t &          aServiceId) const
+                               uint8_t           &aServiceId) const
 {
     Error         error    = kErrorNotFound;
     Iterator      iterator = kIteratorInit;
@@ -131,7 +131,7 @@ const PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress
 
 Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
 {
-    const PrefixTlv * prefix = nullptr;
+    const PrefixTlv  *prefix = nullptr;
     const ContextTlv *contextTlv;
 
     aContext.mPrefix.SetLength(0);
@@ -304,7 +304,7 @@ Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDe
 {
     Error                error = kErrorNoRoute;
     TlvIterator          tlvIterator(GetTlvsStart(), GetTlvsEnd());
-    const PrefixTlv *    prefixTlv;
+    const PrefixTlv     *prefixTlv;
     const HasRouteEntry *bestRouteEntry  = nullptr;
     uint8_t              bestMatchLength = 0;
 
@@ -356,7 +356,7 @@ Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16
 {
     Error                    error = kErrorNoRoute;
     TlvIterator              subTlvIterator(aPrefix);
-    const BorderRouterTlv *  borderRouter;
+    const BorderRouterTlv   *borderRouter;
     const BorderRouterEntry *route = nullptr;
 
     while ((borderRouter = subTlvIterator.Iterate<BorderRouterTlv>()) != nullptr)
@@ -453,7 +453,7 @@ const CommissioningDataTlv *LeaderBase::GetCommissioningData(void) const
 
 const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const
 {
-    const MeshCoP::Tlv *  rval = nullptr;
+    const MeshCoP::Tlv   *rval = nullptr;
     const NetworkDataTlv *commissioningDataTlv;
 
     commissioningDataTlv = GetCommissioningData();
@@ -501,7 +501,7 @@ exit:
 Error LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
 {
     Error                 error = kErrorNone;
-    const MeshCoP::Tlv *  steeringDataTlv;
+    const MeshCoP::Tlv   *steeringDataTlv;
     MeshCoP::SteeringData steeringData;
 
     steeringDataTlv = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);

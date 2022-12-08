@@ -39,6 +39,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -185,6 +186,8 @@ private:
  */
 class Mpl : public InstanceLocator, private NonCopyable
 {
+    friend class ot::TimeTicker;
+
 public:
     /**
      * This constructor initializes the MPL object.
@@ -221,57 +224,18 @@ public:
      */
     Error ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive);
 
-    /**
-     * This method returns the MPL Seed Id value.
-     *
-     * @returns The MPL Seed Id value.
-     *
-     */
-    uint16_t GetSeedId(void) const { return mSeedId; }
-
-    /**
-     * This method sets the MPL Seed Id value.
-     *
-     * @param[in]  aSeedId  The MPL Seed Id value.
-     *
-     */
-    void SetSeedId(uint16_t aSeedId) { mSeedId = aSeedId; }
-
-    /**
-     * This method sets the IPv6 matching address, that allows to elide MPL Seed Id.
-     *
-     * @param[in] aAddress The reference to the IPv6 matching address.
-     *
-     */
-    void SetMatchingAddress(const Address &aAddress) { mMatchingAddress = &aAddress; }
-
 #if OPENTHREAD_FTD
-    /**
-     * This method gets the MPL number of Trickle timer expirations that occur before
-     * terminating the Trickle algorithm's retransmission of a given MPL Data Message.
-     *
-     * @returns The MPL number of Trickle timer expirations.
-     *
-     */
-    uint8_t GetTimerExpirations(void) const { return mTimerExpirations; }
-
-    /**
-     * This method sets the MPL number of Trickle timer expirations that occur before
-     * terminating the Trickle algorithm's retransmission of a given MPL Data Message.
-     *
-     * @param[in]  aTimerExpirations  The number of Trickle timer expirations.
-     *
-     */
-    void SetTimerExpirations(uint8_t aTimerExpirations) { mTimerExpirations = aTimerExpirations; }
-
     /**
      * This method returns a reference to the buffered message set.
      *
      * @returns A reference to the buffered message set.
      *
      */
-    const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
-#endif // OPENTHREAD_FTD
+    const MessageQueue &GetBufferedMessageSet(void) const
+    {
+        return mBufferedMessageSet;
+    }
+#endif
 
 private:
     static constexpr uint16_t kNumSeedEntries      = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES;
@@ -286,19 +250,16 @@ private:
         uint8_t  mLifetime;
     };
 
-    void HandleSeedSetTimer(void);
-
+    void  HandleTimeTick(void);
     Error UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
 
-    using SeedSetTimer = TimerMilliIn<Mpl, &Mpl::HandleSeedSetTimer>;
-
-    SeedEntry      mSeedSet[kNumSeedEntries];
-    const Address *mMatchingAddress;
-    SeedSetTimer   mSeedSetTimer;
-    uint16_t       mSeedId;
-    uint8_t        mSequence;
+    SeedEntry mSeedSet[kNumSeedEntries];
+    uint8_t   mSequence;
 
 #if OPENTHREAD_FTD
+    static constexpr uint8_t kChildTimerExpirations  = 0; // MPL retransmissions for Children.
+    static constexpr uint8_t kRouterTimerExpirations = 2; // MPL retransmissions for Routers.
+
     struct Metadata
     {
         Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
@@ -314,15 +275,14 @@ private:
         uint8_t   mIntervalOffset;
     };
 
-    void HandleRetransmissionTimer(void);
-
-    void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
+    uint8_t GetTimerExpirations(void) const;
+    void    HandleRetransmissionTimer(void);
+    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
     using RetxTimer = TimerMilliIn<Mpl, &Mpl::HandleRetransmissionTimer>;
 
     MessageQueue mBufferedMessageSet;
     RetxTimer    mRetransmissionTimer;
-    uint8_t      mTimerExpirations;
 #endif // OPENTHREAD_FTD
 };
 

@@ -152,8 +152,8 @@ private:
 
     void HandleTimeout(void);
 
-    static void HandleCoapResponse(void *               aContext,
-                                   otMessage *          aMessage,
+    static void HandleCoapResponse(void                *aContext,
+                                   otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
                                    Error                aResult);
     void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);

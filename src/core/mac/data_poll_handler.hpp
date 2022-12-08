@@ -94,31 +94,82 @@ public:
 #endif
 
     private:
-        bool IsDataPollPending(void) const { return mDataPollPending; }
-        void SetDataPollPending(bool aPending) { mDataPollPending = aPending; }
+        bool IsDataPollPending(void) const
+        {
+            return mDataPollPending;
+        }
+        void SetDataPollPending(bool aPending)
+        {
+            mDataPollPending = aPending;
+        }
 
-        uint32_t GetIndirectFrameCounter(void) const { return mIndirectFrameCounter; }
-        void     SetIndirectFrameCounter(uint32_t aFrameCounter) { mIndirectFrameCounter = aFrameCounter; }
+        uint32_t GetIndirectFrameCounter(void) const
+        {
+            return mIndirectFrameCounter;
+        }
+        void SetIndirectFrameCounter(uint32_t aFrameCounter)
+        {
+            mIndirectFrameCounter = aFrameCounter;
+        }
 
-        uint8_t GetIndirectKeyId(void) const { return mIndirectKeyId; }
-        void    SetIndirectKeyId(uint8_t aKeyId) { mIndirectKeyId = aKeyId; }
+        uint8_t GetIndirectKeyId(void) const
+        {
+            return mIndirectKeyId;
+        }
+        void SetIndirectKeyId(uint8_t aKeyId)
+        {
+            mIndirectKeyId = aKeyId;
+        }
 
-        uint8_t GetIndirectTxAttempts(void) const { return mIndirectTxAttempts; }
-        void    ResetIndirectTxAttempts(void) { mIndirectTxAttempts = 0; }
-        void    IncrementIndirectTxAttempts(void) { mIndirectTxAttempts++; }
+        uint8_t GetIndirectTxAttempts(void) const
+        {
+            return mIndirectTxAttempts;
+        }
+        void ResetIndirectTxAttempts(void)
+        {
+            mIndirectTxAttempts = 0;
+        }
+        void IncrementIndirectTxAttempts(void)
+        {
+            mIndirectTxAttempts++;
+        }
 
-        uint8_t GetIndirectDataSequenceNumber(void) const { return mIndirectDsn; }
-        void    SetIndirectDataSequenceNumber(uint8_t aDsn) { mIndirectDsn = aDsn; }
+        uint8_t GetIndirectDataSequenceNumber(void) const
+        {
+            return mIndirectDsn;
+        }
+        void SetIndirectDataSequenceNumber(uint8_t aDsn)
+        {
+            mIndirectDsn = aDsn;
+        }
 
-        bool IsFramePurgePending(void) const { return mFramePurgePending; }
-        void SetFramePurgePending(bool aPurgePending) { mFramePurgePending = aPurgePending; }
+        bool IsFramePurgePending(void) const
+        {
+            return mFramePurgePending;
+        }
+        void SetFramePurgePending(bool aPurgePending)
+        {
+            mFramePurgePending = aPurgePending;
+        }
 
-        bool IsFrameReplacePending(void) const { return mFrameReplacePending; }
-        void SetFrameReplacePending(bool aReplacePending) { mFrameReplacePending = aReplacePending; }
+        bool IsFrameReplacePending(void) const
+        {
+            return mFrameReplacePending;
+        }
+        void SetFrameReplacePending(bool aReplacePending)
+        {
+            mFrameReplacePending = aReplacePending;
+        }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-        Mac::RadioType GetLastPollRadioType(void) const { return mLastPollRadioType; }
-        void           SetLastPollRadioType(Mac::RadioType aRadioType) { mLastPollRadioType = aRadioType; }
+        Mac::RadioType GetLastPollRadioType(void) const
+        {
+            return mLastPollRadioType;
+        }
+        void SetLastPollRadioType(Mac::RadioType aRadioType)
+        {
+            mLastPollRadioType = aRadioType;
+        }
 #endif
 
         uint32_t mIndirectFrameCounter;    // Frame counter for current indirect frame (used for retx).
@@ -191,7 +242,7 @@ public:
         void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                     const FrameContext &aContext,
                                     Error               aError,
-                                    Child &             aChild);
+                                    Child              &aChild);
 
         /**
          * This callback method notifies that a requested frame change from `RequestFrameChange()` is processed.
@@ -282,7 +333,7 @@ private:
     // indicates no active indirect tx). `mFrameContext` tracks the
     // context for the prepared frame for the current indirect tx.
 
-    Child *                 mIndirectTxChild;
+    Child                  *mIndirectTxChild;
     Callbacks::FrameContext mFrameContext;
     Callbacks               mCallbacks;
 };

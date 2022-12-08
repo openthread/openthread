@@ -65,8 +65,8 @@ namespace ot {
 namespace Posix {
 
 SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                           void *                                aCallbackContext,
-                           SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                           void                                 *aCallbackContext,
+                           SpinelInterface::RxFrameBuffer       &aFrameBuffer)
     : mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
     , mRxFrameBuffer(aFrameBuffer)
@@ -343,7 +343,7 @@ void SpiInterface::TriggerReset(void)
 
 uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength)
 {
-    uint8_t *      start = aSpiRxFrameBuffer;
+    uint8_t       *start = aSpiRxFrameBuffer;
     const uint8_t *end   = aSpiRxFrameBuffer + aAlignAllowance;
 
     for (; start != end && start[0] == 0xff; start++)
@@ -408,8 +408,8 @@ otError SpiInterface::PushPullSpi(void)
     uint16_t      spiTransferBytes    = 0;
     uint8_t       successfulExchanges = 0;
     bool          discardRxFrame      = true;
-    uint8_t *     spiRxFrameBuffer;
-    uint8_t *     spiRxFrame;
+    uint8_t      *spiRxFrameBuffer;
+    uint8_t      *spiRxFrame;
     uint8_t       slaveHeader;
     uint16_t      slaveAcceptLen;
     Ncp::SpiFrame txFrame(mSpiTxFrameBuffer);

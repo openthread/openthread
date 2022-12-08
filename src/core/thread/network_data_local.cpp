@@ -178,11 +178,11 @@ void Local::UpdateRloc(PrefixTlv &aPrefixTlv)
 Error Local::AddService(uint32_t           aEnterpriseNumber,
                         const ServiceData &aServiceData,
                         bool               aServerStable,
-                        const ServerData & aServerData)
+                        const ServerData  &aServerData)
 {
     Error       error = kErrorNone;
     ServiceTlv *serviceTlv;
-    ServerTlv * serverTlv;
+    ServerTlv  *serverTlv;
     uint16_t    serviceTlvSize = ServiceTlv::CalculateSize(aEnterpriseNumber, aServiceData.GetLength()) +
                               sizeof(ServerTlv) + aServerData.GetLength();
 

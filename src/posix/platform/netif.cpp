@@ -1026,10 +1026,10 @@ static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError e
     {
         otLogInfoPlat("[netif] %s [%s] %s%s", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
                       aAddress.ToString().AsCString(),
-                      error == OT_ERROR_ALREADY
-                          ? " (already subscribed, ignored)"
-                          : error == OT_ERROR_REJECTED ? " (rejected)"
-                                                       : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)" : "");
+                      error == OT_ERROR_ALREADY     ? " (already subscribed, ignored)"
+                      : error == OT_ERROR_REJECTED  ? " (rejected)"
+                      : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)"
+                                                    : "");
     }
     else
     {
@@ -1042,7 +1042,7 @@ static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError e
 
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
 {
-    struct ifaddrmsg *  ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
+    struct ifaddrmsg   *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
     size_t              rtaLength;
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 addr6;
@@ -1207,10 +1207,10 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 #endif
     struct sockaddr_in6 addr6;
     struct sockaddr_in6 netmask;
-    uint8_t *           addrbuf;
+    uint8_t            *addrbuf;
     unsigned int        addrmask = 0;
     unsigned int        i;
-    struct sockaddr *   sa;
+    struct sockaddr    *sa;
     bool                is_link_local;
 
     addr6.sin6_family   = 0;
@@ -1531,10 +1531,10 @@ static void processMLDEvent(otInstance *aInstance)
     struct sockaddr_in6 srcAddr;
     socklen_t           addrLen  = sizeof(srcAddr);
     bool                fromSelf = false;
-    MLDv2Header *       hdr      = reinterpret_cast<MLDv2Header *>(buffer);
+    MLDv2Header        *hdr      = reinterpret_cast<MLDv2Header *>(buffer);
     size_t              offset;
     uint8_t             type;
-    struct ifaddrs *    ifAddrs = nullptr;
+    struct ifaddrs     *ifAddrs = nullptr;
     char                addressString[INET6_ADDRSTRLEN + 1];
 
     bufferLen = recvfrom(sMLDMonitorFd, buffer, sizeof(buffer), 0, reinterpret_cast<sockaddr *>(&srcAddr), &addrLen);
@@ -1606,7 +1606,7 @@ exit:
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
     struct ifreq ifr;
-    const char * interfaceName;
+    const char  *interfaceName;
 
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);

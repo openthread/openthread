@@ -40,7 +40,7 @@
 
 otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
                              otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
-                             void *                                    aContext)
+                             void                                     *aContext)
 {
     OT_UNUSED_VARIABLE(aCompleteCallback);
     OT_UNUSED_VARIABLE(aProcessCallback);

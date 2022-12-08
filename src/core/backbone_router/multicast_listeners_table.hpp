@@ -186,7 +186,7 @@ public:
      *
      */
     Error GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
-                  otBackboneRouterMulticastListenerInfo &    aListenerInfo);
+                  otBackboneRouterMulticastListenerInfo     &aListenerInfo);
 
 private:
     static constexpr uint16_t kMulticastListenersTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
@@ -207,7 +207,7 @@ private:
         Listener *end(void);
     };
 
-    void LogMulticastListenersTable(const char *        aAction,
+    void LogMulticastListenersTable(const char         *aAction,
                                     const Ip6::Address &aAddress,
                                     TimeMilli           aExpireTime,
                                     Error               aError);
@@ -221,7 +221,7 @@ private:
     uint16_t mNumValidListeners;
 
     otBackboneRouterMulticastListenerCallback mCallback;
-    void *                                    mCallbackContext;
+    void                                     *mCallbackContext;
 };
 
 } // namespace BackboneRouter

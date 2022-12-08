@@ -222,9 +222,9 @@ void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMapp
  * @retval OT_ERROR_NOT_FOUND  No subsequent NAT64 address mapping info was found.
  *
  */
-otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
+otError otNat64GetNextAddressMapping(otInstance                    *aInstance,
                                      otNat64AddressMappingIterator *aIterator,
-                                     otNat64AddressMapping *        aMapping);
+                                     otNat64AddressMapping         *aMapping);
 
 /**
  * States of NAT64.

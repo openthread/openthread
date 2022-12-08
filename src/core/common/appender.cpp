@@ -84,7 +84,7 @@ uint16_t Appender::GetAppendedLength(void) const
     return length;
 }
 
-void Appender::GetAsData(Data<kWithUint16Length> &aData)
+void Appender::GetAsData(Data<kWithUint16Length> &aData) const
 {
     aData.Init(mShared.mFrameBuilder.GetBytes(), mShared.mFrameBuilder.GetLength());
 }

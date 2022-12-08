@@ -80,9 +80,9 @@ void otNat64InitAddressMappingIterator(otInstance *aInstance, otNat64AddressMapp
     AsCoreType(aInstance).Get<Nat64::Translator>().InitAddressMappingIterator(*aIterator);
 }
 
-otError otNat64GetNextAddressMapping(otInstance *                   aInstance,
+otError otNat64GetNextAddressMapping(otInstance                    *aInstance,
                                      otNat64AddressMappingIterator *aIterator,
-                                     otNat64AddressMapping *        aMapping)
+                                     otNat64AddressMapping         *aMapping)
 {
     AssertPointerIsNotNull(aIterator);
     AssertPointerIsNotNull(aMapping);

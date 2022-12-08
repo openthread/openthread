@@ -405,7 +405,7 @@ public:
 
     private:
         const ServiceTlv *mServiceTlv;
-        const ServerTlv * mServerSubTlv;
+        const ServerTlv  *mServerSubTlv;
     };
 
     /**
@@ -605,13 +605,13 @@ private:
     Error GetServiceId(const void *aServiceData,
                        uint8_t     aServiceDataLength,
                        bool        aServerStable,
-                       uint8_t &   aServiceId) const;
+                       uint8_t    &aServiceId) const;
     Error IterateToNextServer(Iterator &aIterator) const;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    bool IsBackboneRouterPreferredTo(const ServerTlv &                 aServerTlv,
+    bool IsBackboneRouterPreferredTo(const ServerTlv                  &aServerTlv,
                                      const BackboneRouter::ServerData &aServerData,
-                                     const ServerTlv &                 aOtherServerTlv,
+                                     const ServerTlv                  &aOtherServerTlv,
                                      const BackboneRouter::ServerData &aOtherServerData) const;
 #endif
 };

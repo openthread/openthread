@@ -111,7 +111,7 @@ public:
      * @returns The wrapped pointer.
      *
      */
-    const Type *operator->(void)const { return mPointer; }
+    const Type *operator->(void) const { return mPointer; }
 
     /**
      * This method overloads the `*` dereference operator and returns a reference to the pointed object.
@@ -131,7 +131,7 @@ public:
      * @returns A reference to the pointed object.
      *
      */
-    const Type &operator*(void)const { return *mPointer; }
+    const Type &operator*(void) const { return *mPointer; }
 
     /**
      * This method overloads the operator `==` to compare the `Ptr` with a given pointer.

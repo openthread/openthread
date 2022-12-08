@@ -127,9 +127,9 @@ public:
                    Mac::PanId              aPanId,
                    bool                    aJoiner,
                    bool                    aEnableFiltering,
-                   const FilterIndexes *   aFilterIndexes,
+                   const FilterIndexes    *aFilterIndexes,
                    Handler                 aCallback,
-                   void *                  aContext);
+                   void                   *aContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery Scan is currently in progress.
@@ -178,7 +178,7 @@ private:
     using ScanDoneTask = TaskletIn<DiscoverScanner, &DiscoverScanner::HandleScanDoneTask>;
 
     Handler          mHandler;
-    void *           mHandlerContext;
+    void            *mHandlerContext;
     ScanDoneTask     mScanDoneTask;
     ScanTimer        mTimer;
     FilterIndexes    mFilterIndexes;

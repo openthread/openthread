@@ -440,7 +440,7 @@ public:
 private:
     uint32_t              mTransmitTimestamp;   ///< Time at the client when the request departed for the server.
     otSntpResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
-    void *                mResponseContext;     ///< A pointer to arbitrary context information.
+    void                 *mResponseContext;     ///< A pointer to arbitrary context information.
     TimeMilli             mTransmissionTime;    ///< Time when the timer should shoot for this message.
     Ip6::Address          mSourceAddress;       ///< IPv6 address of the message source.
     Ip6::Address          mDestinationAddress;  ///< IPv6 address of the message destination.

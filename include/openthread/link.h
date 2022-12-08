@@ -430,11 +430,11 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aCon
  * @retval OT_ERROR_BUSY  Already performing an Active Scan.
  *
  */
-otError otLinkActiveScan(otInstance *             aInstance,
+otError otLinkActiveScan(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aScanDuration,
                          otHandleActiveScanResult aCallback,
-                         void *                   aCallbackContext);
+                         void                    *aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
@@ -468,11 +468,11 @@ typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aCon
  * @retval OT_ERROR_BUSY  Could not start the energy scan.
  *
  */
-otError otLinkEnergyScan(otInstance *             aInstance,
+otError otLinkEnergyScan(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aScanDuration,
                          otHandleEnergyScanResult aCallback,
-                         void *                   aCallbackContext);
+                         void                    *aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.

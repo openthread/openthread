@@ -215,7 +215,7 @@ Option *RouterAdvertMessage::AppendOption(uint16_t aOptionSize)
     // returns `nullptr`. The returned option needs to be
     // initialized and populated by the caller.
 
-    Option * option    = nullptr;
+    Option  *option    = nullptr;
     uint32_t newLength = mData.GetLength();
 
     newLength += aOptionSize;
@@ -249,7 +249,7 @@ exit:
     return error;
 }
 
-Error RouterAdvertMessage::AppendRouteInfoOption(const Prefix &  aPrefix,
+Error RouterAdvertMessage::AppendRouteInfoOption(const Prefix   &aPrefix,
                                                  uint32_t        aRouteLifetime,
                                                  RoutePreference aPreference)
 {

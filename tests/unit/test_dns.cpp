@@ -49,24 +49,24 @@ void TestDnsName(void)
 
     struct TestName
     {
-        const char *   mName;
+        const char    *mName;
         uint16_t       mEncodedLength;
         const uint8_t *mEncodedData;
-        const char **  mLabels;
-        const char *   mExpectedReadName;
+        const char   **mLabels;
+        const char    *mExpectedReadName;
     };
 
-    Instance *   instance;
+    Instance    *instance;
     MessagePool *messagePool;
-    Message *    message;
+    Message     *message;
     uint8_t      buffer[kMaxSize];
     uint16_t     len;
     uint16_t     offset;
     char         label[Dns::Name::kMaxLabelSize];
     uint8_t      labelLength;
     char         name[Dns::Name::kMaxNameSize];
-    const char * subDomain;
-    const char * domain;
+    const char  *subDomain;
+    const char  *domain;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -444,10 +444,10 @@ void TestDnsCompressedName(void)
 
     static const char kBadName[] = "bad.name";
 
-    Instance *   instance;
+    Instance    *instance;
     MessagePool *messagePool;
-    Message *    message;
-    Message *    message2;
+    Message     *message;
+    Message     *message2;
     uint16_t     offset;
     uint16_t     name1Offset;
     uint16_t     name2Offset;
@@ -799,9 +799,9 @@ void TestHeaderAndResourceRecords(void)
     const char *kInstanceLabels[] = {kInstance1Label, kInstance2Label};
     const char *kInstanceNames[]  = {kInstance1Name, kInstance2Name};
 
-    Instance *          instance;
-    MessagePool *       messagePool;
-    Message *           message;
+    Instance           *instance;
+    MessagePool        *messagePool;
+    Message            *message;
     Dns::Header         header;
     uint16_t            messageId;
     uint16_t            headerOffset;
@@ -1240,9 +1240,9 @@ void TestDnsTxtEntry(void)
         {kEncodedTxt5, sizeof(kEncodedTxt5)}, {kEncodedTxt6, sizeof(kEncodedTxt6)},
         {kEncodedTxt7, sizeof(kEncodedTxt7)}};
 
-    Instance *                     instance;
-    MessagePool *                  messagePool;
-    Message *                      message;
+    Instance                      *instance;
+    MessagePool                   *messagePool;
+    Message                       *message;
     uint8_t                        txtData[kMaxTxtDataSize];
     uint16_t                       txtDataLength;
     uint8_t                        index;

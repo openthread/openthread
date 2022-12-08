@@ -187,7 +187,10 @@ public:
      * @retval kErrorNotFound    The key was not found.
      *
      */
-    Error Get(uint16_t aKey, void *aValue, uint16_t *aValueLength) const { return Get(aKey, 0, aValue, aValueLength); }
+    Error Get(uint16_t aKey, void *aValue, uint16_t *aValueLength) const
+    {
+        return Get(aKey, 0, aValue, aValueLength);
+    }
 
     /**
      * This method sets or replaces the value identified by @p aKey.
@@ -231,7 +234,10 @@ public:
     }
 
 private:
-    otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
+    otInstance *GetInstancePtr(void) const
+    {
+        return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance());
+    }
 
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
     Flash mFlash;

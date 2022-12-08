@@ -833,8 +833,8 @@ exit:
 // It returns the next offset into the message after the prepared
 // frame.
 //
-uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame &        aFrame,
-                                         Message &             aMessage,
+uint16_t MeshForwarder::PrepareDataFrame(Mac::TxFrame         &aFrame,
+                                         Message              &aMessage,
                                          const Mac::Addresses &aMacAddrs,
                                          bool                  aAddMeshHeader,
                                          uint16_t              aMeshSource,
@@ -968,7 +968,7 @@ start:
     // Initialize Mesh header
     if (aAddMeshHeader)
     {
-        Mle::MleRouter &   mle = Get<Mle::MleRouter>();
+        Mle::MleRouter    &mle = Get<Mle::MleRouter>();
         Lowpan::MeshHeader meshHeader;
         uint8_t            hopsLeft;
         uint16_t           maxPayloadLength;
@@ -1135,7 +1135,7 @@ start:
     return nextOffset;
 }
 
-Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &      aFrame,
+Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
                                                    Error               aError,
                                                    const Mac::Address &aMacDest,
                                                    bool                aIsDataPoll)
@@ -1230,7 +1230,7 @@ exit:
 
 void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, Error aError)
 {
-    Neighbor *   neighbor = nullptr;
+    Neighbor    *neighbor = nullptr;
     Mac::Address macDest;
 
     OT_ASSERT((aError == kErrorNone) || (aError == kErrorChannelAccessFailure) || (aError == kErrorAbort) ||
@@ -1449,13 +1449,13 @@ exit:
     }
 }
 
-void MeshForwarder::HandleFragment(FrameData &           aFrameData,
+void MeshForwarder::HandleFragment(FrameData            &aFrameData,
                                    const Mac::Addresses &aMacAddrs,
                                    const ThreadLinkInfo &aLinkInfo)
 {
     Error                  error = kErrorNone;
     Lowpan::FragmentHeader fragmentHeader;
-    Message *              message = nullptr;
+    Message               *message = nullptr;
 
     SuccessOrExit(error = fragmentHeader.ParseFrom(aFrameData));
 
@@ -1639,10 +1639,10 @@ bool MeshForwarder::UpdateReassemblyList(void)
     return mReassemblyList.GetHead() != nullptr;
 }
 
-Error MeshForwarder::FrameToMessage(const FrameData &     aFrameData,
+Error MeshForwarder::FrameToMessage(const FrameData      &aFrameData,
                                     uint16_t              aDatagramSize,
                                     const Mac::Addresses &aMacAddrs,
-                                    Message *&            aMessage)
+                                    Message             *&aMessage)
 {
     Error             error     = kErrorNone;
     FrameData         frameData = aFrameData;
@@ -1662,7 +1662,7 @@ exit:
     return error;
 }
 
-void MeshForwarder::HandleLowpanHC(const FrameData &     aFrameData,
+void MeshForwarder::HandleLowpanHC(const FrameData      &aFrameData,
                                    const Mac::Addresses &aMacAddrs,
                                    const ThreadLinkInfo &aLinkInfo)
 {
@@ -1712,9 +1712,9 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
     return Get<Ip6::Ip6>().HandleDatagram(aMessage, Ip6::Ip6::kFromThreadNetif, &aLinkInfo);
 }
 
-Error MeshForwarder::GetFramePriority(const FrameData &     aFrameData,
+Error MeshForwarder::GetFramePriority(const FrameData      &aFrameData,
                                       const Mac::Addresses &aMacAddrs,
-                                      Message::Priority &   aPriority)
+                                      Message::Priority    &aPriority)
 {
     Error        error = kErrorNone;
     Ip6::Headers headers;
@@ -1931,7 +1931,7 @@ void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &, LogLevel)
 #endif
 
 void MeshForwarder::LogIp6Message(MessageAction       aAction,
-                                  const Message &     aMessage,
+                                  const Message      &aMessage,
                                   const Mac::Address *aMacAddress,
                                   Error               aError,
                                   LogLevel            aLogLevel)
@@ -1939,7 +1939,7 @@ void MeshForwarder::LogIp6Message(MessageAction       aAction,
     Ip6::Headers headers;
     bool         shouldLogRss;
     bool         shouldLogRadio = false;
-    const char * radioString    = "";
+    const char  *radioString    = "";
 
     SuccessOrExit(headers.ParseFrom(aMessage));
 
@@ -1971,7 +1971,7 @@ exit:
 }
 
 void MeshForwarder::LogMessage(MessageAction       aAction,
-                               const Message &     aMessage,
+                               const Message      &aMessage,
                                Error               aError,
                                const Mac::Address *aMacAddress)
 
@@ -2038,7 +2038,7 @@ void MeshForwarder::LogFrame(const char *aActionText, const Mac::Frame &aFrame, 
 
 void MeshForwarder::LogFragmentFrameDrop(Error                         aError,
                                          uint16_t                      aFrameLength,
-                                         const Mac::Addresses &        aMacAddrs,
+                                         const Mac::Addresses         &aMacAddrs,
                                          const Lowpan::FragmentHeader &aFragmentHeader,
                                          bool                          aIsSecure)
 {
