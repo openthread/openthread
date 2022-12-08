@@ -52,6 +52,8 @@ Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
     , mMappingExpirerTimer(aInstance)
+    , mStateChangeCallback(nullptr)
+    , mStateChangeCallbackContext(nullptr)
 {
     Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
 
@@ -445,7 +447,8 @@ exit:
 
 Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
 {
-    Error err = kErrorNone;
+    Error err          = kErrorNone;
+    State initialState = GetState();
 
     uint32_t numberOfHosts;
     uint32_t hostIdBegin;
@@ -490,16 +493,28 @@ Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
             numberOfHosts);
     mIp4Cidr = aCidr;
 
+    if (GetState() != initialState)
+    {
+        InvokeStateChangeCallback();
+    }
+
 exit:
     return err;
 }
 
 void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
+    State initialState = GetState();
+
     if (mNat64Prefix != aNat64Prefix)
     {
         LogInfo("IPv6 Prefix for NAT64 updated to %s", aNat64Prefix.ToString().AsCString());
         mNat64Prefix = aNat64Prefix;
+    }
+
+    if (GetState() != initialState)
+    {
+        InvokeStateChangeCallback();
     }
 }
 
@@ -619,6 +634,18 @@ void Translator::SetEnabled(bool aEnabled)
     }
 
     LogInfo("NAT64 translator %s", aEnabled ? "enabled" : "disabled");
+
+    InvokeStateChangeCallback();
+
+exit:
+    return;
+}
+
+void Translator::InvokeStateChangeCallback(void)
+{
+    VerifyOrExit(mStateChangeCallback != nullptr);
+
+    mStateChangeCallback(mStateChangeCallbackContext, static_cast<otNat64State>(GetState()));
 
 exit:
     return;

@@ -321,6 +321,20 @@ public:
      */
     Error GetIp6Prefix(Ip6::Prefix &aPrefix);
 
+    /**
+     * Registers a callback receiving NAT64 translator state change event.
+     *
+     * @param[in]  aCallback         A pointer to a function that is called when an IPv4 datagram is received or
+     *                               NULL to disable the callback.
+     * @param[in]  aContext  A pointer to application-specific context.
+     *
+     */
+    void SetStateChangeCallback(otNat64StateChangeCallback aCallback, void *aContext)
+    {
+        mStateChangeCallback        = aCallback;
+        mStateChangeCallbackContext = aContext;
+    }
+
 private:
     class AddressMapping : public LinkedListEntry<AddressMapping>
     {
@@ -362,6 +376,8 @@ private:
 
     void HandleMappingExpirerTimer(void);
 
+    void InvokeStateChangeCallback(void);
+
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
     bool mEnabled;
@@ -379,6 +395,9 @@ private:
 
     ProtocolCounters mCounters;
     ErrorCounters    mErrorCounters;
+
+    otNat64StateChangeCallback mStateChangeCallback;
+    void                      *mStateChangeCallbackContext;
 };
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 

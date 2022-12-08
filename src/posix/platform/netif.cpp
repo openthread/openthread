@@ -624,8 +624,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
-static otError DeleteRoute(const otIp6Prefix &aPrefix)
+template <size_t N> otError DeleteRoute(const uint8_t (&aAddress)[N], uint8_t aPrefixLen)
 {
     constexpr unsigned int kBufSize = 512;
     struct
@@ -634,10 +633,10 @@ static otError DeleteRoute(const otIp6Prefix &aPrefix)
         struct rtmsg    msg;
         char            buf[kBufSize];
     } req{};
-    unsigned char data[sizeof(in6_addr)];
-    char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
-    unsigned int  netifIdx = otSysGetThreadNetifIndex();
-    otError       error    = OT_ERROR_NONE;
+    unsigned int netifIdx = otSysGetThreadNetifIndex();
+    otError      error    = OT_ERROR_NONE;
+
+    static_assert(N == sizeof(in6_addr) || N == sizeof(in_addr), "aAddress should be 4 octets or 16 octets");
 
     VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
@@ -649,9 +648,9 @@ static otError DeleteRoute(const otIp6Prefix &aPrefix)
     req.header.nlmsg_pid  = 0;
     req.header.nlmsg_seq  = ++sNetlinkSequence;
 
-    req.msg.rtm_family   = AF_INET6;
+    req.msg.rtm_family   = (N == sizeof(in6_addr) ? AF_INET6 : AF_INET);
     req.msg.rtm_src_len  = 0;
-    req.msg.rtm_dst_len  = aPrefix.mLength;
+    req.msg.rtm_dst_len  = aPrefixLen;
     req.msg.rtm_tos      = 0;
     req.msg.rtm_scope    = RT_SCOPE_UNIVERSE;
     req.msg.rtm_type     = RTN_UNICAST;
@@ -659,9 +658,7 @@ static otError DeleteRoute(const otIp6Prefix &aPrefix)
     req.msg.rtm_protocol = RTPROT_BOOT;
     req.msg.rtm_flags    = 0;
 
-    otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
-    inet_pton(AF_INET6, addrBuf, data);
-    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, data, sizeof(data));
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, &aAddress, sizeof(aAddress));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
     if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
@@ -674,9 +671,15 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 static otError AddRoute(const otIp6Prefix &aPrefix, uint32_t aPriority)
 {
     return AddRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength, aPriority);
+}
+
+static otError DeleteRoute(const otIp6Prefix &aPrefix)
+{
+    return DeleteRoute(aPrefix.mPrefix.mFields.m8, aPrefix.mLength);
 }
 #endif // OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE || OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 
@@ -865,6 +868,8 @@ static otError AddIp4Route(const otIp4Cidr &aCidr, uint32_t aPriority)
 {
     return AddRoute(aCidr.mAddress.mFields.m8, aCidr.mLength, aPriority);
 }
+
+static otError DeleteIp4Route(const otIp4Cidr &aCidr) { return DeleteRoute(aCidr.mAddress.mFields.m8, aCidr.mLength); }
 #endif
 #endif // defined(__linux__)
 
@@ -1167,7 +1172,10 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     if (isUp && gNat64Cidr.mLength > 0)
     {
         SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
-        AddIp4Route(gNat64Cidr, kNat64RoutePriority);
+        if (otNat64GetTranslatorState(gInstance) != OT_NAT64_STATE_DISABLED)
+        {
+            AddIp4Route(gNat64Cidr, kNat64RoutePriority);
+        }
         otLogInfoPlat("[netif] Succeeded to enable NAT64");
     }
 #endif
@@ -1601,6 +1609,30 @@ exit:
 }
 #endif
 
+#if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void processNat64StateChange(void *aContext, otNat64State aNewState)
+{
+    assert(aContext == gInstance);
+
+    // If the interface is not up and we are enabling NAT64, the route will be added when we bring up the route.
+    // Also, the route will be deleted by the kernel when we shutting down the interface.
+    // We should try to add route first, since otNat64SetEnabled never fails.
+    if (otIp6IsEnabled(gInstance))
+    {
+        if (aNewState == OT_NAT64_STATE_DISABLED)
+        {
+            DeleteIp4Route(gNat64Cidr);
+            otLogInfoPlat("[netif] Deleting route for NAT64");
+        }
+        else
+        {
+            AddIp4Route(gNat64Cidr, kNat64RoutePriority);
+            otLogInfoPlat("[netif] Adding route for NAT64");
+        }
+    }
+}
+#endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
 #if defined(__linux__)
 // set up the tun device
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
@@ -1811,6 +1843,10 @@ void platformNetifSetUp(void)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     // We can use the same function for IPv6 and translated IPv4 messages.
     otNat64SetReceiveIp4Callback(gInstance, processReceive, gInstance);
+#if defined(__linux__)
+    // On Linux, we will add / remove the reoutes to NAT64 CIDR according to the state of NAT64 translator.
+    otNat64SetTranslatorStateChangeCallback(gInstance, processNat64StateChange, gInstance);
+#endif
 #endif
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
