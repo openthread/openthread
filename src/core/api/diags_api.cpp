@@ -54,9 +54,6 @@ otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs
     return AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessCmd(aArgsLength, aArgs, aOutput, aOutputMaxLen);
 }
 
-bool otDiagIsEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().IsEnabled();
-}
+bool otDiagIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<FactoryDiags::Diags>().IsEnabled(); }
 
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE

@@ -276,10 +276,7 @@ private:
     void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t        CalculatePollPeriod(void) const;
     const Neighbor &GetParent(void) const;
-    void            HandlePollTimer(void)
-    {
-        IgnoreError(SendDataPoll());
-    }
+    void            HandlePollTimer(void) { IgnoreError(SendDataPoll()); }
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
 #else

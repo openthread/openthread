@@ -50,21 +50,12 @@
 extern void otAppCliInit(otInstance *aInstance);
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize)
-{
-    return calloc(aNum, aSize);
-}
+OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
-OT_TOOL_WEAK void otPlatFree(void *aPtr)
-{
-    free(aPtr);
-}
+OT_TOOL_WEAK void otPlatFree(void *aPtr) { free(aPtr); }
 #endif
 
-void otTaskletsSignalPending(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
+void otTaskletsSignalPending(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstance); }
 
 #if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
 static otError ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])

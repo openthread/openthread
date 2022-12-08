@@ -48,10 +48,7 @@ namespace ot {
  * @returns A const reference to @p aObject reference.
  *
  */
-template <typename Type> const Type &AsConst(Type &aObject)
-{
-    return const_cast<const Type &>(aObject);
-}
+template <typename Type> const Type &AsConst(Type &aObject) { return const_cast<const Type &>(aObject); }
 
 /**
  * This template method casts a given non-const pointer to a const pointer.
@@ -63,10 +60,7 @@ template <typename Type> const Type &AsConst(Type &aObject)
  * @returns A const pointer to @p aPointer pointer.
  *
  */
-template <typename Type> const Type *AsConst(Type *aPointer)
-{
-    return const_cast<const Type *>(aPointer);
-}
+template <typename Type> const Type *AsConst(Type *aPointer) { return const_cast<const Type *>(aPointer); }
 
 /**
  * This template method casts a given const reference to a non-const reference.
@@ -78,10 +72,7 @@ template <typename Type> const Type *AsConst(Type *aPointer)
  * @returns A non-const reference to @p aObject reference.
  *
  */
-template <typename Type> Type &AsNonConst(const Type &aObject)
-{
-    return const_cast<Type &>(aObject);
-}
+template <typename Type> Type &AsNonConst(const Type &aObject) { return const_cast<Type &>(aObject); }
 
 /**
  * This template method casts a given const pointer to a non-const pointer.
@@ -93,10 +84,7 @@ template <typename Type> Type &AsNonConst(const Type &aObject)
  * @returns A non-const pointer to @p aPointer pointer.
  *
  */
-template <typename Type> Type *AsNonConst(const Type *aPointer)
-{
-    return const_cast<Type *>(aPointer);
-}
+template <typename Type> Type *AsNonConst(const Type *aPointer) { return const_cast<Type *>(aPointer); }
 
 } // namespace ot
 

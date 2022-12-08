@@ -173,10 +173,7 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
     return kErrorNone;
 }
 
-extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
-{
-    otPlatDiagAlarmCallback(aInstance);
-}
+extern "C" void otPlatDiagAlarmFired(otInstance *aInstance) { otPlatDiagAlarmCallback(aInstance); }
 
 #else // OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 // For OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO_CLI
@@ -475,10 +472,7 @@ exit:
     return error;
 }
 
-extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Diags>().AlarmFired();
-}
+extern "C" void otPlatDiagAlarmFired(otInstance *aInstance) { AsCoreType(aInstance).Get<Diags>().AlarmFired(); }
 
 void Diags::AlarmFired(void)
 {
@@ -724,10 +718,7 @@ exit:
     return error;
 }
 
-bool Diags::IsEnabled(void)
-{
-    return otPlatDiagModeGet();
-}
+bool Diags::IsEnabled(void) { return otPlatDiagModeGet(); }
 
 } // namespace FactoryDiags
 } // namespace ot

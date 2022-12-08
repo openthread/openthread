@@ -286,10 +286,7 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
      *
      */
-    void SetSslAuthMode(bool aVerifyPeerCertificate)
-    {
-        mVerifyPeerCertificate = aVerifyPeerCertificate;
-    }
+    void SetSslAuthMode(bool aVerifyPeerCertificate) { mVerifyPeerCertificate = aVerifyPeerCertificate; }
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #ifdef MBEDTLS_SSL_SRV_C
@@ -332,10 +329,7 @@ public:
      * @param[in]  aMessageSubType  The default message sub-type.
      *
      */
-    void SetDefaultMessageSubType(Message::SubType aMessageSubType)
-    {
-        mMessageDefaultSubType = aMessageSubType;
-    }
+    void SetDefaultMessageSubType(Message::SubType aMessageSubType) { mMessageDefaultSubType = aMessageSubType; }
 
     /**
      * This method returns the DTLS session's peer address.
@@ -343,10 +337,7 @@ public:
      * @return DTLS session's message info.
      *
      */
-    const Ip6::MessageInfo &GetMessageInfo(void) const
-    {
-        return mMessageInfo;
-    }
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
 
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

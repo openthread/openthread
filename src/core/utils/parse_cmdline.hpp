@@ -524,10 +524,7 @@ public:
      * @retval kErrorInvalidArgs  The argument is empty or does not contain a valid IPv6 prefix.
      *
      */
-    otError ParseAsIp6Prefix(otIp6Prefix &aPrefix) const
-    {
-        return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix);
-    }
+    otError ParseAsIp6Prefix(otIp6Prefix &aPrefix) const { return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix); }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -660,57 +657,27 @@ template <uint8_t kLength> inline otError ParseCmd(char *aCommandString, Arg (&a
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Specializations of `Arg::ParseAs<Type>()` method.
 
-template <> inline otError Arg::ParseAs(uint8_t &aValue) const
-{
-    return ParseAsUint8(aValue);
-}
+template <> inline otError Arg::ParseAs(uint8_t &aValue) const { return ParseAsUint8(aValue); }
 
-template <> inline otError Arg::ParseAs(uint16_t &aValue) const
-{
-    return ParseAsUint16(aValue);
-}
+template <> inline otError Arg::ParseAs(uint16_t &aValue) const { return ParseAsUint16(aValue); }
 
-template <> inline otError Arg::ParseAs(uint32_t &aValue) const
-{
-    return ParseAsUint32(aValue);
-}
+template <> inline otError Arg::ParseAs(uint32_t &aValue) const { return ParseAsUint32(aValue); }
 
-template <> inline otError Arg::ParseAs(uint64_t &aValue) const
-{
-    return ParseAsUint64(aValue);
-}
+template <> inline otError Arg::ParseAs(uint64_t &aValue) const { return ParseAsUint64(aValue); }
 
-template <> inline otError Arg::ParseAs(bool &aValue) const
-{
-    return ParseAsBool(aValue);
-}
+template <> inline otError Arg::ParseAs(bool &aValue) const { return ParseAsBool(aValue); }
 
-template <> inline otError Arg::ParseAs(int8_t &aValue) const
-{
-    return ParseAsInt8(aValue);
-}
+template <> inline otError Arg::ParseAs(int8_t &aValue) const { return ParseAsInt8(aValue); }
 
-template <> inline otError Arg::ParseAs(int16_t &aValue) const
-{
-    return ParseAsInt16(aValue);
-}
+template <> inline otError Arg::ParseAs(int16_t &aValue) const { return ParseAsInt16(aValue); }
 
-template <> inline otError Arg::ParseAs(int32_t &aValue) const
-{
-    return ParseAsInt32(aValue);
-}
+template <> inline otError Arg::ParseAs(int32_t &aValue) const { return ParseAsInt32(aValue); }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-template <> inline otError Arg::ParseAs(otIp6Address &aValue) const
-{
-    return ParseAsIp6Address(aValue);
-}
+template <> inline otError Arg::ParseAs(otIp6Address &aValue) const { return ParseAsIp6Address(aValue); }
 
-template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const
-{
-    return ParseAsIp6Prefix(aValue);
-}
+template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const { return ParseAsIp6Prefix(aValue); }
 
 #endif
 

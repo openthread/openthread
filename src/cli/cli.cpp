@@ -483,10 +483,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[])
-{
-    return mHistory.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("history")>(Arg aArgs[]) { return mHistory.Process(aArgs); }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -2352,17 +2349,11 @@ template <> otError Interpreter::Process<Cmd("childtimeout")>(Arg aArgs[])
 }
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
-template <> otError Interpreter::Process<Cmd("coap")>(Arg aArgs[])
-{
-    return mCoap.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("coap")>(Arg aArgs[]) { return mCoap.Process(aArgs); }
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-template <> otError Interpreter::Process<Cmd("coaps")>(Arg aArgs[])
-{
-    return mCoapSecure.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("coaps")>(Arg aArgs[]) { return mCoapSecure.Process(aArgs); }
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
@@ -5079,10 +5070,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-template <> otError Interpreter::Process<Cmd("netdata")>(Arg aArgs[])
-{
-    return mNetworkData.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("netdata")>(Arg aArgs[]) { return mNetworkData.Process(aArgs); }
 
 #if OPENTHREAD_FTD
 template <> otError Interpreter::Process<Cmd("networkidtimeout")>(Arg aArgs[])
@@ -6358,10 +6346,7 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
     return error;
 }
 
-template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[])
-{
-    return mDataset.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return mDataset.Process(aArgs); }
 
 template <> otError Interpreter::Process<Cmd("txpower")>(Arg aArgs[])
 {
@@ -6384,16 +6369,10 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
-template <> otError Interpreter::Process<Cmd("tcp")>(Arg aArgs[])
-{
-    return mTcp.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("tcp")>(Arg aArgs[]) { return mTcp.Process(aArgs); }
 #endif
 
-template <> otError Interpreter::Process<Cmd("udp")>(Arg aArgs[])
-{
-    return mUdp.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("udp")>(Arg aArgs[]) { return mUdp.Process(aArgs); }
 
 template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
 {
@@ -6465,17 +6444,11 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
 #endif
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-template <> otError Interpreter::Process<Cmd("commissioner")>(Arg aArgs[])
-{
-    return mCommissioner.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("commissioner")>(Arg aArgs[]) { return mCommissioner.Process(aArgs); }
 #endif
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
-template <> otError Interpreter::Process<Cmd("joiner")>(Arg aArgs[])
-{
-    return mJoiner.Process(aArgs);
-}
+template <> otError Interpreter::Process<Cmd("joiner")>(Arg aArgs[]) { return mJoiner.Process(aArgs); }
 #endif
 
 #if OPENTHREAD_FTD
@@ -7449,10 +7422,7 @@ extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, 
     Interpreter::Initialize(aInstance, aCallback, aContext);
 }
 
-extern "C" void otCliInputLine(char *aBuf)
-{
-    Interpreter::GetInterpreter().ProcessLine(aBuf);
-}
+extern "C" void otCliInputLine(char *aBuf) { Interpreter::GetInterpreter().ProcessLine(aBuf); }
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
@@ -7472,10 +7442,7 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...)
     va_end(aAp);
 }
 
-extern "C" void otCliAppendResult(otError aError)
-{
-    Interpreter::GetInterpreter().OutputResult(aError);
-}
+extern "C" void otCliAppendResult(otError aError) { Interpreter::GetInterpreter().OutputResult(aError); }
 
 extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
@@ -7499,18 +7466,9 @@ exit:
 } // namespace ot
 
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
-OT_TOOL_WEAK void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers)
-{
-    OT_UNUSED_VARIABLE(aHandlers);
-}
+OT_TOOL_WEAK void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers) { OT_UNUSED_VARIABLE(aHandlers); }
 
-OT_TOOL_WEAK void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix)
-{
-    OT_UNUSED_VARIABLE(aUlaPrefix);
-}
+OT_TOOL_WEAK void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix) { OT_UNUSED_VARIABLE(aUlaPrefix); }
 
-OT_TOOL_WEAK void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr)
-{
-    OT_UNUSED_VARIABLE(aExtAddr);
-}
+OT_TOOL_WEAK void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr) { OT_UNUSED_VARIABLE(aExtAddr); }
 #endif

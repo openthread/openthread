@@ -129,10 +129,7 @@ otError otCoapMessageAppendUriQueryOption(otMessage *aMessage, const char *aUriQ
     return AsCoapMessage(aMessage).AppendUriQueryOption(aUriQuery);
 }
 
-otError otCoapMessageSetPayloadMarker(otMessage *aMessage)
-{
-    return AsCoapMessage(aMessage).SetPayloadMarker();
-}
+otError otCoapMessageSetPayloadMarker(otMessage *aMessage) { return AsCoapMessage(aMessage).SetPayloadMarker(); }
 
 otCoapType otCoapMessageGetType(const otMessage *aMessage)
 {
@@ -144,30 +141,15 @@ otCoapCode otCoapMessageGetCode(const otMessage *aMessage)
     return static_cast<otCoapCode>(AsCoapMessage(aMessage).GetCode());
 }
 
-void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode)
-{
-    AsCoapMessage(aMessage).SetCode(MapEnum(aCode));
-}
+void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode) { AsCoapMessage(aMessage).SetCode(MapEnum(aCode)); }
 
-const char *otCoapMessageCodeToString(const otMessage *aMessage)
-{
-    return AsCoapMessage(aMessage).CodeToString();
-}
+const char *otCoapMessageCodeToString(const otMessage *aMessage) { return AsCoapMessage(aMessage).CodeToString(); }
 
-uint16_t otCoapMessageGetMessageId(const otMessage *aMessage)
-{
-    return AsCoapMessage(aMessage).GetMessageId();
-}
+uint16_t otCoapMessageGetMessageId(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetMessageId(); }
 
-uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage)
-{
-    return AsCoapMessage(aMessage).GetTokenLength();
-}
+uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetTokenLength(); }
 
-const uint8_t *otCoapMessageGetToken(const otMessage *aMessage)
-{
-    return AsCoapMessage(aMessage).GetToken();
-}
+const uint8_t *otCoapMessageGetToken(const otMessage *aMessage) { return AsCoapMessage(aMessage).GetToken(); }
 
 otError otCoapOptionIteratorInit(otCoapOptionIterator *aIterator, const otMessage *aMessage)
 {
@@ -271,10 +253,7 @@ otError otCoapStart(otInstance *aInstance, uint16_t aPort)
     return AsCoreType(aInstance).GetApplicationCoap().Start(aPort);
 }
 
-otError otCoapStop(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).GetApplicationCoap().Stop();
-}
+otError otCoapStop(otInstance *aInstance) { return AsCoreType(aInstance).GetApplicationCoap().Stop(); }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 void otCoapAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource)

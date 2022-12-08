@@ -887,10 +887,7 @@ exit:
     }
 }
 
-void Commissioner::SendKeepAlive(void)
-{
-    SendKeepAlive(mSessionId);
-}
+void Commissioner::SendKeepAlive(void) { SendKeepAlive(mSessionId); }
 
 void Commissioner::SendKeepAlive(uint16_t aSessionId)
 {
@@ -1218,9 +1215,7 @@ void Commissioner::LogJoinerEntry(const char *aAction, const Joiner &aJoiner) co
 
 #else
 
-void Commissioner::LogJoinerEntry(const char *, const Joiner &) const
-{
-}
+void Commissioner::LogJoinerEntry(const char *, const Joiner &) const {}
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 

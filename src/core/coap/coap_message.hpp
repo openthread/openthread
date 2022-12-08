@@ -315,10 +315,7 @@ public:
      * @returns The Message ID value.
      *
      */
-    uint16_t GetMessageId(void) const
-    {
-        return HostSwap16(GetHelpData().mHeader.mMessageId);
-    }
+    uint16_t GetMessageId(void) const { return HostSwap16(GetHelpData().mHeader.mMessageId); }
 
     /**
      * This method sets the Message ID value.
@@ -326,10 +323,7 @@ public:
      * @param[in]  aMessageId  The Message ID value.
      *
      */
-    void SetMessageId(uint16_t aMessageId)
-    {
-        GetHelpData().mHeader.mMessageId = HostSwap16(aMessageId);
-    }
+    void SetMessageId(uint16_t aMessageId) { GetHelpData().mHeader.mMessageId = HostSwap16(aMessageId); }
 
     /**
      * This method returns the Token length.
@@ -348,10 +342,7 @@ public:
      * @returns A pointer to the Token value.
      *
      */
-    const uint8_t *GetToken(void) const
-    {
-        return GetHelpData().mHeader.mToken;
-    }
+    const uint8_t *GetToken(void) const { return GetHelpData().mHeader.mToken; }
 
     /**
      * This method sets the Token value and length.
@@ -447,10 +438,7 @@ public:
      * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    Error AppendObserveOption(uint32_t aObserve)
-    {
-        return AppendUintOption(kOptionObserve, aObserve & kObserveMask);
-    }
+    Error AppendObserveOption(uint32_t aObserve) { return AppendUintOption(kOptionObserve, aObserve & kObserveMask); }
 
     /**
      * This method appends a Uri-Path option.
@@ -501,10 +489,7 @@ public:
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    Error AppendProxyUriOption(const char *aProxyUri)
-    {
-        return AppendStringOption(kOptionProxyUri, aProxyUri);
-    }
+    Error AppendProxyUriOption(const char *aProxyUri) { return AppendStringOption(kOptionProxyUri, aProxyUri); }
 
     /**
      * This method appends a Content-Format option.
@@ -530,10 +515,7 @@ public:
      * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    Error AppendMaxAgeOption(uint32_t aMaxAge)
-    {
-        return AppendUintOption(kOptionMaxAge, aMaxAge);
-    }
+    Error AppendMaxAgeOption(uint32_t aMaxAge) { return AppendUintOption(kOptionMaxAge, aMaxAge); }
 
     /**
      * This method appends a single Uri-Query option.
@@ -544,10 +526,7 @@ public:
      * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    Error AppendUriQueryOption(const char *aUriQuery)
-    {
-        return AppendStringOption(kOptionUriQuery, aUriQuery);
-    }
+    Error AppendUriQueryOption(const char *aUriQuery) { return AppendStringOption(kOptionUriQuery, aUriQuery); }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
@@ -568,10 +547,7 @@ public:
      * @returns The length of the message header.
      *
      */
-    uint16_t GetHeaderLength(void) const
-    {
-        return GetHelpData().mHeaderLength;
-    }
+    uint16_t GetHeaderLength(void) const { return GetHelpData().mHeaderLength; }
 
     /**
      * This method returns the block number of a CoAP block-wise transfer message.
@@ -579,10 +555,7 @@ public:
      * @returns The block number.
      *
      */
-    uint32_t GetBlockWiseBlockNumber(void) const
-    {
-        return GetHelpData().mBlockWiseData.mBlockNumber;
-    }
+    uint32_t GetBlockWiseBlockNumber(void) const { return GetHelpData().mBlockWiseData.mBlockNumber; }
 
     /**
      * This method checks if the More Blocks flag is set.
@@ -591,10 +564,7 @@ public:
      * @retval FALSE  More Blocks flag is not set.
      *
      */
-    bool IsMoreBlocksFlagSet(void) const
-    {
-        return GetHelpData().mBlockWiseData.mMoreBlocks;
-    }
+    bool IsMoreBlocksFlagSet(void) const { return GetHelpData().mBlockWiseData.mMoreBlocks; }
 
     /**
      * This method returns the block size of a CoAP block-wise transfer message.
@@ -602,10 +572,7 @@ public:
      * @returns The block size.
      *
      */
-    otCoapBlockSzx GetBlockWiseBlockSize(void) const
-    {
-        return GetHelpData().mBlockWiseData.mBlockSize;
-    }
+    otCoapBlockSzx GetBlockWiseBlockSize(void) const { return GetHelpData().mBlockWiseData.mBlockSize; }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
@@ -634,10 +601,7 @@ public:
      * @returns The offset of the first CoAP option.
      *
      */
-    uint16_t GetOptionStart(void) const
-    {
-        return kMinHeaderLength + GetTokenLength();
-    }
+    uint16_t GetOptionStart(void) const { return kMinHeaderLength + GetTokenLength(); }
 
     /**
      * This method parses CoAP header and moves offset end of CoAP header.
@@ -667,10 +631,7 @@ public:
      * @param[in]   aBlockNumber    Block number value to set.
      *
      */
-    void SetBlockWiseBlockNumber(uint32_t aBlockNumber)
-    {
-        GetHelpData().mBlockWiseData.mBlockNumber = aBlockNumber;
-    }
+    void SetBlockWiseBlockNumber(uint32_t aBlockNumber) { GetHelpData().mBlockWiseData.mBlockNumber = aBlockNumber; }
 
     /**
      * This method sets the More Blocks falg in the message HelpData.
@@ -678,10 +639,7 @@ public:
      * @param[in]   aMoreBlocks    TRUE or FALSE.
      *
      */
-    void SetMoreBlocksFlag(bool aMoreBlocks)
-    {
-        GetHelpData().mBlockWiseData.mMoreBlocks = aMoreBlocks;
-    }
+    void SetMoreBlocksFlag(bool aMoreBlocks) { GetHelpData().mBlockWiseData.mMoreBlocks = aMoreBlocks; }
 
     /**
      * This method sets the block size value in the message HelpData.
@@ -689,10 +647,7 @@ public:
      * @param[in]   aBlockSize    Block size value to set.
      *
      */
-    void SetBlockWiseBlockSize(otCoapBlockSzx aBlockSize)
-    {
-        GetHelpData().mBlockWiseData.mBlockSize = aBlockSize;
-    }
+    void SetBlockWiseBlockSize(otCoapBlockSzx aBlockSize) { GetHelpData().mBlockWiseData.mBlockSize = aBlockSize; }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
@@ -702,10 +657,7 @@ public:
      * @retval FALSE  Message is not an empty message header.
      *
      */
-    bool IsEmpty(void) const
-    {
-        return (GetCode() == kCodeEmpty);
-    }
+    bool IsEmpty(void) const { return (GetCode() == kCodeEmpty); }
 
     /**
      * This method checks if a header is a request header.
@@ -714,10 +666,7 @@ public:
      * @retval FALSE  Message is not a request header.
      *
      */
-    bool IsRequest(void) const
-    {
-        return (GetCode() >= kCodeGet) && (GetCode() <= kCodeDelete);
-    }
+    bool IsRequest(void) const { return (GetCode() >= kCodeGet) && (GetCode() <= kCodeDelete); }
 
     /**
      * This method indicates whether or not the CoAP code in header is "Get" request.
@@ -726,10 +675,7 @@ public:
      * @retval FALSE  Message is not a Get request.
      *
      */
-    bool IsGetRequest(void) const
-    {
-        return GetCode() == kCodeGet;
-    }
+    bool IsGetRequest(void) const { return GetCode() == kCodeGet; }
 
     /**
      * This method indicates whether or not the CoAP code in header is "Post" request.
@@ -738,10 +684,7 @@ public:
      * @retval FALSE  Message is not a Post request.
      *
      */
-    bool IsPostRequest(void) const
-    {
-        return GetCode() == kCodePost;
-    }
+    bool IsPostRequest(void) const { return GetCode() == kCodePost; }
 
     /**
      * This method indicates whether or not the CoAP code in header is "Put" request.
@@ -750,10 +693,7 @@ public:
      * @retval FALSE  Message is not a Put request.
      *
      */
-    bool IsPutRequest(void) const
-    {
-        return GetCode() == kCodePut;
-    }
+    bool IsPutRequest(void) const { return GetCode() == kCodePut; }
 
     /**
      * This method indicates whether or not the CoAP code in header is "Delete" request.
@@ -762,10 +702,7 @@ public:
      * @retval FALSE  Message is not a Delete request.
      *
      */
-    bool IsDeleteRequest(void) const
-    {
-        return GetCode() == kCodeDelete;
-    }
+    bool IsDeleteRequest(void) const { return GetCode() == kCodeDelete; }
 
     /**
      * This method checks if a header is a response header.
@@ -774,10 +711,7 @@ public:
      * @retval FALSE  Message is not a response header.
      *
      */
-    bool IsResponse(void) const
-    {
-        return GetCode() >= OT_COAP_CODE_RESPONSE_MIN;
-    }
+    bool IsResponse(void) const { return GetCode() >= OT_COAP_CODE_RESPONSE_MIN; }
 
     /**
      * This method checks if a header is a CON message header.
@@ -786,10 +720,7 @@ public:
      * @retval FALSE  Message is not is a CON message header.
      *
      */
-    bool IsConfirmable(void) const
-    {
-        return (GetType() == kTypeConfirmable);
-    }
+    bool IsConfirmable(void) const { return (GetType() == kTypeConfirmable); }
 
     /**
      * This method checks if a header is a NON message header.
@@ -798,10 +729,7 @@ public:
      * @retval FALSE  Message is not is a NON message header.
      *
      */
-    bool IsNonConfirmable(void) const
-    {
-        return (GetType() == kTypeNonConfirmable);
-    }
+    bool IsNonConfirmable(void) const { return (GetType() == kTypeNonConfirmable); }
 
     /**
      * This method checks if a header is a ACK message header.
@@ -810,10 +738,7 @@ public:
      * @retval FALSE  Message is not is a ACK message header.
      *
      */
-    bool IsAck(void) const
-    {
-        return (GetType() == kTypeAck);
-    }
+    bool IsAck(void) const { return (GetType() == kTypeAck); }
 
     /**
      * This method checks if a header is a RST message header.
@@ -822,10 +747,7 @@ public:
      * @retval FALSE  Message is not is a RST message header.
      *
      */
-    bool IsReset(void) const
-    {
-        return (GetType() == kTypeReset);
-    }
+    bool IsReset(void) const { return (GetType() == kTypeReset); }
 
     /**
      * This method indicates whether or not the header is a confirmable Put request (i.e, `kTypeConfirmable` with
@@ -871,19 +793,13 @@ public:
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
-    Message *Clone(void) const
-    {
-        return Clone(GetLength());
-    }
+    Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
      * This method returns the minimal reserved bytes required for CoAP message.
      *
      */
-    static uint16_t GetHelpDataReserved(void)
-    {
-        return sizeof(HelpData) + kHelpDataAlignment;
-    }
+    static uint16_t GetHelpDataReserved(void) { return sizeof(HelpData) + kHelpDataAlignment; }
 
     /**
      * This method returns a pointer to the next message after this as a `Coap::Message`.
@@ -894,10 +810,7 @@ public:
      * @returns A pointer to the next message in the queue or `nullptr` if at the end of the queue.
      *
      */
-    Message *GetNextCoapMessage(void)
-    {
-        return static_cast<Message *>(GetNext());
-    }
+    Message *GetNextCoapMessage(void) { return static_cast<Message *>(GetNext()); }
 
     /**
      * This method returns a pointer to the next message after this as a `Coap::Message`.
@@ -908,10 +821,7 @@ public:
      * @returns A pointer to the next message in the queue or `nullptr` if at the end of the queue.
      *
      */
-    const Message *GetNextCoapMessage(void) const
-    {
-        return static_cast<const Message *>(GetNext());
-    }
+    const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
 
 private:
     /*
@@ -1047,15 +957,9 @@ private:
         return *static_cast<const HelpData *>(OT_ALIGN(GetFirstData(), kHelpDataAlignment));
     }
 
-    HelpData &GetHelpData(void)
-    {
-        return AsNonConst(AsConst(this)->GetHelpData());
-    }
+    HelpData &GetHelpData(void) { return AsNonConst(AsConst(this)->GetHelpData()); }
 
-    uint8_t *GetToken(void)
-    {
-        return GetHelpData().mHeader.mToken;
-    }
+    uint8_t *GetToken(void) { return GetHelpData().mHeader.mToken; }
 
     void SetTokenLength(uint8_t aTokenLength)
     {
@@ -1337,10 +1241,7 @@ DefineMapEnum(otCoapCode, Coap::Code);
  * @returns A reference to `Coap::Message` matching @p aMessage.
  *
  */
-inline Coap::Message &AsCoapMessage(otMessage *aMessage)
-{
-    return *static_cast<Coap::Message *>(aMessage);
-}
+inline Coap::Message &AsCoapMessage(otMessage *aMessage) { return *static_cast<Coap::Message *>(aMessage); }
 
 /**
  * This method casts an `otMessage` pointer to a `Coap::Message` reference.
@@ -1350,10 +1251,7 @@ inline Coap::Message &AsCoapMessage(otMessage *aMessage)
  * @returns A reference to `Coap::Message` matching @p aMessage.
  *
  */
-inline Coap::Message *AsCoapMessagePtr(otMessage *aMessage)
-{
-    return static_cast<Coap::Message *>(aMessage);
-}
+inline Coap::Message *AsCoapMessagePtr(otMessage *aMessage) { return static_cast<Coap::Message *>(aMessage); }
 
 /**
  * This method casts an `otMessage` pointer to a `Coap::Message` pointer.

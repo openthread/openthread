@@ -66,10 +66,7 @@ const Option *Option::Iterator::Next(const Option *aOption)
     return reinterpret_cast<const Option *>(reinterpret_cast<const uint8_t *>(aOption) + aOption->GetSize());
 }
 
-void Option::Iterator::Advance(void)
-{
-    mOption = (mOption != nullptr) ? Validate(Next(mOption)) : nullptr;
-}
+void Option::Iterator::Advance(void) { mOption = (mOption != nullptr) ? Validate(Next(mOption)) : nullptr; }
 
 const Option *Option::Iterator::Validate(const Option *aOption) const
 {
@@ -99,10 +96,7 @@ void PrefixInfoOption::SetPrefix(const Prefix &aPrefix)
     mPrefix       = AsCoreType(&aPrefix.mPrefix);
 }
 
-void PrefixInfoOption::GetPrefix(Prefix &aPrefix) const
-{
-    aPrefix.Set(mPrefix.GetBytes(), mPrefixLength);
-}
+void PrefixInfoOption::GetPrefix(Prefix &aPrefix) const { aPrefix.Set(mPrefix.GetBytes(), mPrefixLength); }
 
 bool PrefixInfoOption::IsValid(void) const
 {
@@ -137,10 +131,7 @@ void RouteInfoOption::SetPrefix(const Prefix &aPrefix)
     memcpy(GetPrefixBytes(), aPrefix.GetBytes(), aPrefix.GetBytesSize());
 }
 
-void RouteInfoOption::GetPrefix(Prefix &aPrefix) const
-{
-    aPrefix.Set(GetPrefixBytes(), mPrefixLength);
-}
+void RouteInfoOption::GetPrefix(Prefix &aPrefix) const { aPrefix.Set(GetPrefixBytes(), mPrefixLength); }
 
 bool RouteInfoOption::IsValid(void) const
 {

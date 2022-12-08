@@ -737,10 +737,7 @@ public:
      * @returns A reference to the request message list.
      *
      */
-    const MessageQueue &GetRequestMessages(void) const
-    {
-        return mPendingRequests;
-    }
+    const MessageQueue &GetRequestMessages(void) const { return mPendingRequests; }
 
     /**
      * This method returns a reference to the cached response list.
@@ -748,10 +745,7 @@ public:
      * @returns A reference to the cached response list.
      *
      */
-    const MessageQueue &GetCachedResponses(void) const
-    {
-        return mResponsesQueue.GetResponses();
-    }
+    const MessageQueue &GetCachedResponses(void) const { return mResponsesQueue.GetResponses(); }
 
 protected:
     /**
@@ -812,10 +806,7 @@ protected:
      * @param[in] aResourceHandler   The resource handler function pointer.
      *
      */
-    void SetResourceHandler(ResourceHandler aHandler)
-    {
-        mResourceHandler = aHandler;
-    }
+    void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }
 
 private:
     struct Metadata

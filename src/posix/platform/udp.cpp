@@ -65,25 +65,13 @@ namespace {
 
 constexpr size_t kMaxUdpSize = 1280;
 
-void *FdToHandle(int aFd)
-{
-    return reinterpret_cast<void *>(aFd);
-}
+void *FdToHandle(int aFd) { return reinterpret_cast<void *>(aFd); }
 
-int FdFromHandle(void *aHandle)
-{
-    return static_cast<int>(reinterpret_cast<long>(aHandle));
-}
+int FdFromHandle(void *aHandle) { return static_cast<int>(reinterpret_cast<long>(aHandle)); }
 
-bool IsLinkLocal(const struct in6_addr &aAddress)
-{
-    return aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80;
-}
+bool IsLinkLocal(const struct in6_addr &aAddress) { return aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80; }
 
-bool IsMulticast(const otIp6Address &aAddress)
-{
-    return aAddress.mFields.m8[0] == 0xff;
-}
+bool IsMulticast(const otIp6Address &aAddress) { return aAddress.mFields.m8[0] == 0xff; }
 
 otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
 {
@@ -591,15 +579,9 @@ void Udp::Init(const char *aIfName)
     assert(gNetifIndex != 0);
 }
 
-void Udp::SetUp(void)
-{
-    Mainloop::Manager::Get().Add(*this);
-}
+void Udp::SetUp(void) { Mainloop::Manager::Get().Add(*this); }
 
-void Udp::TearDown(void)
-{
-    Mainloop::Manager::Get().Remove(*this);
-}
+void Udp::TearDown(void) { Mainloop::Manager::Get().Remove(*this); }
 
 void Udp::Deinit(void)
 {

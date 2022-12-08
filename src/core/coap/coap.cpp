@@ -73,10 +73,7 @@ void CoapBase::ClearRequestsAndResponses(void)
     mResponsesQueue.DequeueAllResponses();
 }
 
-void CoapBase::ClearRequests(const Ip6::Address &aAddress)
-{
-    ClearRequests(&aAddress);
-}
+void CoapBase::ClearRequests(const Ip6::Address &aAddress) { ClearRequests(&aAddress); }
 
 void CoapBase::ClearRequests(const Ip6::Address *aAddress)
 {
@@ -94,10 +91,7 @@ void CoapBase::ClearRequests(const Ip6::Address *aAddress)
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-void CoapBase::AddBlockWiseResource(ResourceBlockWise &aResource)
-{
-    IgnoreError(mBlockWiseResources.Add(aResource));
-}
+void CoapBase::AddBlockWiseResource(ResourceBlockWise &aResource) { IgnoreError(mBlockWiseResources.Add(aResource)); }
 
 void CoapBase::RemoveBlockWiseResource(ResourceBlockWise &aResource)
 {
@@ -106,10 +100,7 @@ void CoapBase::RemoveBlockWiseResource(ResourceBlockWise &aResource)
 }
 #endif
 
-void CoapBase::AddResource(Resource &aResource)
-{
-    IgnoreError(mResources.Add(aResource));
-}
+void CoapBase::AddResource(Resource &aResource) { IgnoreError(mResources.Add(aResource)); }
 
 void CoapBase::RemoveResource(Resource &aResource)
 {
@@ -145,10 +136,7 @@ Message *CoapBase::NewPriorityConfirmablePostMessage(Uri aUri)
     return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUri);
 }
 
-Message *CoapBase::NewConfirmablePostMessage(Uri aUri)
-{
-    return InitMessage(NewMessage(), kTypeConfirmable, aUri);
-}
+Message *CoapBase::NewConfirmablePostMessage(Uri aUri) { return InitMessage(NewMessage(), kTypeConfirmable, aUri); }
 
 Message *CoapBase::NewPriorityNonConfirmablePostMessage(Uri aUri)
 {
@@ -165,10 +153,7 @@ Message *CoapBase::NewPriorityResponseMessage(const Message &aRequest)
     return InitResponse(NewPriorityMessage(), aRequest);
 }
 
-Message *CoapBase::NewResponseMessage(const Message &aRequest)
-{
-    return InitResponse(NewMessage(), aRequest);
-}
+Message *CoapBase::NewResponseMessage(const Message &aRequest) { return InitResponse(NewMessage(), aRequest); }
 
 Message *CoapBase::InitMessage(Message *aMessage, Type aType, Uri aUri)
 {
@@ -1589,15 +1574,9 @@ void ResponsesQueue::UpdateQueue(void)
     }
 }
 
-void ResponsesQueue::DequeueResponse(Message &aMessage)
-{
-    mQueue.DequeueAndFree(aMessage);
-}
+void ResponsesQueue::DequeueResponse(Message &aMessage) { mQueue.DequeueAndFree(aMessage); }
 
-void ResponsesQueue::DequeueAllResponses(void)
-{
-    mQueue.DequeueAndFreeAll();
-}
+void ResponsesQueue::DequeueAllResponses(void) { mQueue.DequeueAndFreeAll(); }
 
 void ResponsesQueue::HandleTimer(Timer &aTimer)
 {
@@ -1686,10 +1665,7 @@ uint32_t TxParameters::CalculateExchangeLifetime(void) const
     return CalculateSpan(mMaxRetransmit) + 2 * kDefaultMaxLatency + mAckTimeout;
 }
 
-uint32_t TxParameters::CalculateMaxTransmitWait(void) const
-{
-    return CalculateSpan(mMaxRetransmit + 1);
-}
+uint32_t TxParameters::CalculateMaxTransmitWait(void) const { return CalculateSpan(mMaxRetransmit + 1); }
 
 uint32_t TxParameters::CalculateSpan(uint8_t aMaxRetx) const
 {

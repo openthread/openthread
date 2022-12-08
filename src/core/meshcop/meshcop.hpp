@@ -459,9 +459,7 @@ Error GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
  */
 void LogError(const char *aActionText, Error aError);
 #else
-inline void LogError(const char *, Error)
-{
-}
+inline void LogError(const char *, Error) {}
 #endif
 
 } // namespace MeshCoP

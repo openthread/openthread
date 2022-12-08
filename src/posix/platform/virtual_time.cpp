@@ -197,9 +197,6 @@ void virtualTimeProcess(otInstance   *aInstance,
     virtualTimeRadioSpinelProcess(aInstance, &event);
 }
 
-uint64_t otPlatTimeGet(void)
-{
-    return sNow;
-}
+uint64_t otPlatTimeGet(void) { return sNow; }
 
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME

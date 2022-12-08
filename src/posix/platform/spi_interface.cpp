@@ -191,10 +191,7 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     return OT_ERROR_NONE;
 }
 
-SpiInterface::~SpiInterface(void)
-{
-    Deinit();
-}
+SpiInterface::~SpiInterface(void) { Deinit(); }
 
 void SpiInterface::Deinit(void)
 {
@@ -725,10 +722,7 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
     }
 }
 
-void SpiInterface::Process(const RadioProcessContext &aContext)
-{
-    Process(aContext.mReadFdSet, aContext.mWriteFdSet);
-}
+void SpiInterface::Process(const RadioProcessContext &aContext) { Process(aContext.mReadFdSet, aContext.mWriteFdSet); }
 
 void SpiInterface::Process(const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {

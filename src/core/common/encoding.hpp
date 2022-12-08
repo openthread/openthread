@@ -51,10 +51,7 @@
 namespace ot {
 namespace Encoding {
 
-inline uint16_t Swap16(uint16_t v)
-{
-    return (((v & 0x00ffU) << 8) & 0xff00) | (((v & 0xff00U) >> 8) & 0x00ff);
-}
+inline uint16_t Swap16(uint16_t v) { return (((v & 0x00ffU) << 8) & 0xff00) | (((v & 0xff00U) >> 8) & 0x00ff); }
 
 inline uint32_t Swap32(uint32_t v)
 {
@@ -91,33 +88,15 @@ namespace BigEndian {
 
 #if BYTE_ORDER_BIG_ENDIAN
 
-inline uint16_t HostSwap16(uint16_t v)
-{
-    return v;
-}
-inline uint32_t HostSwap32(uint32_t v)
-{
-    return v;
-}
-inline uint64_t HostSwap64(uint64_t v)
-{
-    return v;
-}
+inline uint16_t HostSwap16(uint16_t v) { return v; }
+inline uint32_t HostSwap32(uint32_t v) { return v; }
+inline uint64_t HostSwap64(uint64_t v) { return v; }
 
 #else /* BYTE_ORDER_LITTLE_ENDIAN */
 
-inline uint16_t HostSwap16(uint16_t v)
-{
-    return Swap16(v);
-}
-inline uint32_t HostSwap32(uint32_t v)
-{
-    return Swap32(v);
-}
-inline uint64_t HostSwap64(uint64_t v)
-{
-    return Swap64(v);
-}
+inline uint16_t HostSwap16(uint16_t v) { return Swap16(v); }
+inline uint32_t HostSwap32(uint32_t v) { return Swap32(v); }
+inline uint64_t HostSwap64(uint64_t v) { return Swap64(v); }
 
 #endif // LITTLE_ENDIAN
 
@@ -133,22 +112,10 @@ inline uint64_t HostSwap64(uint64_t v)
  */
 template <typename UintType> UintType HostSwap(UintType aValue);
 
-template <> inline uint8_t HostSwap(uint8_t aValue)
-{
-    return aValue;
-}
-template <> inline uint16_t HostSwap(uint16_t aValue)
-{
-    return HostSwap16(aValue);
-}
-template <> inline uint32_t HostSwap(uint32_t aValue)
-{
-    return HostSwap32(aValue);
-}
-template <> inline uint64_t HostSwap(uint64_t aValue)
-{
-    return HostSwap64(aValue);
-}
+template <> inline uint8_t  HostSwap(uint8_t aValue) { return aValue; }
+template <> inline uint16_t HostSwap(uint16_t aValue) { return HostSwap16(aValue); }
+template <> inline uint32_t HostSwap(uint32_t aValue) { return HostSwap32(aValue); }
+template <> inline uint64_t HostSwap(uint64_t aValue) { return HostSwap64(aValue); }
 
 /**
  * This function reads a `uint16_t` value from a given buffer assuming big-endian encoding.
@@ -158,10 +125,7 @@ template <> inline uint64_t HostSwap(uint64_t aValue)
  * @returns The `uint16_t` value read from buffer.
  *
  */
-inline uint16_t ReadUint16(const uint8_t *aBuffer)
-{
-    return static_cast<uint16_t>((aBuffer[0] << 8) | aBuffer[1]);
-}
+inline uint16_t ReadUint16(const uint8_t *aBuffer) { return static_cast<uint16_t>((aBuffer[0] << 8) | aBuffer[1]); }
 
 /**
  * This function reads a `uint32_t` value from a given buffer assuming big-endian encoding.
@@ -274,33 +238,15 @@ namespace LittleEndian {
 
 #if BYTE_ORDER_BIG_ENDIAN
 
-inline uint16_t HostSwap16(uint16_t v)
-{
-    return Swap16(v);
-}
-inline uint32_t HostSwap32(uint32_t v)
-{
-    return Swap32(v);
-}
-inline uint64_t HostSwap64(uint64_t v)
-{
-    return Swap64(v);
-}
+inline uint16_t HostSwap16(uint16_t v) { return Swap16(v); }
+inline uint32_t HostSwap32(uint32_t v) { return Swap32(v); }
+inline uint64_t HostSwap64(uint64_t v) { return Swap64(v); }
 
 #else /* BYTE_ORDER_LITTLE_ENDIAN */
 
-inline uint16_t HostSwap16(uint16_t v)
-{
-    return v;
-}
-inline uint32_t HostSwap32(uint32_t v)
-{
-    return v;
-}
-inline uint64_t HostSwap64(uint64_t v)
-{
-    return v;
-}
+inline uint16_t HostSwap16(uint16_t v) { return v; }
+inline uint32_t HostSwap32(uint32_t v) { return v; }
+inline uint64_t HostSwap64(uint64_t v) { return v; }
 
 #endif
 
@@ -316,22 +262,10 @@ inline uint64_t HostSwap64(uint64_t v)
  */
 template <typename UintType> UintType HostSwap(UintType aValue);
 
-template <> inline uint8_t HostSwap(uint8_t aValue)
-{
-    return aValue;
-}
-template <> inline uint16_t HostSwap(uint16_t aValue)
-{
-    return HostSwap16(aValue);
-}
-template <> inline uint32_t HostSwap(uint32_t aValue)
-{
-    return HostSwap32(aValue);
-}
-template <> inline uint64_t HostSwap(uint64_t aValue)
-{
-    return HostSwap64(aValue);
-}
+template <> inline uint8_t  HostSwap(uint8_t aValue) { return aValue; }
+template <> inline uint16_t HostSwap(uint16_t aValue) { return HostSwap16(aValue); }
+template <> inline uint32_t HostSwap(uint32_t aValue) { return HostSwap32(aValue); }
+template <> inline uint64_t HostSwap(uint64_t aValue) { return HostSwap64(aValue); }
 
 /**
  * This function reads a `uint16_t` value from a given buffer assuming little-endian encoding.
@@ -341,10 +275,7 @@ template <> inline uint64_t HostSwap(uint64_t aValue)
  * @returns The `uint16_t` value read from buffer.
  *
  */
-inline uint16_t ReadUint16(const uint8_t *aBuffer)
-{
-    return static_cast<uint16_t>(aBuffer[0] | (aBuffer[1] << 8));
-}
+inline uint16_t ReadUint16(const uint8_t *aBuffer) { return static_cast<uint16_t>(aBuffer[0] | (aBuffer[1] << 8)); }
 
 /**
  * This function reads a 24-bit integer value from a given buffer assuming little-endian encoding.

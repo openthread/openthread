@@ -589,10 +589,7 @@ typedef Mac::Key Key;
  * @returns The Child ID portion of an RLOC16.
  *
  */
-inline uint16_t ChildIdFromRloc16(uint16_t aRloc16)
-{
-    return aRloc16 & kMaxChildId;
-}
+inline uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
 
 /**
  * This function derives the Router ID portion from a given RLOC16.
@@ -602,10 +599,7 @@ inline uint16_t ChildIdFromRloc16(uint16_t aRloc16)
  * @returns The Router ID portion of an RLOC16.
  *
  */
-inline uint8_t RouterIdFromRloc16(uint16_t aRloc16)
-{
-    return aRloc16 >> kRouterIdOffset;
-}
+inline uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
 /**
  * This function returns whether the two RLOC16 have the same Router ID.
@@ -629,10 +623,7 @@ inline bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
  * @returns The Service ID corresponding to given ALOC16.
  *
  */
-inline uint8_t ServiceIdFromAloc(uint16_t aAloc16)
-{
-    return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart);
-}
+inline uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
 /**
  * This function returns the Service ALOC16 corresponding to a Service ID.
@@ -668,10 +659,7 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
  * @returns The RLOC16 corresponding to the given Router ID.
  *
  */
-inline uint16_t Rloc16FromRouterId(uint8_t aRouterId)
-{
-    return static_cast<uint16_t>(aRouterId << kRouterIdOffset);
-}
+inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
 
 /**
  * This function indicates whether or not @p aRloc16 refers to an active router.
@@ -682,10 +670,7 @@ inline uint16_t Rloc16FromRouterId(uint8_t aRouterId)
  * @retval FALSE  If @p aRloc16 does not refer to an active router.
  *
  */
-inline bool IsActiveRouter(uint16_t aRloc16)
-{
-    return ChildIdFromRloc16(aRloc16) == 0;
-}
+inline bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
 
 /**
  * This function converts a device role into a human-readable string.

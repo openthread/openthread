@@ -52,10 +52,7 @@ static otInstance *sInstance;
     printf("%02u:%02u:%02u.%03u " OT_FIRST_ARG(__VA_ARGS__) "\n", (sNow / 36000000), (sNow / 60000) % 60, \
            (sNow / 1000) % 60, sNow % 1000 OT_REST_ARGS(__VA_ARGS__))
 
-void otPlatAlarmMilliStop(otInstance *)
-{
-    sAlarmOn = false;
-}
+void otPlatAlarmMilliStop(otInstance *) { sAlarmOn = false; }
 
 void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 {
@@ -66,10 +63,7 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
         (sAlarmTime - sNow) / 1000, (sAlarmTime - sNow) % 1000);
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
-{
-    return sNow;
-}
+uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 
 } // extern "C"
 

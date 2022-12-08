@@ -200,20 +200,11 @@ template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[])
-{
-    return ProcessRequest(aArgs, OT_COAP_CODE_GET);
-}
+template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
-template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[])
-{
-    return ProcessRequest(aArgs, OT_COAP_CODE_POST);
-}
+template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
-template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[])
-{
-    return ProcessRequest(aArgs, OT_COAP_CODE_PUT);
-}
+template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
 template <> otError CoapSecure::Process<Cmd("delete")>(Arg aArgs[])
 {

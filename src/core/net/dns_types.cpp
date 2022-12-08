@@ -1074,10 +1074,7 @@ bool AaaaRecord::IsValid(void) const
     return GetType() == Dns::ResourceRecord::kTypeAaaa && GetSize() == sizeof(*this);
 }
 
-bool KeyRecord::IsValid(void) const
-{
-    return GetType() == Dns::ResourceRecord::kTypeKey;
-}
+bool KeyRecord::IsValid(void) const { return GetType() == Dns::ResourceRecord::kTypeKey; }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 void Ecdsa256KeyRecord::Init(void)
@@ -1098,10 +1095,7 @@ bool SigRecord::IsValid(void) const
     return GetType() == Dns::ResourceRecord::kTypeSig && GetLength() >= sizeof(*this) - sizeof(ResourceRecord);
 }
 
-bool LeaseOption::IsValid(void) const
-{
-    return GetLeaseInterval() <= GetKeyLeaseInterval();
-}
+bool LeaseOption::IsValid(void) const { return GetLeaseInterval() <= GetKeyLeaseInterval(); }
 
 Error PtrRecord::ReadPtrName(const Message &aMessage,
                              uint16_t      &aOffset,

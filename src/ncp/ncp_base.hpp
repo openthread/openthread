@@ -241,10 +241,7 @@ protected:
                                                    uint16_t          aValueLen);
 
     otError SendQueuedResponses(void);
-    bool    IsResponseQueueEmpty(void) const
-    {
-        return (mResponseQueueHead == mResponseQueueTail);
-    }
+    bool    IsResponseQueueEmpty(void) const { return (mResponseQueueHead == mResponseQueueTail); }
     otError EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus);
 
     otError PrepareGetResponse(uint8_t aHeader, spinel_prop_key_t aPropKey)
@@ -492,12 +489,8 @@ protected:
     void StartLegacy(void);
     void StopLegacy(void);
 #else
-    void StartLegacy(void)
-    {
-    }
-    void StopLegacy(void)
-    {
-    }
+    void StartLegacy(void) {}
+    void StopLegacy(void) {}
 #endif
 
     static uint8_t      ConvertLogLevel(otLogLevel aLogLevel);

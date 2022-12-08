@@ -277,10 +277,7 @@ void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc)
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-otPskcRef otThreadGetPskcRef(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<KeyManager>().GetPskcRef();
-}
+otPskcRef otThreadGetPskcRef(otInstance *aInstance) { return AsCoreType(aInstance).Get<KeyManager>().GetPskcRef(); }
 #endif
 
 otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)

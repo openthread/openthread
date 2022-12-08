@@ -82,10 +82,7 @@ void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     mLength += GetFcsSize();
 }
 
-uint16_t Frame::GetFrameControlField(void) const
-{
-    return ReadUint16(mPsdu);
-}
+uint16_t Frame::GetFrameControlField(void) const { return ReadUint16(mPsdu); }
 
 Error Frame::ValidatePsdu(void) const
 {
@@ -187,10 +184,7 @@ void Frame::SetDstPanId(PanId aPanId)
     WriteUint16(aPanId, &mPsdu[index]);
 }
 
-uint8_t Frame::FindDstAddrIndex(void) const
-{
-    return kFcfSize + kDsnSize + (IsDstPanIdPresent() ? sizeof(PanId) : 0);
-}
+uint8_t Frame::FindDstAddrIndex(void) const { return kFcfSize + kDsnSize + (IsDstPanIdPresent() ? sizeof(PanId) : 0); }
 
 Error Frame::GetDstAddr(Address &aAddress) const
 {
@@ -633,10 +627,7 @@ exit:
     return isDataRequest;
 }
 
-uint8_t Frame::GetHeaderLength(void) const
-{
-    return static_cast<uint8_t>(GetPayload() - mPsdu);
-}
+uint8_t Frame::GetHeaderLength(void) const { return static_cast<uint8_t>(GetPayload() - mPsdu); }
 
 uint8_t Frame::GetFooterLength(void) const
 {
@@ -680,20 +671,11 @@ uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
     return micSize;
 }
 
-uint16_t Frame::GetMaxPayloadLength(void) const
-{
-    return GetMtu() - (GetHeaderLength() + GetFooterLength());
-}
+uint16_t Frame::GetMaxPayloadLength(void) const { return GetMtu() - (GetHeaderLength() + GetFooterLength()); }
 
-uint16_t Frame::GetPayloadLength(void) const
-{
-    return mLength - (GetHeaderLength() + GetFooterLength());
-}
+uint16_t Frame::GetPayloadLength(void) const { return mLength - (GetHeaderLength() + GetFooterLength()); }
 
-void Frame::SetPayloadLength(uint16_t aLength)
-{
-    mLength = GetHeaderLength() + GetFooterLength() + aLength;
-}
+void Frame::SetPayloadLength(uint16_t aLength) { mLength = GetHeaderLength() + GetFooterLength() + aLength; }
 
 uint8_t Frame::SkipSecurityHeaderIndex(void) const
 {
@@ -884,10 +866,7 @@ exit:
     return payload;
 }
 
-const uint8_t *Frame::GetFooter(void) const
-{
-    return mPsdu + mLength - GetFooterLength();
-}
+const uint8_t *Frame::GetFooter(void) const { return mPsdu + mLength - GetFooterLength(); }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 uint8_t Frame::FindHeaderIeIndex(void) const
@@ -943,16 +922,10 @@ template <> void Frame::InitIeContentAt<TimeIe>(uint8_t &aIndex)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-template <> void Frame::InitIeContentAt<CslIe>(uint8_t &aIndex)
-{
-    aIndex += sizeof(CslIe);
-}
+template <> void Frame::InitIeContentAt<CslIe>(uint8_t &aIndex) { aIndex += sizeof(CslIe); }
 #endif
 
-template <> void Frame::InitIeContentAt<Termination2Ie>(uint8_t &aIndex)
-{
-    OT_UNUSED_VARIABLE(aIndex);
-}
+template <> void Frame::InitIeContentAt<Termination2Ie>(uint8_t &aIndex) { OT_UNUSED_VARIABLE(aIndex); }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
@@ -1112,15 +1085,9 @@ uint8_t Frame::GetFcsSize(void) const
 }
 
 #elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-uint16_t Frame::GetMtu(void) const
-{
-    return Trel::Link::kMtuSize;
-}
+uint16_t Frame::GetMtu(void) const { return Trel::Link::kMtuSize; }
 
-uint8_t Frame::GetFcsSize(void) const
-{
-    return Trel::Link::kFcsSize;
-}
+uint8_t Frame::GetFcsSize(void) const { return Trel::Link::kFcsSize; }
 #endif
 
 // Explicit instantiation

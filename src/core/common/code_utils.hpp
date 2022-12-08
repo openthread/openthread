@@ -170,9 +170,6 @@
  * @param[in]  aError  The error to be ignored.
  *
  */
-static inline void IgnoreError(otError aError)
-{
-    OT_UNUSED_VARIABLE(aError);
-}
+static inline void IgnoreError(otError aError) { OT_UNUSED_VARIABLE(aError); }
 
 #endif // CODE_UTILS_HPP_

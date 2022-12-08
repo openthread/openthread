@@ -87,18 +87,12 @@ otError otPlatRadioTransmit(otInstance *, otRadioFrame *)
     return OT_ERROR_NONE;
 }
 
-otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *)
-{
-    return &sRadioTxFrame;
-}
+otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *) { return &sRadioTxFrame; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // `otPlatAlaram`
 
-void otPlatAlarmMilliStop(otInstance *)
-{
-    sAlarmOn = false;
-}
+void otPlatAlarmMilliStop(otInstance *) { sAlarmOn = false; }
 
 void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 {
@@ -106,10 +100,7 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
     sAlarmTime = aT0 + aDt;
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
-{
-    return sNow;
-}
+uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 
 //----------------------------------------------------------------------------------------------------------------------
 

@@ -57,10 +57,7 @@ otError otJoinerStart(otInstance      *aInstance,
                                                               aVendorSwVersion, aVendorData, aCallback, aContext);
 }
 
-void otJoinerStop(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<MeshCoP::Joiner>().Stop();
-}
+void otJoinerStop(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshCoP::Joiner>().Stop(); }
 
 otJoinerState otJoinerGetState(otInstance *aInstance)
 {

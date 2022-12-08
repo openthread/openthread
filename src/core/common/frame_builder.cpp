@@ -42,10 +42,7 @@ void FrameBuilder::Init(void *aBuffer, uint16_t aLength)
     mMaxLength = aLength;
 }
 
-Error FrameBuilder::AppendUint8(uint8_t aUint8)
-{
-    return Append<uint8_t>(aUint8);
-}
+Error FrameBuilder::AppendUint8(uint8_t aUint8) { return Append<uint8_t>(aUint8); }
 
 Error FrameBuilder::AppendBigEndianUint16(uint16_t aUint16)
 {

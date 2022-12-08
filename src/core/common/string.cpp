@@ -255,10 +255,7 @@ StringWriter &StringWriter::AppendHexBytes(const uint8_t *aBytes, uint16_t aLeng
     return *this;
 }
 
-bool IsValidUtf8String(const char *aString)
-{
-    return IsValidUtf8String(aString, strlen(aString));
-}
+bool IsValidUtf8String(const char *aString) { return IsValidUtf8String(aString, strlen(aString)); }
 
 bool IsValidUtf8String(const char *aString, size_t aLength)
 {

@@ -421,10 +421,7 @@ public:
      * @returns The parent CSL accuracy.
      *
      */
-    const CslAccuracy &GetCslParentAccuracy(void) const
-    {
-        return mCslParentAccuracy;
-    }
+    const CslAccuracy &GetCslParentAccuracy(void) const { return mCslParentAccuracy; }
 
     /**
      * This method sets parent CSL accuracy.
@@ -432,10 +429,7 @@ public:
      * @param[in] aCslAccuracy  The parent CSL accuracy.
      *
      */
-    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy)
-    {
-        mCslParentAccuracy = aCslAccuracy;
-    }
+    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy) { mCslParentAccuracy = aCslAccuracy; }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -461,10 +455,7 @@ public:
      * @returns A reference to the current MAC key.
      *
      */
-    const KeyMaterial &GetCurrentMacKey(void) const
-    {
-        return mCurrKey;
-    }
+    const KeyMaterial &GetCurrentMacKey(void) const { return mCurrKey; }
 
     /**
      * This method returns a reference to the previous MAC key.
@@ -472,10 +463,7 @@ public:
      * @returns A reference to the previous MAC key.
      *
      */
-    const KeyMaterial &GetPreviousMacKey(void) const
-    {
-        return mPrevKey;
-    }
+    const KeyMaterial &GetPreviousMacKey(void) const { return mPrevKey; }
 
     /**
      * This method returns a reference to the next MAC key.
@@ -483,10 +471,7 @@ public:
      * @returns A reference to the next MAC key.
      *
      */
-    const KeyMaterial &GetNextMacKey(void) const
-    {
-        return mNextKey;
-    }
+    const KeyMaterial &GetNextMacKey(void) const { return mNextKey; }
 
     /**
      * This method returns the current MAC frame counter value.
@@ -494,10 +479,7 @@ public:
      * @returns The current MAC frame counter value.
      *
      */
-    uint32_t GetFrameCounter(void) const
-    {
-        return mFrameCounter;
-    }
+    uint32_t GetFrameCounter(void) const { return mFrameCounter; }
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -518,10 +500,7 @@ public:
      * @param[in] aFilterEnabled    TRUE to enable radio filter, FALSE to disable.
      *
      */
-    void SetRadioFilterEnabled(bool aFilterEnabled)
-    {
-        mRadioFilterEnabled = aFilterEnabled;
-    }
+    void SetRadioFilterEnabled(bool aFilterEnabled) { mRadioFilterEnabled = aFilterEnabled; }
 
     /**
      * This method indicates whether the radio filter is enabled or not.
@@ -530,10 +509,7 @@ public:
      * @retval FALSE  If the radio filter is disabled.
      *
      */
-    bool IsRadioFilterEnabled(void) const
-    {
-        return mRadioFilterEnabled;
-    }
+    bool IsRadioFilterEnabled(void) const { return mRadioFilterEnabled; }
 #endif
 
 private:
@@ -600,30 +576,12 @@ private:
         return ((mRadioCaps & (OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES)) != 0);
     }
 
-    bool RadioSupportsTransmitSecurity(void) const
-    {
-        return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) != 0);
-    }
-    bool RadioSupportsRetries(void) const
-    {
-        return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0);
-    }
-    bool RadioSupportsAckTimeout(void) const
-    {
-        return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0);
-    }
-    bool RadioSupportsEnergyScan(void) const
-    {
-        return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0);
-    }
-    bool RadioSupportsTransmitTiming(void) const
-    {
-        return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0);
-    }
-    bool RadioSupportsReceiveTiming(void) const
-    {
-        return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0);
-    }
+    bool RadioSupportsTransmitSecurity(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) != 0); }
+    bool RadioSupportsRetries(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) != 0); }
+    bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
+    bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
+    bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
+    bool RadioSupportsReceiveTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0); }
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;

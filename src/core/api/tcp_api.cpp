@@ -49,15 +49,9 @@ otError otTcpEndpointInitialize(otInstance                        *aInstance,
     return AsCoreType(aEndpoint).Initialize(AsCoreType(aInstance), *aArgs);
 }
 
-otInstance *otTcpEndpointGetInstance(otTcpEndpoint *aEndpoint)
-{
-    return &AsCoreType(aEndpoint).GetInstance();
-}
+otInstance *otTcpEndpointGetInstance(otTcpEndpoint *aEndpoint) { return &AsCoreType(aEndpoint).GetInstance(); }
 
-void *otTcpEndpointGetContext(otTcpEndpoint *aEndpoint)
-{
-    return AsCoreType(aEndpoint).GetContext();
-}
+void *otTcpEndpointGetContext(otTcpEndpoint *aEndpoint) { return AsCoreType(aEndpoint).GetContext(); }
 
 const otSockAddr *otTcpGetLocalAddress(const otTcpEndpoint *aEndpoint)
 {
@@ -94,30 +88,18 @@ otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer *
     return AsCoreType(aEndpoint).ReceiveByReference(*aBuffer);
 }
 
-otError otTcpReceiveContiguify(otTcpEndpoint *aEndpoint)
-{
-    return AsCoreType(aEndpoint).ReceiveContiguify();
-}
+otError otTcpReceiveContiguify(otTcpEndpoint *aEndpoint) { return AsCoreType(aEndpoint).ReceiveContiguify(); }
 
 otError otTcpCommitReceive(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t aFlags)
 {
     return AsCoreType(aEndpoint).CommitReceive(aNumBytes, aFlags);
 }
 
-otError otTcpSendEndOfStream(otTcpEndpoint *aEndpoint)
-{
-    return AsCoreType(aEndpoint).SendEndOfStream();
-}
+otError otTcpSendEndOfStream(otTcpEndpoint *aEndpoint) { return AsCoreType(aEndpoint).SendEndOfStream(); }
 
-otError otTcpAbort(otTcpEndpoint *aEndpoint)
-{
-    return AsCoreType(aEndpoint).Abort();
-}
+otError otTcpAbort(otTcpEndpoint *aEndpoint) { return AsCoreType(aEndpoint).Abort(); }
 
-otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint)
-{
-    return AsCoreType(aEndpoint).Deinitialize();
-}
+otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint) { return AsCoreType(aEndpoint).Deinitialize(); }
 
 otError otTcpListenerInitialize(otInstance                        *aInstance,
                                 otTcpListener                     *aListener,
@@ -126,29 +108,17 @@ otError otTcpListenerInitialize(otInstance                        *aInstance,
     return AsCoreType(aListener).Initialize(AsCoreType(aInstance), *aArgs);
 }
 
-otInstance *otTcpListenerGetInstance(otTcpListener *aListener)
-{
-    return &AsCoreType(aListener).GetInstance();
-}
+otInstance *otTcpListenerGetInstance(otTcpListener *aListener) { return &AsCoreType(aListener).GetInstance(); }
 
-void *otTcpListenerGetContext(otTcpListener *aListener)
-{
-    return AsCoreType(aListener).GetContext();
-}
+void *otTcpListenerGetContext(otTcpListener *aListener) { return AsCoreType(aListener).GetContext(); }
 
 otError otTcpListen(otTcpListener *aListener, const otSockAddr *aSockName)
 {
     return AsCoreType(aListener).Listen(AsCoreType(aSockName));
 }
 
-otError otTcpStopListening(otTcpListener *aListener)
-{
-    return AsCoreType(aListener).StopListening();
-}
+otError otTcpStopListening(otTcpListener *aListener) { return AsCoreType(aListener).StopListening(); }
 
-otError otTcpListenerDeinitialize(otTcpListener *aListener)
-{
-    return AsCoreType(aListener).Deinitialize();
-}
+otError otTcpListenerDeinitialize(otTcpListener *aListener) { return AsCoreType(aListener).Deinitialize(); }
 
 #endif // OPENTHREAD_CONFIG_TCP_ENABLE

@@ -57,10 +57,7 @@ static const otIp6Address MA501 = {
 
 uint32_t sNow;
 
-extern "C" uint32_t otPlatAlarmMilliGetNow(void)
-{
-    return sNow;
-}
+extern "C" uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 
 void testMulticastListenersTableAPIs(Instance *aInstance);
 
@@ -199,8 +196,5 @@ int main(void)
 }
 
 #else
-int main(void)
-{
-    return 0;
-}
+int main(void) { return 0; }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE

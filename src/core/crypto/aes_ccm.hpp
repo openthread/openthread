@@ -174,10 +174,7 @@ public:
      * @returns The tag length in bytes.
      *
      */
-    uint8_t GetTagLength(void) const
-    {
-        return mTagLength;
-    }
+    uint8_t GetTagLength(void) const { return mTagLength; }
 
     /**
      * This method generates the tag.

@@ -1408,10 +1408,7 @@ exit:
     return error;
 }
 
-void Dso::Connection::PendingRequests::Remove(MessageId aMessageId)
-{
-    mRequests.RemoveMatching(aMessageId);
-}
+void Dso::Connection::PendingRequests::Remove(MessageId aMessageId) { mRequests.RemoveMatching(aMessageId); }
 
 bool Dso::Connection::PendingRequests::HasAnyTimedOut(TimeMilli aNow) const
 {
@@ -1459,10 +1456,7 @@ void Dso::StartListening(AcceptHandler aAcceptHandler)
     otPlatDsoEnableListening(&GetInstance(), true);
 }
 
-void Dso::StopListening(void)
-{
-    otPlatDsoEnableListening(&GetInstance(), false);
-}
+void Dso::StopListening(void) { otPlatDsoEnableListening(&GetInstance(), false); }
 
 Dso::Connection *Dso::FindClientConnection(const Ip6::SockAddr &aPeerSockAddr)
 {

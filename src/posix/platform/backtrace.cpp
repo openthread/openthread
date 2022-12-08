@@ -162,8 +162,6 @@ void platformBacktraceInit(void)
     sigaction(SIGFPE, &sigact, (struct sigaction *)nullptr);
 }
 #else  // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
-void platformBacktraceInit(void)
-{
-}
+void platformBacktraceInit(void) {}
 #endif // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE || defined(__GLIBC__)
 #endif // OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE

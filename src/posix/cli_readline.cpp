@@ -94,10 +94,7 @@ extern "C" void otAppCliInit(otInstance *aInstance)
     otCliInit(aInstance, OutputCallback, nullptr);
 }
 
-extern "C" void otAppCliDeinit(void)
-{
-    rl_callback_handler_remove();
-}
+extern "C" void otAppCliDeinit(void) { rl_callback_handler_remove(); }
 
 extern "C" void otAppCliUpdate(otSysMainloopContext *aMainloop)
 {

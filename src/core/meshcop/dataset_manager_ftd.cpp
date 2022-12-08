@@ -394,10 +394,7 @@ exit:
     return error;
 }
 
-void ActiveDatasetManager::StartLeader(void)
-{
-    IgnoreError(GenerateLocal());
-}
+void ActiveDatasetManager::StartLeader(void) { IgnoreError(GenerateLocal()); }
 
 template <>
 void ActiveDatasetManager::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -410,10 +407,7 @@ exit:
     return;
 }
 
-void PendingDatasetManager::StartLeader(void)
-{
-    StartDelayTimer();
-}
+void PendingDatasetManager::StartLeader(void) { StartDelayTimer(); }
 
 template <>
 void PendingDatasetManager::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

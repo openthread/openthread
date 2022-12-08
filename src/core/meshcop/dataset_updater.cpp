@@ -94,10 +94,7 @@ exit:
     return;
 }
 
-void DatasetUpdater::HandleTimer(void)
-{
-    PreparePendingDataset();
-}
+void DatasetUpdater::HandleTimer(void) { PreparePendingDataset(); }
 
 void DatasetUpdater::PreparePendingDataset(void)
 {

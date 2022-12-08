@@ -492,10 +492,7 @@ void Manager::ConfigNextMulticastListenerRegistrationResponse(ThreadStatusTlv::M
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-NdProxyTable &Manager::GetNdProxyTable(void)
-{
-    return mNdProxyTable;
-}
+NdProxyTable &Manager::GetNdProxyTable(void) { return mNdProxyTable; }
 
 bool Manager::ShouldForwardDuaToBackbone(const Ip6::Address &aAddress)
 {

@@ -243,10 +243,7 @@ exit:
 
 #else // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &)
-{
-    return nullptr;
-}
+Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &) { return nullptr; }
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 

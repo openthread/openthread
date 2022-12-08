@@ -234,10 +234,7 @@ public:
      * @returns The Thread Domain Name.
      *
      */
-    const DomainName &GetDomainName(void) const
-    {
-        return mDomainName;
-    }
+    const DomainName &GetDomainName(void) const { return mDomainName; }
 
     /**
      * This method sets the Thread Domain Name.

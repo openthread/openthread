@@ -109,10 +109,7 @@ exit:
     return error;
 }
 
-bool NetworkName::operator==(const NetworkName &aOther) const
-{
-    return GetAsData() == aOther.GetAsData();
-}
+bool NetworkName::operator==(const NetworkName &aOther) const { return GetAsData() == aOther.GetAsData(); }
 
 NetworkNameManager::NetworkNameManager(Instance &aInstance)
     : InstanceLocator(aInstance)
