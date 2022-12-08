@@ -155,15 +155,9 @@ unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 otIp4Cidr    gNat64Cidr;
 
-const char *otSysGetThreadNetifName(void)
-{
-    return gNetifName;
-}
+const char *otSysGetThreadNetifName(void) { return gNetifName; }
 
-unsigned int otSysGetThreadNetifIndex(void)
-{
-    return gNetifIndex;
-}
+unsigned int otSysGetThreadNetifIndex(void) { return gNetifIndex; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
@@ -1818,9 +1812,7 @@ void platformNetifSetUp(void)
 #endif
 }
 
-void platformNetifTearDown(void)
-{
-}
+void platformNetifTearDown(void) {}
 
 void platformNetifDeinit(void)
 {

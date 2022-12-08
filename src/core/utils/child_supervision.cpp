@@ -102,10 +102,7 @@ exit:
     FreeMessage(message);
 }
 
-void ChildSupervisor::UpdateOnSend(Child &aChild)
-{
-    aChild.ResetSecondsSinceLastSupervision();
-}
+void ChildSupervisor::UpdateOnSend(Child &aChild) { aChild.ResetSecondsSinceLastSupervision(); }
 
 void ChildSupervisor::HandleTimeTick(void)
 {
@@ -162,15 +159,9 @@ SupervisionListener::SupervisionListener(Instance &aInstance)
     SetTimeout(kDefaultTimeout);
 }
 
-void SupervisionListener::Start(void)
-{
-    RestartTimer();
-}
+void SupervisionListener::Start(void) { RestartTimer(); }
 
-void SupervisionListener::Stop(void)
-{
-    mTimer.Stop();
-}
+void SupervisionListener::Stop(void) { mTimer.Stop(); }
 
 void SupervisionListener::SetTimeout(uint16_t aTimeout)
 {

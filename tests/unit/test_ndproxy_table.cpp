@@ -111,8 +111,5 @@ int main(void)
 }
 
 #else
-int main(void)
-{
-    return 0;
-}
+int main(void) { return 0; }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE

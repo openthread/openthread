@@ -164,10 +164,7 @@ public:
          * @returns The timeout interval in msec.
          *
          */
-        uint32_t GetResponseTimeout(void) const
-        {
-            return mResponseTimeout;
-        }
+        uint32_t GetResponseTimeout(void) const { return mResponseTimeout; }
 
         /**
          * This method gets the maximum number of query transmit attempts before reporting failure.
@@ -175,10 +172,7 @@ public:
          * @returns The maximum number of query transmit attempts.
          *
          */
-        uint8_t GetMaxTxAttempts(void) const
-        {
-            return mMaxTxAttempts;
-        }
+        uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
 
         /**
          * This method gets the recursion flag indicating whether the server can resolve the query recursively or not.
@@ -186,10 +180,7 @@ public:
          * @returns The recursion flag.
          *
          */
-        RecursionFlag GetRecursionFlag(void) const
-        {
-            return static_cast<RecursionFlag>(mRecursionFlag);
-        }
+        RecursionFlag GetRecursionFlag(void) const { return static_cast<RecursionFlag>(mRecursionFlag); }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         /**
@@ -198,10 +189,7 @@ public:
          * @returns The NAT64 mode.
          *
          */
-        Nat64Mode GetNat64Mode(void) const
-        {
-            return static_cast<Nat64Mode>(mNat64Mode);
-        }
+        Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
 #endif
 
     private:
@@ -223,28 +211,13 @@ public:
 
         explicit QueryConfig(InitMode aMode);
 
-        Ip6::SockAddr &GetServerSockAddr(void)
-        {
-            return AsCoreType(&mServerSockAddr);
-        }
+        Ip6::SockAddr &GetServerSockAddr(void) { return AsCoreType(&mServerSockAddr); }
 
-        void SetResponseTimeout(uint32_t aResponseTimeout)
-        {
-            mResponseTimeout = aResponseTimeout;
-        }
-        void SetMaxTxAttempts(uint8_t aMaxTxAttempts)
-        {
-            mMaxTxAttempts = aMaxTxAttempts;
-        }
-        void SetRecursionFlag(RecursionFlag aFlag)
-        {
-            mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag);
-        }
+        void SetResponseTimeout(uint32_t aResponseTimeout) { mResponseTimeout = aResponseTimeout; }
+        void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
+        void SetRecursionFlag(RecursionFlag aFlag) { mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag); }
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-        void SetNat64Mode(Nat64Mode aMode)
-        {
-            mNat64Mode = static_cast<otDnsNat64Mode>(aMode);
-        }
+        void SetNat64Mode(Nat64Mode aMode) { mNat64Mode = static_cast<otDnsNat64Mode>(aMode); }
 #endif
 
         void SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig);
@@ -593,10 +566,7 @@ public:
      * @returns The current default query config.
      *
      */
-    const QueryConfig &GetDefaultConfig(void) const
-    {
-        return mDefaultConfig;
-    }
+    const QueryConfig &GetDefaultConfig(void) const { return mDefaultConfig; }
 
     /**
      * This method sets the default query config.
@@ -756,17 +726,14 @@ private:
 
     static constexpr uint16_t kNameOffsetInQuery = sizeof(QueryInfo);
 
-    Error StartQuery(QueryInfo         &aInfo,
-                     const QueryConfig *aConfig,
-                     const char        *aLabel,
-                     const char        *aName,
-                     void              *aContext);
-    Error AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
-    void  FreeQuery(Query &aQuery);
-    void  UpdateQuery(Query &aQuery, const QueryInfo &aInfo)
-    {
-        aQuery.Write(0, aInfo);
-    }
+    Error       StartQuery(QueryInfo         &aInfo,
+                           const QueryConfig *aConfig,
+                           const char        *aLabel,
+                           const char        *aName,
+                           void              *aContext);
+    Error       AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
+    void        FreeQuery(Query &aQuery);
+    void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
     void        SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
     void        FinalizeQuery(Query &aQuery, Error aError);
     void        FinalizeQuery(Response &Response, QueryType aType, Error aError);

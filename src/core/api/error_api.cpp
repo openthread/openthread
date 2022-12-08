@@ -37,7 +37,4 @@
 
 using namespace ot;
 
-const char *otThreadErrorToString(otError aError)
-{
-    return ErrorToString(aError);
-}
+const char *otThreadErrorToString(otError aError) { return ErrorToString(aError); }

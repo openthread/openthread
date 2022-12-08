@@ -45,20 +45,14 @@ AesEcb::AesEcb(void)
     SuccessOrAssert(otPlatCryptoAesInit(&mContext));
 }
 
-void AesEcb::SetKey(const Key &aKey)
-{
-    SuccessOrAssert(otPlatCryptoAesSetKey(&mContext, &aKey));
-}
+void AesEcb::SetKey(const Key &aKey) { SuccessOrAssert(otPlatCryptoAesSetKey(&mContext, &aKey)); }
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
     SuccessOrAssert(otPlatCryptoAesEncrypt(&mContext, aInput, aOutput));
 }
 
-AesEcb::~AesEcb(void)
-{
-    SuccessOrAssert(otPlatCryptoAesFree(&mContext));
-}
+AesEcb::~AesEcb(void) { SuccessOrAssert(otPlatCryptoAesFree(&mContext)); }
 
 } // namespace Crypto
 } // namespace ot

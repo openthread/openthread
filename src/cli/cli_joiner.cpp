@@ -261,10 +261,7 @@ exit:
     return error;
 }
 
-void Joiner::HandleCallback(otError aError, void *aContext)
-{
-    static_cast<Joiner *>(aContext)->HandleCallback(aError);
-}
+void Joiner::HandleCallback(otError aError, void *aContext) { static_cast<Joiner *>(aContext)->HandleCallback(aError); }
 
 void Joiner::HandleCallback(otError aError)
 {

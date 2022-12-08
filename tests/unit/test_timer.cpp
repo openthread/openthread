@@ -65,10 +65,7 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
     sPlatDt = aDt;
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
-{
-    return sNow;
-}
+uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 void otPlatAlarmMicroStop(otInstance *)
@@ -85,18 +82,12 @@ void otPlatAlarmMicroStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
     sPlatDt = aDt;
 }
 
-uint32_t otPlatAlarmMicroGetNow(void)
-{
-    return sNow;
-}
+uint32_t otPlatAlarmMicroGetNow(void) { return sNow; }
 #endif
 
 } // extern "C"
 
-void InitCounters(void)
-{
-    memset(sCallCount, 0, sizeof(sCallCount));
-}
+void InitCounters(void) { memset(sCallCount, 0, sizeof(sCallCount)); }
 
 /**
  * `TestTimer` sub-classes `ot::TimerMilli` and provides a handler and a counter to keep track of number of times timer
@@ -131,16 +122,10 @@ private:
 
 template <typename TimerType> void AlarmFired(otInstance *aInstance);
 
-template <> void AlarmFired<ot::TimerMilli>(otInstance *aInstance)
-{
-    otPlatAlarmMilliFired(aInstance);
-}
+template <> void AlarmFired<ot::TimerMilli>(otInstance *aInstance) { otPlatAlarmMilliFired(aInstance); }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-template <> void AlarmFired<ot::TimerMicro>(otInstance *aInstance)
-{
-    otPlatAlarmMicroFired(aInstance);
-}
+template <> void AlarmFired<ot::TimerMicro>(otInstance *aInstance) { otPlatAlarmMicroFired(aInstance); }
 #endif
 
 /**

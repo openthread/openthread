@@ -591,10 +591,7 @@ void TestEncoderDecoder(void)
     printf(" -- PASS\n");
 }
 
-uint32_t GetRandom(uint32_t max)
-{
-    return static_cast<uint32_t>(rand()) % max;
-}
+uint32_t GetRandom(uint32_t max) { return static_cast<uint32_t>(rand()) % max; }
 
 void TestFuzzEncoderDecoder(void)
 {

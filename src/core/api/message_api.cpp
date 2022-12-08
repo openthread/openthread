@@ -40,35 +40,17 @@
 
 using namespace ot;
 
-void otMessageFree(otMessage *aMessage)
-{
-    AsCoreType(aMessage).Free();
-}
+void otMessageFree(otMessage *aMessage) { AsCoreType(aMessage).Free(); }
 
-uint16_t otMessageGetLength(const otMessage *aMessage)
-{
-    return AsCoreType(aMessage).GetLength();
-}
+uint16_t otMessageGetLength(const otMessage *aMessage) { return AsCoreType(aMessage).GetLength(); }
 
-otError otMessageSetLength(otMessage *aMessage, uint16_t aLength)
-{
-    return AsCoreType(aMessage).SetLength(aLength);
-}
+otError otMessageSetLength(otMessage *aMessage, uint16_t aLength) { return AsCoreType(aMessage).SetLength(aLength); }
 
-uint16_t otMessageGetOffset(const otMessage *aMessage)
-{
-    return AsCoreType(aMessage).GetOffset();
-}
+uint16_t otMessageGetOffset(const otMessage *aMessage) { return AsCoreType(aMessage).GetOffset(); }
 
-void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset)
-{
-    AsCoreType(aMessage).SetOffset(aOffset);
-}
+void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset) { AsCoreType(aMessage).SetOffset(aOffset); }
 
-bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage)
-{
-    return AsCoreType(aMessage).IsLinkSecurityEnabled();
-}
+bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage) { return AsCoreType(aMessage).IsLinkSecurityEnabled(); }
 
 void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
 {
@@ -82,10 +64,7 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
     }
 }
 
-int8_t otMessageGetRss(const otMessage *aMessage)
-{
-    return AsCoreType(aMessage).GetAverageRss();
-}
+int8_t otMessageGetRss(const otMessage *aMessage) { return AsCoreType(aMessage).GetAverageRss(); }
 
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
@@ -132,10 +111,7 @@ void otMessageQueueDequeue(otMessageQueue *aQueue, otMessage *aMessage)
     AsCoreType(aQueue).Dequeue(AsCoreType(aMessage));
 }
 
-otMessage *otMessageQueueGetHead(otMessageQueue *aQueue)
-{
-    return AsCoreType(aQueue).GetHead();
-}
+otMessage *otMessageQueueGetHead(otMessageQueue *aQueue) { return AsCoreType(aQueue).GetHead(); }
 
 otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessage)
 {

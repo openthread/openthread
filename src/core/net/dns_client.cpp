@@ -759,10 +759,7 @@ exit:
     return error;
 }
 
-void Client::FreeQuery(Query &aQuery)
-{
-    mQueries.DequeueAndFree(aQuery);
-}
+void Client::FreeQuery(Query &aQuery) { mQueries.DequeueAndFree(aQuery); }
 
 void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
 {

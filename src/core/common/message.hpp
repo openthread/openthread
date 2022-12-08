@@ -232,32 +232,14 @@ protected:
     static constexpr uint16_t kBufferDataSize     = kBufferSize - sizeof(otMessageBuffer);
     static constexpr uint16_t kHeadBufferDataSize = kBufferDataSize - sizeof(Metadata);
 
-    Metadata &GetMetadata(void)
-    {
-        return mBuffer.mHead.mMetadata;
-    }
-    const Metadata &GetMetadata(void) const
-    {
-        return mBuffer.mHead.mMetadata;
-    }
+    Metadata       &GetMetadata(void) { return mBuffer.mHead.mMetadata; }
+    const Metadata &GetMetadata(void) const { return mBuffer.mHead.mMetadata; }
 
-    uint8_t *GetFirstData(void)
-    {
-        return mBuffer.mHead.mData;
-    }
-    const uint8_t *GetFirstData(void) const
-    {
-        return mBuffer.mHead.mData;
-    }
+    uint8_t       *GetFirstData(void) { return mBuffer.mHead.mData; }
+    const uint8_t *GetFirstData(void) const { return mBuffer.mHead.mData; }
 
-    uint8_t *GetData(void)
-    {
-        return mBuffer.mData;
-    }
-    const uint8_t *GetData(void) const
-    {
-        return mBuffer.mData;
-    }
+    uint8_t       *GetData(void) { return mBuffer.mData; }
+    const uint8_t *GetData(void) const { return mBuffer.mData; }
 
 private:
     union
@@ -1167,10 +1149,7 @@ public:
      * @param[in] aLqi A new LQI value (has no unit) to be added to average.
      *
      */
-    void AddLqi(uint8_t aLqi)
-    {
-        GetMetadata().mLqiAverager.Add(aLqi);
-    }
+    void AddLqi(uint8_t aLqi) { GetMetadata().mLqiAverager.Add(aLqi); }
 
     /**
      * This method returns the average LQI (Link Quality Indicator) associated with the message.
@@ -1178,10 +1157,7 @@ public:
      * @returns The current average LQI value (in dBm) or OT_RADIO_LQI_NONE if no average is available.
      *
      */
-    uint8_t GetAverageLqi(void) const
-    {
-        return GetMetadata().mLqiAverager.GetAverage();
-    }
+    uint8_t GetAverageLqi(void) const { return GetMetadata().mLqiAverager.GetAverage(); }
 
     /**
      * This method returns the count of frames counted so far.
@@ -1189,10 +1165,7 @@ public:
      * @returns The count of frames that have been counted.
      *
      */
-    uint8_t GetPsduCount(void) const
-    {
-        return GetMetadata().mLqiAverager.GetCount();
-    }
+    uint8_t GetPsduCount(void) const { return GetMetadata().mLqiAverager.GetCount(); }
 #endif
 
     /**
@@ -1243,10 +1216,7 @@ public:
      * @param[in]  aEnabled  TRUE if the message is also used for time sync purpose, FALSE otherwise.
      *
      */
-    void SetTimeSync(bool aEnabled)
-    {
-        GetMetadata().mTimeSync = aEnabled;
-    }
+    void SetTimeSync(bool aEnabled) { GetMetadata().mTimeSync = aEnabled; }
 
     /**
      * This method sets the offset to network time.
@@ -1254,10 +1224,7 @@ public:
      * @param[in]  aNetworkTimeOffset  The offset to network time.
      *
      */
-    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset)
-    {
-        GetMetadata().mNetworkTimeOffset = aNetworkTimeOffset;
-    }
+    void SetNetworkTimeOffset(int64_t aNetworkTimeOffset) { GetMetadata().mNetworkTimeOffset = aNetworkTimeOffset; }
 
     /**
      * This method gets the offset to network time.
@@ -1265,10 +1232,7 @@ public:
      * @returns  The offset to network time.
      *
      */
-    int64_t GetNetworkTimeOffset(void) const
-    {
-        return GetMetadata().mNetworkTimeOffset;
-    }
+    int64_t GetNetworkTimeOffset(void) const { return GetMetadata().mNetworkTimeOffset; }
 
     /**
      * This method sets the time sync sequence.
@@ -1276,10 +1240,7 @@ public:
      * @param[in]  aTimeSyncSeq  The time sync sequence.
      *
      */
-    void SetTimeSyncSeq(uint8_t aTimeSyncSeq)
-    {
-        GetMetadata().mTimeSyncSeq = aTimeSyncSeq;
-    }
+    void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { GetMetadata().mTimeSyncSeq = aTimeSyncSeq; }
 
     /**
      * This method gets the time sync sequence.
@@ -1287,10 +1248,7 @@ public:
      * @returns  The time sync sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const
-    {
-        return GetMetadata().mTimeSyncSeq;
-    }
+    uint8_t GetTimeSyncSeq(void) const { return GetMetadata().mTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1301,10 +1259,7 @@ public:
      * @retval FALSE  If the radio type is not set.
      *
      */
-    bool IsRadioTypeSet(void) const
-    {
-        return GetMetadata().mIsRadioTypeSet;
-    }
+    bool IsRadioTypeSet(void) const { return GetMetadata().mIsRadioTypeSet; }
 
     /**
      * This method gets the radio link type the message was received on, or should be sent on.
@@ -1314,10 +1269,7 @@ public:
      * @returns The radio link type of the message.
      *
      */
-    Mac::RadioType GetRadioType(void) const
-    {
-        return static_cast<Mac::RadioType>(GetMetadata().mRadioType);
-    }
+    Mac::RadioType GetRadioType(void) const { return static_cast<Mac::RadioType>(GetMetadata().mRadioType); }
 
     /**
      * This method sets the radio link type the message was received on, or should be sent on.
@@ -1337,10 +1289,7 @@ public:
      * After calling this method, `IsRadioTypeSet()` returns false until radio type is set (`SetRadioType()`).
      *
      */
-    void ClearRadioType(void)
-    {
-        GetMetadata().mIsRadioTypeSet = false;
-    }
+    void ClearRadioType(void) { GetMetadata().mIsRadioTypeSet = false; }
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
@@ -1384,14 +1333,8 @@ protected:
         Message *mNext;
     };
 
-    uint16_t GetReserved(void) const
-    {
-        return GetMetadata().mReserved;
-    }
-    void SetReserved(uint16_t aReservedHeader)
-    {
-        GetMetadata().mReserved = aReservedHeader;
-    }
+    uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
+    void     SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
 
 private:
     class Chunk : public Data<kWithUint16Length>
@@ -1423,43 +1366,19 @@ private:
         AsConst(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
     }
 
-    MessagePool *GetMessagePool(void) const
-    {
-        return GetMetadata().mMessagePool;
-    }
-    void SetMessagePool(MessagePool *aMessagePool)
-    {
-        GetMetadata().mMessagePool = aMessagePool;
-    }
+    MessagePool *GetMessagePool(void) const { return GetMetadata().mMessagePool; }
+    void         SetMessagePool(MessagePool *aMessagePool) { GetMetadata().mMessagePool = aMessagePool; }
 
-    bool IsInAQueue(void) const
-    {
-        return (GetMetadata().mQueue != nullptr);
-    }
+    bool IsInAQueue(void) const { return (GetMetadata().mQueue != nullptr); }
     void SetMessageQueue(MessageQueue *aMessageQueue);
     void SetPriorityQueue(PriorityQueue *aPriorityQueue);
 
-    Message *&Next(void)
-    {
-        return GetMetadata().mNext;
-    }
-    Message *const &Next(void) const
-    {
-        return GetMetadata().mNext;
-    }
-    Message *&Prev(void)
-    {
-        return GetMetadata().mPrev;
-    }
+    Message       *&Next(void) { return GetMetadata().mNext; }
+    Message *const &Next(void) const { return GetMetadata().mNext; }
+    Message       *&Prev(void) { return GetMetadata().mPrev; }
 
-    static Message *NextOf(Message *aMessage)
-    {
-        return (aMessage != nullptr) ? aMessage->Next() : nullptr;
-    }
-    static const Message *NextOf(const Message *aMessage)
-    {
-        return (aMessage != nullptr) ? aMessage->Next() : nullptr;
-    }
+    static Message       *NextOf(Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
+    static const Message *NextOf(const Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
 
     Error ResizeMessage(uint16_t aLength);
 };
@@ -1791,10 +1710,7 @@ private:
 #endif
 };
 
-inline Instance &Message::GetInstance(void) const
-{
-    return GetMessagePool()->GetInstance();
-}
+inline Instance &Message::GetInstance(void) const { return GetMessagePool()->GetInstance(); }
 
 /**
  * @}

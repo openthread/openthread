@@ -70,10 +70,7 @@ Link::Link(Instance &aInstance)
     mTimer.Start(kAckWaitWindow);
 }
 
-void Link::AfterInit(void)
-{
-    mInterface.Init();
-}
+void Link::AfterInit(void) { mInterface.Init(); }
 
 void Link::Enable(void)
 {
@@ -116,10 +113,7 @@ void Link::Send(void)
     mTxTasklet.Post();
 }
 
-void Link::HandleTxTasklet(void)
-{
-    BeginTransmit();
-}
+void Link::HandleTxTasklet(void) { BeginTransmit(); }
 
 void Link::BeginTransmit(void)
 {

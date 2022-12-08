@@ -243,10 +243,7 @@ void Notifier::HandleNotifierEvents(Events aEvents)
     }
 }
 
-void Notifier::HandleTimer(void)
-{
-    SynchronizeServerData();
-}
+void Notifier::HandleTimer(void) { SynchronizeServerData(); }
 
 void Notifier::HandleCoapResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
 {

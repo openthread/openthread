@@ -193,15 +193,9 @@ const uint16_t Settings::kSensitiveKeys[] = {
     SettingsBase::kKeySrpEcdsaKey,
 };
 
-void Settings::Init(void)
-{
-    Get<SettingsDriver>().Init(kSensitiveKeys, GetArrayLength(kSensitiveKeys));
-}
+void Settings::Init(void) { Get<SettingsDriver>().Init(kSensitiveKeys, GetArrayLength(kSensitiveKeys)); }
 
-void Settings::Deinit(void)
-{
-    Get<SettingsDriver>().Deinit();
-}
+void Settings::Deinit(void) { Get<SettingsDriver>().Deinit(); }
 
 void Settings::Wipe(void)
 {
@@ -364,10 +358,7 @@ exit:
     return error;
 }
 
-Error Settings::DeleteAllBrOnLinkPrefixes(void)
-{
-    return Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes);
-}
+Error Settings::DeleteAllBrOnLinkPrefixes(void) { return Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes); }
 
 Error Settings::ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix)
 {

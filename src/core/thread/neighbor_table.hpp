@@ -213,10 +213,7 @@ public:
      * @param[in] aCallback    A pointer to callback handler function.
      *
      */
-    void RegisterCallback(Callback aCallback)
-    {
-        mCallback = aCallback;
-    }
+    void RegisterCallback(Callback aCallback) { mCallback = aCallback; }
 
     /**
      * This method signals a "neighbor table changed" event.

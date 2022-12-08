@@ -76,10 +76,7 @@ otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessa
                                                         AsCoreType(aMessageInfo));
 }
 
-otUdpSocket *otUdpGetSockets(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets();
-}
+otUdpSocket *otUdpGetSockets(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets(); }
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, void *aContext)

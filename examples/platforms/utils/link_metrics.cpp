@@ -177,10 +177,7 @@ static inline bool IsLinkMetricsClear(otLinkMetrics aLinkMetrics)
     return !aLinkMetrics.mPduCount && !aLinkMetrics.mLqi && !aLinkMetrics.mLinkMargin && !aLinkMetrics.mRssi;
 }
 
-void otLinkMetricsInit(int8_t aNoiseFloor)
-{
-    sNoiseFloor = aNoiseFloor;
-}
+void otLinkMetricsInit(int8_t aNoiseFloor) { sNoiseFloor = aNoiseFloor; }
 
 otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
                                             const otExtAddress *aExtAddress,

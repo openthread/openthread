@@ -240,10 +240,7 @@ void NcpHdlc::HandleHdlcReceiveDone(const uint8_t *aBuf, uint16_t aBufLength)
     mFrameDecoder.Decode(aBuf, aBufLength);
 }
 
-void NcpHdlc::HandleFrame(void *aContext, otError aError)
-{
-    static_cast<NcpHdlc *>(aContext)->HandleFrame(aError);
-}
+void NcpHdlc::HandleFrame(void *aContext, otError aError) { static_cast<NcpHdlc *>(aContext)->HandleFrame(aError); }
 
 void NcpHdlc::HandleFrame(otError aError)
 {
@@ -312,10 +309,7 @@ NcpHdlc::BufferEncrypterReader::BufferEncrypterReader(Spinel::Buffer &aTxFrameBu
 {
 }
 
-bool NcpHdlc::BufferEncrypterReader::IsEmpty(void) const
-{
-    return mTxFrameBuffer.IsEmpty() && !mOutputDataLength;
-}
+bool NcpHdlc::BufferEncrypterReader::IsEmpty(void) const { return mTxFrameBuffer.IsEmpty() && !mOutputDataLength; }
 
 otError NcpHdlc::BufferEncrypterReader::OutFrameBegin(void)
 {
@@ -347,20 +341,11 @@ otError NcpHdlc::BufferEncrypterReader::OutFrameBegin(void)
     return status;
 }
 
-bool NcpHdlc::BufferEncrypterReader::OutFrameHasEnded(void)
-{
-    return (mDataBufferReadIndex >= mOutputDataLength);
-}
+bool NcpHdlc::BufferEncrypterReader::OutFrameHasEnded(void) { return (mDataBufferReadIndex >= mOutputDataLength); }
 
-uint8_t NcpHdlc::BufferEncrypterReader::OutFrameReadByte(void)
-{
-    return mDataBuffer[mDataBufferReadIndex++];
-}
+uint8_t NcpHdlc::BufferEncrypterReader::OutFrameReadByte(void) { return mDataBuffer[mDataBufferReadIndex++]; }
 
-otError NcpHdlc::BufferEncrypterReader::OutFrameRemove(void)
-{
-    return mTxFrameBuffer.OutFrameRemove();
-}
+otError NcpHdlc::BufferEncrypterReader::OutFrameRemove(void) { return mTxFrameBuffer.OutFrameRemove(); }
 
 void NcpHdlc::BufferEncrypterReader::Reset(void)
 {

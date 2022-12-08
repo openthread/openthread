@@ -292,10 +292,7 @@ otError otThreadBecomeDetached(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeDetached();
 }
 
-otError otThreadBecomeChild(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild();
-}
+otError otThreadBecomeChild(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild(); }
 
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
 {
@@ -309,10 +306,7 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
     return MapEnum(AsCoreType(aInstance).Get<Mle::MleRouter>().GetRole());
 }
 
-const char *otThreadDeviceRoleToString(otDeviceRole aRole)
-{
-    return Mle::RoleToString(MapEnum(aRole));
-}
+const char *otThreadDeviceRoleToString(otDeviceRole aRole) { return Mle::RoleToString(MapEnum(aRole)); }
 
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
@@ -342,10 +336,7 @@ uint32_t otThreadGetPartitionId(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetPartitionId();
 }
 
-uint16_t otThreadGetRloc16(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetRloc16();
-}
+uint16_t otThreadGetRloc16(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::MleRouter>().GetRloc16(); }
 
 otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
 {
@@ -401,15 +392,9 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     return error;
 }
 
-uint16_t otThreadGetVersion(void)
-{
-    return kThreadVersion;
-}
+uint16_t otThreadGetVersion(void) { return kThreadVersion; }
 
-bool otThreadIsSingleton(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().IsSingleton();
-}
+bool otThreadIsSingleton(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::MleRouter>().IsSingleton(); }
 
 otError otThreadDiscover(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
@@ -442,20 +427,14 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)
     return &AsCoreType(aInstance).Get<MeshForwarder>().GetCounters();
 }
 
-void otThreadResetIp6Counters(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<MeshForwarder>().ResetCounters();
-}
+void otThreadResetIp6Counters(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshForwarder>().ResetCounters(); }
 
 const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetCounters();
 }
 
-void otThreadResetMleCounters(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Mle::MleRouter>().ResetCounters();
-}
+void otThreadResetMleCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mle::MleRouter>().ResetCounters(); }
 
 void otThreadRegisterParentResponseCallback(otInstance                    *aInstance,
                                             otThreadParentResponseCallback aCallback,

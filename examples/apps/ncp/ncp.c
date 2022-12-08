@@ -37,15 +37,9 @@
 #if !OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 #include "utils/uart.h"
 
-void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    otNcpHdlcReceive(aBuf, aBufLength);
-}
+void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength) { otNcpHdlcReceive(aBuf, aBufLength); }
 
-void otPlatUartSendDone(void)
-{
-    otNcpHdlcSendDone();
-}
+void otPlatUartSendDone(void) { otNcpHdlcSendDone(); }
 #endif
 
 #if !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK

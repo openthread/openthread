@@ -114,10 +114,7 @@ public:
      * @returns The selected radio types.
      *
      */
-    RadioTypes GetSelectedRadioTypes(void) const
-    {
-        return mSelectedRadioTypes;
-    }
+    RadioTypes GetSelectedRadioTypes(void) const { return mSelectedRadioTypes; }
 
     /**
      * This method gets the required radio types.
@@ -131,10 +128,7 @@ public:
      * @returns The required radio types.
      *
      */
-    RadioTypes GetRequiredRadioTypes(void) const
-    {
-        return mRequiredRadioTypes;
-    }
+    RadioTypes GetRequiredRadioTypes(void) const { return mRequiredRadioTypes; }
 
     /**
      * This method sets the required types.
@@ -144,10 +138,7 @@ public:
      * @param[in] aRadioTypes   A set of radio link types.
      *
      */
-    void SetRequiredRadioTypes(RadioTypes aRadioTypes)
-    {
-        mRequiredRadioTypes = aRadioTypes;
-    }
+    void SetRequiredRadioTypes(RadioTypes aRadioTypes) { mRequiredRadioTypes = aRadioTypes; }
 
 #else // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
@@ -158,10 +149,7 @@ public:
      * @returns A reference to `TxFrame`.
      *
      */
-    TxFrame &GetTxFrame(void)
-    {
-        return mTxFrame802154;
-    }
+    TxFrame &GetTxFrame(void) { return mTxFrame802154; }
 #elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
      * This method gets the tx frame.
@@ -169,10 +157,7 @@ public:
      * @returns A reference to `TxFrame`.
      *
      */
-    TxFrame &GetTxFrame(void)
-    {
-        return mTxFrameTrel;
-    }
+    TxFrame &GetTxFrame(void) { return mTxFrameTrel; }
 #endif
     /**
      * This method gets a tx frame for sending a broadcast frame.
@@ -180,10 +165,7 @@ public:
      * @returns A reference to a `TxFrame` for broadcast.
      *
      */
-    TxFrame &GetBroadcastTxFrame(void)
-    {
-        return GetTxFrame();
-    }
+    TxFrame &GetBroadcastTxFrame(void) { return GetTxFrame(); }
 
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
@@ -538,10 +520,7 @@ public:
      * @returns The transmit frames.
      *
      */
-    TxFrames &GetTxFrames(void)
-    {
-        return mTxFrames;
-    }
+    TxFrames &GetTxFrames(void) { return mTxFrames; }
 
 #if !OPENTHREAD_CONFIG_MULTI_RADIO
 
@@ -655,10 +634,7 @@ public:
      * @returns A reference to the `SubMac` instance.
      *
      */
-    SubMac &GetSubMac(void)
-    {
-        return mSubMac;
-    }
+    SubMac &GetSubMac(void) { return mSubMac; }
 
     /**
      * This methods gets a reference to the `SubMac` instance.
@@ -666,10 +642,7 @@ public:
      * @returns A reference to the `SubMac` instance.
      *
      */
-    const SubMac &GetSubMac(void) const
-    {
-        return mSubMac;
-    }
+    const SubMac &GetSubMac(void) const { return mSubMac; }
 
     /**
      * This method returns a reference to the current MAC key (for Key Mode 1) for a given Frame.

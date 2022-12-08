@@ -154,10 +154,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
-{
-    return Get<MeshForwarder>().EvictMessage(aPriority);
-}
+Error MessagePool::ReclaimBuffers(Message::Priority aPriority) { return Get<MeshForwarder>().EvictMessage(aPriority); }
 
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {
@@ -255,10 +252,7 @@ exit:
     return error;
 }
 
-void Message::Free(void)
-{
-    GetMessagePool()->Free(this);
-}
+void Message::Free(void) { GetMessagePool()->Free(this); }
 
 Message *Message::GetNext(void) const
 {
@@ -703,25 +697,13 @@ exit:
     return messageCopy;
 }
 
-bool Message::GetChildMask(uint16_t aChildIndex) const
-{
-    return GetMetadata().mChildMask.Get(aChildIndex);
-}
+bool Message::GetChildMask(uint16_t aChildIndex) const { return GetMetadata().mChildMask.Get(aChildIndex); }
 
-void Message::ClearChildMask(uint16_t aChildIndex)
-{
-    GetMetadata().mChildMask.Set(aChildIndex, false);
-}
+void Message::ClearChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Set(aChildIndex, false); }
 
-void Message::SetChildMask(uint16_t aChildIndex)
-{
-    GetMetadata().mChildMask.Set(aChildIndex, true);
-}
+void Message::SetChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Set(aChildIndex, true); }
 
-bool Message::IsChildPending(void) const
-{
-    return GetMetadata().mChildMask.HasAny();
-}
+bool Message::IsChildPending(void) const { return GetMetadata().mChildMask.HasAny(); }
 
 void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
 {
@@ -835,15 +817,9 @@ void MessageQueue::DequeueAndFreeAll(void)
     }
 }
 
-Message::Iterator MessageQueue::begin(void)
-{
-    return Message::Iterator(GetHead());
-}
+Message::Iterator MessageQueue::begin(void) { return Message::Iterator(GetHead()); }
 
-Message::ConstIterator MessageQueue::begin(void) const
-{
-    return Message::ConstIterator(GetHead());
-}
+Message::ConstIterator MessageQueue::begin(void) const { return Message::ConstIterator(GetHead()); }
 
 void MessageQueue::GetInfo(Info &aInfo) const
 {
@@ -909,10 +885,7 @@ const Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) co
     return head;
 }
 
-const Message *PriorityQueue::GetTail(void) const
-{
-    return FindFirstNonNullTail(Message::kPriorityLow);
-}
+const Message *PriorityQueue::GetTail(void) const { return FindFirstNonNullTail(Message::kPriorityLow); }
 
 void PriorityQueue::Enqueue(Message &aMessage)
 {
@@ -993,15 +966,9 @@ void PriorityQueue::DequeueAndFreeAll(void)
     }
 }
 
-Message::Iterator PriorityQueue::begin(void)
-{
-    return Message::Iterator(GetHead());
-}
+Message::Iterator PriorityQueue::begin(void) { return Message::Iterator(GetHead()); }
 
-Message::ConstIterator PriorityQueue::begin(void) const
-{
-    return Message::ConstIterator(GetHead());
-}
+Message::ConstIterator PriorityQueue::begin(void) const { return Message::ConstIterator(GetHead()); }
 
 void PriorityQueue::GetInfo(Info &aInfo) const
 {

@@ -47,15 +47,9 @@ HmacSha256::HmacSha256(void)
     SuccessOrAssert(otPlatCryptoHmacSha256Init(&mContext));
 }
 
-HmacSha256::~HmacSha256(void)
-{
-    SuccessOrAssert(otPlatCryptoHmacSha256Deinit(&mContext));
-}
+HmacSha256::~HmacSha256(void) { SuccessOrAssert(otPlatCryptoHmacSha256Deinit(&mContext)); }
 
-void HmacSha256::Start(const Key &aKey)
-{
-    SuccessOrAssert(otPlatCryptoHmacSha256Start(&mContext, &aKey));
-}
+void HmacSha256::Start(const Key &aKey) { SuccessOrAssert(otPlatCryptoHmacSha256Start(&mContext, &aKey)); }
 
 void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {

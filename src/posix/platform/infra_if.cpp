@@ -111,15 +111,9 @@ otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
 #endif
 }
 
-bool platformInfraIfIsRunning(void)
-{
-    return ot::Posix::InfraNetif::Get().IsRunning();
-}
+bool platformInfraIfIsRunning(void) { return ot::Posix::InfraNetif::Get().IsRunning(); }
 
-const char *otSysGetInfraNetifName(void)
-{
-    return ot::Posix::InfraNetif::Get().GetNetifName();
-}
+const char *otSysGetInfraNetifName(void) { return ot::Posix::InfraNetif::Get().GetNetifName(); }
 
 namespace ot {
 namespace Posix {

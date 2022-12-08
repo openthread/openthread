@@ -43,20 +43,11 @@
 
 using namespace ot;
 
-void otTrelEnable(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Trel::Interface>().Enable();
-}
+void otTrelEnable(otInstance *aInstance) { AsCoreType(aInstance).Get<Trel::Interface>().Enable(); }
 
-void otTrelDisable(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Trel::Interface>().Disable();
-}
+void otTrelDisable(otInstance *aInstance) { AsCoreType(aInstance).Get<Trel::Interface>().Disable(); }
 
-bool otTrelIsEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Trel::Interface>().IsEnabled();
-}
+bool otTrelIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Trel::Interface>().IsEnabled(); }
 
 void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator)
 {

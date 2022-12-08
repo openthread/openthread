@@ -563,10 +563,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS    If @p aMessage is nullptr.
      *
      */
-    otError WriteMessage(otMessage *aMessage)
-    {
-        return mNcpBuffer.InFrameFeedMessage(aMessage);
-    }
+    otError WriteMessage(otMessage *aMessage) { return mNcpBuffer.InFrameFeedMessage(aMessage); }
 #endif
 
     /**

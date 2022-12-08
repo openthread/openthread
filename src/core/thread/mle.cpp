@@ -660,15 +660,9 @@ exit:
     return delay;
 }
 
-bool Mle::IsAttached(void) const
-{
-    return (IsChild() || IsRouter() || IsLeader());
-}
+bool Mle::IsAttached(void) const { return (IsChild() || IsRouter() || IsLeader()); }
 
-bool Mle::IsRouterOrLeader(void) const
-{
-    return (IsRouter() || IsLeader());
-}
+bool Mle::IsRouterOrLeader(void) const { return (IsRouter() || IsLeader()); }
 
 void Mle::SetStateDetached(void)
 {
@@ -958,10 +952,7 @@ exit:
     Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
 }
 
-uint16_t Mle::GetRloc16(void) const
-{
-    return Get<Mac::Mac>().GetShortAddress();
-}
+uint16_t Mle::GetRloc16(void) const { return Get<Mac::Mac>().GetShortAddress(); }
 
 void Mle::SetRloc16(uint16_t aRloc16)
 {
@@ -1983,10 +1974,7 @@ exit:
     return;
 }
 
-Error Mle::SendChildUpdateRequest(bool aAppendChallenge)
-{
-    return SendChildUpdateRequest(aAppendChallenge, mTimeout);
-}
+Error Mle::SendChildUpdateRequest(bool aAppendChallenge) { return SendChildUpdateRequest(aAppendChallenge, mTimeout); }
 
 Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
 {
@@ -4012,15 +4000,9 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void Mle::LogProcessError(MessageType aType, Error aError)
-{
-    LogError(kMessageReceive, aType, aError);
-}
+void Mle::LogProcessError(MessageType aType, Error aError) { LogError(kMessageReceive, aType, aError); }
 
-void Mle::LogSendError(MessageType aType, Error aError)
-{
-    LogError(kMessageSend, aType, aError);
-}
+void Mle::LogSendError(MessageType aType, Error aError) { LogError(kMessageSend, aType, aError); }
 
 void Mle::LogError(MessageAction aAction, MessageType aType, Error aError)
 {
@@ -4350,10 +4332,7 @@ exit:
     return error;
 }
 
-void Mle::HandleDetachGracefullyTimer(void)
-{
-    Stop();
-}
+void Mle::HandleDetachGracefullyTimer(void) { Stop(); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // TlvList
@@ -4489,20 +4468,11 @@ Error Mle::TxMessage::AppendSourceAddressTlv(void)
     return Tlv::Append<SourceAddressTlv>(*this, Get<Mle>().GetRloc16());
 }
 
-Error Mle::TxMessage::AppendStatusTlv(StatusTlv::Status aStatus)
-{
-    return Tlv::Append<StatusTlv>(*this, aStatus);
-}
+Error Mle::TxMessage::AppendStatusTlv(StatusTlv::Status aStatus) { return Tlv::Append<StatusTlv>(*this, aStatus); }
 
-Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode)
-{
-    return Tlv::Append<ModeTlv>(*this, aMode.Get());
-}
+Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode) { return Tlv::Append<ModeTlv>(*this, aMode.Get()); }
 
-Error Mle::TxMessage::AppendTimeoutTlv(uint32_t aTimeout)
-{
-    return Tlv::Append<TimeoutTlv>(*this, aTimeout);
-}
+Error Mle::TxMessage::AppendTimeoutTlv(uint32_t aTimeout) { return Tlv::Append<TimeoutTlv>(*this, aTimeout); }
 
 Error Mle::TxMessage::AppendChallengeTlv(const Challenge &aChallenge)
 {
@@ -4542,10 +4512,7 @@ Error Mle::TxMessage::AppendMleFrameCounterTlv(void)
     return Tlv::Append<MleFrameCounterTlv>(*this, Get<KeyManager>().GetMleFrameCounter());
 }
 
-Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16)
-{
-    return Tlv::Append<Address16Tlv>(*this, aRloc16);
-}
+Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16) { return Tlv::Append<Address16Tlv>(*this, aRloc16); }
 
 Error Mle::TxMessage::AppendLeaderDataTlv(void)
 {
@@ -4582,20 +4549,14 @@ Error Mle::TxMessage::AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLen
     return Tlv::Append<TlvRequestTlv>(*this, aTlvs, aTlvsLength);
 }
 
-Error Mle::TxMessage::AppendScanMaskTlv(uint8_t aScanMask)
-{
-    return Tlv::Append<ScanMaskTlv>(*this, aScanMask);
-}
+Error Mle::TxMessage::AppendScanMaskTlv(uint8_t aScanMask) { return Tlv::Append<ScanMaskTlv>(*this, aScanMask); }
 
 Error Mle::TxMessage::AppendLinkMarginTlv(uint8_t aLinkMargin)
 {
     return Tlv::Append<LinkMarginTlv>(*this, aLinkMargin);
 }
 
-Error Mle::TxMessage::AppendVersionTlv(void)
-{
-    return Tlv::Append<VersionTlv>(*this, kThreadVersion);
-}
+Error Mle::TxMessage::AppendVersionTlv(void) { return Tlv::Append<VersionTlv>(*this, kThreadVersion); }
 
 Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode)
 {

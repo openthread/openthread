@@ -328,25 +328,13 @@ exit:
     return error;
 }
 
-template <> otError Coap::Process<Cmd("get")>(Arg aArgs[])
-{
-    return ProcessRequest(aArgs, OT_COAP_CODE_GET);
-}
+template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
-template <> otError Coap::Process<Cmd("post")>(Arg aArgs[])
-{
-    return ProcessRequest(aArgs, OT_COAP_CODE_POST);
-}
+template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
-template <> otError Coap::Process<Cmd("put")>(Arg aArgs[])
-{
-    return ProcessRequest(aArgs, OT_COAP_CODE_PUT);
-}
+template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
-template <> otError Coap::Process<Cmd("delete")>(Arg aArgs[])
-{
-    return ProcessRequest(aArgs, OT_COAP_CODE_DELETE);
-}
+template <> otError Coap::Process<Cmd("delete")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_DELETE); }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
 template <> otError Coap::Process<Cmd("observe")>(Arg aArgs[])

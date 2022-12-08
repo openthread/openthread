@@ -499,10 +499,7 @@ public:
      * @returns The literal `Key`
      *
      */
-    const Key &GetKey(void) const
-    {
-        return static_cast<const Key &>(mKeyMaterial.mKey);
-    }
+    const Key &GetKey(void) const { return static_cast<const Key &>(mKeyMaterial.mKey); }
 
 #else
     /**
@@ -511,10 +508,7 @@ public:
      * @returns The `KeyRef`
      *
      */
-    KeyRef GetKeyRef(void) const
-    {
-        return mKeyMaterial.mKeyRef;
-    }
+    KeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
 #endif
 
     /**
@@ -562,19 +556,10 @@ private:
     static constexpr KeyRef kInvalidKeyRef = Crypto::Storage::kInvalidKeyRef;
 
     void DestroyKey(void);
-    void SetKeyRef(KeyRef aKeyRef)
-    {
-        mKeyMaterial.mKeyRef = aKeyRef;
-    }
+    void SetKeyRef(KeyRef aKeyRef) { mKeyMaterial.mKeyRef = aKeyRef; }
 #endif
-    Key &GetKey(void)
-    {
-        return static_cast<Key &>(mKeyMaterial.mKey);
-    }
-    void SetKey(const Key &aKey)
-    {
-        mKeyMaterial.mKey = aKey;
-    }
+    Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
+    void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
 };
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -829,10 +814,7 @@ public:
      * @returns The Link Frame Counter for 802.15.4 radio link.
      *
      */
-    uint32_t Get154(void) const
-    {
-        return m154Counter;
-    }
+    uint32_t Get154(void) const { return m154Counter; }
 
     /**
      * This method sets the Link Frame Counter for 802.15.4 radio link.
@@ -840,10 +822,7 @@ public:
      * @param[in] aCounter   The new counter value.
      *
      */
-    void Set154(uint32_t aCounter)
-    {
-        m154Counter = aCounter;
-    }
+    void Set154(uint32_t aCounter) { m154Counter = aCounter; }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -853,19 +832,13 @@ public:
      * @returns The Link Frame Counter for TREL radio link.
      *
      */
-    uint32_t GetTrel(void) const
-    {
-        return mTrelCounter;
-    }
+    uint32_t GetTrel(void) const { return mTrelCounter; }
 
     /**
      * This method increments the Link Frame Counter for TREL radio link.
      *
      */
-    void IncrementTrel(void)
-    {
-        mTrelCounter++;
-    }
+    void IncrementTrel(void) { mTrelCounter++; }
 #endif
 
     /**

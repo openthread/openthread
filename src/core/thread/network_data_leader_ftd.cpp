@@ -641,15 +641,9 @@ bool Leader::ContainsMatchingServer(const ServiceTlv *aService, const ServerTlv 
     return contains;
 }
 
-Leader::UpdateStatus Leader::UpdatePrefix(PrefixTlv &aPrefix)
-{
-    return UpdateTlv(aPrefix, aPrefix.GetSubTlvs());
-}
+Leader::UpdateStatus Leader::UpdatePrefix(PrefixTlv &aPrefix) { return UpdateTlv(aPrefix, aPrefix.GetSubTlvs()); }
 
-Leader::UpdateStatus Leader::UpdateService(ServiceTlv &aService)
-{
-    return UpdateTlv(aService, aService.GetSubTlvs());
-}
+Leader::UpdateStatus Leader::UpdateService(ServiceTlv &aService) { return UpdateTlv(aService, aService.GetSubTlvs()); }
 
 Leader::UpdateStatus Leader::UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs)
 {
@@ -1019,10 +1013,7 @@ void Leader::StartContextReuseTimer(uint8_t aContextId)
     mTimer.Start(kStateUpdatePeriod);
 }
 
-void Leader::StopContextReuseTimer(uint8_t aContextId)
-{
-    mContextLastUsed[aContextId - kMinContextId].SetValue(0);
-}
+void Leader::StopContextReuseTimer(uint8_t aContextId) { mContextLastUsed[aContextId - kMinContextId].SetValue(0); }
 
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags)
 {
