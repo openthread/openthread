@@ -25,7 +25,7 @@ Show the power calibration table.
 Done
 ```
 
-#### powercalibrationtable add [-b [\<channelstart\>,\<channelend\>] -c [\<actualpower\>,\<rawpowersetting\>]/...] ...
+#### powercalibrationtable add -b \<channelstart\>,\<channelend\> -c \<actualpower\>,\<rawpowersetting\>/... ...
 
 Add power calibration table entry.
 
