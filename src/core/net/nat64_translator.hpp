@@ -166,7 +166,7 @@ public:
      * @retval  kNat64StateActive    The translator is translating packets.
      *
      */
-    State GetState(void) const;
+    State GetState(void) const { return mState; }
 
     /**
      * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
@@ -376,7 +376,7 @@ private:
 
     void HandleMappingExpirerTimer(void);
 
-    void InvokeStateChangeCallback(void);
+    void UpdateState(void);
 
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
@@ -396,6 +396,7 @@ private:
     ProtocolCounters mCounters;
     ErrorCounters    mErrorCounters;
 
+    State                      mState;
     otNat64StateChangeCallback mStateChangeCallback;
     void                      *mStateChangeCallbackContext;
 };

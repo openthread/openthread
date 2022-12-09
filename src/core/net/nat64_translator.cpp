@@ -447,8 +447,7 @@ exit:
 
 Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
 {
-    Error err          = kErrorNone;
-    State initialState = GetState();
+    Error err = kErrorNone;
 
     uint32_t numberOfHosts;
     uint32_t hostIdBegin;
@@ -493,10 +492,7 @@ Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
             numberOfHosts);
     mIp4Cidr = aCidr;
 
-    if (GetState() != initialState)
-    {
-        InvokeStateChangeCallback();
-    }
+    UpdateState();
 
 exit:
     return err;
@@ -504,18 +500,13 @@ exit:
 
 void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
-    State initialState = GetState();
-
     if (mNat64Prefix != aNat64Prefix)
     {
         LogInfo("IPv6 Prefix for NAT64 updated to %s", aNat64Prefix.ToString().AsCString());
         mNat64Prefix = aNat64Prefix;
     }
 
-    if (GetState() != initialState)
-    {
-        InvokeStateChangeCallback();
-    }
+    UpdateState();
 }
 
 void Translator::HandleMappingExpirerTimer(void)
@@ -611,16 +602,36 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
     mTotal.m4To6Bytes += aPacketSize;
 }
 
-State Translator::GetState(void) const
+void Translator::UpdateState(void)
 {
-    State ret = kStateDisabled;
+    State newState;
 
-    VerifyOrExit(mEnabled);
-    VerifyOrExit(mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64(), ret = kStateNotRunning);
-    ret = kStateActive;
+    if (mEnabled)
+    {
+        if (mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64())
+        {
+            newState = kStateActive;
+        }
+        else
+        {
+            newState = kStateNotRunning;
+        }
+    }
+    else
+    {
+        newState = kStateDisabled;
+    }
+
+    VerifyOrExit(mState != newState);
+    mState = newState;
+
+    if (mStateChangeCallback != nullptr)
+    {
+        mStateChangeCallback(mStateChangeCallbackContext, static_cast<otNat64State>(mState));
+    }
 
 exit:
-    return ret;
+    return;
 }
 
 void Translator::SetEnabled(bool aEnabled)
@@ -634,18 +645,7 @@ void Translator::SetEnabled(bool aEnabled)
     }
 
     LogInfo("NAT64 translator %s", aEnabled ? "enabled" : "disabled");
-
-    InvokeStateChangeCallback();
-
-exit:
-    return;
-}
-
-void Translator::InvokeStateChangeCallback(void)
-{
-    VerifyOrExit(mStateChangeCallback != nullptr);
-
-    mStateChangeCallback(mStateChangeCallbackContext, static_cast<otNat64State>(GetState()));
+    UpdateState();
 
 exit:
     return;
