@@ -1175,10 +1175,6 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     if (isUp && gNat64Cidr.mLength > 0)
     {
         SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
-        if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
-        {
-            AddIp4Route(gNat64Cidr, kNat64RoutePriority);
-        }
         otLogInfoPlat("[netif] Succeeded to enable NAT64");
     }
 #endif
