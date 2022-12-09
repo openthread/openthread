@@ -1172,7 +1172,7 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     if (isUp && gNat64Cidr.mLength > 0)
     {
         SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
-        if (otNat64GetTranslatorState(gInstance) != OT_NAT64_STATE_DISABLED)
+        if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
         {
             AddIp4Route(gNat64Cidr, kNat64RoutePriority);
         }
@@ -1619,15 +1619,15 @@ void processNat64StateChange(void *aContext, otNat64State aNewState)
     // We should try to add route first, since otNat64SetEnabled never fails.
     if (otIp6IsEnabled(gInstance))
     {
-        if (aNewState == OT_NAT64_STATE_DISABLED)
-        {
-            DeleteIp4Route(gNat64Cidr);
-            otLogInfoPlat("[netif] Deleting route for NAT64");
-        }
-        else
+        if (aNewState == OT_NAT64_STATE_ACTIVE)
         {
             AddIp4Route(gNat64Cidr, kNat64RoutePriority);
             otLogInfoPlat("[netif] Adding route for NAT64");
+        }
+        else
+        {
+            DeleteIp4Route(gNat64Cidr);
+            otLogInfoPlat("[netif] Deleting route for NAT64");
         }
     }
 }
