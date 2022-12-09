@@ -137,10 +137,7 @@ public:
      * @param[in] aSequenceNumber  The sequence number of DNS/SRP Anycast Service.
      *
      */
-    void PublishDnsSrpServiceAnycast(uint8_t aSequenceNumber)
-    {
-        mDnsSrpServiceEntry.PublishAnycast(aSequenceNumber);
-    }
+    void PublishDnsSrpServiceAnycast(uint8_t aSequenceNumber) { mDnsSrpServiceEntry.PublishAnycast(aSequenceNumber); }
 
     /**
      * This method requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -173,10 +170,7 @@ public:
      * @param[in] aPort      The SRP server port number to publish.
      *
      */
-    void PublishDnsSrpServiceUnicast(uint16_t aPort)
-    {
-        mDnsSrpServiceEntry.PublishUnicast(aPort);
-    }
+    void PublishDnsSrpServiceUnicast(uint16_t aPort) { mDnsSrpServiceEntry.PublishUnicast(aPort); }
 
     /**
      * This method indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
@@ -185,20 +179,14 @@ public:
      * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
      *
      */
-    bool IsDnsSrpServiceAdded(void) const
-    {
-        return mDnsSrpServiceEntry.IsAdded();
-    }
+    bool IsDnsSrpServiceAdded(void) const { return mDnsSrpServiceEntry.IsAdded(); }
 
     /**
      * This method unpublishes any previously added "DNS/SRP (Anycast or Unicast) Service" entry from the Thread
      * Network Data.
      *
      */
-    void UnpublishDnsSrpService(void)
-    {
-        mDnsSrpServiceEntry.Unpublish();
-    }
+    void UnpublishDnsSrpService(void) { mDnsSrpServiceEntry.Unpublish(); }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
@@ -475,10 +463,7 @@ private:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    bool IsADnsSrpServiceEntry(const Entry &aEntry) const
-    {
-        return (&aEntry == &mDnsSrpServiceEntry);
-    }
+    bool IsADnsSrpServiceEntry(const Entry &aEntry) const { return (&aEntry == &mDnsSrpServiceEntry); }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -489,12 +474,9 @@ private:
     void               NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix) const;
 #endif
 
-    TimerMilli &GetTimer(void)
-    {
-        return mTimer;
-    }
-    void HandleNotifierEvents(Events aEvents);
-    void HandleTimer(void);
+    TimerMilli &GetTimer(void) { return mTimer; }
+    void        HandleNotifierEvents(Events aEvents);
+    void        HandleTimer(void);
 
     using PublisherTimer = TimerMilliIn<Publisher, &Publisher::HandleTimer>;
 

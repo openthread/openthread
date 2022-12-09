@@ -586,10 +586,7 @@ void Netif::RemoveAllExternalUnicastAddresses(void)
     }
 }
 
-bool Netif::HasUnicastAddress(const Address &aAddress) const
-{
-    return mUnicastAddresses.ContainsMatching(aAddress);
-}
+bool Netif::HasUnicastAddress(const Address &aAddress) const { return mUnicastAddresses.ContainsMatching(aAddress); }
 
 bool Netif::IsUnicastAddressExternal(const UnicastAddress &aAddress) const
 {

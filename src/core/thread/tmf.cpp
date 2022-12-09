@@ -41,10 +41,7 @@ namespace Tmf {
 //----------------------------------------------------------------------------------------------------------------------
 // MessageInfo
 
-void MessageInfo::SetSockAddrToRloc(void)
-{
-    SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-}
+void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16()); }
 
 Error MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
 {
@@ -87,10 +84,7 @@ Agent::Agent(Instance &aInstance)
     SetResourceHandler(&HandleResource);
 }
 
-Error Agent::Start(void)
-{
-    return Coap::Start(kUdpPort, Ip6::kNetifThread);
-}
+Error Agent::Start(void) { return Coap::Start(kUdpPort, Ip6::kNetifThread); }
 
 template <> void Agent::HandleTmf<kUriRelayRx>(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {

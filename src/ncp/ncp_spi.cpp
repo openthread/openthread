@@ -224,10 +224,7 @@ exit:
     return shouldProcess;
 }
 
-void NcpSpi::SpiTransactionProcess(void *aContext)
-{
-    reinterpret_cast<NcpSpi *>(aContext)->SpiTransactionProcess();
-}
+void NcpSpi::SpiTransactionProcess(void *aContext) { reinterpret_cast<NcpSpi *>(aContext)->SpiTransactionProcess(); }
 
 void NcpSpi::SpiTransactionProcess(void)
 {

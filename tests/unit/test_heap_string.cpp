@@ -150,10 +150,7 @@ void TestHeapString(void)
     printf("\n -- PASS\n");
 }
 
-void PrintData(const Heap::Data &aData)
-{
-    DumpBuffer("data", aData.GetBytes(), aData.GetLength());
-}
+void PrintData(const Heap::Data &aData) { DumpBuffer("data", aData.GetBytes(), aData.GetLength()); }
 
 static const uint8_t kTestValue = 0x77;
 

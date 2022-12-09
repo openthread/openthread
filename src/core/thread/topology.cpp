@@ -546,10 +546,7 @@ void Router::Clear(void)
     Init(instance);
 }
 
-LinkQuality Router::GetTwoWayLinkQuality(void) const
-{
-    return Min(GetLinkQualityIn(), GetLinkQualityOut());
-}
+LinkQuality Router::GetTwoWayLinkQuality(void) const { return Min(GetLinkQualityIn(), GetLinkQualityOut()); }
 
 void Router::SetFrom(const Parent &aParent)
 {

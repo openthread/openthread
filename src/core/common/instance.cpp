@@ -299,10 +299,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
-void Instance::Reset(void)
-{
-    otPlatReset(this);
-}
+void Instance::Reset(void) { otPlatReset(this); }
 
 #if OPENTHREAD_RADIO
 void Instance::ResetRadioStack(void)
@@ -426,10 +423,7 @@ void Instance::SetLogLevel(LogLevel aLogLevel)
     }
 }
 
-extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel)
-{
-    OT_UNUSED_VARIABLE(aLogLevel);
-}
+extern "C" OT_TOOL_WEAK void otPlatLogHandleLevelChanged(otLogLevel aLogLevel) { OT_UNUSED_VARIABLE(aLogLevel); }
 
 #endif
 

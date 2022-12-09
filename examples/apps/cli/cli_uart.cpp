@@ -368,15 +368,9 @@ exit:
     return rval;
 }
 
-void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    ReceiveTask(aBuf, aBufLength);
-}
+void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength) { ReceiveTask(aBuf, aBufLength); }
 
-void otPlatUartSendDone(void)
-{
-    SendDoneTask();
-}
+void otPlatUartSendDone(void) { SendDoneTask(); }
 
 extern "C" void otAppCliInit(otInstance *aInstance)
 {

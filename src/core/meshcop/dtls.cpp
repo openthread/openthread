@@ -214,10 +214,7 @@ exit:
     return;
 }
 
-uint16_t Dtls::GetUdpPort(void) const
-{
-    return mSocket.GetSockName().GetPort();
-}
+uint16_t Dtls::GetUdpPort(void) const { return mSocket.GetSockName().GetPort(); }
 
 Error Dtls::Bind(uint16_t aPort)
 {
@@ -683,10 +680,7 @@ exit:
     return rval;
 }
 
-int Dtls::HandleMbedtlsGetTimer(void *aContext)
-{
-    return static_cast<Dtls *>(aContext)->HandleMbedtlsGetTimer();
-}
+int Dtls::HandleMbedtlsGetTimer(void *aContext) { return static_cast<Dtls *>(aContext)->HandleMbedtlsGetTimer(); }
 
 int Dtls::HandleMbedtlsGetTimer(void)
 {

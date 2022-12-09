@@ -206,10 +206,7 @@ uint8_t otMacFrameGetKeyId(otRadioFrame *aFrame)
     return keyId;
 }
 
-void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId)
-{
-    static_cast<Mac::Frame *>(aFrame)->SetKeyId(aKeyId);
-}
+void otMacFrameSetKeyId(otRadioFrame *aFrame, uint8_t aKeyId) { static_cast<Mac::Frame *>(aFrame)->SetKeyId(aKeyId); }
 
 uint32_t otMacFrameGetFrameCounter(otRadioFrame *aFrame)
 {

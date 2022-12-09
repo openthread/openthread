@@ -36,15 +36,9 @@
 
 #include "test_util.h"
 
-uint32_t otNetifAddress_Size_c()
-{
-    return sizeof(otNetifAddress);
-}
+uint32_t otNetifAddress_Size_c() { return sizeof(otNetifAddress); }
 
-uint32_t otNetifAddress_offset_mNext_c()
-{
-    return offsetof(otNetifAddress, mNext);
-}
+uint32_t otNetifAddress_offset_mNext_c() { return offsetof(otNetifAddress, mNext); }
 
 otNetifAddress CreateNetif_c()
 {

@@ -54,15 +54,9 @@ Icmp::Icmp(Instance &aInstance)
 {
 }
 
-Message *Icmp::NewMessage(uint16_t aReserved)
-{
-    return Get<Ip6>().NewMessage(sizeof(Header) + aReserved);
-}
+Message *Icmp::NewMessage(uint16_t aReserved) { return Get<Ip6>().NewMessage(sizeof(Header) + aReserved); }
 
-Error Icmp::RegisterHandler(Handler &aHandler)
-{
-    return mHandlers.Add(aHandler);
-}
+Error Icmp::RegisterHandler(Handler &aHandler) { return mHandlers.Add(aHandler); }
 
 Error Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier)
 {

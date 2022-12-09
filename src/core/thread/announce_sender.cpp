@@ -161,10 +161,7 @@ AnnounceSender::AnnounceSender(Instance &aInstance)
     SetJitter(kMaxJitter);
 }
 
-void AnnounceSender::UpdateOnReceivedAnnounce(void)
-{
-    mTrickleTimer.IndicateConsistent();
-}
+void AnnounceSender::UpdateOnReceivedAnnounce(void) { mTrickleTimer.IndicateConsistent(); }
 
 void AnnounceSender::Stop(void)
 {
@@ -173,15 +170,9 @@ void AnnounceSender::Stop(void)
     LogInfo("Stopped");
 }
 
-void AnnounceSender::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<AnnounceSender>().AnnounceSenderBase::HandleTimer();
-}
+void AnnounceSender::HandleTimer(Timer &aTimer) { aTimer.Get<AnnounceSender>().AnnounceSenderBase::HandleTimer(); }
 
-void AnnounceSender::HandleTrickleTimer(TrickleTimer &aTimer)
-{
-    aTimer.Get<AnnounceSender>().HandleTrickleTimer();
-}
+void AnnounceSender::HandleTrickleTimer(TrickleTimer &aTimer) { aTimer.Get<AnnounceSender>().HandleTrickleTimer(); }
 
 void AnnounceSender::HandleTrickleTimer(void)
 {

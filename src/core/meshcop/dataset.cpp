@@ -162,10 +162,7 @@ Dataset::Dataset(void)
     memset(mTlvs, 0, sizeof(mTlvs));
 }
 
-void Dataset::Clear(void)
-{
-    mLength = 0;
-}
+void Dataset::Clear(void) { mLength = 0; }
 
 bool Dataset::IsValid(void) const
 {
@@ -182,10 +179,7 @@ exit:
     return rval;
 }
 
-const Tlv *Dataset::GetTlv(Tlv::Type aType) const
-{
-    return Tlv::FindTlv(mTlvs, mLength, aType);
-}
+const Tlv *Dataset::GetTlv(Tlv::Type aType) const { return Tlv::FindTlv(mTlvs, mLength, aType); }
 
 void Dataset::ConvertTo(Info &aDatasetInfo) const
 {
@@ -431,10 +425,7 @@ exit:
     return error;
 }
 
-Error Dataset::SetTlv(const Tlv &aTlv)
-{
-    return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength());
-}
+Error Dataset::SetTlv(const Tlv &aTlv) { return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength()); }
 
 Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
@@ -612,10 +603,7 @@ void Dataset::ConvertToActive(void)
     RemoveTlv(Tlv::kDelayTimer);
 }
 
-const char *Dataset::TypeToString(Type aType)
-{
-    return (aType == kActive) ? "Active" : "Pending";
-}
+const char *Dataset::TypeToString(Type aType) { return (aType == kActive) ? "Active" : "Pending"; }
 
 } // namespace MeshCoP
 } // namespace ot

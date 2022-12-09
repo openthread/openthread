@@ -82,15 +82,9 @@ Message *Udp::Socket::NewMessage(uint16_t aReserved, const Message::Settings &aS
     return Get<Udp>().NewMessage(aReserved, aSettings);
 }
 
-Error Udp::Socket::Open(otUdpReceive aHandler, void *aContext)
-{
-    return Get<Udp>().Open(*this, aHandler, aContext);
-}
+Error Udp::Socket::Open(otUdpReceive aHandler, void *aContext) { return Get<Udp>().Open(*this, aHandler, aContext); }
 
-bool Udp::Socket::IsOpen(void) const
-{
-    return Get<Udp>().IsOpen(*this);
-}
+bool Udp::Socket::IsOpen(void) const { return Get<Udp>().IsOpen(*this); }
 
 Error Udp::Socket::Bind(const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier)
 {
@@ -102,20 +96,11 @@ Error Udp::Socket::Bind(uint16_t aPort, NetifIdentifier aNetifIdentifier)
     return Bind(SockAddr(aPort), aNetifIdentifier);
 }
 
-Error Udp::Socket::Connect(const SockAddr &aSockAddr)
-{
-    return Get<Udp>().Connect(*this, aSockAddr);
-}
+Error Udp::Socket::Connect(const SockAddr &aSockAddr) { return Get<Udp>().Connect(*this, aSockAddr); }
 
-Error Udp::Socket::Connect(uint16_t aPort)
-{
-    return Connect(SockAddr(aPort));
-}
+Error Udp::Socket::Connect(uint16_t aPort) { return Connect(SockAddr(aPort)); }
 
-Error Udp::Socket::Close(void)
-{
-    return Get<Udp>().Close(*this);
-}
+Error Udp::Socket::Close(void) { return Get<Udp>().Close(*this); }
 
 Error Udp::Socket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo)
 {
@@ -171,10 +156,7 @@ Udp::Udp(Instance &aInstance)
 {
 }
 
-Error Udp::AddReceiver(Receiver &aReceiver)
-{
-    return mReceivers.Add(aReceiver);
-}
+Error Udp::AddReceiver(Receiver &aReceiver) { return mReceivers.Add(aReceiver); }
 
 Error Udp::RemoveReceiver(Receiver &aReceiver)
 {

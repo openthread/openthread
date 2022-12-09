@@ -54,20 +54,14 @@ otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCal
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetReceiveDone(aCallback);
 }
 
-bool otLinkRawIsEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().IsEnabled();
-}
+bool otLinkRawIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().IsEnabled(); }
 
 otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
 {
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetShortAddress(aShortAddress);
 }
 
-bool otLinkRawGetPromiscuous(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Radio>().GetPromiscuous();
-}
+bool otLinkRawGetPromiscuous(otInstance *aInstance) { return AsCoreType(aInstance).Get<Radio>().GetPromiscuous(); }
 
 otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
@@ -94,10 +88,7 @@ exit:
     return error;
 }
 
-otError otLinkRawReceive(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().Receive();
-}
+otError otLinkRawReceive(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().Receive(); }
 
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
@@ -109,15 +100,9 @@ otError otLinkRawTransmit(otInstance *aInstance, otLinkRawTransmitDone aCallback
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().Transmit(aCallback);
 }
 
-int8_t otLinkRawGetRssi(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Radio>().GetRssi();
-}
+int8_t otLinkRawGetRssi(otInstance *aInstance) { return AsCoreType(aInstance).Get<Radio>().GetRssi(); }
 
-otRadioCaps otLinkRawGetCaps(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetCaps();
-}
+otRadioCaps otLinkRawGetCaps(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetCaps(); }
 
 otError otLinkRawEnergyScan(otInstance             *aInstance,
                             uint8_t                 aScanChannel,
@@ -255,20 +240,14 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
     return OT_DEVICE_ROLE_DISABLED;
 }
 
-uint8_t otLinkGetChannel(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetChannel();
-}
+uint8_t otLinkGetChannel(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetChannel(); }
 
 otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetChannel(aChannel);
 }
 
-otPanId otLinkGetPanId(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetPanId();
-}
+otPanId otLinkGetPanId(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::LinkRaw>().GetPanId(); }
 
 otError otLinkSetPanId(otInstance *aInstance, uint16_t aPanId)
 {

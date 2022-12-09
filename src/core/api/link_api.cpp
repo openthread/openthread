@@ -127,10 +127,7 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
     AsCoreType(aInstance).Get<Radio>().GetIeeeEui64(AsCoreType(aEui64));
 }
 
-otPanId otLinkGetPanId(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetPanId();
-}
+otPanId otLinkGetPanId(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetPanId(); }
 
 otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
 {
@@ -246,10 +243,7 @@ void otLinkFilterClearDefaultRssIn(otInstance *aInstance)
     AsCoreType(aInstance).Get<Mac::Filter>().ClearDefaultRssIn();
 }
 
-void otLinkFilterClearAllRssIn(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Mac::Filter>().ClearAllRssIn();
-}
+void otLinkFilterClearAllRssIn(otInstance *aInstance) { AsCoreType(aInstance).Get<Mac::Filter>().ClearAllRssIn(); }
 
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
@@ -319,10 +313,7 @@ void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallba
     AsCoreType(aInstance).Get<Mac::Mac>().SetPcapCallback(aPcapCallback, aCallbackContext);
 }
 
-bool otLinkIsPromiscuous(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().IsPromiscuous();
-}
+bool otLinkIsPromiscuous(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsPromiscuous(); }
 
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous)
 {
@@ -352,20 +343,14 @@ exit:
     return error;
 }
 
-bool otLinkIsEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled();
-}
+bool otLinkIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled(); }
 
 const otMacCounters *otLinkGetCounters(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Mac::Mac>().GetCounters();
 }
 
-void otLinkResetCounters(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Mac::Mac>().ResetCounters();
-}
+void otLinkResetCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mac::Mac>().ResetCounters(); }
 
 otError otLinkActiveScan(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
@@ -406,10 +391,7 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-uint8_t otLinkCslGetChannel(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel();
-}
+uint8_t otLinkCslGetChannel(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel(); }
 
 otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
@@ -423,10 +405,7 @@ exit:
     return error;
 }
 
-uint16_t otLinkCslGetPeriod(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod();
-}
+uint16_t otLinkCslGetPeriod(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod(); }
 
 otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod)
 {

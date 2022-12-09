@@ -204,10 +204,7 @@ void TimeSync::HandleNotifierEvents(Events aEvents)
     }
 }
 
-void TimeSync::HandleTimeout(void)
-{
-    CheckAndHandleChanges(false);
-}
+void TimeSync::HandleTimeout(void) { CheckAndHandleChanges(false); }
 
 void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
 {

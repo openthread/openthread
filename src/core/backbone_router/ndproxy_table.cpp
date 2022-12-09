@@ -123,10 +123,7 @@ void NdProxyTable::Iterator::Advance(void)
     } while (mItem < GetArrayEnd(table.mProxies) && !MatchesFilter(*mItem, mFilter));
 }
 
-void NdProxyTable::Erase(NdProxy &aNdProxy)
-{
-    aNdProxy.mValid = false;
-}
+void NdProxyTable::Erase(NdProxy &aNdProxy) { aNdProxy.mValid = false; }
 
 void NdProxyTable::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
 {

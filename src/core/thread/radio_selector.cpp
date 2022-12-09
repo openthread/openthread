@@ -387,9 +387,7 @@ exit:
 
 #else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void RadioSelector::Log(LogLevel, const char *, Mac::RadioType, const Neighbor &)
-{
-}
+void RadioSelector::Log(LogLevel, const char *, Mac::RadioType, const Neighbor &) {}
 
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 

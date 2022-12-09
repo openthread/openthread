@@ -329,10 +329,7 @@ private:
         kReasonRemovingEid,
     };
 
-    CacheEntryPool &GetCacheEntryPool(void)
-    {
-        return mCacheEntryPool;
-    }
+    CacheEntryPool &GetCacheEntryPool(void) { return mCacheEntryPool; }
 
     Error       Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery);
     void        Remove(Mac::ShortAddress aRloc16, bool aMatchRouterId);

@@ -104,15 +104,9 @@ void Output::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
     OutputNewLine();
 }
 
-void Output::OutputNewLine(void)
-{
-    OutputFormat("\r\n");
-}
+void Output::OutputNewLine(void) { OutputFormat("\r\n"); }
 
-void Output::OutputSpaces(uint8_t aCount)
-{
-    OutputFormat("%*s", aCount, "");
-}
+void Output::OutputSpaces(uint8_t aCount) { OutputFormat("%*s", aCount, ""); }
 
 void Output::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
 {
@@ -162,10 +156,7 @@ void Output::OutputUint64Line(uint64_t aUint64)
     OutputNewLine();
 }
 
-void Output::OutputEnabledDisabledStatus(bool aEnabled)
-{
-    OutputLine(aEnabled ? "Enabled" : "Disabled");
-}
+void Output::OutputEnabledDisabledStatus(bool aEnabled) { OutputLine(aEnabled ? "Enabled" : "Disabled"); }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -272,10 +263,7 @@ void Output::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 }
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
-void Output::OutputFormatV(const char *aFormat, va_list aArguments)
-{
-    mImplementer.OutputV(aFormat, aArguments);
-}
+void Output::OutputFormatV(const char *aFormat, va_list aArguments) { mImplementer.OutputV(aFormat, aArguments); }
 
 void OutputImplementer::OutputV(const char *aFormat, va_list aArguments)
 {

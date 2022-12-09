@@ -395,10 +395,7 @@ static void log_debug_buffer(const char *desc, const uint8_t *buffer_ptr, int bu
 /* ------------------------------------------------------------------------- */
 /* MARK: SPI Transfer Functions */
 
-static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
-{
-    header[0] = value;
-}
+static void spi_header_set_flag_byte(uint8_t *header, uint8_t value) { header[0] = value; }
 
 static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
 {
@@ -412,20 +409,11 @@ static void spi_header_set_data_len(uint8_t *header, uint16_t len)
     header[4] = ((len >> 8) & 0xFF);
 }
 
-static uint8_t spi_header_get_flag_byte(const uint8_t *header)
-{
-    return header[0];
-}
+static uint8_t spi_header_get_flag_byte(const uint8_t *header) { return header[0]; }
 
-static uint16_t spi_header_get_accept_len(const uint8_t *header)
-{
-    return (header[1] + (uint16_t)(header[2] << 8));
-}
+static uint16_t spi_header_get_accept_len(const uint8_t *header) { return (header[1] + (uint16_t)(header[2] << 8)); }
 
-static uint16_t spi_header_get_data_len(const uint8_t *header)
-{
-    return (header[3] + (uint16_t)(header[4] << 8));
-}
+static uint16_t spi_header_get_data_len(const uint8_t *header) { return (header[3] + (uint16_t)(header[4] << 8)); }
 
 static uint8_t *get_real_rx_frame_start(void)
 {

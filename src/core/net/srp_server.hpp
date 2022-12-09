@@ -729,10 +729,7 @@ public:
      * @returns A pointer to the dot-joined domain string.
      *
      */
-    const char *GetDomain(void) const
-    {
-        return mDomain.AsCString();
-    }
+    const char *GetDomain(void) const { return mDomain.AsCString(); }
 
     /**
      * This method sets the domain on the SRP server.
@@ -756,10 +753,7 @@ public:
      * @returns The SRP server's address mode.
      *
      */
-    AddressMode GetAddressMode(void) const
-    {
-        return mAddressMode;
-    }
+    AddressMode GetAddressMode(void) const { return mAddressMode; }
 
     /**
      * This method sets the address mode to be used by the SRP server.
@@ -780,10 +774,7 @@ public:
      * @returns The anycast sequence number.
      *
      */
-    uint8_t GetAnycastModeSequenceNumber(void) const
-    {
-        return mAnycastSequenceNumber;
-    }
+    uint8_t GetAnycastModeSequenceNumber(void) const { return mAnycastSequenceNumber; }
 
     /**
      * This method sets the sequence number used with anycast address mode.
@@ -802,10 +793,7 @@ public:
      * @returns  The state of the server.
      *
      */
-    State GetState(void) const
-    {
-        return mState;
-    }
+    State GetState(void) const { return mState; }
 
     /**
      * This method tells the port the SRP server is listening to.
@@ -813,10 +801,7 @@ public:
      * @returns  The port of the server or 0 if the SRP server is not running.
      *
      */
-    uint16_t GetPort(void) const
-    {
-        return (mState == kStateRunning) ? mPort : 0;
-    }
+    uint16_t GetPort(void) const { return (mState == kStateRunning) ? mPort : 0; }
 
     /**
      * This method enables/disables the SRP server.
@@ -852,10 +837,7 @@ public:
      * @retval FALSE  The auto-enable mode is disabled.
      *
      */
-    bool IsAutoEnableMode(void) const
-    {
-        return mAutoEnable;
-    }
+    bool IsAutoEnableMode(void) const { return mAutoEnable; }
 #endif
 
     /**
@@ -864,10 +846,7 @@ public:
      * @param[out]  aTtlConfig  A reference to the `TtlConfig` instance.
      *
      */
-    void GetTtlConfig(TtlConfig &aTtlConfig) const
-    {
-        aTtlConfig = mTtlConfig;
-    }
+    void GetTtlConfig(TtlConfig &aTtlConfig) const { aTtlConfig = mTtlConfig; }
 
     /**
      * This method sets the TTL configuration.
@@ -886,10 +865,7 @@ public:
      * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      */
-    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const
-    {
-        aLeaseConfig = mLeaseConfig;
-    }
+    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const { aLeaseConfig = mLeaseConfig; }
 
     /**
      * This method sets the LEASE and KEY-LEASE configurations.
@@ -922,10 +898,7 @@ public:
      * @returns  A pointer to the response counters of the SRP server.
      *
      */
-    const otSrpServerResponseCounters *GetResponseCounters(void) const
-    {
-        return &mResponseCounters;
-    }
+    const otSrpServerResponseCounters *GetResponseCounters(void) const { return &mResponseCounters; }
 
     /**
      * This method receives the service update result from service handler set by
@@ -1018,10 +991,7 @@ private:
 
     void HandleNetDataPublisherEvent(NetworkData::Publisher::Event aEvent);
 
-    ServiceUpdateId AllocateId(void)
-    {
-        return mServiceUpdateId++;
-    }
+    ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 
     void  InformUpdateHandlerOrCommit(Error aError, Host &aHost, const MessageMetadata &aMetadata);
     void  CommitSrpUpdate(Error aError, Host &aHost, const MessageMetadata &aMessageMetadata);

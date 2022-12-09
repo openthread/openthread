@@ -145,30 +145,18 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
 
 #else // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError)
-{
-}
+extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError) {}
 
-extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *)
-{
-}
+extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *) {}
 
-extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *, otRadioFrame *, otError)
-{
-}
+extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *, otRadioFrame *, otError) {}
 
-extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t)
-{
-}
+extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t) {}
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, otError)
-{
-}
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, otError) {}
 
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otError)
-{
-}
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otError) {}
 #endif
 
 #endif // // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -224,10 +212,7 @@ OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t 
     OT_UNUSED_VARIABLE(aMacFrameCounter);
 }
 
-OT_TOOL_WEAK uint64_t otPlatTimeGet(void)
-{
-    return UINT64_MAX;
-}
+OT_TOOL_WEAK uint64_t otPlatTimeGet(void) { return UINT64_MAX; }
 
 OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)
 {

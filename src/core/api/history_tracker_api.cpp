@@ -43,10 +43,7 @@
 
 using namespace ot;
 
-void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator)
-{
-    AsCoreType(aIterator).Init();
-}
+void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator) { AsCoreType(aIterator).Init(); }
 
 const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInstance               *aInstance,
                                                                          otHistoryTrackerIterator *aIterator,

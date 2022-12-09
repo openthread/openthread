@@ -112,10 +112,7 @@ constexpr KeyRef kPendingDatasetPskcRef       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OF
  * @retval FALSE  If @p aKeyRef is not valid.
  *
  */
-inline bool IsKeyRefValid(KeyRef aKeyRef)
-{
-    return (aKeyRef < kInvalidKeyRef);
-}
+inline bool IsKeyRefValid(KeyRef aKeyRef) { return (aKeyRef < kInvalidKeyRef); }
 
 /**
  * Import a key into PSA ITS.
@@ -187,10 +184,7 @@ inline void DestroyKey(KeyRef aKeyRef)
  * @retval false                Key Ref passed is invalid and has no key associated in PSA.
  *
  */
-inline bool HasKey(KeyRef aKeyRef)
-{
-    return otPlatCryptoHasKey(aKeyRef);
-}
+inline bool HasKey(KeyRef aKeyRef) { return otPlatCryptoHasKey(aKeyRef); }
 
 } // namespace Storage
 
@@ -250,10 +244,7 @@ public:
      * @retval FALSE The `Key` represents a literal key.
      *
      */
-    bool IsKeyRef(void) const
-    {
-        return (mKey == nullptr);
-    }
+    bool IsKeyRef(void) const { return (mKey == nullptr); }
 
     /**
      * This method gets the `KeyRef`.
@@ -263,10 +254,7 @@ public:
      * @returns The `KeyRef` associated with `Key`.
      *
      */
-    Storage::KeyRef GetKeyRef(void) const
-    {
-        return mKeyRef;
-    }
+    Storage::KeyRef GetKeyRef(void) const { return mKeyRef; }
 
     /**
      * This method sets the `Key` as a `KeyRef`.

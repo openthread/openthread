@@ -4206,10 +4206,7 @@ exit:
     return error;
 }
 
-void NcpBase::HandleTimeSyncUpdate(void *aContext)
-{
-    static_cast<NcpBase *>(aContext)->HandleTimeSyncUpdate();
-}
+void NcpBase::HandleTimeSyncUpdate(void *aContext) { static_cast<NcpBase *>(aContext)->HandleTimeSyncUpdate(); }
 
 void NcpBase::HandleTimeSyncUpdate(void)
 {

@@ -168,10 +168,7 @@ void AddressResolver::Remove(uint8_t aRouterId)
     Remove(Mle::Rloc16FromRouterId(aRouterId), /* aMatchRouterId */ true);
 }
 
-void AddressResolver::Remove(uint16_t aRloc16)
-{
-    Remove(aRloc16, /* aMatchRouterId */ false);
-}
+void AddressResolver::Remove(uint16_t aRloc16) { Remove(aRloc16, /* aMatchRouterId */ false); }
 
 AddressResolver::CacheEntry *AddressResolver::GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList)
 {
@@ -224,10 +221,7 @@ exit:
     return entry;
 }
 
-void AddressResolver::Remove(const Ip6::Address &aEid)
-{
-    Remove(aEid, kReasonRemovingEid);
-}
+void AddressResolver::Remove(const Ip6::Address &aEid) { Remove(aEid, kReasonRemovingEid); }
 
 void AddressResolver::Remove(const Ip6::Address &aEid, Reason aReason)
 {
@@ -1069,9 +1063,7 @@ exit:
 
 #else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry &, CacheEntryList *)
-{
-}
+void AddressResolver::LogCacheEntryChange(EntryChange, Reason, const CacheEntry &, CacheEntryList *) {}
 
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 

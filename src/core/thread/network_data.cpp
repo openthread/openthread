@@ -630,10 +630,7 @@ void MutableNetworkData::Remove(void *aRemoveStart, uint8_t aRemoveLength)
     mLength -= aRemoveLength;
 }
 
-void MutableNetworkData::RemoveTlv(NetworkDataTlv *aTlv)
-{
-    Remove(aTlv, aTlv->GetSize());
-}
+void MutableNetworkData::RemoveTlv(NetworkDataTlv *aTlv) { Remove(aTlv, aTlv->GetSize()); }
 
 Error NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const
 {

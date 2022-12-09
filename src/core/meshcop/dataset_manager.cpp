@@ -65,10 +65,7 @@ DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::
     mTimestamp.Clear();
 }
 
-const Timestamp *DatasetManager::GetTimestamp(void) const
-{
-    return mTimestampValid ? &mTimestamp : nullptr;
-}
+const Timestamp *DatasetManager::GetTimestamp(void) const { return mTimestampValid ? &mTimestamp : nullptr; }
 
 Error DatasetManager::Restore(void)
 {
@@ -115,10 +112,7 @@ void DatasetManager::Clear(void)
     SignalDatasetChange();
 }
 
-void DatasetManager::HandleDetach(void)
-{
-    IgnoreError(Restore());
-}
+void DatasetManager::HandleDetach(void) { IgnoreError(Restore()); }
 
 Error DatasetManager::Save(const Dataset &aDataset)
 {
@@ -246,10 +240,7 @@ exit:
     return error;
 }
 
-void DatasetManager::HandleTimer(void)
-{
-    SendSet();
-}
+void DatasetManager::HandleTimer(void) { SendSet(); }
 
 void DatasetManager::SendSet(void)
 {
@@ -646,10 +637,7 @@ ActiveDatasetManager::ActiveDatasetManager(Instance &aInstance)
 {
 }
 
-bool ActiveDatasetManager::IsPartiallyComplete(void) const
-{
-    return mLocal.IsSaved() && !mTimestampValid;
-}
+bool ActiveDatasetManager::IsPartiallyComplete(void) const { return mLocal.IsSaved() && !mTimestampValid; }
 
 bool ActiveDatasetManager::IsCommissioned(void) const
 {
@@ -687,10 +675,7 @@ void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, con
     DatasetManager::HandleGet(aMessage, aMessageInfo);
 }
 
-void ActiveDatasetManager::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<ActiveDatasetManager>().HandleTimer();
-}
+void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDatasetManager>().HandleTimer(); }
 
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
@@ -826,10 +811,7 @@ void PendingDatasetManager::HandleTmf<kUriPendingGet>(Coap::Message &aMessage, c
     DatasetManager::HandleGet(aMessage, aMessageInfo);
 }
 
-void PendingDatasetManager::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<PendingDatasetManager>().HandleTimer();
-}
+void PendingDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<PendingDatasetManager>().HandleTimer(); }
 
 } // namespace MeshCoP
 } // namespace ot

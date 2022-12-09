@@ -176,10 +176,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
     platformRandomInit();
 }
 
-bool otSysPseudoResetWasRequested(void)
-{
-    return gPlatformPseudoResetWasRequested;
-}
+bool otSysPseudoResetWasRequested(void) { return gPlatformPseudoResetWasRequested; }
 
 void otSysDeinit(void)
 {

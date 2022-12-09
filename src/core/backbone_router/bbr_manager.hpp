@@ -119,10 +119,7 @@ public:
      * @returns The Multicast Listeners Table.
      *
      */
-    MulticastListenersTable &GetMulticastListenersTable(void)
-    {
-        return mMulticastListenersTable;
-    }
+    MulticastListenersTable &GetMulticastListenersTable(void) { return mMulticastListenersTable; }
 #endif
 
     /**
@@ -143,10 +140,7 @@ public:
      * @returns A reference to the Backbone TMF agent.
      *
      */
-    BackboneTmfAgent &GetBackboneTmfAgent(void)
-    {
-        return mBackboneTmfAgent;
-    }
+    BackboneTmfAgent &GetBackboneTmfAgent(void) { return mBackboneTmfAgent; }
 
     /**
      * This method sends BB.qry on the Backbone link.

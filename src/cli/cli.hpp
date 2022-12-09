@@ -153,10 +153,7 @@ public:
      * @returns  Whether the interpreter is initialized.
      *
      */
-    static bool IsInitialized(void)
-    {
-        return sInterpreter != nullptr;
-    }
+    static bool IsInitialized(void) { return sInterpreter != nullptr; }
 
     /**
      * This method interprets a CLI command.
@@ -582,35 +579,17 @@ private:
 
 // Specializations of `FormatStringFor<ValueType>()`
 
-template <> inline constexpr const char *Interpreter::FormatStringFor<uint8_t>(void)
-{
-    return "%u";
-}
+template <> inline constexpr const char *Interpreter::FormatStringFor<uint8_t>(void) { return "%u"; }
 
-template <> inline constexpr const char *Interpreter::FormatStringFor<uint16_t>(void)
-{
-    return "%u";
-}
+template <> inline constexpr const char *Interpreter::FormatStringFor<uint16_t>(void) { return "%u"; }
 
-template <> inline constexpr const char *Interpreter::FormatStringFor<uint32_t>(void)
-{
-    return "%lu";
-}
+template <> inline constexpr const char *Interpreter::FormatStringFor<uint32_t>(void) { return "%lu"; }
 
-template <> inline constexpr const char *Interpreter::FormatStringFor<int8_t>(void)
-{
-    return "%d";
-}
+template <> inline constexpr const char *Interpreter::FormatStringFor<int8_t>(void) { return "%d"; }
 
-template <> inline constexpr const char *Interpreter::FormatStringFor<int16_t>(void)
-{
-    return "%d";
-}
+template <> inline constexpr const char *Interpreter::FormatStringFor<int16_t>(void) { return "%d"; }
 
-template <> inline constexpr const char *Interpreter::FormatStringFor<int32_t>(void)
-{
-    return "%ld";
-}
+template <> inline constexpr const char *Interpreter::FormatStringFor<int32_t>(void) { return "%ld"; }
 
 // Specialization of ProcessGet<> for `uint32_t` and `int32_t`
 

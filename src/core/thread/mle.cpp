@@ -91,11 +91,13 @@ Mle::Mle(Instance &aInstance)
     , mAddressRegistrationMode(kAppendAllAddresses)
     , mHasRestored(false)
     , mReceivedResponseFromParent(false)
+    , mInitiallyAttachedAsSleepy(false)
     , mSocket(aInstance)
     , mTimeout(kMleEndDeviceTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
 #endif
+    , mRloc16(Mac::kShortAddrInvalid)
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
@@ -329,6 +331,17 @@ void Mle::SetRole(DeviceRole aRole)
         mParent.SetState(Neighbor::kStateInvalid);
     }
 
+    if ((oldRole == kRoleDetached) && IsChild())
+    {
+        // On transition from detached to child, we remember whether we
+        // attached as sleepy or not. This is then used to determine
+        // whether or not we need to re-attach on mode changes between
+        // rx-on and sleepy (rx-off). If we initially attach as sleepy,
+        // then rx-on/off mode changes are allowed without re-attach.
+
+        mInitiallyAttachedAsSleepy = !GetDeviceMode().IsRxOnWhenIdle();
+    }
+
 exit:
     return;
 }
@@ -386,6 +399,7 @@ void Mle::Restore(void)
 #endif
     {
         Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
+        mRloc16 = networkInfo.GetRloc16();
     }
     Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
 
@@ -660,15 +674,9 @@ exit:
     return delay;
 }
 
-bool Mle::IsAttached(void) const
-{
-    return (IsChild() || IsRouter() || IsLeader());
-}
+bool Mle::IsAttached(void) const { return (IsChild() || IsRouter() || IsLeader()); }
 
-bool Mle::IsRouterOrLeader(void) const
-{
-    return (IsRouter() || IsLeader());
-}
+bool Mle::IsRouterOrLeader(void) const { return (IsRouter() || IsLeader()); }
 
 void Mle::SetStateDetached(void)
 {
@@ -688,10 +696,11 @@ void Mle::SetStateDetached(void)
     SetAttachState(kAttachStateIdle);
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    mChildUpdateRequestState = kChildUpdateRequestNone;
-    mChildUpdateAttempts     = 0;
-    mDataRequestState        = kDataRequestNone;
-    mDataRequestAttempts     = 0;
+    mChildUpdateRequestState   = kChildUpdateRequestNone;
+    mChildUpdateAttempts       = 0;
+    mDataRequestState          = kDataRequestNone;
+    mDataRequestAttempts       = 0;
+    mInitiallyAttachedAsSleepy = false;
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
@@ -815,15 +824,34 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
 
     IgnoreError(Store());
 
-    // We need to re-attach on switching between MTD/FTD modes
-    // and also on switching from rx-on to sleepy (rx-off) mode.
-
-    if (IsAttached() && ((oldMode.IsFullThreadDevice() != mDeviceMode.IsFullThreadDevice()) ||
-                         (oldMode.IsRxOnWhenIdle() && !mDeviceMode.IsRxOnWhenIdle())))
+    if (IsAttached())
     {
-        mAttachCounter = 0;
-        IgnoreError(BecomeDetached());
-        ExitNow();
+        bool shouldReattach = false;
+
+        // We need to re-attach when switching between MTD/FTD modes.
+
+        if (oldMode.IsFullThreadDevice() != mDeviceMode.IsFullThreadDevice())
+        {
+            shouldReattach = true;
+        }
+
+        // If we initially attached as sleepy we allow mode changes
+        // between rx-on/off without a re-attach (we send "Child Update
+        // Request" to update the parent). But if we initially attached
+        // as rx-on, we require a re-attach on switching from rx-on to
+        // sleepy (rx-off) mode.
+
+        if (!mInitiallyAttachedAsSleepy && oldMode.IsRxOnWhenIdle() && !mDeviceMode.IsRxOnWhenIdle())
+        {
+            shouldReattach = true;
+        }
+
+        if (shouldReattach)
+        {
+            mAttachCounter = 0;
+            IgnoreError(BecomeDetached());
+            ExitNow();
+        }
     }
 
     if (IsDetached())
@@ -958,11 +986,6 @@ exit:
     Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
 }
 
-uint16_t Mle::GetRloc16(void) const
-{
-    return Get<Mac::Mac>().GetShortAddress();
-}
-
 void Mle::SetRloc16(uint16_t aRloc16)
 {
     uint16_t oldRloc16 = GetRloc16();
@@ -980,6 +1003,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
     }
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
+    mRloc16 = aRloc16;
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
@@ -1983,10 +2007,7 @@ exit:
     return;
 }
 
-Error Mle::SendChildUpdateRequest(bool aAppendChallenge)
-{
-    return SendChildUpdateRequest(aAppendChallenge, mTimeout);
-}
+Error Mle::SendChildUpdateRequest(bool aAppendChallenge) { return SendChildUpdateRequest(aAppendChallenge, mTimeout); }
 
 Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
 {
@@ -4012,15 +4033,9 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
 #endif
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void Mle::LogProcessError(MessageType aType, Error aError)
-{
-    LogError(kMessageReceive, aType, aError);
-}
+void Mle::LogProcessError(MessageType aType, Error aError) { LogError(kMessageReceive, aType, aError); }
 
-void Mle::LogSendError(MessageType aType, Error aError)
-{
-    LogError(kMessageSend, aType, aError);
-}
+void Mle::LogSendError(MessageType aType, Error aError) { LogError(kMessageSend, aType, aError); }
 
 void Mle::LogError(MessageAction aAction, MessageType aType, Error aError)
 {
@@ -4350,10 +4365,7 @@ exit:
     return error;
 }
 
-void Mle::HandleDetachGracefullyTimer(void)
-{
-    Stop();
-}
+void Mle::HandleDetachGracefullyTimer(void) { Stop(); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // TlvList
@@ -4489,20 +4501,11 @@ Error Mle::TxMessage::AppendSourceAddressTlv(void)
     return Tlv::Append<SourceAddressTlv>(*this, Get<Mle>().GetRloc16());
 }
 
-Error Mle::TxMessage::AppendStatusTlv(StatusTlv::Status aStatus)
-{
-    return Tlv::Append<StatusTlv>(*this, aStatus);
-}
+Error Mle::TxMessage::AppendStatusTlv(StatusTlv::Status aStatus) { return Tlv::Append<StatusTlv>(*this, aStatus); }
 
-Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode)
-{
-    return Tlv::Append<ModeTlv>(*this, aMode.Get());
-}
+Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode) { return Tlv::Append<ModeTlv>(*this, aMode.Get()); }
 
-Error Mle::TxMessage::AppendTimeoutTlv(uint32_t aTimeout)
-{
-    return Tlv::Append<TimeoutTlv>(*this, aTimeout);
-}
+Error Mle::TxMessage::AppendTimeoutTlv(uint32_t aTimeout) { return Tlv::Append<TimeoutTlv>(*this, aTimeout); }
 
 Error Mle::TxMessage::AppendChallengeTlv(const Challenge &aChallenge)
 {
@@ -4542,10 +4545,7 @@ Error Mle::TxMessage::AppendMleFrameCounterTlv(void)
     return Tlv::Append<MleFrameCounterTlv>(*this, Get<KeyManager>().GetMleFrameCounter());
 }
 
-Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16)
-{
-    return Tlv::Append<Address16Tlv>(*this, aRloc16);
-}
+Error Mle::TxMessage::AppendAddress16Tlv(uint16_t aRloc16) { return Tlv::Append<Address16Tlv>(*this, aRloc16); }
 
 Error Mle::TxMessage::AppendLeaderDataTlv(void)
 {
@@ -4582,20 +4582,14 @@ Error Mle::TxMessage::AppendTlvRequestTlv(const uint8_t *aTlvs, uint8_t aTlvsLen
     return Tlv::Append<TlvRequestTlv>(*this, aTlvs, aTlvsLength);
 }
 
-Error Mle::TxMessage::AppendScanMaskTlv(uint8_t aScanMask)
-{
-    return Tlv::Append<ScanMaskTlv>(*this, aScanMask);
-}
+Error Mle::TxMessage::AppendScanMaskTlv(uint8_t aScanMask) { return Tlv::Append<ScanMaskTlv>(*this, aScanMask); }
 
 Error Mle::TxMessage::AppendLinkMarginTlv(uint8_t aLinkMargin)
 {
     return Tlv::Append<LinkMarginTlv>(*this, aLinkMargin);
 }
 
-Error Mle::TxMessage::AppendVersionTlv(void)
-{
-    return Tlv::Append<VersionTlv>(*this, kThreadVersion);
-}
+Error Mle::TxMessage::AppendVersionTlv(void) { return Tlv::Append<VersionTlv>(*this, kThreadVersion); }
 
 Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode)
 {

@@ -739,10 +739,7 @@ void Client::ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStat
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
 }
 
-void Client::InvokeCallback(Error aError) const
-{
-    InvokeCallback(aError, mHostInfo, nullptr);
-}
+void Client::InvokeCallback(Error aError) const { InvokeCallback(aError, mHostInfo, nullptr); }
 
 void Client::InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const
 {

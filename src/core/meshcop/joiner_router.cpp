@@ -235,10 +235,7 @@ exit:
     LogError("schedule joiner entrust", error);
 }
 
-void JoinerRouter::HandleTimer(void)
-{
-    SendDelayedJoinerEntrust();
-}
+void JoinerRouter::HandleTimer(void) { SendDelayedJoinerEntrust(); }
 
 void JoinerRouter::SendDelayedJoinerEntrust(void)
 {

@@ -812,10 +812,7 @@ exit:
     return error;
 }
 
-void Ip6::CleanupFragmentationBuffer(void)
-{
-    mReassemblyList.DequeueAndFreeAll();
-}
+void Ip6::CleanupFragmentationBuffer(void) { mReassemblyList.DequeueAndFreeAll(); }
 
 void Ip6::HandleTimeTick(void)
 {

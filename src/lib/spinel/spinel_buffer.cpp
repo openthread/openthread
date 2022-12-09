@@ -536,20 +536,11 @@ exit:
     return error;
 }
 
-Buffer::FrameTag Buffer::InFrameGetLastTag(void) const
-{
-    return mWriteFrameTag;
-}
+Buffer::FrameTag Buffer::InFrameGetLastTag(void) const { return mWriteFrameTag; }
 
-bool Buffer::HasFrame(Priority aPriority) const
-{
-    return mReadFrameStart[aPriority] != mWriteFrameStart[aPriority];
-}
+bool Buffer::HasFrame(Priority aPriority) const { return mReadFrameStart[aPriority] != mWriteFrameStart[aPriority]; }
 
-bool Buffer::IsEmpty(void) const
-{
-    return !HasFrame(kPriorityHigh) && !HasFrame(kPriorityLow);
-}
+bool Buffer::IsEmpty(void) const { return !HasFrame(kPriorityHigh) && !HasFrame(kPriorityLow); }
 
 void Buffer::OutFrameSelectReadDirection(void)
 {
@@ -704,10 +695,7 @@ exit:
     return error;
 }
 
-bool Buffer::OutFrameHasEnded(void)
-{
-    return (mReadState == kReadStateDone) || (mReadState == kReadStateNotActive);
-}
+bool Buffer::OutFrameHasEnded(void) { return (mReadState == kReadStateDone) || (mReadState == kReadStateNotActive); }
 
 uint8_t Buffer::OutFrameReadByte(void)
 {

@@ -198,10 +198,7 @@ void Radio::Init(void)
 } // namespace Posix
 } // namespace ot
 
-void platformRadioDeinit(void)
-{
-    sRadioSpinel.Deinit();
-}
+void platformRadioDeinit(void) { sRadioSpinel.Deinit(); }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
@@ -246,10 +243,7 @@ bool otPlatRadioIsEnabled(otInstance *aInstance)
     return sRadioSpinel.IsEnabled();
 }
 
-otError otPlatRadioEnable(otInstance *aInstance)
-{
-    return sRadioSpinel.Enable(aInstance);
-}
+otError otPlatRadioEnable(otInstance *aInstance) { return sRadioSpinel.Enable(aInstance); }
 
 otError otPlatRadioDisable(otInstance *aInstance)
 {
@@ -532,10 +526,7 @@ exit:
     return;
 }
 
-bool otPlatDiagModeGet(void)
-{
-    return sRadioSpinel.IsDiagEnabled();
-}
+bool otPlatDiagModeGet(void) { return sRadioSpinel.IsDiagEnabled(); }
 
 void otPlatDiagTxPowerSet(int8_t aTxPower)
 {
@@ -634,10 +625,7 @@ void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otErro
     OT_UNUSED_VARIABLE(aError);
 }
 
-void otPlatDiagAlarmCallback(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
+void otPlatDiagAlarmCallback(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstance); }
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
 
 uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
@@ -746,10 +734,7 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void)
-{
-    return sRadioSpinel.GetRadioSpinelMetrics();
-}
+const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void) { return sRadioSpinel.GetRadioSpinelMetrics(); }
 
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void)
 {

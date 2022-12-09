@@ -562,10 +562,7 @@ private:
  * @returns A `TlvType` pointer to `aTlv`.
  *
  */
-template <class TlvType> TlvType *As(Tlv *aTlv)
-{
-    return static_cast<TlvType *>(aTlv);
-}
+template <class TlvType> TlvType *As(Tlv *aTlv) { return static_cast<TlvType *>(aTlv); }
 
 /**
  * This template method casts a `Tlv` pointer to a given subclass `TlvType` pointer.
@@ -577,10 +574,7 @@ template <class TlvType> TlvType *As(Tlv *aTlv)
  * @returns A `TlvType` pointer to `aTlv`.
  *
  */
-template <class TlvType> const TlvType *As(const Tlv *aTlv)
-{
-    return static_cast<const TlvType *>(aTlv);
-}
+template <class TlvType> const TlvType *As(const Tlv *aTlv) { return static_cast<const TlvType *>(aTlv); }
 
 /**
  * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
@@ -592,10 +586,7 @@ template <class TlvType> const TlvType *As(const Tlv *aTlv)
  * @returns A `TlvType` reference to `aTlv`.
  *
  */
-template <class TlvType> TlvType &As(Tlv &aTlv)
-{
-    return static_cast<TlvType &>(aTlv);
-}
+template <class TlvType> TlvType &As(Tlv &aTlv) { return static_cast<TlvType &>(aTlv); }
 
 /**
  * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
@@ -607,10 +598,7 @@ template <class TlvType> TlvType &As(Tlv &aTlv)
  * @returns A `TlvType` reference to `aTlv`.
  *
  */
-template <class TlvType> const TlvType &As(const Tlv &aTlv)
-{
-    return static_cast<const TlvType &>(aTlv);
-}
+template <class TlvType> const TlvType &As(const Tlv &aTlv) { return static_cast<const TlvType &>(aTlv); }
 
 /**
  * This class defines constants for a TLV.
