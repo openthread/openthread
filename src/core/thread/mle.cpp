@@ -97,6 +97,7 @@ Mle::Mle(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
 #endif
+    , mRloc16(Mac::kShortAddrInvalid)
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
@@ -398,6 +399,7 @@ void Mle::Restore(void)
 #endif
     {
         Get<Mac::Mac>().SetShortAddress(networkInfo.GetRloc16());
+        mRloc16 = networkInfo.GetRloc16();
     }
     Get<Mac::Mac>().SetExtAddress(networkInfo.GetExtAddress());
 
@@ -984,8 +986,6 @@ exit:
     Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
 }
 
-uint16_t Mle::GetRloc16(void) const { return Get<Mac::Mac>().GetShortAddress(); }
-
 void Mle::SetRloc16(uint16_t aRloc16)
 {
     uint16_t oldRloc16 = GetRloc16();
@@ -1003,6 +1003,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
     }
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
+    mRloc16 = aRloc16;
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
