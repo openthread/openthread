@@ -866,12 +866,12 @@ exit:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static otError AddIp4Route(const otIp4Cidr &aIp4Cidr, uint32_t aPriority)
 {
-    return AddRoute(aIp4Cidr.mAddress.mFields.m8, aCidr.mLength, aPriority);
+    return AddRoute(aIp4Cidr.mAddress.mFields.m8, aIp4Cidr.mLength, aPriority);
 }
 
 static otError DeleteIp4Route(const otIp4Cidr &aIp4Cidr)
 {
-    return DeleteRoute(aIp4Cidr.mAddress.mFields.m8, aCidr.mLength);
+    return DeleteRoute(aIp4Cidr.mAddress.mFields.m8, aIp4Cidr.mLength);
 }
 #endif
 #endif // defined(__linux__)
