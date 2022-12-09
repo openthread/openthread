@@ -2011,6 +2011,7 @@ private:
 
     bool mHasRestored;
     bool mReceivedResponseFromParent;
+    bool mInitiallyAttachedAsSleepy;
 
     Ip6::Udp::Socket mSocket;
     uint32_t         mTimeout;
