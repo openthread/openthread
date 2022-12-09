@@ -257,7 +257,6 @@ LOCAL_SRC_FILES                                                  := \
     src/core/crypto/hkdf_sha256.cpp                                 \
     src/core/crypto/hmac_sha256.cpp                                 \
     src/core/crypto/mbedtls.cpp                                     \
-    src/core/crypto/pbkdf2_cmac.cpp                                 \
     src/core/crypto/sha256.cpp                                      \
     src/core/crypto/storage.cpp                                     \
     src/core/diags/factory_diags.cpp                                \
