@@ -124,7 +124,6 @@ set(COMMON_SOURCES
     crypto/hkdf_sha256.cpp
     crypto/hmac_sha256.cpp
     crypto/mbedtls.cpp
-    crypto/pbkdf2_cmac.cpp
     crypto/sha256.cpp
     crypto/storage.cpp
     diags/factory_diags.cpp
