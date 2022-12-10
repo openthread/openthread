@@ -90,7 +90,8 @@ Done
 - [preferrouterid](#preferrouterid-routerid)
 - [prefix](#prefix)
 - [promiscuous](#promiscuous)
-- [pskc](#pskc--p-keypassphrase)
+- [pskc](#pskc)
+- [pskcref](#pskcref)
 - [radiofilter](#radiofilter)
 - [rcp](#rcp)
 - [region](#region)
@@ -2349,7 +2350,7 @@ Done
 
 ### pollperiod
 
-Get the customized data poll period of sleepy end device (milliseconds). Only for certification test
+Get the customized data poll period of sleepy end device (milliseconds). Only for certification test.
 
 ```bash
 > pollperiod
@@ -2359,10 +2360,20 @@ Done
 
 ### pollperiod \<pollperiod\>
 
-Set the customized data poll period for sleepy end device (milliseconds >= 10ms). Only for certification test
+Set the customized data poll period for sleepy end device (milliseconds >= 10ms). Only for certification test.
 
 ```bash
 > pollperiod 10
+Done
+```
+
+### pskc
+
+Get pskc in hex format.
+
+```bash
+> pskc
+00000000000000000000000000000000
 Done
 ```
 
@@ -2374,6 +2385,29 @@ With `-p` generate pskc from \<passphrase\> (UTF-8 encoded) together with **curr
 > pskc 67c0c203aa0b042bfb5381c47aef4d9e
 Done
 > pskc -p 123456
+Done
+```
+
+### pskcref
+
+Get pskc key reference.
+
+`OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is required.
+
+```bash
+> pskcref
+0x80000000
+Done
+```
+
+### pskcref \<keyref\>
+
+Set pskc key reference as \<keyref\>.
+
+`OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is required.
+
+```bash
+> pskcref 0x20017
 Done
 ```
 
