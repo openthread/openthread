@@ -1837,7 +1837,7 @@ void platformNetifSetUp(void)
     // We can use the same function for IPv6 and translated IPv4 messages.
     otNat64SetReceiveIp4Callback(gInstance, processReceive, gInstance);
 #if defined(__linux__)
-    // On Linux, we will add / remove the reoutes to NAT64 CIDR according to the state of NAT64 translator.
+    // On Linux, we will add / remove the routes to NAT64 CIDR according to the state of NAT64 translator.
     otNat64SetTranslatorStateChangeCallback(gInstance, processNat64StateChange, gInstance);
 #endif
 #endif
