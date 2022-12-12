@@ -239,10 +239,7 @@ exit:
     return error;
 }
 
-uint32_t Leader::GetDelayTimerMinimal(void) const
-{
-    return mDelayTimerMinimal;
-}
+uint32_t Leader::GetDelayTimerMinimal(void) const { return mDelayTimerMinimal; }
 
 void Leader::HandleTimer(void)
 {

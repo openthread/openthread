@@ -60,10 +60,7 @@ otError otCommissionerSetId(otInstance *aInstance, const char *aId)
     return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().SetId(aId);
 }
 
-otError otCommissionerStop(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Stop();
-}
+otError otCommissionerStop(otInstance *aInstance) { return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Stop(); }
 
 otError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aEui64, const char *aPskd, uint32_t aTimeout)
 {

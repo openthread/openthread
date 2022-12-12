@@ -110,10 +110,7 @@ otError otCoapSecureConnect(otInstance                     *aInstance,
     return AsCoreType(aInstance).GetApplicationCoapSecure().Connect(AsCoreType(aSockAddr), aHandler, aContext);
 }
 
-void otCoapSecureDisconnect(otInstance *aInstance)
-{
-    AsCoreType(aInstance).GetApplicationCoapSecure().Disconnect();
-}
+void otCoapSecureDisconnect(otInstance *aInstance) { AsCoreType(aInstance).GetApplicationCoapSecure().Disconnect(); }
 
 bool otCoapSecureIsConnected(otInstance *aInstance)
 {
@@ -125,10 +122,7 @@ bool otCoapSecureIsConnectionActive(otInstance *aInstance)
     return AsCoreType(aInstance).GetApplicationCoapSecure().IsConnectionActive();
 }
 
-void otCoapSecureStop(otInstance *aInstance)
-{
-    AsCoreType(aInstance).GetApplicationCoapSecure().Stop();
-}
+void otCoapSecureStop(otInstance *aInstance) { AsCoreType(aInstance).GetApplicationCoapSecure().Stop(); }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 otError otCoapSecureSendRequestBlockWise(otInstance                 *aInstance,

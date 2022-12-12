@@ -189,10 +189,7 @@ void TcpCircularSendBuffer::HandleForwardProgress(size_t aInSendBuffer)
     mCapacityUsed = aInSendBuffer;
 }
 
-size_t TcpCircularSendBuffer::GetFreeSpace(void) const
-{
-    return mCapacity - mCapacityUsed;
-}
+size_t TcpCircularSendBuffer::GetFreeSpace(void) const { return mCapacity - mCapacityUsed; }
 
 void TcpCircularSendBuffer::ForceDiscardAll(void)
 {
@@ -201,10 +198,7 @@ void TcpCircularSendBuffer::ForceDiscardAll(void)
     mFirstSendLinkIndex = 0;
 }
 
-Error TcpCircularSendBuffer::Deinitialize(void)
-{
-    return (mCapacityUsed != 0) ? kErrorBusy : kErrorNone;
-}
+Error TcpCircularSendBuffer::Deinitialize(void) { return (mCapacityUsed != 0) ? kErrorBusy : kErrorNone; }
 
 size_t TcpCircularSendBuffer::GetIndex(size_t aStart, size_t aOffsetFromStart) const
 {

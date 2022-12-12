@@ -211,10 +211,7 @@ public:
      * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
      *
      */
-    bool IsInitialized(void) const
-    {
-        return mIsInitialized;
-    }
+    bool IsInitialized(void) const { return mIsInitialized; }
 
     /**
      * This method triggers a platform reset.
@@ -303,10 +300,7 @@ public:
      * @returns A reference to the application COAP object.
      *
      */
-    Coap::Coap &GetApplicationCoap(void)
-    {
-        return mApplicationCoap;
-    }
+    Coap::Coap &GetApplicationCoap(void) { return mApplicationCoap; }
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
@@ -316,10 +310,7 @@ public:
      * @returns A reference to the application COAP Secure object.
      *
      */
-    Coap::CoapSecure &GetApplicationCoapSecure(void)
-    {
-        return mApplicationCoapSecure;
-    }
+    Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -334,10 +325,7 @@ public:
      * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
      *
      */
-    static void SetDnsNameCompressionEnabled(bool aEnabled)
-    {
-        sDnsNameCompressionEnabled = aEnabled;
-    }
+    static void SetDnsNameCompressionEnabled(bool aEnabled) { sDnsNameCompressionEnabled = aEnabled; }
 
     /**
      * This method indicates whether the "DNS name compression" mode is enabled or not.
@@ -345,10 +333,7 @@ public:
      * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
      *
      */
-    static bool IsDnsNameCompressionEnabled(void)
-    {
-        return sDnsNameCompressionEnabled;
-    }
+    static bool IsDnsNameCompressionEnabled(void) { return sDnsNameCompressionEnabled; }
 #endif
 
     /**
@@ -646,507 +631,255 @@ DefineCoreType(otBufferInfo, Instance::BufferInfo);
 
 // Specializations of the `Get<Type>()` method.
 
-template <> inline Instance &Instance::Get(void)
-{
-    return *this;
-}
+template <> inline Instance &Instance::Get(void) { return *this; }
 
-template <> inline Radio &Instance::Get(void)
-{
-    return mRadio;
-}
+template <> inline Radio &Instance::Get(void) { return mRadio; }
 
-template <> inline Radio::Callbacks &Instance::Get(void)
-{
-    return mRadio.mCallbacks;
-}
+template <> inline Radio::Callbacks &Instance::Get(void) { return mRadio.mCallbacks; }
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
-template <> inline Uptime &Instance::Get(void)
-{
-    return mUptime;
-}
+template <> inline Uptime &Instance::Get(void) { return mUptime; }
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-template <> inline Notifier &Instance::Get(void)
-{
-    return mNotifier;
-}
+template <> inline Notifier &Instance::Get(void) { return mNotifier; }
 
-template <> inline TimeTicker &Instance::Get(void)
-{
-    return mTimeTicker;
-}
+template <> inline TimeTicker &Instance::Get(void) { return mTimeTicker; }
 
-template <> inline Settings &Instance::Get(void)
-{
-    return mSettings;
-}
+template <> inline Settings &Instance::Get(void) { return mSettings; }
 
-template <> inline SettingsDriver &Instance::Get(void)
-{
-    return mSettingsDriver;
-}
+template <> inline SettingsDriver &Instance::Get(void) { return mSettingsDriver; }
 
-template <> inline MeshForwarder &Instance::Get(void)
-{
-    return mMeshForwarder;
-}
+template <> inline MeshForwarder &Instance::Get(void) { return mMeshForwarder; }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-template <> inline RadioSelector &Instance::Get(void)
-{
-    return mRadioSelector;
-}
+template <> inline RadioSelector &Instance::Get(void) { return mRadioSelector; }
 #endif
 
-template <> inline Mle::Mle &Instance::Get(void)
-{
-    return mMleRouter;
-}
+template <> inline Mle::Mle &Instance::Get(void) { return mMleRouter; }
 
-template <> inline Mle::MleRouter &Instance::Get(void)
-{
-    return mMleRouter;
-}
+template <> inline Mle::MleRouter &Instance::Get(void) { return mMleRouter; }
 
-template <> inline Mle::DiscoverScanner &Instance::Get(void)
-{
-    return mDiscoverScanner;
-}
+template <> inline Mle::DiscoverScanner &Instance::Get(void) { return mDiscoverScanner; }
 
-template <> inline NeighborTable &Instance::Get(void)
-{
-    return mMleRouter.mNeighborTable;
-}
+template <> inline NeighborTable &Instance::Get(void) { return mMleRouter.mNeighborTable; }
 
 #if OPENTHREAD_FTD
-template <> inline ChildTable &Instance::Get(void)
-{
-    return mMleRouter.mChildTable;
-}
+template <> inline ChildTable &Instance::Get(void) { return mMleRouter.mChildTable; }
 
-template <> inline RouterTable &Instance::Get(void)
-{
-    return mMleRouter.mRouterTable;
-}
+template <> inline RouterTable &Instance::Get(void) { return mMleRouter.mRouterTable; }
 #endif
 
-template <> inline Ip6::Netif &Instance::Get(void)
-{
-    return mThreadNetif;
-}
+template <> inline Ip6::Netif &Instance::Get(void) { return mThreadNetif; }
 
-template <> inline ThreadNetif &Instance::Get(void)
-{
-    return mThreadNetif;
-}
+template <> inline ThreadNetif &Instance::Get(void) { return mThreadNetif; }
 
-template <> inline Ip6::Ip6 &Instance::Get(void)
-{
-    return mIp6;
-}
+template <> inline Ip6::Ip6 &Instance::Get(void) { return mIp6; }
 
-template <> inline Mac::Mac &Instance::Get(void)
-{
-    return mMac;
-}
+template <> inline Mac::Mac &Instance::Get(void) { return mMac; }
 
-template <> inline Mac::SubMac &Instance::Get(void)
-{
-    return mMac.mLinks.mSubMac;
-}
+template <> inline Mac::SubMac &Instance::Get(void) { return mMac.mLinks.mSubMac; }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-template <> inline Trel::Link &Instance::Get(void)
-{
-    return mMac.mLinks.mTrel;
-}
+template <> inline Trel::Link &Instance::Get(void) { return mMac.mLinks.mTrel; }
 
-template <> inline Trel::Interface &Instance::Get(void)
-{
-    return mMac.mLinks.mTrel.mInterface;
-}
+template <> inline Trel::Interface &Instance::Get(void) { return mMac.mLinks.mTrel.mInterface; }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-template <> inline Mac::Filter &Instance::Get(void)
-{
-    return mMac.mFilter;
-}
+template <> inline Mac::Filter &Instance::Get(void) { return mMac.mFilter; }
 #endif
 
-template <> inline Lowpan::Lowpan &Instance::Get(void)
-{
-    return mLowpan;
-}
+template <> inline Lowpan::Lowpan &Instance::Get(void) { return mLowpan; }
 
-template <> inline KeyManager &Instance::Get(void)
-{
-    return mKeyManager;
-}
+template <> inline KeyManager &Instance::Get(void) { return mKeyManager; }
 
-template <> inline Ip6::Filter &Instance::Get(void)
-{
-    return mIp6Filter;
-}
+template <> inline Ip6::Filter &Instance::Get(void) { return mIp6Filter; }
 
-template <> inline AddressResolver &Instance::Get(void)
-{
-    return mAddressResolver;
-}
+template <> inline AddressResolver &Instance::Get(void) { return mAddressResolver; }
 
 #if OPENTHREAD_FTD
 
-template <> inline IndirectSender &Instance::Get(void)
-{
-    return mMeshForwarder.mIndirectSender;
-}
+template <> inline IndirectSender &Instance::Get(void) { return mMeshForwarder.mIndirectSender; }
 
 template <> inline SourceMatchController &Instance::Get(void)
 {
     return mMeshForwarder.mIndirectSender.mSourceMatchController;
 }
 
-template <> inline DataPollHandler &Instance::Get(void)
-{
-    return mMeshForwarder.mIndirectSender.mDataPollHandler;
-}
+template <> inline DataPollHandler &Instance::Get(void) { return mMeshForwarder.mIndirectSender.mDataPollHandler; }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-template <> inline CslTxScheduler &Instance::Get(void)
-{
-    return mMeshForwarder.mIndirectSender.mCslTxScheduler;
-}
+template <> inline CslTxScheduler &Instance::Get(void) { return mMeshForwarder.mIndirectSender.mCslTxScheduler; }
 #endif
 
-template <> inline MeshCoP::Leader &Instance::Get(void)
-{
-    return mLeader;
-}
+template <> inline MeshCoP::Leader &Instance::Get(void) { return mLeader; }
 
-template <> inline MeshCoP::JoinerRouter &Instance::Get(void)
-{
-    return mJoinerRouter;
-}
+template <> inline MeshCoP::JoinerRouter &Instance::Get(void) { return mJoinerRouter; }
 #endif // OPENTHREAD_FTD
 
-template <> inline AnnounceBeginServer &Instance::Get(void)
-{
-    return mAnnounceBegin;
-}
+template <> inline AnnounceBeginServer &Instance::Get(void) { return mAnnounceBegin; }
 
-template <> inline DataPollSender &Instance::Get(void)
-{
-    return mMeshForwarder.mDataPollSender;
-}
+template <> inline DataPollSender &Instance::Get(void) { return mMeshForwarder.mDataPollSender; }
 
-template <> inline EnergyScanServer &Instance::Get(void)
-{
-    return mEnergyScan;
-}
+template <> inline EnergyScanServer &Instance::Get(void) { return mEnergyScan; }
 
-template <> inline PanIdQueryServer &Instance::Get(void)
-{
-    return mPanIdQuery;
-}
+template <> inline PanIdQueryServer &Instance::Get(void) { return mPanIdQuery; }
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
-template <> inline AnycastLocator &Instance::Get(void)
-{
-    return mAnycastLocator;
-}
+template <> inline AnycastLocator &Instance::Get(void) { return mAnycastLocator; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-template <> inline NetworkData::Local &Instance::Get(void)
-{
-    return mNetworkDataLocal;
-}
+template <> inline NetworkData::Local &Instance::Get(void) { return mNetworkDataLocal; }
 #endif
 
-template <> inline NetworkData::Leader &Instance::Get(void)
-{
-    return mNetworkDataLeader;
-}
+template <> inline NetworkData::Leader &Instance::Get(void) { return mNetworkDataLeader; }
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-template <> inline NetworkData::Notifier &Instance::Get(void)
-{
-    return mNetworkDataNotifier;
-}
+template <> inline NetworkData::Notifier &Instance::Get(void) { return mNetworkDataNotifier; }
 #endif
 
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
-template <> inline NetworkData::Publisher &Instance::Get(void)
-{
-    return mNetworkDataPublisher;
-}
+template <> inline NetworkData::Publisher &Instance::Get(void) { return mNetworkDataPublisher; }
 #endif
 
-template <> inline NetworkData::Service::Manager &Instance::Get(void)
-{
-    return mNetworkDataServiceManager;
-}
+template <> inline NetworkData::Service::Manager &Instance::Get(void) { return mNetworkDataServiceManager; }
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE
-template <> inline Ip6::Tcp &Instance::Get(void)
-{
-    return mIp6.mTcp;
-}
+template <> inline Ip6::Tcp &Instance::Get(void) { return mIp6.mTcp; }
 #endif
 
-template <> inline Ip6::Udp &Instance::Get(void)
-{
-    return mIp6.mUdp;
-}
+template <> inline Ip6::Udp &Instance::Get(void) { return mIp6.mUdp; }
 
-template <> inline Ip6::Icmp &Instance::Get(void)
-{
-    return mIp6.mIcmp;
-}
+template <> inline Ip6::Icmp &Instance::Get(void) { return mIp6.mIcmp; }
 
-template <> inline Ip6::Mpl &Instance::Get(void)
-{
-    return mIp6.mMpl;
-}
+template <> inline Ip6::Mpl &Instance::Get(void) { return mIp6.mMpl; }
 
-template <> inline Tmf::Agent &Instance::Get(void)
-{
-    return mTmfAgent;
-}
+template <> inline Tmf::Agent &Instance::Get(void) { return mTmfAgent; }
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
-template <> inline Tmf::SecureAgent &Instance::Get(void)
-{
-    return mTmfSecureAgent;
-}
+template <> inline Tmf::SecureAgent &Instance::Get(void) { return mTmfSecureAgent; }
 #endif
 
-template <> inline MeshCoP::ExtendedPanIdManager &Instance::Get(void)
-{
-    return mExtendedPanIdManager;
-}
+template <> inline MeshCoP::ExtendedPanIdManager &Instance::Get(void) { return mExtendedPanIdManager; }
 
-template <> inline MeshCoP::NetworkNameManager &Instance::Get(void)
-{
-    return mNetworkNameManager;
-}
+template <> inline MeshCoP::NetworkNameManager &Instance::Get(void) { return mNetworkNameManager; }
 
-template <> inline MeshCoP::ActiveDatasetManager &Instance::Get(void)
-{
-    return mActiveDataset;
-}
+template <> inline MeshCoP::ActiveDatasetManager &Instance::Get(void) { return mActiveDataset; }
 
-template <> inline MeshCoP::PendingDatasetManager &Instance::Get(void)
-{
-    return mPendingDataset;
-}
+template <> inline MeshCoP::PendingDatasetManager &Instance::Get(void) { return mPendingDataset; }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-template <> inline TimeSync &Instance::Get(void)
-{
-    return mTimeSync;
-}
+template <> inline TimeSync &Instance::Get(void) { return mTimeSync; }
 #endif
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-template <> inline MeshCoP::Commissioner &Instance::Get(void)
-{
-    return mCommissioner;
-}
+template <> inline MeshCoP::Commissioner &Instance::Get(void) { return mCommissioner; }
 
-template <> inline AnnounceBeginClient &Instance::Get(void)
-{
-    return mCommissioner.GetAnnounceBeginClient();
-}
+template <> inline AnnounceBeginClient &Instance::Get(void) { return mCommissioner.GetAnnounceBeginClient(); }
 
-template <> inline EnergyScanClient &Instance::Get(void)
-{
-    return mCommissioner.GetEnergyScanClient();
-}
+template <> inline EnergyScanClient &Instance::Get(void) { return mCommissioner.GetEnergyScanClient(); }
 
-template <> inline PanIdQueryClient &Instance::Get(void)
-{
-    return mCommissioner.GetPanIdQueryClient();
-}
+template <> inline PanIdQueryClient &Instance::Get(void) { return mCommissioner.GetPanIdQueryClient(); }
 #endif
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
-template <> inline MeshCoP::Joiner &Instance::Get(void)
-{
-    return mJoiner;
-}
+template <> inline MeshCoP::Joiner &Instance::Get(void) { return mJoiner; }
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-template <> inline Dns::Client &Instance::Get(void)
-{
-    return mDnsClient;
-}
+template <> inline Dns::Client &Instance::Get(void) { return mDnsClient; }
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-template <> inline Srp::Client &Instance::Get(void)
-{
-    return mSrpClient;
-}
+template <> inline Srp::Client &Instance::Get(void) { return mSrpClient; }
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
-template <> inline Utils::SrpClientBuffers &Instance::Get(void)
-{
-    return mSrpClientBuffers;
-}
+template <> inline Utils::SrpClientBuffers &Instance::Get(void) { return mSrpClientBuffers; }
 #endif
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
-template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void)
-{
-    return mDnssdServer;
-}
+template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void) { return mDnssdServer; }
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
-template <> inline Dns::Dso &Instance::Get(void)
-{
-    return mDnsDso;
-}
+template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
 #endif
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
-{
-    return mNetworkDiagnostic;
-}
+template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void) { return mNetworkDiagnostic; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-template <> inline Dhcp6::Client &Instance::Get(void)
-{
-    return mDhcp6Client;
-}
+template <> inline Dhcp6::Client &Instance::Get(void) { return mDhcp6Client; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-template <> inline Dhcp6::Server &Instance::Get(void)
-{
-    return mDhcp6Server;
-}
+template <> inline Dhcp6::Server &Instance::Get(void) { return mDhcp6Server; }
 #endif
 
 #if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
-template <> inline NeighborDiscovery::Agent &Instance::Get(void)
-{
-    return mNeighborDiscoveryAgent;
-}
+template <> inline NeighborDiscovery::Agent &Instance::Get(void) { return mNeighborDiscoveryAgent; }
 #endif
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-template <> inline Utils::Slaac &Instance::Get(void)
-{
-    return mSlaac;
-}
+template <> inline Utils::Slaac &Instance::Get(void) { return mSlaac; }
 #endif
 
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
-template <> inline Utils::JamDetector &Instance::Get(void)
-{
-    return mJamDetector;
-}
+template <> inline Utils::JamDetector &Instance::Get(void) { return mJamDetector; }
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
-template <> inline Sntp::Client &Instance::Get(void)
-{
-    return mSntpClient;
-}
+template <> inline Sntp::Client &Instance::Get(void) { return mSntpClient; }
 #endif
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #if OPENTHREAD_FTD
-template <> inline Utils::ChildSupervisor &Instance::Get(void)
-{
-    return mChildSupervisor;
-}
+template <> inline Utils::ChildSupervisor &Instance::Get(void) { return mChildSupervisor; }
 #endif
-template <> inline Utils::SupervisionListener &Instance::Get(void)
-{
-    return mSupervisionListener;
-}
+template <> inline Utils::SupervisionListener &Instance::Get(void) { return mSupervisionListener; }
 #endif
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-template <> inline Utils::PingSender &Instance::Get(void)
-{
-    return mPingSender;
-}
+template <> inline Utils::PingSender &Instance::Get(void) { return mPingSender; }
 #endif
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
-template <> inline Utils::ChannelMonitor &Instance::Get(void)
-{
-    return mChannelMonitor;
-}
+template <> inline Utils::ChannelMonitor &Instance::Get(void) { return mChannelMonitor; }
 #endif
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
-template <> inline Utils::ChannelManager &Instance::Get(void)
-{
-    return mChannelManager;
-}
+template <> inline Utils::ChannelManager &Instance::Get(void) { return mChannelManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-template <> inline Utils::HistoryTracker &Instance::Get(void)
-{
-    return mHistoryTracker;
-}
+template <> inline Utils::HistoryTracker &Instance::Get(void) { return mHistoryTracker; }
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-template <> inline MeshCoP::DatasetUpdater &Instance::Get(void)
-{
-    return mDatasetUpdater;
-}
+template <> inline MeshCoP::DatasetUpdater &Instance::Get(void) { return mDatasetUpdater; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-template <> inline MeshCoP::BorderAgent &Instance::Get(void)
-{
-    return mBorderAgent;
-}
+template <> inline MeshCoP::BorderAgent &Instance::Get(void) { return mBorderAgent; }
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
-template <> inline AnnounceSender &Instance::Get(void)
-{
-    return mAnnounceSender;
-}
+template <> inline AnnounceSender &Instance::Get(void) { return mAnnounceSender; }
 #endif
 
-template <> inline MessagePool &Instance::Get(void)
-{
-    return mMessagePool;
-}
+template <> inline MessagePool &Instance::Get(void) { return mMessagePool; }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-template <> inline BackboneRouter::Leader &Instance::Get(void)
-{
-    return mBackboneRouterLeader;
-}
+template <> inline BackboneRouter::Leader &Instance::Get(void) { return mBackboneRouterLeader; }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-template <> inline BackboneRouter::Local &Instance::Get(void)
-{
-    return mBackboneRouterLocal;
-}
-template <> inline BackboneRouter::Manager &Instance::Get(void)
-{
-    return mBackboneRouterManager;
-}
+template <> inline BackboneRouter::Local   &Instance::Get(void) { return mBackboneRouterLocal; }
+template <> inline BackboneRouter::Manager &Instance::Get(void) { return mBackboneRouterManager; }
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
@@ -1169,107 +902,62 @@ template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
-template <> inline MlrManager &Instance::Get(void)
-{
-    return mMlrManager;
-}
+template <> inline MlrManager &Instance::Get(void) { return mMlrManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
-template <> inline DuaManager &Instance::Get(void)
-{
-    return mDuaManager;
-}
+template <> inline DuaManager &Instance::Get(void) { return mDuaManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-template <> inline LinkMetrics::LinkMetrics &Instance::Get(void)
-{
-    return mLinkMetrics;
-}
+template <> inline LinkMetrics::LinkMetrics &Instance::Get(void) { return mLinkMetrics; }
 #endif
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-template <> inline Utils::Otns &Instance::Get(void)
-{
-    return mOtns;
-}
+template <> inline Utils::Otns &Instance::Get(void) { return mOtns; }
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-template <> inline BorderRouter::RoutingManager &Instance::Get(void)
-{
-    return mRoutingManager;
-}
+template <> inline BorderRouter::RoutingManager &Instance::Get(void) { return mRoutingManager; }
 
-template <> inline BorderRouter::InfraIf &Instance::Get(void)
-{
-    return mRoutingManager.mInfraIf;
-}
+template <> inline BorderRouter::InfraIf &Instance::Get(void) { return mRoutingManager.mInfraIf; }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-template <> inline Nat64::Translator &Instance::Get(void)
-{
-    return mNat64Translator;
-}
+template <> inline Nat64::Translator &Instance::Get(void) { return mNat64Translator; }
 #endif
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-template <> inline Srp::Server &Instance::Get(void)
-{
-    return mSrpServer;
-}
+template <> inline Srp::Server &Instance::Get(void) { return mSrpServer; }
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-template <> inline Mac::LinkRaw &Instance::Get(void)
-{
-    return mLinkRaw;
-}
+template <> inline Mac::LinkRaw &Instance::Get(void) { return mLinkRaw; }
 
 #if OPENTHREAD_RADIO
-template <> inline Mac::SubMac &Instance::Get(void)
-{
-    return mLinkRaw.mSubMac;
-}
+template <> inline Mac::SubMac &Instance::Get(void) { return mLinkRaw.mSubMac; }
 #endif
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-template <> inline Tasklet::Scheduler &Instance::Get(void)
-{
-    return mTaskletScheduler;
-}
+template <> inline Tasklet::Scheduler &Instance::Get(void) { return mTaskletScheduler; }
 
-template <> inline TimerMilli::Scheduler &Instance::Get(void)
-{
-    return mTimerMilliScheduler;
-}
+template <> inline TimerMilli::Scheduler &Instance::Get(void) { return mTimerMilliScheduler; }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-template <> inline TimerMicro::Scheduler &Instance::Get(void)
-{
-    return mTimerMicroScheduler;
-}
+template <> inline TimerMicro::Scheduler &Instance::Get(void) { return mTimerMicroScheduler; }
 #endif
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
-template <> inline Extension::ExtensionBase &Instance::Get(void)
-{
-    return mExtension;
-}
+template <> inline Extension::ExtensionBase &Instance::Get(void) { return mExtension; }
 #endif
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-template <> inline FactoryDiags::Diags &Instance::Get(void)
-{
-    return mDiags;
-}
+template <> inline FactoryDiags::Diags &Instance::Get(void) { return mDiags; }
 #endif
 
 /**

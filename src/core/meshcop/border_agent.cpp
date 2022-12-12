@@ -562,10 +562,7 @@ void BorderAgent::HandleConnected(bool aConnected)
     }
 }
 
-uint16_t BorderAgent::GetUdpPort(void) const
-{
-    return Get<Tmf::SecureAgent>().GetUdpPort();
-}
+uint16_t BorderAgent::GetUdpPort(void) const { return Get<Tmf::SecureAgent>().GetUdpPort(); }
 
 void BorderAgent::Start(void)
 {

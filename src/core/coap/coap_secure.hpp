@@ -278,10 +278,7 @@ public:
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
      *
      */
-    void SetSslAuthMode(bool aVerifyPeerCertificate)
-    {
-        mDtls.SetSslAuthMode(aVerifyPeerCertificate);
-    }
+    void SetSslAuthMode(bool aVerifyPeerCertificate) { mDtls.SetSslAuthMode(aVerifyPeerCertificate); }
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
@@ -395,10 +392,7 @@ public:
      * @return DTLS session's message info.
      *
      */
-    const Ip6::MessageInfo &GetMessageInfo(void) const
-    {
-        return mDtls.GetMessageInfo();
-    }
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
 
 private:
     static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

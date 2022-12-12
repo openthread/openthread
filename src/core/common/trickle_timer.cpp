@@ -115,10 +115,7 @@ void TrickleTimer::StartNewInterval(void)
     TimerMilli::Start(mTimeInInterval);
 }
 
-void TrickleTimer::HandleTimer(Timer &aTimer)
-{
-    static_cast<TrickleTimer *>(&aTimer)->HandleTimer();
-}
+void TrickleTimer::HandleTimer(Timer &aTimer) { static_cast<TrickleTimer *>(&aTimer)->HandleTimer(); }
 
 void TrickleTimer::HandleTimer(void)
 {

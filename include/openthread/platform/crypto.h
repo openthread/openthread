@@ -220,6 +220,12 @@ struct otPlatCryptoEcdsaSignature
 typedef struct otPlatCryptoEcdsaSignature otPlatCryptoEcdsaSignature;
 
 /**
+ * Max PBKDF2 SALT length: salt prefix (6) + extended panid (8) + network name (16)
+ *
+ */
+#define OT_CRYPTO_PBDKF2_MAX_SALT_SIZE 30
+
+/**
  * Initialize the Crypto module.
  *
  */
@@ -643,6 +649,26 @@ otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyPair,
 otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
                                 const otPlatCryptoSha256Hash     *aHash,
                                 const otPlatCryptoEcdsaSignature *aSignature);
+
+/**
+ * Perform PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).
+ *
+ * @param[in]     aPassword          Password to use when generating key.
+ * @param[in]     aPasswordLen       Length of password.
+ * @param[in]     aSalt              Salt to use when generating key.
+ * @param[in]     aSaltLen           Length of salt.
+ * @param[in]     aIterationCounter  Iteration count.
+ * @param[in]     aKeyLen            Length of generated key in bytes.
+ * @param[out]    aKey               A pointer to the generated key.
+ *
+ */
+void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
+                                   uint16_t       aPasswordLen,
+                                   const uint8_t *aSalt,
+                                   uint16_t       aSaltLen,
+                                   uint32_t       aIterationCounter,
+                                   uint16_t       aKeyLen,
+                                   uint8_t       *aKey);
 
 /**
  * @}

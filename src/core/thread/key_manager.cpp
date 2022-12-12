@@ -202,10 +202,7 @@ void KeyManager::Start(void)
     StartKeyRotationTimer();
 }
 
-void KeyManager::Stop(void)
-{
-    mKeyRotationTimer.Stop();
-}
+void KeyManager::Stop(void) { mKeyRotationTimer.Stop(); }
 
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
@@ -444,9 +441,7 @@ exit:
     return;
 }
 #else
-void KeyManager::MacFrameCounterUsed(uint32_t)
-{
-}
+void KeyManager::MacFrameCounterUsed(uint32_t) {}
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

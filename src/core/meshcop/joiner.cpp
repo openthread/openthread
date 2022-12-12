@@ -81,10 +81,7 @@ void Joiner::SetIdFromIeeeEui64(void)
     ComputeJoinerId(eui64, mId);
 }
 
-const JoinerDiscerner *Joiner::GetDiscerner(void) const
-{
-    return mDiscerner.IsEmpty() ? nullptr : &mDiscerner;
-}
+const JoinerDiscerner *Joiner::GetDiscerner(void) const { return mDiscerner.IsEmpty() ? nullptr : &mDiscerner; }
 
 Error Joiner::SetDiscerner(const JoinerDiscerner &aDiscerner)
 {

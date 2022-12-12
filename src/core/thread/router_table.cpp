@@ -50,10 +50,7 @@ RouterTable::Iterator::Iterator(Instance &aInstance)
 {
 }
 
-void RouterTable::Iterator::Advance(void)
-{
-    mItem = Get<RouterTable>().GetNextEntry(mItem);
-}
+void RouterTable::Iterator::Advance(void) { mItem = Get<RouterTable>().GetNextEntry(mItem); }
 
 RouterTable::RouterTable(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -114,10 +111,7 @@ void RouterTable::ClearNeighbors(void)
     }
 }
 
-bool RouterTable::IsAllocated(uint8_t aRouterId) const
-{
-    return mAllocatedRouterIds.Contains(aRouterId);
-}
+bool RouterTable::IsAllocated(uint8_t aRouterId) const { return mAllocatedRouterIds.Contains(aRouterId); }
 
 void RouterTable::UpdateAllocation(void)
 {
@@ -398,10 +392,7 @@ const Router *RouterTable::FindRouterByRloc16(uint16_t aRloc16) const
     return FindRouterById(Mle::RouterIdFromRloc16(aRloc16));
 }
 
-const Router *RouterTable::FindNextHopOf(const Router &aRouter) const
-{
-    return FindRouterById(aRouter.GetNextHop());
-}
+const Router *RouterTable::FindNextHopOf(const Router &aRouter) const { return FindRouterById(aRouter.GetNextHop()); }
 
 Router *RouterTable::FindRouter(const Mac::ExtAddress &aExtAddress)
 {
@@ -434,10 +425,7 @@ exit:
     return error;
 }
 
-Router *RouterTable::GetLeader(void)
-{
-    return FindRouterById(Get<Mle::MleRouter>().GetLeaderId());
-}
+Router *RouterTable::GetLeader(void) { return FindRouterById(Get<Mle::MleRouter>().GetLeaderId()); }
 
 uint32_t RouterTable::GetLeaderAge(void) const
 {

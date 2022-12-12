@@ -272,10 +272,7 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    bool IsReceiveIp6FilterEnabled(void) const
-    {
-        return mIsReceiveIp6FilterEnabled;
-    }
+    bool IsReceiveIp6FilterEnabled(void) const { return mIsReceiveIp6FilterEnabled; }
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -287,10 +284,7 @@ public:
      * @sa IsReceiveIp6FilterEnabled
      *
      */
-    void SetReceiveIp6FilterEnabled(bool aEnabled)
-    {
-        mIsReceiveIp6FilterEnabled = aEnabled;
-    }
+    void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
 
     /**
      * This method indicates whether or not IPv6 forwarding is enabled.
@@ -298,10 +292,7 @@ public:
      * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
      *
      */
-    bool IsForwardingEnabled(void) const
-    {
-        return mForwardingEnabled;
-    }
+    bool IsForwardingEnabled(void) const { return mForwardingEnabled; }
 
     /**
      * This method enables/disables IPv6 forwarding.
@@ -309,10 +300,7 @@ public:
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
      *
      */
-    void SetForwardingEnabled(bool aEnable)
-    {
-        mForwardingEnabled = aEnable;
-    }
+    void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
 
     /**
      * This method perform default source address selection.
@@ -330,10 +318,7 @@ public:
      * @returns A reference to the send queue.
      *
      */
-    const PriorityQueue &GetSendQueue(void) const
-    {
-        return mSendQueue;
-    }
+    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     /**
      * This static method converts an IP protocol number to a string.
@@ -362,10 +347,7 @@ public:
      * @returns A reference to the Border Routing counters.
      *
      */
-    const otBorderRoutingCounters &GetBorderRoutingCounters(void) const
-    {
-        return mBorderRoutingCounters;
-    }
+    const otBorderRoutingCounters &GetBorderRoutingCounters(void) const { return mBorderRoutingCounters; }
 
     /**
      * This method returns a reference to the Border Routing counters.
@@ -373,19 +355,13 @@ public:
      * @returns A reference to the Border Routing counters.
      *
      */
-    otBorderRoutingCounters &GetBorderRoutingCounters(void)
-    {
-        return mBorderRoutingCounters;
-    }
+    otBorderRoutingCounters &GetBorderRoutingCounters(void) { return mBorderRoutingCounters; }
 
     /**
      * This method resets the Border Routing counters.
      *
      */
-    void ResetBorderRoutingCounters(void)
-    {
-        memset(&mBorderRoutingCounters, 0, sizeof(mBorderRoutingCounters));
-    }
+    void ResetBorderRoutingCounters(void) { memset(&mBorderRoutingCounters, 0, sizeof(mBorderRoutingCounters)); }
 #endif
 
 private:

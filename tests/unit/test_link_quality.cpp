@@ -82,10 +82,7 @@ void VerifyRawRssValue(int8_t aAverage, uint16_t aRawValue)
 }
 
 // This function prints the values in the passed in link info instance. It is invoked as the final step in test-case.
-void PrintOutcome(LinkQualityInfo &aLinkInfo)
-{
-    printf("%s -> PASS \n", aLinkInfo.ToInfoString().AsCString());
-}
+void PrintOutcome(LinkQualityInfo &aLinkInfo) { printf("%s -> PASS \n", aLinkInfo.ToInfoString().AsCString()); }
 
 void TestLinkQualityData(RssTestData aRssData)
 {
@@ -138,10 +135,7 @@ void VerifyRawRssValue(RssAverager &aRssAverager)
 }
 
 // This function prints the values in the passed link info instance. It is invoked as the final step in test-case.
-void PrintOutcome(RssAverager &aRssAverager)
-{
-    printf("%s -> PASS\n", aRssAverager.ToString().AsCString());
-}
+void PrintOutcome(RssAverager &aRssAverager) { printf("%s -> PASS\n", aRssAverager.ToString().AsCString()); }
 
 int8_t GetRandomRss(void)
 {

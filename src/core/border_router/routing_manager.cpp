@@ -1633,10 +1633,7 @@ exit:
     return shouldPublish;
 }
 
-void RoutingManager::DiscoveredPrefixTable::HandleEntryTimer(void)
-{
-    RemoveExpiredEntries();
-}
+void RoutingManager::DiscoveredPrefixTable::HandleEntryTimer(void) { RemoveExpiredEntries(); }
 
 void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
 {
@@ -1682,10 +1679,7 @@ void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
     }
 }
 
-void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void)
-{
-    mSignalTask.Post();
-}
+void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void) { mSignalTask.Post(); }
 
 void RoutingManager::DiscoveredPrefixTable::ProcessNeighborAdvertMessage(
     const Ip6::Nd::NeighborAdvertMessage &aNaMessage,
@@ -2890,10 +2884,7 @@ exit:
     return;
 }
 
-void RoutingManager::RsSender::Stop(void)
-{
-    mTimer.Stop();
-}
+void RoutingManager::RsSender::Stop(void) { mTimer.Stop(); }
 
 Error RoutingManager::RsSender::SendRs(void)
 {

@@ -1843,9 +1843,7 @@ void Server::Service::Log(Action aAction) const
     }
 }
 #else
-void Server::Service::Log(Action) const
-{
-}
+void Server::Service::Log(Action) const {}
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1923,10 +1921,7 @@ Server::Host::Host(Instance &aInstance, TimeMilli aUpdateTime)
     mKeyRecord.Clear();
 }
 
-Server::Host::~Host(void)
-{
-    FreeAllServices();
-}
+Server::Host::~Host(void) { FreeAllServices(); }
 
 Error Server::Host::SetFullName(const char *aFullName)
 {
@@ -1967,10 +1962,7 @@ TimeMilli Server::Host::GetExpireTime(void) const
     return mUpdateTime + Time::SecToMsec(mLease);
 }
 
-TimeMilli Server::Host::GetKeyExpireTime(void) const
-{
-    return mUpdateTime + Time::SecToMsec(mKeyLease);
-}
+TimeMilli Server::Host::GetKeyExpireTime(void) const { return mUpdateTime + Time::SecToMsec(mKeyLease); }
 
 void Server::Host::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
 {
@@ -2126,10 +2118,7 @@ void Server::Host::FreeAllServices(void)
     }
 }
 
-void Server::Host::ClearResources(void)
-{
-    mAddresses.Free();
-}
+void Server::Host::ClearResources(void) { mAddresses.Free(); }
 
 Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 {

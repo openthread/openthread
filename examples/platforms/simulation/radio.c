@@ -185,10 +185,7 @@ static void NodeIdFilterDeny(uint16_t aNodeId)
     sDeniedNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
 }
 
-static void NodeIdFilterClear(void)
-{
-    memset(sDeniedNodeIdsBitVector, 0, sizeof(sDeniedNodeIdsBitVector));
-}
+static void NodeIdFilterClear(void) { memset(sDeniedNodeIdsBitVector, 0, sizeof(sDeniedNodeIdsBitVector)); }
 
 otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
@@ -237,10 +234,7 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
 }
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
-static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
-{
-    return (aTimeA - aTimeB) < (1U << 31);
-}
+static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB) { return (aTimeA - aTimeB) < (1U << 31); }
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -794,10 +788,7 @@ exit:
     return;
 }
 
-bool platformRadioIsTransmitPending(void)
-{
-    return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait;
-}
+bool platformRadioIsTransmitPending(void) { return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait; }
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength)

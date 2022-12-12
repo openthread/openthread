@@ -44,15 +44,9 @@ namespace ot {
 namespace Utils {
 namespace CmdLineParser {
 
-static bool IsSeparator(char aChar)
-{
-    return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
-}
+static bool IsSeparator(char aChar) { return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n'); }
 
-static bool IsEscapable(char aChar)
-{
-    return IsSeparator(aChar) || (aChar == '\\');
-}
+static bool IsEscapable(char aChar) { return IsSeparator(aChar) || (aChar == '\\'); }
 
 static Error ParseDigit(char aDigitChar, uint8_t &aValue)
 {
@@ -137,20 +131,11 @@ exit:
     return error;
 }
 
-Error ParseAsUint8(const char *aString, uint8_t &aUint8)
-{
-    return ParseUint<uint8_t>(aString, aUint8);
-}
+Error ParseAsUint8(const char *aString, uint8_t &aUint8) { return ParseUint<uint8_t>(aString, aUint8); }
 
-Error ParseAsUint16(const char *aString, uint16_t &aUint16)
-{
-    return ParseUint<uint16_t>(aString, aUint16);
-}
+Error ParseAsUint16(const char *aString, uint16_t &aUint16) { return ParseUint<uint16_t>(aString, aUint16); }
 
-Error ParseAsUint32(const char *aString, uint32_t &aUint32)
-{
-    return ParseUint<uint32_t>(aString, aUint32);
-}
+Error ParseAsUint32(const char *aString, uint32_t &aUint32) { return ParseUint<uint32_t>(aString, aUint32); }
 
 Error ParseAsUint64(const char *aString, uint64_t &aUint64)
 {
@@ -208,15 +193,9 @@ exit:
     return error;
 }
 
-Error ParseAsInt8(const char *aString, int8_t &aInt8)
-{
-    return ParseInt<int8_t>(aString, aInt8);
-}
+Error ParseAsInt8(const char *aString, int8_t &aInt8) { return ParseInt<int8_t>(aString, aInt8); }
 
-Error ParseAsInt16(const char *aString, int16_t &aInt16)
-{
-    return ParseInt<int16_t>(aString, aInt16);
-}
+Error ParseAsInt16(const char *aString, int16_t &aInt16) { return ParseInt<int16_t>(aString, aInt16); }
 
 Error ParseAsInt32(const char *aString, int32_t &aInt32)
 {
@@ -390,15 +369,9 @@ Error ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aB
 //---------------------------------------------------------------------------------------------------------------------
 // Arg class
 
-uint16_t Arg::GetLength(void) const
-{
-    return IsEmpty() ? 0 : static_cast<uint16_t>(strlen(mString));
-}
+uint16_t Arg::GetLength(void) const { return IsEmpty() ? 0 : static_cast<uint16_t>(strlen(mString)); }
 
-bool Arg::operator==(const char *aString) const
-{
-    return !IsEmpty() && (strcmp(mString, aString) == 0);
-}
+bool Arg::operator==(const char *aString) const { return !IsEmpty() && (strcmp(mString, aString) == 0); }
 
 void Arg::CopyArgsToStringArray(Arg aArgs[], char *aStrings[])
 {

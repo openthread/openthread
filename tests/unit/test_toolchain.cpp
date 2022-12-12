@@ -109,10 +109,7 @@ void test_addr_sizes(void)
     VerifyOrQuit(sizeof(otNetifAddress) == otNetifAddress_Size_c(), "otNetifAddress should the same in C & C++");
 }
 
-void test_addr_bitfield(void)
-{
-    VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "test_addr_size_cpp");
-}
+void test_addr_bitfield(void) { VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "test_addr_size_cpp"); }
 
 void test_packed_alignment(void)
 {

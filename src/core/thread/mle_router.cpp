@@ -455,10 +455,7 @@ exit:
     return;
 }
 
-void MleRouter::StopAdvertiseTrickleTimer(void)
-{
-    mAdvertiseTrickleTimer.Stop();
-}
+void MleRouter::StopAdvertiseTrickleTimer(void) { mAdvertiseTrickleTimer.Stop(); }
 
 void MleRouter::ResetAdvertiseInterval(void)
 {
@@ -4234,10 +4231,7 @@ exit:
     return;
 }
 
-bool MleRouter::HasChildren(void)
-{
-    return mChildTable.HasChildren(Child::kInStateValidOrAttaching);
-}
+bool MleRouter::HasChildren(void) { return mChildTable.HasChildren(Child::kInStateValidOrAttaching); }
 
 void MleRouter::RemoveChildren(void)
 {

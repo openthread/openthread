@@ -115,6 +115,9 @@ install_packages_brew()
     command -v clang-format-14 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
         brew install llvm@14
         sudo ln -s "$(brew --prefix llvm@14)/bin/clang-format" /usr/local/bin/clang-format-14
+        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-tidy" /usr/local/bin/clang-tidy-14
+        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-apply-replacements" /usr/local/bin/clang-apply-replacements-14
+        sudo ln -s "$(brew --prefix llvm@14)/bin/run-clang-tidy" /usr/local/bin/run-clang-tidy-14
     } || echo 'WARNING: could not install llvm@14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
 
     # add yapf for pretty

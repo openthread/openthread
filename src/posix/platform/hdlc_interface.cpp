@@ -139,10 +139,7 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_UART;
 }
 
-void HdlcInterface::OnRcpReset(void)
-{
-    mHdlcDecoder.Reset();
-}
+void HdlcInterface::OnRcpReset(void) { mHdlcDecoder.Reset(); }
 
 otError HdlcInterface::Init(const Url::Url &aRadioUrl)
 {
@@ -177,15 +174,9 @@ exit:
     return error;
 }
 
-HdlcInterface::~HdlcInterface(void)
-{
-    Deinit();
-}
+HdlcInterface::~HdlcInterface(void) { Deinit(); }
 
-void HdlcInterface::Deinit(void)
-{
-    CloseFile();
-}
+void HdlcInterface::Deinit(void) { CloseFile(); }
 
 void HdlcInterface::Read(void)
 {
@@ -204,10 +195,7 @@ void HdlcInterface::Read(void)
     }
 }
 
-void HdlcInterface::Decode(const uint8_t *aBuffer, uint16_t aLength)
-{
-    mHdlcDecoder.Decode(aBuffer, aLength);
-}
+void HdlcInterface::Decode(const uint8_t *aBuffer, uint16_t aLength) { mHdlcDecoder.Decode(aBuffer, aLength); }
 
 otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {

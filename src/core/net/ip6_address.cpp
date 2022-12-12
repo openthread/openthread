@@ -75,15 +75,9 @@ bool Prefix::IsLinkLocal(void) const
     return (mLength >= 10) && ((mPrefix.mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80));
 }
 
-bool Prefix::IsMulticast(void) const
-{
-    return (mLength >= 8) && (mPrefix.mFields.m8[0] == 0xff);
-}
+bool Prefix::IsMulticast(void) const { return (mLength >= 8) && (mPrefix.mFields.m8[0] == 0xff); }
 
-bool Prefix::IsUniqueLocal(void) const
-{
-    return (mLength >= 7) && ((mPrefix.mFields.m8[0] & 0xfe) == 0xfc);
-}
+bool Prefix::IsUniqueLocal(void) const { return (mLength >= 7) && ((mPrefix.mFields.m8[0] & 0xfe) == 0xfc); }
 
 bool Prefix::IsEqual(const uint8_t *aPrefixBytes, uint8_t aPrefixLength) const
 {
@@ -196,20 +190,14 @@ void Prefix::ToString(StringWriter &aWriter) const
 //---------------------------------------------------------------------------------------------------------------------
 // InterfaceIdentifier methods
 
-bool InterfaceIdentifier::IsUnspecified(void) const
-{
-    return (mFields.m32[0] == 0) && (mFields.m32[1] == 0);
-}
+bool InterfaceIdentifier::IsUnspecified(void) const { return (mFields.m32[0] == 0) && (mFields.m32[1] == 0); }
 
 bool InterfaceIdentifier::IsReserved(void) const
 {
     return IsSubnetRouterAnycast() || IsReservedSubnetAnycast() || IsAnycastLocator();
 }
 
-bool InterfaceIdentifier::IsSubnetRouterAnycast(void) const
-{
-    return (mFields.m32[0] == 0) && (mFields.m32[1] == 0);
-}
+bool InterfaceIdentifier::IsSubnetRouterAnycast(void) const { return (mFields.m32[0] == 0) && (mFields.m32[1] == 0); }
 
 bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
 {
@@ -224,15 +212,9 @@ bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
             mFields.m8[7] >= 0x80);
 }
 
-void InterfaceIdentifier::GenerateRandom(void)
-{
-    SuccessOrAssert(Random::Crypto::FillBuffer(mFields.m8, kSize));
-}
+void InterfaceIdentifier::GenerateRandom(void) { SuccessOrAssert(Random::Crypto::FillBuffer(mFields.m8, kSize)); }
 
-void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer)
-{
-    memcpy(mFields.m8, aBuffer, kSize);
-}
+void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
 void InterfaceIdentifier::SetFromExtAddress(const Mac::ExtAddress &aExtAddress)
 {
@@ -318,10 +300,7 @@ bool Address::IsLoopback(void) const
     return (mFields.m32[0] == 0 && mFields.m32[1] == 0 && mFields.m32[2] == 0 && mFields.m32[3] == HostSwap32(1));
 }
 
-bool Address::IsLinkLocal(void) const
-{
-    return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80);
-}
+bool Address::IsLinkLocal(void) const { return (mFields.m16[0] & HostSwap16(0xffc0)) == HostSwap16(0xfe80); }
 
 void Address::SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress)
 {
@@ -337,70 +316,31 @@ void Address::SetToLinkLocalAddress(const InterfaceIdentifier &aIid)
     SetIid(aIid);
 }
 
-bool Address::IsLinkLocalMulticast(void) const
-{
-    return IsMulticast() && (GetScope() == kLinkLocalScope);
-}
+bool Address::IsLinkLocalMulticast(void) const { return IsMulticast() && (GetScope() == kLinkLocalScope); }
 
-bool Address::IsLinkLocalAllNodesMulticast(void) const
-{
-    return (*this == GetLinkLocalAllNodesMulticast());
-}
+bool Address::IsLinkLocalAllNodesMulticast(void) const { return (*this == GetLinkLocalAllNodesMulticast()); }
 
-void Address::SetToLinkLocalAllNodesMulticast(void)
-{
-    *this = GetLinkLocalAllNodesMulticast();
-}
+void Address::SetToLinkLocalAllNodesMulticast(void) { *this = GetLinkLocalAllNodesMulticast(); }
 
-bool Address::IsLinkLocalAllRoutersMulticast(void) const
-{
-    return (*this == GetLinkLocalAllRoutersMulticast());
-}
+bool Address::IsLinkLocalAllRoutersMulticast(void) const { return (*this == GetLinkLocalAllRoutersMulticast()); }
 
-void Address::SetToLinkLocalAllRoutersMulticast(void)
-{
-    *this = GetLinkLocalAllRoutersMulticast();
-}
+void Address::SetToLinkLocalAllRoutersMulticast(void) { *this = GetLinkLocalAllRoutersMulticast(); }
 
-bool Address::IsRealmLocalMulticast(void) const
-{
-    return IsMulticast() && (GetScope() == kRealmLocalScope);
-}
+bool Address::IsRealmLocalMulticast(void) const { return IsMulticast() && (GetScope() == kRealmLocalScope); }
 
-bool Address::IsMulticastLargerThanRealmLocal(void) const
-{
-    return IsMulticast() && (GetScope() > kRealmLocalScope);
-}
+bool Address::IsMulticastLargerThanRealmLocal(void) const { return IsMulticast() && (GetScope() > kRealmLocalScope); }
 
-bool Address::IsRealmLocalAllNodesMulticast(void) const
-{
-    return (*this == GetRealmLocalAllNodesMulticast());
-}
+bool Address::IsRealmLocalAllNodesMulticast(void) const { return (*this == GetRealmLocalAllNodesMulticast()); }
 
-void Address::SetToRealmLocalAllNodesMulticast(void)
-{
-    *this = GetRealmLocalAllNodesMulticast();
-}
+void Address::SetToRealmLocalAllNodesMulticast(void) { *this = GetRealmLocalAllNodesMulticast(); }
 
-bool Address::IsRealmLocalAllRoutersMulticast(void) const
-{
-    return (*this == GetRealmLocalAllRoutersMulticast());
-}
+bool Address::IsRealmLocalAllRoutersMulticast(void) const { return (*this == GetRealmLocalAllRoutersMulticast()); }
 
-void Address::SetToRealmLocalAllRoutersMulticast(void)
-{
-    *this = GetRealmLocalAllRoutersMulticast();
-}
+void Address::SetToRealmLocalAllRoutersMulticast(void) { *this = GetRealmLocalAllRoutersMulticast(); }
 
-bool Address::IsRealmLocalAllMplForwarders(void) const
-{
-    return (*this == GetRealmLocalAllMplForwarders());
-}
+bool Address::IsRealmLocalAllMplForwarders(void) const { return (*this == GetRealmLocalAllMplForwarders()); }
 
-void Address::SetToRealmLocalAllMplForwarders(void)
-{
-    *this = GetRealmLocalAllMplForwarders();
-}
+void Address::SetToRealmLocalAllMplForwarders(void) { *this = GetRealmLocalAllMplForwarders(); }
 
 bool Address::MatchesPrefix(const Prefix &aPrefix) const
 {
@@ -412,15 +352,9 @@ bool Address::MatchesPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const
     return Prefix::MatchLength(mFields.m8, aPrefix, Prefix::SizeForLength(aPrefixLength)) >= aPrefixLength;
 }
 
-void Address::SetPrefix(const NetworkPrefix &aNetworkPrefix)
-{
-    mFields.mComponents.mNetworkPrefix = aNetworkPrefix;
-}
+void Address::SetPrefix(const NetworkPrefix &aNetworkPrefix) { mFields.mComponents.mNetworkPrefix = aNetworkPrefix; }
 
-void Address::SetPrefix(const Prefix &aPrefix)
-{
-    CopyBits(mFields.m8, aPrefix.GetBytes(), aPrefix.GetLength());
-}
+void Address::SetPrefix(const Prefix &aPrefix) { CopyBits(mFields.m8, aPrefix.GetBytes(), aPrefix.GetLength()); }
 
 void Address::CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits)
 {

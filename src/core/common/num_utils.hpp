@@ -52,10 +52,7 @@ namespace ot {
  * @returns The minimum of @p aFirst and @p aSecond.
  *
  */
-template <typename Type> Type Min(Type aFirst, Type aSecond)
-{
-    return (aFirst < aSecond) ? aFirst : aSecond;
-}
+template <typename Type> Type Min(Type aFirst, Type aSecond) { return (aFirst < aSecond) ? aFirst : aSecond; }
 
 /**
  * This template function returns the maximum of two given values.
@@ -70,10 +67,7 @@ template <typename Type> Type Min(Type aFirst, Type aSecond)
  * @returns The maximum of @p aFirst and @p aSecond.
  *
  */
-template <typename Type> Type Max(Type aFirst, Type aSecond)
-{
-    return (aFirst < aSecond) ? aSecond : aFirst;
-}
+template <typename Type> Type Max(Type aFirst, Type aSecond) { return (aFirst < aSecond) ? aSecond : aFirst; }
 
 /**
  * This template function returns clamped version of a given value to a given closed range [min, max].
@@ -195,10 +189,7 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
  * @returns The @p aUint32 value as `unsigned long`.
  *
  */
-inline unsigned long ToUlong(uint32_t aUint32)
-{
-    return static_cast<unsigned long>(aUint32);
-}
+inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned long>(aUint32); }
 
 /**
  * This function counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.

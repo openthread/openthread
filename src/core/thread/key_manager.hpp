@@ -148,10 +148,7 @@ public:
      * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    Error GenerateRandom(void)
-    {
-        return Random::Crypto::FillBuffer(m8, sizeof(m8));
-    }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
 #endif
 
 } OT_TOOL_PACKED_END;
@@ -181,10 +178,7 @@ public:
      * @retval kErrorNone  Successfully generated a random Thread PSKc.
      *
      */
-    Error GenerateRandom(void)
-    {
-        return Random::Crypto::FillBuffer(m8, sizeof(m8));
-    }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
 #endif
 } OT_TOOL_PACKED_END;
 
@@ -260,10 +254,7 @@ public:
      * @returns A key reference to the Thread Network Key.
      *
      */
-    NetworkKeyRef GetNetworkKeyRef(void)
-    {
-        return mNetworkKeyRef;
-    }
+    NetworkKeyRef GetNetworkKeyRef(void) { return mNetworkKeyRef; }
 
     /**
      * This method sets the Thread Network Key using Key Reference.
@@ -283,10 +274,7 @@ public:
      * @retval FALSE if the PSKc is not not configured.
      *
      */
-    bool IsPskcSet(void) const
-    {
-        return mIsPskcSet;
-    }
+    bool IsPskcSet(void) const { return mIsPskcSet; }
 
     /**
      * This method gets the PKSc.
@@ -311,10 +299,7 @@ public:
      * @returns A key reference to the PSKc.
      *
      */
-    const PskcRef &GetPskcRef(void)
-    {
-        return mPskcRef;
-    }
+    const PskcRef &GetPskcRef(void) { return mPskcRef; }
 
     /**
      * This method sets the PSKc as a Key reference.
@@ -331,10 +316,7 @@ public:
      * @returns The current key sequence value.
      *
      */
-    uint32_t GetCurrentKeySequence(void) const
-    {
-        return mKeySequence;
-    }
+    uint32_t GetCurrentKeySequence(void) const { return mKeySequence; }
 
     /**
      * This method sets the current key sequence value.
@@ -351,10 +333,7 @@ public:
      * @returns The current TREL MAC key.
      *
      */
-    const Mac::KeyMaterial &GetCurrentTrelMacKey(void) const
-    {
-        return mTrelKey;
-    }
+    const Mac::KeyMaterial &GetCurrentTrelMacKey(void) const { return mTrelKey; }
 
     /**
      * This method returns a temporary MAC key for TREL radio link computed from the given key sequence.
@@ -373,10 +352,7 @@ public:
      * @returns The current MLE key.
      *
      */
-    const Mle::KeyMaterial &GetCurrentMleKey(void) const
-    {
-        return mMleKey;
-    }
+    const Mle::KeyMaterial &GetCurrentMleKey(void) const { return mMleKey; }
 
     /**
      * This method returns a temporary MLE key Material computed from the given key sequence.
@@ -395,10 +371,7 @@ public:
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t Get154MacFrameCounter(void) const
-    {
-        return mMacFrameCounters.Get154();
-    }
+    uint32_t Get154MacFrameCounter(void) const { return mMacFrameCounters.Get154(); }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -408,10 +381,7 @@ public:
      * @returns The current MAC Frame Counter value for TREL radio link.
      *
      */
-    uint32_t GetTrelMacFrameCounter(void) const
-    {
-        return mMacFrameCounters.GetTrel();
-    }
+    uint32_t GetTrelMacFrameCounter(void) const { return mMacFrameCounters.GetTrel(); }
 
     /**
      * This method increments the current MAC Frame Counter value for TREL radio link.
@@ -426,10 +396,7 @@ public:
      * @return The maximum MAC frame Counter among all supported radio links.
      *
      */
-    uint32_t GetMaximumMacFrameCounter(void) const
-    {
-        return mMacFrameCounters.GetMaximum();
-    }
+    uint32_t GetMaximumMacFrameCounter(void) const { return mMacFrameCounters.GetMaximum(); }
 
     /**
      * This method sets the current MAC Frame Counter value for all radio links.
@@ -445,10 +412,7 @@ public:
      * @param[in]  aStoredMacFrameCounter  The stored MAC Frame Counter value.
      *
      */
-    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
-    {
-        mStoredMacFrameCounter = aStoredMacFrameCounter;
-    }
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter) { mStoredMacFrameCounter = aStoredMacFrameCounter; }
 
     /**
      * This method returns the current MLE Frame Counter value.
@@ -456,10 +420,7 @@ public:
      * @returns The current MLE Frame Counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const
-    {
-        return mMleFrameCounter;
-    }
+    uint32_t GetMleFrameCounter(void) const { return mMleFrameCounter; }
 
     /**
      * This method sets the current MLE Frame Counter value.
@@ -467,10 +428,7 @@ public:
      * @param[in]  aMleFrameCounter  The MLE Frame Counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aMleFrameCounter)
-    {
-        mMleFrameCounter = aMleFrameCounter;
-    }
+    void SetMleFrameCounter(uint32_t aMleFrameCounter) { mMleFrameCounter = aMleFrameCounter; }
 
     /**
      * This method sets the MLE Frame Counter value which is stored in non-volatile memory.
@@ -478,10 +436,7 @@ public:
      * @param[in]  aStoredMleFrameCounter  The stored MLE Frame Counter value.
      *
      */
-    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter)
-    {
-        mStoredMleFrameCounter = aStoredMleFrameCounter;
-    }
+    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter) { mStoredMleFrameCounter = aStoredMleFrameCounter; }
 
     /**
      * This method increments the current MLE Frame Counter value.
@@ -495,10 +450,7 @@ public:
      * @returns The KEK as `KekKeyMaterial`.
      *
      */
-    const KekKeyMaterial &GetKek(void) const
-    {
-        return mKek;
-    }
+    const KekKeyMaterial &GetKek(void) const { return mKek; }
 
     /**
      * This method retrieves the KEK as literal `Kek` key.
@@ -506,10 +458,7 @@ public:
      * @param[out] aKek  A reference to a `Kek` to output the retrieved KEK.
      *
      */
-    void ExtractKek(Kek &aKek)
-    {
-        mKek.ExtractKey(aKek);
-    }
+    void ExtractKek(Kek &aKek) { mKek.ExtractKey(aKek); }
 
     /**
      * This method sets the KEK.
@@ -525,10 +474,7 @@ public:
      * @param[in]  aKekBytes  A pointer to the KEK bytes.
      *
      */
-    void SetKek(const uint8_t *aKekBytes)
-    {
-        SetKek(*reinterpret_cast<const Kek *>(aKekBytes));
-    }
+    void SetKek(const uint8_t *aKekBytes) { SetKek(*reinterpret_cast<const Kek *>(aKekBytes)); }
 
     /**
      * This method returns the current KEK Frame Counter value.
@@ -536,19 +482,13 @@ public:
      * @returns The current KEK Frame Counter value.
      *
      */
-    uint32_t GetKekFrameCounter(void) const
-    {
-        return mKekFrameCounter;
-    }
+    uint32_t GetKekFrameCounter(void) const { return mKekFrameCounter; }
 
     /**
      * This method increments the current KEK Frame Counter value.
      *
      */
-    void IncrementKekFrameCounter(void)
-    {
-        mKekFrameCounter++;
-    }
+    void IncrementKekFrameCounter(void) { mKekFrameCounter++; }
 
     /**
      * This method returns the KeySwitchGuardTime.
@@ -558,10 +498,7 @@ public:
      * @returns The KeySwitchGuardTime value in hours.
      *
      */
-    uint32_t GetKeySwitchGuardTime(void) const
-    {
-        return mKeySwitchGuardTime;
-    }
+    uint32_t GetKeySwitchGuardTime(void) const { return mKeySwitchGuardTime; }
 
     /**
      * This method sets the KeySwitchGuardTime.
@@ -571,10 +508,7 @@ public:
      * @param[in]  aKeySwitchGuardTime  The KeySwitchGuardTime value in hours.
      *
      */
-    void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime)
-    {
-        mKeySwitchGuardTime = aKeySwitchGuardTime;
-    }
+    void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime) { mKeySwitchGuardTime = aKeySwitchGuardTime; }
 
     /**
      * This method returns the Security Policy.
@@ -585,10 +519,7 @@ public:
      * @returns The SecurityPolicy.
      *
      */
-    const SecurityPolicy &GetSecurityPolicy(void) const
-    {
-        return mSecurityPolicy;
-    }
+    const SecurityPolicy &GetSecurityPolicy(void) const { return mSecurityPolicy; }
 
     /**
      * This method sets the Security Policy.

@@ -1015,10 +1015,7 @@ public:
      * @returns A ChildInfoIteratorBuilder instance.
      *
      */
-    ChildInfoIteratorBuilder IterateChildInfo(void)
-    {
-        return ChildInfoIteratorBuilder(GetInstance());
-    }
+    ChildInfoIteratorBuilder IterateChildInfo(void) { return ChildInfoIteratorBuilder(GetInstance()); }
 
     /**
      * This class defines an iterator to access all Child Info entries in the settings.

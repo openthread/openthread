@@ -299,20 +299,11 @@ exit:
     return error;
 }
 
-template <> otError History::Process<Cmd("rx")>(Arg aArgs[])
-{
-    return ProcessRxTxHistory(kRx, aArgs);
-}
+template <> otError History::Process<Cmd("rx")>(Arg aArgs[]) { return ProcessRxTxHistory(kRx, aArgs); }
 
-template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[])
-{
-    return ProcessRxTxHistory(kRxTx, aArgs);
-}
+template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[]) { return ProcessRxTxHistory(kRxTx, aArgs); }
 
-template <> otError History::Process<Cmd("tx")>(Arg aArgs[])
-{
-    return ProcessRxTxHistory(kTx, aArgs);
-}
+template <> otError History::Process<Cmd("tx")>(Arg aArgs[]) { return ProcessRxTxHistory(kTx, aArgs); }
 
 const char *History::MessagePriorityToString(uint8_t aPriority)
 {

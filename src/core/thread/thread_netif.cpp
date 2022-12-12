@@ -118,10 +118,7 @@ exit:
     return;
 }
 
-Error ThreadNetif::SendMessage(Message &aMessage)
-{
-    return Get<MeshForwarder>().SendMessage(aMessage);
-}
+Error ThreadNetif::SendMessage(Message &aMessage) { return Get<MeshForwarder>().SendMessage(aMessage); }
 
 Error ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination)
 {
@@ -139,9 +136,6 @@ exit:
     return error;
 }
 
-bool ThreadNetif::IsOnMesh(const Ip6::Address &aAddress) const
-{
-    return Get<NetworkData::Leader>().IsOnMesh(aAddress);
-}
+bool ThreadNetif::IsOnMesh(const Ip6::Address &aAddress) const { return Get<NetworkData::Leader>().IsOnMesh(aAddress); }
 
 } // namespace ot

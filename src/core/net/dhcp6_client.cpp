@@ -218,10 +218,7 @@ exit:
     return rval;
 }
 
-void Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
-{
-    aTrickleTimer.Get<Client>().HandleTrickleTimer();
-}
+void Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer) { aTrickleTimer.Get<Client>().HandleTrickleTimer(); }
 
 void Client::HandleTrickleTimer(void)
 {

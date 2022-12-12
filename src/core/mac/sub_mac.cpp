@@ -683,10 +683,7 @@ int8_t SubMac::GetRssi(void) const
     return rssi;
 }
 
-int8_t SubMac::GetNoiseFloor(void) const
-{
-    return Get<Radio>().GetReceiveSensitivity();
-}
+int8_t SubMac::GetNoiseFloor(void) const { return Get<Radio>().GetReceiveSensitivity(); }
 
 Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 {
@@ -1073,10 +1070,7 @@ exit:
     return retval;
 }
 
-void SubMac::HandleCslTimer(Timer &aTimer)
-{
-    aTimer.Get<SubMac>().HandleCslTimer();
-}
+void SubMac::HandleCslTimer(Timer &aTimer) { aTimer.Get<SubMac>().HandleCslTimer(); }
 
 void SubMac::HandleCslTimer(void)
 {

@@ -145,10 +145,7 @@ exit:
     return;
 }
 
-void Server::Stop(void)
-{
-    IgnoreError(mSocket.Close());
-}
+void Server::Stop(void) { IgnoreError(mSocket.Close()); }
 
 void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext)
 {

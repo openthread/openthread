@@ -124,10 +124,7 @@ exit:
     return error;
 }
 
-Instance &Tcp::Endpoint::GetInstance(void) const
-{
-    return AsNonConst(AsCoreType(GetTcb().instance));
-}
+Instance &Tcp::Endpoint::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcb().instance)); }
 
 const SockAddr &Tcp::Endpoint::GetLocalAddress(void) const
 {
@@ -287,10 +284,7 @@ exit:
     return error;
 }
 
-bool Tcp::Endpoint::IsClosed(void) const
-{
-    return GetTcb().t_state == TCP6S_CLOSED;
-}
+bool Tcp::Endpoint::IsClosed(void) const { return GetTcb().t_state == TCP6S_CLOSED; }
 
 uint8_t Tcp::Endpoint::TimerFlagToIndex(uint8_t aTimerFlag)
 {
@@ -483,25 +477,16 @@ size_t Tcp::Endpoint::GetInFlightBytes(void) const
     return tp.snd_max - tp.snd_una;
 }
 
-size_t Tcp::Endpoint::GetBacklogBytes(void) const
-{
-    return GetSendBufferBytes() - GetInFlightBytes();
-}
+size_t Tcp::Endpoint::GetBacklogBytes(void) const { return GetSendBufferBytes() - GetInFlightBytes(); }
 
-Address &Tcp::Endpoint::GetLocalIp6Address(void)
-{
-    return *reinterpret_cast<Address *>(&GetTcb().laddr);
-}
+Address &Tcp::Endpoint::GetLocalIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcb().laddr); }
 
 const Address &Tcp::Endpoint::GetLocalIp6Address(void) const
 {
     return *reinterpret_cast<const Address *>(&GetTcb().laddr);
 }
 
-Address &Tcp::Endpoint::GetForeignIp6Address(void)
-{
-    return *reinterpret_cast<Address *>(&GetTcb().faddr);
-}
+Address &Tcp::Endpoint::GetForeignIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcb().faddr); }
 
 const Address &Tcp::Endpoint::GetForeignIp6Address(void) const
 {
@@ -543,10 +528,7 @@ exit:
     return error;
 }
 
-Instance &Tcp::Listener::GetInstance(void) const
-{
-    return AsNonConst(AsCoreType(GetTcbListen().instance));
-}
+Instance &Tcp::Listener::GetInstance(void) const { return AsNonConst(AsCoreType(GetTcbListen().instance)); }
 
 Error Tcp::Listener::Listen(const SockAddr &aSockName)
 {
@@ -586,15 +568,9 @@ exit:
     return error;
 }
 
-bool Tcp::Listener::IsClosed(void) const
-{
-    return GetTcbListen().t_state == TCP6S_CLOSED;
-}
+bool Tcp::Listener::IsClosed(void) const { return GetTcbListen().t_state == TCP6S_CLOSED; }
 
-Address &Tcp::Listener::GetLocalIp6Address(void)
-{
-    return *reinterpret_cast<Address *>(&GetTcbListen().laddr);
-}
+Address &Tcp::Listener::GetLocalIp6Address(void) { return *reinterpret_cast<Address *>(&GetTcbListen().laddr); }
 
 const Address &Tcp::Listener::GetLocalIp6Address(void) const
 {
@@ -972,15 +948,9 @@ void tcplp_sys_send_message(otInstance *aInstance, otMessage *aMessage, otMessag
     IgnoreError(instance.Get<ot::Ip6::Ip6>().SendDatagram(message, info, kProtoTcp));
 }
 
-uint32_t tcplp_sys_get_ticks(void)
-{
-    return TimerMilli::GetNow().GetValue();
-}
+uint32_t tcplp_sys_get_ticks(void) { return TimerMilli::GetNow().GetValue(); }
 
-uint32_t tcplp_sys_get_millis(void)
-{
-    return TimerMilli::GetNow().GetValue();
-}
+uint32_t tcplp_sys_get_millis(void) { return TimerMilli::GetNow().GetValue(); }
 
 void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay)
 {
@@ -1151,15 +1121,9 @@ uint32_t tcplp_sys_generate_isn()
     return isn;
 }
 
-uint16_t tcplp_sys_hostswap16(uint16_t aHostPort)
-{
-    return HostSwap16(aHostPort);
-}
+uint16_t tcplp_sys_hostswap16(uint16_t aHostPort) { return HostSwap16(aHostPort); }
 
-uint32_t tcplp_sys_hostswap32(uint32_t aHostPort)
-{
-    return HostSwap32(aHostPort);
-}
+uint32_t tcplp_sys_hostswap32(uint32_t aHostPort) { return HostSwap32(aHostPort); }
 }
 
 #endif // OPENTHREAD_CONFIG_TCP_ENABLE

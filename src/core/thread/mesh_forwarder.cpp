@@ -681,10 +681,7 @@ exit:
     return error;
 }
 
-bool MeshForwarder::GetRxOnWhenIdle(void) const
-{
-    return Get<Mac::Mac>().GetRxOnWhenIdle();
-}
+bool MeshForwarder::GetRxOnWhenIdle(void) const { return Get<Mac::Mac>().GetRxOnWhenIdle(); }
 
 void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
@@ -1925,9 +1922,7 @@ void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogL
     }
 }
 #else
-void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &, LogLevel)
-{
-}
+void MeshForwarder::LogIp6SourceDestAddresses(const Ip6::Headers &, LogLevel) {}
 #endif
 
 void MeshForwarder::LogIp6Message(MessageAction       aAction,
@@ -2060,21 +2055,15 @@ void MeshForwarder::LogLowpanHcFrameDrop(Error                 aError,
 
 #else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 
-void MeshForwarder::LogMessage(MessageAction, const Message &, Error, const Mac::Address *)
-{
-}
+void MeshForwarder::LogMessage(MessageAction, const Message &, Error, const Mac::Address *) {}
 
-void MeshForwarder::LogFrame(const char *, const Mac::Frame &, Error)
-{
-}
+void MeshForwarder::LogFrame(const char *, const Mac::Frame &, Error) {}
 
 void MeshForwarder::LogFragmentFrameDrop(Error, uint16_t, const Mac::Addresses &, const Lowpan::FragmentHeader &, bool)
 {
 }
 
-void MeshForwarder::LogLowpanHcFrameDrop(Error, uint16_t, const Mac::Addresses &, bool)
-{
-}
+void MeshForwarder::LogLowpanHcFrameDrop(Error, uint16_t, const Mac::Addresses &, bool) {}
 
 #endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
 

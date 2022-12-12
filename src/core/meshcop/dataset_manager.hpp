@@ -221,10 +221,7 @@ protected:
      * @returns The Operational Dataset type.
      *
      */
-    Dataset::Type GetType(void) const
-    {
-        return mLocal.GetType();
-    }
+    Dataset::Type GetType(void) const { return mLocal.GetType(); }
 
     /**
      * This method clears the Operational Dataset.
@@ -341,14 +338,8 @@ private:
                                       Error                aError);
     void        HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
 
-    bool IsActiveDataset(void) const
-    {
-        return GetType() == Dataset::kActive;
-    }
-    bool IsPendingDataset(void) const
-    {
-        return GetType() == Dataset::kPending;
-    }
+    bool  IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
+    bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
     void  SignalDatasetChange(void) const;
     void  HandleDatasetUpdated(void);
     Error AppendDatasetToMessage(const Dataset::Info &aDatasetInfo, Message &aMessage) const;
@@ -472,10 +463,7 @@ public:
      * @retval kErrorFailed  Failed to generate random values for new parameters.
      *
      */
-    Error CreateNewNetwork(Dataset::Info &aDatasetInfo)
-    {
-        return aDatasetInfo.GenerateRandom(GetInstance());
-    }
+    Error CreateNewNetwork(Dataset::Info &aDatasetInfo) { return aDatasetInfo.GenerateRandom(GetInstance()); }
 
     /**
      * This method starts the Leader functions for maintaining the Active Operational Dataset.
@@ -498,10 +486,7 @@ private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void)
-    {
-        DatasetManager::HandleTimer();
-    }
+    void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 };
 
 DeclareTmfHandler(ActiveDatasetManager, kUriActiveGet);
@@ -611,10 +596,7 @@ private:
     void StartDelayTimer(void);
 
     static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void)
-    {
-        DatasetManager::HandleTimer();
-    }
+    void        HandleTimer(void) { DatasetManager::HandleTimer(); }
 
     void                     HandleDelayTimer(void);
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

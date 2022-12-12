@@ -114,14 +114,9 @@ void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter)
 
 #elif OPENTHREAD_RADIO
 
-void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError)
-{
-    Get<LinkRaw>().InvokeReceiveDone(aFrame, aError);
-}
+void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError) { Get<LinkRaw>().InvokeReceiveDone(aFrame, aError); }
 
-void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t)
-{
-}
+void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t) {}
 
 void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
                                                   const RxFrame *aAckFrame,
@@ -137,15 +132,9 @@ void SubMac::Callbacks::TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error 
     Get<LinkRaw>().InvokeTransmitDone(aFrame, aAckFrame, aError);
 }
 
-void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi)
-{
-    Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi);
-}
+void SubMac::Callbacks::EnergyScanDone(int8_t aMaxRssi) { Get<LinkRaw>().InvokeEnergyScanDone(aMaxRssi); }
 
-void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter)
-{
-    OT_UNUSED_VARIABLE(aFrameCounter);
-}
+void SubMac::Callbacks::FrameCounterUsed(uint32_t aFrameCounter) { OT_UNUSED_VARIABLE(aFrameCounter); }
 
 #endif // OPENTHREAD_RADIO
 

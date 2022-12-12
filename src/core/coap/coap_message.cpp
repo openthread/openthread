@@ -84,15 +84,9 @@ Error Message::InitAsPost(const Ip6::Address &aDestination, Uri aUri)
     return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUri);
 }
 
-bool Message::IsConfirmablePostRequest(void) const
-{
-    return IsConfirmable() && IsPostRequest();
-}
+bool Message::IsConfirmablePostRequest(void) const { return IsConfirmable() && IsPostRequest(); }
 
-bool Message::IsNonConfirmablePostRequest(void) const
-{
-    return IsNonConfirmable() && IsPostRequest();
-}
+bool Message::IsNonConfirmablePostRequest(void) const { return IsNonConfirmable() && IsPostRequest(); }
 
 void Message::Finish(void)
 {
@@ -456,15 +450,9 @@ const char *Message::CodeToString(void) const
 }
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-Message::Iterator MessageQueue::begin(void)
-{
-    return Message::Iterator(GetHead());
-}
+Message::Iterator MessageQueue::begin(void) { return Message::Iterator(GetHead()); }
 
-Message::ConstIterator MessageQueue::begin(void) const
-{
-    return Message::ConstIterator(GetHead());
-}
+Message::ConstIterator MessageQueue::begin(void) const { return Message::ConstIterator(GetHead()); }
 
 Error Option::Iterator::Init(const Message &aMessage)
 {

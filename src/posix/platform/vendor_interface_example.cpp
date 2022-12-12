@@ -83,10 +83,7 @@ VendorInterface::VendorInterface(SpinelInterface::ReceiveFrameCallback aCallback
     OT_UNUSED_VARIABLE(sVendorInterfaceImplRaw);
 }
 
-VendorInterface::~VendorInterface(void)
-{
-    Deinit();
-}
+VendorInterface::~VendorInterface(void) { Deinit(); }
 
 otError VendorInterface::Init(const Url::Url &aRadioUrl)
 {
@@ -102,10 +99,7 @@ void VendorInterface::Deinit(void)
     // TODO: Implement vendor code here.
 }
 
-uint32_t VendorInterface::GetBusSpeed(void) const
-{
-    return 1000000;
-}
+uint32_t VendorInterface::GetBusSpeed(void) const { return 1000000; }
 
 void VendorInterface::OnRcpReset(void)
 {

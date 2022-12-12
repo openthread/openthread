@@ -578,10 +578,7 @@ exit:
     return;
 }
 
-bool Mac::IsActiveOrPending(Operation aOperation) const
-{
-    return (mOperation == aOperation) || IsPending(aOperation);
-}
+bool Mac::IsActiveOrPending(Operation aOperation) const { return (mOperation == aOperation) || IsPending(aOperation); }
 
 void Mac::StartOperation(Operation aOperation)
 {
@@ -2114,16 +2111,10 @@ const uint32_t *Mac::GetIndirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)
 }
 #endif
 
-void Mac::ResetRetrySuccessHistogram()
-{
-    memset(&mRetryHistogram, 0, sizeof(mRetryHistogram));
-}
+void Mac::ResetRetrySuccessHistogram() { memset(&mRetryHistogram, 0, sizeof(mRetryHistogram)); }
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
-uint8_t Mac::ComputeLinkMargin(int8_t aRss) const
-{
-    return ot::ComputeLinkMargin(GetNoiseFloor(), aRss);
-}
+uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin(GetNoiseFloor(), aRss); }
 
 // LCOV_EXCL_START
 
@@ -2214,24 +2205,15 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
     }
 }
 
-void Mac::LogBeacon(const char *aActionText) const
-{
-    LogInfo("%s Beacon", aActionText);
-}
+void Mac::LogBeacon(const char *aActionText) const { LogInfo("%s Beacon", aActionText); }
 
 #else // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void Mac::LogFrameRxFailure(const RxFrame *, Error) const
-{
-}
+void Mac::LogFrameRxFailure(const RxFrame *, Error) const {}
 
-void Mac::LogBeacon(const char *) const
-{
-}
+void Mac::LogBeacon(const char *) const {}
 
-void Mac::LogFrameTxFailure(const TxFrame &, Error, uint8_t, bool) const
-{
-}
+void Mac::LogFrameTxFailure(const TxFrame &, Error, uint8_t, bool) const {}
 
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
@@ -2290,15 +2272,9 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
     UpdateCsl();
 }
 
-bool Mac::IsCslEnabled(void) const
-{
-    return !Get<Mle::Mle>().IsRxOnWhenIdle() && IsCslCapable();
-}
+bool Mac::IsCslEnabled(void) const { return !Get<Mle::Mle>().IsRxOnWhenIdle() && IsCslCapable(); }
 
-bool Mac::IsCslCapable(void) const
-{
-    return (GetCslPeriod() > 0) && IsCslSupported();
-}
+bool Mac::IsCslCapable(void) const { return (GetCslPeriod() > 0) && IsCslSupported(); }
 
 bool Mac::IsCslSupported(void) const
 {

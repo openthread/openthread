@@ -265,12 +265,8 @@ private:
     void LogBackboneRouterService(const char *aAction, Error aError);
     void LogDomainPrefix(const char *aAction, Error aError);
 #else
-    void LogBackboneRouterService(const char *, Error)
-    {
-    }
-    void LogDomainPrefix(const char *, Error)
-    {
-    }
+    void LogBackboneRouterService(const char *, Error) {}
+    void LogDomainPrefix(const char *, Error) {}
 #endif
 
     BackboneRouterState mState;

@@ -210,11 +210,9 @@ SOURCES_COMMON                                  = \
     crypto/aes_ccm.cpp                            \
     crypto/aes_ecb.cpp                            \
     crypto/crypto_platform.cpp                    \
-    crypto/ecdsa.cpp                              \
     crypto/hkdf_sha256.cpp                        \
     crypto/hmac_sha256.cpp                        \
     crypto/mbedtls.cpp                            \
-    crypto/pbkdf2_cmac.cpp                        \
     crypto/sha256.cpp                             \
     crypto/storage.cpp                            \
     diags/factory_diags.cpp                       \
@@ -529,7 +527,6 @@ HEADERS_COMMON                                  = \
     crypto/hkdf_sha256.hpp                        \
     crypto/hmac_sha256.hpp                        \
     crypto/mbedtls.hpp                            \
-    crypto/pbkdf2_cmac.hpp                        \
     crypto/sha256.hpp                             \
     crypto/storage.hpp                            \
     diags/factory_diags.hpp                       \

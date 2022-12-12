@@ -315,10 +315,7 @@ static otInstance *InitInstance(PosixConfig *aConfig)
     return instance;
 }
 
-void otTaskletsSignalPending(otInstance *aInstance)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-}
+void otTaskletsSignalPending(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstance); }
 
 void otPlatReset(otInstance *aInstance)
 {

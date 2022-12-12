@@ -56,10 +56,7 @@ namespace Ncp {
 // ----------------------------------------------------------------------------
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-static bool HasOnly1BitSet(uint32_t aValue)
-{
-    return aValue != 0 && ((aValue & (aValue - 1)) == 0);
-}
+static bool HasOnly1BitSet(uint32_t aValue) { return aValue != 0 && ((aValue & (aValue - 1)) == 0); }
 
 static uint8_t IndexOfMSB(uint32_t aValue)
 {
@@ -308,10 +305,7 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif
 }
 
-NcpBase *NcpBase::GetNcpInstance(void)
-{
-    return sNcpInstance;
-}
+NcpBase *NcpBase::GetNcpInstance(void) { return sNcpInstance; }
 
 void NcpBase::ResetCounters(void)
 {
@@ -334,10 +328,7 @@ void NcpBase::ResetCounters(void)
 // MARK: Serial Traffic Glue
 // ----------------------------------------------------------------------------
 
-Spinel::Buffer::FrameTag NcpBase::GetLastOutboundFrameTag(void)
-{
-    return mTxFrameBuffer.InFrameGetLastTag();
-}
+Spinel::Buffer::FrameTag NcpBase::GetLastOutboundFrameTag(void) { return mTxFrameBuffer.InFrameGetLastTag(); }
 
 void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
 {
@@ -477,10 +468,7 @@ bool NcpBase::ShouldDeferHostSend(void)
     return (mHostPowerState == SPINEL_HOST_POWER_STATE_DEEP_SLEEP && !mHostPowerStateInProgress);
 }
 
-void NcpBase::IncrementFrameErrorCounter(void)
-{
-    mFramingErrorCounter++;
-}
+void NcpBase::IncrementFrameErrorCounter(void) { mFramingErrorCounter++; }
 
 otError NcpBase::StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
 {
@@ -1198,10 +1186,7 @@ exit:
 // MARK: Individual Command Handlers
 // ----------------------------------------------------------------------------
 
-otError NcpBase::CommandHandler_NOOP(uint8_t aHeader)
-{
-    return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_OK);
-}
+otError NcpBase::CommandHandler_NOOP(uint8_t aHeader) { return PrepareLastStatusResponse(aHeader, SPINEL_STATUS_OK); }
 
 otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
 {
@@ -2090,10 +2075,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_POWER_STATE>(void)
     return mEncoder.WriteUint8(SPINEL_POWER_STATE_ONLINE);
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_POWER_STATE>(void)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_POWER_STATE>(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_HWADDR>(void)
 {

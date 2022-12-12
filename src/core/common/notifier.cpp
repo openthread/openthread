@@ -300,14 +300,9 @@ const char *Notifier::EventToString(Event aEvent) const
 
 #else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
-void Notifier::LogEvents(Events) const
-{
-}
+void Notifier::LogEvents(Events) const {}
 
-const char *Notifier::EventToString(Event) const
-{
-    return "";
-}
+const char *Notifier::EventToString(Event) const { return ""; }
 
 #endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 

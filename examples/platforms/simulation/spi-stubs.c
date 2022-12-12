@@ -52,9 +52,7 @@ otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aComplete
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void otPlatSpiSlaveDisable(void)
-{
-}
+void otPlatSpiSlaveDisable(void) {}
 
 otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
                                          uint16_t aOutputBufLen,
@@ -73,9 +71,7 @@ otError otPlatSpiSlavePrepareTransaction(uint8_t *aOutputBuf,
 
 // Uart
 
-void otPlatUartSendDone(void)
-{
-}
+void otPlatUartSendDone(void) {}
 
 void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {

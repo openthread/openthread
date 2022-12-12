@@ -68,10 +68,7 @@ exit:
     return error;
 }
 
-bool otIp6IsEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<ThreadNetif>().IsUp();
-}
+bool otIp6IsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<ThreadNetif>().IsUp(); }
 
 const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
 {
@@ -222,10 +219,7 @@ void otIp6GetPrefix(const otIp6Address *aAddress, uint8_t aLength, otIp6Prefix *
     AsCoreType(aAddress).GetPrefix(aLength, AsCoreType(aPrefix));
 }
 
-bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
-{
-    return AsCoreType(aAddress).IsUnspecified();
-}
+bool otIp6IsAddressUnspecified(const otIp6Address *aAddress) { return AsCoreType(aAddress).IsUnspecified(); }
 
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
 {
@@ -255,10 +249,7 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
-bool otIp6IsSlaacEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Utils::Slaac>().IsEnabled();
-}
+bool otIp6IsSlaacEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Utils::Slaac>().IsEnabled(); }
 
 void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
 {
@@ -290,10 +281,7 @@ otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifi
 
 #endif
 
-const char *otIp6ProtoToString(uint8_t aIpProto)
-{
-    return Ip6::Ip6::IpProtoToString(aIpProto);
-}
+const char *otIp6ProtoToString(uint8_t aIpProto) { return Ip6::Ip6::IpProtoToString(aIpProto); }
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstance)

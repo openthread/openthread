@@ -138,10 +138,7 @@ public:
      * @returns The Time Sync Sequence.
      *
      */
-    uint8_t GetTimeSyncSeq(void) const
-    {
-        return mTimeSyncSeq;
-    }
+    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
     /**
      * This method returns the time offset to the Thread network time (in microseconds).
@@ -149,10 +146,7 @@ public:
      * @returns The time offset to the Thread network time (in microseconds).
      *
      */
-    int64_t GetNetworkTimeOffset(void) const
-    {
-        return mNetworkTimeOffset;
-    }
+    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
 #endif
 
     /**
@@ -293,10 +287,7 @@ public:
      * @returns  A reference to the send queue.
      *
      */
-    const PriorityQueue &GetSendQueue(void) const
-    {
-        return mSendQueue;
-    }
+    const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     /**
      * This method returns a reference to the reassembly queue.
@@ -304,10 +295,7 @@ public:
      * @returns  A reference to the reassembly queue.
      *
      */
-    const MessageQueue &GetReassemblyQueue(void) const
-    {
-        return mReassemblyList;
-    }
+    const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
 
     /**
      * This method returns a reference to the IP level counters.
@@ -315,19 +303,13 @@ public:
      * @returns A reference to the IP level counters.
      *
      */
-    const otIpCounters &GetCounters(void) const
-    {
-        return mIpCounters;
-    }
+    const otIpCounters &GetCounters(void) const { return mIpCounters; }
 
     /**
      * This method resets the IP level counters.
      *
      */
-    void ResetCounters(void)
-    {
-        memset(&mIpCounters, 0, sizeof(mIpCounters));
-    }
+    void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
@@ -400,22 +382,10 @@ private:
                 kReassemblyTimeout;
 #endif
 
-            Message::Priority GetPriority(void) const
-            {
-                return static_cast<Message::Priority>(mPriority);
-            }
-            bool IsExpired(void) const
-            {
-                return (mLifetime == 0);
-            }
-            void DecrementLifetime(void)
-            {
-                mLifetime--;
-            }
-            void ResetLifetime(void)
-            {
-                mLifetime = kLifetime;
-            }
+            Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
+            bool              IsExpired(void) const { return (mLifetime == 0); }
+            void              DecrementLifetime(void) { mLifetime--; }
+            void              ResetLifetime(void) { mLifetime = kLifetime; }
 
             bool Matches(uint16_t aSrcRloc16, uint16_t aTag) const
             {
@@ -423,14 +393,8 @@ private:
             }
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-            bool ShouldDrop(void) const
-            {
-                return mShouldDrop;
-            }
-            void MarkToDrop(void)
-            {
-                mShouldDrop = true;
-            }
+            bool ShouldDrop(void) const { return mShouldDrop; }
+            void MarkToDrop(void) { mShouldDrop = true; }
 #endif
 
         private:
@@ -540,10 +504,7 @@ private:
     void AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame);
 #endif
 
-    void PauseMessageTransmissions(void)
-    {
-        mTxPaused = true;
-    }
+    void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE

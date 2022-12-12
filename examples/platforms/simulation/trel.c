@@ -419,10 +419,7 @@ void platformTrelInit(uint32_t aSpeedUpFactor)
     OT_UNUSED_VARIABLE(aSpeedUpFactor);
 }
 
-void platformTrelDeinit(void)
-{
-    deinitFds();
-}
+void platformTrelDeinit(void) { deinitFds(); }
 
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
 {
