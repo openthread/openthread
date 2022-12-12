@@ -91,8 +91,8 @@ public:
     otError Clear(const char *aKey);
 
 private:
-    const char *              kCommentDelimiter = "#";
-    const char *              kSwapSuffix       = ".swap";
+    const char               *kCommentDelimiter = "#";
+    const char               *kSwapSuffix       = ".swap";
     static constexpr uint16_t kLineMaxSize      = 512;
     static constexpr uint16_t kFileNameMaxSize  = 255;
 

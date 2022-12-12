@@ -965,10 +965,7 @@ template <> inline FactoryDiags::Diags &Instance::Get(void) { return mDiags; }
 #endif
 
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-template <> inline Utils::PowerCalibration &Instance::Get(void)
-{
-    return mPowerCalibration;
-}
+template <> inline Utils::PowerCalibration &Instance::Get(void) { return mPowerCalibration; }
 #endif
 
 /**

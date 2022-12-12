@@ -86,7 +86,7 @@ void PowerUpdater::UpdateCalibratedPower(void)
     int                    iterator = 0;
     char                   value[kMaxValueSize];
     Power::CalibratedPower calibratedPower;
-    ConfigFile *           calibrationFile = &mFactoryConfigFile;
+    ConfigFile            *calibrationFile = &mFactoryConfigFile;
 
     SuccessOrExit(otPlatRadioClearCalibratedPowers(gInstance));
 
@@ -121,7 +121,7 @@ otError PowerUpdater::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
     otError error    = OT_ERROR_NOT_FOUND;
     int     iterator = 0;
     char    value[kMaxValueSize];
-    char *  str;
+    char   *str;
 
     while (mProductConfigFile.Get(kKeyRegionDomainMapping, iterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
@@ -147,8 +147,8 @@ otError PowerUpdater::GetNextTargetPower(const Power::Domain &aDomain, int &aIte
 {
     otError error = OT_ERROR_NOT_FOUND;
     char    value[kMaxValueSize];
-    char *  domain;
-    char *  psave;
+    char   *domain;
+    char   *psave;
 
     while (mProductConfigFile.Get(kKeyTargetPower, aIterator, value, sizeof(value)) == OT_ERROR_NONE)
     {

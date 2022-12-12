@@ -90,12 +90,12 @@ public:
     otError GetRegion(uint16_t *aRegionCode) const;
 
 private:
-    const char *              kFactoryConfigFile      = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
-    const char *              kProductConfigFile      = OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE;
-    const char *              kKeyCalibratedPower     = "calibrated_power";
-    const char *              kKeyTargetPower         = "target_power";
-    const char *              kKeyRegionDomainMapping = "region_domain_mapping";
-    const char *              kCommaDelimiter         = ",";
+    const char               *kFactoryConfigFile      = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
+    const char               *kProductConfigFile      = OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE;
+    const char               *kKeyCalibratedPower     = "calibrated_power";
+    const char               *kKeyTargetPower         = "target_power";
+    const char               *kKeyRegionDomainMapping = "region_domain_mapping";
+    const char               *kCommaDelimiter         = ",";
     static constexpr uint16_t kMaxValueSize           = 512;
     static constexpr uint16_t kRegionCodeWorldWide    = 0x5757; // Region Code: "WW"
 

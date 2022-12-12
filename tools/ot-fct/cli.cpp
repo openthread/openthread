@@ -54,8 +54,8 @@ otError Cli::GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Po
 {
     otError error = OT_ERROR_NOT_FOUND;
     char    value[kMaxValueSize];
-    char *  domain;
-    char *  psave;
+    char   *domain;
+    char   *psave;
 
     while (mProductConfigFile.Get(kKeyTargetPower, aIterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
@@ -75,7 +75,7 @@ otError Cli::GetNextDomain(int &aIterator, Power::Domain &aDomain)
 {
     otError error = OT_ERROR_NOT_FOUND;
     char    value[kMaxValueSize];
-    char *  str;
+    char   *str;
 
     while (mProductConfigFile.Get(kKeyRegionDomainMapping, aIterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
@@ -123,8 +123,8 @@ otError Cli::ProcessRegionDomainTable(Utils::CmdLineParser::Arg aArgs[])
     otError error    = OT_ERROR_NONE;
     int     iterator = 0;
     char    value[kMaxValueSize];
-    char *  domain;
-    char *  psave;
+    char   *domain;
+    char   *psave;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
@@ -137,15 +137,15 @@ exit:
     return error;
 }
 
-otError Cli::ParseNextCalibratedPower(char *                  aCalibratedPowerString,
+otError Cli::ParseNextCalibratedPower(char                   *aCalibratedPowerString,
                                       uint16_t                aLength,
-                                      uint16_t &              aIterator,
+                                      uint16_t               &aIterator,
                                       Power::CalibratedPower &aCalibratedPower)
 {
     otError                    error = OT_ERROR_NONE;
-    char *                     start = aCalibratedPowerString + aIterator;
-    char *                     end;
-    char *                     subString;
+    char                      *start = aCalibratedPowerString + aIterator;
+    char                      *end;
+    char                      *subString;
     int16_t                    actualPower;
     ot::Power::RawPowerSetting rawPowerSetting;
 
@@ -207,7 +207,7 @@ otError Cli::ProcessCalibrationTable(Utils::CmdLineParser::Arg aArgs[])
         constexpr uint16_t kStateSearchPower  = 1;
 
         uint8_t                state = kStateSearchDomain;
-        char *                 subString;
+        char                  *subString;
         uint8_t                channel;
         Power::CalibratedPower calibratedPower;
 

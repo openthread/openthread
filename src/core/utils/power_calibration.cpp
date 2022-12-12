@@ -61,7 +61,7 @@ void PowerCalibration::CalibratedPowerEntry::Init(int16_t        aActualPower,
     memcpy(mSettings, aRawPowerSetting, aRawPowerSettingLength);
 }
 
-Error PowerCalibration::CalibratedPowerEntry::GetRawPowerSetting(uint8_t * aRawPowerSetting,
+Error PowerCalibration::CalibratedPowerEntry::GetRawPowerSetting(uint8_t  *aRawPowerSetting,
                                                                  uint16_t *aRawPowerSettingLength)
 {
     Error error = kErrorNone;
@@ -125,7 +125,7 @@ exit:
 }
 
 Error PowerCalibration::GetRawPowerSetting(uint8_t   aChannel,
-                                           uint8_t * aRawPowerSetting,
+                                           uint8_t  *aRawPowerSetting,
                                            uint16_t *aRawPowerSettingLength)
 {
     Error   error = kErrorNone;
@@ -173,7 +173,7 @@ exit:
 
 using namespace ot;
 
-OT_TOOL_WEAK otError otPlatRadioAddCalibratedPower(otInstance *   aInstance,
+OT_TOOL_WEAK otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
                                                    uint8_t        aChannel,
                                                    int16_t        aActualPower,
                                                    const uint8_t *aRawPowerSetting,
@@ -196,8 +196,8 @@ OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uin
 
 otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                       uint8_t     aChannel,
-                                      uint8_t *   aRawPowerSetting,
-                                      uint16_t *  aRawPowerSettingLength)
+                                      uint8_t    *aRawPowerSetting,
+                                      uint16_t   *aRawPowerSettingLength)
 {
     AssertPointerIsNotNull(aRawPowerSetting);
     AssertPointerIsNotNull(aRawPowerSettingLength);

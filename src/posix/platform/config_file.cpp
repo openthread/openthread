@@ -54,8 +54,8 @@ otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aVal
 {
     otError  error = OT_ERROR_NONE;
     char     line[kLineMaxSize + 1];
-    FILE *   fp = nullptr;
-    char *   ret;
+    FILE    *fp = nullptr;
+    char    *ret;
     long int pos;
 
     VerifyOrExit((aKey != nullptr) && (aValue != nullptr), error = OT_ERROR_INVALID_ARGS);
@@ -116,9 +116,9 @@ exit:
 otError ConfigFile::Add(const char *aKey, const char *aValue)
 {
     otError     error = OT_ERROR_NONE;
-    FILE *      fp    = nullptr;
-    char *      path  = nullptr;
-    char *      dir;
+    FILE       *fp    = nullptr;
+    char       *path  = nullptr;
+    char       *dir;
     struct stat st;
 
     VerifyOrExit((aKey != nullptr) && (aValue != nullptr), error = OT_ERROR_INVALID_ARGS);
@@ -152,8 +152,8 @@ otError ConfigFile::Clear(const char *aKey)
     otError error = OT_ERROR_NONE;
     char    swapFile[kFileNameMaxSize];
     char    line[kLineMaxSize];
-    FILE *  fp     = nullptr;
-    FILE *  fpSwap = nullptr;
+    FILE   *fp     = nullptr;
+    FILE   *fpSwap = nullptr;
 
     VerifyOrExit(aKey != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrDie((fp = fopen(mFilePath, "r")) != NULL, OT_EXIT_ERROR_ERRNO);

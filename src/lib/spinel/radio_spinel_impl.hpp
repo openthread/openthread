@@ -2545,8 +2545,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelTargetPower(ui
 {
     otError error = OT_ERROR_NONE;
     VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
-    error = Set(SPINEL_PROP_PHY_CHAN_TARGET_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT16_S, aChannel,
-                aTargetPower);
+    error =
+        Set(SPINEL_PROP_PHY_CHAN_TARGET_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT16_S, aChannel, aTargetPower);
 
 exit:
     return error;
@@ -3134,7 +3134,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         {
             uint8_t      channel;
             int16_t      actualPower;
-            uint8_t *    rawPowerSetting;
+            uint8_t     *rawPowerSetting;
             unsigned int rawPowerSettingLength;
 
             unpacked = spinel_datatype_unpack(

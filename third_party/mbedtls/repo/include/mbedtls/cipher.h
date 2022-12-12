@@ -408,7 +408,7 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_string( const char *cipher
  *                      given \p cipher_type.
  * \return              \c NULL if the associated cipher information is not found.
  */
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_type( const mbedtls_cipher_type_t cipher_type );
+const mbedtls_cipher_info_t *mbedtls_cipher_info_from_type( mbedtls_cipher_type_t cipher_type );
 
 /**
  * \brief               This function retrieves the cipher-information
@@ -424,9 +424,9 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_type( const mbedtls_cipher
  *                      given \p cipher_id.
  * \return              \c NULL if the associated cipher information is not found.
  */
-const mbedtls_cipher_info_t *mbedtls_cipher_info_from_values( const mbedtls_cipher_id_t cipher_id,
+const mbedtls_cipher_info_t *mbedtls_cipher_info_from_values( mbedtls_cipher_id_t cipher_id,
                                               int key_bitlen,
-                                              const mbedtls_cipher_mode_t mode );
+                                              mbedtls_cipher_mode_t mode );
 
 /**
  * \brief               This function initializes a \p cipher_context as NONE.
@@ -506,7 +506,7 @@ static inline unsigned int mbedtls_cipher_get_block_size(
     const mbedtls_cipher_context_t *ctx )
 {
     MBEDTLS_INTERNAL_VALIDATE_RET( ctx != NULL, 0 );
-    if( ctx->cipher_info == NULL )
+    if( ctx->cipher_info == nullptr )
         return 0;
 
     return ctx->cipher_info->block_size;
@@ -525,7 +525,7 @@ static inline mbedtls_cipher_mode_t mbedtls_cipher_get_cipher_mode(
     const mbedtls_cipher_context_t *ctx )
 {
     MBEDTLS_INTERNAL_VALIDATE_RET( ctx != NULL, MBEDTLS_MODE_NONE );
-    if( ctx->cipher_info == NULL )
+    if( ctx->cipher_info == nullptr )
         return MBEDTLS_MODE_NONE;
 
     return ctx->cipher_info->mode;
@@ -545,7 +545,7 @@ static inline int mbedtls_cipher_get_iv_size(
     const mbedtls_cipher_context_t *ctx )
 {
     MBEDTLS_INTERNAL_VALIDATE_RET( ctx != NULL, 0 );
-    if( ctx->cipher_info == NULL )
+    if( ctx->cipher_info == nullptr )
         return 0;
 
     if( ctx->iv_size != 0 )
@@ -567,7 +567,7 @@ static inline mbedtls_cipher_type_t mbedtls_cipher_get_type(
 {
     MBEDTLS_INTERNAL_VALIDATE_RET(
         ctx != NULL, MBEDTLS_CIPHER_NONE );
-    if( ctx->cipher_info == NULL )
+    if( ctx->cipher_info == nullptr )
         return MBEDTLS_CIPHER_NONE;
 
     return ctx->cipher_info->type;
@@ -586,8 +586,8 @@ static inline const char *mbedtls_cipher_get_name(
     const mbedtls_cipher_context_t *ctx )
 {
     MBEDTLS_INTERNAL_VALIDATE_RET( ctx != NULL, 0 );
-    if( ctx->cipher_info == NULL )
-        return 0;
+    if( ctx->cipher_info == nullptr )
+        return nullptr;
 
     return ctx->cipher_info->name;
 }
@@ -606,7 +606,7 @@ static inline int mbedtls_cipher_get_key_bitlen(
 {
     MBEDTLS_INTERNAL_VALIDATE_RET(
         ctx != NULL, MBEDTLS_KEY_LENGTH_NONE );
-    if( ctx->cipher_info == NULL )
+    if( ctx->cipher_info == nullptr )
         return MBEDTLS_KEY_LENGTH_NONE;
 
     return (int) ctx->cipher_info->key_bitlen;
@@ -625,7 +625,7 @@ static inline mbedtls_operation_t mbedtls_cipher_get_operation(
 {
     MBEDTLS_INTERNAL_VALIDATE_RET(
         ctx != NULL, MBEDTLS_OPERATION_NONE );
-    if( ctx->cipher_info == NULL )
+    if( ctx->cipher_info == nullptr )
         return MBEDTLS_OPERATION_NONE;
 
     return ctx->operation;
@@ -650,7 +650,7 @@ static inline mbedtls_operation_t mbedtls_cipher_get_operation(
 int mbedtls_cipher_setkey( mbedtls_cipher_context_t *ctx,
                            const unsigned char *key,
                            int key_bitlen,
-                           const mbedtls_operation_t operation );
+                           mbedtls_operation_t operation );
 
 #if defined(MBEDTLS_CIPHER_MODE_WITH_PADDING)
 /**

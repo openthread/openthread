@@ -707,7 +707,7 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-otError otPlatRadioAddCalibratedPower(otInstance *   aInstance,
+otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
                                       uint8_t        aChannel,
                                       int16_t        aActualPower,
                                       const uint8_t *aRawPowerSetting,

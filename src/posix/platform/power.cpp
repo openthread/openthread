@@ -49,7 +49,7 @@ exit:
 otError TargetPower::FromString(char *aString)
 {
     otError error = OT_ERROR_NONE;
-    char *  str;
+    char   *str;
 
     VerifyOrExit((str = strtok(aString, ",")) != nullptr, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(str, mChannelStart));
@@ -97,8 +97,8 @@ RawPowerSetting::InfoString RawPowerSetting::ToString(void) const
 otError CalibratedPower::FromString(char *aString)
 {
     otError error = OT_ERROR_NONE;
-    char *  str;
-    char *  pSave;
+    char   *str;
+    char   *pSave;
 
     VerifyOrExit((str = strtok_r(aString, ",", &pSave)) != nullptr, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(str, mChannelStart));

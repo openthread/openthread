@@ -1170,7 +1170,7 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
  * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
  *
  */
-otError otPlatRadioAddCalibratedPower(otInstance *   aInstance,
+otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
                                       uint8_t        aChannel,
                                       int16_t        aActualPower,
                                       const uint8_t *aRawPowerSetting,
@@ -1234,8 +1234,8 @@ otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel
  */
 extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                              uint8_t     aChannel,
-                                             uint8_t *   aRawPowerSetting,
-                                             uint16_t *  aRawPowerSettingLength);
+                                             uint8_t    *aRawPowerSetting,
+                                             uint16_t   *aRawPowerSettingLength);
 
 /**
  * @}

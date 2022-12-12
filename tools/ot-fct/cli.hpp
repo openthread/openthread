@@ -84,10 +84,10 @@ public:
 
 private:
     static constexpr uint16_t kMaxValueSize           = 512;
-    const char *              kKeyCalibratedPower     = "calibrated_power";
-    const char *              kKeyTargetPower         = "target_power";
-    const char *              kKeyRegionDomainMapping = "region_domain_mapping";
-    const char *              kCommaDelimiter         = ",";
+    const char               *kKeyCalibratedPower     = "calibrated_power";
+    const char               *kKeyTargetPower         = "target_power";
+    const char               *kKeyRegionDomainMapping = "region_domain_mapping";
+    const char               *kCommaDelimiter         = ",";
 
     struct Command
     {
@@ -95,9 +95,9 @@ private:
         otError (Cli::*mCommand)(Utils::CmdLineParser::Arg aArgs[]);
     };
 
-    otError ParseNextCalibratedPower(char *                  aCalibratedPowerString,
+    otError ParseNextCalibratedPower(char                   *aCalibratedPowerString,
                                      uint16_t                aLength,
-                                     uint16_t &              aIterator,
+                                     uint16_t               &aIterator,
                                      Power::CalibratedPower &aCalibratedPower);
     otError ProcessCalibrationTable(Utils::CmdLineParser::Arg aArgs[]);
     otError ProcessTargetPowerTable(Utils::CmdLineParser::Arg aArgs[]);
