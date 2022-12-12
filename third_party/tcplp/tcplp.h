@@ -67,14 +67,14 @@ struct tcplp_signals
  * the system.
  */
 otMessage *   tcplp_sys_new_message(otInstance *instance);
-void          tcplp_sys_free_message(otInstance *instance, otMessage *aMessage);
-void          tcplp_sys_send_message(otInstance *instance, otMessage *aMessage, otMessageInfo *info);
+void          tcplp_sys_free_message(otInstance *instance, otMessage *pkt);
+void          tcplp_sys_send_message(otInstance *instance, otMessage *pkt, otMessageInfo *info);
 uint32_t      tcplp_sys_get_ticks();
 uint32_t      tcplp_sys_get_millis();
-void          tcplp_sys_set_timer(struct tcpcb *tcb, uint8_t aTimerFlag, uint32_t delay);
-void          tcplp_sys_stop_timer(struct tcpcb *tcb, uint8_t aTimerFlag);
-struct tcpcb *tcplp_sys_accept_ready(struct tcpcb_listen *aTcbListen, struct in6_addr *addr, uint16_t port);
-bool          tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
+void          tcplp_sys_set_timer(struct tcpcb *tcb, uint8_t timer_flag, uint32_t delay);
+void          tcplp_sys_stop_timer(struct tcpcb *tcb, uint8_t timer_flag);
+struct tcpcb *tcplp_sys_accept_ready(struct tcpcb_listen *tpl, struct in6_addr *addr, uint16_t port);
+bool          tcplp_sys_accepted_connection(struct tcpcb_listen *tpl,
                                             struct tcpcb *       accepted,
                                             struct in6_addr *    addr,
                                             uint16_t             port);
