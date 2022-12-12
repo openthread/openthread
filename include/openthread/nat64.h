@@ -402,6 +402,9 @@ typedef void (*otNat64StateChangeCallback)(void *aContext, otNat64State aNewStat
 /**
  * Registers a callback receiving NAT64 translator state change event.
  *
+ * Note: This function is meant to be used by platforms to perform platform specific operations (like setting up
+ * routes).
+ *
  * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
