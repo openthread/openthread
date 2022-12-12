@@ -2567,7 +2567,7 @@ exit:
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_CHAN_TARGET_POWER>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_TARGET_POWER>(void)
 {
     otError error;
     uint8_t channel;
@@ -2581,7 +2581,7 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_RADIO_CALIBRATED_POWER>(void)
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_PHY_CALIBRATED_POWER>(void)
 {
     otError        error;
     uint8_t        channel;
@@ -2598,7 +2598,7 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RADIO_CALIBRATED_POWER>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CALIBRATED_POWER>(void)
 {
     return otPlatRadioClearCalibratedPowers(mInstance);
 }

@@ -196,7 +196,7 @@ build_for_one_version()
 
     build_simulation "${version}"
 
-    if [[ ${OT_NODE_TYPE} == rcp* || ${OT_NODE_TYPE} == fct ]]; then
+    if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         build_posix "${version}"
     fi
 }
@@ -429,8 +429,6 @@ do_expect()
                 test_patterns+=(-o -name 'v1_2-*.exp')
             fi
         fi
-    elif [[ ${OT_NODE_TYPE} == fct ]]; then
-        test_patterns=(-name 'ot-fct.exp')
     else
         test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
     fi
@@ -609,7 +607,6 @@ envsetup()
 
     export OT_SIMULATION_APPS="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps"
     export OT_POSIX_APPS="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix"
-    export OT_FCT_APPS="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/tools/ot-fct"
 
     if [[ ! ${VIRTUAL_TIME+x} ]]; then
         # All expect tests only works in real time mode.

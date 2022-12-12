@@ -29,7 +29,7 @@
 
 source "tests/scripts/expect/_common.exp"
 
-spawn_node 1
+spawn build/posix/tools/ot-fct/ot-fct
 
 send "targetpowertable\n"
 expect_line "Done"
@@ -44,4 +44,5 @@ expect "Done"
 send "invalidcommand\n"
 expect "failed"
 expect "status 0x17"
-dispose_all
+send "\x04"
+expect eof

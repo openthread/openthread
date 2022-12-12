@@ -107,9 +107,6 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             wait_for "state" "disabled"
             expect_line "Done"
         }
-        fct {
-            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_FCT_APPS)/ot-fct
-        }
     }
 
     expect_after {
