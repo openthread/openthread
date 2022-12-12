@@ -107,8 +107,9 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         host.start(start_radvd=False)
         self.simulator.go(5)
 
-        # NAT64 is enabled by default when starting BR1.
         br1.start()
+        # Ensure NAT64 is enabled on BR2.
+        br1.nat64_set_enabled(True)
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         br1.bash("service bind9 stop")
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
@@ -122,8 +123,9 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         # Case 1. BR2 with an infrastructure prefix joins the network later and
         #         it will add the infrastructure nat64 prefix to Network Data.
         #
-        # NAT64 is enabled by default when starting BR2.
         br2.start()
+        # Ensure NAT64 is enabled on BR2.
+        br2.nat64_set_enabled(True)
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
