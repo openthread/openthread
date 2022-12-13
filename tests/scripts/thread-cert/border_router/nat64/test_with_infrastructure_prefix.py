@@ -74,8 +74,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br = self.nodes[BR]
         router = self.nodes[ROUTER]
 
-        # NAT64 is enabled by default when starting BR.
         br.start()
+        # When feature flag is enabled, NAT64 might be disabled by default. So
+        # ensure NAT64 is enabled here.
+        br.nat64_set_enabled(True)
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br.get_state())
 
