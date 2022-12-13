@@ -40,6 +40,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
 
   distcheck:
@@ -51,7 +54,12 @@ jobs:
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -77,7 +85,12 @@ jobs:
       VIRTUAL_TIME: 1
       MULTIPLY: 3
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -94,7 +107,7 @@ jobs:
     - name: Run
       run: |
         ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       if: ${{ failure() }}
       with:
         name: packet-verification-pcaps
@@ -104,7 +117,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       with:
         name: cov-packet-verification
         path: tmp/coverage.info
@@ -120,7 +133,12 @@ jobs:
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -135,7 +153,7 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       if: ${{ failure() }}
       with:
         name: cli-ftd-thread-cert
@@ -143,7 +161,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       with:
         name: cov-cli-ftd
         path: tmp/coverage.info
@@ -166,7 +184,12 @@ jobs:
       VIRTUAL_TIME: 1
       MESSAGE_USE_HEAP: ${{ matrix.message_use_heap }}
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -181,7 +204,7 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       if: ${{ failure() }}
       with:
         name: cli-mtd-thread-cert
@@ -189,7 +212,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       with:
         name: cov-cli-mtd-${{ matrix.message_use_heap }}
         path: tmp/coverage.info
@@ -206,7 +229,12 @@ jobs:
       TIME_SYNC: 1
       VIRTUAL_TIME: 1
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -221,7 +249,7 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       if: ${{ failure() }}
       with:
         name: cli-time-sync-thread-cert
@@ -229,7 +257,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       with:
         name: cov-cli-time-sync
         path: tmp/coverage.info
@@ -241,7 +269,12 @@ jobs:
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       THREAD_VERSION: 1.1
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
@@ -256,7 +289,7 @@ jobs:
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
           echo "CRASHED_CLI=$CRASHED" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       if: ${{ failure() && env.CRASHED_CLI == '1' }}
       with:
         name: core-expect-cli
@@ -265,7 +298,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       with:
         name: cov-expects
         path: tmp/coverage.info
@@ -275,7 +308,12 @@ jobs:
     env:
       THREAD_VERSION: 1.1
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -308,7 +346,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       with:
         name: cov-ot-commissioner
         path: tmp/coverage.info
@@ -323,7 +361,12 @@ jobs:
       VIRTUAL_TIME: 1
       CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -337,7 +380,7 @@ jobs:
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       if: ${{ failure() }}
       with:
         name: multiple-instance-thread-cert
@@ -345,7 +388,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       with:
         name: cov-multiple-instance
         path: tmp/coverage.info
@@ -361,20 +404,25 @@ jobs:
     - multiple-instance
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y lcov
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
       with:
         path: coverage/
     - name: Combine Coverage
       run: |
         script/test combine_coverage
     - name: Upload Coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3.1.1
       with:
         files: final.info
         fail_ci_if_error: true
@@ -383,7 +431,12 @@ jobs:
     needs: upload-coverage
     runs-on: ubuntu-20.04
     steps:
-    - uses: geekyeggo/delete-artifact@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
       with:
         name: cov-*
         useGlob: true
