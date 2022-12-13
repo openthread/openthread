@@ -2213,7 +2213,19 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 uint64_t RadioSpinel<InterfaceType, ProcessContextType>::GetNow(void)
 {
-    return mIsTimeSynced ? static_cast<uint64_t>(otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX;
+    uint64_t now = UINT64_MAX;
+    if (mIsTimeSynced)
+    {
+        if (mRadioTimeOffset >= 0)
+        {
+            now = otPlatTimeGet() + static_cast<uint64_t>(mRadioTimeOffset);
+        }
+        else
+        {
+            now = otPlatTimeGet() - static_cast<uint64_t>(-mRadioTimeOffset);
+        }
+    }
+    return now;
 }
 
 template <typename InterfaceType, typename ProcessContextType>
