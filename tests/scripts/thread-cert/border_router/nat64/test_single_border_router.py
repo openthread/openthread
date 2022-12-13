@@ -116,7 +116,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         br.start()
-        # Ensure NAT64 is enabled on BR.
+        # When feature flag is enabled, NAT64 might be disabled by default. So
+        # ensure NAT64 is enabled here.
         br.nat64_set_enabled(True)
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         br.bash("service bind9 stop")
