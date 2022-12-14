@@ -52,8 +52,6 @@ Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
     , mMappingExpirerTimer(aInstance)
-    , mStateChangeCallback(nullptr)
-    , mStateChangeCallbackContext(nullptr)
 {
     Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
 
@@ -625,10 +623,7 @@ void Translator::UpdateState(void)
     VerifyOrExit(mState != newState);
     mState = newState;
 
-    if (mStateChangeCallback != nullptr)
-    {
-        mStateChangeCallback(mStateChangeCallbackContext, static_cast<otNat64State>(mState));
-    }
+    Get<Notifier>().Signal(kEventNat64TranslatorStateChanged);
 
 exit:
     return;

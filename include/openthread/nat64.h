@@ -391,33 +391,6 @@ void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callba
 otError otNat64GetCidr(otInstance *aInstance, otIp4Cidr *aCidr);
 
 /**
- * This function pointer is called when the state of a component of NAT64 changed.
- *
- * @param[in]  aContext  A pointer to application-specific context.
- * @param[in]  aNewState The new state of the component
- *
- */
-typedef void (*otNat64StateChangeCallback)(void *aContext, otNat64State aNewState);
-
-/**
- * Registers a callback receiving NAT64 translator state change event.
- *
- * Note: This function is meant to be used by platforms to perform platform specific operations (like setting up
- * routes).
- *
- * Available when `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is enabled.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aCallback         A pointer to a function that is called when the state of NAT64 translator
- *                               is changed.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
- *
- */
-void otNat64SetTranslatorStateChangeCallback(otInstance                *aInstance,
-                                             otNat64StateChangeCallback aCallback,
-                                             void                      *aContext);
-
-/**
  * Test if two IPv4 addresses are the same.
  *
  * @param[in]  aFirst   A pointer to the first IPv4 address to compare.

@@ -109,13 +109,6 @@ otNat64State otNat64GetTranslatorState(otInstance *aInstance)
 {
     return MapEnum(AsCoreType(aInstance).Get<Nat64::Translator>().GetState());
 }
-
-void otNat64SetTranslatorStateChangeCallback(otInstance                *aInstance,
-                                             otNat64StateChangeCallback aCallback,
-                                             void                      *aContext)
-{
-    AsCoreType(aInstance).Get<Nat64::Translator>().SetStateChangeCallback(aCallback, aContext);
-}
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE

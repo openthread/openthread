@@ -196,6 +196,7 @@ enum
     OT_CHANGED_JOINER_STATE                 = 1 << 27, ///< Joiner state changed
     OT_CHANGED_ACTIVE_DATASET               = 1 << 28, ///< Active Operational Dataset changed
     OT_CHANGED_PENDING_DATASET              = 1 << 29, ///< Pending Operational Dataset changed
+    OT_CHANGED_NAT64_TRANSLATOR_STATE       = 1 << 30, ///< The state of NAT64 translator changed
 };
 
 /**

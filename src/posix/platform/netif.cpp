@@ -882,6 +882,28 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
     }
 }
 
+#if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void processNat64StateChange(otNat64State aNewState)
+{
+    // If the interface is not up and we are enabling NAT64, the route will be added when we bring up the route.
+    // Also, the route will be deleted by the kernel when we shutting down the interface.
+    // We should try to add route first, since otNat64SetEnabled never fails.
+    if (otIp6IsEnabled(gInstance))
+    {
+        if (aNewState == OT_NAT64_STATE_ACTIVE)
+        {
+            AddIp4Route(gNat64Cidr, kNat64RoutePriority);
+            otLogInfoPlat("[netif] Adding route for NAT64");
+        }
+        else
+        {
+            DeleteIp4Route(gNat64Cidr);
+            otLogInfoPlat("[netif] Deleting route for NAT64");
+        }
+    }
+}
+#endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+
 void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 {
     if (OT_CHANGED_THREAD_NETIF_STATE & aFlags)
@@ -900,6 +922,12 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
         ot::Posix::UpdateIpSets(aInstance);
 #endif
     }
+#if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    if (OT_CHANGED_NAT64_TRANSLATOR_STATE & aFlags)
+    {
+        processNat64StateChange(otNat64GetTranslatorState(aInstance));
+    }
+#endif
 }
 
 static void processReceive(otMessage *aMessage, void *aContext)
@@ -1602,30 +1630,6 @@ exit:
 }
 #endif
 
-#if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-void processNat64StateChange(void *aContext, otNat64State aNewState)
-{
-    assert(aContext == gInstance);
-
-    // If the interface is not up and we are enabling NAT64, the route will be added when we bring up the route.
-    // Also, the route will be deleted by the kernel when we shutting down the interface.
-    // We should try to add route first, since otNat64SetEnabled never fails.
-    if (otIp6IsEnabled(gInstance))
-    {
-        if (aNewState == OT_NAT64_STATE_ACTIVE)
-        {
-            AddIp4Route(gNat64Cidr, kNat64RoutePriority);
-            otLogInfoPlat("[netif] Adding route for NAT64");
-        }
-        else
-        {
-            DeleteIp4Route(gNat64Cidr);
-            otLogInfoPlat("[netif] Deleting route for NAT64");
-        }
-    }
-}
-#endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-
 #if defined(__linux__)
 // set up the tun device
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
@@ -1836,10 +1840,6 @@ void platformNetifSetUp(void)
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     // We can use the same function for IPv6 and translated IPv4 messages.
     otNat64SetReceiveIp4Callback(gInstance, processReceive, gInstance);
-#if defined(__linux__)
-    // On Linux, we will add / remove the routes to NAT64 CIDR according to the state of NAT64 translator.
-    otNat64SetTranslatorStateChangeCallback(gInstance, processNat64StateChange, gInstance);
-#endif
 #endif
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
