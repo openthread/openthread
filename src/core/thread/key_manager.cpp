@@ -238,7 +238,7 @@ void KeyManager::ResetFrameCounters(void)
 
 #if OPENTHREAD_FTD
     // reset router frame counters
-    for (Router &router : Get<RouterTable>().Iterate())
+    for (Router &router : Get<RouterTable>())
     {
         router.SetKeySequence(0);
         router.GetLinkFrameCounters().Reset();
