@@ -132,10 +132,11 @@ int CreateIcmp6Socket(void)
     sock = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketBlock);
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
-    // Only accept router advertisements and solicitations.
+    // Only accept Router Advertisements, Router Solicitations and Neighbor Advertisements.
     ICMP6_FILTER_SETBLOCKALL(&filter);
     ICMP6_FILTER_SETPASS(ND_ROUTER_SOLICIT, &filter);
     ICMP6_FILTER_SETPASS(ND_ROUTER_ADVERT, &filter);
+    ICMP6_FILTER_SETPASS(ND_NEIGHBOR_ADVERT, &filter);
 
     rval = setsockopt(sock, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(filter));
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
