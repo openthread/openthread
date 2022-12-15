@@ -1732,7 +1732,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     if (!child->IsStateValidOrRestoring())
     {
         child->SetLastHeard(TimerMilli::GetNow());
-        child->SetTimeout(Time::MsecToSec(kMaxChildIdRequestTimeout));
+        child->SetTimeout(Time::MsecToSec(kChildIdRequestTimeout));
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -1978,7 +1978,7 @@ void MleRouter::HandleTimeTick(void)
         }
         else if (router.IsStateLinkRequest())
         {
-            if (age >= kMaxLinkRequestTimeout)
+            if (age >= kLinkRequestTimeout)
             {
                 LogInfo("Link Request timeout expired");
                 RemoveNeighbor(router);

@@ -1436,7 +1436,7 @@ void Mle::HandleAttachTimer(void)
     if (HasAcceptableParentCandidate() && (SendChildIdRequest() == kErrorNone))
     {
         SetAttachState(kAttachStateChildIdRequest);
-        delay = kParentRequestReedTimeout;
+        delay = kChildIdResponseTimeout;
         ExitNow();
     }
 
