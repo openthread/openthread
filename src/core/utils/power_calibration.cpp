@@ -173,23 +173,23 @@ exit:
 
 using namespace ot;
 
-OT_TOOL_WEAK otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
-                                                   uint8_t        aChannel,
-                                                   int16_t        aActualPower,
-                                                   const uint8_t *aRawPowerSetting,
-                                                   uint16_t       aRawPowerSettingLength)
+otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
+                                      uint8_t        aChannel,
+                                      int16_t        aActualPower,
+                                      const uint8_t *aRawPowerSetting,
+                                      uint16_t       aRawPowerSettingLength)
 {
     return AsCoreType(aInstance).Get<Utils::PowerCalibration>().AddCalibratedPower(
         aChannel, aActualPower, aRawPowerSetting, aRawPowerSettingLength);
 }
 
-OT_TOOL_WEAK otError otPlatRadioClearCalibratedPowers(otInstance *aInstance)
+otError otPlatRadioClearCalibratedPowers(otInstance *aInstance)
 {
     AsCoreType(aInstance).Get<Utils::PowerCalibration>().ClearCalibratedPowers();
     return OT_ERROR_NONE;
 }
 
-OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower)
+otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower)
 {
     return AsCoreType(aInstance).Get<Utils::PowerCalibration>().SetChannelTargetPower(aChannel, aTargetPower);
 }
