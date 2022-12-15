@@ -314,8 +314,29 @@ public:
     void HandleTimeTick(void);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method gets the range of Router IDs.
+     *
+     * All the Router IDs in the range `[aMinRouterId, aMaxRouterId]` are allowed. This is intended for testing only.
+     *
+     * @param[out]  aMinRouterId   Reference to return the minimum Router ID.
+     * @param[out]  aMaxRouterId   Reference to return the maximum Router ID.
+     *
+     */
     void GetRouterIdRange(uint8_t &aMinRouterId, uint8_t &aMaxRouterId) const;
 
+    /**
+     * This method sets the range of Router IDs.
+     *
+     * All the Router IDs in the range `[aMinRouterId, aMaxRouterId]` are allowed. This is intended for testing only.
+     *
+     * @param[in]  aMinRouterId   The minimum Router ID.
+     * @param[in]  aMaxRouterId   The maximum Router ID.
+     *
+     * @retval kErrorNone          Successfully set the Router ID range.
+     * @retval kErrorInvalidArgs   The given range is not valid.
+     *
+     */
     Error SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId);
 #endif
 
