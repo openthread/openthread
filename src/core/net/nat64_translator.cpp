@@ -48,7 +48,7 @@ namespace Nat64 {
 
 RegisterLogModule("Nat64");
 
-const char * StateToString(State aState)
+const char *StateToString(State aState)
 {
     static const char *const kStateString[] = {
         "Disabled",
@@ -617,7 +617,7 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
     mTotal.m4To6Bytes += aPacketSize;
 }
 
-void Translator::UpdateState()
+void Translator::UpdateState(void)
 {
     State newState;
 
@@ -637,8 +637,11 @@ void Translator::UpdateState()
         newState = kStateDisabled;
     }
 
-    Get<Notifier>().Update(mState, newState, kEventNat64TranslatorStateChanged);
+    SuccessOrExit(Get<Notifier>().Update(mState, newState, kEventNat64TranslatorStateChanged));
     LogInfo("NAT64 translator is now %s", StateToString(mState));
+
+exit:
+    return;
 }
 
 void Translator::SetEnabled(bool aEnabled)

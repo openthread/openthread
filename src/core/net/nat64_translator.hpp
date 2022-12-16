@@ -64,7 +64,7 @@ enum State : uint8_t
  * @returns  A string representation of @p aState.
  *
  */
-const char * StateToString(State aState);
+const char *StateToString(State aState);
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
@@ -374,9 +374,9 @@ private:
 
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
-    void UpdateState();
+    void UpdateState(void);
 
-    bool mEnabled;
+    bool  mEnabled;
     State mState;
 
     uint64_t mNextMappingId;
