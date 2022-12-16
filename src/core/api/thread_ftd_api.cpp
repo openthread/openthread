@@ -369,6 +369,9 @@ void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId)
 {
+    AssertPointerIsNotNull(aMinRouterId);
+    AssertPointerIsNotNull(aMaxRouterId);
+
     AsCoreType(aInstance).Get<RouterTable>().GetRouterIdRange(*aMinRouterId, *aMaxRouterId);
 }
 

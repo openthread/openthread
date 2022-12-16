@@ -6,6 +6,7 @@ This page lists the available common switches with description. Unless stated ot
 
 | Makefile switch | CMake switch | Description |
 | --- | --- | --- |
+|  | OT_15_4 | Enables 802.15.4 radio link. |
 | ANYCAST_LOCATOR | OT_ANYCAST_LOCATOR | Enables anycast locator functionality. |
 | BACKBONE_ROUTER | OT_BACKBONE_ROUTER | Enables Backbone Router functionality for Thread 1.2. |
 | BIG_ENDIAN | OT_BIG_ENDIAN | Allows the host platform to use big-endian byte order. |

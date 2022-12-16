@@ -34,6 +34,13 @@ option(OT_FTD "enable FTD" ON)
 option(OT_MTD "enable MTD" ON)
 option(OT_RCP "enable RCP" ON)
 
+message(STATUS OT_APP_CLI=${OT_APP_CLI})
+message(STATUS OT_APP_NCP=${OT_APP_NCP})
+message(STATUS OT_APP_RCP=${OT_APP_RCP})
+message(STATUS OT_FTD=${OT_FTD})
+message(STATUS OT_MTD=${OT_MTD})
+message(STATUS OT_RCP=${OT_RCP})
+
 set(OT_CONFIG_VALUES
     ""
     "ON"
@@ -69,6 +76,7 @@ macro(ot_option name ot_config description)
     endif()
 endmacro()
 
+ot_option(OT_15_4 OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE "802.15.4 radio link")
 ot_option(OT_ANYCAST_LOCATOR OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE "anycast locator")
 ot_option(OT_ASSERT OPENTHREAD_CONFIG_ASSERT_ENABLE "assert function OT_ASSERT()")
 ot_option(OT_BACKBONE_ROUTER OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE "backbone router functionality")
