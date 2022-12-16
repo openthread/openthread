@@ -175,6 +175,25 @@ send "diag gpio mode 0\n"
 expect "out"
 expect_line "Done"
 
+send "diag cw start\n"
+expect_line "Done"
+
+send "diag cw stop\n"
+expect_line "Done"
+
+send "diag rawpowersetting 112233\n"
+expect_line "Done"
+
+send "diag rawpowersetting\n"
+expect "112233"
+expect_line "Done"
+
+send "diag rawpowersetting enable\n"
+expect_line "Done"
+
+send "diag rawpowersetting disable\n"
+expect_line "Done"
+
 send "diag invalid_commad\n"
 expect "Error 35: InvalidCommand"
 
