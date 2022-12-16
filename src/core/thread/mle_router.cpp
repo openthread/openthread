@@ -4243,6 +4243,7 @@ void MleRouter::RemoveChildren(void)
 
 bool MleRouter::HasSmallNumberOfChildren(void)
 {
+    bool     rval        = false;
     uint16_t numChildren = 0;
     uint8_t  routerCount = mRouterTable.GetActiveRouterCount();
 
@@ -4250,10 +4251,10 @@ bool MleRouter::HasSmallNumberOfChildren(void)
 
     numChildren = mChildTable.GetNumChildren(Child::kInStateValid);
 
-    return numChildren < (routerCount - mRouterDowngradeThreshold) * 3;
+    rval = numChildren < (routerCount - mRouterDowngradeThreshold) * 3;
 
 exit:
-    return false;
+    return rval;
 }
 
 Error MleRouter::SetAssignParentPriority(int8_t aParentPriority)
