@@ -56,6 +56,16 @@ enum State : uint8_t
     kStateActive     = OT_NAT64_STATE_ACTIVE,      ///< The component is running.
 };
 
+/**
+ * This function converts a `State` into a string.
+ *
+ * @param[in]  aState     A state.
+ *
+ * @returns  A string representation of @p aState.
+ *
+ */
+const char *StateToString(State aState);
+
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 /**
@@ -166,7 +176,7 @@ public:
      * @retval  kNat64StateActive    The translator is translating packets.
      *
      */
-    State GetState(void) const;
+    State GetState(void) const { return mState; }
 
     /**
      * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
@@ -364,7 +374,10 @@ private:
 
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
-    bool mEnabled;
+    void UpdateState(void);
+
+    bool  mEnabled;
+    State mState;
 
     uint64_t mNextMappingId;
 
