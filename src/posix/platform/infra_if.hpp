@@ -39,7 +39,7 @@
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 
 namespace ot {
 namespace Posix {
@@ -177,4 +177,4 @@ private:
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE

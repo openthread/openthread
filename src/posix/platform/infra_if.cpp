@@ -33,7 +33,7 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 
 #ifdef __APPLE__
 #define __APPLE_USE_RFC_3542
@@ -682,4 +682,4 @@ InfraNetif &InfraNetif::Get(void)
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE

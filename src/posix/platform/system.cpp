@@ -142,7 +142,7 @@ void platformInit(otPlatformConfig *aPlatformConfig)
     platformBackboneInit(aPlatformConfig->mBackboneInterfaceName);
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
     ot::Posix::InfraNetif::Get().Init(aPlatformConfig->mBackboneInterfaceName);
 #endif
 
@@ -181,7 +181,7 @@ void platformSetUp(void)
     platformBackboneSetUp();
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
     ot::Posix::InfraNetif::Get().SetUp();
 #endif
 
@@ -236,7 +236,7 @@ void platformTearDown(void)
     platformNetifTearDown();
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
     ot::Posix::InfraNetif::Get().TearDown();
 #endif
 
@@ -268,7 +268,7 @@ void platformDeinit(void)
     platformTrelDeinit();
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
     ot::Posix::InfraNetif::Get().Deinit();
 #endif
 

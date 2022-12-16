@@ -323,4 +323,16 @@
 #ifndef OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 #define OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE 0
 #endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+ *
+ * Defines `1` to enable the posix implementation of platform/infra_if.h APIs.
+ * The default value is set to `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` if it's
+ * not explicit defined.
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_
