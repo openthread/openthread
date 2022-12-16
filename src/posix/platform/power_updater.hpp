@@ -81,13 +81,10 @@ public:
      * The radio region format is the 2-bytes ascii representation of the
      * ISO 3166 alpha-2 code.
      *
-     * @param[out] aRegionCode  The radio region.
-     *
-     * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
-     * @retval  OT_ERROR_NONE             Successfully got region code.
+     * @returns  The region code.
      *
      */
-    otError GetRegion(uint16_t *aRegionCode) const;
+    uint16_t GetRegion(void) const { return mRegionCode; }
 
 private:
     const char               *kFactoryConfigFile      = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
@@ -105,7 +102,7 @@ private:
     }
     otError GetDomain(uint16_t aRegionCode, Power::Domain &aDomain);
     otError GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Power::TargetPower &aTargetPower);
-    void    UpdateCalibratedPower(void);
+    otError UpdateCalibratedPower(void);
 
     ConfigFile mFactoryConfigFile;
     ConfigFile mProductConfigFile;

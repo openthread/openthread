@@ -68,7 +68,7 @@ TargetPower::InfoString TargetPower::ToString(void) const
 {
     InfoString string;
 
-    string.Append("%d,%d,%d", mChannelStart, mChannelEnd, mTargetPower);
+    string.Append("%u,%u,%d", mChannelStart, mChannelEnd, mTargetPower);
 
     return string;
 }
@@ -118,7 +118,7 @@ CalibratedPower::InfoString CalibratedPower::ToString(void) const
 {
     InfoString string;
 
-    string.Append("%d,%d,%d,%s", mChannelStart, mChannelEnd, mActualPower, mRawPowerSetting.ToString().AsCString());
+    string.Append("%u,%u,%d,%s", mChannelStart, mChannelEnd, mActualPower, mRawPowerSetting.ToString().AsCString());
 
     return string;
 }

@@ -744,7 +744,8 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    return sPowerUpdater.GetRegion(aRegionCode);
+    *aRegionCode = sPowerUpdater.GetRegion();
+    return OT_ERROR_NONE;
 #else
     return sRadioSpinel.GetRadioRegion(aRegionCode);
 #endif

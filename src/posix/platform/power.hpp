@@ -188,14 +188,15 @@ private:
 class CalibratedPower
 {
 public:
-    static constexpr uint16_t       kInfoStringSize = 77; ///< Recommended buffer size to use with `ToString()`.
+    // Recommended buffer size to use with `ToString()`.
+    static constexpr uint16_t       kInfoStringSize = 20 + RawPowerSetting::kInfoStringSize;
     typedef String<kInfoStringSize> InfoString;
 
     /**
      * This method parses an calibrated power string.
      *
      * The string MUST follow the format: "<channel_start>,<channel_end>,<actual_power>,<raw_power_setting>".
-     * For example, "11,26,2000,0x11,0x22"
+     * For example, "11,26,2000,1122aabb"
      *
      * @param[in]  aString   A pointer to the null-terminated string.
      *

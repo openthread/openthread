@@ -139,6 +139,7 @@ private:
         uint16_t mLength;
     };
 
+    bool IsPowerUpdated(void) const { return mCalibratedPowerIndex == kInvalidIndex; }
     bool IsChannelValid(uint8_t aChannel) const
     {
         return ((aChannel >= Radio::kChannelMin) && (aChannel <= Radio::kChannelMax));
@@ -155,8 +156,7 @@ private:
 
     typedef Array<CalibratedPowerEntry, kMaxNumCalibratedPowers> CalibratedPowerTable;
 
-    bool                 mPowerUpdated;
-    uint8_t              mChannel;
+    uint8_t              mLastChannel;
     int16_t              mTargetPowerTable[kNumChannels];
     uint8_t              mCalibratedPowerIndex;
     CalibratedPowerTable mCalibratedPowerTables[kNumChannels];

@@ -60,35 +60,33 @@ otError PowerUpdater::SetRegion(uint16_t aRegionCode)
         }
     }
 
-    UpdateCalibratedPower();
+    SuccessOrExit(error = UpdateCalibratedPower());
 
     mRegionCode = aRegionCode;
 
 exit:
-    otLogInfoPlat("Set region \"%c%c\" %s", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff),
-                  (error == OT_ERROR_NONE) ? "success" : "failed");
+    if (error == OT_ERROR_NONE)
+    {
+        otLogInfoPlat("Set region \"%c%c\" successfully", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff));
+    }
+    else
+    {
+        otLogCritPlat("Set region \"%c%c\" failed, Error: %s", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff),
+                      otThreadErrorToString(error));
+    }
+
     return error;
 }
 
-otError PowerUpdater::GetRegion(uint16_t *aRegionCode) const
+otError PowerUpdater::UpdateCalibratedPower(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aRegionCode != nullptr, error = OT_ERROR_INVALID_ARGS);
-    *aRegionCode = mRegionCode;
-
-exit:
-    return error;
-}
-
-void PowerUpdater::UpdateCalibratedPower(void)
-{
+    otError                error    = OT_ERROR_NONE;
     int                    iterator = 0;
     char                   value[kMaxValueSize];
     Power::CalibratedPower calibratedPower;
     ConfigFile            *calibrationFile = &mFactoryConfigFile;
 
-    SuccessOrExit(otPlatRadioClearCalibratedPowers(gInstance));
+    SuccessOrExit(error = otPlatRadioClearCalibratedPowers(gInstance));
 
     // If the distribution of output power is large, the factory needs to measure the power calibration data
     // for each device individually, and the power calibration data will be written to the factory config file.
@@ -101,19 +99,24 @@ void PowerUpdater::UpdateCalibratedPower(void)
     iterator = 0;
     while (calibrationFile->Get(kKeyCalibratedPower, iterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
-        SuccessOrExit(calibratedPower.FromString(value));
+        SuccessOrExit(error = calibratedPower.FromString(value));
         otLogInfoPlat("Update calibrated power: %s\r\n", calibratedPower.ToString().AsCString());
 
         for (uint8_t ch = calibratedPower.GetChannelStart(); ch <= calibratedPower.GetChannelEnd(); ch++)
         {
-            SuccessOrExit(otPlatRadioAddCalibratedPower(gInstance, ch, calibratedPower.GetActualPower(),
-                                                        calibratedPower.GetRawPowerSetting().GetData(),
-                                                        calibratedPower.GetRawPowerSetting().GetLength()));
+            SuccessOrExit(error = otPlatRadioAddCalibratedPower(gInstance, ch, calibratedPower.GetActualPower(),
+                                                                calibratedPower.GetRawPowerSetting().GetData(),
+                                                                calibratedPower.GetRawPowerSetting().GetLength()));
         }
     }
 
 exit:
-    return;
+    if (error != OT_ERROR_NONE)
+    {
+        otLogCritPlat("Update calibrated power table failed, Error: %s", otThreadErrorToString(error));
+    }
+
+    return error;
 }
 
 otError PowerUpdater::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
@@ -140,6 +143,11 @@ otError PowerUpdater::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
     }
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogCritPlat("Get domain failed, Error: %s", otThreadErrorToString(error));
+    }
+
     return error;
 }
 
@@ -157,7 +165,10 @@ otError PowerUpdater::GetNextTargetPower(const Power::Domain &aDomain, int &aIte
             continue;
         }
 
-        error = aTargetPower.FromString(psave);
+        if ((error = aTargetPower.FromString(psave)) != OT_ERROR_NONE)
+        {
+            otLogCritPlat("Read target power failed, Error: %s", otThreadErrorToString(error));
+        }
         break;
     }
 

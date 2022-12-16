@@ -39,8 +39,7 @@ namespace Utils {
 
 PowerCalibration::PowerCalibration(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mPowerUpdated(false)
-    , mChannel(0)
+    , mLastChannel(0)
     , mCalibratedPowerIndex(kInvalidIndex)
 {
     for (int16_t &targetPower : mTargetPowerTable)
@@ -96,7 +95,11 @@ Error PowerCalibration::AddCalibratedPower(uint8_t        aChannel,
 
     entry.Init(aActualPower, aRawPowerSetting, aRawPowerSettingLength);
     SuccessOrExit(error = mCalibratedPowerTables[chIndex].PushBack(entry));
-    mPowerUpdated = true;
+
+    if (aChannel == mLastChannel)
+    {
+        mCalibratedPowerIndex = kInvalidIndex;
+    }
 
 exit:
     return error;
@@ -109,7 +112,7 @@ void PowerCalibration::ClearCalibratedPowers(void)
         table.Clear();
     }
 
-    mPowerUpdated = true;
+    mCalibratedPowerIndex = kInvalidIndex;
 }
 
 Error PowerCalibration::SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower)
@@ -118,7 +121,11 @@ Error PowerCalibration::SetChannelTargetPower(uint8_t aChannel, int16_t aTargetP
 
     VerifyOrExit(IsChannelValid(aChannel), error = kErrorInvalidArgs);
     mTargetPowerTable[aChannel - Radio::kChannelMin] = aTargetPower;
-    mPowerUpdated                                    = true;
+
+    if (aChannel == mLastChannel)
+    {
+        mCalibratedPowerIndex = kInvalidIndex;
+    }
 
 exit:
     return error;
@@ -136,7 +143,7 @@ Error PowerCalibration::GetRawPowerSetting(uint8_t   aChannel,
     int16_t actualPower;
 
     VerifyOrExit(IsChannelValid(aChannel), error = kErrorInvalidArgs);
-    VerifyOrExit((mChannel != aChannel) || mPowerUpdated);
+    VerifyOrExit((mLastChannel != aChannel) || IsPowerUpdated());
 
     chIndex     = aChannel - Radio::kChannelMin;
     targetPower = mTargetPowerTable[chIndex];
@@ -156,13 +163,12 @@ Error PowerCalibration::GetRawPowerSetting(uint8_t   aChannel,
     VerifyOrExit(powerIndex != kInvalidIndex, error = kErrorNotFound);
 
     mCalibratedPowerIndex = powerIndex;
-    mChannel              = aChannel;
-    mPowerUpdated         = false;
+    mLastChannel          = aChannel;
 
 exit:
     if (error == kErrorNone)
     {
-        error = mCalibratedPowerTables[mChannel - Radio::kChannelMin][mCalibratedPowerIndex].GetRawPowerSetting(
+        error = mCalibratedPowerTables[mLastChannel - Radio::kChannelMin][mCalibratedPowerIndex].GetRawPowerSetting(
             aRawPowerSetting, aRawPowerSettingLength);
     }
 

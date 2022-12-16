@@ -1166,7 +1166,7 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
  * @retval OT_ERROR_NONE             Successfully added the calibrated power to the power calibration table.
  * @retval OT_ERROR_NO_BUFS          No available entry in the power calibration table.
  * @retval OT_ERROR_INVALID_ARGS     The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid or the
- *                                   @ aActualPower already exists in the power calibration table.
+ *                                   @p aActualPower already exists in the power calibration table.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
  *
  */
@@ -1200,7 +1200,8 @@ otError otPlatRadioClearCalibratedPowers(otInstance *aInstance);
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aChannel      The radio channel.
- * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel.
+ * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel to use the
+ *                           target power.
  *
  * @retval  OT_ERROR_NONE             Successfully set the target power.
  * @retval  OT_ERROR_INVALID_ARGS     The @p aChannel or @p aTargetPower is invalid.
