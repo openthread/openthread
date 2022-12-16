@@ -2388,6 +2388,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, mFemLnaGain));
     }
 
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
     {
         int8_t power = mMaxPowerTable.GetTransmitPower(channel);
@@ -2403,6 +2404,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
             }
         }
     }
+#endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 
     CalcRcpTimeOffset();
 }
