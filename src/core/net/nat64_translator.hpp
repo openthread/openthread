@@ -56,6 +56,16 @@ enum State : uint8_t
     kStateActive     = OT_NAT64_STATE_ACTIVE,      ///< The component is running.
 };
 
+/**
+ * This function converts a `State` into a string.
+ *
+ * @param[in]  aState     A state.
+ *
+ * @returns  A string representation of @p aState.
+ *
+ */
+const char * StateToString(State aState);
+
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 /**
@@ -362,11 +372,12 @@ private:
 
     void HandleMappingExpirerTimer(void);
 
-    void UpdateState(void);
-
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
+    void UpdateState();
+
     bool mEnabled;
+    State mState;
 
     uint64_t mNextMappingId;
 
@@ -381,8 +392,6 @@ private:
 
     ProtocolCounters mCounters;
     ErrorCounters    mErrorCounters;
-
-    State mState;
 };
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 

@@ -48,9 +48,26 @@ namespace Nat64 {
 
 RegisterLogModule("Nat64");
 
+const char * StateToString(State aState)
+{
+    static const char *const kStateString[] = {
+        "Disabled",
+        "NotRunning",
+        "Idle",
+        "Active",
+    };
+
+    static_assert(0 == kStateDisabled, "kStateDisabled value is incorrect");
+    static_assert(1 == kStateNotRunning, "kStateNotRunning value is incorrect");
+    static_assert(2 == kStateIdle, "kStateIdle value is incorrect");
+    static_assert(3 == kStateActive, "kStateActive value is incorrect");
+
+    return kStateString[aState];
+}
+
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEnabled(false)
+    , mState(State::kStateDisabled)
     , mMappingExpirerTimer(aInstance)
 {
     Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
@@ -600,7 +617,7 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
     mTotal.m4To6Bytes += aPacketSize;
 }
 
-void Translator::UpdateState(void)
+void Translator::UpdateState()
 {
     State newState;
 
@@ -620,13 +637,8 @@ void Translator::UpdateState(void)
         newState = kStateDisabled;
     }
 
-    VerifyOrExit(mState != newState);
-    mState = newState;
-
-    Get<Notifier>().Signal(kEventNat64TranslatorStateChanged);
-
-exit:
-    return;
+    Get<Notifier>().Update(mState, newState, kEventNat64TranslatorStateChanged);
+    LogInfo("NAT64 translator is now %s", StateToString(mState));
 }
 
 void Translator::SetEnabled(bool aEnabled)
@@ -639,7 +651,6 @@ void Translator::SetEnabled(bool aEnabled)
         ReleaseMappings(mActiveAddressMappings);
     }
 
-    LogInfo("NAT64 translator %s", aEnabled ? "enabled" : "disabled");
     UpdateState();
 
 exit:
