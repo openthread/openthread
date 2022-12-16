@@ -122,7 +122,6 @@ Router *RouterTable::Allocate(void)
 
     VerifyOrExit(!mRouters.IsFull());
 
-    // count available router ids
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     for (uint8_t routerId = mMinRouterId; routerId <= mMaxRouterId; routerId++)
 #else
