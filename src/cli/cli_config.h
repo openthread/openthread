@@ -102,6 +102,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
+ *
+ * Defines the log level to use when CLI emits its command input/output to the logs.
+ *
+ * This is used only when `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
+#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL OT_LOG_LEVEL_DEBG
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE
  *
  * The log string buffer size (in bytes).

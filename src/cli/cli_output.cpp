@@ -307,7 +307,7 @@ void OutputImplementer::OutputV(const char *aFormat, va_list aArguments)
 
         if (lineEnd > mOutputString)
         {
-            otLogCli(OT_LOG_LEVEL_DEBG, "Output: %s", mOutputString);
+            otLogCli(OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL, "Output: %s", mOutputString);
         }
 
         lineEnd++;
@@ -348,7 +348,7 @@ void OutputImplementer::OutputV(const char *aFormat, va_list aArguments)
 
     if (truncated)
     {
-        otLogCli(OT_LOG_LEVEL_DEBG, "Output: %s ...", mOutputString);
+        otLogCli(OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL, "Output: %s ...", mOutputString);
         mOutputLength = 0;
     }
 
@@ -367,7 +367,7 @@ void Output::LogInput(const Arg *aArgs)
         inputString.Append(isFirst ? "%s" : " %s", aArgs->GetCString());
     }
 
-    otLogCli(OT_LOG_LEVEL_DEBG, "Input: %s", inputString.AsCString());
+    otLogCli(OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL, "Input: %s", inputString.AsCString());
 }
 #endif
 
