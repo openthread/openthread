@@ -62,8 +62,6 @@
 #include "lib/platform/exit_code.h"
 #include "posix/platform/infra_if.hpp"
 
-uint32_t ot::Posix::InfraNetif::mInfraIfIndex = 0;
-
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
     bool            ret     = false;
@@ -599,7 +597,7 @@ void InfraNetif::DiscoverNat64PrefixDone(union sigval sv)
         }
     }
 
-    otPlatInfraIfDiscoverNat64PrefixDone(gInstance, mInfraIfIndex, &prefix);
+    otPlatInfraIfDiscoverNat64PrefixDone(gInstance, Get().mInfraIfIndex, &prefix);
 
 exit:
     freeaddrinfo(res);
