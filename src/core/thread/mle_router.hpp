@@ -118,7 +118,7 @@ public:
      * @retval FALSE  It is a child or is not a single router in the network.
      *
      */
-    bool IsSingleton(void);
+    bool IsSingleton(void) const;
 
     /**
      * This method generates an Address Solicit request for a Router ID.
@@ -633,8 +633,6 @@ private:
     void HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static bool IsSingleton(const RouteTlv &aRouteTlv);
 
     void HandlePartitionChange(void);
 

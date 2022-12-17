@@ -1143,21 +1143,15 @@ exit:
     return error;
 }
 
-bool MleRouter::IsSingleton(void)
+bool MleRouter::IsSingleton(void) const
 {
-    bool rval = true;
+    bool isSingleton = true;
 
-    if (IsAttached() && IsRouterEligible())
-    {
-        // not a singleton if any other routers exist
-        if (mRouterTable.GetActiveRouterCount() > 1)
-        {
-            ExitNow(rval = false);
-        }
-    }
+    VerifyOrExit(IsAttached() && IsRouterEligible());
+    isSingleton = (mRouterTable.GetActiveRouterCount() <= 1);
 
 exit:
-    return rval;
+    return isSingleton;
 }
 
 int MleRouter::ComparePartitions(bool              aSingletonA,
@@ -1175,30 +1169,6 @@ int MleRouter::ComparePartitions(bool              aSingletonA,
     VerifyOrExit(rval == 0);
 
     rval = ThreeWayCompare(aLeaderDataA.GetPartitionId(), aLeaderDataB.GetPartitionId());
-
-exit:
-    return rval;
-}
-
-bool MleRouter::IsSingleton(const RouteTlv &aRouteTlv)
-{
-    bool    rval  = true;
-    uint8_t count = 0;
-
-    // REEDs do not include a Route TLV and indicate not a singleton
-    if (!aRouteTlv.IsValid())
-    {
-        ExitNow(rval = false);
-    }
-
-    // Check if 2 or more active routers
-    for (uint8_t routerId = 0; routerId <= kMaxRouterId; routerId++)
-    {
-        if (aRouteTlv.IsRouterIdSet(routerId) && (++count >= 2))
-        {
-            ExitNow(rval = false);
-        }
-    }
 
 exit:
     return rval;
@@ -1258,7 +1228,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
             ExitNow();
         }
 
-        if (ComparePartitions(IsSingleton(routeTlv), leaderData, IsSingleton(), mLeaderData) > 0
+        if (ComparePartitions(routeTlv.IsSingleton(), leaderData, IsSingleton(), mLeaderData) > 0
 #if OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
             // if time sync is required, it will only migrate to a better network which also enables time sync.
             && aRxInfo.mMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ

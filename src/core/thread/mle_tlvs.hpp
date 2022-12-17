@@ -309,6 +309,15 @@ public:
     bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
 
     /**
+     * This method indicates whether the `RouteTlv` is a singleton, i.e., only one router is allocated.
+     *
+     * @retval TRUE   It is a singleton.
+     * @retval FALSE  It is not a singleton.
+     *
+     */
+    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.GetNumberOfAllocatedIds() <= 1); }
+
+    /**
      * This method returns the Route Data Length value.
      *
      * @returns The Route Data Length value.
@@ -458,6 +467,15 @@ public:
      *
      */
     bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
+
+    /**
+     * This method indicates whether the `RouteTlv` is a singleton, i.e., only one router is allocated.
+     *
+     * @retval TRUE   It is a singleton.
+     * @retval FALSE  It is not a singleton.
+     *
+     */
+    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.GetNumberOfAllocatedIds() <= 1); }
 
     /**
      * This method sets the Router ID bit.
