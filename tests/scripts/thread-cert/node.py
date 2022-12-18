@@ -2876,7 +2876,7 @@ class NodeImpl:
         else:
             timeout = 5
 
-        self._expect(r'Received ACK in reply to notification ' r'from ([\da-f:]+)\b', timeout=timeout)
+        self._expect(r'Received ACK in reply to notification from ([\da-f:]+)\b', timeout=timeout)
         (source,) = self.pexpect.match.groups()
         source = source.decode('UTF-8')
 
