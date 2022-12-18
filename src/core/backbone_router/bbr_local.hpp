@@ -54,6 +54,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/bbr_leader.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
@@ -253,7 +254,10 @@ public:
      * @param[in] aContext   A user context pointer.
      *
      */
-    void SetDomainPrefixCallback(otBackboneRouterDomainPrefixCallback aCallback, void *aContext);
+    void SetDomainPrefixCallback(otBackboneRouterDomainPrefixCallback aCallback, void *aContext)
+    {
+        mDomainPrefixCallback.Set(aCallback, aContext);
+    }
 
 private:
     void SetState(BackboneRouterState aState);
@@ -282,11 +286,10 @@ private:
 
     NetworkData::OnMeshPrefixConfig mDomainPrefixConfig;
 
-    Ip6::Netif::UnicastAddress           mBackboneRouterPrimaryAloc;
-    Ip6::Address                         mAllNetworkBackboneRouters;
-    Ip6::Address                         mAllDomainBackboneRouters;
-    otBackboneRouterDomainPrefixCallback mDomainPrefixCallback;
-    void                                *mDomainPrefixCallbackContext;
+    Ip6::Netif::UnicastAddress                     mBackboneRouterPrimaryAloc;
+    Ip6::Address                                   mAllNetworkBackboneRouters;
+    Ip6::Address                                   mAllDomainBackboneRouters;
+    Callback<otBackboneRouterDomainPrefixCallback> mDomainPrefixCallback;
 };
 
 } // namespace BackboneRouter

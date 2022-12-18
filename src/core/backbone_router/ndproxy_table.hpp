@@ -40,6 +40,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/bbr_leader.hpp"
+#include "common/callback.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -134,8 +135,6 @@ public:
      */
     explicit NdProxyTable(Instance &aInstance)
         : InstanceLocator(aInstance)
-        , mCallback(nullptr)
-        , mCallbackContext(nullptr)
         , mIsAnyDadInProcess(false)
     {
     }
@@ -217,7 +216,7 @@ public:
      * @param[in] aContext   A user context pointer.
      *
      */
-    void SetCallback(otBackboneRouterNdProxyCallback aCallback, void *aContext);
+    void SetCallback(otBackboneRouterNdProxyCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
 
     /**
      * This method retrieves the ND Proxy info of the Domain Unicast Address.
@@ -292,10 +291,9 @@ private:
     void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy, bool aIsRenew);
     void TriggerCallback(otBackboneRouterNdProxyEvent aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
 
-    NdProxy                         mProxies[kMaxNdProxyNum];
-    otBackboneRouterNdProxyCallback mCallback;
-    void                           *mCallbackContext;
-    bool                            mIsAnyDadInProcess : 1;
+    NdProxy                                   mProxies[kMaxNdProxyNum];
+    Callback<otBackboneRouterNdProxyCallback> mCallback;
+    bool                                      mIsAnyDadInProcess : 1;
 };
 
 } // namespace BackboneRouter

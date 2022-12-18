@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/callback.hpp"
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
@@ -619,7 +620,10 @@ public:
      * @param[in]  aContext  A pointer to application-specific context.
      *
      */
-    void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext);
+    void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext)
+    {
+        mParentResponseCallback.Set(aCallback, aContext);
+    }
 
     /**
      * This method requests MLE layer to prepare and send a shorter version of Child ID Request message by only
@@ -2047,12 +2051,10 @@ private:
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
 
-    DetachGracefullyTimer      mDetachGracefullyTimer;
-    otDetachGracefullyCallback mDetachGracefullyCallback;
-    void                      *mDetachGracefullyContext;
+    DetachGracefullyTimer                mDetachGracefullyTimer;
+    Callback<otDetachGracefullyCallback> mDetachGracefullyCallback;
 
-    otThreadParentResponseCallback mParentResponseCb;
-    void                          *mParentResponseCbContext;
+    Callback<otThreadParentResponseCallback> mParentResponseCallback;
 };
 
 } // namespace Mle

@@ -55,8 +55,6 @@ RegisterLogModule("EnergyScanClnt");
 
 EnergyScanClient::EnergyScanClient(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mCallback(nullptr)
-    , mContext(nullptr)
 {
 }
 
@@ -95,8 +93,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
 
     LogInfo("sent query");
 
-    mCallback = aCallback;
-    mContext  = aContext;
+    mCallback.Set(aCallback, aContext);
 
 exit:
     FreeMessageOnError(message, error);
@@ -117,10 +114,7 @@ void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, cons
 
     SuccessOrExit(MeshCoP::Tlv::FindTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyListTlv), energyListTlv));
 
-    if (mCallback != nullptr)
-    {
-        mCallback(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength(), mContext);
-    }
+    mCallback.InvokeIfSet(mask, energyListTlv.GetEnergyList(), energyListTlv.GetEnergyListLength());
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 

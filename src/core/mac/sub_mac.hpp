@@ -40,6 +40,7 @@
 
 #include <openthread/platform/crypto.h>
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -276,7 +277,10 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
+    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
+    {
+        mPcapCallback.Set(aPcapCallback, aCallbackContext);
+    }
 
     /**
      * This method indicates whether radio should stay in Receive or Sleep during CSMA backoff.
@@ -624,17 +628,16 @@ private:
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     bool mRadioFilterEnabled : 1;
 #endif
-    int8_t             mEnergyScanMaxRssi;
-    TimeMilli          mEnergyScanEndTime;
-    TxFrame           &mTransmitFrame;
-    Callbacks          mCallbacks;
-    otLinkPcapCallback mPcapCallback;
-    void              *mPcapCallbackContext;
-    KeyMaterial        mPrevKey;
-    KeyMaterial        mCurrKey;
-    KeyMaterial        mNextKey;
-    uint32_t           mFrameCounter;
-    uint8_t            mKeyId;
+    int8_t                       mEnergyScanMaxRssi;
+    TimeMilli                    mEnergyScanEndTime;
+    TxFrame                     &mTransmitFrame;
+    Callbacks                    mCallbacks;
+    Callback<otLinkPcapCallback> mPcapCallback;
+    KeyMaterial                  mPrevKey;
+    KeyMaterial                  mCurrKey;
+    KeyMaterial                  mNextKey;
+    uint32_t                     mFrameCounter;
+    uint8_t                      mKeyId;
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
     uint8_t mRetxDelayBackOffExponent;
 #endif

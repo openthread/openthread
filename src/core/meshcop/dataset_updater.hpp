@@ -40,6 +40,7 @@
 
 #include <openthread/dataset_updater.h>
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -72,10 +73,10 @@ public:
      * This type represents the callback function pointer which is called when a Dataset update request finishes,
      * reporting success or failure status of the request.
      *
-     * The function pointer has the syntax `void (*Callback)(Error aError, void *aContext)`.
+     * The function pointer has the syntax `void (*UpdaterCallback)(Error aError, void *aContext)`.
      *
      */
-    typedef otDatasetUpdaterCallback Callback;
+    typedef otDatasetUpdaterCallback UpdaterCallback;
 
     /**
      * This method requests an update to Operational Dataset.
@@ -94,7 +95,7 @@ public:
      * @retval kErrorNoBufs         Could not allocated buffer to save Dataset.
      *
      */
-    Error RequestUpdate(const Dataset::Info &aDataset, Callback aCallback, void *aContext);
+    Error RequestUpdate(const Dataset::Info &aDataset, UpdaterCallback aCallback, void *aContext);
 
     /**
      * This method cancels an ongoing (if any) Operational Dataset update request.
@@ -125,10 +126,9 @@ private:
 
     using UpdaterTimer = TimerMilliIn<DatasetUpdater, &DatasetUpdater::HandleTimer>;
 
-    Callback     mCallback;
-    void        *mCallbackContext;
-    UpdaterTimer mTimer;
-    Message     *mDataset;
+    Callback<UpdaterCallback> mCallback;
+    UpdaterTimer              mTimer;
+    Message                  *mDataset;
 };
 
 } // namespace MeshCoP

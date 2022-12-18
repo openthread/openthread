@@ -37,6 +37,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -359,8 +360,7 @@ private:
     bool       mMgmtPending : 1;
     TimerMilli mTimer;
 
-    otDatasetMgmtSetCallback mMgmtSetCallback;
-    void                    *mMgmtSetCallbackContext;
+    Callback<otDatasetMgmtSetCallback> mMgmtSetCallback;
 };
 
 class ActiveDatasetManager : public DatasetManager, private NonCopyable

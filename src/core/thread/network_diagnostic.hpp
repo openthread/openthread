@@ -40,6 +40,7 @@
 
 #include <openthread/netdiag.h>
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/udp6.hpp"
@@ -163,8 +164,7 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
-    void                          *mReceiveDiagnosticGetCallbackContext;
+    Callback<otReceiveDiagnosticGetCallback> mReceiveDiagnosticGetCallback;
 };
 
 DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetRequest);

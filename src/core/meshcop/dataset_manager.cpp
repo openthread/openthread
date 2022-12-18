@@ -59,8 +59,6 @@ DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::
     , mTimestampValid(false)
     , mMgmtPending(false)
     , mTimer(aInstance, aTimerHandler)
-    , mMgmtSetCallback(nullptr)
-    , mMgmtSetCallbackContext(nullptr)
 {
     mTimestamp.Clear();
 }
@@ -337,15 +335,12 @@ exit:
 
     mMgmtPending = false;
 
-    if (mMgmtSetCallback != nullptr)
+    if (mMgmtSetCallback.IsSet())
     {
-        otDatasetMgmtSetCallback callback = mMgmtSetCallback;
-        void                    *context  = mMgmtSetCallbackContext;
+        Callback<otDatasetMgmtSetCallback> callbackCopy = mMgmtSetCallback;
 
-        mMgmtSetCallback        = nullptr;
-        mMgmtSetCallbackContext = nullptr;
-
-        callback(error, context);
+        mMgmtSetCallback.Clear();
+        callbackCopy.Invoke(error);
     }
 
     mTimer.Start(kSendSetDelay);
@@ -510,9 +505,8 @@ Error DatasetManager::SendSetRequest(const Dataset::Info     &aDatasetInfo,
     IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleMgmtSetResponse, this));
-    mMgmtSetCallback        = aCallback;
-    mMgmtSetCallbackContext = aContext;
-    mMgmtPending            = true;
+    mMgmtSetCallback.Set(aCallback, aContext);
+    mMgmtPending = true;
 
     LogInfo("sent dataset set request to leader");
 

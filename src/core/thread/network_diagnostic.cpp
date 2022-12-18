@@ -59,8 +59,6 @@ namespace NetworkDiagnostic {
 
 NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mReceiveDiagnosticGetCallback(nullptr)
-    , mReceiveDiagnosticGetCallbackContext(nullptr)
 {
 }
 
@@ -74,8 +72,7 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address            &aDesti
 
     SuccessOrExit(error = SendDiagnosticCommand(kDiagnosticGet, aDestination, aTlvTypes, aCount));
 
-    mReceiveDiagnosticGetCallback        = aCallback;
-    mReceiveDiagnosticGetCallbackContext = aCallbackContext;
+    mReceiveDiagnosticGetCallback.Set(aCallback, aCallbackContext);
 
     LogInfo("Sent diagnostic get");
 
@@ -155,9 +152,9 @@ void NetworkDiagnostic::HandleDiagnosticGetResponse(Coap::Message          *aMes
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, aResult = kErrorFailed);
 
 exit:
-    if (mReceiveDiagnosticGetCallback)
+    if (mReceiveDiagnosticGetCallback.IsSet())
     {
-        mReceiveDiagnosticGetCallback(aResult, aMessage, aMessageInfo, mReceiveDiagnosticGetCallbackContext);
+        mReceiveDiagnosticGetCallback.Invoke(aResult, aMessage, aMessageInfo);
     }
     else
     {
@@ -173,10 +170,7 @@ void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message        
 
     LogInfo("Diagnostic get answer received");
 
-    if (mReceiveDiagnosticGetCallback)
-    {
-        mReceiveDiagnosticGetCallback(kErrorNone, &aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
-    }
+    mReceiveDiagnosticGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessageInfo);
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 

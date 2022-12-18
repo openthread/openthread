@@ -46,6 +46,7 @@
 #include <openthread/link.h>
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -245,7 +246,7 @@ public:
      * @param[in]  aContext   A pointer to application-specific context.
      *
      */
-    void SetReportCallback(ReportCallback aCallback, void *aContext);
+    void SetReportCallback(ReportCallback aCallback, void *aContext) { mReportCallback.Set(aCallback, aContext); }
 
     /**
      * This method registers a callback to handle Link Metrics Management Response received.
@@ -254,7 +255,10 @@ public:
      * @param[in]  aContext  A pointer to application-specific context.
      *
      */
-    void SetMgmtResponseCallback(MgmtResponseCallback aCallback, void *aContext);
+    void SetMgmtResponseCallback(MgmtResponseCallback aCallback, void *aContext)
+    {
+        mMgmtResponseCallback.Set(aCallback, aContext);
+    }
 
     /**
      * This method registers a callback to handle Link Metrics when Enh-ACK Probing IE is received.
@@ -263,7 +267,10 @@ public:
      * @param[in]  aContext  A pointer to application-specific context.
      *
      */
-    void SetEnhAckProbingCallback(EnhAckProbingIeReportCallback aCallback, void *aContext);
+    void SetEnhAckProbingCallback(EnhAckProbingIeReportCallback aCallback, void *aContext)
+    {
+        mEnhAckProbingIeReportCallback.Set(aCallback, aContext);
+    }
 
     /**
      * This method processes received Enh-ACK Probing IE data.
@@ -320,12 +327,9 @@ private:
     static uint8_t ScaleRssiToRawValue(int8_t aRssi);
     static int8_t  ScaleRawValueToRssi(uint8_t aRawValue);
 
-    ReportCallback                mReportCallback;
-    void                         *mReportCallbackContext;
-    MgmtResponseCallback          mMgmtResponseCallback;
-    void                         *mMgmtResponseCallbackContext;
-    EnhAckProbingIeReportCallback mEnhAckProbingIeReportCallback;
-    void                         *mEnhAckProbingIeReportCallbackContext;
+    Callback<ReportCallback>                mReportCallback;
+    Callback<MgmtResponseCallback>          mMgmtResponseCallback;
+    Callback<EnhAckProbingIeReportCallback> mEnhAckProbingIeReportCallback;
 
     Pool<SeriesInfo, kMaxSeriesSupported> mSeriesInfoPool;
 };

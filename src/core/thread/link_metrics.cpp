@@ -53,12 +53,6 @@ RegisterLogModule("LinkMetrics");
 
 LinkMetrics::LinkMetrics(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mReportCallback(nullptr)
-    , mReportCallbackContext(nullptr)
-    , mMgmtResponseCallback(nullptr)
-    , mMgmtResponseCallbackContext(nullptr)
-    , mEnhAckProbingIeReportCallback(nullptr)
-    , mEnhAckProbingIeReportCallbackContext(nullptr)
 {
 }
 
@@ -362,7 +356,7 @@ Error LinkMetrics::HandleManagementResponse(const Message &aMessage, const Ip6::
     uint8_t  status;
     bool     hasStatus = false;
 
-    VerifyOrExit(mMgmtResponseCallback != nullptr);
+    VerifyOrExit(mMgmtResponseCallback.IsSet());
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, length));
     endOffset = offset + length;
@@ -390,7 +384,7 @@ Error LinkMetrics::HandleManagementResponse(const Message &aMessage, const Ip6::
 
     VerifyOrExit(hasStatus, error = kErrorParse);
 
-    mMgmtResponseCallback(&aAddress, status, mMgmtResponseCallbackContext);
+    mMgmtResponseCallback.Invoke(&aAddress, status);
 
 exit:
     return error;
@@ -414,7 +408,7 @@ void LinkMetrics::HandleReport(const Message      &aMessage,
 
     OT_UNUSED_VARIABLE(error);
 
-    VerifyOrExit(mReportCallback != nullptr);
+    VerifyOrExit(mReportCallback.IsSet());
 
     values.Clear();
 
@@ -494,8 +488,8 @@ void LinkMetrics::HandleReport(const Message      &aMessage,
 
     VerifyOrExit(hasStatus || hasReport);
 
-    mReportCallback(&aAddress, hasStatus ? nullptr : &values, hasStatus ? static_cast<Status>(status) : kStatusSuccess,
-                    mReportCallbackContext);
+    mReportCallback.Invoke(&aAddress, hasStatus ? nullptr : &values,
+                           hasStatus ? static_cast<Status>(status) : kStatusSuccess);
 
 exit:
     LogDebg("HandleReport, error:%s", ErrorToString(error));
@@ -515,30 +509,12 @@ exit:
     return error;
 }
 
-void LinkMetrics::SetReportCallback(ReportCallback aCallback, void *aContext)
-{
-    mReportCallback        = aCallback;
-    mReportCallbackContext = aContext;
-}
-
-void LinkMetrics::SetMgmtResponseCallback(MgmtResponseCallback aCallback, void *aContext)
-{
-    mMgmtResponseCallback        = aCallback;
-    mMgmtResponseCallbackContext = aContext;
-}
-
-void LinkMetrics::SetEnhAckProbingCallback(EnhAckProbingIeReportCallback aCallback, void *aContext)
-{
-    mEnhAckProbingIeReportCallback        = aCallback;
-    mEnhAckProbingIeReportCallbackContext = aContext;
-}
-
 void LinkMetrics::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, const Neighbor &aNeighbor)
 {
     MetricsValues values;
     uint8_t       idx = 0;
 
-    VerifyOrExit(mEnhAckProbingIeReportCallback != nullptr);
+    VerifyOrExit(mEnhAckProbingIeReportCallback.IsSet());
 
     values.SetMetrics(aNeighbor.GetEnhAckProbingMetrics());
 
@@ -555,8 +531,7 @@ void LinkMetrics::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, con
         values.mRssiValue = ScaleRawValueToRssi(aData[idx++]);
     }
 
-    mEnhAckProbingIeReportCallback(aNeighbor.GetRloc16(), &aNeighbor.GetExtAddress(), &values,
-                                   mEnhAckProbingIeReportCallbackContext);
+    mEnhAckProbingIeReportCallback.Invoke(aNeighbor.GetRloc16(), &aNeighbor.GetExtAddress(), &values);
 
 exit:
     return;

@@ -50,8 +50,6 @@ RegisterLogModule("CoapSecure");
 CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
     : CoapBase(aInstance, &CoapSecure::Send)
     , mDtls(aInstance, aLayerTwoSecurity)
-    , mConnectedCallback(nullptr)
-    , mConnectedContext(nullptr)
     , mTransmitTask(aInstance, CoapSecure::HandleTransmit, this)
 {
 }
@@ -60,8 +58,7 @@ Error CoapSecure::Start(uint16_t aPort)
 {
     Error error = kErrorNone;
 
-    mConnectedCallback = nullptr;
-    mConnectedContext  = nullptr;
+    mConnectedCallback.Clear();
 
     SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
     SuccessOrExit(error = mDtls.Bind(aPort));
@@ -74,8 +71,7 @@ Error CoapSecure::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aConte
 {
     Error error = kErrorNone;
 
-    mConnectedCallback = nullptr;
-    mConnectedContext  = nullptr;
+    mConnectedCallback.Clear();
 
     SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
     SuccessOrExit(error = mDtls.Bind(aCallback, aContext));
@@ -94,8 +90,7 @@ void CoapSecure::Stop(void)
 
 Error CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext)
 {
-    mConnectedCallback = aCallback;
-    mConnectedContext  = aContext;
+    mConnectedCallback.Set(aCallback, aContext);
 
     return mDtls.Connect(aSockAddr);
 }
@@ -174,13 +169,7 @@ void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
     return static_cast<CoapSecure *>(aContext)->HandleDtlsConnected(aConnected);
 }
 
-void CoapSecure::HandleDtlsConnected(bool aConnected)
-{
-    if (mConnectedCallback != nullptr)
-    {
-        mConnectedCallback(aConnected, mConnectedContext);
-    }
-}
+void CoapSecure::HandleDtlsConnected(bool aConnected) { mConnectedCallback.InvokeIfSet(aConnected); }
 
 void CoapSecure::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
 {

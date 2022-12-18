@@ -40,6 +40,7 @@
 
 #include <openthread/network_time.h>
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -151,8 +152,7 @@ public:
      */
     void SetTimeSyncCallback(otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)
     {
-        mTimeSyncCallback        = aCallback;
-        mTimeSyncCallbackContext = aCallbackContext;
+        mTimeSyncCallback.Set(aCallback, aCallbackContext);
     }
 
     /**
@@ -202,11 +202,10 @@ private:
 #endif
     TimeMilli mLastTimeSyncReceived; ///< The time when the last time synchronization message was received.
     int64_t   mNetworkTimeOffset;    ///< The time offset to the Thread Network time
-    otNetworkTimeSyncCallbackFn
-                        mTimeSyncCallback; ///< The callback to be called when time sync is handled or status updated.
-    void               *mTimeSyncCallbackContext; ///< The context to be passed to callback.
-    SyncTimer           mTimer;                   ///< Timer for checking if a resync is required.
-    otNetworkTimeStatus mCurrentStatus;           ///< Current network time status.
+
+    Callback<otNetworkTimeSyncCallbackFn> mTimeSyncCallback; ///< Callback when time sync is handled or status updated.
+    SyncTimer                             mTimer;            ///< Timer for checking if a resync is required.
+    otNetworkTimeStatus                   mCurrentStatus;    ///< Current network time status.
 };
 
 /**

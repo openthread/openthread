@@ -55,6 +55,7 @@
 
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/heap.hpp"
 #include "common/heap_allocatable.hpp"
@@ -718,7 +719,10 @@ public:
      * @sa  HandleServiceUpdateResult
      *
      */
-    void SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext);
+    void SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext)
+    {
+        mServiceUpdateHandler.Set(aServiceHandler, aServiceHandlerContext);
+    }
 
     /**
      * This method returns the domain authorized to the SRP server.
@@ -1056,9 +1060,9 @@ private:
     using LeaseTimer  = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
     using UpdateTimer = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;
 
-    Ip6::Udp::Socket                mSocket;
-    otSrpServerServiceUpdateHandler mServiceUpdateHandler;
-    void                           *mServiceUpdateHandlerContext;
+    Ip6::Udp::Socket mSocket;
+
+    Callback<otSrpServerServiceUpdateHandler> mServiceUpdateHandler;
 
     Heap::String mDomain;
 

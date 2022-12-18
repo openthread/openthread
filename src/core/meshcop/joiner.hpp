@@ -43,6 +43,7 @@
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
@@ -239,8 +240,7 @@ private:
 
     State mState;
 
-    otJoinerCallback mCallback;
-    void            *mContext;
+    Callback<otJoinerCallback> mCallback;
 
     JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES];
     uint16_t     mJoinerRouterIndex;
