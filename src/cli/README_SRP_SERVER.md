@@ -168,7 +168,7 @@ Done
 
 Usage: `srp server service`
 
-Print information of all registered services. 
+Print information of all registered services.
 
 The TXT record is displayed as an array of entries. If an entry has a key, the key will be printed in ASCII format. The value portion will always be printed as hex bytes.
 
