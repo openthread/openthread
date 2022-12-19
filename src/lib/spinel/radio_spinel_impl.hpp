@@ -218,7 +218,7 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
 #endif
     , mTxRadioEndUs(UINT64_MAX)
     , mRadioTimeRecalcStart(UINT64_MAX)
-    , mRadioTimeOffset(0)
+    , mRadioTimeOffset(UINT64_MAX)
 {
     mVersion[0] = '\0';
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
@@ -2201,7 +2201,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
 
     VerifyOrExit(error == OT_ERROR_NONE, mRadioTimeRecalcStart = localRxTimestamp);
 
-    mRadioTimeOffset      = static_cast<int64_t>(remoteTimestamp - ((localRxTimestamp / 2) + (localTxTimestamp / 2)));
+    mRadioTimeOffset      = (remoteTimestamp - ((localRxTimestamp / 2) + (localTxTimestamp / 2)));
     mIsTimeSynced         = true;
     mRadioTimeRecalcStart = localRxTimestamp + RCP_TIME_OFFSET_CHECK_INTERVAL;
 
@@ -2213,7 +2213,7 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 uint64_t RadioSpinel<InterfaceType, ProcessContextType>::GetNow(void)
 {
-    return mIsTimeSynced ? (otPlatTimeGet() + static_cast<uint64_t>(mRadioTimeOffset)) : UINT64_MAX;
+    return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX;
 }
 
 template <typename InterfaceType, typename ProcessContextType>
