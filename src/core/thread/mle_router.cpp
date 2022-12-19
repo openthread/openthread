@@ -2106,25 +2106,25 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
     uint8_t                  registeredCount = 0;
     uint8_t                  storedCount     = 0;
     uint16_t                 end             = aOffset + aLength;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     Ip6::Address        oldDua;
     const Ip6::Address *oldDuaPtr = nullptr;
     bool                hasDua    = false;
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Ip6::Address oldMlrRegisteredAddresses[OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1];
     uint16_t     oldMlrRegisteredAddressNum = 0;
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     if ((oldDuaPtr = aChild.GetDomainUnicastAddress()) != nullptr)
     {
         oldDua = *oldDuaPtr;
     }
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     // Retrieve registered multicast addresses of the Child
     if (aChild.HasAnyMlrRegisteredAddress())
     {
@@ -2194,7 +2194,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
         {
             storedCount++;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
             if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
             {
                 hasDua = true;
@@ -2216,7 +2216,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
         }
         else
         {
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
             if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
             {
                 // if not able to store DUA, then assume child does not have one
@@ -2256,7 +2256,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
         Get<AddressResolver>().Remove(address);
     }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     // Dua is removed
     if (oldDuaPtr != nullptr && !hasDua)
     {
@@ -2264,7 +2264,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
     }
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Get<MlrManager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses, oldMlrRegisteredAddressNum);
 #endif
 
@@ -3459,12 +3459,10 @@ void MleRouter::RemoveRouterLink(Router &aRouter)
         }
         break;
 
-#if OPENTHREAD_FTD
     case kRoleRouter:
     case kRoleLeader:
         mRouterTable.RemoveRouterLink(aRouter);
         break;
-#endif
 
     default:
         break;
@@ -4229,7 +4227,7 @@ void MleRouter::SetChildStateToValid(Child &aChild)
     aChild.SetState(Neighbor::kStateValid);
     IgnoreError(mChildTable.StoreChild(aChild));
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
 #endif
 
