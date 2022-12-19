@@ -274,8 +274,6 @@ void NcpHdlc::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 
     super_t::IncrementFrameErrorCounter();
 
-    // We can get away with sprintf because we know
-    // `hexbuf` is large enough.
     snprintf(hexbuf, sizeof(hexbuf), "Framing error %d: [", aError);
 
     // Write out the first part of our log message.
@@ -285,9 +283,6 @@ void NcpHdlc::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     // The second '3' comes from the length of two hex digits and a space.
     for (i = 0; (i < aBufLength) && (i < (sizeof(hexbuf) - 3) / 3); i++)
     {
-        // We can get away with sprintf because we know
-        // `hexbuf` is large enough, based on our calculations
-        // above.
         snprintf(&hexbuf[i * 3], sizeof(hexbuf) - i * 3, " %02X", static_cast<uint8_t>(aBuf[i]));
     }
 

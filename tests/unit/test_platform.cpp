@@ -193,9 +193,9 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK void otPlatDiagProcess(otInstance *, uint8_t, char *aArgs[], char *aOutput, size_t)
+OT_TOOL_WEAK void otPlatDiagProcess(otInstance *, uint8_t, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
-    sprintf(aOutput, "diag feature '%s' is not supported\r\n", aArgs[0]);
+    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", aArgs[0]);
 }
 
 OT_TOOL_WEAK void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }
