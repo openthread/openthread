@@ -164,10 +164,10 @@ private:
     static const otIp4Address kWellKnownIpv4OnlyAddress2; // 192.0.0.171
     static const uint8_t      kValidNat64PrefixLength[];
 
-    char            mInfraIfName[IFNAMSIZ];
-    static uint32_t mInfraIfIndex;
-    int             mInfraIfIcmp6Socket = -1;
-    int             mNetLinkSocket      = -1;
+    char     mInfraIfName[IFNAMSIZ];
+    uint32_t mInfraIfIndex       = 0;
+    int      mInfraIfIcmp6Socket = -1;
+    int      mNetLinkSocket      = -1;
 
     void        ReceiveNetLinkMessage(void);
     void        ReceiveIcmp6Message(void);
