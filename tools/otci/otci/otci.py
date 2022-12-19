@@ -1622,9 +1622,9 @@ class OTCI(object):
         routes = []
         for line in output:
             line = line.split()
-            if line[1] == 's':
-                prefix, _, prf, rloc16 = line
-                stable = True
+            if len(line) == 4:
+                prefix, flags, prf, rloc16 = line
+                stable = 's' in flags
             else:
                 prefix, prf, rloc16 = line
                 stable = False
