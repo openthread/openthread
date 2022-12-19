@@ -1186,7 +1186,6 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
     uint32_t              partitionId;
     Router               *router;
     uint8_t               routerId;
-    uint8_t               routerCount;
 
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
@@ -1395,27 +1394,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
             IgnoreError(SendLinkRequest(nullptr));
         }
 
-        router = mRouterTable.FindRouterById(routerId);
-        VerifyOrExit(router != nullptr);
-
-        // check current active router number
-        routerCount = 0;
-
-        for (uint8_t id = 0; id <= kMaxRouterId; id++)
-        {
-            if (routeTlv.IsRouterIdSet(id))
-            {
-                routerCount++;
-            }
-        }
-
-        if (routerCount > mRouterDowngradeThreshold && mRouterSelectionJitterTimeout == 0 &&
-            HasMinDowngradeNeighborRouters() && HasSmallNumberOfChildren() &&
-            NeighborHasComparableConnectivity(routeTlv, routerId)
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
-            && !Get<NetworkData::Notifier>().IsEligibleForRouterRoleUpgradeAsBorderRouter()
-#endif
-        )
+        if (ShouldDowngrade(routerId, routeTlv))
         {
             mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
         }
@@ -4114,24 +4093,69 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
     aTlv.SetSedDatagramCount(OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT);
 }
 
-bool MleRouter::HasMinDowngradeNeighborRouters(void)
+bool MleRouter::ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const
 {
-    uint8_t routerCount = 0;
+    // Determine whether all conditions are satisfied for the router
+    // to downgrade after receiving info for a neighboring router
+    // with Router ID `aNeighborId` along with its `aRouteTlv`.
 
-    for (const Router &router : Get<RouterTable>())
+    bool    shouldDowngrade   = false;
+    uint8_t activeRouterCount = mRouterTable.GetActiveRouterCount();
+    uint8_t count;
+
+    VerifyOrExit(IsRouter());
+    VerifyOrExit(mRouterTable.IsAllocated(aNeighborId));
+
+    // `mRouterSelectionJitterTimeout` is non-zero if we are already
+    // waiting to downgrade.
+
+    VerifyOrExit(mRouterSelectionJitterTimeout == 0);
+
+    VerifyOrExit(activeRouterCount > mRouterDowngradeThreshold);
+
+    // Check that we have at least `kMinDowngradeNeighbors`
+    // neighboring routers with two-way link quality of 2 or better.
+
+    count = 0;
+
+    for (const Router &router : mRouterTable)
     {
-        if (!router.IsStateValid())
+        if (!router.IsStateValid() || (router.GetTwoWayLinkQuality() < kLinkQuality2))
         {
             continue;
         }
 
-        if (router.GetTwoWayLinkQuality() >= kLinkQuality2)
+        count++;
+
+        if (count >= kMinDowngradeNeighbors)
         {
-            routerCount++;
+            break;
         }
     }
 
-    return routerCount >= kMinDowngradeNeighbors;
+    VerifyOrExit(count >= kMinDowngradeNeighbors);
+
+    // Check that we have fewer children than three times the number
+    // of excess routers (defined as the difference between number of
+    // active routers and `mRouterDowngradeThreshold`).
+
+    count = activeRouterCount - mRouterDowngradeThreshold;
+    VerifyOrExit(mChildTable.GetNumChildren(Child::kInStateValid) < count * 3);
+
+    // Check that the neighbor has as good or better-quality links to
+    // same routers.
+
+    VerifyOrExit(NeighborHasComparableConnectivity(aRouteTlv, aNeighborId));
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    // Check if we are eligible to be router due to being a BR.
+    VerifyOrExit(!Get<NetworkData::Notifier>().IsEligibleForRouterRoleUpgradeAsBorderRouter());
+#endif
+
+    shouldDowngrade = true;
+
+exit:
+    return shouldDowngrade;
 }
 
 bool MleRouter::NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const
@@ -4215,22 +4239,6 @@ void MleRouter::RemoveChildren(void)
     {
         RemoveNeighbor(child);
     }
-}
-
-bool MleRouter::HasSmallNumberOfChildren(void)
-{
-    bool     rval        = false;
-    uint16_t numChildren = 0;
-    uint8_t  routerCount = mRouterTable.GetActiveRouterCount();
-
-    VerifyOrExit(routerCount > mRouterDowngradeThreshold);
-
-    numChildren = mChildTable.GetNumChildren(Child::kInStateValid);
-
-    rval = numChildren < (routerCount - mRouterDowngradeThreshold) * 3;
-
-exit:
-    return rval;
 }
 
 Error MleRouter::SetAssignParentPriority(int8_t aParentPriority)

@@ -639,9 +639,8 @@ private:
     void SetChildStateToValid(Child &aChild);
     bool HasChildren(void);
     void RemoveChildren(void);
-    bool HasMinDowngradeNeighborRouters(void);
+    bool ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
     bool NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
-    bool HasSmallNumberOfChildren(void);
 
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
     void        HandleAdvertiseTrickleTimer(void);
