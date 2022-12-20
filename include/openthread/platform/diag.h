@@ -146,8 +146,10 @@ void otPlatDiagAlarmCallback(otInstance *aInstance);
  * @param[in]  aValue  true to set the gpio to high level, or false otherwise.
  *
  * @retval OT_ERROR_NONE             Successfully set the gpio.
+ * @retval OT_ERROR_FAILED           A platform error occurred while setting the gpio.
  * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported.
- * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on the platform.
+ * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled or @p aGpio is not configured as output.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
  *
  */
 otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue);
@@ -159,8 +161,10 @@ otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue);
  * @param[out]  aValue  A pointer where to put gpio value.
  *
  * @retval OT_ERROR_NONE             Successfully got the gpio value.
+ * @retval OT_ERROR_FAILED           A platform error occurred while getting the gpio value.
  * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported or @p aValue is NULL.
- * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on the platform.
+ * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled or @p aGpio is not configured as input.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
  *
  */
 otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue);
@@ -172,8 +176,10 @@ otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue);
  * @param[out]  aMode   The gpio mode.
  *
  * @retval OT_ERROR_NONE             Successfully set the gpio mode.
- * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported.
- * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on the platform.
+ * @retval OT_ERROR_FAILED           A platform error occurred while setting the gpio mode.
+ * @retval OT_ERROR_INVALID_ARGS     @p aGpio or @p aMode is not supported.
+ * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
  *
  */
 otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode);
@@ -182,13 +188,14 @@ otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode);
  * This function gets the gpio mode.
  *
  * @param[in]   aGpio   The gpio number.
- * @param[out]  aValue  A pointer where to put gpio value.
+ * @param[out]  aMode   A pointer where to put gpio mode.
  *
- * @retval OT_ERROR_NONE             Successfully got the gpio value.
- * @retval OT_ERROR_FAILED           The gpio is neither in input nor output mode. For example, if the gpio is in
- *                                   analog mode.
+ * @retval OT_ERROR_NONE             Successfully got the gpio mode.
+ * @retval OT_ERROR_FAILED           Mode returned by the platform is not implemented in OpenThread or a platform error
+ *                                   occurred while getting the gpio mode.
  * @retval OT_ERROR_INVALID_ARGS     @p aGpio is not supported or @p aMode is NULL.
- * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on the platform.
+ * @retval OT_ERROR_INVALID_STATE    Diagnostic mode was not enabled.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented or configured on the platform.
  *
  */
 otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode);
