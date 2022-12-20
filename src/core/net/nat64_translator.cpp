@@ -515,13 +515,27 @@ exit:
 
 void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
-    if (mNat64Prefix != aNat64Prefix)
+    if (aNat64Prefix.GetLength() == 0)
+    {
+        ClearNat64Prefix();
+    }
+    else if (mNat64Prefix != aNat64Prefix)
     {
         LogInfo("IPv6 Prefix for NAT64 updated to %s", aNat64Prefix.ToString().AsCString());
         mNat64Prefix = aNat64Prefix;
+        UpdateState();
     }
+}
 
+void Translator::ClearNat64Prefix(void)
+{
+    VerifyOrExit(mNat64Prefix.GetLength() != 0);
+    mNat64Prefix.Clear();
+    LogInfo("IPv6 Prefix for NAT64 cleared");
     UpdateState();
+
+exit:
+    return;
 }
 
 void Translator::HandleMappingExpirerTimer(void)

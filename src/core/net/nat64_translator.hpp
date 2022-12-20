@@ -253,13 +253,19 @@ public:
 
     /**
      * Sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
-     * If an empty NAT64 prefix is set, the translator will return kNotTranslated for all IPv6 datagrams and kDrop for
-     * all IPv4 datagrams.
+     * This function equals to `ClearNat64Prefix` when an empty prefix is provided.
      *
      * @param[in] aNat64Prefix The prefix of the NAT64-mapped addresses.
      *
      */
     void SetNat64Prefix(const Ip6::Prefix &aNat64Prefix);
+
+    /**
+     * Clear the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
+     * The translator will return kNotTranslated for all IPv6 datagrams and kDrop for all IPv4 datagrams.
+     *
+     */
+    void ClearNat64Prefix(void);
 
     /**
      * Initializes an `otNat64AddressMappingIterator`.
