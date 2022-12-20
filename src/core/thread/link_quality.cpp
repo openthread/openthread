@@ -219,6 +219,29 @@ int8_t GetTypicalRssForLinkQuality(int8_t aNoiseFloor, LinkQuality aLinkQuality)
     return linkMargin + aNoiseFloor;
 }
 
+uint8_t CostForLinkQuality(LinkQuality aLinkQuality)
+{
+    static const uint8_t kCostsForLinkQuality[] = {
+        kCostForLinkQuality0, // Link cost for `kLinkQuality0` (0).
+        kCostForLinkQuality1, // Link cost for `kLinkQuality1` (1).
+        kCostForLinkQuality2, // Link cost for `kLinkQuality2` (2).
+        kCostForLinkQuality3, // Link cost for `kLinkQuality3` (3).
+    };
+
+    static_assert(kLinkQuality0 == 0, "kLinkQuality0 is invalid");
+    static_assert(kLinkQuality1 == 1, "kLinkQuality1 is invalid");
+    static_assert(kLinkQuality2 == 2, "kLinkQuality2 is invalid");
+    static_assert(kLinkQuality3 == 3, "kLinkQuality3 is invalid");
+
+    uint8_t cost = Mle::kMaxRouteCost;
+
+    VerifyOrExit(aLinkQuality <= kLinkQuality3);
+    cost = kCostsForLinkQuality[aLinkQuality];
+
+exit:
+    return cost;
+}
+
 LinkQuality LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
 {
     // Static private method to calculate the link quality from a given

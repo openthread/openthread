@@ -352,7 +352,7 @@ uint8_t RouterTable::GetLinkCost(const Router &aRouter) const
 
     VerifyOrExit(aRouter.GetRloc16() != Get<Mle::MleRouter>().GetRloc16() && aRouter.IsStateValid());
 
-    rval = Mle::MleRouter::LinkQualityToCost(aRouter.GetTwoWayLinkQuality());
+    rval = CostForLinkQuality(aRouter.GetTwoWayLinkQuality());
 
 exit:
     return rval;

@@ -437,7 +437,7 @@ void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint
     if (!Mle::IsActiveRouter(aDest))
     {
         // Assume best link between remote child server and its parent.
-        curCost += 1;
+        curCost += kCostForLinkQuality3;
     }
 
     // Cost if the server is direct neighbor.
@@ -451,7 +451,7 @@ void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint
         {
             // Cost calculated only from Link Quality In as the parent only maintains
             // one-direction link info.
-            cost = Mle::MleRouter::LinkQualityToCost(neighbor->GetLinkQualityIn());
+            cost = CostForLinkQuality(neighbor->GetLinkQualityIn());
         }
         else
         {

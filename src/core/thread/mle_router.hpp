@@ -493,16 +493,6 @@ public:
      */
     void ResetAdvertiseInterval(void);
 
-    /**
-     * This static method converts link quality to route cost.
-     *
-     * @param[in]  aLinkQuality  The link quality.
-     *
-     * @returns The link cost corresponding to @p aLinkQuality.
-     *
-     */
-    static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
-
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method generates an MLE Time Synchronization message.
