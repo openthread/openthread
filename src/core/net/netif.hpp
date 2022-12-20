@@ -644,6 +644,10 @@ protected:
     void UnsubscribeAllNodesMulticast(void);
 
 private:
+    void SignalMulticastAddressChange(AddressEvent            aAddressEvent,
+                                      const MulticastAddress *aStart,
+                                      const MulticastAddress *aEnd);
+
     LinkedList<UnicastAddress>   mUnicastAddresses;
     LinkedList<MulticastAddress> mMulticastAddresses;
     bool                         mMulticastPromiscuous;

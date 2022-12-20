@@ -143,25 +143,7 @@ void Netif::SubscribeAllNodesMulticast(void)
         tail->SetNext(&linkLocalAllNodesAddress);
     }
 
-    Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
-
-#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    VerifyOrExit(mAddressCallback != nullptr);
-#endif
-
-    for (const MulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
-    {
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry, kOriginThread);
-
-        if (mAddressCallback != nullptr)
-#endif
-        {
-            AddressInfo addressInfo(*entry);
-
-            mAddressCallback(&addressInfo, kAddressAdded, mAddressCallbackContext);
-        }
-    }
+    SignalMulticastAddressChange(kAddressAdded, &linkLocalAllNodesAddress, nullptr);
 
 exit:
     return;
@@ -199,25 +181,7 @@ void Netif::UnsubscribeAllNodesMulticast(void)
         prev->SetNext(nullptr);
     }
 
-    Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
-
-#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    VerifyOrExit(mAddressCallback != nullptr);
-#endif
-
-    for (const MulticastAddress *entry = &linkLocalAllNodesAddress; entry; entry = entry->GetNext())
-    {
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, *entry, kOriginThread);
-
-        if (mAddressCallback != nullptr)
-#endif
-        {
-            AddressInfo addressInfo(*entry);
-
-            mAddressCallback(&addressInfo, kAddressRemoved, mAddressCallbackContext);
-        }
-    }
+    SignalMulticastAddressChange(kAddressRemoved, &linkLocalAllNodesAddress, nullptr);
 
 exit:
     return;
@@ -260,26 +224,7 @@ void Netif::SubscribeAllRoutersMulticast(void)
         prev->SetNext(&linkLocalAllRoutersAddress);
     }
 
-    Get<Notifier>().Signal(kEventIp6MulticastSubscribed);
-
-#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-    VerifyOrExit(mAddressCallback != nullptr);
-#endif
-
-    for (const MulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
-         entry                         = entry->GetNext())
-    {
-#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressAdded, *entry, kOriginThread);
-
-        if (mAddressCallback != nullptr)
-#endif
-        {
-            AddressInfo addressInfo(*entry);
-
-            mAddressCallback(&addressInfo, kAddressAdded, mAddressCallbackContext);
-        }
-    }
+    SignalMulticastAddressChange(kAddressAdded, &linkLocalAllRoutersAddress, &linkLocalAllNodesAddress);
 
 exit:
     return;
@@ -312,26 +257,42 @@ void Netif::UnsubscribeAllRoutersMulticast(void)
         prev->SetNext(&linkLocalAllNodesAddress);
     }
 
-    Get<Notifier>().Signal(kEventIp6MulticastUnsubscribed);
+    SignalMulticastAddressChange(kAddressRemoved, &linkLocalAllRoutersAddress, &linkLocalAllNodesAddress);
+
+exit:
+    return;
+}
+
+void Netif::SignalMulticastAddressChange(AddressEvent            aAddressEvent,
+                                         const MulticastAddress *aStart,
+                                         const MulticastAddress *aEnd)
+{
+    // Signal changes to fixed multicast addresses from `aStart` up to
+    // (not including) `aEnd`. `aAddressEvent` indicates whether
+    // addresses were subscribed or unsubscribed.
+
+    Get<Notifier>().Signal(aAddressEvent == kAddressAdded ? kEventIp6MulticastSubscribed
+                                                          : kEventIp6MulticastUnsubscribed);
 
 #if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     VerifyOrExit(mAddressCallback != nullptr);
 #endif
 
-    for (const MulticastAddress *entry = &linkLocalAllRoutersAddress; entry != &linkLocalAllNodesAddress;
-         entry                         = entry->GetNext())
+    for (const MulticastAddress *entry = aStart; entry != aEnd; entry = entry->GetNext())
     {
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
-        Get<Utils::HistoryTracker>().RecordAddressEvent(kAddressRemoved, *entry, kOriginThread);
+        Get<Utils::HistoryTracker>().RecordAddressEvent(aAddressEvent, *entry, kOriginThread);
 
         if (mAddressCallback != nullptr)
 #endif
         {
             AddressInfo addressInfo(*entry);
 
-            mAddressCallback(&addressInfo, kAddressRemoved, mAddressCallbackContext);
+            mAddressCallback(&addressInfo, aAddressEvent, mAddressCallbackContext);
         }
     }
+
+    ExitNow();
 
 exit:
     return;
