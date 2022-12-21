@@ -150,27 +150,40 @@ public:
     void RequestStop(void) { Stop(); }
 
     /**
-     * This method gets the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in
-     * Router Advertisement messages sent over the infrastructure link.
+     * This method gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
+     * messages sent over the infrastructure link.
      *
-     * @returns The Route Info Option preference.
+     * The RIO preference is determined as follows:
+     *
+     * - If explicitly set by user by calling `SetRouteInfoOptionPreference()`, the given preference is used.
+     * - Otherwise, it is determined based on device's role: Medium preference when in router/leader role and low
+     *   preference when in child role.
+     *
+     * @returns The current Route Info Option preference.
      *
      */
-    RoutePreference GetRouteInfoOptionPreference(void) const { return mRouteInfoOptionPreference; }
+    RoutePreference GetRouteInfoOptionPreference(void) const { return mRioPreference; }
 
     /**
-     * This method sets the preference to use when advertising Route Info Options (e.g., for discovered OMR prefixes)
-     * in Router Advertisement messages sent over the infrastructure link.
+     * This method explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
+     * Advertisement messages sent over the infrastructure link.
      *
-     * By default BR will use 'medium' preference level but this method allows the default value to be changed. As an
-     * example, it can be set to 'low' preference in the case where device is a temporary BR (a mobile BR or a
-     * battery-powered BR) to indicate that other BRs (if any) should be preferred over this BR on the infrastructure
-     * link.
+     * After a call to this method, BR will use the given preference for all its advertised RIOs. The preference can be
+     * cleared by calling `ClearRouteInfoOptionPreference`()`.
      *
      * @param[in] aPreference   The route preference to use.
      *
      */
     void SetRouteInfoOptionPreference(RoutePreference aPreference);
+
+    /**
+     * This method clears a previously set preference value for advertised Route Info Options.
+     *
+     * After a call to this method, BR will use device role to determine the RIO preference: Medium preference when
+     * in router/leader role and low preference when in child role.
+     *
+     */
+    void ClearRouteInfoOptionPreference(void);
 
     /**
      * This method returns the local off-mesh-routable (OMR) prefix.
@@ -838,6 +851,8 @@ private:
     void  HandleNotifierEvents(Events aEvents);
     bool  IsInitialized(void) const { return mInfraIf.IsInitialized(); }
     bool  IsEnabled(void) const { return mIsEnabled; }
+    void  SetRioPreferenceBasedOnRole(void);
+    void  UpdateRioPreference(RoutePreference aPreference);
     Error LoadOrGenerateRandomBrUlaPrefix(void);
 
     void EvaluateRoutingPolicy(void);
@@ -890,7 +905,8 @@ private:
     // were advertised as RIO in the last sent RA message.
     OnMeshPrefixArray mAdvertisedPrefixes;
 
-    RoutePreference mRouteInfoOptionPreference;
+    RoutePreference mRioPreference;
+    bool            mUserSetRioPreference;
 
     OnLinkPrefixManager mOnLinkPrefixManager;
 

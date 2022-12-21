@@ -652,28 +652,48 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         OutputLine(" prf:%s", PreferenceToString(preference));
     }
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    /**
-     * @cli br rioprf (high,med,low)
-     * @code
-     * br rioprf
-     * med
-     * Done
-     * @endcode
-     * @code
-     * br rioprf low
-     * Done
-     * @endcode
-     * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
-     * @par api_copy
-     * #otBorderRoutingSetRouteInfoOptionPreference
-     *
-     */
     else if (aArgs[0] == "rioprf")
     {
+        /**
+         * @cli br rioprf
+         * @code
+         * br rioprf
+         * med
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBorderRoutingGetRouteInfoOptionPreference
+         *
+         */
         if (aArgs[1].IsEmpty())
         {
             OutputLine("%s", PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
         }
+        /**
+         * @cli br rioprf clear
+         * @code
+         * br rioprf clear
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBorderRoutingClearRouteInfoOptionPreference
+         *
+         */
+        else if (aArgs[1] == "clear")
+        {
+            otBorderRoutingClearRouteInfoOptionPreference(GetInstancePtr());
+        }
+        /**
+         * @cli br rioprf (high,med,low)
+         * @code
+         * br rioprf low
+         * Done
+         * @endcode
+         * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
+         * @par api_copy
+         * #otBorderRoutingSetRouteInfoOptionPreference
+         *
+         */
         else
         {
             otRoutePreference preference;
