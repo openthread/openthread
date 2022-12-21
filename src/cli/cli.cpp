@@ -1861,7 +1861,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("interval: %lu", ToUlong(otChannelManagerGetAutoChannelSelectionInterval(GetInstancePtr())));
                 OutputLine("cca threshold: 0x%04x", otChannelManagerGetCcaFailureRateThreshold(GetInstancePtr()));
                 OutputLine("supported: %s", supportedMask.ToString().AsCString());
-                OutputLine("favored: %s", supportedMask.ToString().AsCString());
+                OutputLine("favored: %s", favoredMask.ToString().AsCString());
             }
         }
         /**
