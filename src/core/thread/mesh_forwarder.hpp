@@ -334,6 +334,12 @@ private:
     static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
     static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
 
+    // Hops left to use in lowpan mesh header: We use `kMaxRouteCost` as
+    // max hops between routers within Thread  mesh. We then add two
+    // for possibility of source or destination being a child
+    // (requiring one hop) and one as additional guard increment.
+    static constexpr uint8_t kMeshHeaderHopsLeft = Mle::kMaxRouteCost + 3;
+
     static constexpr uint32_t kTxDelayInterval = OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_INTERVAL; // In msec
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
