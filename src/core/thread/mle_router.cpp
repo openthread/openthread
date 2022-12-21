@@ -634,7 +634,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
 
     // Version
     SuccessOrExit(error = Tlv::Find<VersionTlv>(aRxInfo.mMessage, version));
-    VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = kErrorParse);
+    VerifyOrExit(version >= kThreadVersion1p1, error = kErrorParse);
 
     // Leader Data
     switch (aRxInfo.mMessage.ReadLeaderDataTlv(leaderData))
@@ -888,7 +888,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
 
     // Version
     SuccessOrExit(error = Tlv::Find<VersionTlv>(aRxInfo.mMessage, version));
-    VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = kErrorParse);
+    VerifyOrExit(version >= kThreadVersion1p1, error = kErrorParse);
 
     // Link and MLE Frame Counters
     SuccessOrExit(error = aRxInfo.mMessage.ReadFrameCounterTlvs(linkFrameCounter, mleFrameCounter));
@@ -1626,7 +1626,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
 
     // Version
     SuccessOrExit(error = Tlv::Find<VersionTlv>(aRxInfo.mMessage, version));
-    VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = kErrorParse);
+    VerifyOrExit(version >= kThreadVersion1p1, error = kErrorParse);
 
     // Scan Mask
     SuccessOrExit(error = Tlv::Find<ScanMaskTlv>(aRxInfo.mMessage, scanMask));
@@ -2267,7 +2267,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 
     // Version
     SuccessOrExit(error = Tlv::Find<VersionTlv>(aRxInfo.mMessage, version));
-    VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = kErrorParse);
+    VerifyOrExit(version >= kThreadVersion1p1, error = kErrorParse);
 
     // Response
     SuccessOrExit(error = aRxInfo.mMessage.ReadResponseTlv(response));
