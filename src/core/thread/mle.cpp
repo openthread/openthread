@@ -3101,7 +3101,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
     // Version
     SuccessOrExit(error = Tlv::Find<VersionTlv>(aRxInfo.mMessage, version));
-    VerifyOrExit(version >= OT_THREAD_VERSION_1_1, error = kErrorParse);
+    VerifyOrExit(version >= kThreadVersion1p1, error = kErrorParse);
 
     // Response
     SuccessOrExit(error = aRxInfo.mMessage.ReadResponseTlv(response));
