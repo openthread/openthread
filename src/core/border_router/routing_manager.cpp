@@ -1752,6 +1752,18 @@ void RoutingManager::DiscoveredPrefixTable::HandleRouterTimer(void)
             continue;
         }
 
+        // If the `router` emitting RA has an address belonging to
+        // infra interface, it indicates that the RAs are from
+        // same device. In this case we skip performing NS probes.
+        // This addresses situation where platform may not be
+        // be able to receive and pass the NA message response
+        // from device itself.
+
+        if (Get<RoutingManager>().mInfraIf.HasAddress(router.mAddress))
+        {
+            continue;
+        }
+
         if (router.mTimeout <= now)
         {
             router.mNsProbeCount++;
