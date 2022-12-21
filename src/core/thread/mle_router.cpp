@@ -1038,32 +1038,6 @@ exit:
     return error;
 }
 
-uint8_t MleRouter::LinkQualityToCost(uint8_t aLinkQuality)
-{
-    uint8_t rval;
-
-    switch (aLinkQuality)
-    {
-    case 1:
-        rval = kLinkQuality1LinkCost;
-        break;
-
-    case 2:
-        rval = kLinkQuality2LinkCost;
-        break;
-
-    case 3:
-        rval = kLinkQuality3LinkCost;
-        break;
-
-    default:
-        rval = kLinkQuality0LinkCost;
-        break;
-    }
-
-    return rval;
-}
-
 uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
 {
     uint8_t rval = kMaxRouteCost;
@@ -4031,7 +4005,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             break;
         }
 
-        cost += LinkQualityToCost(mParent.GetLinkQualityIn());
+        cost += CostForLinkQuality(mParent.GetLinkQualityIn());
         break;
 
     case kRoleRouter:

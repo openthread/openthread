@@ -183,11 +183,6 @@ constexpr int8_t kParentPriorityMedium      = 0;  ///< Parent Priority Medium (d
 constexpr int8_t kParentPriorityLow         = -1; ///< Parent Priority Low
 constexpr int8_t kParentPriorityUnspecified = -2; ///< Parent Priority Unspecified
 
-constexpr uint8_t kLinkQuality3LinkCost = 1;             ///< Link Cost for Link Quality 3
-constexpr uint8_t kLinkQuality2LinkCost = 2;             ///< Link Cost for Link Quality 2
-constexpr uint8_t kLinkQuality1LinkCost = 4;             ///< Link Cost for Link Quality 1
-constexpr uint8_t kLinkQuality0LinkCost = kMaxRouteCost; ///< Link Cost for Link Quality 0
-
 /**
  * This type represents a Thread device role.
  *
