@@ -417,7 +417,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 6
+#define SPINEL_RCP_API_VERSION 7
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -1742,6 +1742,28 @@ enum
      *
      */
     SPINEL_PROP_PHY_REGION_CODE = SPINEL_PROP_PHY__BEGIN + 12,
+
+    /// Calibrated Power Table
+    /** Format: `A(Csd)` - Insert/Set
+     *
+     *  The `Insert` command on the property inserts a calibration power entry to the calibrated power table.
+     *  The `Set` command on the property with empty payload clears the calibrated power table.
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Actual power in 0.01 dBm.
+     *  `d`: Raw power setting.
+     */
+    SPINEL_PROP_PHY_CALIBRATED_POWER = SPINEL_PROP_PHY__BEGIN + 13,
+
+    /// Target power for a channel
+    /** Format: `t(Cs)` - Write only
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Target power in 0.01 dBm.
+     */
+    SPINEL_PROP_PHY_CHAN_TARGET_POWER = SPINEL_PROP_PHY__BEGIN + 14,
 
     SPINEL_PROP_PHY__END = 0x30,
 

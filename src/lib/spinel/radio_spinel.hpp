@@ -886,6 +886,55 @@ public:
      */
     const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return &mRadioSpinelMetrics; }
 
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    /**
+     * Add a calibrated power of the specificed channel to the power calibration table.
+     *
+     * @param[in] aChannel                The radio channel.
+     * @param[in] aActualPower            The actual power in 0.01dBm.
+     * @param[in] aRawPowerSetting        A pointer to the raw power setting byte array.
+     * @param[in] aRawPowerSettingLength  The length of the @p aRawPowerSetting.
+     *
+     * @retval  OT_ERROR_NONE              Successfully added the calibrated power to the power calibration table.
+     * @retval  OT_ERROR_NO_BUFS           No available entry in the power calibration table.
+     * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid.
+     * @retval  OT_ERROR_NOT_IMPLEMENTED   This feature is not implemented.
+     * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
+     *
+     */
+    otError AddCalibratedPower(uint8_t        aChannel,
+                               int16_t        aActualPower,
+                               const uint8_t *aRawPowerSetting,
+                               uint16_t       aRawPowerSettingLength);
+
+    /**
+     * Clear all calibrated powers from the power calibration table.
+     *
+     * @retval  OT_ERROR_NONE              Successfully cleared all calibrated powers from the power calibration table.
+     * @retval  OT_ERROR_NOT_IMPLEMENTED   This feature is not implemented.
+     * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
+     *
+     */
+    otError ClearCalibratedPowers(void);
+
+    /**
+     * Set the target power for the given channel.
+     *
+     * @param[in]  aChannel      The radio channel.
+     * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel.
+     *
+     * @retval  OT_ERROR_NONE              Successfully set the target power.
+     * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel or @p aTargetPower is invalid..
+     * @retval  OT_ERROR_NOT_IMPLEMENTED   The feature is not implemented.
+     * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
+     *
+     */
+    otError SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
+#endif
+
 private:
     enum
     {

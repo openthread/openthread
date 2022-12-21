@@ -335,4 +335,27 @@
 #define OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE
+ *
+ * Define the path of the factory config file.
+ *
+ * Note: The factory config file contains the persist data that configured by the factory. And it won't be changed
+ *       after a device firmware update OTA is done.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE
+#define OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE "src/posix/platform/openthread.conf.example"
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE
+ *
+ * Define the path of the product config file.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE
+#define OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE "src/posix/platform/openthread.conf.example"
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

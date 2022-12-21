@@ -330,6 +330,7 @@ SOURCES_COMMON                                  = \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
     utils/ping_sender.cpp                         \
+    utils/power_calibration.cpp                   \
     utils/slaac_address.cpp                       \
     utils/srp_client_buffers.cpp                  \
     $(NULL)
@@ -366,6 +367,7 @@ RADIO_SOURCES_COMMON                       = \
     radio/radio_platform.cpp                 \
     thread/link_quality.cpp                  \
     utils/parse_cmdline.cpp                  \
+    utils/power_calibration.cpp              \
     $(NULL)
 
 EXTRA_DIST                                 = \
@@ -514,6 +516,7 @@ HEADERS_COMMON                                  = \
     config/parent_search.h                        \
     config/ping_sender.h                          \
     config/platform.h                             \
+    config/power_calibration.h                    \
     config/radio_link.h                           \
     config/sntp_client.h                          \
     config/srp_client.h                           \
@@ -649,6 +652,7 @@ HEADERS_COMMON                                  = \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
     utils/ping_sender.hpp                         \
+    utils/power_calibration.hpp                   \
     utils/slaac_address.hpp                       \
     utils/srp_client_buffers.hpp                  \
     $(NULL)

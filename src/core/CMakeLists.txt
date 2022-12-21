@@ -240,6 +240,7 @@ set(COMMON_SOURCES
     utils/otns.cpp
     utils/parse_cmdline.cpp
     utils/ping_sender.cpp
+    utils/power_calibration.cpp
     utils/slaac_address.cpp
     utils/srp_client_buffers.cpp
 )
@@ -276,6 +277,7 @@ set(RADIO_COMMON_SOURCES
     radio/radio_platform.cpp
     thread/link_quality.cpp
     utils/parse_cmdline.cpp
+    utils/power_calibration.cpp
 )
 
 set(OT_VENDOR_EXTENSION "" CACHE STRING "specify a C++ source file built as part of OpenThread core library")

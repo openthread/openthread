@@ -209,6 +209,7 @@ if(OT_PLATFORM STREQUAL "simulation")
 endif()
 
 add_subdirectory(tests)
+add_subdirectory(tools)
 
 add_custom_target(print-ot-config ALL
                   COMMAND ${CMAKE_COMMAND}
