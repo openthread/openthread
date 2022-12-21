@@ -190,7 +190,7 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
  * @param[out]  aPrefix      A pointer to output the favored OMR prefix.
  * @param[out]  aPreference  A pointer to output the preference associated the favored prefix.
  *
- * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not running yet.
  * @retval  OT_ERROR_NONE           Successfully retrieved the favored OMR prefix.
  *
  */
