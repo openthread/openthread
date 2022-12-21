@@ -62,6 +62,11 @@ jobs:
       # of OMR prefix and Domain prefix is not deterministic.
       BORDER_ROUTING: 0
     steps:
+    - name: Setup upterm session
+      uses: lhotari/action-upterm@v1
+      with:
+        ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+        limit-access-to-actor: true
     - name: Harden Runner
       uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
       with:
@@ -177,17 +182,16 @@ jobs:
       NAT64: ${{ matrix.nat64 }}
       MAX_JOBS: 3
     steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
     - name: Setup upterm session
       uses: lhotari/action-upterm@v1
       with:
         ## limits ssh access and adds the ssh public key for the user which triggered the workflow
         limit-access-to-actor: true
+    - name: Harden Runner
+      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
     - name: Build OTBR Docker
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
