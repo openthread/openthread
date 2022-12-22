@@ -204,7 +204,7 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
-     * This structure represents a buffer which is sued when converting a `uint64` value to string in decimal format.
+     * This structure represents a buffer which is used when converting a `uint64` value to string in decimal format.
      *
      */
     struct Uint64StringBuffer
@@ -439,6 +439,32 @@ public:
      *
      */
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
+
+    /**
+     * This structure represents a buffer which is used when converting an encoded rate value to percentage string.
+     *
+     */
+    struct PercentageStringBuffer
+    {
+        static constexpr uint16_t kSize = 7; ///< Size of a buffer
+
+        char mChars[kSize]; ///< Char array (do not access the array directly).
+    };
+
+    /**
+     * This static method converts an encoded value to a percentage representation.
+     *
+     * The encoded @p aValue is assumed to be linearly scaled such that `0` maps to 0% and `0xffff` maps to 100%.
+     *
+     * The resulting string provides two decimal accuracy, e.g., "100.00", "0.00", "75.37".
+     *
+     * @param[in] aValue   The encoded percentage value to convert.
+     * @param[in] aBuffer  A buffer to allocate the string from.
+     *
+     * @returns A pointer to the start of the string (null-terminated) representation of @p aValue.
+     *
+     */
+    static const char *PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer);
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

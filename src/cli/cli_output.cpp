@@ -261,6 +261,18 @@ void Output::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 
     OutputFormat("]");
 }
+
+const char *Output::PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer)
+{
+    uint32_t     scaledValue = aValue;
+    StringWriter writer(aBuffer.mChars, sizeof(aBuffer.mChars));
+
+    scaledValue = (scaledValue * 10000) / 0xffff;
+    writer.Append("%u.%02u", static_cast<uint16_t>(scaledValue / 100), static_cast<uint16_t>(scaledValue % 100));
+
+    return aBuffer.mChars;
+}
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void Output::OutputFormatV(const char *aFormat, va_list aArguments) { mImplementer.OutputV(aFormat, aArguments); }

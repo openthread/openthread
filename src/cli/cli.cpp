@@ -1768,9 +1768,11 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("count: %lu", ToUlong(otChannelMonitorGetSampleCount(GetInstancePtr())));
 
                 OutputLine("occupancies:");
+
                 for (uint8_t channel = 0; channel < channelNum; channel++)
                 {
-                    uint32_t occupancy = 0;
+                    uint16_t               occupancy;
+                    PercentageStringBuffer stringBuffer;
 
                     if (!((1UL << channel) & channelMask))
                     {
@@ -1779,11 +1781,10 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 
                     occupancy = otChannelMonitorGetChannelOccupancy(GetInstancePtr(), channel);
 
-                    OutputFormat("ch %u (0x%04lx) ", channel, ToUlong(occupancy));
-                    occupancy = (occupancy * 10000) / 0xffff;
-                    OutputLine("%2u.%02u%% busy", static_cast<uint16_t>(occupancy / 100),
-                               static_cast<uint16_t>(occupancy % 100));
+                    OutputLine("ch %u (0x%04x) %6s%% busy", channel, occupancy,
+                               PercentageToString(occupancy, stringBuffer));
                 }
+
                 OutputNewLine();
             }
         }
@@ -4986,6 +4987,31 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
         }
 
         OutputNewLine();
+    }
+    else if (aArgs[0] == "linkquality")
+    {
+        static const char *const kLinkQualityTableTitles[] = {
+            "RLOC16", "Extended MAC", "Frame Error", "Msg Error", "Avg RSS", "Last RSS", "Age",
+        };
+
+        static const uint8_t kLinkQualityTableColumnWidths[] = {
+            8, 18, 13, 11, 9, 10, 7,
+        };
+
+        OutputTableHeader(kLinkQualityTableTitles, kLinkQualityTableColumnWidths);
+
+        while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
+        {
+            PercentageStringBuffer stringBuffer;
+
+            OutputFormat("| 0x%04x | ", neighborInfo.mRloc16);
+            OutputExtAddress(neighborInfo.mExtAddress);
+            OutputFormat(" | %9s %% ", PercentageToString(neighborInfo.mFrameErrorRate, stringBuffer));
+            OutputFormat("| %7s %% ", PercentageToString(neighborInfo.mMessageErrorRate, stringBuffer));
+            OutputFormat("| %7d ", neighborInfo.mAverageRssi);
+            OutputFormat("| %8d ", neighborInfo.mLastRssi);
+            OutputLine("| %5lu |", ToUlong(neighborInfo.mAge));
+        }
     }
     else
     {
