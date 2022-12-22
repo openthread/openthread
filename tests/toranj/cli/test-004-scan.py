@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,42 +31,73 @@ from cli import verify_within
 import cli
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test description: forming a Thread network
+# Test description: MAC scan operation
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
 print('Starting \'{}\''.format(test_name))
 
+
 # -----------------------------------------------------------------------------------------------------------------------
-# Creating `Nodes` instances
+def verify_scan_result_conatins_nodes(scan_result, nodes):
+    table = cli.Node.parse_table(scan_result)
+    verify(len(table) >= len(nodes))
+    for node in nodes:
+        ext_addr = node.get_ext_addr()
+        for entry in table:
+            if entry['MAC Address'] == ext_addr:
+                verify(int(entry['PAN'], 16) == int(node.get_panid(), 16))
+                verify(int(entry['Ch']) == int(node.get_channel()))
+                break
+        else:
+            verify(False)
+
+
+# -----------------------------------------------------------------------------------------------------------------------
+# Creating `cli.Nodes` instances
 
 speedup = 10
 cli.Node.set_time_speedup_factor(speedup)
 
-node = cli.Node()
+node1 = cli.Node()
+node2 = cli.Node()
+node3 = cli.Node()
+node4 = cli.Node()
+node5 = cli.Node()
+scanner = cli.Node()
+
+nodes = [node1, node2, node3, node4, node5]
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-verify(node.get_state() == 'disabled')
-node.form('test')
+node1.form('net1', panid=0x1111, channel=12)
+node2.form('net2', panid=0x2222, channel=13)
+node3.form('net3', panid=0x3333, channel=14)
+node4.form('net4', panid=0x4444, channel=15)
+node5.form('net5', panid=0x5555, channel=16)
 
-verify(node.get_network_name() == 'test')
+# MAC scan
 
-node.interface_down()
-verify(node.get_state() == 'disabled')
+# Scan on all channels, should see all nodes
+verify_scan_result_conatins_nodes(scanner.cli('scan'), nodes)
 
-node.form('form-test',
-          channel=21,
-          panid=0x5678,
-          xpanid='1020031510006016',
-          network_key='0123456789abcdeffecdba9876543210')
+# Scan on channel 12 only, should only see node1
+verify_scan_result_conatins_nodes(scanner.cli('scan 12'), [node1])
 
-verify(node.get_network_name() == 'form-test')
-verify(node.get_channel() == '21')
-verify(node.get_panid() == '0x5678')
-verify(node.get_ext_panid() == '1020031510006016')
-verify(node.get_network_key() == '0123456789abcdeffecdba9876543210')
+# Scan on channel 20 only, should see no result
+verify_scan_result_conatins_nodes(scanner.cli('scan 20'), [])
+
+# MLE Discover scan
+
+scanner.interface_up()
+
+verify_scan_result_conatins_nodes(scanner.cli('discover'), nodes)
+verify_scan_result_conatins_nodes(scanner.cli('scan 12'), [node1])
+verify_scan_result_conatins_nodes(scanner.cli('scan 20'), [])
+
+scanner.form('scanner')
+verify_scan_result_conatins_nodes(scanner.cli('discover'), nodes)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

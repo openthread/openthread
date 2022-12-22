@@ -51,7 +51,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        TORANJ_RADIO: ['15.4', 'trel', 'multi']
+        TORANJ_RADIO: ['15.4']
     env:
       COVERAGE: 1
       TORANJ_RADIO : ${{ matrix.TORANJ_RADIO }}
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        TORANJ_RADIO: ['15.4']
+        TORANJ_RADIO: ['15.4', 'trel', 'multi']
     env:
       COVERAGE: 1
       TORANJ_RADIO : ${{ matrix.TORANJ_RADIO }}

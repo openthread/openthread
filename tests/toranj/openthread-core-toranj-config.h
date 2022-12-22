@@ -76,6 +76,14 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+ *
+ * Define as 1 to enable IPv6 Border Routing counters.
+ *
+ */
+#define OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
  *
  * Define to 1 to enable Commissioner support.
@@ -545,6 +553,17 @@
  *
  */
 #define OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+ *
+ * Define as 1 to have CLI register an IPv6 receive callback using `otIp6SetReceiveCallback()`.
+ *
+ * This is intended for testing only. Receive callback should be registered for the `otIp6GetBorderRoutingCounters()`
+ * to count the messages being passed to the callback.
+ *
+ */
+#define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 1
 
 #if OPENTHREAD_RADIO
 /**

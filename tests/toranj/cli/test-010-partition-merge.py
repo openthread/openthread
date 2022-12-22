@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -29,9 +29,26 @@
 from cli import verify
 from cli import verify_within
 import cli
+import time
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test description: joining (as router, end-device, sleepy) - two node network
+# Test description: Partition formation and merge
+#
+# Network Topology:
+#
+#      r1 ---- / ---- r2
+#      |       \      |
+#      |       /      |
+#      c1      \      c2
+#
+#
+# Test covers the following situations:
+#
+# - r2 forming its own partition when it can no longer hear r1
+# - Partitions merging into one once r1 and r2 can talk again
+# - Adding on-mesh prefixes on each partition and ensuring after
+#   merge the info in combined.
+#
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
@@ -40,49 +57,94 @@ print('Starting \'{}\''.format(test_name))
 # -----------------------------------------------------------------------------------------------------------------------
 # Creating `cli.Nodes` instances
 
-speedup = 10
+speedup = 25
 cli.Node.set_time_speedup_factor(speedup)
 
-node1 = cli.Node()
-node2 = cli.Node()
+r1 = cli.Node()
+r2 = cli.Node()
+c1 = cli.Node()
+c2 = cli.Node()
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test implementation
+# Form topology
 
-node1.allowlist_node(node2)
-node2.allowlist_node(node1)
+r1.allowlist_node(r2)
+r1.allowlist_node(c1)
 
-node1.form('join-net')
-verify(node1.get_state() == 'leader')
+r2.allowlist_node(r1)
+r2.allowlist_node(c2)
 
-node2.join(node1)
-verify(node2.get_state() == 'router')
+r1.form("partmrge")
+r2.join(r1)
+c1.join(r1, cli.JOIN_TYPE_END_DEVICE)
+c2.join(r2, cli.JOIN_TYPE_END_DEVICE)
 
-node2.interface_down()
+verify(r1.get_state() == 'leader')
+verify(r2.get_state() == 'router')
+verify(c1.get_state() == 'child')
+verify(c2.get_state() == 'child')
 
-node2.join(node1, cli.JOIN_TYPE_END_DEVICE)
-verify(node2.get_state() == 'child')
-verify(node2.get_mode() == 'rn')
+nodes = [r1, r2, c1, c2]
 
-node2.interface_down()
+# -----------------------------------------------------------------------------------------------------------------------
+# Test Implementation
 
-node2.join(node1, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
-verify(node2.get_state() == 'child')
-verify(node2.get_mode() == '-')
+# Force the two routers to form their own partition
+# by removing them from each other's allowlist table
 
-node2.interface_down()
+r1.un_allowlist_node(r2)
+r2.un_allowlist_node(r1)
 
-# Create a poor link between child and parent using MAC fixed RSSI
-# filter and make sure child can still attach.
+# Add a prefix before r2 realizes it can no longer talk
+# to leader (r1).
 
-node1.cli('macfilter rss add * -99')
-node2.cli('macfilter rss add * -99')
+r2.add_prefix('fd00:abba::/64', 'paros', 'med')
+r2.register_netdata()
 
-node2.join(node1, cli.JOIN_TYPE_END_DEVICE)
-verify(node2.get_state() == 'child')
-verify(node2.get_mode() == 'rn')
+# Check that r2 forms its own partition
 
-verify(len(node1.get_child_table()) == 1)
+
+def check_r2_become_leader():
+    verify(r2.get_state() == 'leader')
+
+
+verify_within(check_r2_become_leader, 20)
+
+# While we have two partition, add a prefix on r1
+r1.add_prefix('fd00:1234::/64', 'paros', 'med')
+r1.register_netdata()
+
+# Update allowlist and wait for partitions to merge.
+r1.allowlist_node(r2)
+r2.allowlist_node(r1)
+
+
+def check_partition_id_match():
+    verify(r1.get_partition_id() == r2.get_partition_id())
+
+
+verify_within(check_partition_id_match, 20)
+
+# Check that partitions merged successfully
+
+
+def check_r1_r2_roles():
+    verify(r1.get_state() in ['leader', 'router'])
+    verify(r2.get_state() in ['leader', 'router'])
+
+
+verify_within(check_r1_r2_roles, 10)
+
+# Verify all nodes see both prefixes
+
+
+def check_netdata_on_all_nodes():
+    for node in nodes:
+        netdata = node.get_netdata()
+        verify(len(netdata['prefixes']) == 2)
+
+
+verify_within(check_netdata_on_all_nodes, 10)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

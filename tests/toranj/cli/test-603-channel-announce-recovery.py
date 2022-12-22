@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -29,44 +29,76 @@
 from cli import verify
 from cli import verify_within
 import cli
+import time
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test description: forming a Thread network
+# Test description:
+#
+# Orphaned node attach through MLE Announcement after channel change.
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
 print('Starting \'{}\''.format(test_name))
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Creating `Nodes` instances
+# Creating `cli.Node` instances
 
-speedup = 10
+speedup = 40
 cli.Node.set_time_speedup_factor(speedup)
 
-node = cli.Node()
+router = cli.Node()
+c1 = cli.Node()
+c2 = cli.Node()
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test implementation
+# Form topology
 
-verify(node.get_state() == 'disabled')
-node.form('test')
+router.form('announce-tst', channel=11)
 
-verify(node.get_network_name() == 'test')
+c1.join(router, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
+c2.join(router, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
+c1.set_pollperiod(500)
+c2.set_pollperiod(500)
 
-node.interface_down()
-verify(node.get_state() == 'disabled')
+verify(router.get_state() == 'leader')
+verify(c1.get_state() == 'child')
+verify(c2.get_state() == 'child')
 
-node.form('form-test',
-          channel=21,
-          panid=0x5678,
-          xpanid='1020031510006016',
-          network_key='0123456789abcdeffecdba9876543210')
+# -----------------------------------------------------------------------------------------------------------------------
+# Test Implementation
 
-verify(node.get_network_name() == 'form-test')
-verify(node.get_channel() == '21')
-verify(node.get_panid() == '0x5678')
-verify(node.get_ext_panid() == '1020031510006016')
-verify(node.get_network_key() == '0123456789abcdeffecdba9876543210')
+# Stop c2
+
+c2.thread_stop()
+
+# Switch the rest of network to channel 26
+router.cli('channel manager change 26')
+
+
+def check_channel_changed_to_26_on_r1_c1():
+    for node in [router, c1]:
+        verify(int(node.get_channel()) == 26)
+
+
+verify_within(check_channel_changed_to_26_on_r1_c1, 10)
+
+# Now re-enable c2 and verify that it does attach to router and is on
+# channel 26. c2 would go through the ML Announce recovery.
+
+c2.thread_start()
+verify(int(c2.get_channel()) == 11)
+
+# wait for 20s for c2 to be attached/associated
+
+
+def check_c2_is_attched():
+    verify(c2.get_state() == 'child')
+
+
+verify_within(check_c2_is_attched, 20)
+
+# Check that c2 is now on channel 26.
+verify(int(c2.get_channel()) == 26)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
