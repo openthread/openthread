@@ -2702,7 +2702,7 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Get<Nat64::Translator>().SetNat64Prefix(mPublishedPrefix);
+    Get<Nat64::Translator>().ClearNat64Prefix();
 #endif
 }
 
@@ -2784,7 +2784,16 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Get<Nat64::Translator>().SetNat64Prefix(mPublishedPrefix);
+    // When there is an prefix other than mLocalPrefix, means there is an external translator available. So we bypass
+    // the NAT64 translator by clearing the NAT64 prefix in the translator.
+    if (mPublishedPrefix == mLocalPrefix)
+    {
+        Get<Nat64::Translator>().SetNat64Prefix(mLocalPrefix);
+    }
+    else
+    {
+        Get<Nat64::Translator>().ClearNat64Prefix();
+    }
 #endif
 
 exit:
