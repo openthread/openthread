@@ -40,6 +40,7 @@
 
 #include <openthread/backbone_router_ftd.h>
 
+#include "common/callback.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/time.hpp"
@@ -108,8 +109,6 @@ public:
     explicit MulticastListenersTable(Instance &aInstance)
         : InstanceLocator(aInstance)
         , mNumValidListeners(0)
-        , mCallback(nullptr)
-        , mCallbackContext(nullptr)
     {
     }
 
@@ -220,8 +219,7 @@ private:
     Listener mListeners[kMulticastListenersTableSize];
     uint16_t mNumValidListeners;
 
-    otBackboneRouterMulticastListenerCallback mCallback;
-    void                                     *mCallbackContext;
+    Callback<otBackboneRouterMulticastListenerCallback> mCallback;
 };
 
 } // namespace BackboneRouter

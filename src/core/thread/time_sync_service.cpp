@@ -62,8 +62,6 @@ TimeSync::TimeSync(Instance &aInstance)
 #endif
     , mLastTimeSyncReceived(0)
     , mNetworkTimeOffset(0)
-    , mTimeSyncCallback(nullptr)
-    , mTimeSyncCallbackContext(nullptr)
     , mTimer(aInstance)
     , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
@@ -140,13 +138,7 @@ void TimeSync::IncrementTimeSyncSeq(void)
     }
 }
 
-void TimeSync::NotifyTimeSyncCallback(void)
-{
-    if (mTimeSyncCallback != nullptr)
-    {
-        mTimeSyncCallback(mTimeSyncCallbackContext);
-    }
-}
+void TimeSync::NotifyTimeSyncCallback(void) { mTimeSyncCallback.InvokeIfSet(); }
 
 #if OPENTHREAD_FTD
 void TimeSync::ProcessTimeSync(void)

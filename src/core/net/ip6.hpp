@@ -42,6 +42,7 @@
 #include <openthread/nat64.h>
 #include <openthread/udp.h>
 
+#include "common/callback.hpp"
 #include "common/encoding.hpp"
 #include "common/frame_data.hpp"
 #include "common/locator.hpp"
@@ -246,7 +247,10 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext);
+    void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
+    {
+        mReceiveIp6DatagramCallback.Set(aCallback, aCallbackContext);
+    }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     /**
@@ -259,7 +263,10 @@ public:
      * @sa SetReceiveDatagramCallback
      *
      */
-    void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext);
+    void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext)
+    {
+        mReceiveIp4DatagramCallback.Set(aCallback, aCallbackContext);
+    }
 #endif
 
     /**
@@ -414,14 +421,13 @@ private:
 
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
-    bool                 mForwardingEnabled;
-    bool                 mIsReceiveIp6FilterEnabled;
-    otIp6ReceiveCallback mReceiveIp6DatagramCallback;
-    void                *mReceiveIp6DatagramCallbackContext;
+    bool mForwardingEnabled;
+    bool mIsReceiveIp6FilterEnabled;
+
+    Callback<otIp6ReceiveCallback> mReceiveIp6DatagramCallback;
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    otNat64ReceiveIp4Callback mReceiveIp4DatagramCallback;
-    void                     *mReceiveIp4DatagramCallbackContext;
+    Callback<otNat64ReceiveIp4Callback> mReceiveIp4DatagramCallback;
 #endif
 
     PriorityQueue mSendQueue;

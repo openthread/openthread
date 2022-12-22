@@ -36,6 +36,7 @@
 #include <openthread/srp_client.h>
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -97,7 +98,7 @@ public:
      * Please see `otSrpClientCallback` for more details.
      *
      */
-    typedef otSrpClientCallback Callback;
+    typedef otSrpClientCallback ClientCallback;
 
     /**
      * This type represents an SRP client host info.
@@ -461,7 +462,7 @@ public:
      * @param[in] aContext         An arbitrary context used with @p aCallback.
      *
      */
-    void SetCallback(Callback aCallback, void *aContext);
+    void SetCallback(ClientCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
 
     /**
      * This method gets the TTL used in SRP update requests.
@@ -925,7 +926,7 @@ private:
         void    SetState(State aState);
         uint8_t GetAnycastSeqNum(void) const { return mAnycastSeqNum; }
         void    SetAnycastSeqNum(uint8_t aAnycastSeqNum) { mAnycastSeqNum = aAnycastSeqNum; }
-        void    SetCallback(AutoStartCallback aCallback, void *aContext);
+        void    SetCallback(AutoStartCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
         void    InvokeCallback(const Ip6::SockAddr *aServerSockAddr) const;
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
@@ -945,10 +946,9 @@ private:
 
         static const char *StateToString(State aState);
 
-        AutoStartCallback mCallback;
-        void             *mContext;
-        State             mState;
-        uint8_t           mAnycastSeqNum;
+        Callback<AutoStartCallback> mCallback;
+        State                       mState;
+        uint8_t                     mAnycastSeqNum;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
         uint8_t mTimoutFailureCount; // Number of no-response timeout failures with the currently selected server.
 #endif
@@ -1049,12 +1049,11 @@ private:
 
     Ip6::Udp::Socket mSocket;
 
-    Callback            mCallback;
-    void               *mCallbackContext;
-    const char         *mDomainName;
-    HostInfo            mHostInfo;
-    LinkedList<Service> mServices;
-    DelayTimer          mTimer;
+    Callback<ClientCallback> mCallback;
+    const char              *mDomainName;
+    HostInfo                 mHostInfo;
+    LinkedList<Service>      mServices;
+    DelayTimer               mTimer;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     AutoStart mAutoStart;
 #endif

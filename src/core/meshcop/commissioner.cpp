@@ -70,9 +70,6 @@ Commissioner::Commissioner(Instance &aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
     , mState(kStateDisabled)
-    , mStateCallback(nullptr)
-    , mJoinerCallback(nullptr)
-    , mCallbackContext(nullptr)
 {
     memset(reinterpret_cast<void *>(mJoiners), 0, sizeof(mJoiners));
 
@@ -98,10 +95,7 @@ void Commissioner::SetState(State aState)
 
     LogInfo("State: %s -> %s", StateToString(oldState), StateToString(aState));
 
-    if (mStateCallback)
-    {
-        mStateCallback(MapEnum(mState), mCallbackContext);
-    }
+    mStateCallback.InvokeIfSet(MapEnum(mState));
 
 exit:
     return;
@@ -113,7 +107,7 @@ void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) 
     Mac::ExtAddress joinerId;
     bool            noJoinerId = false;
 
-    VerifyOrExit((mJoinerCallback != nullptr) && (aJoiner != nullptr));
+    VerifyOrExit(mJoinerCallback.IsSet() && (aJoiner != nullptr));
 
     aJoiner->CopyToJoinerInfo(joinerInfo);
 
@@ -130,7 +124,7 @@ void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) 
         noJoinerId = true;
     }
 
-    mJoinerCallback(MapEnum(aEvent), &joinerInfo, noJoinerId ? nullptr : &joinerId, mCallbackContext);
+    mJoinerCallback.Invoke(MapEnum(aEvent), &joinerInfo, noJoinerId ? nullptr : &joinerId);
 
 exit:
     return;
@@ -295,9 +289,8 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     SuccessOrExit(error = Get<Tmf::SecureAgent>().Start(SendRelayTransmit, this));
     Get<Tmf::SecureAgent>().SetConnectedCallback(&Commissioner::HandleSecureAgentConnected, this);
 
-    mStateCallback    = aStateCallback;
-    mJoinerCallback   = aJoinerCallback;
-    mCallbackContext  = aCallbackContext;
+    mStateCallback.Set(aStateCallback, aCallbackContext);
+    mJoinerCallback.Set(aJoinerCallback, aCallbackContext);
     mTransmitAttempts = 0;
 
     SuccessOrExit(error = SendPetition());

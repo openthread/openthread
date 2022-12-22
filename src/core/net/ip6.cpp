@@ -69,12 +69,6 @@ Ip6::Ip6(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mForwardingEnabled(false)
     , mIsReceiveIp6FilterEnabled(false)
-    , mReceiveIp6DatagramCallback(nullptr)
-    , mReceiveIp6DatagramCallbackContext(nullptr)
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    , mReceiveIp4DatagramCallback(nullptr)
-    , mReceiveIp4DatagramCallbackContext(nullptr)
-#endif
     , mSendQueueTask(aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
@@ -193,20 +187,6 @@ Error Ip6::GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message:
 exit:
     return error;
 }
-
-void Ip6::SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
-{
-    mReceiveIp6DatagramCallback        = aCallback;
-    mReceiveIp6DatagramCallbackContext = aCallbackContext;
-}
-
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-void Ip6::SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext)
-{
-    mReceiveIp4DatagramCallback        = aCallback;
-    mReceiveIp4DatagramCallbackContext = aCallbackContext;
-}
-#endif
 
 Error Ip6::AddMplOption(Message &aMessage, Header &aHeader)
 {
@@ -1027,7 +1007,7 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
 
     VerifyOrExit(aOrigin != kFromHostDisallowLoopBack, error = kErrorNoRoute);
 
-    VerifyOrExit(mReceiveIp6DatagramCallback != nullptr, error = kErrorNoRoute);
+    VerifyOrExit(mReceiveIp6DatagramCallback.IsSet(), error = kErrorNoRoute);
 
     // Do not forward IPv6 packets that exceed kMinimalMtu.
     VerifyOrExit(aMessage.GetLength() <= kMinimalMtu, error = kErrorDrop);
@@ -1100,13 +1080,13 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
     case Nat64::Translator::kDrop:
         ExitNow(error = kErrorDrop);
     case Nat64::Translator::kForward:
-        VerifyOrExit(mReceiveIp4DatagramCallback != nullptr, error = kErrorNoRoute);
-        mReceiveIp4DatagramCallback(message, mReceiveIp4DatagramCallbackContext);
+        VerifyOrExit(mReceiveIp4DatagramCallback.IsSet(), error = kErrorNoRoute);
+        mReceiveIp4DatagramCallback.Invoke(message);
         ExitNow();
     }
 #endif
 
-    mReceiveIp6DatagramCallback(message, mReceiveIp6DatagramCallbackContext);
+    mReceiveIp6DatagramCallback.Invoke(message);
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     UpdateBorderRoutingCounters(header, aMessage.GetLength(), /* aIsInbound */ false);

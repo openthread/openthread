@@ -40,6 +40,7 @@
 
 #include <openthread/commissioner.h>
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
@@ -84,8 +85,7 @@ public:
 private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otCommissionerPanIdConflictCallback mCallback;
-    void                               *mContext;
+    Callback<otCommissionerPanIdConflictCallback> mCallback;
 };
 
 DeclareTmfHandler(PanIdQueryClient, kUriPanIdConflict);

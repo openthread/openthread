@@ -39,6 +39,7 @@
 #include <openthread/thread_ftd.h>
 
 #include "coap/coap_message.hpp"
+#include "common/callback.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
@@ -483,8 +484,7 @@ public:
      */
     void SetDiscoveryRequestCallback(otThreadDiscoveryRequestCallback aCallback, void *aContext)
     {
-        mDiscoveryRequestCallback        = aCallback;
-        mDiscoveryRequestCallbackContext = aContext;
+        mDiscoveryRequestCallback.Set(aCallback, aContext);
     }
 
     /**
@@ -683,8 +683,7 @@ private:
     MeshCoP::SteeringData mSteeringData;
 #endif
 
-    otThreadDiscoveryRequestCallback mDiscoveryRequestCallback;
-    void                            *mDiscoveryRequestCallbackContext;
+    Callback<otThreadDiscoveryRequestCallback> mDiscoveryRequestCallback;
 };
 
 DeclareTmfHandler(MleRouter, kUriAddressSolicit);

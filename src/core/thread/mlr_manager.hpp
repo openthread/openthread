@@ -44,6 +44,7 @@
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -214,8 +215,7 @@ private:
                                uint8_t             aFailedAddressNum);
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    otIp6RegisterMulticastListenersCallback mRegisterMulticastListenersCallback;
-    void                                   *mRegisterMulticastListenersContext;
+    Callback<otIp6RegisterMulticastListenersCallback> mRegisterMulticastListenersCallback;
 #endif
 
     uint32_t mReregistrationDelay;

@@ -107,10 +107,6 @@ Mle::Mle(Instance &aInstance)
     , mAlternatePanId(Mac::kPanIdBroadcast)
     , mAlternateTimestamp(0)
     , mDetachGracefullyTimer(aInstance)
-    , mDetachGracefullyCallback(nullptr)
-    , mDetachGracefullyContext(nullptr)
-    , mParentResponseCb(nullptr)
-    , mParentResponseCbContext(nullptr)
 {
     mParent.Init(aInstance);
     mParentCandidate.Init(aInstance);
@@ -251,15 +247,12 @@ void Mle::Stop(StopMode aMode)
 exit:
     mDetachGracefullyTimer.Stop();
 
-    if (mDetachGracefullyCallback != nullptr)
+    if (mDetachGracefullyCallback.IsSet())
     {
-        otDetachGracefullyCallback callback = mDetachGracefullyCallback;
-        void                      *context  = mDetachGracefullyContext;
+        Callback<otDetachGracefullyCallback> callbackCopy = mDetachGracefullyCallback;
 
-        mDetachGracefullyCallback = nullptr;
-        mDetachGracefullyContext  = nullptr;
-
-        callback(context);
+        mDetachGracefullyCallback.Clear();
+        callbackCopy.Invoke();
     }
 }
 
@@ -3150,7 +3143,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #endif
 
     // Share data with application, if requested.
-    if (mParentResponseCb)
+    if (mParentResponseCallback.IsSet())
     {
         otThreadParentResponseInfo parentinfo;
 
@@ -3163,7 +3156,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         parentinfo.mLinkQuality1 = connectivityTlv.GetLinkQuality1();
         parentinfo.mIsAttached   = IsAttached();
 
-        mParentResponseCb(&parentinfo, mParentResponseCbContext);
+        mParentResponseCallback.Invoke(&parentinfo);
     }
 
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
@@ -4295,12 +4288,6 @@ exit:
 }
 #endif
 
-void Mle::RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext)
-{
-    mParentResponseCb        = aCallback;
-    mParentResponseCbContext = aContext;
-}
-
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 uint64_t Mle::CalcParentCslMetric(const Mac::CslAccuracy &aCslAccuracy) const
 {
@@ -4325,10 +4312,9 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
 
     VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
 
-    OT_ASSERT(mDetachGracefullyCallback == nullptr);
+    OT_ASSERT(!mDetachGracefullyCallback.IsSet());
 
-    mDetachGracefullyCallback = aCallback;
-    mDetachGracefullyContext  = aContext;
+    mDetachGracefullyCallback.Set(aCallback, aContext);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Get<BorderRouter::RoutingManager>().RequestStop();

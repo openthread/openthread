@@ -49,8 +49,6 @@ RegisterLogModule("JamDetector");
 
 JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mHandler(nullptr)
-    , mContext(nullptr)
     , mTimer(aInstance)
     , mHistoryBitmap(0)
     , mCurSecondStartTime(0)
@@ -71,8 +69,7 @@ Error JamDetector::Start(Handler aHandler, void *aContext)
     VerifyOrExit(!mEnabled, error = kErrorAlready);
     VerifyOrExit(aHandler != nullptr, error = kErrorInvalidArgs);
 
-    mHandler = aHandler;
-    mContext = aContext;
+    mCallback.Set(aHandler, aContext);
     mEnabled = true;
 
     LogInfo("Started");
@@ -263,7 +260,7 @@ void JamDetector::SetJamState(bool aNewState)
 
     if (shouldInvokeHandler)
     {
-        mHandler(mJamState, mContext);
+        mCallback.Invoke(aNewState);
     }
 }
 
