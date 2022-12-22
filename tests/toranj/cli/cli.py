@@ -115,17 +115,18 @@ class Node(object):
         self._index = index
         self._verbose = verbose
 
-        if Node._SAVE_LOGS:
-            self._log_file = open(self._LOG_FNAME + str(index) + '.log', 'wb')
-        else:
-            self._log_file = None
+        cmd = f'{self._OT_CLI_FTD} --time-speed={self._SPEED_UP_FACTOR} '
 
-        cmd = f'{self._OT_CLI_FTD} --time-speed={self._SPEED_UP_FACTOR} {self._index}'
+        if Node._SAVE_LOGS:
+            log_file_name = self._LOG_FNAME + str(index) + '.log'
+            cmd = cmd + f'--log-file={log_file_name} '
+
+        cmd = cmd + f'{self._index}'
 
         if self._verbose:
             _log(f'$ Node{index}.__init__() cmd: `{cmd}`')
 
-        self._cli_process = pexpect.popen_spawn.PopenSpawn(cmd, logfile=self._log_file)
+        self._cli_process = pexpect.popen_spawn.PopenSpawn(cmd)
         Node._all_nodes.add(self)
 
     def __del__(self):
