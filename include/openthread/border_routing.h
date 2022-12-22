@@ -141,29 +141,44 @@ otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function gets the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in
- * Router Advertisement messages sent over the infrastructure link.
+ * This function gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
+ * messages sent over the infrastructure link.
  *
- * @param[in] aInstance A pointer to an OpenThread instance.
+ * The RIO preference is determined as follows:
  *
- * @returns The OMR prefix advertisement preference.
+ * - If explicitly set by user by calling `otBorderRoutingSetRouteInfoOptionPreference()`, the given preference is
+ *   used.
+ * - Otherwise, it is determined based on device's current role: Medium preference when in router/leader role and
+ *   low preference when in child role.
+ *
+ * @returns The current Route Info Option preference.
  *
  */
 otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
- * This function sets the preference to use when advertising Route Info Options in Router Advertisement messages sent
- * over the infrastructure link, for example for discovered OMR prefixes.
+ * This function explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
+ * Advertisement messages sent over the infrastructure link.
  *
- * By default BR will use `medium` preference level, but this function allows the default value to be changed. As an
- * example, it can be set to `low` preference in the case where device is a temporary BR (a mobile BR or a
- * battery-powered BR) to indicate that other BRs (if any) should be preferred over this BR on the infrastructure link.
+ * After a call to this function, BR will use the given preference for all its advertised RIOs. The preference can be
+ * cleared by calling `otBorderRoutingClearRouteInfoOptionPreference()`.
  *
  * @param[in] aInstance     A pointer to an OpenThread instance.
  * @param[in] aPreference   The route preference to use.
  *
  */
 void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRoutePreference aPreference);
+
+/**
+ * This function clears a previously set preference value for advertised Route Info Options.
+ *
+ * After a call to this function, BR will use device's role to determine the RIO preference: Medium preference when
+ * in router/leader role and low preference when in child role.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ *
+ */
+void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
  * Gets the local Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
