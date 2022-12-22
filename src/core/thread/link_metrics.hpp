@@ -121,6 +121,7 @@ public:
      */
     Error Query(const Ip6::Address &aDestination, uint8_t aSeriesId, const Metrics *aMetrics);
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     /**
      * This method sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
      *
@@ -140,7 +141,6 @@ public:
                                                const SeriesFlags  &aSeriesFlags,
                                                const Metrics      *aMetrics);
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     /**
      * This method sends an MLE Link Metrics Management Request to configure/clear a Enhanced-ACK Based Probing.
      *
