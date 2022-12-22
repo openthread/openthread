@@ -101,6 +101,11 @@ void RouterTable::RemoveRouter(Router &aRouter)
     // Remove an existing `aRouter` entry from `mRouters` and update the
     // `mRouterIdMap`.
 
+    if (aRouter.IsStateValid())
+    {
+        Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, aRouter);
+    }
+
     mRouterIdMap.Release(aRouter.GetRouterId());
     mRouters.Remove(aRouter);
 
@@ -185,11 +190,6 @@ Error RouterTable::Release(uint8_t aRouterId)
 
     router = FindRouterById(aRouterId);
     VerifyOrExit(router != nullptr, error = kErrorNotFound);
-
-    if (router->IsStateValid())
-    {
-        Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, *router);
-    }
 
     RemoveRouter(*router);
 
