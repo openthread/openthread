@@ -197,7 +197,7 @@ public:
      * @param[out] aPrefix         A reference to output the favored prefix.
      * @param[out] aPreference     A reference to output the preference associated with the favored OMR prefix.
      *
-     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorInvalidState  The Border Routing Manager is not running yet.
      * @retval  kErrorNone          Successfully retrieved the OMR prefix.
      *
      */

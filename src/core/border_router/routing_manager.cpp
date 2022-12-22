@@ -148,7 +148,7 @@ Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference 
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(IsRunning(), error = kErrorInvalidState);
     aPrefix     = mFavoredOmrPrefix.GetPrefix();
     aPreference = mFavoredOmrPrefix.GetPreference();
 
