@@ -298,12 +298,6 @@ class MeshHeader
 {
 public:
     /**
-     * The additional value that is added to predicted value of the route cost.
-     *
-     */
-    static constexpr uint8_t kAdditionalHopsLeft = 1;
-
-    /**
      * This method initializes the Mesh Header with a given Mesh Source, Mesh Destination and Hops Left value.
      *
      * @param[in]  aSource       The Mesh Source address.

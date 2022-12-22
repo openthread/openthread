@@ -965,9 +965,7 @@ start:
     // Initialize Mesh header
     if (aAddMeshHeader)
     {
-        Mle::MleRouter    &mle = Get<Mle::MleRouter>();
         Lowpan::MeshHeader meshHeader;
-        uint8_t            hopsLeft;
         uint16_t           maxPayloadLength;
 
         // Mesh Header frames are forwarded by routers over multiple
@@ -990,35 +988,7 @@ start:
 
         frameBuilder.Init(aFrame.GetPayload(), maxPayloadLength);
 
-        if (mle.IsChild())
-        {
-            // REED sets hopsLeft to max (16) + 1. It does not know the route cost.
-            hopsLeft = Mle::kMaxRouteCost + 1;
-        }
-        else
-        {
-            // Calculate the number of predicted hops.
-            hopsLeft = mle.GetRouteCost(aMeshDest);
-
-            if (hopsLeft != Mle::kMaxRouteCost)
-            {
-                hopsLeft += mle.GetLinkCost(Mle::RouterIdFromRloc16(mle.GetNextHop(aMeshDest)));
-            }
-            else
-            {
-                // In case there is no route to the destination router (only link).
-                hopsLeft = mle.GetLinkCost(Mle::RouterIdFromRloc16(aMeshDest));
-            }
-        }
-
-        // The hopsLft field MUST be incremented by one if the
-        // destination RLOC16 is not that of an active Router.
-        if (!Mle::IsActiveRouter(aMeshDest))
-        {
-            hopsLeft += 1;
-        }
-
-        meshHeader.Init(aMeshSource, aMeshDest, hopsLeft + Lowpan::MeshHeader::kAdditionalHopsLeft);
+        meshHeader.Init(aMeshSource, aMeshDest, kMeshHeaderHopsLeft);
 
         IgnoreError(meshHeader.AppendTo(frameBuilder));
     }
