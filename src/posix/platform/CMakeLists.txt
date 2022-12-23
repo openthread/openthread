@@ -100,6 +100,10 @@ set(OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE "vendor_interface_example.cpp"
 
 set(CMAKE_EXE_LINKER_FLAGS "-rdynamic ${CMAKE_EXE_LINKER_FLAGS}" PARENT_SCOPE)
 
+if(EXISTS /tmp)
+    configure_file(openthread.conf.example /tmp/openthread.conf.example @COPYONLY)
+endif()
+
 add_library(openthread-posix
     alarm.cpp
     backbone.cpp

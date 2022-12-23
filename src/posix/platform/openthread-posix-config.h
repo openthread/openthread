@@ -345,7 +345,7 @@
  *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE
-#define OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE "src/posix/platform/openthread.conf.example"
+#define OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE "/tmp/openthread.conf.example"
 #endif
 
 /**
@@ -355,7 +355,7 @@
  *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE
-#define OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE "src/posix/platform/openthread.conf.example"
+#define OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE "/tmp/openthread.conf.example"
 #endif
 
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_
