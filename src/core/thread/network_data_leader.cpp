@@ -334,7 +334,8 @@ Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDe
             for (const HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
                  entry                      = entry->GetNext())
             {
-                if (bestRouteEntry == nullptr || CompareRouteEntries(*entry, *bestRouteEntry) > 0)
+                if ((bestRouteEntry == nullptr) || (prefixLength > bestMatchLength) ||
+                    CompareRouteEntries(*entry, *bestRouteEntry) > 0)
                 {
                     bestRouteEntry  = entry;
                     bestMatchLength = prefixLength;
