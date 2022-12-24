@@ -273,19 +273,11 @@ int LeaderBase::CompareRouteEntries(int8_t   aFirstPreference,
 {
     // Performs three-way comparison between two BR entries.
 
-    int      result;
-    uint16_t deviceRloc;
+    int result;
 
     // Prefer the entry with higher preference.
 
     result = ThreeWayCompare(aFirstPreference, aSecondPreference);
-    VerifyOrExit(result == 0);
-
-    deviceRloc = Get<Mle::Mle>().GetRloc16();
-
-    // If same preference, prefer the BR that is this device itself.
-
-    result = ThreeWayCompare((aFirstRloc == deviceRloc), (aSecondRloc == deviceRloc));
     VerifyOrExit(result == 0);
 
     // If all the same, prefer the one with lower mesh path cost.
@@ -294,7 +286,8 @@ int LeaderBase::CompareRouteEntries(int8_t   aFirstPreference,
     // if the second entry's cost is larger, we return 1 indicating
     // that the first entry is preferred over the second one.
 
-    result = ThreeWayCompare(Get<Mle::MleRouter>().GetCost(aSecondRloc), Get<Mle::MleRouter>().GetCost(aFirstRloc));
+    result =
+        ThreeWayCompare(Get<Mle::MleRouter>().GetPathCost(aSecondRloc), Get<Mle::MleRouter>().GetPathCost(aFirstRloc));
 
 exit:
     return result;

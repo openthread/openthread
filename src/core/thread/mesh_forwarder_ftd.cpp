@@ -428,44 +428,12 @@ exit:
 
 void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const
 {
-    const Neighbor *neighbor;
-    uint8_t         curCost = 0x00;
+    uint8_t cost = Get<Mle::MleRouter>().GetPathCost(aDest);
 
-    // Path cost
-    curCost = Get<Mle::MleRouter>().GetCost(aDest);
-
-    if (!Mle::IsActiveRouter(aDest))
-    {
-        // Assume best link between remote child server and its parent.
-        curCost += kCostForLinkQuality3;
-    }
-
-    // Cost if the server is direct neighbor.
-    neighbor = Get<NeighborTable>().FindNeighbor(aDest);
-
-    if (neighbor != nullptr && neighbor->IsStateValid())
-    {
-        uint8_t cost;
-
-        if (!Mle::IsActiveRouter(aDest))
-        {
-            // Cost calculated only from Link Quality In as the parent only maintains
-            // one-direction link info.
-            cost = CostForLinkQuality(neighbor->GetLinkQualityIn());
-        }
-        else
-        {
-            cost = Get<Mle::MleRouter>().GetLinkCost(Mle::RouterIdFromRloc16(aDest));
-        }
-
-        // Choose the minimum cost
-        curCost = Min(curCost, cost);
-    }
-
-    if ((aBestDest == Mac::kShortAddrInvalid) || (curCost < aBestCost))
+    if ((aBestDest == Mac::kShortAddrInvalid) || (cost < aBestCost))
     {
         aBestDest = aDest;
-        aBestCost = curCost;
+        aBestCost = cost;
     }
 }
 

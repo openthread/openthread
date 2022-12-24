@@ -258,17 +258,17 @@ public:
      * @returns The link cost to the Router.
      *
      */
-    uint8_t GetLinkCost(uint8_t aRouterId);
+    uint8_t GetLinkCost(uint8_t aRouterId) const;
 
     /**
-     * This method returns the minimum cost to the given router.
+     * This method returns the minimum mesh path cost to the given RLOC16
      *
-     * @param[in]  aRloc16  The short address of the given router.
+     * @param[in]  aDestRloc16  The RLOC16 of destination
      *
-     * @returns The minimum cost to the given router (via direct link or forwarding).
+     * @returns The minimum mesh path cost to @p aDestRloc16 (via direct link or forwarding).
      *
      */
-    uint8_t GetCost(uint16_t aRloc16);
+    uint8_t GetPathCost(uint16_t aDestRloc16) const;
 
     /**
      * This method returns the ROUTER_SELECTION_JITTER value.
@@ -708,7 +708,7 @@ public:
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
 
-    uint8_t GetCost(uint16_t) { return 0; }
+    uint8_t GetPathCost(uint16_t) { return 0; }
 
     Error RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
     void  RemoveRouterLink(Router &) { IgnoreError(BecomeDetached()); }

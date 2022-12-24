@@ -1036,10 +1036,10 @@ exit:
     return error;
 }
 
-uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
+uint8_t MleRouter::GetLinkCost(uint8_t aRouterId) const
 {
-    uint8_t rval = kMaxRouteCost;
-    Router *router;
+    uint8_t       rval = kMaxRouteCost;
+    const Router *router;
 
     router = mRouterTable.FindRouterById(aRouterId);
 
@@ -3484,20 +3484,66 @@ exit:
     return rval;
 }
 
-uint8_t MleRouter::GetCost(uint16_t aRloc16)
+uint8_t MleRouter::GetPathCost(uint16_t aDestRloc16) const
 {
-    uint8_t routerId = RouterIdFromRloc16(aRloc16);
-    uint8_t cost     = GetLinkCost(routerId);
-    Router *router   = mRouterTable.FindRouterById(routerId);
-    uint8_t routeCost;
+    uint8_t       cost = kMaxRouteCost;
+    uint8_t       destRouterId;
+    const Router *router;
+    const Router *nextHop;
 
-    VerifyOrExit(router != nullptr && mRouterTable.FindNextHopOf(*router) != nullptr);
-
-    routeCost = GetRouteCost(aRloc16) + GetLinkCost(router->GetNextHop());
-
-    if (cost > routeCost)
+    if (aDestRloc16 == GetRloc16())
     {
-        cost = routeCost;
+        // Destination is this device, return cost as zero.
+        // This is also valid when device is a child.
+        ExitNow(cost = 0);
+    }
+
+    if (IsChild())
+    {
+        // If device is a child, then check if destination is our parent
+        // and determine cost based on the link quality to parent.
+        // Otherwise we cannot determine the cost.
+
+        VerifyOrExit(aDestRloc16 == GetParent().GetRloc16());
+        cost = CostForLinkQuality(GetParent().GetLinkQualityIn());
+        ExitNow();
+    }
+
+    destRouterId = RouterIdFromRloc16(aDestRloc16);
+
+    if (destRouterId == RouterIdFromRloc16(GetRloc16()))
+    {
+        // `aDestRloc16` is a one of device's children. We know the
+        // device is not a child from `IsChild()` check above and
+        // that the destination is not device itself (from first `if`
+        // check above).
+
+        const Child *child = Get<ChildTable>().FindChild(aDestRloc16, Child::kInStateValid);
+
+        VerifyOrExit(child != nullptr);
+        ExitNow(cost = CostForLinkQuality(child->GetLinkQualityIn()));
+    }
+
+    router = mRouterTable.FindRouterById(destRouterId);
+
+    VerifyOrExit(router != nullptr);
+
+    cost = mRouterTable.GetLinkCost(*router);
+
+    nextHop = mRouterTable.FindNextHopOf(*router);
+
+    if (nextHop != nullptr)
+    {
+        // Determine whether direct link or forwarding hop link
+        // has a lower cost.
+        cost = Min(cost, static_cast<uint8_t>(router->GetCost() + mRouterTable.GetLinkCost(*nextHop)));
+    }
+
+    if (!IsActiveRouter(aDestRloc16))
+    {
+        // Destination is a child. we assume best link quality
+        // between destination and its parent router.
+        cost += kCostForLinkQuality3;
     }
 
 exit:
