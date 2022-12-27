@@ -687,6 +687,53 @@ exit:
     return match;
 }
 
+bool Name::IsSameDomain(const char *aDomain1, const char *aDomain2)
+{
+    bool     match             = false;
+    bool     nameEndsWithDot   = false;
+    bool     domainEndsWithDot = false;
+    uint16_t domain1Length        = StringLength(aDomain1, kMaxNameLength);
+    uint16_t domain2Length      = StringLength(aDomain2, kMaxNameLength);
+
+    if (domain1Length > 0 && aDomain1[domain1Length - 1] == kLabelSeperatorChar)
+    {
+        nameEndsWithDot = true;
+        --domain1Length;
+    }
+
+    if (domain2Length > 0 && aDomain2[domain2Length - 1] == kLabelSeperatorChar)
+    {
+        domainEndsWithDot = true;
+        --domain2Length;
+    }
+
+    VerifyOrExit(domain1Length == domain2Length);
+
+    // This method allows either `aName` or `aDomain` to include or
+    // exclude the last `.` character. If both include it or if both
+    // do not, we do a full comparison using `StringMatch()`.
+    // Otherwise (i.e., when one includes and the other one does not)
+    // we use `StringStartWith()` to allow the extra `.` character.
+
+    if (nameEndsWithDot == domainEndsWithDot)
+    {
+        match = StringMatch(aDomain1, aDomain2, kStringCaseInsensitiveMatch);
+    }
+    else if (nameEndsWithDot)
+    {
+        // `aName` ends with dot, but `aDomain` does not.
+        match = StringStartsWith(aDomain1, aDomain2, kStringCaseInsensitiveMatch);
+    }
+    else
+    {
+        // `aDomain` ends with dot, but `aName` does not.
+        match = StringStartsWith(aDomain2, aDomain1, kStringCaseInsensitiveMatch);
+    }
+
+exit:
+    return match;
+}
+
 Error ResourceRecord::ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords)
 {
     Error error = kErrorNone;

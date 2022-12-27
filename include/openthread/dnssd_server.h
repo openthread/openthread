@@ -160,7 +160,7 @@ typedef struct otDnssdCounters
     uint32_t mNotImplementedResponse; ///< The number of 'not implemented' responses
     uint32_t mOtherResponse;          ///< The number of other responses
 
-    uint32_t mResolvedBySrp; ///< The number of queries completely resolved by the local SRP server
+    uint32_t mResolvedBySrp;          ///< The number of queries completely resolved by the local SRP server
 } otDnssdCounters;
 
 /**
@@ -244,6 +244,21 @@ otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*a
  *
  */
 const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance);
+
+/**
+ * Enable or disable forwarding DNS queries to platform DNS upstream API.
+ *
+ * Available when `OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
+ *
+ * @sa otPlatDnsQueryUpstreamQuery
+ * @sa otPlatDnsCancelUpstreamQueryTransaction
+ * @sa otPlatDnsOnUpstreamQueryResponse
+ *
+ */
+void otDnssdSetUpstreamQueryEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * @}

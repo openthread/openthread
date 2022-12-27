@@ -161,6 +161,7 @@ set(COMMON_SOURCES
     net/dhcp6_server.cpp
     net/dns_client.cpp
     net/dns_dso.cpp
+    net/dns_platform.cpp
     net/dns_types.cpp
     net/dnssd_server.cpp
     net/icmp6.cpp

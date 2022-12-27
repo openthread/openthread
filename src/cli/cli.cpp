@@ -3118,6 +3118,37 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
     }
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    else if (aArgs[0] == "server")
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+        /**
+         * @cli dns server upstream {enable|disable}
+         * @code
+         * Done
+         * @endcode
+         * @cparam dns server upstream @ca{enable|disable}
+         * @par api_copy
+         * #otDnssdSetUpstreamQueryEnabled
+         */
+        if (aArgs[1] == "upstream")
+        {
+            bool enable;
+
+            ParseEnableOrDisable(aArgs[2], enable);
+            otDnssdSetUpstreamQueryEnabled(GetInstancePtr(), enable);
+        }
+#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_COMMAND);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);

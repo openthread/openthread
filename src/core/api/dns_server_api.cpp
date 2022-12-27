@@ -33,6 +33,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/platform/dns.h>
+
 #include "common/instance.hpp"
 #include "net/dns_types.hpp"
 #include "net/dnssd_server.hpp"
@@ -85,5 +87,20 @@ const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().GetCounters();
 }
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+void otPlatDnsOnUpstreamQueryResponse(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse)
+{
+    AssertPointerIsNotNull(aTxn);
+
+    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().OnUpstreamQueryResponse(
+        *reinterpret_cast<Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *>(aTxn), AsCoreType(aResponse));
+}
+
+void otDnssdSetUpstreamQueryEnabled(otInstance *aInstance, bool aEnabled)
+{
+    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().SetUpstreamQueryEnabled(aEnabled);
+}
+#endif
 
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

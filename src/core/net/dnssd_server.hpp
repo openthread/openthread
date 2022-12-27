@@ -75,6 +75,20 @@ public:
     {
     };
 
+    class UpstreamQueryTransaction
+    {
+    private:
+        friend Server;
+
+        bool             mValid;
+        Ip6::MessageInfo mMessageInfo;
+        TimeMilli        mStartTime;
+
+        bool      IsValid() { return mValid; }
+        TimeMilli GetStartTime(void) const { return mStartTime; }
+        void      Reset() { mValid = false; };
+    };
+
     /**
      * This enumeration specifies a DNS-SD query type.
      *
@@ -132,6 +146,27 @@ public:
      *
      */
     void HandleDiscoveredServiceInstance(const char *aServiceFullName, const otDnssdServiceInstanceInfo &aInstanceInfo);
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    /**
+     * This method notifies a answer of a upstream DNS query.
+     *
+     * The Transaction will be released.
+     *
+     * @param[in] aQueryTransaction    A reference to upstream DNS query transaction.
+     * @param[in] aResponseMessage     A reference to response UDP message, should be allocated from Udp::NewMessage.
+     *
+     */
+    void OnUpstreamQueryResponse(UpstreamQueryTransaction &aQueryTransaction, Message &aResponseMessage);
+
+    /**
+     * This method enables or disables forwarding DNS queries to platform DNS upstream API.
+     *
+     * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
+     *
+     */
+    void SetUpstreamQueryEnabled(bool aEnabled) { mEnableUpstreamQuery = aEnabled; }
+#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
     /**
      * This method notifies a discovered host.
@@ -250,10 +285,17 @@ private:
         uint16_t    mHostNameOffset;     // Offset of host name serialization into the response message.
     };
 
-    static constexpr bool     kBindUnspecifiedNetif = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
-    static constexpr uint8_t  kProtocolLabelLength  = 4;
-    static constexpr uint8_t  kSubTypeLabelLength   = 4;
-    static constexpr uint16_t kMaxConcurrentQueries = 32;
+    enum DomainType
+    {
+        kLocalDomain,
+        kInternetDomain,
+    };
+
+    static constexpr bool     kBindUnspecifiedNetif         = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
+    static constexpr uint8_t  kProtocolLabelLength          = 4;
+    static constexpr uint8_t  kSubTypeLabelLength           = 4;
+    static constexpr uint16_t kMaxConcurrentQueries         = 32;
+    static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
 
     // This structure represents the splitting information of a full name.
     struct NameComponentsOffsetInfo
@@ -327,9 +369,11 @@ private:
     void ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
     static Header::Response AddQuestions(const Header     &aRequestHeader,
                                          const Message    &aRequestMessage,
+                                         bool              aRecursiveSupported,
                                          Header           &aResponseHeader,
                                          Message          &aResponseMessage,
-                                         NameCompressInfo &aCompressInfo);
+                                         NameCompressInfo &aCompressInfo,
+                                         bool             &aRecursiveRequired);
     static Error            AppendQuestion(const char       *aName,
                                            const Question   &aQuestion,
                                            Message          &aMessage,
@@ -362,7 +406,10 @@ private:
     static Error            AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
     static Error            AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
     static void             IncResourceRecordCount(Header &aHeader, bool aAdditional);
-    static Error            FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo);
+    static Error            FindNameComponents(const char               *aName,
+                                               const char               *aDomain,
+                                               NameComponentsOffsetInfo &aInfo,
+                                               bool                     &aIsInternameDomainName);
     static Error            FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
     void                    SendResponse(Header                  aHeader,
                                          Header::Response        aResponseCode,
@@ -382,6 +429,11 @@ private:
     const Srp::Server::Host           *GetNextSrpHost(const Srp::Server::Host *aHost);
     static const Srp::Server::Service *GetNextSrpService(const Srp::Server::Host    &aHost,
                                                          const Srp::Server::Service *aService);
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
+    Error                     ResolveByUpstream(const Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     Error             ResolveByQueryCallbacks(Header                 &aResponseHeader,
@@ -424,7 +476,13 @@ private:
     void                           *mQueryCallbackContext;
     otDnssdQuerySubscribeCallback   mQuerySubscribe;
     otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
-    ServerTimer                     mTimer;
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    bool                     mEnableUpstreamQuery = false;
+    UpstreamQueryTransaction mUpstreamQueryTransactions[kMaxConcurrentUpstreamQueries];
+#endif
+
+    ServerTimer mTimer;
 
     Counters mCounters;
 };

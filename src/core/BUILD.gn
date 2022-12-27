@@ -543,6 +543,7 @@ openthread_core_files = [
   "net/dns_client.hpp",
   "net/dns_dso.cpp",
   "net/dns_dso.hpp",
+  "net/dns_platform.cpp",
   "net/dns_types.cpp",
   "net/dns_types.hpp",
   "net/dnssd_server.cpp",

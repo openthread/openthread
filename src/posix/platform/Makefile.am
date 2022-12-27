@@ -59,6 +59,7 @@ libopenthread_posix_a_SOURCES             = \
     multicast_routing.cpp                   \
     netif.cpp                               \
     radio.cpp                               \
+    resolver.cpp                            \
     radio_url.cpp                           \
     settings.cpp                            \
     spi_interface.cpp                       \

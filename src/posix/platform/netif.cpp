@@ -151,6 +151,8 @@ extern int
 #include "common/debug.hpp"
 #include "net/ip6_address.hpp"
 
+#include "resolver.hpp"
+
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 otIp4Cidr    gNat64Cidr;
@@ -208,6 +210,10 @@ static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
 #endif
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+ot::Posix::Resolver gResolver;
+#endif
+
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
 // on NetBSD, MLD monitoring simply doesn't work
@@ -235,9 +241,9 @@ static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to 
 static otError destroyTunnel(void);
 #endif
 
-static int sTunFd     = -1; ///< Used to exchange IPv6 packets.
-static int sIpFd      = -1; ///< Used to manage IPv6 stack on Thread interface.
-static int sNetlinkFd = -1; ///< Used to receive netlink events.
+static int sTunFd     = -1;    ///< Used to exchange IPv6 packets.
+static int sIpFd      = -1;    ///< Used to manage IPv6 stack on Thread interface.
+static int sNetlinkFd = -1;    ///< Used to receive netlink events.
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
 static int sMLDMonitorFd = -1; ///< Used to receive MLD events.
 #endif
@@ -1845,6 +1851,9 @@ void platformNetifSetUp(void)
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
 #endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    gResolver.Init();
+#endif
 }
 
 void platformNetifTearDown(void) {}
@@ -1901,6 +1910,10 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     FD_SET(sMLDMonitorFd, aReadFdSet);
     FD_SET(sMLDMonitorFd, aErrorFdSet);
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    gResolver.UpdateFdSet(aReadFdSet, aErrorFdSet, aMaxFd);
 #endif
 
     if (sTunFd > *aMaxFd)
@@ -1963,6 +1976,10 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
     {
         processMLDEvent(gInstance);
     }
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    gResolver.HandleSelect(aReadFdSet, aErrorFdSet);
 #endif
 
 exit:
