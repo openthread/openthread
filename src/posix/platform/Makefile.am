@@ -67,6 +67,7 @@ libopenthread_posix_a_SOURCES             = \
     settings.cpp                            \
     spi_interface.cpp                       \
     system.cpp                              \
+    temporary_file.cpp                      \
     trel.cpp                                \
     udp.cpp                                 \
     utils.cpp                               \

@@ -215,6 +215,16 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
 {
     mVersion[0] = '\0';
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
+
+    if (otTempFileGet(kRcpTimeoutCountKey, &mRadioSpinelMetrics.mRcpTimeoutCount) != OT_ERROR_NONE)
+    {
+        mRadioSpinelMetrics.mRcpTimeoutCount = 0;
+    }
+
+    if (otTempFileGet(kRcpUnexpectResetCountKey, &mRadioSpinelMetrics.mRcpUnexpectedResetCount) != OT_ERROR_NONE)
+    {
+        mRadioSpinelMetrics.mRcpUnexpectedResetCount = 0;
+    }
 }
 
 template <typename InterfaceType, typename ProcessContextType>
@@ -2255,6 +2265,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(sp
     OT_UNUSED_VARIABLE(aStatus);
 
     mRadioSpinelMetrics.mRcpUnexpectedResetCount++;
+    IgnoreError(otTempFileSet(kRcpUnexpectResetCountKey, mRadioSpinelMetrics.mRcpUnexpectedResetCount));
     otLogCritPlat("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
@@ -2268,6 +2279,7 @@ template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpTimeout(void)
 {
     mRadioSpinelMetrics.mRcpTimeoutCount++;
+    IgnoreError(otTempFileSet(kRcpTimeoutCountKey, mRadioSpinelMetrics.mRcpTimeoutCount));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailed = true;

@@ -73,7 +73,7 @@ public:
      * @param[in]  aKey    The key string associated with the requested configuration.
      * @param[in]  aValue  A pointer to where the new value string of the configuration should be written.
      *
-     * @retval OT_ERROR_NONE          The given key was found and removed successfully.
+     * @retval OT_ERROR_NONE          The given key was added successfully.
      * @retval OT_ERROR_INVALID_ARGS  If @p aKey or @p aValue was NULL.
      *
      */
@@ -89,6 +89,31 @@ public:
      *
      */
     otError Clear(const char *aKey);
+
+    /**
+     * This method sets a `uint32_t` configuration in the configuration file.
+     *
+     * @param[in]  aKey    The key string associated with the requested configuration.
+     * @param[in]  aValue  A `uint32_t` configuration.
+     *
+     * @retval OT_ERROR_NONE          The given configuration was set successfully.
+     * @retval OT_ERROR_INVALID_ARGS  If @p aKey was NULL.
+     *
+     */
+    otError SetUint32(const char *aKey, uint32_t aValue);
+
+    /**
+     * This method gets a `uin32_t` configuration from the configuration file.
+     *
+     * @param[in]    aKey     The key string associated with the requested configuration.
+     * @param[out]   aValue   A reference to an `uint32_t` variable to be read from the configuration file.
+     *
+     * @retval OT_ERROR_NONE          The given configuration was found and fetched successfully.
+     * @retval OT_ERROR_NOT_FOUND     The given key was not found in the configuration file.
+     * @retval OT_ERROR_INVALID_ARGS  If @p aKey was NULL.
+     *
+     */
+    otError GetUint32(const char *aKey, uint32_t &aValue);
 
 private:
     const char               *kCommentDelimiter = "#";

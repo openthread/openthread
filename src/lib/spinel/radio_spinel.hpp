@@ -958,6 +958,9 @@ private:
         kStateTransmitDone, ///< Radio indicated frame transmission is done.
     };
 
+    static constexpr const char *kRcpTimeoutCountKey       = "rcp_timeout_count";
+    static constexpr const char *kRcpUnexpectResetCountKey = "rcp_unexpected_reset_count";
+
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
     static void HandleReceivedFrame(void *aContext);

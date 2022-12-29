@@ -51,6 +51,32 @@ typedef struct otRadioSpinelMetrics
     uint32_t mSpinelParseErrorCount;   ///< The number of spinel frame parse errors.
 } otRadioSpinelMetrics;
 
+/**
+ * This function sets the key-value pair to the temporary file.
+ *
+ * @param[in] aKey    A pointer to key string.
+ * @param[in] aValue  The value.
+ *
+ * @retval OT_ERROR_NONE             Successfully save the key-value pair.
+ * @retval OT_ERROR_FAILED           Failed to save the key-value pair.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented.
+ *
+ */
+otError otTempFileSet(const char *aKey, uint32_t aValue);
+
+/**
+ * This function gets the key-value pair from the temporary file.
+ *
+ * @param[in]  aKey    A pointer to the key string.
+ * @param[out] aValue  A pointer to where the value should be written.
+ *
+ * @retval OT_ERROR_NONE             Successfully got the key-value pair.
+ * @retval OT_ERROR_FAILED           Failed to get the key-value pair.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented.
+ *
+ */
+otError otTempFileGet(const char *aKey, uint32_t *aValue);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

@@ -124,6 +124,7 @@ add_library(openthread-posix
     settings.cpp
     spi_interface.cpp
     system.cpp
+    temporary_file.cpp
     trel.cpp
     udp.cpp
     utils.cpp

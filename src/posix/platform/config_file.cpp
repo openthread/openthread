@@ -39,6 +39,7 @@
 #include <openthread/logging.h>
 #include "common/code_utils.hpp"
 #include "lib/platform/exit_code.h"
+#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Posix {
@@ -156,6 +157,7 @@ otError ConfigFile::Clear(const char *aKey)
     FILE   *fpSwap = nullptr;
 
     VerifyOrExit(aKey != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(access(mFilePath, F_OK) != -1);
     VerifyOrDie((fp = fopen(mFilePath, "r")) != NULL, OT_EXIT_ERROR_ERRNO);
     snprintf(swapFile, sizeof(swapFile), "%s%s", mFilePath, kSwapSuffix);
     VerifyOrDie((fpSwap = fopen(swapFile, "w+")) != NULL, OT_EXIT_ERROR_ERRNO);
@@ -189,11 +191,37 @@ exit:
         fclose(fpSwap);
     }
 
-    if (error == OT_ERROR_NONE)
+    if ((error == OT_ERROR_NONE) && (fpSwap != nullptr))
     {
         VerifyOrDie(rename(swapFile, mFilePath) == 0, OT_EXIT_ERROR_ERRNO);
     }
 
+    return error;
+}
+
+otError ConfigFile::SetUint32(const char *aKey, uint32_t aValue)
+{
+    otError error;
+    char    value[kLineMaxSize];
+
+    snprintf(value, sizeof(value), "%u", aValue);
+    SuccessOrExit(error = Clear(aKey));
+    SuccessOrExit(error = Add(aKey, value));
+
+exit:
+    return error;
+}
+
+otError ConfigFile::GetUint32(const char *aKey, uint32_t &aValue)
+{
+    otError error;
+    int     iterator = 0;
+    char    value[kLineMaxSize];
+
+    SuccessOrExit(error = Get(aKey, iterator, value, sizeof(value)));
+    error = ot::Utils::CmdLineParser::ParseAsUint32(value, aValue);
+
+exit:
     return error;
 }
 
