@@ -998,12 +998,25 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
                                   Message::Ownership aMessageOwnership)
 {
     Error    error   = kErrorNone;
-    Message *message = &aMessage;
+    Message *message = nullptr;
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     Header header;
 
     IgnoreError(header.ParseFrom(aMessage));
 #endif
+
+    // `message` points to the `Message` instance we own in this
+    // method. If we can take ownership of `aMessage`, we use it as
+    // `message`. Otherwise, we may create a clone of it and use as
+    // `message`. `message` variable will be set to `nullptr` if the
+    // message ownership is transferred to an invoked callback. At
+    // the end of this method we free `message` if it is not `nullptr`
+    // indicating it was not passed to a callback.
+
+    if (aMessageOwnership == Message::kTakeCustody)
+    {
+        message = &aMessage;
+    }
 
     VerifyOrExit(aOrigin != kFromHostDisallowLoopBack, error = kErrorNoRoute);
 
@@ -1029,6 +1042,7 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
             if (mIcmp.ShouldHandleEchoRequest(aMessageInfo))
             {
                 Icmp::Header icmp;
+
                 IgnoreError(aMessage.Read(aMessage.GetOffset(), icmp));
 
                 // do not pass ICMP Echo Request messages
@@ -1081,24 +1095,23 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
         ExitNow(error = kErrorDrop);
     case Nat64::Translator::kForward:
         VerifyOrExit(mReceiveIp4DatagramCallback.IsSet(), error = kErrorNoRoute);
+        // Pass message to callback transferring its ownership.
         mReceiveIp4DatagramCallback.Invoke(message);
+        message = nullptr;
         ExitNow();
     }
 #endif
 
+    // Pass message to callback transferring its ownership.
     mReceiveIp6DatagramCallback.Invoke(message);
+    message = nullptr;
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     UpdateBorderRoutingCounters(header, aMessage.GetLength(), /* aIsInbound */ false);
 #endif
 
 exit:
-
-    if ((error != kErrorNone) && (aMessageOwnership == Message::kTakeCustody))
-    {
-        aMessage.Free();
-    }
-
+    FreeMessage(message);
     return error;
 }
 
