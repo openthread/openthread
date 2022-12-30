@@ -419,6 +419,14 @@ public:
     Parent &GetParent(void) { return mParent; }
 
     /**
+     * This method gets the parent when operating in End Device mode.
+     *
+     * @returns A reference to the parent.
+     *
+     */
+    const Parent &GetParent(void) const { return mParent; }
+
+    /**
      * The method retrieves information about the parent.
      *
      * @param[out] aParentInfo     Reference to a parent information structure.
