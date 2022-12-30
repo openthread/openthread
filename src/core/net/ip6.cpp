@@ -1062,6 +1062,15 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
             break;
         }
 
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+        // Do not pass TCP message to avoid dual processing from both openthread and POSIX tcp stacks
+        case kProtoTcp:
+        {
+            error = kErrorNoRoute;
+            goto exit;
+        }
+#endif
+
         default:
             break;
         }
