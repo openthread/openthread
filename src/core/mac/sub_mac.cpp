@@ -966,13 +966,23 @@ exit:
     return;
 }
 
-void SubMac::SetFrameCounter(uint32_t aFrameCounter)
+void SubMac::SetFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger)
 {
-    mFrameCounter = aFrameCounter;
+    if (!aSetIfLarger || (aFrameCounter > mFrameCounter))
+    {
+        mFrameCounter = aFrameCounter;
+    }
 
     VerifyOrExit(!ShouldHandleTransmitSecurity());
 
-    Get<Radio>().SetMacFrameCounter(aFrameCounter);
+    if (aSetIfLarger)
+    {
+        Get<Radio>().SetMacFrameCounterIfLarger(aFrameCounter);
+    }
+    else
+    {
+        Get<Radio>().SetMacFrameCounter(aFrameCounter);
+    }
 
 exit:
     return;

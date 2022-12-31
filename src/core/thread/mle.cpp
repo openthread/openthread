@@ -365,7 +365,7 @@ void Mle::Restore(void)
 
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
-    Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter());
+    Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter(), /* aSetIfLarger */ false);
 
 #if OPENTHREAD_MTD
     mDeviceMode.Set(networkInfo.GetDeviceMode() & ~DeviceMode::kModeFullThreadDevice);
@@ -4514,7 +4514,7 @@ Error Mle::TxMessage::AppendLinkFrameCounterTlv(void)
     counter = Get<KeyManager>().GetMaximumMacFrameCounter();
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Get<KeyManager>().SetAllMacFrameCounters(counter);
+    Get<KeyManager>().SetAllMacFrameCounters(counter, /* aSetIfLarger */ true);
 #endif
 
     return Tlv::Append<LinkFrameCounterTlv>(*this, counter);
