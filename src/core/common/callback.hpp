@@ -105,6 +105,21 @@ public:
      */
     void *GetContext(void) const { return mContext; }
 
+    /**
+     * This method indicates whether the callback matches a given handler function pointer and context.
+     *
+     * @param[in] aHandler   The handler function pointer to compare with.
+     * @param[in] aContext   The context associated with handler.
+     *
+     * @retval TRUE   The callback matches @p aHandler and @p aContext.
+     * @retval FALSE  The callback does not match @p aHandler and @p aContext.
+     *
+     */
+    bool Matches(HandlerType aHandler, void *aContext) const
+    {
+        return (mHandler == aHandler) && (mContext == aContext);
+    }
+
 protected:
     CallbackBase(void)
         : mHandler(nullptr)
