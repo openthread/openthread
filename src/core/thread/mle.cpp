@@ -2770,7 +2770,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 
     case kRoleRouter:
     case kRoleLeader:
-        VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+        VerifyOrExit(aRxInfo.IsNeighborStateValid());
         break;
     }
 
@@ -2792,7 +2792,7 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeDataResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorDrop);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorDrop);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     {
@@ -3299,7 +3299,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildIdResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorSecurity);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorSecurity);
 
     VerifyOrExit(mAttachState == kAttachStateChildIdRequest);
 

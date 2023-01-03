@@ -1395,6 +1395,16 @@ protected:
         {
         }
 
+        /**
+         * This method indicates whether the `mNeighbor` (neighbor from which message was received) is non-null and
+         * in valid state.
+         *
+         * @retval TRUE  If `mNeighbor` is non-null and in valid state.
+         * @retval FALSE If `mNeighbor` is `nullptr` or not in valid state.
+         *
+         */
+        bool IsNeighborStateValid(void) const { return (mNeighbor != nullptr) && mNeighbor->IsStateValid(); }
+
         RxMessage              &mMessage;      ///< The MLE message.
         const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
         uint32_t                mFrameCounter; ///< The frame counter from aux security header.
