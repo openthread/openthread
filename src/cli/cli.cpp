@@ -145,10 +145,6 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 {
-#if OPENTHREAD_FTD
-    otThreadSetDiscoveryRequestCallback(GetInstancePtr(), &Interpreter::HandleDiscoveryRequest, this);
-#endif
-
     OutputPrompt();
 }
 
@@ -3023,6 +3019,36 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
+
+#if OPENTHREAD_FTD
+    /**
+     * @cli discover reqcallback (enable,disable)
+     * @code
+     * discover reqcallback enable
+     * Done
+     * @endcode
+     * @cparam discover reqcallback @ca{enable|disable}
+     * @par api_copy
+     * #otThreadSetDiscoveryRequestCallback
+     */
+    if (aArgs[0] == "reqcallback")
+    {
+        bool                             enable;
+        otThreadDiscoveryRequestCallback callback = nullptr;
+        void                            *context  = nullptr;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
+
+        if (enable)
+        {
+            callback = &Interpreter::HandleDiscoveryRequest;
+            context  = this;
+        }
+
+        otThreadSetDiscoveryRequestCallback(GetInstancePtr(), callback, context);
+        ExitNow();
+    }
+#endif // OPENTHREAD_FTD
 
     if (!aArgs[0].IsEmpty())
     {
@@ -7155,12 +7181,19 @@ void Interpreter::HandleDetachGracefullyResult(void)
     OutputResult(OT_ERROR_NONE);
 }
 
+#if OPENTHREAD_FTD
+void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
+}
+
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
 {
     OutputFormat("~ Discovery Request from ");
     OutputExtAddress(aInfo.mExtAddress);
     OutputLine(": version=%u,joiner=%d", aInfo.mVersion, aInfo.mIsJoiner);
 }
+#endif
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
