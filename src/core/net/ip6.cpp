@@ -215,25 +215,23 @@ exit:
     return error;
 }
 
-Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
+Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader)
 {
-    Error                        error = kErrorNone;
-    Header                       tunnelHeader;
-    const Netif::UnicastAddress *source;
-    MessageInfo                  messageInfo(aMessageInfo);
+    Error          error = kErrorNone;
+    Header         tunnelHeader;
+    const Address *source;
 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
-    messageInfo.GetPeerAddr().SetToRealmLocalAllMplForwarders();
-
     tunnelHeader.InitVersionTrafficClassFlow();
     tunnelHeader.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
-    tunnelHeader.SetDestination(messageInfo.GetPeerAddr());
+    tunnelHeader.GetDestination().SetToRealmLocalAllMplForwarders();
     tunnelHeader.SetNextHeader(kProtoIp6);
 
-    VerifyOrExit((source = SelectSourceAddress(messageInfo)) != nullptr, error = kErrorInvalidSourceAddress);
+    source = SelectSourceAddress(tunnelHeader.GetDestination());
+    VerifyOrExit(source != nullptr, error = kErrorInvalidSourceAddress);
 
-    tunnelHeader.SetSource(source->GetAddress());
+    tunnelHeader.SetSource(*source);
 
     SuccessOrExit(error = AddMplOption(aMessage, tunnelHeader));
     SuccessOrExit(error = aMessage.Prepend(tunnelHeader));
@@ -242,7 +240,7 @@ exit:
     return error;
 }
 
-Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
+Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
 {
     Error error = kErrorNone;
 
@@ -315,7 +313,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
         }
 #endif
 
-        SuccessOrExit(error = AddTunneledMplOption(aMessage, aHeader, aMessageInfo));
+        SuccessOrExit(error = AddTunneledMplOption(aMessage, aHeader));
     }
 
 exit:
@@ -467,10 +465,10 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast())
     {
-        const Netif::UnicastAddress *source = SelectSourceAddress(aMessageInfo);
+        const Address *source = SelectSourceAddress(aMessageInfo.GetPeerAddr());
 
         VerifyOrExit(source != nullptr, error = kErrorInvalidSourceAddress);
-        header.SetSource(source->GetAddress());
+        header.SetSource(*source);
     }
     else
     {
@@ -507,7 +505,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
         }
 #endif
 
-        SuccessOrExit(error = AddTunneledMplOption(aMessage, header, aMessageInfo));
+        SuccessOrExit(error = AddTunneledMplOption(aMessage, header));
     }
 
     aMessage.SetMulticastLoop(aMessageInfo.GetMulticastLoop());
@@ -1126,21 +1124,16 @@ exit:
 
 Error Ip6::SendRaw(Message &aMessage, bool aAllowLoopBackToHost)
 {
-    Error       error = kErrorNone;
-    Header      header;
-    MessageInfo messageInfo;
-    bool        freed = false;
+    Error  error = kErrorNone;
+    Header header;
+    bool   freed = false;
 
     SuccessOrExit(error = header.ParseFrom(aMessage));
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
 
-    messageInfo.SetPeerAddr(header.GetSource());
-    messageInfo.SetSockAddr(header.GetDestination());
-    messageInfo.SetHopLimit(header.GetHopLimit());
-
     if (header.GetDestination().IsMulticast())
     {
-        SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
+        SuccessOrExit(error = InsertMplOption(aMessage, header));
     }
 
     error = HandleDatagram(aMessage, aAllowLoopBackToHost ? kFromHostAllowLoopBack : kFromHostDisallowLoopBack);
@@ -1379,95 +1372,105 @@ bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, MessageOrigin a
     return shouldForward;
 }
 
-const Netif::UnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
+Error Ip6::SelectSourceAddress(MessageInfo &aMessageInfo) const
 {
-    Address                     *destination                 = &aMessageInfo.GetPeerAddr();
-    uint8_t                      destinationScope            = destination->GetScope();
-    const bool                   destinationIsRoutingLocator = Get<Mle::Mle>().IsRoutingLocator(*destination);
-    const Netif::UnicastAddress *rvalAddr                    = nullptr;
-    uint8_t                      rvalPrefixMatched           = 0;
+    Error          error = kErrorNone;
+    const Address *source;
+
+    source = SelectSourceAddress(aMessageInfo.GetPeerAddr());
+    VerifyOrExit(source != nullptr, error = kErrorNotFound);
+    aMessageInfo.SetSockAddr(*source);
+
+exit:
+    return error;
+}
+
+const Address *Ip6::SelectSourceAddress(const Address &aDestination) const
+{
+    uint8_t                      destScope    = aDestination.GetScope();
+    bool                         destIsRloc   = Get<Mle::Mle>().IsRoutingLocator(aDestination);
+    const Netif::UnicastAddress *bestAddr     = nullptr;
+    uint8_t                      bestMatchLen = 0;
 
     for (const Netif::UnicastAddress &addr : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        const Address *candidateAddr = &addr.GetAddress();
-        uint8_t        candidatePrefixMatched;
-        uint8_t        overrideScope;
+        uint8_t matchLen;
+        uint8_t overrideScope;
 
-        if (Get<Mle::Mle>().IsAnycastLocator(*candidateAddr))
+        if (Get<Mle::Mle>().IsAnycastLocator(addr.GetAddress()))
         {
             // Don't use anycast address as source address.
             continue;
         }
 
-        candidatePrefixMatched = destination->PrefixMatch(*candidateAddr);
+        matchLen = aDestination.PrefixMatch(addr.GetAddress());
 
-        if (candidatePrefixMatched >= addr.mPrefixLength)
+        if (matchLen >= addr.mPrefixLength)
         {
-            candidatePrefixMatched = addr.mPrefixLength;
-            overrideScope          = addr.GetScope();
+            matchLen      = addr.mPrefixLength;
+            overrideScope = addr.GetScope();
         }
         else
         {
-            overrideScope = destinationScope;
+            overrideScope = destScope;
         }
 
-        if (rvalAddr == nullptr)
+        if (bestAddr == nullptr)
         {
             // Rule 0: Prefer any address
-            rvalAddr          = &addr;
-            rvalPrefixMatched = candidatePrefixMatched;
+            bestAddr     = &addr;
+            bestMatchLen = matchLen;
         }
-        else if (*candidateAddr == *destination)
+        else if (addr.GetAddress() == aDestination)
         {
             // Rule 1: Prefer same address
-            rvalAddr = &addr;
+            bestAddr = &addr;
             ExitNow();
         }
-        else if (addr.GetScope() < rvalAddr->GetScope())
+        else if (addr.GetScope() < bestAddr->GetScope())
         {
             // Rule 2: Prefer appropriate scope
             if (addr.GetScope() >= overrideScope)
             {
-                rvalAddr          = &addr;
-                rvalPrefixMatched = candidatePrefixMatched;
+                bestAddr     = &addr;
+                bestMatchLen = matchLen;
             }
             else
             {
                 continue;
             }
         }
-        else if (addr.GetScope() > rvalAddr->GetScope())
+        else if (addr.GetScope() > bestAddr->GetScope())
         {
-            if (rvalAddr->GetScope() < overrideScope)
+            if (bestAddr->GetScope() < overrideScope)
             {
-                rvalAddr          = &addr;
-                rvalPrefixMatched = candidatePrefixMatched;
+                bestAddr     = &addr;
+                bestMatchLen = matchLen;
             }
             else
             {
                 continue;
             }
         }
-        else if (addr.mPreferred && !rvalAddr->mPreferred)
+        else if (addr.mPreferred && !bestAddr->mPreferred)
         {
             // Rule 3: Avoid deprecated addresses
-            rvalAddr          = &addr;
-            rvalPrefixMatched = candidatePrefixMatched;
+            bestAddr     = &addr;
+            bestMatchLen = matchLen;
         }
-        else if (candidatePrefixMatched > rvalPrefixMatched)
+        else if (matchLen > bestMatchLen)
         {
             // Rule 6: Prefer matching label
             // Rule 7: Prefer public address
             // Rule 8: Use longest prefix matching
-            rvalAddr          = &addr;
-            rvalPrefixMatched = candidatePrefixMatched;
+            bestAddr     = &addr;
+            bestMatchLen = matchLen;
         }
-        else if ((candidatePrefixMatched == rvalPrefixMatched) &&
-                 (destinationIsRoutingLocator == Get<Mle::Mle>().IsRoutingLocator(*candidateAddr)))
+        else if ((matchLen == bestMatchLen) && (destIsRloc == Get<Mle::Mle>().IsRoutingLocator(addr.GetAddress())))
         {
             // Additional rule: Prefer RLOC source for RLOC destination, EID source for anything else
-            rvalAddr          = &addr;
-            rvalPrefixMatched = candidatePrefixMatched;
+            bestAddr     = &addr;
+            bestMatchLen = matchLen;
         }
         else
         {
@@ -1475,14 +1478,14 @@ const Netif::UnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         }
 
         // infer destination scope based on prefix match
-        if (rvalPrefixMatched >= rvalAddr->mPrefixLength)
+        if (bestMatchLen >= bestAddr->mPrefixLength)
         {
-            destinationScope = rvalAddr->GetScope();
+            destScope = bestAddr->GetScope();
         }
     }
 
 exit:
-    return rvalAddr;
+    return (bestAddr != nullptr) ? &bestAddr->GetAddress() : nullptr;
 }
 
 bool Ip6::IsOnLink(const Address &aAddress) const

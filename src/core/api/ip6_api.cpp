@@ -223,15 +223,7 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress) { return AsCoreType
 
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
 {
-    Error                             error = kErrorNone;
-    const Ip6::Netif::UnicastAddress *netifAddr;
-
-    netifAddr = AsCoreType(aInstance).Get<Ip6::Ip6>().SelectSourceAddress(AsCoreType(aMessageInfo));
-    VerifyOrExit(netifAddr != nullptr, error = kErrorNotFound);
-    aMessageInfo->mSockAddr = netifAddr->GetAddress();
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().SelectSourceAddress(AsCoreType(aMessageInfo));
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
