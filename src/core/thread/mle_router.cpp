@@ -679,8 +679,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
 
     case kErrorNotFound:
         // lack of source address indicates router coming out of reset
-        VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid() &&
-                         IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()),
+        VerifyOrExit(aRxInfo.IsNeighborStateValid() && IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()),
                      error = kErrorDrop);
         neighbor = aRxInfo.mNeighbor;
         break;
@@ -1213,7 +1212,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
     }
     else if (leaderData.GetLeaderRouterId() != GetLeaderId())
     {
-        VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+        VerifyOrExit(aRxInfo.IsNeighborStateValid());
 
         if (!IsChild())
         {
@@ -1232,7 +1231,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
     Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
 #endif
 
-    if (IsFullThreadDevice() && (aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid()) &&
+    if (IsFullThreadDevice() && aRxInfo.IsNeighborStateValid() &&
         ((mRouterTable.GetActiveRouterCount() == 0) ||
          SerialNumber::IsGreater(routeTlv.GetRouterIdSequence(), mRouterTable.GetRouterIdSequence())))
     {
@@ -2738,7 +2737,7 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeDataRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorSecurity);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorSecurity);
 
     // TLV Request
     SuccessOrExit(error = aRxInfo.mMessage.ReadTlvRequestTlv(tlvList));
@@ -4304,7 +4303,7 @@ void MleRouter::HandleTimeSync(RxInfo &aRxInfo)
 {
     Log(kMessageReceive, kTypeTimeSync, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+    VerifyOrExit(aRxInfo.IsNeighborStateValid());
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
 
