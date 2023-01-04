@@ -1761,6 +1761,10 @@ private:
 
     static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
+    static constexpr uint32_t kStoreFrameCounterAhead   = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    static constexpr uint8_t  kMaxIpAddressesToRegister = OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER;
+    static constexpr uint32_t kDefaultCslTimeout        = OPENTHREAD_CONFIG_CSL_TIMEOUT;
+
     enum StartMode : uint8_t // Used in `Start()`.
     {
         kNormalAttach,
