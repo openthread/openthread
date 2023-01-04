@@ -337,7 +337,7 @@ otError otPlatCryptoHmacSha256Deinit(otCryptoContext *aContext);
  * Start HMAC operation.
  *
  * @param[in]  aContext           Context for HMAC operation.
- * @param[in]  aKey               Key material to be used for for HMAC operation.
+ * @param[in]  aKey               Key material to be used for HMAC operation.
  *
  * @retval OT_ERROR_NONE          Successfully started HMAC operation.
  * @retval OT_ERROR_FAILED        Failed to start HMAC operation.
