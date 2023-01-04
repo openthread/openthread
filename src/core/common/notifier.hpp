@@ -42,6 +42,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
+#include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -308,11 +309,7 @@ private:
 
     static constexpr uint16_t kFlagsStringBufferSize = kFlagsStringLineLimit + kMaxFlagNameLength;
 
-    struct ExternalCallback
-    {
-        otStateChangedCallback mHandler;
-        void                  *mContext;
-    };
+    typedef Callback<otStateChangedCallback> ExternalCallback;
 
     void EmitEvents(void);
 
