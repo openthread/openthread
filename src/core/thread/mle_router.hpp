@@ -222,7 +222,7 @@ public:
      * @returns A RLOC16 of the next hop if a route is known, kInvalidRloc16 otherwise.
      *
      */
-    uint16_t GetNextHop(uint16_t aDestination);
+    uint16_t GetNextHop(uint16_t aDestination) { return mRouterTable.GetNextHop(aDestination); }
 
     /**
      * This method returns the NETWORK_ID_TIMEOUT value.
@@ -241,26 +241,6 @@ public:
     void SetNetworkIdTimeout(uint8_t aTimeout) { mNetworkIdTimeout = aTimeout; }
 
     /**
-     * This method returns the route cost to a RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 of the destination.
-     *
-     * @returns The route cost to a RLOC16.
-     *
-     */
-    uint8_t GetRouteCost(uint16_t aRloc16) const;
-
-    /**
-     * This method returns the link cost to the given Router.
-     *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     * @returns The link cost to the Router.
-     *
-     */
-    uint8_t GetLinkCost(uint8_t aRouterId) const;
-
-    /**
      * This method returns the minimum mesh path cost to the given RLOC16
      *
      * @param[in]  aDestRloc16  The RLOC16 of destination
@@ -268,7 +248,7 @@ public:
      * @returns The minimum mesh path cost to @p aDestRloc16 (via direct link or forwarding).
      *
      */
-    uint8_t GetPathCost(uint16_t aDestRloc16) const;
+    uint8_t GetPathCost(uint16_t aDestRloc16) const { return mRouterTable.GetPathCost(aDestRloc16); }
 
     /**
      * This method returns the ROUTER_SELECTION_JITTER value.
@@ -617,8 +597,6 @@ private:
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild);
-    void  UpdateRoutes(const RouteTlv &aRouteTlv, uint8_t aRouterId);
-    bool  UpdateLinkQualityOut(const RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval);
     bool  HasNeighborWithGoodLinkQuality(void) const;
 
     static void HandleAddressSolicitResponse(void                *aContext,
