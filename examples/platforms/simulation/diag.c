@@ -143,6 +143,7 @@ otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
     otError error = OT_ERROR_NONE;
 
     otEXPECT_ACTION((aRawPowerSetting != NULL) && (aRawPowerSettingLength != NULL), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION((sRawPowerSettingLength != 0), error = OT_ERROR_NOT_FOUND);
     otEXPECT_ACTION((sRawPowerSettingLength <= *aRawPowerSettingLength), error = OT_ERROR_INVALID_ARGS);
 
     memcpy(aRawPowerSetting, sRawPowerSetting, sRawPowerSettingLength);

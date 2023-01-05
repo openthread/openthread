@@ -217,7 +217,7 @@ otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
                                           uint16_t       aRawPowerSettingLength);
 
 /**
- * Get the radio raw power settings.
+ * Get the radio raw power setting for diagnostics module.
  *
  * @param[in]      aInstance               The OpenThread instance structure.
  * @param[in]      aRawPowerSetting        A pointer to the raw power setting byte array.
@@ -225,9 +225,9 @@ otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
  *                                         On output, a pointer to the length of the raw power setting data.
  *
  * @retval OT_ERROR_NONE             Successfully set the raw power setting.
- * @retval OT_ERROR_INVALID_ARGS     The @p aChannel is invalid, @p aRawPowerSetting or @p aRawPowerSettingLength is
- *                                   NULL or @aRawPowerSettingLength is too short.
- * @retval OT_ERROR_NOT_FOUND        The raw power setting for the @p aChannel was not found.
+ * @retval OT_ERROR_INVALID_ARGS     The @p aRawPowerSetting or @p aRawPowerSettingLength is NULL or
+ *                                   @aRawPowerSettingLength is too short.
+ * @retval OT_ERROR_NOT_FOUND        The raw power setting is not set.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
  *
  */
