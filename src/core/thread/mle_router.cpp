@@ -679,8 +679,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
 
     case kErrorNotFound:
         // lack of source address indicates router coming out of reset
-        VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid() &&
-                         IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()),
+        VerifyOrExit(aRxInfo.IsNeighborStateValid() && IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()),
                      error = kErrorDrop);
         neighbor = aRxInfo.mNeighbor;
         break;
@@ -1185,7 +1184,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         LogNote("Different partition (peer:%lu, local:%lu)", ToUlong(partitionId),
                 ToUlong(mLeaderData.GetPartitionId()));
 
-        VerifyOrExit(linkMargin >= OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN, error = kErrorLinkMarginLow);
+        VerifyOrExit(linkMargin >= kPartitionMergeMinMargin, error = kErrorLinkMarginLow);
 
         if (routeTlv.IsValid() && IsFullThreadDevice() && (mPreviousPartitionIdTimeout > 0) &&
             (partitionId == mPreviousPartitionId))
@@ -1213,7 +1212,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
     }
     else if (leaderData.GetLeaderRouterId() != GetLeaderId())
     {
-        VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+        VerifyOrExit(aRxInfo.IsNeighborStateValid());
 
         if (!IsChild())
         {
@@ -1232,7 +1231,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
     Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
 #endif
 
-    if (IsFullThreadDevice() && (aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid()) &&
+    if (IsFullThreadDevice() && aRxInfo.IsNeighborStateValid() &&
         ((mRouterTable.GetActiveRouterCount() == 0) ||
          SerialNumber::IsGreater(routeTlv.GetRouterIdSequence(), mRouterTable.GetRouterIdSequence())))
     {
@@ -1342,7 +1341,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
             VerifyOrExit(router != nullptr);
 
             if (IsFullThreadDevice() && !router->IsStateValid() && !router->IsStateLinkRequest() &&
-                (mRouterTable.GetNeighborCount() < OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS))
+                (mRouterTable.GetNeighborCount() < kChildRouterLinks))
             {
                 router->SetExtAddress(extAddr);
                 router->GetLinkInfo().Clear();
@@ -1379,7 +1378,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
 
         // Send unicast link request if no link to router and no unicast/multicast link request in progress
         if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
-            (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN))
+            (linkMargin >= kLinkRequestMinMargin))
         {
             router->SetExtAddress(extAddr);
             router->GetLinkInfo().Clear();
@@ -1671,7 +1670,7 @@ bool MleRouter::HasNeighborWithGoodLinkQuality(void) const
 
     linkMargin = Get<Mac::Mac>().ComputeLinkMargin(mParent.GetLinkInfo().GetLastRss());
 
-    if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
+    if (linkMargin >= kLinkRequestMinMargin)
     {
         ExitNow();
     }
@@ -1685,7 +1684,7 @@ bool MleRouter::HasNeighborWithGoodLinkQuality(void) const
 
         linkMargin = Get<Mac::Mac>().ComputeLinkMargin(router.GetLinkInfo().GetLastRss());
 
-        if (linkMargin >= OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN)
+        if (linkMargin >= kLinkRequestMinMargin)
         {
             ExitNow();
         }
@@ -1992,7 +1991,7 @@ exit:
 
 uint8_t MleRouter::GetMaxChildIpAddresses(void) const
 {
-    uint8_t num = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
+    uint8_t num = kMaxChildIpAddresses;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     if (mMaxChildIpAddresses != 0)
@@ -2009,7 +2008,7 @@ Error MleRouter::SetMaxChildIpAddresses(uint8_t aMaxIpAddresses)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(aMaxIpAddresses <= OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD, error = kErrorInvalidArgs);
+    VerifyOrExit(aMaxIpAddresses <= kMaxChildIpAddresses, error = kErrorInvalidArgs);
 
     mMaxChildIpAddresses = aMaxIpAddresses;
 
@@ -2034,7 +2033,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
-    Ip6::Address oldMlrRegisteredAddresses[OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1];
+    Ip6::Address oldMlrRegisteredAddresses[kMaxChildIpAddresses - 1];
     uint16_t     oldMlrRegisteredAddressNum = 0;
 #endif
 
@@ -2738,7 +2737,7 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeDataRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorSecurity);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorSecurity);
 
     // TLV Request
     SuccessOrExit(error = aRxInfo.mMessage.ReadTlvRequestTlv(tlvList));
@@ -4304,7 +4303,7 @@ void MleRouter::HandleTimeSync(RxInfo &aRxInfo)
 {
     Log(kMessageReceive, kTypeTimeSync, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+    VerifyOrExit(aRxInfo.IsNeighborStateValid());
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
 

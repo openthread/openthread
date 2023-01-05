@@ -1395,6 +1395,16 @@ protected:
         {
         }
 
+        /**
+         * This method indicates whether the `mNeighbor` (neighbor from which message was received) is non-null and
+         * in valid state.
+         *
+         * @retval TRUE  If `mNeighbor` is non-null and in valid state.
+         * @retval FALSE If `mNeighbor` is `nullptr` or not in valid state.
+         *
+         */
+        bool IsNeighborStateValid(void) const { return (mNeighbor != nullptr) && mNeighbor->IsStateValid(); }
+
         RxMessage              &mMessage;      ///< The MLE message.
         const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
         uint32_t                mFrameCounter; ///< The frame counter from aux security header.
@@ -1750,6 +1760,10 @@ private:
     static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
 
     static constexpr uint32_t kDetachGracefullyTimeout = 1000;
+
+    static constexpr uint32_t kStoreFrameCounterAhead   = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    static constexpr uint8_t  kMaxIpAddressesToRegister = OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER;
+    static constexpr uint32_t kDefaultCslTimeout        = OPENTHREAD_CONFIG_CSL_TIMEOUT;
 
     enum StartMode : uint8_t // Used in `Start()`.
     {

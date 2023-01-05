@@ -563,6 +563,11 @@ private:
     // Network Data).
     static constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
 
+    static constexpr uint8_t kLinkRequestMinMargin    = OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN;
+    static constexpr uint8_t kPartitionMergeMinMargin = OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN;
+    static constexpr uint8_t kChildRouterLinks        = OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS;
+    static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
+
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
     void  HandleLinkRequest(RxInfo &aRxInfo);

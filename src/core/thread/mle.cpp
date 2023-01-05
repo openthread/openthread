@@ -95,7 +95,7 @@ Mle::Mle(Instance &aInstance)
     , mSocket(aInstance)
     , mTimeout(kMleEndDeviceTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
+    , mCslTimeout(kDefaultCslTimeout)
 #endif
     , mRloc16(Mac::kShortAddrInvalid)
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
@@ -489,10 +489,8 @@ Error Mle::Store(void)
     }
 
     networkInfo.SetKeySequence(Get<KeyManager>().GetCurrentKeySequence());
-    networkInfo.SetMleFrameCounter(Get<KeyManager>().GetMleFrameCounter() +
-                                   OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
-    networkInfo.SetMacFrameCounter(Get<KeyManager>().GetMaximumMacFrameCounter() +
-                                   OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
+    networkInfo.SetMleFrameCounter(Get<KeyManager>().GetMleFrameCounter() + kStoreFrameCounterAhead);
+    networkInfo.SetMacFrameCounter(Get<KeyManager>().GetMaximumMacFrameCounter() + kStoreFrameCounterAhead);
     networkInfo.SetDeviceMode(mDeviceMode.Get());
 
     SuccessOrExit(error = Get<Settings>().Save(networkInfo));
@@ -2770,7 +2768,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 
     case kRoleRouter:
     case kRoleLeader:
-        VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid());
+        VerifyOrExit(aRxInfo.IsNeighborStateValid());
         break;
     }
 
@@ -2792,7 +2790,7 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeDataResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorDrop);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorDrop);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     {
@@ -3299,7 +3297,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeChildIdResponse, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
-    VerifyOrExit(aRxInfo.mNeighbor && aRxInfo.mNeighbor->IsStateValid(), error = kErrorSecurity);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorSecurity);
 
     VerifyOrExit(mAttachState == kAttachStateChildIdRequest);
 
@@ -4586,9 +4584,6 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
     uint8_t                  length      = 0;
     uint8_t                  counter     = 0;
     uint16_t                 startOffset = GetLength();
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    Ip6::Address domainUnicastAddress;
-#endif
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = Append(tlv));
@@ -4604,21 +4599,18 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
     counter++;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    // Cache Domain Unicast Address.
-    domainUnicastAddress = Get<DuaManager>().GetDomainUnicastAddress();
-
-    if (Get<ThreadNetif>().HasUnicastAddress(domainUnicastAddress))
+    if (Get<ThreadNetif>().HasUnicastAddress(Get<DuaManager>().GetDomainUnicastAddress()))
     {
-        SuccessOrAssert(Get<NetworkData::Leader>().GetContext(domainUnicastAddress, context));
+        SuccessOrAssert(Get<NetworkData::Leader>().GetContext(Get<DuaManager>().GetDomainUnicastAddress(), context));
 
         // Prioritize DUA, compressed entry
         entry.SetContextId(context.mContextId);
-        entry.SetIid(domainUnicastAddress.GetIid());
+        entry.SetIid(Get<DuaManager>().GetDomainUnicastAddress().GetIid());
         SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
         length += entry.GetLength();
         counter++;
     }
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
+#endif
 
     for (const Ip6::Netif::UnicastAddress &addr : Get<ThreadNetif>().GetUnicastAddresses())
     {
@@ -4629,8 +4621,7 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
         }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-        // Skip DUA that was already appended above.
-        if (addr.GetAddress() == domainUnicastAddress)
+        if (addr.GetAddress() == Get<DuaManager>().GetDomainUnicastAddress())
         {
             continue;
         }
@@ -4653,7 +4644,7 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
         length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
-        VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER);
+        VerifyOrExit(counter < kMaxIpAddressesToRegister);
     }
 
     // Append external multicast addresses.  For sleepy end device,
@@ -4685,7 +4676,7 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 
             counter++;
             // only continue to append if there is available entry.
-            VerifyOrExit(counter < OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER);
+            VerifyOrExit(counter < kMaxIpAddressesToRegister);
         }
     }
 

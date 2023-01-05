@@ -57,6 +57,8 @@ expect "channel"
 expect -re {(\d+)}
 set channel $expect_out(1,string)
 expect_line "Done"
+send "discover reqcallback enable\n"
+expect_line "Done"
 
 switch_node 3
 send "scan $channel\n"
