@@ -31,6 +31,10 @@
 
 #include "openthread-core-config.h"
 
+#ifdef OPENTHREAD_POSIX_CONFIG_FILE
+#include OPENTHREAD_POSIX_CONFIG_FILE
+#endif
+
 /**
  * @file
  * @brief
