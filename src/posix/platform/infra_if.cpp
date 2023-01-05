@@ -113,6 +113,13 @@ bool platformInfraIfIsRunning(void) { return ot::Posix::InfraNetif::Get().IsRunn
 
 const char *otSysGetInfraNetifName(void) { return ot::Posix::InfraNetif::Get().GetNetifName(); }
 
+uint32_t otSysGetInfraNetifFlags(void) { return ot::Posix::InfraNetif::Get().GetFlags(); }
+
+void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters)
+{
+    ot::Posix::InfraNetif::Get().CountAddresses(*aAddressCounters);
+}
+
 namespace ot {
 namespace Posix {
 namespace {
@@ -162,6 +169,15 @@ int CreateIcmp6Socket(void)
 
     return sock;
 }
+
+bool IsAddressLinkLocal(const in6_addr &aAddress)
+{
+    return ((aAddress.s6_addr[0] & 0xff) == 0xfe) && ((aAddress.s6_addr[1] & 0xc0) == 0x80);
+}
+
+bool IsAddressUniqueLocal(const in6_addr &aAddress) { return (aAddress.s6_addr[0] & 0xfe) == 0xfc; }
+
+bool IsAddressGlobalUnicast(const in6_addr &aAddress) { return (aAddress.s6_addr[0] & 0xe0) == 0x20; }
 
 // Create a net-link socket that subscribes to link & addresses events.
 int CreateNetLinkSocket(void)
@@ -259,7 +275,9 @@ exit:
     return error;
 }
 
-bool InfraNetif::IsRunning(void) const
+bool InfraNetif::IsRunning(void) const { return (GetFlags() & IFF_RUNNING) && HasLinkLocalAddress(); }
+
+uint32_t InfraNetif::GetFlags(void) const
 {
     int          sock;
     struct ifreq ifReq;
@@ -277,7 +295,41 @@ bool InfraNetif::IsRunning(void) const
 
     close(sock);
 
-    return (ifReq.ifr_flags & IFF_RUNNING) && HasLinkLocalAddress();
+    return ifReq.ifr_flags;
+}
+
+void InfraNetif::CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const
+{
+    struct ifaddrs *ifAddrs = nullptr;
+
+    aAddressCounters.mLinkLocalAddresses     = 0;
+    aAddressCounters.mUniqueLocalAddresses   = 0;
+    aAddressCounters.mGlobalUnicastAddresses = 0;
+
+    if (getifaddrs(&ifAddrs) < 0)
+    {
+        otLogWarnPlat("failed to get netif addresses: %s", strerror(errno));
+        ExitNow();
+    }
+
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        in6_addr *in6Addr;
+        if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr->sa_family != AF_INET6)
+        {
+            continue;
+        }
+
+        in6Addr = &(reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr)->sin6_addr);
+        aAddressCounters.mLinkLocalAddresses += IsAddressLinkLocal(*in6Addr);
+        aAddressCounters.mUniqueLocalAddresses += IsAddressUniqueLocal(*in6Addr);
+        aAddressCounters.mGlobalUnicastAddresses += IsAddressGlobalUnicast(*in6Addr);
+    }
+
+    freeifaddrs(ifAddrs);
+
+exit:
+    return;
 }
 
 bool InfraNetif::HasLinkLocalAddress(void) const
