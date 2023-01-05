@@ -231,6 +231,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
+    bool    supportsRcpMinHostApiVersion;
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mResetRadioOnStartup = aResetRadio;
@@ -257,7 +258,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64.m8));
 
-    if (!IsRcp(supportsRcpApiVersion))
+    if (!IsRcp(supportsRcpApiVersion, supportsRcpMinHostApiVersion))
     {
         uint8_t exitCode = OT_EXIT_RADIO_SPINEL_INCOMPATIBLE;
 
@@ -273,7 +274,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
 
     if (!aSkipRcpCompatibilityCheck)
     {
-        SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion));
+        SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion, supportsRcpMinHostApiVersion));
         SuccessOrDie(CheckRadioCapabilities());
     }
 
@@ -309,7 +310,8 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(bool &aSupportsRcpApiVersion)
+bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(bool &aSupportsRcpApiVersion,
+                                                           bool &aSupportsRcpMinHostApiVersion)
 {
     uint8_t        capsBuffer[kCapsBufferSize];
     const uint8_t *capsData         = capsBuffer;
@@ -317,7 +319,8 @@ bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(bool &aSupportsRcpApi
     bool           supportsRawRadio = false;
     bool           isRcp            = false;
 
-    aSupportsRcpApiVersion = false;
+    aSupportsRcpApiVersion        = false;
+    aSupportsRcpMinHostApiVersion = false;
 
     SuccessOrDie(Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
 
@@ -347,6 +350,11 @@ bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(bool &aSupportsRcpApi
         if (capability == SPINEL_CAP_RCP_API_VERSION)
         {
             aSupportsRcpApiVersion = true;
+        }
+
+        if (capability == SPINEL_PROP_RCP_MIN_HOST_API_VERSION)
+        {
+            aSupportsRcpMinHostApiVersion = true;
         }
 
         capsData += unpacked;
@@ -400,27 +408,50 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool aSupportsRcpApiVersion)
+otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool aSupportsRcpApiVersion,
+                                                                           bool aSupportsRcpMinHostApiVersion)
 {
-    otError      error         = OT_ERROR_NONE;
-    unsigned int rcpApiVersion = 1;
-
-    // Use RCP API Version value 1, when the RCP capability
-    // list does not contain `SPINEL_CAP_RCP_API_VERSION`.
-
-    if (aSupportsRcpApiVersion)
-    {
-        SuccessOrExit(error = Get(SPINEL_PROP_RCP_API_VERSION, SPINEL_DATATYPE_UINT_PACKED_S, &rcpApiVersion));
-    }
+    otError error = OT_ERROR_NONE;
 
     static_assert(SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION <= SPINEL_RCP_API_VERSION,
                   "MIN_HOST_SUPPORTED_RCP_API_VERSION must be smaller than or equal to RCP_API_VERSION");
 
-    if ((rcpApiVersion < SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION) || (rcpApiVersion > SPINEL_RCP_API_VERSION))
+    if (aSupportsRcpApiVersion)
     {
-        otLogCritPlat("RCP API Version %u is not in the supported range [%u-%u]", rcpApiVersion,
-                      SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION, SPINEL_RCP_API_VERSION);
-        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        // Make sure RCP is not too old and its version is within the
+        // range host supports.
+
+        unsigned int rcpApiVersion;
+
+        SuccessOrExit(error = Get(SPINEL_PROP_RCP_API_VERSION, SPINEL_DATATYPE_UINT_PACKED_S, &rcpApiVersion));
+
+        if (rcpApiVersion < SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION)
+        {
+            otLogCritPlat("RCP and host are using incompatible API versions");
+            otLogCritPlat("RCP API Version %u is older than min required by host %u", rcpApiVersion,
+                          SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION);
+            DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        }
+    }
+
+    if (aSupportsRcpMinHostApiVersion)
+    {
+        // Check with RCP about min host API version it can work with,
+        // and make sure on host side our version is within the supported
+        // range.
+
+        unsigned int minHostRcpApiVersion;
+
+        SuccessOrExit(
+            error = Get(SPINEL_PROP_RCP_MIN_HOST_API_VERSION, SPINEL_DATATYPE_UINT_PACKED_S, &minHostRcpApiVersion));
+
+        if (SPINEL_RCP_API_VERSION < minHostRcpApiVersion)
+        {
+            otLogCritPlat("RCP and host are using incompatible API versions");
+            otLogCritPlat("RCP requires min host API version %u but host is older and at version %u",
+                          minHostRcpApiVersion, SPINEL_RCP_API_VERSION);
+            DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+        }
     }
 
 exit:
@@ -2763,6 +2794,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
     case SPINEL_PROP_RADIO_CAPS:
     case SPINEL_PROP_RCP_API_VERSION:
+    case SPINEL_PROP_RCP_MIN_HOST_API_VERSION:
     {
         const char  *name;
         unsigned int value;
@@ -2770,7 +2802,22 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
         unpacked = spinel_datatype_unpack(data, len, SPINEL_DATATYPE_UINT_PACKED_S, &value);
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
 
-        name = (key == SPINEL_PROP_RADIO_CAPS) ? "caps" : "version";
+        switch (key)
+        {
+        case SPINEL_PROP_RADIO_CAPS:
+            name = "caps";
+            break;
+        case SPINEL_PROP_RCP_API_VERSION:
+            name = "version";
+            break;
+        case SPINEL_PROP_RCP_MIN_HOST_API_VERSION:
+            name = "min-host-version";
+            break;
+        default:
+            name = "";
+            break;
+        }
+
         start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, value);
     }
     break;

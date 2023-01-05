@@ -325,8 +325,11 @@
  *     as constant as possible.
  *
  *   - On start, host implementation queries the RCP API version and accepts
- *     any version number from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION up to
- *     and including SPINEL_RCP_API_VERSION.
+ *     any version starting from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION.
+ *
+ *   - Host implementation also queries the RCP about the minimum host RCP
+ *     API version it can work with, and then checks that its own version is
+ *     within the range.
  *
  *   Host and RCP compatibility guideline:
  *
@@ -417,7 +420,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 7
+#define SPINEL_RCP_API_VERSION 8
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -1278,9 +1281,10 @@ enum
     SPINEL_CAP_NET_THREAD_1_2 = (SPINEL_CAP_NET__BEGIN + 2),
     SPINEL_CAP_NET__END       = 64,
 
-    SPINEL_CAP_RCP__BEGIN      = 64,
-    SPINEL_CAP_RCP_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 0),
-    SPINEL_CAP_RCP__END        = 80,
+    SPINEL_CAP_RCP__BEGIN               = 64,
+    SPINEL_CAP_RCP_API_VERSION          = (SPINEL_CAP_RCP__BEGIN + 0),
+    SPINEL_CAP_RCP_MIN_HOST_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 1),
+    SPINEL_CAP_RCP__END                 = 80,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
     SPINEL_CAP_MAC_ALLOWLIST           = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
@@ -4348,6 +4352,18 @@ enum
      *
      */
     SPINEL_PROP_RCP_API_VERSION = SPINEL_PROP_RCP__BEGIN + 0,
+
+    /// Min host RCP API Version number
+    /** Format: `i` (read-only)
+     *
+     * Required capability: SPINEL_CAP_RADIO and SPINEL_CAP_RCP_MIN_HOST_API_VERSION.
+     *
+     * This property gives the minimum host RCP API Version number.
+     *
+     * Please see "Spinel definition compatibility guideline" section.
+     *
+     */
+    SPINEL_PROP_RCP_MIN_HOST_API_VERSION = SPINEL_PROP_RCP__BEGIN + 1,
 
     SPINEL_PROP_RCP__END = 0xFF,
 
