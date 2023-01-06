@@ -124,7 +124,15 @@ public:
      * @returns A pointer to the Leader in the Thread network.
      *
      */
-    Router *GetLeader(void);
+    Router *GetLeader(void) { return AsNonConst(AsConst(this)->GetLeader()); }
+
+    /**
+     * This method returns the leader in the Thread network.
+     *
+     * @returns A pointer to the Leader in the Thread network.
+     *
+     */
+    const Router *GetLeader(void) const;
 
     /**
      * This method returns the leader's age in seconds, i.e., seconds since the last Router ID Sequence update.
@@ -163,6 +171,14 @@ public:
      *
      */
     uint8_t GetPathCost(uint16_t aDestRloc16) const;
+
+    /**
+     * This method returns the mesh path cost to leader.
+     *
+     * @returns The path cost to leader.
+     *
+     */
+    uint8_t GetPathCostToLeader(void) const;
 
     /**
      * This method determines the next hop towards an RLOC16 destination.
