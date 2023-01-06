@@ -145,6 +145,10 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 {
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+    otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
+#endif
+
     OutputPrompt();
 }
 
@@ -1957,7 +1961,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
          */
         else if (aArgs[1] == "delay")
         {
-            error = ProcessSet(aArgs + 2, otChannelManagerSetDelay);
+            error = ProcessGetSet(aArgs + 2, otChannelManagerGetDelay, otChannelManagerSetDelay);
         }
         /**
          * @cli channel manager interval
@@ -7192,6 +7196,15 @@ void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aIn
     OutputFormat("~ Discovery Request from ");
     OutputExtAddress(aInfo.mExtAddress);
     OutputLine(": version=%u,joiner=%d", aInfo.mVersion, aInfo.mIsJoiner);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+void Interpreter::HandleIp6Receive(otMessage *aMessage, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    otMessageFree(aMessage);
 }
 #endif
 

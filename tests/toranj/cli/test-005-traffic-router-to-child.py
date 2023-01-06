@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,42 +31,63 @@ from cli import verify_within
 import cli
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Test description: forming a Thread network
+# Test description:
+#
+# Traffic between router to end-device (link-local and mesh-local IPv6 addresses).
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
 print('Starting \'{}\''.format(test_name))
 
 # -----------------------------------------------------------------------------------------------------------------------
-# Creating `Nodes` instances
+# Creating `cli.Nodes` instances
 
 speedup = 10
 cli.Node.set_time_speedup_factor(speedup)
 
-node = cli.Node()
+node1 = cli.Node()
+node2 = cli.Node()
+node3 = cli.Node()
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
 
-verify(node.get_state() == 'disabled')
-node.form('test')
+node1.form('net')
+node2.join(node1, cli.JOIN_TYPE_END_DEVICE)
+node3.join(node1, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
 
-verify(node.get_network_name() == 'test')
+verify(node1.get_state() == 'leader')
+verify(node2.get_state() == 'child')
+verify(node3.get_state() == 'child')
 
-node.interface_down()
-verify(node.get_state() == 'disabled')
+ll1 = node1.get_linklocal_ip_addr()
+ll2 = node2.get_linklocal_ip_addr()
+ll3 = node2.get_linklocal_ip_addr()
 
-node.form('form-test',
-          channel=21,
-          panid=0x5678,
-          xpanid='1020031510006016',
-          network_key='0123456789abcdeffecdba9876543210')
+ml1 = node1.get_mleid_ip_addr()
+ml2 = node2.get_mleid_ip_addr()
+ml3 = node2.get_mleid_ip_addr()
 
-verify(node.get_network_name() == 'form-test')
-verify(node.get_channel() == '21')
-verify(node.get_panid() == '0x5678')
-verify(node.get_ext_panid() == '1020031510006016')
-verify(node.get_network_key() == '0123456789abcdeffecdba9876543210')
+sizes = [0, 80, 500, 1000]
+count = 2
+
+for size in sizes:
+    node1.ping(ll2, size=size, count=count)
+    node2.ping(ll1, size=size, count=count)
+    node1.ping(ml2, size=size, count=count)
+    node2.ping(ml1, size=size, count=count)
+
+poll_periods = [10, 100, 300]
+
+for period in poll_periods:
+    node3.set_pollperiod(period)
+    verify(int(node3.get_pollperiod()) == period)
+
+    for size in sizes:
+        node1.ping(ll3, size=size, count=count)
+        node3.ping(ll1, size=size, count=count)
+        node1.ping(ml3, size=size, count=count)
+        node3.ping(ml1, size=size, count=count)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
