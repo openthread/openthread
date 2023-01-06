@@ -145,10 +145,10 @@ class TestDetach(thread_cert.TestCase):
         self.assertEqual(leader.get_state(), 'disabled')
 
         leader.start()
-        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_RESET_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
         router1.start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.ROUTER_RESET_DELAY)
         self.assertEqual(router1.get_state(), 'router')
 
         leader.thread_stop()

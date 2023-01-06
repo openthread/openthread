@@ -128,7 +128,7 @@ class TestHistoryTracker(thread_cert.TestCase):
         # Start leader and child
 
         leader.start()
-        self.simulator.go(SHORT_WAIT * 2)
+        self.simulator.go(config.LEADER_RESET_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         child.start()

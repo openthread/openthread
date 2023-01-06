@@ -153,6 +153,13 @@ PACKET_VERIFICATION_NONE = 0
 PACKET_VERIFICATION_DEFAULT = 1
 PACKET_VERIFICATION_TREL = 2
 
+# After leader reset it may retransmit link request 6 times with 5s interval
+LEADER_RESET_DELAY = 38
+# After router reset it may retransmit link request 3 times with 5s interval
+ROUTER_RESET_DELAY = 22
+MLE_MAX_CRITICAL_TRANSMISSION_COUNT = 6
+MLE_MAX_TRANSMISSION_COUNT = 3
+
 
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {

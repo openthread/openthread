@@ -1706,6 +1706,8 @@ protected:
 
 #endif
 
+    void ScheduleMessageTransmissionTimer(void);
+
 private:
     // Declare early so we can use in as `TimerMilli` callbacks.
     void HandleAttachTimer(void);
@@ -1733,6 +1735,9 @@ protected:
     AttachTimer   mAttachTimer;              ///< The timer for driving the attach process.
     DelayTimer    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     MsgTxTimer    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
+    uint8_t       mLinkRequestAttempts;      ///< Number of link requests sent after reset
+    uint8_t       mMaxLinkRequests;          ///< Max number of link request transmissions after reset
+    bool          mInRouterResetSync;        ///< Indicating if device is in router synchronization process after reset
 
 private:
     static constexpr uint8_t kMleHopLimit        = 255;
@@ -1924,7 +1929,6 @@ private:
     void        SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        ScheduleMessageTransmissionTimer(void);
     void        ReestablishLinkWithNeighbor(Neighbor &aNeighbor);
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);

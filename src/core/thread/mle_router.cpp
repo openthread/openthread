@@ -184,6 +184,26 @@ exit:
     return error;
 }
 
+// If the router was a leader or had more than 5 children prior to reset,
+// the multicast link request is retransmitted as a critical message
+void MleRouter::SetMaxLinkRequestTransmissionCounter(void)
+{
+    Settings::NetworkInfo networkInfo;
+    uint8_t               numOfChildren = 0;
+    mMaxLinkRequests                    = kMaxTransmissionCount;
+    SuccessOrExit(Get<Settings>().Read(networkInfo));
+    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
+    {
+        numOfChildren++;
+    }
+    if (networkInfo.GetRole() == kRoleLeader || numOfChildren > 5)
+    {
+        mMaxLinkRequests = kMaxCriticalTransmissionCount;
+    }
+exit:
+    return;
+}
+
 Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 {
     Error error = kErrorNone;
@@ -202,6 +222,10 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     {
     case kRoleDetached:
         SuccessOrExit(error = SendLinkRequest(nullptr));
+        mLinkRequestAttempts = 1;
+        mInRouterResetSync   = true; // Start router sync process after reset
+        SetMaxLinkRequestTransmissionCounter();
+        ScheduleMessageTransmissionTimer();
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
         break;
 
@@ -930,6 +954,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
             SetStateRouter(GetRloc16());
         }
 
+        mInRouterResetSync      = false; // completed router sync after reset
         mRetrieveNewNetworkData = true;
         IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kDataRequestTlvs));
 
@@ -1541,8 +1566,9 @@ void MleRouter::HandleTimeTick(void)
     switch (mRole)
     {
     case kRoleDetached:
-        if (mChallengeTimeout == 0)
+        if (mChallengeTimeout == 0 && mLinkRequestAttempts == mMaxLinkRequests)
         {
+            mInRouterResetSync = false; // Router has retransmitted link request maximum times, give up sync process
             IgnoreError(BecomeDetached());
             ExitNow();
         }

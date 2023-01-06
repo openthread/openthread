@@ -97,6 +97,7 @@ children = [child1, child2]
 # Test implementation
 
 WAIT_INTERVAL = 6
+LEADER_RESET_DELAY = 38
 
 # Thread Mode for end-device and sleepy end-device
 DEVICE_MODE_SLEEPY_END_DEVICE = (wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA)
@@ -144,7 +145,7 @@ wpan.verify_within(check_child_table, WAIT_INTERVAL)
 
 # Reset parent and verify all children are recovered
 parent.reset()
-wpan.verify_within(check_child_table, WAIT_INTERVAL)
+wpan.verify_within(check_child_table, WAIT_INTERVAL + LEADER_RESET_DELAY)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

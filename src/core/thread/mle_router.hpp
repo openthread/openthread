@@ -627,6 +627,8 @@ private:
     void        HandleAdvertiseTrickleTimer(void);
     void        HandleTimeTick(void);
 
+    void SetMaxLinkRequestTransmissionCounter(void);
+
     TrickleTimer mAdvertiseTrickleTimer;
 
     ChildTable  mChildTable;
