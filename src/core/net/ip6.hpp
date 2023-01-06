@@ -310,14 +310,25 @@ public:
     void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
 
     /**
-     * This method perform default source address selection.
+     * This method performs default source address selection.
      *
-     * @param[in]  aMessageInfo  A reference to the message information.
+     * @param[in,out]  aMessageInfo  A reference to the message information.
+     *
+     * @retval  kErrorNone      Found a source address and updated SockAddr of @p aMessageInfo.
+     * @retval  kErrorNotFound  No source address was found and @p aMessageInfo is unchanged.
+     *
+     */
+    Error SelectSourceAddress(MessageInfo &aMessageInfo) const;
+
+    /**
+     * This method performs default source address selection.
+     *
+     * @param[in]  aDestination  The destination address.
      *
      * @returns A pointer to the selected IPv6 source address or `nullptr` if no source address was found.
      *
      */
-    const Netif::UnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+    const Address *SelectSourceAddress(const Address &aDestination) const;
 
     /**
      * This method returns a reference to the send queue.
@@ -404,8 +415,8 @@ private:
     void SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
 #endif
     Error AddMplOption(Message &aMessage, Header &aHeader);
-    Error AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
-    Error InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    Error AddTunneledMplOption(Message &aMessage, Header &aHeader);
+    Error InsertMplOption(Message &aMessage, Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
     Error HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
     Error HandlePayload(Header            &aIp6Header,
