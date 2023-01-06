@@ -220,7 +220,7 @@ otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
  * Get the radio raw power setting for diagnostics module.
  *
  * @param[in]      aInstance               The OpenThread instance structure.
- * @param[in]      aRawPowerSetting        A pointer to the raw power setting byte array.
+ * @param[out]     aRawPowerSetting        A pointer to the raw power setting byte array.
  * @param[in,out]  aRawPowerSettingLength  On input, a pointer to the size of @p aRawPowerSetting.
  *                                         On output, a pointer to the length of the raw power setting data.
  *
@@ -248,7 +248,7 @@ otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
 otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable);
 
 /**
- * Enable/disable the platform layer to transmit continuous carrier wave.
+ * Start/stop the platform layer to transmit continuous carrier wave.
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aEnable   TRUE to enable or FALSE to disable the platform layer to transmit continuous carrier wave.
