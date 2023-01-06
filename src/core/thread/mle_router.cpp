@@ -1276,8 +1276,6 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
 
             if (IsFullThreadDevice())
             {
-                Router *leader;
-
                 if ((mRouterSelectionJitterTimeout == 0) &&
                     (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold))
                 {
@@ -1285,37 +1283,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
                     ExitNow();
                 }
 
-                leader = mRouterTable.GetLeader();
-
-                if (leader != nullptr)
-                {
-                    for (uint8_t id = 0, routeCount = 0; id <= kMaxRouterId; id++)
-                    {
-                        if (!routeTlv.IsRouterIdSet(id))
-                        {
-                            continue;
-                        }
-
-                        if (id != GetLeaderId())
-                        {
-                            routeCount++;
-                            continue;
-                        }
-
-                        if (routeTlv.GetRouteCost(routeCount) > 0)
-                        {
-                            leader->SetNextHop(id);
-                            leader->SetCost(routeTlv.GetRouteCost(routeCount));
-                        }
-                        else
-                        {
-                            leader->SetNextHop(kInvalidRouterId);
-                            leader->SetCost(0);
-                        }
-
-                        break;
-                    }
-                }
+                mRouterTable.UpdateRoutesOnFed(routeTlv, routerId);
             }
         }
         else
@@ -1397,7 +1365,6 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     uint16_t        version;
     uint8_t         scanMask;
     Challenge       challenge;
-    Router         *leader;
     Child          *child;
     uint8_t         modeBitmask;
     DeviceMode      mode;
@@ -1421,13 +1388,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     VerifyOrExit(mRouterTable.GetLeaderAge() < mNetworkIdTimeout, error = kErrorDrop);
 
     // 3. Its current routing path cost to the Leader is infinite.
-    leader = mRouterTable.GetLeader();
-    OT_ASSERT(leader != nullptr);
-
-    VerifyOrExit(IsLeader() || mRouterTable.GetLinkCost(GetLeaderId()) < kMaxRouteCost ||
-                     (IsChild() && leader->GetCost() + 1 < kMaxRouteCost) ||
-                     (leader->GetCost() + mRouterTable.GetLinkCost(leader->GetNextHop()) < kMaxRouteCost),
-                 error = kErrorDrop);
+    VerifyOrExit(mRouterTable.GetPathCostToLeader() < kMaxRouteCost, error = kErrorDrop);
 
     // 4. It is a REED and there are already `kMaxRouters` active routers in
     // the network (because Leader would reject any further address solicit).
@@ -3313,7 +3274,7 @@ void MleRouter::ResolveRoutingLoops(uint16_t aSourceMac, uint16_t aDestRloc16)
     VerifyOrExit(router != nullptr);
 
     // invalidate next hop
-    router->SetNextHop(kInvalidRouterId);
+    router->SetNextHopToInvalid();
     ResetAdvertiseInterval();
 
 exit:
@@ -3490,7 +3451,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     VerifyOrExit(router != nullptr);
 
     router->SetExtAddress(Get<Mac::Mac>().GetExtAddress());
-    router->SetCost(0);
+    router->SetNextHopToInvalid();
 
     router = mRouterTable.FindRouterById(mParent.GetRouterId());
     VerifyOrExit(router != nullptr);
@@ -3499,8 +3460,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     router->SetFrom(mParent);
 
     router->SetState(Neighbor::kStateValid);
-    router->SetNextHop(kInvalidRouterId);
-    router->SetCost(0);
+    router->SetNextHopToInvalid();
 
     leader = mRouterTable.GetLeader();
     OT_ASSERT(leader != nullptr);
@@ -3508,8 +3468,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     if (leader != router)
     {
         // Keep route path to the Leader reported by the parent before it is updated.
-        leader->SetCost(mParent.GetLeaderCost());
-        leader->SetNextHop(RouterIdFromRloc16(mParent.GetRloc16()));
+        leader->SetNextHopAndCost(RouterIdFromRloc16(mParent.GetRloc16()), mParent.GetLeaderCost());
     }
 
     if (isRouterIdAllocated)
@@ -3707,9 +3666,7 @@ exit:
 
 void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 {
-    Router *leader;
-    uint8_t cost;
-    int8_t  parentPriority = kParentPriorityMedium;
+    int8_t parentPriority = kParentPriorityMedium;
 
     if (mParentPriority != kParentPriorityUnspecified)
     {
@@ -3732,22 +3689,12 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     aTlv.SetParentPriority(parentPriority);
 
-    // compute leader cost and link qualities
     aTlv.SetLinkQuality1(0);
     aTlv.SetLinkQuality2(0);
     aTlv.SetLinkQuality3(0);
 
-    leader = mRouterTable.GetLeader();
-    cost   = (leader != nullptr) ? leader->GetCost() : static_cast<uint8_t>(kMaxRouteCost);
-
-    switch (mRole)
+    if (IsChild())
     {
-    case kRoleDisabled:
-    case kRoleDetached:
-        cost = static_cast<uint8_t>(kMaxRouteCost);
-        break;
-
-    case kRoleChild:
         switch (mParent.GetLinkQualityIn())
         {
         case kLinkQuality0:
@@ -3765,29 +3712,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             aTlv.SetLinkQuality3(aTlv.GetLinkQuality3() + 1);
             break;
         }
-
-        cost += CostForLinkQuality(mParent.GetLinkQualityIn());
-        break;
-
-    case kRoleRouter:
-        if (leader != nullptr)
-        {
-            cost += mRouterTable.GetLinkCost(leader->GetNextHop());
-
-            if (!IsRouterIdValid(leader->GetNextHop()) || mRouterTable.GetLinkCost(GetLeaderId()) < cost)
-            {
-                cost = mRouterTable.GetLinkCost(GetLeaderId());
-            }
-        }
-
-        break;
-
-    case kRoleLeader:
-        cost = 0;
-        break;
     }
-
-    aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());
 
     for (const Router &router : Get<RouterTable>())
     {
@@ -3822,7 +3747,8 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
         }
     }
 
-    aTlv.SetLeaderCost((cost < kMaxRouteCost) ? cost : static_cast<uint8_t>(kMaxRouteCost));
+    aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());
+    aTlv.SetLeaderCost(Min(mRouterTable.GetPathCostToLeader(), kMaxRouteCost));
     aTlv.SetIdSequence(mRouterTable.GetRouterIdSequence());
     aTlv.SetSedBufferSize(OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE);
     aTlv.SetSedDatagramCount(OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT);

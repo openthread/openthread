@@ -97,6 +97,7 @@ r2.join(r1)
 r3.join(r2)
 r4.join(r3)
 fed.join(r1, cli.JOIN_TYPE_REED)
+
 sed.join(r3, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
 
 sed.set_pollperiod(600)
