@@ -362,4 +362,15 @@
 #define OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE "src/posix/platform/openthread.conf.example"
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
+ *
+ * This setting configures the interval (in unit of microseconds) for host-rcp
+ * time sync. i.e., the host  will recalculate the time offset b/w host and RCP
+ * every interval.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
+#define OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL (60 * 1000 * 1000)
+#endif
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_
