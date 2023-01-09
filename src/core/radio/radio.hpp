@@ -45,7 +45,7 @@
 
 namespace ot {
 
-static constexpr uint32_t kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS; ///< The microseconds per 10 symbols.
+static constexpr uint32_t kUsPerTenSymbols = OT_RADIO_TEN_SYMBOLS_TIME_US; ///< The microseconds per 10 symbols.
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 /**
@@ -75,7 +75,7 @@ class Radio : public InstanceLocator, private NonCopyable
     friend class Instance;
 
 public:
-    static constexpr uint32_t kSymbolTime = OT_RADIO_SYMBOL_TIME;
+    static constexpr uint32_t kSymbolTime = OT_RADIO_SYMBOL_TIME_US;
 #if (OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT && OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT)
     static constexpr uint16_t kNumChannelPages = 2;
     static constexpr uint32_t kSupportedChannels =
