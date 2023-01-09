@@ -747,46 +747,34 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        const Router *router;
+        uint16_t routerRloc16;
 
         if (!routerIdSet.Contains(routerId))
         {
             continue;
         }
 
-        router = FindRouterById(routerId);
-        OT_ASSERT(router != nullptr);
+        routerRloc16 = Mle::Rloc16FromRouterId(routerId);
 
-        if (router->GetRloc16() == Get<Mle::Mle>().GetRloc16())
+        if (routerRloc16 == Get<Mle::Mle>().GetRloc16())
         {
             aRouteTlv.SetRouteData(routerIndex, kLinkQuality0, kLinkQuality0, 1);
         }
         else
         {
-            const Router *nextHop  = FindNextHopOf(*router);
-            uint8_t       linkCost = GetLinkCost(*router);
-            uint8_t       routeCost;
+            const Router *router = FindRouterById(routerId);
+            uint8_t       pathCost;
 
-            if (nextHop == nullptr)
-            {
-                routeCost = linkCost;
-            }
-            else
-            {
-                routeCost = router->GetCost() + GetLinkCost(*nextHop);
+            OT_ASSERT(router != nullptr);
 
-                if (linkCost < routeCost)
-                {
-                    routeCost = linkCost;
-                }
+            pathCost = GetPathCost(routerRloc16);
+
+            if (pathCost >= Mle::kMaxRouteCost)
+            {
+                pathCost = 0;
             }
 
-            if (routeCost >= Mle::kMaxRouteCost)
-            {
-                routeCost = 0;
-            }
-
-            aRouteTlv.SetRouteData(routerIndex, router->GetLinkQualityIn(), router->GetLinkQualityOut(), routeCost);
+            aRouteTlv.SetRouteData(routerIndex, router->GetLinkQualityIn(), router->GetLinkQualityOut(), pathCost);
         }
 
         routerIndex++;
