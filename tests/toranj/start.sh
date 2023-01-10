@@ -75,7 +75,51 @@ run()
     done
 }
 
+install_wpantund()
+{
+    echo "Installing wpantund"
+    sudo apt-get --no-install-recommends install -y dbus libdbus-1-dev
+    sudo apt-get --no-install-recommends install -y autoconf-archive
+    sudo apt-get --no-install-recommends install -y libarchive-tools
+    sudo apt-get --no-install-recommends install -y libtool
+    sudo apt-get --no-install-recommends install -y libglib2.0-dev
+    sudo apt-get --no-install-recommends install -y lcov
+
+    sudo add-apt-repository universe
+    sudo apt-get update
+    sudo apt-get --no-install-recommends install -y libboost-all-dev python2
+
+    git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git || die "wpandtund clone"
+    cd wpantund
+    ./bootstrap.sh
+    ./configure
+    sudo make -j2 || die "wpantund make failed"
+    sudo make install || die "wpantund make install failed"
+    cd ..
+}
+
 cd "$(dirname "$0")" || die "cd failed"
+
+if [ "$TORANJ_NCP" = 1 ]; then
+    echo "========================================================================"
+    echo "Running toranj-ncp triggered by event" ${TORANJ_EVENT_NAME}
+
+    if [ $TORANJ_EVENT_NAME = "pull_request" ]; then
+        cd ../..
+        OT_SHA_OLD="$(git cat-file -p HEAD | grep 'parent ' | head -n1 | cut -d' ' -f2)"
+        git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
+        if git diff --name-only --exit-code "${OT_SHA_OLD}" -- src/ncp; then
+            echo "No changes to any of src/ncp files - skip running tests."
+            echo "========================================================================"
+            exit 0
+        fi
+        cd tests/toranj
+        echo "There are change in src/ncp files, running toranj-ncp tests"
+    fi
+
+    echo "========================================================================"
+    install_wpantund
+fi
 
 if [ -z "${top_builddir}" ]; then
     top_builddir=.

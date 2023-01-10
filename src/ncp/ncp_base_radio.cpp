@@ -60,6 +60,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MIN_HOST_API_VERS
 }
 #endif
 
+// Unrelated change in ncp
+
 // ----------------------------------------------------------------------------
 // MARK: Raw Link-Layer Datapath Glue
 // ----------------------------------------------------------------------------
