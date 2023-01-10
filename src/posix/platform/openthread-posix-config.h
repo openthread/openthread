@@ -365,8 +365,8 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
  *
- * This setting configures the interval (in unit of microseconds) for host-rcp
- * time sync. i.e., the host  will recalculate the time offset b/w host and RCP
+ * This setting configures the interval (in units of microseconds) for host-rcp
+ * time sync. The host will recalculate the time offset between host and RCP
  * every interval.
  *
  */
