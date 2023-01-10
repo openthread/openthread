@@ -52,7 +52,7 @@ extern "C" {
  * @{
  *
  */
-#define OT_US_PER_TEN_SYMBOLS 160 ///< The microseconds per 10 symbols.
+#define OT_US_PER_TEN_SYMBOLS OT_RADIO_TEN_SYMBOLS_TIME ///< Time for 10 symbols in units of microseconds
 
 /**
  * This structure represents link-specific information for messages received from the Thread radio.
