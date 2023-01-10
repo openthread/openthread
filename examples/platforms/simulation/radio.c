@@ -453,10 +453,10 @@ void platformRadioInit(void)
 static uint16_t getCslPhase(void)
 {
     uint32_t curTime       = otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = sCslPeriod * OT_RADIO_TEN_SYMBOLS_TIME_US;
+    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
     uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
 
-    return (uint16_t)(diff / OT_RADIO_TEN_SYMBOLS_TIME_US);
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
 }
 #endif
 

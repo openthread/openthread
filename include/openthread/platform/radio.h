@@ -71,15 +71,20 @@ enum
     OT_RADIO_FRAME_MAX_SIZE = 127, ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
     OT_RADIO_FRAME_MIN_SIZE = 3,   ///< Minimal size of frame FCS + CONTROL
 
+    OT_RADIO_SYMBOLS_PER_OCTET = 2,      ///< 2.4 GHz IEEE 802.15.4-2006
+    OT_RADIO_BIT_RATE          = 250000, ///< 2.4 GHz IEEE 802.15.4 (bits per second)
+    OT_RADIO_BITS_PER_OCTET    = 8,      ///< Number of bits per octet
+
     // Per IEEE 802.15.4-2015, 12.3.3 Symbol rate:
     // The O-QPSK PHY symbol rate shall be 25 ksymbol/s when operating in the 868 MHz band and 62.5 ksymbol/s when
     // operating in the 780 MHz, 915 MHz, 2380 MHz, or 2450 MHz band
     OT_RADIO_SYMBOL_RATE = 62500, ///< The O-QPSK PHY symbol rate when operating in the 780MHz, 915MHz, 2380MHz, 2450MHz
-    OT_RADIO_SYMBOL_TIME_US      = 1000000 * 1 / OT_RADIO_SYMBOL_RATE, ///< Symbol duration time
-    OT_RADIO_TEN_SYMBOLS_TIME_US = 10 * OT_RADIO_SYMBOL_TIME_US,       ///< Time for 10 symbols
-    OT_RADIO_LQI_NONE            = 0,                                  ///< LQI measurement not supported
-    OT_RADIO_RSSI_INVALID        = 127,                                ///< Invalid or unknown RSSI value
-    OT_RADIO_POWER_INVALID       = 127,                                ///< Invalid or unknown power value
+    OT_RADIO_SYMBOL_TIME = 1000000 * 1 / OT_RADIO_SYMBOL_RATE, ///< Symbol duration time in unit of microseconds
+    OT_RADIO_TEN_SYMBOLS_TIME = 10 * OT_RADIO_SYMBOL_TIME,     ///< Time for 10 symbols in unit of microseconds
+
+    OT_RADIO_LQI_NONE      = 0,   ///< LQI measurement not supported
+    OT_RADIO_RSSI_INVALID  = 127, ///< Invalid or unknown RSSI value
+    OT_RADIO_POWER_INVALID = 127, ///< Invalid or unknown power value
 };
 
 /**
