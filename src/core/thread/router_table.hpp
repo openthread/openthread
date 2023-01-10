@@ -165,14 +165,14 @@ public:
     uint8_t GetPathCost(uint16_t aDestRloc16) const;
 
     /**
-     * This method returns the next hop towards an RLOC16 destination.
+     * This method determines the next hop towards an RLOC16 destination.
      *
-     * @param[in]  aDestination  The RLOC16 of the destination.
+     * @param[in]  aDestRloc16  The RLOC16 of the destination.
      *
-     * @returns A RLOC16 of the next hop if a route is known, kInvalidRloc16 otherwise.
+     * @returns A RLOC16 of the next hop if a route is known, `Mle::kInvalidRloc16` otherwise.
      *
      */
-    uint16_t GetNextHop(uint16_t aDestination) const;
+    uint16_t GetNextHop(uint16_t aDestRloc16) const;
 
     /**
      * This method finds the router for a given Router ID.
@@ -410,8 +410,7 @@ private:
         return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }
 
-    bool    UpdateLinkQualityOut(const Mle::RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval);
-    uint8_t GetRouteCost(uint16_t aRloc16) const;
+    bool UpdateLinkQualityOut(const Mle::RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval);
 
     class RouterIdMap
     {

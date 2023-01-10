@@ -440,12 +440,11 @@ exit:
     return cost;
 }
 
-uint16_t RouterTable::GetNextHop(uint16_t aDestination) const
+uint16_t RouterTable::GetNextHop(uint16_t aDestRloc16) const
 {
-    uint8_t       destinationId = Mle::RouterIdFromRloc16(aDestination);
-    uint8_t       routeCost;
+    uint16_t      nextHopRloc16 = Mle::kInvalidRloc16;
+    uint8_t       destRouterId  = Mle::RouterIdFromRloc16(aDestRloc16);
     uint8_t       linkCost;
-    uint16_t      rval = Mac::kShortAddrInvalid;
     const Router *router;
     const Router *nextHop;
 
@@ -454,49 +453,41 @@ uint16_t RouterTable::GetNextHop(uint16_t aDestination) const
         const Router &parent = Get<Mle::Mle>().GetParent();
 
         VerifyOrExit(parent.IsStateValid());
-        ExitNow(rval = parent.GetRloc16());
+        nextHopRloc16 = parent.GetRloc16();
+        ExitNow();
     }
 
-    // The frame is destined to a child
-    if (destinationId == Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16()))
+    if (destRouterId == Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16()))
     {
-        ExitNow(rval = aDestination);
+        // Destination is device itself or one of its
+        // children.
+        ExitNow(nextHopRloc16 = aDestRloc16);
     }
 
-    router = FindRouterById(destinationId);
+    router = FindRouterById(destRouterId);
     VerifyOrExit(router != nullptr);
 
-    linkCost  = GetLinkCost(destinationId);
-    routeCost = GetRouteCost(aDestination);
+    linkCost = GetLinkCost(*router);
 
-    if ((routeCost + GetLinkCost(router->GetNextHop())) < linkCost)
+    if (linkCost < Mle::kMaxRouteCost)
     {
-        nextHop = FindNextHopOf(*router);
-        VerifyOrExit(nextHop != nullptr && !nextHop->IsStateInvalid());
-
-        rval = Mle::Rloc16FromRouterId(router->GetNextHop());
+        nextHopRloc16 = Mle::Rloc16FromRouterId(destRouterId);
     }
-    else if (linkCost < Mle::kMaxRouteCost)
+
+    // Check if we have a forwarding route path towards the
+    // destination and whether direct link or forwarding path has a
+    // lower cost.
+
+    nextHop = FindNextHopOf(*router);
+    VerifyOrExit(nextHop != nullptr);
+
+    if (router->GetCost() + GetLinkCost(*nextHop) < linkCost)
     {
-        rval = Mle::Rloc16FromRouterId(destinationId);
+        nextHopRloc16 = nextHop->GetRloc16();
     }
 
 exit:
-    return rval;
-}
-
-uint8_t RouterTable::GetRouteCost(uint16_t aRloc16) const
-{
-    uint8_t       rval = Mle::kMaxRouteCost;
-    const Router *router;
-
-    router = FindRouterByRloc16(aRloc16);
-    VerifyOrExit(router != nullptr && FindNextHopOf(*router) != nullptr);
-
-    rval = router->GetCost();
-
-exit:
-    return rval;
+    return nextHopRloc16;
 }
 
 void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet)
