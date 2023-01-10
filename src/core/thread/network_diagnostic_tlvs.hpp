@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/netdiag.h>
 #include <openthread/thread.h>
 
 #include "common/clearable.hpp"
