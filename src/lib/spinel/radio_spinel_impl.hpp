@@ -64,16 +64,9 @@
 #ifndef US_PER_S
 #define US_PER_S (MS_PER_S * US_PER_MS)
 #endif
-#ifndef NS_PER_US
-#define NS_PER_US 1000
-#endif
 
 #ifndef TX_WAIT_US
 #define TX_WAIT_US (5 * US_PER_S)
-#endif
-
-#ifndef RCP_TIME_OFFSET_CHECK_INTERVAL
-#define RCP_TIME_OFFSET_CHECK_INTERVAL (60 * US_PER_S)
 #endif
 
 using ot::Spinel::Decoder;
@@ -2234,7 +2227,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
 
     mRadioTimeOffset      = (remoteTimestamp - ((localRxTimestamp / 2) + (localTxTimestamp / 2)));
     mIsTimeSynced         = true;
-    mRadioTimeRecalcStart = localRxTimestamp + RCP_TIME_OFFSET_CHECK_INTERVAL;
+    mRadioTimeRecalcStart = localRxTimestamp + OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL;
 
 exit:
     LogIfFail("Error calculating RCP time offset: %s", error);
