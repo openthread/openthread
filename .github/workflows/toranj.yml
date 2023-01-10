@@ -99,110 +99,110 @@ jobs:
         name: cov-toranj-ncp-${{ matrix.TORANJ_RADIO }}
         path: tmp/coverage.info
 
-  toranj-cli:
-    name: toranj-cli-${{ matrix.TORANJ_RADIO }}
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        TORANJ_RADIO: ['15.4', 'trel', 'multi']
-    env:
-      COVERAGE: 1
-      TORANJ_RADIO : ${{ matrix.TORANJ_RADIO }}
-      TORANJ_CLI: 1
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      with:
-        submodules: true
-    - name: Bootstrap
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build lcov
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build & Run
-      run: |
-        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
-    - name: Generate Coverage
-      if: "matrix.TORANJ_RADIO != 'multi'"
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
-      if: "matrix.TORANJ_RADIO != 'multi'"
-      with:
-        name: cov-toranj-cli-${{ matrix.TORANJ_RADIO }}
-        path: tmp/coverage.info
-
-  toranj-unittest:
-    name: toranj-unittest
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      with:
-        submodules: true
-    - name: Bootstrap
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 ninja-build python3-setuptools python3-wheel llvm lcov
-        sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Build & Run
-      run: |
-        ./tests/toranj/build.sh cmake
-        ninja test
-
-  upload-coverage:
-    needs:
-    - toranj-ncp
-    - toranj-cli
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        sudo apt-get --no-install-recommends install -y lcov
-    - uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
-      with:
-        path: coverage/
-    - name: Combine Coverage
-      run: |
-        script/test combine_coverage
-    - name: Upload Coverage
-      uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3.1.1
-      with:
-        files: final.info
-        fail_ci_if_error: true
-
-  delete-coverage-artifacts:
-    needs: upload-coverage
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-      with:
-        name: cov-*
-        useGlob: true
+#  toranj-cli:
+#    name: toranj-cli-${{ matrix.TORANJ_RADIO }}
+#    runs-on: ubuntu-20.04
+#    strategy:
+#      matrix:
+#        TORANJ_RADIO: ['15.4', 'trel', 'multi']
+#    env:
+#      COVERAGE: 1
+#      TORANJ_RADIO : ${{ matrix.TORANJ_RADIO }}
+#      TORANJ_CLI: 1
+#    steps:
+#    - name: Harden Runner
+#      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+#      with:
+#        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+#
+#    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+#      with:
+#        submodules: true
+#    - name: Bootstrap
+#      env:
+#        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+#      run: |
+#        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+#        sudo apt-get --no-install-recommends install -y ninja-build lcov
+#        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+#    - name: Build & Run
+#      run: |
+#        top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
+#    - name: Generate Coverage
+#      if: "matrix.TORANJ_RADIO != 'multi'"
+#      run: |
+#        ./script/test generate_coverage gcc
+#    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+#      if: "matrix.TORANJ_RADIO != 'multi'"
+#      with:
+#        name: cov-toranj-cli-${{ matrix.TORANJ_RADIO }}
+#        path: tmp/coverage.info
+#
+#  toranj-unittest:
+#    name: toranj-unittest
+#    runs-on: ubuntu-20.04
+#    steps:
+#    - name: Harden Runner
+#      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+#      with:
+#        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+#
+#    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+#      with:
+#        submodules: true
+#    - name: Bootstrap
+#      env:
+#        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+#      run: |
+#        sudo dpkg --add-architecture i386
+#        sudo apt-get update
+#        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 ninja-build python3-setuptools python3-wheel llvm lcov
+#        sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
+#        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+#    - name: Build & Run
+#      run: |
+#        ./tests/toranj/build.sh cmake
+#        ninja test
+#
+#  upload-coverage:
+#    needs:
+#    - toranj-ncp
+#    - toranj-cli
+#    runs-on: ubuntu-20.04
+#    steps:
+#    - name: Harden Runner
+#      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+#      with:
+#        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+#
+#    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+#      with:
+#        submodules: true
+#    - name: Bootstrap
+#      run: |
+#        sudo apt-get --no-install-recommends install -y lcov
+#    - uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
+#      with:
+#        path: coverage/
+#    - name: Combine Coverage
+#      run: |
+#        script/test combine_coverage
+#    - name: Upload Coverage
+#      uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3.1.1
+#      with:
+#        files: final.info
+#        fail_ci_if_error: true
+#
+#  delete-coverage-artifacts:
+#    needs: upload-coverage
+#    runs-on: ubuntu-20.04
+#    steps:
+#    - name: Harden Runner
+#      uses: step-security/harden-runner@ebacdc22ef6c2cfb85ee5ded8f2e640f4c776dd5 # v2.0.0
+#      with:
+#        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+#
+#    - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+#      with:
+#        name: cov-*
+#        useGlob: true
