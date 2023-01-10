@@ -2714,12 +2714,12 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     // Leader Data
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
-    if (!IsDetached())
+    if (IsAttached())
     {
 #if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
-            SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aRxInfo));
+            SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aRxInfo, sourceAddress, leaderData));
         }
         else
 #endif

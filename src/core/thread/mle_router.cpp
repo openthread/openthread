@@ -1129,60 +1129,55 @@ exit:
     return rval;
 }
 
-Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
+Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData)
 {
+    // This method processes a received MLE Advertisement message on
+    // an FTD device. It is called from `Mle::HandleAdvertisement()`
+    // only when device is attached (in child, router, or leader roles)
+    // and `IsFullThreadDevice()`.
+    //
+    // - `aSourceAdress` is the read value from `SourceAddressTlv`.
+    // - `aLeaderData` is the read value from `LeaderDataTlv`.
+
     Error                 error      = kErrorNone;
     const ThreadLinkInfo *linkInfo   = aRxInfo.mMessageInfo.GetThreadLinkInfo();
     uint8_t               linkMargin = Get<Mac::Mac>().ComputeLinkMargin(linkInfo->GetRss());
     Mac::ExtAddress       extAddr;
-    uint16_t              sourceAddress = Mac::kShortAddrInvalid;
-    LeaderData            leaderData;
     RouteTlv              routeTlv;
-    uint32_t              partitionId;
     Router               *router;
     uint8_t               routerId;
 
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
 
-    // Source Address
-    SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
-
-    // Leader Data
-    SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
-
-    // Route Data (optional)
     if (Tlv::FindTlv(aRxInfo.mMessage, routeTlv) == kErrorNone)
     {
         VerifyOrExit(routeTlv.IsValid(), error = kErrorParse);
     }
     else
     {
-        // mark that a Route TLV was not included
-        routeTlv.SetLength(0);
+        routeTlv.SetLength(0); // Mark that a Route TLV was not included
     }
 
-    partitionId = leaderData.GetPartitionId();
-
-    if (partitionId != mLeaderData.GetPartitionId())
+    if (aLeaderData.GetPartitionId() != mLeaderData.GetPartitionId())
     {
-        LogNote("Different partition (peer:%lu, local:%lu)", ToUlong(partitionId),
+        LogNote("Different partition (peer:%lu, local:%lu)", ToUlong(aLeaderData.GetPartitionId()),
                 ToUlong(mLeaderData.GetPartitionId()));
 
         VerifyOrExit(linkMargin >= kPartitionMergeMinMargin, error = kErrorLinkMarginLow);
 
-        if (routeTlv.IsValid() && IsFullThreadDevice() && (mPreviousPartitionIdTimeout > 0) &&
-            (partitionId == mPreviousPartitionId))
+        if (routeTlv.IsValid() && (mPreviousPartitionIdTimeout > 0) &&
+            (aLeaderData.GetPartitionId() == mPreviousPartitionId))
         {
             VerifyOrExit(SerialNumber::IsGreater(routeTlv.GetRouterIdSequence(), mPreviousPartitionRouterIdSequence),
                          error = kErrorDrop);
         }
 
-        if (IsChild() && (aRxInfo.mNeighbor == &mParent || !IsFullThreadDevice()))
+        if (IsChild() && (aRxInfo.mNeighbor == &mParent))
         {
             ExitNow();
         }
 
-        if (ComparePartitions(routeTlv.IsSingleton(), leaderData, IsSingleton(), mLeaderData) > 0
+        if (ComparePartitions(routeTlv.IsSingleton(), aLeaderData, IsSingleton(), mLeaderData) > 0
 #if OPENTHREAD_CONFIG_TIME_SYNC_REQUIRED
             // if time sync is required, it will only migrate to a better network which also enables time sync.
             && aRxInfo.mMessage.GetTimeSyncSeq() != OT_TIME_SYNC_INVALID_SEQ
@@ -1194,7 +1189,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
 
         ExitNow(error = kErrorDrop);
     }
-    else if (leaderData.GetLeaderRouterId() != GetLeaderId())
+    else if (aLeaderData.GetLeaderRouterId() != GetLeaderId())
     {
         VerifyOrExit(aRxInfo.IsNeighborStateValid());
 
@@ -1208,27 +1203,22 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         ExitNow();
     }
 
-    VerifyOrExit(IsActiveRouter(sourceAddress) && routeTlv.IsValid());
-    routerId = RouterIdFromRloc16(sourceAddress);
+    VerifyOrExit(IsActiveRouter(aSourceAddress) && routeTlv.IsValid());
+    routerId = RouterIdFromRloc16(aSourceAddress);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
 #endif
 
-    if (IsFullThreadDevice() && aRxInfo.IsNeighborStateValid() &&
+    if (aRxInfo.IsNeighborStateValid() &&
         ((mRouterTable.GetActiveRouterCount() == 0) ||
          SerialNumber::IsGreater(routeTlv.GetRouterIdSequence(), mRouterTable.GetRouterIdSequence())))
     {
         bool processRouteTlv = false;
 
-        switch (mRole)
+        if (IsChild())
         {
-        case kRoleDisabled:
-        case kRoleDetached:
-            break;
-
-        case kRoleChild:
-            if (sourceAddress == mParent.GetRloc16())
+            if (aSourceAddress == mParent.GetRloc16())
             {
                 processRouteTlv = true;
             }
@@ -1241,13 +1231,10 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
                     processRouteTlv = true;
                 }
             }
-
-            break;
-
-        case kRoleRouter:
-        case kRoleLeader:
+        }
+        else // Device is router or leader
+        {
             processRouteTlv = true;
-            break;
         }
 
         if (processRouteTlv)
@@ -1256,35 +1243,26 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         }
     }
 
-    switch (mRole)
+    if (IsChild())
     {
-    case kRoleDisabled:
-    case kRoleDetached:
-        ExitNow();
-
-    case kRoleChild:
         if (aRxInfo.mNeighbor == &mParent)
         {
             // MLE Advertisement from parent
             router = &mParent;
 
-            if (mParent.GetRloc16() != sourceAddress)
+            if (mParent.GetRloc16() != aSourceAddress)
             {
                 IgnoreError(BecomeDetached());
                 ExitNow(error = kErrorDetached);
             }
 
-            if (IsFullThreadDevice())
+            if ((mRouterSelectionJitterTimeout == 0) && (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold))
             {
-                if ((mRouterSelectionJitterTimeout == 0) &&
-                    (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold))
-                {
-                    mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
-                    ExitNow();
-                }
-
-                mRouterTable.UpdateRoutesOnFed(routeTlv, routerId);
+                mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
+                ExitNow();
             }
+
+            mRouterTable.UpdateRoutesOnFed(routeTlv, routerId);
         }
         else
         {
@@ -1292,7 +1270,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
             router = mRouterTable.FindRouterById(routerId);
             VerifyOrExit(router != nullptr);
 
-            if (IsFullThreadDevice() && !router->IsStateValid() && !router->IsStateLinkRequest() &&
+            if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
                 (mRouterTable.GetNeighborCount() < kChildRouterLinks))
             {
                 router->SetExtAddress(extAddr);
@@ -1309,8 +1287,10 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         router->SetLastHeard(TimerMilli::GetNow());
 
         ExitNow();
+    }
 
-    case kRoleRouter:
+    if (IsRouter())
+    {
         if (mLinkRequestDelay > 0 && routeTlv.IsRouterIdSet(mRouterId))
         {
             mLinkRequestDelay = 0;
@@ -1321,35 +1301,31 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo)
         {
             mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
         }
-
-        OT_FALL_THROUGH;
-
-    case kRoleLeader:
-        router = mRouterTable.FindRouterById(routerId);
-        VerifyOrExit(router != nullptr);
-
-        // Send unicast link request if no link to router and no unicast/multicast link request in progress
-        if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
-            (linkMargin >= kLinkRequestMinMargin))
-        {
-            router->SetExtAddress(extAddr);
-            router->GetLinkInfo().Clear();
-            router->GetLinkInfo().AddRss(linkInfo->GetRss());
-            router->ResetLinkFailures();
-            router->SetLastHeard(TimerMilli::GetNow());
-            router->SetState(Neighbor::kStateLinkRequest);
-            IgnoreError(SendLinkRequest(router));
-            ExitNow(error = kErrorNoRoute);
-        }
-
-        router->SetLastHeard(TimerMilli::GetNow());
-        break;
     }
+
+    router = mRouterTable.FindRouterById(routerId);
+    VerifyOrExit(router != nullptr);
+
+    // Send unicast link request if no link to router and no unicast/multicast link request in progress
+    if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
+        (linkMargin >= kLinkRequestMinMargin))
+    {
+        router->SetExtAddress(extAddr);
+        router->GetLinkInfo().Clear();
+        router->GetLinkInfo().AddRss(linkInfo->GetRss());
+        router->ResetLinkFailures();
+        router->SetLastHeard(TimerMilli::GetNow());
+        router->SetState(Neighbor::kStateLinkRequest);
+        IgnoreError(SendLinkRequest(router));
+        ExitNow(error = kErrorNoRoute);
+    }
+
+    router->SetLastHeard(TimerMilli::GetNow());
 
     mRouterTable.UpdateRoutes(routeTlv, routerId);
 
 exit:
-    if (aRxInfo.mNeighbor && aRxInfo.mNeighbor->GetRloc16() != sourceAddress)
+    if (aRxInfo.mNeighbor && aRxInfo.mNeighbor->GetRloc16() != aSourceAddress)
     {
         // Remove stale neighbors
         RemoveNeighbor(*aRxInfo.mNeighbor);
