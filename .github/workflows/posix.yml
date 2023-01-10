@@ -287,7 +287,16 @@ jobs:
     - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
     - name: Bootstrap
       run: |
-        rm -f '/usr/local/bin/2to3'
+        rm -f /usr/local/bin/2to3
+        rm -f /usr/local/bin/2to3-3.11
+        rm -f /usr/local/bin/idle3
+        rm -f /usr/local/bin/idle3.11
+        rm -f /usr/local/bin/pydoc3
+        rm -f /usr/local/bin/pydoc3.11
+        rm -f /usr/local/bin/python3
+        rm -f /usr/local/bin/python3.11
+        rm -f /usr/local/bin/python3-config
+        rm -f /usr/local/bin/python3.11-config
         brew update
         brew install ninja socat
     - name: Build
