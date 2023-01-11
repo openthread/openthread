@@ -554,7 +554,7 @@ private:
     void  HandleLinkAccept(RxInfo &aRxInfo);
     Error HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
     void  HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
-    Error HandleAdvertisement(RxInfo &aRxInfo);
+    Error HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData);
     void  HandleParentRequest(RxInfo &aRxInfo);
     void  HandleChildIdRequest(RxInfo &aRxInfo);
     void  HandleChildUpdateRequest(RxInfo &aRxInfo);
