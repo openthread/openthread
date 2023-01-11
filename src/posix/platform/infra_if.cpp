@@ -315,6 +315,7 @@ void InfraNetif::CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters
     for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
     {
         in6_addr *in6Addr;
+
         if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr->sa_family != AF_INET6)
         {
             continue;
