@@ -3373,9 +3373,13 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice())
     {
-        switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo))
+        RouteTlv routeTlv;
+
+        switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo, routeTlv))
         {
         case kErrorNone:
+            Get<RouterTable>().UpdateRoutesOnFed(routeTlv, RouterIdFromRloc16(sourceAddress));
+            break;
         case kErrorNotFound:
             break;
         default:

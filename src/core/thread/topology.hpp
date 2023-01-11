@@ -1402,14 +1402,6 @@ public:
     uint8_t GetNextHop(void) const { return mNextHop; }
 
     /**
-     * This method sets the router ID of the next hop to this router.
-     *
-     * @param[in]  aRouterId  The router ID of the next hop to this router.
-     *
-     */
-    void SetNextHop(uint8_t aRouterId) { mNextHop = aRouterId; }
-
-    /**
      * This method gets the link quality out value for this router.
      *
      * @returns The link quality out value for this router.
@@ -1442,12 +1434,25 @@ public:
     uint8_t GetCost(void) const { return mCost; }
 
     /**
-     * This method sets the router cost to this router.
+     * This method sets the next hop and cost to this router.
      *
-     * @param[in]  aCost  The router cost to this router.
+     * @param[in]  aNextHop  The Router ID of the next hop to this router.
+     * @param[in]  aCost     The cost to this router.
+     *
+     * @retval TRUE   If there was a change, i.e., @p aNextHop or @p aCost were different from their previous values.
+     * @retval FALSE  If no change to next hop and cost values (new values are the same as before).
      *
      */
-    void SetCost(uint8_t aCost) { mCost = aCost; }
+    bool SetNextHopAndCost(uint8_t aNextHop, uint8_t aCost);
+
+    /**
+     * This method sets the next hop to this router as invalid and clears the cost.
+     *
+     * @retval TRUE   If there was a change (next hop was valid before).
+     * @retval FALSE  No change to next hop (next hop was invalid before).
+     *
+     */
+    bool SetNextHopToInvalid(void);
 
 private:
     uint8_t mNextHop;            ///< The next hop towards this router
