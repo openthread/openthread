@@ -35,6 +35,7 @@
 
 #include <net/if.h>
 #include <openthread/nat64.h>
+#include <openthread/openthread-system.h>
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
@@ -106,6 +107,22 @@ public:
      *
      */
     bool IsRunning(void) const;
+
+    /**
+     * This method returns the ifr_flags of the infrastructure network interface.
+     *
+     * @returns The ifr_flags of the infrastructure network interface.
+     *
+     */
+    uint32_t GetFlags(void) const;
+
+    /**
+     * This functions counts the number of addresses on the infrastructure network interface.
+     *
+     * @param[out] aAddressCounters  The counters of addresses on infrastructure network interface.
+     *
+     */
+    void CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const;
 
     /**
      * This method sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
