@@ -693,6 +693,7 @@ Child ID: 1
 Rloc: 9c01
 Ext Addr: e2b3540590b0fd87
 Mode: rn
+CSL Synchronized: 1
 Net Data: 184
 Timeout: 100
 Age: 0

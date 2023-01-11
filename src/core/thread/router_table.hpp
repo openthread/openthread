@@ -145,6 +145,36 @@ public:
     uint8_t GetLinkCost(const Router &aRouter) const;
 
     /**
+     * This method returns the link cost to the given Router.
+     *
+     * @param[in]  aRouterId  The Router ID.
+     *
+     * @returns The link cost to the Router.
+     *
+     */
+    uint8_t GetLinkCost(uint8_t aRouterId) const;
+
+    /**
+     * This method returns the minimum mesh path cost to the given RLOC16
+     *
+     * @param[in]  aDestRloc16  The RLOC16 of destination
+     *
+     * @returns The minimum mesh path cost to @p aDestRloc16 (via direct link or forwarding).
+     *
+     */
+    uint8_t GetPathCost(uint16_t aDestRloc16) const;
+
+    /**
+     * This method determines the next hop towards an RLOC16 destination.
+     *
+     * @param[in]  aDestRloc16  The RLOC16 of the destination.
+     *
+     * @returns A RLOC16 of the next hop if a route is known, `Mle::kInvalidRloc16` otherwise.
+     *
+     */
+    uint16_t GetNextHop(uint16_t aDestRloc16) const;
+
+    /**
      * This method finds the router for a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to search for.
@@ -287,6 +317,15 @@ public:
     void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
 
     /**
+     * This method updates the routes based on a received `RouteTlv` from a neighboring router.
+     *
+     * @param[in]  aRouteTlv    The received `RouteTlv`
+     * @param[in]  aRouterId    The router ID of neighboring router from which @p aRouteTlv is received.
+     *
+     */
+    void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aRouterId);
+
+    /**
      * This method gets the allocated Router ID set.
      *
      * @returns The allocated Router ID set.
@@ -370,6 +409,8 @@ private:
     {
         return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }
+
+    bool UpdateLinkQualityOut(const Mle::RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval);
 
     class RouterIdMap
     {

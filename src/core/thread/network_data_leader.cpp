@@ -113,8 +113,14 @@ Error LeaderBase::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
     return error;
 }
 
-const PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
+const PrefixTlv *LeaderBase::FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
 {
+    // This method iterates over Prefix TLVs which match a given IPv6
+    // `aAddress`. If `aPrevTlv` is `nullptr` we start from the
+    // beginning. Otherwise, we search for a match after `aPrevTlv`.
+    // This method returns a pointer to the next matching Prefix TLV
+    // when found, or `nullptr` if no match is found.
+
     const PrefixTlv *prefixTlv;
     TlvIterator      tlvIterator((aPrevTlv == nullptr) ? GetTlvsStart() : aPrevTlv->GetNext(), GetTlvsEnd());
 
@@ -131,7 +137,7 @@ const PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress
 
 Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
 {
-    const PrefixTlv  *prefix = nullptr;
+    const PrefixTlv  *prefixTlv = nullptr;
     const ContextTlv *contextTlv;
 
     aContext.mPrefix.SetLength(0);
@@ -141,18 +147,18 @@ Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aCon
         GetContextForMeshLocalPrefix(aContext);
     }
 
-    while ((prefix = FindNextMatchingPrefix(aAddress, prefix)) != nullptr)
+    while ((prefixTlv = FindNextMatchingPrefixTlv(aAddress, prefixTlv)) != nullptr)
     {
-        contextTlv = prefix->FindSubTlv<ContextTlv>();
+        contextTlv = prefixTlv->FindSubTlv<ContextTlv>();
 
         if (contextTlv == nullptr)
         {
             continue;
         }
 
-        if (prefix->GetPrefixLength() > aContext.mPrefix.GetLength())
+        if (prefixTlv->GetPrefixLength() > aContext.mPrefix.GetLength())
         {
-            aContext.mPrefix.Set(prefix->GetPrefix(), prefix->GetPrefixLength());
+            prefixTlv->CopyPrefixTo(aContext.mPrefix);
             aContext.mContextId    = contextTlv->GetContextId();
             aContext.mCompressFlag = contextTlv->IsCompress();
             aContext.mIsValid      = true;
@@ -166,7 +172,7 @@ Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) cons
 {
     Error            error = kErrorNotFound;
     TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
-    const PrefixTlv *prefix;
+    const PrefixTlv *prefixTlv;
 
     if (aContextId == Mle::kMeshLocalPrefixContextId)
     {
@@ -174,16 +180,16 @@ Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) cons
         ExitNow(error = kErrorNone);
     }
 
-    while ((prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
+    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
-        const ContextTlv *contextTlv = prefix->FindSubTlv<ContextTlv>();
+        const ContextTlv *contextTlv = prefixTlv->FindSubTlv<ContextTlv>();
 
         if ((contextTlv == nullptr) || (contextTlv->GetContextId() != aContextId))
         {
             continue;
         }
 
-        aContext.mPrefix.Set(prefix->GetPrefix(), prefix->GetPrefixLength());
+        prefixTlv->CopyPrefixTo(aContext.mPrefix);
         aContext.mContextId    = contextTlv->GetContextId();
         aContext.mCompressFlag = contextTlv->IsCompress();
         aContext.mIsValid      = true;
@@ -204,51 +210,46 @@ void LeaderBase::GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const
 
 bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress) const
 {
-    const PrefixTlv *prefix = nullptr;
-    bool             rval   = false;
+    const PrefixTlv *prefixTlv = nullptr;
+    bool             isOnMesh  = false;
 
-    VerifyOrExit(!Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress), rval = true);
+    VerifyOrExit(!Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress), isOnMesh = true);
 
-    while ((prefix = FindNextMatchingPrefix(aAddress, prefix)) != nullptr)
+    while ((prefixTlv = FindNextMatchingPrefixTlv(aAddress, prefixTlv)) != nullptr)
     {
-        // check both stable and temporary Border Router TLVs
-        for (int i = 0; i < 2; i++)
+        TlvIterator            subTlvIterator(*prefixTlv);
+        const BorderRouterTlv *brTlv;
+
+        while ((brTlv = subTlvIterator.Iterate<BorderRouterTlv>()) != nullptr)
         {
-            const BorderRouterTlv *borderRouter = prefix->FindSubTlv<BorderRouterTlv>(/* aStable */ (i == 0));
-
-            if (borderRouter == nullptr)
-            {
-                continue;
-            }
-
-            for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+            for (const BorderRouterEntry *entry = brTlv->GetFirstEntry(); entry <= brTlv->GetLastEntry();
                  entry                          = entry->GetNext())
             {
                 if (entry->IsOnMesh())
                 {
-                    ExitNow(rval = true);
+                    ExitNow(isOnMesh = true);
                 }
             }
         }
     }
 
 exit:
-    return rval;
+    return isOnMesh;
 }
 
 Error LeaderBase::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint16_t &aRloc16) const
 {
-    Error            error  = kErrorNoRoute;
-    const PrefixTlv *prefix = nullptr;
+    Error            error     = kErrorNoRoute;
+    const PrefixTlv *prefixTlv = nullptr;
 
-    while ((prefix = FindNextMatchingPrefix(aSource, prefix)) != nullptr)
+    while ((prefixTlv = FindNextMatchingPrefixTlv(aSource, prefixTlv)) != nullptr)
     {
-        if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aRloc16) == kErrorNone)
+        if (ExternalRouteLookup(prefixTlv->GetDomainId(), aDestination, aRloc16) == kErrorNone)
         {
             ExitNow(error = kErrorNone);
         }
 
-        if (DefaultRouteLookup(*prefix, aRloc16) == kErrorNone)
+        if (DefaultRouteLookup(*prefixTlv, aRloc16) == kErrorNone)
         {
             ExitNow(error = kErrorNone);
         }
@@ -295,24 +296,18 @@ exit:
 
 Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const
 {
-    Error                error = kErrorNoRoute;
-    TlvIterator          tlvIterator(GetTlvsStart(), GetTlvsEnd());
-    const PrefixTlv     *prefixTlv;
+    Error                error           = kErrorNoRoute;
+    const PrefixTlv     *prefixTlv       = nullptr;
     const HasRouteEntry *bestRouteEntry  = nullptr;
     uint8_t              bestMatchLength = 0;
 
-    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
+    while ((prefixTlv = FindNextMatchingPrefixTlv(aDestination, prefixTlv)) != nullptr)
     {
         const HasRouteTlv *hasRoute;
         uint8_t            prefixLength = prefixTlv->GetPrefixLength();
         TlvIterator        subTlvIterator(*prefixTlv);
 
         if (prefixTlv->GetDomainId() != aDomainId)
-        {
-            continue;
-        }
-
-        if (!aDestination.MatchesPrefix(prefixTlv->GetPrefix(), prefixLength))
         {
             continue;
         }
@@ -350,12 +345,12 @@ Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16
 {
     Error                    error = kErrorNoRoute;
     TlvIterator              subTlvIterator(aPrefix);
-    const BorderRouterTlv   *borderRouter;
+    const BorderRouterTlv   *brTlv;
     const BorderRouterEntry *route = nullptr;
 
-    while ((borderRouter = subTlvIterator.Iterate<BorderRouterTlv>()) != nullptr)
+    while ((brTlv = subTlvIterator.Iterate<BorderRouterTlv>()) != nullptr)
     {
-        for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+        for (const BorderRouterEntry *entry = brTlv->GetFirstEntry(); entry <= brTlv->GetLastEntry();
              entry                          = entry->GetNext())
         {
             if (!entry->IsDefaultRoute())

@@ -145,6 +145,10 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 {
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+    otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
+#endif
+
     OutputPrompt();
 }
 
@@ -1957,7 +1961,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
          */
         else if (aArgs[1] == "delay")
         {
-            error = ProcessSet(aArgs + 2, otChannelManagerSetDelay);
+            error = ProcessGetSet(aArgs + 2, otChannelManagerGetDelay, otChannelManagerSetDelay);
         }
         /**
          * @cli channel manager interval
@@ -2147,6 +2151,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
      * Rloc: 9c01
      * Ext Addr: e2b3540590b0fd87
      * Mode: rn
+     * CSL Synchronized: 1
      * Net Data: 184
      * Timeout: 100
      * Age: 0
@@ -2166,6 +2171,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
     linkMode.mDeviceType   = childInfo.mFullThreadDevice;
     linkMode.mNetworkData  = childInfo.mFullThreadDevice;
     OutputLine("Mode: %s", LinkModeToString(linkMode, linkModeString));
+    OutputLine("CSL Synchronized: %d ", childInfo.mIsCslSynced);
     OutputLine("Net Data: %u", childInfo.mNetworkDataVersion);
     OutputLine("Timeout: %lu", ToUlong(childInfo.mTimeout));
     OutputLine("Age: %lu", ToUlong(childInfo.mAge));
@@ -7192,6 +7198,15 @@ void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aIn
     OutputFormat("~ Discovery Request from ");
     OutputExtAddress(aInfo.mExtAddress);
     OutputLine(": version=%u,joiner=%d", aInfo.mVersion, aInfo.mIsJoiner);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+void Interpreter::HandleIp6Receive(otMessage *aMessage, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    otMessageFree(aMessage);
 }
 #endif
 

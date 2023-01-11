@@ -286,7 +286,7 @@ protected:
 private:
     using FilterIndexes = MeshCoP::SteeringData::HashBitIndexes;
 
-    const PrefixTlv *FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
+    const PrefixTlv *FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
 
     void RemoveCommissioningData(void);
 

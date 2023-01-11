@@ -151,4 +151,17 @@
 #define OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE 512
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+ *
+ * Define as 1 to have CLI register an IPv6 receive callback using `otIp6SetReceiveCallback()`.
+ *
+ * This is intended for testing only. Receive callback should be registered for the `otIp6GetBorderRoutingCounters()`
+ * to count the messages being passed to the callback.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+#define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 0
+#endif
+
 #endif // CONFIG_CLI_H_

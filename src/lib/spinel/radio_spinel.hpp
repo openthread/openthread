@@ -727,14 +727,16 @@ public:
     /**
      * This method checks whether the spinel interface is radio-only.
      *
-     * @param[out] aSupportsRcpApiVersion   A reference to a boolean variable to update whether the list of spinel
-     *                                      capabilities include `SPINEL_CAP_RCP_API_VERSION`.
+     * @param[out] aSupportsRcpApiVersion          A reference to a boolean variable to update whether the list of
+     *                                             spinel capabilities includes `SPINEL_CAP_RCP_API_VERSION`.
+     * @param[out] aSupportsRcpMinHostApiVersion   A reference to a boolean variable to update whether the list of
+     *                                             spinel capabilities includes `SPINEL_CAP_RCP_MIN_HOST_API_VERSION`.
      *
      * @retval  TRUE    The radio chip is in radio-only mode.
      * @retval  FALSE   Otherwise.
      *
      */
-    bool IsRcp(bool &aSupportsRcpApiVersion);
+    bool IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
 
     /**
      * This method checks whether there is pending frame in the buffer.
@@ -960,7 +962,7 @@ private:
 
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
-    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion);
+    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsMinHostRcpApiVersion);
 
     /**
      * This method triggers a state transfer of the state machine.
