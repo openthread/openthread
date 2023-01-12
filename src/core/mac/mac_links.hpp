@@ -41,6 +41,7 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "mac/sub_mac.hpp"
+#include "radio/radio.hpp"
 #include "radio/trel_link.hpp"
 
 namespace ot {
@@ -680,7 +681,7 @@ public:
 #endif
 
 private:
-    static constexpr int8_t kDefaultNoiseFloor = -100;
+    static constexpr int8_t kDefaultNoiseFloor = Radio::kDefaultReceiveSensitivity;
 
     SubMac mSubMac;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
