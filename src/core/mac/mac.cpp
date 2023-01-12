@@ -1124,7 +1124,7 @@ void Mac::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 }
 
 void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                    const RxFrame *aAckFrame,
+                                    RxFrame       *aAckFrame,
                                     Error          aError,
                                     uint8_t        aRetryCount,
                                     bool           aWillRetx)
@@ -1187,6 +1187,10 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
     if ((aError == kErrorNone) && ackRequested && (aAckFrame != nullptr) && (neighbor != nullptr))
     {
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+        SuccessOrExit(mFilter.ApplyToRxFrame(*aAckFrame, neighbor->GetExtAddress(), neighbor));
+#endif
+
         neighbor->GetLinkInfo().AddRss(aAckFrame->GetRssi());
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aAckFrame->GetType(), aAckFrame->GetLqi(),
@@ -1787,23 +1791,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = kErrorInvalidSourceAddress);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-        {
-            int8_t fixedRss;
-
-            SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), fixedRss));
-
-            if (fixedRss != Filter::kFixedRssDisabled)
-            {
-                aFrame->SetRssi(fixedRss);
-
-                // Clear any previous link info to ensure the fixed RSSI
-                // value takes effect quickly.
-                if (neighbor != nullptr)
-                {
-                    neighbor->GetLinkInfo().Clear();
-                }
-            }
-        }
+        SuccessOrExit(error = mFilter.ApplyToRxFrame(*aFrame, srcaddr.GetExtended(), neighbor));
 #endif
 
         break;

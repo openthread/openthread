@@ -38,6 +38,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 namespace Mac {
@@ -53,11 +54,11 @@ Filter::Filter(void)
     }
 }
 
-Filter::FilterEntry *Filter::FindEntry(const ExtAddress &aExtAddress)
+const Filter::FilterEntry *Filter::FindEntry(const ExtAddress &aExtAddress) const
 {
-    FilterEntry *rval = nullptr;
+    const FilterEntry *rval = nullptr;
 
-    for (FilterEntry &entry : mFilterEntries)
+    for (const FilterEntry &entry : mFilterEntries)
     {
         if (entry.IsInUse() && (aExtAddress == entry.mExtAddress))
         {
@@ -182,13 +183,13 @@ void Filter::ClearAllRssIn(void)
     mDefaultRssIn = kFixedRssDisabled;
 }
 
-Error Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
+Error Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry) const
 {
     Error error = kErrorNotFound;
 
     for (; aIterator < GetArrayLength(mFilterEntries); aIterator++)
     {
-        FilterEntry &entry = mFilterEntries[aIterator];
+        const FilterEntry &entry = mFilterEntries[aIterator];
 
         if (entry.mRssIn != kFixedRssDisabled)
         {
@@ -213,11 +214,11 @@ exit:
     return error;
 }
 
-Error Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
+Error Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss) const
 {
-    Error        error = kErrorNone;
-    FilterEntry *entry = FindEntry(aExtAddress);
-    bool         isInFilterList;
+    Error              error = kErrorNone;
+    const FilterEntry *entry = FindEntry(aExtAddress);
+    bool               isInFilterList;
 
     // Use the default RssIn setting for all receiving messages first.
     aRss = mDefaultRssIn;
@@ -244,6 +245,28 @@ Error Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
     if ((entry != nullptr) && (entry->mRssIn != kFixedRssDisabled))
     {
         aRss = entry->mRssIn;
+    }
+
+exit:
+    return error;
+}
+
+Error Filter::ApplyToRxFrame(RxFrame &aRxFrame, const ExtAddress &aExtAddress, Neighbor *aNeighbor) const
+{
+    Error  error;
+    int8_t fixedRss;
+
+    SuccessOrExit(error = Apply(aExtAddress, fixedRss));
+
+    VerifyOrExit(fixedRss != kFixedRssDisabled);
+
+    aRxFrame.SetRssi(fixedRss);
+
+    if (aNeighbor != nullptr)
+    {
+        // Clear the previous RSS average to ensure the fixed RSS
+        // value takes effect quickly.
+        aNeighbor->GetLinkInfo().CleaAverageRss();
     }
 
 exit:

@@ -298,12 +298,12 @@ public:
      *
      */
     void RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                   const RxFrame *aAckFrame,
+                                   RxFrame       *aAckFrame,
                                    Error          aError,
                                    uint8_t        aRetryCount,
                                    bool           aWillRetx);
 #else
-    void    RecordFrameTransmitStatus(const TxFrame &, const RxFrame *, Error, uint8_t, bool) {}
+    void    RecordFrameTransmitStatus(const TxFrame &, RxFrame *, Error, uint8_t, bool) {}
 #endif
 
 private:
