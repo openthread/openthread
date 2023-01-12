@@ -2706,52 +2706,47 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     LeaderData leaderData;
     uint16_t   delay;
 
-    // Source Address
+    VerifyOrExit(IsAttached());
+
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
 
     Log(kMessageReceive, kTypeAdvertisement, aRxInfo.mMessageInfo.GetPeerAddr(), sourceAddress);
 
-    // Leader Data
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
-    if (IsAttached())
-    {
 #if OPENTHREAD_FTD
-        if (IsFullThreadDevice())
-        {
-            SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aRxInfo, sourceAddress, leaderData));
-        }
-        else
-#endif
-        {
-            if ((aRxInfo.mNeighbor == &mParent) && (mParent.GetRloc16() != sourceAddress))
-            {
-                // Remove stale parent.
-                IgnoreError(BecomeDetached());
-            }
-        }
-    }
-
-    switch (mRole)
+    if (IsFullThreadDevice())
     {
-    case kRoleDisabled:
-    case kRoleDetached:
-        ExitNow();
+        SuccessOrExit(error = Get<MleRouter>().HandleAdvertisement(aRxInfo, sourceAddress, leaderData));
+    }
+#endif
 
-    case kRoleChild:
+    if (IsChild())
+    {
         VerifyOrExit(aRxInfo.mNeighbor == &mParent);
 
-        if ((mParent.GetRloc16() == sourceAddress) && (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
-                                                       leaderData.GetLeaderRouterId() != GetLeaderId()))
+        if (mParent.GetRloc16() != sourceAddress)
+        {
+            // Remove stale parent.
+            IgnoreError(BecomeDetached());
+            ExitNow();
+        }
+
+        if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
+            (leaderData.GetLeaderRouterId() != GetLeaderId()))
         {
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
 #if OPENTHREAD_FTD
             if (IsFullThreadDevice())
             {
-                switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo))
+                RouteTlv routeTlv;
+
+                switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo, routeTlv))
                 {
                 case kErrorNone:
+                    Get<RouterTable>().UpdateRoutesOnFed(routeTlv, mParent.GetRouterId());
+                    break;
                 case kErrorNotFound:
                     break;
                 default:
@@ -2764,12 +2759,10 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
         }
 
         mParent.SetLastHeard(TimerMilli::GetNow());
-        break;
-
-    case kRoleRouter:
-    case kRoleLeader:
+    }
+    else // Device is router or leader
+    {
         VerifyOrExit(aRxInfo.IsNeighborStateValid());
-        break;
     }
 
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))

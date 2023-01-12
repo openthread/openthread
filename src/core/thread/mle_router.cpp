@@ -1158,6 +1158,9 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
         routeTlv.SetLength(0); // Mark that a Route TLV was not included
     }
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Handle Partition ID mismatch
+
     if (aLeaderData.GetPartitionId() != mLeaderData.GetPartitionId())
     {
         LogNote("Different partition (peer:%lu, local:%lu)", ToUlong(aLeaderData.GetPartitionId()),
@@ -1189,7 +1192,11 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
 
         ExitNow(error = kErrorDrop);
     }
-    else if (aLeaderData.GetLeaderRouterId() != GetLeaderId())
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Handle Leader Router ID mismatch
+
+    if (aLeaderData.GetLeaderRouterId() != GetLeaderId())
     {
         VerifyOrExit(aRxInfo.IsNeighborStateValid());
 
@@ -1209,6 +1216,9 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
 #endif
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Process `RouteTlv`
 
     if (aRxInfo.IsNeighborStateValid() &&
         ((mRouterTable.GetActiveRouterCount() == 0) ||
@@ -1242,6 +1252,9 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
             SuccessOrExit(error = ProcessRouteTlv(aRxInfo));
         }
     }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Update routers as a child
 
     if (IsChild())
     {
@@ -1287,6 +1300,9 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
 
         ExitNow();
     }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Update routers as a router or leader.
 
     if (IsRouter())
     {
