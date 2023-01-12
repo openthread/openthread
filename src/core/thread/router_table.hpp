@@ -336,10 +336,10 @@ public:
      * This method updates the routes based on a received `RouteTlv` from a neighboring router.
      *
      * @param[in]  aRouteTlv    The received `RouteTlv`
-     * @param[in]  aRouterId    The router ID of neighboring router from which @p aRouteTlv is received.
+     * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlv is received.
      *
      */
-    void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aRouterId);
+    void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId);
 
     /**
      * This method updates the routes on an FED based on a received `RouteTlv` from the parent.
@@ -436,8 +436,6 @@ private:
     {
         return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }
-
-    bool UpdateLinkQualityOut(const Mle::RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval);
 
     class RouterIdMap
     {

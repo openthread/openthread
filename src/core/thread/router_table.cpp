@@ -555,20 +555,62 @@ exit:
     return;
 }
 
-void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aRouterId)
+void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId)
 {
-    Router *neighbor;
-    bool    resetAdvInterval = false;
-    bool    changed          = false;
+    Router          *neighbor;
+    bool             changed = false;
+    Mle::RouterIdSet finitePathCostIdSet;
+    uint8_t          linkCostToNeighbor;
 
-    neighbor = FindRouterById(aRouterId);
+    neighbor = FindRouterById(aNeighborId);
     VerifyOrExit(neighbor != nullptr);
 
-    // update link quality out to neighbor
-    changed = UpdateLinkQualityOut(aRouteTlv, *neighbor, resetAdvInterval);
+    // Before updating the routes, we track which routers have finite
+    // path cost. After the update we check again to see if any path
+    // cost changed from finite to infinite or vice versa to decide
+    // whether to reset the  MLE Advertisement interval.
 
-    // update routes
-    for (uint8_t routerId = 0, routeCount = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    finitePathCostIdSet.Clear();
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        if (GetPathCost(Mle::Rloc16FromRouterId(routerId)) < Mle::kMaxRouteCost)
+        {
+            finitePathCostIdSet.Add(routerId);
+        }
+    }
+
+    // Find the entry corresponding to our Router ID in the received
+    // `aRouteTlv` to get the `LinkQualityIn` from the perspective of
+    // neighbor. We use this to update our `LinkQualityOut` to the
+    // neighbor.
+
+    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
+         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    {
+        if (routerId != Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16()))
+        {
+            continue;
+        }
+
+        if (aRouteTlv.IsRouterIdSet(routerId))
+        {
+            LinkQuality linkQuality = aRouteTlv.GetLinkQualityIn(index);
+
+            if (neighbor->GetLinkQualityOut() != linkQuality)
+            {
+                neighbor->SetLinkQualityOut(linkQuality);
+                changed = true;
+            }
+        }
+
+        break;
+    }
+
+    linkCostToNeighbor = GetLinkCost(*neighbor);
+
+    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
+         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
     {
         Router *router;
         Router *nextHop;
@@ -583,42 +625,27 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aRouterId
 
         if (router == nullptr || router->GetRloc16() == Get<Mle::Mle>().GetRloc16() || router == neighbor)
         {
-            routeCount++;
             continue;
         }
 
         nextHop = FindNextHopOf(*router);
 
-        cost = aRouteTlv.GetRouteCost(routeCount);
+        cost = aRouteTlv.GetRouteCost(index);
+        cost = (cost == 0) ? Mle::kMaxRouteCost : cost;
 
-        if (cost == 0)
+        if ((nextHop == nullptr) || (nextHop == neighbor))
         {
-            cost = Mle::kMaxRouteCost;
-        }
+            // `router` has no next hop or next hop is neighbor (sender)
 
-        if (nextHop == nullptr || nextHop == neighbor)
-        {
-            // router has no next hop or next hop is neighbor (sender)
-
-            if (cost + GetLinkCost(*neighbor) < Mle::kMaxRouteCost)
+            if (cost + linkCostToNeighbor < Mle::kMaxRouteCost)
             {
-                if (nextHop == nullptr && GetLinkCost(*router) >= Mle::kMaxRouteCost)
-                {
-                    resetAdvInterval = true;
-                }
-
-                if (router->SetNextHopAndCost(aRouterId, cost))
+                if (router->SetNextHopAndCost(aNeighborId, cost))
                 {
                     changed = true;
                 }
             }
             else if (nextHop == neighbor)
             {
-                if (GetLinkCost(*router) >= Mle::kMaxRouteCost)
-                {
-                    resetAdvInterval = true;
-                }
-
                 router->SetNextHopToInvalid();
                 router->SetLastHeard(TimerMilli::GetNow());
                 changed = true;
@@ -627,21 +654,26 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aRouterId
         else
         {
             uint8_t curCost = router->GetCost() + GetLinkCost(*nextHop);
-            uint8_t newCost = cost + GetLinkCost(*neighbor);
+            uint8_t newCost = cost + linkCostToNeighbor;
 
             if (newCost < curCost)
             {
-                router->SetNextHopAndCost(aRouterId, cost);
+                router->SetNextHopAndCost(aNeighborId, cost);
                 changed = true;
             }
         }
-
-        routeCount++;
     }
 
-    if (resetAdvInterval)
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        Get<Mle::MleRouter>().ResetAdvertiseInterval();
+        bool oldCostFinite = finitePathCostIdSet.Contains(routerId);
+        bool newCostFinite = (GetPathCost(Mle::Rloc16FromRouterId(routerId)) < Mle::kMaxRouteCost);
+
+        if (newCostFinite != oldCostFinite)
+        {
+            Get<Mle::MleRouter>().ResetAdvertiseInterval();
+            break;
+        }
     }
 
     if (changed)
@@ -651,44 +683,6 @@ void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aRouterId
 
 exit:
     return;
-}
-
-bool RouterTable::UpdateLinkQualityOut(const Mle::RouteTlv &aRouteTlv, Router &aNeighbor, bool &aResetAdvInterval)
-{
-    bool        changed = false;
-    LinkQuality linkQuality;
-    uint8_t     myRouterId;
-    uint8_t     myRouteCount;
-    uint8_t     oldLinkCost;
-    Router     *nextHop;
-
-    myRouterId = Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16());
-    VerifyOrExit(aRouteTlv.IsRouterIdSet(myRouterId));
-
-    myRouteCount = 0;
-    for (uint8_t routerId = 0; routerId < myRouterId; routerId++)
-    {
-        myRouteCount += aRouteTlv.IsRouterIdSet(routerId);
-    }
-
-    linkQuality = aRouteTlv.GetLinkQualityIn(myRouteCount);
-    VerifyOrExit(aNeighbor.GetLinkQualityOut() != linkQuality);
-
-    oldLinkCost = GetLinkCost(aNeighbor);
-
-    aNeighbor.SetLinkQualityOut(linkQuality);
-    nextHop = FindNextHopOf(aNeighbor);
-
-    // reset MLE advertisement timer if neighbor route cost changed to or from infinite
-    if (nextHop == nullptr && (oldLinkCost >= Mle::kMaxRouteCost) != (GetLinkCost(aNeighbor) >= Mle::kMaxRouteCost))
-    {
-        aResetAdvInterval = true;
-    }
-
-    changed = true;
-
-exit:
-    return changed;
 }
 
 void RouterTable::UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId)
