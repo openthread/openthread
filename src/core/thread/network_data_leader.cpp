@@ -281,14 +281,22 @@ int LeaderBase::CompareRouteEntries(int8_t   aFirstPreference,
     result = ThreeWayCompare(aFirstPreference, aSecondPreference);
     VerifyOrExit(result == 0);
 
+#if OPENTHREAD_MTD
+    // On MTD, prefer the BR that is this device itself. This handles
+    // the uncommon case where an MTD itself may be acting as BR.
+
+    result = ThreeWayCompare((aFirstRloc == Get<Mle::Mle>().GetRloc16()), (aSecondRloc == Get<Mle::Mle>().GetRloc16()));
+#endif
+
+#if OPENTHREAD_FTD
     // If all the same, prefer the one with lower mesh path cost.
     // Lower cost is preferred so we pass the second entry's cost as
     // the first argument in the call to `ThreeWayCompare()`, i.e.,
     // if the second entry's cost is larger, we return 1 indicating
     // that the first entry is preferred over the second one.
 
-    result =
-        ThreeWayCompare(Get<Mle::MleRouter>().GetPathCost(aSecondRloc), Get<Mle::MleRouter>().GetPathCost(aFirstRloc));
+    result = ThreeWayCompare(Get<RouterTable>().GetPathCost(aSecondRloc), Get<RouterTable>().GetPathCost(aFirstRloc));
+#endif
 
 exit:
     return result;

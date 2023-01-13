@@ -428,7 +428,7 @@ exit:
 
 void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const
 {
-    uint8_t cost = Get<Mle::MleRouter>().GetPathCost(aDest);
+    uint8_t cost = Get<RouterTable>().GetPathCost(aDest);
 
     if ((aBestDest == Mac::kShortAddrInvalid) || (cost < aBestCost))
     {
