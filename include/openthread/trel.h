@@ -74,6 +74,15 @@ typedef struct otTrelPeer
 typedef uint16_t otTrelPeerIterator;
 
 /**
+ * Enables or disables TREL operation.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   A boolean to enable/disable the TREL operation.
+ *
+ */
+void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
  * This function enables TREL operation.
  *
  * This function initiates an ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing domain

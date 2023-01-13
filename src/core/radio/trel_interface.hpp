@@ -152,6 +152,13 @@ public:
     typedef otTrelPeerIterator PeerIterator;
 
     /**
+     * This method enables or disables the TREL interface.
+     *
+     * @param[in] aEnable A boolean to enable/disable the TREL interface.
+     */
+    void SetEnabled(bool aEnable);
+
+    /**
      * This method enables the TREL interface.
      *
      * This call initiates an ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing domain
