@@ -412,7 +412,7 @@ public:
      *
      */
     void RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                   const RxFrame *aAckFrame,
+                                   RxFrame       *aAckFrame,
                                    Error          aError,
                                    uint8_t        aRetryCount,
                                    bool           aWillRetx);

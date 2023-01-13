@@ -274,7 +274,7 @@ exit:
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void LinkRaw::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                        const RxFrame *aAckFrame,
+                                        RxFrame       *aAckFrame,
                                         Error          aError,
                                         uint8_t        aRetryCount,
                                         bool           aWillRetx)
