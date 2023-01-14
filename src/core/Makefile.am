@@ -345,6 +345,7 @@ RADIO_SOURCES_COMMON                       = \
     api/tasklet_api.cpp                      \
     common/binary_search.cpp                 \
     common/error.cpp                         \
+    common/frame_builder.cpp                 \
     common/instance.cpp                      \
     common/log.cpp                           \
     common/random.cpp                        \

@@ -255,6 +255,7 @@ set(RADIO_COMMON_SOURCES
     api/tasklet_api.cpp
     common/binary_search.cpp
     common/error.cpp
+    common/frame_builder.cpp
     common/instance.cpp
     common/log.cpp
     common/random.cpp

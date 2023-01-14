@@ -445,6 +445,15 @@ private:
     void     HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo);
     void     HandleFragment(FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
     void HandleLowpanHC(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
+
+    void PrepareMacHeaders(Mac::TxFrame             &aFrame,
+                           Mac::Frame::Type          aFrameType,
+                           const Mac::Addresses     &aMacAddr,
+                           const Mac::PanIds        &aPanIds,
+                           Mac::Frame::SecurityLevel aSecurityLevel,
+                           Mac::Frame::KeyIdMode     aKeyIdMode,
+                           const Message            *aMessage);
+
     uint16_t PrepareDataFrame(Mac::TxFrame         &aFrame,
                               Message              &aMessage,
                               const Mac::Addresses &aMacAddrs,
@@ -504,8 +513,8 @@ private:
                                   const Mac::Addresses &aMeshAddrs,
                                   Message::Priority    &aPriority);
 
-    bool     CalcIePresent(const Message *aMessage);
-    uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
+    bool                CalcIePresent(const Message *aMessage);
+    Mac::Frame::Version CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent) const;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     void AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame);
 #endif

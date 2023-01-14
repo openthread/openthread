@@ -33,6 +33,16 @@
 
 #include "frame_builder.hpp"
 
+#include <string.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#include "common/message.hpp"
+#endif
+
 namespace ot {
 
 void FrameBuilder::Init(void *aBuffer, uint16_t aLength)
@@ -76,6 +86,31 @@ exit:
     return error;
 }
 
+Error FrameBuilder::AppendMacAddress(const Mac::Address &aMacAddress)
+{
+    Error error = kErrorNone;
+
+    switch (aMacAddress.GetType())
+    {
+    case Mac::Address::kTypeNone:
+        break;
+
+    case Mac::Address::kTypeShort:
+        error = AppendLittleEndianUint16(aMacAddress.GetShort());
+        break;
+
+    case Mac::Address::kTypeExtended:
+        VerifyOrExit(CanAppend(sizeof(Mac::ExtAddress)), error = kErrorNoBufs);
+        aMacAddress.GetExtended().CopyTo(mBuffer + mLength, Mac::ExtAddress::kReverseByteOrder);
+        mLength += sizeof(Mac::ExtAddress);
+        break;
+    }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 Error FrameBuilder::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Error error = kErrorNone;
@@ -87,6 +122,7 @@ Error FrameBuilder::AppendBytesFromMessage(const Message &aMessage, uint16_t aOf
 exit:
     return error;
 }
+#endif
 
 void FrameBuilder::WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength)
 {

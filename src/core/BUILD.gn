@@ -726,6 +726,8 @@ openthread_radio_sources = [
   "common/binary_search.cpp",
   "common/binary_search.hpp",
   "common/error.hpp",
+  "common/frame_builder.cpp",
+  "common/frame_builder.hpp",
   "common/instance.cpp",
   "common/log.cpp",
   "common/random.cpp",
