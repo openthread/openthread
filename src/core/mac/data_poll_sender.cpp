@@ -513,6 +513,13 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
     if (mRetxMode)
     {
         period = Min(period, kRetxPollPeriod);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (Get<Mac::Mac>().GetCslPeriodMs() > 0)
+        {
+            period = Min(period, Get<Mac::Mac>().GetCslPeriodMs());
+        }
+#endif
     }
 
     if (mRemainingFastPolls != 0)
