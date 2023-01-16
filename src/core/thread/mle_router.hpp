@@ -320,11 +320,12 @@ public:
      * @param[in]  aChildRouterLinks  The MLE_CHILD_ROUTER_LINKS value.
      *
      */
-    otError SetChildRouterLinks(uint8_t aChildRouterLinks) {
-        otError error    = OT_ERROR_NONE;
+    otError SetChildRouterLinks(uint8_t aChildRouterLinks)
+    {
+        otError error = OT_ERROR_NONE;
         VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
 
-        mChildRouterLinks = aChildRouterLinks; 
+        mChildRouterLinks = aChildRouterLinks;
     exit:
         return error;
     }
