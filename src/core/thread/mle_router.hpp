@@ -320,7 +320,14 @@ public:
      * @param[in]  aChildRouterLinks  The MLE_CHILD_ROUTER_LINKS value.
      *
      */
-    void SetChildRouterLinks(uint8_t aChildRouterLinks) { mChildRouterLinks = aChildRouterLinks; }
+    otError SetChildRouterLinks(uint8_t aChildRouterLinks) {
+        otError error    = OT_ERROR_NONE;
+        VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
+
+        mChildRouterLinks = aChildRouterLinks; 
+    exit:
+        return error;
+    }
 
     /**
      * This method returns if the REED is expected to become Router soon.
@@ -561,6 +568,7 @@ private:
 
     static constexpr uint8_t kLinkRequestMinMargin    = OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN;
     static constexpr uint8_t kPartitionMergeMinMargin = OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN;
+    static constexpr uint8_t kChildRouterLinks        = OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS;
     static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
     void  HandleDetachStart(void);

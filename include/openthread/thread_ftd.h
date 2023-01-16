@@ -372,11 +372,14 @@ uint8_t otThreadGetChildRouterLinks(otInstance *aInstance);
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aChildRouterLinks The MLE_CHILD_ROUTER_LINKS value.
- *
+ * 
+ * @retval OT_ERROR_NONE           Successfully set the value.
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ * 
  * @sa otThreadGetChildRouterLinks
  *
  */
-void otThreadSetChildRouterLinks(otInstance *aInstance, uint8_t aChildRouterLinks);
+otError otThreadSetChildRouterLinks(otInstance *aInstance, uint8_t aChildRouterLinks);
 
 /**
  * Release a Router ID that has been allocated by the device in the Leader role.

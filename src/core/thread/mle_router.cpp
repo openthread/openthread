@@ -85,7 +85,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionIdTimeout(0)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
-    , mChildRouterLinks(OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS)
+    , mChildRouterLinks(kChildRouterLinks)
     , mLinkRequestDelay(0)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
