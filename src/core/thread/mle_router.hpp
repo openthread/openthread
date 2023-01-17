@@ -322,7 +322,7 @@ public:
      */
     Error SetChildRouterLinks(uint8_t aChildRouterLinks)
     {
-        otError error = OT_ERROR_NONE;
+        Error error = kErrorNone;
         VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
 
         mChildRouterLinks = aChildRouterLinks;
