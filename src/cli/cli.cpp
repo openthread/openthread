@@ -7295,6 +7295,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("child"),
         CmdEntry("childip"),
         CmdEntry("childmax"),
+        CmdEntry("childrouterlinks"),
 #endif
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
         CmdEntry("childsupervision"),
