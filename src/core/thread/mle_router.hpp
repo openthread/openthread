@@ -320,15 +320,7 @@ public:
      * @param[in]  aChildRouterLinks  The MLE_CHILD_ROUTER_LINKS value.
      *
      */
-    Error SetChildRouterLinks(uint8_t aChildRouterLinks)
-    {
-        Error error = kErrorNone;
-        VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
-
-        mChildRouterLinks = aChildRouterLinks;
-    exit:
-        return error;
-    }
+    Error SetChildRouterLinks(uint8_t aChildRouterLinks);
 
     /**
      * This method returns if the REED is expected to become Router soon.
