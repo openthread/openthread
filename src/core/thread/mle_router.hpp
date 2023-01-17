@@ -241,16 +241,6 @@ public:
     void SetNetworkIdTimeout(uint8_t aTimeout) { mNetworkIdTimeout = aTimeout; }
 
     /**
-     * This method returns the minimum mesh path cost to the given RLOC16
-     *
-     * @param[in]  aDestRloc16  The RLOC16 of destination
-     *
-     * @returns The minimum mesh path cost to @p aDestRloc16 (via direct link or forwarding).
-     *
-     */
-    uint8_t GetPathCost(uint16_t aDestRloc16) const { return mRouterTable.GetPathCost(aDestRloc16); }
-
-    /**
      * This method returns the ROUTER_SELECTION_JITTER value.
      *
      * @returns The ROUTER_SELECTION_JITTER value.
@@ -690,8 +680,6 @@ public:
     bool IsSingleton(void) const { return false; }
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
-
-    uint8_t GetPathCost(uint16_t) { return 0; }
 
     Error RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
     void  RemoveRouterLink(Router &) { IgnoreError(BecomeDetached()); }
