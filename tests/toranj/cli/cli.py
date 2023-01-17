@@ -195,8 +195,8 @@ class Node(object):
         outputs = self.cli(cmd, *args)
         verify(len(outputs) == 0)
 
-    def _cli_single_output(self, cmd, expected_outputs=None):
-        outputs = self.cli(cmd)
+    def _cli_single_output(self, cmd, *args, expected_outputs=None):
+        outputs = self.cli(cmd, *args)
         verify(len(outputs) == 1)
         verify((expected_outputs is None) or (outputs[0] in expected_outputs))
         return outputs[0]
@@ -212,7 +212,7 @@ class Node(object):
     # cli commands
 
     def get_state(self):
-        return self._cli_single_output('state', ['detached', 'child', 'router', 'leader', 'disabled'])
+        return self._cli_single_output('state', expected_outputs=['detached', 'child', 'router', 'leader', 'disabled'])
 
     def get_channel(self):
         return self._cli_single_output('channel')
@@ -327,6 +327,9 @@ class Node(object):
 
     def get_partition_id(self):
         return self._cli_single_output('partitionid')
+
+    def get_nexthop(self, rloc16):
+        return self._cli_single_output('nexthop', rloc16)
 
     def get_parent_info(self):
         outputs = self.cli('parent')
@@ -446,10 +449,10 @@ class Node(object):
         self._cli_no_output('srp client stop')
 
     def srp_client_get_state(self):
-        return self._cli_single_output('srp client state', ['Enabled', 'Disabled'])
+        return self._cli_single_output('srp client state', expected_outputs=['Enabled', 'Disabled'])
 
     def srp_client_get_auto_start_mode(self):
-        return self._cli_single_output('srp client autostart', ['Enabled', 'Disabled'])
+        return self._cli_single_output('srp client autostart', expected_outputs=['Enabled', 'Disabled'])
 
     def srp_client_enable_auto_start_mode(self):
         self._cli_no_output('srp client autostart enable')
@@ -545,10 +548,10 @@ class Node(object):
     # SRP server
 
     def srp_server_get_state(self):
-        return self._cli_single_output('srp server state', ['disabled', 'running', 'stopped'])
+        return self._cli_single_output('srp server state', expected_outputs=['disabled', 'running', 'stopped'])
 
     def srp_server_get_addr_mode(self):
-        return self._cli_single_output('srp server addrmode', ['unicast', 'anycast'])
+        return self._cli_single_output('srp server addrmode', expected_outputs=['unicast', 'anycast'])
 
     def srp_server_set_addr_mode(self, mode):
         self._cli_no_output('srp server addrmode', mode)
@@ -716,6 +719,9 @@ class Node(object):
     def un_allowlist_node(self, node):
         """Removes a given node (of node `Node) from the allowlist"""
         self._cli_no_output('macfilter addr remove', node.get_ext_addr())
+
+    def set_macfilter_lqi_to_node(self, node, lqi):
+        self._cli_no_output('macfilter rss add-lqi', node.get_ext_addr(), lqi)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing helpers
