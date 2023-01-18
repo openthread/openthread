@@ -70,7 +70,6 @@ MleRouter::MleRouter(Instance &aInstance)
     , mNetworkIdTimeout(kNetworkIdTimeout)
     , mRouterUpgradeThreshold(kRouterUpgradeThreshold)
     , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
-    , mLeaderWeight(kLeaderWeight)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mPreferredLeaderPartitionId(0)
     , mCcmEnabled(false)
@@ -95,6 +94,7 @@ MleRouter::MleRouter(Instance &aInstance)
 #endif
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
+    mLeaderWeight = mDeviceProperties.CalculateLeaderWeight();
 
     SetRouterId(kInvalidRouterId);
 
@@ -181,6 +181,13 @@ Error MleRouter::SetRouterEligible(bool aEligible)
 
 exit:
     return error;
+}
+
+void MleRouter::SetDeviceProperties(const DeviceProperties &aDeviceProperties)
+{
+    mDeviceProperties = aDeviceProperties;
+    mDeviceProperties.ClampWeightAdjustment();
+    SetLeaderWeight(mDeviceProperties.CalculateLeaderWeight());
 }
 
 Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)

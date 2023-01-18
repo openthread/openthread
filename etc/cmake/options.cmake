@@ -157,6 +157,23 @@ if(OT_FULL_LOGS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1")
 endif()
 
+set(OT_POWER_SUPPLY "" CACHE STRING "set the device power supply config")
+set(OT_POWER_SUPPLY_VALUES
+    ""
+    "BATTERY"
+    "EXTERNAL"
+    "EXTERNAL_STABLE"
+    "EXTERNAL_UNSTABLE"
+)
+set_property(CACHE OT_POWER_SUPPLY PROPERTY STRINGS ${OT_POWER_SUPPLY_VALUES})
+string(COMPARE EQUAL "${OT_POWER_SUPPLY}" "" is_empty)
+if (is_empty)
+    message(STATUS "OT_POWER_SUPPLY=\"\"")
+else()
+    message(STATUS "OT_POWER_SUPPLY=${OT_POWER_SUPPLY} --> OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY=OT_POWER_SUPPLY_${OT_POWER_SUPPLY}")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY=OT_POWER_SUPPLY_${OT_POWER_SUPPLY}")
+endif()
+
 set(OT_MLE_MAX_CHILDREN "" CACHE STRING "set maximum number of children")
 if(OT_MLE_MAX_CHILDREN MATCHES "^[0-9]+$")
     message(STATUS "OT_MLE_MAX_CHILDREN=${OT_MLE_MAX_CHILDREN}")

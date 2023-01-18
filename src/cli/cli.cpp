@@ -4290,6 +4290,106 @@ template <> otError Interpreter::Process<Cmd("leaderweight")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetLocalLeaderWeight, otThreadSetLocalLeaderWeight);
 }
+
+template <> otError Interpreter::Process<Cmd("deviceprops")>(Arg aArgs[])
+{
+    static const char *const kPowerSupplyStrings[4] = {
+        "battery",           // (0) OT_POWER_SUPPLY_BATTERY
+        "external",          // (1) OT_POWER_SUPPLY_EXTERNAL
+        "external-stable",   // (2) OT_POWER_SUPPLY_EXTERNAL_STABLE
+        "external-unstable", // (3) OT_POWER_SUPPLY_EXTERNAL_UNSTABLE
+    };
+
+    static_assert(0 == OT_POWER_SUPPLY_BATTERY, "OT_POWER_SUPPLY_BATTERY value is incorrect");
+    static_assert(1 == OT_POWER_SUPPLY_EXTERNAL, "OT_POWER_SUPPLY_EXTERNAL value is incorrect");
+    static_assert(2 == OT_POWER_SUPPLY_EXTERNAL_STABLE, "OT_POWER_SUPPLY_EXTERNAL_STABLE value is incorrect");
+    static_assert(3 == OT_POWER_SUPPLY_EXTERNAL_UNSTABLE, "OT_POWER_SUPPLY_EXTERNAL_UNSTABLE value is incorrect");
+
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli deviceprops
+     * @code
+     * deviceprops
+     * PowerSupply      : external
+     * IsBorderRouter   : yes
+     * SupportsCcm      : no
+     * IsUnstable       : no
+     * WeightAdjustment : 0
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetDeviceProperties
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        const otDeviceProperties *props = otThreadGetDeviceProperties(GetInstancePtr());
+
+        OutputLine("PowerSupply      : %s", Stringify(props->mPowerSupply, kPowerSupplyStrings));
+        OutputLine("IsBorderRouter   : %s", props->mIsBorderRouter ? "yes" : "no");
+        OutputLine("SupportsCcm      : %s", props->mSupportsCcm ? "yes" : "no");
+        OutputLine("IsUnstable       : %s", props->mIsUnstable ? "yes" : "no");
+        OutputLine("WeightAdjustment : %d", props->mLeaderWeightAdjustment);
+    }
+    /**
+     * @cli deviceprops (set)
+     * @code
+     * deviceprops battery 0 0 0 -5
+     * Done
+     * @endcode
+     * @code
+     * deviceprops
+     * PowerSupply      : battery
+     * IsBorderRouter   : no
+     * SupportsCcm      : no
+     * IsUnstable       : no
+     * WeightAdjustment : -5
+     * Done
+     * @endcode
+     * @cparam deviceprops @ca{powerSupply} @ca{isBr} @ca{supportsCcm} @ca{isUnstable} @ca{weightAdjustment}
+     * `powerSupply`: should be 'battery', 'external', 'external-stable', 'external-unstable'.
+     * @par
+     * Sets the device properties.
+     * @csa{leaderweight}
+     * @csa{leaderweight (set)}
+     * @sa #otThreadSetDeviceProperties
+     */
+    else
+    {
+        otDeviceProperties props;
+        bool               value;
+        uint8_t            index;
+
+        for (index = 0; index < OT_ARRAY_LENGTH(kPowerSupplyStrings); index++)
+        {
+            if (aArgs[0] == kPowerSupplyStrings[index])
+            {
+                props.mPowerSupply = static_cast<otPowerSupply>(index);
+                break;
+            }
+        }
+
+        VerifyOrExit(index < OT_ARRAY_LENGTH(kPowerSupplyStrings), error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = aArgs[1].ParseAsBool(value));
+        props.mIsBorderRouter = value;
+
+        SuccessOrExit(error = aArgs[2].ParseAsBool(value));
+        props.mSupportsCcm = value;
+
+        SuccessOrExit(error = aArgs[3].ParseAsBool(value));
+        props.mIsUnstable = value;
+
+        SuccessOrExit(error = aArgs[4].ParseAsInt8(props.mLeaderWeightAdjustment));
+
+        VerifyOrExit(aArgs[5].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        otThreadSetDeviceProperties(GetInstancePtr(), &props);
+    }
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
@@ -7952,6 +8052,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("detach"),
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD
+        CmdEntry("deviceprops"),
+#endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         CmdEntry("diag"),
 #endif

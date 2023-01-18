@@ -79,6 +79,16 @@ otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
     return AsCoreType(aInstance).Get<Mle::MleRouter>().SetPreferredRouterId(aRouterId);
 }
 
+const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance)
+{
+    return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetDeviceProperties();
+}
+
+void otThreadSetDeviceProperties(otInstance *aInstance, const otDeviceProperties *aDeviceProperties)
+{
+    AsCoreType(aInstance).Get<Mle::MleRouter>().SetDeviceProperties(AsCoreType(aDeviceProperties));
+}
+
 uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderWeight();

@@ -89,6 +89,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT
+ *
+ * Specifies the default value for `mLeaderWeightAdjustment` in `otDeviceProperties`. MUST be from -16 up to +16.
+ *
+ * This value is used to adjust the calculated Leader Weight from `otDeviceProperties`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT
+#define OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
  *
  * Enable setting steering data out of band.

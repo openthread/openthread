@@ -41,6 +41,7 @@ Done
 - [csl](#csl)
 - [dataset](README_DATASET.md)
 - [delaytimermin](#delaytimermin)
+- [deviceprops](#deviceprops)
 - [diag](#diag)
 - [discover](#discover-channel)
 - [dns](#dns-config)
@@ -1053,6 +1054,44 @@ Set the minimal delay timer (in seconds).
 
 ```bash
 > delaytimermin 60
+Done
+```
+
+### deviceprops
+
+Get the current device properties.
+
+```bash
+> deviceprops
+PowerSupply      : external
+IsBorderRouter   : yes
+SupportsCcm      : no
+IsUnstable       : no
+WeightAdjustment : 0
+Done
+```
+
+### deviceprops \<power-supply\> \<is-br\> \<supports-ccm\> \<is-unstable\> \<weight-adjustment\>
+
+Set the device properties which are then used to determine and set the Leader Weight.
+
+- power-supply: `battery`, `external`, `external-stable`, or `external-unstable`.
+- weight-adjustment: Valid range is from -16 to +16. Clamped if not within the range.
+
+```bash
+> deviceprops battery 0 0 0 -5
+Done
+
+> deviceprops
+PowerSupply      : battery
+IsBorderRouter   : no
+SupportsCcm      : no
+IsUnstable       : no
+WeightAdjustment : -5
+Done
+
+> leaderweight
+51
 Done
 ```
 

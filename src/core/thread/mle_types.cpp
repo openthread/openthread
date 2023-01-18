@@ -39,6 +39,9 @@
 namespace ot {
 namespace Mle {
 
+//---------------------------------------------------------------------------------------------------------------------
+// DeviceMode
+
 void DeviceMode::Get(ModeConfig &aModeConfig) const
 {
     aModeConfig.mRxOnWhenIdle = IsRxOnWhenIdle();
@@ -64,6 +67,77 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
     return string;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// DeviceProperties
+
+#if OPENTHREAD_FTD
+
+DeviceProperties::DeviceProperties(void)
+{
+    Clear();
+
+    mPowerSupply            = OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY;
+    mLeaderWeightAdjustment = kDefaultAdjustment;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    mIsBorderRouter = true;
+#endif
+}
+
+void DeviceProperties::ClampWeightAdjustment(void)
+{
+    mLeaderWeightAdjustment = Clamp(mLeaderWeightAdjustment, kMinAdjustment, kMaxAdjustment);
+}
+
+uint8_t DeviceProperties::CalculateLeaderWeight(void) const
+{
+    static const int8_t kPowerSupplyIncs[] = {
+        kPowerBatteryInc,          // (0) kPowerSupplyBattery
+        kPowerExternalInc,         // (1) kPowerSupplyExternal
+        kPowerExternalStableInc,   // (2) kPowerSupplyExternalStable
+        kPowerExternalUnstableInc, // (3) kPowerSupplyExternalUnstable
+    };
+
+    static_assert(0 == kPowerSupplyBattery, "kPowerSupplyBattery value is incorrect");
+    static_assert(1 == kPowerSupplyExternal, "kPowerSupplyExternal value is incorrect");
+    static_assert(2 == kPowerSupplyExternalStable, "kPowerSupplyExternalStable value is incorrect");
+    static_assert(3 == kPowerSupplyExternalUnstable, "kPowerSupplyExternalUnstable value is incorrect");
+
+    uint8_t     weight      = kBaseWeight;
+    PowerSupply powerSupply = MapEnum(mPowerSupply);
+
+    if (mIsBorderRouter)
+    {
+        weight += (mSupportsCcm ? kCcmBorderRouterInc : kBorderRouterInc);
+    }
+
+    if (powerSupply < GetArrayLength(kPowerSupplyIncs))
+    {
+        weight += kPowerSupplyIncs[powerSupply];
+    }
+
+    if (mIsUnstable)
+    {
+        switch (powerSupply)
+        {
+        case kPowerSupplyBattery:
+        case kPowerSupplyExternalUnstable:
+            break;
+
+        default:
+            weight += kIsUnstableInc;
+        }
+    }
+
+    weight += mLeaderWeightAdjustment;
+
+    return weight;
+}
+
+#endif // OPENTHREAD_FTD
+
+//---------------------------------------------------------------------------------------------------------------------
+// RouterIdSet
+
 uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
 {
     uint8_t count = 0;
@@ -75,6 +149,8 @@ uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
 
     return count;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
 
 const char *RoleToString(DeviceRole aRole)
 {
