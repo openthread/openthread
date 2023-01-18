@@ -67,7 +67,6 @@ RegisterLogModule("Ip6");
 
 Ip6::Ip6(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mForwardingEnabled(false)
     , mIsReceiveIp6FilterEnabled(false)
     , mSendQueueTask(aInstance)
     , mIcmp(aInstance)
@@ -1299,7 +1298,7 @@ start:
 
         if (aOrigin == kFromThreadNetif)
         {
-            VerifyOrExit(mForwardingEnabled);
+            VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
             header.SetHopLimit(header.GetHopLimit() - 1);
         }
 
