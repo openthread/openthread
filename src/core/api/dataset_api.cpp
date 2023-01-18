@@ -168,3 +168,15 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
 exit:
     return error;
 }
+
+void otDatasetUpdate(const otOperationalDataset *aSrcDataset, otOperationalDataset *aDstDataset)
+{
+    MeshCoP::Dataset dataset;
+
+    AssertPointerIsNotNull(aSrcDataset);
+    AssertPointerIsNotNull(aDstDataset);
+
+    dataset.SetFrom(AsCoreType(aDstDataset));
+    dataset.SetFrom(AsCoreType(aSrcDataset));
+    dataset.ConvertTo(AsCoreType(aDstDataset));
+}

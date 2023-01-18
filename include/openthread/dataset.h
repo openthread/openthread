@@ -595,6 +595,15 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
 
 /**
+ * This function updates an Operational Dataset with information from another Operational Dataset.
+ *
+ * @param[in]  aSrcDataset  A pointer to dataset with the new/updated information.
+ * @param[out] aDstDataset  A pointer to where the dataset will be placed.
+ *
+ */
+void otDatasetUpdate(const otOperationalDataset *aSrcDataset, otOperationalDataset *aDstDataset);
+
+/**
  * @}
  *
  */
