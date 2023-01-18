@@ -892,8 +892,8 @@ Error Ip6::HandleExtensionHeaders(Message      &aMessage,
             break;
 
         case kProtoFragment:
-            IgnoreError(ProcessReceiveCallback(aMessage, aOrigin, aMessageInfo, aNextHeader,
-                                               /* aAllowReceiveFilter */ false, Message::kCopyToUse));
+            IgnoreError(PassToHost(aMessage, aOrigin, aMessageInfo, aNextHeader,
+                                   /* aApplyFilter */ false, Message::kCopyToUse));
             SuccessOrExit(error = HandleFragment(aMessage, aOrigin, aMessageInfo));
             break;
 
@@ -988,20 +988,20 @@ exit:
     return error;
 }
 
-Error Ip6::ProcessReceiveCallback(Message           &aMessage,
-                                  MessageOrigin      aOrigin,
-                                  const MessageInfo &aMessageInfo,
-                                  uint8_t            aIpProto,
-                                  bool               aAllowReceiveFilter,
-                                  Message::Ownership aMessageOwnership)
+Error Ip6::PassToHost(Message           &aMessage,
+                      MessageOrigin      aOrigin,
+                      const MessageInfo &aMessageInfo,
+                      uint8_t            aIpProto,
+                      bool               aApplyFilter,
+                      Message::Ownership aMessageOwnership)
 {
+    // This method passes the message to host by invoking the
+    // registered IPv6 receive callback. When NAT64 is enabled, it
+    // may also perform translation and invoke IPv4 receive
+    // callback.
+
     Error    error   = kErrorNone;
     Message *message = nullptr;
-#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
-    Header header;
-
-    IgnoreError(header.ParseFrom(aMessage));
-#endif
 
     // `message` points to the `Message` instance we own in this
     // method. If we can take ownership of `aMessage`, we use it as
@@ -1020,13 +1020,15 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
 
     VerifyOrExit(mReceiveIp6DatagramCallback.IsSet(), error = kErrorNoRoute);
 
-    // Do not forward IPv6 packets that exceed kMinimalMtu.
+    // Do not pass IPv6 packets that exceed kMinimalMtu.
     VerifyOrExit(aMessage.GetLength() <= kMinimalMtu, error = kErrorDrop);
 
-    if (mIsReceiveIp6FilterEnabled && aAllowReceiveFilter)
+    if (mIsReceiveIp6FilterEnabled && aApplyFilter)
     {
 #if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-        // do not pass messages sent to an RLOC/ALOC, except Service Locator
+        // Do not pass messages sent to an RLOC/ALOC, except
+        // Service Locator
+
         bool isLocator = Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) &&
                          aMessageInfo.GetSockAddr().GetIid().IsLocator();
 
@@ -1042,8 +1044,6 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
                 Icmp::Header icmp;
 
                 IgnoreError(aMessage.Read(aMessage.GetOffset(), icmp));
-
-                // do not pass ICMP Echo Request messages
                 VerifyOrExit(icmp.GetType() != Icmp::Header::kTypeEchoRequest, error = kErrorDrop);
             }
 
@@ -1061,12 +1061,11 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
         }
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE
-        // Do not pass TCP message to avoid dual processing from both openthread and POSIX tcp stacks
+        // Do not pass TCP message to avoid dual processing from both
+        // OpenThread and POSIX TCP stacks.
         case kProtoTcp:
-        {
             error = kErrorNoRoute;
-            goto exit;
-        }
+            ExitNow();
 #endif
 
         default:
@@ -1098,8 +1097,10 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
     {
     case Nat64::Translator::kNotTranslated:
         break;
+
     case Nat64::Translator::kDrop:
         ExitNow(error = kErrorDrop);
+
     case Nat64::Translator::kForward:
         VerifyOrExit(mReceiveIp4DatagramCallback.IsSet(), error = kErrorNoRoute);
         // Pass message to callback transferring its ownership.
@@ -1114,7 +1115,12 @@ Error Ip6::ProcessReceiveCallback(Message           &aMessage,
     message = nullptr;
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
-    UpdateBorderRoutingCounters(header, aMessage.GetLength(), /* aIsInbound */ false);
+    {
+        Header header;
+
+        IgnoreError(header.ParseFrom(aMessage));
+        UpdateBorderRoutingCounters(header, aMessage.GetLength(), /* aIsInbound */ false);
+    }
 #endif
 
 exit:
@@ -1179,9 +1185,10 @@ start:
     messageInfo.SetEcn(header.GetEcn());
     messageInfo.SetLinkInfo(aLinkMessageInfo);
 
-    // determine destination of packet
     if (header.GetDestination().IsMulticast())
     {
+        // Destination is multicast
+
         if (aOrigin == kFromThreadNetif)
         {
 #if OPENTHREAD_FTD
@@ -1211,7 +1218,8 @@ start:
     }
     else
     {
-        // unicast
+        // Destination is unicast
+
         if (Get<ThreadNetif>().HasUnicastAddress(header.GetDestination()))
         {
             receive = true;
@@ -1232,18 +1240,20 @@ start:
         }
     }
 
-    // never forward reassembled frames as they were already delivered as fragments
+    // Never forward reassembled frames as they were already delivered
+    // as fragments.
     if (aIsReassembled)
     {
         forwardHost = false;
     }
+
     aMessage.SetOffset(sizeof(header));
 
-    // process IPv6 Extension Headers
+    // Process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, aOrigin, messageInfo, header, nextHeader, receive));
 
-    // process IPv6 Payload
+    // Process IPv6 Payload
     if (receive)
     {
         if (nextHeader == kProtoIp6)
@@ -1253,26 +1263,33 @@ start:
             Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, aMessage);
             goto start;
         }
+
         if (!aIsReassembled)
         {
-            error = ProcessReceiveCallback(aMessage, aOrigin, messageInfo, nextHeader,
-                                           /* aAllowReceiveFilter */ !forwardHost, Message::kCopyToUse);
+            error = PassToHost(aMessage, aOrigin, messageInfo, nextHeader,
+                               /* aApplyFilter */ !forwardHost, Message::kCopyToUse);
 
             if ((error == kErrorNone || error == kErrorNoRoute) && forwardHost)
             {
                 forwardHost = false;
             }
         }
-        error             = HandlePayload(header, aMessage, messageInfo, nextHeader,
-                                          (forwardThread || forwardHost ? Message::kCopyToUse : Message::kTakeCustody));
+
+        error = HandlePayload(header, aMessage, messageInfo, nextHeader,
+                              (forwardThread || forwardHost ? Message::kCopyToUse : Message::kTakeCustody));
+
+        // Need to free the message if we did not pass its
+        // ownership in the call to `HandlePayload()`
         shouldFreeMessage = forwardThread || forwardHost;
     }
 
     if (forwardHost)
     {
-        // try passing to host
-        error = ProcessReceiveCallback(aMessage, aOrigin, messageInfo, nextHeader, /* aAllowReceiveFilter */ false,
-                                       forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
+        error = PassToHost(aMessage, aOrigin, messageInfo, nextHeader, /* aApplyFilter */ false,
+                           forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
+
+        // Need to free the message if we did not pass its
+        // ownership in the call to `PassToHost()`
         shouldFreeMessage = forwardThread;
     }
 

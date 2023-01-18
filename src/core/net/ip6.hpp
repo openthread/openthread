@@ -394,12 +394,12 @@ private:
     static Error   GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
 
     void  EnqueueDatagram(Message &aMessage);
-    Error ProcessReceiveCallback(Message           &aMessage,
-                                 MessageOrigin      aOrigin,
-                                 const MessageInfo &aMessageInfo,
-                                 uint8_t            aIpProto,
-                                 bool               aAllowReceiveFilter,
-                                 Message::Ownership aMessageOwnership);
+    Error PassToHost(Message           &aMessage,
+                     MessageOrigin      aOrigin,
+                     const MessageInfo &aMessageInfo,
+                     uint8_t            aIpProto,
+                     bool               aApplyFilter,
+                     Message::Ownership aMessageOwnership);
     Error HandleExtensionHeaders(Message      &aMessage,
                                  MessageOrigin aOrigin,
                                  MessageInfo  &aMessageInfo,
