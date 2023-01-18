@@ -37,10 +37,11 @@
 #include "openthread-core-config.h"
 
 #include "common/error.hpp"
-#include "common/message.hpp"
 #include "common/type_traits.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
+class Message;
 
 /**
  * The `FrameBuilder` can be used to construct frame content in a given data buffer.
@@ -183,6 +184,18 @@ public:
     Error AppendBytes(const void *aBuffer, uint16_t aLength);
 
     /**
+     * This method appends a given `Mac::Address` to the `FrameBuilder`.
+     *
+     * @param[in] aMacAddress  A `Mac::Address` to append.
+     *
+     * @retval kErrorNone    Successfully appended the address.
+     * @retval kErrorNoBufs  Insufficient available buffers.
+     *
+     */
+    Error AppendMacAddress(const Mac::Address &aMacAddress);
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    /**
      * This method appends bytes read from a given message to the `FrameBuilder`.
      *
      * @param[in] aMessage   The message to read the bytes from.
@@ -195,6 +208,7 @@ public:
      *
      */
     Error AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+#endif
 
     /**
      * This method appends an object to the `FrameBuilder`.

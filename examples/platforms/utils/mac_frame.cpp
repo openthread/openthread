@@ -68,17 +68,17 @@ exit:
 
 bool otMacFrameIsAck(const otRadioFrame *aFrame)
 {
-    return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kFcfFrameAck;
+    return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kTypeAck;
 }
 
 bool otMacFrameIsData(const otRadioFrame *aFrame)
 {
-    return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kFcfFrameData;
+    return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kTypeData;
 }
 
 bool otMacFrameIsCommand(const otRadioFrame *aFrame)
 {
-    return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kFcfFrameMacCmd;
+    return static_cast<const Mac::Frame *>(aFrame)->GetType() == Mac::Frame::kTypeMacCmd;
 }
 
 bool otMacFrameIsDataRequest(const otRadioFrame *aFrame)

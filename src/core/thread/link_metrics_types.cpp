@@ -137,13 +137,13 @@ bool SeriesInfo::IsFrameTypeMatch(uint8_t aFrameType) const
         VerifyOrExit(!mSeriesFlags.IsMacDataFlagSet()); // Ignore this when Mac Data is accounted
         match = mSeriesFlags.IsLinkProbeFlagSet();
         break;
-    case Mac::Frame::kFcfFrameData:
+    case Mac::Frame::kTypeData:
         match = mSeriesFlags.IsMacDataFlagSet();
         break;
-    case Mac::Frame::kFcfFrameMacCmd:
+    case Mac::Frame::kTypeMacCmd:
         match = mSeriesFlags.IsMacDataRequestFlagSet();
         break;
-    case Mac::Frame::kFcfFrameAck:
+    case Mac::Frame::kTypeAck:
         match = mSeriesFlags.IsMacAckFlagSet();
         break;
     default:
