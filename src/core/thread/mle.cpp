@@ -697,7 +697,6 @@ void Mle::SetStateDetached(void)
 #if OPENTHREAD_FTD
     Get<MleRouter>().HandleDetachStart();
 #endif
-    Get<Ip6::Ip6>().SetForwardingEnabled(false);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Get<Mac::Mac>().UpdateCsl();
 #endif
@@ -726,8 +725,6 @@ void Mle::SetStateChild(uint16_t aRloc16)
         Get<MleRouter>().HandleChildStart(mAttachMode);
     }
 #endif
-
-    Get<Ip6::Ip6>().SetForwardingEnabled(false);
 
     // send announce after attached if needed
     InformPreviousChannel();
