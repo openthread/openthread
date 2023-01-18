@@ -391,4 +391,17 @@ otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, ui
 }
 #endif
 
+void otThreadGetNextHopAndPathCost(otInstance *aInstance,
+                                   uint16_t    aDestRloc16,
+                                   uint16_t   *aNextHopRloc16,
+                                   uint8_t    *aPathCost)
+{
+    uint8_t  pathcost;
+    uint16_t nextHopRloc16;
+
+    AsCoreType(aInstance).Get<RouterTable>().GetNextHopAndPathCost(
+        aDestRloc16, (aNextHopRloc16 != nullptr) ? *aNextHopRloc16 : nextHopRloc16,
+        (aPathCost != nullptr) ? *aPathCost : pathcost);
+}
+
 #endif // OPENTHREAD_FTD

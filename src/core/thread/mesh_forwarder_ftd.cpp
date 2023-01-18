@@ -349,31 +349,13 @@ void MeshForwarder::RemoveDataResponseMessages(void)
 
 void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
 {
-    uint16_t fcf;
-    bool     iePresent = CalcIePresent(&aMessage);
+    Mac::PanIds panIds;
 
-    // initialize MAC header
-    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfDstAddrShort |
-          Mac::Frame::kFcfSrcAddrShort | Mac::Frame::kFcfAckRequest | Mac::Frame::kFcfSecurityEnabled;
+    panIds.mSource      = Get<Mac::Mac>().GetPanId();
+    panIds.mDestination = Get<Mac::Mac>().GetPanId();
 
-    if (iePresent)
-    {
-        fcf |= Mac::Frame::kFcfIePresent;
-    }
-
-    fcf |= CalcFrameVersion(Get<NeighborTable>().FindNeighbor(mMacAddrs.mDestination), iePresent);
-
-    aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
-    aFrame.SetDstPanId(Get<Mac::Mac>().GetPanId());
-    aFrame.SetDstAddr(mMacAddrs.mDestination.GetShort());
-    aFrame.SetSrcAddr(mMacAddrs.mSource);
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    if (iePresent)
-    {
-        AppendHeaderIe(&aMessage, aFrame);
-    }
-#endif
+    PrepareMacHeaders(aFrame, Mac::Frame::kTypeData, mMacAddrs, panIds, Mac::Frame::kSecurityEncMic32,
+                      Mac::Frame::kKeyIdMode1, &aMessage);
 
     // write payload
     OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
@@ -428,7 +410,7 @@ exit:
 
 void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const
 {
-    uint8_t cost = Get<Mle::MleRouter>().GetPathCost(aDest);
+    uint8_t cost = Get<RouterTable>().GetPathCost(aDest);
 
     if ((aBestDest == Mac::kShortAddrInvalid) || (cost < aBestCost))
     {

@@ -3394,7 +3394,6 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     ThreadRouterMaskTlv routerMaskTlv;
     uint8_t             routerId;
     Router             *router;
-    Router             *leader;
     bool                isRouterIdAllocated;
 
     mAddressSolicitPending = false;
@@ -3436,30 +3435,38 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     SetRouterId(routerId);
 
     SetStateRouter(Rloc16FromRouterId(mRouterId));
-    mRouterTable.Clear();
+
+    // We keep the router table next hop and cost as what we had as a
+    // REED, i.e., our parent was the next hop towards all other
+    // routers and we tracked its cost towards them. As FED, we may
+    // have established links with a subset of neighboring routers.
+    // We ensure to clear these links to avoid using them (since will
+    // be rejected by the neighbor).
+
+    mRouterTable.ClearNeighbors();
+
     mRouterTable.UpdateRouterIdSet(routerMaskTlv.GetIdSequence(), routerMaskTlv.GetAssignedRouterIdMask());
 
     router = mRouterTable.FindRouterById(routerId);
     VerifyOrExit(router != nullptr);
-
     router->SetExtAddress(Get<Mac::Mac>().GetExtAddress());
     router->SetNextHopToInvalid();
 
+    // Ensure we have our parent as a neighboring router, copying the
+    // `mParent` entry.
+
     router = mRouterTable.FindRouterById(mParent.GetRouterId());
     VerifyOrExit(router != nullptr);
-
-    // Keep link to the parent in order to respond to Parent Requests before new link is established.
     router->SetFrom(mParent);
-
     router->SetState(Neighbor::kStateValid);
     router->SetNextHopToInvalid();
 
-    leader = mRouterTable.GetLeader();
-    OT_ASSERT(leader != nullptr);
-
-    if (leader != router)
+    // Ensure we have a next hop and cost towards leader.
+    if (mRouterTable.GetPathCostToLeader() >= kMaxRouteCost)
     {
-        // Keep route path to the Leader reported by the parent before it is updated.
+        Router *leader = mRouterTable.GetLeader();
+
+        OT_ASSERT(leader != nullptr);
         leader->SetNextHopAndCost(RouterIdFromRloc16(mParent.GetRloc16()), mParent.GetLeaderCost());
     }
 

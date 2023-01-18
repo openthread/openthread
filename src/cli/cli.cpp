@@ -5301,6 +5301,37 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_FTD
+/**
+ * @cli nexthop
+ * @code
+ * nexthop 0xc000
+ * 0xc000 cost:0
+ * Done
+ * nexthop 0x8001
+ * 0x2000 cost:3
+ * Done
+ * @endcode
+ * @cparam nexthop @ca{rloc16}
+ * @par api_copy
+ * #otThreadGetNextHopAndPathCost
+ */
+template <> otError Interpreter::Process<Cmd("nexthop")>(Arg aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t destRloc16;
+    uint16_t nextHopRloc16;
+    uint8_t  pathCost;
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint16(destRloc16));
+    otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
+    OutputLine("0x%04x cost:%u", nextHopRloc16, pathCost);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_FTD
+
 template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -7408,6 +7439,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("networkname"),
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         CmdEntry("networktime"),
+#endif
+#if OPENTHREAD_FTD
+        CmdEntry("nexthop"),
 #endif
         CmdEntry("panid"),
         CmdEntry("parent"),

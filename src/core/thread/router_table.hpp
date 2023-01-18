@@ -191,6 +191,16 @@ public:
     uint16_t GetNextHop(uint16_t aDestRloc16) const;
 
     /**
+     * This method determines the next hop and the path cost towards an RLOC16 destination.
+     *
+     * @param[in]  aDestRloc16      The RLOC16 of the destination.
+     * @param[out] aNextHopRloc16   A reference to return the RLOC16 of next hop if known, or `Mle::kInvalidRloc16`.
+     * @param[out] aPathCost        A reference to return the path cost.
+     *
+     */
+    void GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHopRloc16, uint8_t &aPathCost) const;
+
+    /**
      * This method finds the router for a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to search for.

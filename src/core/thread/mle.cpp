@@ -1900,8 +1900,7 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
-            ExitNow(interval = Get<Mac::Mac>().GetCslPeriod() * kUsPerTenSymbols / 1000 +
-                               static_cast<uint32_t>(kUnicastRetransmissionDelay));
+            ExitNow(interval = Get<Mac::Mac>().GetCslPeriodMs() + static_cast<uint32_t>(kUnicastRetransmissionDelay));
         }
         else
 #endif
@@ -2329,7 +2328,7 @@ Error Mle::ProcessMessageSecurity(Crypto::AesCcm::Mode    aMode,
     }
 
     senderAddress->GetIid().ConvertToExtAddress(extAddress);
-    Crypto::AesCcm::GenerateNonce(extAddress, aHeader.GetFrameCounter(), Mac::Frame::kSecEncMic32, nonce);
+    Crypto::AesCcm::GenerateNonce(extAddress, aHeader.GetFrameCounter(), Mac::Frame::kSecurityEncMic32, nonce);
 
     keySequence = aHeader.GetKeyId();
 

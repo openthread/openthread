@@ -816,6 +816,24 @@ void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint
  *
  */
 otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
+
+/**
+ * This function gets the next hop and path cost towards a given RLOC16 destination.
+ *
+ * This function can be used with either @p aNextHopRloc16 or @p aPathCost being NULL indicating caller does not want
+ * to get the value.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aDesRloct16     The RLOC16 of destination.
+ * @param[out] aNextHopRloc16  A pointer to return RLOC16 of next hop, 0xfffe if no next hop.
+ * @param[out] aPathCost       A pointer to return path cost towards destination.
+ *
+ */
+void otThreadGetNextHopAndPathCost(otInstance *aInstance,
+                                   uint16_t    aDestRloc16,
+                                   uint16_t   *aNextHopRloc16,
+                                   uint8_t    *aPathCost);
+
 /**
  * @}
  *

@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/frame_builder.hpp"
 #include "common/log.hpp"
 #include "radio/trel_link.hpp"
 #if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
@@ -58,23 +59,106 @@ void HeaderIe::Init(uint16_t aId, uint8_t aLen)
     SetLength(aLen);
 }
 
-void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
+void Frame::InitMacHeader(Type             aType,
+                          Version          aVersion,
+                          const Addresses &aAddrs,
+                          const PanIds    &aPanIds,
+                          SecurityLevel    aSecurityLevel,
+                          KeyIdMode        aKeyIdMode)
 {
-    mLength = CalculateAddrFieldSize(aFcf);
+    uint16_t     fcf;
+    FrameBuilder builder;
 
-    OT_ASSERT(mLength != kInvalidSize);
+    fcf = static_cast<uint16_t>(aType) | static_cast<uint16_t>(aVersion);
 
-    WriteUint16(aFcf, mPsdu);
-
-    if (aFcf & kFcfSecurityEnabled)
+    switch (aAddrs.mSource.GetType())
     {
-        mPsdu[mLength] = aSecurityControl;
-
-        mLength += CalculateSecurityHeaderSize(aSecurityControl);
-        mLength += CalculateMicSize(aSecurityControl);
+    case Address::kTypeNone:
+        fcf |= kFcfSrcAddrNone;
+        break;
+    case Address::kTypeShort:
+        fcf |= kFcfSrcAddrShort;
+        break;
+    case Address::kTypeExtended:
+        fcf |= kFcfSrcAddrExt;
+        break;
     }
 
-    if ((aFcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
+    switch (aAddrs.mDestination.GetType())
+    {
+    case Address::kTypeNone:
+        fcf |= kFcfDstAddrNone;
+        break;
+    case Address::kTypeShort:
+        fcf |= kFcfDstAddrShort;
+        fcf |= ((aAddrs.mDestination.GetShort() == kShortAddrBroadcast) ? 0 : kFcfAckRequest);
+        break;
+    case Address::kTypeExtended:
+        fcf |= (kFcfDstAddrExt | kFcfAckRequest);
+        break;
+    }
+
+    fcf |= (aSecurityLevel != kSecurityNone) ? kFcfSecurityEnabled : 0;
+
+    // When we have both source and destination addresses we check PAN
+    // IDs to determine whether to include `kFcfPanidCompression`.
+
+    if (!aAddrs.mSource.IsNone() && !aAddrs.mDestination.IsNone() && (aPanIds.mSource == aPanIds.mDestination))
+    {
+        switch (aVersion)
+        {
+        case kVersion2015:
+            // Special case for a IEEE 802.15.4-2015 frame: When both
+            // addresses are extended, the PAN ID compression is set
+            // to one to indicate that no PAN ID is in the frame,
+            // while setting the PAN ID Compression to zero indicates
+            // the presence of the destination PAN ID in the frame.
+
+            if (aAddrs.mSource.IsExtended() && aAddrs.mDestination.IsExtended())
+            {
+                break;
+            }
+
+            OT_FALL_THROUGH;
+
+        case kVersion2003:
+        case kVersion2006:
+            fcf |= kFcfPanidCompression;
+            break;
+        }
+    }
+
+    builder.Init(mPsdu, GetMtu());
+    IgnoreError(builder.AppendLittleEndianUint16(fcf));
+    IgnoreError(builder.AppendUint8(0)); // Seq number
+
+    if (IsDstPanIdPresent(fcf))
+    {
+        IgnoreError(builder.AppendLittleEndianUint16(aPanIds.mDestination));
+    }
+
+    IgnoreError(builder.AppendMacAddress(aAddrs.mDestination));
+
+    if (IsSrcPanIdPresent(fcf))
+    {
+        IgnoreError(builder.AppendLittleEndianUint16(aPanIds.mSource));
+    }
+
+    IgnoreError(builder.AppendMacAddress(aAddrs.mSource));
+
+    mLength = builder.GetLength();
+
+    if (aSecurityLevel != kSecurityNone)
+    {
+        uint8_t secCtl = static_cast<uint8_t>(aSecurityLevel) | static_cast<uint8_t>(aKeyIdMode);
+
+        IgnoreError(builder.AppendUint8(secCtl));
+
+        mLength += CalculateSecurityHeaderSize(secCtl);
+        mLength += CalculateMicSize(secCtl);
+    }
+
+    if (aType == kTypeMacCmd)
     {
         mLength += kCommandIdSize;
     }
@@ -136,7 +220,6 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
 {
     bool present = true;
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     if (IsVersion2015(aFcf))
     {
         switch (aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask | kFcfPanidCompression))
@@ -156,7 +239,6 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
         }
     }
     else
-#endif
     {
         present = IsDstAddrPresent(aFcf);
     }
@@ -277,26 +359,21 @@ exit:
 
 bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
 {
-    bool srcPanIdPresent = false;
+    bool present = IsSrcAddrPresent(aFcf) && ((aFcf & kFcfPanidCompression) == 0);
 
-    if ((aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone && (aFcf & kFcfPanidCompression) == 0)
+    // Special case for a IEEE 802.15.4-2015 frame: When both
+    // addresses are extended, then the source PAN iD is not present
+    // independent of PAN ID Compression. In this case, if the PAN ID
+    // compression is set, it indicates that no PAN ID is in the
+    // frame, while if the PAN ID Compression is zero, it indicates
+    // the presence of the destination PAN ID in the frame.
+
+    if (IsVersion2015(aFcf) && ((aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask)) == (kFcfDstAddrExt | kFcfSrcAddrExt)))
     {
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-        // Handle a special case in IEEE 802.15.4-2015, when Pan ID Compression is 0, but Src Pan ID is not present:
-        //  Dest Address:       Extended
-        //  Source Address:     Extended
-        //  Dest Pan ID:        Present
-        //  Src Pan ID:         Not Present
-        //  Pan ID Compression: 0
-        if (!IsVersion2015(aFcf) || (aFcf & kFcfDstAddrMask) != kFcfDstAddrExt ||
-            (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrExt)
-#endif
-        {
-            srcPanIdPresent = true;
-        }
+        present = false;
     }
 
-    return srcPanIdPresent;
+    return present;
 }
 
 Error Frame::GetSrcPanId(PanId &aPanId) const
@@ -619,7 +696,7 @@ bool Frame::IsDataRequestCommand(void) const
     bool    isDataRequest = false;
     uint8_t commandId;
 
-    VerifyOrExit(GetType() == kFcfFrameMacCmd);
+    VerifyOrExit(GetType() == kTypeMacCmd);
     SuccessOrExit(GetCommandId(commandId));
     isDataRequest = (commandId == kMacCmdDataRequest);
 
@@ -647,23 +724,23 @@ uint8_t Frame::CalculateMicSize(uint8_t aSecurityControl)
 
     switch (aSecurityControl & kSecLevelMask)
     {
-    case kSecNone:
-    case kSecEnc:
+    case kSecurityNone:
+    case kSecurityEnc:
         micSize = kMic0Size;
         break;
 
-    case kSecMic32:
-    case kSecEncMic32:
+    case kSecurityMic32:
+    case kSecurityEncMic32:
         micSize = kMic32Size;
         break;
 
-    case kSecMic64:
-    case kSecEncMic64:
+    case kSecurityMic64:
+    case kSecurityEncMic64:
         micSize = kMic64Size;
         break;
 
-    case kSecMic128:
-    case kSecEncMic128:
+    case kSecurityMic128:
+    case kSecurityEncMic128:
         micSize = kMic128Size;
         break;
     }
@@ -707,7 +784,7 @@ uint8_t Frame::CalculateSecurityHeaderSize(uint8_t aSecurityControl)
 {
     uint8_t size = kSecurityControlSize + kFrameCounterSize;
 
-    VerifyOrExit((aSecurityControl & kSecLevelMask) != kSecNone, size = kInvalidSize);
+    VerifyOrExit((aSecurityControl & kSecLevelMask) != kSecurityNone, size = kInvalidSize);
 
     switch (aSecurityControl & kKeyIdModeMask)
     {
@@ -845,7 +922,7 @@ uint8_t Frame::FindPayloadIndex(void) const
     }
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
-    if (!IsVersion2015() && (GetFrameControlField() & kFcfFrameTypeMask) == kFcfFrameMacCmd)
+    if (!IsVersion2015() && (GetFrameControlField() & kFcfFrameTypeMask) == kTypeMacCmd)
     {
         index += kCommandIdSize;
     }
@@ -897,6 +974,8 @@ exit:
 Error Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize)
 {
     Error error = kErrorNone;
+
+    WriteUint16(GetFrameControlField() | kFcfIePresent, mPsdu);
 
     if (aIndex == 0)
     {
@@ -1175,7 +1254,7 @@ exit:
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 {
-    uint16_t fcf = kFcfFrameAck | aFrame.GetVersion();
+    uint16_t fcf = static_cast<uint16_t>(kTypeAck) | aFrame.GetVersion();
 
     mChannel = aFrame.mChannel;
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
@@ -1196,12 +1275,14 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const
 {
     Error error = kErrorNone;
 
-    uint16_t fcf = kFcfFrameAck | kFcfFrameVersion2015 | kFcfSrcAddrNone;
+    uint16_t fcf;
     Address  address;
     PanId    panId;
     uint8_t  footerLength;
     uint8_t  securityControlField;
     uint8_t  keyId;
+
+    fcf = static_cast<uint16_t>(kTypeAck) | static_cast<uint16_t>(kVersion2015) | kFcfSrcAddrNone;
 
     mChannel = aFrame.mChannel;
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
@@ -1366,19 +1447,19 @@ Frame::InfoString Frame::ToInfoString(void) const
 
     switch (type)
     {
-    case kFcfFrameBeacon:
+    case kTypeBeacon:
         string.Append("Beacon");
         break;
 
-    case kFcfFrameData:
+    case kTypeData:
         string.Append("Data");
         break;
 
-    case kFcfFrameAck:
+    case kTypeAck:
         string.Append("Ack");
         break;
 
-    case kFcfFrameMacCmd:
+    case kTypeMacCmd:
         if (GetCommandId(commandId) != kErrorNone)
         {
             commandId = 0xff;

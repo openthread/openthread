@@ -275,75 +275,81 @@ public:
 class Frame : public otRadioFrame
 {
 public:
-    static constexpr uint8_t kFcfSize             = sizeof(uint16_t);
-    static constexpr uint8_t kDsnSize             = sizeof(uint8_t);
-    static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
-    static constexpr uint8_t kFrameCounterSize    = sizeof(uint32_t);
-    static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
-    static constexpr uint8_t k154FcsSize          = sizeof(uint16_t);
+    /**
+     * This enumeration represents the MAC frame type.
+     *
+     * Values match the Frame Type field in Frame Control Field (FCF)  as an `uint16_t`.
+     *
+     */
+    enum Type : uint16_t
+    {
+        kTypeBeacon = 0, ///< Beacon Frame Type.
+        kTypeData   = 1, ///< Data Frame Type.
+        kTypeAck    = 2, ///< Ack Frame Type.
+        kTypeMacCmd = 3, ///< MAC Command Frame Type.
+    };
 
-    static constexpr uint16_t kFcfFrameBeacon      = 0 << 0;
-    static constexpr uint16_t kFcfFrameData        = 1 << 0;
-    static constexpr uint16_t kFcfFrameAck         = 2 << 0;
-    static constexpr uint16_t kFcfFrameMacCmd      = 3 << 0;
-    static constexpr uint16_t kFcfFrameTypeMask    = 7 << 0;
-    static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
-    static constexpr uint16_t kFcfFramePending     = 1 << 4;
-    static constexpr uint16_t kFcfAckRequest       = 1 << 5;
-    static constexpr uint16_t kFcfPanidCompression = 1 << 6;
-    static constexpr uint16_t kFcfIePresent        = 1 << 9;
-    static constexpr uint16_t kFcfDstAddrNone      = 0 << 10;
-    static constexpr uint16_t kFcfDstAddrShort     = 2 << 10;
-    static constexpr uint16_t kFcfDstAddrExt       = 3 << 10;
-    static constexpr uint16_t kFcfDstAddrMask      = 3 << 10;
-    static constexpr uint16_t kFcfFrameVersion2006 = 1 << 12;
-    static constexpr uint16_t kFcfFrameVersion2015 = 2 << 12;
-    static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
-    static constexpr uint16_t kFcfSrcAddrNone      = 0 << 14;
-    static constexpr uint16_t kFcfSrcAddrShort     = 2 << 14;
-    static constexpr uint16_t kFcfSrcAddrExt       = 3 << 14;
-    static constexpr uint16_t kFcfSrcAddrMask      = 3 << 14;
+    /**
+     * This enumeration represents the MAC frame version.
+     *
+     * Values match the Version field in Frame Control Field (FCF) as an `uint16_t`.
+     *
+     */
+    enum Version : uint16_t
+    {
+        kVersion2003 = 0 << 12, ///< 2003 Frame Version.
+        kVersion2006 = 1 << 12, ///< 2006 Frame Version.
+        kVersion2015 = 2 << 12, ///< 2015 Frame Version.
+    };
 
-    static constexpr uint8_t kSecNone      = 0 << 0;
-    static constexpr uint8_t kSecMic32     = 1 << 0;
-    static constexpr uint8_t kSecMic64     = 2 << 0;
-    static constexpr uint8_t kSecMic128    = 3 << 0;
-    static constexpr uint8_t kSecEnc       = 4 << 0;
-    static constexpr uint8_t kSecEncMic32  = 5 << 0;
-    static constexpr uint8_t kSecEncMic64  = 6 << 0;
-    static constexpr uint8_t kSecEncMic128 = 7 << 0;
-    static constexpr uint8_t kSecLevelMask = 7 << 0;
+    /**
+     * This enumeration represents the MAC frame security level.
+     *
+     * Values match the Security Level field in Security Control Field as an `uint8_t`.
+     *
+     */
+    enum SecurityLevel : uint8_t
+    {
+        kSecurityNone      = 0, ///< No security.
+        kSecurityMic32     = 1, ///< No encryption, MIC-32 authentication.
+        kSecurityMic64     = 2, ///< No encryption, MIC-64 authentication.
+        kSecurityMic128    = 3, ///< No encryption, MIC-128 authentication.
+        kSecurityEnc       = 4, ///< Encryption, no authentication
+        kSecurityEncMic32  = 5, ///< Encryption with MIC-32 authentication.
+        kSecurityEncMic64  = 6, ///< Encryption with MIC-64 authentication.
+        kSecurityEncMic128 = 7, ///< Encryption with MIC-128 authentication.
+    };
 
-    static constexpr uint8_t kMic0Size   = 0;
-    static constexpr uint8_t kMic32Size  = 32 / CHAR_BIT;
-    static constexpr uint8_t kMic64Size  = 64 / CHAR_BIT;
-    static constexpr uint8_t kMic128Size = 128 / CHAR_BIT;
-    static constexpr uint8_t kMaxMicSize = kMic128Size;
+    /**
+     * This enumeration represents the MAC frame security key identifier mode.
+     *
+     * Values match the Key Identifier Mode field in Security Control Field as an `uint8_t`.
+     *
+     */
+    enum KeyIdMode : uint8_t
+    {
+        kKeyIdMode0 = 0 << 3, ///< Key ID Mode 0 - Key is determined implicitly.
+        kKeyIdMode1 = 1 << 3, ///< Key ID Mode 1 - Key is determined from Key Index field.
+        kKeyIdMode2 = 2 << 3, ///< Key ID Mode 2 - Key is determined from 4-bytes Key Source and Index fields.
+        kKeyIdMode3 = 3 << 3, ///< Key ID Mode 3 - Key is determined from 8-bytes Key Source and Index fields.
+    };
 
-    static constexpr uint8_t kKeyIdMode0    = 0 << 3;
-    static constexpr uint8_t kKeyIdMode1    = 1 << 3;
-    static constexpr uint8_t kKeyIdMode2    = 2 << 3;
-    static constexpr uint8_t kKeyIdMode3    = 3 << 3;
-    static constexpr uint8_t kKeyIdModeMask = 3 << 3;
-
-    static constexpr uint8_t kKeySourceSizeMode0 = 0;
-    static constexpr uint8_t kKeySourceSizeMode1 = 0;
-    static constexpr uint8_t kKeySourceSizeMode2 = 4;
-    static constexpr uint8_t kKeySourceSizeMode3 = 8;
-
-    static constexpr uint8_t kKeyIndexSize = sizeof(uint8_t);
-
-    static constexpr uint8_t kMacCmdAssociationRequest         = 1;
-    static constexpr uint8_t kMacCmdAssociationResponse        = 2;
-    static constexpr uint8_t kMacCmdDisassociationNotification = 3;
-    static constexpr uint8_t kMacCmdDataRequest                = 4;
-    static constexpr uint8_t kMacCmdPanidConflictNotification  = 5;
-    static constexpr uint8_t kMacCmdOrphanNotification         = 6;
-    static constexpr uint8_t kMacCmdBeaconRequest              = 7;
-    static constexpr uint8_t kMacCmdCoordinatorRealignment     = 8;
-    static constexpr uint8_t kMacCmdGtsRequest                 = 9;
-
-    static constexpr uint8_t kImmAckLength = kFcfSize + kDsnSize + k154FcsSize;
+    /**
+     * This enumeration represents a subset of MAC Command Identifiers.
+     *
+     */
+    enum CommandId : uint8_t
+    {
+        kMacCmdAssociationRequest         = 1,
+        kMacCmdAssociationResponse        = 2,
+        kMacCmdDisassociationNotification = 3,
+        kMacCmdDataRequest                = 4,
+        kMacCmdPanidConflictNotification  = 5,
+        kMacCmdOrphanNotification         = 6,
+        kMacCmdBeaconRequest              = 7,
+        kMacCmdCoordinatorRealignment     = 8,
+        kMacCmdGtsRequest                 = 9,
+    };
 
     static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
 
@@ -365,11 +371,26 @@ public:
     /**
      * This method initializes the MAC header.
      *
-     * @param[in]  aFcf              The Frame Control field.
-     * @param[in]  aSecurityControl  The Security Control field.
+     * This method determines and writes the Frame Control Field (FCF) and Security Control in the frame along with
+     * given source and destination addresses and PAN IDs.
+     *
+     * The Ack Request bit in FCF is set if there is destination and it is not broadcast. The Frame Pending and IE
+     * Present bits are not set.
+     *
+     * @param[in] aType          Frame type.
+     * @param[in] aVerion        Frame version.
+     * @param[in] aAddrs         Frame source and destination addresses (each can be none, short, or extended).
+     * @param[in] aPanIds        Source and destination PAN IDs.
+     * @param[in] aSeucirtyLevel Frame security level.
+     * @param[in] aKeyIdMode     Frame security key ID mode.
      *
      */
-    void InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl);
+    void InitMacHeader(Type             aType,
+                       Version          aVersion,
+                       const Addresses &aAddrs,
+                       const PanIds    &aPanIds,
+                       SecurityLevel    aSecurityLevel,
+                       KeyIdMode        aKeyIdMode = kKeyIdMode0);
 
     /**
      * This method validates the frame.
@@ -395,7 +416,7 @@ public:
      * @retval FALSE  If this is not an Ack.
      *
      */
-    bool IsAck(void) const { return GetType() == kFcfFrameAck; }
+    bool IsAck(void) const { return GetType() == kTypeAck; }
 
     /**
      * This method returns the IEEE 802.15.4 Frame Version.
@@ -918,6 +939,8 @@ public:
     /**
      * This template method appends an Header IE at specified index in this frame.
      *
+     * This method also sets the IE present bit in the Frame Control Field (FCF).
+     *
      * @param[in,out]   aIndex  The index to append IE. If `aIndex` is `0` on input, this method finds the index
      *                          for the first IE and appends the IE at that position. If the position is not found
      *                          successfully, `aIndex` will be set to `kInvalidIndex`. Otherwise the IE will be
@@ -1066,6 +1089,46 @@ public:
     uint16_t GetFrameControlField(void) const;
 
 protected:
+    static constexpr uint8_t kFcfSize             = sizeof(uint16_t);
+    static constexpr uint8_t kDsnSize             = sizeof(uint8_t);
+    static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
+    static constexpr uint8_t kFrameCounterSize    = sizeof(uint32_t);
+    static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
+    static constexpr uint8_t k154FcsSize          = sizeof(uint16_t);
+    static constexpr uint8_t kKeyIndexSize        = sizeof(uint8_t);
+
+    static constexpr uint16_t kFcfFrameTypeMask    = 7 << 0;
+    static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
+    static constexpr uint16_t kFcfFramePending     = 1 << 4;
+    static constexpr uint16_t kFcfAckRequest       = 1 << 5;
+    static constexpr uint16_t kFcfPanidCompression = 1 << 6;
+    static constexpr uint16_t kFcfIePresent        = 1 << 9;
+    static constexpr uint16_t kFcfDstAddrNone      = 0 << 10;
+    static constexpr uint16_t kFcfDstAddrShort     = 2 << 10;
+    static constexpr uint16_t kFcfDstAddrExt       = 3 << 10;
+    static constexpr uint16_t kFcfDstAddrMask      = 3 << 10;
+    static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
+    static constexpr uint16_t kFcfSrcAddrNone      = 0 << 14;
+    static constexpr uint16_t kFcfSrcAddrShort     = 2 << 14;
+    static constexpr uint16_t kFcfSrcAddrExt       = 3 << 14;
+    static constexpr uint16_t kFcfSrcAddrMask      = 3 << 14;
+
+    static constexpr uint8_t kSecLevelMask  = 7 << 0;
+    static constexpr uint8_t kKeyIdModeMask = 3 << 3;
+
+    static constexpr uint8_t kMic0Size   = 0;
+    static constexpr uint8_t kMic32Size  = 32 / CHAR_BIT;
+    static constexpr uint8_t kMic64Size  = 64 / CHAR_BIT;
+    static constexpr uint8_t kMic128Size = 128 / CHAR_BIT;
+    static constexpr uint8_t kMaxMicSize = kMic128Size;
+
+    static constexpr uint8_t kKeySourceSizeMode0 = 0;
+    static constexpr uint8_t kKeySourceSizeMode1 = 0;
+    static constexpr uint8_t kKeySourceSizeMode2 = 4;
+    static constexpr uint8_t kKeySourceSizeMode3 = 8;
+
+    static constexpr uint8_t kImmAckLength = kFcfSize + kDsnSize + k154FcsSize;
+
     static constexpr uint8_t kInvalidIndex  = 0xff;
     static constexpr uint8_t kInvalidSize   = kInvalidIndex;
     static constexpr uint8_t kMaxPsduSize   = kInvalidSize - 1;
@@ -1092,7 +1155,7 @@ protected:
     static bool IsDstPanIdPresent(uint16_t aFcf);
     static bool IsSrcAddrPresent(uint16_t aFcf) { return (aFcf & kFcfSrcAddrMask) != kFcfSrcAddrNone; }
     static bool IsSrcPanIdPresent(uint16_t aFcf);
-    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kFcfFrameVersion2015; }
+    static bool IsVersion2015(uint16_t aFcf) { return (aFcf & kFcfFrameVersionMask) == kVersion2015; }
 
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
