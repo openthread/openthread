@@ -3494,13 +3494,12 @@ exit:
 Error MleRouter::SetChildRouterLinks(uint8_t aChildRouterLinks)
 {
     Error error = kErrorNone;
-    
+
     VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
     mChildRouterLinks = aChildRouterLinks;
 exit:
     return error;
 }
-
 
 bool MleRouter::IsExpectedToBecomeRouterSoon(void) const
 {
