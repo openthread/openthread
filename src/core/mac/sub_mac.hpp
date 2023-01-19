@@ -489,9 +489,11 @@ public:
      * This method sets the current MAC Frame Counter value.
      *
      * @param[in] aFrameCounter  The MAC Frame Counter value.
+     * @param[in] aSetIfLarger   If `true`, set only if the new value @p aFrameCounter is larger than the current value.
+     *                           If `false`, set the new value independent of the current value.
      *
      */
-    void SetFrameCounter(uint32_t aFrameCounter);
+    void SetFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     /**

@@ -621,6 +621,17 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
+ * This method sets the current MAC frame counter value only if the new given value is larger than the current value.
+ *
+ * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ *
+ * @param[in]   aInstance         A pointer to an OpenThread instance.
+ * @param[in]   aMacFrameCounter  The MAC frame counter value.
+ *
+ */
+void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter);
+
+/**
  * Get the current estimated time (in microseconds) of the radio chip.
  *
  * This microsecond timer must be a free-running timer. The timer must continue to advance with microsecond precision
