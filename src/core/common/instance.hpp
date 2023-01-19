@@ -127,6 +127,7 @@
 #include "utils/heap.hpp"
 #include "utils/history_tracker.hpp"
 #include "utils/jam_detector.hpp"
+#include "utils/mesh_diag.hpp"
 #include "utils/ping_sender.hpp"
 #include "utils/slaac_address.hpp"
 #include "utils/srp_client_buffers.hpp"
@@ -585,6 +586,10 @@ private:
     Utils::ChannelManager mChannelManager;
 #endif
 
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+    Utils::MeshDiag mMeshDiag;
+#endif
+
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Utils::HistoryTracker mHistoryTracker;
 #endif
@@ -862,6 +867,10 @@ template <> inline Utils::ChannelMonitor &Instance::Get(void) { return mChannelM
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 template <> inline Utils::ChannelManager &Instance::Get(void) { return mChannelManager; }
+#endif
+
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+template <> inline Utils::MeshDiag &Instance::Get(void) { return mMeshDiag; }
 #endif
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE

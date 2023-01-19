@@ -84,6 +84,14 @@
 #define OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+ *
+ * Define as 1 to enable Mesh Diagnostics module.
+ *
+ */
+#define OPENTHREAD_CONFIG_MESH_DIAG_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
  *
  * Define to 1 to enable Commissioner support.

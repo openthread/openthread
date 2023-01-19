@@ -67,6 +67,7 @@ Done
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
+- [meshdiag](#meshdiag-topology)
 - [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
@@ -1819,6 +1820,140 @@ Set the log level.
 ```bash
 > log level 4
 Done
+```
+
+### meshdiag topology [ip6-addrs][children]
+
+Discover network topology (list of routers and their connections).
+
+This command requires `OPENTHREAD_CONFIG_MESH_DIAG_ENABLE` and `OPENTHREAD_FTD`.
+
+Parameters are optional and indicate additional items to discover. Can be added in any order.
+
+- `ip6-addrs` to discover the list of IPv6 addresses of every router.
+- `children` to discover the child table of every router.
+
+Output lists all discovered routers. Information per router:
+
+- Router ID
+- RLOC16
+- Extended MAC address
+- Whether the router is this device is itself (`me`)
+- Whether the router is the parent of this device when device is a child (`parent`)
+- Whether the router is `leader`
+- Whether the router acts as a border router providing external connectivity (`br`)
+- List of routers to which this router has a link:
+  - `3-links`: Router IDs to which this router has a incoming link with link quality 3
+  - `2-links`: Router IDs to which this router has a incoming link with link quality 2
+  - `1-links`: Router IDs to which this router has a incoming link with link quality 1
+  - If a list if empty, it is omitted in the out.
+- If `ip6-addrs`, list of IPv6 addresses of the router
+- If `children`, list of all children of the router. Information per child:
+  - RLOC16
+  - Incoming Link Quality from perspective of parent to child (zero indicates unknown)
+  - Child Device mode (`r` rx-on-when-idle, `d` Full Thread Device, `n` Full Network Data, `-` no flags set)
+  - Whether the child is this device itself (`me`)
+  - Whether the child acts as a border router providing external connectivity (`br`)
+
+Discover network topology:
+
+```bash
+> meshdiag topology
+id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - me - leader
+   3-links:{ 46 }
+id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+   3-links:{ 02 51 57 }
+id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+   3-links:{ 51 57 }
+id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+   3-links:{ 33 57 }
+   2-links:{ 46 }
+id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+   3-links:{ 46 51 }
+   1-links:{ 33 }
+Done
+```
+
+Discover network topology with router's IPv6 addresses and children:
+
+```bash
+> meshdiag topology children ip6-addrs
+id:62 rloc16:0xf800 ext-addr:ce349873897233a5 - me - br
+   3-links:{ 46 }
+   ip6-addrs:
+       fdde:ad00:beef:0:0:ff:fe00:f800
+       fdde:ad00:beef:0:211d:39e9:6b2e:4ad1
+       fe80:0:0:0:cc34:9873:8972:33a5
+   children: none
+id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - leader - br
+   3-links:{ 46 51 }
+   ip6-addrs:
+       fdde:ad00:beef:0:0:ff:fe00:fc00
+       fdde:ad00:beef:0:0:ff:fe00:800
+       fdde:ad00:beef:0:8a36:a3eb:47ae:a9b0
+       fe80:0:0:0:88a5:7d2c:603f:e16c
+   children:
+       rloc16:0x0803 lq:3, mode:rn
+       rloc16:0x0804 lq:3, mode:rdn
+id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+   3-links:{ 57 }
+   ip6-addrs:
+       fdde:ad00:beef:0:0:ff:fe00:8400
+       fdde:ad00:beef:0:824:a126:cf19:a9f4
+       fe80:0:0:0:d0e5:11a1:46b9:e54d
+   children: none
+id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+   3-links:{ 02 46 57 }
+   ip6-addrs:
+       fdde:ad00:beef:0:0:ff:fe00:cc00
+       fdde:ad00:beef:0:2986:bba3:12d0:1dd2
+       fe80:0:0:0:98ab:43ab:abf0:5352
+   children: none
+id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+   3-links:{ 33 51 }
+   ip6-addrs:
+       fdde:ad00:beef:0:0:ff:fe00:e400
+       fdde:ad00:beef:0:87d0:550:bc18:9920
+       fe80:0:0:0:d8e9:c4c0:e9da:55ff
+   children:
+       rloc16:0xe402 lq:3, mode:rn - br
+       rloc16:0xe403 lq:3, mode:rn
+id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+   3-links:{ 02 51 62 }
+   ip6-addrs:
+       fdde:ad00:beef:0:0:ff:fe00:b800
+       fdde:ad00:beef:0:df4d:2994:d85c:c337
+       fe80:0:0:0:fc10:9d27:7e01:75cc
+   children: none
+Done
+```
+
+Discover network topology with children:
+
+```bash
+> meshdiag topology children
+id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - parent - leader - br
+   3-links:{ 46 51 }
+   children:
+       rloc16:0x0803 lq:0, mode:rn
+       rloc16:0x0804 lq:0, mode:rdn - me
+id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+   3-links:{ 02 51 62 }
+   children: none
+id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+   3-links:{ 57 }
+   children: none
+id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+   3-links:{ 02 46 57 }
+   children: none
+id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+   3-links:{ 33 51 }
+   children:
+       rloc16:0xe402 lq:3, mode:rn - br
+       rloc16:0xe403 lq:3, mode:rn
+id:62 rloc16:0xf800 ext-addr:ce349873897233a5 - br
+   3-links:{ 46 }
+   children: none
 ```
 
 ### mliid \<iid\>

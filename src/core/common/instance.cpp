@@ -206,6 +206,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     , mChannelManager(*this)
 #endif
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+    , mMeshDiag(*this)
+#endif
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     , mHistoryTracker(*this)
 #endif

@@ -151,6 +151,7 @@ SOURCES_COMMON                                  = \
     api/link_metrics_api.cpp                      \
     api/link_raw_api.cpp                          \
     api/logging_api.cpp                           \
+    api/mesh_diag_api.cpp                         \
     api/message_api.cpp                           \
     api/multi_radio_api.cpp                       \
     api/nat64_api.cpp                             \
@@ -328,6 +329,7 @@ SOURCES_COMMON                                  = \
     utils/heap.cpp                                \
     utils/history_tracker.cpp                     \
     utils/jam_detector.cpp                        \
+    utils/mesh_diag.cpp                           \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
     utils/ping_sender.cpp                         \
@@ -511,6 +513,7 @@ HEADERS_COMMON                                  = \
     config/link_raw.h                             \
     config/logging.h                              \
     config/mac.h                                  \
+    config/mesh_diag.h                            \
     config/misc.h                                 \
     config/mle.h                                  \
     config/nat64.h                                \
@@ -652,6 +655,7 @@ HEADERS_COMMON                                  = \
     utils/heap.hpp                                \
     utils/history_tracker.hpp                     \
     utils/jam_detector.hpp                        \
+    utils/mesh_diag.hpp                           \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
     utils/ping_sender.hpp                         \

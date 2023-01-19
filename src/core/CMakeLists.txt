@@ -61,6 +61,7 @@ set(COMMON_SOURCES
     api/link_metrics_api.cpp
     api/link_raw_api.cpp
     api/logging_api.cpp
+    api/mesh_diag_api.cpp
     api/message_api.cpp
     api/multi_radio_api.cpp
     api/nat64_api.cpp
@@ -238,6 +239,7 @@ set(COMMON_SOURCES
     utils/heap.cpp
     utils/history_tracker.cpp
     utils/jam_detector.cpp
+    utils/mesh_diag.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp
     utils/ping_sender.cpp

@@ -72,6 +72,7 @@ source_set("openthread") {
     "link_metrics.h",
     "link_raw.h",
     "logging.h",
+    "mesh_diag.h",
     "message.h",
     "multi_radio.h",
     "nat64.h",
