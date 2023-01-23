@@ -4772,9 +4772,12 @@ enum
     SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP_EXT__BEGIN + 0,
 
     /// MAC Frame Counter
-    /** Format: `L`.
+    /** Format: `L` for read and `Lb` or `L` for write
      *
      *  `L`: MAC frame counter
+     *  'b': Optional boolean used only during write. If not provided, `false` is assumed.
+     *       If `true` counter is set only if the new value is larger than current value.
+     *       If `false` the new value is set as frame counter independent of the current value.
      *
      * The Spinel property is used to set MAC frame counter to RCP.
      *

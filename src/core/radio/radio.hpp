@@ -302,6 +302,18 @@ public:
     }
 
     /**
+     * This method sets the current MAC Frame Counter value only if the new given value is larger than the current
+     * value.
+     *
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    void SetMacFrameCounterIfLarger(uint32_t aMacFrameCounter)
+    {
+        otPlatRadioSetMacFrameCounterIfLarger(GetInstancePtr(), aMacFrameCounter);
+    }
+
+    /**
      * This method gets the radio's transmit power in dBm.
      *
      * @param[out] aPower    A reference to output the transmit power in dBm.

@@ -212,6 +212,28 @@ OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t 
     OT_UNUSED_VARIABLE(aMacFrameCounter);
 }
 
+OT_TOOL_WEAK void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    // Radio platforms that support `OT_RADIO_CAPS_TRANSMIT_SEC` should
+    // provide this radio platform function.
+    //
+    // This function helps address an edge-case where OT stack may not
+    // yet know the latest frame counter values used by radio platform
+    // (e.g., due to enhanced acks processed by radio platform directly
+    // or due to delay between RCP and host) and then setting the value
+    // from OT stack may cause the counter value on radio to move back
+    // (OT stack will set the counter after appending it in
+    // `LinkFrameCounterTlv` on all radios when multi-radio links
+    // feature is enabled).
+    //
+    // The weak implementation here is intended as a solution to ensure
+    // temporary compatibility with radio platforms that may not yet
+    // implement it. If this weak implementation is used, the edge-case
+    // above may still happen.
+
+    otPlatRadioSetMacFrameCounter(aInstance, aMacFrameCounter);
+}
+
 OT_TOOL_WEAK uint64_t otPlatTimeGet(void) { return UINT64_MAX; }
 
 OT_TOOL_WEAK uint64_t otPlatRadioGetNow(otInstance *aInstance)

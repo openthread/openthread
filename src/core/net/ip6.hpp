@@ -294,22 +294,6 @@ public:
     void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
 
     /**
-     * This method indicates whether or not IPv6 forwarding is enabled.
-     *
-     * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
-     *
-     */
-    bool IsForwardingEnabled(void) const { return mForwardingEnabled; }
-
-    /**
-     * This method enables/disables IPv6 forwarding.
-     *
-     * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
-     *
-     */
-    void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
-
-    /**
      * This method performs default source address selection.
      *
      * @param[in,out]  aMessageInfo  A reference to the message information.
@@ -394,12 +378,12 @@ private:
     static Error   GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
 
     void  EnqueueDatagram(Message &aMessage);
-    Error ProcessReceiveCallback(Message           &aMessage,
-                                 MessageOrigin      aOrigin,
-                                 const MessageInfo &aMessageInfo,
-                                 uint8_t            aIpProto,
-                                 bool               aAllowReceiveFilter,
-                                 Message::Ownership aMessageOwnership);
+    Error PassToHost(Message           &aMessage,
+                     MessageOrigin      aOrigin,
+                     const MessageInfo &aMessageInfo,
+                     uint8_t            aIpProto,
+                     bool               aApplyFilter,
+                     Message::Ownership aMessageOwnership);
     Error HandleExtensionHeaders(Message      &aMessage,
                                  MessageOrigin aOrigin,
                                  MessageInfo  &aMessageInfo,
@@ -432,7 +416,6 @@ private:
 
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
-    bool mForwardingEnabled;
     bool mIsReceiveIp6FilterEnabled;
 
     Callback<otIp6ReceiveCallback> mReceiveIp6DatagramCallback;

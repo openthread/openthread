@@ -365,7 +365,7 @@ void Mle::Restore(void)
 
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
-    Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter());
+    Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter(), /* aSetIfLarger */ false);
 
 #if OPENTHREAD_MTD
     mDeviceMode.Set(networkInfo.GetDeviceMode() & ~DeviceMode::kModeFullThreadDevice);
@@ -697,7 +697,6 @@ void Mle::SetStateDetached(void)
 #if OPENTHREAD_FTD
     Get<MleRouter>().HandleDetachStart();
 #endif
-    Get<Ip6::Ip6>().SetForwardingEnabled(false);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     Get<Mac::Mac>().UpdateCsl();
 #endif
@@ -726,8 +725,6 @@ void Mle::SetStateChild(uint16_t aRloc16)
         Get<MleRouter>().HandleChildStart(mAttachMode);
     }
 #endif
-
-    Get<Ip6::Ip6>().SetForwardingEnabled(false);
 
     // send announce after attached if needed
     InformPreviousChannel();
@@ -4514,7 +4511,7 @@ Error Mle::TxMessage::AppendLinkFrameCounterTlv(void)
     counter = Get<KeyManager>().GetMaximumMacFrameCounter();
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    Get<KeyManager>().SetAllMacFrameCounters(counter);
+    Get<KeyManager>().SetAllMacFrameCounters(counter, /* aSetIfLarger */ true);
 #endif
 
     return Tlv::Append<LinkFrameCounterTlv>(*this, counter);

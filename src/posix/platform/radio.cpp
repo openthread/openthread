@@ -666,7 +666,13 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
-    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter));
+    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter, /* aSetIfLarger */ false));
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter, /* aSetIfLarger */ true));
     OT_UNUSED_VARIABLE(aInstance);
 }
 
