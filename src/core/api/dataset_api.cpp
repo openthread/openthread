@@ -173,10 +173,7 @@ void otDatasetUpdate(const otOperationalDataset *aSrcDataset, otOperationalDatas
 {
     MeshCoP::Dataset dataset;
 
-    AssertPointerIsNotNull(aSrcDataset);
-    AssertPointerIsNotNull(aDstDataset);
-
-    dataset.SetFrom(AsCoreType(aDstDataset));
-    dataset.SetFrom(AsCoreType(aSrcDataset));
+    IgnoreError(dataset.SetFrom(AsCoreType(aDstDataset)));
+    IgnoreError(dataset.SetFrom(AsCoreType(aSrcDataset)));
     dataset.ConvertTo(AsCoreType(aDstDataset));
 }
