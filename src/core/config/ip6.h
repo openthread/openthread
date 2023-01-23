@@ -173,6 +173,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TLS_ENABLE
+ *
+ * Define as 1 to enable support for TLS over TCP.
+ *
+ */
+#if OPENTHREAD_CONFIG_TCP_ENABLE && !defined(OPENTHREAD_CONFIG_TLS_ENABLE)
+#define OPENTHREAD_CONFIG_TLS_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS
  *
  * Define as 1 to allow IPv6 datagrams from Host to be looped back to Host.
