@@ -45,6 +45,7 @@
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/string.hpp"
 
 namespace ot {
 namespace FactoryDiags {
@@ -142,12 +143,52 @@ private:
         uint8_t  mLastLqi;
     };
 
+    struct RawPowerSetting
+    {
+        static constexpr uint16_t       kMaxDataSize    = OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE;
+        static constexpr uint16_t       kInfoStringSize = kMaxDataSize * 2 + 1;
+        typedef String<kInfoStringSize> InfoString;
+
+        InfoString ToString(void) const
+        {
+            InfoString string;
+
+            string.AppendHexBytes(mData, mLength);
+
+            return string;
+        }
+
+        bool operator!=(const RawPowerSetting &aOther) const
+        {
+            return (mLength != aOther.mLength) || (memcmp(mData, aOther.mData, mLength) != 0);
+        }
+
+        uint8_t  mData[kMaxDataSize];
+        uint16_t mLength;
+    };
+
+    struct PowerSettings
+    {
+        bool operator!=(const PowerSettings &aOther) const
+        {
+            return (mTargetPower != aOther.mTargetPower) || (mActualPower != aOther.mActualPower) ||
+                   (mRawPowerSetting != aOther.mRawPowerSetting);
+        }
+
+        int16_t         mTargetPower;
+        int16_t         mActualPower;
+        RawPowerSetting mRawPowerSetting;
+    };
+
     Error ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[]);
     Error ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    Error ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessGpio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessRepeat(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    Error ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
+    Error ProcessRawPowerSetting(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessSend(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessStats(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
@@ -155,6 +196,9 @@ private:
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
     Error ProcessEcho(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 #endif
+
+    Error GetRawPowerSetting(RawPowerSetting &aRawPowerSetting);
+    Error GetPowerSettings(uint8_t aChannel, PowerSettings &aPowerSettings);
 
     void TransmitPacket(void);
 

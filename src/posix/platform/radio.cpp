@@ -41,6 +41,7 @@
 #include "common/new.hpp"
 #include "lib/spinel/radio_spinel.hpp"
 #include "posix/platform/radio.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 #include "hdlc_interface.hpp"
@@ -623,6 +624,117 @@ exit:
     return error;
 }
 
+otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
+                                        uint8_t     aChannel,
+                                        int16_t    *aTargetPower,
+                                        int16_t    *aActualPower,
+                                        uint8_t    *aRawPowerSetting,
+                                        uint16_t   *aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    static constexpr uint16_t kRawPowerStringSize = OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE * 2 + 1;
+    static constexpr uint16_t kFmtStringSize      = 100;
+
+    otError error;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+    char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    int     targetPower;
+    int     actualPower;
+    char    rawPowerSetting[kRawPowerStringSize];
+    char    fmt[kFmtStringSize];
+
+    assert((aTargetPower != nullptr) && (aActualPower != nullptr) && (aRawPowerSetting != nullptr) &&
+           (aRawPowerSettingLength != nullptr));
+
+    snprintf(cmd, sizeof(cmd), "powersettings %d", aChannel);
+    SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, output, sizeof(output)));
+    snprintf(fmt, sizeof(fmt), "TargetPower(0.01dBm): %%d\r\nActualPower(0.01dBm): %%d\r\nRawPowerSetting: %%%us\r\n",
+             kRawPowerStringSize);
+    VerifyOrExit(sscanf(output, fmt, &targetPower, &actualPower, rawPowerSetting) == 3, error = OT_ERROR_FAILED);
+    SuccessOrExit(
+        error = ot::Utils::CmdLineParser::ParseAsHexString(rawPowerSetting, *aRawPowerSettingLength, aRawPowerSetting));
+    *aTargetPower = static_cast<int16_t>(targetPower);
+    *aActualPower = static_cast<int16_t>(actualPower);
+
+exit:
+    return error;
+}
+
+otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
+                                          const uint8_t *aRawPowerSetting,
+                                          uint16_t       aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+    int     nbytes;
+
+    assert(aRawPowerSetting != nullptr);
+
+    nbytes = snprintf(cmd, sizeof(cmd), "rawpowersetting ");
+
+    for (uint16_t i = 0; i < aRawPowerSettingLength; i++)
+    {
+        nbytes += snprintf(cmd + nbytes, sizeof(cmd) - static_cast<size_t>(nbytes), "%02x", aRawPowerSetting[i]);
+        VerifyOrExit(nbytes < static_cast<int>(sizeof(cmd)), error = OT_ERROR_INVALID_ARGS);
+    }
+
+    SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, nullptr, 0));
+
+exit:
+    return error;
+}
+
+otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
+                                          uint8_t    *aRawPowerSetting,
+                                          uint16_t   *aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    otError error;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+    char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
+    char   *str;
+
+    assert((aRawPowerSetting != nullptr) && (aRawPowerSettingLength != nullptr));
+
+    snprintf(cmd, sizeof(cmd), "rawpowersetting");
+    SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, output, sizeof(output)));
+    VerifyOrExit((str = strtok(output, "\r")) != nullptr, error = OT_ERROR_FAILED);
+    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseAsHexString(str, *aRawPowerSettingLength, aRawPowerSetting));
+
+exit:
+    return error;
+}
+
+otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+
+    snprintf(cmd, sizeof(cmd), "rawpowersetting %s", aEnable ? "enable" : "disable");
+    SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, nullptr, 0));
+
+exit:
+    return error;
+}
+
+otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error;
+    char    cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+
+    snprintf(cmd, sizeof(cmd), "cw %s", aEnable ? "start" : "stop");
+    SuccessOrExit(error = sRadioSpinel.PlatDiagProcess(cmd, nullptr, 0));
+
+exit:
+    return error;
+}
+
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -666,7 +778,13 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
-    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter));
+    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter, /* aSetIfLarger */ false));
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    SuccessOrDie(sRadioSpinel.SetMacFrameCounter(aMacFrameCounter, /* aSetIfLarger */ true));
     OT_UNUSED_VARIABLE(aInstance);
 }
 

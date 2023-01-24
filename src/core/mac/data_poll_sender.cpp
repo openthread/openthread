@@ -513,6 +513,13 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
     if (mRetxMode)
     {
         period = Min(period, kRetxPollPeriod);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (Get<Mac::Mac>().GetCslPeriodMs() > 0)
+        {
+            period = Min(period, Get<Mac::Mac>().GetCslPeriodMs());
+        }
+#endif
     }
 
     if (mRemainingFastPolls != 0)
@@ -556,66 +563,41 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 
 Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
 {
-    Mac::TxFrame *frame = nullptr;
-    Mac::Address  src, dst;
-    uint16_t      fcf;
-    bool          iePresent;
+    Mac::TxFrame  *frame = nullptr;
+    Mac::Addresses addresses;
+    Mac::PanIds    panIds;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     Mac::RadioType radio;
 
-    SuccessOrExit(GetPollDestinationAddress(dst, radio));
+    SuccessOrExit(GetPollDestinationAddress(addresses.mDestination, radio));
     frame = &aTxFrames.GetTxFrame(radio);
 #else
-    SuccessOrExit(GetPollDestinationAddress(dst));
+    SuccessOrExit(GetPollDestinationAddress(addresses.mDestination));
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    fcf = Mac::Frame::kFcfFrameMacCmd | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfAckRequest |
-          Mac::Frame::kFcfSecurityEnabled;
-
-    iePresent = Get<MeshForwarder>().CalcIePresent(nullptr);
-
-    if (iePresent)
+    if (addresses.mDestination.IsExtended())
     {
-        fcf |= Mac::Frame::kFcfIePresent;
-    }
-
-    fcf |= Get<MeshForwarder>().CalcFrameVersion(Get<NeighborTable>().FindNeighbor(dst), iePresent);
-
-    if (dst.IsExtended())
-    {
-        fcf |= Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrExt;
-        src.SetExtended(Get<Mac::Mac>().GetExtAddress());
+        addresses.mSource.SetExtended(Get<Mac::Mac>().GetExtAddress());
     }
     else
     {
-        fcf |= Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort;
-        src.SetShort(Get<Mac::Mac>().GetShortAddress());
+        addresses.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
     }
 
-    frame->InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
+    panIds.mSource      = Get<Mac::Mac>().GetPanId();
+    panIds.mDestination = Get<Mac::Mac>().GetPanId();
 
-    if (frame->IsDstPanIdPresent())
-    {
-        frame->SetDstPanId(Get<Mac::Mac>().GetPanId());
-    }
+    Get<MeshForwarder>().PrepareMacHeaders(*frame, Mac::Frame::kTypeMacCmd, addresses, panIds,
+                                           Mac::Frame::kSecurityEncMic32, Mac::Frame::kKeyIdMode1, nullptr);
 
-    frame->SetSrcAddr(src);
-    frame->SetDstAddr(dst);
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    if (iePresent)
-    {
-        Get<MeshForwarder>().AppendHeaderIe(nullptr, *frame);
-    }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (frame->GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr)
     {
         // Disable frame retransmission when the data poll has CSL IE included
         aTxFrames.SetMaxFrameRetries(0);
     }
-#endif
 #endif
 
     IgnoreError(frame->SetCommandId(Mac::Frame::kMacCmdDataRequest));

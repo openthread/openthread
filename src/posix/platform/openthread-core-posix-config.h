@@ -45,6 +45,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode output buffer size in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 500
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PLATFORM
  *
  * Define to enable platform region logging.

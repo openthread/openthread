@@ -299,9 +299,10 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
         // Split the log into two lines for RTT to output
-        LogDebg("Received frame in state (SubMac %s, CSL %s), timestamp %u", StateToString(mState),
-                mIsCslSampling ? "CslSample" : "CslSleep", static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
-        LogDebg("Target sample start time %u, time drift %d", mCslSampleTime.GetValue(),
+        LogDebg("Received frame in state (SubMac %s, CSL %s), timestamp %lu", StateToString(mState),
+                mIsCslSampling ? "CslSample" : "CslSleep",
+                ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp)));
+        LogDebg("Target sample start time %lu, time drift %d", ToUlong(mCslSampleTime.GetValue()),
                 static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue());
 #endif
     }
@@ -965,13 +966,23 @@ exit:
     return;
 }
 
-void SubMac::SetFrameCounter(uint32_t aFrameCounter)
+void SubMac::SetFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger)
 {
-    mFrameCounter = aFrameCounter;
+    if (!aSetIfLarger || (aFrameCounter > mFrameCounter))
+    {
+        mFrameCounter = aFrameCounter;
+    }
 
     VerifyOrExit(!ShouldHandleTransmitSecurity());
 
-    Get<Radio>().SetMacFrameCounter(aFrameCounter);
+    if (aSetIfLarger)
+    {
+        Get<Radio>().SetMacFrameCounterIfLarger(aFrameCounter);
+    }
+    else
+    {
+        Get<Radio>().SetMacFrameCounter(aFrameCounter);
+    }
 
 exit:
     return;

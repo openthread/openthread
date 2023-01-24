@@ -356,6 +356,9 @@ otError otLinkRawSetMacKey(otInstance     *aInstance,
 /**
  * Sets the current MAC frame counter value.
  *
+ * This function always sets the MAC counter to the new given value @p aMacFrameCounter independent of the current
+ * value.
+ *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
  * @param[in]   aMacFrameCounter  The MAC frame counter value.
  *
@@ -364,6 +367,18 @@ otError otLinkRawSetMacKey(otInstance     *aInstance,
  *
  */
 otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
+
+/**
+ * Sets the current MAC frame counter value only if the new value is larger than the current one.
+ *
+ * @param[in]   aInstance         A pointer to an OpenThread instance.
+ * @param[in]   aMacFrameCounter  The MAC frame counter value.
+ *
+ * @retval OT_ERROR_NONE             If successful.
+ * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+ *
+ */
+otError otLinkRawSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
  * Get current platform time (64bits width) of the radio chip.

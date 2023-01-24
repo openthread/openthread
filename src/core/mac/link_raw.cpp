@@ -258,12 +258,12 @@ exit:
     return error;
 }
 
-Error LinkRaw::SetMacFrameCounter(uint32_t aMacFrameCounter)
+Error LinkRaw::SetMacFrameCounter(uint32_t aFrameCounter, bool aSetIfLarger)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
-    mSubMac.SetFrameCounter(aMacFrameCounter);
+    mSubMac.SetFrameCounter(aFrameCounter, aSetIfLarger);
 
 exit:
     return error;

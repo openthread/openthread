@@ -618,6 +618,14 @@ public:
     uint16_t GetCslPeriod(void) const { return mCslPeriod; }
 
     /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period in milliseconds.
+     *
+     */
+    uint32_t GetCslPeriodMs(void) const { return mCslPeriod * kUsPerTenSymbols / 1000; }
+
+    /**
      * This method sets the CSL period.
      *
      * @param[in]  aPeriod  The CSL period in 10 symbols.

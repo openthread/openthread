@@ -648,10 +648,12 @@ public:
     /**
      * This method sets the current MAC Frame Counter value.
      *
-     * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     * @param[in] aSetIfLarger      If `true`, set only if the new value is larger than the current value.
+     *                              If `false`, set the new value independent of the current value.
      *
      */
-    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter, bool aSetIfLarger);
 
     /**
      * This method sets the radio region code.

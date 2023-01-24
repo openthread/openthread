@@ -79,16 +79,25 @@ Error Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOut
     Error     error;
     OptionMpl option;
 
-    VerifyOrExit(aMessage.ReadBytes(aMessage.GetOffset(), &option, sizeof(option)) >= OptionMpl::kMinLength &&
-                     (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
-                      option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
-                 error = kErrorParse);
+    // Read the min size bytes first, then check the expected
+    // `SeedIdLength` and read the full `OptionMpl` if needed.
+    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), &option, OptionMpl::kMinSize));
 
-    if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
+    switch (option.GetSeedIdLength())
     {
+    case OptionMpl::kSeedIdLength0:
         // Retrieve Seed ID from the IPv6 Source Address RLOC.
         VerifyOrExit(aAddress.GetIid().IsLocator(), error = kErrorDrop);
         option.SetSeedId(aAddress.GetIid().GetLocator());
+        break;
+
+    case OptionMpl::kSeedIdLength2:
+        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), option));
+        break;
+
+    case OptionMpl::kSeedIdLength8:
+    case OptionMpl::kSeedIdLength16:
+        ExitNow(error = kErrorParse);
     }
 
     // Check if the MPL Data Message is new.

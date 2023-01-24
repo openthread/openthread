@@ -153,6 +153,7 @@ private:
     static constexpr uint16_t k154AckFrameSize = 3 + kFcsSize;
     static constexpr int8_t   kRxRssi          = -20; // The RSSI value used for received frames on TREL radio link.
     static constexpr uint32_t kAckWaitWindow   = 750; // (in msec)
+    static constexpr uint16_t kFcfFramePending = 1 << 4;
 
     enum State : uint8_t
     {

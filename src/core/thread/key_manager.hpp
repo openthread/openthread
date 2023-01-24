@@ -401,10 +401,12 @@ public:
     /**
      * This method sets the current MAC Frame Counter value for all radio links.
      *
-     * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
-     *
+     * @param[in] aFrameCounter  The MAC Frame Counter value.
+     * @param[in] aSetIfLarger   If `true`, set only if the new value @p aFrameCounter is larger than current value.
+     *                           If `false`, set the new value independent of the current value.
+
      */
-    void SetAllMacFrameCounters(uint32_t aMacFrameCounter);
+    void SetAllMacFrameCounters(uint32_t aFrameCounter, bool aSetIfLarger);
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
