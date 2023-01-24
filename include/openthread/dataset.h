@@ -599,7 +599,7 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
  *
  * This function updates @p aDstDataset by setting all the components that are marked as present in @p aSrcDataset to
  * the same value. Other components remain unchanged in @p aDataset.
- * 
+ *
  * @param[in]  aSrcDataset  A pointer to dataset with the new/updated information.
  * @param[out] aDstDataset  A pointer to where the dataset will be placed.
  *
