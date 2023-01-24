@@ -157,14 +157,19 @@ stoplistening
 Done
 ```
 
-### init [\<size\>]
+### init [\<mode\>]&nbsp;[\<size\>]
 
 Initializes the example TCP listener and the example TCP endpoint.
 
+- mode: this specifies the buffering strategy and whether to use TLS. The possible values are "linked", "circular" (default), and "tls".
 - size: the size of the receive buffer to associate with the example TCP endpoint. If left unspecified, the maximum size is used.
 
+If "tls" is used, then the TLS protocol will be used for the connection (on top of TCP). When communicating over TCP between two nodes, either both should use TLS or neither should (a non-TLS endpoint cannot communicate with a TLS endpoint). The first two options, "linked" and "circular", specify that TLS should not be used and specify a buffering strategy to use with TCP; two endpoints of a TCP connection may use different buffering strategies.
+
+The behaviors of "linked" and "circular" buffering are identical, but the option is provided so that users of TCP can inspect the code to see an example of using the two buffering strategies.
+
 ```bash
-> tcp init
+> tcp init tls
 Done
 ```
 

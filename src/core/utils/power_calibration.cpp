@@ -29,6 +29,7 @@
 #include "power_calibration.hpp"
 
 #if OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+#include <openthread/platform/diag.h>
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
@@ -131,9 +132,11 @@ exit:
     return error;
 }
 
-Error PowerCalibration::GetRawPowerSetting(uint8_t   aChannel,
-                                           uint8_t  *aRawPowerSetting,
-                                           uint16_t *aRawPowerSettingLength)
+Error PowerCalibration::GetPowerSettings(uint8_t   aChannel,
+                                         int16_t  *aTargetPower,
+                                         int16_t  *aActualPower,
+                                         uint8_t  *aRawPowerSetting,
+                                         uint16_t *aRawPowerSettingLength)
 {
     Error   error = kErrorNone;
     uint8_t chIndex;
@@ -168,8 +171,20 @@ Error PowerCalibration::GetRawPowerSetting(uint8_t   aChannel,
 exit:
     if (error == kErrorNone)
     {
-        error = mCalibratedPowerTables[mLastChannel - Radio::kChannelMin][mCalibratedPowerIndex].GetRawPowerSetting(
-            aRawPowerSetting, aRawPowerSettingLength);
+        chIndex = mLastChannel - Radio::kChannelMin;
+
+        if (aTargetPower != nullptr)
+        {
+            *aTargetPower = mTargetPowerTable[chIndex];
+        }
+
+        if (aActualPower != nullptr)
+        {
+            *aActualPower = mCalibratedPowerTables[chIndex][mCalibratedPowerIndex].GetActualPower();
+        }
+
+        error = mCalibratedPowerTables[chIndex][mCalibratedPowerIndex].GetRawPowerSetting(aRawPowerSetting,
+                                                                                          aRawPowerSettingLength);
     }
 
     return error;
@@ -208,7 +223,23 @@ otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
     AssertPointerIsNotNull(aRawPowerSetting);
     AssertPointerIsNotNull(aRawPowerSettingLength);
 
-    return AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetRawPowerSetting(aChannel, aRawPowerSetting,
-                                                                                   aRawPowerSettingLength);
+    return AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetPowerSettings(
+        aChannel, nullptr, nullptr, aRawPowerSetting, aRawPowerSettingLength);
+}
+
+otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
+                                        uint8_t     aChannel,
+                                        int16_t    *aTargetPower,
+                                        int16_t    *aActualPower,
+                                        uint8_t    *aRawPowerSetting,
+                                        uint16_t   *aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    AssertPointerIsNotNull(aRawPowerSetting);
+    AssertPointerIsNotNull(aRawPowerSettingLength);
+
+    return AsCoreType(aInstance).Get<Utils::PowerCalibration>().GetPowerSettings(
+        aChannel, aTargetPower, aActualPower, aRawPowerSetting, aRawPowerSettingLength);
 }
 #endif // OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE && OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE

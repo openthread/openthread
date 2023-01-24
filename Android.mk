@@ -49,6 +49,7 @@ OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1                           \
     -DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1                        \
+    -DOPENTHREAD_CONFIG_TLS_ENABLE=1                                \
     -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1                \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_PLATFORM_POSIX=1                                   \
