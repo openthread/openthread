@@ -309,6 +309,8 @@ public:
      *
      * @param[in]  aChildRouterLinks  The MLE_CHILD_ROUTER_LINKS value.
      *
+     * @retval kErrorNone          Successfully set the value.
+     * @retval kErrorInvalidState  Thread protocols are enabled.
      */
     Error SetChildRouterLinks(uint8_t aChildRouterLinks);
 

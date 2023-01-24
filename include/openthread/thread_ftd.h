@@ -358,9 +358,9 @@ void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold
 /**
  * Get the MLE_CHILD_ROUTER_LINKS parameter used in the REED role.
  *
- * This parameter specifies the max number of neighboring routers with which the device (as an FED) 
- *  will try to establish link. *
- 
+ * This parameter specifies the max number of neighboring routers with which the device (as an FED)
+ *  will try to establish link.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The MLE_CHILD_ROUTER_LINKS value.
