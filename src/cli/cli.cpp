@@ -3011,6 +3011,10 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
             OutputLine("RecursionDesired: %s",
                        (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+            OutputLine("TransportProtocol: %s",
+                       (defaultConfig->mTransportProto == OT_DNS_TRANSPORT_UDP) ? "udp" : "tcp");
+#endif
         }
         /* clang-format off */
         /**
@@ -3286,6 +3290,19 @@ otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
     aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
 
+    VerifyOrExit(!aArgs[5].IsEmpty());
+    if (aArgs[5] == "tcp")
+    {
+        aConfig->mTransportProto = OT_DNS_TRANSPORT_TCP;
+    }
+    else if (aArgs[5] == "udp")
+    {
+        aConfig->mTransportProto = OT_DNS_TRANSPORT_UDP;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
 exit:
     return error;
 }

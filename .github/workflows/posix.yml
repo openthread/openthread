@@ -95,6 +95,7 @@ jobs:
         sudo apt-get install --no-install-recommends -y bind9-host ntp socat
         sudo systemctl restart ntp
         sudo socat 'UDP6-LISTEN:53,fork,reuseaddr,bind=[::1]' UDP:127.0.0.53:53 &
+        socat 'TCP6-LISTEN:2000,fork,reuseaddr' TCP:127.0.0.53:53 &
         host ipv6.google.com 127.0.0.53
         host ipv6.google.com ::1
         ulimit -c unlimited

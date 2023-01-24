@@ -81,6 +81,19 @@ typedef enum
 } otDnsNat64Mode;
 
 /**
+ * This enumeration type represents the DNS transport protocol in an `otDnsQueryConfig`.
+ *
+ * This `OT_DNS_TRANSPORT_TCP` is only supported when `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is enabled.
+ *
+ */
+typedef enum
+{
+    OT_DNS_TRANSPORT_UNSPECIFIED = 0, /// DNS transport is unspecified.
+    OT_DNS_TRANSPORT_UDP         = 1, /// DNS query should be sent via UDP.
+    OT_DNS_TRANSPORT_TCP         = 2, /// DNS query should be sent via TCP.
+} otDnsTransportProto;
+
+/**
  * This structure represents a DNS query configuration.
  *
  * Any of the fields in this structure can be set to zero to indicate that it is not specified. How the unspecified
@@ -89,11 +102,12 @@ typedef enum
  */
 typedef struct otDnsQueryConfig
 {
-    otSockAddr         mServerSockAddr;  ///< Server address (IPv6 address/port). All zero or zero port for unspecified.
-    uint32_t           mResponseTimeout; ///< Wait time (in msec) to rx response. Zero indicates unspecified value.
-    uint8_t            mMaxTxAttempts;   ///< Maximum tx attempts before reporting failure. Zero for unspecified value.
-    otDnsRecursionFlag mRecursionFlag;   ///< Indicates whether the server can resolve the query recursively or not.
-    otDnsNat64Mode     mNat64Mode;       ///< Allow/Disallow NAT64 address translation during address resolution.
+    otSockAddr          mServerSockAddr; ///< Server address (IPv6 address/port). All zero or zero port for unspecified.
+    uint32_t            mResponseTimeout; ///< Wait time (in msec) to rx response. Zero indicates unspecified value.
+    uint8_t             mMaxTxAttempts;   ///< Maximum tx attempts before reporting failure. Zero for unspecified value.
+    otDnsRecursionFlag  mRecursionFlag;   ///< Indicates whether the server can resolve the query recursively or not.
+    otDnsNat64Mode      mNat64Mode;       ///< Allow/Disallow NAT64 address translation during address resolution.
+    otDnsTransportProto mTransportProto;  ///< Select default transport protocol.
 } otDnsQueryConfig;
 
 /**
