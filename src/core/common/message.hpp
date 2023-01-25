@@ -608,12 +608,47 @@ public:
     }
 
     /**
-     * This method removes header bytes from the message.
+     * This method removes header bytes from the message at start of message.
      *
-     * @param[in]  aLength  Number of header bytes to remove.
+     * The caller MUST ensure that message contains the bytes to be removed, i.e. `aOffset` is smaller than the message
+     * length.
+     *
+     * @param[in]  aLength  Number of header bytes to remove from start of `Message`.
      *
      */
     void RemoveHeader(uint16_t aLength);
+
+    /**
+     * This method removes header bytes from the message at a given offset.
+     *
+     * This method shrinks the message. The existing header bytes before @p aOffset are copied forward and replace the
+     * removed bytes.
+     *
+     * The caller MUST ensure that message contains the bytes to be removed, i.e. `aOffset + aLength` is smaller than
+     * the message length.
+     *
+     * @param[in]  aOffset  The offset to start removing.
+     * @param[in]  aLength  Number of header bytes to remove.
+     *
+     */
+    void RemoveHeader(uint16_t aOffset, uint16_t aLength);
+
+    /**
+     * This method grows the message to make space for new header bytes at a given offset.
+     *
+     * This method grows the message header (similar to `PrependBytes()`). The existing header bytes from start to
+     * `aOffset + aLength` are then copied backward to make room for the new header bytes. Note that this method does
+     * not change the bytes from @p aOffset up @p aLength (the new inserted header range). Caller can write to this
+     * range to update the bytes after successful return from this method.
+     *
+     * @param[in] aOffset   The offset at which to insert the header bytes
+     * @param[in] aLength   Number of header bytes to insert.
+     *
+     * @retval kErrorNone    Successfully grown the message and copied the existing header bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    Error InsertHeader(uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method appends bytes to the end of the message.
@@ -810,6 +845,23 @@ public:
     void WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength);
 
     /**
+     * This method writes bytes read from another or potentially the same message to the message at a given offset.
+     *
+     * This method will not resize the message. The bytes to write (with @p aLength) MUST fit within the existing
+     * message buffer (from the given @p aWriteOffset up to the message's length).
+     *
+     * This method can be used to copy bytes within the same message in either direction, i.e., copy forward where
+     * `aWriteOffset > aReadOffset` or copy backward where `aWriteOffset < aReadOffset`.
+     *
+     * @param[in] aWriteOffset  Byte offset within this message to begin writing.
+     * @param[in] aMessage      The message to read the bytes from.
+     * @param[in] aReadOffset   The offset in @p aMessage to start reading the bytes from.
+     * @param[in] aLength       The number of bytes to read from @p aMessage and write.
+     *
+     */
+    void WriteBytesFromMessage(uint16_t aWriteOffset, const Message &aMessage, uint16_t aReadOffset, uint16_t aLength);
+
+    /**
      * This methods writes an object to the message.
      *
      * This method will not resize the message. The entire given object (all its bytes) MUST fit within the existing
@@ -844,23 +896,6 @@ public:
     {
         WriteBytes(aOffset, aData.GetBytes(), aData.GetLength());
     }
-
-    /**
-     * This method copies bytes from one message to another.
-     *
-     * If source and destination messages are the same, `CopyTo()` can be used to perform a backward copy, but
-     * it MUST not be used to forward copy within the same message (i.e., when source and destination messages are the
-     * same and source offset is smaller than the destination offset).
-     *
-     * @param[in] aSourceOffset       Byte offset within the source message to begin reading.
-     * @param[in] aDestinationOffset  Byte offset within the destination message to begin writing.
-     * @param[in] aLength             Number of bytes to copy.
-     * @param[in] aMessage            Message to copy to.
-     *
-     * @returns The number of bytes copied.
-     *
-     */
-    uint16_t CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
      * This method creates a copy of the message.
