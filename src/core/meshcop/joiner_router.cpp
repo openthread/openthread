@@ -134,7 +134,6 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     Tmf::MessageInfo messageInfo(GetInstance());
     ExtendedTlv      tlv;
     uint16_t         borderAgentRloc;
-    uint16_t         offset;
 
     LogInfo("JoinerRouter::HandleUdpReceive");
 
@@ -150,9 +149,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(aMessage.GetLength() - aMessage.GetOffset());
     SuccessOrExit(error = message->Append(tlv));
-    offset = message->GetLength();
-    SuccessOrExit(error = message->SetLength(offset + tlv.GetLength()));
-    aMessage.CopyTo(aMessage.GetOffset(), offset, tlv.GetLength(), *message);
+    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, aMessage.GetOffset(), tlv.GetLength()));
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(borderAgentRloc);
 
@@ -189,8 +186,7 @@ template <> void JoinerRouter::HandleTmf<kUriRelayTx>(Coap::Message &aMessage, c
 
     VerifyOrExit((message = mSocket.NewMessage(0, settings)) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->SetLength(length));
-    aMessage.CopyTo(offset, 0, length, *message);
+    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offset, length));
 
     messageInfo.GetPeerAddr().SetToLinkLocalAddress(joinerIid);
     messageInfo.SetPeerPort(joinerPort);
