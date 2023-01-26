@@ -408,14 +408,15 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(error = mDecoder.ReadUint8(aFrame.mChannel));
 
     // Set the default value for all optional parameters.
-    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs     = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
-    aFrame.mInfo.mTxInfo.mMaxFrameRetries     = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = true;
-    aFrame.mInfo.mTxInfo.mIsHeaderUpdated     = false;
-    aFrame.mInfo.mTxInfo.mIsARetx             = false;
-    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = false;
-    aFrame.mInfo.mTxInfo.mTxDelay             = 0;
-    aFrame.mInfo.mTxInfo.mTxDelayBaseTime     = 0;
+    aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone = aFrame.mChannel;
+    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs      = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+    aFrame.mInfo.mTxInfo.mMaxFrameRetries      = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled        = true;
+    aFrame.mInfo.mTxInfo.mIsHeaderUpdated      = false;
+    aFrame.mInfo.mTxInfo.mIsARetx              = false;
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed  = false;
+    aFrame.mInfo.mTxInfo.mTxDelay              = 0;
+    aFrame.mInfo.mTxInfo.mTxDelayBaseTime      = 0;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -430,6 +431,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelay));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
+    SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone));
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
     aFrame.mInfo.mTxInfo.mIsHeaderUpdated     = isHeaderUpdated;
     aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;

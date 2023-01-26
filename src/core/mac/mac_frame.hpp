@@ -837,14 +837,6 @@ public:
     uint8_t GetChannel(void) const { return mChannel; }
 
     /**
-     * This method sets the IEEE 802.15.4 channel used for transmission or reception.
-     *
-     * @param[in]  aChannel  The IEEE 802.15.4 channel used for transmission or reception.
-     *
-     */
-    void SetChannel(uint8_t aChannel) { mChannel = aChannel; }
-
-    /**
      * This method returns the IEEE 802.15.4 PSDU length.
      *
      * @returns The IEEE 802.15.4 PSDU length.
@@ -1262,6 +1254,36 @@ public:
 class TxFrame : public Frame
 {
 public:
+    /**
+     * This method sets the channel on which to send the frame.
+     *
+     * It also sets the `RxChannelAfterTxDone` to the same channel.
+     *
+     * @param[in]  aChannel  The channel used for transmission.
+     *
+     */
+    void SetChannel(uint8_t aChannel)
+    {
+        mChannel = aChannel;
+        SetRxChannelAfterTxDone(aChannel);
+    }
+
+    /**
+     * This method gets the RX channel after frame TX is done.
+     *
+     * @returns The RX channel after frame TX is done.
+     *
+     */
+    uint8_t GetRxChannelAfterTxDone(void) const { return mInfo.mTxInfo.mRxChannelAfterTxDone; }
+
+    /**
+     * This method sets the RX channel after frame TX is done.
+     *
+     * @param[in] aChannel   The RX channel after frame TX is done.
+     *
+     */
+    void SetRxChannelAfterTxDone(uint8_t aChannel) { mInfo.mTxInfo.mRxChannelAfterTxDone = aChannel; }
+
     /**
      * This method returns the maximum number of backoffs the CSMA-CA algorithm will attempt before declaring a channel
      * access failure.

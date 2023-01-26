@@ -1980,21 +1980,23 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
 
     error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
-                    SPINEL_DATATYPE_DATA_WLEN_S                                   // Frame data
-                        SPINEL_DATATYPE_UINT8_S                                   // Channel
-                            SPINEL_DATATYPE_UINT8_S                               // MaxCsmaBackoffs
-                                SPINEL_DATATYPE_UINT8_S                           // MaxFrameRetries
-                                    SPINEL_DATATYPE_BOOL_S                        // CsmaCaEnabled
-                                        SPINEL_DATATYPE_BOOL_S                    // IsHeaderUpdated
-                                            SPINEL_DATATYPE_BOOL_S                // IsARetx
-                                                SPINEL_DATATYPE_BOOL_S            // SkipAes
-                                                    SPINEL_DATATYPE_UINT32_S      // TxDelay
-                                                        SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
+                    SPINEL_DATATYPE_DATA_WLEN_S                                      // Frame data
+                        SPINEL_DATATYPE_UINT8_S                                      // Channel
+                            SPINEL_DATATYPE_UINT8_S                                  // MaxCsmaBackoffs
+                                SPINEL_DATATYPE_UINT8_S                              // MaxFrameRetries
+                                    SPINEL_DATATYPE_BOOL_S                           // CsmaCaEnabled
+                                        SPINEL_DATATYPE_BOOL_S                       // IsHeaderUpdated
+                                            SPINEL_DATATYPE_BOOL_S                   // IsARetx
+                                                SPINEL_DATATYPE_BOOL_S               // IsSecurityProcessed
+                                                    SPINEL_DATATYPE_UINT32_S         // TxDelay
+                                                        SPINEL_DATATYPE_UINT32_S     // TxDelayBaseTime
+                                                            SPINEL_DATATYPE_UINT8_S, // RxChannelAfterTxDone
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
                     mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated,
                     mTransmitFrame->mInfo.mTxInfo.mIsARetx, mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed,
-                    mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
+                    mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime,
+                    mTransmitFrame->mInfo.mTxInfo.mRxChannelAfterTxDone);
 
     if (error == OT_ERROR_NONE)
     {

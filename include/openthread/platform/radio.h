@@ -278,6 +278,27 @@ typedef struct otRadioFrame
             uint8_t mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
+             * The RX channel after frame TX is done (after all frame retries - ack received, or timeout, or abort).
+             *
+             * Radio platforms can choose to fully ignore this. OT stack will make sure to call `otPlatRadioReceive()`
+             * with the desired RX channel after a frame TX is done and signaled in `otPlatRadioTxDone()` callback.
+             * Radio platforms that don't provide `OT_RADIO_CAPS_TRANSMIT_RETRIES` must always ignore this.
+             *
+             * This is intended for situations where there may be delay in interactions between OT stack and radio, as
+             * an example this is used in RCP/host architecture to make sure RCP switches to PAN channel more quickly.
+             * In particular, this can help with CSL tx to a sleepy child, where the child may use a different channel
+             * for CSL than the PAN channel. After frame tx, we want the radio/RCP to go back to the PAN channel
+             * quickly to ensure that parent does not miss tx from child afterwards, e.g., child responding to the
+             * earlier CSL transmitted frame from parent using PAN channel while radio still staying on CSL channel.
+             *
+             * The switch to the RX channel MUST happen after the frame TX is fully done, i.e., after all retries and
+             * when ack is received (when "Ack Request" flag is set on the TX frame) or ack timeout. Note that ack is
+             * expected on the same channel that frame is sent on.
+             *
+             */
+            uint8_t mRxChannelAfterTxDone;
+
+            /**
              * Indicates whether frame counter and CSL IEs are properly updated in the header.
              *
              * If the platform layer does not provide `OT_RADIO_CAPS_TRANSMIT_SEC` capability, it can ignore this flag.
