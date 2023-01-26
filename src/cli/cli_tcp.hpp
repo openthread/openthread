@@ -149,12 +149,11 @@ private:
     otTcpEndpointAndCircularSendBuffer mEndpointAndCircularSendBuffer;
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    mbedtls_ssl_context      mSslContext;
-    mbedtls_ssl_config       mSslConfig;
-    mbedtls_ctr_drbg_context mCtrDrbg;
-    mbedtls_x509_crt         mSrvCert;
-    mbedtls_pk_context       mPKey;
-    mbedtls_entropy_context  mEntropy;
+    mbedtls_ssl_context     mSslContext;
+    mbedtls_ssl_config      mSslConfig;
+    mbedtls_x509_crt        mSrvCert;
+    mbedtls_pk_context      mPKey;
+    mbedtls_entropy_context mEntropy;
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
     static constexpr const char *sBenchmarkData =
@@ -210,6 +209,7 @@ private:
 
     static constexpr const char  *sEcjpakePassword       = "TLS-over-TCPlp";
     static constexpr const size_t sEcjpakePasswordLength = 14;
+    static const int              sCipherSuites[];
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 };
 
