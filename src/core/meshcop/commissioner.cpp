@@ -1116,7 +1116,6 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     Error            error = kErrorNone;
     ExtendedTlv      tlv;
     Coap::Message   *message;
-    uint16_t         offset;
     Tmf::MessageInfo messageInfo(GetInstance());
     Kek              kek;
 
@@ -1137,9 +1136,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(aMessage.GetLength());
     SuccessOrExit(error = message->Append(tlv));
-    offset = message->GetLength();
-    SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength()));
-    aMessage.CopyTo(0, offset, aMessage.GetLength(), *message);
+    SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, 0, aMessage.GetLength()));
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(mJoinerRloc);
 
