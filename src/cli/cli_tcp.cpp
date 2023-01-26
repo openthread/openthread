@@ -49,10 +49,16 @@
 #if OPENTHREAD_CONFIG_TLS_ENABLE
 #include <mbedtls/debug.h>
 #include <mbedtls/ecjpake.h>
+#include "crypto/mbedtls.hpp"
 #endif
 
 namespace ot {
 namespace Cli {
+
+#if OPENTHREAD_CONFIG_TLS_ENABLE
+const int TcpExample::sCipherSuites[] = {MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8,
+                                         MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8, 0};
+#endif
 
 TcpExample::TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer)
     : Output(aInstance, aOutputImplementer)
@@ -70,13 +76,6 @@ TcpExample::TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
 }
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-static int mbedtls_entropy_function(void *ctx, unsigned char *buffer, size_t length)
-{
-    OT_UNUSED_VARIABLE(ctx);
-    otError error = ot::Random::Crypto::FillBuffer(static_cast<uint8_t *>(buffer), static_cast<uint16_t>(length));
-    return (error == OT_ERROR_NONE) ? 0 : 1;
-}
-
 void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int line, const char *str)
 {
     TcpExample &tcpExample = *static_cast<TcpExample *>(ctx);
@@ -117,16 +116,16 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
 
             // mbedtls_debug_set_threshold(0);
 
-            mbedtls_ctr_drbg_init(&mCtrDrbg);
+            otPlatCryptoRandomInit();
             mbedtls_x509_crt_init(&mSrvCert);
             mbedtls_pk_init(&mPKey);
 
             mbedtls_ssl_init(&mSslContext);
             mbedtls_ssl_config_init(&mSslConfig);
-            mbedtls_ssl_conf_rng(&mSslConfig, mbedtls_ctr_drbg_random, &mCtrDrbg);
+            mbedtls_ssl_conf_rng(&mSslConfig, Crypto::MbedTls::CryptoSecurePrng, nullptr);
             // mbedtls_ssl_conf_dbg(&mSslConfig, MbedTlsDebugOutput, this);
             mbedtls_ssl_conf_authmode(&mSslConfig, MBEDTLS_SSL_VERIFY_NONE);
-            mbedtls_entropy_init(&mEntropy);
+            mbedtls_ssl_conf_ciphersuites(&mSslConfig, sCipherSuites);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
             mbedtls_ssl_conf_min_tls_version(&mSslConfig, MBEDTLS_SSL_VERSION_TLS1_2);
@@ -147,12 +146,6 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
             if (rv != 0)
             {
                 OutputLine("mbedtls_pk_parse_key returned %d", rv);
-            }
-
-            rv = mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_function, nullptr, nullptr, 0);
-            if (rv != 0)
-            {
-                OutputLine("mbedtls_ctr_drbg_seed returned %d", rv);
             }
 
             rv = mbedtls_x509_crt_parse(&mSrvCert, reinterpret_cast<const unsigned char *>(sSrvPem), sSrvPemLength);
@@ -252,13 +245,12 @@ template <> otError TcpExample::Process<Cmd("deinit")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_TLS_ENABLE
     if (mUseTls)
     {
-        mbedtls_entropy_free(&mEntropy);
+        otPlatCryptoRandomDeinit();
         mbedtls_ssl_config_free(&mSslConfig);
         mbedtls_ssl_free(&mSslContext);
 
         mbedtls_pk_free(&mPKey);
         mbedtls_x509_crt_free(&mSrvCert);
-        mbedtls_ctr_drbg_free(&mCtrDrbg);
     }
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
