@@ -182,7 +182,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     Header      icmp6Header;
     Message    *replyMessage = nullptr;
     MessageInfo replyMessageInfo;
-    uint16_t    payloadLength;
+    uint16_t    dataOffset;
 
     // always handle Echo Request destined for RLOC or ALOC
     VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
@@ -198,12 +198,11 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
         ExitNow();
     }
 
-    payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - Header::kDataFieldOffset;
-    SuccessOrExit(error = replyMessage->SetLength(Header::kDataFieldOffset + payloadLength));
+    dataOffset = aRequestMessage.GetOffset() + Header::kDataFieldOffset;
 
-    replyMessage->WriteBytes(0, &icmp6Header, Header::kDataFieldOffset);
-    aRequestMessage.CopyTo(aRequestMessage.GetOffset() + Header::kDataFieldOffset, Header::kDataFieldOffset,
-                           payloadLength, *replyMessage);
+    SuccessOrExit(error = replyMessage->AppendBytes(&icmp6Header, Header::kDataFieldOffset));
+    SuccessOrExit(error = replyMessage->AppendBytesFromMessage(aRequestMessage, dataOffset,
+                                                               aRequestMessage.GetLength() - dataOffset));
 
     replyMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
 

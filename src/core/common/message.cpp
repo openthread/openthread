@@ -40,6 +40,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
@@ -678,10 +679,10 @@ Message *Message::Clone(uint16_t aLength) const
     Settings settings(IsLinkSecurityEnabled() ? kWithLinkSecurity : kNoLinkSecurity, GetPriority());
     uint16_t offset;
 
+    aLength     = Min(GetLength(), aLength);
     messageCopy = GetMessagePool()->Allocate(GetType(), GetReserved(), settings);
     VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = messageCopy->SetLength(aLength));
-    CopyTo(0, 0, aLength, *messageCopy);
+    SuccessOrExit(error = messageCopy->AppendBytesFromMessage(*this, 0, aLength));
 
     // Copy selected message information.
     offset = GetOffset() < aLength ? GetOffset() : aLength;
