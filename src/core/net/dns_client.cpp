@@ -833,24 +833,10 @@ exit:
 
 Error Client::AppendNameFromQuery(const Query &aQuery, Message &aMessage)
 {
-    Error    error = kErrorNone;
-    uint16_t offset;
-    uint16_t length;
+    // The name is encoded and included after the `Info` in `aQuery`
+    // starting at `kNameOffsetInQuery`.
 
-    // The name is encoded and included after the `Info` in `aQuery`. We
-    // first calculate the encoded length of the name, then grow the
-    // message, and finally copy the encoded name bytes from `aQuery`
-    // into `aMessage`.
-
-    length = aQuery.GetLength() - kNameOffsetInQuery;
-
-    offset = aMessage.GetLength();
-    SuccessOrExit(error = aMessage.SetLength(offset + length));
-
-    aQuery.CopyTo(/* aSourceOffset */ kNameOffsetInQuery, /* aDestOffset */ offset, length, aMessage);
-
-exit:
-    return error;
+    return aMessage.AppendBytesFromMessage(aQuery, kNameOffsetInQuery, aQuery.GetLength() - kNameOffsetInQuery);
 }
 
 void Client::FinalizeQuery(Query &aQuery, Error aError)

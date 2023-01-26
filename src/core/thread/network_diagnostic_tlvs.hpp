@@ -45,6 +45,7 @@
 #include "common/tlvs.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
+#include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 
@@ -468,6 +469,28 @@ public:
     }
 
     /**
+     * This method the Link Quality value.
+     *
+     * @returns The Link Quality value.
+     *
+     */
+    LinkQuality GetLinkQuality(void) const
+    {
+        return static_cast<LinkQuality>((GetTimeoutChildId() & kLqiMask) >> kLqiOffset);
+    }
+
+    /**
+     * This method set the Link Quality value.
+     *
+     * @param[in] aLinkQuality  The Link Quality value.
+     *
+     */
+    void SetLinkQuality(LinkQuality aLinkQuality)
+    {
+        SetTimeoutChildId((GetTimeoutChildId() & ~kLqiMask) | ((aLinkQuality << kLqiOffset) & kLqiMask));
+    }
+
+    /**
      * This method returns the Child ID value.
      *
      * @returns The Child ID value.
@@ -506,12 +529,14 @@ private:
     //             1                   0
     //   5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //  | Timeout |RSV|     Child ID    |
+    //  | Timeout |LQI|     Child ID    |
     //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
     static constexpr uint8_t  kTimeoutOffset = 11;
+    static constexpr uint8_t  kLqiOffset     = 9;
     static constexpr uint8_t  kChildIdOffset = 0;
     static constexpr uint16_t kTimeoutMask   = 0x1f << kTimeoutOffset;
+    static constexpr uint16_t kLqiMask       = 0x3 << kLqiOffset;
     static constexpr uint16_t kChildIdMask   = 0x1ff << kChildIdOffset;
 
     uint16_t GetTimeoutChildId(void) const { return HostSwap16(mTimeoutChildId); }

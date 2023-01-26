@@ -203,6 +203,14 @@ typedef struct otNetworkDiagChildEntry
     uint16_t mTimeout : 5;
 
     /**
+     * Link Quality In value in [0,3].
+     *
+     * Value 0 indicates that sender does not support the feature to provide link quality info.
+     *
+     */
+    uint8_t mLinkQuality : 2;
+
+    /**
      * Child ID from which an RLOC can be generated.
      */
     uint16_t mChildId : 9;
