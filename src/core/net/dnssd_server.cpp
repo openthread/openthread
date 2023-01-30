@@ -54,16 +54,11 @@ namespace ServiceDiscovery {
 
 RegisterLogModule("DnssdServer");
 
-const char Server::kDnssdProtocolUdp[]  = "_udp";
-const char Server::kDnssdProtocolTcp[]  = "_tcp";
-const char Server::kDnssdSubTypeLabel[] = "._sub.";
-const char Server::kDefaultDomainName[] = "default.service.arpa.";
-
-namespace {
-// A list of domains that should not be forwarded to upstream DNS services.
-constexpr size_t kBlockListDomainCount                   = 1;
-const char      *kBlockListDomain[kBlockListDomainCount] = {"ipv4only.arpa."};
-} // namespace
+const char  Server::kDnssdProtocolUdp[]  = "_udp";
+const char  Server::kDnssdProtocolTcp[]  = "_tcp";
+const char  Server::kDnssdSubTypeLabel[] = "._sub.";
+const char  Server::kDefaultDomainName[] = "default.service.arpa.";
+const char *Server::kBlockListDomain[]   = {"ipv4only.arpa.", nullptr};
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -156,7 +151,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     Header::Response response                  = Header::kResponseSuccess;
     bool             resolveByQueryCallbacks   = false;
     bool             resolveByUpstreamResolver = false;
-    bool             supportRecursiveResolve     = false;
+    bool             supportRecursiveResolve   = false;
 
     responseMessage = mSocket.NewMessage(0);
     VerifyOrExit(responseMessage != nullptr, error = kErrorNoBufs);
@@ -298,9 +293,9 @@ Header::Response Server::AddQuestions(const Header     &aRequestHeader,
                                                       isInternetDomainName),
                      response = Header::kResponseNameError);
 
-        for (uint16_t j = 0; j < kBlockListDomainCount; j++)
+        for (const char ** blockedDomain = kBlockListDomain; blockedDomain != nullptr; blockedDomain++)
         {
-            VerifyOrExit(!Name::IsSameDomain(name, kBlockListDomain[j]), response = Header::kResponseNameError);
+            VerifyOrExit(!Name::IsSameDomain(name, *blockedDomain), response = Header::kResponseNameError);
         }
         if (isInternetDomainName)
         {
@@ -943,7 +938,7 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
     return ret;
 }
 
-Error Server::ResolveByUpstream(const Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Server::ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                     error = kErrorNone;
     UpstreamQueryTransaction *txn   = nullptr;
@@ -953,7 +948,7 @@ Error Server::ResolveByUpstream(const Message &aRequestMessage, const Ip6::Messa
     txn = AllocateUpstreamQueryTransaction(aMessageInfo);
     VerifyOrExit(txn != nullptr, error = kErrorNoBufs);
 
-    otPlatDnsQueryUpstreamQuery(&GetInstance(), txn, &aRequestMessage);
+    otPlatDnsStartUpstreamQuery(&GetInstance(), txn, &aRequestMessage);
 
 exit:
     return error;

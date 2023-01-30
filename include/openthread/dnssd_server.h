@@ -253,12 +253,12 @@ const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance);
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
  *
- * @sa otPlatDnsQueryUpstreamQuery
- * @sa otPlatDnsCancelUpstreamQueryTransaction
- * @sa otPlatDnsOnUpstreamQueryResponse
+ * @sa otPlatDnsStartUpstreamQuery
+ * @sa otPlatDnsCancelUpstreamQuery
+ * @sa otPlatDnsUpstreamQueryDone
  *
  */
-void otDnssdSetUpstreamQueryEnabled(otInstance *aInstance, bool aEnabled);
+void otDnssdUpstreamQuerySetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * @}

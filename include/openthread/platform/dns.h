@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -62,36 +62,43 @@ typedef void otPlatDnsUpstreamQuery;
 /**
  * Starts a transaction of upstream query.
  *
+ * - In success case (and errors represented by DNS protocol messages), the platform is expected to call
+ *   `otPlatDnsUpstreamQueryDone`.
+ * - The OpenThread core may cancel a (possibly timeout) query transaction by calling
+ *   `otPlatDnsCancelUpstreamQuery`, the platform should not call `otPlatDnsUpstreamQueryDone` on a
+ *   calcelled transaction.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
- * @param[in] aQuery     A message buffer of the DNS payload that should be sent to upstream DNS server.
+ * @param[in] aQuery     A message buffer of the DNS payload that should be sent to upstream DNS server. The platform is
+ *                       responsible for releasing the message buffer.
  *
  */
-void otPlatDnsQueryUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery);
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aQuery);
 
 /**
  * Cancels a transaction of upstream query.
  *
- * The platform must not call `otPlatDnsOnUpstreamQueryResponse` on the same transaction after this function is called.
+ * The platform must not call `otPlatDnsUpstreamQueryDone` on the same transaction after this function is called.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
  *
  */
-void otPlatDnsCancelUpstreamQueryTransaction(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn);
+void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn);
 
 /**
- * The radio driver calls this method to notify OpenThread of a completed DNS query.
+ * The platform calls this method to notify OpenThread of a completed DNS query.
  *
- * The transaction will be released, so the platform must not call on the same transaction twice. This function takes
- * the ownership of `aResponse`.
+ * The transaction will be released, so the platform must not call on the same transaction twice. This function passes
+ * the ownership of `aResponse` to OpenThread stack.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
  * @param[in] aResponse  A message buffer of the DNS response payload.
  *
  */
-extern void otPlatDnsOnUpstreamQueryResponse(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse);
+extern void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse);
 
 /**
  * @}

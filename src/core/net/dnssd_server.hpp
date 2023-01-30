@@ -433,7 +433,7 @@ private:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
-    Error                     ResolveByUpstream(const Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error                     ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     Error             ResolveByQueryCallbacks(Header                 &aResponseHeader,
@@ -477,8 +477,10 @@ private:
     otDnssdQuerySubscribeCallback   mQuerySubscribe;
     otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
 
+    // A list of domains that should not be resolved by DNS-SD server. Terminated by a nullptr.
+    static const char       *kBlockListDomain[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    bool                     mEnableUpstreamQuery = false;
+    bool mEnableUpstreamQuery = false;
     UpstreamQueryTransaction mUpstreamQueryTransactions[kMaxConcurrentUpstreamQueries];
 #endif
 

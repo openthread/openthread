@@ -36,19 +36,23 @@
 #include <openthread/instance.h>
 #include <openthread/platform/dns.h>
 
+#include "common/instance.hpp"
+#include "common/message.hpp"
 #include "common/code_utils.hpp"
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-OT_TOOL_WEAK void otPlatDnsQueryUpstreamQuery(otInstance             *aInstance,
-                                              otPlatDnsUpstreamQuery *aTxn,
-                                              const otMessage        *aQuery)
+
+using namespace ot;
+
+OT_TOOL_WEAK void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aQuery)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aTxn);
-    OT_UNUSED_VARIABLE(aQuery);
+
+    AsCoreType(aQuery).Free();
 }
 
-OT_TOOL_WEAK void otPlatDnsCancelUpstreamQueryTransaction(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
+OT_TOOL_WEAK void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aTxn);

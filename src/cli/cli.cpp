@@ -3133,14 +3133,14 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * @endcode
          * @cparam dns server upstream @ca{enable|disable}
          * @par api_copy
-         * #otDnssdSetUpstreamQueryEnabled
+         * #otDnssdUpstreamQuerySetEnabled
          */
         if (aArgs[1] == "upstream")
         {
             bool enable;
 
-            ParseEnableOrDisable(aArgs[2], enable);
-            otDnssdSetUpstreamQueryEnabled(GetInstancePtr(), enable);
+            SuccessOrExit(error = ParseEnableOrDisable(aArgs[2], enable));
+            otDnssdUpstreamQuerySetEnabled(GetInstancePtr(), enable);
         }
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
         else
