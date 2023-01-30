@@ -84,7 +84,7 @@ public:
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mStartTime;
 
-        bool      IsValid() { return mValid; }
+        bool      IsValid() const { return mValid; }
         TimeMilli GetStartTime(void) const { return mStartTime; }
         void      Reset() { mValid = false; };
     };
@@ -409,7 +409,7 @@ private:
     static Error            FindNameComponents(const char               *aName,
                                                const char               *aDomain,
                                                NameComponentsOffsetInfo &aInfo,
-                                               bool                     &aIsInternameDomainName);
+                                               bool                     &aIsInternetDomainName);
     static Error            FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
     void                    SendResponse(Header                  aHeader,
                                          Header::Response        aResponseCode,
@@ -478,9 +478,9 @@ private:
     otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
 
     // A list of domains that should not be resolved by DNS-SD server. Terminated by a nullptr.
-    static const char       *kBlockListDomain[];
+    static const char *kBlockListDomain[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    bool mEnableUpstreamQuery = false;
+    bool                     mEnableUpstreamQuery = false;
     UpstreamQueryTransaction mUpstreamQueryTransactions[kMaxConcurrentUpstreamQueries];
 #endif
 

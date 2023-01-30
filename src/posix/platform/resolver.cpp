@@ -50,8 +50,8 @@
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
 namespace {
-constexpr char      kResolveConfLocation[] = "/etc/resolv.conf";
-constexpr char      kNameserverItem[]      = "nameserver";
+constexpr char kResolveConfLocation[] = "/etc/resolv.conf";
+constexpr char kNameserverItem[]      = "nameserver";
 } // namespace
 
 extern ot::Posix::Resolver gResolver;

@@ -241,9 +241,9 @@ ot::Posix::Resolver gResolver;
 static otError destroyTunnel(void);
 #endif
 
-static int sTunFd     = -1;    ///< Used to exchange IPv6 packets.
-static int sIpFd      = -1;    ///< Used to manage IPv6 stack on Thread interface.
-static int sNetlinkFd = -1;    ///< Used to receive netlink events.
+static int sTunFd     = -1; ///< Used to exchange IPv6 packets.
+static int sIpFd      = -1; ///< Used to manage IPv6 stack on Thread interface.
+static int sNetlinkFd = -1; ///< Used to receive netlink events.
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
 static int sMLDMonitorFd = -1; ///< Used to receive MLD events.
 #endif

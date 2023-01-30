@@ -211,40 +211,40 @@ void TestDnsName(void)
     domain    = "Vice.arpa.";
     VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
 
-    domain = "example.com.";
-    domain2    = "example.com.";
+    domain  = "example.com.";
+    domain2 = "example.com.";
     VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.com.";
-    domain2    = "example.com";
+    domain  = "example.com.";
+    domain2 = "example.com";
     VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.com.";
-    domain2    = "ExAmPlE.cOm";
+    domain  = "example.com.";
+    domain2 = "ExAmPlE.cOm";
     VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.com";
-    domain2    = "ExAmPlE.cOm";
+    domain  = "example.com";
+    domain2 = "ExAmPlE.cOm";
     VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.com.";
-    domain2    = "ExAmPlE.cOm.";
+    domain  = "example.com.";
+    domain2 = "ExAmPlE.cOm.";
     VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.com.";
-    domain2    = "aExAmPlE.cOm.";
+    domain  = "example.com.";
+    domain2 = "aExAmPlE.cOm.";
     VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.com.";
-    domain2    = "cOm.";
+    domain  = "example.com.";
+    domain2 = "cOm.";
     VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.";
-    domain2    = "example.com.";
+    domain  = "example.";
+    domain2 = "example.com.";
     VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
 
-    domain = "example.com.";
-    domain2    = ".example.com.";
+    domain  = "example.com.";
+    domain2 = ".example.com.";
     VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
 
     printf("----------------------------------------------------------------\n");

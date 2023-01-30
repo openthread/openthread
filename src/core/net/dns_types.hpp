@@ -1010,16 +1010,16 @@ private:
     // - Value 11 indicates pointer label type (lower 14-bits indicates the pointer offset).
     // - Values 01,10 are reserved (RFC 6891 recommends to not use)
 
-    static constexpr uint8_t kLabelTypeMask    = 0xc0;          // 0b1100_0000 (first two bits)
-    static constexpr uint8_t kTextLabelType    = 0x00;          // Text label type (00)
-    static constexpr uint8_t kPointerLabelType = 0xc0;          // Pointer label type - compressed name (11)
+    static constexpr uint8_t kLabelTypeMask    = 0xc0; // 0b1100_0000 (first two bits)
+    static constexpr uint8_t kTextLabelType    = 0x00; // Text label type (00)
+    static constexpr uint8_t kPointerLabelType = 0xc0; // Pointer label type - compressed name (11)
 
-    static constexpr uint8_t kMaxEncodedLength = 255;           ///< Max length of an encoded name.
+    static constexpr uint8_t kMaxEncodedLength = 255; ///< Max length of an encoded name.
 
     static constexpr uint16_t kPointerLabelTypeUint16 = 0xc000; // Pointer label type mask (first 2 bits).
     static constexpr uint16_t kPointerLabelOffsetMask = 0x3fff; // Mask for offset in a pointer label (lower 14 bits).
 
-    static constexpr bool kIsSingleLabel = true;                // Used in `LabelIterator::CompareLable()`.
+    static constexpr bool kIsSingleLabel = true; // Used in `LabelIterator::CompareLable()`.
 
     struct LabelIterator
     {

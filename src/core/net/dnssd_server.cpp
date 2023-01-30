@@ -293,7 +293,7 @@ Header::Response Server::AddQuestions(const Header     &aRequestHeader,
                                                       isInternetDomainName),
                      response = Header::kResponseNameError);
 
-        for (const char ** blockedDomain = kBlockListDomain; blockedDomain != nullptr; blockedDomain++)
+        for (const char **blockedDomain = kBlockListDomain; *blockedDomain != nullptr; blockedDomain++)
         {
             VerifyOrExit(!Name::IsSameDomain(name, *blockedDomain), response = Header::kResponseNameError);
         }

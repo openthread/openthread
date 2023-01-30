@@ -160,7 +160,7 @@ typedef struct otDnssdCounters
     uint32_t mNotImplementedResponse; ///< The number of 'not implemented' responses
     uint32_t mOtherResponse;          ///< The number of other responses
 
-    uint32_t mResolvedBySrp;          ///< The number of queries completely resolved by the local SRP server
+    uint32_t mResolvedBySrp; ///< The number of queries completely resolved by the local SRP server
 } otDnssdCounters;
 
 /**
