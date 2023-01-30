@@ -38,6 +38,7 @@
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "net/ip6_address.hpp"
@@ -61,7 +62,7 @@ public:
      * This function pointer type defines the callback to notify the outcome of a request.
      *
      */
-    typedef otThreadAnycastLocatorCallback Callback;
+    typedef otThreadAnycastLocatorCallback LocatorCallback;
 
     /**
      * This constructor initializes the `AnycastLocator` object.
@@ -86,7 +87,7 @@ public:
      * @retval kErrorInvalidArgs  The @p aAnycastAddress is not a valid anycast address or @p aCallback is `nullptr`.
      *
      */
-    Error Locate(const Ip6::Address &aAnycastAddress, Callback aCallback, void *aContext);
+    Error Locate(const Ip6::Address &aAnycastAddress, LocatorCallback aCallback, void *aContext);
 
     /**
      * This method indicates whether an earlier request is in progress.
@@ -94,7 +95,7 @@ public:
      * @returns TRUE if an earlier request is in progress, FALSE otherwise.
      *
      */
-    bool IsInProgress(void) const { return (mCallback != nullptr); }
+    bool IsInProgress(void) const { return mCallback.IsSet(); }
 
 private:
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aError);
@@ -103,8 +104,7 @@ private:
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    Callback mCallback;
-    void    *mContext;
+    Callback<LocatorCallback> mCallback;
 };
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE

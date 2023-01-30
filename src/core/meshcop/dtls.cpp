@@ -83,12 +83,7 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
     , mTimerSet(false)
     , mLayerTwoSecurity(aLayerTwoSecurity)
     , mReceiveMessage(nullptr)
-    , mConnectedHandler(nullptr)
-    , mReceiveHandler(nullptr)
-    , mContext(nullptr)
     , mSocket(aInstance)
-    , mTransportCallback(nullptr)
-    , mTransportContext(nullptr)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
@@ -147,10 +142,9 @@ Error Dtls::Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHand
 
     SuccessOrExit(error = mSocket.Open(&Dtls::HandleUdpReceive, this));
 
-    mReceiveHandler   = aReceiveHandler;
-    mConnectedHandler = aConnectedHandler;
-    mContext          = aContext;
-    mState            = kStateOpen;
+    mConnectedCallback.Set(aConnectedHandler, aContext);
+    mReceiveCallback.Set(aReceiveHandler, aContext);
+    mState = kStateOpen;
 
 exit:
     return error;
@@ -221,7 +215,7 @@ Error Dtls::Bind(uint16_t aPort)
     Error error;
 
     VerifyOrExit(mState == kStateOpen, error = kErrorInvalidState);
-    VerifyOrExit(mTransportCallback == nullptr, error = kErrorAlready);
+    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
 
     SuccessOrExit(error = mSocket.Bind(aPort, Ip6::kNetifUnspecified));
 
@@ -235,10 +229,9 @@ Error Dtls::Bind(TransportCallback aCallback, void *aContext)
 
     VerifyOrExit(mState == kStateOpen, error = kErrorInvalidState);
     VerifyOrExit(!mSocket.IsBound(), error = kErrorAlready);
-    VerifyOrExit(mTransportCallback == nullptr, error = kErrorAlready);
+    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
 
-    mTransportCallback = aCallback;
-    mTransportContext  = aContext;
+    mTransportCallback.Set(aCallback, aContext);
 
 exit:
     return error;
@@ -439,10 +432,9 @@ void Dtls::Close(void)
 {
     Disconnect();
 
-    mState             = kStateClosed;
-    mTransportCallback = nullptr;
-    mTransportContext  = nullptr;
-    mTimerSet          = false;
+    mState    = kStateClosed;
+    mTimerSet = false;
+    mTransportCallback.Clear();
 
     IgnoreError(mSocket.Close());
     mTimer.Stop();
@@ -851,11 +843,7 @@ void Dtls::HandleTimer(void)
     case kStateCloseNotify:
         mState = kStateOpen;
         mTimer.Stop();
-
-        if (mConnectedHandler != nullptr)
-        {
-            mConnectedHandler(mContext, false);
-        }
+        mConnectedCallback.InvokeIfSet(false);
         break;
 
     default:
@@ -879,11 +867,7 @@ void Dtls::Process(void)
             if (mSsl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER)
             {
                 mState = kStateConnected;
-
-                if (mConnectedHandler != nullptr)
-                {
-                    mConnectedHandler(mContext, true);
-                }
+                mConnectedCallback.InvokeIfSet(true);
             }
         }
         else
@@ -893,10 +877,7 @@ void Dtls::Process(void)
 
         if (rval > 0)
         {
-            if (mReceiveHandler != nullptr)
-            {
-                mReceiveHandler(mContext, buf, static_cast<uint16_t>(rval));
-            }
+            mReceiveCallback.InvokeIfSet(buf, static_cast<uint16_t>(rval));
         }
         else if (rval == 0 || rval == MBEDTLS_ERR_SSL_WANT_READ || rval == MBEDTLS_ERR_SSL_WANT_WRITE)
         {
@@ -1006,9 +987,9 @@ Error Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubTy
         message->SetSubType(aMessageSubType);
     }
 
-    if (mTransportCallback)
+    if (mTransportCallback.IsSet())
     {
-        SuccessOrExit(error = mTransportCallback(mTransportContext, *message, mMessageInfo));
+        SuccessOrExit(error = mTransportCallback.Invoke(*message, mMessageInfo));
     }
     else
     {

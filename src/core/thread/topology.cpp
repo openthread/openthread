@@ -567,4 +567,25 @@ void Parent::Clear(void)
     Init(instance);
 }
 
+bool Router::SetNextHopAndCost(uint8_t aNextHop, uint8_t aCost)
+{
+    bool changed = false;
+
+    if (mNextHop != aNextHop)
+    {
+        mNextHop = aNextHop;
+        changed  = true;
+    }
+
+    if (mCost != aCost)
+    {
+        mCost   = aCost;
+        changed = true;
+    }
+
+    return changed;
+}
+
+bool Router::SetNextHopToInvalid(void) { return SetNextHopAndCost(Mle::kInvalidRouterId, 0); }
+
 } // namespace ot

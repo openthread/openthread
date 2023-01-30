@@ -68,7 +68,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsEnabled(false)
     , mInfraIf(aInstance)
     , mLocalOmrPrefix(aInstance)
-    , mRouteInfoOptionPreference(NetworkData::kRoutePreferenceMedium)
+    , mRioPreference(NetworkData::kRoutePreferenceLow)
+    , mUserSetRioPreference(false)
     , mOnLinkPrefixManager(aInstance)
     , mDiscoveredPrefixTable(aInstance)
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
@@ -122,9 +123,36 @@ exit:
 
 void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
 {
-    VerifyOrExit(mRouteInfoOptionPreference != aPreference);
+    LogInfo("User explicitly set RIO Preference to %s", RoutePreferenceToString(aPreference));
+    mUserSetRioPreference = true;
+    UpdateRioPreference(aPreference);
+}
 
-    mRouteInfoOptionPreference = aPreference;
+void RoutingManager::ClearRouteInfoOptionPreference(void)
+{
+    VerifyOrExit(mUserSetRioPreference);
+
+    LogInfo("User cleared explicitly set RIO Preference");
+    mUserSetRioPreference = false;
+    SetRioPreferenceBasedOnRole();
+
+exit:
+    return;
+}
+
+void RoutingManager::SetRioPreferenceBasedOnRole(void)
+{
+    UpdateRioPreference(Get<Mle::Mle>().IsRouterOrLeader() ? NetworkData::kRoutePreferenceMedium
+                                                           : NetworkData::kRoutePreferenceLow);
+}
+
+void RoutingManager::UpdateRioPreference(RoutePreference aPreference)
+{
+    VerifyOrExit(mRioPreference != aPreference);
+
+    LogInfo("RIO Preference changed: %s -> %s", RoutePreferenceToString(mRioPreference),
+            RoutePreferenceToString(aPreference));
+    mRioPreference = aPreference;
 
     VerifyOrExit(mIsRunning);
     ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
@@ -148,7 +176,7 @@ Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference 
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(IsRunning(), error = kErrorInvalidState);
     aPrefix     = mFavoredOmrPrefix.GetPrefix();
     aPreference = mFavoredOmrPrefix.GetPreference();
 
@@ -347,6 +375,11 @@ exit:
 
 void RoutingManager::HandleNotifierEvents(Events aEvents)
 {
+    if (aEvents.Contains(kEventThreadRoleChanged) && !mUserSetRioPreference)
+    {
+        SetRioPreferenceBasedOnRole();
+    }
+
     VerifyOrExit(IsInitialized() && IsEnabled());
 
     if (aEvents.Contains(kEventThreadRoleChanged))
@@ -664,7 +697,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     {
         if (prefix.GetLength() != 0)
         {
-            SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, /* aRouteLifetime */ 0, mRouteInfoOptionPreference));
+            SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, /* aRouteLifetime */ 0, mRioPreference));
             LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", prefix.ToString().AsCString());
         }
     }
@@ -738,7 +771,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
         for (const OnMeshPrefix &prefix : mAdvertisedPrefixes)
         {
-            SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRouteInfoOptionPreference));
+            SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRioPreference));
             LogInfo("RouterAdvert: Added RIO for %s (lifetime=%lu)", prefix.ToString().AsCString(),
                     ToUlong(kDefaultOmrPrefixLifetime));
         }
@@ -1715,6 +1748,18 @@ void RoutingManager::DiscoveredPrefixTable::HandleRouterTimer(void)
     for (Router &router : mRouters)
     {
         if (router.mNsProbeCount > Router::kMaxNsProbes)
+        {
+            continue;
+        }
+
+        // If the `router` emitting RA has an address belonging to
+        // infra interface, it indicates that the RAs are from
+        // same device. In this case we skip performing NS probes.
+        // This addresses situation where platform may not be
+        // be able to receive and pass the NA message response
+        // from device itself.
+
+        if (Get<RoutingManager>().mInfraIf.HasAddress(router.mAddress))
         {
             continue;
         }
@@ -2702,7 +2747,7 @@ void RoutingManager::Nat64PrefixManager::Stop(void)
     mTimer.Stop();
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Get<Nat64::Translator>().SetNat64Prefix(mPublishedPrefix);
+    Get<Nat64::Translator>().ClearNat64Prefix();
 #endif
 }
 
@@ -2784,7 +2829,16 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    Get<Nat64::Translator>().SetNat64Prefix(mPublishedPrefix);
+    // When there is an prefix other than mLocalPrefix, means there is an external translator available. So we bypass
+    // the NAT64 translator by clearing the NAT64 prefix in the translator.
+    if (mPublishedPrefix == mLocalPrefix)
+    {
+        Get<Nat64::Translator>().SetNat64Prefix(mLocalPrefix);
+    }
+    else
+    {
+        Get<Nat64::Translator>().ClearNat64Prefix();
+    }
 #endif
 
 exit:

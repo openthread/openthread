@@ -41,6 +41,12 @@
 #include "common/locator_getters.hpp"
 #include "net/tcp6_ext.hpp"
 
+#if OPENTHREAD_CONFIG_TLS_ENABLE
+
+#include <mbedtls/ssl.h>
+
+#endif
+
 using namespace ot;
 
 void otTcpCircularSendBufferInitialize(otTcpCircularSendBuffer *aSendBuffer, void *aDataBuffer, size_t aCapacity)
@@ -78,5 +84,53 @@ otError otTcpCircularSendBufferDeinitialize(otTcpCircularSendBuffer *aSendBuffer
 {
     return AsCoreType(aSendBuffer).Deinitialize();
 }
+
+#if OPENTHREAD_CONFIG_TLS_ENABLE
+
+int otTcpMbedTlsSslSendCallback(void *aCtx, const unsigned char *aBuf, size_t aLen)
+{
+    otTcpEndpointAndCircularSendBuffer *pair       = static_cast<otTcpEndpointAndCircularSendBuffer *>(aCtx);
+    otTcpEndpoint                      *endpoint   = pair->mEndpoint;
+    otTcpCircularSendBuffer            *sendBuffer = pair->mSendBuffer;
+    size_t                              bytes_written;
+    int                                 result;
+    otError                             error;
+
+    error = otTcpCircularSendBufferWrite(endpoint, sendBuffer, aBuf, aLen, &bytes_written, 0);
+    VerifyOrExit(error == OT_ERROR_NONE, result = MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+    VerifyOrExit(aLen == 0 || bytes_written != 0, result = MBEDTLS_ERR_SSL_WANT_WRITE);
+    result = static_cast<int>(bytes_written);
+
+exit:
+    return result;
+}
+
+int otTcpMbedTlsSslRecvCallback(void *aCtx, unsigned char *aBuf, size_t aLen)
+{
+    otTcpEndpointAndCircularSendBuffer *pair       = static_cast<otTcpEndpointAndCircularSendBuffer *>(aCtx);
+    otTcpEndpoint                      *endpoint   = pair->mEndpoint;
+    size_t                              bytes_read = 0;
+    const otLinkedBuffer               *buffer;
+    int                                 result;
+    otError                             error;
+
+    error = otTcpReceiveByReference(endpoint, &buffer);
+    VerifyOrExit(error == OT_ERROR_NONE, result = MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+    while (bytes_read != aLen && buffer != nullptr)
+    {
+        size_t to_copy = OT_MIN(aLen - bytes_read, buffer->mLength);
+        memcpy(&aBuf[bytes_read], buffer->mData, to_copy);
+        bytes_read += to_copy;
+        buffer = buffer->mNext;
+    }
+    VerifyOrExit(aLen == 0 || bytes_read != 0, result = MBEDTLS_ERR_SSL_WANT_READ);
+    IgnoreReturnValue(otTcpCommitReceive(endpoint, bytes_read, 0));
+    result = static_cast<int>(bytes_read);
+
+exit:
+    return result;
+}
+
+#endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
 #endif // OPENTHREAD_CONFIG_TCP_ENABLE

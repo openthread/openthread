@@ -141,10 +141,7 @@ void NdProxyTable::Clear(void)
         proxy.Clear();
     }
 
-    if (mCallback != nullptr)
-    {
-        mCallback(mCallbackContext, OT_BACKBONE_ROUTER_NDPROXY_CLEARED, nullptr);
-    }
+    mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_NDPROXY_CLEARED, nullptr);
 
     LogInfo("NdProxyTable::Clear!");
 }
@@ -268,26 +265,20 @@ exit:
     return;
 }
 
-void NdProxyTable::SetCallback(otBackboneRouterNdProxyCallback aCallback, void *aContext)
-{
-    mCallback        = aCallback;
-    mCallbackContext = aContext;
-}
-
 void NdProxyTable::TriggerCallback(otBackboneRouterNdProxyEvent    aEvent,
                                    const Ip6::InterfaceIdentifier &aAddressIid) const
 {
     Ip6::Address       dua;
     const Ip6::Prefix *prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
 
-    VerifyOrExit(mCallback != nullptr);
+    VerifyOrExit(mCallback.IsSet());
 
     OT_ASSERT(prefix != nullptr);
 
     dua.SetPrefix(*prefix);
     dua.SetIid(aAddressIid);
 
-    mCallback(mCallbackContext, aEvent, &dua);
+    mCallback.Invoke(aEvent, &dua);
 
 exit:
     return;

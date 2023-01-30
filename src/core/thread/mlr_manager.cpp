@@ -51,10 +51,6 @@ RegisterLogModule("MlrManager");
 
 MlrManager::MlrManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    , mRegisterMulticastListenersCallback(nullptr)
-    , mRegisterMulticastListenersContext(nullptr)
-#endif
     , mReregistrationDelay(0)
     , mSendDelay(0)
     , mMlrPending(false)
@@ -343,9 +339,8 @@ Error MlrManager::RegisterMulticastListeners(const otIp6Address                 
     SuccessOrExit(error = SendMulticastListenerRegistrationMessage(
                       aAddresses, aAddressNum, aTimeout, &MlrManager::HandleRegisterMulticastListenersResponse, this));
 
-    mRegisterMulticastListenersPending  = true;
-    mRegisterMulticastListenersCallback = aCallback;
-    mRegisterMulticastListenersContext  = aContext;
+    mRegisterMulticastListenersPending = true;
+    mRegisterMulticastListenersCallback.Set(aCallback, aContext);
 
 exit:
     return error;
@@ -366,24 +361,19 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage           *a
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    uint8_t                                 status;
-    Error                                   error;
-    Ip6::Address                            failedAddresses[Ip6AddressesTlv::kMaxAddresses];
-    uint8_t                                 failedAddressNum = 0;
-    otIp6RegisterMulticastListenersCallback callback         = mRegisterMulticastListenersCallback;
-    void                                   *context          = mRegisterMulticastListenersContext;
+    uint8_t                                           status;
+    Error                                             error;
+    Ip6::Address                                      failedAddresses[Ip6AddressesTlv::kMaxAddresses];
+    uint8_t                                           failedAddressNum = 0;
+    Callback<otIp6RegisterMulticastListenersCallback> callbackCopy     = mRegisterMulticastListenersCallback;
 
-    mRegisterMulticastListenersPending  = false;
-    mRegisterMulticastListenersCallback = nullptr;
-    mRegisterMulticastListenersContext  = nullptr;
+    mRegisterMulticastListenersPending = false;
+    mRegisterMulticastListenersCallback.Clear();
 
     error = ParseMulticastListenerRegistrationResponse(aResult, AsCoapMessagePtr(aMessage), status, failedAddresses,
                                                        failedAddressNum);
 
-    if (callback != nullptr)
-    {
-        callback(context, error, status, failedAddresses, failedAddressNum);
-    }
+    callbackCopy.InvokeIfSet(error, status, failedAddresses, failedAddressNum);
 }
 
 #endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

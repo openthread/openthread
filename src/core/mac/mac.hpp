@@ -412,7 +412,7 @@ public:
      *
      */
     void RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                   const RxFrame *aAckFrame,
+                                   RxFrame       *aAckFrame,
                                    Error          aError,
                                    uint8_t        aRetryCount,
                                    bool           aWillRetx);
@@ -616,6 +616,14 @@ public:
      *
      */
     uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+
+    /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period in milliseconds.
+     *
+     */
+    uint32_t GetCslPeriodMs(void) const { return mCslPeriod * kUsPerTenSymbols / 1000; }
 
     /**
      * This method sets the CSL period.

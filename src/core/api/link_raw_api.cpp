@@ -223,7 +223,12 @@ otError otLinkRawSetMacKey(otInstance     *aInstance,
 
 otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {
-    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter);
+    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter, /* aSetIfLarger */ false);
+}
+
+otError otLinkRawSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetMacFrameCounter(aMacFrameCounter, /* aSetIfLarger */ true);
 }
 
 uint64_t otLinkRawGetRadioTime(otInstance *aInstance)

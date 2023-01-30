@@ -124,7 +124,15 @@ public:
      * @returns A pointer to the Leader in the Thread network.
      *
      */
-    Router *GetLeader(void);
+    Router *GetLeader(void) { return AsNonConst(AsConst(this)->GetLeader()); }
+
+    /**
+     * This method returns the leader in the Thread network.
+     *
+     * @returns A pointer to the Leader in the Thread network.
+     *
+     */
+    const Router *GetLeader(void) const;
 
     /**
      * This method returns the leader's age in seconds, i.e., seconds since the last Router ID Sequence update.
@@ -143,6 +151,54 @@ public:
      *
      */
     uint8_t GetLinkCost(const Router &aRouter) const;
+
+    /**
+     * This method returns the link cost to the given Router.
+     *
+     * @param[in]  aRouterId  The Router ID.
+     *
+     * @returns The link cost to the Router.
+     *
+     */
+    uint8_t GetLinkCost(uint8_t aRouterId) const;
+
+    /**
+     * This method returns the minimum mesh path cost to the given RLOC16
+     *
+     * @param[in]  aDestRloc16  The RLOC16 of destination
+     *
+     * @returns The minimum mesh path cost to @p aDestRloc16 (via direct link or forwarding).
+     *
+     */
+    uint8_t GetPathCost(uint16_t aDestRloc16) const;
+
+    /**
+     * This method returns the mesh path cost to leader.
+     *
+     * @returns The path cost to leader.
+     *
+     */
+    uint8_t GetPathCostToLeader(void) const;
+
+    /**
+     * This method determines the next hop towards an RLOC16 destination.
+     *
+     * @param[in]  aDestRloc16  The RLOC16 of the destination.
+     *
+     * @returns A RLOC16 of the next hop if a route is known, `Mle::kInvalidRloc16` otherwise.
+     *
+     */
+    uint16_t GetNextHop(uint16_t aDestRloc16) const;
+
+    /**
+     * This method determines the next hop and the path cost towards an RLOC16 destination.
+     *
+     * @param[in]  aDestRloc16      The RLOC16 of the destination.
+     * @param[out] aNextHopRloc16   A reference to return the RLOC16 of next hop if known, or `Mle::kInvalidRloc16`.
+     * @param[out] aPathCost        A reference to return the path cost.
+     *
+     */
+    void GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHopRloc16, uint8_t &aPathCost) const;
 
     /**
      * This method finds the router for a given Router ID.
@@ -285,6 +341,26 @@ public:
      *
      */
     void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
+
+    /**
+     * This method updates the routes based on a received `RouteTlv` from a neighboring router.
+     *
+     * @param[in]  aRouteTlv    The received `RouteTlv`
+     * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlv is received.
+     *
+     */
+    void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId);
+
+    /**
+     * This method updates the routes on an FED based on a received `RouteTlv` from the parent.
+     *
+     * This method MUST be called when device is an FED child and @p aRouteTlv is received from its current parent.
+     *
+     * @param[in]  aRouteTlv    The received `RouteTlv` from parent.
+     * @param[in]  aParentId    The Router ID of parent.
+     *
+     */
+    void UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
 
     /**
      * This method gets the allocated Router ID set.

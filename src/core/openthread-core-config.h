@@ -89,6 +89,7 @@
 #include "config/parent_search.h"
 #include "config/ping_sender.h"
 #include "config/platform.h"
+#include "config/power_calibration.h"
 #include "config/radio_link.h"
 #include "config/sntp_client.h"
 #include "config/srp_client.h"

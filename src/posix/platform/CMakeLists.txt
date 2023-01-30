@@ -104,6 +104,7 @@ add_library(openthread-posix
     alarm.cpp
     backbone.cpp
     backtrace.cpp
+    config_file.cpp
     daemon.cpp
     entropy.cpp
     firewall.cpp
@@ -115,6 +116,8 @@ add_library(openthread-posix
     misc.cpp
     multicast_routing.cpp
     netif.cpp
+    power.cpp
+    power_updater.cpp
     radio.cpp
     radio_url.cpp
     resolver.cpp

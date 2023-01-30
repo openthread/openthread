@@ -47,6 +47,7 @@ libopenthread_posix_a_SOURCES             = \
     alarm.cpp                               \
     backbone.cpp                            \
     backtrace.cpp                           \
+    config_file.cpp                         \
     daemon.cpp                              \
     entropy.cpp                             \
     firewall.cpp                            \
@@ -58,6 +59,8 @@ libopenthread_posix_a_SOURCES             = \
     misc.cpp                                \
     multicast_routing.cpp                   \
     netif.cpp                               \
+    power.cpp                               \
+    power_updater.cpp                       \
     radio.cpp                               \
     resolver.cpp                            \
     radio_url.cpp                           \

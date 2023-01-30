@@ -1844,6 +1844,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
 #if OPENTHREAD_RADIO
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RCP_API_VERSION));
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RCP_MIN_HOST_API_VERSION));
 #endif
 
 #if OPENTHREAD_PLATFORM_POSIX
@@ -2565,6 +2566,44 @@ exit:
     return error;
 }
 #endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_TARGET_POWER>(void)
+{
+    otError error;
+    uint8_t channel;
+    int16_t targetPower;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+    SuccessOrExit(error = mDecoder.ReadInt16(targetPower));
+    error = otPlatRadioSetChannelTargetPower(mInstance, channel, targetPower);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_PHY_CALIBRATED_POWER>(void)
+{
+    otError        error;
+    uint8_t        channel;
+    int16_t        actualPower;
+    const uint8_t *dataPtr;
+    uint16_t       dataLen;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(channel));
+    SuccessOrExit(error = mDecoder.ReadInt16(actualPower));
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(dataPtr, dataLen));
+    error = otPlatRadioAddCalibratedPower(mInstance, channel, actualPower, dataPtr, dataLen);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CALIBRATED_POWER>(void)
+{
+    return otPlatRadioClearCalibratedPowers(mInstance);
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 
 } // namespace Ncp
 } // namespace ot

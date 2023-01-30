@@ -39,30 +39,16 @@ cleanup()
     sudo rm tmp/*.flash tmp/*.data tmp/*.swap >/dev/null 2>&1
     sudo rm ./*.log >/dev/null 2>&1
 
-    # Clear any wpantund instances
-    sudo killall wpantund >/dev/null 2>&1
+    if [ "$TORANJ_CLI" != 1 ]; then
+        # Clear any wpantund instances
+        sudo killall wpantund >/dev/null 2>&1
 
-    while read -r interface; do
-        sudo ip link delete "$interface" >/dev/null 2>&1
-    done < <(ifconfig 2>/dev/null | grep -o "wpan[0-9]*")
-
-    sudo ip address flush trel
+        while read -r interface; do
+            sudo ip link delete "$interface" >/dev/null 2>&1
+        done < <(ifconfig 2>/dev/null | grep -o "wpan[0-9]*")
+    fi
 
     sleep 0.3
-}
-
-prepare_trel_link()
-{
-    # Prepares a netif "trel" as virtual eth to use for
-    # testing "TREL" radio link in POSIX platform.
-
-    echo "Preparing trel netif"
-    sudo ip link delete trel
-    sudo ip link add trel type veth peer name trel-peer || die
-    sudo ip link set trel multicast on || die
-    sudo ip link set trel up || die
-    sudo ip link set trel-peer multicast on || die
-    sudo ip link set trel-peer up || die
 }
 
 run()
@@ -114,11 +100,8 @@ fi
 if [ "$TORANJ_RADIO" = "multi" ]; then
     # Build all combinations
     ./build.sh "${coverage_option}" "${app_name}"-15.4 || die "${app_name}-15.4 build failed"
-    (cd ${top_builddir} && make clean) || die "cd and clean failed"
     ./build.sh "${coverage_option}" "${app_name}"-trel || die "${app_name}-trel build failed"
-    (cd ${top_builddir} && make clean) || die "cd and clean failed"
     ./build.sh "${coverage_option}" "${app_name}"-15.4+trel || die "${app_name}-15.4+trel build failed"
-    (cd ${top_builddir} && make clean) || die "cd and clean failed"
 else
     ./build.sh "${coverage_option}" "${app_name}"-"${TORANJ_RADIO}" || die "build failed"
 fi
@@ -126,10 +109,44 @@ fi
 cleanup
 
 if [ "$TORANJ_CLI" = 1 ]; then
+
+    if [ "$TORANJ_RADIO" = "multi" ]; then
+        run cli/test-700-multi-radio-join.py
+        run cli/test-701-multi-radio-probe.py
+        run cli/test-702-multi-radio-discover-by-rx.py
+        run cli/test-703-multi-radio-mesh-header-msg.py
+        run cli/test-704-multi-radio-scan.py
+        run cli/test-705-multi-radio-discover-scan.py
+
+        exit 0
+    fi
+
     run cli/test-001-get-set.py
     run cli/test-002-form.py
     run cli/test-003-join.py
+    run cli/test-004-scan.py
+    run cli/test-005-traffic-router-to-child.py
+    run cli/test-006-traffic-multi-hop.py
+    run cli/test-007-off-mesh-route-traffic.py
+    run cli/test-008-multicast-traffic.py
+    run cli/test-009-router-table.py
+    run cli/test-010-partition-merge.py
+    run cli/test-011-network-data-timeout.py
+    run cli/test-012-reset-recovery.py
+    run cli/test-013-address-cache-parent-switch.py
+    run cli/test-014-address-resolver.py
+    run cli/test-015-clear-addresss-cache-for-sed.py
+    run cli/test-016-child-mode-change.py
+    run cli/test-017-network-data-versions.py
+    run cli/test-018-next-hop-and-path-cost.py
     run cli/test-400-srp-client-server.py
+    run cli/test-601-channel-manager-channel-change.py
+    # Skip the "channel-select" test on a TREL only radio link, since it
+    # requires energy scan which is not supported in this case.
+    if [ "$TORANJ_RADIO" != "trel" ]; then
+        run cli/test-602-channel-manager-channel-select.py
+    fi
+    run cli/test-603-channel-announce-recovery.py
 
     exit 0
 fi

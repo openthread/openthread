@@ -503,11 +503,14 @@ private:
     static void HandleDetachGracefullyResult(void *aContext);
     void        HandleDetachGracefullyResult(void);
 
-    static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
-    {
-        static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
-    }
-    void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
+#if OPENTHREAD_FTD
+    static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext);
+    void        HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
+#endif
+
+#if OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+    static void HandleIp6Receive(otMessage *aMessage, void *aContext);
+#endif
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

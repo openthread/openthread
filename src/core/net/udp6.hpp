@@ -40,6 +40,7 @@
 #include <openthread/platform/udp.h>
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -593,11 +594,7 @@ public:
      * @param[in]   aContext    A pointer to arbitrary context information.
      *
      */
-    void SetUdpForwarder(otUdpForwarder aForwarder, void *aContext)
-    {
-        mUdpForwarder        = aForwarder;
-        mUdpForwarderContext = aContext;
-    }
+    void SetUdpForwarder(otUdpForwarder aForwarder, void *aContext) { mUdpForwarder.Set(aForwarder, aContext); }
 #endif
 
     /**
@@ -652,8 +649,7 @@ private:
     SocketHandle *mPrevBackboneSockets;
 #endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
-    void          *mUdpForwarderContext;
-    otUdpForwarder mUdpForwarder;
+    Callback<otUdpForwarder> mUdpForwarder;
 #endif
 };
 

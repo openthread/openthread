@@ -34,6 +34,7 @@
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 #include "coap/coap.hpp"
+#include "common/callback.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop.hpp"
 
@@ -101,8 +102,7 @@ public:
      */
     void SetConnectedCallback(ConnectedCallback aCallback, void *aContext)
     {
-        mConnectedCallback = aCallback;
-        mConnectedContext  = aContext;
+        mConnectedCallback.Set(aCallback, aContext);
     }
 
     /**
@@ -267,8 +267,7 @@ public:
      */
     void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
     {
-        mConnectedCallback = aCallback;
-        mConnectedContext  = aContext;
+        mConnectedCallback.Set(aCallback, aContext);
     }
 
     /**
@@ -410,11 +409,10 @@ private:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
-    MeshCoP::Dtls     mDtls;
-    ConnectedCallback mConnectedCallback;
-    void             *mConnectedContext;
-    ot::MessageQueue  mTransmitQueue;
-    TaskletContext    mTransmitTask;
+    MeshCoP::Dtls               mDtls;
+    Callback<ConnectedCallback> mConnectedCallback;
+    ot::MessageQueue            mTransmitQueue;
+    TaskletContext              mTransmitTask;
 };
 
 } // namespace Coap

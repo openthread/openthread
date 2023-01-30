@@ -145,8 +145,8 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 {
-#if OPENTHREAD_FTD
-    otThreadSetDiscoveryRequestCallback(GetInstancePtr(), &Interpreter::HandleDiscoveryRequest, this);
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+    otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
 #endif
 
     OutputPrompt();
@@ -652,28 +652,48 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
         OutputLine(" prf:%s", PreferenceToString(preference));
     }
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    /**
-     * @cli br rioprf (high,med,low)
-     * @code
-     * br rioprf
-     * med
-     * Done
-     * @endcode
-     * @code
-     * br rioprf low
-     * Done
-     * @endcode
-     * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
-     * @par api_copy
-     * #otBorderRoutingSetRouteInfoOptionPreference
-     *
-     */
     else if (aArgs[0] == "rioprf")
     {
+        /**
+         * @cli br rioprf
+         * @code
+         * br rioprf
+         * med
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBorderRoutingGetRouteInfoOptionPreference
+         *
+         */
         if (aArgs[1].IsEmpty())
         {
             OutputLine("%s", PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
         }
+        /**
+         * @cli br rioprf clear
+         * @code
+         * br rioprf clear
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBorderRoutingClearRouteInfoOptionPreference
+         *
+         */
+        else if (aArgs[1] == "clear")
+        {
+            otBorderRoutingClearRouteInfoOptionPreference(GetInstancePtr());
+        }
+        /**
+         * @cli br rioprf (high,med,low)
+         * @code
+         * br rioprf low
+         * Done
+         * @endcode
+         * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
+         * @par api_copy
+         * #otBorderRoutingSetRouteInfoOptionPreference
+         *
+         */
         else
         {
             otRoutePreference preference;
@@ -1768,9 +1788,11 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("count: %lu", ToUlong(otChannelMonitorGetSampleCount(GetInstancePtr())));
 
                 OutputLine("occupancies:");
+
                 for (uint8_t channel = 0; channel < channelNum; channel++)
                 {
-                    uint32_t occupancy = 0;
+                    uint16_t               occupancy;
+                    PercentageStringBuffer stringBuffer;
 
                     if (!((1UL << channel) & channelMask))
                     {
@@ -1779,11 +1801,10 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
 
                     occupancy = otChannelMonitorGetChannelOccupancy(GetInstancePtr(), channel);
 
-                    OutputFormat("ch %u (0x%04lx) ", channel, ToUlong(occupancy));
-                    occupancy = (occupancy * 10000) / 0xffff;
-                    OutputLine("%2u.%02u%% busy", static_cast<uint16_t>(occupancy / 100),
-                               static_cast<uint16_t>(occupancy % 100));
+                    OutputLine("ch %u (0x%04x) %6s%% busy", channel, occupancy,
+                               PercentageToString(occupancy, stringBuffer));
                 }
+
                 OutputNewLine();
             }
         }
@@ -1861,7 +1882,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
                 OutputLine("interval: %lu", ToUlong(otChannelManagerGetAutoChannelSelectionInterval(GetInstancePtr())));
                 OutputLine("cca threshold: 0x%04x", otChannelManagerGetCcaFailureRateThreshold(GetInstancePtr()));
                 OutputLine("supported: %s", supportedMask.ToString().AsCString());
-                OutputLine("favored: %s", supportedMask.ToString().AsCString());
+                OutputLine("favored: %s", favoredMask.ToString().AsCString());
             }
         }
         /**
@@ -1940,7 +1961,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
          */
         else if (aArgs[1] == "delay")
         {
-            error = ProcessSet(aArgs + 2, otChannelManagerSetDelay);
+            error = ProcessGetSet(aArgs + 2, otChannelManagerGetDelay, otChannelManagerSetDelay);
         }
         /**
          * @cli channel manager interval
@@ -2130,6 +2151,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
      * Rloc: 9c01
      * Ext Addr: e2b3540590b0fd87
      * Mode: rn
+     * CSL Synchronized: 1
      * Net Data: 184
      * Timeout: 100
      * Age: 0
@@ -2149,6 +2171,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
     linkMode.mDeviceType   = childInfo.mFullThreadDevice;
     linkMode.mNetworkData  = childInfo.mFullThreadDevice;
     OutputLine("Mode: %s", LinkModeToString(linkMode, linkModeString));
+    OutputLine("CSL Synchronized: %d ", childInfo.mIsCslSynced);
     OutputLine("Net Data: %u", childInfo.mNetworkDataVersion);
     OutputLine("Timeout: %lu", ToUlong(childInfo.mTimeout));
     OutputLine("Age: %lu", ToUlong(childInfo.mAge));
@@ -3002,6 +3025,36 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
 {
     otError  error        = OT_ERROR_NONE;
     uint32_t scanChannels = 0;
+
+#if OPENTHREAD_FTD
+    /**
+     * @cli discover reqcallback (enable,disable)
+     * @code
+     * discover reqcallback enable
+     * Done
+     * @endcode
+     * @cparam discover reqcallback @ca{enable|disable}
+     * @par api_copy
+     * #otThreadSetDiscoveryRequestCallback
+     */
+    if (aArgs[0] == "reqcallback")
+    {
+        bool                             enable;
+        otThreadDiscoveryRequestCallback callback = nullptr;
+        void                            *context  = nullptr;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
+
+        if (enable)
+        {
+            callback = &Interpreter::HandleDiscoveryRequest;
+            context  = this;
+        }
+
+        otThreadSetDiscoveryRequestCallback(GetInstancePtr(), callback, context);
+        ExitNow();
+    }
+#endif // OPENTHREAD_FTD
 
     if (!aArgs[0].IsEmpty())
     {
@@ -5018,6 +5071,31 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 
         OutputNewLine();
     }
+    else if (aArgs[0] == "linkquality")
+    {
+        static const char *const kLinkQualityTableTitles[] = {
+            "RLOC16", "Extended MAC", "Frame Error", "Msg Error", "Avg RSS", "Last RSS", "Age",
+        };
+
+        static const uint8_t kLinkQualityTableColumnWidths[] = {
+            8, 18, 13, 11, 9, 10, 7,
+        };
+
+        OutputTableHeader(kLinkQualityTableTitles, kLinkQualityTableColumnWidths);
+
+        while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
+        {
+            PercentageStringBuffer stringBuffer;
+
+            OutputFormat("| 0x%04x | ", neighborInfo.mRloc16);
+            OutputExtAddress(neighborInfo.mExtAddress);
+            OutputFormat(" | %9s %% ", PercentageToString(neighborInfo.mFrameErrorRate, stringBuffer));
+            OutputFormat("| %7s %% ", PercentageToString(neighborInfo.mMessageErrorRate, stringBuffer));
+            OutputFormat("| %7d ", neighborInfo.mAverageRssi);
+            OutputFormat("| %8d ", neighborInfo.mLastRssi);
+            OutputLine("| %5lu |", ToUlong(neighborInfo.mAge));
+        }
+    }
     else
     {
         error = OT_ERROR_INVALID_ARGS;
@@ -5253,6 +5331,37 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+#if OPENTHREAD_FTD
+/**
+ * @cli nexthop
+ * @code
+ * nexthop 0xc000
+ * 0xc000 cost:0
+ * Done
+ * nexthop 0x8001
+ * 0x2000 cost:3
+ * Done
+ * @endcode
+ * @cparam nexthop @ca{rloc16}
+ * @par api_copy
+ * #otThreadGetNextHopAndPathCost
+ */
+template <> otError Interpreter::Process<Cmd("nexthop")>(Arg aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t destRloc16;
+    uint16_t nextHopRloc16;
+    uint8_t  pathCost;
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint16(destRloc16));
+    otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
+    OutputLine("0x%04x cost:%u", nextHopRloc16, pathCost);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_FTD
 
 template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 {
@@ -7124,6 +7233,7 @@ void Interpreter::OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiag
     OutputLine("ChildId: 0x%04x", aChildEntry.mChildId);
 
     OutputLine(aIndentSize, "Timeout: %u", aChildEntry.mTimeout);
+    OutputLine(aIndentSize, "Link Quality: %u", aChildEntry.mLinkQuality);
     OutputLine(aIndentSize, "Mode:");
     OutputMode(aIndentSize + kIndentSize, aChildEntry.mMode);
 }
@@ -7140,12 +7250,28 @@ void Interpreter::HandleDetachGracefullyResult(void)
     OutputResult(OT_ERROR_NONE);
 }
 
+#if OPENTHREAD_FTD
+void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
+}
+
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
 {
     OutputFormat("~ Discovery Request from ");
     OutputExtAddress(aInfo.mExtAddress);
     OutputLine(": version=%u,joiner=%d", aInfo.mVersion, aInfo.mIsJoiner);
 }
+#endif
+
+#if OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+void Interpreter::HandleIp6Receive(otMessage *aMessage, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    otMessageFree(aMessage);
+}
+#endif
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -7338,6 +7464,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("networkname"),
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         CmdEntry("networktime"),
+#endif
+#if OPENTHREAD_FTD
+        CmdEntry("nexthop"),
 #endif
         CmdEntry("panid"),
         CmdEntry("parent"),

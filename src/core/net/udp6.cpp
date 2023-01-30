@@ -149,10 +149,6 @@ Udp::Udp(Instance &aInstance)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     , mPrevBackboneSockets(nullptr)
 #endif
-#if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
-    , mUdpForwarderContext(nullptr)
-    , mUdpForwarder(nullptr)
-#endif
 {
 }
 
@@ -430,9 +426,8 @@ Error Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     if (aMessageInfo.IsHostInterface())
     {
-        VerifyOrExit(mUdpForwarder != nullptr, error = kErrorNoRoute);
-        mUdpForwarder(&aMessage, aMessageInfo.mPeerPort, &aMessageInfo.GetPeerAddr(), aMessageInfo.mSockPort,
-                      mUdpForwarderContext);
+        VerifyOrExit(mUdpForwarder.IsSet(), error = kErrorNoRoute);
+        mUdpForwarder.Invoke(&aMessage, aMessageInfo.mPeerPort, &aMessageInfo.GetPeerAddr(), aMessageInfo.mSockPort);
         // message is consumed by the callback
     }
     else

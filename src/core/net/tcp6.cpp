@@ -780,14 +780,11 @@ bool Tcp::AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, 
 
     if (aBindAddress)
     {
-        MessageInfo                  peerInfo;
-        const Netif::UnicastAddress *netifAddress;
+        const Address *source;
 
-        peerInfo.Clear();
-        peerInfo.SetPeerAddr(aPeer.GetAddress());
-        netifAddress = Get<Ip6>().SelectSourceAddress(peerInfo);
-        VerifyOrExit(netifAddress != nullptr, success = false);
-        aToBind.GetAddress() = netifAddress->GetAddress();
+        source = Get<Ip6>().SelectSourceAddress(aPeer.GetAddress());
+        VerifyOrExit(source != nullptr, success = false);
+        aToBind.SetAddress(*source);
     }
 
     if (aBindPort)

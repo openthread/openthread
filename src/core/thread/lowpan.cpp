@@ -438,7 +438,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     uint16_t             startOffset = aMessage.GetOffset();
     Ip6::ExtensionHeader extHeader;
     uint16_t             len;
-    uint8_t              padLength = 0;
+    uint16_t             padLength = 0;
     uint8_t              tmpByte;
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), extHeader));
@@ -461,7 +461,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
 
     SuccessOrExit(error = aFrameBuilder.AppendUint8(tmpByte));
 
-    len = (extHeader.GetLength() + 1) * 8 - sizeof(extHeader);
+    len = extHeader.GetSize() - sizeof(extHeader);
 
     // RFC 6282 does not support compressing large extension headers
     VerifyOrExit(len <= kExtHdrMaxLength, error = kErrorFailed);
@@ -485,7 +485,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
             }
             else
             {
-                offset += sizeof(optionHeader) + optionHeader.GetLength();
+                offset += optionHeader.GetSize();
             }
         }
 
@@ -496,7 +496,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
         }
         else if (optionHeader.GetType() == Ip6::OptionPadN::kType)
         {
-            padLength = sizeof(optionHeader) + optionHeader.GetLength();
+            padLength = optionHeader.GetSize();
         }
 
         len -= padLength;

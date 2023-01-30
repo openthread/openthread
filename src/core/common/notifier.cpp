@@ -50,8 +50,7 @@ Notifier::Notifier(Instance &aInstance)
 {
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        callback.mHandler = nullptr;
-        callback.mContext = nullptr;
+        callback.Clear();
     }
 }
 
@@ -64,23 +63,17 @@ Error Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContex
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        if (callback.mHandler == nullptr)
+        VerifyOrExit(!callback.Matches(aCallback, aContext), error = kErrorAlready);
+
+        if (!callback.IsSet() && (unusedCallback == nullptr))
         {
-            if (unusedCallback == nullptr)
-            {
-                unusedCallback = &callback;
-            }
-
-            continue;
+            unusedCallback = &callback;
         }
-
-        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = kErrorAlready);
     }
 
     VerifyOrExit(unusedCallback != nullptr, error = kErrorNoBufs);
 
-    unusedCallback->mHandler = aCallback;
-    unusedCallback->mContext = aContext;
+    unusedCallback->Set(aCallback, aContext);
 
 exit:
     return error;
@@ -92,10 +85,9 @@ void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        if ((callback.mHandler == aCallback) && (callback.mContext == aContext))
+        if (callback.Matches(aCallback, aContext))
         {
-            callback.mHandler = nullptr;
-            callback.mContext = nullptr;
+            callback.Clear();
         }
     }
 
@@ -199,10 +191,7 @@ void Notifier::EmitEvents(void)
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        if (callback.mHandler != nullptr)
-        {
-            callback.mHandler(events.GetAsFlags(), callback.mContext);
-        }
+        callback.InvokeIfSet(events.GetAsFlags());
     }
 
 exit:

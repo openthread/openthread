@@ -86,8 +86,6 @@ static Dns::UpdateHeader::Response ErrorToDnsResponseCode(Error aError)
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mServiceUpdateHandler(nullptr)
-    , mServiceUpdateHandlerContext(nullptr)
     , mLeaseTimer(aInstance)
     , mOutstandingUpdatesTimer(aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
@@ -101,12 +99,6 @@ Server::Server(Instance &aInstance)
 #endif
 {
     IgnoreError(SetDomain(kDefaultDomain));
-}
-
-void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext)
-{
-    mServiceUpdateHandler        = aServiceHandler;
-    mServiceUpdateHandlerContext = aServiceHandlerContext;
 }
 
 Error Server::SetAddressMode(AddressMode aMode)
@@ -342,12 +334,12 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyS
         LogInfo("Fully remove host %s", aHost->GetFullName());
     }
 
-    if (aNotifyServiceHandler && mServiceUpdateHandler != nullptr)
+    if (aNotifyServiceHandler && mServiceUpdateHandler.IsSet())
     {
         uint32_t updateId = AllocateId();
 
         LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
-        mServiceUpdateHandler(updateId, aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        mServiceUpdateHandler.Invoke(updateId, aHost, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
         // We don't wait for the reply from the service update handler,
         // but always remove the host (and its services) regardless of
         // host/service update result. Because removing a host should fail
@@ -1373,7 +1365,7 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
     }
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-    if ((aError == kErrorNone) && (mServiceUpdateHandler != nullptr))
+    if ((aError == kErrorNone) && mServiceUpdateHandler.IsSet())
     {
         UpdateMetadata *update = UpdateMetadata::Allocate(GetInstance(), aHost, aMetadata);
 
@@ -1383,7 +1375,7 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
             mOutstandingUpdatesTimer.FireAtIfEarlier(update->GetExpireTime());
 
             LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(update->GetId()));
-            mServiceUpdateHandler(update->GetId(), &aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+            mServiceUpdateHandler.Invoke(update->GetId(), &aHost, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
             ExitNow();
         }
 
@@ -2068,12 +2060,12 @@ void Server::Host::RemoveService(Service *aService, RetainName aRetainName, Noti
 
     aService->Log(aRetainName ? Service::kRemoveButRetainName : Service::kFullyRemove);
 
-    if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
+    if (aNotifyServiceHandler && server.mServiceUpdateHandler.IsSet())
     {
         uint32_t updateId = server.AllocateId();
 
         LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
-        server.mServiceUpdateHandler(updateId, this, kDefaultEventsHandlerTimeout, server.mServiceUpdateHandlerContext);
+        server.mServiceUpdateHandler.Invoke(updateId, this, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
         // We don't wait for the reply from the service update handler,
         // but always remove the service regardless of service update result.
         // Because removing a service should fail only when there is system

@@ -53,8 +53,6 @@ RegisterLogModule("PanIdQueryClnt");
 
 PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mCallback(nullptr)
-    , mContext(nullptr)
 {
 }
 
@@ -89,8 +87,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
 
     LogInfo("sent panid query");
 
-    mCallback = aCallback;
-    mContext  = aContext;
+    mCallback.Set(aCallback, aContext);
 
 exit:
     FreeMessageOnError(message, error);
@@ -112,10 +109,7 @@ void PanIdQueryClient::HandleTmf<kUriPanIdConflict>(Coap::Message &aMessage, con
 
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
-    if (mCallback != nullptr)
-    {
-        mCallback(panId, mask, mContext);
-    }
+    mCallback.InvokeIfSet(panId, mask);
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, responseInfo));
 

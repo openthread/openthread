@@ -812,6 +812,27 @@ target_link_libraries(ot-test-pool
 
 add_test(NAME ot-test-pool COMMAND ot-test-pool)
 
+add_executable(ot-test-power-calibration
+    test_power_calibration.cpp
+)
+
+target_include_directories(ot-test-power-calibration
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-power-calibration
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-power-calibration
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-power-calibration COMMAND ot-test-power-calibration)
+
 add_executable(ot-test-priority-queue
     test_priority_queue.cpp
 )

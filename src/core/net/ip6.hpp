@@ -42,6 +42,7 @@
 #include <openthread/nat64.h>
 #include <openthread/udp.h>
 
+#include "common/callback.hpp"
 #include "common/encoding.hpp"
 #include "common/frame_data.hpp"
 #include "common/locator.hpp"
@@ -246,7 +247,10 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext);
+    void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext)
+    {
+        mReceiveIp6DatagramCallback.Set(aCallback, aCallbackContext);
+    }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     /**
@@ -259,7 +263,10 @@ public:
      * @sa SetReceiveDatagramCallback
      *
      */
-    void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext);
+    void SetNat64ReceiveIp4DatagramCallback(otNat64ReceiveIp4Callback aCallback, void *aCallbackContext)
+    {
+        mReceiveIp4DatagramCallback.Set(aCallback, aCallbackContext);
+    }
 #endif
 
     /**
@@ -287,30 +294,25 @@ public:
     void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
 
     /**
-     * This method indicates whether or not IPv6 forwarding is enabled.
+     * This method performs default source address selection.
      *
-     * @returns TRUE if IPv6 forwarding is enabled, FALSE otherwise.
+     * @param[in,out]  aMessageInfo  A reference to the message information.
      *
-     */
-    bool IsForwardingEnabled(void) const { return mForwardingEnabled; }
-
-    /**
-     * This method enables/disables IPv6 forwarding.
-     *
-     * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
+     * @retval  kErrorNone      Found a source address and updated SockAddr of @p aMessageInfo.
+     * @retval  kErrorNotFound  No source address was found and @p aMessageInfo is unchanged.
      *
      */
-    void SetForwardingEnabled(bool aEnable) { mForwardingEnabled = aEnable; }
+    Error SelectSourceAddress(MessageInfo &aMessageInfo) const;
 
     /**
-     * This method perform default source address selection.
+     * This method performs default source address selection.
      *
-     * @param[in]  aMessageInfo  A reference to the message information.
+     * @param[in]  aDestination  The destination address.
      *
      * @returns A pointer to the selected IPv6 source address or `nullptr` if no source address was found.
      *
      */
-    const Netif::UnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+    const Address *SelectSourceAddress(const Address &aDestination) const;
 
     /**
      * This method returns a reference to the send queue.
@@ -376,12 +378,12 @@ private:
     static Error   GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
 
     void  EnqueueDatagram(Message &aMessage);
-    Error ProcessReceiveCallback(Message           &aMessage,
-                                 MessageOrigin      aOrigin,
-                                 const MessageInfo &aMessageInfo,
-                                 uint8_t            aIpProto,
-                                 bool               aAllowReceiveFilter,
-                                 Message::Ownership aMessageOwnership);
+    Error PassToHost(Message           &aMessage,
+                     MessageOrigin      aOrigin,
+                     const MessageInfo &aMessageInfo,
+                     uint8_t            aIpProto,
+                     bool               aApplyFilter,
+                     Message::Ownership aMessageOwnership);
     Error HandleExtensionHeaders(Message      &aMessage,
                                  MessageOrigin aOrigin,
                                  MessageInfo  &aMessageInfo,
@@ -397,8 +399,8 @@ private:
     void SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
 #endif
     Error AddMplOption(Message &aMessage, Header &aHeader);
-    Error AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
-    Error InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    Error AddTunneledMplOption(Message &aMessage, Header &aHeader);
+    Error InsertMplOption(Message &aMessage, Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
     Error HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
     Error HandlePayload(Header            &aIp6Header,
@@ -414,14 +416,12 @@ private:
 
     using SendQueueTask = TaskletIn<Ip6, &Ip6::HandleSendQueue>;
 
-    bool                 mForwardingEnabled;
-    bool                 mIsReceiveIp6FilterEnabled;
-    otIp6ReceiveCallback mReceiveIp6DatagramCallback;
-    void                *mReceiveIp6DatagramCallbackContext;
+    bool mIsReceiveIp6FilterEnabled;
+
+    Callback<otIp6ReceiveCallback> mReceiveIp6DatagramCallback;
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    otNat64ReceiveIp4Callback mReceiveIp4DatagramCallback;
-    void                     *mReceiveIp4DatagramCallbackContext;
+    Callback<otNat64ReceiveIp4Callback> mReceiveIp4DatagramCallback;
 #endif
 
     PriorityQueue mSendQueue;

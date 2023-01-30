@@ -53,6 +53,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_API_VERSION>(void
 {
     return mEncoder.WriteUintPacked(SPINEL_RCP_API_VERSION);
 }
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MIN_HOST_API_VERSION>(void)
+{
+    return mEncoder.WriteUintPacked(SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION);
+}
 #endif
 
 // ----------------------------------------------------------------------------
@@ -503,10 +508,23 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER
 {
     otError  error = OT_ERROR_NONE;
     uint32_t frameCounter;
+    bool     setIfLarger = false;
 
     SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
 
-    error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadBool(setIfLarger));
+    }
+
+    if (setIfLarger)
+    {
+        error = otLinkRawSetMacFrameCounterIfLarger(mInstance, frameCounter);
+    }
+    else
+    {
+        error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
+    }
 
 exit:
     return error;

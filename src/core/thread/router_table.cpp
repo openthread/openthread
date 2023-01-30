@@ -88,7 +88,7 @@ Router *RouterTable::AddRouter(uint8_t aRouterId)
 
     router->Clear();
     router->SetRloc16(Mle::Rloc16FromRouterId(aRouterId));
-    router->SetNextHop(Mle::kInvalidRouterId);
+    router->SetNextHopToInvalid();
 
     mRouterIdMap.SetIndex(aRouterId, mRouters.IndexOf(*router));
 
@@ -100,6 +100,11 @@ void RouterTable::RemoveRouter(Router &aRouter)
 {
     // Remove an existing `aRouter` entry from `mRouters` and update the
     // `mRouterIdMap`.
+
+    if (aRouter.IsStateValid())
+    {
+        Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, aRouter);
+    }
 
     mRouterIdMap.Release(aRouter.GetRouterId());
     mRouters.Remove(aRouter);
@@ -186,19 +191,13 @@ Error RouterTable::Release(uint8_t aRouterId)
     router = FindRouterById(aRouterId);
     VerifyOrExit(router != nullptr, error = kErrorNotFound);
 
-    if (router->IsStateValid())
-    {
-        Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, *router);
-    }
-
     RemoveRouter(*router);
 
     for (Router &otherRouter : mRouters)
     {
         if (otherRouter.GetNextHop() == aRouterId)
         {
-            otherRouter.SetNextHop(Mle::kInvalidRouterId);
-            otherRouter.SetCost(0);
+            otherRouter.SetNextHopToInvalid();
         }
     }
 
@@ -228,8 +227,7 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
     {
         if (router.GetNextHop() == aRouter.GetRouterId())
         {
-            router.SetNextHop(Mle::kInvalidRouterId);
-            router.SetCost(0);
+            router.SetNextHopToInvalid();
 
             if (GetLinkCost(router) >= Mle::kMaxRouteCost)
             {
@@ -324,7 +322,7 @@ exit:
     return error;
 }
 
-Router *RouterTable::GetLeader(void) { return FindRouterById(Get<Mle::MleRouter>().GetLeaderId()); }
+const Router *RouterTable::GetLeader(void) const { return FindRouterById(Get<Mle::MleRouter>().GetLeaderId()); }
 
 uint32_t RouterTable::GetLeaderAge(void) const
 {
@@ -352,15 +350,157 @@ uint8_t RouterTable::GetLinkCost(const Router &aRouter) const
 
     VerifyOrExit(aRouter.GetRloc16() != Get<Mle::MleRouter>().GetRloc16() && aRouter.IsStateValid());
 
-    rval = Mle::MleRouter::LinkQualityToCost(aRouter.GetTwoWayLinkQuality());
+    rval = CostForLinkQuality(aRouter.GetTwoWayLinkQuality());
 
 exit:
     return rval;
 }
 
+uint8_t RouterTable::GetLinkCost(uint8_t aRouterId) const
+{
+    uint8_t       rval = Mle::kMaxRouteCost;
+    const Router *router;
+
+    router = FindRouterById(aRouterId);
+
+    // `nullptr` aRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
+    VerifyOrExit(router != nullptr);
+
+    rval = GetLinkCost(*router);
+
+exit:
+    return rval;
+}
+
+uint8_t RouterTable::GetPathCost(uint16_t aDestRloc16) const
+{
+    uint8_t  pathCost;
+    uint16_t nextHopRloc16;
+
+    GetNextHopAndPathCost(aDestRloc16, nextHopRloc16, pathCost);
+
+    return pathCost;
+}
+
+uint8_t RouterTable::GetPathCostToLeader(void) const
+{
+    return GetPathCost(Mle::Rloc16FromRouterId(Get<Mle::Mle>().GetLeaderId()));
+}
+
+void RouterTable::GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHopRloc16, uint8_t &aPathCost) const
+{
+    uint8_t       destRouterId;
+    const Router *router;
+    const Router *nextHop;
+
+    aPathCost      = Mle::kMaxRouteCost;
+    aNextHopRloc16 = Mle::kInvalidRloc16;
+
+    VerifyOrExit(Get<Mle::Mle>().IsAttached());
+
+    if (aDestRloc16 == Get<Mle::Mle>().GetRloc16())
+    {
+        // Destination is this device, return cost as zero.
+        aPathCost      = 0;
+        aNextHopRloc16 = aDestRloc16;
+        ExitNow();
+    }
+
+    destRouterId = Mle::RouterIdFromRloc16(aDestRloc16);
+
+    router  = FindRouterById(destRouterId);
+    nextHop = (router != nullptr) ? FindNextHopOf(*router) : nullptr;
+
+    if (Get<Mle::MleRouter>().IsChild())
+    {
+        const Router &parent = Get<Mle::Mle>().GetParent();
+
+        if (parent.IsStateValid())
+        {
+            aNextHopRloc16 = parent.GetRloc16();
+        }
+
+        // If destination is our parent or another child of our
+        // parent, we use the link cost to our parent. Otherwise we
+        // check if we have a next hop towards the destination and
+        // add its cost to the link cost to parent.
+
+        VerifyOrExit((destRouterId == parent.GetRouterId()) || (nextHop != nullptr));
+
+        aPathCost = CostForLinkQuality(parent.GetLinkQualityIn());
+
+        if (destRouterId != parent.GetRouterId())
+        {
+            aPathCost += router->GetCost();
+        }
+
+        // The case where destination itself is a child is handled at
+        // the end (after `else` block).
+    }
+    else // Role is router or leader
+    {
+        if (destRouterId == Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16()))
+        {
+            // Destination is a one of our children.
+
+            const Child *child = Get<ChildTable>().FindChild(aDestRloc16, Child::kInStateAnyExceptInvalid);
+
+            VerifyOrExit(child != nullptr);
+            aNextHopRloc16 = aDestRloc16;
+            aPathCost      = CostForLinkQuality(child->GetLinkQualityIn());
+            ExitNow();
+        }
+
+        VerifyOrExit(router != nullptr);
+
+        aPathCost = GetLinkCost(*router);
+
+        if (aPathCost < Mle::kMaxRouteCost)
+        {
+            aNextHopRloc16 = router->GetRloc16();
+        }
+
+        if (nextHop != nullptr)
+        {
+            // Determine whether direct link or forwarding hop link
+            // through `nextHop` has a lower path cost.
+
+            uint8_t nextHopPathCost = router->GetCost() + GetLinkCost(*nextHop);
+
+            if (nextHopPathCost < aPathCost)
+            {
+                aPathCost      = nextHopPathCost;
+                aNextHopRloc16 = nextHop->GetRloc16();
+            }
+        }
+    }
+
+    if (!Mle::IsActiveRouter(aDestRloc16))
+    {
+        // Destination is a child. we assume best link quality
+        // between destination and its parent router.
+
+        aPathCost += kCostForLinkQuality3;
+    }
+
+exit:
+    return;
+}
+
+uint16_t RouterTable::GetNextHop(uint16_t aDestRloc16) const
+{
+    uint8_t  pathCost;
+    uint16_t nextHopRloc16;
+
+    GetNextHopAndPathCost(aDestRloc16, nextHopRloc16, pathCost);
+
+    return nextHopRloc16;
+}
+
 void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet)
 {
     bool shouldAdd = false;
+    bool changed   = false;
 
     mRouterIdSequence            = aRouterIdSequence;
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
@@ -380,9 +520,10 @@ void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::Router
             Router *router = FindRouterById(routerId);
 
             OT_ASSERT(router != nullptr);
-            router->SetNextHop(Mle::kInvalidRouterId);
+            router->SetNextHopToInvalid();
             RemoveRouterLink(*router);
             RemoveRouter(*router);
+            changed = true;
         }
         else
         {
@@ -399,13 +540,185 @@ void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::Router
         if (!IsAllocated(routerId) && aRouterIdSet.Contains(routerId))
         {
             AddRouter(routerId);
+            changed = true;
         }
     }
 
     Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
 exit:
+    if (changed)
+    {
+        LogRouteTable();
+    }
+}
+
+void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId)
+{
+    Router          *neighbor;
+    bool             changed = false;
+    Mle::RouterIdSet finitePathCostIdSet;
+    uint8_t          linkCostToNeighbor;
+
+    neighbor = FindRouterById(aNeighborId);
+    VerifyOrExit(neighbor != nullptr);
+
+    // Before updating the routes, we track which routers have finite
+    // path cost. After the update we check again to see if any path
+    // cost changed from finite to infinite or vice versa to decide
+    // whether to reset the  MLE Advertisement interval.
+
+    finitePathCostIdSet.Clear();
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        if (GetPathCost(Mle::Rloc16FromRouterId(routerId)) < Mle::kMaxRouteCost)
+        {
+            finitePathCostIdSet.Add(routerId);
+        }
+    }
+
+    // Find the entry corresponding to our Router ID in the received
+    // `aRouteTlv` to get the `LinkQualityIn` from the perspective of
+    // neighbor. We use this to update our `LinkQualityOut` to the
+    // neighbor.
+
+    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
+         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    {
+        if (routerId != Mle::RouterIdFromRloc16(Get<Mle::Mle>().GetRloc16()))
+        {
+            continue;
+        }
+
+        if (aRouteTlv.IsRouterIdSet(routerId))
+        {
+            LinkQuality linkQuality = aRouteTlv.GetLinkQualityIn(index);
+
+            if (neighbor->GetLinkQualityOut() != linkQuality)
+            {
+                neighbor->SetLinkQualityOut(linkQuality);
+                changed = true;
+            }
+        }
+
+        break;
+    }
+
+    linkCostToNeighbor = GetLinkCost(*neighbor);
+
+    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
+         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    {
+        Router *router;
+        Router *nextHop;
+        uint8_t cost;
+
+        if (!aRouteTlv.IsRouterIdSet(routerId))
+        {
+            continue;
+        }
+
+        router = FindRouterById(routerId);
+
+        if (router == nullptr || router->GetRloc16() == Get<Mle::Mle>().GetRloc16() || router == neighbor)
+        {
+            continue;
+        }
+
+        nextHop = FindNextHopOf(*router);
+
+        cost = aRouteTlv.GetRouteCost(index);
+        cost = (cost == 0) ? Mle::kMaxRouteCost : cost;
+
+        if ((nextHop == nullptr) || (nextHop == neighbor))
+        {
+            // `router` has no next hop or next hop is neighbor (sender)
+
+            if (cost + linkCostToNeighbor < Mle::kMaxRouteCost)
+            {
+                if (router->SetNextHopAndCost(aNeighborId, cost))
+                {
+                    changed = true;
+                }
+            }
+            else if (nextHop == neighbor)
+            {
+                router->SetNextHopToInvalid();
+                router->SetLastHeard(TimerMilli::GetNow());
+                changed = true;
+            }
+        }
+        else
+        {
+            uint8_t curCost = router->GetCost() + GetLinkCost(*nextHop);
+            uint8_t newCost = cost + linkCostToNeighbor;
+
+            if (newCost < curCost)
+            {
+                router->SetNextHopAndCost(aNeighborId, cost);
+                changed = true;
+            }
+        }
+    }
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        bool oldCostFinite = finitePathCostIdSet.Contains(routerId);
+        bool newCostFinite = (GetPathCost(Mle::Rloc16FromRouterId(routerId)) < Mle::kMaxRouteCost);
+
+        if (newCostFinite != oldCostFinite)
+        {
+            Get<Mle::MleRouter>().ResetAdvertiseInterval();
+            break;
+        }
+    }
+
+    if (changed)
+    {
+        LogRouteTable();
+    }
+
+exit:
     return;
+}
+
+void RouterTable::UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId)
+{
+    bool changed = false;
+
+    for (uint8_t routerId = 0, index = 0; routerId <= Mle::kMaxRouterId;
+         index += aRouteTlv.IsRouterIdSet(routerId) ? 1 : 0, routerId++)
+    {
+        Router *router;
+        uint8_t cost;
+        uint8_t nextHopId;
+
+        if (!aRouteTlv.IsRouterIdSet(routerId) || (routerId == aParentId))
+        {
+            continue;
+        }
+
+        router = FindRouterById(routerId);
+
+        if (router == nullptr)
+        {
+            continue;
+        }
+
+        cost      = aRouteTlv.GetRouteCost(index);
+        nextHopId = (cost == 0) ? Mle::kInvalidRouterId : aParentId;
+
+        if (router->SetNextHopAndCost(nextHopId, cost))
+        {
+            changed = true;
+        }
+    }
+
+    if (changed)
+    {
+        LogRouteTable();
+    }
 }
 
 void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor) const
@@ -461,46 +774,34 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
     for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
     {
-        const Router *router;
+        uint16_t routerRloc16;
 
         if (!routerIdSet.Contains(routerId))
         {
             continue;
         }
 
-        router = FindRouterById(routerId);
-        OT_ASSERT(router != nullptr);
+        routerRloc16 = Mle::Rloc16FromRouterId(routerId);
 
-        if (router->GetRloc16() == Get<Mle::Mle>().GetRloc16())
+        if (routerRloc16 == Get<Mle::Mle>().GetRloc16())
         {
             aRouteTlv.SetRouteData(routerIndex, kLinkQuality0, kLinkQuality0, 1);
         }
         else
         {
-            const Router *nextHop  = FindNextHopOf(*router);
-            uint8_t       linkCost = GetLinkCost(*router);
-            uint8_t       routeCost;
+            const Router *router = FindRouterById(routerId);
+            uint8_t       pathCost;
 
-            if (nextHop == nullptr)
-            {
-                routeCost = linkCost;
-            }
-            else
-            {
-                routeCost = router->GetCost() + GetLinkCost(*nextHop);
+            OT_ASSERT(router != nullptr);
 
-                if (linkCost < routeCost)
-                {
-                    routeCost = linkCost;
-                }
+            pathCost = GetPathCost(routerRloc16);
+
+            if (pathCost >= Mle::kMaxRouteCost)
+            {
+                pathCost = 0;
             }
 
-            if (routeCost >= Mle::kMaxRouteCost)
-            {
-                routeCost = 0;
-            }
-
-            aRouteTlv.SetRouteData(routerIndex, router->GetLinkQualityIn(), router->GetLinkQualityOut(), routeCost);
+            aRouteTlv.SetRouteData(routerIndex, router->GetLinkQualityIn(), router->GetLinkQualityOut(), pathCost);
         }
 
         routerIndex++;
@@ -590,6 +891,10 @@ void RouterTable::LogRouteTable(void) const
         if (router.GetRloc16() == Get<Mle::Mle>().GetRloc16())
         {
             string.Append(" - me");
+        }
+        else if (Get<Mle::Mle>().IsChild() && (router.GetRloc16() == Get<Mle::Mle>().GetParent().GetRloc16()))
+        {
+            string.Append(" - parent");
         }
         else
         {

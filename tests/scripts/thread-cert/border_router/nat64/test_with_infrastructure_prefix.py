@@ -52,6 +52,11 @@ SMALL_NAT64_PREFIX = "2000:0:0:1:0:0::/96"
 
 NAT64_PREFIX_REFRESH_DELAY = 305
 
+NAT64_STATE_DISABLED = 'disabled'
+NAT64_STATE_NOT_RUNNING = 'not_running'
+NAT64_STATE_IDLE = 'idle'
+NAT64_STATE_ACTIVE = 'active'
+
 
 class Nat64SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -91,6 +96,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         nat64_prefix = br.get_netdata_nat64_prefix()[0]
         self.assertEqual(nat64_prefix, infra_nat64_prefix)
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
 
         # Case 2 Withdraw infrastructure prefix when a smaller prefix in medium
         # preference is present
@@ -100,6 +109,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         self.assertNotEqual(infra_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_IDLE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
 
         br.remove_route(SMALL_NAT64_PREFIX)
         br.register_netdata()
@@ -115,6 +128,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 2)
         self.assertEqual(br.get_netdata_nat64_prefix(), [infra_nat64_prefix, SMALL_NAT64_PREFIX])
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
 
         br.remove_route(SMALL_NAT64_PREFIX)
         br.register_netdata()
@@ -128,6 +145,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertNotEqual(local_nat64_prefix, infra_nat64_prefix)
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         self.assertEqual(br.get_netdata_nat64_prefix()[0], local_nat64_prefix)
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_ACTIVE
+        })
 
         # Case 5 Infrastructure nat64 prefix is recovered
         br.bash("service bind9 start")
@@ -136,6 +157,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(br.get_br_favored_nat64_prefix(), infra_nat64_prefix)
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         self.assertEqual(br.get_netdata_nat64_prefix()[0], infra_nat64_prefix)
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
 
         # Case 6 Change infrastructure nat64 prefix
         br.bash("sed -i 's/dns64 /\/\/dns64 /' /etc/bind/named.conf.options")
@@ -146,6 +171,10 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(br.get_br_favored_nat64_prefix(), SMALL_NAT64_PREFIX)
         self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
         self.assertEqual(br.get_netdata_nat64_prefix()[0], SMALL_NAT64_PREFIX)
+        self.assertDictIncludes(br.nat64_state, {
+            'PrefixManager': NAT64_STATE_ACTIVE,
+            'Translator': NAT64_STATE_NOT_RUNNING
+        })
 
 
 if __name__ == '__main__':

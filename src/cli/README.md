@@ -693,6 +693,7 @@ Child ID: 1
 Rloc: 9c01
 Ext Addr: e2b3540590b0fd87
 Mode: rn
+CSL Synchronized: 1
 Net Data: 184
 Timeout: 100
 Age: 0
@@ -2058,6 +2059,19 @@ Get the NAT64 translator packet and error counters.
 |   Illegal Pkt |                       0 |                       0 |
 |   Unsup Proto |                       0 |                       0 |
 |    No Mapping |                       2 |                       0 |
+Done
+```
+
+### neighbor linkquality
+
+Print link quality info for all neighbors.
+
+```bash
+> neighbor linkquality
+| RLOC16 | Extended MAC     | Frame Error | Msg Error | Avg RSS | Last RSS | Age   |
++--------+------------------+-------------+-----------+---------+----------+-------+
+| 0xe800 | 9e2fa4e1b84f92db |      0.00 % |    0.00 % |     -46 |      -48 |     1 |
+| 0xc001 | 0ad7ed6beaa6016d |      4.67 % |    0.08 % |     -68 |      -72 |    10 |
 Done
 ```
 

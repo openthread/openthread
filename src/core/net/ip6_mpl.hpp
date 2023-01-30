@@ -64,8 +64,8 @@ OT_TOOL_PACKED_BEGIN
 class OptionMpl : public OptionHeader
 {
 public:
-    static constexpr uint8_t kType      = 0x6d; // 01 1 01101
-    static constexpr uint8_t kMinLength = 2;
+    static constexpr uint8_t kType    = 0x6d;                       ///< MPL option type - 01 1 01101
+    static constexpr uint8_t kMinSize = (2 + sizeof(OptionHeader)); ///< Minimum size (num of bytes) of `OptionMpl`
 
     /**
      * This method initializes the MPL header.
@@ -73,19 +73,10 @@ public:
      */
     void Init(void)
     {
-        OptionHeader::SetType(kType);
-        OptionHeader::SetLength(sizeof(*this) - sizeof(OptionHeader));
+        SetType(kType);
+        SetLength(sizeof(*this) - sizeof(OptionHeader));
         mControl = 0;
     }
-
-    /**
-     * This method returns the total MPL Option length value including option
-     * header.
-     *
-     * @returns The total IPv6 Option Length.
-     *
-     */
-    uint8_t GetTotalLength(void) const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
 
     /**
      * MPL Seed Id lengths.

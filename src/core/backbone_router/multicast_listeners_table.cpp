@@ -77,10 +77,7 @@ Error MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireTim
 
     FixHeap(mNumValidListeners - 1);
 
-    if (mCallback != nullptr)
-    {
-        mCallback(mCallbackContext, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED, &aAddress);
-    }
+    mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED, &aAddress);
 
 exit:
     LogMulticastListenersTable("Add", aAddress, aExpireTime, error);
@@ -106,10 +103,7 @@ void MulticastListenersTable::Remove(const Ip6::Address &aAddress)
                 FixHeap(i);
             }
 
-            if (mCallback != nullptr)
-            {
-                mCallback(mCallbackContext, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &aAddress);
-            }
+            mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &aAddress);
 
             ExitNow(error = kErrorNone);
         }
@@ -138,10 +132,7 @@ void MulticastListenersTable::Expire(void)
             FixHeap(0);
         }
 
-        if (mCallback != nullptr)
-        {
-            mCallback(mCallbackContext, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &address);
-        }
+        mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &address);
     }
 
     CheckInvariants();
@@ -263,11 +254,11 @@ MulticastListenersTable::Listener *MulticastListenersTable::IteratorBuilder::end
 
 void MulticastListenersTable::Clear(void)
 {
-    if (mCallback != nullptr)
+    if (mCallback.IsSet())
     {
         for (uint16_t i = 0; i < mNumValidListeners; i++)
         {
-            mCallback(mCallbackContext, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &mListeners[i].GetAddress());
+            mCallback.Invoke(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &mListeners[i].GetAddress());
         }
     }
 
@@ -278,14 +269,13 @@ void MulticastListenersTable::Clear(void)
 
 void MulticastListenersTable::SetCallback(otBackboneRouterMulticastListenerCallback aCallback, void *aContext)
 {
-    mCallback        = aCallback;
-    mCallbackContext = aContext;
+    mCallback.Set(aCallback, aContext);
 
-    if (mCallback != nullptr)
+    if (mCallback.IsSet())
     {
         for (uint16_t i = 0; i < mNumValidListeners; i++)
         {
-            mCallback(mCallbackContext, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED, &mListeners[i].GetAddress());
+            mCallback.Invoke(OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED, &mListeners[i].GetAddress());
         }
     }
 }

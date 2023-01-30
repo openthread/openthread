@@ -206,18 +206,9 @@ void Client::AutoStart::SetState(State aState)
     }
 }
 
-void Client::AutoStart::SetCallback(AutoStartCallback aCallback, void *aContext)
-{
-    mCallback = aCallback;
-    mContext  = aContext;
-}
-
 void Client::AutoStart::InvokeCallback(const Ip6::SockAddr *aServerSockAddr) const
 {
-    if (mCallback != nullptr)
-    {
-        mCallback(aServerSockAddr, mContext);
-    }
+    mCallback.InvokeIfSet(aServerSockAddr);
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -266,8 +257,6 @@ Client::Client(Instance &aInstance)
     , mDefaultLease(kDefaultLease)
     , mDefaultKeyLease(kDefaultKeyLease)
     , mSocket(aInstance)
-    , mCallback(nullptr)
-    , mCallbackContext(nullptr)
     , mDomainName(kDefaultDomainName)
     , mTimer(aInstance)
 {
@@ -380,12 +369,6 @@ exit:
         DisableAutoStartMode();
     }
 #endif
-}
-
-void Client::SetCallback(Callback aCallback, void *aContext)
-{
-    mCallback        = aCallback;
-    mCallbackContext = aContext;
 }
 
 void Client::Resume(void)
@@ -743,11 +726,7 @@ void Client::InvokeCallback(Error aError) const { InvokeCallback(aError, mHostIn
 
 void Client::InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const
 {
-    VerifyOrExit(mCallback != nullptr);
-    mCallback(aError, &aHostInfo, mServices.GetHead(), aRemovedServices, mCallbackContext);
-
-exit:
-    return;
+    mCallback.InvokeIfSet(aError, &aHostInfo, mServices.GetHead(), aRemovedServices);
 }
 
 void Client::SendUpdate(void)

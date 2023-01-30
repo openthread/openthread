@@ -71,7 +71,7 @@ void SubMac::Callbacks::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 }
 
 void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                                  const RxFrame *aAckFrame,
+                                                  RxFrame       *aAckFrame,
                                                   Error          aError,
                                                   uint8_t        aRetryCount,
                                                   bool           aWillRetx)
@@ -119,7 +119,7 @@ void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError) { Get<LinkRaw
 void SubMac::Callbacks::RecordCcaStatus(bool, uint8_t) {}
 
 void SubMac::Callbacks::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                                  const RxFrame *aAckFrame,
+                                                  RxFrame       *aAckFrame,
                                                   Error          aError,
                                                   uint8_t        aRetryCount,
                                                   bool           aWillRetx)

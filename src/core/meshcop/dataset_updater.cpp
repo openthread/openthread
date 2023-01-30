@@ -48,14 +48,12 @@ namespace MeshCoP {
 
 DatasetUpdater::DatasetUpdater(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mCallback(nullptr)
-    , mCallbackContext(nullptr)
     , mTimer(aInstance)
     , mDataset(nullptr)
 {
 }
 
-Error DatasetUpdater::RequestUpdate(const Dataset::Info &aDataset, Callback aCallback, void *aContext)
+Error DatasetUpdater::RequestUpdate(const Dataset::Info &aDataset, UpdaterCallback aCallback, void *aContext)
 {
     Error    error   = kErrorNone;
     Message *message = nullptr;
@@ -71,9 +69,8 @@ Error DatasetUpdater::RequestUpdate(const Dataset::Info &aDataset, Callback aCal
 
     SuccessOrExit(error = message->Append(aDataset));
 
-    mCallback        = aCallback;
-    mCallbackContext = aContext;
-    mDataset         = message;
+    mCallback.Set(aCallback, aContext);
+    mDataset = message;
 
     mTimer.Start(1);
 
@@ -163,10 +160,7 @@ void DatasetUpdater::Finish(Error aError)
     FreeMessage(mDataset);
     mDataset = nullptr;
 
-    if (mCallback != nullptr)
-    {
-        mCallback(aError, mCallbackContext);
-    }
+    mCallback.InvokeIfSet(aError);
 }
 
 void DatasetUpdater::HandleNotifierEvents(Events aEvents)

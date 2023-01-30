@@ -49,6 +49,7 @@ OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1                           \
     -DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1                        \
+    -DOPENTHREAD_CONFIG_TLS_ENABLE=1                                \
     -DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1                \
     -DOPENTHREAD_FTD=1                                              \
     -DOPENTHREAD_PLATFORM_POSIX=1                                   \
@@ -374,6 +375,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/utils/otns.cpp                                         \
     src/core/utils/parse_cmdline.cpp                                \
     src/core/utils/ping_sender.cpp                                  \
+    src/core/utils/power_calibration.cpp                            \
     src/core/utils/slaac_address.cpp                                \
     src/core/utils/srp_client_buffers.cpp                           \
     src/lib/hdlc/hdlc.cpp                                           \
@@ -385,6 +387,7 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/alarm.cpp                                    \
     src/posix/platform/backbone.cpp                                 \
     src/posix/platform/backtrace.cpp                                \
+    src/posix/platform/config_file.cpp                              \
     src/posix/platform/daemon.cpp                                   \
     src/posix/platform/entropy.cpp                                  \
     src/posix/platform/firewall.cpp                                 \
@@ -396,6 +399,8 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/misc.cpp                                     \
     src/posix/platform/multicast_routing.cpp                        \
     src/posix/platform/netif.cpp                                    \
+    src/posix/platform/power.cpp                                    \
+    src/posix/platform/power_updater.cpp                            \
     src/posix/platform/radio.cpp                                    \
     src/posix/platform/radio_url.cpp                                \
     src/posix/platform/settings.cpp                                 \
@@ -656,6 +661,43 @@ LOCAL_SRC_FILES := src/posix/client.cpp
 
 include $(BUILD_EXECUTABLE)
 endif # ($(USE_OTBR_DAEMON), 1)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := ot-fct
+LOCAL_MODULE_TAGS := eng
+
+LOCAL_CPPFLAGS                                            := \
+    -std=c++11                                               \
+    -pedantic-errors                                         \
+    $(NULL)
+
+LOCAL_CFLAGS                                              := \
+    $(OPENTHREAD_PUBLIC_CFLAGS)                              \
+    $(OPENTHREAD_PRIVATE_CFLAGS)                             \
+    $(OPENTHREAD_PROJECT_CFLAGS)                             \
+    $(NULL)
+
+LOCAL_C_INCLUDES                                         := \
+    $(OPENTHREAD_PROJECT_INCLUDES)                          \
+    $(LOCAL_PATH)/include                                   \
+    $(LOCAL_PATH)/src/                                      \
+    $(LOCAL_PATH)/src/core                                  \
+    $(LOCAL_PATH)/src/posix/platform                        \
+    $(NULL)
+
+LOCAL_SRC_FILES                                          := \
+    src/core/common/string.cpp                              \
+    src/core/utils/parse_cmdline.cpp                        \
+    src/lib/platform/exit_code.c                            \
+    src/posix/platform/config_file.cpp                      \
+    src/posix/platform/power.cpp                            \
+    tools/ot-fct/cli.cpp                                    \
+    tools/ot-fct/logging.cpp                                \
+    tools/ot-fct/main.cpp                                   \
+    $(NULL)
+
+include $(BUILD_EXECUTABLE)
 
 ifneq ($(OPENTHREAD_PROJECT_ANDROID_MK),)
 include $(OPENTHREAD_PROJECT_ANDROID_MK)

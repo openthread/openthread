@@ -35,6 +35,7 @@
 
 #include "coap/coap_message.hpp"
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/debug.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -438,7 +439,7 @@ public:
      * @param[in]  aContext   A pointer to arbitrary context information. May be `nullptr` if not used.
      *
      */
-    void SetDefaultHandler(RequestHandler aHandler, void *aContext);
+    void SetDefaultHandler(RequestHandler aHandler, void *aContext) { mDefaultHandler.Set(aHandler, aContext); }
 
     /**
      * This method allocates a new message with a CoAP header.
@@ -729,7 +730,7 @@ public:
      * @param[in]   aContext        A pointer to arbitrary context information.
      *
      */
-    void SetInterceptor(Interceptor aInterceptor, void *aContext);
+    void SetInterceptor(Interceptor aInterceptor, void *aContext) { mInterceptor.Set(aInterceptor, aContext); }
 
     /**
      * This method returns a reference to the request message list.
@@ -900,12 +901,10 @@ private:
 
     LinkedList<Resource> mResources;
 
-    void          *mContext;
-    Interceptor    mInterceptor;
-    ResponsesQueue mResponsesQueue;
+    Callback<Interceptor> mInterceptor;
+    ResponsesQueue        mResponsesQueue;
 
-    RequestHandler mDefaultHandler;
-    void          *mDefaultHandlerContext;
+    Callback<RequestHandler> mDefaultHandler;
 
     ResourceHandler mResourceHandler;
 

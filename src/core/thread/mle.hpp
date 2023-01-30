@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/callback.hpp"
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
@@ -418,6 +419,14 @@ public:
     Parent &GetParent(void) { return mParent; }
 
     /**
+     * This method gets the parent when operating in End Device mode.
+     *
+     * @returns A reference to the parent.
+     *
+     */
+    const Parent &GetParent(void) const { return mParent; }
+
+    /**
      * The method retrieves information about the parent.
      *
      * @param[out] aParentInfo     Reference to a parent information structure.
@@ -619,7 +628,10 @@ public:
      * @param[in]  aContext  A pointer to application-specific context.
      *
      */
-    void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext);
+    void RegisterParentResponseStatsCallback(otThreadParentResponseCallback aCallback, void *aContext)
+    {
+        mParentResponseCallback.Set(aCallback, aContext);
+    }
 
     /**
      * This method requests MLE layer to prepare and send a shorter version of Child ID Request message by only
@@ -1383,6 +1395,16 @@ protected:
         {
         }
 
+        /**
+         * This method indicates whether the `mNeighbor` (neighbor from which message was received) is non-null and
+         * in valid state.
+         *
+         * @retval TRUE  If `mNeighbor` is non-null and in valid state.
+         * @retval FALSE If `mNeighbor` is `nullptr` or not in valid state.
+         *
+         */
+        bool IsNeighborStateValid(void) const { return (mNeighbor != nullptr) && mNeighbor->IsStateValid(); }
+
         RxMessage              &mMessage;      ///< The MLE message.
         const Ip6::MessageInfo &mMessageInfo;  ///< The `MessageInfo` associated with the message.
         uint32_t                mFrameCounter; ///< The frame counter from aux security header.
@@ -1739,6 +1761,10 @@ private:
 
     static constexpr uint32_t kDetachGracefullyTimeout = 1000;
 
+    static constexpr uint32_t kStoreFrameCounterAhead   = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
+    static constexpr uint8_t  kMaxIpAddressesToRegister = OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER;
+    static constexpr uint32_t kDefaultCslTimeout        = OPENTHREAD_CONFIG_CSL_TIMEOUT;
+
     enum StartMode : uint8_t // Used in `Start()`.
     {
         kNormalAttach,
@@ -1810,7 +1836,8 @@ private:
         }
 
     private:
-        static constexpr uint8_t kKeyIdMode2Mic32 = (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32);
+        static constexpr uint8_t kKeyIdMode2Mic32 =
+            static_cast<uint8_t>(Mac::Frame::kKeyIdMode2) | static_cast<uint8_t>(Mac::Frame::kSecurityEncMic32);
 
         uint8_t  mSecurityControl;
         uint32_t mFrameCounter;
@@ -2047,12 +2074,10 @@ private:
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
 
-    DetachGracefullyTimer      mDetachGracefullyTimer;
-    otDetachGracefullyCallback mDetachGracefullyCallback;
-    void                      *mDetachGracefullyContext;
+    DetachGracefullyTimer                mDetachGracefullyTimer;
+    Callback<otDetachGracefullyCallback> mDetachGracefullyCallback;
 
-    otThreadParentResponseCallback mParentResponseCb;
-    void                          *mParentResponseCbContext;
+    Callback<otThreadParentResponseCallback> mParentResponseCallback;
 };
 
 } // namespace Mle

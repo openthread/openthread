@@ -396,6 +396,8 @@ public:
     /**
      * This method returns the IPv6 Header Extension Length value.
      *
+     * The Length is in 8-byte units and does not include the first 8 bytes.
+     *
      * @returns The IPv6 Header Extension Length value.
      *
      */
@@ -404,12 +406,29 @@ public:
     /**
      * This method sets the IPv6 Header Extension Length value.
      *
+     * The Length is in 8-byte units and does not include the first 8 bytes.
+     *
      * @param[in]  aLength  The IPv6 Header Extension Length value.
      *
      */
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
+    /**
+     * This method returns the size (number of bytes) of the Extension Header including Next Header and Length fields.
+     *
+     * @returns The size (number of bytes) of the Extension Header.
+     *
+     */
+    uint16_t GetSize(void) const { return kLengthUnitInBytes * (mLength + 1); }
+
 private:
+    static constexpr uint16_t kLengthUnitInBytes = 8;
+
+    // |     m8[0]     |     m8[1]     |     m8[2]     |      m8[3]    |
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    // | Next Header   | Header Length | . . .                         |
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
     uint8_t mNextHeader;
     uint8_t mLength;
 } OT_TOOL_PACKED_END;
@@ -463,10 +482,10 @@ public:
      */
     enum Action : uint8_t
     {
-        kActionSkip      = 0x00, ///< skip over this option and continue processing the header
-        kActionDiscard   = 0x40, ///< discard the packet
-        kActionForceIcmp = 0x80, ///< discard the packet and forcibly send an ICMP Parameter Problem
-        kActionIcmp      = 0xc0, ///< discard packet and conditionally send an ICMP Parameter Problem
+        kActionSkip      = 0x00, ///< Skip over this option and continue processing the header.
+        kActionDiscard   = 0x40, ///< Discard the packet.
+        kActionForceIcmp = 0x80, ///< Discard the packet and forcibly send an ICMP Parameter Problem.
+        kActionIcmp      = 0xc0, ///< Discard packet and conditionally send an ICMP Parameter Problem.
     };
 
     /**
@@ -493,6 +512,14 @@ public:
      */
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
+    /**
+     * This method returns the size (number of bytes) of the IPv6 Option including the Type and Length fields.
+     *
+     * @returns The size of the Option.
+     *
+     */
+    uint16_t GetSize(void) const { return static_cast<uint16_t>(mLength) + sizeof(OptionHeader); }
+
 private:
     static constexpr uint8_t kActionMask = 0xc0;
 
@@ -515,8 +542,7 @@ public:
     /**
      * This method initializes the PadN header.
      *
-     * @param[in]  aPadLength  The length of needed padding. Allowed value from
-     *                         range 2-7.
+     * @param[in]  aPadLength  The length of needed padding. Allowed value from range 2-7.
      *
      */
     void Init(uint8_t aPadLength)
@@ -525,15 +551,6 @@ public:
         SetLength(aPadLength - sizeof(OptionHeader));
         memset(mPad, kData, aPadLength - sizeof(OptionHeader));
     }
-
-    /**
-     * This method returns the total IPv6 Option Length value including option
-     * header.
-     *
-     * @returns The total IPv6 Option Length.
-     *
-     */
-    uint8_t GetTotalLength(void) const { return GetLength() + sizeof(OptionHeader); }
 
 private:
     uint8_t mPad[kMaxLength];
