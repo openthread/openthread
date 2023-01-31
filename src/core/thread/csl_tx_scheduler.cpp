@@ -90,6 +90,7 @@ void CslTxScheduler::Update(void)
     {
         // `Mac` has already started the CSL tx, so wait for tx done callback
         // to call `RescheduleCslTx`
+        mCslTxChild->ResetCslTxAttempts();
         mCslTxChild                      = nullptr;
         mFrameContext.mMessageNextOffset = 0;
     }
@@ -260,7 +261,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
     HandleSentFrame(aFrame, aError, *child);
 
 exit:
-    return;
+    RescheduleCslTx();
 }
 
 void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild)
@@ -312,7 +313,6 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
             }
         }
 
-        RescheduleCslTx();
         ExitNow();
 
     default:

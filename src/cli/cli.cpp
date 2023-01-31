@@ -7208,6 +7208,7 @@ void Interpreter::OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiag
     OutputLine("ChildId: 0x%04x", aChildEntry.mChildId);
 
     OutputLine(aIndentSize, "Timeout: %u", aChildEntry.mTimeout);
+    OutputLine(aIndentSize, "Link Quality: %u", aChildEntry.mLinkQuality);
     OutputLine(aIndentSize, "Mode:");
     OutputMode(aIndentSize + kIndentSize, aChildEntry.mMode);
 }
