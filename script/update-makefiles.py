@@ -148,18 +148,6 @@ update_build_file(include_build_gn_file, "  public = [\n", "  ]\n", formatted_li
 print("Updated " + include_build_gn_file)
 
 #----------------------------------------------------------------------------------------------
-# Update Android.mk file
-
-android_mk_file = "./Android.mk"
-
-formatted_list = ["    {:<63} \\\n".format(file_name) for file_name in core_cpp_files]
-start_string = "LOCAL_SRC_FILES                                                  := \\\n"
-end_string = "    src/lib/hdlc/hdlc.cpp"
-update_build_file(android_mk_file, start_string, end_string, formatted_list)
-
-print("Updated " + android_mk_file)
-
-#----------------------------------------------------------------------------------------------
 # Update Makefile.am files
 
 core_makefile_am_file = "./src/core/Makefile.am"
