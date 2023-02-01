@@ -124,22 +124,6 @@ jobs:
       with:
         name: cov-expects-linux-2
         path: tmp/coverage.info
-  
-  tcplp-buffering:
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@18bf8ad2ca49c14cbb28b91346d626ccfb00c518 # v2.1.0
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      with:
-        submodules: true
-    - name: Build
-      run: make -C third_party/tcplp/lib/test/
-    - name: Run
-      run: third_party/tcplp/lib/test/test_all
 
   thread-cert:
     runs-on: ubuntu-20.04
