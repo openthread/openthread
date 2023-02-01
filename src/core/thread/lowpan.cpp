@@ -472,31 +472,31 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     // Pad1 or PadN option MAY be elided by the compressor."
     if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
     {
-        uint16_t          offset = aMessage.GetOffset();
-        Ip6::OptionHeader optionHeader;
+        uint16_t    offset = aMessage.GetOffset();
+        Ip6::Option option;
 
         while ((offset - aMessage.GetOffset()) < len)
         {
-            SuccessOrExit(error = aMessage.Read(offset, optionHeader));
+            SuccessOrExit(error = aMessage.Read(offset, option));
 
-            if (optionHeader.GetType() == Ip6::OptionPad1::kType)
+            if (option.GetType() == Ip6::Pad1Option::kType)
             {
-                offset += sizeof(Ip6::OptionPad1);
+                offset += sizeof(Ip6::Pad1Option);
             }
             else
             {
-                offset += optionHeader.GetSize();
+                offset += option.GetSize();
             }
         }
 
         // Check if the last option can be compressed.
-        if (optionHeader.GetType() == Ip6::OptionPad1::kType)
+        if (option.GetType() == Ip6::Pad1Option::kType)
         {
-            padLength = sizeof(Ip6::OptionPad1);
+            padLength = sizeof(Ip6::Pad1Option);
         }
-        else if (optionHeader.GetType() == Ip6::OptionPadN::kType)
+        else if (option.GetType() == Ip6::PadNOption::kType)
         {
-            padLength = optionHeader.GetSize();
+            padLength = option.GetSize();
         }
 
         len -= padLength;
@@ -888,17 +888,17 @@ Error Lowpan::DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData
     {
         if (padLength == 1)
         {
-            Ip6::OptionPad1 optionPad1;
+            Ip6::Pad1Option pad1;
 
-            optionPad1.Init();
-            SuccessOrExit(aMessage.AppendBytes(&optionPad1, padLength));
+            pad1.Init();
+            SuccessOrExit(aMessage.AppendBytes(&pad1, padLength));
         }
         else
         {
-            Ip6::OptionPadN optionPadN;
+            Ip6::PadNOption padn;
 
-            optionPadN.Init(padLength);
-            SuccessOrExit(aMessage.AppendBytes(&optionPadN, padLength));
+            padn.Init(padLength);
+            SuccessOrExit(aMessage.AppendBytes(&padn, padLength));
         }
 
         aMessage.MoveOffset(padLength);

@@ -84,7 +84,7 @@ Ip6::Ip6(Instance &aInstance)
 Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
     return Get<MessagePool>().Allocate(
-        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
+        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(MplOption) + aReserved, aSettings);
 }
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings)
@@ -191,7 +191,7 @@ Error Ip6::AddMplOption(Message &aMessage, Header &aHeader)
 {
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
-    OptionMpl      mplOption;
+    MplOption      mplOption;
 
     hbhHeader.SetNextHeader(aHeader.GetNextHeader());
     hbhHeader.SetLength(0);
@@ -200,7 +200,7 @@ Error Ip6::AddMplOption(Message &aMessage, Header &aHeader)
     // Mpl option may require two bytes padding.
     if ((mplOption.GetSize() + sizeof(hbhHeader)) % 8)
     {
-        OptionPadN padOption;
+        PadNOption padOption;
 
         padOption.Init(2);
         SuccessOrExit(error = aMessage.PrependBytes(&padOption, padOption.GetSize()));
@@ -255,7 +255,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
         {
             HopByHopHeader hbh;
             uint16_t       hbhSize;
-            OptionMpl      mplOption;
+            MplOption      mplOption;
 
             // read existing hop-by-hop option header
             SuccessOrExit(error = aMessage.Read(0, hbh));
@@ -278,7 +278,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
             // insert Pad Option (if needed)
             if (mplOption.GetSize() % 8)
             {
-                OptionPadN padOption;
+                PadNOption padOption;
 
                 padOption.Init(8 - (mplOption.GetSize() % 8));
                 aMessage.WriteBytes(hbhSize + mplOption.GetSize(), &padOption, padOption.GetSize());
@@ -345,20 +345,20 @@ Error Ip6::RemoveMplOption(Message &aMessage)
 
     while (offset < endOffset)
     {
-        OptionHeader option;
+        Option option;
 
         IgnoreError(aMessage.Read(offset, option));
 
         switch (option.GetType())
         {
-        case OptionMpl::kType:
+        case MplOption::kType:
             // if multiple MPL options exist, discard packet
             VerifyOrExit(mplOffset == 0, error = kErrorParse);
 
             mplOffset = offset;
             mplLength = option.GetLength();
 
-            VerifyOrExit(mplLength <= sizeof(OptionMpl) - sizeof(OptionHeader), error = kErrorParse);
+            VerifyOrExit(mplLength <= sizeof(MplOption) - sizeof(Option), error = kErrorParse);
 
             if (mplOffset == sizeof(ip6Header) + sizeof(hbh) && hbh.GetLength() == 0)
             {
@@ -374,11 +374,11 @@ Error Ip6::RemoveMplOption(Message &aMessage)
             offset += option.GetSize();
             break;
 
-        case OptionPad1::kType:
-            offset += sizeof(OptionPad1);
+        case Pad1Option::kType:
+            offset += sizeof(Pad1Option);
             break;
 
-        case OptionPadN::kType:
+        case PadNOption::kType:
             offset += option.GetSize();
             break;
 
@@ -427,9 +427,9 @@ Error Ip6::RemoveMplOption(Message &aMessage)
     else if (mplOffset != 0)
     {
         // replace MPL Option with PadN Option
-        OptionPadN padOption;
+        PadNOption padOption;
 
-        padOption.Init(sizeof(OptionHeader) + mplLength);
+        padOption.Init(sizeof(Option) + mplLength);
         aMessage.WriteBytes(mplOffset, &padOption, padOption.GetSize());
     }
 
@@ -540,7 +540,7 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
 {
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
-    OptionHeader   optionHeader;
+    Option         option;
     uint16_t       endOffset;
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), hbhHeader));
@@ -548,40 +548,40 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
 
     VerifyOrExit(endOffset <= aMessage.GetLength(), error = kErrorParse);
 
-    aMessage.MoveOffset(sizeof(optionHeader));
+    aMessage.MoveOffset(sizeof(option));
 
     while (aMessage.GetOffset() < endOffset)
     {
-        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), optionHeader));
+        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), option));
 
-        if (optionHeader.GetType() == OptionPad1::kType)
+        if (option.GetType() == Pad1Option::kType)
         {
-            aMessage.MoveOffset(sizeof(OptionPad1));
+            aMessage.MoveOffset(sizeof(Pad1Option));
             continue;
         }
 
-        VerifyOrExit(aMessage.GetOffset() + optionHeader.GetSize() <= endOffset, error = kErrorParse);
+        VerifyOrExit(aMessage.GetOffset() + option.GetSize() <= endOffset, error = kErrorParse);
 
-        switch (optionHeader.GetType())
+        switch (option.GetType())
         {
-        case OptionMpl::kType:
+        case MplOption::kType:
             SuccessOrExit(error = mMpl.ProcessOption(aMessage, aHeader.GetSource(), aIsOutbound, aReceive));
             break;
 
         default:
-            switch (optionHeader.GetAction())
+            switch (option.GetAction())
             {
-            case OptionHeader::kActionSkip:
+            case Option::kActionSkip:
                 break;
 
-            case OptionHeader::kActionDiscard:
+            case Option::kActionDiscard:
                 ExitNow(error = kErrorDrop);
 
-            case OptionHeader::kActionForceIcmp:
+            case Option::kActionForceIcmp:
                 // TODO: send icmp error
                 ExitNow(error = kErrorDrop);
 
-            case OptionHeader::kActionIcmp:
+            case Option::kActionIcmp:
                 // TODO: send icmp error
                 ExitNow(error = kErrorDrop);
             }
@@ -589,7 +589,7 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
             break;
         }
 
-        aMessage.MoveOffset(optionHeader.GetSize());
+        aMessage.MoveOffset(option.GetSize());
     }
 
 exit:

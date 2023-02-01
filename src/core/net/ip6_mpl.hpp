@@ -61,11 +61,11 @@ namespace Ip6 {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class OptionMpl : public OptionHeader
+class MplOption : public Option
 {
 public:
-    static constexpr uint8_t kType    = 0x6d;                       ///< MPL option type - 01 1 01101
-    static constexpr uint8_t kMinSize = (2 + sizeof(OptionHeader)); ///< Minimum size (num of bytes) of `OptionMpl`
+    static constexpr uint8_t kType    = 0x6d;                 ///< MPL option type - 01 1 01101
+    static constexpr uint8_t kMinSize = (2 + sizeof(Option)); ///< Minimum size (num of bytes) of `MplOption`
 
     /**
      * This method initializes the MPL header.
@@ -74,7 +74,7 @@ public:
     void Init(void)
     {
         SetType(kType);
-        SetLength(sizeof(*this) - sizeof(OptionHeader));
+        SetLength(sizeof(*this) - sizeof(Option));
         mControl = 0;
     }
 
@@ -195,7 +195,7 @@ public:
      * @param[in]  aAddress  A reference to the IPv6 Source Address.
      *
      */
-    void InitOption(OptionMpl &aOption, const Address &aAddress);
+    void InitOption(MplOption &aOption, const Address &aAddress);
 
     /**
      * This method processes an MPL option. When the MPL module acts as an MPL Forwarder
