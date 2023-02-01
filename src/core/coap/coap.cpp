@@ -861,10 +861,10 @@ Error CoapBase::ProcessBlock2Request(Message                 &aMessage,
     VerifyOrExit((response = NewMessage()) != nullptr, error = kErrorNoBufs);
     response->Init(kTypeAck, kCodeContent);
     response->SetMessageId(aMessage.GetMessageId());
-    
-	SuccessOrExit(error = response->SetTokenFromMessage(aMessage));
-    
-	VerifyOrExit((bufLen = otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
+
+    SuccessOrExit(error = response->SetTokenFromMessage(aMessage));
+
+    VerifyOrExit((bufLen = otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
                  error = kErrorNoBufs);
     SuccessOrExit(error = aResource.HandleBlockTransmit(buf,
                                                         otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize()) *
