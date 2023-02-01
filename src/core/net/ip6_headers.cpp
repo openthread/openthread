@@ -38,6 +38,9 @@
 namespace ot {
 namespace Ip6 {
 
+//---------------------------------------------------------------------------------------------------------------------
+// Header
+
 Error Header::ParseFrom(const Message &aMessage)
 {
     Error error = kErrorParse;
@@ -61,6 +64,16 @@ bool Header::IsValid(void) const
 #endif
 
     return IsVersion6() && ((sizeof(Header) + GetPayloadLength()) <= kMaxLength);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// PadNOption
+
+void PadNOption::Init(uint8_t aPadLength)
+{
+    SetType(kType);
+    SetLength(aPadLength - sizeof(Option));
+    memset(mPad, kData, aPadLength - sizeof(Option));
 }
 
 } // namespace Ip6

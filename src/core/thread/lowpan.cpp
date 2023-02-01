@@ -472,7 +472,8 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     // Pad1 or PadN option MAY be elided by the compressor."
     if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
     {
-        uint16_t    offset = aMessage.GetOffset();
+        uint16_t    offset    = aMessage.GetOffset();
+        bool        hasOption = false;
         Ip6::Option option;
 
         while ((offset - aMessage.GetOffset()) < len)
@@ -487,19 +488,24 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
             {
                 offset += option.GetSize();
             }
+
+            hasOption = true;
         }
 
-        // Check if the last option can be compressed.
-        if (option.GetType() == Ip6::Pad1Option::kType)
+        if (hasOption)
         {
-            padLength = sizeof(Ip6::Pad1Option);
-        }
-        else if (option.GetType() == Ip6::PadNOption::kType)
-        {
-            padLength = option.GetSize();
-        }
+            // Check if the last option can be compressed.
+            if (option.GetType() == Ip6::Pad1Option::kType)
+            {
+                padLength = sizeof(Ip6::Pad1Option);
+            }
+            else if (option.GetType() == Ip6::PadNOption::kType)
+            {
+                padLength = option.GetSize();
+            }
 
-        len -= padLength;
+            len -= padLength;
+        }
     }
 
     VerifyOrExit(aMessage.GetOffset() + len + padLength <= aMessage.GetLength(), error = kErrorParse);

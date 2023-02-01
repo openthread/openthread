@@ -451,16 +451,6 @@ class Option
 {
 public:
     /**
-     * Default constructor.
-     *
-     */
-    Option(void)
-        : mType(0)
-        , mLength(0)
-    {
-    }
-
-    /**
      * This method returns the IPv6 Option Type value.
      *
      * @returns The IPv6 Option Type value.
@@ -545,12 +535,7 @@ public:
      * @param[in]  aPadLength  The length of needed padding. Allowed value from range 2-7.
      *
      */
-    void Init(uint8_t aPadLength)
-    {
-        SetType(kType);
-        SetLength(aPadLength - sizeof(Option));
-        memset(mPad, kData, aPadLength - sizeof(Option));
-    }
+    void Init(uint8_t aPadLength);
 
 private:
     uint8_t mPad[kMaxLength];
