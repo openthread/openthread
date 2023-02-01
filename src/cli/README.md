@@ -104,6 +104,7 @@ Done
 - [routereligible](#routereligible)
 - [routerselectionjitter](#routerselectionjitter)
 - [routerupgradethreshold](#routerupgradethreshold)
+- [childrouterlinks](#childrouterlinks)
 - [scan](#scan-channel)
 - [service](#service)
 - [singleton](#singleton)
@@ -2788,6 +2789,25 @@ Set the ROUTER_UPGRADE_THRESHOLD value.
 
 ```bash
 > routerupgradethreshold 16
+Done
+```
+
+### childrouterlinks
+
+Get the MLE_CHILD_ROUTER_LINKS value.
+
+```bash
+> childrouterlinks
+16
+Done
+```
+
+### childrouterlinks \<number_of_links\>
+
+Set the MLE_CHILD_ROUTER_LINKS value.
+
+```bash
+> childrouterlinks 16
 Done
 ```
 
