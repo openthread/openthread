@@ -54,7 +54,7 @@ Mpl::Mpl(Instance &aInstance)
     memset(mSeedSet, 0, sizeof(mSeedSet));
 }
 
-void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
+void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
 {
     aOption.Init();
     aOption.SetSequence(mSequence++);
@@ -62,14 +62,14 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
     // Seed ID can be elided when `aAddress` is RLOC.
     if (aAddress == Get<Mle::Mle>().GetMeshLocal16())
     {
-        aOption.SetSeedIdLength(OptionMpl::kSeedIdLength0);
+        aOption.SetSeedIdLength(MplOption::kSeedIdLength0);
 
         // Decrease default option length.
         aOption.SetLength(aOption.GetLength() - sizeof(uint16_t));
     }
     else
     {
-        aOption.SetSeedIdLength(OptionMpl::kSeedIdLength2);
+        aOption.SetSeedIdLength(MplOption::kSeedIdLength2);
         aOption.SetSeedId(Get<Mle::Mle>().GetRloc16());
     }
 }
@@ -77,26 +77,26 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
 Error Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive)
 {
     Error     error;
-    OptionMpl option;
+    MplOption option;
 
     // Read the min size bytes first, then check the expected
-    // `SeedIdLength` and read the full `OptionMpl` if needed.
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), &option, OptionMpl::kMinSize));
+    // `SeedIdLength` and read the full `MplOption` if needed.
+    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), &option, MplOption::kMinSize));
 
     switch (option.GetSeedIdLength())
     {
-    case OptionMpl::kSeedIdLength0:
+    case MplOption::kSeedIdLength0:
         // Retrieve Seed ID from the IPv6 Source Address RLOC.
         VerifyOrExit(aAddress.GetIid().IsLocator(), error = kErrorDrop);
         option.SetSeedId(aAddress.GetIid().GetLocator());
         break;
 
-    case OptionMpl::kSeedIdLength2:
+    case MplOption::kSeedIdLength2:
         SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), option));
         break;
 
-    case OptionMpl::kSeedIdLength8:
-    case OptionMpl::kSeedIdLength16:
+    case MplOption::kSeedIdLength8:
+    case MplOption::kSeedIdLength16:
         ExitNow(error = kErrorParse);
     }
 
