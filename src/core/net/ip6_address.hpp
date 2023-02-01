@@ -294,7 +294,7 @@ public:
     /**
      * This method indicates whether or not a given prefix length is valid for use as a NAT64 prefix.
      *
-     * A NAT64 prefix must have one of the following lengths: 32, 40, 48, 56, 64, or 96 (per RFC 6502).
+     * A NAT64 prefix must have one of the following lengths: 32, 40, 48, 56, 64, or 96 (per RFC 6052).
      *
      * @param[in] aLength The length of the prefix.
      *
@@ -307,7 +307,7 @@ public:
     /**
      * This method indicates whether or not the prefix has a valid length for use as a NAT64 prefix.
      *
-     * A NAT64 prefix must have one of the following lengths: 32, 40, 48, 56, 64, or 96 (per RFC 6502).
+     * A NAT64 prefix must have one of the following lengths: 32, 40, 48, 56, 64, or 96 (per RFC 6052).
      *
      * @retval TRUE   If the prefix has a valid length for use as a NAT64 prefix.
      * @retval FALSE  If the prefix does not have a valid length for use as a NAT64 prefix.
