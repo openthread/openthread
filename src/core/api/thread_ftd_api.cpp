@@ -143,6 +143,16 @@ void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetRouterUpgradeThreshold(aThreshold);
 }
 
+uint8_t otThreadGetChildRouterLinks(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetChildRouterLinks();
+}
+
+otError otThreadSetChildRouterLinks(otInstance *aInstance, uint8_t aChildRouterLinks)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().SetChildRouterLinks(aChildRouterLinks);
+}
+
 otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     Error error = kErrorNone;
