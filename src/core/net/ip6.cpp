@@ -268,8 +268,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
             aMessage.Write(0, hbh);
 
             // make space for MPL Option + padding by shifting hop-by-hop option header
-            SuccessOrExit(error = aMessage.PrependBytes(nullptr, 8));
-            aMessage.CopyTo(/* aSourceOffset */ 8, /* aDestOffset */ 0, hbhSize, aMessage);
+            SuccessOrExit(error = aMessage.InsertHeader(hbh.GetSize(), 8));
 
             // insert MPL Option
             mMpl.InitOption(mplOption, aHeader.GetSource());
@@ -396,18 +395,7 @@ Error Ip6::RemoveMplOption(Message &aMessage)
     if (remove)
     {
         // last IPv6 Option, shrink HBH Option header
-        uint8_t buf[8];
-
-        offset = endOffset - sizeof(buf);
-
-        while (offset >= sizeof(buf))
-        {
-            IgnoreError(aMessage.Read(offset - sizeof(buf), buf));
-            aMessage.Write(offset, buf);
-            offset -= sizeof(buf);
-        }
-
-        aMessage.RemoveHeader(sizeof(buf));
+        aMessage.RemoveHeader(endOffset - 8, 8);
 
         if (mplOffset == sizeof(ip6Header) + sizeof(hbh))
         {
@@ -421,7 +409,7 @@ Error Ip6::RemoveMplOption(Message &aMessage)
             aMessage.Write(sizeof(ip6Header), hbh);
         }
 
-        ip6Header.SetPayloadLength(ip6Header.GetPayloadLength() - sizeof(buf));
+        ip6Header.SetPayloadLength(ip6Header.GetPayloadLength() - 8);
         aMessage.Write(0, ip6Header);
     }
     else if (mplOffset != 0)
@@ -649,10 +637,10 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         fragment->SetOffset(aMessage.GetOffset());
         fragment->Write(aMessage.GetOffset(), fragmentHeader);
 
-        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + FragmentHeader::FragmentOffsetToBytes(offset),
-                                     aMessage.GetOffset() + sizeof(fragmentHeader), payloadFragment,
-                                     *fragment) == static_cast<int>(payloadFragment),
-                     error = kErrorNoBufs);
+        fragment->WriteBytesFromMessage(
+            /* aWriteOffset */ aMessage.GetOffset() + sizeof(fragmentHeader), aMessage,
+            /* aReadOffset */ aMessage.GetOffset() + FragmentHeader::FragmentOffsetToBytes(offset),
+            /* aLength */ payloadFragment);
 
         EnqueueDatagram(*fragment);
 
@@ -683,10 +671,7 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
     Message       *message         = nullptr;
     uint16_t       offset          = 0;
     uint16_t       payloadFragment = 0;
-    int            assertValue     = 0;
     bool           isFragmented    = true;
-
-    OT_UNUSED_VARIABLE(assertValue);
 
     SuccessOrExit(error = aMessage.Read(0, header));
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), fragmentHeader));
@@ -727,15 +712,13 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
         LogDebg("start reassembly");
         VerifyOrExit((message = NewMessage(0)) != nullptr, error = kErrorNoBufs);
         mReassemblyList.Enqueue(*message);
-        SuccessOrExit(error = message->SetLength(aMessage.GetOffset()));
 
         message->SetTimestampToNow();
         message->SetOffset(0);
         message->SetDatagramTag(fragmentHeader.GetIdentification());
 
         // copying the non-fragmentable header to the fragmentation buffer
-        assertValue = aMessage.CopyTo(0, 0, aMessage.GetOffset(), *message);
-        OT_ASSERT(assertValue == aMessage.GetOffset());
+        SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, 0, aMessage.GetOffset()));
 
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kIp6FragmentReassembler);
     }
@@ -747,9 +730,9 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
     }
 
     // copy the fragment payload into the message buffer
-    assertValue = aMessage.CopyTo(aMessage.GetOffset() + sizeof(fragmentHeader), aMessage.GetOffset() + offset,
-                                  payloadFragment, *message);
-    OT_ASSERT(assertValue == static_cast<int>(payloadFragment));
+    message->WriteBytesFromMessage(
+        /* aWriteOffset */ aMessage.GetOffset() + offset, aMessage,
+        /* aReadOffset */ aMessage.GetOffset() + sizeof(fragmentHeader), /* aLength */ payloadFragment);
 
     // check if it is the last frame
     if (!fragmentHeader.IsMoreFlagSet())

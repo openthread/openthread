@@ -482,6 +482,67 @@ void Message::RemoveHeader(uint16_t aLength)
     }
 }
 
+void Message::RemoveHeader(uint16_t aOffset, uint16_t aLength)
+{
+    // To shrink the header, we copy the header byte before `aOffset`
+    // forward. Starting at offset `aLength`, we write bytes we read
+    // from offset `0` onward and copy a total of `aOffset` bytes.
+    // Then remove the first `aLength` bytes from message.
+    //
+    //
+    // 0                   aOffset  aOffset + aLength
+    // +-----------------------+---------+------------------------+
+    // | / / / / / / / / / / / | x x x x |                        |
+    // +-----------------------+---------+------------------------+
+    //
+    // 0       aLength                aOffset + aLength
+    // +---------+-----------------------+------------------------+
+    // |         | / / / / / / / / / / / |                        |
+    // +---------+-----------------------+------------------------+
+    //
+    //  0                    aOffset
+    //  +-----------------------+------------------------+
+    //  | / / / / / / / / / / / |                        |
+    //  +-----------------------+------------------------+
+    //
+
+    WriteBytesFromMessage(/* aWriteOffset */ aLength, *this, /* aReadOffset */ 0, /* aLength */ aOffset);
+    RemoveHeader(aLength);
+}
+
+Error Message::InsertHeader(uint16_t aOffset, uint16_t aLength)
+{
+    Error error;
+
+    // To make space in header at `aOffset`, we first prepend
+    // `aLength` bytes at front. Then copy the existing bytes
+    // backwards. Starting at offset `0`, we write bytes we read
+    // from offset `aLength` onward and copy a total of `aOffset`
+    // bytes.
+    //
+    // 0                    aOffset
+    // +-----------------------+------------------------+
+    // | / / / / / / / / / / / |                        |
+    // +-----------------------+------------------------+
+    //
+    // 0       aLength                aOffset + aLength
+    // +---------+-----------------------+------------------------+
+    // |         | / / / / / / / / / / / |                        |
+    // +---------+-----------------------+------------------------+
+    //
+    // 0                   aOffset  aOffset + aLength
+    // +-----------------------+---------+------------------------+
+    // | / / / / / / / / / / / |  N E W  |                        |
+    // +-----------------------+---------+------------------------+
+    //
+
+    SuccessOrExit(error = PrependBytes(nullptr, aLength));
+    WriteBytesFromMessage(/* aWriteOffset */ 0, *this, /* aReadOffset */ aLength, /* aLength */ aOffset);
+
+exit:
+    return error;
+}
+
 void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) const
 {
     // This method gets the first message chunk (contiguous data
@@ -647,29 +708,49 @@ void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
     }
 }
 
-uint16_t Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const
+void Message::WriteBytesFromMessage(uint16_t       aWriteOffset,
+                                    const Message &aMessage,
+                                    uint16_t       aReadOffset,
+                                    uint16_t       aLength)
 {
-    uint16_t bytesCopied = 0;
-    Chunk    chunk;
-
-    // This implementing can potentially overwrite the data when bytes are
-    // being copied forward within the same message, i.e., source and
-    // destination messages are the same, and source offset is smaller than
-    // the destination offset. We assert not allowing such a use.
-
-    OT_ASSERT((&aMessage != this) || (aSourceOffset >= aDestinationOffset));
-
-    GetFirstChunk(aSourceOffset, aLength, chunk);
-
-    while (chunk.GetLength() > 0)
+    if ((&aMessage != this) || (aReadOffset >= aWriteOffset))
     {
-        aMessage.WriteBytes(aDestinationOffset, chunk.GetBytes(), chunk.GetLength());
-        aDestinationOffset += chunk.GetLength();
-        bytesCopied += chunk.GetLength();
-        GetNextChunk(aLength, chunk);
-    }
+        Chunk chunk;
 
-    return bytesCopied;
+        aMessage.GetFirstChunk(aReadOffset, aLength, chunk);
+
+        while (chunk.GetLength() > 0)
+        {
+            WriteBytes(aWriteOffset, chunk.GetBytes(), chunk.GetLength());
+            aWriteOffset += chunk.GetLength();
+            aMessage.GetNextChunk(aLength, chunk);
+        }
+    }
+    else
+    {
+        // We are copying bytes within the same message forward.
+        // To ensure copy forward works, we read and write from
+        // end of range and move backwards.
+
+        static constexpr uint16_t kBufSize = 32;
+
+        uint8_t buf[kBufSize];
+
+        aWriteOffset += aLength;
+        aReadOffset += aLength;
+
+        while (aLength > 0)
+        {
+            uint16_t copyLength = Min(kBufSize, aLength);
+
+            aLength -= copyLength;
+            aReadOffset -= copyLength;
+            aWriteOffset -= copyLength;
+
+            ReadBytes(aReadOffset, buf, copyLength);
+            WriteBytes(aWriteOffset, buf, copyLength);
+        }
+    }
 }
 
 Message *Message::Clone(uint16_t aLength) const
