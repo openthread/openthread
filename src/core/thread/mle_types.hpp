@@ -101,8 +101,12 @@ constexpr uint32_t kChildIdRequestTimeout          = 5000; ///< Max delay to rx 
 constexpr uint32_t kLinkRequestTimeout             = 2000; ///< Max delay to rx a Link Accept
 constexpr uint8_t  kMulticastLinkRequestDelay      = 5;    ///< Max delay for sending a mcast Link Request (in sec)
 constexpr uint8_t kMaxCriticalTransmissionCount = 6; ///< Max number of times an critical MLE message may be transmitted
-constexpr uint32_t kMulticastTransmissionDelayMin = 4500; ///< Min delay for retransmitting a multicast packet (in msec)
-constexpr uint32_t kMulticastTransmissionDelayMax = 5500; ///< Max delay for retransmitting a multicast packet (in msec)
+
+constexpr uint32_t kMulticastTransmissionDelay = 5000; ///< Delay for retransmitting a multicast packet (in msec)
+constexpr uint32_t kMulticastTransmissionDelayMin =
+    kMulticastTransmissionDelay * 9 / 10; ///< Min delay for retransmitting a multicast packet (in msec)
+constexpr uint32_t kMulticastTransmissionDelayMax =
+    kMulticastTransmissionDelay * 11 / 10; ///< Max delay for retransmitting a multicast packet (in msec)
 
 constexpr uint32_t kMinTimeoutKeepAlive = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000);
 constexpr uint32_t kMinPollPeriod       = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;

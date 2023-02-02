@@ -136,7 +136,7 @@ class Test_LeaderRebootMultipleLinkRequest(thread_cert.TestCase):
         #     - Challenge TLV
         #     - Version TLV
         #     - TLV Request TLV: Address16 TLV, Route64 TLV
-        for i in range(1, config.MLE_MAX_CRITICAL_TRANSMISSION_COUNT):
+        for i in range(0, config.MLE_MAX_CRITICAL_TRANSMISSION_COUNT):
             pkts.filter_wpan_src64(LEADER).\
                 filter_LLARMA().\
                 filter_mle_cmd(MLE_LINK_REQUEST).\

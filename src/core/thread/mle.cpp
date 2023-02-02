@@ -83,7 +83,6 @@ Mle::Mle(Instance &aInstance)
     , mAttachTimer(aInstance)
     , mDelayedResponseTimer(aInstance)
     , mMessageTransmissionTimer(aInstance)
-    , mInRouterResetSync(false)
     , mAttachMode(kAnyPartition)
     , mChildUpdateAttempts(0)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
@@ -1886,11 +1885,13 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 {
     uint32_t interval = 0;
 
-    if (mInRouterResetSync && mLinkRequestAttempts < mMaxLinkRequests)
+#if OPENTHREAD_FTD
+    if (mRole == kRoleDetached && mLinkRequestAttempts > 0)
     {
         ExitNow(interval = Random::NonCrypto::GetUint32InRange(kMulticastTransmissionDelayMin,
                                                                kMulticastTransmissionDelayMax));
     }
+#endif
 
     switch (mChildUpdateRequestState)
     {
@@ -1952,10 +1953,10 @@ void Mle::HandleMessageTransmissionTimer(void)
 #if OPENTHREAD_FTD
     // Retransmit multicast link request if no response has been received
     // and maximum transmission limit has not been reached.
-    if (mInRouterResetSync && mLinkRequestAttempts < mMaxLinkRequests)
+    if (mRole == kRoleDetached && mLinkRequestAttempts > 0)
     {
         IgnoreError(Get<MleRouter>().SendLinkRequest(nullptr));
-        mLinkRequestAttempts++;
+        mLinkRequestAttempts--;
         ScheduleMessageTransmissionTimer();
         ExitNow();
     }

@@ -1735,9 +1735,9 @@ protected:
     AttachTimer   mAttachTimer;              ///< The timer for driving the attach process.
     DelayTimer    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     MsgTxTimer    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
-    uint8_t       mLinkRequestAttempts;      ///< Number of link requests sent after reset
-    uint8_t       mMaxLinkRequests;          ///< Max number of link request transmissions after reset
-    bool          mInRouterResetSync;        ///< Indicating if device is in router synchronization process after reset
+#if OPENTHREAD_FTD
+    uint8_t mLinkRequestAttempts; ///< Number of remaining link requests to sent after reset
+#endif
 
 private:
     static constexpr uint8_t kMleHopLimit        = 255;

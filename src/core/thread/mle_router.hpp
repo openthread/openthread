@@ -556,6 +556,8 @@ private:
     static constexpr uint8_t kChildRouterLinks        = OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS;
     static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
+    static constexpr uint8_t kMinCriticalChildrenCount = 6;
+
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
     void  HandleLinkRequest(RxInfo &aRxInfo);
@@ -627,7 +629,7 @@ private:
     void        HandleAdvertiseTrickleTimer(void);
     void        HandleTimeTick(void);
 
-    void SetMaxLinkRequestTransmissionCounter(void);
+    void SetLinkRequestTransmissionCounter(void);
 
     TrickleTimer mAdvertiseTrickleTimer;
 

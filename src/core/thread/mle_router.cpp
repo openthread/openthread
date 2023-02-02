@@ -186,20 +186,18 @@ exit:
 
 // If the router was a leader or had more than 5 children prior to reset,
 // the multicast link request is retransmitted as a critical message
-void MleRouter::SetMaxLinkRequestTransmissionCounter(void)
+void MleRouter::SetLinkRequestTransmissionCounter(void)
 {
     Settings::NetworkInfo networkInfo;
-    uint8_t               numOfChildren = 0;
-    mMaxLinkRequests                    = kMaxTransmissionCount;
+    uint16_t              numOfChildren = mChildTable.GetNumChildren(Child::kInStateValidOrRestoring);
+    mLinkRequestAttempts                = kMaxTransmissionCount;
+
     SuccessOrExit(Get<Settings>().Read(networkInfo));
-    for (Settings::ChildInfoIterator iter(GetInstance()); !iter.IsDone(); iter++)
+    if (networkInfo.GetRole() == kRoleLeader || numOfChildren >= kMinCriticalChildrenCount)
     {
-        numOfChildren++;
+        mLinkRequestAttempts = kMaxCriticalTransmissionCount;
     }
-    if (networkInfo.GetRole() == kRoleLeader || numOfChildren > 5)
-    {
-        mMaxLinkRequests = kMaxCriticalTransmissionCount;
-    }
+
 exit:
     return;
 }
@@ -221,10 +219,9 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     switch (mRole)
     {
     case kRoleDetached:
+        SetLinkRequestTransmissionCounter();
         SuccessOrExit(error = SendLinkRequest(nullptr));
-        mLinkRequestAttempts = 1;
-        mInRouterResetSync   = true; // Start router sync process after reset
-        SetMaxLinkRequestTransmissionCounter();
+        mLinkRequestAttempts--;
         ScheduleMessageTransmissionTimer();
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
         break;
@@ -889,7 +886,8 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         break;
 
     case Neighbor::kStateInvalid:
-        VerifyOrExit((mChallengeTimeout > 0) && (response == mChallenge), error = kErrorSecurity);
+        VerifyOrExit((mLinkRequestAttempts > 0 || mChallengeTimeout > 0) && (response == mChallenge),
+                     error = kErrorSecurity);
 
         OT_FALL_THROUGH;
 
@@ -954,7 +952,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
             SetStateRouter(GetRloc16());
         }
 
-        mInRouterResetSync      = false; // completed router sync after reset
+        mLinkRequestAttempts    = 0; // completed router sync after reset, no more link request to retransmit
         mRetrieveNewNetworkData = true;
         IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kDataRequestTlvs));
 
@@ -1566,9 +1564,8 @@ void MleRouter::HandleTimeTick(void)
     switch (mRole)
     {
     case kRoleDetached:
-        if (mChallengeTimeout == 0 && mLinkRequestAttempts == mMaxLinkRequests)
+        if (mChallengeTimeout == 0 && mLinkRequestAttempts == 0)
         {
-            mInRouterResetSync = false; // Router has retransmitted link request maximum times, give up sync process
             IgnoreError(BecomeDetached());
             ExitNow();
         }
