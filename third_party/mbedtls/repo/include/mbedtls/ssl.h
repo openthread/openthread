@@ -1514,7 +1514,7 @@ MBEDTLS_DEPRECATED extern int (*mbedtls_ssl_hw_record_finish)(
  *
  * \return              a string containing the ciphersuite name
  */
-const char *mbedtls_ssl_get_ciphersuite_name( const int ciphersuite_id );
+const char *mbedtls_ssl_get_ciphersuite_name( int ciphersuite_id );
 
 /**
  * \brief               Return the ID of the ciphersuite associated with the
@@ -4414,7 +4414,7 @@ void mbedtls_ssl_session_free( mbedtls_ssl_session *session );
  *
  * \return         0 on success. An SSL specific error on failure.
  */
-int  mbedtls_ssl_tls_prf( const mbedtls_tls_prf_types prf,
+int  mbedtls_ssl_tls_prf( mbedtls_tls_prf_types prf,
                           const unsigned char *secret, size_t slen,
                           const char *label,
                           const unsigned char *random, size_t rlen,
