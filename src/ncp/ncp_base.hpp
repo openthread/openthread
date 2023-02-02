@@ -96,7 +96,7 @@ public:
      * @returns IID.
      *
      */
-    spinel_iid_t GetCurCommandIid(void);
+    spinel_iid_t GetCurCommandIid(void) const;
 
     /**
      * Sends data to host via specific stream.

@@ -321,7 +321,11 @@ public:
      */
     bool IsTransmittingOrScanning(void) const
     {
-        return (mState == kStateTransmit) || (mState == kStateEnergyScan) || (mState == kStateCsmaBackoff);
+        return ((mState == kStateTransmit) || (mState == kStateEnergyScan) || (mState == kStateCsmaBackoff)
+#if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
+                || (mState == kStateDelayBeforeRetx)
+#endif
+        );
     }
 
     /**
