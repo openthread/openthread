@@ -467,7 +467,7 @@ void TestIp4Ip6Translation(void)
         const char *mIp6Address; // Expected IPv6 address (with embedded IPv4 "192.0.2.33").
     };
 
-    // The test cases are from RFC 6502 - section 2.4
+    // The test cases are from RFC 6052 - section 2.4
 
     const TestCase kTestCases[] = {
         {"2001:db8::", 32, "2001:db8:c000:221::"},

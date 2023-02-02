@@ -450,7 +450,7 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
 {
     // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added
     // after the prefix, skipping over the bits 64 to 71 (byte at `kSkipIndex`)
-    // which must be set to zero. The suffix is set to zero (per RFC 6502).
+    // which must be set to zero. The suffix is set to zero (per RFC 6052).
     //
     //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     //    |PL| 0-------------32--40--48--56--64--72--80--88--96--104---------|
