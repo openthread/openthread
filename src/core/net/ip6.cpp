@@ -268,7 +268,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
             aMessage.Write(0, hbh);
 
             // make space for MPL Option + padding by shifting hop-by-hop option header
-            SuccessOrExit(error = aMessage.InsertHeader(hbh.GetSize(), 8));
+            SuccessOrExit(error = aMessage.InsertHeader(hbhSize, 8));
 
             // insert MPL Option
             mMpl.InitOption(mplOption, aHeader.GetSource());
