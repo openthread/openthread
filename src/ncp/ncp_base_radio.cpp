@@ -491,13 +491,13 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
     }
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error == OT_ERROR_NONE)
     {
-        // If we fail to report the error now, it will be reported later in HandleReceive() of ncp_base.cpp.
-        if (WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)) == OT_ERROR_NONE)
-        {
-            error = OT_ERROR_NONE;
-        }
+        // Don't do anything here yet. We will complete the transaction when we get a transmit done callback
+    }
+    else
+    {
+        error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error));
     }
 
     return error;
