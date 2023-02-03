@@ -1169,6 +1169,23 @@ DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
 Done
 ```
 
+### dns resolve4 \<hostname\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send DNS query to obtain IPv4 address for a given hostname and provide the NAT64 synthesized IPv6 addresses for the IPv4 addresses from the query response.
+
+Requires `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE`.
+
+The parameters after `hostname` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
+This command requires a NAT64 prefix to be configured and present in Thread Network Data.
+
+For example, if a NAT64 prefix of `2001:db8:122:344::/96` is used within the Thread mesh, the outputted IPv6 address corresponds to an IPv4 address of `142.250.191.78` for the `ipv4.google.com` host:
+
+```bash
+> dns resolve4 ipv4.google.com
+> DNS response for ipv4.google.com - 2001:db8:122:344:0:0:8efa:bf4e TTL: 20456
+```
+
 ### dns browse \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
 
 Send a browse (service instance enumeration) DNS query to get the list of services for given service-name.
