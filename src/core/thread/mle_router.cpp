@@ -188,18 +188,14 @@ exit:
 // the multicast link request is retransmitted as a critical message
 void MleRouter::SetLinkRequestTransmissionCounter(void)
 {
-    Settings::NetworkInfo networkInfo;
-    uint16_t              numOfChildren = mChildTable.GetNumChildren(Child::kInStateValidOrRestoring);
-    mLinkRequestAttempts                = kMaxTransmissionCount;
+    uint16_t numOfChildren = mChildTable.GetNumChildren(Child::kInStateValidOrRestoring);
 
-    SuccessOrExit(Get<Settings>().Read(networkInfo));
-    if (networkInfo.GetRole() == kRoleLeader || numOfChildren >= kMinCriticalChildrenCount)
+    mLinkRequestAttempts = kMaxTransmissionCount;
+
+    if (mWasLeader || numOfChildren >= kMinCriticalChildrenCount)
     {
         mLinkRequestAttempts = kMaxCriticalTransmissionCount;
     }
-
-exit:
-    return;
 }
 
 Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
