@@ -39,6 +39,7 @@ main()
 {
     local builddir
     local options=(
+        "-DBUILT_TESTING=OFF"
         "-DCMAKE_BUILD_TYPE=Release"
         "-DOT_COVERAGE=OFF"
         "-DOT_LOG_LEVEL=INFO"

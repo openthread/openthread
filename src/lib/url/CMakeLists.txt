@@ -31,3 +31,14 @@ add_library(openthread-url EXCLUDE_FROM_ALL
 )
 
 target_link_libraries(openthread-url PRIVATE ot-config)
+
+add_executable(ot-test-url
+    url.cpp
+)
+target_compile_definitions(ot-test-url
+    PRIVATE -DSELF_TEST=1
+)
+target_link_libraries(ot-test-url
+    PRIVATE ot-config
+)
+add_test(NAME ot-test-url COMMAND ot-test-url)

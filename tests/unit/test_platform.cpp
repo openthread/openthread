@@ -445,4 +445,64 @@ OT_TOOL_WEAK void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDs
 
 #endif // #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUdpClose(otUdpSocket *aUdpSocket)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUdpBind(otUdpSocket *aUdpSocket)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifIdentifier)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
+                                    otNetifIdentifier   aNetifIdentifier,
+                                    const otIp6Address *aAddress)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+    OT_UNUSED_VARIABLE(aAddress);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
+                                     otNetifIdentifier   aNetifIdentifier,
+                                     const otIp6Address *aAddress)
+{
+    OT_UNUSED_VARIABLE(aUdpSocket);
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+    OT_UNUSED_VARIABLE(aAddress);
+    return OT_ERROR_NONE;
+}
+#endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+
 } // extern "C"
