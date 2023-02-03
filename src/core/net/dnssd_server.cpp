@@ -910,13 +910,14 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
         {
             ret = &txn;
             txn.Init(aMessageInfo);
+            LogInfo("Allocated new transaction for upstream query.");
             break;
         }
     }
 
     if (ret != nullptr)
     {
-        ResetTimer();
+        mTimer.FireAtIfEarlier(ret->GetExpireTime());
     }
 
     return ret;
@@ -1253,7 +1254,7 @@ void Server::HandleTimer(void)
             continue;
         }
 
-        expire = query.GetExpiryTime();
+        expire = query.GetExpireTime();
         if (expire <= now)
         {
             otPlatDnsCancelUpstreamQuery(&GetInstance(), &query);
@@ -1300,7 +1301,7 @@ void Server::ResetTimer(void)
             continue;
         }
 
-        expire = query.GetExpiryTime();
+        expire = query.GetExpireTime();
         if (expire <= now)
         {
             nextExpire = now;

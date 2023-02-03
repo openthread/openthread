@@ -84,7 +84,7 @@ public:
     {
     public:
         bool                    IsValid(void) const { return mValid; }
-        TimeMilli               GetExpiryTime(void) const { return mExpiryTime; }
+        TimeMilli               GetExpireTime(void) const { return mExpiryTime; }
         void                    Reset(void) { mValid = false; };
         void                    Init(const Ip6::MessageInfo &aMessageInfo);
         const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
