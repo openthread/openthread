@@ -31,8 +31,8 @@
  *   This file defines the new operator used by OpenThread.
  */
 
-#ifndef NEW_HPP_
-#define NEW_HPP_
+#ifndef OT_CORE_COMMON_NEW_HPP_
+#define OT_CORE_COMMON_NEW_HPP_
 
 #include "openthread-core-config.h"
 
@@ -42,4 +42,4 @@
 
 inline void *operator new(size_t, void *p) throw() { return p; }
 
-#endif // NEW_HPP_
+#endif // OT_CORE_COMMON_NEW_HPP_

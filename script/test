@@ -272,6 +272,7 @@ do_cert()
 do_cert_suite()
 {
     export top_builddir="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}"
+    export top_srcdir="${OT_SRCDIR}"
 
     if [[ ${THREAD_VERSION} != "1.1" ]]; then
         export top_builddir_1_3_bbr="${OT_BUILDDIR}/openthread-simulation-1.3-bbr"
@@ -285,7 +286,8 @@ do_cert_suite()
 
     sudo modprobe ip6table_filter
 
-    python3 tests/scripts/thread-cert/run_cert_suite.py --multiply "${MULTIPLY:-1}" "$@"
+    mkdir -p ot_testing
+    ./tests/scripts/thread-cert/run_cert_suite.py --run-directory ot_testing --multiply "${MULTIPLY:-1}" "$@"
     exit 0
 }
 
@@ -389,7 +391,7 @@ do_build_otbr_docker()
 
 do_pktverify()
 {
-    python3 ./tests/scripts/thread-cert/pktverify/verify.py "$1"
+    ./tests/scripts/thread-cert/pktverify/verify.py "$1"
 }
 
 ot_exec_expect_script()

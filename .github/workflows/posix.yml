@@ -131,11 +131,8 @@ jobs:
     env:
       COVERAGE: 1
       PYTHONUNBUFFERED: 1
-      READLINE: readline
-      REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
-      VIRTUAL_TIME_UART: 1
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
@@ -148,21 +145,19 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools python3-wheel lcov
+        sudo apt-get --no-install-recommends install -y lcov ninja-build python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
-        make -f src/posix/Makefile-posix
+        OT_NODE_TYPE=rcp ./script/test build
     - name: Run
       run: |
-        VERBOSE=1 OT_CLI_PATH="$PWD/output/posix/bin/ot-cli -v" RADIO_DEVICE="$PWD/output/simulation/bin/ot-rcp" make -f src/posix/Makefile-posix check
+        MAX_JOBS=$(getconf _NPROCESSORS_ONLN) ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       if: ${{ failure() }}
       with:
         name: thread-cert
-        path: build/posix/tests/scripts/thread-cert
+        path: ot_testing
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
