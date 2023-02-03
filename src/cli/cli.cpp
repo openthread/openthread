@@ -6206,6 +6206,12 @@ template <> otError Interpreter::Process<Cmd("routerupgradethreshold")>(Arg aArg
 {
     return ProcessGetSet(aArgs, otThreadGetRouterUpgradeThreshold, otThreadSetRouterUpgradeThreshold);
 }
+
+template <> otError Interpreter::Process<Cmd("childrouterlinks")>(Arg aArgs[])
+{
+    return ProcessGetSet(aArgs, otThreadGetChildRouterLinks, otThreadSetChildRouterLinks);
+}
+
 #endif // OPENTHREAD_FTD
 
 template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
@@ -7352,6 +7358,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("child"),
         CmdEntry("childip"),
         CmdEntry("childmax"),
+        CmdEntry("childrouterlinks"),
 #endif
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
         CmdEntry("childsupervision"),

@@ -447,19 +447,9 @@ class HopByHopHeader : public ExtensionHeader
  *
  */
 OT_TOOL_PACKED_BEGIN
-class OptionHeader
+class Option
 {
 public:
-    /**
-     * Default constructor.
-     *
-     */
-    OptionHeader(void)
-        : mType(0)
-        , mLength(0)
-    {
-    }
-
     /**
      * This method returns the IPv6 Option Type value.
      *
@@ -518,7 +508,7 @@ public:
      * @returns The size of the Option.
      *
      */
-    uint16_t GetSize(void) const { return static_cast<uint16_t>(mLength) + sizeof(OptionHeader); }
+    uint16_t GetSize(void) const { return static_cast<uint16_t>(mLength) + sizeof(Option); }
 
 private:
     static constexpr uint8_t kActionMask = 0xc0;
@@ -532,7 +522,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class OptionPadN : public OptionHeader
+class PadNOption : public Option
 {
 public:
     static constexpr uint8_t kType      = 0x01; ///< PadN type
@@ -545,12 +535,7 @@ public:
      * @param[in]  aPadLength  The length of needed padding. Allowed value from range 2-7.
      *
      */
-    void Init(uint8_t aPadLength)
-    {
-        SetType(kType);
-        SetLength(aPadLength - sizeof(OptionHeader));
-        memset(mPad, kData, aPadLength - sizeof(OptionHeader));
-    }
+    void Init(uint8_t aPadLength);
 
 private:
     uint8_t mPad[kMaxLength];
@@ -561,7 +546,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class OptionPad1
+class Pad1Option
 {
 public:
     static constexpr uint8_t kType = 0x00;

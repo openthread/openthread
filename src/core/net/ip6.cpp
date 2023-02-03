@@ -84,7 +84,7 @@ Ip6::Ip6(Instance &aInstance)
 Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
     return Get<MessagePool>().Allocate(
-        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
+        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(MplOption) + aReserved, aSettings);
 }
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings)
@@ -191,7 +191,7 @@ Error Ip6::AddMplOption(Message &aMessage, Header &aHeader)
 {
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
-    OptionMpl      mplOption;
+    MplOption      mplOption;
 
     hbhHeader.SetNextHeader(aHeader.GetNextHeader());
     hbhHeader.SetLength(0);
@@ -200,7 +200,7 @@ Error Ip6::AddMplOption(Message &aMessage, Header &aHeader)
     // Mpl option may require two bytes padding.
     if ((mplOption.GetSize() + sizeof(hbhHeader)) % 8)
     {
-        OptionPadN padOption;
+        PadNOption padOption;
 
         padOption.Init(2);
         SuccessOrExit(error = aMessage.PrependBytes(&padOption, padOption.GetSize()));
@@ -255,7 +255,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
         {
             HopByHopHeader hbh;
             uint16_t       hbhSize;
-            OptionMpl      mplOption;
+            MplOption      mplOption;
 
             // read existing hop-by-hop option header
             SuccessOrExit(error = aMessage.Read(0, hbh));
@@ -268,8 +268,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
             aMessage.Write(0, hbh);
 
             // make space for MPL Option + padding by shifting hop-by-hop option header
-            SuccessOrExit(error = aMessage.PrependBytes(nullptr, 8));
-            aMessage.CopyTo(/* aSourceOffset */ 8, /* aDestOffset */ 0, hbhSize, aMessage);
+            SuccessOrExit(error = aMessage.InsertHeader(hbh.GetSize(), 8));
 
             // insert MPL Option
             mMpl.InitOption(mplOption, aHeader.GetSource());
@@ -278,7 +277,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
             // insert Pad Option (if needed)
             if (mplOption.GetSize() % 8)
             {
-                OptionPadN padOption;
+                PadNOption padOption;
 
                 padOption.Init(8 - (mplOption.GetSize() % 8));
                 aMessage.WriteBytes(hbhSize + mplOption.GetSize(), &padOption, padOption.GetSize());
@@ -345,20 +344,20 @@ Error Ip6::RemoveMplOption(Message &aMessage)
 
     while (offset < endOffset)
     {
-        OptionHeader option;
+        Option option;
 
         IgnoreError(aMessage.Read(offset, option));
 
         switch (option.GetType())
         {
-        case OptionMpl::kType:
+        case MplOption::kType:
             // if multiple MPL options exist, discard packet
             VerifyOrExit(mplOffset == 0, error = kErrorParse);
 
             mplOffset = offset;
             mplLength = option.GetLength();
 
-            VerifyOrExit(mplLength <= sizeof(OptionMpl) - sizeof(OptionHeader), error = kErrorParse);
+            VerifyOrExit(mplLength <= sizeof(MplOption) - sizeof(Option), error = kErrorParse);
 
             if (mplOffset == sizeof(ip6Header) + sizeof(hbh) && hbh.GetLength() == 0)
             {
@@ -374,11 +373,11 @@ Error Ip6::RemoveMplOption(Message &aMessage)
             offset += option.GetSize();
             break;
 
-        case OptionPad1::kType:
-            offset += sizeof(OptionPad1);
+        case Pad1Option::kType:
+            offset += sizeof(Pad1Option);
             break;
 
-        case OptionPadN::kType:
+        case PadNOption::kType:
             offset += option.GetSize();
             break;
 
@@ -396,18 +395,7 @@ Error Ip6::RemoveMplOption(Message &aMessage)
     if (remove)
     {
         // last IPv6 Option, shrink HBH Option header
-        uint8_t buf[8];
-
-        offset = endOffset - sizeof(buf);
-
-        while (offset >= sizeof(buf))
-        {
-            IgnoreError(aMessage.Read(offset - sizeof(buf), buf));
-            aMessage.Write(offset, buf);
-            offset -= sizeof(buf);
-        }
-
-        aMessage.RemoveHeader(sizeof(buf));
+        aMessage.RemoveHeader(endOffset - 8, 8);
 
         if (mplOffset == sizeof(ip6Header) + sizeof(hbh))
         {
@@ -421,15 +409,15 @@ Error Ip6::RemoveMplOption(Message &aMessage)
             aMessage.Write(sizeof(ip6Header), hbh);
         }
 
-        ip6Header.SetPayloadLength(ip6Header.GetPayloadLength() - sizeof(buf));
+        ip6Header.SetPayloadLength(ip6Header.GetPayloadLength() - 8);
         aMessage.Write(0, ip6Header);
     }
     else if (mplOffset != 0)
     {
         // replace MPL Option with PadN Option
-        OptionPadN padOption;
+        PadNOption padOption;
 
-        padOption.Init(sizeof(OptionHeader) + mplLength);
+        padOption.Init(sizeof(Option) + mplLength);
         aMessage.WriteBytes(mplOffset, &padOption, padOption.GetSize());
     }
 
@@ -540,7 +528,7 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
 {
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
-    OptionHeader   optionHeader;
+    Option         option;
     uint16_t       endOffset;
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), hbhHeader));
@@ -548,40 +536,40 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
 
     VerifyOrExit(endOffset <= aMessage.GetLength(), error = kErrorParse);
 
-    aMessage.MoveOffset(sizeof(optionHeader));
+    aMessage.MoveOffset(sizeof(option));
 
     while (aMessage.GetOffset() < endOffset)
     {
-        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), optionHeader));
+        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), option));
 
-        if (optionHeader.GetType() == OptionPad1::kType)
+        if (option.GetType() == Pad1Option::kType)
         {
-            aMessage.MoveOffset(sizeof(OptionPad1));
+            aMessage.MoveOffset(sizeof(Pad1Option));
             continue;
         }
 
-        VerifyOrExit(aMessage.GetOffset() + optionHeader.GetSize() <= endOffset, error = kErrorParse);
+        VerifyOrExit(aMessage.GetOffset() + option.GetSize() <= endOffset, error = kErrorParse);
 
-        switch (optionHeader.GetType())
+        switch (option.GetType())
         {
-        case OptionMpl::kType:
+        case MplOption::kType:
             SuccessOrExit(error = mMpl.ProcessOption(aMessage, aHeader.GetSource(), aIsOutbound, aReceive));
             break;
 
         default:
-            switch (optionHeader.GetAction())
+            switch (option.GetAction())
             {
-            case OptionHeader::kActionSkip:
+            case Option::kActionSkip:
                 break;
 
-            case OptionHeader::kActionDiscard:
+            case Option::kActionDiscard:
                 ExitNow(error = kErrorDrop);
 
-            case OptionHeader::kActionForceIcmp:
+            case Option::kActionForceIcmp:
                 // TODO: send icmp error
                 ExitNow(error = kErrorDrop);
 
-            case OptionHeader::kActionIcmp:
+            case Option::kActionIcmp:
                 // TODO: send icmp error
                 ExitNow(error = kErrorDrop);
             }
@@ -589,7 +577,7 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
             break;
         }
 
-        aMessage.MoveOffset(optionHeader.GetSize());
+        aMessage.MoveOffset(option.GetSize());
     }
 
 exit:
@@ -649,10 +637,10 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         fragment->SetOffset(aMessage.GetOffset());
         fragment->Write(aMessage.GetOffset(), fragmentHeader);
 
-        VerifyOrExit(aMessage.CopyTo(aMessage.GetOffset() + FragmentHeader::FragmentOffsetToBytes(offset),
-                                     aMessage.GetOffset() + sizeof(fragmentHeader), payloadFragment,
-                                     *fragment) == static_cast<int>(payloadFragment),
-                     error = kErrorNoBufs);
+        fragment->WriteBytesFromMessage(
+            /* aWriteOffset */ aMessage.GetOffset() + sizeof(fragmentHeader), aMessage,
+            /* aReadOffset */ aMessage.GetOffset() + FragmentHeader::FragmentOffsetToBytes(offset),
+            /* aLength */ payloadFragment);
 
         EnqueueDatagram(*fragment);
 
@@ -683,10 +671,7 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
     Message       *message         = nullptr;
     uint16_t       offset          = 0;
     uint16_t       payloadFragment = 0;
-    int            assertValue     = 0;
     bool           isFragmented    = true;
-
-    OT_UNUSED_VARIABLE(assertValue);
 
     SuccessOrExit(error = aMessage.Read(0, header));
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), fragmentHeader));
@@ -727,15 +712,13 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
         LogDebg("start reassembly");
         VerifyOrExit((message = NewMessage(0)) != nullptr, error = kErrorNoBufs);
         mReassemblyList.Enqueue(*message);
-        SuccessOrExit(error = message->SetLength(aMessage.GetOffset()));
 
         message->SetTimestampToNow();
         message->SetOffset(0);
         message->SetDatagramTag(fragmentHeader.GetIdentification());
 
         // copying the non-fragmentable header to the fragmentation buffer
-        assertValue = aMessage.CopyTo(0, 0, aMessage.GetOffset(), *message);
-        OT_ASSERT(assertValue == aMessage.GetOffset());
+        SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, 0, aMessage.GetOffset()));
 
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kIp6FragmentReassembler);
     }
@@ -747,9 +730,9 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
     }
 
     // copy the fragment payload into the message buffer
-    assertValue = aMessage.CopyTo(aMessage.GetOffset() + sizeof(fragmentHeader), aMessage.GetOffset() + offset,
-                                  payloadFragment, *message);
-    OT_ASSERT(assertValue == static_cast<int>(payloadFragment));
+    message->WriteBytesFromMessage(
+        /* aWriteOffset */ aMessage.GetOffset() + offset, aMessage,
+        /* aReadOffset */ aMessage.GetOffset() + sizeof(fragmentHeader), /* aLength */ payloadFragment);
 
     // check if it is the last frame
     if (!fragmentHeader.IsMoreFlagSet())

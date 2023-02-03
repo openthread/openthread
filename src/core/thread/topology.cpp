@@ -76,6 +76,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mLinkQualityIn    = aNeighbor.GetLinkQualityIn();
     mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
     mLastRssi         = aNeighbor.GetLinkInfo().GetLastRss();
+    mLinkMargin       = aNeighbor.GetLinkInfo().GetLinkMargin();
     mFrameErrorRate   = aNeighbor.GetLinkInfo().GetFrameErrorRate();
     mMessageErrorRate = aNeighbor.GetLinkInfo().GetMessageErrorRate();
     mRxOnWhenIdle     = aNeighbor.IsRxOnWhenIdle();

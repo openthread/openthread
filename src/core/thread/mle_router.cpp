@@ -85,6 +85,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionIdTimeout(0)
     , mRouterSelectionJitter(kRouterSelectionJitter)
     , mRouterSelectionJitterTimeout(0)
+    , mChildRouterLinks(kChildRouterLinks)
     , mLinkRequestDelay(0)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -1281,7 +1282,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
             VerifyOrExit(router != nullptr);
 
             if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
-                (mRouterTable.GetNeighborCount() < kChildRouterLinks))
+                (mRouterTable.GetNeighborCount() < mChildRouterLinks))
             {
                 router->SetExtAddress(extAddr);
                 router->GetLinkInfo().Clear();
@@ -3486,6 +3487,16 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
 exit:
     // Send announce after received address solicit reply if needed
     InformPreviousChannel();
+}
+
+Error MleRouter::SetChildRouterLinks(uint8_t aChildRouterLinks)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
+    mChildRouterLinks = aChildRouterLinks;
+exit:
+    return error;
 }
 
 bool MleRouter::IsExpectedToBecomeRouterSoon(void) const

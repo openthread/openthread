@@ -297,6 +297,24 @@ public:
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
 
     /**
+     * This method returns the MLE_CHILD_ROUTER_LINKS value.
+     *
+     * @returns The MLE_CHILD_ROUTER_LINKS value.
+     *
+     */
+    uint8_t GetChildRouterLinks(void) const { return mChildRouterLinks; }
+
+    /**
+     * This method sets the MLE_CHILD_ROUTER_LINKS value.
+     *
+     * @param[in]  aChildRouterLinks  The MLE_CHILD_ROUTER_LINKS value.
+     *
+     * @retval kErrorNone          Successfully set the value.
+     * @retval kErrorInvalidState  Thread protocols are enabled.
+     */
+    Error SetChildRouterLinks(uint8_t aChildRouterLinks);
+
+    /**
      * This method returns if the REED is expected to become Router soon.
      *
      * @retval TRUE   If the REED is going to become a Router soon.
@@ -641,6 +659,8 @@ private:
 
     uint8_t mRouterSelectionJitter;        ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.
+
+    uint8_t mChildRouterLinks;
 
     uint8_t mLinkRequestDelay;
 
