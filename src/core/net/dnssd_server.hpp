@@ -292,12 +292,6 @@ private:
         uint16_t    mHostNameOffset;     // Offset of host name serialization into the response message.
     };
 
-    enum DomainType
-    {
-        kLocalDomain,
-        kInternetDomain,
-    };
-
     static constexpr bool     kBindUnspecifiedNetif         = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
     static constexpr uint8_t  kProtocolLabelLength          = 4;
     static constexpr uint8_t  kSubTypeLabelLength           = 4;
@@ -480,7 +474,6 @@ private:
     otDnssdQuerySubscribeCallback   mQuerySubscribe;
     otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
 
-    // A list of domains that should not be resolved by DNS-SD server. Terminated by a nullptr.
     static const char *kBlockedDomain[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     bool                     mEnableUpstreamQuery = false;
