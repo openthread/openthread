@@ -3188,7 +3188,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * @par api_copy
          * #otDnssdUpstreamQuerySetEnabled
          */
-        if (aArgs[1] == "upstream")
+        else if (aArgs[1] == "upstream")
         {
             bool enable;
 

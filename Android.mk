@@ -182,6 +182,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/dataset_updater_api.cpp                            \
     src/core/api/diags_api.cpp                                      \
     src/core/api/dns_api.cpp                                        \
+    src/core/api/dns_platform_api.cpp                               \
     src/core/api/dns_server_api.cpp                                 \
     src/core/api/error_api.cpp                                      \
     src/core/api/heap_api.cpp                                       \

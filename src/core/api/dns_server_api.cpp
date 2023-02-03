@@ -89,14 +89,6 @@ const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse)
-{
-    AssertPointerIsNotNull(aTxn);
-
-    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().OnUpstreamQueryResponse(
-        *reinterpret_cast<Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *>(aTxn), AsCoreType(aResponse));
-}
-
 void otDnssdUpstreamQuerySetEnabled(otInstance *aInstance, bool aEnabled)
 {
     return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().SetUpstreamQueryEnabled(aEnabled);

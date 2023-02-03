@@ -49,6 +49,10 @@
  *   This file includes definitions for the DNS-SD server.
  */
 
+struct otPlatDnsUpstreamQuery
+{
+};
+
 namespace ot {
 
 namespace Srp {
@@ -75,19 +79,22 @@ public:
     {
     };
 
-    class UpstreamQueryTransaction
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    class UpstreamQueryTransaction : public otPlatDnsUpstreamQuery
     {
-    private:
-        friend Server;
+    public:
+        bool                    IsValid(void) const { return mValid; }
+        TimeMilli               GetExpiryTime(void) const { return mExpiryTime; }
+        void                    Reset(void) { mValid = false; };
+        void                    Init(const Ip6::MessageInfo &aMessageInfo);
+        const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
 
+    private:
         bool             mValid;
         Ip6::MessageInfo mMessageInfo;
-        TimeMilli        mStartTime;
-
-        bool      IsValid() const { return mValid; }
-        TimeMilli GetStartTime(void) const { return mStartTime; }
-        void      Reset() { mValid = false; };
+        TimeMilli        mExpiryTime;
     };
+#endif
 
     /**
      * This enumeration specifies a DNS-SD query type.
@@ -369,11 +376,9 @@ private:
     void ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
     static Header::Response AddQuestions(const Header     &aRequestHeader,
                                          const Message    &aRequestMessage,
-                                         bool              aRecursiveSupported,
                                          Header           &aResponseHeader,
                                          Message          &aResponseMessage,
-                                         NameCompressInfo &aCompressInfo,
-                                         bool             &aRecursiveRequired);
+                                         NameCompressInfo &aCompressInfo);
     static Error            AppendQuestion(const char       *aName,
                                            const Question   &aQuestion,
                                            Message          &aMessage,
@@ -406,10 +411,7 @@ private:
     static Error            AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
     static Error            AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
     static void             IncResourceRecordCount(Header &aHeader, bool aAdditional);
-    static Error            FindNameComponents(const char               *aName,
-                                               const char               *aDomain,
-                                               NameComponentsOffsetInfo &aInfo,
-                                               bool                     &aIsInternetDomainName);
+    static Error            FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo);
     static Error            FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
     void                    SendResponse(Header                  aHeader,
                                          Header::Response        aResponseCode,
@@ -432,6 +434,7 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    static bool               ShouldForwardToUpstream(const Header &aRequestHeader, const Message &aRequestMessage);
     UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
     Error                     ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
@@ -478,7 +481,7 @@ private:
     otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
 
     // A list of domains that should not be resolved by DNS-SD server. Terminated by a nullptr.
-    static const char *kBlockListDomain[];
+    static const char *kBlockedDomain[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     bool                     mEnableUpstreamQuery = false;
     UpstreamQueryTransaction mUpstreamQueryTransactions[kMaxConcurrentUpstreamQueries];
@@ -493,6 +496,9 @@ private:
 } // namespace Dns
 
 DefineMapEnum(otDnssdQueryType, Dns::ServiceDiscovery::Server::DnsQueryType);
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+DefineCoreType(otPlatDnsUpstreamQuery, Dns::ServiceDiscovery::Server::UpstreamQueryTransaction);
+#endif
 
 } // namespace ot
 
