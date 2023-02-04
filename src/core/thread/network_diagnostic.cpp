@@ -50,6 +50,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/version.hpp"
 
 namespace ot {
 
@@ -440,6 +441,10 @@ Error NetworkDiagnostic::AppendRequestedTlvs(const Message &aRequest, Message &a
         }
 #endif
 
+        case Tlv::kVersion:
+            SuccessOrExit(error = Tlv::Append<VersionTlv>(aResponse, kThreadVersion));
+            break;
+
         default:
             // Skip unrecognized TLV type.
             break;
@@ -774,6 +779,10 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage, Iterator 
 
         case Tlv::kMaxChildTimeout:
             SuccessOrExit(error = Tlv::Read<MaxChildTimeoutTlv>(aMessage, offset, aTlvInfo.mData.mMaxChildTimeout));
+            break;
+
+        case Tlv::kVersion:
+            SuccessOrExit(error = Tlv::Read<VersionTlv>(aMessage, offset, aTlvInfo.mData.mVersion));
             break;
 
         default:
