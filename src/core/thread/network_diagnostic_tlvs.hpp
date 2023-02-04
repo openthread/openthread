@@ -85,6 +85,7 @@ public:
         kChannelPages    = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
         kTypeList        = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
         kMaxChildTimeout = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
+        kVersion         = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
     };
 
     /**
@@ -164,6 +165,12 @@ typedef TlvInfo<Tlv::kChildTable> ChildTableTlv;
  *
  */
 typedef UintTlvInfo<Tlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
+
+/**
+ * This class defines Version TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
 
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 

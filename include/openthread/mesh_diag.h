@@ -82,6 +82,15 @@ typedef struct otMeshDiagIp6AddrIterator otMeshDiagIp6AddrIterator;
 typedef struct otMeshDiagChildIterator otMeshDiagChildIterator;
 
 /**
+ * This constant indicates that Thread Version is unknown.
+ *
+ * This is used in `otMeshDiagRouterInfo` for `mVersion` property when device does not provide its version. This
+ * indicates that device is likely running 1.3.0 (version value 4) or earlier.
+ *
+ */
+#define OT_MESH_DIAG_VERSION_UNKNOWN 0xffff
+
+/**
  * This type represents information about a router in Thread mesh.
  *
  */
@@ -90,6 +99,7 @@ typedef struct otMeshDiagRouterInfo
     otExtAddress mExtAddress;             ///< Extended MAC address.
     uint16_t     mRloc16;                 ///< RLOC16.
     uint8_t      mRouterId;               ///< Router ID.
+    uint16_t     mVersion;                ///< Thread Version. `OT_MESH_DIAG_VERSION_UNKNOWN` if unknown.
     bool         mIsThisDevice : 1;       ///< Whether router is this device itself.
     bool         mIsThisDeviceParent : 1; ///< Whether router is parent of this device (when device is a child).
     bool         mIsLeader : 1;           ///< Whether router is leader.

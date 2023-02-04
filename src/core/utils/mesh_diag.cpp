@@ -94,17 +94,17 @@ Error MeshDiag::SendDiagGetTo(uint16_t aRloc16, const DiscoverConfig &aConfig)
     Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
     uint8_t          tlvs[kMaxTlvsToRequest];
-    uint8_t          tlvsLength;
+    uint8_t          tlvsLength = 0;
 
     message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     IgnoreError(message->SetPriority(Message::kPriorityLow));
 
-    tlvs[0]    = Address16Tlv::kType;
-    tlvs[1]    = ExtMacAddressTlv::kType;
-    tlvs[2]    = RouteTlv::kType;
-    tlvsLength = 3;
+    tlvs[tlvsLength++] = Address16Tlv::kType;
+    tlvs[tlvsLength++] = ExtMacAddressTlv::kType;
+    tlvs[tlvsLength++] = RouteTlv::kType;
+    tlvs[tlvsLength++] = VersionTlv::kType;
 
     if (aConfig.mDiscoverIp6Addresses)
     {
@@ -200,6 +200,18 @@ Error MeshDiag::RouterInfo::ParseFrom(const Message &aMessage)
     SuccessOrExit(error = Tlv::Find<Address16Tlv>(aMessage, mRloc16));
     SuccessOrExit(error = Tlv::Find<ExtMacAddressTlv>(aMessage, AsCoreType(&mExtAddress)));
     SuccessOrExit(error = Tlv::FindTlv(aMessage, routeTlv));
+
+    switch (error = Tlv::Find<VersionTlv>(aMessage, mVersion))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        mVersion = kVersionUnknown;
+        error    = kErrorNone;
+        break;
+    default:
+        ExitNow();
+    }
 
     mRouterId           = Mle::RouterIdFromRloc16(mRloc16);
     mIsThisDevice       = (mRloc16 == mle.GetRloc16());

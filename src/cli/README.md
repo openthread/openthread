@@ -1848,6 +1848,7 @@ Output lists all discovered routers. Information per router:
 - Router ID
 - RLOC16
 - Extended MAC address
+- Thread Version (if known).
 - Whether the router is this device is itself (`me`)
 - Whether the router is the parent of this device when device is a child (`parent`)
 - Whether the router is `leader`
@@ -1869,16 +1870,16 @@ Discover network topology:
 
 ```bash
 > meshdiag topology
-id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - me - leader
+id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c ver:4 - me - leader
    3-links:{ 46 }
-id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc ver:4
    3-links:{ 02 51 57 }
-id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d ver:4
    3-links:{ 51 57 }
-id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352 ver:4
    3-links:{ 33 57 }
    2-links:{ 46 }
-id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff ver:4
    3-links:{ 46 51 }
    1-links:{ 33 }
 Done
@@ -1888,14 +1889,14 @@ Discover network topology with router's IPv6 addresses and children:
 
 ```bash
 > meshdiag topology children ip6-addrs
-id:62 rloc16:0xf800 ext-addr:ce349873897233a5 - me - br
+id:62 rloc16:0xf800 ext-addr:ce349873897233a5 ver:4 - me - br
    3-links:{ 46 }
    ip6-addrs:
        fdde:ad00:beef:0:0:ff:fe00:f800
        fdde:ad00:beef:0:211d:39e9:6b2e:4ad1
        fe80:0:0:0:cc34:9873:8972:33a5
    children: none
-id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - leader - br
+id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c ver:4 - leader - br
    3-links:{ 46 51 }
    ip6-addrs:
        fdde:ad00:beef:0:0:ff:fe00:fc00
@@ -1905,21 +1906,21 @@ id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - leader - br
    children:
        rloc16:0x0803 lq:3, mode:rn
        rloc16:0x0804 lq:3, mode:rdn
-id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d ver:4
    3-links:{ 57 }
    ip6-addrs:
        fdde:ad00:beef:0:0:ff:fe00:8400
        fdde:ad00:beef:0:824:a126:cf19:a9f4
        fe80:0:0:0:d0e5:11a1:46b9:e54d
    children: none
-id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352 ver:4
    3-links:{ 02 46 57 }
    ip6-addrs:
        fdde:ad00:beef:0:0:ff:fe00:cc00
        fdde:ad00:beef:0:2986:bba3:12d0:1dd2
        fe80:0:0:0:98ab:43ab:abf0:5352
    children: none
-id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff ver:4
    3-links:{ 33 51 }
    ip6-addrs:
        fdde:ad00:beef:0:0:ff:fe00:e400
@@ -1928,7 +1929,7 @@ id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
    children:
        rloc16:0xe402 lq:3, mode:rn - br
        rloc16:0xe403 lq:3, mode:rn
-id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc ver:4
    3-links:{ 02 51 62 }
    ip6-addrs:
        fdde:ad00:beef:0:0:ff:fe00:b800
@@ -1942,26 +1943,26 @@ Discover network topology with children:
 
 ```bash
 > meshdiag topology children
-id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - parent - leader - br
+id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c ver:4 - parent - leader - br
    3-links:{ 46 51 }
    children:
        rloc16:0x0803 lq:0, mode:rn
        rloc16:0x0804 lq:0, mode:rdn - me
-id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc ver:4
    3-links:{ 02 51 62 }
    children: none
-id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d ver:4
    3-links:{ 57 }
    children: none
-id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352 ver:4
    3-links:{ 02 46 57 }
    children: none
-id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff ver:4
    3-links:{ 33 51 }
    children:
        rloc16:0xe402 lq:3, mode:rn - br
        rloc16:0xe403 lq:3, mode:rn
-id:62 rloc16:0xf800 ext-addr:ce349873897233a5 - br
+id:62 rloc16:0xf800 ext-addr:ce349873897233a5 ver:4 - br
    3-links:{ 46 }
    children: none
 ```
