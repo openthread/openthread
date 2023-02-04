@@ -312,7 +312,7 @@ private:
                                           const Metrics &aMetrics,
                                           Neighbor      &aNeighbor);
 
-    Status ConfigureEnhAckProbing(EnhAckFlags aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor);
+    Status ConfigureEnhAckProbing(uint8_t aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor);
 
     Error FindNeighbor(const Ip6::Address &aDestination, Neighbor *&aNeighbor) const;
 
