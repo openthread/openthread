@@ -129,6 +129,7 @@ After the device successfully attaches to a Thread network, the device will retr
 - [pendingtimestamp](#pendingtimestamp)
 - [pskc](#pskc)
 - [securitypolicy](#securitypolicy)
+- [tlvs](#tlvs)
 
 ## Command Details
 
@@ -160,6 +161,8 @@ pending
 pendingtimestamp
 pskc
 securitypolicy
+set
+tlvs
 Done
 ```
 
@@ -530,13 +533,38 @@ Usage: `dataset set <active|pending> <dataset>`
 Set the Active Operational Dataset using hex-encoded TLVs.
 
 ```bash
-dataset set active 0e080000000000010000000300000f35060004001fffe0020839758ec8144b07fb0708fdf1f1add0797dc00510f366cec7a446bab978d90d27abe38f23030f4f70656e5468726561642d353933380102593804103ca67c969efb0d0c74a4d8ee923b576c0c0402a0f7f8
+> dataset set active 0e080000000000010000000300000f35060004001fffe0020839758ec8144b07fb0708fdf1f1add0797dc00510f366cec7a446bab978d90d27abe38f23030f4f70656e5468726561642d353933380102593804103ca67c969efb0d0c74a4d8ee923b576c0c0402a0f7f8
 Done
 ```
 
 Set the Pending Operational Dataset using hex-encoded TLVs.
 
 ```bash
-dataset set pending 0e0800000000000100003308000000000002000034040000b512000300001a35060004001fffe00208a74182f4d3f4de410708fd46c1b9e15955740510ed916e454d96fd00184f10a6f5c9e1d3030f4f70656e5468726561642d626666380102bff80410264f78414adc683191863d968f72d1b70c0402a0f7f8
+> dataset set pending 0e0800000000000100003308000000000002000034040000b512000300001a35060004001fffe00208a74182f4d3f4de410708fd46c1b9e15955740510ed916e454d96fd00184f10a6f5c9e1d3030f4f70656e5468726561642d626666380102bff80410264f78414adc683191863d968f72d1b70c0402a0f7f8
+Done
+```
+
+### tlvs
+
+Usage: `dataset tlvs`
+
+Convert the Operational Dataset to hex-encoded TLVs.
+
+```bash
+> dataset
+Active Timestamp: 1
+Channel: 22
+Channel Mask: 0x07fff800
+Ext PAN ID: d196fa2040e973b6
+Mesh Local Prefix: fdbb:c310:c48f:3a39::/64
+Network Key: 9929154dbc363218bcd22f907caf5c15
+Network Name: OpenThread-de2b
+PAN ID: 0xde2b
+PSKc: 15b2c16f7ba92ed4bc7b1ee054f1553f
+Security Policy: 672 onrc
+Done
+
+> dataset tlvs
+0e080000000000010000000300001635060004001fffe00208d196fa2040e973b60708fdbbc310c48f3a3905109929154dbc363218bcd22f907caf5c15030f4f70656e5468726561642d646532620102de2b041015b2c16f7ba92ed4bc7b1ee054f1553f0c0402a0f7f8
 Done
 ```
