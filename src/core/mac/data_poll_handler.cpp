@@ -188,7 +188,11 @@ Mac::TxFrame *DataPollHandler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     VerifyOrExit(mCallbacks.PrepareFrameForChild(*frame, mFrameContext, *mIndirectTxChild) == kErrorNone,
                  frame = nullptr);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if ((mIndirectTxChild->GetIndirectTxAttempts() > 0) || (mIndirectTxChild->GetCslTxAttempts() > 0))
+#else
     if (mIndirectTxChild->GetIndirectTxAttempts() > 0)
+#endif
     {
         // For a re-transmission of an indirect frame to a sleepy
         // child, we ensure to use the same frame counter, key id, and
