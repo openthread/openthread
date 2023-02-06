@@ -1,5 +1,11 @@
 CC=clang
-CFLAGS=-I ../../../../include -O2 -Wall
+CFLAGS=-I ../../../../include -O0 -Wall
+LDFLAGS=
+
+ifeq ($(COVERAGE),1)
+CFLAGS+=--coverage
+LDFLAGS+=--coverage
+endif
 
 all: test_all
 
@@ -10,7 +16,7 @@ test_all.o: test_all.c
 	clang -c $(CFLAGS) test_all.c -o $@
 
 test_all: test_all.o cbuf.o lbuf.o bitmap.o
-	clang test_all.o cbuf.o lbuf.o bitmap.o -o test_all
+	clang $(LDFLAGS) test_all.o cbuf.o lbuf.o bitmap.o -o test_all
 
 clean:
 	rm -f *.o test_all
