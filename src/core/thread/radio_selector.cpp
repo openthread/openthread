@@ -323,6 +323,13 @@ Mac::TxFrame &RadioSelector::SelectRadio(Message &aMessage, const Mac::Address &
 #endif
 
 exit:
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    if (!Get<Trel::Interface>().IsEnabled())
+    {
+        selections.Remove(Mac::kRadioTypeTrel);
+    }
+#endif
+
     return aTxFrames.GetTxFrame(selections);
 }
 
