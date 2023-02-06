@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2022, The OpenThread Authors.
+#  Copyright (c) 2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -92,8 +92,6 @@ class Test_LeaderRebootMultipleLinkRequest(thread_cert.TestCase):
         self.nodes[DUT_LEADER].reset()
         self.assertFalse(self.nodes[DUT_ROUTER1].ping(leader_rloc))
         self._setUpLeader()
-
-        self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
         # Router1 will not reply to leader's link request
         self.nodes[DUT_ROUTER1].clear_allowlist()

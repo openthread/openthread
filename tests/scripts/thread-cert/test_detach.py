@@ -145,8 +145,10 @@ class TestDetach(thread_cert.TestCase):
         self.assertEqual(leader.get_state(), 'disabled')
 
         leader.start()
+        # leader didn't become leader after the last start(), so it re-syncs in a non-critical manner thus taking ROUTER_RESET_DELAY to recover
+        self.simulator.go(config.ROUTER_RESET_DELAY / 2)
         self.assertEqual(leader.get_state(), 'detached')
-        self.simulator.go(config.LEADER_RESET_DELAY)
+        self.simulator.go(config.ROUTER_RESET_DELAY / 2)
         self.assertEqual(leader.get_state(), 'leader')
         router1.start()
         self.simulator.go(config.ROUTER_RESET_DELAY)
