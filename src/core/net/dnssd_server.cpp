@@ -272,14 +272,14 @@ Header::Response Server::AddQuestions(const Header     &aRequestHeader,
         VerifyOrExit(kErrorNone == aRequestMessage.Read(readOffset, question), response = Header::kResponseFormatError);
         readOffset += sizeof(question);
 
-        VerifyOrExit(kErrorNone == FindNameComponents(name, aCompressInfo.GetDomainName(), nameComponentsOffsetInfo),
-                     response = Header::kResponseNameError);
-
         qtype = question.GetType();
 
         VerifyOrExit(qtype == ResourceRecord::kTypePtr || qtype == ResourceRecord::kTypeSrv ||
                          qtype == ResourceRecord::kTypeTxt || qtype == ResourceRecord::kTypeAaaa,
                      response = Header::kResponseNotImplemented);
+
+        VerifyOrExit(kErrorNone == FindNameComponents(name, aCompressInfo.GetDomainName(), nameComponentsOffsetInfo),
+                     response = Header::kResponseNameError);
 
         switch (question.GetType())
         {
@@ -594,6 +594,8 @@ Error Server::FindNameComponents(const char *aName, const char *aDomain, NameCom
     uint8_t domainLen = static_cast<uint8_t>(StringLength(aDomain, Name::kMaxNameLength));
     Error   error     = kErrorNone;
     uint8_t labelBegin, labelEnd;
+
+    VerifyOrExit(Name::IsSubDomainOf(aName, aDomain), error = kErrorInvalidArgs);
 
     labelBegin          = nameLen - domainLen;
     aInfo.mDomainOffset = labelBegin;
