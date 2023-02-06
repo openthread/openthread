@@ -153,12 +153,13 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     bool             resolveByUpstreamResolver = false;
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    if (ShouldForwardToUpstream(aRequestHeader, aRequestMessage))
+    if (mEnableUpstreamQuery && ShouldForwardToUpstream(aRequestHeader, aRequestMessage))
     {
         resolveByUpstreamResolver = true;
-        error                     = ResolveByUpstream(aRequestMessage, aMessageInfo);
+        error                     = ResolveByUpstream(aRequestHeader, aRequestMessage, aMessageInfo);
         if (error != kErrorNone)
         {
+            ConstructAndSendResponseCode(aMessageInfo, aRequestHeader, Header::Response::kResponseServerFailure);
             LogWarn("Failed to forward DNS query to upstream: %s", ErrorToString(error));
         }
         ExitNow();
@@ -899,7 +900,8 @@ exit:
     return;
 }
 
-Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo)
+Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Header           &aRequestHeader,
+                                                                           const Ip6::MessageInfo &aMessageInfo)
 {
     UpstreamQueryTransaction *ret = nullptr;
 
@@ -908,7 +910,7 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
         if (!txn.IsValid())
         {
             ret = &txn;
-            txn.Init(aMessageInfo);
+            txn.Init(aRequestHeader, aMessageInfo);
             LogInfo("Allocated new transaction for upstream query.");
             break;
         }
@@ -922,20 +924,49 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
     return ret;
 }
 
-Error Server::ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Server::ResolveByUpstream(const Header           &aRequestHeader,
+                                Message                &aRequestMessage,
+                                const Ip6::MessageInfo &aMessageInfo)
 {
     Error                     error = kErrorNone;
     UpstreamQueryTransaction *txn   = nullptr;
 
-    LogInfo("Forwarding DNS query to upstream");
-
-    txn = AllocateUpstreamQueryTransaction(aMessageInfo);
+    txn = AllocateUpstreamQueryTransaction(aRequestHeader, aMessageInfo);
     VerifyOrExit(txn != nullptr, error = kErrorNoBufs);
 
+    LogInfo("Forwarding DNS query to upstream");
     otPlatDnsStartUpstreamQuery(&GetInstance(), txn, &aRequestMessage);
 
 exit:
     return error;
+}
+
+void Server::ConstructAndSendResponseCode(const Ip6::MessageInfo &aMessageInfo,
+                                          const Header           &aRequestHeader,
+                                          Header::Response        aResponse)
+{
+    Error    error           = kErrorNone;
+    Message *responseMessage = nullptr;
+    Header   responseHeader;
+
+    responseMessage = mSocket.NewMessage(0);
+    VerifyOrExit(responseMessage != nullptr, error = kErrorNoBufs);
+    SuccessOrExit(error = responseMessage->SetLength(sizeof(Header)));
+
+    // Setup initial DNS response header
+    responseHeader.Clear();
+    responseHeader.SetType(Header::kTypeResponse);
+    responseHeader.SetQueryType(aRequestHeader.GetQueryType());
+    if (aRequestHeader.IsRecursionDesiredFlagSet())
+    {
+        responseHeader.SetRecursionDesiredFlag();
+    }
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+
+    SendResponse(responseHeader, aResponse, *responseMessage, aMessageInfo, mSocket);
+
+exit:
+    LogWarn("Failed to send DNS response code: %s", ErrorToString(error));
 }
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
@@ -1257,6 +1288,8 @@ void Server::HandleTimer(void)
         if (expire <= now)
         {
             otPlatDnsCancelUpstreamQuery(&GetInstance(), &query);
+            ConstructAndSendResponseCode(query.GetMessageInfo(), query.GetRequestHeader(),
+                                         Header::Response::kResponseServerFailure);
             query.Reset();
         }
     }
@@ -1388,11 +1421,12 @@ void Server::UpdateResponseCounters(Header::Response aResponseCode)
 }
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-void Server::UpstreamQueryTransaction::Init(const Ip6::MessageInfo &aMessageInfo)
+void Server::UpstreamQueryTransaction::Init(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
 {
-    mMessageInfo = aMessageInfo;
-    mValid       = true;
-    mExpiryTime  = TimerMilli::GetNow() + kQueryTimeout;
+    mRequestHeader = aRequestHeader;
+    mMessageInfo   = aMessageInfo;
+    mValid         = true;
+    mExpireTime    = TimerMilli::GetNow() + kQueryTimeout;
 }
 #endif
 

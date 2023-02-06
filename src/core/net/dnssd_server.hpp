@@ -84,15 +84,17 @@ public:
     {
     public:
         bool                    IsValid(void) const { return mValid; }
-        TimeMilli               GetExpireTime(void) const { return mExpiryTime; }
+        TimeMilli               GetExpireTime(void) const { return mExpireTime; }
         void                    Reset(void) { mValid = false; };
-        void                    Init(const Ip6::MessageInfo &aMessageInfo);
+        void                    Init(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
         const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+        const Header           &GetRequestHeader(void) const { return mRequestHeader; }
 
     private:
-        bool             mValid;
+        Header           mRequestHeader;
         Ip6::MessageInfo mMessageInfo;
-        TimeMilli        mExpiryTime;
+        TimeMilli        mExpireTime;
+        bool             mValid;
     };
 #endif
 
@@ -429,8 +431,14 @@ private:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static bool               ShouldForwardToUpstream(const Header &aRequestHeader, const Message &aRequestMessage);
-    UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
-    Error                     ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
+    UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Header           &aRequestHeader,
+                                                               const Ip6::MessageInfo &aMessageInfo);
+    Error                     ResolveByUpstream(const Header           &aRequestHeader,
+                                                Message                &aRequestMessage,
+                                                const Ip6::MessageInfo &aMessageInfo);
+    void                      ConstructAndSendResponseCode(const Ip6::MessageInfo &aMessageInfo,
+                                                           const Header           &aRequestHeader,
+                                                           Header::Response        aResponse);
 #endif
 
     Error             ResolveByQueryCallbacks(Header                 &aResponseHeader,
