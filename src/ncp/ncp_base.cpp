@@ -290,12 +290,6 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     otSrpClientSetCallback(mInstance, HandleSrpClientCallback, this);
 #endif
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    mLegacyNodeDidJoin = false;
-    mLegacyHandlers    = nullptr;
-    memset(mLegacyUlaPrefix, 0, sizeof(mLegacyUlaPrefix));
-    memset(&mLegacyLastJoinedNode, 0, sizeof(mLegacyLastJoinedNode));
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
     mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
     mUpdateChangedPropsTask.Post();
@@ -1917,10 +1911,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_ROLE_SLEEPY));
 
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_NEST_LEGACY_INTERFACE));
-#endif
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_COMMISSIONER));
 #endif
@@ -2048,7 +2038,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MCU_POWER_STATE>(void
         if (otThreadGetDeviceRole(mInstance) != OT_DEVICE_ROLE_DISABLED)
         {
             IgnoreError(otThreadSetEnabled(mInstance, false));
-            StopLegacy();
         }
 
         if (otIp6IsEnabled(mInstance))

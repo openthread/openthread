@@ -148,14 +148,6 @@
 #define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE 1
 
 /**
- * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
- *
- * Define to 1 to enable legacy network support.
- *
- */
-#define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
-
-/**
  * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
  *
  * Define to 1 to enable ECDSA support.
