@@ -155,11 +155,13 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     if (ShouldForwardToUpstream(aRequestHeader, aRequestMessage))
     {
-        error = ResolveByUpstream(aRequestMessage, aMessageInfo);
-        if (error == kErrorNone)
+        resolveByUpstreamResolver = true;
+        error                     = ResolveByUpstream(aRequestMessage, aMessageInfo);
+        if (error != kErrorNone)
         {
-            ExitNow();
+            LogWarn("Failed to forward DNS query to upstream: %s", ErrorToString(error));
         }
+        ExitNow();
     }
 #endif
 
@@ -205,11 +207,6 @@ exit:
     if (error == kErrorNone && !resolveByQueryCallbacks && !resolveByUpstreamResolver)
     {
         SendResponse(responseHeader, response, *responseMessage, aMessageInfo, mSocket);
-    }
-
-    if (resolveByUpstreamResolver)
-    {
-        FreeMessage(responseMessage);
     }
 
     FreeMessageOnError(responseMessage, error);
@@ -870,7 +867,7 @@ bool Server::ShouldForwardToUpstream(const Header &aRequestHeader, const Message
         VerifyOrExit(kErrorNone == Name::ReadName(aRequestMessage, readOffset, name, sizeof(name)), ret = false);
         readOffset += sizeof(Question);
 
-        VerifyOrExit(Name::IsSubDomainOf(name, kDefaultDomainName), ret = false);
+        VerifyOrExit(!Name::IsSubDomainOf(name, kDefaultDomainName), ret = false);
         for (const char *blockedDomain : kBlockedDomain)
         {
             VerifyOrExit(!Name::IsSameDomain(name, blockedDomain), ret = false);
