@@ -818,6 +818,18 @@ void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint
 otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
 
 /**
+ * This function indicates whether or not a Router ID is currently allocated.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aRouterId     The router ID to check.
+ *
+ * @retval TRUE  The @p aRouterId is allocated.
+ * @retval FALSE The @p aRouterId is not allocated.
+ *
+ */
+bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId);
+
+/**
  * This function gets the next hop and path cost towards a given RLOC16 destination.
  *
  * This function can be used with either @p aNextHopRloc16 or @p aPathCost being NULL indicating caller does not want
