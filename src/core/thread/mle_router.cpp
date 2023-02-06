@@ -185,7 +185,7 @@ exit:
 }
 
 // If the router was a leader or had more than 5 children prior to reset,
-// the multicast link request is retransmitted as a critical message
+// the multicast link request is retransmitted as a critical message.
 void MleRouter::SetLinkRequestTransmissionCounter(void)
 {
     uint16_t numOfChildren = mChildTable.GetNumChildren(Child::kInStateValidOrRestoring);

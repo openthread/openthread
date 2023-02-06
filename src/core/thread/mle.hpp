@@ -1736,8 +1736,8 @@ protected:
     DelayTimer    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
     MsgTxTimer    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
 #if OPENTHREAD_FTD
-    uint8_t mLinkRequestAttempts; ///< Number of remaining link requests to send after reset
-    bool    mWasLeader;           ///< Indicating if device was leader before reset
+    uint8_t mLinkRequestAttempts; ///< Number of remaining link requests to send after reset.
+    bool    mWasLeader;           ///< Indicating if device was leader before reset.
 #endif
 
 private:
