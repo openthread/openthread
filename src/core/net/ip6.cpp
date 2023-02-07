@@ -192,17 +192,15 @@ Error Ip6::AddMplOption(Message &aMessage, Header &aHeader)
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
     MplOption      mplOption;
+    PadOption      padOption;
 
     hbhHeader.SetNextHeader(aHeader.GetNextHeader());
     hbhHeader.SetLength(0);
     mMpl.InitOption(mplOption, aHeader.GetSource());
 
-    // Mpl option may require two bytes padding.
-    if ((mplOption.GetSize() + sizeof(hbhHeader)) % 8)
+    // Check if MPL option may require padding
+    if (padOption.InitToPadHeaderWithSize(sizeof(HopByHopHeader) + mplOption.GetSize()) == kErrorNone)
     {
-        PadNOption padOption;
-
-        padOption.Init(2);
         SuccessOrExit(error = aMessage.PrependBytes(&padOption, padOption.GetSize()));
     }
 
@@ -256,35 +254,35 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
             HopByHopHeader hbh;
             uint16_t       hbhSize;
             MplOption      mplOption;
+            PadOption      padOption;
 
-            // read existing hop-by-hop option header
+            // Read existing hop-by-hop option header
             SuccessOrExit(error = aMessage.Read(0, hbh));
             hbhSize = hbh.GetSize();
 
             VerifyOrExit(hbhSize <= aHeader.GetPayloadLength(), error = kErrorParse);
 
-            // increase existing hop-by-hop option header length by 8 bytes
+            // Increment hop-by-hop option header length by one which
+            // increases its total size by 8 bytes.
             hbh.SetLength(hbh.GetLength() + 1);
             aMessage.Write(0, hbh);
 
-            // make space for MPL Option + padding by shifting hop-by-hop option header
-            SuccessOrExit(error = aMessage.InsertHeader(hbhSize, 8));
+            // Make space for MPL Option + padding (8 bytes) at the end
+            // of hop-by-hop header
+            SuccessOrExit(error = aMessage.InsertHeader(hbhSize, ExtensionHeader::kLengthUnitSize));
 
-            // insert MPL Option
+            // Insert MPL Option
             mMpl.InitOption(mplOption, aHeader.GetSource());
             aMessage.WriteBytes(hbhSize, &mplOption, mplOption.GetSize());
 
-            // insert Pad Option (if needed)
-            if (mplOption.GetSize() % 8)
+            // Insert Pad Option (if needed)
+            if (padOption.InitToPadHeaderWithSize(mplOption.GetSize()) == kErrorNone)
             {
-                PadNOption padOption;
-
-                padOption.Init(8 - (mplOption.GetSize() % 8));
                 aMessage.WriteBytes(hbhSize + mplOption.GetSize(), &padOption, padOption.GetSize());
             }
 
-            // increase IPv6 Payload Length
-            aHeader.SetPayloadLength(aHeader.GetPayloadLength() + 8);
+            // Update IPv6 Payload Length
+            aHeader.SetPayloadLength(aHeader.GetPayloadLength() + ExtensionHeader::kLengthUnitSize);
         }
         else
         {
@@ -325,6 +323,7 @@ Error Ip6::RemoveMplOption(Message &aMessage)
     Error          error = kErrorNone;
     Header         ip6Header;
     HopByHopHeader hbh;
+    Option         option;
     uint16_t       offset;
     uint16_t       endOffset;
     uint16_t       mplOffset = 0;
@@ -342,16 +341,18 @@ Error Ip6::RemoveMplOption(Message &aMessage)
 
     offset += sizeof(hbh);
 
-    while (offset < endOffset)
+    for (; offset < endOffset; offset += option.GetSize())
     {
-        Option option;
+        IgnoreError(option.ParseFrom(aMessage, offset, endOffset));
 
-        IgnoreError(aMessage.Read(offset, option));
-
-        switch (option.GetType())
+        if (option.IsPadding())
         {
-        case MplOption::kType:
-            // if multiple MPL options exist, discard packet
+            continue;
+        }
+
+        if (option.GetType() == MplOption::kType)
+        {
+            // If multiple MPL options exist, discard packet
             VerifyOrExit(mplOffset == 0, error = kErrorParse);
 
             mplOffset = offset;
@@ -361,31 +362,20 @@ Error Ip6::RemoveMplOption(Message &aMessage)
 
             if (mplOffset == sizeof(ip6Header) + sizeof(hbh) && hbh.GetLength() == 0)
             {
-                // first and only IPv6 Option, remove IPv6 HBH Option header
+                // First and only IPv6 Option, remove IPv6 HBH Option header
                 remove = true;
             }
-            else if (mplOffset + 8 == endOffset)
+            else if (mplOffset + ExtensionHeader::kLengthUnitSize == endOffset)
             {
-                // last IPv6 Option, remove last 8 bytes
+                // Last IPv6 Option, remove the last 8 bytes
                 remove = true;
             }
-
-            offset += option.GetSize();
-            break;
-
-        case Pad1Option::kType:
-            offset += sizeof(Pad1Option);
-            break;
-
-        case PadNOption::kType:
-            offset += option.GetSize();
-            break;
-
-        default:
-            // encountered another option, now just replace MPL Option with PadN
+        }
+        else
+        {
+            // Encountered another option, now just replace
+            // MPL Option with Pad Option
             remove = false;
-            offset += option.GetSize();
-            break;
         }
     }
 
@@ -394,30 +384,33 @@ Error Ip6::RemoveMplOption(Message &aMessage)
 
     if (remove)
     {
-        // last IPv6 Option, shrink HBH Option header
-        aMessage.RemoveHeader(endOffset - 8, 8);
+        // Last IPv6 Option, shrink HBH Option header by
+        // 8 bytes (`kLengthUnitSize`)
+        aMessage.RemoveHeader(endOffset - ExtensionHeader::kLengthUnitSize, ExtensionHeader::kLengthUnitSize);
 
         if (mplOffset == sizeof(ip6Header) + sizeof(hbh))
         {
-            // remove entire HBH header
+            // Remove entire HBH header
             ip6Header.SetNextHeader(hbh.GetNextHeader());
         }
         else
         {
-            // update HBH header length
+            // Update HBH header length, decrement by one
+            // which decreases its total size by 8 bytes.
+
             hbh.SetLength(hbh.GetLength() - 1);
             aMessage.Write(sizeof(ip6Header), hbh);
         }
 
-        ip6Header.SetPayloadLength(ip6Header.GetPayloadLength() - 8);
+        ip6Header.SetPayloadLength(ip6Header.GetPayloadLength() - ExtensionHeader::kLengthUnitSize);
         aMessage.Write(0, ip6Header);
     }
     else if (mplOffset != 0)
     {
-        // replace MPL Option with PadN Option
-        PadNOption padOption;
+        // Replace MPL Option with Pad Option
+        PadOption padOption;
 
-        padOption.Init(sizeof(Option) + mplLength);
+        padOption.InitForPadSize(sizeof(Option) + mplLength);
         aMessage.WriteBytes(mplOffset, &padOption, padOption.GetSize());
     }
 
@@ -529,56 +522,35 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
     Option         option;
+    uint16_t       offset = aMessage.GetOffset();
     uint16_t       endOffset;
 
-    SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), hbhHeader));
-    endOffset = aMessage.GetOffset() + hbhHeader.GetSize();
+    SuccessOrExit(error = aMessage.Read(offset, hbhHeader));
 
+    endOffset = offset + hbhHeader.GetSize();
     VerifyOrExit(endOffset <= aMessage.GetLength(), error = kErrorParse);
 
-    aMessage.MoveOffset(sizeof(option));
+    offset += sizeof(HopByHopHeader);
 
-    while (aMessage.GetOffset() < endOffset)
+    for (; offset < endOffset; offset += option.GetSize())
     {
-        SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), option));
+        SuccessOrExit(error = option.ParseFrom(aMessage, offset, endOffset));
 
-        if (option.GetType() == Pad1Option::kType)
+        if (option.IsPadding())
         {
-            aMessage.MoveOffset(sizeof(Pad1Option));
             continue;
         }
 
-        VerifyOrExit(aMessage.GetOffset() + option.GetSize() <= endOffset, error = kErrorParse);
-
-        switch (option.GetType())
+        if (option.GetType() == MplOption::kType)
         {
-        case MplOption::kType:
-            SuccessOrExit(error = mMpl.ProcessOption(aMessage, aHeader.GetSource(), aIsOutbound, aReceive));
-            break;
-
-        default:
-            switch (option.GetAction())
-            {
-            case Option::kActionSkip:
-                break;
-
-            case Option::kActionDiscard:
-                ExitNow(error = kErrorDrop);
-
-            case Option::kActionForceIcmp:
-                // TODO: send icmp error
-                ExitNow(error = kErrorDrop);
-
-            case Option::kActionIcmp:
-                // TODO: send icmp error
-                ExitNow(error = kErrorDrop);
-            }
-
-            break;
+            SuccessOrExit(error = mMpl.ProcessOption(aMessage, offset, aHeader.GetSource(), aIsOutbound, aReceive));
+            continue;
         }
 
-        aMessage.MoveOffset(option.GetSize());
+        VerifyOrExit(option.GetAction() == Option::kActionSkip, error = kErrorDrop);
     }
+
+    aMessage.SetOffset(offset);
 
 exit:
     return error;

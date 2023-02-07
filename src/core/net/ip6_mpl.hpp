@@ -68,18 +68,7 @@ public:
     static constexpr uint8_t kMinSize = (2 + sizeof(Option)); ///< Minimum size (num of bytes) of `MplOption`
 
     /**
-     * This method initializes the MPL header.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kType);
-        SetLength(sizeof(*this) - sizeof(Option));
-        mControl = 0;
-    }
-
-    /**
-     * MPL Seed Id lengths.
+     * MPL Seed Id Lengths.
      *
      */
     enum SeedIdLength : uint8_t
@@ -91,23 +80,22 @@ public:
     };
 
     /**
+     * This method initializes the MPL Option.
+     *
+     * The @p aSeedIdLength MUST be either `kSeedIdLength0` or `kSeedIdLength2`. Other values are not supported.
+     *
+     * @param[in] aSeedIdLength   The MPL Seed Id Length.
+     *
+     */
+    void Init(SeedIdLength aSeedIdLength);
+
+    /**
      * This method returns the MPL Seed Id Length value.
      *
      * @returns The MPL Seed Id Length value.
      *
      */
     SeedIdLength GetSeedIdLength(void) const { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
-
-    /**
-     * This method sets the MPL Seed Id Length value.
-     *
-     * @param[in]  aSeedIdLength  The MPL Seed Length.
-     *
-     */
-    void SetSeedIdLength(SeedIdLength aSeedIdLength)
-    {
-        mControl = static_cast<uint8_t>((mControl & ~kSeedIdLengthMask) | aSeedIdLength);
-    }
 
     /**
      * This method indicates whether or not the MPL M flag is set.
@@ -204,6 +192,7 @@ public:
      * timer expirations for subsequent retransmissions.
      *
      * @param[in]  aMessage    A reference to the message.
+     * @param[in]  aOffset     The offset in @p aMessage to read the MPL option.
      * @param[in]  aAddress    A reference to the IPv6 Source Address.
      * @param[in]  aIsOutbound TRUE if this message was locally generated, FALSE otherwise.
      * @param[out] aReceive    Set to FALSE if the MPL message is a duplicate and must not
@@ -213,7 +202,7 @@ public:
      * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
      *
      */
-    Error ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive);
+    Error ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool aIsOutbound, bool &aReceive);
 
 #if OPENTHREAD_FTD
     /**
