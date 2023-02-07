@@ -871,10 +871,14 @@ void RouterTable::HandleTableChanged(void)
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     LogRouteTable();
 #endif
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordRouterTableChange();
+#endif
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-void RouterTable::LogRouteTable(void)
+void RouterTable::LogRouteTable(void) const
 {
     static constexpr uint16_t kStringSize = 128;
 

@@ -103,6 +103,15 @@ const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otIns
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNeighborHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
+const otHistoryTrackerRouterInfo *otHistoryTrackerIterateRouterHistory(otInstance               *aInstance,
+                                                                       otHistoryTrackerIterator *aIterator,
+                                                                       uint32_t                 *aEntryAge)
+{
+    AssertPointerIsNotNull(aEntryAge);
+
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateRouterHistory(AsCoreType(aIterator), *aEntryAge);
+}
+
 const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHistory(otInstance               *aInstance,
                                                                                    otHistoryTrackerIterator *aIterator,
                                                                                    uint32_t                 *aEntryAge)

@@ -17,6 +17,7 @@ Usage : `history [command] ...`
 - [netinfo](#netinfo)
 - [prefix](#prefix)
 - [route](#route)
+- [router](#router)
 - [rx](#rx)
 - [rxtx](#rxtx)
 - [tx](#tx)
@@ -56,6 +57,7 @@ neighbor
 netinfo
 prefix
 route
+router
 rx
 rxtx
 tx
@@ -298,7 +300,7 @@ Print the history as a list.
 00:06:01.711 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:med rloc16:0x8800
 ```
 
-### prefix
+### route
 
 Usage `history route [list] [<num-entries>]`
 
@@ -334,6 +336,82 @@ Print the history as a list (last two entries).
 > history route list 2
 00:00:48.704 -> event:Removed route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
 00:01:12.558 -> event:Added route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
+Done
+```
+
+### router
+
+Usage `history router [list] [<num-entries>]`
+
+Print the route table history. Each item provides:
+
+- Event (`Added`, `Removed`, `NextHopChnaged`, `CostChanged`)
+- Router ID and RLOC16 of router
+- Next Hop (Router ID and RLOC16) - `none` if no next hop.
+- Path cost (old `->` new) - `inf` to indicate infinite path cost.
+
+Print the history as a table.
+
+```bash
+> history router
+| Age                  | Event          | ID (RLOC16) | Next Hop    | Path Cost  |
++----------------------+----------------+-------------+-------------+------------+
+|         00:00:05.258 | NextHopChanged |  7 (0x1c00) | 34 (0x8800) | inf ->   3 |
+|         00:00:08.604 | NextHopChanged | 34 (0x8800) | 34 (0x8800) | inf ->   2 |
+|         00:00:08.604 | Added          |  7 (0x1c00) |        none | inf -> inf |
+|         00:00:11.931 | Added          | 34 (0x8800) |        none | inf -> inf |
+|         00:00:14.948 | Removed        | 59 (0xec00) |        none | inf -> inf |
+|         00:00:14.948 | Removed        | 54 (0xd800) |        none | inf -> inf |
+|         00:00:14.948 | Removed        | 34 (0x8800) |        none | inf -> inf |
+|         00:00:14.948 | Removed        |  7 (0x1c00) |        none | inf -> inf |
+|         00:00:54.795 | NextHopChanged | 59 (0xec00) | 34 (0x8800) |   1 ->   5 |
+|         00:02:33.735 | NextHopChanged | 54 (0xd800) |        none |  15 -> inf |
+|         00:03:10.915 | CostChanged    | 54 (0xd800) | 34 (0x8800) |  13 ->  15 |
+|         00:03:45.716 | NextHopChanged | 54 (0xd800) | 34 (0x8800) |  15 ->  13 |
+|         00:03:46.188 | CostChanged    | 54 (0xd800) | 59 (0xec00) |  13 ->  15 |
+|         00:04:19.124 | CostChanged    | 54 (0xd800) | 59 (0xec00) |  11 ->  13 |
+|         00:04:52.008 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   9 ->  11 |
+|         00:05:23.176 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   7 ->   9 |
+|         00:05:51.081 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   5 ->   7 |
+|         00:06:48.721 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   3 ->   5 |
+|         00:07:13.792 | NextHopChanged | 54 (0xd800) | 59 (0xec00) |   1 ->   3 |
+|         00:09:28.681 | NextHopChanged |  7 (0x1c00) | 34 (0x8800) | inf ->   3 |
+|         00:09:31.882 | Added          |  7 (0x1c00) |        none | inf -> inf |
+|         00:09:51.240 | NextHopChanged | 54 (0xd800) | 54 (0xd800) | inf ->   1 |
+|         00:09:54.204 | Added          | 54 (0xd800) |        none | inf -> inf |
+|         00:10:20.645 | NextHopChanged | 34 (0x8800) | 34 (0x8800) | inf ->   2 |
+|         00:10:24.242 | NextHopChanged | 59 (0xec00) | 59 (0xec00) | inf ->   1 |
+|         00:10:24.242 | Added          | 34 (0x8800) |        none | inf -> inf |
+|         00:10:41.900 | NextHopChanged | 59 (0xec00) |        none |   1 -> inf |
+|         00:10:42.480 | Added          |  3 (0x0c00) |  3 (0x0c00) | inf -> inf |
+|         00:10:43.614 | Added          | 59 (0xec00) | 59 (0xec00) | inf ->   1 |
+Done
+```
+
+Print the history as a list (last 20 entries).
+
+```bash
+> history router list 20
+00:00:06.959 -> event:NextHopChanged router:7(0x1c00) nexthop:34(0x8800) old-cost:inf new-cost:3
+00:00:10.305 -> event:NextHopChanged router:34(0x8800) nexthop:34(0x8800) old-cost:inf new-cost:2
+00:00:10.305 -> event:Added router:7(0x1c00) nexthop:none old-cost:inf new-cost:inf
+00:00:13.632 -> event:Added router:34(0x8800) nexthop:none old-cost:inf new-cost:inf
+00:00:16.649 -> event:Removed router:59(0xec00) nexthop:none old-cost:inf new-cost:inf
+00:00:16.649 -> event:Removed router:54(0xd800) nexthop:none old-cost:inf new-cost:inf
+00:00:16.649 -> event:Removed router:34(0x8800) nexthop:none old-cost:inf new-cost:inf
+00:00:16.649 -> event:Removed router:7(0x1c00) nexthop:none old-cost:inf new-cost:inf
+00:00:56.496 -> event:NextHopChanged router:59(0xec00) nexthop:34(0x8800) old-cost:1 new-cost:5
+00:02:35.436 -> event:NextHopChanged router:54(0xd800) nexthop:none old-cost:15 new-cost:inf
+00:03:12.616 -> event:CostChanged router:54(0xd800) nexthop:34(0x8800) old-cost:13 new-cost:15
+00:03:47.417 -> event:NextHopChanged router:54(0xd800) nexthop:34(0x8800) old-cost:15 new-cost:13
+00:03:47.889 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:13 new-cost:15
+00:04:20.825 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:11 new-cost:13
+00:04:53.709 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:9 new-cost:11
+00:05:24.877 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:7 new-cost:9
+00:05:52.782 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:5 new-cost:7
+00:06:50.422 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:3 new-cost:5
+00:07:15.493 -> event:NextHopChanged router:54(0xd800) nexthop:59(0xec00) old-cost:1 new-cost:3
+00:09:30.382 -> event:NextHopChanged router:7(0x1c00) nexthop:34(0x8800) old-cost:inf new-cost:3
 Done
 ```
 

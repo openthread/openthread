@@ -256,6 +256,92 @@ exit:
     return error;
 }
 
+template <> otError History::Process<Cmd("router")>(Arg aArgs[])
+{
+    static const char *const kEventString[] = {
+        /* (0) OT_HISTORY_TRACKER_ROUTER_EVENT_ADDED             -> */ "Added",
+        /* (1) OT_HISTORY_TRACKER_ROUTER_EVENT_REMOVED           -> */ "Removed",
+        /* (2) OT_HISTORY_TRACKER_ROUTER_EVENT_NEXT_HOP_CHANGED  -> */ "NextHopChanged",
+        /* (3) OT_HISTORY_TRACKER_ROUTER_EVENT_COST_CHANGED      -> */ "CostChanged",
+    };
+
+    constexpr uint8_t kRouterIdOffset = 10; // Bit offset of Router ID in RLOC16
+
+    otError                           error;
+    bool                              isList;
+    uint16_t                          numEntries;
+    otHistoryTrackerIterator          iterator;
+    const otHistoryTrackerRouterInfo *info;
+    uint32_t                          entryAge;
+    char                              ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+
+    static_assert(0 == OT_HISTORY_TRACKER_ROUTER_EVENT_ADDED, "EVENT_ADDED is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_ROUTER_EVENT_REMOVED, "EVENT_REMOVED is incorrect");
+    static_assert(2 == OT_HISTORY_TRACKER_ROUTER_EVENT_NEXT_HOP_CHANGED, "EVENT_NEXT_HOP_CHANGED is incorrect");
+    static_assert(3 == OT_HISTORY_TRACKER_ROUTER_EVENT_COST_CHANGED, "EVENT_COST_CHANGED is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event          | ID (RlOC16) | Next Hop   | Path Cost   |
+        // +----------------------+----------------+-------------+------------+-------------+
+
+        static const char *const kRouterInfoTitles[] = {
+            "Age", "Event", "ID (RLOC16)", "Next Hop", "Path Cost",
+        };
+
+        static const uint8_t kRouterInfoColumnWidths[] = {22, 16, 13, 13, 12};
+
+        OutputTableHeader(kRouterInfoTitles, kRouterInfoColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateRouterHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        OutputFormat(isList ? "%s -> event:%s router:%u(0x%04x) nexthop:" : "| %20s | %-14s | %2u (0x%04x) | ",
+                     ageString, kEventString[info->mEvent], info->mRouterId,
+                     static_cast<uint16_t>(info->mRouterId) << kRouterIdOffset);
+
+        if (info->mNextHop != OT_HISTORY_TRACKER_NO_NEXT_HOP)
+        {
+            OutputFormat(isList ? "%u(0x%04x)" : "%2u (0x%04x)", info->mNextHop,
+                         static_cast<uint16_t>(info->mNextHop) << kRouterIdOffset);
+        }
+        else
+        {
+            OutputFormat(isList ? "%s" : "%11s", "none");
+        }
+
+        if (info->mOldPathCost != OT_HISTORY_TRACKER_INFINITE_PATH_COST)
+        {
+            OutputFormat(isList ? " old-cost:%u" : " | %3u ->", info->mOldPathCost);
+        }
+        else
+        {
+            OutputFormat(isList ? " old-cost:inf" : " | inf ->");
+        }
+
+        if (info->mPathCost != OT_HISTORY_TRACKER_INFINITE_PATH_COST)
+        {
+            OutputLine(isList ? " new-cost:%u" : " %3u |", info->mPathCost);
+        }
+        else
+        {
+            OutputLine(isList ? " new-cost:inf" : " inf |");
+        }
+    }
+
+exit:
+    return error;
+}
+
 template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
 {
     otError                            error;
@@ -659,7 +745,7 @@ otError History::Process(Arg aArgs[])
 
     static constexpr Command kCommands[] = {
         CmdEntry("ipaddr"), CmdEntry("ipmaddr"), CmdEntry("neighbor"), CmdEntry("netinfo"), CmdEntry("prefix"),
-        CmdEntry("route"),  CmdEntry("rx"),      CmdEntry("rxtx"),     CmdEntry("tx"),
+        CmdEntry("route"),  CmdEntry("router"),  CmdEntry("rx"),       CmdEntry("rxtx"),    CmdEntry("tx"),
     };
 
 #undef CmdEntry
