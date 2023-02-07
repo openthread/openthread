@@ -114,7 +114,7 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         # 5
 
         self.nodes[ROUTER2].start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.ROUTER_RESET_DELAY)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)

@@ -37,7 +37,7 @@ proc skip_on_macos {} {
 
 proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
     set timeout 1
-    for {set i 0} {$i < 20} {incr i} {
+    for {set i 0} {$i < 40} {incr i} {
         if {$command != ""} {
             send "$command\n"
         }

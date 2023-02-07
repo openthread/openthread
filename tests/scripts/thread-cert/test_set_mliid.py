@@ -63,7 +63,7 @@ class Test_SetMlIid(thread_cert.TestCase):
         self.nodes[LEADER].reset()
 
         self.nodes[LEADER].start()
-        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_RESET_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         # Ensure ML-IID is persistent after reset.

@@ -838,6 +838,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         # Turn off Router 1.1 and turn on Router 1.2
         self.nodes[ROUTER_1_1].stop()
         self.nodes[ROUTER_1_2].start()
+        self.simulator.go(config.ROUTER_RESET_DELAY)
         for id in [FED_1, MED_1, SED_1]:
             self.simulator.go(config.DEFAULT_CHILD_TIMEOUT + WAIT_REDUNDANCE)
 
