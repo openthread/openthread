@@ -391,6 +391,11 @@ otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, ui
 }
 #endif
 
+bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId)
+{
+    return AsCoreType(aInstance).Get<RouterTable>().IsAllocated(aRouterId);
+}
+
 void otThreadGetNextHopAndPathCost(otInstance *aInstance,
                                    uint16_t    aDestRloc16,
                                    uint16_t   *aNextHopRloc16,

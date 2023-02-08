@@ -5465,30 +5465,98 @@ exit:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_FTD
-/**
- * @cli nexthop
- * @code
- * nexthop 0xc000
- * 0xc000 cost:0
- * Done
- * nexthop 0x8001
- * 0x2000 cost:3
- * Done
- * @endcode
- * @cparam nexthop @ca{rloc16}
- * @par api_copy
- * #otThreadGetNextHopAndPathCost
- */
 template <> otError Interpreter::Process<Cmd("nexthop")>(Arg aArgs[])
 {
+    constexpr uint8_t  kRouterIdOffset = 10; // Bit offset of Router ID in RLOC16
+    constexpr uint16_t kInvalidRloc16  = 0xfffe;
+
     otError  error = OT_ERROR_NONE;
     uint16_t destRloc16;
     uint16_t nextHopRloc16;
     uint8_t  pathCost;
 
-    SuccessOrExit(error = aArgs[0].ParseAsUint16(destRloc16));
-    otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
-    OutputLine("0x%04x cost:%u", nextHopRloc16, pathCost);
+    /**
+     * @cli nexthop
+     * @code
+     * nexthop
+     * | ID   |NxtHop| Cost |
+     * +------+------+------+
+     * |    9 |    9 |    1 |
+     * |   25 |   25 |    0 |
+     * |   30 |   30 |    1 |
+     * |   46 |    - |    - |
+     * |   50 |   30 |    3 |
+     * |   60 |   30 |    2 |
+     * Done
+     * @endcode
+     * @par
+     * Output table of allocated Router IDs and current next hop and path
+     * cost for each router.
+     * @sa otThreadGetNextHopAndPathCost
+     * @sa otThreadIsRouterIdAllocated
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        static const char *const kNextHopTableTitles[] = {
+            "ID",
+            "NxtHop",
+            "Cost",
+        };
+
+        static const uint8_t kNextHopTableColumnWidths[] = {
+            6,
+            6,
+            6,
+        };
+
+        OutputTableHeader(kNextHopTableTitles, kNextHopTableColumnWidths);
+
+        for (uint8_t routerId = 0; routerId <= OT_NETWORK_MAX_ROUTER_ID; routerId++)
+        {
+            if (!otThreadIsRouterIdAllocated(GetInstancePtr(), routerId))
+            {
+                continue;
+            }
+
+            destRloc16 = routerId;
+            destRloc16 <<= kRouterIdOffset;
+
+            otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
+
+            OutputFormat("| %4u | ", routerId);
+
+            if (nextHopRloc16 != kInvalidRloc16)
+            {
+                OutputLine("%4u | %4u |", nextHopRloc16 >> kRouterIdOffset, pathCost);
+            }
+            else
+            {
+                OutputLine("%4s | %4s |", "-", "-");
+            }
+        }
+    }
+    /**
+     * @cli nexthop (get)
+     * @code
+     * nexthop 0xc000
+     * 0xc000 cost:0
+     * Done
+     * @endcode
+     * @code
+     * nexthop 0x8001
+     * 0x2000 cost:3
+     * Done
+     * @endcode
+     * @cparam nexthop @ca{rloc16}
+     * @par api_copy
+     * #otThreadGetNextHopAndPathCost
+     */
+    else
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint16(destRloc16));
+        otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
+        OutputLine("0x%04x cost:%u", nextHopRloc16, pathCost);
+    }
 
 exit:
     return error;
