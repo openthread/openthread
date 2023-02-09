@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <sys/time.h>
 
+#include <openthread/cli.h>
 #include <openthread/dataset.h>
 #include <openthread/link.h>
 #include <openthread/random_noncrypto.h>
@@ -169,39 +170,90 @@ static otRadioKeyType   sKeyType;
 static int8_t GetRssi(uint16_t aChannel);
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-static uint8_t sDeniedNodeIdsBitVector[(MAX_NETWORK_SIZE + 7) / 8];
+
+static enum {
+    kFilterOff,
+    kFilterDenyList,
+    kFilterAllowList,
+} sFilterMode = kFilterOff;
+
+static uint8_t sFilterNodeIdsBitVector[(MAX_NETWORK_SIZE + 7) / 8];
+
+static bool FilterContainsId(uint16_t aNodeId)
+{
+    uint16_t index = aNodeId - 1;
+
+    return (sFilterNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) != 0;
+}
 
 static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
 {
-    uint16_t index = aNodeId - 1;
+    bool isConnectable = true;
 
-    return (sDeniedNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) == 0;
+    switch (sFilterMode)
+    {
+    case kFilterOff:
+        break;
+    case kFilterDenyList:
+        isConnectable = !FilterContainsId(aNodeId);
+        break;
+    case kFilterAllowList:
+        isConnectable = FilterContainsId(aNodeId);
+        break;
+    }
+
+    return isConnectable;
 }
 
-static void NodeIdFilterDeny(uint16_t aNodeId)
+static void AddNodeIdToFilter(uint16_t aNodeId)
 {
     uint16_t index = aNodeId - 1;
 
-    sDeniedNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
+    sFilterNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
 }
 
-static void NodeIdFilterClear(void) { memset(sDeniedNodeIdsBitVector, 0, sizeof(sDeniedNodeIdsBitVector)); }
+OT_TOOL_WEAK void otCliOutputFormat(const char *aFmt, ...) { OT_UNUSED_VARIABLE(aFmt); }
 
 otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aContext);
 
     otError error = OT_ERROR_NONE;
+    bool    deny  = false;
 
-    otEXPECT_ACTION(aArgsLength > 0, error = OT_ERROR_INVALID_COMMAND);
+    if (aArgsLength == 0)
+    {
+        switch (sFilterMode)
+        {
+        case kFilterOff:
+            otCliOutputFormat("off");
+            break;
+        case kFilterDenyList:
+            otCliOutputFormat("deny-list");
+            break;
+        case kFilterAllowList:
+            otCliOutputFormat("allow-list");
+            break;
+        }
 
-    if (!strcmp(aArgs[0], "clear"))
+        for (uint16_t nodeId = 0; nodeId <= MAX_NETWORK_SIZE; nodeId++)
+        {
+            if (FilterContainsId(nodeId))
+            {
+                otCliOutputFormat(" %d", nodeId);
+            }
+        }
+
+        otCliOutputFormat("\r\n");
+    }
+    else if (!strcmp(aArgs[0], "clear"))
     {
         otEXPECT_ACTION(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
 
-        NodeIdFilterClear();
+        memset(sFilterNodeIdsBitVector, 0, sizeof(sFilterNodeIdsBitVector));
+        sFilterMode = kFilterOff;
     }
-    else if (!strcmp(aArgs[0], "deny"))
+    else if ((deny = !strcmp(aArgs[0], "deny")) || !strcmp(aArgs[0], "allow"))
     {
         uint16_t nodeId;
         char    *endptr;
@@ -213,7 +265,10 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
         otEXPECT_ACTION(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
         otEXPECT_ACTION(1 <= nodeId && nodeId <= MAX_NETWORK_SIZE, error = OT_ERROR_INVALID_ARGS);
 
-        NodeIdFilterDeny(nodeId);
+        otEXPECT_ACTION(sFilterMode != (deny ? kFilterAllowList : kFilterDenyList), error = OT_ERROR_INVALID_STATE);
+
+        AddNodeIdToFilter(nodeId);
+        sFilterMode = deny ? kFilterDenyList : kFilterAllowList;
     }
     else
     {

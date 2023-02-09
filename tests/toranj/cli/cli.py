@@ -724,6 +724,18 @@ class Node(object):
         self._cli_no_output('macfilter rss add-lqi', node.get_ext_addr(), lqi)
 
     # ------------------------------------------------------------------------------------------------------------------
+    # Radio nodeidfilter
+
+    def nodeidfilter_clear(self, node):
+        self._cli_no_output('nodeidfilter clear')
+
+    def nodeidfilter_allow(self, node):
+        self._cli_no_output('nodeidfilter allow', node.index)
+
+    def nodeidfilter_deny(self, node):
+        self._cli_no_output('nodeidfilter deny', node.index)
+
+    # ------------------------------------------------------------------------------------------------------------------
     # Parsing helpers
 
     @classmethod
