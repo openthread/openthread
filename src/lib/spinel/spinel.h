@@ -1319,8 +1319,8 @@ enum
     SPINEL_CAP_THREAD__END            = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
-    SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0),
-    SPINEL_CAP_NEST_LEGACY_NET_WAKE  = (SPINEL_CAP_NEST__BEGIN + 1),
+    SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0), ///< deprecated
+    SPINEL_CAP_NEST_LEGACY_NET_WAKE  = (SPINEL_CAP_NEST__BEGIN + 1), ///< deprecated
     SPINEL_CAP_NEST_TRANSMIT_HOOK    = (SPINEL_CAP_NEST__BEGIN + 2),
     SPINEL_CAP_NEST__END             = 15360,
 
@@ -4839,12 +4839,20 @@ enum
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
 
-    /// The legacy network ULA prefix (8 bytes)
-    /** Format: 'D' */
+    /// The legacy network ULA prefix (8 bytes).
+    /** Format: 'D'
+     *
+     * This property is deprecated.
+     *
+     */
     SPINEL_PROP_NEST_LEGACY_ULA_PREFIX = SPINEL_PROP_NEST__BEGIN + 1,
 
     /// The EUI64 of last node joined using legacy protocol (if none, all zero EUI64 is returned).
-    /** Format: 'E' */
+    /** Format: 'E'
+     *
+     * This property is deprecated.
+     *
+     */
     SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED = SPINEL_PROP_NEST__BEGIN + 2,
 
     SPINEL_PROP_NEST__END = 0x3C00,
