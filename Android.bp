@@ -109,7 +109,7 @@ soong_config_module_type {
 
 soong_config_string_variable {
     name: "rcp_bus",
-    values: ["spi", "uart"],
+    values: ["spi", "uart", "hal"],
 }
 
 ot_config_cc_defaults {
@@ -122,10 +122,9 @@ ot_config_cc_defaults {
             spi: {
                 cflags: ["-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI"]
             },
-            uart: {
+            hal: {
                 cflags: [
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1",
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_VENDOR",
                 ]
             },
             conditions_default: {
@@ -146,6 +145,7 @@ cc_library_static {
     local_include_dirs: [
         "include",
         "src",
+        "src/android/thread_network_hal",
         "src/cli",
         "src/core",
         "src/ncp",
@@ -173,6 +173,8 @@ cc_library_static {
     ],
 
     srcs: [
+        "src/android/thread_network_hal/hal_interface.cpp",
+        "src/android/thread_network_hal/vendor_interface.cpp",
         "src/core/api/backbone_router_api.cpp",
         "src/core/api/backbone_router_ftd_api.cpp",
         "src/core/api/border_agent_api.cpp",
@@ -556,6 +558,7 @@ cc_defaults {
         "src/cli",
         "src/core",
         "src/ncp",
+        "src/lib/hdlc",
         "third_party",
         "third_party/mbedtls",
         "third_party/mbedtls/repo/include",
@@ -586,6 +589,7 @@ cc_defaults {
 
 cc_library_static {
     name: "openthread-simulation",
+    vendor: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
@@ -606,13 +610,10 @@ cc_library_static {
         "examples/platforms/simulation/system.c",
         "examples/platforms/simulation/trel.c",
         "examples/platforms/simulation/uart.c",
-
         "examples/platforms/utils/link_metrics.cpp",
         "examples/platforms/utils/mac_frame.cpp",
         "examples/platforms/utils/soft_source_match_table.c",
-
         "src/lib/platform/exit_code.c",
-
         "third_party/mbedtls/repo/library/aes.c",
         "third_party/mbedtls/repo/library/asn1parse.c",
         "third_party/mbedtls/repo/library/asn1write.c",
@@ -643,6 +644,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-radio",
+    vendor: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
@@ -650,6 +652,9 @@ cc_library_static {
     ],
 
     generated_headers: ["ot_version_header"],
+    shared_libs: [
+        "libcutils",
+    ],
 
     srcs: [
         "src/core/api/diags_api.cpp",
@@ -688,9 +693,14 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-hdlc",
+    vendor: true,
     defaults: [
         "ot_rcp_cflags_defaults",
         "ot_simulation_cflags_defaults",
+    ],
+    export_include_dirs: [
+        "include",
+        "src",
     ],
     srcs: [
         "src/lib/hdlc/hdlc.cpp",
@@ -698,11 +708,54 @@ cc_library_static {
 }
 
 cc_library_static {
+    name: "openthread-url",
+    vendor: true,
+    local_include_dirs: [
+        "include",
+        "src",
+        "src/core",
+        "src/lib/url",
+    ],
+    export_include_dirs: [
+        "include",
+        "src",
+    ],
+    srcs: [
+        "src/lib/url/url.cpp",
+    ],
+}
+
+cc_library_static {
+    name: "openthread-platform",
+    vendor: true,
+    local_include_dirs: [
+        "include",
+        "src",
+        "src/core",
+        "src/lib/platform",
+    ],
+    export_include_dirs: [
+        "include",
+        "src",
+    ],
+    srcs: [
+        "src/lib/platform/exit_code.c",
+    ],
+}
+
+
+cc_library_static {
     name: "openthread-spinel-rcp",
+    vendor: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
         "ot_simulation_cflags_defaults",
+    ],
+
+    export_include_dirs: [
+        "include",
+        "src",
     ],
 
     srcs: [
@@ -715,6 +768,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-rcp",
+    vendor: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
@@ -733,7 +787,7 @@ cc_library_static {
 
 cc_binary {
     name: "ot-rcp",
-
+    vendor: true,
     defaults: [
         "ot_rcp_cflags_defaults",
         "ot_simulation_cflags_defaults",
@@ -760,3 +814,56 @@ cc_binary {
     ],
 }
 
+cc_library_static {
+    name: "openthread-posix",
+    vendor: true,
+    local_include_dirs: [
+        "include",
+        "src",
+        "src/core",
+        "src/lib/platform",
+        "src/posix/platform",
+        "src/posix/platform/include",
+    ],
+    export_include_dirs: [
+        "include",
+        "src/core",
+        "src/posix/platform",
+        "src/posix/platform/include",
+    ],
+
+    cflags: [
+        "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
+        "-DOPENTHREAD_OSIX_CONFIG_RCP_PTY_ENABLE=1",
+    ],
+
+    cppflags: [
+        "-Wno-non-virtual-dtor",
+    ],
+
+    srcs: [
+        "src/posix/platform/alarm.cpp",
+        "src/posix/platform/mainloop.cpp",
+        "src/posix/platform/hdlc_interface.cpp",
+    ],
+}
+
+cc_library_static {
+    name: "openthread-common",
+    vendor: true,
+    local_include_dirs: [
+        "include",
+        "src",
+        "src/core",
+    ],
+
+    export_include_dirs: [
+        "include",
+        "src/core",
+    ],
+
+    srcs: [
+        "src/core/common/error.cpp",
+        "src/core/api/error_api.cpp",
+    ],
+}
