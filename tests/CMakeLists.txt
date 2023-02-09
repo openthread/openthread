@@ -26,10 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_PLATFORM STREQUAL "simulation")
-    if(OT_FTD)
-        add_subdirectory(unit)
-    endif()
+if(OT_FTD AND BUILD_TESTING)
+    add_subdirectory(unit)
 endif()
 
 option(OT_FUZZ_TARGETS "enable fuzz targets" OFF)

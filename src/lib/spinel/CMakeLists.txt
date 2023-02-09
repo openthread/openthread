@@ -84,3 +84,11 @@ target_link_libraries(openthread-spinel-rcp
         ot-config-radio
         ot-config
 )
+
+add_executable(ot-test-spinel
+    spinel.c
+)
+target_compile_definitions(ot-test-spinel
+    PRIVATE -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
+)
+add_test(NAME ot-test-spinel COMMAND ot-test-spinel)

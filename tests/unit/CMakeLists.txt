@@ -60,6 +60,8 @@ target_link_libraries(ot-test-platform
 )
 
 set(COMMON_LIBS
+    openthread-spinel-ncp
+    openthread-hdlc
     ot-test-platform
     openthread-ftd
     ot-test-platform
@@ -1006,6 +1008,15 @@ add_executable(ot-test-timer
     test_timer.cpp
 )
 
+add_executable(ot-test-toolchain
+    test_toolchain.cpp test_toolchain_c.c
+)
+target_include_directories(ot-test-toolchain
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+add_test(NAME ot-test-toolchain COMMAND ot-test-toolchain)
+
 target_include_directories(ot-test-timer
     PRIVATE
         ${COMMON_INCLUDES}
@@ -1043,3 +1054,88 @@ target_link_libraries(ot-test-tlv
 )
 
 add_test(NAME ot-test-tlv COMMAND ot-test-tlv)
+
+add_executable(ot-test-hdlc
+    test_hdlc.cpp
+)
+target_include_directories(ot-test-hdlc
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+target_compile_options(ot-test-hdlc
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+target_link_libraries(ot-test-hdlc
+    PRIVATE
+        ${COMMON_LIBS}
+)
+add_test(NAME ot-test-hdlc COMMAND ot-test-hdlc)
+
+add_executable(ot-test-spinel-buffer
+    test_spinel_buffer.cpp
+)
+target_include_directories(ot-test-spinel-buffer
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+target_compile_options(ot-test-spinel-buffer
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+target_link_libraries(ot-test-spinel-buffer
+    PRIVATE
+        ${COMMON_LIBS}
+)
+add_test(NAME ot-test-spinel-buffer COMMAND ot-test-spinel-buffer)
+
+add_executable(ot-test-spinel-decoder
+    test_spinel_decoder.cpp
+)
+target_include_directories(ot-test-spinel-decoder
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+target_compile_options(ot-test-spinel-decoder
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+target_link_libraries(ot-test-spinel-decoder
+    PRIVATE
+        ${COMMON_LIBS}
+)
+add_test(NAME ot-test-spinel-decoder COMMAND ot-test-spinel-decoder)
+
+add_executable(ot-test-spinel-encoder
+    test_spinel_encoder.cpp
+)
+target_include_directories(ot-test-spinel-encoder
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+target_compile_options(ot-test-spinel-encoder
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+target_link_libraries(ot-test-spinel-encoder
+    PRIVATE
+        ${COMMON_LIBS}
+)
+add_test(NAME ot-test-spinel-encoder COMMAND ot-test-spinel-encoder)
+
+add_executable(ot-test-address-sanitizer
+    test_address_sanitizer.cpp
+)
+target_include_directories(ot-test-address-sanitizer
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+target_compile_options(ot-test-address-sanitizer
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+target_link_libraries(ot-test-address-sanitizer
+    PRIVATE
+        ${COMMON_LIBS}
+)
+add_test(NAME ot-test-address-sanitizer COMMAND ot-test-address-sanitizer)
