@@ -208,6 +208,14 @@ void InitTest(void)
     VerifyOrQuit(otThreadGetDeviceRole(sInstance) == OT_DEVICE_ROLE_LEADER);
 }
 
+void FinalizeTest(void)
+{
+    SuccessOrQuit(otIp6SetEnabled(sInstance, false));
+    SuccessOrQuit(otThreadSetEnabled(sInstance, false));
+    SuccessOrQuit(otInstanceErasePersistentInfo(sInstance));
+    testFreeInstance(sInstance);
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 
 enum UpdateHandlerMode
@@ -458,7 +466,7 @@ void TestSrpServerBase(void)
     // Finalize OT instance and validate all heap allocations are freed.
 
     Log("Finalizing OT instance");
-    testFreeInstance(sInstance);
+    FinalizeTest();
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
@@ -570,7 +578,7 @@ void TestSrpServerReject(void)
     // Finalize OT instance and validate all heap allocations are freed.
 
     Log("Finalizing OT instance");
-    testFreeInstance(sInstance);
+    FinalizeTest();
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 
@@ -682,7 +690,7 @@ void TestSrpServerIgnore(void)
     // Finalize OT instance and validate all heap allocations are freed.
 
     Log("Finalizing OT instance");
-    testFreeInstance(sInstance);
+    FinalizeTest();
 
     VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
 

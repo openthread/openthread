@@ -39,6 +39,7 @@
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/tasklet.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
@@ -416,16 +417,6 @@ public:
     Error SetRouterIdRange(uint8_t aMinRouterId, uint8_t aMaxRouterId);
 #endif
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    /**
-     * This method logs the route table.
-     *
-     */
-    void LogRouteTable(void) const;
-#else
-    void LogRouteTable(void) const {}
-#endif
-
     // The following methods are intended to support range-based `for`
     // loop iteration over the router and should not be used
     // directly.
@@ -446,6 +437,10 @@ private:
     {
         return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }
+
+    void SignalTableChanged(void);
+    void HandleTableChanged(void);
+    void LogRouteTable(void);
 
     class RouterIdMap
     {
@@ -478,7 +473,10 @@ private:
         uint8_t mIndexes[Mle::kMaxRouterId + 1];
     };
 
+    using ChangedTask = TaskletIn<RouterTable, &RouterTable::HandleTableChanged>;
+
     Array<Router, Mle::kMaxRouters> mRouters;
+    ChangedTask                     mChangedTask;
     RouterIdMap                     mRouterIdMap;
     TimeMilli                       mRouterIdSequenceLastUpdated;
     uint8_t                         mRouterIdSequence;

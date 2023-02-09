@@ -58,7 +58,6 @@ HISTORY_TRACKER                      ?= 1
 IP6_FRAGM                            ?= 1
 JAM_DETECTION                        ?= 1
 JOINER                               ?= 1
-LEGACY                               ?= 1
 LINK_RAW                             ?= 0
 LOG_OUTPUT                           ?= PLATFORM_DEFINED
 MAC_FILTER                           ?= 1

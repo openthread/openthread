@@ -144,7 +144,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
             self.nodes[BBR_1].set_domain_prefix(config.DOMAIN_PREFIX)
             self.nodes[BBR_1].enable_backbone_router()
             self.nodes[BBR_1].start()
-            WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
+            WAIT_TIME = config.ROUTER_RESET_DELAY
             self.simulator.go(WAIT_TIME)
             self.assertEqual(self.nodes[BBR_1].get_state(), 'router')
             WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
@@ -229,7 +229,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         self.nodes[BBR_2].enable_backbone_router()
         self.nodes[BBR_2].interface_up()
         self.nodes[BBR_2].thread_start()
-        WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
+        WAIT_TIME = config.ROUTER_RESET_DELAY
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_2].get_state(), 'router')
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE

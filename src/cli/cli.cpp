@@ -3101,6 +3101,31 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (aArgs[0] == "compression")
     {
+        /**
+         * @cli dns compression
+         * @code
+         * dns compression
+         * Enabled
+         * @endcode
+         * @code
+         * dns compression disable
+         * Done
+         * dns compression
+         * Disabled
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otDnsSetNameCompressionEnabled
+         * @cparam dns compression [{@ca{enable|disable}]
+         * @par
+         * Set the "DNS name compression" mode.
+         * @par
+         * By default DNS name compression is enabled. When disabled,
+         * DNS names are appended as full and never compressed. This
+         * is applicable to OpenThread's DNS and SRP client/server
+         * modules."
+         * 'OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE' is required.
+         */
         if (aArgs[1].IsEmpty())
         {
             OutputEnabledDisabledStatus(otDnsIsNameCompressionEnabled());
@@ -3115,8 +3140,28 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
     }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
     else if (aArgs[0] == "config")
     {
+        /**
+         * @cli dns config
+         * @code
+         * dns config
+         * Server: [fd00:0:0:0:0:0:0:1]:1234
+         * ResponseTimeout: 5000 ms
+         * MaxTxAttempts: 2
+         * RecursionDesired: no
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otDnsClientGetDefaultConfig
+         * @par
+         * The config includes the server IPv6 address and port, response
+         * timeout in msec (wait time to rx response), maximum tx attempts
+         * before reporting failure, boolean flag to indicate whether the server
+         * can resolve the query recursively or not.
+         * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
+         */
         if (aArgs[1].IsEmpty())
         {
             const otDnsQueryConfig *defaultConfig = otDnsClientGetDefaultConfig(GetInstancePtr());
@@ -3128,12 +3173,79 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             OutputLine("RecursionDesired: %s",
                        (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
         }
+        /**
+         * @cli dns config (set)
+         * @code
+         * dns config fd00::1 1234 5000 2 0
+         * Done
+         * @endcode
+         * @code
+         * dns config
+         * Server: [fd00:0:0:0:0:0:0:1]:1234
+         * ResponseTimeout: 5000 ms
+         * MaxTxAttempts: 2
+         * RecursionDesired: no
+         * Done
+         * @endcode
+         * @code
+         * dns config fd00::2
+         * Done
+         * @endcode
+         * @code
+         * dns config
+         * Server: [fd00:0:0:0:0:0:0:2]:53
+         * ResponseTimeout: 3000 ms
+         * MaxTxAttempts: 3
+         * RecursionDesired: yes
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otDnsClientSetDefaultConfig
+         * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}]
+         * [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+         * @par
+         * We can leave some of the fields as unspecified (or use value zero). The
+         * unspecified fields are replaced by the corresponding OT config option
+         * definitions OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT to form the default
+         * query config.
+         * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
+         */
         else
         {
             SuccessOrExit(error = GetDnsConfig(aArgs + 1, config));
             otDnsClientSetDefaultConfig(GetInstancePtr(), config);
         }
     }
+    /**
+     * @cli dns resolve
+     * @code
+     * dns resolve ipv6.google.com
+     * DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
+     * @endcode
+     * @code
+     * dns resolve example.com 8.8.8.8
+     * Synthesized IPv6 DNS server address: fdde:ad00:beef:2:0:0:808:808
+     * DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otDnsClientResolveAddress
+     * @cparam dns resolve [@ca<hostname>] [@ca{dns-server-IP}] [@ca{dns-server-port] [@ca{response-timeout-ms}]
+     * [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+     * @par
+     * Send DNS Query to obtain IPv6 address for given hostname.
+     * @par
+     * The parameters after hostname are optional. Any unspecified (or zero) value
+     * for these optional parameters is replaced by the value from the current default
+     * config (dns config).
+     * @par
+     * The DNS server IP can be an IPv4 address, which will be synthesized to an
+     * IPv6 address using the preferred NAT64 prefix from the network data.
+     * @par
+     * Note: The command will return InvalidState when the DNS server IP is an IPv4
+     * address but the preferred NAT64 prefix is unavailable.
+     * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
+     */
     else if (aArgs[0] == "resolve")
     {
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -3153,6 +3265,38 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
     }
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    /**
+     * @cli dns browse
+     * @code
+     * dns browse _service._udp.example.com
+     * DNS browse response for _service._udp.example.com.
+     * inst1
+     *     Port:1234, Priority:1, Weight:2, TTL:7200
+     *     Host:host.example.com.
+     *     HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+     *     TXT:[a=6531, b=6c12] TTL:7300
+     * instance2
+     *     Port:1234, Priority:1, Weight:2, TTL:7200
+     *     Host:host.example.com.
+     *     HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+     *     TXT:[a=1234] TTL:7300
+     * Done
+     * @endcode
+     * @cparam dns browse [@ca<service-name>] [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}]
+     *[@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+     * @par api_copy
+     * #otDnsClientBrowse
+     * @par
+     * The parameters after `service-name` are optional. Any unspecified (or zero) value
+     * for these optional parameters is replaced by the value from the current default
+     * config (`dns config`).
+     * @par
+     * Note: The DNS server IP can be an IPv4 address, which will be synthesized to an
+     * IPv6 address using the preferred NAT64 prefix from the network data. The command
+     * will return `InvalidState` when the DNS server IP is an IPv4 address but the
+     * preferred NAT64 prefix is unavailable.
+     * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
+     **/
     else if (aArgs[0] == "browse")
     {
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -3161,6 +3305,25 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
                                                 &Interpreter::HandleDnsBrowseResponse, this, config));
         error = OT_ERROR_PENDING;
     }
+    /**
+     * @cli dns service
+     * @par api_copy
+     * #otDnsClientResolveService
+     * @par
+     * Send a service instance resolution DNS query for a given service instance.
+     * Service instance label is provided first, followed by the service name
+     * (note that service instance label can contain dot '.' character).
+     * @par
+     * The parameters after `service-name` are optional. Any unspecified (or zero)
+     * value for these optional parameters is replaced by the value from the
+     * current default config (`dns config`).
+     * @par
+     * Note: The DNS server IP can be an IPv4 address, which will be synthesized
+     * to an IPv6 address using the preferred NAT64 prefix from the network data.
+     * The command will return `InvalidState` when the DNS * server IP is an IPv4
+     * address but the preferred NAT64 prefix is unavailable.
+     * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
+     */
     else if (aArgs[0] == "service")
     {
         VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -5333,30 +5496,98 @@ exit:
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_FTD
-/**
- * @cli nexthop
- * @code
- * nexthop 0xc000
- * 0xc000 cost:0
- * Done
- * nexthop 0x8001
- * 0x2000 cost:3
- * Done
- * @endcode
- * @cparam nexthop @ca{rloc16}
- * @par api_copy
- * #otThreadGetNextHopAndPathCost
- */
 template <> otError Interpreter::Process<Cmd("nexthop")>(Arg aArgs[])
 {
+    constexpr uint8_t  kRouterIdOffset = 10; // Bit offset of Router ID in RLOC16
+    constexpr uint16_t kInvalidRloc16  = 0xfffe;
+
     otError  error = OT_ERROR_NONE;
     uint16_t destRloc16;
     uint16_t nextHopRloc16;
     uint8_t  pathCost;
 
-    SuccessOrExit(error = aArgs[0].ParseAsUint16(destRloc16));
-    otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
-    OutputLine("0x%04x cost:%u", nextHopRloc16, pathCost);
+    /**
+     * @cli nexthop
+     * @code
+     * nexthop
+     * | ID   |NxtHop| Cost |
+     * +------+------+------+
+     * |    9 |    9 |    1 |
+     * |   25 |   25 |    0 |
+     * |   30 |   30 |    1 |
+     * |   46 |    - |    - |
+     * |   50 |   30 |    3 |
+     * |   60 |   30 |    2 |
+     * Done
+     * @endcode
+     * @par
+     * Output table of allocated Router IDs and current next hop and path
+     * cost for each router.
+     * @sa otThreadGetNextHopAndPathCost
+     * @sa otThreadIsRouterIdAllocated
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        static const char *const kNextHopTableTitles[] = {
+            "ID",
+            "NxtHop",
+            "Cost",
+        };
+
+        static const uint8_t kNextHopTableColumnWidths[] = {
+            6,
+            6,
+            6,
+        };
+
+        OutputTableHeader(kNextHopTableTitles, kNextHopTableColumnWidths);
+
+        for (uint8_t routerId = 0; routerId <= OT_NETWORK_MAX_ROUTER_ID; routerId++)
+        {
+            if (!otThreadIsRouterIdAllocated(GetInstancePtr(), routerId))
+            {
+                continue;
+            }
+
+            destRloc16 = routerId;
+            destRloc16 <<= kRouterIdOffset;
+
+            otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
+
+            OutputFormat("| %4u | ", routerId);
+
+            if (nextHopRloc16 != kInvalidRloc16)
+            {
+                OutputLine("%4u | %4u |", nextHopRloc16 >> kRouterIdOffset, pathCost);
+            }
+            else
+            {
+                OutputLine("%4s | %4s |", "-", "-");
+            }
+        }
+    }
+    /**
+     * @cli nexthop (get)
+     * @code
+     * nexthop 0xc000
+     * 0xc000 cost:0
+     * Done
+     * @endcode
+     * @code
+     * nexthop 0x8001
+     * 0x2000 cost:3
+     * Done
+     * @endcode
+     * @cparam nexthop @ca{rloc16}
+     * @par api_copy
+     * #otThreadGetNextHopAndPathCost
+     */
+    else
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint16(destRloc16));
+        otThreadGetNextHopAndPathCost(GetInstancePtr(), destRloc16, &nextHopRloc16, &pathCost);
+        OutputLine("0x%04x cost:%u", nextHopRloc16, pathCost);
+    }
 
 exit:
     return error;
@@ -7631,11 +7862,3 @@ exit:
 
 } // namespace Cli
 } // namespace ot
-
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-OT_TOOL_WEAK void otNcpRegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers) { OT_UNUSED_VARIABLE(aHandlers); }
-
-OT_TOOL_WEAK void otNcpHandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix) { OT_UNUSED_VARIABLE(aUlaPrefix); }
-
-OT_TOOL_WEAK void otNcpHandleLegacyNodeDidJoin(const otExtAddress *aExtAddr) { OT_UNUSED_VARIABLE(aExtAddr); }
-#endif

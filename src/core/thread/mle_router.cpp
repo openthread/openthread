@@ -184,6 +184,20 @@ exit:
     return error;
 }
 
+// If the router was a leader or had more than 5 children prior to reset,
+// the multicast link request is retransmitted as a critical message.
+void MleRouter::SetLinkRequestTransmissionCounter(void)
+{
+    uint16_t numOfChildren = mChildTable.GetNumChildren(Child::kInStateValidOrRestoring);
+
+    mLinkRequestAttempts = kMaxTransmissionCount;
+
+    if (mWasLeader || numOfChildren >= kMinCriticalChildrenCount)
+    {
+        mLinkRequestAttempts = kMaxCriticalTransmissionCount;
+    }
+}
+
 Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 {
     Error error = kErrorNone;
@@ -201,7 +215,10 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     switch (mRole)
     {
     case kRoleDetached:
+        SetLinkRequestTransmissionCounter();
         SuccessOrExit(error = SendLinkRequest(nullptr));
+        mLinkRequestAttempts--;
+        ScheduleMessageTransmissionTimer();
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
         break;
 
@@ -865,7 +882,8 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         break;
 
     case Neighbor::kStateInvalid:
-        VerifyOrExit((mChallengeTimeout > 0) && (response == mChallenge), error = kErrorSecurity);
+        VerifyOrExit((mLinkRequestAttempts > 0 || mChallengeTimeout > 0) && (response == mChallenge),
+                     error = kErrorSecurity);
 
         OT_FALL_THROUGH;
 
@@ -930,6 +948,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
             SetStateRouter(GetRloc16());
         }
 
+        mLinkRequestAttempts    = 0; // completed router sync after reset, no more link request to retransmit
         mRetrieveNewNetworkData = true;
         IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kDataRequestTlvs));
 
@@ -1541,7 +1560,7 @@ void MleRouter::HandleTimeTick(void)
     switch (mRole)
     {
     case kRoleDetached:
-        if (mChallengeTimeout == 0)
+        if (mChallengeTimeout == 0 && mLinkRequestAttempts == 0)
         {
             IgnoreError(BecomeDetached());
             ExitNow();

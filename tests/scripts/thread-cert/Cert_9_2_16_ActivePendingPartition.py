@@ -142,7 +142,7 @@ class Cert_9_2_16_ActivePendingPartition(thread_cert.TestCase):
         self.simulator.go(100)
 
         self.nodes[ROUTER2].start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.ROUTER_RESET_DELAY)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.assertEqual(self.nodes[COMMISSIONER].get_network_name(), NETWORK_NAME_FINAL)
