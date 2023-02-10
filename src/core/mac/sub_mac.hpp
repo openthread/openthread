@@ -569,6 +569,12 @@ private:
     // CSL receivers would wake up `kCslReceiveTimeAhead` earlier
     // than expected sample window. The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+
+    // Extra wake up ahead time for CSL receivers due to inter-op issues:
+    // 1. Different interpretation and implentations of 'the first symbol' (of preamble or Mac Header).
+    // 2. Different interpretation of CSL Accuracy and Uncertainty (typical value or worst-case value).
+    // The value is in usec.
+    static constexpr uint32_t kCslReceiveTimeAheadInteropSlack = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD_INTEROP_SLACK;
 #endif
 
     /**

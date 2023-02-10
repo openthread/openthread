@@ -1148,8 +1148,8 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
                               (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) / 1000000);
     semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec();
 
-    aAhead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;
-    aAfter = (semiWindow + kMinCslWindow > semiPeriod) ? semiPeriod : semiWindow + kMinCslWindow;
+    aAhead = OT_MIN(semiPeriod, semiWindow + kCslReceiveTimeAhead + kCslReceiveTimeAheadInteropSlack);
+    aAfter = OT_MIN(semiPeriod, semiWindow + kMinCslWindow);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

@@ -476,6 +476,20 @@
 #define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD 320
 #endif
 
+/*
+ * @def OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD_INTEROP_SLACK
+ *
+ * Extra wake up ahead time for CSL receivers due to inter-op issues:
+ * 1. Different interpretation and implentations of 'the first symbol' (of preamble or Mac Header).
+ * 2. Different interpretation of CSL Accuracy and Uncertainty (typical value or worst-case value).
+ *
+ * The value is in units of microseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD_INTEROP_SLACK
+#define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD_INTEROP_SLACK 256
+#endif
+
 /**
  * @def OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON
  *
