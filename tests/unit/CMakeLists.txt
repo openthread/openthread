@@ -258,6 +258,27 @@ target_link_libraries(ot-test-dns
 
 add_test(NAME ot-test-dns COMMAND ot-test-dns)
 
+add_executable(ot-test-dns-client
+    test_dns_client.cpp
+)
+
+target_include_directories(ot-test-dns-client
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-dns-client
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-dns-client
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-dns-client COMMAND ot-test-dns-client)
+
 add_executable(ot-test-dso
     test_dso.cpp
 )

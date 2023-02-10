@@ -70,6 +70,7 @@ Server::Server(Instance &aInstance)
     , mEnableUpstreamQuery(false)
 #endif
     , mTimer(aInstance)
+    , mTestMode(kTestModeDisabled)
 {
     mCounters.Clear();
 }
@@ -202,6 +203,15 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
                  response = Header::kResponseNotImplemented);
     VerifyOrExit(!aRequestHeader.IsTruncationFlagSet(), response = Header::kResponseFormatError);
     VerifyOrExit(aRequestHeader.GetQuestionCount() > 0, response = Header::kResponseFormatError);
+
+    switch (mTestMode)
+    {
+    case kTestModeDisabled:
+        break;
+    case kTestModeSingleQuestionOnly:
+        VerifyOrExit(aRequestHeader.GetQuestionCount() == 1, response = Header::kResponseFormatError);
+        break;
+    }
 
     response = AddQuestions(aRequestHeader, aRequestMessage, responseHeader, *responseMessage, compressInfo);
     VerifyOrExit(response == Header::kResponseSuccess);

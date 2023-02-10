@@ -152,6 +152,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVICE_MODE
+ *
+ * Specifies the default `otDnsServiceMode` to use. The value MUST be from `otDnsServiceMode` enumeration.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVICE_MODE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVICE_MODE OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
  *
  * Enables support for sending DNS Queries over TCP.

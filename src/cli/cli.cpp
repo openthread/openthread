@@ -2990,6 +2990,8 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * ResponseTimeout: 5000 ms
          * MaxTxAttempts: 2
          * RecursionDesired: no
+         * ServiceMode: srv
+         * Nat64Mode: allow
          * Done
          * @endcode
          * @par api_copy
@@ -3011,6 +3013,10 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
             OutputLine("RecursionDesired: %s",
                        (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
+            OutputLine("ServiceMode: %s", DnsConfigServiceModeToString(defaultConfig->mServiceMode));
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+            OutputLine("Nat64Mode: %s", (defaultConfig->mNat64Mode == OT_DNS_NAT64_ALLOW) ? "allow" : "disallow");
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
             OutputLine("TransportProtocol: %s",
                        (defaultConfig->mTransportProto == OT_DNS_TRANSPORT_UDP) ? "udp" : "tcp");
@@ -3046,7 +3052,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * #otDnsClientSetDefaultConfig
          * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}] <!--
          * -->                [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
-         * -->                [@ca{recursion-desired-boolean}]
+         * -->                [@ca{recursion-desired-boolean}] [@ca{service-mode}]
          * @par
          * We can leave some of the fields as unspecified (or use value zero). The
          * unspecified fields are replaced by the corresponding OT config option
@@ -3256,11 +3262,69 @@ exit:
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
+const char *Interpreter::DnsConfigServiceModeToString(otDnsServiceMode aMode) const
+{
+    static const char *const kServiceModeStrings[] = {
+        "unspec",      // OT_DNS_SERVICE_MODE_UNSPECIFIED      (0)
+        "srv",         // OT_DNS_SERVICE_MODE_SRV              (1)
+        "txt",         // OT_DNS_SERVICE_MODE_TXT              (2)
+        "srv_txt",     // OT_DNS_SERVICE_MODE_SRV_TXT          (3)
+        "srv_txt_sep", // OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE (4)
+        "srv_txt_opt", // OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE (5)
+    };
+
+    static_assert(OT_DNS_SERVICE_MODE_UNSPECIFIED == 0, "OT_DNS_SERVICE_MODE_UNSPECIFIED value is incorrect");
+    static_assert(OT_DNS_SERVICE_MODE_SRV == 1, "OT_DNS_SERVICE_MODE_SRV value is incorrect");
+    static_assert(OT_DNS_SERVICE_MODE_TXT == 2, "OT_DNS_SERVICE_MODE_TXT value is incorrect");
+    static_assert(OT_DNS_SERVICE_MODE_SRV_TXT == 3, "OT_DNS_SERVICE_MODE_SRV_TXT value is incorrect");
+    static_assert(OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE == 4, "OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE value is incorrect");
+    static_assert(OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE == 5, "OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE value is incorrect");
+
+    return Stringify(aMode, kServiceModeStrings);
+}
+
+otError Interpreter::ParseDnsServiceMode(const Arg &aArg, otDnsServiceMode &aMode) const
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArg == "def")
+    {
+        aMode = OT_DNS_SERVICE_MODE_UNSPECIFIED;
+    }
+    else if (aArg == "srv")
+    {
+        aMode = OT_DNS_SERVICE_MODE_SRV;
+    }
+    else if (aArg == "txt")
+    {
+        aMode = OT_DNS_SERVICE_MODE_TXT;
+    }
+    else if (aArg == "srv_txt")
+    {
+        aMode = OT_DNS_SERVICE_MODE_SRV_TXT;
+    }
+    else if (aArg == "srv_txt_sep")
+    {
+        aMode = OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE;
+    }
+    else if (aArg == "srv_txt_opt")
+    {
+        aMode = OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
 otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
 {
     // This method gets the optional DNS config from `aArgs[]`.
     // The format: `[server IP address] [server port] [timeout]
-    // [max tx attempt] [recursion desired]`.
+    // [max tx attempt] [recursion desired] [service mode]
+    // [transport]`
 
     otError error = OT_ERROR_NONE;
     bool    recursionDesired;
@@ -3292,11 +3356,15 @@ otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
 
     VerifyOrExit(!aArgs[5].IsEmpty());
-    if (aArgs[5] == "tcp")
+    SuccessOrExit(error = ParseDnsServiceMode(aArgs[5], aConfig->mServiceMode));
+
+    VerifyOrExit(!aArgs[6].IsEmpty());
+
+    if (aArgs[6] == "tcp")
     {
         aConfig->mTransportProto = OT_DNS_TRANSPORT_TCP;
     }
-    else if (aArgs[5] == "udp")
+    else if (aArgs[6] == "udp")
     {
         aConfig->mTransportProto = OT_DNS_TRANSPORT_UDP;
     }
@@ -3304,6 +3372,7 @@ otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     {
         error = OT_ERROR_INVALID_ARGS;
     }
+
 exit:
     return error;
 }
