@@ -123,12 +123,12 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
         VerifyOrExit(sendto(txn->mUdpFd, packet, length, 0, (struct sockaddr *)&serverAddr, sizeof(serverAddr)),
                      error = OT_ERROR_NO_ROUTE);
     }
-    otLogInfoPlat("Forwarded DNS query to %d servers", mUpstreamDnsServerCount);
+    otLogInfoPlat("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), mUpstreamDnsServerCount);
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to send DNS query to server: %d", error);
+        otLogCritPlat("Failed to forward DNS query %p to server: %d", static_cast<void *>(aTxn), error);
     }
     return;
 }

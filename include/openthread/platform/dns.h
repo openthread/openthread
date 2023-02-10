@@ -54,7 +54,7 @@ extern "C" {
  */
 
 /**
- * This opaque type represents a upstream DNS query transaction.
+ * This opaque type represents an upstream DNS query transaction.
  *
  */
 typedef struct otPlatDnsUpstreamQuery otPlatDnsUpstreamQuery;

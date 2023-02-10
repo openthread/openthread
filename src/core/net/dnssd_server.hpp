@@ -80,18 +80,57 @@ public:
     };
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    /**
+     * This class represents an upstream query transaction. The methods should only be used by
+     * Dns::ServiceDiscovery::Server.
+     *
+     */
     class UpstreamQueryTransaction : public otPlatDnsUpstreamQuery
     {
     public:
-        bool                    IsValid(void) const { return mValid; }
-        TimeMilli               GetExpireTime(void) const { return mExpireTime; }
-        void                    Reset(void) { mValid = false; };
-        void                    Init(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+        /**
+         * This method returns whether the transaction is valid.
+         *
+         * @retval  TRUE  The transaction is valid.
+         * @retval  FALSE The transaction is not valid.
+         *
+         */
+        bool IsValid(void) const { return mValid; }
+
+        /**
+         * This method returns the time when the transaction expires.
+         *
+         * @retval  The expire time of the transaction.
+         *
+         */
+        TimeMilli GetExpireTime(void) const { return mExpireTime; }
+
+        /**
+         * This method resets the transaction with a reason. The transaction will be invalid and can be reused for
+         * another upstream query after this call.
+         *
+         * @param[in] aError  The reason for resetting the transaction.
+         *
+         */
+        void Reset(Error aError);
+
+        /**
+         * This method initializes the transaction.
+         *
+         * @param[in] aMessageInfo  The IP message info of the query.
+         *
+         */
+        void Init(const Ip6::MessageInfo &aMessageInfo);
+
+        /**
+         * This method returns the message info of the query.
+         *
+         * @returns  The message info of the query.
+         *
+         */
         const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
-        const Header           &GetRequestHeader(void) const { return mRequestHeader; }
 
     private:
-        Header           mRequestHeader;
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mExpireTime;
         bool             mValid;
@@ -431,14 +470,8 @@ private:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static bool               ShouldForwardToUpstream(const Header &aRequestHeader, const Message &aRequestMessage);
-    UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Header           &aRequestHeader,
-                                                               const Ip6::MessageInfo &aMessageInfo);
-    Error                     ResolveByUpstream(const Header           &aRequestHeader,
-                                                Message                &aRequestMessage,
-                                                const Ip6::MessageInfo &aMessageInfo);
-    void                      ConstructAndSendResponseCode(const Ip6::MessageInfo &aMessageInfo,
-                                                           const Header           &aRequestHeader,
-                                                           Header::Response        aResponse);
+    UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
+    Error                     ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     Error             ResolveByQueryCallbacks(Header                 &aResponseHeader,
@@ -482,7 +515,7 @@ private:
     otDnssdQuerySubscribeCallback   mQuerySubscribe;
     otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
 
-    static const char *kBlockedDomain[];
+    static const char *kBlockedDomains[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     bool                     mEnableUpstreamQuery = false;
     UpstreamQueryTransaction mUpstreamQueryTransactions[kMaxConcurrentUpstreamQueries];

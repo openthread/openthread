@@ -58,7 +58,7 @@ const char  Server::kDnssdProtocolUdp[]  = "_udp";
 const char  Server::kDnssdProtocolTcp[]  = "_tcp";
 const char  Server::kDnssdSubTypeLabel[] = "._sub.";
 const char  Server::kDefaultDomainName[] = "default.service.arpa.";
-const char *Server::kBlockedDomain[]     = {"ipv4only.arpa."};
+const char *Server::kBlockedDomains[]    = {"ipv4only.arpa."};
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -148,21 +148,20 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     Message         *responseMessage = nullptr;
     Header           responseHeader;
     NameCompressInfo compressInfo(kDefaultDomainName);
-    Header::Response response                  = Header::kResponseSuccess;
-    bool             resolveByQueryCallbacks   = false;
-    bool             resolveByUpstreamResolver = false;
+    Header::Response response           = Header::kResponseSuccess;
+    bool             shouldSendResponse = true;
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     if (mEnableUpstreamQuery && ShouldForwardToUpstream(aRequestHeader, aRequestMessage))
     {
-        resolveByUpstreamResolver = true;
-        error                     = ResolveByUpstream(aRequestHeader, aRequestMessage, aMessageInfo);
-        if (error != kErrorNone)
+        error = ResolveByUpstream(aRequestMessage, aMessageInfo);
+        if (error == kErrorNone)
         {
-            ConstructAndSendResponseCode(aMessageInfo, aRequestHeader, Header::Response::kResponseServerFailure);
-            LogWarn("Failed to forward DNS query to upstream: %s", ErrorToString(error));
+            shouldSendResponse = false;
+            ExitNow();
         }
-        ExitNow();
+        response = Header::kResponseServerFailure;
+        LogWarn("Failed to forward DNS query to upstream: %s", ErrorToString(error));
     }
 #endif
 
@@ -176,6 +175,14 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     responseHeader.Clear();
     responseHeader.SetType(Header::kTypeResponse);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetQueryType(aRequestHeader.GetQueryType());
+    if (aRequestHeader.IsRecursionDesiredFlagSet())
+    {
+        responseHeader.SetRecursionDesiredFlag();
+    }
+
+    // We may met errors when forwarding the query to the upstream
+    VerifyOrExit(response == Header::kResponseSuccess);
 
     // Validate the query
     VerifyOrExit(aRequestHeader.GetQueryType() == Header::kQueryTypeStandard,
@@ -194,7 +201,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     {
         if (kErrorNone == ResolveByQueryCallbacks(responseHeader, *responseMessage, compressInfo, aMessageInfo))
         {
-            resolveByQueryCallbacks = true;
+            shouldSendResponse = false;
         }
     }
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
@@ -205,7 +212,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
 #endif
 
 exit:
-    if (error == kErrorNone && !resolveByQueryCallbacks && !resolveByUpstreamResolver)
+    if (error == kErrorNone && shouldSendResponse)
     {
         SendResponse(responseHeader, response, *responseMessage, aMessageInfo, mSocket);
     }
@@ -871,7 +878,7 @@ bool Server::ShouldForwardToUpstream(const Header &aRequestHeader, const Message
         readOffset += sizeof(Question);
 
         VerifyOrExit(!Name::IsSubDomainOf(name, kDefaultDomainName), ret = false);
-        for (const char *blockedDomain : kBlockedDomain)
+        for (const char *blockedDomain : kBlockedDomains)
         {
             VerifyOrExit(!Name::IsSameDomain(name, blockedDomain), ret = false);
         }
@@ -883,25 +890,23 @@ exit:
 
 void Server::OnUpstreamQueryResponse(UpstreamQueryTransaction &aQueryTransaction, Message &aResponseMessage)
 {
-    Error err = kErrorNone;
+    Error error = kErrorNone;
 
     VerifyOrExit(aQueryTransaction.IsValid());
 
-    err = mSocket.SendTo(aResponseMessage, aQueryTransaction.GetMessageInfo());
-    if (err != kErrorNone)
+    error = mSocket.SendTo(aResponseMessage, aQueryTransaction.GetMessageInfo());
+    if (error != kErrorNone)
     {
         aResponseMessage.Free();
     }
-
-    aQueryTransaction.Reset();
+    aQueryTransaction.Reset(error);
     ResetTimer();
 
 exit:
     return;
 }
 
-Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Header           &aRequestHeader,
-                                                                           const Ip6::MessageInfo &aMessageInfo)
+Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo)
 {
     UpstreamQueryTransaction *ret = nullptr;
 
@@ -910,8 +915,7 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
         if (!txn.IsValid())
         {
             ret = &txn;
-            txn.Init(aRequestHeader, aMessageInfo);
-            LogInfo("Allocated new transaction for upstream query.");
+            txn.Init(aMessageInfo);
             break;
         }
     }
@@ -924,49 +928,18 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
     return ret;
 }
 
-Error Server::ResolveByUpstream(const Header           &aRequestHeader,
-                                Message                &aRequestMessage,
-                                const Ip6::MessageInfo &aMessageInfo)
+Error Server::ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                     error = kErrorNone;
     UpstreamQueryTransaction *txn   = nullptr;
 
-    txn = AllocateUpstreamQueryTransaction(aRequestHeader, aMessageInfo);
+    txn = AllocateUpstreamQueryTransaction(aMessageInfo);
     VerifyOrExit(txn != nullptr, error = kErrorNoBufs);
 
-    LogInfo("Forwarding DNS query to upstream");
     otPlatDnsStartUpstreamQuery(&GetInstance(), txn, &aRequestMessage);
 
 exit:
     return error;
-}
-
-void Server::ConstructAndSendResponseCode(const Ip6::MessageInfo &aMessageInfo,
-                                          const Header           &aRequestHeader,
-                                          Header::Response        aResponse)
-{
-    Error    error           = kErrorNone;
-    Message *responseMessage = nullptr;
-    Header   responseHeader;
-
-    responseMessage = mSocket.NewMessage(0);
-    VerifyOrExit(responseMessage != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = responseMessage->SetLength(sizeof(Header)));
-
-    // Setup initial DNS response header
-    responseHeader.Clear();
-    responseHeader.SetType(Header::kTypeResponse);
-    responseHeader.SetQueryType(aRequestHeader.GetQueryType());
-    if (aRequestHeader.IsRecursionDesiredFlagSet())
-    {
-        responseHeader.SetRecursionDesiredFlag();
-    }
-    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
-
-    SendResponse(responseHeader, aResponse, *responseMessage, aMessageInfo, mSocket);
-
-exit:
-    LogWarn("Failed to send DNS response code: %s", ErrorToString(error));
 }
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
@@ -1277,20 +1250,15 @@ void Server::HandleTimer(void)
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     for (UpstreamQueryTransaction &query : mUpstreamQueryTransactions)
     {
-        TimeMilli expire;
-
         if (!query.IsValid())
         {
             continue;
         }
 
-        expire = query.GetExpireTime();
-        if (expire <= now)
+        if (query.GetExpireTime() <= now)
         {
             otPlatDnsCancelUpstreamQuery(&GetInstance(), &query);
-            ConstructAndSendResponseCode(query.GetMessageInfo(), query.GetRequestHeader(),
-                                         Header::Response::kResponseServerFailure);
-            query.Reset();
+            query.Reset(kErrorResponseTimeout);
         }
     }
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
@@ -1421,12 +1389,25 @@ void Server::UpdateResponseCounters(Header::Response aResponseCode)
 }
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-void Server::UpstreamQueryTransaction::Init(const Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+void Server::UpstreamQueryTransaction::Init(const Ip6::MessageInfo &aMessageInfo)
 {
-    mRequestHeader = aRequestHeader;
-    mMessageInfo   = aMessageInfo;
-    mValid         = true;
-    mExpireTime    = TimerMilli::GetNow() + kQueryTimeout;
+    mMessageInfo = aMessageInfo;
+    mValid       = true;
+    mExpireTime  = TimerMilli::GetNow() + kQueryTimeout;
+    LogInfo("Upstream query transaction %p initialized.", static_cast<void *>(this));
+}
+
+void Server::UpstreamQueryTransaction::Reset(Error aError)
+{
+    mValid = false;
+    if (aError == kErrorNone)
+    {
+        LogInfo("Upstream query transaction %p completed.", static_cast<void *>(this));
+    }
+    else
+    {
+        LogWarn("Upstream query transaction %p closed: %s.", static_cast<void *>(this), ErrorToString(aError));
+    }
 }
 #endif
 
