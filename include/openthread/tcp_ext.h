@@ -240,7 +240,7 @@ int otTcpMbedTlsSslSendCallback(void *aCtx, const unsigned char *aBuf, size_t aL
  *
  * @param[in]   aCtx  A pointer to an otTcpEndpointAndCircularSendBuffer.
  * @param[out]  aBuf  The buffer into which to receive data.
- * @param[in]   aLen  The maxmimum amount of data that can be received.
+ * @param[in]   aLen  The maximum amount of data that can be received.
  *
  * @returns The number of bytes received, or an mbedtls error code.
  */
