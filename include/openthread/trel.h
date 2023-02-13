@@ -76,6 +76,16 @@ typedef uint16_t otTrelPeerIterator;
 /**
  * Enables or disables TREL operation.
  *
+ * When aEnable = true, this function initiates an ongoing DNS-SD browse on the service name "_trel._udp" within the
+ * local browsing domain to discover other devices supporting TREL. Device also registers a new service to be advertised
+ * using DNS-SD, with the service name is "_trel._udp" indicating its support for TREL. Device is then ready to receive
+ * TREL messages from peers.
+ *
+ * When aEnable = false, this function stops the DNS-SD browse on the service name "_trel._udp", stops advertising TREL
+ * DNS-SD service, and clears the TREL peer table.
+ *
+ * @note By default the OpenThread stack enables the TREL operation on start.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable the TREL operation.
  *
@@ -98,23 +108,13 @@ void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
 void otTrelEnable(otInstance *aInstance);
 
 /**
- * This function disables TREL operation.
- *
- * This function stops the DNS-SD browse on the service name "_trel._udp", stops advertising TREL DNS-SD service, and
- * clears the TREL peer table.
- *
- * @param[in] aInstance   The OpenThread instance.
+ * This function is deprecated.
  *
  */
 void otTrelDisable(otInstance *aInstance);
 
 /**
- * This function indicates whether the TREL operation is enabled.
- *
- * @param[in] aInstance   The OpenThread instance.
- *
- * @retval TRUE if the TREL operation is enabled.
- * @retval FALSE if the TREL operation is disabled.
+ * This function is deprecated.
  *
  */
 bool otTrelIsEnabled(otInstance *aInstance);
