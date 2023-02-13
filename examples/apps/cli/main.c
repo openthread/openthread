@@ -76,9 +76,17 @@ static const otCliCommand kCommands[] = {
 #if OPENTHREAD_EXAMPLES_SIMULATION
     /*
      * The CLI command `nodeidfilter` only works for simulation in real time.
+     *
+     * It can be used either as an allow list or a deny list. Once the filter is cleared, the first `nodeidfilter allow`
+     * or `nodeidfilter deny` will determine whether it is set up as an allow or deny list. Subsequent calls should
+     * use the same sub-command to add new node IDs, e.g., if we first call `nodeidfilter allow` (which sets the filter
+     * up  as an allow list), a subsequent `nodeidfilter deny` will result in `InvalidState` error.
+     *
      * The usage of the command `nodeidfilter`:
-     *     - `nodeidfilter deny <nodeid>`:  It denies the connection to a specified node.
-     *     - `nodeidfilter clear`:          It restores the filter state to default.
+     *     - `nodeidfilter deny <nodeid>` :  It denies the connection to a specified node (use as deny-list).
+     *     - `nodeidfilter allow <nodeid> :  It allows the connection to a specified node (use as allow-list).
+     *     - `nodeidfilter clear`         :  It restores the filter state to default.
+     *     - `nodeidfilter`               :  Outputs filter mode (allow-list or deny-list) and filtered node IDs.
      */
     {"nodeidfilter", ProcessNodeIdFilter},
 #endif
