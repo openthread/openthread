@@ -582,16 +582,6 @@
 #endif // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
 
 /**
- * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
- *
- * Define to 1 to enable legacy network support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_LEGACY_ENABLE
-#define OPENTHREAD_CONFIG_LEGACY_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_OTNS_ENABLE
  *
  * Define to 1 to enable OTNS interactions.

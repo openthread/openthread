@@ -473,37 +473,20 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
     {
         uint16_t    offset    = aMessage.GetOffset();
+        uint16_t    endOffset = offset + len;
         bool        hasOption = false;
         Ip6::Option option;
 
-        while ((offset - aMessage.GetOffset()) < len)
+        for (; offset < endOffset; offset += option.GetSize())
         {
-            SuccessOrExit(error = aMessage.Read(offset, option));
-
-            if (option.GetType() == Ip6::Pad1Option::kType)
-            {
-                offset += sizeof(Ip6::Pad1Option);
-            }
-            else
-            {
-                offset += option.GetSize();
-            }
-
+            SuccessOrExit(error = option.ParseFrom(aMessage, offset, endOffset));
             hasOption = true;
         }
 
-        if (hasOption)
+        // Check if the last option can be compressed.
+        if (hasOption && option.IsPadding())
         {
-            // Check if the last option can be compressed.
-            if (option.GetType() == Ip6::Pad1Option::kType)
-            {
-                padLength = sizeof(Ip6::Pad1Option);
-            }
-            else if (option.GetType() == Ip6::PadNOption::kType)
-            {
-                padLength = option.GetSize();
-            }
-
+            padLength = option.GetSize();
             len -= padLength;
         }
     }
@@ -850,11 +833,11 @@ exit:
 
 Error Lowpan::DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData)
 {
-    Error   error = kErrorParse;
-    uint8_t hdr[2];
-    uint8_t len;
-    uint8_t ctl;
-    uint8_t padLength;
+    Error          error = kErrorParse;
+    uint8_t        hdr[2];
+    uint8_t        len;
+    uint8_t        ctl;
+    Ip6::PadOption padOption;
 
     SuccessOrExit(aFrameData.ReadUint8(ctl));
 
@@ -888,26 +871,11 @@ Error Lowpan::DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData
     // The RFC6282 says: "The trailing Pad1 or PadN option MAY be elided by the compressor.
     // A decompressor MUST ensure that the containing header is padded out to a multiple of 8 octets
     // in length, using a Pad1 or PadN option if necessary."
-    padLength = 8 - ((len + sizeof(hdr)) & 0x07);
 
-    if (padLength != 8)
+    if (padOption.InitToPadHeaderWithSize(len + sizeof(hdr)) == kErrorNone)
     {
-        if (padLength == 1)
-        {
-            Ip6::Pad1Option pad1;
-
-            pad1.Init();
-            SuccessOrExit(aMessage.AppendBytes(&pad1, padLength));
-        }
-        else
-        {
-            Ip6::PadNOption padn;
-
-            padn.Init(padLength);
-            SuccessOrExit(aMessage.AppendBytes(&padn, padLength));
-        }
-
-        aMessage.MoveOffset(padLength);
+        SuccessOrExit(aMessage.AppendBytes(&padOption, padOption.GetSize()));
+        aMessage.MoveOffset(padOption.GetSize());
     }
 
     error = kErrorNone;

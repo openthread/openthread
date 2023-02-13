@@ -67,13 +67,66 @@ bool Header::IsValid(void) const
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// PadNOption
+// Option
 
-void PadNOption::Init(uint8_t aPadLength)
+Error Option::ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t aEndOffset)
 {
-    SetType(kType);
-    SetLength(aPadLength - sizeof(Option));
-    memset(mPad, kData, aPadLength - sizeof(Option));
+    Error error;
+
+    // Read the Type first to check for the Pad1 Option.
+    // If it is not, then we read the full `Option` header.
+
+    SuccessOrExit(error = aMessage.Read(aOffset, this, sizeof(mType)));
+
+    if (mType == kTypePad1)
+    {
+        SetLength(0);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = aMessage.Read(aOffset, *this));
+
+    VerifyOrExit(aOffset + GetSize() <= aEndOffset, error = kErrorParse);
+
+exit:
+    return error;
+}
+
+uint16_t Option::GetSize(void) const
+{
+    return (mType == kTypePad1) ? sizeof(mType) : static_cast<uint16_t>(mLength) + sizeof(Option);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// PadOption
+
+void PadOption::InitForPadSize(uint8_t aPadSize)
+{
+    OT_UNUSED_VARIABLE(mPads);
+
+    Clear();
+
+    if (aPadSize == 1)
+    {
+        SetType(kTypePad1);
+    }
+    else
+    {
+        SetType(kTypePadN);
+        SetLength(aPadSize - sizeof(Option));
+    }
+}
+
+Error PadOption::InitToPadHeaderWithSize(uint16_t aHeaderSize)
+{
+    Error   error = kErrorNone;
+    uint8_t size  = static_cast<uint8_t>(aHeaderSize % ExtensionHeader::kLengthUnitSize);
+
+    VerifyOrExit(size != 0, error = kErrorAlready);
+    InitForPadSize(ExtensionHeader::kLengthUnitSize - size);
+
+exit:
+    return error;
 }
 
 } // namespace Ip6

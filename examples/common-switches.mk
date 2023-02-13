@@ -61,7 +61,6 @@ HISTORY_TRACKER           ?= 0
 IP6_FRAGM                 ?= 0
 JAM_DETECTION             ?= 0
 JOINER                    ?= 0
-LEGACY                    ?= 0
 ifeq ($(REFERENCE_DEVICE),1)
 LOG_OUTPUT                ?= APP
 endif
@@ -246,10 +245,6 @@ endif
 
 ifeq ($(JOINER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JOINER_ENABLE=1
-endif
-
-ifeq ($(LEGACY),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1
 endif
 
 ifeq ($(LINK_RAW),1)

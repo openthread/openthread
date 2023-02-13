@@ -102,7 +102,7 @@ class Cert_5_5_4_SplitMergeRouters(thread_cert.TestCase):
         self.simulator.go(150)
 
         self.nodes[LEADER].start()
-        self.simulator.go(50)
+        self.simulator.go(50 + config.LEADER_RESET_DELAY)
 
         self.assertEqual(self.nodes[LEADER].get_state(), 'router')
 

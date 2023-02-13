@@ -309,12 +309,15 @@ void TestStringToLowercase(void)
     printf(" -- PASS\n");
 }
 
+// gcc-4 does not support constexpr function
+#if __GNUC__ > 4
 static_assert(ot::AreStringsInOrder("a", "b"), "AreStringsInOrder() failed");
 static_assert(ot::AreStringsInOrder("aa", "aaa"), "AreStringsInOrder() failed");
 static_assert(ot::AreStringsInOrder("", "a"), "AreStringsInOrder() failed");
 static_assert(!ot::AreStringsInOrder("cd", "cd"), "AreStringsInOrder() failed");
 static_assert(!ot::AreStringsInOrder("z", "abcd"), "AreStringsInOrder() failed");
 static_assert(!ot::AreStringsInOrder("0", ""), "AreStringsInOrder() failed");
+#endif
 
 } // namespace ot
 

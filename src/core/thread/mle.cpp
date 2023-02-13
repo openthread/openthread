@@ -83,6 +83,9 @@ Mle::Mle(Instance &aInstance)
     , mAttachTimer(aInstance)
     , mDelayedResponseTimer(aInstance)
     , mMessageTransmissionTimer(aInstance)
+#if OPENTHREAD_FTD
+    , mWasLeader(false)
+#endif
     , mAttachMode(kAnyPartition)
     , mChildUpdateAttempts(0)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
@@ -435,6 +438,8 @@ void Mle::Restore(void)
         Get<MleRouter>().SetPreviousPartitionId(networkInfo.GetPreviousPartitionId());
         Get<ChildTable>().Restore();
     }
+
+    mWasLeader = networkInfo.GetRole() == kRoleLeader;
 #endif
 
     // Successfully restored the network information from non-volatile settings after boot.
@@ -1885,6 +1890,14 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 {
     uint32_t interval = 0;
 
+#if OPENTHREAD_FTD
+    if (mRole == kRoleDetached && mLinkRequestAttempts > 0)
+    {
+        ExitNow(interval = Random::NonCrypto::GetUint32InRange(kMulticastTransmissionDelayMin,
+                                                               kMulticastTransmissionDelayMax));
+    }
+#endif
+
     switch (mChildUpdateRequestState)
     {
     case kChildUpdateRequestNone:
@@ -1940,6 +1953,19 @@ void Mle::HandleMessageTransmissionTimer(void)
     //  - Retransmission of "Child Update Request",
     //  - Retransmission of "Data Request" on a child,
     //  - Sending periodic keep-alive "Child Update Request" messages on a non-sleepy (rx-on) child.
+    //  - Retransmission of "Link Request" after router reset
+
+#if OPENTHREAD_FTD
+    // Retransmit multicast link request if no response has been received
+    // and maximum transmission limit has not been reached.
+    if (mRole == kRoleDetached && mLinkRequestAttempts > 0)
+    {
+        IgnoreError(Get<MleRouter>().SendLinkRequest(nullptr));
+        mLinkRequestAttempts--;
+        ScheduleMessageTransmissionTimer();
+        ExitNow();
+    }
+#endif
 
     switch (mChildUpdateRequestState)
     {

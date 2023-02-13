@@ -46,7 +46,6 @@ This page lists the available common switches with description. Unless stated ot
 | IP6_FRAGM | OT_IP6_FRAGM | Enables support for IPv6 fragmentation. |
 | JAM_DETECTION | OT_JAM_DETECTION | Enables support for [Jam Detection](https://openthread.io/guides/build/features/jam-detection). Enable this switch if a device requires the ability to detect signal jamming on a specific channel. |
 | JOINER | OT_JOINER | Enables [support for Joiner](https://openthread.io/reference/group/api-joiner). Enable this switch on a device that has to be commissioned to join the network. |
-| LEGACY | OT_LEGACY | Enables support for legacy network. |
 | LINK_RAW | OT_LINK_RAW | Enables the Link Raw service. |
 | LOG_OUTPUT | not implemented | Defines if the LOG output is to be created and where it goes. There are several options available: `NONE`, `DEBUG_UART`, `APP`, `PLATFORM_DEFINED` (default). See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | MAC_FILTER | OT_MAC_FILTER | Enables support for the MAC filter. |

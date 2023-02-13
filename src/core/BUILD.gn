@@ -170,10 +170,6 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_JOINER_ENABLE=1" ]
     }
 
-    if (openthread_config_legacy_enable) {
-      defines += [ "OPENTHREAD_CONFIG_LEGACY_ENABLE=1" ]
-    }
-
     if (openthread_config_link_metrics_initiator_enable) {
       defines += [ "DOPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=1" ]
     }

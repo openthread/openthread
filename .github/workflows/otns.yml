@@ -67,7 +67,7 @@ jobs:
       with:
         go-version: '1.14'
     - name: Set up Python 3.6
-      uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # v4.3.1
+      uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
       with:
         python-version: 3.6
     - name: Bootstrap
@@ -107,7 +107,7 @@ jobs:
         with:
           go-version: '1.14'
       - name: Set up Python 3.6
-        uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # v4.3.1
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
         with:
           python-version: 3.6
       - name: Bootstrap
@@ -170,7 +170,7 @@ jobs:
         with:
           go-version: '1.14'
       - name: Set up Python 3.6
-        uses: actions/setup-python@2c3dd9e7e29afd70cc0950079bde6c979d1f69f9 # v4.3.1
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4.5.0
         with:
           python-version: 3.6
       - name: Bootstrap

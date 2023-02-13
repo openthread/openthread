@@ -93,7 +93,7 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         self.simulator.go(140)
 
         self.nodes[LEADER1].start()
-        self.simulator.go(30)
+        self.simulator.go(30 + config.LEADER_RESET_DELAY)
 
         addrs = self.nodes[LEADER1].get_addrs()
         for addr in addrs:
