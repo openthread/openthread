@@ -109,10 +109,8 @@ public:
          * This method resets the transaction with a reason. The transaction will be invalid and can be reused for
          * another upstream query after this call.
          *
-         * @param[in] aError  The reason for resetting the transaction.
-         *
          */
-        void Reset(Error aError);
+        void Reset(void) { mValid = false; }
 
         /**
          * This method initializes the transaction.
@@ -471,6 +469,7 @@ private:
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static bool               ShouldForwardToUpstream(const Header &aRequestHeader, const Message &aRequestMessage);
     UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
+    void                      ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error aError);
     Error                     ResolveByUpstream(const Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 

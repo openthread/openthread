@@ -184,6 +184,10 @@ void Resolver::ForwardResponse(Transaction *aTxn)
     message = nullptr;
 
 exit:
+    if (readSize < 0)
+    {
+        otLogInfoPlat("Failed to read response: %d", errno);
+    }
     if (message != nullptr)
     {
         otMessageFree(message);
@@ -254,13 +258,8 @@ void Resolver::Process(const fd_set *aReadFdSet, const fd_set *aErrorFdSet)
     {
         if (txn.mThreadTxn != nullptr)
         {
-            if (FD_ISSET(txn.mUdpFd, aErrorFdSet))
-            {
-                close(txn.mUdpFd);
-                DieNow(OT_EXIT_FAILURE);
-            }
-
-            if (FD_ISSET(txn.mUdpFd, aReadFdSet))
+            // Note: On Linux, we can only get the error via read, so they should share the same logic.
+            if (FD_ISSET(txn.mUdpFd, aErrorFdSet) || FD_ISSET(txn.mUdpFd, aReadFdSet))
             {
                 ForwardResponse(&txn);
                 CloseTransaction(&txn);

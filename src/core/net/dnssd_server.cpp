@@ -106,6 +106,16 @@ void Server::Stop(void)
         }
     }
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    for (UpstreamQueryTransaction &txn : mUpstreamQueryTransactions)
+    {
+        if (txn.IsValid())
+        {
+            ResetUpstreamQueryTransaction(txn, kErrorFailed);
+        }
+    }
+#endif
+
     mTimer.Stop();
 
     IgnoreError(mSocket.Close());
@@ -899,7 +909,7 @@ void Server::OnUpstreamQueryResponse(UpstreamQueryTransaction &aQueryTransaction
     {
         aResponseMessage.Free();
     }
-    aQueryTransaction.Reset(error);
+    ResetUpstreamQueryTransaction(aQueryTransaction, error);
     ResetTimer();
 
 exit:
@@ -922,6 +932,7 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
 
     if (ret != nullptr)
     {
+        LogInfo("Upstream query transaction %d initialized.", ret - mUpstreamQueryTransactions);
         mTimer.FireAtIfEarlier(ret->GetExpireTime());
     }
 
@@ -1258,10 +1269,10 @@ void Server::HandleTimer(void)
         if (query.GetExpireTime() <= now)
         {
             otPlatDnsCancelUpstreamQuery(&GetInstance(), &query);
-            query.Reset(kErrorResponseTimeout);
+            ResetUpstreamQueryTransaction(query, kErrorResponseTimeout);
         }
     }
-#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+#endif
 
     ResetTimer();
 }
@@ -1311,7 +1322,7 @@ void Server::ResetTimer(void)
             nextExpire = expire;
         }
     }
-#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+#endif
 
     if (nextExpire < now.GetDistantFuture())
     {
@@ -1394,20 +1405,19 @@ void Server::UpstreamQueryTransaction::Init(const Ip6::MessageInfo &aMessageInfo
     mMessageInfo = aMessageInfo;
     mValid       = true;
     mExpireTime  = TimerMilli::GetNow() + kQueryTimeout;
-    LogInfo("Upstream query transaction %p initialized.", static_cast<void *>(this));
 }
 
-void Server::UpstreamQueryTransaction::Reset(Error aError)
+void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error aError)
 {
-    mValid = false;
     if (aError == kErrorNone)
     {
-        LogInfo("Upstream query transaction %p completed.", static_cast<void *>(this));
+        LogInfo("Upstream query transaction %d completed.", &aTxn - mUpstreamQueryTransactions);
     }
     else
     {
-        LogWarn("Upstream query transaction %p closed: %s.", static_cast<void *>(this), ErrorToString(aError));
+        LogWarn("Upstream query transaction %d closed: %s.", &aTxn - mUpstreamQueryTransactions, ErrorToString(aError));
     }
+    aTxn.Reset();
 }
 #endif
 
