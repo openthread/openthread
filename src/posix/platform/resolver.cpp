@@ -120,8 +120,9 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
     for (int i = 0; i < mUpstreamDnsServerCount; i++)
     {
         serverAddr.sin_addr.s_addr = mUpstreamDnsServerList[i];
-        VerifyOrExit(sendto(txn->mUdpFd, packet, length, 0, (struct sockaddr *)&serverAddr, sizeof(serverAddr)),
-                     error = OT_ERROR_NO_ROUTE);
+        VerifyOrExit(
+            sendto(txn->mUdpFd, packet, length, MSG_DONTWAIT, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) > 0,
+            error = OT_ERROR_NO_ROUTE);
     }
     otLogInfoPlat("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), mUpstreamDnsServerCount);
 
@@ -137,38 +138,32 @@ void Resolver::Cancel(otPlatDnsUpstreamQuery *aTxn)
 {
     Transaction *txn = GetTransaction(aTxn);
 
-    CloseTransaction(txn);
+    if (txn != nullptr)
+    {
+        CloseTransaction(txn);
+    }
 }
 
 Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aThreadTxn)
 {
-    int          i;
-    int          error     = 0;
     int          fdOrError = 0;
     Transaction *ret       = nullptr;
 
-    for (i = 0; i < kMaxUpstreamTransactionCount; i++)
+    for (Transaction &txn : mUpstreamTransaction)
     {
-        if (mUpstreamTransaction[i].mThreadTxn == nullptr)
+        if (txn.mThreadTxn == nullptr)
         {
-            ret       = &mUpstreamTransaction[i];
             fdOrError = socket(AF_INET, SOCK_DGRAM, 0);
             if (fdOrError < 0)
             {
                 otLogInfoPlat("Failed to create socket: %d", fdOrError);
-                error = fdOrError;
                 break;
             }
-            ret->mUdpFd                        = fdOrError;
-            mUpstreamTransaction[i].mThreadTxn = aThreadTxn;
+            ret             = &txn;
+            ret->mUdpFd     = fdOrError;
+            ret->mThreadTxn = aThreadTxn;
             break;
         }
-    }
-
-    if (ret != nullptr && error != 0)
-    {
-        CloseTransaction(ret);
-        ret = nullptr;
     }
 
     return ret;
@@ -199,11 +194,11 @@ Resolver::Transaction *Resolver::GetTransaction(int aFd)
 {
     Transaction *ret = nullptr;
 
-    for (int i = 0; i < kMaxUpstreamTransactionCount; i++)
+    for (Transaction &txn : mUpstreamTransaction)
     {
-        if (mUpstreamTransaction[i].mThreadTxn != nullptr && mUpstreamTransaction[i].mUdpFd == aFd)
+        if (txn.mThreadTxn != nullptr && txn.mUdpFd == aFd)
         {
-            ret = &mUpstreamTransaction[i];
+            ret = &txn;
             break;
         }
     }
@@ -215,11 +210,11 @@ Resolver::Transaction *Resolver::GetTransaction(otPlatDnsUpstreamQuery *aThreadT
 {
     Transaction *ret = nullptr;
 
-    for (int i = 0; i < kMaxUpstreamTransactionCount; i++)
+    for (Transaction &txn : mUpstreamTransaction)
     {
-        if (mUpstreamTransaction[i].mThreadTxn == aThreadTxn)
+        if (txn.mThreadTxn == aThreadTxn)
         {
-            ret = &mUpstreamTransaction[i];
+            ret = &txn;
             break;
         }
     }
@@ -239,35 +234,36 @@ void Resolver::CloseTransaction(Transaction *aTxn)
 
 void Resolver::UpdateFdSet(fd_set *aReadFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
-    for (int i = 0; i < kMaxUpstreamTransactionCount; i++)
+    for (Transaction &txn : mUpstreamTransaction)
     {
-        if (mUpstreamTransaction[i].mThreadTxn != nullptr)
+        if (txn.mThreadTxn != nullptr)
         {
-            FD_SET(mUpstreamTransaction[i].mUdpFd, aReadFdSet);
-            FD_SET(mUpstreamTransaction[i].mUdpFd, aErrorFdSet);
-            if (mUpstreamTransaction[i].mUdpFd > *aMaxFd)
+            FD_SET(txn.mUdpFd, aReadFdSet);
+            FD_SET(txn.mUdpFd, aErrorFdSet);
+            if (txn.mUdpFd > *aMaxFd)
             {
-                *aMaxFd = mUpstreamTransaction[i].mUdpFd;
+                *aMaxFd = txn.mUdpFd;
             }
         }
     }
 }
 
-void Resolver::HandleSelect(const fd_set *aReadFdSet, const fd_set *aErrorFdSet)
+void Resolver::Process(const fd_set *aReadFdSet, const fd_set *aErrorFdSet)
 {
-    for (int i = 0; i < kMaxUpstreamTransactionCount; i++)
+    for (Transaction &txn : mUpstreamTransaction)
     {
-        if (mUpstreamTransaction[i].mThreadTxn != nullptr)
+        if (txn.mThreadTxn != nullptr)
         {
-            if (FD_ISSET(mUpstreamTransaction[i].mUdpFd, aErrorFdSet))
+            if (FD_ISSET(txn.mUdpFd, aErrorFdSet))
             {
-                close(mUpstreamTransaction[i].mUdpFd);
+                close(txn.mUdpFd);
                 DieNow(OT_EXIT_FAILURE);
             }
 
-            if (FD_ISSET(mUpstreamTransaction[i].mUdpFd, aReadFdSet))
+            if (FD_ISSET(txn.mUdpFd, aReadFdSet))
             {
-                ForwardResponse(&mUpstreamTransaction[i]);
+                ForwardResponse(&txn);
+                CloseTransaction(&txn);
             }
         }
     }
@@ -276,7 +272,7 @@ void Resolver::HandleSelect(const fd_set *aReadFdSet, const fd_set *aErrorFdSet)
 } // namespace Posix
 } // namespace ot
 
-void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aQuery)
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
     OT_UNUSED_VARIABLE(aInstance);
 

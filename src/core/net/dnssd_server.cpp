@@ -928,7 +928,7 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
     return ret;
 }
 
-Error Server::ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Server::ResolveByUpstream(const Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                     error = kErrorNone;
     UpstreamQueryTransaction *txn   = nullptr;

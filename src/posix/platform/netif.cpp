@@ -1979,7 +1979,7 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    gResolver.HandleSelect(aReadFdSet, aErrorFdSet);
+    gResolver.Process(aReadFdSet, aErrorFdSet);
 #endif
 
 exit:

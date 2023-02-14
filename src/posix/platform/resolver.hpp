@@ -87,7 +87,7 @@ public:
      * @param[in]  aErrirFdSet  A reference to the error file descriptors.
      *
      */
-    void HandleSelect(const fd_set *aReadFdSet, const fd_set *aErrorFdSet);
+    void Process(const fd_set *aReadFdSet, const fd_set *aErrorFdSet);
 
 private:
     struct Transaction

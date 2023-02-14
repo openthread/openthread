@@ -70,11 +70,10 @@ typedef struct otPlatDnsUpstreamQuery otPlatDnsUpstreamQuery;
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
- * @param[in] aQuery     A message buffer of the DNS payload that should be sent to upstream DNS server. The platform is
- *                       responsible for releasing the message buffer.
+ * @param[in] aQuery     A message buffer of the DNS payload that should be sent to upstream DNS server.
  *
  */
-void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aQuery);
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery);
 
 /**
  * Cancels a transaction of upstream query.

@@ -44,12 +44,13 @@
 
 using namespace ot;
 
-OT_TOOL_WEAK void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aQuery)
+OT_TOOL_WEAK void otPlatDnsStartUpstreamQuery(otInstance             *aInstance,
+                                              otPlatDnsUpstreamQuery *aTxn,
+                                              const otMessage        *aQuery)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aTxn);
-
-    AsCoreType(aQuery).Free();
+    OT_UNUSED_VARIABLE(aQuery);
 }
 
 OT_TOOL_WEAK void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)

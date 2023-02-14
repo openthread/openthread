@@ -471,7 +471,7 @@ private:
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static bool               ShouldForwardToUpstream(const Header &aRequestHeader, const Message &aRequestMessage);
     UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
-    Error                     ResolveByUpstream(Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error                     ResolveByUpstream(const Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     Error             ResolveByQueryCallbacks(Header                 &aResponseHeader,
