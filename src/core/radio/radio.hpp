@@ -45,7 +45,7 @@
 
 namespace ot {
 
-static constexpr uint32_t kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS; ///< The microseconds per 10 symbols.
+static constexpr uint32_t kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS; ///< Time for 10 symbols in units of microseconds
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 /**
@@ -104,6 +104,8 @@ public:
 #endif
 
     static constexpr int8_t kInvalidRssi = OT_RADIO_RSSI_INVALID; ///< Invalid RSSI value.
+
+    static constexpr int8_t kDefaultReceiveSensitivity = -110; ///< Default receive sensitivity (in dBm).
 
     static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
                    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),
@@ -297,6 +299,18 @@ public:
     void SetMacFrameCounter(uint32_t aMacFrameCounter)
     {
         otPlatRadioSetMacFrameCounter(GetInstancePtr(), aMacFrameCounter);
+    }
+
+    /**
+     * This method sets the current MAC Frame Counter value only if the new given value is larger than the current
+     * value.
+     *
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     *
+     */
+    void SetMacFrameCounterIfLarger(uint32_t aMacFrameCounter)
+    {
+        otPlatRadioSetMacFrameCounterIfLarger(GetInstancePtr(), aMacFrameCounter);
     }
 
     /**
@@ -806,7 +820,7 @@ inline otRadioCaps Radio::GetCaps(void)
     return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES;
 }
 
-inline int8_t Radio::GetReceiveSensitivity(void) const { return -110; }
+inline int8_t Radio::GetReceiveSensitivity(void) const { return kDefaultReceiveSensitivity; }
 
 inline void Radio::SetPanId(Mac::PanId) {}
 

@@ -54,11 +54,7 @@ CoapBase::CoapBase(Instance &aInstance, Sender aSender)
     : InstanceLocator(aInstance)
     , mMessageId(Random::NonCrypto::GetUint16())
     , mRetransmissionTimer(aInstance, Coap::HandleRetransmissionTimer, this)
-    , mContext(nullptr)
-    , mInterceptor(nullptr)
     , mResponsesQueue(aInstance)
-    , mDefaultHandler(nullptr)
-    , mDefaultHandlerContext(nullptr)
     , mResourceHandler(nullptr)
     , mSender(aSender)
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -106,18 +102,6 @@ void CoapBase::RemoveResource(Resource &aResource)
 {
     IgnoreError(mResources.Remove(aResource));
     aResource.SetNext(nullptr);
-}
-
-void CoapBase::SetDefaultHandler(RequestHandler aHandler, void *aContext)
-{
-    mDefaultHandler        = aHandler;
-    mDefaultHandlerContext = aContext;
-}
-
-void CoapBase::SetInterceptor(Interceptor aInterceptor, void *aContext)
-{
-    mInterceptor = aInterceptor;
-    mContext     = aContext;
 }
 
 Message *CoapBase::NewMessage(const Message::Settings &aSettings)
@@ -878,6 +862,8 @@ Error CoapBase::ProcessBlock2Request(Message                 &aMessage,
     response->Init(kTypeAck, kCodeContent);
     response->SetMessageId(aMessage.GetMessageId());
 
+    SuccessOrExit(error = response->SetTokenFromMessage(aMessage));
+
     VerifyOrExit((bufLen = otCoapBlockSizeFromExponent(aMessage.GetBlockWiseBlockSize())) <= kMaxBlockLength,
                  error = kErrorNoBufs);
     SuccessOrExit(error = aResource.HandleBlockTransmit(buf,
@@ -1295,9 +1281,9 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     uint32_t         totalTransfereSize = 0;
 #endif
 
-    if (mInterceptor != nullptr)
+    if (mInterceptor.IsSet())
     {
-        SuccessOrExit(error = mInterceptor(aMessage, aMessageInfo, mContext));
+        SuccessOrExit(error = mInterceptor.Invoke(aMessage, aMessageInfo));
     }
 
     switch (mResponsesQueue.GetMatchedResponseCopy(aMessage, aMessageInfo, &cachedResponse))
@@ -1434,9 +1420,9 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         }
     }
 
-    if (mDefaultHandler)
+    if (mDefaultHandler.IsSet())
     {
-        mDefaultHandler(mDefaultHandlerContext, &aMessage, &aMessageInfo);
+        mDefaultHandler.Invoke(&aMessage, &aMessageInfo);
         error = kErrorNone;
         ExitNow();
     }

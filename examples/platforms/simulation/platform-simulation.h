@@ -186,6 +186,28 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 void platformRandomInit(void);
 
 /**
+ * This functions set the file name to use for logging.
+ *
+ * @param[in] aName  The file name.
+ *
+ */
+void platformLoggingSetFileName(const char *aName);
+
+/**
+ * This function initializes the platform logging service.
+ *
+ * @param[in] aName    The log module name to set with syslog.
+ *
+ */
+void platformLoggingInit(const char *aName);
+
+/**
+ * This function finalizes the platform logging service.
+ *
+ */
+void platformLoggingDeinit(void);
+
+/**
  * This function updates the file descriptor sets with file descriptors used by the UART driver.
  *
  * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.

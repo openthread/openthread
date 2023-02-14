@@ -42,6 +42,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
+#include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -95,6 +96,7 @@ enum Event : uint32_t
     kEventJoinerStateChanged               = OT_CHANGED_JOINER_STATE,                 ///< Joiner state changed
     kEventActiveDatasetChanged             = OT_CHANGED_ACTIVE_DATASET,               ///< Active Dataset changed
     kEventPendingDatasetChanged            = OT_CHANGED_PENDING_DATASET,              ///< Pending Dataset changed
+    kEventNat64TranslatorStateChanged      = OT_CHANGED_NAT64_TRANSLATOR_STATE,       ///< Nat64Translator state changed
 };
 
 /**
@@ -307,11 +309,7 @@ private:
 
     static constexpr uint16_t kFlagsStringBufferSize = kFlagsStringLineLimit + kMaxFlagNameLength;
 
-    struct ExternalCallback
-    {
-        otStateChangedCallback mHandler;
-        void                  *mContext;
-    };
+    typedef Callback<otStateChangedCallback> ExternalCallback;
 
     void EmitEvents(void);
 

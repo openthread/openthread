@@ -92,10 +92,10 @@ Mac::Mac(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     , mCslTxFireTime(TimeMilli::kMaxDuration)
 #endif
+#endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslChannel(0)
     , mCslPeriod(0)
-#endif
 #endif
     , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
     , mScanHandlerContext(nullptr)
@@ -224,7 +224,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
 
     VerifyOrExit(aBeaconFrame != nullptr, error = kErrorInvalidArgs);
 
-    VerifyOrExit(aBeaconFrame->GetType() == Frame::kFcfFrameBeacon, error = kErrorParse);
+    VerifyOrExit(aBeaconFrame->GetType() == Frame::kTypeBeacon, error = kErrorParse);
     SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
     VerifyOrExit(address.IsExtended(), error = kErrorParse);
     aResult.mExtAddress = address.GetExtended();
@@ -719,12 +719,16 @@ void Mac::FinishOperation(void)
 
 TxFrame *Mac::PrepareBeaconRequest(void)
 {
-    TxFrame &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
-    uint16_t fcf   = Frame::kFcfFrameMacCmd | Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrNone;
+    TxFrame  &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    Addresses addrs;
+    PanIds    panIds;
 
-    frame.InitMacHeader(fcf, Frame::kSecNone);
-    frame.SetDstPanId(kShortAddrBroadcast);
-    frame.SetDstAddr(kShortAddrBroadcast);
+    addrs.mSource.SetNone();
+    addrs.mDestination.SetShort(kShortAddrBroadcast);
+    panIds.mDestination = kShortAddrBroadcast;
+
+    frame.InitMacHeader(Frame::kTypeMacCmd, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
+
     IgnoreError(frame.SetCommandId(Frame::kMacCmdBeaconRequest));
 
     LogInfo("Sending Beacon Request");
@@ -734,9 +738,10 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame *frame;
-    uint16_t fcf;
-    Beacon  *beacon = nullptr;
+    TxFrame  *frame;
+    Beacon   *beacon = nullptr;
+    Addresses addrs;
+    PanIds    panIds;
 #if OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE
     uint8_t        beaconLength;
     BeaconPayload *beaconPayload = nullptr;
@@ -750,10 +755,11 @@ TxFrame *Mac::PrepareBeacon(void)
     frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
 #endif
 
-    fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
-    frame->InitMacHeader(fcf, Frame::kSecNone);
-    IgnoreError(frame->SetSrcPanId(mPanId));
-    frame->SetSrcAddr(GetExtAddress());
+    addrs.mSource.SetExtended(GetExtAddress());
+    panIds.mSource = mPanId;
+    addrs.mDestination.SetNone();
+
+    frame->InitMacHeader(Frame::kTypeBeacon, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
 
     beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
@@ -1124,7 +1130,7 @@ void Mac::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 }
 
 void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                    const RxFrame *aAckFrame,
+                                    RxFrame       *aAckFrame,
                                     Error          aError,
                                     uint8_t        aRetryCount,
                                     bool           aWillRetx)
@@ -1187,6 +1193,10 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
     if ((aError == kErrorNone) && ackRequested && (aAckFrame != nullptr) && (neighbor != nullptr))
     {
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+        SuccessOrExit(mFilter.ApplyToRxFrame(*aAckFrame, neighbor->GetExtAddress(), neighbor));
+#endif
+
         neighbor->GetLinkInfo().AddRss(aAckFrame->GetRssi());
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aAckFrame->GetType(), aAckFrame->GetLqi(),
@@ -1194,7 +1204,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
         ProcessEnhAckProbing(*aAckFrame, *neighbor);
 #endif
 #if OPENTHREAD_FTD
-        if (aAckFrame->GetVersion() == Frame::kFcfFrameVersion2015)
+        if (aAckFrame->GetVersion() == Frame::kVersion2015)
         {
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
             ProcessCsl(*aAckFrame, dstAddr);
@@ -1496,7 +1506,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);
 
     IgnoreError(aFrame.GetSecurityLevel(securityLevel));
-    VerifyOrExit(securityLevel == Frame::kSecEncMic32);
+    VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
 
     IgnoreError(aFrame.GetFrameCounter(frameCounter));
     LogDebg("Rx security - frame counter %lu", ToUlong(frameCounter));
@@ -1634,7 +1644,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     VerifyOrExit(aAckFrame.IsVersion2015());
 
     IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
-    VerifyOrExit(securityLevel == Frame::kSecEncMic32);
+    VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
 
     IgnoreError(aAckFrame.GetKeyIdMode(keyIdMode));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, error = kErrorNone);
@@ -1787,23 +1797,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = kErrorInvalidSourceAddress);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-        {
-            int8_t fixedRss;
-
-            SuccessOrExit(error = mFilter.Apply(srcaddr.GetExtended(), fixedRss));
-
-            if (fixedRss != Filter::kFixedRssDisabled)
-            {
-                aFrame->SetRssi(fixedRss);
-
-                // Clear any previous link info to ensure the fixed RSSI
-                // value takes effect quickly.
-                if (neighbor != nullptr)
-                {
-                    neighbor->GetLinkInfo().Clear();
-                }
-            }
-        }
+        SuccessOrExit(error = mFilter.ApplyToRxFrame(*aFrame, srcaddr.GetExtended(), neighbor));
 #endif
 
         break;
@@ -1849,7 +1843,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (aFrame->GetVersion() == Frame::kFcfFrameVersion2015)
+    if (aFrame->GetVersion() == Frame::kVersion2015)
     {
         ProcessCsl(*aFrame, srcaddr);
     }
@@ -1890,7 +1884,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_FTD
                 // From Thread 1.2, MAC Data Frame can also act as keep-alive message if child supports
-                if (aFrame->GetType() == Frame::kFcfFrameData && !neighbor->IsRxOnWhenIdle() &&
+                if (aFrame->GetType() == Frame::kTypeData && !neighbor->IsRxOnWhenIdle() &&
                     neighbor->IsEnhancedKeepAliveSupported())
                 {
                     neighbor->SetLastHeard(TimerMilli::GetNow());
@@ -1908,7 +1902,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     {
     case kOperationActiveScan:
 
-        if (aFrame->GetType() == Frame::kFcfFrameBeacon)
+        if (aFrame->GetType() == Frame::kTypeBeacon)
         {
             mCounters.mRxBeacon++;
             ReportActiveScanResult(aFrame);
@@ -1953,7 +1947,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
     switch (aFrame->GetType())
     {
-    case Frame::kFcfFrameMacCmd:
+    case Frame::kTypeMacCmd:
         if (HandleMacCommand(*aFrame)) // returns `true` when handled
         {
             ExitNow(error = kErrorNone);
@@ -1961,11 +1955,11 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
         break;
 
-    case Frame::kFcfFrameBeacon:
+    case Frame::kTypeBeacon:
         mCounters.mRxBeacon++;
         break;
 
-    case Frame::kFcfFrameData:
+    case Frame::kTypeData:
         mCounters.mRxData++;
         break;
 

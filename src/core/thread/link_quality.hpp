@@ -41,6 +41,7 @@
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/string.hpp"
+#include "thread/mle_types.hpp"
 
 namespace ot {
 
@@ -241,6 +242,21 @@ enum LinkQuality : uint8_t
     kLinkQuality3 = 3, ///< Link quality 3
 };
 
+constexpr uint8_t kCostForLinkQuality0 = Mle::kMaxRouteCost; ///< Link Cost for Link Quality 0.
+constexpr uint8_t kCostForLinkQuality1 = 4;                  ///< Link Cost for Link Quality 1.
+constexpr uint8_t kCostForLinkQuality2 = 2;                  ///< Link Cost for Link Quality 2.
+constexpr uint8_t kCostForLinkQuality3 = 1;                  ///< Link Cost for Link Quality 3.
+
+/**
+ * This function converts link quality to route cost.
+ *
+ * @param[in]  aLinkQuality  The link quality to covert.
+ *
+ * @returns The route cost corresponding to @p aLinkQuality.
+ *
+ */
+uint8_t CostForLinkQuality(LinkQuality aLinkQuality);
+
 /**
  * This function computes the link margin from a given noise floor and received signal strength.
  *
@@ -305,6 +321,12 @@ public:
      *
      */
     void Clear(void);
+
+    /**
+     * This method clears the average RSS value.
+     *
+     */
+    void CleaAverageRss(void) { mRssAverager.Clear(); }
 
     /**
      * This method adds a new received signal strength (RSS) value to the average.

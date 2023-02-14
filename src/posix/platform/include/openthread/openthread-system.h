@@ -219,6 +219,29 @@ const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
  */
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void);
 
+/**
+ * This function returns the ifr_flags of the infrastructure network interface.
+ *
+ * @returns The ifr_flags of infrastructure network interface.
+ *
+ */
+uint32_t otSysGetInfraNetifFlags(void);
+
+typedef struct otSysInfraNetIfAddressCounters
+{
+    uint32_t mLinkLocalAddresses;
+    uint32_t mUniqueLocalAddresses;
+    uint32_t mGlobalUnicastAddresses;
+} otSysInfraNetIfAddressCounters;
+
+/**
+ * This functions counts the number of addresses on the infrastructure network interface.
+ *
+ * @param[out] aAddressCounters  The counters of addresses on infrastructure network interface.
+ *
+ */
+void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

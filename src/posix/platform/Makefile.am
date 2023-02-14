@@ -47,6 +47,7 @@ libopenthread_posix_a_SOURCES             = \
     alarm.cpp                               \
     backbone.cpp                            \
     backtrace.cpp                           \
+    config_file.cpp                         \
     daemon.cpp                              \
     entropy.cpp                             \
     firewall.cpp                            \
@@ -58,6 +59,8 @@ libopenthread_posix_a_SOURCES             = \
     misc.cpp                                \
     multicast_routing.cpp                   \
     netif.cpp                               \
+    power.cpp                               \
+    power_updater.cpp                       \
     radio.cpp                               \
     radio_url.cpp                           \
     settings.cpp                            \
@@ -93,24 +96,5 @@ dist_openthread_HEADERS = $(openthread_headers)
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
-
-check_PROGRAMS = test-settings
-
-test_settings_CPPFLAGS                                        = \
-    -I$(top_srcdir)/include                                     \
-    -I$(top_srcdir)/src                                         \
-    -I$(top_srcdir)/src/core                                    \
-    -I$(top_srcdir)/src/posix/platform/include                  \
-    -DOPENTHREAD_CONFIG_LOG_PLATFORM=0                          \
-    -DSELF_TEST                                                 \
-    $(NULL)
-
-test_settings_SOURCES                     = \
-    settings.cpp                            \
-    $(NULL)
-
-TESTS                                     = \
-    test-settings                           \
-    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

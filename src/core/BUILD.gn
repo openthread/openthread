@@ -170,10 +170,6 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_JOINER_ENABLE=1" ]
     }
 
-    if (openthread_config_legacy_enable) {
-      defines += [ "OPENTHREAD_CONFIG_LEGACY_ENABLE=1" ]
-    }
-
     if (openthread_config_link_metrics_initiator_enable) {
       defines += [ "DOPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=1" ]
     }
@@ -386,6 +382,7 @@ openthread_core_files = [
   "common/binary_search.cpp",
   "common/binary_search.hpp",
   "common/bit_vector.hpp",
+  "common/callback.hpp",
   "common/clearable.hpp",
   "common/code_utils.hpp",
   "common/const_cast.hpp",
@@ -706,6 +703,8 @@ openthread_core_files = [
   "utils/parse_cmdline.hpp",
   "utils/ping_sender.cpp",
   "utils/ping_sender.hpp",
+  "utils/power_calibration.cpp",
+  "utils/power_calibration.hpp",
   "utils/slaac_address.cpp",
   "utils/slaac_address.hpp",
   "utils/srp_client_buffers.cpp",
@@ -723,6 +722,8 @@ openthread_radio_sources = [
   "common/binary_search.cpp",
   "common/binary_search.hpp",
   "common/error.hpp",
+  "common/frame_builder.cpp",
+  "common/frame_builder.hpp",
   "common/instance.cpp",
   "common/log.cpp",
   "common/random.cpp",
@@ -745,6 +746,7 @@ openthread_radio_sources = [
   "radio/radio_platform.cpp",
   "thread/link_quality.cpp",
   "utils/parse_cmdline.cpp",
+  "utils/power_calibration.cpp",
 ]
 
 header_pattern = [
@@ -791,6 +793,7 @@ source_set("libopenthread_core_config") {
     "config/parent_search.h",
     "config/ping_sender.h",
     "config/platform.h",
+    "config/power_calibration.h",
     "config/radio_link.h",
     "config/sntp_client.h",
     "config/srp_client.h",

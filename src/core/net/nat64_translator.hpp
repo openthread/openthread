@@ -56,6 +56,16 @@ enum State : uint8_t
     kStateActive     = OT_NAT64_STATE_ACTIVE,      ///< The component is running.
 };
 
+/**
+ * This function converts a `State` into a string.
+ *
+ * @param[in]  aState     A state.
+ *
+ * @returns  A string representation of @p aState.
+ *
+ */
+const char *StateToString(State aState);
+
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 /**
@@ -166,7 +176,7 @@ public:
      * @retval  kNat64StateActive    The translator is translating packets.
      *
      */
-    State GetState(void) const;
+    State GetState(void) const { return mState; }
 
     /**
      * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
@@ -243,13 +253,19 @@ public:
 
     /**
      * Sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
-     * If an empty NAT64 prefix is set, the translator will return kNotTranslated for all IPv6 datagrams and kDrop for
-     * all IPv4 datagrams.
+     * This function equals to `ClearNat64Prefix` when an empty prefix is provided.
      *
      * @param[in] aNat64Prefix The prefix of the NAT64-mapped addresses.
      *
      */
     void SetNat64Prefix(const Ip6::Prefix &aNat64Prefix);
+
+    /**
+     * Clear the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
+     * The translator will return kNotTranslated for all IPv6 datagrams and kDrop for all IPv4 datagrams.
+     *
+     */
+    void ClearNat64Prefix(void);
 
     /**
      * Initializes an `otNat64AddressMappingIterator`.
@@ -364,7 +380,10 @@ private:
 
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
-    bool mEnabled;
+    void UpdateState(void);
+
+    bool  mEnabled;
+    State mState;
 
     uint64_t mNextMappingId;
 

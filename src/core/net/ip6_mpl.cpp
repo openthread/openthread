@@ -34,6 +34,7 @@
 #include "ip6_mpl.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/message.hpp"
@@ -54,41 +55,65 @@ Mpl::Mpl(Instance &aInstance)
     memset(mSeedSet, 0, sizeof(mSeedSet));
 }
 
-void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
+void MplOption::Init(SeedIdLength aSeedIdLength)
 {
-    aOption.Init();
-    aOption.SetSequence(mSequence++);
+    SetType(kType);
 
-    // Seed ID can be elided when `aAddress` is RLOC.
+    switch (aSeedIdLength)
+    {
+    case kSeedIdLength0:
+        SetLength(sizeof(*this) - sizeof(Option) - sizeof(mSeedId));
+        break;
+    case kSeedIdLength2:
+        SetLength(sizeof(*this) - sizeof(Option));
+        break;
+    default:
+        OT_ASSERT(false);
+    }
+
+    mControl = aSeedIdLength;
+}
+
+void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
+{
     if (aAddress == Get<Mle::Mle>().GetMeshLocal16())
     {
-        aOption.SetSeedIdLength(OptionMpl::kSeedIdLength0);
-
-        // Decrease default option length.
-        aOption.SetLength(aOption.GetLength() - sizeof(uint16_t));
+        // Seed ID can be elided when `aAddress` is RLOC.
+        aOption.Init(MplOption::kSeedIdLength0);
     }
     else
     {
-        aOption.SetSeedIdLength(OptionMpl::kSeedIdLength2);
+        aOption.Init(MplOption::kSeedIdLength2);
         aOption.SetSeedId(Get<Mle::Mle>().GetRloc16());
     }
+
+    aOption.SetSequence(mSequence++);
 }
 
-Error Mpl::ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive)
+Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool aIsOutbound, bool &aReceive)
 {
     Error     error;
-    OptionMpl option;
+    MplOption option;
 
-    VerifyOrExit(aMessage.ReadBytes(aMessage.GetOffset(), &option, sizeof(option)) >= OptionMpl::kMinLength &&
-                     (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0 ||
-                      option.GetSeedIdLength() == OptionMpl::kSeedIdLength2),
-                 error = kErrorParse);
+    // Read the min size bytes first, then check the expected
+    // `SeedIdLength` and read the full `MplOption` if needed.
+    SuccessOrExit(error = aMessage.Read(aOffset, &option, MplOption::kMinSize));
 
-    if (option.GetSeedIdLength() == OptionMpl::kSeedIdLength0)
+    switch (option.GetSeedIdLength())
     {
+    case MplOption::kSeedIdLength0:
         // Retrieve Seed ID from the IPv6 Source Address RLOC.
         VerifyOrExit(aAddress.GetIid().IsLocator(), error = kErrorDrop);
         option.SetSeedId(aAddress.GetIid().GetLocator());
+        break;
+
+    case MplOption::kSeedIdLength2:
+        SuccessOrExit(error = aMessage.Read(aOffset, option));
+        break;
+
+    case MplOption::kSeedIdLength8:
+    case MplOption::kSeedIdLength16:
+        ExitNow(error = kErrorParse);
     }
 
     // Check if the MPL Data Message is new.

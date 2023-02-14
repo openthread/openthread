@@ -34,6 +34,13 @@ option(OT_FTD "enable FTD" ON)
 option(OT_MTD "enable MTD" ON)
 option(OT_RCP "enable RCP" ON)
 
+message(STATUS OT_APP_CLI=${OT_APP_CLI})
+message(STATUS OT_APP_NCP=${OT_APP_NCP})
+message(STATUS OT_APP_RCP=${OT_APP_RCP})
+message(STATUS OT_FTD=${OT_FTD})
+message(STATUS OT_MTD=${OT_MTD})
+message(STATUS OT_RCP=${OT_RCP})
+
 set(OT_CONFIG_VALUES
     ""
     "ON"
@@ -69,6 +76,7 @@ macro(ot_option name ot_config description)
     endif()
 endmacro()
 
+ot_option(OT_15_4 OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE "802.15.4 radio link")
 ot_option(OT_ANYCAST_LOCATOR OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE "anycast locator")
 ot_option(OT_ASSERT OPENTHREAD_CONFIG_ASSERT_ENABLE "assert function OT_ASSERT()")
 ot_option(OT_BACKBONE_ROUTER OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE "backbone router functionality")
@@ -104,7 +112,6 @@ ot_option(OT_HISTORY_TRACKER OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE "history t
 ot_option(OT_IP6_FRAGM OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE "ipv6 fragmentation")
 ot_option(OT_JAM_DETECTION OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE "jam detection")
 ot_option(OT_JOINER OPENTHREAD_CONFIG_JOINER_ENABLE "joiner")
-ot_option(OT_LEGACY OPENTHREAD_CONFIG_LEGACY_ENABLE "legacy network")
 ot_option(OT_LINK_METRICS_INITIATOR OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE "link metrics initiator")
 ot_option(OT_LINK_METRICS_SUBJECT OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE "link metrics subject")
 ot_option(OT_LINK_RAW OPENTHREAD_CONFIG_LINK_RAW_ENABLE "link raw service")

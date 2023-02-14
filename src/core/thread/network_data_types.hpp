@@ -161,6 +161,16 @@ inline RoutePreference RoutePreferenceFromValue(uint8_t aValue)
 }
 
 /**
+ * This function converts a router preference to a human-readable string.
+ *
+ * @param[in] aPreference  The preference to convert
+ *
+ * @returns The string representation of @p aPreference.
+ *
+ */
+const char *RoutePreferenceToString(RoutePreference aPreference);
+
+/**
  * This class represents an On-mesh Prefix (Border Router) configuration.
  *
  */

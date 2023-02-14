@@ -51,6 +51,7 @@
 #endif
 #endif
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
@@ -494,15 +495,13 @@ private:
 
     Message *mReceiveMessage;
 
-    ConnectedHandler mConnectedHandler;
-    ReceiveHandler   mReceiveHandler;
-    void            *mContext;
+    Callback<ConnectedHandler> mConnectedCallback;
+    Callback<ReceiveHandler>   mReceiveCallback;
 
     Ip6::MessageInfo mMessageInfo;
     Ip6::Udp::Socket mSocket;
 
-    TransportCallback mTransportCallback;
-    void             *mTransportContext;
+    Callback<TransportCallback> mTransportCallback;
 
     Message::SubType mMessageSubType;
     Message::SubType mMessageDefaultSubType;

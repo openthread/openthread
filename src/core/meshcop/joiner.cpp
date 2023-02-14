@@ -62,8 +62,6 @@ Joiner::Joiner(Instance &aInstance)
     , mId()
     , mDiscerner()
     , mState(kStateIdle)
-    , mCallback(nullptr)
-    , mContext(nullptr)
     , mJoinerRouterIndex(0)
     , mFinalizeMessage(nullptr)
     , mTimer(aInstance)
@@ -177,9 +175,8 @@ Error Joiner::Start(const char      *aPskd,
     SuccessOrExit(error = Get<Mle::DiscoverScanner>().Discover(Mac::ChannelMask(0), Get<Mac::Mac>().GetPanId(),
                                                                /* aJoiner */ true, /* aEnableFiltering */ true,
                                                                &filterIndexes, HandleDiscoverResult, this));
-    mCallback = aCallback;
-    mContext  = aContext;
 
+    mCallback.Set(aCallback, aContext);
     SetState(kStateDiscover);
 
 exit:
@@ -197,7 +194,7 @@ void Joiner::Stop(void)
     LogInfo("Joiner stopped");
 
     // Callback is set to `nullptr` to skip calling it from `Finish()`
-    mCallback = nullptr;
+    mCallback.Clear();
     Finish(kErrorAbort);
 }
 
@@ -226,10 +223,7 @@ void Joiner::Finish(Error aError)
     SetState(kStateIdle);
     FreeJoinerFinalizeMessage();
 
-    if (mCallback)
-    {
-        mCallback(aError, mContext);
-    }
+    mCallback.InvokeIfSet(aError);
 
 exit:
     return;

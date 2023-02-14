@@ -48,9 +48,26 @@ namespace Nat64 {
 
 RegisterLogModule("Nat64");
 
+const char *StateToString(State aState)
+{
+    static const char *const kStateString[] = {
+        "Disabled",
+        "NotRunning",
+        "Idle",
+        "Active",
+    };
+
+    static_assert(0 == kStateDisabled, "kStateDisabled value is incorrect");
+    static_assert(1 == kStateNotRunning, "kStateNotRunning value is incorrect");
+    static_assert(2 == kStateIdle, "kStateIdle value is incorrect");
+    static_assert(3 == kStateActive, "kStateActive value is incorrect");
+
+    return kStateString[aState];
+}
+
 Translator::Translator(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEnabled(false)
+    , mState(State::kStateDisabled)
     , mMappingExpirerTimer(aInstance)
 {
     Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
@@ -490,17 +507,35 @@ Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
             numberOfHosts);
     mIp4Cidr = aCidr;
 
+    UpdateState();
+
 exit:
     return err;
 }
 
 void Translator::SetNat64Prefix(const Ip6::Prefix &aNat64Prefix)
 {
-    if (mNat64Prefix != aNat64Prefix)
+    if (aNat64Prefix.GetLength() == 0)
+    {
+        ClearNat64Prefix();
+    }
+    else if (mNat64Prefix != aNat64Prefix)
     {
         LogInfo("IPv6 Prefix for NAT64 updated to %s", aNat64Prefix.ToString().AsCString());
         mNat64Prefix = aNat64Prefix;
+        UpdateState();
     }
+}
+
+void Translator::ClearNat64Prefix(void)
+{
+    VerifyOrExit(mNat64Prefix.GetLength() != 0);
+    mNat64Prefix.Clear();
+    LogInfo("IPv6 Prefix for NAT64 cleared");
+    UpdateState();
+
+exit:
+    return;
 }
 
 void Translator::HandleMappingExpirerTimer(void)
@@ -596,16 +631,31 @@ void Translator::ProtocolCounters::Count4To6Packet(uint8_t aProtocol, uint64_t a
     mTotal.m4To6Bytes += aPacketSize;
 }
 
-State Translator::GetState(void) const
+void Translator::UpdateState(void)
 {
-    State ret = kStateDisabled;
+    State newState;
 
-    VerifyOrExit(mEnabled);
-    VerifyOrExit(mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64(), ret = kStateNotRunning);
-    ret = kStateActive;
+    if (mEnabled)
+    {
+        if (mIp4Cidr.mLength > 0 && mNat64Prefix.IsValidNat64())
+        {
+            newState = kStateActive;
+        }
+        else
+        {
+            newState = kStateNotRunning;
+        }
+    }
+    else
+    {
+        newState = kStateDisabled;
+    }
+
+    SuccessOrExit(Get<Notifier>().Update(mState, newState, kEventNat64TranslatorStateChanged));
+    LogInfo("NAT64 translator is now %s", StateToString(mState));
 
 exit:
-    return ret;
+    return;
 }
 
 void Translator::SetEnabled(bool aEnabled)
@@ -618,7 +668,7 @@ void Translator::SetEnabled(bool aEnabled)
         ReleaseMappings(mActiveAddressMappings);
     }
 
-    LogInfo("NAT64 translator %s", aEnabled ? "enabled" : "disabled");
+    UpdateState();
 
 exit:
     return;

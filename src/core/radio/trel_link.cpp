@@ -216,11 +216,11 @@ void Link::BeginTransmit(void)
 
     if (mTxFrame.GetAckRequest())
     {
-        uint16_t fcf = Mac::Frame::kFcfFrameAck;
+        uint16_t fcf = Mac::Frame::kTypeAck;
 
         if (!Get<Mle::MleRouter>().IsRxOnWhenIdle())
         {
-            fcf |= Mac::Frame::kFcfFramePending;
+            fcf |= kFcfFramePending;
         }
 
         // Prepare the ack frame (FCF followed by sequence number)
@@ -265,7 +265,7 @@ void Link::HandleTimer(void)
         HandleTimer(child);
     }
 
-    for (Router &router : Get<RouterTable>().Iterate())
+    for (Router &router : Get<RouterTable>())
     {
         HandleTimer(router);
     }

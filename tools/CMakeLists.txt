@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2022, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,12 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-extraction:
-  cpp:
-    prepare:
-      packages:
-        - cmake
-        - ninja-build
-    index:
-      build_command:
-        - THREAD_VERSION=1.2 NODE_MODE=rcp OT_NATIVE_IP=1 ./script/test build
+if(OT_PLATFORM STREQUAL "posix")
+    add_subdirectory(ot-fct)
+endif()

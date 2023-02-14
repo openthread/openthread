@@ -76,6 +76,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mLinkQualityIn    = aNeighbor.GetLinkQualityIn();
     mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
     mLastRssi         = aNeighbor.GetLinkInfo().GetLastRss();
+    mLinkMargin       = aNeighbor.GetLinkInfo().GetLinkMargin();
     mFrameErrorRate   = aNeighbor.GetLinkInfo().GetFrameErrorRate();
     mMessageErrorRate = aNeighbor.GetLinkInfo().GetMessageErrorRate();
     mRxOnWhenIdle     = aNeighbor.IsRxOnWhenIdle();
@@ -566,5 +567,26 @@ void Parent::Clear(void)
     memset(reinterpret_cast<void *>(this), 0, sizeof(Parent));
     Init(instance);
 }
+
+bool Router::SetNextHopAndCost(uint8_t aNextHop, uint8_t aCost)
+{
+    bool changed = false;
+
+    if (mNextHop != aNextHop)
+    {
+        mNextHop = aNextHop;
+        changed  = true;
+    }
+
+    if (mCost != aCost)
+    {
+        mCost   = aCost;
+        changed = true;
+    }
+
+    return changed;
+}
+
+bool Router::SetNextHopToInvalid(void) { return SetNextHopAndCost(Mle::kInvalidRouterId, 0); }
 
 } // namespace ot

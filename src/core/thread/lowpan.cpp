@@ -438,7 +438,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     uint16_t             startOffset = aMessage.GetOffset();
     Ip6::ExtensionHeader extHeader;
     uint16_t             len;
-    uint8_t              padLength = 0;
+    uint16_t             padLength = 0;
     uint8_t              tmpByte;
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), extHeader));
@@ -461,7 +461,7 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
 
     SuccessOrExit(error = aFrameBuilder.AppendUint8(tmpByte));
 
-    len = (extHeader.GetLength() + 1) * 8 - sizeof(extHeader);
+    len = extHeader.GetSize() - sizeof(extHeader);
 
     // RFC 6282 does not support compressing large extension headers
     VerifyOrExit(len <= kExtHdrMaxLength, error = kErrorFailed);
@@ -472,34 +472,23 @@ Error Lowpan::CompressExtensionHeader(Message &aMessage, FrameBuilder &aFrameBui
     // Pad1 or PadN option MAY be elided by the compressor."
     if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
     {
-        uint16_t          offset = aMessage.GetOffset();
-        Ip6::OptionHeader optionHeader;
+        uint16_t    offset    = aMessage.GetOffset();
+        uint16_t    endOffset = offset + len;
+        bool        hasOption = false;
+        Ip6::Option option;
 
-        while ((offset - aMessage.GetOffset()) < len)
+        for (; offset < endOffset; offset += option.GetSize())
         {
-            SuccessOrExit(error = aMessage.Read(offset, optionHeader));
-
-            if (optionHeader.GetType() == Ip6::OptionPad1::kType)
-            {
-                offset += sizeof(Ip6::OptionPad1);
-            }
-            else
-            {
-                offset += sizeof(optionHeader) + optionHeader.GetLength();
-            }
+            SuccessOrExit(error = option.ParseFrom(aMessage, offset, endOffset));
+            hasOption = true;
         }
 
         // Check if the last option can be compressed.
-        if (optionHeader.GetType() == Ip6::OptionPad1::kType)
+        if (hasOption && option.IsPadding())
         {
-            padLength = sizeof(Ip6::OptionPad1);
+            padLength = option.GetSize();
+            len -= padLength;
         }
-        else if (optionHeader.GetType() == Ip6::OptionPadN::kType)
-        {
-            padLength = sizeof(optionHeader) + optionHeader.GetLength();
-        }
-
-        len -= padLength;
     }
 
     VerifyOrExit(aMessage.GetOffset() + len + padLength <= aMessage.GetLength(), error = kErrorParse);
@@ -844,11 +833,11 @@ exit:
 
 Error Lowpan::DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData)
 {
-    Error   error = kErrorParse;
-    uint8_t hdr[2];
-    uint8_t len;
-    uint8_t ctl;
-    uint8_t padLength;
+    Error          error = kErrorParse;
+    uint8_t        hdr[2];
+    uint8_t        len;
+    uint8_t        ctl;
+    Ip6::PadOption padOption;
 
     SuccessOrExit(aFrameData.ReadUint8(ctl));
 
@@ -882,26 +871,11 @@ Error Lowpan::DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData
     // The RFC6282 says: "The trailing Pad1 or PadN option MAY be elided by the compressor.
     // A decompressor MUST ensure that the containing header is padded out to a multiple of 8 octets
     // in length, using a Pad1 or PadN option if necessary."
-    padLength = 8 - ((len + sizeof(hdr)) & 0x07);
 
-    if (padLength != 8)
+    if (padOption.InitToPadHeaderWithSize(len + sizeof(hdr)) == kErrorNone)
     {
-        if (padLength == 1)
-        {
-            Ip6::OptionPad1 optionPad1;
-
-            optionPad1.Init();
-            SuccessOrExit(aMessage.AppendBytes(&optionPad1, padLength));
-        }
-        else
-        {
-            Ip6::OptionPadN optionPadN;
-
-            optionPadN.Init(padLength);
-            SuccessOrExit(aMessage.AppendBytes(&optionPadN, padLength));
-        }
-
-        aMessage.MoveOffset(padLength);
+        SuccessOrExit(aMessage.AppendBytes(&padOption, padOption.GetSize()));
+        aMessage.MoveOffset(padOption.GetSize());
     }
 
     error = kErrorNone;

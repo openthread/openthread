@@ -57,8 +57,6 @@ Local::Local(Instance &aInstance)
     , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
     , mRegistrationJitter(Mle::kBackboneRouterRegistrationJitter)
     , mIsServiceAdded(false)
-    , mDomainPrefixCallback(nullptr)
-    , mDomainPrefixCallbackContext(nullptr)
 {
     mDomainPrefixConfig.GetPrefix().SetLength(0);
 
@@ -378,21 +376,18 @@ void Local::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
         Get<BackboneTmfAgent>().SubscribeMulticast(mAllDomainBackboneRouters);
     }
 
-    if (mDomainPrefixCallback != nullptr)
+    if (mDomainPrefixCallback.IsSet())
     {
         switch (aState)
         {
         case Leader::kDomainPrefixAdded:
-            mDomainPrefixCallback(mDomainPrefixCallbackContext, OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED,
-                                  Get<Leader>().GetDomainPrefix());
+            mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED, Get<Leader>().GetDomainPrefix());
             break;
         case Leader::kDomainPrefixRemoved:
-            mDomainPrefixCallback(mDomainPrefixCallbackContext, OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED,
-                                  Get<Leader>().GetDomainPrefix());
+            mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, Get<Leader>().GetDomainPrefix());
             break;
         case Leader::kDomainPrefixRefreshed:
-            mDomainPrefixCallback(mDomainPrefixCallbackContext, OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED,
-                                  Get<Leader>().GetDomainPrefix());
+            mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, Get<Leader>().GetDomainPrefix());
             break;
         default:
             break;
@@ -458,12 +453,6 @@ void Local::LogBackboneRouterService(const char *aAction, Error aError)
             mReregistrationDelay, ToUlong(mMlrTimeout), ErrorToString(aError));
 }
 #endif
-
-void Local::SetDomainPrefixCallback(otBackboneRouterDomainPrefixCallback aCallback, void *aContext)
-{
-    mDomainPrefixCallback        = aCallback;
-    mDomainPrefixCallbackContext = aContext;
-}
 
 } // namespace BackboneRouter
 

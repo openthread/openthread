@@ -47,8 +47,6 @@ namespace Mle {
 
 DiscoverScanner::DiscoverScanner(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mHandler(nullptr)
-    , mHandlerContext(nullptr)
     , mScanDoneTask(aInstance)
     , mTimer(aInstance)
     , mFilterIndexes()
@@ -97,8 +95,7 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         }
     }
 
-    mHandler            = aCallback;
-    mHandlerContext     = aContext;
+    mCallback.Set(aCallback, aContext);
     mShouldRestorePanId = false;
     mScanChannels       = Get<Mac::Mac>().GetSupportedChannelMask();
 
@@ -259,11 +256,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
 void DiscoverScanner::HandleScanDoneTask(void)
 {
     mState = kStateIdle;
-
-    if (mHandler != nullptr)
-    {
-        mHandler(nullptr, mHandlerContext);
-    }
+    mCallback.InvokeIfSet(nullptr);
 }
 
 void DiscoverScanner::HandleTimer(void)
@@ -383,10 +376,7 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 
     VerifyOrExit(!mEnableFiltering || didCheckSteeringData);
 
-    if (mHandler)
-    {
-        mHandler(&result, mHandlerContext);
-    }
+    mCallback.InvokeIfSet(&result);
 
 exit:
     Mle::LogProcessError(Mle::kTypeDiscoveryResponse, error);

@@ -104,6 +104,7 @@ add_library(openthread-posix
     alarm.cpp
     backbone.cpp
     backtrace.cpp
+    config_file.cpp
     daemon.cpp
     entropy.cpp
     firewall.cpp
@@ -115,6 +116,8 @@ add_library(openthread-posix
     misc.cpp
     multicast_routing.cpp
     netif.cpp
+    power.cpp
+    power_updater.cpp
     radio.cpp
     radio_url.cpp
     settings.cpp
@@ -167,3 +170,18 @@ target_include_directories(openthread-posix PRIVATE
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
+
+add_executable(ot-posix-test-settings
+    settings.cpp
+)
+target_compile_definitions(ot-posix-test-settings
+    PRIVATE -DSELF_TEST=1 -DOPENTHREAD_CONFIG_LOG_PLATFORM=0
+)
+target_include_directories(ot-posix-test-settings
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src/core
+        ${PROJECT_SOURCE_DIR}/src/posix/platform/include
+)
+add_test(NAME ot-posix-test-settings COMMAND ot-posix-test-settings)

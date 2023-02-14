@@ -39,6 +39,25 @@
 namespace ot {
 namespace NetworkData {
 
+const char *RoutePreferenceToString(RoutePreference aPreference)
+{
+    const char *str = "low";
+
+    switch (aPreference)
+    {
+    case kRoutePreferenceHigh:
+        str = "high";
+        break;
+    case kRoutePreferenceMedium:
+        str = "med";
+        break;
+    case kRoutePreferenceLow:
+        break;
+    }
+
+    return str;
+}
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 static bool IsPrefixValid(Instance &aInstance, const Ip6::Prefix &aPrefix)

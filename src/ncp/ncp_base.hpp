@@ -130,36 +130,6 @@ public:
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 #endif
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    /**
-     * This callback is invoked by the legacy stack to notify that a new
-     * legacy node did join the network.
-     *
-     * @param[in]   aExtAddr    The extended address of the joined node.
-     *
-     */
-    void HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr);
-
-    /**
-     * This callback is invoked by the legacy stack to notify that the
-     * legacy ULA prefix has changed.
-     *
-     * param[in]    aUlaPrefix  The changed ULA prefix.
-     *
-     */
-    void HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
-
-    /**
-     * This method registers a set of legacy handlers with NCP.
-     *
-     * @param[in] aHandlers    A pointer to a handler struct.
-     *
-     */
-    void RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
-#endif
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
-
     /**
      * This method is called by the framer whenever a framing error is detected.
      */
@@ -485,14 +455,6 @@ protected:
 
     void ResetCounters(void);
 
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    void StartLegacy(void);
-    void StopLegacy(void);
-#else
-    void StartLegacy(void) {}
-    void StopLegacy(void) {}
-#endif
-
     static uint8_t      ConvertLogLevel(otLogLevel aLogLevel);
     static unsigned int ConvertLogRegion(otLogRegion aLogRegion);
 
@@ -662,12 +624,6 @@ protected:
     bool mSrpClientCallbackEnabled;
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    const otNcpLegacyHandlers *mLegacyHandlers;
-    uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
-    otExtAddress               mLegacyLastJoinedNode;
-    bool                       mLegacyNodeDidJoin;
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     uint32_t mFramingErrorCounter;          // Number of improperly formed received spinel frames.

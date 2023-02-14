@@ -102,6 +102,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
+ *
+ * Defines the log level to use when CLI emits its command input/output to the logs.
+ *
+ * This is used only when `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
+#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL OT_LOG_LEVEL_DEBG
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE
  *
  * The log string buffer size (in bytes).
@@ -137,6 +149,19 @@
  */
 #ifndef OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE
 #define OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE 512
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+ *
+ * Define as 1 to have CLI register an IPv6 receive callback using `otIp6SetReceiveCallback()`.
+ *
+ * This is intended for testing only. Receive callback should be registered for the `otIp6GetBorderRoutingCounters()`
+ * to count the messages being passed to the callback.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+#define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 0
 #endif
 
 #endif // CONFIG_CLI_H_

@@ -325,8 +325,11 @@
  *     as constant as possible.
  *
  *   - On start, host implementation queries the RCP API version and accepts
- *     any version number from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION up to
- *     and including SPINEL_RCP_API_VERSION.
+ *     any version starting from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION.
+ *
+ *   - Host implementation also queries the RCP about the minimum host RCP
+ *     API version it can work with, and then checks that its own version is
+ *     within the range.
  *
  *   Host and RCP compatibility guideline:
  *
@@ -417,7 +420,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 6
+#define SPINEL_RCP_API_VERSION 8
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -1278,9 +1281,10 @@ enum
     SPINEL_CAP_NET_THREAD_1_2 = (SPINEL_CAP_NET__BEGIN + 2),
     SPINEL_CAP_NET__END       = 64,
 
-    SPINEL_CAP_RCP__BEGIN      = 64,
-    SPINEL_CAP_RCP_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 0),
-    SPINEL_CAP_RCP__END        = 80,
+    SPINEL_CAP_RCP__BEGIN               = 64,
+    SPINEL_CAP_RCP_API_VERSION          = (SPINEL_CAP_RCP__BEGIN + 0),
+    SPINEL_CAP_RCP_MIN_HOST_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 1),
+    SPINEL_CAP_RCP__END                 = 80,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
     SPINEL_CAP_MAC_ALLOWLIST           = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
@@ -1315,8 +1319,8 @@ enum
     SPINEL_CAP_THREAD__END            = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
-    SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0),
-    SPINEL_CAP_NEST_LEGACY_NET_WAKE  = (SPINEL_CAP_NEST__BEGIN + 1),
+    SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0), ///< deprecated
+    SPINEL_CAP_NEST_LEGACY_NET_WAKE  = (SPINEL_CAP_NEST__BEGIN + 1), ///< deprecated
     SPINEL_CAP_NEST_TRANSMIT_HOOK    = (SPINEL_CAP_NEST__BEGIN + 2),
     SPINEL_CAP_NEST__END             = 15360,
 
@@ -1742,6 +1746,28 @@ enum
      *
      */
     SPINEL_PROP_PHY_REGION_CODE = SPINEL_PROP_PHY__BEGIN + 12,
+
+    /// Calibrated Power Table
+    /** Format: `A(Csd)` - Insert/Set
+     *
+     *  The `Insert` command on the property inserts a calibration power entry to the calibrated power table.
+     *  The `Set` command on the property with empty payload clears the calibrated power table.
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Actual power in 0.01 dBm.
+     *  `d`: Raw power setting.
+     */
+    SPINEL_PROP_PHY_CALIBRATED_POWER = SPINEL_PROP_PHY__BEGIN + 13,
+
+    /// Target power for a channel
+    /** Format: `t(Cs)` - Write only
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Target power in 0.01 dBm.
+     */
+    SPINEL_PROP_PHY_CHAN_TARGET_POWER = SPINEL_PROP_PHY__BEGIN + 14,
 
     SPINEL_PROP_PHY__END = 0x30,
 
@@ -4327,6 +4353,18 @@ enum
      */
     SPINEL_PROP_RCP_API_VERSION = SPINEL_PROP_RCP__BEGIN + 0,
 
+    /// Min host RCP API Version number
+    /** Format: `i` (read-only)
+     *
+     * Required capability: SPINEL_CAP_RADIO and SPINEL_CAP_RCP_MIN_HOST_API_VERSION.
+     *
+     * This property gives the minimum host RCP API Version number.
+     *
+     * Please see "Spinel definition compatibility guideline" section.
+     *
+     */
+    SPINEL_PROP_RCP_MIN_HOST_API_VERSION = SPINEL_PROP_RCP__BEGIN + 1,
+
     SPINEL_PROP_RCP__END = 0xFF,
 
     SPINEL_PROP_INTERFACE__BEGIN = 0x100,
@@ -4734,9 +4772,12 @@ enum
     SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP_EXT__BEGIN + 0,
 
     /// MAC Frame Counter
-    /** Format: `L`.
+    /** Format: `L` for read and `Lb` or `L` for write
      *
      *  `L`: MAC frame counter
+     *  'b': Optional boolean used only during write. If not provided, `false` is assumed.
+     *       If `true` counter is set only if the new value is larger than current value.
+     *       If `false` the new value is set as frame counter independent of the current value.
      *
      * The Spinel property is used to set MAC frame counter to RCP.
      *
@@ -4798,12 +4839,20 @@ enum
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
 
-    /// The legacy network ULA prefix (8 bytes)
-    /** Format: 'D' */
+    /// The legacy network ULA prefix (8 bytes).
+    /** Format: 'D'
+     *
+     * This property is deprecated.
+     *
+     */
     SPINEL_PROP_NEST_LEGACY_ULA_PREFIX = SPINEL_PROP_NEST__BEGIN + 1,
 
     /// The EUI64 of last node joined using legacy protocol (if none, all zero EUI64 is returned).
-    /** Format: 'E' */
+    /** Format: 'E'
+     *
+     * This property is deprecated.
+     *
+     */
     SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED = SPINEL_PROP_NEST__BEGIN + 2,
 
     SPINEL_PROP_NEST__END = 0x3C00,

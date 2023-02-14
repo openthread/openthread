@@ -820,13 +820,19 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
     VerifyOrQuit(routePrefixCount == aNumRoutePrefixes);
 }
 
-void InitTest(bool aEnablBorderRouting = false)
+void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 {
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize OT instance.
 
     sNow      = 0;
     sInstance = static_cast<Instance *>(testInitInstance());
+
+    uint32_t delay = 10000;
+    if (aAfterReset)
+    {
+        delay += 26000; // leader reset sync delay
+    }
 
     memset(&sRadioTxFrame, 0, sizeof(sRadioTxFrame));
     sRadioTxFrame.mPsdu = sRadioTxFramePsdu;
@@ -846,7 +852,7 @@ void InitTest(bool aEnablBorderRouting = false)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Ensure device starts as leader.
 
-    AdvanceTime(10000);
+    AdvanceTime(delay);
 
     VerifyOrQuit(otThreadGetDeviceRole(sInstance) == OT_DEVICE_ROLE_LEADER);
 
@@ -2543,7 +2549,7 @@ void TestSavedOnLinkPrefixes(void)
 
     testFreeInstance(sInstance);
 
-    InitTest(/* aEnablBorderRouting */ true);
+    InitTest(/* aEnablBorderRouting */ true, /* aAfterReset */ true);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
@@ -2581,7 +2587,7 @@ void TestSavedOnLinkPrefixes(void)
 
     testFreeInstance(sInstance);
 
-    InitTest(/* aEnablBorderRouting */ true);
+    InitTest(/* aEnablBorderRouting */ true, /* aAfterReset */ true);
 
     sExpectedPio = kPioAdvertisingLocalOnLink;
 
@@ -2627,7 +2633,7 @@ void TestSavedOnLinkPrefixes(void)
 
     testFreeInstance(sInstance);
 
-    InitTest();
+    InitTest(/* aEnablBorderRouting */ false, /* aAfterReset */ true);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager.
@@ -2678,7 +2684,7 @@ void TestSavedOnLinkPrefixes(void)
     Log("Disabling and re-enabling OT Instance again");
 
     testFreeInstance(sInstance);
-    InitTest();
+    InitTest(/* aEnablBorderRouting */ false, /* aAfterReset */ true);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
     AdvanceTime(100);

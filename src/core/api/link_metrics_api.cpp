@@ -55,6 +55,7 @@ otError otLinkMetricsQuery(otInstance                 *aInstance,
                                                                        AsCoreTypePtr(aLinkMetricsFlags));
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 otError otLinkMetricsConfigForwardTrackingSeries(otInstance                       *aInstance,
                                                  const otIp6Address               *aDestination,
                                                  uint8_t                           aSeriesId,
@@ -71,7 +72,6 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance                     
         AsCoreType(aDestination), aSeriesId, AsCoreType(&aSeriesFlags), AsCoreTypePtr(aLinkMetricsFlags));
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 otError otLinkMetricsConfigEnhAckProbing(otInstance                                *aInstance,
                                          const otIp6Address                        *aDestination,
                                          otLinkMetricsEnhAckFlags                   aEnhAckFlags,

@@ -53,12 +53,6 @@ RegisterLogModule("LinkMetrics");
 
 LinkMetrics::LinkMetrics(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mReportCallback(nullptr)
-    , mReportCallbackContext(nullptr)
-    , mMgmtResponseCallback(nullptr)
-    , mMgmtResponseCallbackContext(nullptr)
-    , mEnhAckProbingIeReportCallback(nullptr)
-    , mEnhAckProbingIeReportCallbackContext(nullptr)
 {
 }
 
@@ -286,66 +280,70 @@ exit:
 
 Error LinkMetrics::HandleManagementRequest(const Message &aMessage, Neighbor &aNeighbor, Status &aStatus)
 {
-    Error       error = kErrorNone;
-    Tlv         tlv;
-    uint8_t     seriesId;
-    uint8_t     seriesFlagsMask;
-    EnhAckFlags enhAckFlags;
-    Metrics     metrics;
-    bool        hasForwardProbingRegistrationTlv = false;
-    bool        hasEnhAckProbingTlv              = false;
-    uint16_t    offset;
-    uint16_t    length;
-    uint16_t    index = 0;
+    Error               error = kErrorNone;
+    uint16_t            offset;
+    uint16_t            endOffset;
+    uint16_t            tlvEndOffset;
+    uint16_t            length;
+    FwdProbingRegSubTlv fwdProbingSubTlv;
+    EnhAckConfigSubTlv  enhAckConfigSubTlv;
+    Metrics             metrics;
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, length));
+    endOffset = offset + length;
 
-    while (index < length)
+    // Set sub-TLV lengths to zero to indicate that we have
+    // not yet seen them in the message.
+    fwdProbingSubTlv.SetLength(0);
+    enhAckConfigSubTlv.SetLength(0);
+
+    for (; offset < endOffset; offset = tlvEndOffset)
     {
-        uint16_t pos = offset + index;
+        Tlv      tlv;
+        uint16_t minTlvSize;
+        Tlv     *subTlv;
 
-        SuccessOrExit(aMessage.Read(pos, tlv));
+        SuccessOrExit(error = aMessage.Read(offset, tlv));
 
-        pos += sizeof(tlv);
+        VerifyOrExit(offset + tlv.GetSize() <= endOffset, error = kErrorParse);
+        tlvEndOffset = static_cast<uint16_t>(offset + tlv.GetSize());
 
         switch (tlv.GetType())
         {
         case SubTlv::kFwdProbingReg:
-            VerifyOrExit(!hasForwardProbingRegistrationTlv && !hasEnhAckProbingTlv, error = kErrorParse);
-            VerifyOrExit(tlv.GetLength() >= sizeof(seriesId) + sizeof(seriesFlagsMask), error = kErrorParse);
-            SuccessOrExit(aMessage.Read(pos, seriesId));
-            pos += sizeof(seriesId);
-            SuccessOrExit(aMessage.Read(pos, seriesFlagsMask));
-            pos += sizeof(seriesFlagsMask);
-            SuccessOrExit(error = ReadTypeIdsFromMessage(
-                              aMessage, pos, static_cast<uint16_t>(offset + index + tlv.GetSize()), metrics));
-            hasForwardProbingRegistrationTlv = true;
+            subTlv     = &fwdProbingSubTlv;
+            minTlvSize = sizeof(Tlv) + FwdProbingRegSubTlv::kMinLength;
             break;
 
         case SubTlv::kEnhAckConfig:
-            VerifyOrExit(!hasForwardProbingRegistrationTlv && !hasEnhAckProbingTlv, error = kErrorParse);
-            VerifyOrExit(tlv.GetLength() >= sizeof(EnhAckFlags), error = kErrorParse);
-            SuccessOrExit(aMessage.Read(pos, enhAckFlags));
-            pos += sizeof(enhAckFlags);
-            SuccessOrExit(error = ReadTypeIdsFromMessage(
-                              aMessage, pos, static_cast<uint16_t>(offset + index + tlv.GetSize()), metrics));
-            hasEnhAckProbingTlv = true;
+            subTlv     = &enhAckConfigSubTlv;
+            minTlvSize = sizeof(Tlv) + EnhAckConfigSubTlv::kMinLength;
             break;
 
         default:
-            break;
+            continue;
         }
 
-        index += static_cast<uint16_t>(tlv.GetSize());
+        // Ensure message contains only one sub-TLV.
+        VerifyOrExit(fwdProbingSubTlv.GetLength() == 0, error = kErrorParse);
+        VerifyOrExit(enhAckConfigSubTlv.GetLength() == 0, error = kErrorParse);
+
+        VerifyOrExit(tlv.GetSize() >= minTlvSize, error = kErrorParse);
+
+        // Read `subTlv` with its `minTlvSize`, followed by the Type IDs.
+        SuccessOrExit(error = aMessage.Read(offset, subTlv, minTlvSize));
+        SuccessOrExit(error = ReadTypeIdsFromMessage(aMessage, offset + minTlvSize, tlvEndOffset, metrics));
     }
 
-    if (hasForwardProbingRegistrationTlv)
+    if (fwdProbingSubTlv.GetLength() != 0)
     {
-        aStatus = ConfigureForwardTrackingSeries(seriesId, seriesFlagsMask, metrics, aNeighbor);
+        aStatus = ConfigureForwardTrackingSeries(fwdProbingSubTlv.GetSeriesId(), fwdProbingSubTlv.GetSeriesFlagsMask(),
+                                                 metrics, aNeighbor);
     }
-    else if (hasEnhAckProbingTlv)
+
+    if (enhAckConfigSubTlv.GetLength() != 0)
     {
-        aStatus = ConfigureEnhAckProbing(enhAckFlags, metrics, aNeighbor);
+        aStatus = ConfigureEnhAckProbing(enhAckConfigSubTlv.GetEnhAckFlags(), metrics, aNeighbor);
     }
 
 exit:
@@ -362,7 +360,7 @@ Error LinkMetrics::HandleManagementResponse(const Message &aMessage, const Ip6::
     uint8_t  status;
     bool     hasStatus = false;
 
-    VerifyOrExit(mMgmtResponseCallback != nullptr);
+    VerifyOrExit(mMgmtResponseCallback.IsSet());
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, length));
     endOffset = offset + length;
@@ -390,7 +388,7 @@ Error LinkMetrics::HandleManagementResponse(const Message &aMessage, const Ip6::
 
     VerifyOrExit(hasStatus, error = kErrorParse);
 
-    mMgmtResponseCallback(&aAddress, status, mMgmtResponseCallbackContext);
+    mMgmtResponseCallback.Invoke(&aAddress, status);
 
 exit:
     return error;
@@ -414,7 +412,7 @@ void LinkMetrics::HandleReport(const Message      &aMessage,
 
     OT_UNUSED_VARIABLE(error);
 
-    VerifyOrExit(mReportCallback != nullptr);
+    VerifyOrExit(mReportCallback.IsSet());
 
     values.Clear();
 
@@ -494,8 +492,8 @@ void LinkMetrics::HandleReport(const Message      &aMessage,
 
     VerifyOrExit(hasStatus || hasReport);
 
-    mReportCallback(&aAddress, hasStatus ? nullptr : &values, hasStatus ? static_cast<Status>(status) : kStatusSuccess,
-                    mReportCallbackContext);
+    mReportCallback.Invoke(&aAddress, hasStatus ? nullptr : &values,
+                           hasStatus ? static_cast<Status>(status) : kStatusSuccess);
 
 exit:
     LogDebg("HandleReport, error:%s", ErrorToString(error));
@@ -515,30 +513,12 @@ exit:
     return error;
 }
 
-void LinkMetrics::SetReportCallback(ReportCallback aCallback, void *aContext)
-{
-    mReportCallback        = aCallback;
-    mReportCallbackContext = aContext;
-}
-
-void LinkMetrics::SetMgmtResponseCallback(MgmtResponseCallback aCallback, void *aContext)
-{
-    mMgmtResponseCallback        = aCallback;
-    mMgmtResponseCallbackContext = aContext;
-}
-
-void LinkMetrics::SetEnhAckProbingCallback(EnhAckProbingIeReportCallback aCallback, void *aContext)
-{
-    mEnhAckProbingIeReportCallback        = aCallback;
-    mEnhAckProbingIeReportCallbackContext = aContext;
-}
-
 void LinkMetrics::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, const Neighbor &aNeighbor)
 {
     MetricsValues values;
     uint8_t       idx = 0;
 
-    VerifyOrExit(mEnhAckProbingIeReportCallback != nullptr);
+    VerifyOrExit(mEnhAckProbingIeReportCallback.IsSet());
 
     values.SetMetrics(aNeighbor.GetEnhAckProbingMetrics());
 
@@ -555,8 +535,7 @@ void LinkMetrics::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, con
         values.mRssiValue = ScaleRawValueToRssi(aData[idx++]);
     }
 
-    mEnhAckProbingIeReportCallback(aNeighbor.GetRloc16(), &aNeighbor.GetExtAddress(), &values,
-                                   mEnhAckProbingIeReportCallbackContext);
+    mEnhAckProbingIeReportCallback.Invoke(aNeighbor.GetRloc16(), &aNeighbor.GetExtAddress(), &values);
 
 exit:
     return;
@@ -631,7 +610,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-Status LinkMetrics::ConfigureEnhAckProbing(EnhAckFlags aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor)
+Status LinkMetrics::ConfigureEnhAckProbing(uint8_t aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor)
 {
     Status status = kStatusSuccess;
     Error  error  = kErrorNone;

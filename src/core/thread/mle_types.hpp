@@ -86,6 +86,7 @@ constexpr uint16_t kUdpPort = 19788; ///< MLE UDP Port
 constexpr uint32_t kParentRequestRouterTimeout     = 750;  ///< Router Parent Request timeout (in msec)
 constexpr uint32_t kParentRequestDuplicateMargin   = 50;   ///< Margin for duplicate parent request
 constexpr uint32_t kParentRequestReedTimeout       = 1250; ///< Router and REEDs Parent Request timeout (in msec)
+constexpr uint32_t kChildIdResponseTimeout         = 1250; ///< Wait time to receive Child ID Response (in msec)
 constexpr uint32_t kAttachStartJitter              = 50;   ///< Max jitter time added to start of attach (in msec)
 constexpr uint32_t kAnnounceProcessTimeout         = 250;  ///< Delay after Announce rx before channel/pan-id change
 constexpr uint32_t kAnnounceTimeout                = 1400; ///< Total timeout for sending Announce messages (in msec)
@@ -96,10 +97,16 @@ constexpr uint32_t kUnicastRetransmissionDelay     = 1000; ///< Base delay befor
 constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  ///< Delay for aggregating Child Update Req (in msec)
 constexpr uint8_t  kMaxTransmissionCount           = 3;    ///< Max number of times an MLE message may be transmitted
 constexpr uint32_t kMaxResponseDelay               = 1000; ///< Max response delay for a multicast request (in msec)
-constexpr uint32_t kMaxChildIdRequestTimeout       = 5000; ///< Max delay to rx a Child ID Request (in msec)
-constexpr uint32_t kMaxChildUpdateResponseTimeout  = 2000; ///< Max delay to rx a Child Update Response (in msec)
-constexpr uint32_t kMaxLinkRequestTimeout          = 2000; ///< Max delay to rx a Link Accept
+constexpr uint32_t kChildIdRequestTimeout          = 5000; ///< Max delay to rx a Child ID Request (in msec)
+constexpr uint32_t kLinkRequestTimeout             = 2000; ///< Max delay to rx a Link Accept
 constexpr uint8_t  kMulticastLinkRequestDelay      = 5;    ///< Max delay for sending a mcast Link Request (in sec)
+constexpr uint8_t kMaxCriticalTransmissionCount = 6; ///< Max number of times an critical MLE message may be transmitted
+
+constexpr uint32_t kMulticastTransmissionDelay = 5000; ///< Delay for retransmitting a multicast packet (in msec)
+constexpr uint32_t kMulticastTransmissionDelayMin =
+    kMulticastTransmissionDelay * 9 / 10; ///< Min delay for retransmitting a multicast packet (in msec)
+constexpr uint32_t kMulticastTransmissionDelayMax =
+    kMulticastTransmissionDelay * 11 / 10; ///< Max delay for retransmitting a multicast packet (in msec)
 
 constexpr uint32_t kMinTimeoutKeepAlive = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000);
 constexpr uint32_t kMinPollPeriod       = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
@@ -182,11 +189,6 @@ constexpr int8_t kParentPriorityHigh        = 1;  ///< Parent Priority High
 constexpr int8_t kParentPriorityMedium      = 0;  ///< Parent Priority Medium (default)
 constexpr int8_t kParentPriorityLow         = -1; ///< Parent Priority Low
 constexpr int8_t kParentPriorityUnspecified = -2; ///< Parent Priority Unspecified
-
-constexpr uint8_t kLinkQuality3LinkCost = 1;             ///< Link Cost for Link Quality 3
-constexpr uint8_t kLinkQuality2LinkCost = 2;             ///< Link Cost for Link Quality 2
-constexpr uint8_t kLinkQuality1LinkCost = 4;             ///< Link Cost for Link Quality 1
-constexpr uint8_t kLinkQuality0LinkCost = kMaxRouteCost; ///< Link Cost for Link Quality 0
 
 /**
  * This type represents a Thread device role.

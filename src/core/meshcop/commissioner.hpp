@@ -42,6 +42,7 @@
 
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
@@ -621,9 +622,8 @@ private:
 
     State mState;
 
-    StateCallback  mStateCallback;
-    JoinerCallback mJoinerCallback;
-    void          *mCallbackContext;
+    Callback<StateCallback>  mStateCallback;
+    Callback<JoinerCallback> mJoinerCallback;
 };
 
 DeclareTmfHandler(Commissioner, kUriDatasetChanged);

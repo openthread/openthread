@@ -147,8 +147,8 @@ enum
  *                           @p aLength if the send buffer reaches capacity.
  * @param[in]   aFlags       Flags specifying options for this operation (see enumeration above).
  *
- * @returns OT_ERROR_NONE    Successfully copied data into the send buffer and sent it on the TCP endpoint.
- * @returns OT_ERROR_FAILED  Failed to send out data on the TCP endpoint.
+ * @retval OT_ERROR_NONE    Successfully copied data into the send buffer and sent it on the TCP endpoint.
+ * @retval OT_ERROR_FAILED  Failed to send out data on the TCP endpoint.
  */
 otError otTcpCircularSendBufferWrite(otTcpEndpoint           *aEndpoint,
                                      otTcpCircularSendBuffer *aSendBuffer,
@@ -184,7 +184,7 @@ void otTcpCircularSendBufferHandleForwardProgress(otTcpCircularSendBuffer *aSend
  *
  * @param[in]  aSendBuffer  A pointer to the TCP circular send buffer whose amount of free space to return.
  *
- * @return The amount of free space in the send buffer.
+ * @returns The amount of free space in the send buffer.
  */
 size_t otTcpCircularSendBufferGetFreeSpace(const otTcpCircularSendBuffer *aSendBuffer);
 
@@ -214,6 +214,37 @@ void otTcpCircularSendBufferForceDiscardAll(otTcpCircularSendBuffer *aSendBuffer
  * @retval OT_ERROR_BUSY    Circular buffer contains data and cannot be deinitialized.
  */
 otError otTcpCircularSendBufferDeinitialize(otTcpCircularSendBuffer *aSendBuffer);
+
+/**
+ * Context structure to use with mbedtls_ssl_set_bio.
+ */
+typedef struct otTcpEndpointAndCircularSendBuffer
+{
+    otTcpEndpoint           *mEndpoint;
+    otTcpCircularSendBuffer *mSendBuffer;
+} otTcpEndpointAndCircularSendBuffer;
+
+/**
+ * Non-blocking send callback to pass to mbedtls_ssl_set_bio.
+ *
+ * @param[in]  aCtx  A pointer to an otTcpEndpointAndCircularSendBuffer.
+ * @param[in]  aBuf  The data to add to the send buffer.
+ * @param[in]  aLen  The amount of data to add to the send buffer.
+ *
+ * @returns The number of bytes sent, or an mbedtls error code.
+ */
+int otTcpMbedTlsSslSendCallback(void *aCtx, const unsigned char *aBuf, size_t aLen);
+
+/**
+ * Non-blocking receive callback to pass to mbedtls_ssl_set_bio.
+ *
+ * @param[in]   aCtx  A pointer to an otTcpEndpointAndCircularSendBuffer.
+ * @param[out]  aBuf  The buffer into which to receive data.
+ * @param[in]   aLen  The maximum amount of data that can be received.
+ *
+ * @returns The number of bytes received, or an mbedtls error code.
+ */
+int otTcpMbedTlsSslRecvCallback(void *aCtx, unsigned char *aBuf, size_t aLen);
 
 /**
  * @}

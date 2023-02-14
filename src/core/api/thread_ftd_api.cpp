@@ -143,6 +143,16 @@ void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetRouterUpgradeThreshold(aThreshold);
 }
 
+uint8_t otThreadGetChildRouterLinks(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetChildRouterLinks();
+}
+
+otError otThreadSetChildRouterLinks(otInstance *aInstance, uint8_t aChildRouterLinks)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().SetChildRouterLinks(aChildRouterLinks);
+}
+
 otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
     Error error = kErrorNone;
@@ -369,6 +379,9 @@ void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId)
 {
+    AssertPointerIsNotNull(aMinRouterId);
+    AssertPointerIsNotNull(aMaxRouterId);
+
     AsCoreType(aInstance).Get<RouterTable>().GetRouterIdRange(*aMinRouterId, *aMaxRouterId);
 }
 
@@ -377,5 +390,23 @@ otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, ui
     return AsCoreType(aInstance).Get<RouterTable>().SetRouterIdRange(aMinRouterId, aMaxRouterId);
 }
 #endif
+
+bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId)
+{
+    return AsCoreType(aInstance).Get<RouterTable>().IsAllocated(aRouterId);
+}
+
+void otThreadGetNextHopAndPathCost(otInstance *aInstance,
+                                   uint16_t    aDestRloc16,
+                                   uint16_t   *aNextHopRloc16,
+                                   uint8_t    *aPathCost)
+{
+    uint8_t  pathcost;
+    uint16_t nextHopRloc16;
+
+    AsCoreType(aInstance).Get<RouterTable>().GetNextHopAndPathCost(
+        aDestRloc16, (aNextHopRloc16 != nullptr) ? *aNextHopRloc16 : nextHopRloc16,
+        (aPathCost != nullptr) ? *aPathCost : pathcost);
+}
 
 #endif // OPENTHREAD_FTD

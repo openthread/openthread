@@ -422,6 +422,16 @@ struct Addresses
 };
 
 /**
+ * This structure represents two PAN IDs corresponding to source and destination.
+ *
+ */
+struct PanIds
+{
+    PanId mSource;      ///< Source PAN ID.
+    PanId mDestination; ///< Destination PAN ID.
+};
+
+/**
  * This class represents a MAC key.
  *
  */

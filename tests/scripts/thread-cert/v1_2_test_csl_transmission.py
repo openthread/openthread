@@ -125,7 +125,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         # Check if SSED is able to resynchronize with the parent after it is gone longer than the timeout
         self.nodes[LEADER].start()
-        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_RESET_DELAY)
         self.nodes[SSED_1].set_csl_timeout(8)
         self.nodes[SSED_1].set_timeout(10)
         self.simulator.go(2)
@@ -133,7 +133,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
         self.simulator.go(25)
         self.flush_all()
         self.nodes[LEADER].start()
-        self.simulator.go(config.LEADER_STARTUP_DELAY)
+        self.simulator.go(config.LEADER_RESET_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.simulator.go(5)
         self.assertEqual(self.nodes[SSED_1].get_state(), 'child')

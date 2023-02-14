@@ -68,13 +68,20 @@ extern "C" {
 
 enum
 {
-    OT_RADIO_FRAME_MAX_SIZE    = 127,    ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
-    OT_RADIO_FRAME_MIN_SIZE    = 3,      ///< Minimal size of frame FCS + CONTROL
+    OT_RADIO_FRAME_MAX_SIZE = 127, ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    OT_RADIO_FRAME_MIN_SIZE = 3,   ///< Minimal size of frame FCS + CONTROL
+
     OT_RADIO_SYMBOLS_PER_OCTET = 2,      ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_BIT_RATE          = 250000, ///< 2.4 GHz IEEE 802.15.4 (bits per second)
     OT_RADIO_BITS_PER_OCTET    = 8,      ///< Number of bits per octet
 
-    OT_RADIO_SYMBOL_TIME   = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
+    // Per IEEE 802.15.4-2015, 12.3.3 Symbol rate:
+    // The O-QPSK PHY symbol rate shall be 25 ksymbol/s when operating in the 868 MHz band and 62.5 ksymbol/s when
+    // operating in the 780 MHz, 915 MHz, 2380 MHz, or 2450 MHz band
+    OT_RADIO_SYMBOL_RATE = 62500, ///< The O-QPSK PHY symbol rate when operating in the 780MHz, 915MHz, 2380MHz, 2450MHz
+    OT_RADIO_SYMBOL_TIME = 1000000 * 1 / OT_RADIO_SYMBOL_RATE, ///< Symbol duration time in unit of microseconds
+    OT_RADIO_TEN_SYMBOLS_TIME = 10 * OT_RADIO_SYMBOL_TIME,     ///< Time for 10 symbols in unit of microseconds
+
     OT_RADIO_LQI_NONE      = 0,   ///< LQI measurement not supported
     OT_RADIO_RSSI_INVALID  = 127, ///< Invalid or unknown RSSI value
     OT_RADIO_POWER_INVALID = 127, ///< Invalid or unknown power value
@@ -614,6 +621,17 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
+ * This method sets the current MAC frame counter value only if the new given value is larger than the current value.
+ *
+ * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ *
+ * @param[in]   aInstance         A pointer to an OpenThread instance.
+ * @param[in]   aMacFrameCounter  The MAC frame counter value.
+ *
+ */
+void otPlatRadioSetMacFrameCounterIfLarger(otInstance *aInstance, uint32_t aMacFrameCounter);
+
+/**
  * Get the current estimated time (in microseconds) of the radio chip.
  *
  * This microsecond timer must be a free-running timer. The timer must continue to advance with microsecond precision
@@ -1143,6 +1161,100 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance         *aInstance,
                                           otLinkMetrics       aLinkMetrics,
                                           otShortAddress      aShortAddress,
                                           const otExtAddress *aExtAddress);
+
+/**
+ * Add a calibrated power of the specified channel to the power calibration table.
+ *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
+ *
+ * The @p aActualPower is the actual measured output power when the parameters of the radio hardware modules
+ * are set to the @p aRawPowerSetting.
+ *
+ * The raw power setting is an opaque byte array. OpenThread doesn't define the format of the raw power setting.
+ * Its format is radio hardware related and it should be defined by the developers in the platform radio driver.
+ * For example, if the radio hardware contains both the radio chip and the FEM chip, the raw power setting can be
+ * a combination of the radio power register and the FEM gain value.
+ *
+ * @param[in] aInstance               The OpenThread instance structure.
+ * @param[in] aChannel                The radio channel.
+ * @param[in] aActualPower            The actual power in 0.01dBm.
+ * @param[in] aRawPowerSetting        A pointer to the raw power setting byte array.
+ * @param[in] aRawPowerSettingLength  The length of the @p aRawPowerSetting.
+ *
+ * @retval OT_ERROR_NONE             Successfully added the calibrated power to the power calibration table.
+ * @retval OT_ERROR_NO_BUFS          No available entry in the power calibration table.
+ * @retval OT_ERROR_INVALID_ARGS     The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid or the
+ *                                   @p aActualPower already exists in the power calibration table.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
+ *
+ */
+otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
+                                      uint8_t        aChannel,
+                                      int16_t        aActualPower,
+                                      const uint8_t *aRawPowerSetting,
+                                      uint16_t       aRawPowerSettingLength);
+
+/**
+ * Clear all calibrated powers from the power calibration table.
+ *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ * @retval OT_ERROR_NONE             Successfully cleared all calibrated powers from the power calibration table.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This feature is not implemented.
+ *
+ */
+otError otPlatRadioClearCalibratedPowers(otInstance *aInstance);
+
+/**
+ * Set the target power for the given channel.
+ *
+ * @note This API is an optional radio platform API. It's up to the platform layer to implement it.
+ *       If this API is implemented, the function `otPlatRadioSetTransmitPower()` should be disabled.
+ *
+ * The radio driver should set the actual output power to be less than or equal to the target power and as close
+ * as possible to the target power.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aChannel      The radio channel.
+ * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel to use the
+ *                           target power.
+ *
+ * @retval  OT_ERROR_NONE             Successfully set the target power.
+ * @retval  OT_ERROR_INVALID_ARGS     The @p aChannel or @p aTargetPower is invalid.
+ * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented.
+ *
+ */
+otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower);
+
+/**
+ * Get the raw power setting for the given channel.
+ *
+ * @note OpenThread `src/core/utils` implements a default implementation of the API `otPlatRadioAddCalibratedPower()`,
+ *       `otPlatRadioClearCalibratedPowers()` and `otPlatRadioSetChannelTargetPower()`. This API is provided by
+ *       the default implementation to get the raw power setting for the given channel. If the platform doesn't
+ *       use the default implementation, it can ignore this API.
+ *
+ * Platform radio layer should parse the raw power setting based on the radio layer defined format and set the
+ * parameters of each radio hardware module.
+ *
+ * @param[in]      aInstance               The OpenThread instance structure.
+ * @param[in]      aChannel                The radio channel.
+ * @param[out]     aRawPowerSetting        A pointer to the raw power setting byte array.
+ * @param[in,out]  aRawPowerSettingLength  On input, a pointer to the size of @p aRawPowerSetting.
+ *                                         On output, a pointer to the length of the raw power setting data.
+ *
+ * @retval  OT_ERROR_NONE          Successfully got the target power.
+ * @retval  OT_ERROR_INVALID_ARGS  The @p aChannel is invalid, @p aRawPowerSetting or @p aRawPowerSettingLength is NULL
+ *                                 or @aRawPowerSettingLength is too short.
+ * @retval  OT_ERROR_NOT_FOUND     The raw power setting for the @p aChannel was not found.
+ *
+ */
+extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
+                                             uint8_t     aChannel,
+                                             uint8_t    *aRawPowerSetting,
+                                             uint16_t   *aRawPowerSettingLength);
 
 /**
  * @}

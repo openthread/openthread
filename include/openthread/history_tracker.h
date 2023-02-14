@@ -193,6 +193,35 @@ typedef struct otHistoryTrackerNeighborInfo
 } otHistoryTrackerNeighborInfo;
 
 /**
+ * This enumeration defines the events in a router info (i.e. whether router is added, removed, or changed).
+ *
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_ROUTER_EVENT_ADDED            = 0, ///< Router is added (router ID allocated).
+    OT_HISTORY_TRACKER_ROUTER_EVENT_REMOVED          = 1, ///< Router entry is removed (router ID released).
+    OT_HISTORY_TRACKER_ROUTER_EVENT_NEXT_HOP_CHANGED = 2, ///< Router entry next hop and cost changed.
+    OT_HISTORY_TRACKER_ROUTER_EVENT_COST_CHANGED     = 3, ///< Router entry path cost changed (next hop as before).
+} otHistoryTrackerRouterEvent;
+
+#define OT_HISTORY_TRACKER_NO_NEXT_HOP 63 ///< No next hop - For `mNextHop` in `otHistoryTrackerRouterInfo`.
+
+#define OT_HISTORY_TRACKER_INFINITE_PATH_COST 0 ///< Infinite path cost - used in `otHistoryTrackerRouterInfo`.
+
+/**
+ * This structure represents a router table entry event.
+ *
+ */
+typedef struct otHistoryTrackerRouterInfo
+{
+    uint8_t mEvent : 2;       ///< Router entry event (`OT_HISTORY_TRACKER_ROUTER_EVENT_*` enumeration).
+    uint8_t mRouterId : 6;    ///< Router ID.
+    uint8_t mNextHop;         ///< Next Hop Router ID - `OT_HISTORY_TRACKER_NO_NEXT_HOP` if no next hop.
+    uint8_t mOldPathCost : 4; ///< Old path cost - `OT_HISTORY_TRACKER_INFINITE_PATH_COST` if infinite or unknown.
+    uint8_t mPathCost : 4;    ///< New path cost - `OT_HISTORY_TRACKER_INFINITE_PATH_COST` if infinite or unknown.
+} otHistoryTrackerRouterInfo;
+
+/**
  * This enumeration defines the events for a Network Data entry (i.e., whether an entry is added or removed).
  *
  */
@@ -341,6 +370,23 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance  
 const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance               *aInstance,
                                                                            otHistoryTrackerIterator *aIterator,
                                                                            uint32_t                 *aEntryAge);
+
+/**
+ * This function iterates over the entries in the router history list.
+ *
+ * @param[in]     aInstance  A pointer to the OpenThread instance.
+ * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]    aEntryAge  A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerRouterInfo` entry or `NULL` if no more entries in the list.
+ *
+ */
+const otHistoryTrackerRouterInfo *otHistoryTrackerIterateRouterHistory(otInstance               *aInstance,
+                                                                       otHistoryTrackerIterator *aIterator,
+                                                                       uint32_t                 *aEntryAge);
 
 /**
  * This function iterates over the entries in the Network Data on mesh prefix entry history list.

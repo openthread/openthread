@@ -356,6 +356,35 @@ uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
+ * Get the MLE_CHILD_ROUTER_LINKS parameter used in the REED role.
+ *
+ * This parameter specifies the max number of neighboring routers with which the device (as an FED)
+ *  will try to establish link.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The MLE_CHILD_ROUTER_LINKS value.
+ *
+ * @sa otThreadSetChildRouterLinks
+ *
+ */
+uint8_t otThreadGetChildRouterLinks(otInstance *aInstance);
+
+/**
+ * Set the MLE_CHILD_ROUTER_LINKS parameter used in the REED role.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aChildRouterLinks The MLE_CHILD_ROUTER_LINKS value.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the value.
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ * @sa otThreadGetChildRouterLinks
+ *
+ */
+otError otThreadSetChildRouterLinks(otInstance *aInstance, uint8_t aChildRouterLinks);
+
+/**
  * Release a Router ID that has been allocated by the device in the Leader role.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with
@@ -787,6 +816,36 @@ void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint
  *
  */
 otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
+
+/**
+ * This function indicates whether or not a Router ID is currently allocated.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aRouterId     The router ID to check.
+ *
+ * @retval TRUE  The @p aRouterId is allocated.
+ * @retval FALSE The @p aRouterId is not allocated.
+ *
+ */
+bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId);
+
+/**
+ * This function gets the next hop and path cost towards a given RLOC16 destination.
+ *
+ * This function can be used with either @p aNextHopRloc16 or @p aPathCost being NULL indicating caller does not want
+ * to get the value.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aDesRloct16     The RLOC16 of destination.
+ * @param[out] aNextHopRloc16  A pointer to return RLOC16 of next hop, 0xfffe if no next hop.
+ * @param[out] aPathCost       A pointer to return path cost towards destination.
+ *
+ */
+void otThreadGetNextHopAndPathCost(otInstance *aInstance,
+                                   uint16_t    aDestRloc16,
+                                   uint16_t   *aNextHopRloc16,
+                                   uint8_t    *aPathCost);
+
 /**
  * @}
  *

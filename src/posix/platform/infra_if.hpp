@@ -35,11 +35,12 @@
 
 #include <net/if.h>
 #include <openthread/nat64.h>
+#include <openthread/openthread-system.h>
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 
 namespace ot {
 namespace Posix {
@@ -108,6 +109,22 @@ public:
     bool IsRunning(void) const;
 
     /**
+     * This method returns the ifr_flags of the infrastructure network interface.
+     *
+     * @returns The ifr_flags of the infrastructure network interface.
+     *
+     */
+    uint32_t GetFlags(void) const;
+
+    /**
+     * This functions counts the number of addresses on the infrastructure network interface.
+     *
+     * @param[out] aAddressCounters  The counters of addresses on infrastructure network interface.
+     *
+     */
+    void CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const;
+
+    /**
      * This method sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
      *
      * See RFC 4861: https://tools.ietf.org/html/rfc4861.
@@ -164,10 +181,10 @@ private:
     static const otIp4Address kWellKnownIpv4OnlyAddress2; // 192.0.0.171
     static const uint8_t      kValidNat64PrefixLength[];
 
-    char            mInfraIfName[IFNAMSIZ];
-    static uint32_t mInfraIfIndex;
-    int             mInfraIfIcmp6Socket = -1;
-    int             mNetLinkSocket      = -1;
+    char     mInfraIfName[IFNAMSIZ];
+    uint32_t mInfraIfIndex       = 0;
+    int      mInfraIfIcmp6Socket = -1;
+    int      mNetLinkSocket      = -1;
 
     void        ReceiveNetLinkMessage(void);
     void        ReceiveIcmp6Message(void);
@@ -177,4 +194,4 @@ private:
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE

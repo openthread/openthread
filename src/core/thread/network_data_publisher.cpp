@@ -59,10 +59,6 @@ Publisher::Publisher(Instance &aInstance)
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mDnsSrpServiceEntry(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    , mPrefixCallback(nullptr)
-    , mPrefixCallbackContext(nullptr)
-#endif
     , mTimer(aInstance)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -80,12 +76,6 @@ Publisher::Publisher(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-
-void Publisher::SetPrefixCallback(PrefixCallback aCallback, void *aContext)
-{
-    mPrefixCallback        = aCallback;
-    mPrefixCallbackContext = aContext;
-}
 
 Error Publisher::PublishOnMeshPrefix(const OnMeshPrefixConfig &aConfig, Requester aRequester)
 {
@@ -223,10 +213,7 @@ bool Publisher::IsAPrefixEntry(const Entry &aEntry) const
 
 void Publisher::NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix) const
 {
-    if (mPrefixCallback != nullptr)
-    {
-        mPrefixCallback(static_cast<otNetDataPublisherEvent>(aEvent), &aPrefix, mPrefixCallbackContext);
-    }
+    mPrefixCallback.InvokeIfSet(static_cast<otNetDataPublisherEvent>(aEvent), &aPrefix);
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -499,18 +486,7 @@ const char *Publisher::Entry::StateToString(State aState)
 //---------------------------------------------------------------------------------------------------------------------
 // Publisher::DnsSrpServiceEntry
 
-Publisher::DnsSrpServiceEntry::DnsSrpServiceEntry(Instance &aInstance)
-    : mCallback(nullptr)
-    , mCallbackContext(nullptr)
-{
-    Init(aInstance);
-}
-
-void Publisher::DnsSrpServiceEntry::SetCallback(DnsSrpServiceCallback aCallback, void *aContext)
-{
-    mCallback        = aCallback;
-    mCallbackContext = aContext;
-}
+Publisher::DnsSrpServiceEntry::DnsSrpServiceEntry(Instance &aInstance) { Init(aInstance); }
 
 void Publisher::DnsSrpServiceEntry::PublishAnycast(uint8_t aSequenceNumber)
 {
@@ -649,10 +625,7 @@ void Publisher::DnsSrpServiceEntry::Notify(Event aEvent) const
     Get<Srp::Server>().HandleNetDataPublisherEvent(aEvent);
 #endif
 
-    if (mCallback != nullptr)
-    {
-        mCallback(static_cast<otNetDataPublisherEvent>(aEvent), mCallbackContext);
-    }
+    mCallback.InvokeIfSet(static_cast<otNetDataPublisherEvent>(aEvent));
 }
 
 void Publisher::DnsSrpServiceEntry::Process(void)

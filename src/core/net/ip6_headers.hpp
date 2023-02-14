@@ -378,6 +378,14 @@ class ExtensionHeader
 {
 public:
     /**
+     * This constant defines the size of Length unit in bytes.
+     *
+     * The Length field is in 8-bytes unit. The total size of `ExtensionHeader` MUST be a multiple of 8.
+     *
+     */
+    static constexpr uint16_t kLengthUnitSize = 8;
+
+    /**
      * This method returns the IPv6 Next Header value.
      *
      * @returns The IPv6 Next Header value.
@@ -396,6 +404,8 @@ public:
     /**
      * This method returns the IPv6 Header Extension Length value.
      *
+     * The Length is in 8-byte units and does not include the first 8 bytes.
+     *
      * @returns The IPv6 Header Extension Length value.
      *
      */
@@ -404,12 +414,27 @@ public:
     /**
      * This method sets the IPv6 Header Extension Length value.
      *
+     * The Length is in 8-byte units and does not include the first 8 bytes.
+     *
      * @param[in]  aLength  The IPv6 Header Extension Length value.
      *
      */
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
+    /**
+     * This method returns the size (number of bytes) of the Extension Header including Next Header and Length fields.
+     *
+     * @returns The size (number of bytes) of the Extension Header.
+     *
+     */
+    uint16_t GetSize(void) const { return kLengthUnitSize * (mLength + 1); }
+
 private:
+    // |     m8[0]     |     m8[1]     |     m8[2]     |      m8[3]    |
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    // | Next Header   | Header Length | . . .                         |
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
     uint8_t mNextHeader;
     uint8_t mLength;
 } OT_TOOL_PACKED_END;
@@ -428,18 +453,20 @@ class HopByHopHeader : public ExtensionHeader
  *
  */
 OT_TOOL_PACKED_BEGIN
-class OptionHeader
+class Option
 {
 public:
     /**
-     * Default constructor.
+     * IPv6 Option Type actions for unrecognized IPv6 Options.
      *
      */
-    OptionHeader(void)
-        : mType(0)
-        , mLength(0)
+    enum Action : uint8_t
     {
-    }
+        kActionSkip      = 0x00, ///< Skip over this option and continue processing the header.
+        kActionDiscard   = 0x40, ///< Discard the packet.
+        kActionForceIcmp = 0x80, ///< Discard the packet and forcibly send an ICMP Parameter Problem.
+        kActionIcmp      = 0xc0, ///< Discard packet and conditionally send an ICMP Parameter Problem.
+    };
 
     /**
      * This method returns the IPv6 Option Type value.
@@ -450,24 +477,13 @@ public:
     uint8_t GetType(void) const { return mType; }
 
     /**
-     * This method sets the IPv6 Option Type value.
+     * This method indicates whether IPv6 Option is padding (either Pad1 or PadN).
      *
-     * @param[in]  aType  The IPv6 Option Type value.
-     *
-     */
-    void SetType(uint8_t aType) { mType = aType; }
-
-    /**
-     * IPv6 Option Type actions for unrecognized IPv6 Options.
+     * @retval TRUE   The Option is padding.
+     * @retval FALSE  The Option is not padding.
      *
      */
-    enum Action : uint8_t
-    {
-        kActionSkip      = 0x00, ///< skip over this option and continue processing the header
-        kActionDiscard   = 0x40, ///< discard the packet
-        kActionForceIcmp = 0x80, ///< discard the packet and forcibly send an ICMP Parameter Problem
-        kActionIcmp      = 0xc0, ///< discard packet and conditionally send an ICMP Parameter Problem
-    };
+    bool IsPadding(void) const { return (mType == kTypePad1) || (mType == kTypePadN); }
 
     /**
      * This method returns the IPv6 Option action for unrecognized IPv6 Options.
@@ -486,6 +502,46 @@ public:
     uint8_t GetLength(void) const { return mLength; }
 
     /**
+     * This method returns the size (number of bytes) of the IPv6 Option.
+     *
+     * This method returns the proper size of the Option independent of its type, particularly if Option is Pad1 (which
+     * does not follow the common Option header structure and has only Type field with no Length field). For other
+     * Option types, the returned size includes the Type and Length fields.
+     *
+     * @returns The size of the Option.
+     *
+     */
+    uint16_t GetSize(void) const;
+
+    /**
+     * This method parses and validates the IPv6 Option from a given message.
+     *
+     * The Option is read from @p aOffset in @p aMessage. This method then checks that the entire Option is present
+     * in @p aMessage before the @p aEndOffset.
+     *
+     * @param[in]  aMessage    The IPv6 message.
+     * @param[in]  aOffset     The offset in @p aMessage to read the IPv6 Option.
+     * @param[in]  aEndOffset  The end offset in @p aMessage.
+     *
+     * @retval kErrorNone   Successfully parsed the IPv6 option from @p aMessage.
+     * @retval kErrorParse  Malformed IPv6 Option or Option is not contained within @p aMessage by @p aEndOffset.
+     *
+     */
+    Error ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t aEndOffset);
+
+protected:
+    static constexpr uint8_t kTypePad1 = 0x00; ///< Pad1 Option Type.
+    static constexpr uint8_t kTypePadN = 0x01; ///< PanN Option Type.
+
+    /**
+     * This method sets the IPv6 Option Type value.
+     *
+     * @param[in]  aType  The IPv6 Option Type value.
+     *
+     */
+    void SetType(uint8_t aType) { mType = aType; }
+
+    /**
      * This method sets the IPv6 Option Length value.
      *
      * @param[in]  aLength  The IPv6 Option Length value.
@@ -501,62 +557,45 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 PadN Option generation and parsing.
+ * This class implements IPv6 Pad Options (Pad1 or PadN) generation.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class OptionPadN : public OptionHeader
+class PadOption : public Option, private Clearable<PadOption>
 {
+    friend class Clearable<PadOption>;
+
 public:
-    static constexpr uint8_t kType      = 0x01; ///< PadN type
-    static constexpr uint8_t kData      = 0x00; ///< PadN specific data
-    static constexpr uint8_t kMaxLength = 0x05; ///< Maximum length of PadN option data
-
     /**
-     * This method initializes the PadN header.
+     * This method initializes the Pad Option for a given total Pad size.
      *
-     * @param[in]  aPadLength  The length of needed padding. Allowed value from
-     *                         range 2-7.
+     * The @p aPadSize MUST be from range 1-7. Otherwise the behavior of this method is undefined.
+     *
+     * @param[in]  aPadSize  The total number of needed padding bytes.
      *
      */
-    void Init(uint8_t aPadLength)
-    {
-        SetType(kType);
-        SetLength(aPadLength - sizeof(OptionHeader));
-        memset(mPad, kData, aPadLength - sizeof(OptionHeader));
-    }
+    void InitForPadSize(uint8_t aPadSize);
 
     /**
-     * This method returns the total IPv6 Option Length value including option
-     * header.
+     * This method initializes the Pad Option for padding an IPv6 Extension header with a given current size.
      *
-     * @returns The total IPv6 Option Length.
+     * The Extension Header Length is in 8-bytes unit, so the total size should be a multiple of 8. This method
+     * determines the Pad Option size needed for appending to Extension Header based on it current size @p aHeaderSize
+     * so to make it a multiple of 8. This method returns `kErrorAlready` when the @p aHeaderSize is already
+     * a multiple of 8 (i.e., no padding is needed).
+     *
+     * @param[in] aHeaderSize  The current IPv6 Extension header size (in bytes).
+     *
+     * @retval kErrorNone     The Pad Option is successfully initialized.
+     * @retval kErrorAlready  The @p aHeaderSize is already a multiple of 8 and no padding is needed.
      *
      */
-    uint8_t GetTotalLength(void) const { return GetLength() + sizeof(OptionHeader); }
+    Error InitToPadHeaderWithSize(uint16_t aHeaderSize);
 
 private:
-    uint8_t mPad[kMaxLength];
-} OT_TOOL_PACKED_END;
+    static constexpr uint8_t kMaxLength = 5;
 
-/**
- * This class implements IPv6 Pad1 Option generation and parsing. Pad1 does not follow default option header structure.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class OptionPad1
-{
-public:
-    static constexpr uint8_t kType = 0x00;
-
-    /**
-     * This method initializes the Pad1 header.
-     *
-     */
-    void Init(void) { mType = kType; }
-
-private:
-    uint8_t mType;
+    uint8_t mPads[kMaxLength];
 } OT_TOOL_PACKED_END;
 
 /**

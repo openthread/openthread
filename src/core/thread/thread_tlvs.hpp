@@ -250,6 +250,14 @@ public:
     const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
 
     /**
+     * This method gets the Assigned Router ID Mask.
+     *
+     * @returns The Assigned Router ID Mask.
+     *
+     */
+    Mle::RouterIdSet &GetAssignedRouterIdMask(void) { return mAssignedRouterIdMask; }
+
+    /**
      * This method sets the Assigned Router ID Mask.
      *
      * @param[in]  aRouterIdSet A reference to the Assigned Router ID Mask.

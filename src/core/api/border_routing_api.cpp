@@ -64,6 +64,11 @@ void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRouteP
         static_cast<NetworkData::RoutePreference>(aPreference));
 }
 
+void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ClearRouteInfoOptionPreference();
+}
+
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));

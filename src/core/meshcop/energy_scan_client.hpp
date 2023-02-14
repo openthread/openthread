@@ -41,6 +41,7 @@
 #include <openthread/commissioner.h>
 
 #include "coap/coap.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
@@ -89,8 +90,7 @@ public:
 private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otCommissionerEnergyReportCallback mCallback;
-    void                              *mContext;
+    Callback<otCommissionerEnergyReportCallback> mCallback;
 };
 
 DeclareTmfHandler(EnergyScanClient, kUriEnergyReport);
