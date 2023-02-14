@@ -72,6 +72,7 @@
 #include <fcntl.h>
 #include <ifaddrs.h>
 #ifdef __linux__
+#include <linux/if_link.h>
 #include <linux/if_tun.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -330,7 +331,11 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
 
-void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
+static struct rtattr *AddRtAttr(struct nlmsghdr *aHeader,
+                                uint32_t         aMaxLen,
+                                uint8_t          aType,
+                                const void      *aData,
+                                uint8_t          aLen)
 {
     uint8_t        len = RTA_LENGTH(aLen);
     struct rtattr *rta;
@@ -346,6 +351,8 @@ void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const 
         memcpy(RTA_DATA(rta), aData, aLen);
     }
     aHeader->nlmsg_len = NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len);
+
+    return rta;
 }
 
 void AddRtAttrUint32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, uint32_t aData)
@@ -1631,6 +1638,49 @@ exit:
 #endif
 
 #if defined(__linux__)
+static void SetAddrGenModeToNone(void)
+{
+    struct
+    {
+        struct nlmsghdr  nh;
+        struct ifinfomsg ifi;
+        char             buf[512];
+    } req;
+
+    const enum in6_addr_gen_mode mode = IN6_ADDR_GEN_MODE_NONE;
+
+    memset(&req, 0, sizeof(req));
+
+    req.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifinfomsg));
+    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
+    req.nh.nlmsg_type  = RTM_NEWLINK;
+    req.nh.nlmsg_pid   = 0;
+    req.nh.nlmsg_seq   = ++sNetlinkSequence;
+
+    req.ifi.ifi_index  = static_cast<int>(gNetifIndex);
+    req.ifi.ifi_change = 0xffffffff;
+    req.ifi.ifi_flags  = IFF_MULTICAST | IFF_NOARP;
+
+    {
+        struct rtattr *afSpec  = AddRtAttr(&req.nh, sizeof(req), IFLA_AF_SPEC, 0, 0);
+        struct rtattr *afInet6 = AddRtAttr(&req.nh, sizeof(req), AF_INET6, 0, 0);
+        struct rtattr *inet6AddrGenMode =
+            AddRtAttr(&req.nh, sizeof(req), IFLA_INET6_ADDR_GEN_MODE, &mode, sizeof(mode));
+
+        afInet6->rta_len += inet6AddrGenMode->rta_len;
+        afSpec->rta_len += afInet6->rta_len;
+    }
+
+    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
+    {
+        otLogInfoPlat("[netif] Sent request#%u to set addr_gen_mode to %d", sNetlinkSequence, mode);
+    }
+    else
+    {
+        otLogWarnPlat("[netif] Failed to send request#%u to set addr_gen_mode to %d", sNetlinkSequence, mode);
+    }
+}
+
 // set up the tun device
 static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 {
@@ -1823,6 +1873,10 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
+#endif
+
+#if __linux__
+    SetAddrGenModeToNone();
 #endif
 }
 
