@@ -66,7 +66,7 @@ install_packages_apt()
     if [ "$PLATFORM" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     elif [ "$PLATFORM" = "Ubuntu" ]; then
-        sudo apt-get --no-install-recommends install -y ca-certificates wget bzip2
+        sudo apt-get --no-install-recommends install -y bzip2 ca-certificates wget
         (cd /tmp \
             && wget --tries 4 --no-check-certificate --quiet -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 \
             && sudo tar xjf gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 -C /opt \
