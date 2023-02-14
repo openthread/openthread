@@ -7135,14 +7135,7 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
     }
     else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
-        if (enable)
-        {
-            otTrelEnable(GetInstancePtr());
-        }
-        else
-        {
-            otTrelDisable(GetInstancePtr());
-        }
+        otTrelSetEnabled(GetInstancePtr(), enable);
     }
     else if (aArgs[0] == "filter")
     {

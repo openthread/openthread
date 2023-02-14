@@ -76,6 +76,18 @@ void Interface::Init(void)
     }
 }
 
+void Interface::SetEnabled(bool aEnable)
+{
+    if (aEnable)
+    {
+        Enable();
+    }
+    else
+    {
+        Disable();
+    }
+}
+
 void Interface::Enable(void)
 {
     VerifyOrExit(!mEnabled);
