@@ -60,7 +60,7 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkDiagnosticTlv : public ot::Tlv
+class Tlv : public ot::Tlv
 {
 public:
     /**
@@ -109,61 +109,61 @@ public:
  * This class defines Extended MAC Address TLV constants and types.
  *
  */
-typedef SimpleTlvInfo<NetworkDiagnosticTlv::kExtMacAddress, Mac::ExtAddress> ExtMacAddressTlv;
+typedef SimpleTlvInfo<Tlv::kExtMacAddress, Mac::ExtAddress> ExtMacAddressTlv;
 
 /**
  * This class defines Address16 TLV constants and types.
  *
  */
-typedef UintTlvInfo<NetworkDiagnosticTlv::kAddress16, uint16_t> Address16Tlv;
+typedef UintTlvInfo<Tlv::kAddress16, uint16_t> Address16Tlv;
 
 /**
  * This class defines Mode TLV constants and types.
  *
  */
-typedef UintTlvInfo<NetworkDiagnosticTlv::kMode, uint8_t> ModeTlv;
+typedef UintTlvInfo<Tlv::kMode, uint8_t> ModeTlv;
 
 /**
  * This class defines Timeout TLV constants and types.
  *
  */
-typedef UintTlvInfo<NetworkDiagnosticTlv::kTimeout, uint32_t> TimeoutTlv;
+typedef UintTlvInfo<Tlv::kTimeout, uint32_t> TimeoutTlv;
 
 /**
  * This class defines Network Data TLV constants and types.
  *
  */
-typedef TlvInfo<NetworkDiagnosticTlv::kNetworkData> NetworkDataTlv;
+typedef TlvInfo<Tlv::kNetworkData> NetworkDataTlv;
 
 /**
  * This class defines IPv6 Address List TLV constants and types.
  *
  */
-typedef TlvInfo<NetworkDiagnosticTlv::kIp6AddressList> Ip6AddressListTlv;
+typedef TlvInfo<Tlv::kIp6AddressList> Ip6AddressListTlv;
 
 /**
  * This class defines Battery Level TLV constants and types.
  *
  */
-typedef UintTlvInfo<NetworkDiagnosticTlv::kBatteryLevel, uint8_t> BatteryLevelTlv;
+typedef UintTlvInfo<Tlv::kBatteryLevel, uint8_t> BatteryLevelTlv;
 
 /**
  * This class defines Supply Voltage TLV constants and types.
  *
  */
-typedef UintTlvInfo<NetworkDiagnosticTlv::kSupplyVoltage, uint16_t> SupplyVoltageTlv;
+typedef UintTlvInfo<Tlv::kSupplyVoltage, uint16_t> SupplyVoltageTlv;
 
 /**
  * This class defines Child Table TLV constants and types.
  *
  */
-typedef TlvInfo<NetworkDiagnosticTlv::kChildTable> ChildTableTlv;
+typedef TlvInfo<Tlv::kChildTable> ChildTableTlv;
 
 /**
  * This class defines Max Child Timeout TLV constants and types.
  *
  */
-typedef UintTlvInfo<NetworkDiagnosticTlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
+typedef UintTlvInfo<Tlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
 
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 
@@ -175,7 +175,7 @@ OT_TOOL_PACKED_BEGIN
 class ConnectivityTlv : public Mle::ConnectivityTlv
 {
 public:
-    static constexpr uint8_t kType = NetworkDiagnosticTlv::kConnectivity; ///< The TLV Type value.
+    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kConnectivity; ///< The TLV Type value.
 
     /**
      * This method initializes the TLV.
@@ -216,7 +216,7 @@ OT_TOOL_PACKED_BEGIN
 class RouteTlv : public Mle::RouteTlv
 {
 public:
-    static constexpr uint8_t kType = NetworkDiagnosticTlv::kRoute; ///< The TLV Type value.
+    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kRoute; ///< The TLV Type value.
 
     /**
      * This method initializes the TLV.
@@ -237,7 +237,7 @@ OT_TOOL_PACKED_BEGIN
 class LeaderDataTlv : public Mle::LeaderDataTlv
 {
 public:
-    static constexpr uint8_t kType = NetworkDiagnosticTlv::kLeaderData; ///< The TLV Type value.
+    static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kLeaderData; ///< The TLV Type value.
 
     /**
      * This method initializes the TLV.
@@ -255,7 +255,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MacCountersTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kMacCounters>
+class MacCountersTlv : public Tlv, public TlvInfo<Tlv::kMacCounters>
 {
 public:
     /**
@@ -265,7 +265,7 @@ public:
     void Init(void)
     {
         SetType(kMacCounters);
-        SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+        SetLength(sizeof(*this) - sizeof(Tlv));
     }
 
     /**
@@ -275,7 +275,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(NetworkDiagnosticTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the IfInUnknownProtos counter.
@@ -551,7 +551,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelPagesTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kChannelPages>
+class ChannelPagesTlv : public Tlv, public TlvInfo<Tlv::kChannelPages>
 {
 public:
     /**
@@ -561,7 +561,7 @@ public:
     void Init(void)
     {
         SetType(kChannelPages);
-        SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+        SetLength(sizeof(*this) - sizeof(Tlv));
     }
 
     /**
@@ -594,7 +594,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class TypeListTlv : public NetworkDiagnosticTlv, public TlvInfo<NetworkDiagnosticTlv::kTypeList>
+class TypeListTlv : public Tlv, public TlvInfo<Tlv::kTypeList>
 {
 public:
     /**
@@ -604,7 +604,7 @@ public:
     void Init(void)
     {
         SetType(kTypeList);
-        SetLength(sizeof(*this) - sizeof(NetworkDiagnosticTlv));
+        SetLength(sizeof(*this) - sizeof(Tlv));
     }
 } OT_TOOL_PACKED_END;
 

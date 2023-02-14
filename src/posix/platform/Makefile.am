@@ -98,23 +98,4 @@ if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
-check_PROGRAMS = test-settings
-
-test_settings_CPPFLAGS                                        = \
-    -I$(top_srcdir)/include                                     \
-    -I$(top_srcdir)/src                                         \
-    -I$(top_srcdir)/src/core                                    \
-    -I$(top_srcdir)/src/posix/platform/include                  \
-    -DOPENTHREAD_CONFIG_LOG_PLATFORM=0                          \
-    -DSELF_TEST                                                 \
-    $(NULL)
-
-test_settings_SOURCES                     = \
-    settings.cpp                            \
-    $(NULL)
-
-TESTS                                     = \
-    test-settings                           \
-    $(NULL)
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

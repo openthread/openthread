@@ -145,7 +145,7 @@ void TestEncoder(void)
     DumpBuffer("Frame", frame, frameLen);
 
     parsedLen = spinel_datatype_unpack(
-        frame, (spinel_size_t)frameLen,
+        frame, static_cast<spinel_size_t>(frameLen),
         (SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S
              SPINEL_DATATYPE_UINT16_S SPINEL_DATATYPE_INT16_S SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_INT32_S
                  SPINEL_DATATYPE_UINT64_S SPINEL_DATATYPE_INT64_S SPINEL_DATATYPE_UINT_PACKED_S
@@ -200,7 +200,7 @@ void TestEncoder(void)
     DumpBuffer("Frame", frame, frameLen);
 
     parsedLen = spinel_datatype_unpack(
-        frame, (spinel_size_t)frameLen,
+        frame, static_cast<spinel_size_t>(frameLen),
         (SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_STRUCT_S(
             SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_EUI48_S SPINEL_DATATYPE_UINT_PACKED_S) SPINEL_DATATYPE_INT16_S
 
@@ -215,7 +215,7 @@ void TestEncoder(void)
     VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
 
     // Parse the struct as a "data with len".
-    parsedLen = spinel_datatype_unpack(frame, (spinel_size_t)frameLen,
+    parsedLen = spinel_datatype_unpack(frame, static_cast<spinel_size_t>(frameLen),
                                        (SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_INT16_S
 
                                         ),
@@ -258,7 +258,7 @@ void TestEncoder(void)
     SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
 
     parsedLen = spinel_datatype_unpack(
-        frame, (spinel_size_t)frameLen,
+        frame, static_cast<spinel_size_t>(frameLen),
         (SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UTF8_S SPINEL_DATATYPE_STRUCT_S(
             SPINEL_DATATYPE_BOOL_S SPINEL_DATATYPE_IPv6ADDR_S) SPINEL_DATATYPE_UINT16_S)
              SPINEL_DATATYPE_EUI48_S SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_UINT32_S) SPINEL_DATATYPE_INT32_S),
@@ -296,7 +296,7 @@ void TestEncoder(void)
     SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
 
     parsedLen = spinel_datatype_unpack(
-        frame, (spinel_size_t)frameLen,
+        frame, static_cast<spinel_size_t>(frameLen),
         (SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_STRUCT_S(
             SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_EUI48_S SPINEL_DATATYPE_UINT_PACKED_S))),
         &u8, &u32, &eui48, &u_3);
@@ -340,7 +340,7 @@ void TestEncoder(void)
     SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
 
     parsedLen = spinel_datatype_unpack(
-        frame, (spinel_size_t)frameLen,
+        frame, static_cast<spinel_size_t>(frameLen),
         (SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_STRUCT_S(
             SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_IPv6ADDR_S SPINEL_DATATYPE_EUI64_S) SPINEL_DATATYPE_UTF8_S),
         &u8, &u32, &ip6Addr, &eui64, &utf_1);

@@ -64,9 +64,12 @@ void TestBinarySearch(void)
     constexpr Entry kUnsortedTable[]       = {{"z", 0}, {"a", 0}, {"b", 0}};
     constexpr Entry kDuplicateEntryTable[] = {{"duplicate", 1}, {"duplicate", 2}};
 
+// gcc-4 does not support constexpr function
+#if __GNUC__ > 4
     static_assert(BinarySearch::IsSorted(kTable), "IsSorted() failed");
     static_assert(!BinarySearch::IsSorted(kUnsortedTable), "failed for unsorted table");
     static_assert(!BinarySearch::IsSorted(kDuplicateEntryTable), "failed for table with duplicate entries");
+#endif
 
     for (const Entry &tableEntry : kTable)
     {

@@ -440,7 +440,7 @@ private:
 
     void SignalTableChanged(void);
     void HandleTableChanged(void);
-    void LogRouteTable(void);
+    void LogRouteTable(void) const;
 
     class RouterIdMap
     {

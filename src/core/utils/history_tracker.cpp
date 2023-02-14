@@ -59,6 +59,10 @@ HistoryTracker::HistoryTracker(Instance &aInstance)
 #endif
 {
     mTimer.Start(kAgeCheckPeriod);
+
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0)
+    memset(mRouterEntries, 0, sizeof(mRouterEntries));
+#endif
 }
 
 void HistoryTracker::RecordNetworkInfo(void)
@@ -278,6 +282,76 @@ void HistoryTracker::RecordAddressEvent(Ip6::Netif::AddressEvent            aEve
 exit:
     return;
 }
+
+#if OPENTHREAD_FTD
+void HistoryTracker::RecordRouterTableChange(void)
+{
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        RouterInfo   entry;
+        RouterEntry &oldEntry = mRouterEntries[routerId];
+
+        entry.mRouterId = routerId;
+
+        if (Get<RouterTable>().IsAllocated(routerId))
+        {
+            uint16_t nextHopRloc;
+            uint8_t  pathCost;
+
+            Get<RouterTable>().GetNextHopAndPathCost(Mle::Rloc16FromRouterId(routerId), nextHopRloc, pathCost);
+
+            entry.mNextHop  = (nextHopRloc == Mle::kInvalidRloc16) ? kNoNextHop : Mle::RouterIdFromRloc16(nextHopRloc);
+            entry.mPathCost = (pathCost < Mle::kMaxRouteCost) ? pathCost : 0;
+
+            if (!oldEntry.mIsAllocated)
+            {
+                entry.mEvent       = kRouterAdded;
+                entry.mOldPathCost = 0;
+            }
+            else if (oldEntry.mNextHop != entry.mNextHop)
+            {
+                entry.mEvent       = kRouterNextHopChanged;
+                entry.mOldPathCost = oldEntry.mPathCost;
+            }
+            else if ((entry.mNextHop != kNoNextHop) && (oldEntry.mPathCost != entry.mPathCost))
+            {
+                entry.mEvent       = kRouterCostChanged;
+                entry.mOldPathCost = oldEntry.mPathCost;
+            }
+            else
+            {
+                continue;
+            }
+
+            mRouterHistory.AddNewEntry(entry);
+
+            oldEntry.mIsAllocated = true;
+            oldEntry.mNextHop     = entry.mNextHop;
+            oldEntry.mPathCost    = entry.mPathCost;
+        }
+        else
+        {
+            // `routerId` is not allocated.
+
+            if (oldEntry.mIsAllocated)
+            {
+                entry.mEvent       = kRouterRemoved;
+                entry.mNextHop     = Mle::kInvalidRouterId;
+                entry.mOldPathCost = 0;
+                entry.mPathCost    = 0;
+
+                mRouterHistory.AddNewEntry(entry);
+
+                oldEntry.mIsAllocated = false;
+            }
+        }
+    }
+
+#endif // (OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0)
+}
+#endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
 void HistoryTracker::RecordNetworkDataChange(void)

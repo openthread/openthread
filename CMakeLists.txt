@@ -33,6 +33,7 @@ file(READ .default-version OT_DEFAULT_VERSION)
 string(STRIP ${OT_DEFAULT_VERSION} OT_DEFAULT_VERSION)
 
 project(openthread VERSION ${OT_DEFAULT_VERSION})
+include(CTest)
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_COVERAGE "enable coverage" OFF)
@@ -203,10 +204,6 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(third_party EXCLUDE_FROM_ALL)
-
-if(OT_PLATFORM STREQUAL "simulation")
-    enable_testing()
-endif()
 
 add_subdirectory(tests)
 add_subdirectory(tools)

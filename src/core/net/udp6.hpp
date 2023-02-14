@@ -281,7 +281,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         /**
-         * This method configures the UDP socket to join a mutlicast group on a Host network interface.
+         * This method configures the UDP socket to join a multicast group on a Host network interface.
          *
          * @param[in]  aNetifIdentifier     The network interface identifier.
          * @param[in]  aAddress             The multicast group address.
