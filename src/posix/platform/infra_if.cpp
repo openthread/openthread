@@ -295,7 +295,7 @@ uint32_t InfraNetif::GetFlags(void) const
 
     close(sock);
 
-    return ifReq.ifr_flags;
+    return static_cast<uint32_t>(ifReq.ifr_flags);
 }
 
 void InfraNetif::CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const
