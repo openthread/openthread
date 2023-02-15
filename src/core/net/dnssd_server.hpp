@@ -195,7 +195,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     /**
-     * This method notifies a answer of a upstream DNS query.
+     * This method notifies a answer of an upstream DNS query.
      *
      * The Transaction will be released.
      *
@@ -516,7 +516,7 @@ private:
 
     static const char *kBlockedDomains[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-    bool                     mEnableUpstreamQuery = false;
+    bool                     mEnableUpstreamQuery;
     UpstreamQueryTransaction mUpstreamQueryTransactions[kMaxConcurrentUpstreamQueries];
 #endif
 

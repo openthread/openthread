@@ -156,7 +156,7 @@ Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aTh
             fdOrError = socket(AF_INET, SOCK_DGRAM, 0);
             if (fdOrError < 0)
             {
-                otLogInfoPlat("Failed to create socket: %d", fdOrError);
+                otLogInfoPlat("Failed to create socket for upstream resolver: %d", fdOrError);
                 break;
             }
             ret             = &txn;
@@ -186,7 +186,7 @@ void Resolver::ForwardResponse(Transaction *aTxn)
 exit:
     if (readSize < 0)
     {
-        otLogInfoPlat("Failed to read response: %d", errno);
+        otLogInfoPlat("Failed to read response from upstream resolver socket: %d", errno);
     }
     if (message != nullptr)
     {

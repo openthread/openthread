@@ -66,6 +66,9 @@ Server::Server(Instance &aInstance)
     , mQueryCallbackContext(nullptr)
     , mQuerySubscribe(nullptr)
     , mQueryUnsubscribe(nullptr)
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    , mEnableUpstreamQuery(false)
+#endif
     , mTimer(aInstance)
 {
     mCounters.Clear();
@@ -903,17 +906,15 @@ void Server::OnUpstreamQueryResponse(UpstreamQueryTransaction &aQueryTransaction
     Error error = kErrorNone;
 
     VerifyOrExit(aQueryTransaction.IsValid());
-
-    error = mSocket.SendTo(aResponseMessage, aQueryTransaction.GetMessageInfo());
-    if (error != kErrorNone)
-    {
-        aResponseMessage.Free();
-    }
+    SuccessOrExit(error = mSocket.SendTo(aResponseMessage, aQueryTransaction.GetMessageInfo()));
     ResetUpstreamQueryTransaction(aQueryTransaction, error);
     ResetTimer();
 
 exit:
-    return;
+    if (error != kErrorNone)
+    {
+        aResponseMessage.Free();
+    }
 }
 
 Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo)
