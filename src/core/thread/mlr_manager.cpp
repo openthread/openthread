@@ -648,8 +648,7 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
         {
             // Calculate renewing period according to Thread Spec. 5.24.2.3.2
             // The random time t SHOULD be chosen such that (0.5* MLR-Timeout) < t < (MLR-Timeout – 9 seconds).
-            effectiveMlrTimeout = config.mMlrTimeout > Mle::kMlrTimeoutMin ? config.mMlrTimeout
-                                                                           : static_cast<uint32_t>(Mle::kMlrTimeoutMin);
+            effectiveMlrTimeout = Max(config.mMlrTimeout, Mle::kMlrTimeoutMin);
             reregDelay = Random::NonCrypto::GetUint32InRange((effectiveMlrTimeout >> 1u) + 1, effectiveMlrTimeout - 9);
         }
 

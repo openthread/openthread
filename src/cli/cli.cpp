@@ -7277,7 +7277,7 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
 
     while (length > 0)
     {
-        bytesToPrint = (length < sizeof(buf)) ? length : sizeof(buf);
+        bytesToPrint = Min(length, static_cast<uint16_t>(sizeof(buf)));
         otMessageRead(aMessage, otMessageGetOffset(aMessage) + bytesPrinted, buf, bytesToPrint);
 
         OutputBytes(buf, static_cast<uint8_t>(bytesToPrint));
