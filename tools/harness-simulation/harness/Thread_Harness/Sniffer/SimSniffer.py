@@ -35,6 +35,7 @@ import netifaces
 import select
 import socket
 import struct
+import threading
 import time
 import win32api
 import winreg as wr
@@ -259,7 +260,18 @@ class SimSniffer(ISniffer):
         if response.status != sniffer_pb2.OK:
             raise RuntimeError('startSniffer error: %s' % sniffer_pb2.Status.Name(response.status))
 
+        self._thread = threading.Thread(target=self._file_sync_main_loop)
+        self._thread.setDaemon(True)
+        self._thread.start()
+
         self.is_active = True
+
+    @watched
+    def _file_sync_main_loop(self):
+        with open(self._local_pcapng_location, 'wb') as f:
+            for response in self._stub.TransferPcapng(sniffer_pb2.TransferPcapngRequest()):
+                f.write(response.content)
+                f.flush()
 
     @watched
     def stopSniffer(self):
@@ -270,8 +282,7 @@ class SimSniffer(ISniffer):
         if response.status != sniffer_pb2.OK:
             raise RuntimeError('stopSniffer error: %s' % sniffer_pb2.Status.Name(response.status))
 
-        with open(self._local_pcapng_location, 'wb') as f:
-            f.write(response.pcap_content)
+        self._thread.join()
 
         self.is_active = False
 
