@@ -294,7 +294,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
         hmac.Update(iter);
         hmac.Finish(hash);
 
-        copyLength = (aOutputKeyLength > sizeof(hash)) ? sizeof(hash) : aOutputKeyLength;
+        copyLength = Min(aOutputKeyLength, static_cast<uint16_t>(sizeof(hash)));
 
         memcpy(aOutputKey, hash.GetBytes(), copyLength);
         aOutputKey += copyLength;
@@ -733,7 +733,7 @@ OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
             }
         }
 
-        useLen = (keyLen < kBlockSize) ? keyLen : kBlockSize;
+        useLen = Min(keyLen, static_cast<uint16_t>(kBlockSize));
         memcpy(key, keyBlock, useLen);
         key += useLen;
         keyLen -= useLen;

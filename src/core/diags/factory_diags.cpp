@@ -136,8 +136,7 @@ Error Diags::ProcessEcho(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
         uint32_t      number;
 
         SuccessOrExit(error = ParseLong(aArgs[1], value));
-        number = static_cast<uint32_t>(value);
-        number = (number < outputMaxLen) ? number : outputMaxLen;
+        number = Min(static_cast<uint32_t>(value), outputMaxLen);
 
         for (i = 0; i < number; i++)
         {
