@@ -903,18 +903,16 @@ exit:
 
 void Server::OnUpstreamQueryResponse(UpstreamQueryTransaction &aQueryTransaction, Message &aResponseMessage)
 {
-    Error error = kErrorNone;
+    Error    error   = kErrorNone;
+    Message *message = &aResponseMessage;
 
-    VerifyOrExit(aQueryTransaction.IsValid());
-    SuccessOrExit(error = mSocket.SendTo(aResponseMessage, aQueryTransaction.GetMessageInfo()));
+    VerifyOrExit(aQueryTransaction.IsValid(), error = kErrorInvalidArgs);
+    SuccessOrExit(error = mSocket.SendTo(*message, aQueryTransaction.GetMessageInfo()));
     ResetUpstreamQueryTransaction(aQueryTransaction, error);
     ResetTimer();
 
 exit:
-    if (error != kErrorNone)
-    {
-        aResponseMessage.Free();
-    }
+    FreeMessageOnError(message, error);
 }
 
 Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo)
@@ -933,7 +931,7 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
 
     if (ret != nullptr)
     {
-        LogInfo("Upstream query transaction %d initialized.", ret - mUpstreamQueryTransactions);
+        LogInfo("Upstream query transaction %d initialized.", static_cast<int>(ret - mUpstreamQueryTransactions));
         mTimer.FireAtIfEarlier(ret->GetExpireTime());
     }
 
@@ -1410,13 +1408,17 @@ void Server::UpstreamQueryTransaction::Init(const Ip6::MessageInfo &aMessageInfo
 
 void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error aError)
 {
+    int index = static_cast<int>(&aTxn - mUpstreamQueryTransactions);
+
+    // Avoid the warnings when info / warn logging is disabled.
+    OT_UNUSED_VARIABLE(index);
     if (aError == kErrorNone)
     {
-        LogInfo("Upstream query transaction %d completed.", &aTxn - mUpstreamQueryTransactions);
+        LogInfo("Upstream query transaction %d completed.", index);
     }
     else
     {
-        LogWarn("Upstream query transaction %d closed: %s.", &aTxn - mUpstreamQueryTransactions, ErrorToString(aError));
+        LogWarn("Upstream query transaction %d closed: %s.", index, ErrorToString(aError));
     }
     aTxn.Reset();
 }

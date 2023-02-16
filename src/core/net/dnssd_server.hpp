@@ -195,7 +195,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     /**
-     * This method notifies a answer of an upstream DNS query.
+     * This method notifies an answer of an upstream DNS query.
      *
      * The Transaction will be released.
      *
