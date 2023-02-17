@@ -66,6 +66,7 @@ Commissioner::Commissioner(Instance &aInstance)
     , mTransmitAttempts(0)
     , mJoinerExpirationTimer(aInstance)
     , mTimer(aInstance)
+    , mJoinerSessionTimer(aInstance)
     , mAnnounceBegin(aInstance)
     , mEnergyScan(aInstance)
     , mPanIdQuery(aInstance)
@@ -137,6 +138,11 @@ void Commissioner::HandleSecureAgentConnected(bool aConnected, void *aContext)
 
 void Commissioner::HandleSecureAgentConnected(bool aConnected)
 {
+    if (!aConnected)
+    {
+        mJoinerSessionTimer.Stop();
+    }
+
     SignalJoinerEvent(aConnected ? kJoinerEventConnected : kJoinerEventEnd, mActiveJoiner);
 }
 
@@ -315,6 +321,7 @@ Error Commissioner::Stop(ResignMode aResignMode)
 
     VerifyOrExit(mState != kStateDisabled, error = kErrorAlready);
 
+    mJoinerSessionTimer.Stop();
     Get<Tmf::SecureAgent>().Stop();
 
     if (mState == kStateActive)
@@ -976,12 +983,20 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
         Get<Tmf::SecureAgent>().SetPsk(joiner->mPskd);
         mActiveJoiner = joiner;
 
+        mJoinerSessionTimer.Start(kJoinerSessionTimeoutMillis);
+
         LogJoinerEntry("Starting new session with", *joiner);
         SignalJoinerEvent(kJoinerEventStart, joiner);
     }
     else
     {
-        VerifyOrExit(mJoinerIid == joinerIid);
+        if (mJoinerIid != joinerIid)
+        {
+            LogNote("Ignore Relay Receive (%s, 0x%04x), session in progress with (%s, 0x%04x)",
+                    joinerIid.ToString().AsCString(), joinerRloc, mJoinerIid.ToString().AsCString(), mJoinerRloc);
+
+            ExitNow();
+        }
     }
 
     mJoinerPort = joinerPort;
@@ -1000,6 +1015,16 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
 
 exit:
     return;
+}
+
+void Commissioner::HandleJoinerSessionTimer(void)
+{
+    if (mActiveJoiner != nullptr)
+    {
+        LogJoinerEntry("Timed out session with", *mActiveJoiner);
+    }
+
+    Get<Tmf::SecureAgent>().Disconnect();
 }
 
 template <>
