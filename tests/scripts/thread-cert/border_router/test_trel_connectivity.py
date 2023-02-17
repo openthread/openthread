@@ -107,6 +107,12 @@ class TestTrelConnectivity(thread_cert.TestCase):
         if br1.get_trel_state() is None:
             self.skipTest("TREL is not enabled")
 
+        if br1.get_trel_state() == False:
+            br1.enable_trel()
+
+        if br2.get_trel_state() == False:
+            br2.enable_trel()
+
         br1.start()
         self.wait_node_state(br1, 'leader', 10)
 

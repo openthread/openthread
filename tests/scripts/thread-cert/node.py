@@ -1350,6 +1350,11 @@ class NodeImpl:
     # TREL utilities
     #
 
+    def enable_trel(self):
+        cmd = 'trel enable'
+        self.send_command(cmd)
+        self._expect_done()
+
     def get_trel_state(self) -> Union[None, bool]:
         states = [r'Disabled', r'Enabled']
         self.send_command('trel')
