@@ -104,13 +104,13 @@ class TestTrelConnectivity(thread_cert.TestCase):
         br2 = self.nodes[BR2]
         router2 = self.nodes[ROUTER2]
 
-        if br1.get_trel_state() is None:
-            self.skipTest("TREL is not enabled")
+        if br1.is_trel_enabled() is None:
+            self.skipTest("TREL is not supported")
 
-        if br1.get_trel_state() == False:
+        if br1.is_trel_enabled() == False:
             br1.enable_trel()
 
-        if br2.get_trel_state() == False:
+        if br2.is_trel_enabled() == False:
             br2.enable_trel()
 
         br1.start()

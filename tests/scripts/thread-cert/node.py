@@ -1355,7 +1355,7 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def get_trel_state(self) -> Union[None, bool]:
+    def is_trel_enabled(self) -> Union[None, bool]:
         states = [r'Disabled', r'Enabled']
         self.send_command('trel')
         try:
