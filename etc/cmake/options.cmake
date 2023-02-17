@@ -320,6 +320,8 @@ ot_int_option(OT_RCP_RESTORATION_MAX_COUNT OPENTHREAD_SPINEL_CONFIG_RCP_RESTORAT
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+ot_int_option(OT_RCP_TX_WAIT_TIME_SECS  OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS "set RCP TX wait TIME in seconds")
+
 if(NOT OT_EXTERNAL_MBEDTLS)
     set(OT_MBEDTLS mbedtls)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=1")

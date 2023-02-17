@@ -62,7 +62,7 @@
 #endif
 
 #ifndef TX_WAIT_US
-#define TX_WAIT_US (5 * US_PER_S)
+#define TX_WAIT_US (OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS * US_PER_S)
 #endif
 
 using ot::Spinel::Decoder;
